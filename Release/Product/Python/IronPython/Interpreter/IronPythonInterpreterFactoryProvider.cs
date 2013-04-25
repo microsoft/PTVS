@@ -21,17 +21,22 @@ using Microsoft.PythonTools.Interpreter;
 namespace Microsoft.IronPythonTools.Interpreter {
     [Export(typeof(IPythonInterpreterFactoryProvider))]
     class IronPythonInterpreterFactoryProvider : IPythonInterpreterFactoryProvider {
-        private readonly IPythonInterpreterFactory _interpreter = new IronPythonInterpreterFactory(ProcessorArchitecture.X86);
-        private readonly IPythonInterpreterFactory _interpreterX64 = new IronPythonInterpreterFactory(ProcessorArchitecture.Amd64);
+        private IPythonInterpreterFactory _interpreter;
+        private IPythonInterpreterFactory _interpreterX64;
 
         #region IPythonInterpreterProvider Members
 
         public IEnumerable<IPythonInterpreterFactory> GetInterpreterFactories() {
             if (IronPythonResolver.GetPythonInstallDir() != null) {
-                
+                if (_interpreter == null) {
+                    _interpreter = new IronPythonInterpreterFactory(ProcessorArchitecture.X86);
+                }
                 yield return _interpreter;
 
                 if (Environment.Is64BitOperatingSystem) {
+                    if (_interpreterX64 == null) {
+                        _interpreterX64 = new IronPythonInterpreterFactory(ProcessorArchitecture.Amd64);
+                    }
                     yield return _interpreterX64;
                 }
             }

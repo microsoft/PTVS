@@ -39,6 +39,10 @@ namespace Microsoft.PythonTools.Analysis.Values {
             get { return _type; }
         }
 
+        public override BuiltinTypeId TypeId {
+            get { return _type.TypeId; }
+        }
+
         public override INamespaceSet Call(Node node, AnalysisUnit unit, INamespaceSet[] args, NameExpression[] keywordArgNames) {
             // TODO: More Type propagation
             IAdvancedPythonType advType = _type as IAdvancedPythonType;
@@ -251,29 +255,34 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public override string ToString() {
-            // return 'Class#' + hex(id(self)) + ' ' + self.clrType.__name__
             return "Class " + _type.Name;
         }
 
         private const int MERGE_TO_BASE_STRENGTH = 1;
-        private const int MERGE_TO_TYPE_STRENGTH = 3;
 
         public override bool UnionEquals(Namespace ns, int strength) {
-            if (object.ReferenceEquals(this, ns)) {
-                return true;
-            }
             if (strength < MERGE_TO_BASE_STRENGTH) {
                 return base.UnionEquals(ns, strength);
-            } else if (strength < MERGE_TO_TYPE_STRENGTH) {
+            } else {
                 var ci = ns as ClassInfo;
                 if (this != ProjectState.ClassInfos[BuiltinTypeId.Object] && 
                     ci != null && ci.Mro.AnyContains(this)) {
                     return true;
                 }
-            } else if (this == ProjectState.ClassInfos[BuiltinTypeId.Type]) {
-                return ns is ClassInfo;
+                var bci = ns as BuiltinClassInfo;
+                if (bci != null && TypeId == bci.TypeId) {
+                    return true;
+                }
             }
             return base.UnionEquals(ns, strength);
+        }
+
+        public override int UnionHashCode(int strength) {
+            if (strength < MERGE_TO_BASE_STRENGTH) {
+                return base.UnionHashCode(strength);
+            } else {
+                return ProjectState.ClassInfos[BuiltinTypeId.Type].GetHashCode();
+            }
         }
 
         #region IReferenceableContainer Members

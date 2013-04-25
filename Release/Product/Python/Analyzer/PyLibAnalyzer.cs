@@ -14,23 +14,32 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Reflection;
+using System.Text;
 using System.Threading;
+using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Interpreter.Default;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
+using Microsoft.Win32;
 
 namespace Microsoft.PythonTools.Analysis {
-    class PyLibAnalyzer {
+    internal class PyLibAnalyzer {
+        private const string AnalysisLimitsKey = "Software\\Microsoft\\VisualStudio\\" + AssemblyVersionInfo.VSVersion + "\\PythonTools\\Analysis\\StandardLibrary";
+
         private readonly string[] _dirs;
         private readonly string _indir;
+        private readonly Guid _id;
         private readonly PythonLanguageVersion _version;
 
-        private PyLibAnalyzer(List<string> dirs, string indir, PythonLanguageVersion version) {
+        private PyLibAnalyzer(List<string> dirs, string indir, Guid id, PythonLanguageVersion version) {
             _dirs = dirs.ToArray();
             _indir = indir;
+            _id = id;
             _version = version;
         }
 
@@ -39,6 +48,7 @@ namespace Microsoft.PythonTools.Analysis {
             PythonLanguageVersion version = PythonLanguageVersion.V27;
             string outdir = Environment.CurrentDirectory;
             string indir = Assembly.GetExecutingAssembly().Location;
+            Guid id = Guid.Empty;
             for (int i = 0; i < args.Length; i++) {
                 if (args[i].StartsWith("/") || args[i].StartsWith("-")) {
                     switch (args[i].Substring(1).ToLower()) {
@@ -82,6 +92,24 @@ namespace Microsoft.PythonTools.Analysis {
                             indir = args[i + 1];
                             i++;
                             break;
+                        case "id":
+                            if (i == args.Length - 1) {
+                                Help();
+                                Console.WriteLine("Missing GUID after {0}", args[i]);
+                                return -1;
+                            }
+                            Guid.TryParse(args[i + 1], out id);
+                            i++;
+                            break;
+                        case "log":
+                            if (i == args.Length - 1) {
+                                Help();
+                                Console.WriteLine("Missing filename after {0}", args[i]);
+                                return -1;
+                            }
+                            AnalysisLog.Output = new StreamWriter(args[i + 1], true, Encoding.UTF8);
+                            i++;
+                            break;
                     }
                 }
             }
@@ -91,12 +119,16 @@ namespace Microsoft.PythonTools.Analysis {
                 return -2;
             }
 
+            if (id == Guid.Empty) {
+                id = Guid.NewGuid();
+            }
+
             Thread.CurrentThread.Priority = System.Threading.ThreadPriority.Lowest;
             try {
                 using (var writer = new StreamWriter(File.Open(Path.Combine(outdir, "AnalysisLog.txt"), FileMode.Create, FileAccess.ReadWrite, FileShare.Read))) {
                     try {
                         // TODO: Add trigger to cancel analysis
-                        new PyLibAnalyzer(dirs, indir, version).AnalyzeStdLib(writer, outdir, CancellationToken.None);
+                        new PyLibAnalyzer(dirs, indir, id, version).AnalyzeStdLib(writer, outdir, CancellationToken.None);
                     } catch (Exception e) {
                         Console.WriteLine("Error while saving analysis: {0}", e.ToString());
                         Log(writer, "ANALYSIS FAIL: \"" + e.ToString().Replace("\r\n", " -- ") + "\"");
@@ -129,80 +161,111 @@ namespace Microsoft.PythonTools.Analysis {
             Console.WriteLine(" /version [version]          - specify language version to be used ({0})", String.Join(", ", Enum.GetNames(typeof(PythonLanguageVersion))));
             Console.WriteLine(" /outdir  [output dir]       - specify output directory for analysis (default is current dir)");
             Console.WriteLine(" /indir   [input dir]        - specify input directory for baseline analysis");
+            Console.WriteLine(" /id      [GUID]             - specify GUID of the interpreter being used");
+            Console.WriteLine(" /log     [filename]         - write detailed (CSV) analysis log");
         }
 
         private void AnalyzeStdLib(StreamWriter writer, string outdir, CancellationToken cancel) {
-            var fileGroups = new List<List<string>>();
-            HashSet<string> pthDirs = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            HashSet<string> allFileSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            foreach (var dir in _dirs) {
-                CollectStdLib(pthDirs, dir, fileGroups, allFileSet);
-            }
+            var identifier = string.Format(CultureInfo.InvariantCulture, "{0};{1}", _id, _version);
+            using (var updater = new AnalyzerStatusUpdater(identifier)) {
+                var fileGroups = new List<List<string>>();
 
-            foreach (var dir in pthDirs) {
-                Log(writer, "COLLECTING PATH DIR \"" + dir + "\"");
-                var list = new List<string>();
-                fileGroups.Add(list);
+                var siteDirs = _dirs.Select(dir => Path.Combine(dir, "site-packages")).ToArray();
+                var allModules = ModulePath.GetModulesInLib(
+                    // Directories to include files in root
+                    _dirs.Concat(ModulePath.ExpandPathFiles(siteDirs)),
+                    // Directories to exclude files in root
+                    siteDirs);
+                var allFileSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-                CollectPackage(dir, list, allFileSet);
-            }
+                foreach (var group in allModules.GroupBy(mp => mp.LibraryPath, StringComparer.OrdinalIgnoreCase)) {
+                    fileGroups.Add(group
+                        .Where(mp => !mp.IsCompiled)
+                        .Select(mp => mp.SourceFile)
+                        .Except(allFileSet)
+                        .ToList());
+                    
+                    allFileSet.UnionWith(group
+                        .Where(mp => !mp.IsCompiled)
+                        .Select(mp => mp.SourceFile));
+                }
 
-            foreach (var files in fileGroups) {
-                if (files.Count > 0) {
-                    Log(writer, "GROUP START \"" + Path.GetDirectoryName(files[0]) + "\"");
-                    Console.WriteLine("Now analyzing: {0}", Path.GetDirectoryName(files[0]));
-                    var fact = new CPythonInterpreterFactory();
-                    var projectState = new PythonAnalyzer(new CPythonInterpreter(fact, new PythonTypeDatabase(_indir, _version.Is3x())), _version);
+                int progressOffset = 0;
+                int progressTotal = 0;
+                foreach (var files in fileGroups) {
+                    progressTotal += files.Count;
+                }
 
-                    // TODO: Load limits from storage
-                    projectState.Limits = AnalysisLimits.GetStandardLibraryLimits();
+                foreach (var files in fileGroups) {
+                    if (files.Count > 0) {
+                        Log(writer, "GROUP START \"" + Path.GetDirectoryName(files[0]) + "\"");
+                        Console.WriteLine("Now analyzing: {0}", Path.GetDirectoryName(files[0]));
+                        var fact = new CPythonInterpreterFactory(_version.ToVersion());
+                        var projectState = new PythonAnalyzer(new CPythonInterpreter(fact, new PythonTypeDatabase(_indir, _version.Is3x())), _version);
 
-                    var modules = new List<IPythonProjectEntry>();
-                    for (int i = 0; i < files.Count; i++) {
-                        string modName = PythonAnalyzer.PathToModuleName(files[i]);
+                        int mostItemsInQueue = 0;
 
-                        modules.Add(projectState.AddModule(modName, files[i]));
-                    }
+                        projectState.SetQueueReporting(itemsInQueue => {
+                            if (itemsInQueue > mostItemsInQueue) {
+                                mostItemsInQueue = itemsInQueue;
+                            }
 
-                    var nodes = new List<PythonAst>();
-                    for (int i = 0; i < modules.Count; i++) {
-                        PythonAst ast = null;
-                        try {
-                            var sourceUnit = new FileStream(files[i], FileMode.Open, FileAccess.Read, FileShare.Read);
+                            updater.UpdateStatus(progressOffset + (files.Count * (mostItemsInQueue - itemsInQueue)) / mostItemsInQueue, progressTotal);
+                        }, 10);
 
-                            Log(writer, "PARSE START: \"" + modules[i].FilePath + "\"");
-                            ast = Parser.CreateParser(sourceUnit, _version, new ParserOptions() { BindReferences = true }).ParseFile();
-                            Log(writer, "PARSE END: \"" + modules[i].FilePath + "\"");
-                        } catch (Exception ex) {
-                            Log(writer, "PARSE ERROR: \"" + modules[i].FilePath + "\" \"" + ex.ToString().Replace("\r\n", " -- ") + "\"");
+                        using (var key = Registry.CurrentUser.OpenSubKey(AnalysisLimitsKey)) {
+                            projectState.Limits = AnalysisLimits.LoadFromStorage(key, defaultToStdLib: true);
                         }
-                        nodes.Add(ast);
-                    }
 
-                    for (int i = 0; i < modules.Count; i++) {
-                        var ast = nodes[i];
+                        var modules = new List<IPythonProjectEntry>();
+                        for (int i = 0; i < files.Count; i++) {
+                            string modName = PythonAnalyzer.PathToModuleName(files[i]);
 
-                        if (ast != null) {
-                            modules[i].UpdateTree(ast, null);
+                            modules.Add(projectState.AddModule(modName, files[i]));
                         }
-                    }
 
-                    for (int i = 0; i < modules.Count; i++) {
-                        var ast = nodes[i];
-                        if (ast != null) {
-                            Log(writer, "ANALYSIS START: \"" + modules[i].FilePath + "\"");
-                            modules[i].Analyze(cancel, true);
-                            Log(writer, "ANALYSIS END: \"" + modules[i].FilePath + "\"");
+                        var nodes = new List<PythonAst>();
+                        for (int i = 0; i < modules.Count; i++) {
+                            PythonAst ast = null;
+                            try {
+                                var sourceUnit = new FileStream(files[i], FileMode.Open, FileAccess.Read, FileShare.Read);
+
+                                Log(writer, "PARSE START: \"" + modules[i].FilePath + "\"");
+                                ast = Parser.CreateParser(sourceUnit, _version, new ParserOptions() { BindReferences = true }).ParseFile();
+                                Log(writer, "PARSE END: \"" + modules[i].FilePath + "\"");
+                            } catch (Exception ex) {
+                                Log(writer, "PARSE ERROR: \"" + modules[i].FilePath + "\" \"" + ex.ToString().Replace("\r\n", " -- ") + "\"");
+                            }
+                            nodes.Add(ast);
                         }
+
+                        for (int i = 0; i < modules.Count; i++) {
+                            var ast = nodes[i];
+
+                            if (ast != null) {
+                                modules[i].UpdateTree(ast, null);
+                            }
+                        }
+
+                        for (int i = 0; i < modules.Count; i++) {
+                            var ast = nodes[i];
+                            if (ast != null) {
+                                Log(writer, "ANALYSIS START: \"" + modules[i].FilePath + "\"");
+                                modules[i].Analyze(cancel, true);
+                                Log(writer, "ANALYSIS END: \"" + modules[i].FilePath + "\"");
+                            }
+                        }
+
+                        if (modules.Count > 0) {
+                            modules[0].AnalysisGroup.AnalyzeQueuedEntries(cancel);
+                        }
+
+                        Log(writer, "SAVING GROUP: \"" + Path.GetDirectoryName(files[0]) + "\"");
+                        new SaveAnalysis().Save(projectState, outdir);
+                        Log(writer, "GROUP END \"" + Path.GetDirectoryName(files[0]) + "\"");
                     }
 
-                    if (modules.Count > 0) {
-                        modules[0].AnalysisGroup.AnalyzeQueuedEntries(cancel);
-                    }
-
-                    Log(writer, "SAVING GROUP: \"" + Path.GetDirectoryName(files[0]) + "\"");
-                    new SaveAnalysis().Save(projectState, outdir);
-                    Log(writer, "GROUP END \"" + Path.GetDirectoryName(files[0]) + "\"");
+                    progressOffset += files.Count;
                 }
             }
         }
@@ -214,87 +277,6 @@ namespace Microsoft.PythonTools.Analysis {
                 contents
             );
             writer.Flush();
-        }
-
-
-        private static void CollectStdLib(HashSet<string> pthDirs, string dir, List<List<string>> files, HashSet<string> allFiles) {
-            List<string> libFiles = new List<string>();
-            files.Add(libFiles);
-
-            HashSet<string> sitePackages = new HashSet<string>();
-            foreach (var subdir in Directory.GetDirectories(dir)) {
-                if (Path.GetFileName(subdir) == "site-packages") {
-                    // site packages can be big, analyze each package alone
-                    foreach (var sitePackageDir in Directory.GetDirectories(subdir)) {
-                        var list = new List<string>();
-                        files.Add(list);
-                        CollectPackage(sitePackageDir, list, allFiles);
-
-                        sitePackages.Add(CommonUtils.NormalizeDirectoryPath(sitePackageDir));
-                    }
-
-                    
-                    foreach (var file in Directory.GetFiles(subdir)) {
-                        if (IsPthFile(file)) {
-                            string[] lines = File.ReadAllLines(file);
-                            foreach (var line in lines) {
-                                if (line.IndexOfAny(_invalidPathChars) == -1) {
-                                    string pthDir = line.Replace('/', '\\');
-
-                                    if (!Path.IsPathRooted(pthDir)) {
-                                        pthDir = Path.Combine(subdir, pthDir);
-                                    }
-
-                                    if (Directory.Exists(pthDir) &&
-                                        !sitePackages.Contains(CommonUtils.NormalizeDirectoryPath(pthDir))) {
-                                        pthDirs.Add(pthDir);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                } else {
-                    CollectPackage(subdir, libFiles, allFiles);
-                }
-            }
-
-            foreach (var file in Directory.GetFiles(dir)) {
-                if (IsPythonFile(file)) {
-                    libFiles.Add(file);
-                }
-            }
-        }
-
-        private static char[] _invalidPathChars = Path.GetInvalidPathChars();
-
-        /// <summary>
-        /// Collects a package and all sub-packages
-        /// </summary>
-        private static void CollectPackage(string dir, List<string> files, HashSet<string> allFiles) {
-            foreach (string file in Directory.GetFiles(dir)) {
-                if (IsPythonFile(file) && !allFiles.Contains(file)) {
-                    files.Add(file);
-                    allFiles.Add(file);
-                }
-            }
-
-            foreach (string nestedDir in Directory.GetDirectories(dir)) {
-                // only include packages and subpackages, don't look in random dirs (it's CollectFiles
-                // responsibility to know dirs to look in that aren't packages)
-                if (File.Exists(Path.Combine(nestedDir, "__init__.py"))) {
-                    CollectPackage(nestedDir, files, allFiles);
-                }
-            }
-        }
-
-        private static bool IsPythonFile(string file) {
-            string filename = Path.GetFileName(file);
-            return filename.Length > 0 && (Char.IsLetter(filename[0]) || filename[0] == '_') && // distros include things like '1col.py' in tests which aren't valid module names, ignore those.
-                file.EndsWith(".py", StringComparison.OrdinalIgnoreCase) || file.EndsWith(".pyw", StringComparison.OrdinalIgnoreCase);
-        }
-
-        private static bool IsPthFile(string file) {
-            return String.Compare(Path.GetExtension(file), ".pth", StringComparison.OrdinalIgnoreCase) == 0;
         }
     }
 }

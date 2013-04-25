@@ -30,6 +30,7 @@ namespace Microsoft.PythonTools
         public const uint cmdidRefactorRenameIntegratedShell = 0x109;
         public const uint cmdidExtractMethodIntegratedShell = 0x10a;
         public const uint cmdidDebugAsScript = 0x10b;
+        public const uint cmdidImportWizard = 0x10d;
 
         public const uint cmdidReplWindow = 0x201;
         public const uint cmdidReplWindow2 = 0x202;
@@ -47,5 +48,6 @@ namespace Microsoft.PythonTools
         public const uint cmdidReplWindowE = 0x20E;
         public const uint cmdidReplWindowF = 0x20F;
         public const uint cmdidDebugReplWindow = 0x210;
+        public const uint cmdidInterpreterList = 0x220;
     };
 }

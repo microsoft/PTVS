@@ -17,8 +17,10 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Interpreter.Default;
@@ -101,11 +103,11 @@ namespace Microsoft.PythonTools.Interpreter {
 
             return Task.Factory.StartNew(
                 new ExtensionModuleLoader(
-                    TaskScheduler.FromCurrentSynchronizationContext(), 
-                    this, 
-                    interpreter, 
-                    moduleName, 
-                    extensionModuleFilename, 
+                    TaskScheduler.FromCurrentSynchronizationContext(),
+                    this,
+                    interpreter,
+                    moduleName,
+                    extensionModuleFilename,
                     cancellationToken
                 ).LoadExtensionModule
             );
@@ -290,7 +292,7 @@ namespace Microsoft.PythonTools.Interpreter {
                     }
 
                     // check if this is the file we're looking for...
-                    if(!Guid.TryParse(columns[interpreterGuidIndex], out interpGuid) ||            // corrupt data
+                    if (!Guid.TryParse(columns[interpreterGuidIndex], out interpGuid) ||            // corrupt data
                         interpGuid != interpreter.Id ||                         // not our interpreter
                         !Version.TryParse(columns[interpreterVersionIndex], out interpVersion) ||     // corrupt data
                         interpVersion != interpreter.Configuration.Version ||
@@ -319,10 +321,6 @@ namespace Microsoft.PythonTools.Interpreter {
             get {
                 return _modules != null;
             }
-        }
-
-        public static PythonTypeDatabase CreateDefaultTypeDatabase() {
-            return new PythonTypeDatabase(BaselineDatabasePath);
         }
 
         public static PythonTypeDatabase CreateDefaultTypeDatabase(Version pythonLanguageVersion) {
@@ -418,7 +416,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 }
 
                 if (proc.ExitCode != 0) {
-                    LogEvent(request, "FAIL_SCRAPE " + proc.ExitCode);  
+                    LogEvent(request, "FAIL_SCRAPE " + proc.ExitCode);
                 } else {
                     LogEvent(request, "DONE (SCRAPE)");
                 }
@@ -467,7 +465,8 @@ namespace Microsoft.PythonTools.Interpreter {
             string args = "/dir " + "\"" + libDir + "\"" +
                 " /version V" + request.Factory.Configuration.Version.ToString().Replace(".", "") +
                 " /outdir " + "\"" + outPath + "\"" +
-                " /indir " + "\"" + outPath + "\"";
+                " /indir " + "\"" + outPath + "\"" +
+                " /id " + request.Factory.Id.ToString();
 
             if (virtualEnvPackages != null) {
                 args += " /dir \"" + virtualEnvPackages + "\"";
@@ -478,10 +477,14 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         private static void GetLibDirs(PythonTypeDatabaseCreationRequest request, out string libDir, out string virtualEnvPackages) {
-            libDir = Path.Combine(Path.GetDirectoryName(request.Factory.Configuration.InterpreterPath), "Lib");
+            GetLibDirs(request.Factory, out libDir, out virtualEnvPackages);
+        }
+
+        internal static void GetLibDirs(IPythonInterpreterFactory factory, out string libDir, out string virtualEnvPackages) {
+            libDir = Path.Combine(Path.GetDirectoryName(factory.Configuration.InterpreterPath), "Lib");
             virtualEnvPackages = null;
             if (!Directory.Exists(libDir)) {
-                string virtualEnvLibDir = Path.Combine(Path.GetDirectoryName(request.Factory.Configuration.InterpreterPath), "..\\Lib");
+                string virtualEnvLibDir = Path.Combine(Path.GetDirectoryName(factory.Configuration.InterpreterPath), "..\\Lib");
                 string prefixFile = Path.Combine(virtualEnvLibDir, "orig-prefix.txt");
                 if (Directory.Exists(virtualEnvLibDir) && File.Exists(prefixFile)) {
                     // virtual env is setup differently.  The EXE is in a Scripts directory with the Lib dir being at ..\Lib 
@@ -506,7 +509,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 } else {
                     // try and find the lib dir based upon where site.py lives
                     var psi = new ProcessStartInfo(
-                        request.Factory.Configuration.InterpreterPath,
+                        factory.Configuration.InterpreterPath,
                         "-c \"import site; print site.__file__\""
                     );
                     psi.RedirectStandardOutput = true;
@@ -526,7 +529,7 @@ namespace Microsoft.PythonTools.Interpreter {
                     proc.WaitForExit();
 
                     string siteFilename = receiver.Received.ToString().Trim();
-                    
+
                     if (!String.IsNullOrWhiteSpace(siteFilename) &&
                         siteFilename.IndexOfAny(Path.GetInvalidPathChars()) == -1) {
                         var dirName = Path.GetDirectoryName(siteFilename);
@@ -574,9 +577,9 @@ namespace Microsoft.PythonTools.Interpreter {
                         "Python Tools",
                         "CompletionDB",
 #if DEBUG
-                        "Debug",
+ "Debug",
 #endif
-                        AssemblyVersionInfo.VSVersion
+ AssemblyVersionInfo.VSVersion
                     );
                 }
                 return _completionDatabasePath;

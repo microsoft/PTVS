@@ -101,7 +101,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public override bool UnionEquals(Namespace ns, int strength) {
             if (strength >= MERGE_TO_OBJECT_STRENGTH) {
-                if (IsOfType(ProjectState.ClassInfos[BuiltinTypeId.Object]) && ns is InstanceInfo) {
+                if (IsOfType(ProjectState.ClassInfos[BuiltinTypeId.Object]) && (ns is InstanceInfo || ns.IsOfType(ProjectState.ClassInfos[BuiltinTypeId.Object]))) {
                     return true;
                 } else if (IsOfType(ProjectState.ClassInfos[BuiltinTypeId.Type]) && ns is ClassInfo) {
                     return true;
@@ -114,19 +114,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public override int UnionHashCode(int strength) {
-            if (strength >= MERGE_TO_OBJECT_STRENGTH) {
-                if (this == ProjectState.ClassInfos[BuiltinTypeId.Type].Instance ||
-                    this == ProjectState.ClassInfos[BuiltinTypeId.Function].Instance) {
-                    return base.GetHashCode();
-                }
-            }
-            // For merging to object, this.ClassInfo.GetHashCode() ==
-            // ProjectState._objectType.Instance.ClassInfo.GetHashCode()
-            return ClassInfo.GetHashCode();
+            return ClassInfo.UnionHashCode(strength);
         }
 
         internal override Namespace UnionMergeTypes(Namespace ns, int strength) {
-            return this;
+            return ClassInfo.Instance;
         }
 
         #region IReferenceableContainer Members

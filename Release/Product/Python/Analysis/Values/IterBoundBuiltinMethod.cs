@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System.Collections.Generic;
+using System.Diagnostics;
 using Microsoft.PythonTools.Analysis.Interpreter;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
@@ -42,6 +43,10 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public override INamespaceSet Call(Node node, AnalysisUnit unit, INamespaceSet[] args, NameExpression[] keywordArgNames) {
             if (args.Length == 0) {
+                if (_iterator != null) {
+                    return _iterator;
+                }
+                Debug.Assert(_iterClass != null);
                 return unit.Scope.GetOrMakeNodeValue(node, n => new IteratorInfo(_indexTypes, _iterClass, n));
             }
             return NamespaceSet.Empty;

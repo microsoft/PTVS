@@ -563,7 +563,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             if (strength < REQUIRED_STRENGTH) {
                 return base.UnionHashCode(strength);
             } else {
-                return ProjectState.ClassInfos[BuiltinTypeId.Function].Instance.GetHashCode();
+                return ProjectState.ClassInfos[BuiltinTypeId.Function].Instance.UnionHashCode(strength);
             }
         }
 

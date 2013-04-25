@@ -42,6 +42,8 @@ namespace Microsoft.PythonTools.Analysis {
         private readonly ConcurrentDictionary<string, XamlProjectEntry> _xamlByFilename = new ConcurrentDictionary<string, XamlProjectEntry>();
         internal ConstantInfo _noneInst;
         private readonly Deque<AnalysisUnit> _queue;
+        private Action<int> _reportQueueSize;
+        private int _reportQueueInterval;
         internal readonly IModuleContext _defaultContext;
         private readonly PythonLanguageVersion _langVersion;
         internal readonly AnalysisUnit _evalUnit;   // a unit used for evaluating when we don't otherwise have a unit available
@@ -522,7 +524,7 @@ namespace Microsoft.PythonTools.Analysis {
         internal IKnownPythonTypes Types {
             get;
             private set;
-        }
+            }
 
         internal IKnownClasses ClassInfos {
             get;
@@ -923,6 +925,13 @@ namespace Microsoft.PythonTools.Analysis {
             return NamespaceSet.UnionAll(typeList.Select(GetNamespaceFromObjects));
         }
 
+        internal Namespace GetNamespaceFromObjectsThrowOnNull(object attr) {
+            if (attr == null) {
+                throw new ArgumentNullException("attr");
+            }
+            return GetNamespaceFromObjects(attr);
+        }
+        
         internal Namespace GetNamespaceFromObjects(object attr) {
             var attrType = (attr != null) ? attr.GetType() : typeof(NoneType);
             if (attr is IPythonType) {
@@ -958,8 +967,9 @@ namespace Microsoft.PythonTools.Analysis {
                 }
                 );
             } else {
-                var pyAattrType = GetTypeFromObject(attr);
-                return GetBuiltinType(pyAattrType).Instance;
+                var pyAttrType = GetTypeFromObject(attr);
+                Debug.Assert(pyAttrType != null);
+                return GetBuiltinType(pyAttrType).Instance;
             }
         }
 
@@ -1036,10 +1046,19 @@ namespace Microsoft.PythonTools.Analysis {
             if (cancel.IsCancellationRequested) {
                 return;
             }
-            new DDG().Analyze(Queue, cancel);
+            new DDG().Analyze(Queue, cancel, _reportQueueSize, _reportQueueInterval);
         }
 
         #endregion
+
+        /// <summary>
+        /// Specifies a callback to invoke to provide feedback on the number of
+        /// items being processed.
+        /// </summary>
+        public void SetQueueReporting(Action<int> reportFunction, int interval = 1) {
+            _reportQueueSize = reportFunction;
+            _reportQueueInterval = interval;
+        }
 
         /// <summary>
         /// Adds a directory to the list of directories being analyzed.

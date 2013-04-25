@@ -8,7 +8,7 @@
     <SearchPath>$searchpaths$</SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
-$interpreter$  </PropertyGroup>
+$projecttypeguids$$interpreter$  </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>

@@ -460,9 +460,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
         private const int MERGE_TO_TYPE_STRENGTH = 3;
 
         internal override Namespace UnionMergeTypes(Namespace ns, int strength) {
-            if (Object.ReferenceEquals(this, ns)) {
-                return this;
-            }
             if (strength < MERGE_TO_BASE_STRENGTH) {
                 return this;
             } else if (strength < MERGE_TO_TYPE_STRENGTH) {
@@ -475,14 +472,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 var mro2 = ci.Mro.ToArray();
                 return mro1.FirstOrDefault(cls => mro2.AnyContains(cls)) ?? this;
             } else {
-                return _projectState.ClassInfos[BuiltinTypeId.Type];
+                return _projectState.ClassInfos[BuiltinTypeId.Type].Instance;
             }
         }
 
         public override bool UnionEquals(Namespace ns, int strength) {
-            if (Object.ReferenceEquals(this, ns)) {
-                return true;
-            }
             if (strength < MERGE_TO_BASE_STRENGTH) {
                 return Equals(ns);
             } else if (strength < MERGE_TO_TYPE_STRENGTH) {
@@ -499,13 +493,13 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 var mro2 = ci.Mro.ToArray();
                 return mro1.Any(cls => cls != _projectState.ClassInfos[BuiltinTypeId.Object] && mro2.AnyContains(cls));
             } else {
-                return ns is ClassInfo;
+                return ns is ClassInfo || ns.IsOfType(_projectState.ClassInfos[BuiltinTypeId.Type]);
             }
         }
 
         public override int UnionHashCode(int strength) {
             if (strength < MERGE_TO_BASE_STRENGTH) {
-                return GetHashCode();
+                return base.UnionHashCode(strength);
             } else {
                 return _projectState.ClassInfos[BuiltinTypeId.Type].GetHashCode();
             }

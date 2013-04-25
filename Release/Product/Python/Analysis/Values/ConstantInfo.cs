@@ -26,7 +26,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         private string _doc;
 
         public ConstantInfo(object value, PythonAnalyzer projectState)
-            : base((BuiltinClassInfo)projectState.GetNamespaceFromObjects(projectState.GetTypeFromObject(value))) {
+            : base((BuiltinClassInfo)projectState.GetNamespaceFromObjectsThrowOnNull(projectState.GetTypeFromObject(value))) {
             _value = value;
             _memberType = PythonMemberType.Constant;
             _builtinInfo = ((BuiltinClassInfo)projectState.GetNamespaceFromObjects(_type)).Instance;
@@ -178,23 +178,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public override bool UnionEquals(Namespace ns, int strength) {
-            var bi = ns as BuiltinInstanceInfo;
-            return bi != null && bi.ClassInfo == ClassInfo;
-        }
-
-        public override int UnionHashCode(int strength) {
-            return ClassInfo.GetHashCode();
-        }
-
-        internal override Namespace UnionMergeTypes(Namespace ns, int strength) {
-            if (Equals(ns)) {
-                return this;
-            } else if (ns is ConstantInfo) {
-                return ClassInfo.Instance;
-            } else {
-                // If not a ConstantInfo, it is already a 'generic' instance
-                return ns;
+            var ci = ns as ConstantInfo;
+            if (ci != null && ClassInfo.Equals(ci.ClassInfo)) {
+                return true;
             }
+            return base.UnionEquals(ns, strength);
         }
 
         public override bool Equals(object obj) {

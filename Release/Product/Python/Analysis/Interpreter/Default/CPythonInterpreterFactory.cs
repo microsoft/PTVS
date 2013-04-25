@@ -15,8 +15,12 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Parsing;
 
 namespace Microsoft.PythonTools.Interpreter.Default {
     class CPythonInterpreterFactory : IPythonInterpreterFactory, IInterpreterWithCompletionDatabase {
@@ -26,9 +30,12 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         private readonly HashSet<WeakReference> _interpreters = new HashSet<WeakReference>();
         private PythonTypeDatabase _typeDb;
         private bool _generating;
+        private string[] _missingModules;
+        private readonly Timer _refreshLastUpdateTimesTrigger;
+        private FileSystemWatcher _libWatcher;
 
-        public CPythonInterpreterFactory()
-            : this(default(Version), Guid.Empty, "Default interpreter", "", "", "PYTHONPATH", ProcessorArchitecture.X86) {
+        public CPythonInterpreterFactory(Version version)
+            : this(version, Guid.Empty, "Default interpreter", "", "", "PYTHONPATH", ProcessorArchitecture.X86) {
         }
 
         public CPythonInterpreterFactory(Version version, Guid id, string description, string pythonPath, string pythonwPath, string pathEnvVar, ProcessorArchitecture arch) {
@@ -38,6 +45,26 @@ namespace Microsoft.PythonTools.Interpreter.Default {
             _description = description;
             _id = id;
             _config = new CPythonInterpreterConfiguration(pythonPath, pythonwPath, pathEnvVar, arch, version);
+
+            _refreshLastUpdateTimesTrigger = new Timer(RefreshLastUpdateTimes_Elapsed);
+            Task.Factory.StartNew(() => RefreshLastUpdateTimes());
+
+            if (!string.IsNullOrEmpty(pythonPath)) {
+                try {
+                    _libWatcher = new FileSystemWatcher {
+                        IncludeSubdirectories = true,
+                        Path = Path.Combine(Path.GetDirectoryName(pythonPath), "lib"),
+                        NotifyFilter = NotifyFilters.FileName | NotifyFilters.DirectoryName | NotifyFilters.LastWrite
+                    };
+                    _libWatcher.Created += OnChanged;
+                    _libWatcher.Deleted += OnChanged;
+                    _libWatcher.Changed += OnChanged;
+                    _libWatcher.Renamed += OnRenamed;
+                    _libWatcher.EnableRaisingEvents = true;
+                } catch (ArgumentException ex) {
+                    Console.WriteLine("Error starting FileSystemWatcher:\r\n{0}", ex);
+                }
+            }
         }
 
         internal CPythonInterpreterFactory(Version version, PythonTypeDatabase typeDb)
@@ -71,9 +98,9 @@ namespace Microsoft.PythonTools.Interpreter.Default {
                 }
 
                 var res = new CPythonInterpreter(this, _typeDb);
-                
+
                 _interpreters.Add(new WeakReference(res));
-                
+
                 return res;
             }
         }
@@ -86,7 +113,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
             }
 
             // default DB is "never" corrupt
-            return PythonTypeDatabase.CreateDefaultTypeDatabase(_config.Version);            
+            return PythonTypeDatabase.CreateDefaultTypeDatabase(_config.Version);
         }
 
         private bool ConfigurableDatabaseExists() {
@@ -112,6 +139,9 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         private bool GenerateCompletionDatabaseWorker(GenerateDatabaseOptions options, Action databaseGenerationCompleted) {
             lock (this) {
                 _generating = true;
+                if (_libWatcher != null) {
+                    _libWatcher.EnableRaisingEvents = false;
+                }
             }
             string outPath = DatabasePath;
 
@@ -132,11 +162,19 @@ namespace Microsoft.PythonTools.Interpreter.Default {
                     databaseGenerationCompleted();
                     lock (this) {
                         _generating = false;
+                        if (_libWatcher != null) {
+                            _libWatcher.EnableRaisingEvents = true;
+                        }
                     }
+                    RefreshLastUpdateTimes();
                 })) {
                 lock (this) {
                     _generating = false;
+                    if (_libWatcher != null) {
+                        _libWatcher.EnableRaisingEvents = true;
+                    }
                 }
+                RefreshLastUpdateTimes();
                 return false;
             }
 
@@ -174,7 +212,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
 
         public bool IsCurrent {
             get {
-                return !_generating;
+                return !_generating && Directory.Exists(DatabasePath) && _missingModules == null;
             }
         }
 
@@ -196,16 +234,83 @@ namespace Microsoft.PythonTools.Interpreter.Default {
             }
         }
 
-        public string GetAnalysisLogContent() {
+        public string GetAnalysisLogContent(IFormatProvider culture) {
             var analysisLog = Path.Combine(DatabasePath, "AnalysisLog.txt");
             if (File.Exists(analysisLog)) {
                 try {
                     return File.ReadAllText(analysisLog);
                 } catch (Exception e) {
-                    return "Error reading: " + e;
+                    return string.Format(culture, "Error reading: {0}", e);
                 }
             }
             return null;
+        }
+
+        private void RefreshLastUpdateTimes() {
+            bool initialValue = IsCurrent;
+
+            if (Directory.Exists(DatabasePath)) {
+                var missingModules = ModulePath.GetModulesInLib(this)
+                    .Where(mp => !mp.IsSpecialName)
+                    .Select(mp => mp.FullName)
+                    .Except(Directory.EnumerateFiles(DatabasePath, "*.idb").Select(f => Path.GetFileNameWithoutExtension(f)), StringComparer.OrdinalIgnoreCase)
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .ToArray();
+
+                if (missingModules.Length > 0) {
+                    Array.Sort(missingModules, StringComparer.OrdinalIgnoreCase);
+                    _missingModules = missingModules;
+                } else {
+                    _missingModules = null;
+                }
+            }
+
+            OnIsCurrentChanged();
+        }
+
+        private void RefreshLastUpdateTimes_Elapsed(object state) {
+            RefreshLastUpdateTimes();
+        }
+
+        private void OnRenamed(object sender, RenamedEventArgs e) {
+            _refreshLastUpdateTimesTrigger.Change(1000, Timeout.Infinite);
+        }
+
+        private void OnChanged(object sender, FileSystemEventArgs e) {
+            _refreshLastUpdateTimesTrigger.Change(1000, Timeout.Infinite);
+        }
+
+        public event EventHandler IsCurrentChanged;
+
+        private void OnIsCurrentChanged() {
+            var evt = IsCurrentChanged;
+            if (evt != null) {
+                evt(this, EventArgs.Empty);
+            }
+        }
+
+        public string GetIsCurrentReason(IFormatProvider culture) {
+            var missingModules = _missingModules;
+            if (_generating) {
+                return "Currently regenerating";
+            } else if (!Directory.Exists(DatabasePath)) {
+                return "Database has never been generated";
+            } else if (missingModules != null) {
+                if (missingModules.Length < 100) {
+                    return string.Format(culture,
+                        "The following modules have not been analyzed:{0}    {1}",
+                        Environment.NewLine,
+                        string.Join(Environment.NewLine + "    ", missingModules)
+                        );
+                } else {
+                    return string.Format(culture,
+                        "{0} modules have not been analyzed.",
+                        missingModules.Length
+                        );
+                }
+            }
+
+            return "Up to date";
         }
     }
 }

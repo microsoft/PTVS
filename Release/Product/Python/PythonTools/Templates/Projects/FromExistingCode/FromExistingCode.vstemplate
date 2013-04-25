@@ -11,7 +11,7 @@
     <ProvideDefaultName>true</ProvideDefaultName>
   </TemplateData>
   <TemplateContent>
-    <Project File="FromExistingCode.pyproj" ReplaceParameters="true"></Project>
+    <Project File="FromExistingCode.pyproj" ReplaceParameters="true" IgnoreProjectParameter="$true$"></Project>
   </TemplateContent>
   <WizardExtension>
     <Assembly>Microsoft.PythonTools.ImportWizard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</Assembly>

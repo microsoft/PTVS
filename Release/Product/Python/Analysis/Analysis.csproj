@@ -35,6 +35,7 @@
     <RootNamespace>Microsoft.PythonTools.Analysis</RootNamespace>
     <AssemblyName>Microsoft.PythonTools.Analysis</AssemblyName>
     <FileAlignment>512</FileAlignment>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <SccProjectName>SAK</SccProjectName>
     <SccLocalPath>SAK</SccLocalPath>
     <SccAuxPath>SAK</SccAuxPath>
@@ -61,6 +62,7 @@
     <Compile Include="AnalysisLimits.cs" />
     <Compile Include="AnalysisLog.cs" />
     <Compile Include="AnalysisVariable.cs" />
+    <Compile Include="Analyzer\AnalyzerStatusUpdater.cs" />
     <Compile Include="Analyzer\ComprehensionScope.cs" />
     <Compile Include="Analyzer\DependentKeyValue.cs" />
     <Compile Include="Analyzer\FunctionAnalysisUnit.cs" />
@@ -69,6 +71,7 @@
     <Compile Include="AssemblyInfo.cs" />
     <Compile Include="Interpreter\Default\CPythonSequenceType.cs" />
     <Compile Include="Interpreter\IPythonSequenceType.cs" />
+    <Compile Include="ModulePath.cs" />
     <Compile Include="Parsing\CodeFormattingCategoryAttribute.cs" />
     <Compile Include="Parsing\CodeFormattingDefaultSettingAttribute.cs" />
     <Compile Include="Parsing\CodeFormattingDescriptionAttribute.cs" />

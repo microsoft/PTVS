@@ -38,14 +38,13 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public bool AddTypes(AnalysisUnit unit, IEnumerable<Namespace> keyTypes, IEnumerable<Namespace> valueTypes, bool enqueue = true) {
-            return AddTypes(unit.ProjectEntry, keyTypes, valueTypes, enqueue);
+            return AddTypes(unit.ProjectEntry, unit.ProjectState, keyTypes, valueTypes, enqueue);
         }
 
-        public bool AddTypes(IProjectEntry projectEntry, IEnumerable<Namespace> keyTypes, IEnumerable<Namespace> valueTypes, bool enqueue = true) {
+        public bool AddTypes(IProjectEntry projectEntry, PythonAnalyzer projectState, IEnumerable<Namespace> keyTypes, IEnumerable<Namespace> valueTypes, bool enqueue = true) {
             var dependencies = GetDependentItems(projectEntry);
 
-            // TODO: Get actual limit from current PythonAnalyzer
-            if (dependencies.KeyValues.Count > 50) {
+            if (dependencies.KeyValues.Count > projectState.Limits.DictKeyTypes) {
                 dependencies.MakeUnionStronger();
             }
 
@@ -53,13 +52,17 @@ namespace Microsoft.PythonTools.Analysis.Values {
             foreach (var key in keyTypes) {
                 INamespaceSet values;
                 if (!dependencies.KeyValues.TryGetValue(key, out values)) {
-                    dependencies.KeyValues[key] = values = NamespaceSet.Create(valueTypes);
+                    values = NamespaceSet.Create(valueTypes);
                     anyAdded = true;
                 } else {
                     bool added;
-                    dependencies.KeyValues[key] = values.Union(valueTypes, out added);
+                    values = values.Union(valueTypes, out added);
                     anyAdded |= added;
                 }
+                if (anyAdded && values.Count > projectState.Limits.DictValueTypes) {
+                    values = values.AsStrongerUnion();
+                }
+                dependencies.KeyValues[key] = values;
             }
 
             if (anyAdded) {

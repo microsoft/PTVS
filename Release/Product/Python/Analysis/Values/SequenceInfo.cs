@@ -199,12 +199,14 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        internal void MakeUnionStrongerIfMoreThan(int typeCount, INamespaceSet extraTypes = null) {
+        internal bool MakeUnionStrongerIfMoreThan(int typeCount, INamespaceSet extraTypes = null) {
+            bool anyChanged = false;
             if (IndexTypes != null) {
                 foreach (var it in IndexTypes) {
-                    it.MakeUnionStrongerIfMoreThan(typeCount, extraTypes);
+                    anyChanged |= it.MakeUnionStrongerIfMoreThan(typeCount, extraTypes);
                 }
             }
+            return anyChanged;
         }
     }
 }

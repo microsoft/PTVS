@@ -17,8 +17,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Linq;
+using Microsoft.PythonTools;
+using Microsoft.PythonTools.Project.ImportWizard;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Microsoft.PythonTools.ImportWizard;
 using TestUtilities;
 
 namespace PythonToolsTests {
@@ -31,122 +33,110 @@ namespace PythonToolsTests {
 
         [TestMethod, Priority(0)]
         public void ImportWizardSimple() {
-            var wizard = new Wizard();
-
             var settings = new ImportSettings();
-            var dict = new Dictionary<string, string>();
 
-            settings.SourceFilesPath = TestData.GetPath("TestData\\HelloWorld\\");
-            settings.Filter = "*.py;*.pyproj";
-            settings.SearchPaths = new[] { TestData.GetPath("TestData\\SearchPath1\\"), TestData.GetPath("TestData\\SearchPath2\\") };
+            settings.SourcePath = TestData.GetPath("TestData\\HelloWorld\\");
+            settings.Filters = "*.py;*.pyproj";
+            settings.SearchPaths = TestData.GetPath("TestData\\SearchPath1\\") + Environment.NewLine + TestData.GetPath("TestData\\SearchPath2\\");
+            settings.ProjectPath = TestData.GetPath("TestData\\TestDestination\\Subdirectory\\ProjectName.pyproj");
 
-            dict["$destinationdirectory$"] = TestData.GetPath("TestData\\TestDestination\\Subdirectory");
+            var path = settings.CreateRequestedProject();
 
-            wizard.SetReplacements(settings, dict);
-
-            Assert.AreEqual("..\\..\\HelloWorld\\", dict["$projecthome$"]);
-            Assert.AreEqual("..\\SearchPath1\\;..\\SearchPath2\\", dict["$searchpaths$"]);
-            Assert.AreEqual(@"  <ItemGroup>
-    <Compile Include=""Program.py"" />
-    <Content Include=""HelloWorld.pyproj"" />
-  </ItemGroup>
-", dict["$content$"]);
+            Assert.AreEqual(settings.ProjectPath, path);
+            var proj = XDocument.Load(path);
+            
+            Assert.AreEqual("..\\..\\HelloWorld\\", proj.Descendant("ProjectHome").Value);
+            Assert.AreEqual("..\\SearchPath1\\;..\\SearchPath2\\", proj.Descendant("SearchPath").Value);
+            AssertUtil.ContainsExactly(proj.Descendants(proj.GetName("Compile")).Select(x => x.Attribute("Include").Value),
+                "Program.py");
+            AssertUtil.ContainsExactly(proj.Descendants(proj.GetName("Content")).Select(x => x.Attribute("Include").Value),
+                "HelloWorld.pyproj");
         }
 
         [TestMethod, Priority(0)]
         public void ImportWizardFiltered() {
-            var wizard = new Wizard();
-
             var settings = new ImportSettings();
-            var dict = new Dictionary<string, string>();
 
-            settings.SourceFilesPath = TestData.GetPath("TestData\\HelloWorld\\");
-            settings.Filter = "*.py";
-            settings.SearchPaths = new[] { TestData.GetPath("TestData\\SearchPath1\\"), TestData.GetPath("TestData\\SearchPath2\\") };
+            settings.SourcePath = TestData.GetPath("TestData\\HelloWorld\\");
+            settings.Filters = "*.py";
+            settings.SearchPaths = TestData.GetPath("TestData\\SearchPath1\\") + Environment.NewLine + TestData.GetPath("TestData\\SearchPath2\\");
+            settings.ProjectPath = TestData.GetPath("TestData\\TestDestination\\Subdirectory\\ProjectName.pyproj");
 
-            dict["$destinationdirectory$"] = TestData.GetPath("TestData\\TestDestination\\Subdirectory");
+            var path = settings.CreateRequestedProject();
 
-            wizard.SetReplacements(settings, dict);
+            Assert.AreEqual(settings.ProjectPath, path);
+            var proj = XDocument.Load(path);
 
-            Assert.AreEqual("..\\..\\HelloWorld\\", dict["$projecthome$"]);
-            Assert.AreEqual("..\\SearchPath1\\;..\\SearchPath2\\", dict["$searchpaths$"]);
-            Assert.AreEqual(@"  <ItemGroup>
-    <Compile Include=""Program.py"" />
-  </ItemGroup>
-", dict["$content$"]);
+            Assert.AreEqual("..\\..\\HelloWorld\\", proj.Descendant("ProjectHome").Value);
+            Assert.AreEqual("..\\SearchPath1\\;..\\SearchPath2\\", proj.Descendant("SearchPath").Value);
+            AssertUtil.ContainsExactly(proj.Descendants(proj.GetName("Compile")).Select(x => x.Attribute("Include").Value),
+                "Program.py");
+            Assert.AreEqual(0, proj.Descendants(proj.GetName("Content")).Count());
         }
 
         [TestMethod, Priority(0)]
         public void ImportWizardFolders() {
-            var wizard = new Wizard();
-
             var settings = new ImportSettings();
-            var dict = new Dictionary<string, string>();
 
-            settings.SourceFilesPath = TestData.GetPath("TestData\\HelloWorld2\\");
-            settings.Filter = "*";
-            settings.SearchPaths = new string[0];
+            settings.SourcePath = TestData.GetPath("TestData\\HelloWorld2\\");
+            settings.Filters = "*";
+            settings.ProjectPath = TestData.GetPath("TestData\\TestDestination\\Subdirectory\\ProjectName.pyproj");
 
-            dict["$destinationdirectory$"] = TestData.GetPath("TestData\\TestDestination\\Subdirectory");
+            var path = settings.CreateRequestedProject();
 
-            wizard.SetReplacements(settings, dict);
+            Assert.AreEqual(settings.ProjectPath, path);
+            var proj = XDocument.Load(path);
 
-            Assert.AreEqual("..\\..\\HelloWorld2\\", dict["$projecthome$"]);
-            Assert.AreEqual("", dict["$searchpaths$"]);
-            Assert.AreEqual(@"  <ItemGroup>
-    <Compile Include=""Program.py"" />
-    <Compile Include=""TestFolder\SubItem.py"" />
-    <Compile Include=""TestFolder2\SubItem.py"" />
-    <Compile Include=""TestFolder3\SubItem.py"" />
-    <Content Include=""HelloWorld2.pyproj"" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include=""TestFolder"" />
-    <Folder Include=""TestFolder2"" />
-    <Folder Include=""TestFolder3"" />
-  </ItemGroup>
-", dict["$content$"]);
+            Assert.AreEqual("..\\..\\HelloWorld2\\", proj.Descendant("ProjectHome").Value);
+            Assert.AreEqual("", proj.Descendant("SearchPath").Value);
+            AssertUtil.ContainsExactly(proj.Descendants(proj.GetName("Compile")).Select(x => x.Attribute("Include").Value),
+                "Program.py",
+                "TestFolder\\SubItem.py",
+                "TestFolder2\\SubItem.py",
+                "TestFolder3\\SubItem.py");
+
+            AssertUtil.ContainsExactly(proj.Descendants(proj.GetName("Folder")).Select(x => x.Attribute("Include").Value),
+                "TestFolder",
+                "TestFolder2",
+                "TestFolder3");
         }
 
         [TestMethod, Priority(0)]
         public void ImportWizardInterpreter() {
-            var wizard = new Wizard();
-
             var settings = new ImportSettings();
-            var dict = new Dictionary<string, string>();
 
-            settings.SourceFilesPath = TestData.GetPath("TestData\\HelloWorld\\");
-            settings.Filter = "*.py;*.pyproj";
-            settings.SearchPaths = new[] { TestData.GetPath("TestData\\SearchPath1\\"), TestData.GetPath("TestData\\SearchPath2\\") };
-            settings.InterpreterId = Guid.Empty.ToString();
-            settings.InterpreterVersion = "2.7";
+            settings.SourcePath = TestData.GetPath("TestData\\HelloWorld\\");
+            settings.Filters = "*.py;*.pyproj";
 
-            dict["$destinationdirectory$"] = TestData.GetPath("TestData\\TestDestination\\Subdirectory");
+            var interpreter = new PythonInterpreterView("Test", Guid.NewGuid(), new Version(2, 7, 0, 0), null);
+            settings.AvailableInterpreters.Add(interpreter);
+            settings.SelectedInterpreter = interpreter;
+            settings.ProjectPath = TestData.GetPath("TestData\\TestDestination\\Subdirectory\\ProjectName.pyproj");
 
-            wizard.SetReplacements(settings, dict);
+            var path = settings.CreateRequestedProject();
 
-            Assert.AreEqual(@"    <InterpreterId>00000000-0000-0000-0000-000000000000</InterpreterId>
-    <InterpreterVersion>2.7</InterpreterVersion>
-", dict["$interpreter$"]);
+            Assert.AreEqual(settings.ProjectPath, path);
+            var proj = XDocument.Load(path);
+
+            Assert.AreEqual(interpreter.Id, Guid.Parse(proj.Descendant("InterpreterId").Value));
+            Assert.AreEqual(interpreter.Version, Version.Parse(proj.Descendant("InterpreterVersion").Value));
         }
 
         [TestMethod, Priority(0)]
         public void ImportWizardStartupFile() {
-            var wizard = new Wizard();
-
             var settings = new ImportSettings();
-            var dict = new Dictionary<string, string>();
 
-            settings.SourceFilesPath = TestData.GetPath("TestData\\HelloWorld\\");
-            settings.Filter = "*.py;*.pyproj";
-            settings.SearchPaths = new[] { TestData.GetPath("TestData\\SearchPath1\\"), TestData.GetPath("TestData\\SearchPath2\\") };
+            settings.SourcePath = TestData.GetPath("TestData\\HelloWorld\\");
+            settings.Filters = "*.py;*.pyproj";
             settings.StartupFile = TestData.GetPath("TestData\\HelloWorld\\Program.py");
+            settings.ProjectPath = TestData.GetPath("TestData\\TestDestination\\Subdirectory\\ProjectName.pyproj");
 
-            dict["$destinationdirectory$"] = TestData.GetPath("TestData\\TestDestination\\Subdirectory");
+            var path = settings.CreateRequestedProject();
 
-            wizard.SetReplacements(settings, dict);
+            Assert.AreEqual(settings.ProjectPath, path);
+            var proj = XDocument.Load(path);
 
-            Assert.AreEqual(@"Program.py", dict["$startupfile$"]);
+            Assert.AreEqual("Program.py", proj.Descendant("StartupFile").Value);
         }
     }
 }

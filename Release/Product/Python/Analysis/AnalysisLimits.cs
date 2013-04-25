@@ -12,6 +12,8 @@
  *
  * ***************************************************************************/
 
+using Microsoft.Win32;
+
 namespace Microsoft.PythonTools.Analysis {
     public class AnalysisLimits {
         /// <summary>
@@ -36,8 +38,73 @@ namespace Microsoft.PythonTools.Analysis {
             limits.ReturnTypes = 10;
             limits.YieldTypes = 10;
             limits.InstanceMembers = 5;
+            limits.DictKeyTypes = 5;
+            limits.DictValueTypes = 20;
+            limits.IndexTypes = 5;
             limits.UnifyCallsToNew = true;
             return limits;
+        }
+
+        private const string CallDepthId = "CallDepth";
+        private const string DecreaseCallDepthId = "DecreaseCallDepth";
+        private const string NormalArgumentTypesId = "NormalArgumentTypes";
+        private const string ListArgumentTypesId = "ListArgumentTypes";
+        private const string DictArgumentTypesId = "DictArgumentTypes";
+        private const string ReturnTypesId = "ReturnTypes";
+        private const string YieldTypesId = "YieldTypes";
+        private const string InstanceMembersId = "InstanceMembers";
+        private const string DictKeyTypesId = "DictKeyTypes";
+        private const string DictValueTypesId = "DictValueTypes";
+        private const string IndexTypesId = "IndexTypes";
+        private const string UnifyCallsToNewId = "UnifyCallsToNew";
+
+        /// <summary>
+        /// Loads a new instance from the specified registry key.
+        /// </summary>
+        /// <param name="key">The key to load settings from. Each setting is a
+        /// DWORD value.</param>
+        /// <param name="defaultToStdLib">
+        /// If True, unspecified settings are taken from the defaults for
+        /// standard library analysis. Otherwise, they are taken from the
+        /// usual defaults.
+        /// </param>
+        public static AnalysisLimits LoadFromStorage(RegistryKey key, bool defaultToStdLib = false) {
+            var limits = defaultToStdLib ? GetStandardLibraryLimits() : new AnalysisLimits();
+
+            if (key != null) {
+                limits.CallDepth = (key.GetValue(CallDepthId) as int?) ?? limits.CallDepth;
+                limits.DecreaseCallDepth = (key.GetValue(DecreaseCallDepthId) as int?) ?? limits.DecreaseCallDepth;
+                limits.NormalArgumentTypes = (key.GetValue(NormalArgumentTypesId) as int?) ?? limits.NormalArgumentTypes;
+                limits.ListArgumentTypes = (key.GetValue(ListArgumentTypesId) as int?) ?? limits.ListArgumentTypes;
+                limits.DictArgumentTypes = (key.GetValue(DictArgumentTypesId) as int?) ?? limits.DictArgumentTypes;
+                limits.ReturnTypes = (key.GetValue(ReturnTypesId) as int?) ?? limits.ReturnTypes;
+                limits.YieldTypes = (key.GetValue(YieldTypesId) as int?) ?? limits.YieldTypes;
+                limits.InstanceMembers = (key.GetValue(InstanceMembersId) as int?) ?? limits.InstanceMembers;
+                limits.DictKeyTypes = (key.GetValue(DictKeyTypesId) as int?) ?? limits.DictKeyTypes;
+                limits.DictValueTypes = (key.GetValue(DictValueTypesId) as int?) ?? limits.DictValueTypes;
+                limits.IndexTypes = (key.GetValue(IndexTypesId) as int?) ?? limits.IndexTypes;
+                limits.UnifyCallsToNew = ((key.GetValue(UnifyCallsToNewId) as int?) ?? (limits.UnifyCallsToNew ? 1 : 0)) != 0;
+            }
+
+            return limits;
+        }
+
+        /// <summary>
+        /// Saves the current instance's settings to the specified registry key.
+        /// </summary>
+        public void SaveToStorage(RegistryKey key) {
+            key.SetValue(CallDepthId, CallDepth, RegistryValueKind.DWord);
+            key.SetValue(DecreaseCallDepthId, DecreaseCallDepth, RegistryValueKind.DWord);
+            key.SetValue(NormalArgumentTypesId, NormalArgumentTypes, RegistryValueKind.DWord);
+            key.SetValue(ListArgumentTypesId, ListArgumentTypes, RegistryValueKind.DWord);
+            key.SetValue(DictArgumentTypesId, DictArgumentTypes, RegistryValueKind.DWord);
+            key.SetValue(ReturnTypesId, ReturnTypes, RegistryValueKind.DWord);
+            key.SetValue(YieldTypesId, YieldTypes, RegistryValueKind.DWord);
+            key.SetValue(InstanceMembersId, InstanceMembers, RegistryValueKind.DWord);
+            key.SetValue(DictKeyTypesId, DictKeyTypes, RegistryValueKind.DWord);
+            key.SetValue(DictValueTypesId, DictValueTypes, RegistryValueKind.DWord);
+            key.SetValue(IndexTypesId, IndexTypes, RegistryValueKind.DWord);
+            key.SetValue(UnifyCallsToNewId, UnifyCallsToNew ? 1 : 0, RegistryValueKind.DWord);
         }
 
         public AnalysisLimits() {
@@ -49,6 +116,9 @@ namespace Microsoft.PythonTools.Analysis {
             ReturnTypes = 20;
             YieldTypes = 20;
             InstanceMembers = 50;
+            DictKeyTypes = 10;
+            DictValueTypes = 30;
+            IndexTypes = 30;
         }
 
         /// <summary>
@@ -124,5 +194,24 @@ namespace Microsoft.PythonTools.Analysis {
         /// user-defined '__new__' functions.
         /// </summary>
         public bool UnifyCallsToNew { get; set; }
+
+        /// <summary>
+        /// The number of keys in a dictionary at which to start combining
+        /// similar types.
+        /// </summary>
+        public int DictKeyTypes { get; set; }
+
+        /// <summary>
+        /// The number of values in a dictionary entry at which to start
+        /// combining similar types. Note that this applies to each value in a
+        /// dictionary, not to all values at once.
+        /// </summary>
+        public int DictValueTypes { get; set; }
+
+        /// <summary>
+        /// The number of values in a collection at which to start combining
+        /// similar types. This does not apply to dictionaries.
+        /// </summary>
+        public int IndexTypes { get; set; }
     }
 }

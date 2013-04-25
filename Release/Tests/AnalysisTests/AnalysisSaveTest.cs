@@ -109,7 +109,7 @@ class MultipleInheritance(WithInstanceMembers, WithMemberFunctions):
     pass
 ";
 
-            using (var newPs = SaveLoad(new AnalysisModule("test", "test.py", code))) {
+            using (var newPs = SaveLoad(PythonLanguageVersion.V27, new AnalysisModule("test", "test.py", code))) {
                 AssertUtil.Contains(newPs.Analyzer.GetModules().Select(x => x.Name), "test");
 
                 string codeText = @"
@@ -194,7 +194,7 @@ class C(object): pass
 
 C.abc = C
 ";
-            using (var newPs = SaveLoad(new AnalysisModule("test", "test.py", code))) {
+            using (var newPs = SaveLoad(PythonLanguageVersion.V27, new AnalysisModule("test", "test.py", code))) {
             }
         }
 
@@ -204,7 +204,7 @@ C.abc = C
 C = []
 C.append(C)
 ";
-            using (var newPs = SaveLoad(new AnalysisModule("test", "test.py", code))) {
+            using (var newPs = SaveLoad(PythonLanguageVersion.V27, new AnalysisModule("test", "test.py", code))) {
                 string code2 = @"import test
 C = test.C";
                 var newMod = newPs.NewModule("test2", code2);
@@ -222,7 +222,7 @@ x = bar.f()
             string bar = @"
 def f(): return 42";
 
-            using (var newPs = SaveLoad(new AnalysisModule("foo", "foo.py", foo), new AnalysisModule("bar", "bar.py", bar))) {
+            using (var newPs = SaveLoad(PythonLanguageVersion.V27, new AnalysisModule("foo", "foo.py", foo), new AnalysisModule("bar", "bar.py", bar))) {
                 string code = @"
 import foo
 abc = foo.x
@@ -243,7 +243,7 @@ f(1, 2)
 f(3, 'abc')
 f([1, 2], 3)
 ";
-            using (var newPs = SaveLoad(new AnalysisModule("test", "test.py", code))) {
+            using (var newPs = SaveLoad(PythonLanguageVersion.V27, new AnalysisModule("test", "test.py", code))) {
                 var newMod = newPs.NewModule("test2", "from test import f; x = f()");
 
                 AssertUtil.ContainsExactly(newMod.Analysis.GetShortDescriptionsByIndex("x", 0), "int", "str", "list of int");
@@ -252,13 +252,13 @@ f([1, 2], 3)
 
 
 
-        private SaveLoadResult SaveLoad(params AnalysisModule[] modules) {
+        private SaveLoadResult SaveLoad(PythonLanguageVersion version, params AnalysisModule[] modules) {
             IPythonProjectEntry[] entries = new IPythonProjectEntry[modules.Length];
 
-            var state = new PythonAnalyzer(Interpreter, PythonLanguageVersion.V27);
+            var state = new PythonAnalyzer(Interpreter, version);
             for (int i = 0; i < modules.Length; i++) {
                 entries[i] = state.AddModule(modules[i].ModuleName, modules[i].Filename);
-                Prepare(entries[i], new StringReader(modules[i].Code), PythonLanguageVersion.V27);
+                Prepare(entries[i], new StringReader(modules[i].Code), version);
 
             }
 
@@ -274,7 +274,7 @@ f([1, 2], 3)
             File.Copy(Path.Combine(PythonTypeDatabase.BaselineDatabasePath, "__builtin__.idb"), Path.Combine(tmpFolder, "__builtin__.idb"), true);
 
             return new SaveLoadResult(
-                new PythonAnalyzer(new CPythonInterpreter(new CPythonInterpreterFactory(), new PythonTypeDatabase(tmpFolder)), PythonLanguageVersion.V27),
+                new PythonAnalyzer(new CPythonInterpreter(new CPythonInterpreterFactory(version.ToVersion()), new PythonTypeDatabase(tmpFolder)), version),
                 tmpFolder
             );
         }

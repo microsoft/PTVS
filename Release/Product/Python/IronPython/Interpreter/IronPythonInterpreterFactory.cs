@@ -15,8 +15,11 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.IronPythonTools.Interpreter {
@@ -27,10 +30,35 @@ namespace Microsoft.IronPythonTools.Interpreter {
         private readonly HashSet<WeakReference> _interpreters = new HashSet<WeakReference>();
         private readonly ProcessorArchitecture _arch;
         private bool _generating;
+        private string[] _missingModules;
+        private readonly Timer _refreshLastUpdateTimesTrigger;
+        private FileSystemWatcher _libWatcher;
 
         public IronPythonInterpreterFactory(ProcessorArchitecture arch = ProcessorArchitecture.X86) {
             _arch = arch;
             _config = new IronPythonInterpreterConfiguration(arch);
+
+            _refreshLastUpdateTimesTrigger = new Timer(RefreshLastUpdateTimes_Elapsed);
+            Task.Factory.StartNew(() => RefreshLastUpdateTimes());
+
+            if (string.IsNullOrEmpty(_config.InterpreterPath)) {
+                throw new InvalidOperationException("IronPython is not installed.");
+            }
+
+            try {
+                _libWatcher = new FileSystemWatcher {
+                    IncludeSubdirectories = true,
+                    Path = Path.Combine(Path.GetDirectoryName(_config.InterpreterPath), "lib"),
+                    NotifyFilter = NotifyFilters.FileName | NotifyFilters.DirectoryName | NotifyFilters.LastWrite
+                };
+                _libWatcher.Created += OnChanged;
+                _libWatcher.Deleted += OnChanged;
+                _libWatcher.Changed += OnChanged;
+                _libWatcher.Renamed += OnRenamed;
+                _libWatcher.EnableRaisingEvents = true;
+            } catch (ArgumentException ex) {
+                Console.WriteLine("Error starting FileSystemWatcher:\r\n{0}", ex);
+            }
         }
 
         public InterpreterConfiguration Configuration {
@@ -68,15 +96,13 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
         class IronPythonInterpreterConfiguration : InterpreterConfiguration {
             private readonly ProcessorArchitecture _arch;
-            
+
             public IronPythonInterpreterConfiguration(ProcessorArchitecture arch) {
                 _arch = arch;
             }
 
             public override string InterpreterPath {
-                get { 
-                    return Path.Combine(IronPythonResolver.GetPythonInstallDir(), _arch == ProcessorArchitecture.X86 ? "ipy.exe" : "ipy64.exe"); 
-                }
+                get { return Path.Combine(IronPythonResolver.GetPythonInstallDir(), _arch == ProcessorArchitecture.X86 ? "ipy.exe" : "ipy64.exe"); }
             }
 
             public override string WindowsInterpreterPath {
@@ -106,6 +132,9 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
         private bool GenerateCompletionDatabaseWorker(GenerateDatabaseOptions options, Action databaseGenerationCompleted) {
             _generating = true;
+            if (_libWatcher != null) {
+                _libWatcher.EnableRaisingEvents = false;
+            }
             string outPath = DatabasePath;
 
             if (!PythonTypeDatabase.Generate(
@@ -114,9 +143,17 @@ namespace Microsoft.IronPythonTools.Interpreter {
                     OnNewDatabaseAvailable();
                     databaseGenerationCompleted();
                     _generating = false;
+                    if (_libWatcher != null) {
+                        _libWatcher.EnableRaisingEvents = true;
+                    }
+                    RefreshLastUpdateTimes();
                 }
             )) {
                 _generating = false;
+                if (_libWatcher != null) {
+                    _libWatcher.EnableRaisingEvents = true;
+                }
+                RefreshLastUpdateTimes();
                 return false;
             }
             return true;
@@ -124,7 +161,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
         public bool IsCurrent {
             get {
-                return !_generating;
+                return !_generating && Directory.Exists(DatabasePath) && _missingModules == null;
             }
         }
 
@@ -175,19 +212,85 @@ namespace Microsoft.IronPythonTools.Interpreter {
             }
         }
 
-        public string GetAnalysisLogContent() {
+        public string GetAnalysisLogContent(IFormatProvider culture) {
             var analysisLog = Path.Combine(DatabasePath, "AnalysisLog.txt");
             if (File.Exists(analysisLog)) {
                 try {
                     return File.ReadAllText(analysisLog);
                 } catch (Exception e) {
-                    return "Error reading: " + e;
+                    return string.Format(culture, "Error reading: {0}", e);
                 }
             }
             return null;
         }
 
-        #endregion
+        private void RefreshLastUpdateTimes() {
+            bool initialValue = IsCurrent;
 
+            if (Directory.Exists(DatabasePath)) {
+                var missingModules = ModulePath.GetModulesInLib(this)
+                    .Where(mp => !mp.IsSpecialName)
+                    .Select(mp => mp.FullName)
+                    .Except(Directory.EnumerateFiles(DatabasePath, "*.idb").Select(f => Path.GetFileNameWithoutExtension(f)), StringComparer.OrdinalIgnoreCase)
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .ToArray();
+
+                if (missingModules.Length > 0) {
+                    Array.Sort(missingModules, StringComparer.OrdinalIgnoreCase);
+                    _missingModules = missingModules;
+                } else {
+                    _missingModules = null;
+                }
+            }
+
+            OnIsCurrentChanged();
+        }
+
+        private void RefreshLastUpdateTimes_Elapsed(object state) {
+            RefreshLastUpdateTimes();
+        }
+
+        private void OnRenamed(object sender, RenamedEventArgs e) {
+            _refreshLastUpdateTimesTrigger.Change(1000, Timeout.Infinite);
+        }
+
+        private void OnChanged(object sender, FileSystemEventArgs e) {
+            _refreshLastUpdateTimesTrigger.Change(1000, Timeout.Infinite);
+        }
+
+        public event EventHandler IsCurrentChanged;
+
+        private void OnIsCurrentChanged() {
+            var evt = IsCurrentChanged;
+            if (evt != null) {
+                evt(this, EventArgs.Empty);
+            }
+        }
+
+        public string GetIsCurrentReason(IFormatProvider culture) {
+            var missingModules = _missingModules;
+            if (_generating) {
+                return "Currently regenerating";
+            } else if (!Directory.Exists(DatabasePath)) {
+                return "Database has never been generated";
+            } else if (missingModules != null) {
+                if (missingModules.Length < 100) {
+                    return string.Format(culture,
+                        "The following modules have not been analyzed:{0}    {1}",
+                        Environment.NewLine,
+                        string.Join(Environment.NewLine + "    ", missingModules)
+                        );
+                } else {
+                    return string.Format(culture,
+                        "{0} modules have not been analyzed.",
+                        missingModules.Length
+                        );
+                }
+            }
+
+            return "Up to date";
+        }
+
+        #endregion
     }
 }

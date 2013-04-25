@@ -101,6 +101,33 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
+        private const int MERGE_TO_SAME_BASE = 2;
+
+        internal override Namespace UnionMergeTypes(Namespace ns, int strength) {
+            if (_indexTypes.Any() && strength >= MERGE_TO_SAME_BASE) {
+                return ProjectState.ClassInfos[TypeId] ?? base.UnionMergeTypes(ns, strength);
+            }
+            return base.UnionMergeTypes(ns, strength);
+        }
+
+        public override bool UnionEquals(Namespace ns, int strength) {
+            if (_indexTypes.Any() && strength >= MERGE_TO_SAME_BASE) {
+                return TypeId == ns.TypeId;
+            }
+            return base.UnionEquals(ns, strength);
+        }
+
+        public override int UnionHashCode(int strength) {
+            if (_indexTypes.Any()) {
+                var type = ProjectState.ClassInfos[TypeId];
+                if (type != null) {
+                    // Use our unspecialized type's hash code.
+                    return type.UnionHashCode(strength);
+                }
+            }
+            return base.UnionHashCode(strength);
+        }
+
         public abstract SequenceInfo MakeFromIndexes(Node node, ProjectEntry entry);
     }
 }

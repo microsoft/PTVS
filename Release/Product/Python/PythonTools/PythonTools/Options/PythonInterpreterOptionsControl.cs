@@ -31,16 +31,45 @@ namespace Microsoft.PythonTools.Options {
             InitInterpreters();
         }
 
+        protected override void OnVisibleChanged(EventArgs e) {
+            base.OnVisibleChanged(e);
+
+            if (Visible) {
+                var defaultId = PythonToolsPackage.Instance.InterpreterOptionsPage.DefaultInterpreterValue;
+                var defaultVersion = PythonToolsPackage.Instance.InterpreterOptionsPage.DefaultInterpreterVersionValue;
+                var selectId = defaultId;
+                var selectVersion = defaultVersion;
+                var programmaticSelection = PythonToolsPackage.Instance.NextOptionsSelection;
+                PythonToolsPackage.Instance.NextOptionsSelection = null;
+                if (programmaticSelection != null) {
+                    selectId = programmaticSelection.Id;
+                    selectVersion = programmaticSelection.Configuration.Version;
+                }
+
+                foreach (var interpreter in OptionsPage._options) {
+                    if (IsSameInterpreter(interpreter, defaultId, defaultVersion)) {
+                        _defaultInterpreter.SelectedIndex = _defaultInterpreter.FindStringExact(interpreter.Display);
+                    }
+                    if (IsSameInterpreter(interpreter, selectId, selectVersion)) {
+                        _showSettingsFor.SelectedIndex = _showSettingsFor.FindStringExact(interpreter.Display);
+                    }
+                }
+            }
+        }
+
         internal void InitInterpreters() {
             _showSettingsFor.Items.Clear();
             _defaultInterpreter.Items.Clear();
+
+            var defaultId = PythonToolsPackage.Instance.InterpreterOptionsPage.DefaultInterpreterValue;
+            var defaultVersion = PythonToolsPackage.Instance.InterpreterOptionsPage.DefaultInterpreterVersionValue;
 
             foreach (var interpreter in OptionsPage._options) {
                 var display = interpreter.Display;
                 int index = _defaultInterpreter.Items.Add(display);
                 _showSettingsFor.Items.Add(display);
 
-                if (IsDefaultInterpreter(interpreter)) {
+                if (IsSameInterpreter(interpreter, defaultId, defaultVersion)) {
                     _defaultInterpreter.SelectedIndex = index;
                     _showSettingsFor.SelectedIndex = index;
                 }
@@ -53,11 +82,9 @@ namespace Microsoft.PythonTools.Options {
             LoadNewOptions();
         }
 
-        internal static bool IsDefaultInterpreter(InterpreterOptions interpreter) {
+        internal static bool IsSameInterpreter(InterpreterOptions interpreter, Guid id, Version version) {
             Version vers;
-            return interpreter.Id == PythonToolsPackage.Instance.InterpreterOptionsPage.DefaultInterpreterValue &&
-                    Version.TryParse(interpreter.Version, out vers) &&
-                    vers == PythonToolsPackage.Instance.InterpreterOptionsPage.DefaultInterpreterVersionValue;
+            return interpreter.Id == id && Version.TryParse(interpreter.Version, out vers) && vers == version;
         }
 
         private void LoadNewOptions() {

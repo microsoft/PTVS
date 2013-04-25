@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System;
+using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Threading;
@@ -99,7 +100,7 @@ namespace Microsoft.PythonTools.Commands {
 
                     var withDb = factory as IInterpreterWithCompletionDatabase;
                     if (withDb != null) {
-                        string analysisLog = withDb.GetAnalysisLogContent();
+                        string analysisLog = withDb.GetAnalysisLogContent(CultureInfo.InvariantCulture);
                         if (!string.IsNullOrEmpty(analysisLog)) {
                             res.AppendLine(analysisLog);
                         }

@@ -84,6 +84,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
             bool added = false;
             for (int i = 0; i < types.Length; i++) {
+                added |= _indexTypes[i].MakeUnionStrongerIfMoreThan(ProjectState.Limits.IndexTypes, types[i]);
                 added |= _indexTypes[i].AddTypes(unit, types[i]);
             }
 
@@ -147,21 +148,10 @@ namespace Microsoft.PythonTools.Analysis.Values {
             if (si != null && strength < IGNORE_NODE_STRENGTH) {
                 return si.ClassInfo == ClassInfo && si._node.Equals(_node);
             }
-            var bii = ns as BuiltinInstanceInfo;
-            if (bii != null) {
-                return bii.ClassInfo == ClassInfo;
-            }
-            return false;
-        }
-
-        public override int UnionHashCode(int strength) {
-            return ClassInfo.GetHashCode();
+            return base.UnionEquals(ns, strength);
         }
 
         internal override Namespace UnionMergeTypes(Namespace ns, int strength) {
-            if (object.ReferenceEquals(this, ns)) {
-                return this;
-            }
             return ClassInfo.Instance;
         }
     }

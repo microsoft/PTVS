@@ -34,7 +34,7 @@ namespace Microsoft.PythonTools {
         }
 
         public Guid Id {
-            get { return _realFactory.Id;  }
+            get { return _realFactory.Id; }
         }
 
         public IPythonInterpreter CreateInterpreter() {
@@ -61,8 +61,21 @@ namespace Microsoft.PythonTools {
             ((IInterpreterWithCompletionDatabase)_realFactory).NotifyInvalidDatabase();
         }
 
-        public string GetAnalysisLogContent() {
-            return ((IInterpreterWithCompletionDatabase)_realFactory).GetAnalysisLogContent();
+        public string GetAnalysisLogContent(IFormatProvider culture) {
+            return ((IInterpreterWithCompletionDatabase)_realFactory).GetAnalysisLogContent(culture);
+        }
+
+        public event EventHandler IsCurrentChanged {
+            add {
+                ((IInterpreterWithCompletionDatabase)_realFactory).IsCurrentChanged += value;
+            }
+            remove {
+                ((IInterpreterWithCompletionDatabase)_realFactory).IsCurrentChanged -= value;
+            }
+        }
+
+        public string GetIsCurrentReason(IFormatProvider culture) {
+            return ((IInterpreterWithCompletionDatabase)_realFactory).GetIsCurrentReason(culture);
         }
 
         #endregion

@@ -179,6 +179,14 @@
           <CommandName>DebugAsScript</CommandName>
         </Strings>
       </Button>
+
+      <Button guid="guidPythonToolsCmdSet" id="cmdidInterpreterList" priority="0x7e00" type="Button">
+        <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1"/>
+        <Strings>
+          <CommandName>cmdidInterpreterList</CommandName>
+          <ButtonText>Python Interpreters</ButtonText>
+        </Strings>
+      </Button>
       
       <Button guid="guidPythonToolsCmdSet" id="cmdidReplWindow" priority="0x7f00" type="Button">
         <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1"/>
@@ -456,6 +464,16 @@
       </Button>
 
 
+      <Button guid="guidPythonToolsCmdSet" id="cmdidImportWizard" priority="0x010" type="Button">
+        <Parent guid="guidPythonToolsCmdSet" id="ToolsMenuItemsGroup"/>
+        <CommandFlag>DefaultInvisible</CommandFlag>
+        <Strings>
+          <ButtonText>Import Existing &amp;Project...</ButtonText>
+          <CommandName>ImportPythonProject</CommandName>
+          <LocCanonicalName>Import Python Project</LocCanonicalName>
+        </Strings>
+      </Button>
+
       <!--================================================================================================================-->
       <!--============================================= Virtual Env Commands =============================================-->
       <!--================================================================================================================-->
@@ -587,6 +605,10 @@
     </CommandPlacement>
 
     <!-- Make some commands also available via Tools/Python Tools menu for discoverability -->
+    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidInterpreterList" priority="0x101">
+      <Parent guid="guidPythonToolsCmdSet" id="ToolsMenuItemsGroup"/>
+    </CommandPlacement>
+
     <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidReplWindow" priority="0x102">
       <Parent guid="guidPythonToolsCmdSet" id="ToolsMenuItemsGroup"/>
     </CommandPlacement>
@@ -706,6 +728,7 @@
       <IDSymbol name="cmdidRefactorRename" value ="0x0109" />
       <IDSymbol name="cmdidExtractMethod" value ="0x010a" />
       <IDSymbol name="cmdidDebugAsScript" value ="0x010b" />
+      <IDSymbol name="cmdidImportWizard" value ="0x010d" />
       
       <IDSymbol name="cmdidReplWindow" value="0x0201" />
       <IDSymbol name="cmdidReplWindow2" value="0x0202" />
@@ -723,6 +746,7 @@
       <IDSymbol name="cmdidReplWindowE" value="0x020E" />
       <IDSymbol name="cmdidReplWindowF" value="0x020F" />
       <IDSymbol name="cmdidDebugReplWindow" value="0x0210" />
+      <IDSymbol name="cmdidInterpreterList" value="0x0220" />
       <IDSymbol name="cmdidSetAsStartupFile" value="0x3001" />
 
       <IDSymbol name="cmdIdAddSearchPath" value="0x4002" />

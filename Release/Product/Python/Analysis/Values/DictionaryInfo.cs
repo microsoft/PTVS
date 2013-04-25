@@ -218,22 +218,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             if (di != null && strength < IGNORE_NODE_STRENGTH) {
                 return di.ClassInfo == ClassInfo && di._node.Equals(_node);
             }
-            var bii = ns as BuiltinInstanceInfo;
-            if (bii != null) {
-                return bii.ClassInfo == ClassInfo;
-            }
-            return false;
-        }
-
-        public override int UnionHashCode(int strength) {
-            return ClassInfo.GetHashCode();
-        }
-
-        internal override Namespace UnionMergeTypes(Namespace ns, int strength) {
-            if (object.ReferenceEquals(this, ns)) {
-                return this;
-            }
-            return ClassInfo.Instance;
+            return base.UnionEquals(ns, strength);
         }
 
         /// <summary>

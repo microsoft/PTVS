@@ -37,9 +37,12 @@ namespace TestUtilities {
         public static readonly PythonVersion Python31 = GetCPythonVersion(PythonLanguageVersion.V31);
         public static readonly PythonVersion Python32 = GetCPythonVersion(PythonLanguageVersion.V32);
         public static readonly PythonVersion Python33 = GetCPythonVersion(PythonLanguageVersion.V33);
-        public static readonly PythonVersion IronPython27 = GetIronPythonVersion();
+        public static readonly PythonVersion IronPython27 = GetIronPythonVersion(false);
+        public static readonly PythonVersion IronPython27_x64 = GetIronPythonVersion(true);
 
-        private static PythonVersion GetIronPythonVersion() {
+        private static PythonVersion GetIronPythonVersion(bool x64) {
+            var exeName = x64 ? "ipy64.exe" : "ipy.exe";
+            
             using (var ipy = Registry.LocalMachine.OpenSubKey("SOFTWARE\\IronPython")) {
                 if (ipy != null) {
                     using (var twoSeven = ipy.OpenSubKey("2.7")) {
@@ -48,7 +51,7 @@ namespace TestUtilities {
                             if (installPath != null) {
                                 var res = installPath.GetValue("") as string;
                                 if (res != null) {
-                                    return new PythonVersion(Path.Combine(res, "ipy.exe"), PythonLanguageVersion.V27, IronPythonGuid);
+                                    return new PythonVersion(Path.Combine(res, exeName), PythonLanguageVersion.V27, IronPythonGuid);
                                 }
                             }
                         }
@@ -56,7 +59,7 @@ namespace TestUtilities {
                 }
             }
 
-            var ver = new PythonVersion("C:\\Program Files (x86)\\IronPython 2.7\\ipy.exe", PythonLanguageVersion.V27, IronPythonGuid);
+            var ver = new PythonVersion("C:\\Program Files (x86)\\IronPython 2.7\\" + exeName, PythonLanguageVersion.V27, IronPythonGuid);
             if (File.Exists(ver.Path)) {
                 return ver;
             }
@@ -129,6 +132,7 @@ namespace TestUtilities {
                 if (Python32 != null) yield return Python32;
                 if (Python33 != null) yield return Python33;
                 if (IronPython27 != null) yield return IronPython27;
+                if (IronPython27_x64 != null) yield return IronPython27_x64;
             }
         }
     }

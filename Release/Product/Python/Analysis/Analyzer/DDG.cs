@@ -26,7 +26,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
         internal ExpressionEvaluator _eval;
         private SuiteStatement _curSuite;
 
-        public void Analyze(Deque<AnalysisUnit> queue, CancellationToken cancel) {
+        public void Analyze(Deque<AnalysisUnit> queue, CancellationToken cancel, Action<int> reportQueueSize = null, int reportQueueInterval = 1) {
             if (cancel.IsCancellationRequested) {
                 return;
             }
@@ -35,6 +35,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             // the log how frequently the queue empties.
             var endOfQueueMarker = new AnalysisUnit(null, null);
             int queueCountAtStart = queue.Count;
+            int reportInterval = reportQueueInterval - 1;
 
             if (queueCountAtStart > 0) {
                 queue.Append(endOfQueueMarker);
@@ -45,6 +46,10 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
 
                 if (_unit == endOfQueueMarker) {
                     AnalysisLog.EndOfQueue(queueCountAtStart, queue.Count);
+                    if (reportInterval < 0 && reportQueueSize != null) {
+                        reportQueueSize(queue.Count);
+                    }
+
                     queueCountAtStart = queue.Count;
                     if (queueCountAtStart > 0) {
                         queue.Append(endOfQueueMarker);
@@ -53,10 +58,20 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                 }
 
                 AnalysisLog.Dequeue(queue, _unit);
+                if (reportInterval == 0 && reportQueueSize != null) {
+                    reportQueueSize(queue.Count);
+                    reportInterval = reportQueueInterval - 1;
+                } else if (reportInterval > 0) {
+                    reportInterval -= 1;
+                }
 
                 _unit.IsInQueue = false;
                 SetCurrentUnit(_unit);
                 _unit.Analyze(this, cancel);
+            }
+
+            if (reportQueueSize != null) {
+                reportQueueSize(0);
             }
 
             if (cancel.IsCancellationRequested) {

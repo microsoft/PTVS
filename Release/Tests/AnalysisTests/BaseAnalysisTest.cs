@@ -44,7 +44,7 @@ namespace AnalysisTests {
         }
 
         public BaseAnalysisTest()
-            : this(new CPythonInterpreter(new CPythonInterpreterFactory(), PythonTypeDatabase.CreateDefaultTypeDatabase())) {
+            : this(new CPythonInterpreter(new CPythonInterpreterFactory(PythonLanguageVersion.V27.ToVersion()), PythonTypeDatabase.CreateDefaultTypeDatabase(PythonLanguageVersion.V27.ToVersion()))) {
         }
 
         public BaseAnalysisTest(IPythonInterpreter interpreter) {

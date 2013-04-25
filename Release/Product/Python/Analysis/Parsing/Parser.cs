@@ -4635,9 +4635,10 @@ namespace Microsoft.PythonTools.Parsing {
         }
 
         private static StreamReader/*!*/ GetStreamReaderWithEncoding(Stream/*!*/ stream, Encoding/*!*/ defaultEncoding, ErrorSink errors) {
-            // we choose ASCII by default, if the file has a Unicode pheader though
-            // we'll automatically get it as unicode.
-            Encoding encoding = PythonAsciiEncoding.SourceEncoding;
+            // Python 2.x should pass ASCII as the default
+            // Python 3.x should pass UTF-8
+            // A BOM or encoding comment can override the default
+            Encoding encoding = defaultEncoding;
 
             byte[] bomBuffer = new byte[3];
             int bomRead = stream.Read(bomBuffer, 0, 3);

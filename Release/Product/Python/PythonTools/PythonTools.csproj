@@ -157,6 +157,7 @@
       <Aliases>global</Aliases>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.Shell.Design" />
+    <Reference Include="Microsoft.VisualStudio.Shell.Immutable.11.0, Version=11.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.Shell.Interop" />
     <Reference Include="Microsoft.VisualStudio.Shell.Interop.8.0" />
     <Reference Include="Microsoft.VisualStudio.Shell.Interop.9.0" />
@@ -176,6 +177,7 @@
       <EmbedInteropTypes>False</EmbedInteropTypes>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.WizardFramework, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+    <Reference Include="PresentationFramework.Aero2" />
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.Core" />
@@ -214,6 +216,12 @@
     <Compile Include="ProvideEditorExtension2Attribute.cs" />
     <Compile Include="ProvideFileExtensionMapping.cs" />
     <Compile Include="ProvideFileFilterAttribute.cs" />
+    <Compile Include="PythonTools\Commands\OpenInterpreterListCommand.cs" />
+    <Compile Include="PythonTools\InterpreterList\InterpreterListToolWindow.cs" />
+    <Compile Include="PythonTools\InterpreterList\InterpreterView.cs" />
+    <Compile Include="PythonTools\InterpreterList\InterpreterList.xaml.cs">
+      <DependentUpon>InterpreterList.xaml</DependentUpon>
+    </Compile>
     <Compile Include="PythonTools\Navigation\NavigateTo\PythonNavigateToItemDisplay.cs" />
     <Compile Include="PythonTools\Navigation\NavigateTo\PythonNavigateToItemDisplayFactory.cs" />
     <Compile Include="PythonTools\Navigation\NavigateTo\PythonNavigateToItemProviderFactory.cs" />
@@ -223,6 +231,21 @@
     <Compile Include="PythonTools\Intellisense\FuzzyCompletionSet.cs" />
     <Compile Include="PythonTools\Project\Automation\OAProjectConfigurationProperties.cs" />
     <Compile Include="PythonTools\Project\CreateVirtualEnvironmentView.cs" />
+    <Compile Include="PythonTools\Project\ImportWizard\SaveProjectPage.xaml.cs">
+      <DependentUpon>SaveProjectPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="PythonTools\Project\ImportWizard\InterpreterPage.xaml.cs">
+      <DependentUpon>InterpreterPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="PythonTools\Project\ImportWizard\FileSourcePage.xaml.cs">
+      <DependentUpon>FileSourcePage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="PythonTools\Project\ImportWizard\ImportSettings.cs" />
+    <Compile Include="PythonTools\Project\ImportWizard\ImportWizard.xaml.cs">
+      <DependentUpon>ImportWizard.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="PythonTools\Commands\ImportWizardCommand.cs" />
+    <Compile Include="PythonTools\Project\ImportWizard\LabelledControl.cs" />
     <Compile Include="PythonTools\Project\InstallPythonPackage.xaml.cs">
       <DependentUpon>InstallPythonPackage.xaml</DependentUpon>
     </Compile>
@@ -700,6 +723,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PkgCmdID.cs" />
     <Compile Include="VsCredentials.cs" />
+    <Compile Include="Wpf\Controls.cs" />
   </ItemGroup>
   <ItemDefinitionGroup>
     <ZipProject>
@@ -766,13 +790,13 @@
     </Content>
     <Content Include="..\Icons\Dev$(VSTarget)\PythonProject.ico">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <IncludeInVSIX>true</IncludeInVSIX>
       <VSIXSubPath>.</VSIXSubPath>
+      <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
     <Content Include="..\Icons\Dev$(VSTarget)\PythonProjectBig.ico">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <IncludeInVSIX>true</IncludeInVSIX>
       <VSIXSubPath>.</VSIXSubPath>
+      <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
     <ZipItem Include="Templates\Files\TextFile\textfile.txt" />
     <ZipItem Include="Templates\Files\TextFile\textfile.vstemplate" />
@@ -1028,6 +1052,8 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <EmbeddedResource Include="..\Icons\Dev$(VSTarget)\PythonImageList.bmp" />
+    <Resource Include="..\Icons\Dev$(VSTarget)\PyFile.png" />
+    <Resource Include="..\Icons\Dev$(VSTarget)\PyProjectBig.png" />
     <EmbeddedResource Include="PythonTools\Commands\DiagnosticsForm.resx">
       <DependentUpon>DiagnosticsForm.cs</DependentUpon>
     </EmbeddedResource>
@@ -1128,6 +1154,10 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
+    <Page Include="PythonTools\InterpreterList\InterpreterList.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="PythonTools\Intellisense\CompletionControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -1145,6 +1175,26 @@
       <Generator>MSBuild:Compile</Generator>
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+    </Page>
+    <Page Include="PythonTools\Project\ImportWizard\SaveProjectPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="PythonTools\Project\ImportWizard\InterpreterPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="PythonTools\Project\ImportWizard\FileSourcePage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="PythonTools\Project\ImportWizard\ImportWizard.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="PythonTools\Project\ImportWizard\ImportWizardDictionary.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="PythonTools\Project\InstallPythonPackage.xaml">
       <SubType>Designer</SubType>
@@ -1168,6 +1218,10 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
+    <Resource Include="Wpf\Controls.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Resource>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Templates\Files\EmptyPackage\package\" />

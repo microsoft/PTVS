@@ -310,10 +310,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
             if (strength < MERGE_TO_BASE_STRENGTH) {
                 return base.UnionEquals(ns, strength);
             } else if (strength < MERGE_TO_OBJECT_STRENGTH) {
-                if (Object.ReferenceEquals(this, ns)) {
-                    return true;
-                }
-
                 InstanceInfo inst = ns as InstanceInfo;
                 if (inst == null) {
                     return false;
@@ -321,7 +317,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
                 return inst.ClassInfo.UnionEquals(ClassInfo, strength);
             } else {
-                return ns is InstanceInfo;
+                return ns is InstanceInfo || ns.IsOfType(ProjectState.ClassInfos[BuiltinTypeId.Object]);
             }
         }
 
@@ -331,7 +327,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             } else if (strength < MERGE_TO_OBJECT_STRENGTH) {
                 return ClassInfo.UnionHashCode(strength);
             } else {
-                return ProjectState.ClassInfos[BuiltinTypeId.Object].UnionHashCode(strength);
+                return ProjectState.ClassInfos[BuiltinTypeId.Object].Instance.UnionHashCode(strength);
             }
         }
 

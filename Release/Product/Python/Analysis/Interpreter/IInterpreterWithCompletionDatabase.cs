@@ -38,9 +38,8 @@ namespace Microsoft.PythonTools.Interpreter {
 
         /// <summary>
         /// Gets whether or not the completion database is currently up to date.
-        /// 
-        /// New in 1.1
         /// </summary>
+        /// <remarks>New in 1.1</remarks>
         bool IsCurrent {
             get;
         }
@@ -48,9 +47,8 @@ namespace Microsoft.PythonTools.Interpreter {
         /// <summary>
         /// Called to inform the interpreter that its database requires
         /// regeneration.
-        /// 
-        /// New in 2.0
         /// </summary>
+        /// <remarks>New in 2.0</remarks>
         void NotifyInvalidDatabase();
 
         /// <summary>
@@ -58,9 +56,23 @@ namespace Microsoft.PythonTools.Interpreter {
         /// 
         /// May return null if no information is available, or a string containing error
         /// text if an error occurs.
-        /// 
-        /// New in 2.0
         /// </summary>
-        string GetAnalysisLogContent();
+        /// <remarks>New in 2.0</remarks>
+        string GetAnalysisLogContent(IFormatProvider culture);
+
+        /// <summary>
+        /// Raised when the value of IsCurrent changes.
+        /// </summary>
+        /// <remarks>New in 2.0</remarks>
+        event EventHandler IsCurrentChanged;
+
+        /// <summary>
+        /// Returns a string describing the reason why IsCurrent has its current value.
+        /// 
+        /// May return null if no information is available, or a string containing error
+        /// text if an error occurs.
+        /// </summary>
+        /// <returns>New in 2.0</returns>
+        string GetIsCurrentReason(IFormatProvider culture);
     }
 }

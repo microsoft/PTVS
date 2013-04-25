@@ -173,7 +173,10 @@ namespace Microsoft.PythonTools.Intellisense {
         public FuzzyCompletionSet(string moniker, string displayName, ITrackingSpan applicableTo, IEnumerable<DynamicallyVisibleCompletion> completions, CompletionOptions options, IComparer<Completion> comparer) :
             base(moniker, displayName, applicableTo, null, null) {
             _completions = new BulkObservableCollection<Completion>();
-            _completions.AddRange(completions.OrderBy(c => c, comparer));
+            _completions.AddRange(completions
+                .Where(c => c != null && !string.IsNullOrWhiteSpace(c.DisplayText))
+                .OrderBy(c => c, comparer)
+            );
             _comparer = new FuzzyStringMatcher(options.SearchMode);
 
             _shouldFilter = options.FilterCompletions;

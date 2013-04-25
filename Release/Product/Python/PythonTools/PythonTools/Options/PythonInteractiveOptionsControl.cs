@@ -32,18 +32,13 @@ namespace Microsoft.PythonTools.Options {
             foreach (var mode in _executionModes) {
                 // TODO: Support localizing these names...
                 _executionMode.Items.Add(mode.FriendlyName);
-            }            
+            }
 
             foreach (var interpreter in OptionsPage._options.Keys) {
                 var display = interpreter.GetInterpreterDisplay();
 
                 _factories.Add(interpreter);
                 _showSettingsFor.Items.Add(display);
-
-                if (interpreter.Id == PythonToolsPackage.Instance.InterpreterOptionsPage.DefaultInterpreterValue &&
-                    interpreter.Configuration.Version == PythonToolsPackage.Instance.InterpreterOptionsPage.DefaultInterpreterVersionValue) {
-                    _showSettingsFor.SelectedIndex = _showSettingsFor.Items.Count - 1;
-                }
             }
             
             AddToolTips();
@@ -64,6 +59,28 @@ namespace Microsoft.PythonTools.Options {
                 _liveCompletionsOnly.Enabled = false;
                 EnableOrDisableOptions(false);
 
+            }
+        }
+
+        protected override void OnVisibleChanged(EventArgs e) {
+            base.OnVisibleChanged(e);
+
+            if (Visible) {
+                var selectId = PythonToolsPackage.Instance.InterpreterOptionsPage.DefaultInterpreterValue;
+                var selectVersion = PythonToolsPackage.Instance.InterpreterOptionsPage.DefaultInterpreterVersionValue;
+                var programmaticSelection = PythonToolsPackage.Instance.NextOptionsSelection;
+                PythonToolsPackage.Instance.NextOptionsSelection = null;
+                if (programmaticSelection != null) {
+                    selectId = programmaticSelection.Id;
+                    selectVersion = programmaticSelection.Configuration.Version;
+                }
+
+                foreach (var interpreter in OptionsPage._options.Keys) {
+                    if (interpreter.Id == selectId && interpreter.Configuration.Version == selectVersion) {
+                        _showSettingsFor.SelectedIndex = _showSettingsFor.FindStringExact(interpreter.GetInterpreterDisplay());
+                        break;
+                    }
+                }
             }
         }
 

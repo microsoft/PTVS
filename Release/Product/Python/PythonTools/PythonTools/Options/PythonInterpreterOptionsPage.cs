@@ -240,7 +240,7 @@ namespace Microsoft.PythonTools.Options {
             }
         }
 
-        private void RaiseDefaultInterpreterChanged() {
+        internal void RaiseDefaultInterpreterChanged() {
             var changed = DefaultInterpreterChanged;
             if (changed != null) {
                 DefaultInterpreterChanged(this, EventArgs.Empty);

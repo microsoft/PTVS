@@ -31,6 +31,7 @@ using Microsoft.PythonTools.Debugger.Remote;
 using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.InterpreterList;
 using Microsoft.PythonTools.Navigation;
 using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Parsing;
@@ -156,7 +157,8 @@ namespace Microsoft.PythonTools {
     [ProvideDebugException(AD7Engine.DebugEngineId, "Python Exceptions", "exceptions", "exceptions.Warning")]
     [ProvideDebugException(AD7Engine.DebugEngineId, "Python Exceptions", "exceptions", "exceptions.WindowsError")]
     [ProvideDebugException(AD7Engine.DebugEngineId, "Python Exceptions", "exceptions", "exceptions.ZeroDivisionError")]
-    [ProvideComponentPickerPropertyPage(typeof(PythonToolsPackage), typeof(WebPiComponentPickerControl), "WebPi", DefaultPageNameValue="#4000")]
+    [ProvideComponentPickerPropertyPage(typeof(PythonToolsPackage), typeof(WebPiComponentPickerControl), "WebPi", DefaultPageNameValue = "#4000")]
+    [ProvideToolWindow(typeof(InterpreterListToolWindow), Style=VsDockStyle.Linked, Window=ToolWindowGuids80.Outputwindow)]
 #if DEV11_OR_LATER // TODO: UNSURE IF WE NEED THIS FOR DEV12
     [ProvideX64DebuggerFixForIntegratedShell]
 #endif
@@ -164,7 +166,7 @@ namespace Microsoft.PythonTools {
         private LanguagePreferences _langPrefs;
         public static PythonToolsPackage Instance;
         private VsProjectAnalyzer _analyzer;
-        private static Dictionary<Command, MenuCommand> _commands = new Dictionary<Command,MenuCommand>();
+        private static Dictionary<Command, MenuCommand> _commands = new Dictionary<Command, MenuCommand>();
         private PythonAutomation _autoObject = new PythonAutomation();
         private IContentType _contentType;
         private PackageContainer _packageContainer;
@@ -357,6 +359,14 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
             }
         }
 
+        internal IPythonInterpreterFactory NextOptionsSelection { get; set; }
+
+        internal void ShowOptionPage(Type dialogPage, IPythonInterpreterFactory interpreter) {
+            NextOptionsSelection = interpreter;
+            ShowOptionPage(dialogPage);
+        }
+
+
         /// <summary>
         /// Gets a CodeFormattingOptions object configured to match the current settings.
         /// </summary>
@@ -527,7 +537,9 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
                 new SendToDefiningModuleCommand(), 
                 new DiagnosticsCommand(),
                 new RemoveImportsCommand(),
-                new RemoveImportsCurrentScopeCommand()
+                new RemoveImportsCurrentScopeCommand(),
+                new OpenInterpreterListCommand(),
+                new ImportWizardCommand()
             });
 
             RegisterCommands(GetReplCommands());
@@ -694,6 +706,136 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
 
             Debug.Assert(false, "Unable to determine Python Tools installation path");
             return string.Empty;
+        }
+
+        public string BrowseForFileOpen(IntPtr owner, string filter, string initialPath = null) {
+            IVsUIShell uiShell = GetService(typeof(SVsUIShell)) as IVsUIShell;
+            if (null == uiShell) {
+                using (var sfd = new System.Windows.Forms.OpenFileDialog()) {
+                    sfd.AutoUpgradeEnabled = true;
+                    sfd.Filter = filter;
+                    if (!string.IsNullOrEmpty(initialPath)) {
+                        sfd.FileName = Path.GetFileName(initialPath);
+                        sfd.InitialDirectory = Path.GetDirectoryName(initialPath);
+                    }
+                    var result = sfd.ShowDialog(NativeWindow.FromHandle(owner));
+                    if (result == DialogResult.OK) {
+                        return sfd.FileName;
+                    } else {
+                        return null;
+                    }
+                }
+            }
+
+            VSOPENFILENAMEW[] openInfo = new VSOPENFILENAMEW[1];
+            openInfo[0].lStructSize = (uint)Marshal.SizeOf(typeof(VSOPENFILENAMEW));
+            openInfo[0].pwzFilter = filter.Replace('|', '\0') + "\0";
+            openInfo[0].hwndOwner = owner;
+            openInfo[0].nMaxFileName = 260;
+            var pFileName = Marshal.AllocCoTaskMem(520);
+            openInfo[0].pwzFileName = pFileName;
+            if (!string.IsNullOrEmpty(initialPath)) {
+                openInfo[0].pwzInitialDir = Path.GetDirectoryName(initialPath);
+                var nameArray = Path.GetFileName(initialPath).ToCharArray();
+                Marshal.Copy(nameArray, 0, pFileName, nameArray.Length);
+            } else {
+                Marshal.Copy(new byte[] { 0 }, 0, pFileName, 1);
+            }
+            try {
+                int hr = uiShell.GetOpenFileNameViaDlg(openInfo);
+                if (hr == VSConstants.OLE_E_PROMPTSAVECANCELLED) {
+                    return null;
+                }
+                ErrorHandler.ThrowOnFailure(hr);
+                return Marshal.PtrToStringAuto(openInfo[0].pwzFileName);
+            } finally {
+                if (pFileName != IntPtr.Zero) {
+                    Marshal.FreeCoTaskMem(pFileName);
+                }
+            }
+        }
+
+        public string BrowseForFileSave(IntPtr owner, string filter, string initialPath = null) {
+            IVsUIShell uiShell = GetService(typeof(SVsUIShell)) as IVsUIShell;
+            if (null == uiShell) {
+                using (var sfd = new System.Windows.Forms.SaveFileDialog()) {
+                    sfd.AutoUpgradeEnabled = true;
+                    sfd.Filter = filter;
+                    if (!string.IsNullOrEmpty(initialPath)) {
+                        sfd.FileName = Path.GetFileName(initialPath);
+                        sfd.InitialDirectory = Path.GetDirectoryName(initialPath);
+                    }
+                    var result = sfd.ShowDialog(NativeWindow.FromHandle(owner));
+                    if (result == DialogResult.OK) {
+                        return sfd.FileName;
+                    } else {
+                        return null;
+                    }
+                }
+            }
+
+            VSSAVEFILENAMEW[] saveInfo = new VSSAVEFILENAMEW[1];
+            saveInfo[0].lStructSize = (uint)Marshal.SizeOf(typeof(VSSAVEFILENAMEW));
+            saveInfo[0].pwzFilter = filter.Replace('|', '\0') + "\0";
+            saveInfo[0].hwndOwner = owner;
+            saveInfo[0].nMaxFileName = 260;
+            var pFileName = Marshal.AllocCoTaskMem(520);
+            saveInfo[0].pwzFileName = pFileName;
+            if (!string.IsNullOrEmpty(initialPath)) {
+                saveInfo[0].pwzInitialDir = Path.GetDirectoryName(initialPath);
+                var nameArray = Path.GetFileName(initialPath).ToCharArray();
+                Marshal.Copy(nameArray, 0, pFileName, nameArray.Length);
+            } else {
+                Marshal.Copy(new byte[] { 0 }, 0, pFileName, 1);
+            }
+            try {
+                int hr = uiShell.GetSaveFileNameViaDlg(saveInfo);
+                if (hr == VSConstants.OLE_E_PROMPTSAVECANCELLED) {
+                    return null;
+                }
+                ErrorHandler.ThrowOnFailure(hr);
+                return Marshal.PtrToStringAuto(saveInfo[0].pwzFileName);
+            } finally {
+                if (pFileName != IntPtr.Zero) {
+                    Marshal.FreeCoTaskMem(pFileName);
+                }
+            }
+        }
+
+        public string BrowseForDirectory(IntPtr owner, string initialDirectory = null) {
+            IVsUIShell uiShell = GetService(typeof(SVsUIShell)) as IVsUIShell;
+            if (null == uiShell) {
+                using (var ofd = new FolderBrowserDialog()) {
+                    ofd.RootFolder = Environment.SpecialFolder.Desktop;
+                    ofd.ShowNewFolderButton = false;
+                    var result = ofd.ShowDialog(NativeWindow.FromHandle(owner));
+                    if (result == DialogResult.OK) {
+                        return ofd.SelectedPath;
+                    } else {
+                        return null;
+                    }
+                }
+            }
+
+            VSBROWSEINFOW[] browseInfo = new VSBROWSEINFOW[1];
+            browseInfo[0].lStructSize = (uint)Marshal.SizeOf(typeof(VSBROWSEINFOW));
+            browseInfo[0].pwzInitialDir = initialDirectory;
+            browseInfo[0].hwndOwner = owner;
+            browseInfo[0].nMaxDirName = 260;
+            IntPtr pDirName = Marshal.AllocCoTaskMem(520);
+            browseInfo[0].pwzDirName = pDirName;
+            try {
+                int hr = uiShell.GetDirectoryViaBrowseDlg(browseInfo);
+                if (hr == VSConstants.OLE_E_PROMPTSAVECANCELLED) {
+                    return null;
+                }
+                ErrorHandler.ThrowOnFailure(hr);
+                return Marshal.PtrToStringAuto(browseInfo[0].pwzDirName);
+            } finally {
+                if (pDirName != IntPtr.Zero) {
+                    Marshal.FreeCoTaskMem(pDirName);
+                }
+            }
         }
 
         #region IVsComponentSelectorProvider Members

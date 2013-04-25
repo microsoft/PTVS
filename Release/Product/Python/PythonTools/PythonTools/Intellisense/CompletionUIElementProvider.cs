@@ -24,7 +24,7 @@ using Microsoft.VisualStudio.Utilities;
 namespace Microsoft.PythonTools.Intellisense {
     [Export(typeof(IUIElementProvider<CompletionSet, ICompletionSession>))]
     [Name("Python Completion UI Provider")]
-    [Order()]
+    [Order(Before="Default Completion Presenter")]
     [ContentType(PythonCoreConstants.ContentType)]
     internal class CompletionUIElementProvider : IUIElementProvider<CompletionSet, ICompletionSession> {
         [ImportMany]

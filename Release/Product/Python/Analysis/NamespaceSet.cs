@@ -459,6 +459,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public bool Equals(Namespace x, Namespace y) {
+            if (Object.ReferenceEquals(x, y)) {
+                return true;
+            }
             return (x == null) ? (y == null) : x.UnionEquals(y, Strength);
         }
 
@@ -467,6 +470,10 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public Namespace MergeTypes(Namespace x, Namespace y, out bool wasChanged) {
+            if (Object.ReferenceEquals(x, y)) {
+                wasChanged = false;
+                return x;
+            }
             var z = x.UnionMergeTypes(y, Strength);
             wasChanged = !Object.ReferenceEquals(x, z);
             return z;
@@ -986,15 +993,12 @@ namespace Microsoft.PythonTools.Analysis.Values {
                         newItemAlreadyInSet |= !changed;
                     }
                 }
-                int removed;
                 if (!newItemAlreadyInSet) {
-                    removed = set.RemoveWhere(ns => cmp.Equals(ns, newItem));
-                    set.Add(newItem);
+                    wasChanged = (set.RemoveWhere(ns => cmp.Equals(ns, newItem)) > 0);
+                    wasChanged |= set.Add(newItem);
                 } else {
-                    removed = set.RemoveWhere(ns => cmp.Equals(ns, newItem) && !Object.ReferenceEquals(ns, newItem));
+                    wasChanged = (set.RemoveWhere(ns => !Object.ReferenceEquals(ns, newItem) && cmp.Equals(ns, newItem)) > 0);
                 }
-
-                wasChanged = (removed > 1) | !newItemAlreadyInSet;
 
                 return (canMutate | !wasChanged) ? this : new NamespaceSetManyUnion(set);
             }
@@ -1017,7 +1021,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                                 newItem = cmp.MergeTypes(ns, newItem, out dummy);
                             }
                         }
-                        set.RemoveWhere(ns => cmp.Equals(ns, item));
+                        set.RemoveWhere(ns => cmp.Equals(ns, newItem));
                         set.Add(newItem);
                     }
                 }
@@ -1043,7 +1047,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                                 newItem = cmp.MergeTypes(ns, newItem, out changed);
                             }
                         }
-                        int removed = set.RemoveWhere(ns => cmp.Equals(ns, item));
+                        int removed = set.RemoveWhere(ns => cmp.Equals(ns, newItem));
                         set.Add(newItem);
                         anyAdded |= (removed > 1) | changed;
                     }

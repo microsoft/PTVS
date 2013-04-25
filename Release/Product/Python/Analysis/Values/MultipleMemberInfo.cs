@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using Microsoft.PythonTools.Analysis.Interpreter;
@@ -25,8 +26,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
     sealed class MultipleMemberInfo : Namespace, IModule {
         private readonly Namespace[] _members;
 
-        public MultipleMemberInfo(Namespace[] members) {
-            _members = members;
+        public MultipleMemberInfo(IEnumerable<Namespace> members) {
+            _members = members.Where(m => m != null).ToArray();
         }
 
         public Namespace[] Members {
@@ -122,15 +123,15 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public override IDictionary<string, INamespaceSet> GetAllMembers(PythonTools.Interpreter.IModuleContext moduleContext) {
             Dictionary<string, INamespaceSet> res = new Dictionary<string, INamespaceSet>();
-            foreach (var mem in _members) {
-                foreach (var keyValue in mem.GetAllMembers(moduleContext)) {
+            foreach (var member in _members) {
+                foreach (var keyValue in member.GetAllMembers(moduleContext)) {
                     INamespaceSet existing;
                     if (res.TryGetValue(keyValue.Key, out existing)) {
                         MultipleMemberInfo existingMultiMember = existing as MultipleMemberInfo;
                         if (existingMultiMember != null) {
-                            res[keyValue.Key] = new MultipleMemberInfo(existingMultiMember._members.Concat(keyValue.Value).ToArray());
+                            res[keyValue.Key] = new MultipleMemberInfo(existingMultiMember._members.Concat(keyValue.Value));
                         } else {
-                            res[keyValue.Key] = new MultipleMemberInfo(existing.Concat(keyValue.Value).ToArray());
+                            res[keyValue.Key] = new MultipleMemberInfo(existing.Concat(keyValue.Value));
                         }
                     } else {
                         res[keyValue.Key] = keyValue.Value;
@@ -284,7 +285,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             } else if (children.Count == 1) {
                 return (IModule)children[0];
             } else {
-                return (IModule)new MultipleMemberInfo(children.ToArray());
+                return (IModule)new MultipleMemberInfo(children);
             }
         }
 

@@ -15,6 +15,7 @@
 using EnvDTE;
 using System.Collections.Generic;
 using System.Linq;
+using System.Xml.Linq;
 
 namespace TestUtilities {
     public static class TestExtensions {
@@ -53,6 +54,18 @@ namespace TestUtilities {
                 }
             }
             return true;
+        }
+
+        public static XName GetName(this XDocument doc, string localName) {
+            return doc.Root.Name.Namespace.GetName(localName);
+        }
+
+        public static XElement Descendant(this XDocument doc, string localName) {
+            return doc.Descendants(doc.Root.Name.Namespace.GetName(localName)).Single();
+        }
+
+        public static XElement Descendant(this XElement node, string localName) {
+            return node.Descendants(node.Document.Root.Name.Namespace.GetName(localName)).Single();
         }
     }
 

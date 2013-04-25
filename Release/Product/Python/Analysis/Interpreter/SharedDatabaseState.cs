@@ -244,9 +244,9 @@ namespace Microsoft.PythonTools.Interpreter {
                 case BuiltinTypeId.ListIterator: name = "list_iterator"; break;
                 case BuiltinTypeId.TupleIterator: name = "tuple_iterator"; break;
                 case BuiltinTypeId.SetIterator: name = "set_iterator"; break;
-                case BuiltinTypeId.StrIterator: name = is3x ? "str_iterator" : "bytes_iterator"; break;
+                case BuiltinTypeId.StrIterator: name = "str_iterator"; break;
                 case BuiltinTypeId.UnicodeIterator: name = "str_iterator"; break;
-                case BuiltinTypeId.BytesIterator: name = "bytes_iterator"; break;
+                case BuiltinTypeId.BytesIterator: name = is3x ? "bytes_iterator" : "str_iterator"; break;
                 case BuiltinTypeId.CallableIterator: name = "callable_iterator"; break;
 
                 case BuiltinTypeId.Property: name = "property"; break;

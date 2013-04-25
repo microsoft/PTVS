@@ -20,6 +20,7 @@ namespace Microsoft.PythonTools {
         public const string LanguageName = "Python";
         public const string TextEditorSettingsRegistryKey = LanguageName;
         public const string FileExtension = ".py";
+        public const string ProjectFileFilter = "Python Project File (*.pyproj)\n*.pyproj\nAll Files (*.*)\n*.*\n";
         /// <summary>
         /// The extension for Python files which represent Windows applications.
         /// </summary>
@@ -36,6 +37,7 @@ namespace Microsoft.PythonTools {
         public const string PublishPropertyPageGuid = "63DF0877-CF53-4975-B200-2B11D669AB00";
         public const string EditorFactoryPromptForEncodingGuid = "CA887E0B-55C6-4AE9-B5CF-A2EEFBA90A3E";
         public const string VirtualEnvPropertiesGuid = "45D3DC23-F419-4744-B55B-B897FAC1F4A2";
+        public const string InterpreterListToolWindowGuid = "75504045-D02F-44E5-BF60-5F60DF380E8B";
 
         // Do not change below info without re-requesting PLK:
         public const string ProjectSystemPackageGuid = "15490272-3C6B-4129-8E1D-795C8B6D8E9F"; //matches PLK

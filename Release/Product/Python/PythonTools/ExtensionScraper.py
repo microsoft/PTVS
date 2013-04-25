@@ -13,6 +13,7 @@
  # ###########################################################################
 
 import sys
+import PythonScraper
 
 try:
     # disable error reporting in our process, bad extension modules can crash us, and we don't
@@ -38,6 +39,7 @@ if mod_name and mod_name != '-':
     finally:
         if not module:
             print('__import__("' + mod_name + '")')
+            PythonScraper.write_analysis(output_path, {"members": {}, "doc": "Could not import compiled module"})
 elif mod_path and mod_path != '-':
     try:
         import imp
@@ -47,9 +49,9 @@ elif mod_path and mod_path != '-':
     finally:
         if not module:
             print('imp.load_dynamic("' + mod_name + '", "' + mod_path + '")')
+            PythonScraper.write_analysis(output_path, {"members": {}, "doc": "Could not import compiled module", "filename": mod_path})
 else:
     raise ValueError('No module name or path provided')
 
-import PythonScraper
 analysis = PythonScraper.generate_module(module)
 PythonScraper.write_analysis(output_path, analysis)

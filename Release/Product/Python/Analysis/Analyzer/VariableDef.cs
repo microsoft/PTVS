@@ -438,19 +438,32 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        internal void MakeUnionStrongerIfMoreThan(int typeCount, INamespaceSet extraTypes = null) {
+        /// <summary>
+        /// If the number of types associated with this variable exceeds a
+        /// given limit, increases the union strength. This will cause more
+        /// types to be combined.
+        /// </summary>
+        /// <param name="typeCount">The number of types at which to increase
+        /// union strength.</param>
+        /// <param name="extraTypes">A set of types that is about to be added.
+        /// The estimated number of types includes these types.</param>
+        /// <returns>True if the type set was modified. This may be safely
+        /// ignored in many cases, since modifications will reenqueue dependent
+        /// units automatically.</returns>
+        internal bool MakeUnionStrongerIfMoreThan(int typeCount, INamespaceSet extraTypes = null) {
             if (EstimateTypeCount(extraTypes) >= typeCount) {
-                MakeUnionStronger();
+                return MakeUnionStronger();
             }
+            return false;
         }
 
-        internal void MakeUnionStronger() {
+        internal bool MakeUnionStronger() {
             var uc = _emptySet.Comparer as UnionComparer;
             int strength = uc != null ? uc.Strength + 1 : 0;
-            MakeUnion(strength);
+            return MakeUnion(strength);
         }
 
-        internal void MakeUnion(int strength) {
+        internal bool MakeUnion(int strength) {
             if (strength > UnionStrength) {
                 bool anyChanged = false;
 
@@ -461,8 +474,10 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
                 if (anyChanged) {
                     EnqueueDependents();
+                    return true;
                 }
             }
+            return false;
         }
 
         internal int UnionStrength {
