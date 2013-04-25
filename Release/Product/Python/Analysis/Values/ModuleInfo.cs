@@ -232,8 +232,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
             get {
                 var result = new StringBuilder("Python module ");
                 result.Append(Name);
-                var doc = ProjectEntry.Tree.Body.Documentation.TrimDocumentation();
-                if (doc != null) {
+                var doc = Documentation;
+                if (!string.IsNullOrEmpty(doc)) {
                     result.Append("\n\n");
                     result.Append(doc);
                 }
