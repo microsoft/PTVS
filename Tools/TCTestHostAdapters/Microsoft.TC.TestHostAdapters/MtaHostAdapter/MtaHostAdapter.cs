@@ -29,10 +29,14 @@ namespace Microsoft.TC.TestHostAdapters
     /// Registry: HKCU\SOFTWARE\Microsoft\VisualStudio\10.0\EnterpriseTools\QualityTools\HostAdapters\TC MTA\
     /// </summary>
     [RegisterHostAdapter(Constants.MtaHostAdapterName, typeof(MtaHostAdapter), null)]
-#if DEV11
-    [DefaultRegistryRoot(@"Software\Microsoft\VisualStudio\11.0")]
-#else
+#if DEV10
     [DefaultRegistryRoot(@"Software\Microsoft\VisualStudio\10.0")]
+#elif DEV11
+    [DefaultRegistryRoot(@"Software\Microsoft\VisualStudio\11.0")]
+#elif DEV12
+    [DefaultRegistryRoot(@"Software\Microsoft\VisualStudio\12.0")]
+#else
+#error Unrecognized VS Version.
 #endif
     // We don't need to define Dispose, as IDisposable children are managed objects and we call Dispose on them when we clean up.
     [SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable")]

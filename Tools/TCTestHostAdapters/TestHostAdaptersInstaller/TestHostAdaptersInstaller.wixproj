@@ -7,28 +7,25 @@
     <ProductVersion>3.0</ProductVersion>
     <ProjectGuid>{d5306a0d-9603-4ce2-be65-b1653f2937b4}</ProjectGuid>
     <SchemaVersion>2.0</SchemaVersion>
-    <OutputName>TCTestHostAdapters</OutputName>
+    <OutputName Condition=" '$(VisualStudioVersion)' == '10.0' ">TCTestHostAdaptersVS2010</OutputName>
+    <OutputName Condition=" '$(VisualStudioVersion)' == '11.0' ">TCTestHostAdaptersVS2012</OutputName>
+    <OutputName Condition=" '$(VisualStudioVersion)' == '12.0' ">TCTestHostAdaptersVS2013</OutputName>
     <OutputType>Package</OutputType>
-    <OutputPath>..\bin\</OutputPath>
+    <OutputPath>..\bin\$(Configuration)$(VisualStudioVersion)\</OutputPath>
     <DefineSolutionProperties>false</DefineSolutionProperties>
     <WixTargetsPath>$(BuildRoot)\Tools\Wix\3.5\Targets\Wix.targets</WixTargetsPath>
-    <!--
-    <WixTargetsPath Condition=" '$(WixTargetsPath)' == '' AND '$(MSBuildExtensionsPath32)' != '' ">$(MSBuildExtensionsPath32)\Microsoft\WiX\v3.5\Wix2010.targets</WixTargetsPath>
-    <WixTargetsPath Condition=" '$(WixTargetsPath)' == '' ">$(MSBuildExtensionsPath)\Microsoft\WiX\v3.5\Wix2010.targets</WixTargetsPath>
--->
     <SccProjectName>SAK</SccProjectName>
     <SccProvider>SAK</SccProvider>
     <SccAuxPath>SAK</SccAuxPath>
     <SccLocalPath>SAK</SccLocalPath>
-	<VsRegistryVersion Condition="'$(VsRegistryVersion)'==''">10.0</VsRegistryVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
-    <IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
-    <DefineConstants>Debug;VsRegistryVersion=$(VsRegistryVersion)</DefineConstants>
+    <IntermediateOutputPath>obj\$(Configuration)$(VisualStudioVersion)\</IntermediateOutputPath>
+    <DefineConstants>Debug;VsRegistryVersion=$(VisualStudioVersion)</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
-    <IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
-    <DefineConstants>VsRegistryVersion=$(VsRegistryVersion)</DefineConstants>
+    <IntermediateOutputPath>obj\$(Configuration)$(VisualStudioVersion)\</IntermediateOutputPath>
+    <DefineConstants>VsRegistryVersion=$(VisualStudioVersion)</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="TCTestHostAdapters.wxs" />
@@ -58,12 +55,6 @@
   <ItemGroup>
     <None Include="TCTestHostAdaptersVars.wxi" />
   </ItemGroup>
-  <PropertyGroup>
-    <PostBuildEvent>copy $(OutputPath)\TCTestHostAdapters.msi $(BuildRoot)\Release\Public\TCTestHostAdapters
-copy $(OutputPath)\Microsoft.TC.TestHostAdaptersFramework.dll $(BuildRoot)\Release\Public\TCTestHostAdapters
-copy $(OutputPath)\Microsoft.TC.TestHostAdapters.dll $(BuildRoot)\Release\Public\TCTestHostAdapters
-copy $(OutputPath)\Microsoft.TC.RemoteTest.dll $(BuildRoot)\Release\Public\TCTestHostAdapters</PostBuildEvent>
-  </PropertyGroup>
   <!--
 	To modify your build process, add your task inside one of the targets below and uncomment it.
 	Other similar extension points exist, see Wix.targets.

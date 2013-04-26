@@ -25,10 +25,14 @@ namespace Microsoft.TC.TestHostAdapters
         public const string VsAddinName = "TcVsIdeTestHost";
 
         public const string IVsIdeTestHostAddinGuidString = "C525A97C-241C-45EF-BE9C-CF95650D9F00";
-#if DEV11
+#if DEV10
         public const string VsIdeTestHostAddinGuidString = "E80282C0-570E-4607-8190-02F30B681921";
+#elif DEV11
+        public const string VsIdeTestHostAddinGuidString = "32F55E70-9461-4998-827D-C4F9B16A282D";
+#elif DEV12
+        public const string VsIdeTestHostAddinGuidString = "F993962B-FF17-4B86-88BC-2CFFC457A6FB";
 #else
-        public const string VsIdeTestHostAddinGuidString = "E80282C0-570E-4607-8190-02F30B681921";
+#error Unrecognized VS Version.
 #endif
 
     }

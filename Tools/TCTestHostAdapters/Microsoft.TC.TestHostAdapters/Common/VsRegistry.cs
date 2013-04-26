@@ -28,10 +28,14 @@ namespace Microsoft.TC.TestHostAdapters
     internal static class VsRegistry
     {
         private const string ProcessName = "devenv.exe";
-#if DEV11
-        private const string TargetVSVersion = "11.0";
-#else
+#if DEV10
         private const string TargetVSVersion = "10.0";
+#elif DEV11
+        private const string TargetVSVersion = "11.0";
+#elif DEV12
+        private const string TargetVSVersion = "12.0";
+#else
+#error Unrecognized VS Version.
 #endif
 
         /// <summary>

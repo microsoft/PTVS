@@ -10,7 +10,8 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Microsoft.TC.RemoteTest</RootNamespace>
     <AssemblyName>Microsoft.TC.RemoteTest</AssemblyName>
-    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion Condition=" '$(VisualStudioVersion)' == '10.0' ">v4.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion Condition="'$(TargetFrameworkVersion)' == ''">v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <SccProjectName>SAK</SccProjectName>
     <SccLocalPath>SAK</SccLocalPath>
@@ -22,25 +23,33 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>..\bin\</OutputPath>
+    <OutputPath>..\bin\Debug$(VisualStudioVersion)\</OutputPath>
+    <IntermediateOutputPath>obj\Debug$(VisualStudioVersion)\</IntermediateOutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <RegisterForComInterop>true</RegisterForComInterop>
+    <RegisterForComInterop>false</RegisterForComInterop>
     <GenerateSerializationAssemblies>Auto</GenerateSerializationAssemblies>
     <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
+    <OutputPath>..\bin\Release$(VisualStudioVersion)\</OutputPath>
+    <IntermediateOutputPath>obj\Release$(VisualStudioVersion)\</IntermediateOutputPath>
     <DefineConstants>TRACE</DefineConstants>
-    <RegisterForComInterop>true</RegisterForComInterop>
+    <RegisterForComInterop>false</RegisterForComInterop>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(VsRegistryVersion)' == '11.0' ">
-	<DefineConstants>DEV11</DefineConstants>
+  <PropertyGroup Condition=" '$(VisualStudioVersion)' == '10.0' ">
+    <DefineConstants>$(DefineConstants);DEV10</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(VisualStudioVersion)' == '11.0' ">
+    <DefineConstants>$(DefineConstants);DEV11</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(VisualStudioVersion)' == '12.0' ">
+    <DefineConstants>$(DefineConstants);DEV12</DefineConstants>
   </PropertyGroup>
   <PropertyGroup>
     <AssemblyOriginatorKeyFile>..\..\..\Build\TCWB.snk</AssemblyOriginatorKeyFile>
@@ -51,10 +60,10 @@
     <Reference Include="System.Core" />
     <Reference Include="System.Runtime.Remoting" />
     <Reference Include="System.Windows.Forms " />
-    <Reference Include="microsoft.visualstudio.qualitytools.common, Version=$(VsRegistryVersion).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+    <Reference Include="microsoft.visualstudio.qualitytools.common, Version=$(VisualStudioVersion).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>$(DevEnvDir)\PrivateAssemblies\microsoft.visualstudio.qualitytools.common.dll</HintPath>
     </Reference>
-    <Reference Include="Microsoft.VisualStudio.QualityTools.ExecutionCommon, Version=$(VsRegistryVersion).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+    <Reference Include="Microsoft.VisualStudio.QualityTools.ExecutionCommon, Version=$(VisualStudioVersion).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>$(DevEnvDir)\PrivateAssemblies\Microsoft.VisualStudio.QualityTools.ExecutionCommon.dll</HintPath>
     </Reference>
   </ItemGroup>
@@ -69,6 +78,9 @@
     <Compile Include="UIThreadInvoker.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>tlbexp $(TargetPath) /out:$(TargetDir)$(TargetName).tlb</PostBuildEvent>
+  </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

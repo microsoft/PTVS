@@ -1,12 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Include>
-  <?define ProductName = "TC Test Host Adapters $(var.VsRegistryVersion)" ?>
-  <?define ProductDescription = "Allows to run TC VSTS tests inside VS and other hosts." ?>
-  <?define ProductUrl = "http://msdn.microsoft.com/vstudio/extend/" ?>
-
   <!-- Where to get compiled binaries from. When running from build, to override use: -dBinDir=... -->
   <?ifndef BinDir ?>
-    <?define BinDir = ..\bin ?>
+    <?define BinDir = ..\bin\$(var.Configuration)$(var.VsRegistryVersion) ?>
   <?endif?>
 
   <!-- By default include PDBs into the MSI. -->
@@ -17,7 +13,7 @@
   <!-- Rev this whenever a critical change is made to the installer so that the pre-reqs can pick it up -->
   <?define TestAdaptersRevision = "2" ?>
 
-  <?define TestAdaptersKey = "Software\Microsoft\TCTestHostAdapters" ?>
+  <?define TestAdaptersKey = "Software\Microsoft\TCTestHostAdapters\$(var.VsRegistryVersion)" ?>
   <?define TestAdaptersRevisionProperty = "Revision" ?>
 
   <?define PublicKeyToken=null?>
@@ -32,7 +28,8 @@
   
   <!-- Product GUIDs: must match code declaration -->
   <?if "$(var.VsRegistryVersion)" = "10.0" ?>
-	  <?define VsAddinName=TcVsIdeTestHost.10.0?>
+    <?define VsName="Visual Studio 2010"?>
+    <?define VsAddinName=TcVsIdeTestHost.10.0?>
 
 	  <?define VsIdeTestHostAddinGuid=E80282C0-570E-4607-8190-02F30B681921?>
 	  <?define IRemoteTestGuid=45C00F61-5394-4288-8AA5-66DBCF95FF20?>
@@ -52,8 +49,9 @@
 	  <?define C_VSIdeTestHostAddinPdb_Guid=47BB87C7-48DE-449D-A339-9274E361ED21?>
 	  <?define C_RemoteTestDll_Guid=91E554A0-DA13-4733-B31C-B59574A513F5?>
 	  <?define C_RemoteTestTlb_Guid=C4886081-E541-47C0-95E1-CFA6BFCDE5EE?>	
-  <?else?>
-	  <?define VsAddinName=TcVsIdeTestHost.11.0?>
+  <?elseif "$(var.VsRegistryVersion)" = "11.0" ?>
+    <?define VsName="Visual Studio 2012"?>
+    <?define VsAddinName=TcVsIdeTestHost.11.0?>
 
 	  <?define VsIdeTestHostAddinGuid=32F55E70-9461-4998-827D-C4F9B16A282D?>
 	  <?define IRemoteTestGuid=33EE7772-E6BF-4C03-9ADC-6651698E06B5?>
@@ -73,9 +71,40 @@
 	  <?define C_VSIdeTestHostAddinPdb_Guid=EB92A44C-2ABE-4706-8DC5-92FA818EA7D1?>
 	  <?define C_RemoteTestDll_Guid=3255F38E-C5F5-4973-8B13-FCCBDFECBCC2?>
 	  <?define C_RemoteTestTlb_Guid=F37D55F1-CCAE-40E5-BD5D-3C5896B2C1AC?>
-	
+  <?elseif "$(var.VsRegistryVersion)" = "12.0" ?>
+    <?define VsName="Visual Studio 2013"?>
+    <?define VsAddinName=TcVsIdeTestHost.12.0?>
+
+    <!-- Match the definition in Microsoft.TC.TestHostAdapters\Common\Constants.cs -->
+    <?define VsIdeTestHostAddinGuid=F993962B-FF17-4B86-88BC-2CFFC457A6FB?>
+
+    <!-- Match the definition in Microsoft.TC.RemoteTest\RemoteTest.cs -->
+    <?define IRemoteTestGuid=227AD534-5479-4FA6-860B-DA7ED5D7C077?>
+    <?define IRemoteTestProviderGuid=E7E8191E-A676-45E7-BDE1-7AD68DA6D438?>
+    <?define RemoteTestComponentGuid=14D65E5C-BD10-470F-B88B-02A92E5341B0?>
+    <?define DefaultRemoteTestProviderGuid=CF4ADC06-4F3F-47EB-8821-A0D2F7820FB4?>
+    <?define RemoteTestTypeLibGuid=7A48F6FE-59A8-4312-9608-139931D36ED3?>
+
+    <!-- Product GUIDs: Must just be unique-->
+    <?define InstallerGuid=B9280A1E-F247-474C-8B33-BA4AB7A7F730?>
+    <?define InstallerUpgradeGuid=1830D76A-E1D5-4528-BC57-22F7DBF62630?>
+
+    <?define C_VsIdeTestHostAddinXml_Guid=2C3C2A9F-F0C0-4E37-AFAB-C8EF455390BD?>
+    <?define C_VsIdeTestHostFrameworkDll_Guid=E74A5734-F4BE-4AD8-8CF3-C63F3CCAAB01?>
+    <?define C_VSIdeTestHostFrameworkPdb_Guid=D9371696-612E-49A3-B534-15420A57E856?>
+    <?define C_VSIdeTestHostAddinDll_Guid=D8434EE0-8275-4855-80EB-74FDA89028A8?>
+    <?define C_VSIdeTestHostAddinPdb_Guid=B781A8C4-3924-45CF-B28E-E787F709C863?>
+    <?define C_RemoteTestDll_Guid=6BE6F4BA-F01D-4774-9A83-FE278BBBD69E?>
+    <?define C_RemoteTestTlb_Guid=BCD9646A-4CDA-415C-ABC9-45BF32BF47E9?>
+  <?else?>
+    <?error Unrecognized VS Version. ?>
   <?endif?>
 
   <!-- Product GUIDs: Must not change-->
-  <?define UnitTestTypeGuid=13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b?> 
+  <?define UnitTestTypeGuid=13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b?>
+
+  <?define ProductName = "TC Test Host Adapters for $(var.VsName)" ?>
+  <?define ProductDescription = "Allows to run TC VSTS tests inside VS and other hosts." ?>
+  <?define ProductUrl = "http://msdn.microsoft.com/vstudio/extend/" ?>
+
 </Include>

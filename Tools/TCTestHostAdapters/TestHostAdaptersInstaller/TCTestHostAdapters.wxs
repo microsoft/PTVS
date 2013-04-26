@@ -99,12 +99,6 @@
             <RegistryValue Name="Version" Type="string" Value="1.0" />
           </RegistryKey>
           <!--    Remote Test Component -->
-          <RegistryKey Root="HKCR" Key="Microsoft.TC.RemoteTest.RemoteTestComponent" Action="createAndRemoveOnUninstall">
-            <RegistryValue Type="string" Value="Microsoft.TC.RemoteTest.RemoteTestComponent" />
-          </RegistryKey>
-          <RegistryKey Root="HKCR" Key="Microsoft.TC.RemoteTest.RemoteTestComponent\CLSID" Action="createAndRemoveOnUninstall">
-            <RegistryValue Type="string" Value="{$(var.RemoteTestComponentGuid)}" />
-          </RegistryKey>
           <RegistryKey Root="HKCR" Key="CLSID\{$(var.RemoteTestComponentGuid)}" Action="createAndRemoveOnUninstall">
             <RegistryValue Type="string" Value="Microsoft.TC.RemoteTest.RemoteTestComponent" />
           </RegistryKey>
@@ -130,12 +124,6 @@
             <RegistryValue Type="string" Value="Microsoft.TC.RemoteTest.RemoteTestComponent" />
           </RegistryKey>
           <!--     DefaultRemoteTestProvider -->
-          <RegistryKey Root="HKCR" Key="Microsoft.TC.RemoteTest.DefaultRemoteTestProvider" Action="createAndRemoveOnUninstall">
-            <RegistryValue Type="string" Value="Microsoft.TC.RemoteTest.DefaultRemoteTestProvider" />
-          </RegistryKey>
-          <RegistryKey Root="HKCR" Key="Microsoft.TC.RemoteTest.DefaultRemoteTestProvider\CLSID" Action="createAndRemoveOnUninstall">
-            <RegistryValue Type="string" Value="{$(var.DefaultRemoteTestProviderGuid)}" />
-          </RegistryKey>
           <RegistryKey Root="HKCR" Key="CLSID\{$(var.DefaultRemoteTestProviderGuid)}" Action="createAndRemoveOnUninstall">
             <RegistryValue Type="string" Value="Microsoft.TC.RemoteTest.DefaultRemoteTestProvider" />
           </RegistryKey>

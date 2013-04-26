@@ -14,7 +14,7 @@
     <Property Id="ARPCOMMENTS" Value="$(var.ProductDescription)" />
 
     <!-- Install conditions -->
-    <Condition Message="Visual Studio 2010 must be installed">VSINSTALLDIR</Condition>
+    <Condition Message="$(var.VsName) must be installed">VSINSTALLDIR OR Installed</Condition>
 
     <!-- Directories, files, shortcuts -->
     <Directory Id="TARGETDIR" Name="SourceDir">

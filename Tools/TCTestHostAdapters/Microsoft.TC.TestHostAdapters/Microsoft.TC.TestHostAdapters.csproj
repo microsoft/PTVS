@@ -12,7 +12,8 @@
     <AssemblyAttributeClsCompliant>true</AssemblyAttributeClsCompliant>
     <SignAssembly>false</SignAssembly>
     <UICulture>en-US</UICulture>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion Condition=" '$(VisualStudioVersion)' == '10.0' ">v4.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion Condition="'$(TargetFrameworkVersion)' == ''">v4.5</TargetFrameworkVersion>
     <FileUpgradeFlags>
     </FileUpgradeFlags>
     <OldToolsVersion>3.5</OldToolsVersion>
@@ -39,9 +40,6 @@
     <SccAuxPath>SAK</SccAuxPath>
     <SccProvider>SAK</SccProvider>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(VsRegistryVersion)' == '11.0' ">
-	<DefineConstants>DEV11</DefineConstants>
-  </PropertyGroup>
   <PropertyGroup>
     <AssemblyOriginatorKeyFile>..\..\..\Build\TCWB.snk</AssemblyOriginatorKeyFile>
     <SignAssembly>true</SignAssembly>
@@ -50,7 +48,8 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>..\bin\</OutputPath>
+    <OutputPath>..\bin\Debug$(VisualStudioVersion)\</OutputPath>
+    <IntermediateOutputPath>obj\Debug$(VisualStudioVersion)\</IntermediateOutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -59,21 +58,31 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
+    <OutputPath>..\bin\Release$(VisualStudioVersion)\</OutputPath>
+    <IntermediateOutputPath>obj\Release$(VisualStudioVersion)\</IntermediateOutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
+  <PropertyGroup Condition=" '$(VisualStudioVersion)' == '10.0' ">
+    <DefineConstants>$(DefineConstants);DEV10</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(VisualStudioVersion)' == '11.0' ">
+    <DefineConstants>$(DefineConstants);DEV11</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(VisualStudioVersion)' == '12.0' ">
+    <DefineConstants>$(DefineConstants);DEV12</DefineConstants>
+  </PropertyGroup>
   <ItemGroup>
-    <Reference Include="microsoft.visualstudio.qualitytools.common, Version=$(VsRegistryVersion).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+    <Reference Include="microsoft.visualstudio.qualitytools.common, Version=$(VisualStudioVersion).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>$(DevEnvDir)\PrivateAssemblies\microsoft.visualstudio.qualitytools.common.dll</HintPath>
     </Reference>
-    <Reference Include="Microsoft.VisualStudio.QualityTools.ExecutionCommon, Version=$(VsRegistryVersion).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+    <Reference Include="Microsoft.VisualStudio.QualityTools.ExecutionCommon, Version=$(VisualStudioVersion).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>$(DevEnvDir)\PrivateAssemblies\Microsoft.VisualStudio.QualityTools.ExecutionCommon.dll</HintPath>
     </Reference>
-    <Reference Include="Microsoft.VisualStudio.QualityTools.Vsip, Version=$(VSRegistryVersion).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="Microsoft.VisualStudio.QualityTools.Vsip, Version=$(VisualStudioVersion).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <SpecificVersion>True</SpecificVersion>
       <HintPath>$(DevEnvDir)\PrivateAssemblies\Microsoft.VisualStudio.QualityTools.Vsip.dll</HintPath>
     </Reference>
     <Reference Include="System" />
