@@ -343,7 +343,7 @@
               <RegistryValue Root='HKCU' Key='SOFTWARE\Microsoft\PythonTools\$(var.VSTargetVersion)' Type='string' Name='ptvsd' Value='[$cmpDB59A8DAF5AF4EF5BF5C73297E6D80CF]' KeyPath='yes' />
               <RemoveFolder Id='DeleteApplicationProgramsFolder' Directory='ApplicationProgramsFolder' On='uninstall'/>
             </Component>
-      </ComponentGroup>
+        </ComponentGroup>
     </Fragment>
     <Fragment>
         <DirectoryRef Id="dirD5195BC5D1C101171FEF8AD9B89AA866" />

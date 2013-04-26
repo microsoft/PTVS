@@ -822,6 +822,7 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
         auto delThreadTls = (PyThread_delete_key_value*)GetProcAddress(module, "PyThread_delete_key_value");
 		auto pyGilStateEnsure = (PyGILState_EnsureFunc*)GetProcAddress(module, "PyGILState_Ensure");
 		auto pyGilStateRelease = (PyGILState_ReleaseFunc*)GetProcAddress(module, "PyGILState_Release");
+        auto PyCFrame_Type = (PyTypeObject*)GetProcAddress(module, "PyCFrame_Type");
 
         if (addPendingCall== nullptr || curPythonThread == nullptr || interpHeap == nullptr || gilEnsure == nullptr || gilRelease== nullptr || threadHead==nullptr ||
             initThreads==nullptr || releaseLock== nullptr || threadsInited== nullptr || threadNext==nullptr || threadSwap==nullptr ||
@@ -1152,10 +1153,16 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
                         // update all of the frames so they have our trace func
                         auto curFrame = (PyFrameObject*)GetPyObjectPointerNoDebugInfo(isDebug, frame);
                         while(curFrame != nullptr) {
-                            DecRef(curFrame->f_trace, isDebug);
-                            IncRef(*traceFunc);
-                            curFrame->f_trace = traceFunc.ToPython();
-                            curFrame = (PyFrameObject*)GetPyObjectPointerNoDebugInfo(isDebug, curFrame->f_back);
+							// Special case for CFrame objects
+                            // Stackless CFrame does not have a trace function
+                            // This will just prevent a crash on attach.
+							if( PyCFrame_Type != NULL && (((PyObject*) curFrame)->ob_type != PyCFrame_Type) )
+							{
+								DecRef(curFrame->f_trace, isDebug);
+								IncRef(*traceFunc);
+								curFrame->f_trace = traceFunc.ToPython();
+							}
+							curFrame = (PyFrameObject*)GetPyObjectPointerNoDebugInfo(isDebug, curFrame->f_back);
                         }
 
                         delThreadTls(threadStateIndex);

@@ -1226,6 +1226,9 @@
   <ItemGroup>
     <Folder Include="Templates\Files\EmptyPackage\package\" />
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Templates\Files\EmptyPackage\package\" />
+  </ItemGroup>
   <PropertyGroup>
     <!--
     To specify a different registry root to register your package, uncomment the TargetRegistryRoot

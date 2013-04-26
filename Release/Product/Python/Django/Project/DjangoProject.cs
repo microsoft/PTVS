@@ -30,6 +30,7 @@ using System.Xml;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Django.Intellisense;
 using Microsoft.PythonTools.Parsing.Ast;
+using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
@@ -709,8 +710,15 @@ namespace Microsoft.PythonTools.Django.Project {
         private Process RunManageCommand(string arguments) {
             var pyProj = _innerVsHierarchy.GetPythonInterpreterFactory();
             if (pyProj != null) {
-                var path = pyProj.Configuration.InterpreterPath;
-                var psi = new ProcessStartInfo(path, "manage.py " + arguments);
+                ProcessStartInfo psi;
+                var interpreterPath = pyProj.Configuration.InterpreterPath;
+                var pyProject = _innerVsHierarchy.GetProject().GetPythonProject() as IPythonProject;
+                var managePyPath = (pyProject != null) ? pyProject.GetStartupFile() : null;
+                if (string.IsNullOrEmpty(managePyPath)) {
+                    psi = new ProcessStartInfo(interpreterPath, "manage.py " + arguments);
+                } else {
+                    psi = new ProcessStartInfo(interpreterPath, "\"" + managePyPath + "\" " + arguments);
+                }
 
                 object projectDir;
                 ErrorHandler.ThrowOnFailure(_innerVsHierarchy.GetProperty(
