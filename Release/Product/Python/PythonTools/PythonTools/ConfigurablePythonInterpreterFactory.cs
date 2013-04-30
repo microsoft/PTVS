@@ -78,6 +78,10 @@ namespace Microsoft.PythonTools {
             return ((IInterpreterWithCompletionDatabase)_realFactory).GetIsCurrentReason(culture);
         }
 
+        public string GetIsCurrentReasonNonUI(IFormatProvider culture) {
+            return ((IInterpreterWithCompletionDatabase)_realFactory).GetIsCurrentReasonNonUI(culture);
+        }
+
         #endregion
     }
 }

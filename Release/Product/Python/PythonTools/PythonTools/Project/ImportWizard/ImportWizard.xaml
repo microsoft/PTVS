@@ -7,10 +7,11 @@
     xmlns:wpf="clr-namespace:Microsoft.PythonTools.Wpf"
     xmlns:pt="clr-namespace:Microsoft.PythonTools"
     Height="525" Width="700"
+    MinHeight="500" MinWidth="500"
+    ResizeMode="CanResizeWithGrip"
+    HasMaximizeButton="True"
+    UseLayoutRounding="True"
     SnapsToDevicePixels="True"
-    RenderOptions.EdgeMode="Aliased"
-    TextOptions.TextRenderingMode="ClearType"
-    TextOptions.TextFormattingMode="Display"
     WindowStartupLocation="CenterOwner">
 
     <Window.Title>
@@ -62,11 +63,24 @@
                Focusable="False" IsTabStop="False"
                Margin="8" />
         
-        <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="8">
-            <Button Command="NavigationCommands.BrowseBack">_Back</Button>
-            <Button Command="NavigationCommands.BrowseForward">_Next</Button>
-            <Button Command="ApplicationCommands.Save">_Finish</Button>
-            <Button Command="ApplicationCommands.Close">_Cancel</Button>
+        <StackPanel Grid.Row="2" Grid.Column="1" HorizontalAlignment="Right" Margin="8" Grid.IsSharedSizeScope="True">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition SharedSizeGroup="A" Width="auto" />
+                    <ColumnDefinition SharedSizeGroup="A" Width="auto" />
+                    <ColumnDefinition SharedSizeGroup="A" Width="auto" />
+                    <ColumnDefinition SharedSizeGroup="A" Width="auto" />
+                </Grid.ColumnDefinitions>
+                <Grid.Resources>
+                    <Style TargetType="{x:Type Button}" BasedOn="{StaticResource {x:Type Button}}">
+                        <Setter Property="HorizontalAlignment" Value="Stretch" />
+                    </Style>
+                </Grid.Resources>
+                <Button Grid.Column="0" Command="NavigationCommands.BrowseBack">_Back</Button>
+                <Button Grid.Column="1" Command="NavigationCommands.BrowseForward">_Next</Button>
+                <Button Grid.Column="2" Command="ApplicationCommands.Save">_Finish</Button>
+                <Button Grid.Column="3" Command="ApplicationCommands.Close">_Cancel</Button>
+            </Grid>
         </StackPanel>
     </Grid>
 </pt:DialogWindowVersioningWorkaround>

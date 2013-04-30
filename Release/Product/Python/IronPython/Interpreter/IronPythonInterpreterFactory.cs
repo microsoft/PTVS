@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -45,19 +46,23 @@ namespace Microsoft.IronPythonTools.Interpreter {
                 throw new InvalidOperationException("IronPython is not installed.");
             }
 
-            try {
-                _libWatcher = new FileSystemWatcher {
-                    IncludeSubdirectories = true,
-                    Path = Path.Combine(Path.GetDirectoryName(_config.InterpreterPath), "lib"),
-                    NotifyFilter = NotifyFilters.FileName | NotifyFilters.DirectoryName | NotifyFilters.LastWrite
-                };
-                _libWatcher.Created += OnChanged;
-                _libWatcher.Deleted += OnChanged;
-                _libWatcher.Changed += OnChanged;
-                _libWatcher.Renamed += OnRenamed;
-                _libWatcher.EnableRaisingEvents = true;
-            } catch (ArgumentException ex) {
-                Console.WriteLine("Error starting FileSystemWatcher:\r\n{0}", ex);
+            // Unit tests like to make lots of factories for non-existant
+            // interpreters.
+            if (File.Exists(_config.InterpreterPath)) {
+                try {
+                    _libWatcher = new FileSystemWatcher {
+                        IncludeSubdirectories = true,
+                        Path = Path.Combine(Path.GetDirectoryName(_config.InterpreterPath), "lib"),
+                        NotifyFilter = NotifyFilters.FileName | NotifyFilters.DirectoryName | NotifyFilters.LastWrite
+                    };
+                    _libWatcher.Created += OnChanged;
+                    _libWatcher.Deleted += OnChanged;
+                    _libWatcher.Changed += OnChanged;
+                    _libWatcher.Renamed += OnRenamed;
+                    _libWatcher.EnableRaisingEvents = true;
+                } catch (ArgumentException ex) {
+                    Console.WriteLine("Error starting FileSystemWatcher:\r\n{0}", ex);
+                }
             }
         }
 
@@ -229,14 +234,14 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
             if (Directory.Exists(DatabasePath)) {
                 var missingModules = ModulePath.GetModulesInLib(this)
-                    .Where(mp => !mp.IsSpecialName)
-                    .Select(mp => mp.FullName)
+                    // TODO: Remove IsCompiled check when pyds referenced by pth files are properly analyzed
+                    .Where(mp => !mp.IsCompiled)
+                    .Select(mp => mp.ModuleName)
                     .Except(Directory.EnumerateFiles(DatabasePath, "*.idb").Select(f => Path.GetFileNameWithoutExtension(f)), StringComparer.OrdinalIgnoreCase)
-                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .OrderBy(name => name, StringComparer.InvariantCultureIgnoreCase)
                     .ToArray();
 
                 if (missingModules.Length > 0) {
-                    Array.Sort(missingModules, StringComparer.OrdinalIgnoreCase);
                     _missingModules = missingModules;
                 } else {
                     _missingModules = null;
@@ -289,6 +294,21 @@ namespace Microsoft.IronPythonTools.Interpreter {
             }
 
             return "Up to date";
+        }
+
+        public string GetIsCurrentReasonNonUI(IFormatProvider culture) {
+            var missingModules = _missingModules;
+            var reason = "Database at " + DatabasePath;
+            if (_generating) {
+                return reason + " is regenerating";
+            } else if (!Directory.Exists(DatabasePath)) {
+                return reason + " does not exist";
+            } else if (missingModules != null) {
+                return reason + " does not contain the following modules:" + Environment.NewLine +
+                    string.Join(Environment.NewLine, missingModules);
+            }
+
+            return reason + " is up to date";
         }
 
         #endregion

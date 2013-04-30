@@ -168,27 +168,19 @@ namespace Microsoft.PythonTools.Analysis {
         private void AnalyzeStdLib(StreamWriter writer, string outdir, CancellationToken cancel) {
             var identifier = string.Format(CultureInfo.InvariantCulture, "{0};{1}", _id, _version);
             using (var updater = new AnalyzerStatusUpdater(identifier)) {
-                var fileGroups = new List<List<string>>();
+                var allModuleNames = new HashSet<string>(StringComparer.Ordinal);
 
                 var siteDirs = _dirs.Select(dir => Path.Combine(dir, "site-packages")).ToArray();
-                var allModules = ModulePath.GetModulesInLib(
-                    // Directories to include files in root
-                    _dirs.Concat(ModulePath.ExpandPathFiles(siteDirs)),
-                    // Directories to exclude files in root
-                    siteDirs);
-                var allFileSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                // Concat the contents of directories referenced by .pth files
+                // to ensure that they lose naming collisions.
+                var allModules = ModulePath.GetModulesInLib(_dirs, siteDirs, allModuleNames)
+                    .Concat(ModulePath.GetModulesInLib(ModulePath.ExpandPathFiles(siteDirs), null, allModuleNames));
 
-                foreach (var group in allModules.GroupBy(mp => mp.LibraryPath, StringComparer.OrdinalIgnoreCase)) {
-                    fileGroups.Add(group
-                        .Where(mp => !mp.IsCompiled)
-                        .Select(mp => mp.SourceFile)
-                        .Except(allFileSet)
-                        .ToList());
-                    
-                    allFileSet.UnionWith(group
-                        .Where(mp => !mp.IsCompiled)
-                        .Select(mp => mp.SourceFile));
-                }
+                var fileGroups = allModules
+                    .Where(mp => !mp.IsCompiled)
+                    .GroupBy(mp => mp.LibraryPath, StringComparer.OrdinalIgnoreCase)
+                    .Select(group => group.ToList())
+                    .ToList();
 
                 int progressOffset = 0;
                 int progressTotal = 0;
@@ -198,8 +190,8 @@ namespace Microsoft.PythonTools.Analysis {
 
                 foreach (var files in fileGroups) {
                     if (files.Count > 0) {
-                        Log(writer, "GROUP START \"" + Path.GetDirectoryName(files[0]) + "\"");
-                        Console.WriteLine("Now analyzing: {0}", Path.GetDirectoryName(files[0]));
+                        Log(writer, "GROUP START \"{0}\"", files[0].LibraryPath);
+                        Console.WriteLine("Now analyzing: {0}", files[0].LibraryPath);
                         var fact = new CPythonInterpreterFactory(_version.ToVersion());
                         var projectState = new PythonAnalyzer(new CPythonInterpreter(fact, new PythonTypeDatabase(_indir, _version.Is3x())), _version);
 
@@ -210,7 +202,11 @@ namespace Microsoft.PythonTools.Analysis {
                                 mostItemsInQueue = itemsInQueue;
                             }
 
-                            updater.UpdateStatus(progressOffset + (files.Count * (mostItemsInQueue - itemsInQueue)) / mostItemsInQueue, progressTotal);
+                            if (mostItemsInQueue > 0) {
+                                updater.UpdateStatus(progressOffset + (files.Count * (mostItemsInQueue - itemsInQueue)) / mostItemsInQueue, progressTotal);
+                            } else {
+                                updater.UpdateStatus(0, 0);
+                            }
                         }, 10);
 
                         using (var key = Registry.CurrentUser.OpenSubKey(AnalysisLimitsKey)) {
@@ -219,22 +215,20 @@ namespace Microsoft.PythonTools.Analysis {
 
                         var modules = new List<IPythonProjectEntry>();
                         for (int i = 0; i < files.Count; i++) {
-                            string modName = PythonAnalyzer.PathToModuleName(files[i]);
-
-                            modules.Add(projectState.AddModule(modName, files[i]));
+                            modules.Add(projectState.AddModule(files[i].ModuleName, files[i].SourceFile));
                         }
 
                         var nodes = new List<PythonAst>();
                         for (int i = 0; i < modules.Count; i++) {
                             PythonAst ast = null;
                             try {
-                                var sourceUnit = new FileStream(files[i], FileMode.Open, FileAccess.Read, FileShare.Read);
+                                var sourceUnit = new FileStream(files[i].SourceFile, FileMode.Open, FileAccess.Read, FileShare.Read);
 
-                                Log(writer, "PARSE START: \"" + modules[i].FilePath + "\"");
+                                Log(writer, "PARSE START: \"{0}\" (\"{1}\")", modules[i].ModuleName, modules[i].FilePath);
                                 ast = Parser.CreateParser(sourceUnit, _version, new ParserOptions() { BindReferences = true }).ParseFile();
-                                Log(writer, "PARSE END: \"" + modules[i].FilePath + "\"");
+                                Log(writer, "PARSE END: \"{0}\" (\"{1}\")", modules[i].ModuleName, modules[i].FilePath);
                             } catch (Exception ex) {
-                                Log(writer, "PARSE ERROR: \"" + modules[i].FilePath + "\" \"" + ex.ToString().Replace("\r\n", " -- ") + "\"");
+                                Log(writer, "PARSE ERROR: \"{0}\" \"{1}\" \"{2}\"", modules[i].ModuleName, modules[i].FilePath, ex.ToString().Replace("\r\n", " -- "));
                             }
                             nodes.Add(ast);
                         }
@@ -260,9 +254,9 @@ namespace Microsoft.PythonTools.Analysis {
                             modules[0].AnalysisGroup.AnalyzeQueuedEntries(cancel);
                         }
 
-                        Log(writer, "SAVING GROUP: \"" + Path.GetDirectoryName(files[0]) + "\"");
+                        Log(writer, "SAVING GROUP: \"" + Path.GetDirectoryName(files[0].SourceFile) + "\"");
                         new SaveAnalysis().Save(projectState, outdir);
-                        Log(writer, "GROUP END \"" + Path.GetDirectoryName(files[0]) + "\"");
+                        Log(writer, "GROUP END \"" + Path.GetDirectoryName(files[0].SourceFile) + "\"");
                     }
 
                     progressOffset += files.Count;
@@ -270,11 +264,11 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
-        private static void Log(StreamWriter writer, string contents) {
+        private static void Log(StreamWriter writer, string contents, params object[] arguments) {
             writer.WriteLine(
                 "\"{0}\" {1}",
                 DateTime.Now.ToString("s"),
-                contents
+                string.Format(CultureInfo.InvariantCulture, contents, arguments)
             );
             writer.Flush();
         }

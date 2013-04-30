@@ -2382,7 +2382,7 @@ def g(a, b, c):
                         Assert.AreEqual(error, extractInput.Failure);
                         return;
                     }
-                    Assert.AreEqual(previewChangesService.Previewed, preview);
+                    Assert.AreEqual(preview, previewChangesService.Previewed, preview ? "Changes were not previewed" : "Changes were previewed");
                     for (int i = 0; i < buffers.Length; i++) {
                         Assert.AreEqual(inputs[i].Output, buffers[i].CurrentSnapshot.GetText());
                     }

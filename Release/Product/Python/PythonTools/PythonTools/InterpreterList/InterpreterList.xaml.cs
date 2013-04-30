@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -23,6 +24,7 @@ using System.Windows.Input;
 using System.Windows.Threading;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Commands;
+using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Options;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Repl;
@@ -46,6 +48,7 @@ namespace Microsoft.PythonTools.InterpreterList {
         public static readonly RoutedCommand OpenOptionsCommand = new RoutedUICommand("Options", "OpenOptions", typeof(InterpreterList));
         public static readonly RoutedCommand OpenReplOptionsCommand = new RoutedUICommand("Interactive Options", "OpenInteractiveOptions", typeof(InterpreterList));
         public static readonly RoutedCommand MakeDefaultCommand = new RoutedUICommand("Make Default", "MakeDefault", typeof(InterpreterList));
+        public static readonly RoutedCommand CopyReasonCommand = new RoutedUICommand("Copy", "CopyReason", typeof(InterpreterList));
 
         public InterpreterList() {
             _refreshTimer = new DispatcherTimer();
@@ -102,13 +105,15 @@ namespace Microsoft.PythonTools.InterpreterList {
 
         private void Abort_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
             e.CanExecute = false;
+
+            // TODO: Uncomment when analysis can be aborted
+            //var interp = e.Parameter as InterpreterView;
+            //e.CanExecute = interp != null && interp.IsRunning;
         }
 
         private void Abort_Executed(object sender, ExecutedRoutedEventArgs e) {
-            var interp = e.Parameter as InterpreterView;
-            if (interp != null) {
-                interp.Abort();
-            }
+            // TODO: Uncomment when analysis can be aborted
+            //((InterpreterView)e.Parameter).Abort();
         }
 
         private void Refresh_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
@@ -138,10 +143,7 @@ namespace Microsoft.PythonTools.InterpreterList {
         }
 
         private void Regenerate_Executed(object sender, ExecutedRoutedEventArgs e) {
-            var interp = e.Parameter as InterpreterView;
-            if (interp != null) {
-                interp.Start();
-            }
+            ((InterpreterView)e.Parameter).Start();
         }
 
         private void OpenWindow_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
@@ -173,12 +175,22 @@ namespace Microsoft.PythonTools.InterpreterList {
         }
 
         private void MakeDefault_Executed(object sender, ExecutedRoutedEventArgs e) {
-            var view = e.Parameter as InterpreterView;
+            var view = (InterpreterView)e.Parameter;
             var page = PythonToolsPackage.Instance.InterpreterOptionsPage;
             page.DefaultInterpreterValue = view.Interpreter.Id;
             page.DefaultInterpreterVersionValue = view.Interpreter.Configuration.Version;
             page.SaveSettingsToStorage();
             page.RaiseDefaultInterpreterChanged();
+        }
+
+        private void CopyReason_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
+            var view = e.Parameter as InterpreterView;
+            e.CanExecute = view != null && view.Interpreter is IInterpreterWithCompletionDatabase && !view.IsCurrent;
+        }
+
+        private void CopyReason_Executed(object sender, ExecutedRoutedEventArgs e) {
+            var withDb = (IInterpreterWithCompletionDatabase)((InterpreterView)e.Parameter).Interpreter;
+            Clipboard.SetText(withDb.GetIsCurrentReasonNonUI(CultureInfo.CurrentUICulture));
         }
     }
 }

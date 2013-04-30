@@ -11,8 +11,9 @@
              d:DesignHeight="400" d:DesignWidth="800"
              TextOptions.TextFormattingMode="Display"
              HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+             UseLayoutRounding="True"
+             SnapsToDevicePixels="True"
              Background="{DynamicResource {x:Static wpf:Controls.BackgroundKey}}"
-             RenderOptions.EdgeMode="Aliased"
              TextElement.Foreground="{DynamicResource {x:Static wpf:Controls.ForegroundKey}}">
     <UserControl.InputBindings>
         <KeyBinding Key="F5" Command="{x:Static l:InterpreterList.RefreshCommand}" />
@@ -26,6 +27,7 @@
         <CommandBinding Command="{x:Static l:InterpreterList.OpenOptionsCommand}" CanExecute="OpenWindow_CanExecute" Executed="OpenWindow_Executed" />
         <CommandBinding Command="{x:Static l:InterpreterList.OpenReplOptionsCommand}" CanExecute="OpenWindow_CanExecute" Executed="OpenWindow_Executed" />
         <CommandBinding Command="{x:Static l:InterpreterList.MakeDefaultCommand}" CanExecute="MakeDefault_CanExecute" Executed="MakeDefault_Executed" />
+        <CommandBinding Command="{x:Static l:InterpreterList.CopyReasonCommand}" CanExecute="CopyReason_CanExecute" Executed="CopyReason_Executed" />
     </UserControl.CommandBindings>
 
     <UserControl.Resources>
@@ -34,11 +36,6 @@
                 <ResourceDictionary Source="pack://application:,,,/Microsoft.PythonTools;component/Wpf/Controls.xaml" />
 
                 <ResourceDictionary>
-                    <Style TargetType="{x:Type Expander}">
-                        <Setter Property="Margin" Value="4" />
-                        <Setter Property="RenderOptions.EdgeMode" Value="Unspecified" />
-                    </Style>
-
                     <Style x:Key="InterpreterItemStyle" TargetType="ListViewItem">
                         <Setter Property="HorizontalContentAlignment" Value="Stretch" />
                         <Setter Property="Template">
@@ -98,7 +95,9 @@
                                         <TextBlock VerticalAlignment="Center" FontWeight="Bold">
                                             Completion DB needs refresh
                                         </TextBlock>
-                                        <Expander Name="ShowContent" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="3 0 0 0" />
+                                        <Expander Name="ShowContent"
+                                                  HorizontalAlignment="Left" VerticalAlignment="Center"
+                                                  Header="&#xE11B;"/>
                                     </StackPanel>
                                 </Grid>
                                 <Button Command="{x:Static l:InterpreterList.RegenerateCommand}" CommandParameter="{Binding}"
@@ -123,16 +122,33 @@
                                              HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
                             </Grid>
                             <Popup Name="Reason"
+                                   IsOpen="{Binding IsExpanded,ElementName=ShowContent,Mode=TwoWay}"
                                    PlacementTarget="{Binding ElementName=Required}"
                                    Placement="Bottom"
                                    Width="auto"
-                                   MaxWidth="600" MaxHeight="300"
-                                   StaysOpen="True">
+                                   MaxWidth="640" MaxHeight="300"
+                                   StaysOpen="False">
                                 <Border Style="{DynamicResource TooltipBorder}">
                                     <ScrollViewer Background="Transparent"
-                                      HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
-                                      Padding="2">
-                                        <TextBlock Text="{Binding IsCurrentReason}" />
+                                                  HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
+                                                  Padding="2">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="{Binding IsCurrentReason}"
+                                                       VerticalAlignment="Center"/>
+                                            <Button Command="{x:Static l:InterpreterList.CopyReasonCommand}"
+                                                    CommandParameter="{Binding}"
+                                                    FontFamily="Segoe UI Symbol"
+                                                    Padding="2"
+                                                    MinHeight="{Binding ActualWidth,RelativeSource={RelativeSource Self}}"
+                                                    VerticalAlignment="Top">
+                                                <Button.Content>
+                                                    &#xE16F;
+                                                </Button.Content>
+                                                <Button.ToolTip>
+                                                    Copy to Clipboard
+                                                </Button.ToolTip>
+                                            </Button>
+                                        </StackPanel>
                                     </ScrollViewer>
                                 </Border>
                             </Popup>
@@ -149,13 +165,6 @@
                                 <Setter TargetName="Required" Property="Visibility" Value="Visible" />
                                 <Setter TargetName="NotRequired" Property="Visibility" Value="Hidden" />
                             </DataTrigger>
-                            <MultiTrigger>
-                                <MultiTrigger.Conditions>
-                                    <Condition SourceName="ShowContent" Property="IsExpanded" Value="True" />
-                                    <Condition SourceName="Required" Property="IsVisible" Value="True" />
-                                </MultiTrigger.Conditions>
-                                <Setter TargetName="Reason" Property="IsOpen" Value="True" />
-                            </MultiTrigger>
                         </DataTemplate.Triggers>
                     </DataTemplate>
 

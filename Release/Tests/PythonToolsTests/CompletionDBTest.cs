@@ -69,22 +69,22 @@ namespace PythonToolsTests {
                 process.WaitForExit();
 
                 // it should succeed
-                Assert.AreEqual(process.ExitCode, 0, "Bad exit code: " + process.ExitCode + "\r\n" + receiver.Output.ToString());
+                Assert.AreEqual(0, process.ExitCode, "Bad exit code: " + process.ExitCode + "\r\n" + receiver.Output.ToString());
 
                 // perform some basic validation
                 dynamic builtinDb = Unpickle.Load(new FileStream(Path.Combine(testDir, path.Version.Is3x() ? "builtins.idb" : "__builtin__.idb"), FileMode.Open, FileAccess.Read));
                 if (path.Version.Is2x()) { // no open in 3.x
                     foreach (var overload in builtinDb["members"]["open"]["value"]["overloads"]) {
-                        Assert.AreEqual(overload["ret_type"][0], "__builtin__");
-                        Assert.AreEqual(overload["ret_type"][1], "file");
+                        Assert.AreEqual("__builtin__", overload["ret_type"][0]["module_name"]);
+                        Assert.AreEqual("file", overload["ret_type"][0]["type_name"]);
                     }
 
                     if (!path.Path.Contains("Iron")) {
                         // http://pytools.codeplex.com/workitem/799
-                        var arr = (object[])builtinDb["members"]["list"]["value"]["members"]["__init__"]["value"]["overloads"];
+                        var arr = (IList<object>)builtinDb["members"]["list"]["value"]["members"]["__init__"]["value"]["overloads"];
                         Assert.AreEqual(
-                            ((dynamic)(arr[0]))["args"][1]["name"],
-                            "args"
+                            "args",
+                            ((dynamic)(arr[0]))["args"][1]["name"]
                         );
                     }
                 }
@@ -94,8 +94,8 @@ namespace PythonToolsTests {
                     var tee = itertoolsDb["members"]["tee"]["value"];
                     var overloads = tee["overloads"];
                     var nArg = overloads[0]["args"][1];
-                    Assert.AreEqual(nArg["name"], "n");
-                    Assert.AreEqual(nArg["default_value"], "2");
+                    Assert.AreEqual("n", nArg["name"]);
+                    Assert.AreEqual("2", nArg["default_value"]);
 
                     dynamic sreDb = Unpickle.Load(new FileStream(Path.Combine(testDir, "_sre.idb"), FileMode.Open, FileAccess.Read));
                     var members = sreDb["members"];
@@ -123,9 +123,22 @@ namespace PythonToolsTests {
 
             // run the analyzer
             var startInfo = new ProcessStartInfo("Microsoft.PythonTools.Analyzer.exe", args);
+            startInfo.RedirectStandardOutput = true;
+            startInfo.RedirectStandardError = true;
+            startInfo.UseShellExecute = false;
+
+            Console.WriteLine("\"{0}\" {1}", startInfo.FileName, startInfo.Arguments);
             var proc = Process.Start(startInfo);
+            
+            var receiver = new OutputReceiver();
+            proc.OutputDataReceived += receiver.OutputDataReceived;
+            proc.ErrorDataReceived += receiver.OutputDataReceived;
+            proc.BeginErrorReadLine();
+            proc.BeginOutputReadLine();
             proc.WaitForExit();
-            Assert.AreEqual(proc.ExitCode, 0);
+
+            Console.WriteLine(receiver.Output);
+            Assert.AreEqual(0, proc.ExitCode);
 
             File.Copy(TestData.GetPath(@"CompletionDB\__builtin__.idb"), Path.Combine(outputPath, "__builtin__.idb"));
 
