@@ -272,6 +272,11 @@ namespace Microsoft.IronPythonTools.Interpreter {
             }
         }
 
+        static string GetPackageName(string fullName) {
+            int firstDot = fullName.IndexOf('.');
+            return (firstDot > 0) ? fullName.Remove(firstDot) : fullName;
+        }
+
         public string GetIsCurrentReason(IFormatProvider culture) {
             var missingModules = _missingModules;
             if (_generating) {
@@ -286,10 +291,25 @@ namespace Microsoft.IronPythonTools.Interpreter {
                         string.Join(Environment.NewLine + "    ", missingModules)
                         );
                 } else {
-                    return string.Format(culture,
-                        "{0} modules have not been analyzed.",
-                        missingModules.Length
-                        );
+                    var packages = new List<string>(
+                        from m in missingModules
+                        group m by GetPackageName(m) into groupedByPackage
+                        where groupedByPackage.Count() > 1
+                        orderby groupedByPackage.Key
+                        select groupedByPackage.Key);
+
+                    if (packages.Count > 0 && packages.Count < 100) {
+                        return string.Format(culture,
+                            "{0} modules have not been analyzed.{2}Packages include:{2}    {1}",
+                            missingModules.Length,
+                            string.Join(Environment.NewLine + "    ", packages),
+                            Environment.NewLine
+                            );
+                    } else {
+                        return string.Format(culture,
+                            "{0} modules have not been analyzed.",
+                            missingModules.Length);
+                    }
                 }
             }
 

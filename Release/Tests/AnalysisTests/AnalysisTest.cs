@@ -2695,6 +2695,19 @@ b = a.f
             foreach (var varRef in entry.GetValuesByIndex("b", 1)) {
                 Assert.AreEqual("method f of C objects \r\ndoc string", varRef.Description);
             }
+
+            entry = ProcessText(@"
+class C(object):
+    def f(self):
+        'doc string'
+
+a = C()
+b = a.f
+            ");
+
+            foreach (var varRef in entry.GetValuesByIndex("b", 1)) {
+                Assert.AreEqual("method f of C objects \r\ndoc string", varRef.Description);
+            }
         }
 
         [TestMethod, Priority(0)]
@@ -3208,7 +3221,6 @@ def f(x): pass
 
             AssertUtil.ContainsExactly(entry.GetMemberNamesByIndex("f.func_name", 1), _strMembers);
         }
-
 
         [TestMethod, Priority(0)]
         public void RangeIteration() {

@@ -100,7 +100,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             if (getAttribute.Count > 0) {
                 foreach (var getAttrFunc in getAttribute) {
                     var func = getAttrFunc as BuiltinMethodInfo;
-                    if (func != null && func.Function.Overloads.Count == 1 && func.Function.DeclaringType == ProjectState.Types[BuiltinTypeId.Object]) {
+                    if (func != null && func.Function.DeclaringType.TypeId == BuiltinTypeId.Object) {
                         continue;
                     }
                     // TODO: We should really do a get descriptor / call here
