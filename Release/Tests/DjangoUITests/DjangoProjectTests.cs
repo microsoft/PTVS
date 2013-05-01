@@ -26,7 +26,7 @@ using TestUtilities.UI.Python.Django;
 namespace DjangoUITests {
     [TestClass]
     public class DjangoProjectTests {
-        private const string AddDjangoAppCmd = "ProjectandSolutionContextMenus.Project.Add.AddNewDjangoapp";
+        private const string AddDjangoAppCmd = "ProjectandSolutionContextMenus.Project.Add.Djangoapp";
 
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
