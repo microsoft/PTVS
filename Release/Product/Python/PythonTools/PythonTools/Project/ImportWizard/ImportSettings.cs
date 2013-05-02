@@ -30,15 +30,11 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
         public ImportSettings() {
             var componentService = PythonToolsPackage.GetGlobalService(typeof(SComponentModel)) as IComponentModel;
             if (componentService != null) {
-                var factoryProviders = componentService.GetExtensions<IPythonInterpreterFactoryProvider>();
-
                 AvailableInterpreters = new ObservableCollection<PythonInterpreterView>(
                     Enumerable.Repeat(new PythonInterpreterView("(Use my default)", Guid.Empty, new Version(), null), 1)
                     .Concat(
-                        factoryProviders
-                            .SelectMany(fp => fp.GetInterpreterFactories())
+                        componentService.GetAllPythonInterpreterFactories()
                             .Select(fact => new PythonInterpreterView(fact))
-                            .OrderBy(i => i.Name)
                     )
                 );
             } else {
@@ -49,7 +45,7 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
             SelectedInterpreter = AvailableInterpreters[0];
             TopLevelPythonFiles = new BulkObservableCollection<string>();
 
-            Filters = "*.pyw;*.txt;*.htm;*.html;*.css;*.djt;*.png;*.jpg;*.gif;*.bmp;*.ico;*.svg";
+            Filters = "*.pyw;*.txt;*.htm;*.html;*.css;*.djt;*.js;*.png;*.jpg;*.gif;*.bmp;*.ico;*.svg";
         }
 
         public string ProjectPath {
@@ -141,7 +137,7 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
 
         private static void SourcePath_Updated(DependencyObject d, DependencyPropertyChangedEventArgs e) {
             if (!d.Dispatcher.CheckAccess()) {
-                d.Dispatcher.Invoke((Action)(() => SourcePath_Updated(d, e)));
+                d.Dispatcher.BeginInvoke((Action)(() => SourcePath_Updated(d, e)));
                 return;
             }
 
@@ -170,7 +166,7 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
                         files = files.Concat(Directory.EnumerateFiles(sourcePath, pywFilters, SearchOption.TopDirectoryOnly));
                     }
                     var fileList = files.Select(f => Path.GetFileName(f)).ToList();
-                    dispatcher.Invoke((Action)(() => {
+                    dispatcher.BeginInvoke((Action)(() => {
                         var tlpf = s.TopLevelPythonFiles as BulkObservableCollection<string>;
                         if (tlpf != null) {
                             tlpf.Clear();
@@ -256,13 +252,6 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
             bool supportDjango) {
 
             var projectHome = CommonUtils.GetRelativeDirectoryPath(Path.GetDirectoryName(projectPath), sourcePath);
-            if (IsSafePath(startupFile)) {
-                try {
-                    startupFile = CommonUtils.GetRelativeFilePath(sourcePath, startupFile);
-                } catch (ArgumentException) {
-                    startupFile = null;
-                }
-            }
 
             writer.WriteStartDocument();
             writer.WriteStartElement("Project", "http://schemas.microsoft.com/developer/msbuild/2003");
@@ -278,10 +267,12 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
             writer.WriteElementString("SchemaVersion", "2.0");
             writer.WriteElementString("ProjectGuid", Guid.NewGuid().ToString("B"));
             writer.WriteElementString("ProjectHome", projectHome);
-            if (!string.IsNullOrEmpty(startupFile)) {
+            if (IsSafePath(startupFile)) {
                 writer.WriteElementString("StartupFile", startupFile);
             } else if (supportDjango) {
                 writer.WriteElementString("StartupFile", "manage.py");
+            } else {
+                writer.WriteElementString("StartupFile", "");
             }
             writer.WriteElementString("SearchPath", searchPaths);
             writer.WriteElementString("WorkingDirectory", ".");

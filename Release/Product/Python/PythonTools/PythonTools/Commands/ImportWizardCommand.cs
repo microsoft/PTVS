@@ -33,7 +33,7 @@ namespace Microsoft.PythonTools.Commands {
                     .ContinueWith(t => {
                         var path = t.Result;
                         if (!string.IsNullOrEmpty(path) && File.Exists(path)) {
-                            PythonToolsPackage.Instance.DTE.ExecuteCommand("File.OpenProject", path);
+                            PythonToolsPackage.Instance.DTE.ExecuteCommand("File.OpenProject", "\"" + path + "\"");
                         }
                         statusBar.SetText("");
                     }, System.Threading.Tasks.TaskScheduler.FromCurrentSynchronizationContext());

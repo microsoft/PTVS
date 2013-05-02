@@ -103,7 +103,8 @@
                 <Setter Property="BorderBrush" Value="{DynamicResource {x:Static wpf:Controls.ControlBorderSelectedKey}}" />
             </Trigger>
             <Trigger Property="IsDefault" Value="True">
-                <Setter Property="BorderBrush" Value="{DynamicResource {x:Static wpf:Controls.ControlBackgroundHoverKey}}" />
+                <Setter Property="BorderBrush" Value="{DynamicResource {x:Static wpf:Controls.ControlBorderSelectedKey}}" />
+                <Setter Property="BorderThickness" Value="2" />
             </Trigger>
         </Style.Triggers>
     </Style>

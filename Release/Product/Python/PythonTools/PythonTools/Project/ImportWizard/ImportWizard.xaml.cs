@@ -20,6 +20,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
+using System.Windows.Interop;
 using Microsoft.VisualStudio.Shell;
 
 namespace Microsoft.PythonTools.Project.ImportWizard {
@@ -49,6 +50,11 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
         private static readonly DependencyPropertyKey PageCountPropertyKey = DependencyProperty.RegisterReadOnly("PageCount", typeof(int), typeof(ImportWizard), new PropertyMetadata(0));
         public static readonly DependencyProperty PageCountProperty = PageCountPropertyKey.DependencyProperty;
 
+        private static readonly DependencyPropertyKey IsNextDefaultPropertyKey = DependencyProperty.RegisterReadOnly("IsNextDefault", typeof(bool), typeof(ImportWizard), new PropertyMetadata(true));
+        public static readonly DependencyProperty IsNextDefaultProperty = IsNextDefaultPropertyKey.DependencyProperty;
+        private static readonly DependencyPropertyKey IsFinishDefaultPropertyKey = DependencyProperty.RegisterReadOnly("IsFinishDefault", typeof(bool), typeof(ImportWizard), new PropertyMetadata(false));
+        public static readonly DependencyProperty IsFinishDefaultProperty = IsFinishDefaultPropertyKey.DependencyProperty;
+
         private CollectionViewSource _pageSequence;
 
         public ICollectionView PageSequence {
@@ -72,11 +78,17 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
             PageCount = _pageSequence.View.OfType<object>().Count();
 
             PageSequence = _pageSequence.View;
+            PageSequence.CurrentChanged += PageSequence_CurrentChanged;
             PageSequence.MoveCurrentToFirst();
 
             DataContext = this;
 
             InitializeComponent();
+        }
+
+        private void PageSequence_CurrentChanged(object sender, EventArgs e) {
+            SetValue(IsNextDefaultPropertyKey, PageSequence.CurrentPosition < PageCount - 1);
+            SetValue(IsFinishDefaultPropertyKey, PageSequence.CurrentPosition >= PageCount - 1);
         }
 
         private void Browse_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
@@ -90,17 +102,25 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
                 var path = tb.GetValue(TextBox.TextProperty) as string;
                 path = PythonToolsPackage.Instance.BrowseForDirectory(new System.Windows.Interop.WindowInteropHelper(this).Handle, path);
                 if (path != null) {
-                    tb.SetValue(TextBox.TextProperty, path);
+                    tb.SetCurrentValue(TextBox.TextProperty, path);
+                    var binding = BindingOperations.GetBindingExpressionBase(tb, TextBox.TextProperty);
+                    if (binding != null) {
+                        binding.UpdateSource();
+                    }
                 }
             } else {
                 var existing = tb.GetValue(TextBox.TextProperty) as string;
                 var path = e.Parameter as string;
-                path = PythonToolsPackage.Instance.BrowseForDirectory(new System.Windows.Interop.WindowInteropHelper(this).Handle, path);
+                path = PythonToolsPackage.Instance.BrowseForDirectory(new WindowInteropHelper(this).Handle, path);
                 if (path != null) {
                     if (string.IsNullOrEmpty(existing)) {
-                        tb.SetValue(TextBox.TextProperty, path);
+                        tb.SetCurrentValue(TextBox.TextProperty, path);
                     } else {
-                        tb.SetValue(TextBox.TextProperty, existing.TrimEnd(new[] { '\r', '\n' }) + Environment.NewLine + path);
+                        tb.SetCurrentValue(TextBox.TextProperty, existing.TrimEnd(new[] { '\r', '\n' }) + Environment.NewLine + path);
+                    }
+                    var binding = BindingOperations.GetBindingExpressionBase(tb, TextBox.TextProperty);
+                    if (binding != null) {
+                        binding.UpdateSource();
                     }
                 }
             }
@@ -111,9 +131,13 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
             var filter = (e.Parameter as string) ?? "All Files (*.*)|*.*";
 
             var path = tb.GetValue(TextBox.TextProperty) as string;
-            path = PythonToolsPackage.Instance.BrowseForFileOpen(new System.Windows.Interop.WindowInteropHelper(this).Handle, filter, path);
+            path = PythonToolsPackage.Instance.BrowseForFileOpen(new WindowInteropHelper(this).Handle, filter, path);
             if (path != null) {
-                tb.SetValue(TextBox.TextProperty, path);
+                tb.SetCurrentValue(TextBox.TextProperty, path);
+                var binding = BindingOperations.GetBindingExpressionBase(tb, TextBox.TextProperty);
+                if (binding != null) {
+                    binding.UpdateSource();
+                }
             }
         }
 
@@ -122,9 +146,13 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
             var filter = (e.Parameter as string) ?? "All Files (*.*)|*.*";
 
             var path = tb.GetValue(TextBox.TextProperty) as string;
-            path = PythonToolsPackage.Instance.BrowseForFileSave(new System.Windows.Interop.WindowInteropHelper(this).Handle, filter, path);
+            path = PythonToolsPackage.Instance.BrowseForFileSave(new WindowInteropHelper(this).Handle, filter, path);
             if (path != null) {
-                tb.SetValue(TextBox.TextProperty, path);
+                tb.SetCurrentValue(TextBox.TextProperty, path);
+                var binding = BindingOperations.GetBindingExpressionBase(tb, TextBox.TextProperty);
+                if (binding != null) {
+                    binding.UpdateSource();
+                }
             }
         }
 
