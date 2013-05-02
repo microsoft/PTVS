@@ -459,10 +459,11 @@ def merge_data(baseline_data, new_data):
     return new_data
 
 def merge_method(baseline_method, new_method):
-    if new_method.get('overloads') is None:
-        new_method['overloads'] = baseline_method['overloads']
-    else:
-        new_method['overloads'].extend(baseline_method['overloads'])
+    if baseline_method.get('overloads') is not None:
+        if new_method.get('overloads') is None:
+            new_method['overloads'] = baseline_method['overloads']
+        else:
+            new_method['overloads'].extend(baseline_method['overloads'])
     
     if 'doc' in baseline_method and 'doc' not in new_method:
         new_method['doc'] = baseline_method['doc']

@@ -23,48 +23,70 @@ using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
 
 namespace Microsoft.PythonTools.Intellisense {
+    internal class AsKeywordCompletionAnalysis : CompletionAnalysis {
+        public AsKeywordCompletionAnalysis(ITrackingSpan span, ITextBuffer buffer, CompletionOptions options)
+            : base(span, buffer, options) { }
+
+        public override CompletionSet GetCompletions(IGlyphService glyphService) {
+            var completion = new[] { PythonCompletion(glyphService, "as", null, StandardGlyphGroup.GlyphKeyword) };
+            return new FuzzyCompletionSet("PythonAsKeyword", "Python", Span, completion, _options, CompletionComparer.UnderscoresLast);
+        }
+    }
+
     /// <summary>
     /// Provides the completion context for when the user is doing an import
     /// </summary>
     internal class ImportCompletionAnalysis : CompletionAnalysis {
         private static readonly Regex _validNameRegex = new Regex("^[a-zA-Z_][a-zA-Z0-9_]*$");
         private readonly string[] _namespace;
-        
-        internal ImportCompletionAnalysis(IList<ClassificationSpan> tokens, ITrackingSpan span, ITextBuffer textBuffer, CompletionOptions options)
-            : base(span, textBuffer, options) {
 
+        private ImportCompletionAnalysis(string[] ns, ITrackingSpan span, ITextBuffer textBuffer, CompletionOptions options)
+            : base(span, textBuffer, options) {
+            _namespace = ns;
+        }
+
+        public static CompletionAnalysis Make(IList<ClassificationSpan> tokens, ITrackingSpan span, ITextBuffer textBuffer, CompletionOptions options) {
             Debug.Assert(tokens[0].Span.GetText() == "import" || tokens[0].Span.GetText() == "from");
 
-            int beforeLastComma = tokens
-                .Reverse()
-                .SkipWhile(tok => !tok.ClassificationType.IsOfType(PythonPredefinedClassificationTypeNames.Comma))
-                .Count();
-
-            if (tokens.Count >= 2 && beforeLastComma < tokens.Count) {
-                int spanEnd = Span.GetEndPoint(textBuffer.CurrentSnapshot).Position;
-                var nameParts = new List<string>();
-                bool removeLastPart = false, lastWasError = false;
-                foreach(var tok in tokens.Skip(beforeLastComma > 0 ? beforeLastComma : 1)) {
-                    if (tok.ClassificationType.IsOfType(PredefinedClassificationTypeNames.Identifier)) {
-                        nameParts.Add(tok.Span.GetText());
-                        // Only remove the last part if the trigger point is
-                        // not right at the end of it.
-                        removeLastPart = (tok.Span.End.Position != spanEnd);
-                    } else if (tok.ClassificationType.IsOfType(PythonPredefinedClassificationTypeNames.Dot)) {
-                        removeLastPart = false;
+            if (tokens.Count >= 2) {
+                var ns = new List<string>();
+                bool expectDot = false, skipToComma = false;
+                foreach (var tok in tokens.SkipWhile(tok => !tok.ClassificationType.IsOfType(PredefinedClassificationTypeNames.Identifier))) {
+                    if (skipToComma) {
+                        if (tok.ClassificationType.IsOfType(PythonPredefinedClassificationTypeNames.Comma)) {
+                            expectDot = false;
+                            skipToComma = false;
+                            ns.Clear();
+                        }
+                    } else if (expectDot) {
+                        if (tok.ClassificationType.IsOfType(PythonPredefinedClassificationTypeNames.Dot)) {
+                            expectDot = false;
+                        } else if (tok.ClassificationType.IsOfType(PythonPredefinedClassificationTypeNames.Comma)) {
+                            expectDot = false;
+                            ns.Clear();
+                        } else {
+                            skipToComma = true;
+                        }
                     } else {
-                        lastWasError = true;
-                        break;
+                        if (tok.ClassificationType.IsOfType(PredefinedClassificationTypeNames.Identifier)) {
+                            ns.Add(tok.Span.GetText());
+                            expectDot = true;
+                        } else {
+                            skipToComma = true;
+                        }
                     }
                 }
 
-                if (!lastWasError) {
-                    if (removeLastPart && nameParts.Count > 0) {
-                        nameParts.RemoveAt(nameParts.Count - 1);
-                    }
-                    _namespace = nameParts.ToArray();
+                if (skipToComma) {
+                    return EmptyCompletionContext;
                 }
+                if (expectDot) {
+                    return new AsKeywordCompletionAnalysis(span, textBuffer, options);
+                }
+                return new ImportCompletionAnalysis(ns.ToArray(), span, textBuffer, options);
             }
+
+            return new ImportCompletionAnalysis(new string[0], span, textBuffer, options);
         }
 
         public override CompletionSet GetCompletions(IGlyphService glyphService) {
