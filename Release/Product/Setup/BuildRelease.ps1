@@ -483,6 +483,9 @@ try {
         Write-Output "Copying source files"
         robocopy /s . $outdir\Sources /xd TestResults Binaries Servicing obj | Out-Null
     }
+    
+    Copy-Item "Prerequisites\*.reg" "$outdir" -Force -EA:0
+    
     $successful = $true
 } finally {
     if ($asmverfileBackedUp) {
