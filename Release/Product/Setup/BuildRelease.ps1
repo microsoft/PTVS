@@ -309,6 +309,8 @@ if ($scorch) {
     tfpt scorch /noprompt
 }
 
+$failed_logs = @()
+
 try {
     $successful = $false
     if ($asmverfileUseBackup -eq 0) {
@@ -341,6 +343,7 @@ try {
                     Release\Tests\dirs.proj
                 if ($LASTEXITCODE -gt 0) {
                     Write-Error -EA:Continue "Test build failed: $config"
+                    $failed_logs += Get-Item "BuildRelease.$config.$($targetVs.number).tests.log"
                     continue
                 }
             }
@@ -354,6 +357,7 @@ try {
                 Release\Product\Setup\dirs.proj
             if ($LASTEXITCODE -gt 0) {
                 Write-Error -EA:Continue "Build failed: $config"
+                $failed_logs += Get-Item "BuildRelease.$config.$($targetVs.number).log"
                 continue
             }
             
@@ -503,4 +507,12 @@ if ($successful) {
     Write-Output ""
     Write-Output "Installers were output to:"
     Write-Output "    $outdir"
+    if ($failed_logs.Count -ne 0) {
+        Write-Output ""
+        Write-Warning "Some configurations failed to build."
+        Write-Output "Review these log files for details:"
+        foreach ($name in $failed_logs) {
+            Write-Output "    $name"
+        }
+    }
 }
