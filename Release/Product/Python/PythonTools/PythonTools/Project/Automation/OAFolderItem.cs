@@ -16,22 +16,29 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using EnvDTE;
 
-namespace Microsoft.PythonTools.Project.Automation
+namespace Microsoft.VisualStudioTools.Project.Automation
 {
     /// <summary>
     /// Represents an automation object for a folder in a project
     /// </summary>
     [SuppressMessage("Microsoft.Interoperability", "CA1405:ComVisibleTypeBaseTypesShouldBeComVisible")]
     [ComVisible(true)]
-    public class OAFolderItem : OAProjectItem<FolderNode>
+    public class OAFolderItem : OAProjectItem
     {
         #region ctors
-        public OAFolderItem(OAProject project, FolderNode node)
+        internal OAFolderItem(OAProject project, FolderNode node)
             : base(project, node)
         {
         }
 
         #endregion
+
+        private new FolderNode Node {
+            get {
+                return (FolderNode)base.Node;
+            }
+        }
+
 
         #region overridden methods
         public override ProjectItems Collection

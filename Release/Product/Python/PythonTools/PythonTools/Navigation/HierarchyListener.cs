@@ -13,13 +13,13 @@
  * ***************************************************************************/
 
 using System;
-using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TextManager.Interop;
+using Microsoft.VisualStudioTools.Project;
 using VSConstants = Microsoft.VisualStudio.VSConstants;
 
-namespace Microsoft.PythonTools.Navigation {
+namespace Microsoft.VisualStudioTools.Navigation {
 
     public class HierarchyEventArgs : EventArgs {
         private uint _itemId;

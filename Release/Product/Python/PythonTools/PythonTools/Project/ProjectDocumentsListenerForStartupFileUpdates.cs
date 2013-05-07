@@ -14,11 +14,10 @@
 
 using System;
 using Microsoft.VisualStudio;
-
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 
-namespace Microsoft.PythonTools.Project {
+namespace Microsoft.VisualStudioTools.Project {
     /// <summary>
     /// Updates the dynamic project property called StartupFile 
     /// </summary>
@@ -51,7 +50,7 @@ namespace Microsoft.PythonTools.Project {
                     if (CommonUtils.IsSamePath(oldfile, fullPathToStartupFile)) {
                         //Get the newfilename and update the StartupFile property
                         string newfilename = newFileNames[index];
-                        CommonFileNode node = _project.FindChild(newfilename) as CommonFileNode;
+                        CommonFileNode node = _project.FindNodeByFullPath(newfilename) as CommonFileNode;
                         if (node == null)
                             throw new InvalidOperationException("Could not find the CommonFileNode object");
                         //Startup file has been renamed

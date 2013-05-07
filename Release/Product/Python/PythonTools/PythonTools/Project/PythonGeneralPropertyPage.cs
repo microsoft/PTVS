@@ -15,6 +15,8 @@
 using System;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
+using Microsoft.VisualStudioTools;
+using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Project {
     [Guid(PythonConstants.GeneralPropertyPageGuid)]
@@ -31,7 +33,7 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-        public override CommonProjectNode Project {
+        internal override CommonProjectNode Project {
             get {
                 return base.Project;
             }

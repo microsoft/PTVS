@@ -20,7 +20,7 @@ using Microsoft.VisualStudio.Shell.Interop;
 using IServiceProvider = System.IServiceProvider;
 using ShellConstants = Microsoft.VisualStudio.Shell.Interop.Constants;
 
-namespace Microsoft.PythonTools.Project
+namespace Microsoft.VisualStudioTools.Project
 {
     /// <summary>
     /// helper to make the editor ignore external changes

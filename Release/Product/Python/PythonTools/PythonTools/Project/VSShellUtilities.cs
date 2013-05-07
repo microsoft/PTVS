@@ -17,7 +17,7 @@ using System.Diagnostics;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
 
-namespace Microsoft.PythonTools.Project
+namespace Microsoft.VisualStudioTools.Project
 {
     /// <summary>
     ///This class provides some useful static shell based methods. 

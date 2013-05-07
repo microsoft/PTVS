@@ -13,16 +13,10 @@
  * ***************************************************************************/
 
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Globalization;
-using System.IO;
 using System.Runtime.InteropServices;
 using Microsoft.VisualStudio;
-using MSBuild = Microsoft.Build.Evaluation;
-using Microsoft.Build.Evaluation;
 
-namespace Microsoft.PythonTools.Project
+namespace Microsoft.VisualStudioTools.Project
 {
 
     /// <summary>
@@ -79,7 +73,7 @@ namespace Microsoft.PythonTools.Project
             set;
         }
 
-        protected ProjectNode ItemProject
+        internal ProjectNode ItemProject
         {
             get
             {

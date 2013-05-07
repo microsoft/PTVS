@@ -15,14 +15,14 @@
 using System;
 using System.Globalization;
 using System.Runtime.InteropServices;
-using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TextManager.Interop;
+using Microsoft.VisualStudioTools.Parsing;
 using ErrorHandler = Microsoft.VisualStudio.ErrorHandler;
 using VSConstants = Microsoft.VisualStudio.VSConstants;
 
-namespace Microsoft.PythonTools.Navigation {
+namespace Microsoft.VisualStudioTools.Navigation {
 
     /// <summary>
     /// This is a specialized version of the LibraryNode that handles the dynamic languages

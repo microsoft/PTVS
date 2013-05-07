@@ -16,7 +16,7 @@ using System;
 using System.IO;
 using Microsoft.VisualStudio.Shell;
 
-namespace Microsoft.PythonTools {
+namespace Microsoft.VisualStudioTools {
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
     internal class ProvideDebugPortSupplierAttribute : RegistrationAttribute {
         private readonly string _id, _name;

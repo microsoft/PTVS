@@ -14,9 +14,9 @@
 
 using System;
 
-namespace Microsoft.PythonTools.Project
+namespace Microsoft.VisualStudioTools.Project
 {
-    public partial class ProjectNode
+    internal partial class ProjectNode
     {
         #region fields
         private EventHandler<ProjectPropertyChangedArgs> projectPropertiesListeners;

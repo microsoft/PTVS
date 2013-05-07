@@ -24,7 +24,7 @@ using ErrorHandler = Microsoft.VisualStudio.ErrorHandler;
 using IOleServiceProvider = Microsoft.VisualStudio.OLE.Interop.IServiceProvider;
 using VSConstants = Microsoft.VisualStudio.VSConstants;
 
-namespace Microsoft.PythonTools.Project {
+namespace Microsoft.VisualStudioTools.Project {
     /// <summary>
     /// Common factory for creating our editor
     /// </summary>    

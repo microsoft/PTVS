@@ -22,7 +22,7 @@ using EnvDTE;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
 
-namespace Microsoft.PythonTools.Project.Automation
+namespace Microsoft.VisualStudioTools.Project.Automation
 {
     /// <summary>
     /// Contains ProjectItem objects
@@ -32,7 +32,7 @@ namespace Microsoft.PythonTools.Project.Automation
     public class OAProjectItems : OANavigableProjectItems
     {
         #region ctor
-        public OAProjectItems(OAProject project, HierarchyNode nodeWithItems)
+        internal OAProjectItems(OAProject project, HierarchyNode nodeWithItems)
             : base(project, nodeWithItems)
         {
         }
@@ -57,7 +57,7 @@ namespace Microsoft.PythonTools.Project.Automation
                 result.ProjectItems.AddFromDirectory(Path.Combine(directory, subdirectory));
             }
 
-            foreach (var extension in this.Project.Project.CodeFileExtensions) {
+            foreach (var extension in this.Project.ProjectNode.CodeFileExtensions) {
                 foreach (string filename in Directory.EnumerateFiles(directory, "*" + extension)) {
                     result.ProjectItems.AddFromFile(Path.Combine(directory, filename));
                 }
@@ -78,10 +78,10 @@ namespace Microsoft.PythonTools.Project.Automation
         {
             CheckProjectIsValid();
 
-            ProjectNode proj = this.Project.Project;
+            ProjectNode proj = this.Project.ProjectNode;
             EnvDTE.ProjectItem itemAdded = null;
 
-            using (AutomationScope scope = new AutomationScope(this.Project.Project.Site))
+            using (AutomationScope scope = new AutomationScope(this.Project.ProjectNode.Site))
             {
                 // Determine the operation based on the extension of the filename.
                 // We should run the wizard only if the extension is vstemplate
@@ -114,7 +114,7 @@ namespace Microsoft.PythonTools.Project.Automation
 
         private void CheckProjectIsValid()
         {
-            if (this.Project == null || this.Project.Project == null || this.Project.Project.Site == null || this.Project.Project.IsClosed)
+            if (this.Project == null || this.Project.ProjectNode == null || this.Project.ProjectNode.Site == null || this.Project.ProjectNode.IsClosed)
             {
                 throw new InvalidOperationException();
             }
@@ -134,7 +134,7 @@ namespace Microsoft.PythonTools.Project.Automation
             Project.CheckProjectIsValid();
 
             //Verify name is not null or empty
-            Utilities.ValidateFileName(this.Project.Project.Site, name);
+            Utilities.ValidateFileName(this.Project.ProjectNode.Site, name);
 
             //Verify that kind is null, empty, or a physical folder
             if (!(string.IsNullOrEmpty(kind) || kind.Equals(EnvDTE.Constants.vsProjectItemKindPhysicalFolder)))
@@ -142,23 +142,20 @@ namespace Microsoft.PythonTools.Project.Automation
                 throw new ArgumentException("Parameter specification for AddFolder was not meet", "kind");
             }
 
-            for (HierarchyNode child = this.NodeWithItems.FirstChild; child != null; child = child.NextSibling)
-            {
-                if (child.Caption.Equals(name, StringComparison.OrdinalIgnoreCase))
-                {
-                    throw new ArgumentException(String.Format(CultureInfo.CurrentCulture, "Folder already exists with the name '{0}'", name));
-                }
+            var existingChild = this.NodeWithItems.FindImmediateChildByName(name);
+            if (existingChild != null) {
+                throw new ArgumentException(String.Format(CultureInfo.CurrentCulture, "Folder already exists with the name '{0}'", name));
             }
 
-            ProjectNode proj = this.Project.Project;
+            ProjectNode proj = this.Project.ProjectNode;
 
             HierarchyNode newFolder = null;
-            using (AutomationScope scope = new AutomationScope(this.Project.Project.Site))
+            using (AutomationScope scope = new AutomationScope(this.Project.ProjectNode.Site))
             {
 
                 //In the case that we are adding a folder to a folder, we need to build up
                 //the path to the project node.
-                name = Path.Combine(this.NodeWithItems.VirtualNodeName, name);
+                name = Path.Combine(NodeWithItems.FullPathToChildren, name);
 
                 newFolder = proj.CreateFolderNodes(name);
             }
@@ -201,7 +198,7 @@ namespace Microsoft.PythonTools.Project.Automation
             CheckProjectIsValid();
 
             string ext = Path.GetExtension(path);
-            foreach (var extension in this.Project.Project.CodeFileExtensions) {
+            foreach (var extension in this.Project.ProjectNode.CodeFileExtensions) {
                 // http://pytools.codeplex.com/workitem/617
                 // We are currently in create project from existing code mode.  The wizard walks all of the top-level
                 // files and adds them.  It then lets us handle any subdirectories by calling AddFromDirectory.
@@ -210,10 +207,10 @@ namespace Microsoft.PythonTools.Project.Automation
                 // currently adding them ignore anything other than a .py/.pyw files - returnning null is fine
                 // here, the wizard doesn't care about the result.
                 if (String.Compare(ext, extension, StringComparison.OrdinalIgnoreCase) == 0) {
-                    ProjectNode proj = this.Project.Project;
+                    ProjectNode proj = this.Project.ProjectNode;
 
                     EnvDTE.ProjectItem itemAdded = null;
-                    using (AutomationScope scope = new AutomationScope(this.Project.Project.Site)) {
+                    using (AutomationScope scope = new AutomationScope(this.Project.ProjectNode.Site)) {
                         VSADDRESULT[] result = new VSADDRESULT[1];
                         ErrorHandler.ThrowOnFailure(proj.AddItem(this.NodeWithItems.ID, op, path, 0, new string[1] { path }, IntPtr.Zero, result));
 
@@ -238,11 +235,11 @@ namespace Microsoft.PythonTools.Project.Automation
         /// <param name="path">The full path of the item added.</param>
         /// <returns>A ProjectItem object.</returns>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1800:DoNotCastUnnecessarily")]
-        protected virtual EnvDTE.ProjectItem EvaluateAddResult(VSADDRESULT result, string path)
+        private EnvDTE.ProjectItem EvaluateAddResult(VSADDRESULT result, string path)
         {
             if (result == VSADDRESULT.ADDRESULT_Success)
             {
-                HierarchyNode nodeAdded = this.NodeWithItems.FindChild(path);
+                HierarchyNode nodeAdded = this.NodeWithItems.ProjectMgr.FindNodeByFullPath(path);
                 Debug.Assert(nodeAdded != null, "We should have been able to find the new element in the hierarchy");
                 if (nodeAdded != null)
                 {
@@ -253,7 +250,7 @@ namespace Microsoft.PythonTools.Project.Automation
                     }
                     else
                     {
-                        item = new OAProjectItem<HierarchyNode>(this.Project, nodeAdded);
+                        item = new OAProjectItem(this.Project, nodeAdded);
                     }
 
                     return item;

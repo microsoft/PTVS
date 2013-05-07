@@ -20,13 +20,13 @@ using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
 using MSBuildExecution = Microsoft.Build.Execution;
 
-namespace Microsoft.PythonTools.Project
+namespace Microsoft.VisualStudioTools.Project
 {
     /// <summary>
     /// Allows projects to group outputs according to usage.
     /// </summary>
-    [CLSCompliant(false), ComVisible(true)]
-    public class OutputGroup : IVsOutputGroup2
+    [ComVisible(true)]
+    internal class OutputGroup : IVsOutputGroup2
     {
         private readonly ProjectConfig _projectCfg;
         private readonly ProjectNode _project;
@@ -68,7 +68,7 @@ namespace Microsoft.PythonTools.Project
         /// <summary>
         /// Get the project object that produces this output group.
         /// </summary>
-        protected ProjectNode Project
+        internal ProjectNode Project
         {
             get { return _project; }
         }

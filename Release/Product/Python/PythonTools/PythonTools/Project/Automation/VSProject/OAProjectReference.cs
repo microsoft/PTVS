@@ -20,18 +20,22 @@ using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using VSLangProj;
 
-namespace Microsoft.PythonTools.Project.Automation
+namespace Microsoft.VisualStudioTools.Project.Automation
 {
     /// <summary>
     /// Represents a project reference of the solution
     /// </summary>
     [SuppressMessage("Microsoft.Interoperability", "CA1405:ComVisibleTypeBaseTypesShouldBeComVisible")]
     [ComVisible(true)]
-    public class OAProjectReference : OAReferenceBase<ProjectReferenceNode>
+    public class OAProjectReference : OAReferenceBase
     {
-        public OAProjectReference(ProjectReferenceNode projectReference) :
+        internal OAProjectReference(ProjectReferenceNode projectReference) :
             base(projectReference)
         {
+        }
+
+        internal new ProjectReferenceNode BaseReferenceNode {
+            get { return (ProjectReferenceNode)base.BaseReferenceNode; }
         }
 
         #region Reference override

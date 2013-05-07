@@ -17,12 +17,12 @@ using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
 using IServiceProvider = System.IServiceProvider;
 
-namespace Microsoft.PythonTools.Project
+namespace Microsoft.VisualStudioTools.Project
 {
     /// <summary>
     /// This class triggers the project events for "our" hierrachies.
     /// </summary>
-    internal class SolutionListenerForProjectEvents : SolutionListener, IProjectEvents
+    internal class SolutionListenerForProjectEvents : SolutionListener
     {
         #region events
         /// Event raised just after the project file opened.
@@ -45,23 +45,11 @@ namespace Microsoft.PythonTools.Project
         #region overridden methods
         public override int OnAfterOpenProject(IVsHierarchy hierarchy, int added)
         {
-            IProjectEventsListener projectEventListener = hierarchy as IProjectEventsListener;
-            if (projectEventListener != null && projectEventListener.IsProjectEventsListener)
-            {
-                this.RaiseAfterProjectFileOpened((added != 0) ? true : false);
-            }
-
             return VSConstants.S_OK;
         }
 
         public override int OnBeforeCloseProject(IVsHierarchy hierarchy, int removed)
         {
-            IProjectEventsListener projectEvents = hierarchy as IProjectEventsListener;
-            if (projectEvents != null && projectEvents.IsProjectEventsListener)
-            {
-                this.RaiseBeforeProjectFileClosed(hierarchy, (removed != 0) ? true : false);
-            }
-
             return VSConstants.S_OK;
         }
         #endregion

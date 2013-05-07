@@ -14,17 +14,13 @@
 
 using System;
 using System.Diagnostics;
-using System.Globalization;
-using System.IO;
 using System.Runtime.InteropServices;
-using System.Windows.Forms;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using MSBuild = Microsoft.Build.Evaluation;
-using MSBuildExecution = Microsoft.Build.Execution;
 
-namespace Microsoft.PythonTools.Project
+namespace Microsoft.VisualStudioTools.Project
 {
     /// <summary>
     /// Creates projects within the solution
@@ -84,7 +80,7 @@ namespace Microsoft.PythonTools.Project
         #endregion
 
         #region abstract methods
-        protected abstract ProjectNode CreateProject();
+        internal abstract ProjectNode CreateProject();
         #endregion
 
         #region overriden methods
@@ -117,24 +113,9 @@ namespace Microsoft.PythonTools.Project
                     canceled = 1;
                 ErrorHandler.ThrowOnFailure(hr);
 
-                // This needs to be done after the aggregation is completed (to avoid creating a non-aggregated CCW) and as a result we have to go through the interface
-                IProjectEventsProvider eventsProvider = (IProjectEventsProvider)Marshal.GetTypedObjectForIUnknown(project, typeof(IProjectEventsProvider));
-                eventsProvider.ProjectEventsProvider = this.GetProjectEventsProvider();
-                eventsProvider.ProjectEventsProvider.BeforeProjectFileClosed += ProjectEventsProviderBeforeProjectFileClosed;
-
                 this.buildProject = null;
             }
         }
-
-        void ProjectEventsProviderBeforeProjectFileClosed(object sender, BeforeProjectFileClosedEventArgs e)
-        {
-            IProjectEventsCallback callback = e.Hierarchy as IProjectEventsCallback;
-            if (callback != null)
-            {
-                callback.BeforeClose();
-            }
-        }
-
 
         /// <summary>
         /// Instantiate the project class, but do not proceed with the
@@ -179,28 +160,6 @@ namespace Microsoft.PythonTools.Project
 
             return guids;
         }
-        #endregion
-
-        #region helpers
-        private IProjectEvents GetProjectEventsProvider()
-        {
-            ProjectPackage projectPackage = this.package as ProjectPackage;
-            Debug.Assert(projectPackage != null, "Package not inherited from framework");
-            if (projectPackage != null)
-            {
-                foreach (SolutionListener listener in projectPackage.SolutionListeners)
-                {
-                    IProjectEvents projectEvents = listener as IProjectEvents;
-                    if (projectEvents != null)
-                    {
-                        return projectEvents;
-                    }
-                }
-            }
-
-            return null;
-        }
-
         #endregion
 
 #if DEV11_OR_LATER

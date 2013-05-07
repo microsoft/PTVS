@@ -15,7 +15,7 @@
 using System;
 using Microsoft.VisualStudio.Shell;
 
-namespace Microsoft.PythonTools {
+namespace Microsoft.VisualStudioTools {
     class DeveloperActivityAttribute : RegistrationAttribute {
         private readonly Type _projectType;
         private readonly int _templateSet;

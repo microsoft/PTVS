@@ -14,13 +14,14 @@
 
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
+using Microsoft.VisualStudioTools.Project.Automation;
 using VSLangProj;
 
 namespace Microsoft.PythonTools.Project.Automation {
     [SuppressMessage("Microsoft.Interoperability", "CA1405:ComVisibleTypeBaseTypesShouldBeComVisible")]
     [ComVisible(true)]
-    public class OAPythonExtensionReference : OAReferenceBase<PythonExtensionReferenceNode> {
-        public OAPythonExtensionReference(PythonExtensionReferenceNode pythonExtensionReferenceNode) :
+    public class OAPythonExtensionReference : OAReferenceBase {
+        internal OAPythonExtensionReference(PythonExtensionReferenceNode pythonExtensionReferenceNode) :
             base(pythonExtensionReferenceNode) {
         }
 

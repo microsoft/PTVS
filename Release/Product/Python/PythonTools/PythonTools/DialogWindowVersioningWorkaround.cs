@@ -12,13 +12,9 @@
  *
  * ***************************************************************************/
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using Microsoft.VisualStudio.PlatformUI;
 
-namespace Microsoft.PythonTools {
+namespace Microsoft.VisualStudioTools {
     /// <summary>
     /// Works around an issue w/ DialogWindow and targetting multiple versions of VS.
     /// 

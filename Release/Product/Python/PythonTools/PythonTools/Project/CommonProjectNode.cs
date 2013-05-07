@@ -22,16 +22,16 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using System.Windows.Threading;
-using Microsoft.PythonTools.Navigation;
-using Microsoft.PythonTools.Project.Automation;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudioTools.Navigation;
+using Microsoft.VisualStudioTools.Project.Automation;
 using Microsoft.Windows.Design.Host;
 using VsCommands2K = Microsoft.VisualStudio.VSConstants.VSStd2KCmdID;
 using VSConstants = Microsoft.VisualStudio.VSConstants;
 
-namespace Microsoft.PythonTools.Project {
+namespace Microsoft.VisualStudioTools.Project {
 
     public enum CommonImageName {
         File = 0,
@@ -45,7 +45,7 @@ namespace Microsoft.PythonTools.Project {
         VirtualEnvPackage = SearchPath
     }
 
-    public abstract class CommonProjectNode : ProjectNode, IVsProjectSpecificEditorMap2, IVsDeferredSaveProject {
+    internal abstract class CommonProjectNode : ProjectNode, IVsProjectSpecificEditorMap2, IVsDeferredSaveProject {
         private CommonProjectPackage/*!*/ _package;
         private Guid _mruPageGuid = new Guid(CommonConstants.AddReferenceMRUPageGuid);
         private VSLangProj.VSProject _vsProject = null;
@@ -58,6 +58,7 @@ namespace Microsoft.PythonTools.Project {
         internal bool _boldedStartupItem;
         private object _automationObject;
         private CommonPropertyPage _propPage;
+        private readonly Dictionary<string, FileSystemEventHandler> _fileChangedHandlers = new Dictionary<string, FileSystemEventHandler>();
 
         public CommonProjectNode(CommonProjectPackage/*!*/ package, ImageList/*!*/ imageList) {
             Contract.Assert(package != null);
@@ -193,7 +194,7 @@ namespace Microsoft.PythonTools.Project {
             return _automationObject;
         }
 
-        protected override int QueryStatusOnNode(Guid cmdGroup, uint cmd, IntPtr pCmdText, ref QueryStatusResult result) {
+        internal override int QueryStatusOnNode(Guid cmdGroup, uint cmd, IntPtr pCmdText, ref QueryStatusResult result) {
             if (cmdGroup == CommonConstants.Std97CmdGroupGuid) {
                 switch ((VSConstants.VSStd97CmdID)cmd) {
                     case VSConstants.VSStd97CmdID.BuildCtx:
@@ -202,7 +203,7 @@ namespace Microsoft.PythonTools.Project {
                         result = QueryStatusResult.SUPPORTED | QueryStatusResult.INVISIBLE;
                         return VSConstants.S_OK;
                 }
-            } else if (cmdGroup == Microsoft.PythonTools.Project.VsMenus.guidStandardCommandSet2K) {
+            } else if (cmdGroup == Microsoft.VisualStudioTools.Project.VsMenus.guidStandardCommandSet2K) {
                 switch ((VsCommands2K)cmd) {
                     case VsCommands2K.ECMD_PUBLISHSELECTION:
                         if (pCmdText != IntPtr.Zero && NativeMethods.OLECMDTEXT.GetFlags(pCmdText) == NativeMethods.OLECMDTEXT.OLECMDTEXTF.OLECMDTEXTF_NAME) {
@@ -227,6 +228,12 @@ namespace Microsoft.PythonTools.Project {
                         result |= QueryStatusResult.SUPPORTED | QueryStatusResult.ENABLED;
                         return VSConstants.S_OK;
                 }
+            } else if (cmdGroup == SharedCommandGuid) {
+                switch ((SharedCommands)cmd) {
+                    case SharedCommands.AddExistingFolder:
+                        result |= QueryStatusResult.SUPPORTED | QueryStatusResult.ENABLED;
+                        return VSConstants.S_OK;
+            }
             }
 
             return base.QueryStatusOnNode(cmdGroup, cmd, pCmdText, ref result);
@@ -238,8 +245,8 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-        protected override int ExecCommandOnNode(Guid cmdGroup, uint cmd, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut) {
-            if (cmdGroup == Microsoft.PythonTools.Project.VsMenus.guidStandardCommandSet2K) {
+        internal override int ExecCommandOnNode(Guid cmdGroup, uint cmd, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut) {
+            if (cmdGroup == Microsoft.VisualStudioTools.Project.VsMenus.guidStandardCommandSet2K) {
                 switch ((VsCommands2K)cmd) {
                     case VsCommands2K.ECMD_PUBLISHSELECTION:
                     case VsCommands2K.ECMD_PUBLISHSLNCTX:
@@ -249,8 +256,21 @@ namespace Microsoft.PythonTools.Project {
                         Process.Start(this.ProjectHome);
                         return VSConstants.S_OK;
                 }
+            } else if (cmdGroup == SharedCommandGuid) {
+                switch ((SharedCommands)cmd) {
+                    case SharedCommands.AddExistingFolder:
+                        return AddExistingFolderToNode(this);
+            }
             }
             return base.ExecCommandOnNode(cmdGroup, cmd, nCmdexecopt, pvaIn, pvaOut);
+        }
+
+        internal int AddExistingFolderToNode(HierarchyNode parent) {
+            var dir = BrowseForFolder(String.Format("Add Existing Folder - {0}",Caption), parent.FullPathToChildren);
+            if (dir != null) {
+                DropFilesOrFolders(new[] { dir }, parent);
+            }
+            return VSConstants.S_OK;
         }
 
         /// <summary>
@@ -344,8 +364,24 @@ namespace Microsoft.PythonTools.Project {
             _watcher.Created += new FileSystemEventHandler(FileExistanceChanged);
             _watcher.Deleted += new FileSystemEventHandler(FileExistanceChanged);
             _watcher.Renamed += new RenamedEventHandler(FileNameChanged);
+            _watcher.Changed += FileContentsChanged;
             _watcher.SynchronizingObject = new UIThreadSynchronizer();
             _watcher.EnableRaisingEvents = true;
+        }
+
+        private void FileContentsChanged(object sender, FileSystemEventArgs e) {
+            FileSystemEventHandler handler;
+            if (_fileChangedHandlers.TryGetValue(e.FullPath, out handler)) {
+                handler(sender, e);
+            }
+        }
+
+        internal void RegisterFileChangeNotification(FileNode node, FileSystemEventHandler handler) {
+            _fileChangedHandlers[node.Url] = handler;
+        }
+
+        internal void UnregisterFileChangeNotification(FileNode node) {
+            _fileChangedHandlers.Remove(node.Url);
         }
 
         protected override ReferenceContainerNode CreateReferenceContainerNode() {
@@ -358,25 +394,25 @@ namespace Microsoft.PythonTools.Project {
                 oldPath = oldPath + "\\";
             }
 
-            var child = FindChild(oldPath);
+            var child = FindNodeByFullPath(oldPath);
             if (child != null) {
-                child.ReDraw(UIHierarchyElement.Icon);
+                ReDrawNode(child, UIHierarchyElement.Icon);
             }
 
             string newPath = e.FullPath;
             if (!File.Exists(newPath) && Directory.Exists(newPath)) {
                 newPath = newPath + "\\";
             }
-            child = FindChild(newPath);
+            child = FindNodeByFullPath(newPath);
             if (child != null) {
-                child.ReDraw(UIHierarchyElement.Icon);
+                ReDrawNode(child, UIHierarchyElement.Icon);
             }
         }
 
         private void FileExistanceChanged(object sender, FileSystemEventArgs e) {
-            var child = FindChild(e.FullPath);
+            var child = FindNodeByFullPath(e.FullPath);
             if (child != null) {
-                child.ReDraw(UIHierarchyElement.Icon);
+                ReDrawNode(child, UIHierarchyElement.Icon);
             }
         }
 
@@ -418,7 +454,7 @@ namespace Microsoft.PythonTools.Project {
             return VSConstants.S_OK;
         }
 
-        public override int Close() {
+        public override void Close() {
             if (null != _projectDocListenerForStartupFileUpdates) {
                 _projectDocListenerForStartupFileUpdates.Dispose();
                 _projectDocListenerForStartupFileUpdates = null;
@@ -433,7 +469,7 @@ namespace Microsoft.PythonTools.Project {
             _watcher.Dispose();
             _watcher = null;
 
-            return base.Close();
+            base.Close();
         }
 
         public override void Load(string filename, string location, string name, uint flags, ref Guid iidProject, out int canceled) {
@@ -450,17 +486,27 @@ namespace Microsoft.PythonTools.Project {
         }
 
         internal void BoldStartupItem(HierarchyNode startupItem) {
-            if (!_boldedStartupItem && BoldItem(startupItem, true)) {
-                _boldedStartupItem = true;
+            if (!_boldedStartupItem) {
+                if (BoldItem(startupItem, true)) {
+                    _boldedStartupItem = true;
+                }
             }
         }
 
-        internal bool BoldItem(HierarchyNode item, bool bolded) {
+        public bool BoldItem(HierarchyNode node, bool isBold) {
             IVsUIHierarchyWindow2 windows = GetUIHierarchyWindow(
                 ProjectMgr.Site as IServiceProvider,
                 new Guid(ToolWindowGuids80.SolutionExplorer)) as IVsUIHierarchyWindow2;
 
-            return ErrorHandler.Succeeded(windows.SetItemAttribute(this, item.ID, (uint)__VSHIERITEMATTRIBUTE.VSHIERITEMATTRIBUTE_Bold, bolded));
+            if (ErrorHandler.Succeeded(windows.SetItemAttribute(
+                this.GetOuterInterface<IVsUIHierarchy>(),
+                node.ID,
+                (uint)__VSHIERITEMATTRIBUTE.VSHIERITEMATTRIBUTE_Bold,
+                isBold
+            ))) {
+                return true;
+            }
+            return false;
         }
 
         /// <summary>
@@ -468,9 +514,11 @@ namespace Microsoft.PythonTools.Project {
         /// </summary>
         /// <returns></returns>
         protected override Guid[] GetConfigurationIndependentPropertyPages() {
-            return new[] { 
-                GetGeneralPropertyPageType().GUID
-            };
+            var pageType = GetGeneralPropertyPageType();
+            if (pageType != null) {
+                return new[] { pageType.GUID };
+        }
+            return new Guid[0];
         }
 
         /// <summary>
@@ -516,28 +564,16 @@ namespace Microsoft.PythonTools.Project {
             // Avoid adding files to the project multiple times.  Ultimately           
             // we should not use project items and instead should have virtual items.       
 
-            var prjItem = GetExistingItem(absFileName);
+            Microsoft.Build.Evaluation.ProjectItem prjItem;
 
-            if (prjItem == null) {
                 string path = CommonUtils.GetRelativeFilePath(ProjectHome, absFileName);
                 if (IsCodeFile(absFileName)) {
                     prjItem = BuildProject.AddItem("Compile", path)[0];
                 } else {
                     prjItem = BuildProject.AddItem("Content", path)[0];
                 }
-            }
 
             return CreateFileNode(new MsBuildProjectElement(this, prjItem));
-        }
-
-        protected Microsoft.Build.Evaluation.ProjectItem GetExistingItem(string absFileName) {
-            foreach (var item in BuildProject.Items) {
-                string absItemPath = CommonUtils.GetAbsoluteFilePath(ProjectHome, item.EvaluatedInclude);
-                if (CommonUtils.IsSamePath(absItemPath, absFileName)) {
-                    return item;
-                }
-            }
-            return null;
         }
 
         public ProjectElement MakeProjectElement(string type, string path) {
@@ -681,7 +717,7 @@ namespace Microsoft.PythonTools.Project {
                             (uint)__VSHIERITEMATTRIBUTE.VSHIERITEMATTRIBUTE_Bold,
                             false
                         );
-                        n.ReDraw(UIHierarchyElement.Icon);
+                        ReDrawNode(n, UIHierarchyElement.Icon);
                     } else if (CommonUtils.IsSamePath(newFile, absUrl)) {
                         windows.SetItemAttribute(
                             this,
@@ -689,7 +725,7 @@ namespace Microsoft.PythonTools.Project {
                             (uint)__VSHIERITEMATTRIBUTE.VSHIERITEMATTRIBUTE_Bold,
                             true
                         );
-                        n.ReDraw(UIHierarchyElement.Icon);
+                        ReDrawNode(n, UIHierarchyElement.Icon);
                     }
                 }
 
@@ -711,7 +747,10 @@ namespace Microsoft.PythonTools.Project {
             // Because our property page pass itself as the object to display in its grid, 
             // we need to make it have the same CATID
             // as the browse object of the project node so that filtering is possible.
+            var genPropPage = GetGeneralPropertyPageType();
+            if (genPropPage != null) {
             AddCATIDMapping(GetGeneralPropertyPageType(), GetGeneralPropertyPageType().GUID);
+            }
             // We could also provide CATIDs for references and the references container node, if we wanted to.
         }
 
@@ -739,9 +778,9 @@ namespace Microsoft.PythonTools.Project {
                     var absPath = CommonUtils.GetAbsoluteFilePath(ProjectHome, path);
                     if (seen.Add(absPath)) {
                         result.Add(absPath);
-                    }
                 }
             }
+        }
 
             return result;
         }
@@ -754,7 +793,7 @@ namespace Microsoft.PythonTools.Project {
                 var relPath = CommonUtils.GetRelativeFilePath(ProjectHome, path);
                 if (string.IsNullOrEmpty(relPath)) {
                     relPath = ".";
-                }
+            }
                 return relPath;
             }));
             this.ProjectMgr.SetProjectProperty(CommonConstants.SearchPath, valueStr);
@@ -812,76 +851,59 @@ namespace Microsoft.PythonTools.Project {
         /// Executes Add Search Path menu command.
         /// </summary>        
         internal int AddSearchPath() {
+            string dirName = BrowseForFolder(
+                DynamicProjectSR.GetString(DynamicProjectSR.SelectFolderForSearchPath), 
+                ProjectHome);
+
+            if (dirName != null) {
+                AddSearchPathEntry(dirName);
+            }
+            
+            return VSConstants.S_OK;
+        }
+
+        internal string BrowseForFolder(string title, string initialDir) {
             // Get a reference to the UIShell.
             IVsUIShell uiShell = GetService(typeof(SVsUIShell)) as IVsUIShell;
             if (null == uiShell) {
-                return VSConstants.S_FALSE;
+                return null;
             }
+
             //Create a fill in a structure that defines Browse for folder dialog
             VSBROWSEINFOW[] browseInfo = new VSBROWSEINFOW[1];
             //Dialog title
-            browseInfo[0].pwzDlgTitle = DynamicProjectSR.GetString(DynamicProjectSR.SelectFolderForSearchPath);
+            browseInfo[0].pwzDlgTitle = title;
             //Initial directory - project directory
-            browseInfo[0].pwzInitialDir = ProjectHome;
+            browseInfo[0].pwzInitialDir = initialDir;
             //Parent window
             uiShell.GetDialogOwnerHwnd(out browseInfo[0].hwndOwner);
             //Max path length
-            browseInfo[0].nMaxDirName = NativeMethods.MAX_PATH;
+            //This is WCHARS not bytes
+            browseInfo[0].nMaxDirName = (uint)NativeMethods.MAX_PATH;
             //This struct size
             browseInfo[0].lStructSize = (uint)Marshal.SizeOf(typeof(VSBROWSEINFOW));
             //Memory to write selected directory to.
             //Note: this one allocates unmanaged memory, which must be freed later
-            IntPtr pDirName = Marshal.AllocCoTaskMem(NativeMethods.MAX_PATH);
+            //  Add 1 for the null terminator and double since we are WCHARs not bytes
+            IntPtr pDirName = Marshal.AllocCoTaskMem((NativeMethods.MAX_PATH + 1)*2);
             browseInfo[0].pwzDirName = pDirName;
             try {
                 //Show the dialog
                 int hr = uiShell.GetDirectoryViaBrowseDlg(browseInfo);
                 if (hr == VSConstants.OLE_E_PROMPTSAVECANCELLED) {
                     //User cancelled the dialog
-                    return VSConstants.S_OK;
+                    return null;
                 }
                 //Check for any failures
                 ErrorHandler.ThrowOnFailure(hr);
                 //Get selected directory
-                string dirName = Marshal.PtrToStringAuto(browseInfo[0].pwzDirName);
-                AddSearchPathEntry(dirName);
+                return Marshal.PtrToStringAuto(browseInfo[0].pwzDirName);
             } finally {
                 //Free allocated unmanaged memory
                 if (pDirName != IntPtr.Zero) {
                     Marshal.FreeCoTaskMem(pDirName);
                 }
             }
-            return VSConstants.S_OK;
-        }
-
-        internal unsafe int AddSearchPathZip() {
-            var uiShell = GetService(typeof(SVsUIShell)) as IVsUIShell;
-            if (uiShell == null) {
-                return VSConstants.S_FALSE;
-            }
-
-            var fileNameBuf = stackalloc char[NativeMethods.MAX_PATH];
-            var ofn = new[] {
-                new VSOPENFILENAMEW {
-                    lStructSize = (uint)Marshal.SizeOf(typeof(VSOPENFILENAMEW)),
-                    pwzDlgTitle = DynamicProjectSR.GetString(DynamicProjectSR.SelectZipFileForSearchPath),
-                    nMaxFileName = NativeMethods.MAX_PATH,
-                    pwzFileName = (IntPtr)fileNameBuf,
-                    pwzInitialDir = ProjectHome,
-                    pwzFilter = "Zip Archives\0*.zip\0All Files\0*.*\0"
-                }
-            };
-            uiShell.GetDialogOwnerHwnd(out ofn[0].hwndOwner);
-
-            var hr = uiShell.GetOpenFileNameViaDlg(ofn);
-            if (hr == VSConstants.OLE_E_PROMPTSAVECANCELLED) {
-                return VSConstants.S_OK;
-            }
-            ErrorHandler.ThrowOnFailure(hr);
-
-            string fileName = new string(fileNameBuf);
-            AddSearchPathEntry(fileName);
-            return VSConstants.S_OK;
         }
 
         #endregion
@@ -899,7 +921,10 @@ namespace Microsoft.PythonTools.Project {
             // Make sure that the document moniker passed to us is part of this project
             // We also don't care if it is not a dynamic language file node
             uint itemid;
-            ErrorHandler.ThrowOnFailure(ParseCanonicalName(mkDocument, out itemid));
+            int hr;
+            if (ErrorHandler.Failed(hr = ParseCanonicalName(mkDocument, out itemid))) {
+                return hr;
+            }
             HierarchyNode hierNode = NodeFromItemId(itemid);
             if (hierNode == null || ((hierNode as CommonFileNode) == null))
                 return VSConstants.E_NOTIMPL;
@@ -1015,22 +1040,12 @@ namespace Microsoft.PythonTools.Project {
                         docMgr.GetDocInfo(out isOpen, out isDirty, out isOpenedByUs, out docCookie, out persist);
                         int cancelled;
                         if (isDirty) {
-                            child.SaveItem(VSSAVEFLAGS.VSSAVE_Save, null, docCookie, IntPtr.Zero, out cancelled);
+                            child.ProjectMgr.SaveItem(VSSAVEFLAGS.VSSAVE_Save, null, docCookie, IntPtr.Zero, out cancelled);
                         }
 
-                        FileNode fn = child as FileNode;
-                        if (fn != null) {
-                            string oldLoc = CommonUtils.GetAbsoluteFilePath(basePath, child.ItemNode.GetMetadata(ProjectFileConstants.Include));
-                            string newLoc = CommonUtils.GetAbsoluteFilePath(baseNewPath, child.ItemNode.GetMetadata(ProjectFileConstants.Include));
-
-                            // make sure the directory is there
-                            Directory.CreateDirectory(Path.GetDirectoryName(newLoc));
-                            fn.RenameDocument(oldLoc, newLoc);
-                        }
-
-                        FolderNode folder = child as FolderNode;
-                        if (folder != null) {
-                            folder.VirtualNodeName = CommonUtils.GetAbsoluteDirectoryPath(baseNewPath, child.ItemNode.GetMetadata(ProjectFileConstants.Include));
+                        IDiskBasedNode diskNode = child as IDiskBasedNode;
+                        if (diskNode != null) {
+                            diskNode.RenameForDeferredSave(basePath, baseNewPath);
                         }
                     }
 

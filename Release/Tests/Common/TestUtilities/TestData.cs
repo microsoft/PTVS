@@ -18,7 +18,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
-using Microsoft.PythonTools;
+using Microsoft.VisualStudioTools;
 
 namespace TestUtilities {
     public static class TestData {
@@ -38,7 +38,10 @@ namespace TestUtilities {
 
         private static string GetSolutionDir() {
             var dir = Path.GetDirectoryName((typeof(TestData)).Assembly.Location);
-            while (!string.IsNullOrEmpty(dir) && Directory.Exists(dir) && !File.Exists(Path.Combine(dir, "PythonTools.sln")) && !File.Exists(Path.Combine(dir, "Run.bat"))) {
+            while (!string.IsNullOrEmpty(dir) && 
+                Directory.Exists(dir) && 
+                !File.Exists(Path.Combine(dir, "PythonTools.sln")) && 
+                !File.Exists(Path.Combine(dir, "Run.bat"))) {
                 dir = Path.GetDirectoryName(dir);
             }
             return dir ?? "";

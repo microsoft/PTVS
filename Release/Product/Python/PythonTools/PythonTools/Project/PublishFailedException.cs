@@ -15,7 +15,7 @@
 using System;
 using System.Runtime.Serialization;
 
-namespace Microsoft.PythonTools.Project {
+namespace Microsoft.VisualStudioTools.Project {
     public sealed class PublishFailedException : Exception {
         public PublishFailedException(string message, Exception innerException)
             : base(message, innerException) {

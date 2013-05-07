@@ -20,10 +20,9 @@ using System.Runtime.InteropServices;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 
-namespace Microsoft.PythonTools.Project
+namespace Microsoft.VisualStudioTools.Project
 {
-    [CLSCompliant(false), ComVisible(true)]
-    public class ProjectReferenceNode : ReferenceNode
+    internal class ProjectReferenceNode : ReferenceNode
     {
         #region fields
         /// <summary>
@@ -521,9 +520,10 @@ namespace Microsoft.PythonTools.Project
         /// </summary>
         private bool IsReferenceInCycle(Guid projectGuid)
         {
+            // TODO: This has got to be wrong, it doesn't work w/ other project types.
             IVsHierarchy hierarchy = VsShellUtilities.GetHierarchy(this.ProjectMgr.Site, projectGuid);
 
-            IReferenceContainerProvider provider = hierarchy as IReferenceContainerProvider;
+            IReferenceContainerProvider provider = hierarchy.GetProject().GetCommonProject()  as IReferenceContainerProvider;
             if (provider != null)
             {
                 IReferenceContainer referenceContainer = provider.GetReferenceContainer();

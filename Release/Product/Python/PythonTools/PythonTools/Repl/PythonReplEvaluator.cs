@@ -24,6 +24,7 @@ using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.Text.Adornments;
+using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Repl {
 #if INTERACTIVE_WINDOW

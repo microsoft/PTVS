@@ -12,7 +12,7 @@
  *
  * ***************************************************************************/
 
-namespace Microsoft.PythonTools.Project {
+namespace Microsoft.VisualStudioTools.Project {
     public interface IPublishFile {
         /// <summary>
         /// Returns the source file that should be copied from.

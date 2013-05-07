@@ -19,7 +19,7 @@ using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell.Interop;
 using VSConstants = Microsoft.VisualStudio.VSConstants;
 
-namespace Microsoft.PythonTools.Navigation {
+namespace Microsoft.VisualStudioTools.Navigation {
 
     /// <summary>
     /// Implements a simple library that tracks project symbols, objects etc.

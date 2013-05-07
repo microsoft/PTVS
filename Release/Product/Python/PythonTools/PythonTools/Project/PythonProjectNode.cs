@@ -31,12 +31,14 @@ using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text.Adornments;
+using Microsoft.VisualStudioTools;
+using Microsoft.VisualStudioTools.Project;
 using Microsoft.Windows.Design.Host;
 using VsCommands2K = Microsoft.VisualStudio.VSConstants.VSStd2KCmdID;
 
 namespace Microsoft.PythonTools.Project {
     [Guid(PythonConstants.ProjectNodeGuid)]
-    public class PythonProjectNode : CommonProjectNode, IPythonProject {
+    internal class PythonProjectNode : CommonProjectNode, IPythonProject {
         // For files that are analyzed because they were directly or indirectly referenced in the search path, store the information
         // about the directory from the search path that referenced them in IProjectEntry.Properties[_searchPathEntryKey], so that
         // they can be located and removed when that directory is removed from the path.
@@ -57,6 +59,12 @@ namespace Microsoft.PythonTools.Project {
 
             Type projectNodePropsType = typeof(PythonProjectNodeProperties);
             AddCATIDMapping(projectNodePropsType, projectNodePropsType.GUID);
+        }
+
+        protected override Stream ProjectIconsImageStripStream {
+            get {
+                return typeof(ProjectNode).Assembly.GetManifestResourceStream("Microsoft.PythonTools.Project.Resources.imagelis.bmp");
+            }
         }
 
         private static string GetSearchPathEntry(IProjectEntry entry) {
@@ -157,8 +165,8 @@ namespace Microsoft.PythonTools.Project {
             return new PythonProjectConfig(this, activeConfigName);
         }
 
-        protected internal override FolderNode CreateFolderNode(string path, ProjectElement element) {
-            return new PythonFolderNode(this, path, element);
+        protected internal override FolderNode CreateFolderNode(ProjectElement element) {
+            return new PythonFolderNode(this, element);
         }
 
         protected override void Reload() {
@@ -389,6 +397,10 @@ namespace Microsoft.PythonTools.Project {
             return GetAnalyzer().Project;
         }
 
+        VsProjectAnalyzer IPythonProject.GetProjectAnalyzer() {
+            return GetAnalyzer();
+        }
+
         public override IProjectLauncher GetLauncher() {
             return PythonToolsPackage.GetLauncher(this);
         }
@@ -605,8 +617,8 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-        protected override int ExecCommandOnNode(Guid cmdGroup, uint cmd, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut) {
-            if (cmdGroup == Microsoft.PythonTools.Project.VsMenus.guidStandardCommandSet2K) {
+        internal override int ExecCommandOnNode(Guid cmdGroup, uint cmd, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut) {
+            if (cmdGroup == VsMenus.guidStandardCommandSet2K) {
                 switch ((VsCommands2K)cmd) {
                     case VsCommands2K.ECMD_PUBLISHSELECTION:
                     case VsCommands2K.ECMD_PUBLISHSLNCTX:
@@ -620,7 +632,7 @@ namespace Microsoft.PythonTools.Project {
             return base.ExecCommandOnNode(cmdGroup, cmd, nCmdexecopt, pvaIn, pvaOut);
         }
 
-        protected override int QueryStatusOnNode(Guid cmdGroup, uint cmd, IntPtr pCmdText, ref QueryStatusResult result) {
+        internal override int QueryStatusOnNode(Guid cmdGroup, uint cmd, IntPtr pCmdText, ref QueryStatusResult result) {
             if (cmdGroup == GuidList.guidPythonToolsCmdSet) {
                 switch ((int)cmd) {
                     case CommonConstants.AddSearchPathCommandId:
@@ -672,6 +684,36 @@ namespace Microsoft.PythonTools.Project {
         }
 
         #endregion
+
+        internal unsafe int AddSearchPathZip() {
+            var uiShell = GetService(typeof(SVsUIShell)) as IVsUIShell;
+            if (uiShell == null) {
+                return VSConstants.S_FALSE;
+            }
+
+            var fileNameBuf = stackalloc char[NativeMethods.MAX_PATH];
+            var ofn = new[] {
+                new VSOPENFILENAMEW {
+                    lStructSize = (uint)Marshal.SizeOf(typeof(VSOPENFILENAMEW)),
+                    pwzDlgTitle = DynamicProjectSR.GetString(DynamicProjectSR.SelectZipFileForSearchPath),
+                    nMaxFileName = NativeMethods.MAX_PATH,
+                    pwzFileName = (IntPtr)fileNameBuf,
+                    pwzInitialDir = ProjectHome,
+                    pwzFilter = "Zip Archives\0*.zip\0All Files\0*.*\0"
+                }
+            };
+            uiShell.GetDialogOwnerHwnd(out ofn[0].hwndOwner);
+
+            var hr = uiShell.GetOpenFileNameViaDlg(ofn);
+            if (hr == VSConstants.OLE_E_PROMPTSAVECANCELLED) {
+                return VSConstants.S_OK;
+            }
+            ErrorHandler.ThrowOnFailure(hr);
+
+            string fileName = new string(fileNameBuf);
+            AddSearchPathEntry(fileName);
+            return VSConstants.S_OK;
+        }
 
         #region Virtual Env support
 

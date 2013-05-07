@@ -29,11 +29,17 @@ namespace TestUtilities.Mocks {
         public MockTextView(ITextBuffer buffer) {
             _buffer = buffer;
             _selection = new MockTextSelection(this);
-            _bufferGraph = new MockBufferGraph();
+            _bufferGraph = new MockBufferGraph(this);
             _caret = new MockTextCaret(this);
         }
 
-        public IBufferGraph BufferGraph {
+        public MockBufferGraph BufferGraph {
+            get {
+                return _bufferGraph;
+            }
+        }
+
+        IBufferGraph ITextView.BufferGraph {
             get { return _bufferGraph; }
         }
 

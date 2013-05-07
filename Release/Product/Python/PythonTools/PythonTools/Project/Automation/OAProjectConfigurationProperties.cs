@@ -17,9 +17,10 @@ using System.Collections.Generic;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudioTools.Project;
 using VSLangProj;
 
-namespace Microsoft.PythonTools.Project.Automation {
+namespace Microsoft.VisualStudioTools.Project.Automation {
     class OAProjectConfigurationProperties : ConnectionPointContainer, ProjectConfigurationProperties, IConnectionPointContainer, IEventSource<IPropertyNotifySink> {
         private readonly ProjectNode _project;
         private readonly List<IPropertyNotifySink> _sinks = new List<IPropertyNotifySink>();

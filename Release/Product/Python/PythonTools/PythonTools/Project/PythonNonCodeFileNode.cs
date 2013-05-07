@@ -15,6 +15,7 @@
 using System;
 using System.IO;
 using Microsoft.PythonTools.Designer;
+using Microsoft.VisualStudioTools.Project;
 using Microsoft.Windows.Design.Host;
 
 namespace Microsoft.PythonTools.Project {
@@ -36,10 +37,10 @@ namespace Microsoft.PythonTools.Project {
                     var filenameWithoutExt = Path.Combine(dirName, fileName);
 
                     // look for foo.py
-                    var child = Parent.FindChild(filenameWithoutExt + PythonConstants.FileExtension);
+                    var child = ProjectMgr.FindNodeByFullPath(filenameWithoutExt + PythonConstants.FileExtension);
                     if (child == null) {
                         // then look for foo.pyw
-                        child = Parent.FindChild(filenameWithoutExt + PythonConstants.WindowsFileExtension);
+                        child = ProjectMgr.FindNodeByFullPath(filenameWithoutExt + PythonConstants.WindowsFileExtension);
                     }
 
                     if (child != null) {

@@ -20,10 +20,12 @@ using System.Text;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio;
+using Microsoft.VisualStudioTools;
+using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Project {
 
-    public class PythonFileNode : CommonFileNode {
+    internal class PythonFileNode : CommonFileNode {
         internal PythonFileNode(CommonProjectNode root, MsBuildProjectElement e)
             : base(root, e) { }
 
@@ -49,7 +51,7 @@ namespace Microsoft.PythonTools.Project {
             do {
                 nodes.Add(curNode);
                 curNode = curNode.Parent;
-            } while (curNode != null && curNode.FindChild(Path.Combine(curNode.GetMkDocument(), "__init__.py"), recurse: false) != null);
+            } while (curNode != null && curNode.FindImmediateChildByName("__init__.py") != null);
 
             for (int i = nodes.Count - 1; i >= 0; i--) {
                 fullName.Append(nodes[i].Caption);
@@ -59,7 +61,7 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-        protected override int ExecCommandOnNode(Guid guidCmdGroup, uint cmd, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut) {
+        internal override int ExecCommandOnNode(Guid guidCmdGroup, uint cmd, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut) {
             Debug.Assert(this.ProjectMgr != null, "The Dynamic FileNode has no project manager");
 
             Utilities.CheckNotNull(this.ProjectMgr);
@@ -86,7 +88,7 @@ namespace Microsoft.PythonTools.Project {
             return base.ExecCommandOnNode(guidCmdGroup, cmd, nCmdexecopt, pvaIn, pvaOut);
         }
 
-        protected override int QueryStatusOnNode(Guid guidCmdGroup, uint cmd, IntPtr pCmdText, ref QueryStatusResult result) {
+        internal override int QueryStatusOnNode(Guid guidCmdGroup, uint cmd, IntPtr pCmdText, ref QueryStatusResult result) {
             if (guidCmdGroup == GuidList.guidPythonToolsCmdSet) {
                 if (this.ProjectMgr.IsCodeFile(this.Url)) {
                     switch (cmd) {
@@ -153,8 +155,8 @@ namespace Microsoft.PythonTools.Project {
             return ((PythonProjectNode)this.ProjectMgr).GetAnalyzer().GetAnalysisFromFile(Url);
         }
 
-        protected override FileNode RenameFileNode(string oldFileName, string newFileName, uint newParentId) {
-            var res = base.RenameFileNode(oldFileName, newFileName, newParentId);
+        internal override FileNode RenameFileNode(string oldFileName, string newFileName) {
+            var res = base.RenameFileNode(oldFileName, newFileName);
             if (res != null) {
                 var analyzer = ((PythonProjectNode)this.ProjectMgr).GetAnalyzer();
                 var analysis = GetAnalysis();

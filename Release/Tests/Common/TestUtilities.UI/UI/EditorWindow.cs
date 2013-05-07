@@ -13,6 +13,8 @@
  * ***************************************************************************/
 
 using System;
+using System.Collections.Generic;
+using System.Text;
 using System.Threading;
 using System.Windows;
 using System.Windows.Automation;
@@ -50,7 +52,9 @@ namespace TestUtilities.UI {
         }
 
         public void MoveCaret(SnapshotPoint newPoint) {
-            Invoke(() => TextView.Caret.MoveTo(newPoint));
+            ((UIElement)TextView).Dispatcher.Invoke((Action)(() => {
+                TextView.Caret.MoveTo(newPoint.TranslateTo(newPoint.Snapshot.TextBuffer.CurrentSnapshot, PointTrackingMode.Positive));
+            }));
         }
 
         public void Select(int line, int column, int length) {
@@ -62,17 +66,19 @@ namespace TestUtilities.UI {
                 span = new Span(textLine.Start + column - 1, length);
             }
 
-            Invoke(() => TextView.Selection.Select(
-                new SnapshotSpan(TextView.TextBuffer.CurrentSnapshot, span),
-                false
-            ));
+            ((UIElement)TextView).Dispatcher.Invoke((Action)(() => {
+                TextView.Selection.Select(
+                    new SnapshotSpan(TextView.TextBuffer.CurrentSnapshot, span),
+                    false
+                );
+            }));
         }
 
         /// <summary>
         /// Moves the caret to the 1 based line and column
         /// </summary>
         public void MoveCaret(int line, int column) {
-            var textLine = TextView.TextViewLines[line - 1];
+            var textLine = TextView.TextBuffer.CurrentSnapshot.GetLineFromLineNumber(line - 1);
             if (column - 1 == textLine.Length) {
                 MoveCaret(textLine.End);
             } else {
@@ -90,6 +96,74 @@ namespace TestUtilities.UI {
             }
 
             Assert.AreEqual(text, Text);
+        }
+
+        public void WaitForTextStart(params string[] text) {
+            string expected = GetExpectedText(text);
+
+            for (int i = 0; i < 100; i++) {
+                string curText = Text;
+
+                if (Text.StartsWith(expected, StringComparison.CurrentCulture)) {
+                    return;
+                }
+                Thread.Sleep(100);
+            }
+
+            FailWrongText(expected);
+        }
+
+        public void WaitForTextEnd(params string[] text) {
+            string expected = GetExpectedText(text);
+
+            for (int i = 0; i < 100; i++) {
+                string curText = Text;
+
+                if (Text.EndsWith(expected, StringComparison.CurrentCulture)) {
+                    return;
+                }
+                Thread.Sleep(100);
+            }
+
+            FailWrongText(expected);
+        }
+
+        public static string GetExpectedText(IList<string> text) {
+            StringBuilder finalString = new StringBuilder();
+            for (int i = 0; i < text.Count; i++) {
+                if (i != 0) {
+                    finalString.Append(Environment.NewLine);
+                }
+
+                finalString.Append(text[i]);
+            }
+
+            string expected = finalString.ToString();
+            return expected;
+        }
+
+        private void FailWrongText(string expected) {
+            StringBuilder msg = new StringBuilder("Did not get text: ");
+            AppendRepr(msg, expected);
+            msg.Append(" instead got ");
+            AppendRepr(msg, Text);
+            Assert.Fail(msg.ToString());
+        }
+
+        public static void AppendRepr(StringBuilder msg, string str) {
+            for (int i = 0; i < str.Length; i++) {
+                if (str[i] >= 32) {
+                    msg.Append(str[i]);
+                } else {
+                    switch (str[i]) {
+                        case '\n': msg.Append("\\n"); break;
+
+                        case '\r': msg.Append("\\r"); break;
+                        case '\t': msg.Append("\\t"); break;
+                        default: msg.AppendFormat("\\u00{0:D2}", (int)str[i]); break;
+                    }
+                }
+            }
         }
 
         public void StartSmartTagSessionNoSession() {

@@ -61,6 +61,10 @@ namespace TestUtilities
             }
         }
 
+        public static void MissingDependency(string dependency) {
+            Assert.Inconclusive("Missing Dependency: {0}", dependency);
+        }
+
         public static void ArrayEquals(IList expected, IList actual)
         {
             if (expected == null)
@@ -224,12 +228,9 @@ namespace TestUtilities
                 if (sb.Length > 1) {
                     sb.Append(", ");
                 }
-                if (value is Microsoft.PythonTools.Interpreter.IPythonType) {
-                    sb.Append(((Microsoft.PythonTools.Interpreter.IPythonType)value).Name);
-                } else {
-                    sb.Append(value == null ? "(null)" : value.ToString());
-                }
+                sb.Append(value == null ? "(null)" : value.ToString());
             }
+        
             sb.Append("}");
             return sb.ToString();
         }

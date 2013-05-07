@@ -20,7 +20,7 @@ using System.Windows.Forms;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.OLE.Interop;
 
-namespace Microsoft.PythonTools.Project {
+namespace Microsoft.VisualStudioTools.Project {
     /// <summary>
     /// Base class for property pages based on a WinForm control.
     /// </summary>
@@ -40,7 +40,7 @@ namespace Microsoft.PythonTools.Project {
             get;
         }
 
-        public virtual CommonProjectNode Project {
+        internal virtual CommonProjectNode Project {
             get {
                 return _project;
             }
@@ -141,7 +141,7 @@ namespace Microsoft.PythonTools.Project {
                     }
                 } else if (punk[0] is NodeProperties) {
                     if (_project == null) {
-                        Project = (CommonProjectNode)(punk[0] as NodeProperties).Node.ProjectMgr;
+                        Project = (CommonProjectNode)(punk[0] as NodeProperties).HierarchyNode.ProjectMgr;
                     }
                 }
             } else {

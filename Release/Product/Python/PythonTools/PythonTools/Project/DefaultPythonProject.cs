@@ -14,7 +14,10 @@
 
 using System.Diagnostics;
 using System.IO;
+using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Project {
     public class DefaultPythonProject : IPythonProject {
@@ -73,6 +76,10 @@ namespace Microsoft.PythonTools.Project {
 
         string IPythonProject.GetUnevaluatedProperty(string name) {
             return null;
+        }
+
+        VsProjectAnalyzer IPythonProject.GetProjectAnalyzer() {
+            return PythonToolsPackage.Instance.DefaultAnalyzer;
         }
 
         #endregion

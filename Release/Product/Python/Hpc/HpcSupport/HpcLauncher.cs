@@ -30,6 +30,7 @@ using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Debugger.Interop;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudioTools.Project;
 using Microsoft.Win32;
 
 namespace Microsoft.PythonTools.Hpc {
@@ -100,7 +101,7 @@ namespace Microsoft.PythonTools.Hpc {
         #region IPythonLauncher Members
 
         public int LaunchProject(bool debug) {
-            string filename = _project.GetProperty(CommonConstants.StartupFile);
+            string filename = _project.GetProperty(PythonConstants.StartupFileSetting);
             return LaunchFile(filename, debug);
         }
 
@@ -454,7 +455,7 @@ namespace Microsoft.PythonTools.Hpc {
 
                 string output = task.Output;
                 if (!String.IsNullOrWhiteSpace(output)) {
-                    var outWin = (IVsOutputWindow)CommonPackage.GetGlobalService(typeof(IVsOutputWindow));
+                    var outWin = (IVsOutputWindow)HpcSupportPackage.GetGlobalService(typeof(IVsOutputWindow));
                     IVsOutputWindowPane pane;
                     if (ErrorHandler.Succeeded(outWin.GetPane(VSConstants.GUID_OutWindowGeneralPane, out pane))) {
                         pane.Activate();
@@ -683,7 +684,7 @@ namespace Microsoft.PythonTools.Hpc {
                 }
             }
 
-            var interpArgs = _project.GetProperty(CommonConstants.InterpreterArguments);
+            var interpArgs = _project.GetProperty(PythonConstants.InterpreterArgumentsSetting);
             if (!String.IsNullOrWhiteSpace(interpArgs)) {
                 if (!String.IsNullOrEmpty(options)) {
                     options += ";";
@@ -776,7 +777,7 @@ namespace Microsoft.PythonTools.Hpc {
 
         private static void EnsureGeneralPane() {
             if (!_createdGeneralPane) {
-                var outWin = (IVsOutputWindow)CommonPackage.GetGlobalService(typeof(IVsOutputWindow));
+                var outWin = (IVsOutputWindow)HpcSupportPackage.GetGlobalService(typeof(IVsOutputWindow));
                 var guid = VSConstants.GUID_OutWindowGeneralPane;
                 outWin.CreatePane(ref guid, "General", 1, 0);
                 _createdGeneralPane = true;
@@ -784,7 +785,7 @@ namespace Microsoft.PythonTools.Hpc {
         }
 
         private static void ScheduleJob(Scheduler scheduler, ISchedulerJob job) {
-            var outWin = (IVsOutputWindow)CommonPackage.GetGlobalService(typeof(IVsOutputWindow));
+            var outWin = (IVsOutputWindow)HpcSupportPackage.GetGlobalService(typeof(IVsOutputWindow));
 
             IVsOutputWindowPane pane;
             if (ErrorHandler.Succeeded(outWin.GetPane(VSConstants.GUID_OutWindowGeneralPane, out pane))) {
@@ -841,7 +842,7 @@ namespace Microsoft.PythonTools.Hpc {
             }
 
             public void RedirectOutput() {
-                var outWin = (IVsOutputWindow)CommonPackage.GetGlobalService(typeof(IVsOutputWindow));
+                var outWin = (IVsOutputWindow)HpcSupportPackage.GetGlobalService(typeof(IVsOutputWindow));
                 IVsOutputWindowPane pane;
                 char[] buffer = new char[1024];
                 if (ErrorHandler.Succeeded(outWin.GetPane(VSConstants.GUID_OutWindowDebugPane, out pane))) {                    
@@ -906,7 +907,7 @@ namespace Microsoft.PythonTools.Hpc {
         }
 
         private static void OutputState(string state) {
-            var outWin = (IVsOutputWindow)CommonPackage.GetGlobalService(typeof(IVsOutputWindow));
+            var outWin = (IVsOutputWindow)HpcSupportPackage.GetGlobalService(typeof(IVsOutputWindow));
             IVsOutputWindowPane pane;
             if (ErrorHandler.Succeeded(outWin.GetPane(VSConstants.GUID_OutWindowGeneralPane, out pane))) {
                 pane.Activate();
@@ -916,7 +917,7 @@ namespace Microsoft.PythonTools.Hpc {
         }
 
         private static void SetStatus(string text) {
-            var statusBar = (IVsStatusbar)CommonPackage.GetGlobalService(typeof(SVsStatusbar));
+            var statusBar = (IVsStatusbar)HpcSupportPackage.GetGlobalService(typeof(SVsStatusbar));
 
             statusBar.SetText(text);
         }

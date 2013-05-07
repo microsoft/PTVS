@@ -15,6 +15,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using Microsoft.VisualStudio.PlatformUI;
+using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Refactoring {
     /// <summary>

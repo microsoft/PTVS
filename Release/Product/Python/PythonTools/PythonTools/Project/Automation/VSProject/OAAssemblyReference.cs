@@ -18,15 +18,22 @@ using System.Runtime.InteropServices;
 using System.Text;
 using VSLangProj;
 
-namespace Microsoft.PythonTools.Project.Automation
+namespace Microsoft.VisualStudioTools.Project.Automation
 {
     [SuppressMessage("Microsoft.Interoperability", "CA1405:ComVisibleTypeBaseTypesShouldBeComVisible")]
     [ComVisible(true)]
-    public class OAAssemblyReference : OAReferenceBase<AssemblyReferenceNode>
+    public class OAAssemblyReference : OAReferenceBase
     {
-        public OAAssemblyReference(AssemblyReferenceNode assemblyReference) :
+        internal OAAssemblyReference(AssemblyReferenceNode assemblyReference) :
             base(assemblyReference)
         {
+        }
+
+        internal new AssemblyReferenceNode BaseReferenceNode 
+        {
+            get { 
+                return (AssemblyReferenceNode)base.BaseReferenceNode; 
+            }
         }
 
         #region Reference override

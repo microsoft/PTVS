@@ -103,32 +103,49 @@ namespace TestUtilities.UI {
             FailWrongText(expected);
         }
 
-        public void WaitForTextStart(params string[] text) {
-            string expected = GetExpectedText(text);
+        public void WaitForTextIPython(params string[] text) {
+            WaitForTextIPython((IList<string>)text);
+        }
 
+        public void WaitForTextIPython(IList<string> text) {
+            string expected = null;
             for (int i = 0; i < 100; i++) {
-                string curText = Text;
-
-                if (Text.StartsWith(expected, StringComparison.CurrentCulture)) {
+                WaitForIdleState();
+                expected = GetExpectedText(text);
+                if (expected.Equals(GetIPythonText(), StringComparison.CurrentCulture)) {
                     return;
                 }
                 Thread.Sleep(100);
             }
 
-            FailWrongText(expected);
+            FailWrongTextIPython(expected);
         }
 
-        public void WaitForTextEnd(params string[] text) {
-            WaitForTextEnd(10000, text);
+        private string GetIPythonText() {
+            var text = Text;
+            var lines = Text.Split(new[] { "\r\n" }, StringSplitOptions.None);
+            StringBuilder res = new StringBuilder();
+            for (int i = 0; i < lines.Length; i++) {
+                var line = lines[i];
+
+                if (!line.StartsWith("[IPKernelApp] ")) {
+                    if (i != lines.Length - 1 || text.EndsWith("\r\n")) {
+                        res.AppendLine(line);
+                    } else {
+                        res.Append(line);
+                    }
+                }
+            }
+            return res.ToString();            
         }
 
-        public void WaitForTextEnd(int timeout, params string[] text) {
+        public void WaitForTextStartIPython(params string[] text) {
             string expected = GetExpectedText(text);
 
-            for (int i = 0; i < timeout / 100; i++) {
+            for (int i = 0; i < 100; i++) {
                 string curText = Text;
 
-                if (curText.EndsWith(expected, StringComparison.CurrentCulture)) {
+                if (GetIPythonText().StartsWith(expected, StringComparison.CurrentCulture)) {
                     return;
                 }
                 Thread.Sleep(100);
@@ -145,34 +162,12 @@ namespace TestUtilities.UI {
             Assert.Fail(msg.ToString());
         }
 
-        private static string GetExpectedText(IList<string> text) {
-            StringBuilder finalString = new StringBuilder();
-            for (int i = 0; i < text.Count; i++) {
-                if (i != 0) {
-                    finalString.Append(Environment.NewLine);
-                }
-
-                finalString.Append(text[i]);
-            }
-
-            string expected = finalString.ToString();
-            return expected;
-        }
-
-        private static void AppendRepr(StringBuilder msg, string str) {
-            for (int i = 0; i < str.Length; i++) {
-                if (str[i] >= 32) {
-                    msg.Append(str[i]);
-                } else {
-                    switch (str[i]) {
-                        case '\n': msg.Append("\\n"); break;
-
-                        case '\r': msg.Append("\\r"); break;
-                        case '\t': msg.Append("\\t"); break;
-                        default: msg.AppendFormat("\\u00{0:D2}", (int)str[i]); break;
-                    }
-                }
-            }
+        private void FailWrongTextIPython(string expected) {
+            StringBuilder msg = new StringBuilder("Did not get text: ");
+            AppendRepr(msg, expected);
+            msg.Append(" instead got ");
+            AppendRepr(msg, GetIPythonText());
+            Assert.Fail(msg.ToString());
         }
 
         public void WaitForSessionDismissed() {

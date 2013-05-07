@@ -21,7 +21,7 @@ using Microsoft.VisualStudio.Shell.Interop;
 using VSLangProj;
 using ErrorHandler = Microsoft.VisualStudio.ErrorHandler;
 
-namespace Microsoft.PythonTools.Project.Automation
+namespace Microsoft.VisualStudioTools.Project.Automation
 {
     /// <summary>
     /// Represents the automation object for the equivalent ReferenceContainerNode object
@@ -34,7 +34,7 @@ namespace Microsoft.PythonTools.Project.Automation
                                 ReferencesEvents
     {
         private ReferenceContainerNode container;
-        public OAReferences(ReferenceContainerNode containerNode)
+        internal OAReferences(ReferenceContainerNode containerNode)
         {
             container = containerNode;
             AddEventSource<_dispReferencesEvents>(this as IEventSource<_dispReferencesEvents>);

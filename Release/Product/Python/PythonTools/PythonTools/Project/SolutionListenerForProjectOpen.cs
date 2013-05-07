@@ -12,17 +12,16 @@
  *
  * ***************************************************************************/
 
-using System;
 using System.Diagnostics;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
 using IServiceProvider = System.IServiceProvider;
 
-namespace Microsoft.PythonTools.Project
+namespace Microsoft.VisualStudioTools.Project
 {
 
 
-    public class SolutionListenerForProjectOpen : SolutionListener
+    internal class SolutionListenerForProjectOpen : SolutionListener
     {
         public SolutionListenerForProjectOpen(IServiceProvider serviceProvider)
             : base(serviceProvider)

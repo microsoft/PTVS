@@ -23,6 +23,7 @@ using EnvDTE80;
 using Microsoft.PythonTools.Project.Automation;
 using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudioTools.Project.Automation;
 using TestUtilities;
 using TestUtilities.UI;
 using Keyboard = TestUtilities.UI.Keyboard;
@@ -226,7 +227,7 @@ namespace PythonToolsUITests {
                 project.SaveAs(TestData.GetPath(@"TestData\ProjectHomeProjects\TempFile.pyproj"));
 
                 Assert.AreEqual(TestData.GetPath(@"TestData\HelloWorld\"),
-                    ((Microsoft.PythonTools.Project.Automation.OAProject)project).Project.ProjectHome);
+                    ((OAProject)project).ProjectNode.ProjectHome);
 
                 VsIdeTestHostContext.Dte.Solution.SaveAs("HelloWorldRelocated.sln");
             } finally {
@@ -240,7 +241,7 @@ namespace PythonToolsUITests {
                 Assert.AreEqual("TempFile.pyproj", project.FileName);
 
                 Assert.AreEqual(TestData.GetPath(@"TestData\HelloWorld\"),
-                    ((Microsoft.PythonTools.Project.Automation.OAProject)project).Project.ProjectHome);
+                    ((OAProject)project).ProjectNode.ProjectHome);
             } finally {
                 VsIdeTestHostContext.Dte.Solution.Close();
                 GC.Collect();

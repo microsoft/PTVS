@@ -94,13 +94,13 @@ namespace Microsoft.PythonTools.Django.Project {
 
             var pyProj = _innerVsHierarchy.GetProject().GetPythonProject();
             if (pyProj != null) {
-                var analyzer = pyProj.GetProjectAnalyzer();
-                var projAnalyzer = pyProj.GetAnalyzer();
+                var projAnalyzer = pyProj.GetProjectAnalyzer();
+                var analyzer = projAnalyzer.Project;
                 var djangoMod = analyzer.GetModule("django");
                 if (djangoMod.Count() == 0) {
                     // cached analysis doesn't have Django, so let's see if we can find it
                     // on our own - http://pytools.codeplex.com/workitem/775
-                    var interpreterDir = Path.GetDirectoryName(pyProj.GetPythonInterpreterFactory().Configuration.InterpreterPath);
+                    var interpreterDir = Path.GetDirectoryName(pyProj.GetInterpreterFactory().Configuration.InterpreterPath);
                     var djangoDir = Path.Combine(interpreterDir, "Lib", "site-packages", "django");
                     if (Directory.Exists(djangoDir)) {
                         HookAnalysis(analyzer, projAnalyzer, djangoDir);
@@ -712,7 +712,7 @@ namespace Microsoft.PythonTools.Django.Project {
             if (pyProj != null) {
                 ProcessStartInfo psi;
                 var interpreterPath = pyProj.Configuration.InterpreterPath;
-                var pyProject = _innerVsHierarchy.GetProject().GetPythonProject() as IPythonProject;
+                var pyProject = _innerVsHierarchy.GetProject().GetPythonProject();
                 var managePyPath = (pyProject != null) ? pyProject.GetStartupFile() : null;
                 if (string.IsNullOrEmpty(managePyPath)) {
                     psi = new ProcessStartInfo(interpreterPath, "manage.py " + arguments);

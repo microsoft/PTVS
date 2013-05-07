@@ -13,22 +13,15 @@
  * ***************************************************************************/
 
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
-using MSBuild = Microsoft.Build.Evaluation;
 
-namespace Microsoft.PythonTools.Project
+namespace Microsoft.VisualStudioTools.Project
 {
-    [CLSCompliant(false)]
-    [ComVisible(true)]
-    public class AssemblyReferenceNode : ReferenceNode
+    internal class AssemblyReferenceNode : ReferenceNode
     {
         #region fieds
         /// <summary>
@@ -167,7 +160,7 @@ namespace Microsoft.PythonTools.Project
         /// Closes the node.
         /// </summary>
         /// <returns></returns>
-        public override int Close()
+        public override void Close()
         {
             try
             {
@@ -177,8 +170,6 @@ namespace Microsoft.PythonTools.Project
             {
                 base.Close();
             }
-
-            return VSConstants.S_OK;
         }
 
         /// <summary>
@@ -254,7 +245,7 @@ namespace Microsoft.PythonTools.Project
         /// <returns>true if the assembly has already been added.</returns>
         protected override bool IsAlreadyAdded()
         {
-            ReferenceContainerNode referencesFolder = this.ProjectMgr.FindChild(ReferenceContainerNode.ReferencesNodeVirtualName) as ReferenceContainerNode;
+            ReferenceContainerNode referencesFolder = this.ProjectMgr.GetReferenceContainer() as ReferenceContainerNode;
             Debug.Assert(referencesFolder != null, "Could not find the References node");
             bool shouldCheckPath = !string.IsNullOrEmpty(this.Url);
 
@@ -463,7 +454,7 @@ namespace Microsoft.PythonTools.Project
 
             if (CommonUtils.IsSamePath(e.FileName, this.assemblyPath))
             {
-                this.OnInvalidateItems(this.Parent);
+                ProjectMgr.OnInvalidateItems(this.Parent);
             }
         }
 
@@ -480,7 +471,7 @@ namespace Microsoft.PythonTools.Project
             this.ItemNode.RemoveFromProjectFile();
 
             // Notify hierarchy event listeners that items have been invalidated
-            OnInvalidateItems(this);
+            ProjectMgr.OnInvalidateItems(this);
 
             // Dispose the node now that is deleted.
             Dispose(true);

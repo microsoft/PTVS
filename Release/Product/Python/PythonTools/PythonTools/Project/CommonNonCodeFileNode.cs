@@ -16,8 +16,8 @@ using System;
 using System.Diagnostics;
 using Microsoft.VisualStudio.Shell.Interop;
 
-namespace Microsoft.PythonTools.Project {
-    public class CommonNonCodeFileNode : CommonFileNode {
+namespace Microsoft.VisualStudioTools.Project {
+    internal class CommonNonCodeFileNode : CommonFileNode {
         public CommonNonCodeFileNode(CommonProjectNode root, MsBuildProjectElement e)
             : base(root, e) {
         }

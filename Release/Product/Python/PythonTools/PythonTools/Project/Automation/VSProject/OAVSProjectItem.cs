@@ -17,7 +17,7 @@ using System.Runtime.InteropServices;
 using EnvDTE;
 using VSLangProj;
 
-namespace Microsoft.PythonTools.Project.Automation
+namespace Microsoft.VisualStudioTools.Project.Automation
 {
     /// <summary>
     /// Represents a language-specific project item
@@ -31,7 +31,7 @@ namespace Microsoft.PythonTools.Project.Automation
         #endregion
 
         #region ctors
-        public OAVSProjectItem(FileNode fileNode)
+        internal OAVSProjectItem(FileNode fileNode)
         {
             this.FileNode = fileNode;
         }
@@ -64,7 +64,7 @@ namespace Microsoft.PythonTools.Project.Automation
         /// <summary>
         /// File Node property
         /// </summary>
-        public FileNode FileNode
+        internal FileNode FileNode
         {
             get
             {

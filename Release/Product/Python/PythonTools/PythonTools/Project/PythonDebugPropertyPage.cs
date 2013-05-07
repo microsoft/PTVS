@@ -15,6 +15,7 @@
 using System;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
+using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Project {
     [Guid(PythonConstants.DebugPropertyPageGuid)]
@@ -31,7 +32,7 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-        public override CommonProjectNode Project {
+        internal override CommonProjectNode Project {
             get {
                 return base.Project;
             }

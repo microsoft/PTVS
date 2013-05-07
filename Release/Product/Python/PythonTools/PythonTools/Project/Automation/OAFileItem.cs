@@ -22,25 +22,30 @@ using EnvDTE;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
-using IServiceProvider = System.IServiceProvider;
 using VSConstants = Microsoft.VisualStudio.VSConstants;
 
-namespace Microsoft.PythonTools.Project.Automation
+namespace Microsoft.VisualStudioTools.Project.Automation
 {
     /// <summary>
     /// Represents an automation object for a file in a project
     /// </summary>
     [SuppressMessage("Microsoft.Interoperability", "CA1405:ComVisibleTypeBaseTypesShouldBeComVisible")]
     [ComVisible(true)]
-    public class OAFileItem : OAProjectItem<FileNode>
+    public class OAFileItem : OAProjectItem
     {
         #region ctors
-        public OAFileItem(OAProject project, FileNode node)
+        internal OAFileItem(OAProject project, FileNode node)
             : base(project, node)
         {
         }
 
         #endregion
+
+        private new FileNode Node {
+            get {
+                return (FileNode)base.Node;
+            }
+        }
 
         public override string Name
         {
@@ -259,7 +264,7 @@ namespace Microsoft.PythonTools.Project.Automation
         {
             get
             {
-                if (this.Project.Project.CanFileNodesHaveChilds)
+                if (this.Project.ProjectNode.CanFileNodesHaveChilds)
                     return new OAProjectItems(this.Project, this.Node);
                 else
                     return base.ProjectItems;

@@ -15,6 +15,7 @@
 using System;
 using System.IO;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Commands {
     /// <summary>

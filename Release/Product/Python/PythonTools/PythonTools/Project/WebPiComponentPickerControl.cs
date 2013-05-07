@@ -13,20 +13,18 @@
  * ***************************************************************************/
 
 using System;
-using System.Runtime.InteropServices;
-using System.Windows.Forms;
+using System.Collections;
+using System.Collections.Generic;
 using System.Net;
-using System.Threading.Tasks;
+using System.Runtime.InteropServices;
 using System.Threading;
+using System.Windows.Forms;
 using System.Xml;
 using System.Xml.XPath;
-using System.Collections.Generic;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
-using System.Diagnostics;
-using System.Collections;
 
-namespace Microsoft.PythonTools.Project {
+namespace Microsoft.VisualStudioTools.Project {
     [Guid("B7773A32-2EE5-4844-9630-F14768A5D03C")]
     partial class WebPiComponentPickerControl : UserControl {
         private readonly List<PackageInfo> _packages = new List<PackageInfo>();

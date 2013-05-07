@@ -12,7 +12,7 @@
  *
  * ***************************************************************************/
 
-namespace Microsoft.PythonTools.Project {
+namespace Microsoft.VisualStudioTools.Project {
     /// <summary>
     /// Defines an interface for launching a project or a file with or without debugging.
     /// </summary>

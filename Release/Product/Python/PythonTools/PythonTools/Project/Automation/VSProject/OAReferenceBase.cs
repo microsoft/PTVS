@@ -17,30 +17,27 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using VSLangProj;
 
-namespace Microsoft.PythonTools.Project.Automation
+namespace Microsoft.VisualStudioTools.Project.Automation
 {
     /// <summary>
     /// Represents the automation equivalent of ReferenceNode
     /// </summary>
     /// <typeparam name="RefType"></typeparam>
-    [SuppressMessage("Microsoft.Naming", "CA1715:IdentifiersShouldHaveCorrectPrefix", MessageId = "T")]
-    [ComVisible(true)]
-    public abstract class OAReferenceBase<RefType> : Reference
-        where RefType : ReferenceNode
+    public abstract class OAReferenceBase: Reference
     {
         #region fields
-        private RefType referenceNode;
+        private ReferenceNode referenceNode;
         #endregion
 
         #region ctors
-        protected OAReferenceBase(RefType referenceNode)
+        internal OAReferenceBase(ReferenceNode referenceNode)
         {
             this.referenceNode = referenceNode;
         }
         #endregion
 
         #region properties
-        protected RefType BaseReferenceNode
+        internal ReferenceNode BaseReferenceNode
         {
             get { return referenceNode; }
         }

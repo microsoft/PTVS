@@ -31,9 +31,9 @@ namespace TestUtilities.UI {
                 var filename = (ValuePattern)GetFilenameEditBox().GetCurrentPattern(ValuePattern.Pattern);
                 return filename.Current.Value;
             }
-            set { 
+            set {
                 var filename = (ValuePattern)GetFilenameEditBox().GetCurrentPattern(ValuePattern.Pattern);
-                filename.SetValue(value);
+                filename.SetValue(value);                
             }
         }
 

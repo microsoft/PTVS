@@ -27,7 +27,7 @@ using Microsoft.VisualStudio.Shell.Interop;
 using VSLangProj;
 using IOleServiceProvider = Microsoft.VisualStudio.OLE.Interop.IServiceProvider;
 
-namespace Microsoft.PythonTools.Project
+namespace Microsoft.VisualStudioTools.Project
 {
 
     /// <summary>
@@ -62,7 +62,6 @@ namespace Microsoft.PythonTools.Project
         ISpecifyPropertyPages,
         IVsGetCfgProvider,
         IVsSpecifyProjectDesignerPages,
-        EnvDTE80.IInternalExtenderProvider,
         IVsBrowseObject
     {
         #region fields
@@ -72,10 +71,15 @@ namespace Microsoft.PythonTools.Project
         #region properties
         [Browsable(false)]
         [AutomationBrowsable(true)]
-        public HierarchyNode Node
+        public object Node
         {
             get { return this.node; }
         }
+
+        internal HierarchyNode HierarchyNode {
+            get { return this.node; }
+        }
+
 
         /// <summary>
         /// Used by Property Pages Frame to set it's title bar. The Caption of the Hierarchy Node is returned.
@@ -90,7 +94,7 @@ namespace Microsoft.PythonTools.Project
         #endregion
 
         #region ctors
-        public NodeProperties(HierarchyNode node)
+        internal NodeProperties(HierarchyNode node)
         {
             Utilities.ArgumentNotNull("node", node);
             this.node = node;
@@ -136,7 +140,7 @@ namespace Microsoft.PythonTools.Project
         {
             Utilities.CheckNotNull(node);
 
-            hier = HierarchyNode.GetOuterHierarchy(this.node.ProjectMgr);
+            hier = node.ProjectMgr.GetOuterInterface<IVsHierarchy>();
             itemid = this.node.ID;
             return VSConstants.S_OK;
         }
@@ -149,7 +153,7 @@ namespace Microsoft.PythonTools.Project
         /// <returns>Caption of Hierarchy node instance</returns>
         public override string GetComponentName()
         {
-            string caption = this.Node.Caption;
+            string caption = this.HierarchyNode.Caption;
             if (string.IsNullOrEmpty(caption))
             {
                 return base.GetComponentName();
@@ -164,13 +168,13 @@ namespace Microsoft.PythonTools.Project
         #region helper methods
         protected string GetProperty(string name, string def)
         {
-            string a = this.Node.ItemNode.GetMetadata(name);
+            string a = this.HierarchyNode.ItemNode.GetMetadata(name);
             return (a == null) ? def : a;
         }
 
         protected void SetProperty(string name, string value)
         {
-            this.Node.ItemNode.SetMetadata(name, value);
+            this.HierarchyNode.ItemNode.SetMetadata(name, value);
         }
 
         /// <summary>
@@ -195,7 +199,7 @@ namespace Microsoft.PythonTools.Project
                 // Retrieve the list of guids from hierarchy properties.
                 // Because a flavor could modify that list we must make sure we are calling the outer most implementation of IVsHierarchy
                 string guidsList = String.Empty;
-                IVsHierarchy hierarchy = HierarchyNode.GetOuterHierarchy(this.Node.ProjectMgr);
+                IVsHierarchy hierarchy = HierarchyNode.ProjectMgr.GetOuterInterface<IVsHierarchy>();
                 object variant = null;
                 ErrorHandler.ThrowOnFailure(hierarchy.GetProperty(VSConstants.VSITEMID_ROOT, (int)__VSHPROPID2.VSHPROPID_PropertyPagesCLSIDList, out variant));
                 guidsList = (string)variant;
@@ -219,39 +223,6 @@ namespace Microsoft.PythonTools.Project
         }
         #endregion
 
-        #region IInternalExtenderProvider Members
-
-        bool EnvDTE80.IInternalExtenderProvider.CanExtend(string extenderCATID, string extenderName, object extendeeObject)
-        {
-            EnvDTE80.IInternalExtenderProvider outerHierarchy = HierarchyNode.GetOuterHierarchy(this.Node) as EnvDTE80.IInternalExtenderProvider;
-
-
-            if (outerHierarchy != null)
-            {
-                return outerHierarchy.CanExtend(extenderCATID, extenderName, extendeeObject);
-            }
-            return false;
-        }
-
-        object EnvDTE80.IInternalExtenderProvider.GetExtender(string extenderCATID, string extenderName, object extendeeObject, EnvDTE.IExtenderSite extenderSite, int cookie)
-        {
-            EnvDTE80.IInternalExtenderProvider outerHierarchy = HierarchyNode.GetOuterHierarchy(this.Node) as EnvDTE80.IInternalExtenderProvider;
-
-            if (outerHierarchy != null)
-            {
-                return outerHierarchy.GetExtender(extenderCATID, extenderName, extendeeObject, extenderSite, cookie);
-            }
-
-            return null;
-        }
-
-        object EnvDTE80.IInternalExtenderProvider.GetExtenderNames(string extenderCATID, object extendeeObject)
-        {
-            return null;
-        }
-
-        #endregion
-
         #region ExtenderSupport
         [Browsable(false)]
         [SuppressMessage("Microsoft.Naming", "CA1709:IdentifiersShouldBeCasedCorrectly", MessageId = "CATID")]
@@ -259,7 +230,7 @@ namespace Microsoft.PythonTools.Project
         {
             get
             {
-                Guid catid = this.Node.ProjectMgr.GetCATIDForType(this.GetType());
+                Guid catid = this.HierarchyNode.ProjectMgr.GetCATIDForType(this.GetType());
                 if (Guid.Empty.CompareTo(catid) == 0)
                 {
                     return null;
@@ -271,7 +242,7 @@ namespace Microsoft.PythonTools.Project
         [Browsable(false)]
         public object ExtenderNames()
         {
-            EnvDTE.ObjectExtenders extenderService = (EnvDTE.ObjectExtenders)this.Node.GetService(typeof(EnvDTE.ObjectExtenders));
+            EnvDTE.ObjectExtenders extenderService = (EnvDTE.ObjectExtenders)this.HierarchyNode.GetService(typeof(EnvDTE.ObjectExtenders));
             Debug.Assert(extenderService != null, "Could not get the ObjectExtenders object from the services exposed by this property object");
             Utilities.CheckNotNull(extenderService);
 
@@ -280,7 +251,7 @@ namespace Microsoft.PythonTools.Project
 
         public object Extender(string extenderName)
         {
-            EnvDTE.ObjectExtenders extenderService = (EnvDTE.ObjectExtenders)this.Node.GetService(typeof(EnvDTE.ObjectExtenders));
+            EnvDTE.ObjectExtenders extenderService = (EnvDTE.ObjectExtenders)this.HierarchyNode.GetService(typeof(EnvDTE.ObjectExtenders));
             Debug.Assert(extenderService != null, "Could not get the ObjectExtenders object from the services exposed by this property object");
             Utilities.CheckNotNull(extenderService);
             return extenderService.GetExtender(this.ExtenderCATID, extenderName, this);
@@ -302,11 +273,11 @@ namespace Microsoft.PythonTools.Project
         {
             get
             {
-                return this.Node.Caption;
+                return this.HierarchyNode.Caption;
             }
             set
             {
-                this.Node.SetEditLabel(value);
+                this.HierarchyNode.SetEditLabel(value);
             }
         }
 
@@ -317,7 +288,7 @@ namespace Microsoft.PythonTools.Project
         {
             get
             {
-                return this.Node.Url;
+                return this.HierarchyNode.Url;
             }
         }
 
@@ -329,11 +300,11 @@ namespace Microsoft.PythonTools.Project
         {
             get
             {
-                return (prjBuildAction)BuildActionTypeConverter.Instance.ConvertFromString(Node.ItemNode.ItemTypeName);
+                return (prjBuildAction)BuildActionTypeConverter.Instance.ConvertFromString(HierarchyNode.ItemNode.ItemTypeName);
             }
             set
             {
-                this.Node.ItemNode.ItemTypeName = BuildActionTypeConverter.Instance.ConvertToString(value);
+                this.HierarchyNode.ItemNode.ItemTypeName = BuildActionTypeConverter.Instance.ConvertToString(value);
             }
         }
 
@@ -344,10 +315,10 @@ namespace Microsoft.PythonTools.Project
         {
             get
             {
-                var publish = this.Node.ItemNode.GetMetadata("Publish");
+                var publish = this.HierarchyNode.ItemNode.GetMetadata("Publish");
                 if (String.IsNullOrEmpty(publish))
                 {
-                    if (this.Node.ItemNode.ItemTypeName == "Compile")
+                    if (this.HierarchyNode.ItemNode.ItemTypeName == "Compile")
                     {
                         return true;
                     }
@@ -358,7 +329,7 @@ namespace Microsoft.PythonTools.Project
             set
             {
 
-                this.Node.ItemNode.SetMetadata("Publish", value.ToString());
+                this.HierarchyNode.ItemNode.SetMetadata("Publish", value.ToString());
             }
         }
 
@@ -369,7 +340,7 @@ namespace Microsoft.PythonTools.Project
         {
             get
             {
-                return this.Node.Url;
+                return this.HierarchyNode.Url;
             }
         }
 
@@ -378,7 +349,7 @@ namespace Microsoft.PythonTools.Project
         {
             get
             {
-                return Path.GetExtension(this.Node.Caption);
+                return Path.GetExtension(this.HierarchyNode.Caption);
             }
         }
 
@@ -388,7 +359,7 @@ namespace Microsoft.PythonTools.Project
             get
             {
                 // remove STATEICON_ and return rest of enum
-                return Node.StateIconIndex.ToString().Substring(10);
+                return HierarchyNode.StateIconIndex.ToString().Substring(10);
             }
         }
 
@@ -397,7 +368,7 @@ namespace Microsoft.PythonTools.Project
         #endregion
 
         #region ctors
-        public FileNodeProperties(HierarchyNode node)
+        internal FileNodeProperties(HierarchyNode node)
             : base(node)
         {
         }
@@ -412,7 +383,7 @@ namespace Microsoft.PythonTools.Project
     [ComVisible(true)]
     public class LinkFileNodeProperties : FileNodeProperties
     {
-        public LinkFileNodeProperties(HierarchyNode node)
+        internal LinkFileNodeProperties(HierarchyNode node)
             : base(node)
         {
 
@@ -426,7 +397,7 @@ namespace Microsoft.PythonTools.Project
         {
             get
             {
-                return this.Node.Caption;
+                return this.HierarchyNode.Caption;
             }
             set
             {
@@ -448,7 +419,7 @@ namespace Microsoft.PythonTools.Project
         {
             get
             {
-                return this.Node.Caption;
+                return this.HierarchyNode.Caption;
             }
         }
 
@@ -459,13 +430,13 @@ namespace Microsoft.PythonTools.Project
         {
             get
             {
-                return this.Node.Url;
+                return this.HierarchyNode.Url;
             }
         }
         #endregion
 
         #region ctors
-        public DependentFileNodeProperties(HierarchyNode node)
+        internal DependentFileNodeProperties(HierarchyNode node)
             : base(node)
         {
         }
@@ -514,8 +485,6 @@ namespace Microsoft.PythonTools.Project
                         return "Compile";
                     case prjBuildAction.prjBuildActionContent:
                         return "Content";
-                    case prjBuildAction.prjBuildActionEmbeddedResource:
-                        return "Embedded Resource";
                     case prjBuildAction.prjBuildActionNone:
                         return "None";
                 }
@@ -532,8 +501,6 @@ namespace Microsoft.PythonTools.Project
                     return prjBuildAction.prjBuildActionCompile;
                 } else if (strVal.Equals("Content", StringComparison.OrdinalIgnoreCase)) {
                     return prjBuildAction.prjBuildActionContent;
-                } else if (strVal.Equals("Embedded Resource", StringComparison.OrdinalIgnoreCase)) {
-                    return prjBuildAction.prjBuildActionEmbeddedResource;
                 } else if (strVal.Equals("None", StringComparison.OrdinalIgnoreCase)) {
                     return prjBuildAction.prjBuildActionNone;
                 }
@@ -543,12 +510,12 @@ namespace Microsoft.PythonTools.Project
 
         public override StandardValuesCollection GetStandardValues(ITypeDescriptorContext context)
         {
-            return new StandardValuesCollection(new[] { prjBuildAction.prjBuildActionNone, prjBuildAction.prjBuildActionCompile, prjBuildAction.prjBuildActionContent, prjBuildAction.prjBuildActionEmbeddedResource });
+            return new StandardValuesCollection(new[] { prjBuildAction.prjBuildActionNone, prjBuildAction.prjBuildActionCompile, prjBuildAction.prjBuildActionContent });
         }
     }
    
     [ComVisible(true)]
-    public class ProjectNodeProperties : NodeProperties
+    public class ProjectNodeProperties : NodeProperties, EnvDTE80.IInternalExtenderProvider
     {
         #region properties
         [SRCategoryAttribute(SR.Misc)]
@@ -616,10 +583,17 @@ namespace Microsoft.PythonTools.Project
         #endregion
 
         #region ctors
-        public ProjectNodeProperties(ProjectNode node)
+        internal ProjectNodeProperties(ProjectNode node)
             : base(node)
         {
         }
+
+        internal new ProjectNode Node {
+            get {
+                return (ProjectNode)base.Node;
+            }
+        }
+
         #endregion
 
         #region overridden methods
@@ -641,7 +615,7 @@ namespace Microsoft.PythonTools.Project
             if (editorBaseType == typeof(ComponentEditor))
             {
                 IOleServiceProvider sp;
-                ErrorHandler.ThrowOnFailure(this.Node.GetSite(out sp));
+                ErrorHandler.ThrowOnFailure(Node.ProjectMgr.GetSite(out sp));
                 return new PropertiesEditorLauncher(new ServiceProvider(sp));
             }
 
@@ -664,6 +638,33 @@ namespace Microsoft.PythonTools.Project
         }
 
         #endregion
+
+        #region IInternalExtenderProvider Members
+
+        bool EnvDTE80.IInternalExtenderProvider.CanExtend(string extenderCATID, string extenderName, object extendeeObject) {
+            EnvDTE80.IInternalExtenderProvider outerHierarchy = Node.GetOuterInterface<EnvDTE80.IInternalExtenderProvider>();
+
+            if (outerHierarchy != null) {
+                return outerHierarchy.CanExtend(extenderCATID, extenderName, extendeeObject);
+            }
+            return false;
+        }
+
+        object EnvDTE80.IInternalExtenderProvider.GetExtender(string extenderCATID, string extenderName, object extendeeObject, EnvDTE.IExtenderSite extenderSite, int cookie) {
+            EnvDTE80.IInternalExtenderProvider outerHierarchy = Node.GetOuterInterface<EnvDTE80.IInternalExtenderProvider>();
+
+            if (outerHierarchy != null) {
+                return outerHierarchy.GetExtender(extenderCATID, extenderName, extendeeObject, extenderSite, cookie);
+            }
+
+            return null;
+        }
+
+        object EnvDTE80.IInternalExtenderProvider.GetExtenderNames(string extenderCATID, object extendeeObject) {
+            return null;
+        }
+
+        #endregion
     }
 
     [ComVisible(true)]
@@ -677,12 +678,14 @@ namespace Microsoft.PythonTools.Project
         {
             get
             {
-                return this.Node.Caption;
+                return this.HierarchyNode.Caption;
             }
             set
             {
-                this.Node.SetEditLabel(value);
-                this.Node.ReDraw(UIHierarchyElement.Caption);
+                UIThread.Instance.RunSync(() => {
+                    this.HierarchyNode.SetEditLabel(value);
+                    this.HierarchyNode.ProjectMgr.ReDrawNode(HierarchyNode, UIHierarchyElement.Caption);
+                });
             }
         }
 
@@ -693,11 +696,13 @@ namespace Microsoft.PythonTools.Project
         {
             get
             {
-                return this.Node.Caption;
+                return this.HierarchyNode.Caption;
             }
-            set
-            {
-                this.Node.SetEditLabel(value);
+            set {
+                UIThread.Instance.RunSync(() => {
+                    this.HierarchyNode.SetEditLabel(value);
+                    this.HierarchyNode.ProjectMgr.ReDrawNode(HierarchyNode, UIHierarchyElement.Caption);
+                });
             }
         }
 
@@ -707,7 +712,7 @@ namespace Microsoft.PythonTools.Project
         {
             get
             {
-                return CommonUtils.NormalizeDirectoryPath(this.Node.GetMkDocument());
+                return CommonUtils.NormalizeDirectoryPath(this.HierarchyNode.GetMkDocument());
             }
         }
         #endregion
@@ -715,7 +720,7 @@ namespace Microsoft.PythonTools.Project
         #endregion
 
         #region ctors
-        public FolderNodeProperties(HierarchyNode node)
+        internal FolderNodeProperties(HierarchyNode node)
             : base(node)
         {
         }
@@ -740,7 +745,7 @@ namespace Microsoft.PythonTools.Project
         {
             get
             {
-                return this.Node.Caption;
+                return this.HierarchyNode.Caption;
             }
         }
 
@@ -769,13 +774,13 @@ namespace Microsoft.PythonTools.Project
         {
             get
             {
-                return this.Node.Url;
+                return this.HierarchyNode.Url;
             }
         }
         #endregion
 
         #region ctors
-        public ReferenceNodeProperties(HierarchyNode node)
+        internal ReferenceNodeProperties(HierarchyNode node)
             : base(node)
         {
         }
@@ -793,7 +798,7 @@ namespace Microsoft.PythonTools.Project
     public class ProjectReferencesProperties : ReferenceNodeProperties
     {
         #region ctors
-        public ProjectReferencesProperties(ProjectReferenceNode node)
+        internal ProjectReferencesProperties(ProjectReferenceNode node)
             : base(node)
         {
         }

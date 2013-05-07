@@ -14,17 +14,18 @@
 
 using System;
 using System.ComponentModel;
+using System.IO;
 using System.Runtime.InteropServices;
-using Microsoft.PythonTools.Project.Automation;
+using Microsoft.VisualStudioTools.Project.Automation;
 using Microsoft.VisualStudio.Shell.Interop;
 
-
-namespace Microsoft.PythonTools.Project {
+namespace Microsoft.VisualStudioTools.Project {
     [ComVisible(true)]
     [ClassInterface(ClassInterfaceType.AutoDual)]
     public class CommonProjectNodeProperties : ProjectNodeProperties, IVsCfgBrowseObject, VSLangProj.ProjectProperties {
+        private OAProjectConfigurationProperties _activeCfgSettings; 
 
-        public CommonProjectNodeProperties(ProjectNode node)
+        internal CommonProjectNodeProperties(ProjectNode node)
             : base(node) {
         }
 
@@ -32,10 +33,16 @@ namespace Microsoft.PythonTools.Project {
         /// <summary>
         /// Returns/Sets the StartupFile project property
         /// </summary>
-        [Browsable(false)]
+        [SRCategoryAttribute(SR.General)]
+        [LocDisplayName(SR.StartupFile)]
+        [SRDescriptionAttribute(SR.StartupFileDescription)]
         public string StartupFile {
             get {
-                return this.Node.ProjectMgr.GetProjectProperty(CommonConstants.StartupFile, true);
+                var res = Node.ProjectMgr.GetProjectProperty(CommonConstants.StartupFile, true);
+                if (!Path.IsPathRooted(res)) {
+                    res = CommonUtils.GetAbsoluteFilePath(Node.ProjectMgr.ProjectHome, res);
+            }
+                return res;
             }
             set {
                 this.Node.ProjectMgr.SetProjectProperty(CommonConstants.StartupFile, value);
@@ -45,7 +52,9 @@ namespace Microsoft.PythonTools.Project {
         /// <summary>
         /// Returns/Sets the StartupFile project property
         /// </summary>
-        [Browsable(false)]
+        [SRCategoryAttribute(SR.General)]
+        [LocDisplayName(SR.WorkingDirectory)]
+        [SRDescriptionAttribute(SR.WorkingDirectoryDescription)]
         public string WorkingDirectory {
             get {
                 return this.Node.ProjectMgr.GetProjectProperty(CommonConstants.WorkingDirectory, true);
@@ -65,43 +74,6 @@ namespace Microsoft.PythonTools.Project {
             }
             set {
                 this.Node.ProjectMgr.SetProjectProperty(CommonConstants.PublishUrl, value);
-            }
-        }
-
-        /// <summary>
-        /// Returns the SearchPath project property
-        /// </summary>
-        [Browsable(false)]
-        public string SearchPath {
-            get {
-                return this.Node.ProjectMgr.GetProjectProperty(CommonConstants.SearchPath, true);
-            }
-        }
-
-        /// <summary>
-        /// Gets the command line arguments for the project.
-        /// </summary>
-        [Browsable(false)]
-        public string CommandLineArguments {
-            get {
-                return this.Node.ProjectMgr.GetProjectProperty(CommonConstants.CommandLineArguments, true);
-            }
-        }
-
-        /// <summary>
-        /// Gets the override for the interpreter path to used for launching the project.
-        /// </summary>
-        [Browsable(false)]
-        public string InterpreterPath {
-            get {
-                var res = this.Node.ProjectMgr.GetProjectProperty(CommonConstants.InterpreterPath, true);
-                if (!string.IsNullOrEmpty(res)) {
-                    var proj = Node.ProjectMgr as CommonProjectNode;
-                    if (proj != null) {
-                        res = CommonUtils.GetAbsoluteFilePath(proj.GetWorkingDirectory(), res);
-                    }
-                }
-                return res;
             }
         }
 
@@ -148,10 +120,15 @@ namespace Microsoft.PythonTools.Project {
                 return Node.ProjectMgr.ProjectFolder;
             }
         }
-        
+
         [Browsable(false)]
         public VSLangProj.ProjectConfigurationProperties ActiveConfigurationSettings {
-            get { return new OAProjectConfigurationProperties(Node.ProjectMgr); }
+            get {
+                if (_activeCfgSettings == null) {
+                    _activeCfgSettings = new OAProjectConfigurationProperties(Node.ProjectMgr);
+                }
+                return _activeCfgSettings;
+            }
         }
 
         [Browsable(false)]
@@ -341,7 +318,7 @@ namespace Microsoft.PythonTools.Project {
             }
             set {
                 throw new System.NotImplementedException();
-            }
+        }
         }
 
         [Browsable(false)]
@@ -353,11 +330,11 @@ namespace Microsoft.PythonTools.Project {
         public string ReferencePath {
             get {
                 throw new System.NotImplementedException();
-            }
+                    }
             set {
                 throw new System.NotImplementedException();
+                }
             }
-        }
 
         [Browsable(false)]
         public string ServerExtensionsVersion {
@@ -372,7 +349,7 @@ namespace Microsoft.PythonTools.Project {
             set {
                 Node.ProjectMgr.SetProjectProperty(CommonConstants.StartupFile, value);
             }
-        }
+            }
 
         [Browsable(false)]
         public string URL {
@@ -407,7 +384,7 @@ namespace Microsoft.PythonTools.Project {
         [Browsable(false)]
         public object __project {
             get { throw new System.NotImplementedException(); }
-        }
+            }
 
         [Browsable(false)]
         public object get_Extender(string ExtenderName) {

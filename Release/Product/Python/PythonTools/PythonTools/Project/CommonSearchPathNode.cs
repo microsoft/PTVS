@@ -16,6 +16,8 @@ using System;
 using System.Runtime.InteropServices;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudioTools;
+using Microsoft.VisualStudioTools.Project;
 using VsCommands = Microsoft.VisualStudio.VSConstants.VSStd97CmdID;
 
 namespace Microsoft.PythonTools.Project {
@@ -23,7 +25,7 @@ namespace Microsoft.PythonTools.Project {
     /// Represents search path entry as a node in the Solution Explorer.
     /// </summary>
     [ComVisible(true)]
-    public class CommonSearchPathNode : BaseSearchPathNode {
+    internal class CommonSearchPathNode : BaseSearchPathNode {
         private int _index;
         public CommonSearchPathNode(CommonProjectNode project, string path, int index)
             : base(project, path, new VirtualProjectElement(project)) {
@@ -41,7 +43,7 @@ namespace Microsoft.PythonTools.Project {
             set { _index = value; }
         }
 
-        protected override int ExecCommandOnNode(Guid cmdGroup, uint cmd, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut) {
+        internal override int ExecCommandOnNode(Guid cmdGroup, uint cmd, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut) {
             if (cmdGroup == VsMenus.guidStandardCommandSet97) {
                 switch ((VsCommands)cmd) {
                     case VsCommands.Delete:
@@ -66,7 +68,7 @@ namespace Microsoft.PythonTools.Project {
         /// <summary>
         /// Generic Search Path Node can only be removed from project.
         /// </summary>        
-        protected override bool CanDeleteItem(__VSDELETEITEMOPERATION deleteOperation) {
+        internal override bool CanDeleteItem(__VSDELETEITEMOPERATION deleteOperation) {
             return deleteOperation == __VSDELETEITEMOPERATION.DELITEMOP_RemoveFromProject;
         }
 

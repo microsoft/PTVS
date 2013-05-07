@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System.Windows;
+using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Project {
     /// <summary>

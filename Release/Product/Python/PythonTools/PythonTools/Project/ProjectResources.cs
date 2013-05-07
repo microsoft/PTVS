@@ -13,15 +13,12 @@
  * ***************************************************************************/
 
 using System;
-using System.Reflection;
+using System.ComponentModel;
 using System.Globalization;
 using System.Resources;
-using System.Text;
 using System.Threading;
-using System.ComponentModel;
-using System.Security.Permissions;
 
-namespace Microsoft.PythonTools.Project
+namespace Microsoft.VisualStudioTools.Project
 {
     [AttributeUsage(AttributeTargets.All)]
     internal sealed class SRDescriptionAttribute : DescriptionAttribute
@@ -127,10 +124,13 @@ namespace Microsoft.PythonTools.Project
         internal const string FolderProperties = "FolderProperties";
         internal const string FullPath = "FullPath";
         internal const string FullPathDescription = "FullPathDescription";
+        internal const string General = "General";
         internal const string ItemDoesNotExistInProjectDirectory = "ItemDoesNotExistInProjectDirectory";
         internal const string InvalidAutomationObject = "InvalidAutomationObject";
         internal const string InvalidLoggerType = "InvalidLoggerType";
         internal const string InvalidParameter = "InvalidParameter";
+        internal const string LaunchUrl = "LaunchUrl";
+        internal const string LaunchUrlDescription = "LaunchUrlDescription";
         internal const string Library = "Library";
         internal const string LinkedItemsAreNotSupported = "LinkedItemsAreNotSupported";
         internal const string Minimal = "Minimal";
@@ -145,6 +145,7 @@ namespace Microsoft.PythonTools.Project
         internal const string ParameterMustBeAValidItemId = "ParameterMustBeAValidItemId";
         internal const string ParameterCannotBeNullOrEmpty = "ParameterCannotBeNullOrEmpty";
         internal const string PathTooLong = "PathTooLong";
+        internal const string PathTooLongShortMessage = "PathTooLongShortMessage";
         internal const string ProjectContainsCircularReferences = "ProjectContainsCircularReferences";
         internal const string Program = "Program";
         internal const string Project = "Project";
@@ -165,8 +166,14 @@ namespace Microsoft.PythonTools.Project
         internal const string SaveCaption = "SaveCaption";
         internal const string SaveModifiedDocuments = "SaveModifiedDocuments";
         internal const string SaveOfProjectFileOutsideCurrentDirectory = "SaveOfProjectFileOutsideCurrentDirectory";
+        internal const string ScriptArguments = "ScriptArguments";
+        internal const string ScriptArgumentsDescription = "ScriptArgumentsDescription";
         internal const string StandardEditorViewError = "StandardEditorViewError";
         internal const string Settings = "Settings";
+        internal const string StartupFile = "StartupFile";
+        internal const string StartupFileDescription = "StartupFileDescription";
+        internal const string StartWebBrowser = "StartWebBrowser";
+        internal const string StartWebBrowserDescription = "StartWebBrowserDescription";
         internal const string URL = "URL";
         internal const string UseOfDeletedItemError = "UseOfDeletedItemError";
         internal const string v1 = "v1";
@@ -176,6 +183,8 @@ namespace Microsoft.PythonTools.Project
         internal const string v35 = "v35";
         internal const string v4 = "v4";
         internal const string Warning = "Warning";
+        internal const string WorkingDirectory = "WorkingDirectory";
+        internal const string WorkingDirectoryDescription = "WorkingDirectoryDescription";
         internal const string WinExe = "WinExe";
         internal const string Publish = "Publish";
         internal const string PublishDescription = "PublishDescription";

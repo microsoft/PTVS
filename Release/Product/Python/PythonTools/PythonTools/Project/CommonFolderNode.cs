@@ -16,38 +16,49 @@ using System;
 using System.Diagnostics;
 
 using Microsoft.VisualStudio.Shell.Interop;
-using OleConstants = Microsoft.VisualStudio.OLE.Interop.Constants;
 using VsCommands2K = Microsoft.VisualStudio.VSConstants.VSStd2KCmdID;
 using VSConstants = Microsoft.VisualStudio.VSConstants;
 
-namespace Microsoft.PythonTools.Project {
+namespace Microsoft.VisualStudioTools.Project {
 
-    public class CommonFolderNode : FolderNode {
+    internal class CommonFolderNode : FolderNode {
         private CommonProjectNode _project;
 
-        public CommonFolderNode(CommonProjectNode root, string path, ProjectElement element)
-            : base(root, path, element) {
+        public CommonFolderNode(CommonProjectNode root, ProjectElement element)
+            : base(root, element) {
             _project = root;
         }
 
-        protected override int QueryStatusOnNode(Guid cmdGroup, uint cmd, IntPtr pCmdText, ref QueryStatusResult result) {
+        internal override int QueryStatusOnNode(Guid cmdGroup, uint cmd, IntPtr pCmdText, ref QueryStatusResult result) {
             //Hide Exclude from Project command, show everything else normal Folder node supports
-            if (cmdGroup == Microsoft.PythonTools.Project.VsMenus.guidStandardCommandSet2K) {
+            if (cmdGroup == Microsoft.VisualStudioTools.Project.VsMenus.guidStandardCommandSet2K) {
                 if ((VsCommands2K)cmd == CommonConstants.OpenFolderInExplorerCmdId) {
                     result |= QueryStatusResult.SUPPORTED | QueryStatusResult.ENABLED;
                     return VSConstants.S_OK;
+                }
+            } else if (cmdGroup == ProjectMgr.SharedCommandGuid) {
+                switch ((SharedCommands)cmd) {
+                    case SharedCommands.AddExistingFolder:
+                        result |= QueryStatusResult.SUPPORTED | QueryStatusResult.ENABLED;
+                        return VSConstants.S_OK;
                 }
             }
             return base.QueryStatusOnNode(cmdGroup, cmd, pCmdText, ref result);
         }
 
-        protected override int ExecCommandOnNode(Guid cmdGroup, uint cmd, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut) {
-            if (cmdGroup == Microsoft.PythonTools.Project.VsMenus.guidStandardCommandSet2K) {
+        internal override int ExecCommandOnNode(Guid cmdGroup, uint cmd, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut) {
+            if (cmdGroup == Microsoft.VisualStudioTools.Project.VsMenus.guidStandardCommandSet2K) {
                 if ((VsCommands2K)cmd == CommonConstants.OpenFolderInExplorerCmdId) {
                     Process.Start(this.Url);
                     return VSConstants.S_OK;
                 }
+            } else if (cmdGroup == ProjectMgr.SharedCommandGuid) {
+                switch ((SharedCommands)cmd) {
+                    case SharedCommands.AddExistingFolder:
+                        return ProjectMgr.AddExistingFolderToNode(this);
             }
+            }
+
             return base.ExecCommandOnNode(cmdGroup, cmd, nCmdexecopt, pvaIn, pvaOut);
         }
 
@@ -63,7 +74,7 @@ namespace Microsoft.PythonTools.Project {
         /// <summary>
         /// Common Folder Node can only be deleted from file system.
         /// </summary>        
-        protected override bool CanDeleteItem(__VSDELETEITEMOPERATION deleteOperation) {
+        internal override bool CanDeleteItem(__VSDELETEITEMOPERATION deleteOperation) {
             return deleteOperation == __VSDELETEITEMOPERATION.DELITEMOP_DeleteFromStorage;
         }
         
@@ -88,7 +99,7 @@ namespace Microsoft.PythonTools.Project {
             if (propId == (int)__VSHPROPID.VSHPROPID_Expanded) {
                 SetBoldStartup(parent);
             }
-        }       
+        }
 #endif
 
         internal static void BoldStartupOnIcon(int propId, HierarchyNode parent) {
@@ -107,10 +118,16 @@ namespace Microsoft.PythonTools.Project {
             HierarchyNode startupItem;
             if (!comProj._boldedStartupItem &&
                 (startupFile = comProj.GetStartupFile()) != null &&
-                (startupItem = parent.FindChild(CommonUtils.GetAbsoluteFilePath(comProj.ProjectFolder, startupFile), false)) != null) {
+                (startupItem = parent.ProjectMgr.FindNodeByFullPath(CommonUtils.GetAbsoluteFilePath(comProj.ProjectFolder, startupFile))) != null) {
 
                 // we're expanding the parent of the 
                 comProj.BoldStartupItem(startupItem);
+            }
+        }
+
+        public new CommonProjectNode ProjectMgr {
+            get {
+                return (CommonProjectNode)base.ProjectMgr;
             }
         }
     }

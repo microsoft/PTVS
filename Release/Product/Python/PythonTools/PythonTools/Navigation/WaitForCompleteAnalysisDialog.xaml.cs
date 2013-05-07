@@ -17,6 +17,7 @@ using System.Threading;
 using System.Windows;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio.PlatformUI;
+using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Navigation {
     /// <summary>

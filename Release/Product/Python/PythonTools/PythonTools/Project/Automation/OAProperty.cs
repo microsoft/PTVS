@@ -16,7 +16,7 @@ using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.InteropServices;
 
-namespace Microsoft.PythonTools.Project.Automation
+namespace Microsoft.VisualStudioTools.Project.Automation
 {
     [ComVisible(true)]
     public class OAProperty : EnvDTE.Property
@@ -157,7 +157,7 @@ namespace Microsoft.PythonTools.Project.Automation
             get { return pi.GetValue(this.parent.Target, null); }
             set
             {
-                using (AutomationScope scope = new AutomationScope(this.parent.Target.Node.ProjectMgr.Site))
+                using (AutomationScope scope = new AutomationScope(this.parent.Target.HierarchyNode.ProjectMgr.Site))
                 {
                     this.pi.SetValue(this.parent.Target, value, null);
                 }

@@ -16,7 +16,7 @@ using System.ComponentModel.Design;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 
-namespace Microsoft.PythonTools.Navigation {
+namespace Microsoft.VisualStudioTools.Navigation {
     public interface ISimpleObject {
         bool CanDelete { get;  }
         bool CanGoToSource { get; }

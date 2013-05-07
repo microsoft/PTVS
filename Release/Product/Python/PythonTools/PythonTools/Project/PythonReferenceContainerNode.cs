@@ -16,6 +16,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Project {
     class PythonReferenceContainerNode : CommonReferenceContainerNode {

@@ -14,7 +14,7 @@
 
 using System.Collections.Generic;
 
-namespace Microsoft.PythonTools.Project {
+namespace Microsoft.VisualStudioTools.Project {
     public interface IPublishProject {
         /// <summary>
         /// Gets the list of files which need to be published.

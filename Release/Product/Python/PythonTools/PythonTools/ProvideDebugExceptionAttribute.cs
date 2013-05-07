@@ -16,7 +16,7 @@ using System;
 using Microsoft.VisualStudio.Debugger.Interop;
 using Microsoft.VisualStudio.Shell;
 
-namespace Microsoft.PythonTools {
+namespace Microsoft.VisualStudioTools {
     /// <summary>
     /// Registers an exception in the Debug->Exceptions window.
     /// 

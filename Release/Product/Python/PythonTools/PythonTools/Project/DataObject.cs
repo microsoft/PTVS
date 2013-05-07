@@ -23,7 +23,7 @@ using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
 
-namespace Microsoft.PythonTools.Project
+namespace Microsoft.VisualStudioTools.Project
 {
     internal enum tagDVASPECT
     {
@@ -278,25 +278,15 @@ namespace Microsoft.PythonTools.Project
 
         public static int QueryGetData(Microsoft.VisualStudio.OLE.Interop.IDataObject pDataObject, ref FORMATETC fmtetc)
         {
-            int returnValue = VSConstants.E_FAIL;
             FORMATETC[] af = new FORMATETC[1];
             af[0] = fmtetc;
-            try
+            int result = pDataObject.QueryGetData(af);
+            if (result == VSConstants.S_OK)
             {
-                int result = ErrorHandler.ThrowOnFailure(pDataObject.QueryGetData(af));
-                if (result == VSConstants.S_OK)
-                {
-                    fmtetc = af[0];
-                    returnValue = VSConstants.S_OK;
-                }
+                fmtetc = af[0];
+                return VSConstants.S_OK;
             }
-            catch (COMException e)
-            {
-                Trace.WriteLine("COMException : " + e.Message);
-                returnValue = e.ErrorCode;
-            }
-
-            return returnValue;
+            return result;
         }
 
         public static STGMEDIUM GetData(Microsoft.VisualStudio.OLE.Interop.IDataObject pDataObject, ref FORMATETC fmtetc)

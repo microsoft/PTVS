@@ -16,6 +16,9 @@ using System;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
 using Microsoft.PythonTools.Project.Automation;
+using Microsoft.VisualStudioTools;
+using Microsoft.VisualStudioTools.Project;
+using Microsoft.VisualStudioTools.Project.Automation;
 
 namespace Microsoft.PythonTools.Project {
     [ComVisible(true)]
@@ -24,10 +27,46 @@ namespace Microsoft.PythonTools.Project {
     [Guid(CommonConstants.ProjectNodePropertiesGuid)]
     public class PythonProjectNodeProperties : CommonProjectNodeProperties {
 
-        public PythonProjectNodeProperties(PythonProjectNode node)
+        internal PythonProjectNodeProperties(PythonProjectNode node)
             : base(node) {
         }
 
+        /// <summary>
+        /// Returns/Sets the SearchPath project property
+        /// </summary>
+        [Browsable(false)]
+        public string SearchPath {
+            get {
+                return this.Node.ProjectMgr.GetProjectProperty(CommonConstants.SearchPath, true);
+            }
+        }
+        
+        /// <summary>
+        /// Gets the command line arguments for the project.
+        /// </summary>
+        [Browsable(false)]
+        public string CommandLineArguments {
+            get {
+                return this.Node.ProjectMgr.GetProjectProperty(CommonConstants.CommandLineArguments, true);
+            }
+        }
+
+        /// <summary>
+        /// Gets the override for the interpreter path to used for launching the project.
+        /// </summary>
+        [Browsable(false)]
+        public string InterpreterPath {
+            get {
+                var res = this.Node.ProjectMgr.GetProjectProperty(CommonConstants.InterpreterPath, true);
+                if (!string.IsNullOrEmpty(res)) {
+                    var proj = Node.ProjectMgr as CommonProjectNode;
+                    if (proj != null) {
+                        res = CommonUtils.GetAbsoluteFilePath(proj.GetWorkingDirectory(), res);
+                    }
+                }
+                return res;
+            }
+        }
 
         [Browsable(false)]
         public string InterpreterId {

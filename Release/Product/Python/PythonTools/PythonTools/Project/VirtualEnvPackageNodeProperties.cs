@@ -16,11 +16,13 @@ using System;
 using System.ComponentModel;
 using System.IO;
 using System.Runtime.InteropServices;
+using Microsoft.VisualStudioTools;
+using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Project {
     [ComVisible(true)]
     [Guid(CommonConstants.VirtualEnvPackagePropertiesGuid)]
-    public class VirtualEnvPackageNodeProperties : NodeProperties {
+    internal class VirtualEnvPackageNodeProperties : NodeProperties {
         public VirtualEnvPackageNodeProperties(HierarchyNode node)
             : base(node) { }
 

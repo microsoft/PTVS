@@ -119,7 +119,7 @@ namespace Microsoft.PythonTools.Django.Intellisense {
         #region IOleCommandTarget Members
 
         public int Exec(ref Guid pguidCmdGroup, uint nCmdID, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut) {
-            if (pguidCmdGroup == CommonConstants.Std2KCmdGroupGuid) {
+            if (pguidCmdGroup == VSConstants.VSStd2K) {
                 int res;
 
                 switch ((VSConstants.VSStd2KCmdID)nCmdID) {
@@ -242,7 +242,7 @@ namespace Microsoft.PythonTools.Django.Intellisense {
         }
 
         public int QueryStatus(ref Guid pguidCmdGroup, uint cCmds, OLECMD[] prgCmds, IntPtr pCmdText) {
-            if (pguidCmdGroup == CommonConstants.Std2KCmdGroupGuid) {
+            if (pguidCmdGroup == VSConstants.VSStd2K) {
                 for (int i = 0; i < cCmds; i++) {
                     switch ((VSConstants.VSStd2KCmdID)prgCmds[i].cmdID) {
                         case VSConstants.VSStd2KCmdID.SHOWMEMBERLIST:

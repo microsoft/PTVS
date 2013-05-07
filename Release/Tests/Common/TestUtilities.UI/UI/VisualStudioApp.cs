@@ -217,7 +217,6 @@ namespace TestUtilities.UI {
         /// Waits for a modal dialog to take over a given window and returns the HWND for the new dialog.
         /// </summary>
         /// <returns>An IntPtr which should be interpreted as an HWND</returns>
-
         public static IntPtr WaitForDialogToReplace(int originalHwndasInt) {
             IVsUIShell uiShell = VsIdeTestHostContext.ServiceProvider.GetService(typeof(IVsUIShell)) as IVsUIShell;
             IntPtr hwnd;
@@ -226,10 +225,12 @@ namespace TestUtilities.UI {
             for (int i = 0; i < 100 && hwnd.ToInt32() == originalHwndasInt; i++) {
                 System.Threading.Thread.Sleep(100);
                 uiShell.GetDialogOwnerHwnd(out hwnd);
-
-                DumpElement(AutomationElement.FromHandle(hwnd));
             }
 
+
+            if (hwnd.ToInt32() == originalHwndasInt) {
+                DumpElement(AutomationElement.FromHandle(hwnd));
+            }
             Assert.AreNotEqual(hwnd, IntPtr.Zero);
             Assert.AreNotEqual(hwnd.ToInt32(), originalHwndasInt);
             return hwnd;
@@ -298,7 +299,8 @@ namespace TestUtilities.UI {
                 uiShell.GetDialogOwnerHwnd(out hwnd);
             }
 
-            Assert.IsTrue(hwnd.ToInt32() != VsIdeTestHostContext.Dte.MainWindow.HWnd && hwnd != IntPtr.Zero);
+            Assert.IsTrue(hwnd != IntPtr.Zero, "hwnd is null, We failed to get the dialog");
+            Assert.IsTrue(hwnd.ToInt32() != VsIdeTestHostContext.Dte.MainWindow.HWnd, "hwnd is Dte.MainWindow, We failed to get the dialog");
             AutomationWrapper.DumpElement(AutomationElement.FromHandle(hwnd));
             StringBuilder title = new StringBuilder(4096);
             Assert.AreNotEqual(NativeMethods.GetDlgItemText(hwnd, dlgField, title, title.Capacity), (uint)0);
@@ -389,45 +391,11 @@ namespace TestUtilities.UI {
             }
         }
         
-        public InteractiveWindow GetInteractiveWindow(string title) {
-            string autoId = GetName(title);
-            AutomationElement element = null;
-            for (int i = 0; i < 5 && element == null; i++) {
-                element = Element.FindFirst(TreeScope.Descendants,
-                        new AndCondition(
-                            new PropertyCondition(
-                                AutomationElement.AutomationIdProperty,
-                                autoId
-                            ),
-                            new PropertyCondition(
-                                AutomationElement.ClassNameProperty,
-                                ""
-                            )
-                        )
-                    );
-                if (element == null) {
-                    System.Threading.Thread.Sleep(100);
-                }
-            }
-
-            return new InteractiveWindow(
-                title,
-                element.FindFirst(
-                    TreeScope.Descendants,
-                    new PropertyCondition(
-                        AutomationElement.AutomationIdProperty,
-                        "WpfTextView"
-                    )
-                )
-            );
-            
-        }
-
         /// <summary>
         /// Produces a name which is compatible with x:Name requirements (starts with a letter/underscore, contains
         /// only letter, numbers, or underscores).
         /// </summary>
-        private static string GetName(string title) {
+        public static string GetName(string title) {
             if (title.Length == 0) {
                 return "InteractiveWindowHost";
             }
@@ -462,5 +430,24 @@ namespace TestUtilities.UI {
                 return _dte;
             }
         }
+
+        internal void OpenProject(string path) {
+            ThreadPool.QueueUserWorkItem((x) => Dte.ExecuteCommand("File.OpenProject"));
+            
+            var dialog = new OpenProjectDialog(WaitForDialog());
+            dialog.ProjectName = path;
+            dialog.Open();
+
+            WaitForDialogDismissed();
+        }
+
+        internal void WaitForMode(dbgDebugMode mode) {
+            for (int i = 0; i < 300 && Dte.Debugger.CurrentMode != mode; i++) {
+                System.Threading.Thread.Sleep(100);
+            }
+
+            Assert.AreEqual(VsIdeTestHostContext.Dte.Debugger.CurrentMode, mode);
+        }
+
     }
 }

@@ -14,10 +14,11 @@
 
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 
-namespace Microsoft.PythonTools.Project.Automation
+namespace Microsoft.VisualStudioTools.Project.Automation
 {
     /// <summary>
     /// This can navigate a collection object only (partial implementation of ProjectItems interface)
@@ -61,7 +62,7 @@ namespace Microsoft.PythonTools.Project.Automation
         /// </summary>
         /// <param name="project">The associated project.</param>
         /// <param name="nodeWithItems">The node that defines the items.</param>
-        public OANavigableProjectItems(OAProject project, HierarchyNode nodeWithItems)
+        internal OANavigableProjectItems(OAProject project, HierarchyNode nodeWithItems)
         {
             this.project = project;
             this.nodeWithItems = nodeWithItems;
@@ -74,14 +75,14 @@ namespace Microsoft.PythonTools.Project.Automation
         /// <summary>
         /// Gets a value indicating the number of objects in the collection.
         /// </summary>
-        public virtual int Count
+        public virtual int Count 
         {
-            get
+            get 
             {
                 int count = 0;
-                for (HierarchyNode child = this.NodeWithItems.FirstChild; child != null; child = child.NextSibling)
+                for (HierarchyNode child = this.NodeWithItems.FirstChild; child != null; child = child.NextSibling) 
                 {
-                    if (child.GetAutomationObject() is EnvDTE.ProjectItem)
+                    if (child.GetAutomationObject() is EnvDTE.ProjectItem) 
                     {
                         count += 1;
                     }
@@ -207,7 +208,7 @@ namespace Microsoft.PythonTools.Project.Automation
                         if (item != null)
                         {
                             if (realIndex == 0)
-                            {
+                {
                                 return item;
                             }
                             realIndex -= 1;
@@ -243,8 +244,8 @@ namespace Microsoft.PythonTools.Project.Automation
                 {
                     yield return item;
                 }
+                }
             }
-        }
 
         #endregion
     }

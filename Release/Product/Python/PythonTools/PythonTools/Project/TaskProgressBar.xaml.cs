@@ -19,7 +19,7 @@ using System.Windows;
 using System.Windows.Threading;
 using Microsoft.VisualStudio.PlatformUI;
 
-namespace Microsoft.PythonTools.Project {
+namespace Microsoft.VisualStudioTools.Project {
     /// <summary>
     /// Interaction logic for WaitForCompleteAnalysisDialog.xaml
     /// </summary>

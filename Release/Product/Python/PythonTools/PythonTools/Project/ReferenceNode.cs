@@ -23,12 +23,11 @@ using Microsoft.VisualStudio.Shell.Interop;
 using OleConstants = Microsoft.VisualStudio.OLE.Interop.Constants;
 using VsCommands2K = Microsoft.VisualStudio.VSConstants.VSStd2KCmdID;
 
-namespace Microsoft.PythonTools.Project
+namespace Microsoft.VisualStudioTools.Project
 {
-    [CLSCompliant(false), ComVisible(true)]
-    public abstract class ReferenceNode : HierarchyNode
+    internal abstract class ReferenceNode : HierarchyNode
     {
-        protected delegate void CannotAddReferenceErrorMessage();
+        internal delegate void CannotAddReferenceErrorMessage();
 
         #region ctors
         /// <summary>
@@ -43,7 +42,7 @@ namespace Microsoft.PythonTools.Project
         /// <summary>
         /// constructor for the ReferenceNode
         /// </summary>
-        protected ReferenceNode(ProjectNode root)
+        internal ReferenceNode(ProjectNode root)
             : base(root)
         {
             this.ExcludeNodeFromScc = true;
@@ -144,12 +143,12 @@ namespace Microsoft.PythonTools.Project
         /// References node cannot be dragged.
         /// </summary>
         /// <returns>A stringbuilder.</returns>
-        protected internal override StringBuilder PrepareSelectedNodesForClipBoard()
+        protected internal override string PrepareSelectedNodesForClipBoard()
         {
             return null;
         }
 
-        protected override int QueryStatusOnNode(Guid cmdGroup, uint cmd, IntPtr pCmdText, ref QueryStatusResult result)
+        internal override int QueryStatusOnNode(Guid cmdGroup, uint cmd, IntPtr pCmdText, ref QueryStatusResult result)
         {
             if (cmdGroup == VsMenus.guidStandardCommandSet2K)
             {
@@ -166,7 +165,7 @@ namespace Microsoft.PythonTools.Project
             return base.QueryStatusOnNode(cmdGroup, cmd, pCmdText, ref result);
         }
 
-        protected override int ExecCommandOnNode(Guid cmdGroup, uint cmd, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut)
+        internal override int ExecCommandOnNode(Guid cmdGroup, uint cmd, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut)
         {
             if (cmdGroup == VsMenus.guidStandardCommandSet2K)
             {
@@ -189,7 +188,7 @@ namespace Microsoft.PythonTools.Project
         /// </summary>
         public virtual void AddReference()
         {
-            ReferenceContainerNode referencesFolder = this.ProjectMgr.FindChild(ReferenceContainerNode.ReferencesNodeVirtualName) as ReferenceContainerNode;
+            ReferenceContainerNode referencesFolder = this.ProjectMgr.GetReferenceContainer() as ReferenceContainerNode;
             Debug.Assert(referencesFolder != null, "Could not find the References node");
 
             CannotAddReferenceErrorMessage referenceErrorMessageHandler = null;
@@ -220,7 +219,7 @@ namespace Microsoft.PythonTools.Project
         internal virtual void RefreshReference()
         {
             this.ResolveReference();
-            this.ReDraw(UIHierarchyElement.Icon);
+            ProjectMgr.ReDrawNode(this, UIHierarchyElement.Icon);
         }
 
         /// <summary>
@@ -255,7 +254,7 @@ namespace Microsoft.PythonTools.Project
         /// <returns>true if the assembly has already been added.</returns>
         protected virtual bool IsAlreadyAdded()
         {
-            ReferenceContainerNode referencesFolder = this.ProjectMgr.FindChild(ReferenceContainerNode.ReferencesNodeVirtualName) as ReferenceContainerNode;
+            ReferenceContainerNode referencesFolder = this.ProjectMgr.GetReferenceContainer() as ReferenceContainerNode;
             Debug.Assert(referencesFolder != null, "Could not find the References node");
 
             for (HierarchyNode n = referencesFolder.FirstChild; n != null; n = n.NextSibling)
@@ -321,7 +320,7 @@ namespace Microsoft.PythonTools.Project
             return returnValue;
         }
 
-        protected override bool CanDeleteItem(__VSDELETEITEMOPERATION deleteOperation)
+        internal override bool CanDeleteItem(__VSDELETEITEMOPERATION deleteOperation)
         {
             if (deleteOperation == __VSDELETEITEMOPERATION.DELITEMOP_RemoveFromProject)
             {

@@ -16,7 +16,7 @@ using System;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
 
-namespace Microsoft.PythonTools.Project {
+namespace Microsoft.VisualStudioTools.Project {
     //[DefaultRegistryRoot("Software\\Microsoft\\VisualStudio\\9.0Exp")]
     //[PackageRegistration(UseManagedResourcesOnly = true)]
     public abstract class CommonProjectPackage : ProjectPackage, IVsInstalledProduct {

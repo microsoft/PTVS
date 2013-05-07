@@ -17,21 +17,19 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
-using System.IO;
 using System.Runtime.InteropServices;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
 //#define ConfigTrace
 using Microsoft.VisualStudio.Shell.Interop;
-using MSBuild = Microsoft.Build.Evaluation;
-using MSBuildExecution = Microsoft.Build.Execution;
 using MSBuildConstruction = Microsoft.Build.Construction;
+using MSBuildExecution = Microsoft.Build.Execution;
 
-namespace Microsoft.PythonTools.Project
+namespace Microsoft.VisualStudioTools.Project
 {
     [ComVisible(true)]
-    public abstract class ProjectConfig :
+    internal abstract class ProjectConfig :
         IVsCfg,
         IVsProjectCfg,
         IVsProjectCfg2,
@@ -52,7 +50,7 @@ namespace Microsoft.PythonTools.Project
         private BuildableProjectConfig buildableCfg;
 
         #region properties
-        public ProjectNode ProjectMgr
+        internal ProjectNode ProjectMgr
         {
             get
             {
@@ -104,7 +102,7 @@ namespace Microsoft.PythonTools.Project
         #endregion
 
         #region ctors
-        public ProjectConfig(ProjectNode project, string configuration)
+        internal ProjectConfig(ProjectNode project, string configuration)
         {
             this.project = project;
             this.configName = configuration;
@@ -125,7 +123,7 @@ namespace Microsoft.PythonTools.Project
 
         #region methods
 
-        protected virtual OutputGroup CreateOutputGroup(ProjectNode project, KeyValuePair<string, string> group)
+        internal virtual OutputGroup CreateOutputGroup(ProjectNode project, KeyValuePair<string, string> group)
         {
             OutputGroup outputGroup = new OutputGroup(group.Key, group.Value, project, this);
             return outputGroup;
@@ -581,7 +579,7 @@ namespace Microsoft.PythonTools.Project
             // Retrive the list of guids from hierarchy properties.
             // Because a flavor could modify that list we must make sure we are calling the outer most implementation of IVsHierarchy
             string guidsList = String.Empty;
-            IVsHierarchy hierarchy = HierarchyNode.GetOuterHierarchy(this.project);
+            IVsHierarchy hierarchy = project.GetOuterInterface<IVsHierarchy>();
             object variant = null;
             ErrorHandler.ThrowOnFailure(hierarchy.GetProperty(VSConstants.VSITEMID_ROOT, (int)__VSHPROPID2.VSHPROPID_CfgPropertyPagesCLSIDList, out variant), new int[] { VSConstants.DISP_E_MEMBERNOTFOUND, VSConstants.E_NOTIMPL });
             guidsList = (string)variant;
@@ -645,11 +643,9 @@ namespace Microsoft.PythonTools.Project
         #endregion
     }
 
-
-    [CLSCompliant(false)]
     [ComVisible(true)]
     [SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "Buildable")]
-    public class BuildableProjectConfig : IVsBuildableProjectCfg {
+    internal class BuildableProjectConfig : IVsBuildableProjectCfg {
         #region fields
         ProjectConfig config = null;
         EventSinkCollection callbacks = new EventSinkCollection();
@@ -688,7 +684,7 @@ namespace Microsoft.PythonTools.Project
             if (ready != null && ready.Length > 0)
                 ready[0] = (this.config.ProjectMgr.BuildInProgress) ? 0 : 1;
             return VSConstants.S_OK;
-        }
+    }
 
         public virtual int QueryStartUpToDateCheck(uint options, int[] supported, int[] ready) {
             config.PrepareBuild(false);
@@ -759,7 +755,7 @@ namespace Microsoft.PythonTools.Project
             }
 
             return true;
-        }
+    }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes")]
         private void NotifyBuildEnd(MSBuildResult result, string buildTarget) {
@@ -810,8 +806,10 @@ namespace Microsoft.PythonTools.Project
         private void RefreshReferences() {
             // Refresh the reference container node for assemblies that could be resolved.
             IReferenceContainer referenceContainer = this.config.ProjectMgr.GetReferenceContainer();
-            foreach (ReferenceNode referenceNode in referenceContainer.EnumReferences()) {
-                referenceNode.RefreshReference();
+            if (referenceContainer != null) {
+                foreach (ReferenceNode referenceNode in referenceContainer.EnumReferences()) {
+                    referenceNode.RefreshReference();
+                }
             }
         }
         #endregion

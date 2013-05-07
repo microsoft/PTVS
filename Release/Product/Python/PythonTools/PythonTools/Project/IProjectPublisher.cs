@@ -14,7 +14,7 @@
 
 using System;
 
-namespace Microsoft.PythonTools.Project {
+namespace Microsoft.VisualStudioTools.Project {
     /// <summary>
     /// Implements a publisher which handles publishing the list of files to a destination.
     /// </summary>

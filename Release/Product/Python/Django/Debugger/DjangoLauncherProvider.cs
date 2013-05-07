@@ -12,10 +12,11 @@
  *
  * ***************************************************************************/
 
+using System;
+using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using Microsoft.PythonTools.Project;
-using System.Collections.Generic;
-using System;
+using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Django.Debugger {
     [Export(typeof(IPythonLauncherProvider))]

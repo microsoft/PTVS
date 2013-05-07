@@ -13,14 +13,14 @@
  * ***************************************************************************/
 
 
-using Microsoft.PythonTools.Project;
-using Microsoft.PythonTools.Project.Automation;
+using Microsoft.VisualStudioTools.Project;
+using Microsoft.VisualStudioTools.Project.Automation;
+using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
-using Microsoft.VisualStudio.Text.Editor;
 
-namespace Microsoft.PythonTools {
+namespace Microsoft.VisualStudioTools {
     static class VsExtensions {
         public static string GetFilePath(this ITextView textView) {
             return textView.TextBuffer.GetFilePath();
@@ -38,6 +38,20 @@ namespace Microsoft.PythonTools {
             }
         }
 #endif
+        internal static EnvDTE.Project GetProject(this IVsHierarchy hierarchy) {
+            object project;
+
+            ErrorHandler.ThrowOnFailure(
+                hierarchy.GetProperty(
+                    VSConstants.VSITEMID_ROOT,
+                    (int)__VSHPROPID.VSHPROPID_ExtObject,
+                    out project
+                )
+            );
+
+            return (project as EnvDTE.Project);
+        }
+
         public static CommonProjectNode GetCommonProject(this EnvDTE.Project project) {
             OAProject oaProj = project as OAProject;
             if (oaProj != null) {
@@ -47,6 +61,22 @@ namespace Microsoft.PythonTools {
                 }
             }
             return null;
+        }
+
+        internal static T[] Append<T>(this T[] list, T item) {
+            T[] res = new T[list.Length + 1];
+            list.CopyTo(res, 0);
+            res[res.Length - 1] = item;
+            return res;
+        }
+
+        internal static string GetFilePath(this ITextBuffer textBuffer) {
+            ITextDocument textDocument;
+            if (textBuffer.Properties.TryGetProperty<ITextDocument>(typeof(ITextDocument), out textDocument)) {
+                return textDocument.FilePath;
+            } else {
+                return null;
+            }
         }
     }
 }

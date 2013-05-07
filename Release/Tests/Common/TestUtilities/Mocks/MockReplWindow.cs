@@ -14,22 +14,32 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using Microsoft.VisualStudio.Repl;
-using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudio.Text.Editor;
 
 namespace TestUtilities.Mocks {
     public class MockReplWindow : IReplWindow {
         private readonly StringBuilder _output = new StringBuilder();
         private readonly StringBuilder _error = new StringBuilder();
         private readonly IReplEvaluator _eval;
-        private readonly IWpfTextView _view;
+        private readonly MockTextView _view;
+        private readonly string _contentType;
 
-        public MockReplWindow(IReplEvaluator eval) {
+        public MockReplWindow(IReplEvaluator eval, string contentType = "Python") {            
             _eval = eval;
-            _view = new MockTextView(new MockTextBuffer(""));
+            _contentType = contentType;
+            _view = new MockTextView(new MockTextBuffer("", "text"));
+            _eval.Initialize(this);
+        }
+
+        public Task<ExecutionResult> Execute(string text) {
+            _view.BufferGraph.AddBuffer(
+                new MockTextBuffer(text, contentType: _contentType)
+            );
+            return _eval.ExecuteText(text);
         }
 
         public string Output {
@@ -75,7 +85,7 @@ namespace TestUtilities.Mocks {
             throw new NotImplementedException();
         }
 
-        public void Cancel() {
+        public void Cancel() {            
             throw new NotImplementedException();
         }
 
@@ -88,10 +98,11 @@ namespace TestUtilities.Mocks {
         }
 
         public System.Threading.Tasks.Task<ExecutionResult> Reset() {
-            return ExecutionResult.Succeeded;
+            return _eval.Reset();            
         }
 
         public void AbortCommand() {
+            _eval.AbortCommand();
         }
 
         public void WriteLine(string text) {

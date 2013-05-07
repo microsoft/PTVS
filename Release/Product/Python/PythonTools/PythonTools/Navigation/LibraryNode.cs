@@ -22,7 +22,7 @@ using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using VSConstants = Microsoft.VisualStudio.VSConstants;
 
-namespace Microsoft.PythonTools.Navigation {
+namespace Microsoft.VisualStudioTools.Navigation {
 
     /// <summary>
     /// Single node inside the tree of the libraries in the object browser or class view.

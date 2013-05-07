@@ -17,15 +17,14 @@ using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 
-namespace Microsoft.PythonTools.Project
+namespace Microsoft.VisualStudioTools.Project
 {
     public class BuildDependency : IVsBuildDependency
     {
         Guid referencedProjectGuid = Guid.Empty;
         ProjectNode projectMgr = null;
 
-        [CLSCompliant(false)]
-        public BuildDependency(ProjectNode projectMgr, Guid projectReference)
+        internal BuildDependency(ProjectNode projectMgr, Guid projectReference)
         {
             this.referencedProjectGuid = projectReference;
             this.projectMgr = projectMgr;

@@ -17,6 +17,8 @@ using System.IO;
 using System.Text;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudioTools;
+using Microsoft.VisualStudioTools.Project;
 using OleConstants = Microsoft.VisualStudio.OLE.Interop.Constants;
 using VsCommands = Microsoft.VisualStudio.VSConstants.VSStd97CmdID;
 
@@ -24,14 +26,15 @@ namespace Microsoft.PythonTools.Project {
     /// <summary>
     /// Base class for Search Path nodes. 
     /// </summary>
-    public abstract class BaseSearchPathNode : CommonFolderNode {
+    internal abstract class BaseSearchPathNode : CommonFolderNode {
         protected CommonProjectNode _project;
         private string _caption;
+        private readonly string _path;
 
         public BaseSearchPathNode(CommonProjectNode project, string path, ProjectElement element)
-            : base(project, path, element) {
+            : base(project, element) {
             _project = project;
-            VirtualNodeName = CommonUtils.TrimEndSeparator(path);
+            _path = CommonUtils.TrimEndSeparator(path);
             this.ExcludeNodeFromScc = true;
         }
 
@@ -75,7 +78,7 @@ namespace Microsoft.PythonTools.Project {
         /// <summary>
         /// Search path node cannot be dragged.
         /// </summary>        
-        protected internal override StringBuilder PrepareSelectedNodesForClipBoard() {
+        protected internal override string PrepareSelectedNodesForClipBoard() {
             return null;
         }
 
@@ -89,7 +92,7 @@ namespace Microsoft.PythonTools.Project {
         /// <summary>
         /// Disable Copy/Cut/Paste commands on Search Path node.
         /// </summary>
-        protected override int QueryStatusOnNode(Guid cmdGroup, uint cmd, IntPtr pCmdText, ref QueryStatusResult result) {
+        internal override int QueryStatusOnNode(Guid cmdGroup, uint cmd, IntPtr pCmdText, ref QueryStatusResult result) {
             if (cmdGroup == VsMenus.guidStandardCommandSet97) {
                 switch ((VsCommands)cmd) {
                     case VsCommands.Copy:
@@ -104,7 +107,7 @@ namespace Microsoft.PythonTools.Project {
 
         public override string Url {
             get {
-                return CommonUtils.GetAbsoluteFilePath(this.ProjectMgr.ProjectHome, this.VirtualNodeName);
+                return CommonUtils.GetAbsoluteFilePath(this.ProjectMgr.ProjectHome, _path);
             }
         }
 

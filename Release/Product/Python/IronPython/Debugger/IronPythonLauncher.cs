@@ -29,6 +29,7 @@ using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudioTools.Project;
 using Microsoft.Win32;
 
 namespace Microsoft.IronPythonTools.Debugger {
@@ -120,8 +121,8 @@ namespace Microsoft.IronPythonTools.Debugger {
         /// Creates language specific command line for starting the project without debigging.
         /// </summary>
         public string CreateCommandLineNoDebug(string startupFile) {
-            string cmdLineArgs = _project.GetProperty(CommonConstants.CommandLineArguments);
-            string interpArgs = _project.GetProperty(CommonConstants.InterpreterArguments);
+            string cmdLineArgs = _project.GetProperty(PythonConstants.CommandLineArgumentsSetting);
+            string interpArgs = _project.GetProperty(PythonConstants.InterpreterArgumentsSetting);
 
             return String.Format("{0} \"{1}\" {2}", interpArgs, startupFile, cmdLineArgs);
         }
@@ -192,7 +193,7 @@ namespace Microsoft.IronPythonTools.Debugger {
         public string CreateCommandLineDebug(string startupFile) {
             string cmdLineArgs = null;
             if (_project != null) {
-                cmdLineArgs = _project.GetProperty(CommonConstants.CommandLineArguments);
+                cmdLineArgs = _project.GetProperty(PythonConstants.CommandLineArgumentsSetting);
             }
             return String.Format("-X:Debug {0} \"{1}\" {2}", GetOptions(), startupFile, cmdLineArgs);
         }
@@ -201,13 +202,13 @@ namespace Microsoft.IronPythonTools.Debugger {
         /// Returns full path of the language specififc iterpreter executable file.
         /// </summary>
         public string GetInterpreterExecutable(out bool isWindows) {
-            isWindows = Convert.ToBoolean(_project.GetProperty(CommonConstants.IsWindowsApplication));
+            isWindows = Convert.ToBoolean(_project.GetProperty(PythonConstants.IsWindowsApplicationSetting));
             return isWindows ? WindowsInterpreterExecutable : InterpreterExecutable;
         }
 
         private string/*!*/ GetInterpreterExecutableInternal(out bool isWindows) {
             string result;
-            result = (_project.GetProperty(CommonConstants.InterpreterPath) ?? "").Trim();
+            result = (_project.GetProperty(PythonConstants.InterpreterPathSetting) ?? "").Trim();
             if (!String.IsNullOrEmpty(result)) {
                 if (!Path.IsPathRooted(result)) {
                     result = Path.Combine(_project.GetWorkingDirectory(), result);
@@ -438,7 +439,7 @@ namespace Microsoft.IronPythonTools.Debugger {
 
         private string GetOptions() {
             if (_project != null) {
-                string interpArgs = _project.GetProperty(CommonConstants.InterpreterArguments);
+                string interpArgs = _project.GetProperty(PythonConstants.InterpreterArgumentsSetting);
 
                 var debugStdLib = _project.GetProperty(IronPythonLauncherOptions.DebugStandardLibrarySetting);
                 bool debugStdLibResult;

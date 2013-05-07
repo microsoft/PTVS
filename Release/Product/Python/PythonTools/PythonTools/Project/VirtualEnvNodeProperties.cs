@@ -16,6 +16,8 @@ using System;
 using System.ComponentModel;
 using System.IO;
 using System.Runtime.InteropServices;
+using Microsoft.VisualStudioTools;
+using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Project {
     [ComVisible(true)]
@@ -28,7 +30,7 @@ namespace Microsoft.PythonTools.Project {
         [AutomationBrowsable(false)]
         public string FolderName {
             get {
-                return Path.GetFileName(CommonUtils.TrimEndSeparator(this.Node.Url));
+                return Path.GetFileName(CommonUtils.TrimEndSeparator(this.HierarchyNode.Url));
             }
         }
 
@@ -38,7 +40,7 @@ namespace Microsoft.PythonTools.Project {
         [AutomationBrowsable(true)]
         public string FullPath {
             get {
-                return this.Node.VirtualNodeName;
+                return this.HierarchyNode.Url;
             }
         }
 
@@ -47,7 +49,7 @@ namespace Microsoft.PythonTools.Project {
         [AutomationBrowsable(true)]
         public string FileName {
             get {
-                return this.Node.VirtualNodeName;
+                return this.HierarchyNode.Url;
             }
         }
 
@@ -56,7 +58,7 @@ namespace Microsoft.PythonTools.Project {
         #endregion
 
         #region ctors
-        public VirtualEnvNodeProperties(HierarchyNode node)
+        internal VirtualEnvNodeProperties(HierarchyNode node)
             : base(node) { }
         #endregion
 

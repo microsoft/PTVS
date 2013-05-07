@@ -15,7 +15,7 @@
 using System;
 using System.Diagnostics;
 
-namespace Microsoft.PythonTools {
+namespace Microsoft.VisualStudioTools {
     struct DebugTimer : IDisposable {
 #if DEBUG
         internal static Stopwatch _timer = MakeStopwatch();

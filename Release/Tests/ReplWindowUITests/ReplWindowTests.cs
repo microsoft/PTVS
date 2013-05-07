@@ -40,6 +40,7 @@ using Microsoft.VisualStudio.Text.Tagging;
 using TestUtilities;
 using TestUtilities.Mocks;
 using TestUtilities.UI;
+using TestUtilities.UI.Python;
 using Keyboard = TestUtilities.UI.Keyboard;
 
 namespace ReplWindowUITests {
@@ -2417,7 +2418,7 @@ $cls
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void AttachReplTest() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte);
             var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\DebuggerProject.sln");
             PythonToolsPackage.Instance.AdvancedEditorOptionsPage.AddNewLineAtEndOfFullyTypedWord = true;
             GetInteractiveOptions().EnableAttach = true;
@@ -2573,7 +2574,7 @@ def g(): pass
         /// Opens the interactive window, clears the screen.
         /// </summary>
         internal InteractiveWindow Prepare(bool reopenOnly = false) {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte);
 
             if (!reopenOnly) {
                 ConfigurePrompts();
@@ -2608,7 +2609,7 @@ def g(): pass
         }
 
         protected void ForceReset() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte);
 
             var interactive = app.GetInteractiveWindow(InterpreterDescription);
             interactive.Reset();

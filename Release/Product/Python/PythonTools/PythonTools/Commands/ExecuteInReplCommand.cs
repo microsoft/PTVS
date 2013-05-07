@@ -14,7 +14,7 @@
 
 using System;
 using System.IO;
-using System.Linq;
+using System.Threading;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Navigation;
@@ -25,7 +25,7 @@ using Microsoft.VisualStudio.Repl;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text.Editor;
-using System.Threading;
+using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Commands {
 #if INTERACTIVE_WINDOW

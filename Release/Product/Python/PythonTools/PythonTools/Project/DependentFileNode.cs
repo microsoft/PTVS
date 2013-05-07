@@ -21,14 +21,13 @@ using OleConstants = Microsoft.VisualStudio.OLE.Interop.Constants;
 using VsCommands = Microsoft.VisualStudio.VSConstants.VSStd97CmdID;
 using VsCommands2K = Microsoft.VisualStudio.VSConstants.VSStd2KCmdID;
 
-namespace Microsoft.PythonTools.Project
+namespace Microsoft.VisualStudioTools.Project
 {
 	/// <summary>
 	/// Defines the logic for all dependent file nodes (solution explorer icon, commands etc.)
 	/// </summary>
 	
-	[ComVisible(true)]
-	public class DependentFileNode : FileNode
+	internal class DependentFileNode : FileNode
 	{
 		#region fields
 		/// <summary>
@@ -50,7 +49,7 @@ namespace Microsoft.PythonTools.Project
 		/// </summary>
 		/// <param name="root">Root of the hierarchy</param>
 		/// <param name="e">Associated project element</param>
-        public DependentFileNode(ProjectNode root, MsBuildProjectElement element)
+        internal DependentFileNode(ProjectNode root, MsBuildProjectElement element)
 			: base(root, element)
 		{
 			this.HasParentNodeNameRelation = false;
@@ -83,7 +82,7 @@ namespace Microsoft.PythonTools.Project
 		/// <summary>
 		/// Disable certain commands for dependent file nodes 
 		/// </summary>
-		protected override int QueryStatusOnNode(Guid cmdGroup, uint cmd, IntPtr pCmdText, ref QueryStatusResult result)
+		internal override int QueryStatusOnNode(Guid cmdGroup, uint cmd, IntPtr pCmdText, ref QueryStatusResult result)
 		{
 			if(cmdGroup == VsMenus.guidStandardCommandSet97)
 			{
@@ -122,7 +121,7 @@ namespace Microsoft.PythonTools.Project
 		/// DependentFileNodes node cannot be dragged.
 		/// </summary>
 		/// <returns>null</returns>
-		protected internal override StringBuilder PrepareSelectedNodesForClipBoard()
+		protected internal override string PrepareSelectedNodesForClipBoard()
 		{
 			return null;
 		}
@@ -140,7 +139,7 @@ namespace Microsoft.PythonTools.Project
 		{
 			if(!this.ExcludeNodeFromScc)
 			{
-				this.Parent.ReDraw(UIHierarchyElement.SccState);
+				ProjectMgr.ReDrawNode(this.Parent, UIHierarchyElement.SccState);
 			}
 		}
 		#endregion

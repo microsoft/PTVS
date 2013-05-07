@@ -13,15 +13,10 @@
  * ***************************************************************************/
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Microsoft.PythonTools.Project;
-
 using System.Drawing;
 using System.Reflection;
 using System.Windows.Forms;
-using System.IO;
+using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Project {
     /// <summary>
@@ -32,8 +27,8 @@ namespace Microsoft.PythonTools.Project {
     class PythonFolderNode : CommonFolderNode {
         private ImageList _imageList;
 
-        public PythonFolderNode(CommonProjectNode root, string path, ProjectElement element)
-            : base(root, path, element) {
+        public PythonFolderNode(CommonProjectNode root, ProjectElement element)
+            : base(root, element) {
         }
 
         public override object GetIconHandle(bool open) {

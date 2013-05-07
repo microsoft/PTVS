@@ -34,6 +34,8 @@ using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Editor.OptionsExtensionMethods;
 using Microsoft.VisualStudio.Text.Operations;
 using Microsoft.VisualStudio.TextManager.Interop;
+using Microsoft.VisualStudioTools;
+using Microsoft.VisualStudioTools.Navigation;
 
 namespace Microsoft.PythonTools.Language {
 #if INTERACTIVE_WINDOW

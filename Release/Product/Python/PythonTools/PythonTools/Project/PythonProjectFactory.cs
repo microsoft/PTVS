@@ -14,7 +14,7 @@
 
 using System;
 using System.Runtime.InteropServices;
-
+using Microsoft.VisualStudioTools.Project;
 using IOleServiceProvider = Microsoft.VisualStudio.OLE.Interop.IServiceProvider;
 
 namespace Microsoft.PythonTools.Project {
@@ -22,13 +22,13 @@ namespace Microsoft.PythonTools.Project {
     /// Creates Python Projects
     /// </summary>
     [Guid(PythonConstants.ProjectFactoryGuid)]
-    public class PythonProjectFactory : ProjectFactory {
+    class PythonProjectFactory : ProjectFactory {
 
         public PythonProjectFactory(PythonProjectPackage/*!*/ package)
             : base(package) {
         }
 
-        protected override ProjectNode/*!*/ CreateProject() {
+        internal override ProjectNode/*!*/ CreateProject() {
             PythonProjectNode project = new PythonProjectNode((PythonProjectPackage)Package);
             project.SetSite((IOleServiceProvider)((IServiceProvider)Package).GetService(typeof(IOleServiceProvider)));
             return project;

@@ -10,24 +10,35 @@ function Get-Batchfile ($file) {
 
 function VsVars32()
 {
-    $vs100comntools = (Get-ChildItem env:VS100COMNTOOLS).Value
-    $batchFile = [System.IO.Path]::Combine($vs100comntools, "vsvars32.bat")
+    #Scan for the most recent version of Visual Studio
+    #Order:
+    #   Visual Studio 2012
+    #   Visual Studio 2010
+    #
+    $vscomntools = (Get-ChildItem env:VS110COMNTOOLS).Value
+    if($vscomntools -eq '')
+    {
+        "Visual Studio 2012 not installed, Falling back to 2010"
+        $vscomntools = (Get-ChildItem env:VS100COMNTOOLS).Value
+    }
+
+    $batchFile = [System.IO.Path]::Combine($vscomntools, "vsvars32.bat")
     Get-Batchfile $BatchFile
 }
 
-"Initializing TC Workbench Powershell VS2010 Environment"
+"Initializing Python Powershell Environment"
 
 # determine enlistment root
-$TCWBToolsBin = $script:MyInvocation.MyCommand.Path | Split-Path -parent;
-$TCWBRoot = $TCWBToolsBin | Split-Path -parent | Split-Path -parent;
-"TCWBRoot = " + $TCWBRoot;
+$pnjsToolsBin = $script:MyInvocation.MyCommand.Path | Split-Path -parent;
+$pnjsRoot = $pnjsToolsBin | Split-Path -parent | Split-Path -parent;
+"Python Tools Root = " + $pnjsRoot;
 
 # get VS tools
 "Calling vsvars32"
 VsVars32
 
 # add tools to path
-$Env:Path = $TCWBToolsBin + ";" + $Env:Path;
+$Env:Path = $pnjsToolsBin + ";" + $Env:Path;
 $env:PTVS_DEV="true"
 
 # set environment var for codereview.bat
@@ -41,3 +52,6 @@ prereq.exe
 
 "Environment Ready"
 ""
+
+# Update the title of Window
+(Get-Host).UI.RawUI.WindowTitle = "Python Powershell Environment"

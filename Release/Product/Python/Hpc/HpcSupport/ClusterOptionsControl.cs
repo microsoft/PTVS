@@ -15,6 +15,7 @@
 using System;
 using System.Windows.Forms;
 using Microsoft.PythonTools.Project;
+using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Hpc {
     public partial class ClusterOptionsControl : UserControl, IPythonLauncherOptions {
@@ -50,7 +51,7 @@ namespace Microsoft.PythonTools.Hpc {
             _project.SetProperty(ClusterOptions.MpiExecPathSetting, _options.MpiExecPath);
             _project.SetProperty(ClusterOptions.DeploymentDirSetting, _options.DeploymentDirectory);
             _project.SetProperty(ClusterOptions.TargetPlatformSetting, _options.TargetPlatform.ToString());
-            _project.SetProperty(CommonConstants.InterpreterArguments, _options.InterpreterArguments);
+            _project.SetProperty(PythonConstants.InterpreterArgumentsSetting, _options.InterpreterArguments);
         }
 
         public void LoadSettings() {
@@ -62,7 +63,7 @@ namespace Microsoft.PythonTools.Hpc {
             _options.MpiExecPath = _project.GetUnevaluatedProperty(ClusterOptions.MpiExecPathSetting);
             _options.DeploymentDirectory = _project.GetUnevaluatedProperty(ClusterOptions.DeploymentDirSetting);
             _options.TargetPlatform = _project.TargetPlatform();
-            _options.InterpreterArguments = _project.GetUnevaluatedProperty(CommonConstants.InterpreterArguments);
+            _options.InterpreterArguments = _project.GetUnevaluatedProperty(PythonConstants.InterpreterArgumentsSetting);
 
             _propGrid.SelectedObject = _options;
         }

@@ -337,6 +337,12 @@ Files and folders cannot be:
   <data name="StandardEditorViewError" xml:space="preserve">
     <value>Error opening specified view '{0}' using standard editor.</value>
   </data>
+  <data name="StartupFile" xml:space="preserve">
+    <value>Startup File</value>
+  </data>
+  <data name="StartupFileDescription" xml:space="preserve">
+    <value>The name of the startup file that you want to be executed when you launch your application.</value>
+  </data>
   <data name="URL" xml:space="preserve">
     <value>URL</value>
   </data>
@@ -357,6 +363,12 @@ Files and folders cannot be:
   </data>
   <data name="WinExe" xml:space="preserve">
     <value>Windows Application</value>
+  </data>
+  <data name="WorkingDirectory" xml:space="preserve">
+    <value>Working Directory</value>
+  </data>
+  <data name="WorkingDirectoryDescription" xml:space="preserve">
+    <value>Working directory for debugging and executing.</value>
   </data>
   <data name="AddReferenceDialogTitle" xml:space="preserve">
     <value>Add Reference</value>

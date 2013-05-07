@@ -19,7 +19,7 @@ using System.Globalization;
 using System.Resources;
 using System.Threading;
 
-namespace Microsoft.PythonTools.Project {
+namespace Microsoft.VisualStudioTools.Project {
     /// <summary>
     /// Specifies the localizable display name for a property, event, or public void method which takes no arguments. 
     /// First looks up the name in local string resources than falls back to MPFProj resources.
@@ -91,7 +91,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         internal DynamicProjectSR() {
-            _resources = new ResourceManager("Microsoft.PythonTools.Project.LocalizableDisplayNameAttribute", this.GetType().Assembly);
+            _resources = new ResourceManager("Microsoft.VisualStudioTools.Project.LocalizableDisplayNameAttribute", this.GetType().Assembly);
         }
 
         private static DynamicProjectSR GetLoader() {

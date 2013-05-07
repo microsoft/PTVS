@@ -17,7 +17,6 @@ using System.Collections.Generic;
 using System.ComponentModel.Design;
 using System.Diagnostics.Contracts;
 using System.Runtime.InteropServices;
-using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Editor;
@@ -25,8 +24,9 @@ using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.TextManager.Interop;
+using Microsoft.VisualStudioTools.Project;
 
-namespace Microsoft.PythonTools.Navigation {
+namespace Microsoft.VisualStudioTools.Navigation {
 
     /// <summary>
     /// Inplementation of the service that builds the information to expose to the symbols

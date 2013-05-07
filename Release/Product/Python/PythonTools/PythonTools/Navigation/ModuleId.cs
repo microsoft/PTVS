@@ -14,7 +14,7 @@
 
 using Microsoft.VisualStudio.Shell.Interop;
 
-namespace Microsoft.PythonTools.Navigation {
+namespace Microsoft.VisualStudioTools.Navigation {
     /// <summary>
     /// Class used to identify a module. The module is identified using the hierarchy that
     /// contains it and its item id inside the hierarchy.

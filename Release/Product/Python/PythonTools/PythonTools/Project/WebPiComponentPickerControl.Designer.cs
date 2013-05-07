@@ -1,4 +1,4 @@
-﻿namespace Microsoft.PythonTools.Project {
+﻿namespace Microsoft.VisualStudioTools.Project {
     partial class WebPiComponentPickerControl {
         /// <summary> 
         /// Required designer variable.

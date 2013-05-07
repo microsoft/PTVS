@@ -14,7 +14,7 @@
 
 using System.Collections.Generic;
 
-namespace Microsoft.PythonTools.Project {
+namespace Microsoft.VisualStudioTools.Project {
     public sealed class PublishProjectOptions {
         private readonly IPublishFile[] _additionalFiles;
         private readonly string _destination;

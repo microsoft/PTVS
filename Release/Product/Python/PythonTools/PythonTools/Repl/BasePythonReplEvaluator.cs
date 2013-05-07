@@ -40,6 +40,7 @@ using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor.OptionsExtensionMethods;
 using Microsoft.VisualStudio.Text.Projection;
+using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Repl {
 #if INTERACTIVE_WINDOW

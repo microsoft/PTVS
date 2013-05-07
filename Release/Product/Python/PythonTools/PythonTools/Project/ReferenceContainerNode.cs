@@ -27,20 +27,19 @@ using OleConstants = Microsoft.VisualStudio.OLE.Interop.Constants;
 using VsCommands = Microsoft.VisualStudio.VSConstants.VSStd97CmdID;
 using VsCommands2K = Microsoft.VisualStudio.VSConstants.VSStd2KCmdID;
 
-namespace Microsoft.PythonTools.Project
+namespace Microsoft.VisualStudioTools.Project
 {
-    [CLSCompliant(false), ComVisible(true)]
-    public class ReferenceContainerNode : HierarchyNode, IReferenceContainer
+    [ComVisible(true)]
+    internal class ReferenceContainerNode : HierarchyNode, IReferenceContainer
     {
         private EventHandler<HierarchyNodeEventArgs> onChildAdded;
         private EventHandler<HierarchyNodeEventArgs> onChildRemoved;
         internal const string ReferencesNodeVirtualName = "References";
 
         #region ctor
-        public ReferenceContainerNode(ProjectNode root)
+        internal ReferenceContainerNode(ProjectNode root)
             : base(root)
         {
-            this.VirtualNodeName = ReferencesNodeVirtualName;
             this.ExcludeNodeFromScc = true;
         }
         #endregion
@@ -82,7 +81,7 @@ namespace Microsoft.PythonTools.Project
 
         public override string Url
         {
-            get { return this.VirtualNodeName; }
+            get { return ReferencesNodeVirtualName; }
         }
 
         public override string Caption
@@ -144,7 +143,7 @@ namespace Microsoft.PythonTools.Project
         /// References node cannot be dragged.
         /// </summary>
         /// <returns>A stringbuilder.</returns>
-        protected internal override StringBuilder PrepareSelectedNodesForClipBoard()
+        protected internal override string PrepareSelectedNodesForClipBoard()
         {
             return null;
         }
@@ -157,7 +156,7 @@ namespace Microsoft.PythonTools.Project
             return (int)OleConstants.OLECMDERR_E_NOTSUPPORTED;
         }
 
-        protected override int QueryStatusOnNode(Guid cmdGroup, uint cmd, IntPtr pCmdText, ref QueryStatusResult result)
+        internal override int QueryStatusOnNode(Guid cmdGroup, uint cmd, IntPtr pCmdText, ref QueryStatusResult result)
         {
             if (cmdGroup == VsMenus.guidStandardCommandSet97)
             {
@@ -184,7 +183,7 @@ namespace Microsoft.PythonTools.Project
             return base.QueryStatusOnNode(cmdGroup, cmd, pCmdText, ref result);
         }
 
-        protected override int ExecCommandOnNode(Guid cmdGroup, uint cmd, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut)
+        internal override int ExecCommandOnNode(Guid cmdGroup, uint cmd, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut)
         {
             if (cmdGroup == VsMenus.guidStandardCommandSet2K)
             {
@@ -202,7 +201,7 @@ namespace Microsoft.PythonTools.Project
             return base.ExecCommandOnNode(cmdGroup, cmd, nCmdexecopt, pvaIn, pvaOut);
         }
 
-        protected override bool CanDeleteItem(__VSDELETEITEMOPERATION deleteOperation)
+        internal override bool CanDeleteItem(__VSDELETEITEMOPERATION deleteOperation)
         {
             return false;
         }
@@ -213,11 +212,7 @@ namespace Microsoft.PythonTools.Project
         /// <returns></returns>
         protected override bool CanShowDefaultIcon()
         {
-            if (!String.IsNullOrEmpty(this.VirtualNodeName))
-            {
-                return true;
-            }
-            return false;
+            return true;
         }
 
         #endregion

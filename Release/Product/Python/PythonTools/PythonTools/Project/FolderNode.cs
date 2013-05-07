@@ -15,7 +15,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Runtime.InteropServices;
@@ -26,14 +25,11 @@ using OleConstants = Microsoft.VisualStudio.OLE.Interop.Constants;
 using VsCommands = Microsoft.VisualStudio.VSConstants.VSStd97CmdID;
 using VsCommands2K = Microsoft.VisualStudio.VSConstants.VSStd2KCmdID;
 
-namespace Microsoft.PythonTools.Project
+namespace Microsoft.VisualStudioTools.Project
 {
 
-    [ComVisible(true)]
-    public class FolderNode : HierarchyNode
+    internal class FolderNode : HierarchyNode, IDiskBasedNode
     {
-        private bool _isBeingCreated;
-
         #region ctors
         /// <summary>
         /// Constructor for the FolderNode
@@ -41,21 +37,20 @@ namespace Microsoft.PythonTools.Project
         /// <param name="root">Root node of the hierarchy</param>
         /// <param name="relativePath">relative path from root i.e.: "NewFolder1\\NewFolder2\\NewFolder3</param>
         /// <param name="element">Associated project element</param>
-        public FolderNode(ProjectNode root, string relativePath, ProjectElement element)
+        public FolderNode(ProjectNode root, ProjectElement element)
             : base(root, element)
         {
-            Utilities.ArgumentNotNull("relativePath", relativePath);
-
-            if (Path.IsPathRooted(relativePath))
-            {
-                relativePath = CommonUtils.GetRelativeDirectoryPath(root.ProjectHome, relativePath);
-            }
-
-            this.VirtualNodeName = CommonUtils.TrimEndSeparator(relativePath);
         }
         #endregion
 
         #region overridden properties
+        
+        internal override string FullPathToChildren {
+            get {
+                return Url;
+            }
+        }
+
         public override int SortPriority
         {
             get { return DefaultSortOrderNode.FolderNode; }
@@ -120,9 +115,9 @@ namespace Microsoft.PythonTools.Project
         /// <returns>VSConstants.S_OK, if succeeded</returns>
         public override int SetEditLabel(string label)
         {
-            if (_isBeingCreated)
+            if (IsBeingCreated)
             {
-                return FinishFolderAdd(label);
+                return FinishFolderAdd(label, false);
             }
             else
             {
@@ -136,12 +131,9 @@ namespace Microsoft.PythonTools.Project
                     Path.GetDirectoryName(CommonUtils.TrimEndSeparator(this.Url)), label));
 
                 // Verify that No Directory/file already exists with the new name among current children
-                for (HierarchyNode n = Parent.FirstChild; n != null; n = n.NextSibling)
-                {
-                    if (n != this && String.Equals(n.Caption, label, StringComparison.OrdinalIgnoreCase))
-                    {
-                        return ShowFileOrFolderAlreadyExistsErrorMessage(newPath);
-                    }
+                var existingChild = Parent.FindImmediateChildByName(label);
+                if (existingChild != null && existingChild != this) {
+                    return ShowFileOrFolderAlreadyExistsErrorMessage(newPath);
                 }
 
                 // Verify that No Directory/file already exists with the new name on disk
@@ -177,7 +169,7 @@ namespace Microsoft.PythonTools.Project
 
                 // Notify the listeners that the name of this folder is changed. This will
                 // also force a refresh of the SolutionExplorer's node.
-                this.OnPropertyChanged(this, (int)__VSHPROPID.VSHPROPID_Caption, 0);
+                ProjectMgr.OnPropertyChanged(this, (int)__VSHPROPID.VSHPROPID_Caption, 0);
             }
             catch (Exception e)
             {
@@ -186,37 +178,55 @@ namespace Microsoft.PythonTools.Project
             return VSConstants.S_OK;
         }
 
-        private int FinishFolderAdd(string label)
+        internal static string PathTooLongMessage {
+            get {
+                return SR.GetString(SR.PathTooLongShortMessage);
+            }
+        }
+
+        private int FinishFolderAdd(string label, bool wasCancelled)
         {
             // finish creation
             string filename = label.Trim();
             if (filename == "." || filename == "..")
             {
-                // TODO: Report error, illegal filename
+                Debug.Assert(!wasCancelled);   // cancelling leaves us with a valid label
                 NativeMethods.SetErrorDescription("{0} is an invalid filename.", filename);
                 return VSConstants.E_FAIL;
             }
 
-            var path = Path.Combine(ProjectMgr.GetBaseDirectoryForAddingFiles(Parent), label);
-            if (path.Length > NativeMethods.MAX_PATH)
+            var path = Path.Combine(Parent.FullPathToChildren, label);
+            if (path.Length >= NativeMethods.MAX_FOLDER_PATH)
             {
-                NativeMethods.SetErrorDescription("The path {0} is too long and the folder cannot be added.", path);
+                if (wasCancelled) {
+                    // cancelling an edit label doesn't result in the error
+                    // being displayed, so we'll display one for the user.
+                    VsShellUtilities.ShowMessageBox(
+                        ProjectMgr.Site,
+                        null,
+                        PathTooLongMessage,
+                        OLEMSGICON.OLEMSGICON_CRITICAL,
+                        OLEMSGBUTTON.OLEMSGBUTTON_OK,
+                        OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST
+                    );
+                } else {
+                    NativeMethods.SetErrorDescription(PathTooLongMessage);
+                }
                 return VSConstants.E_FAIL;
             }
 
-            if (filename == Caption || this.Parent.FindChild(filename, false) == null)
+            if (filename == Caption || Parent.FindImmediateChildByName(filename) == null)
             {
                 if (ProjectMgr.QueryFolderAdd(Parent, this, path))
                 {
                     Directory.CreateDirectory(path);
-                    _isBeingCreated = false;
+                    IsBeingCreated = false;
                     var relativePath = CommonUtils.GetRelativeDirectoryPath(
                         ProjectMgr.ProjectHome,
-                        Path.Combine(Path.GetDirectoryName(CommonUtils.TrimEndSeparator(this.Url)), label));
+                        Path.Combine(Path.GetDirectoryName(CommonUtils.TrimEndSeparator(Url)), label));
                     this.ItemNode.Rename(relativePath);
-                    this.VirtualNodeName = relativePath;
 
-                    this.OnItemDeleted();
+                    ProjectMgr.OnItemDeleted(this);
                     this.Parent.RemoveChild(this);
                     this.ID = ProjectMgr.ItemIdMap.Add(this);
                     this.Parent.AddChild(this);
@@ -229,6 +239,7 @@ namespace Microsoft.PythonTools.Project
             }
             else
             {
+                Debug.Assert(!wasCancelled);    // we choose a label which didn't exist when we started the edit
                 // Set error: folder already exists
                 NativeMethods.SetErrorDescription("The folder {0} already exists.", filename);
                 return VSConstants.E_FAIL;
@@ -263,7 +274,7 @@ namespace Microsoft.PythonTools.Project
             {
                 // it might have a backslash at the end... 
                 // and it might consist of Grandparent\parent\this\
-                return Path.GetFileName(CommonUtils.TrimEndSeparator(this.VirtualNodeName));
+                return Path.GetFileName(CommonUtils.TrimEndSeparator(Url));
             }
         }
 
@@ -286,7 +297,7 @@ namespace Microsoft.PythonTools.Project
             }
         }
 
-        protected override int QueryStatusOnNode(Guid cmdGroup, uint cmd, IntPtr pCmdText, ref QueryStatusResult result)
+        internal override int QueryStatusOnNode(Guid cmdGroup, uint cmd, IntPtr pCmdText, ref QueryStatusResult result)
         {
             if (cmdGroup == VsMenus.guidStandardCommandSet97)
             {
@@ -319,7 +330,7 @@ namespace Microsoft.PythonTools.Project
             return base.QueryStatusOnNode(cmdGroup, cmd, pCmdText, ref result);
         }
 
-        protected override bool CanDeleteItem(__VSDELETEITEMOPERATION deleteOperation)
+        internal override bool CanDeleteItem(__VSDELETEITEMOPERATION deleteOperation)
         {
             if (deleteOperation == __VSDELETEITEMOPERATION.DELITEMOP_DeleteFromStorage)
             {
@@ -354,8 +365,14 @@ namespace Microsoft.PythonTools.Project
         /// <param name="path">Path to the folder to delete</param>
         public virtual void DeleteFolder(string path)
         {
-            if (Directory.Exists(path))
-                Directory.Delete(path, true);
+            if (Directory.Exists(path)) {
+                try {
+                    Directory.Delete(path, true);
+                } catch (IOException ioEx) {
+                    // re-throw with a friendly path
+                    throw new IOException(ioEx.Message.Replace(path, Path.GetFileName(CommonUtils.TrimEndSeparator(Url))));
+                }
+            }
         }
 
         /// <summary>
@@ -412,22 +429,37 @@ namespace Microsoft.PythonTools.Project
                 Directory.Move(this.Url, newPath);
             }
         }
+
+        void IDiskBasedNode.RenameForDeferredSave(string basePath, string baseNewPath) {
+            ItemNode.Rename(CommonUtils.GetAbsoluteDirectoryPath(baseNewPath, ItemNode.GetMetadata(ProjectFileConstants.Include)));
+        }
+
         #endregion
 
         #region helper methods
 
-        // Made public for IronStudio directory based projects:
+        /// <summary>
+        /// Renames the folder to the new name.
+        /// </summary>
         public virtual void RenameFolder(string newName)
         {
             // Do the rename (note that we only do the physical rename if the leaf name changed)
-            string newPath = Path.Combine(this.Parent.VirtualNodeName, newName);
-            if (!String.Equals(Path.GetFileName(VirtualNodeName), newName, StringComparison.Ordinal))
+            string newPath = Path.Combine(Parent.FullPathToChildren, newName);
+            string oldPath = Url;
+            if (!String.Equals(Path.GetFileName(Url), newName, StringComparison.Ordinal))
             {
-                this.RenameDirectory(CommonUtils.GetAbsoluteDirectoryPath(this.ProjectMgr.ProjectHome, newPath));
+                RenameDirectory(CommonUtils.GetAbsoluteDirectoryPath(this.ProjectMgr.ProjectHome, newPath));
             }
-            this.VirtualNodeName = newPath;
 
-            this.ItemNode.Rename(VirtualNodeName);
+            // Reparent the folder
+            ProjectMgr.OnItemDeleted(this);
+            Parent.RemoveChild(this);
+            ID = ProjectMgr.ItemIdMap.Add(this);
+
+            ItemNode.Rename(newPath);
+            ProjectMgr.SetProjectFileDirty(true);
+
+            Parent.AddChild(this);
 
             // Let all children know of the new path
             for (HierarchyNode child = this.FirstChild; child != null; child = child.NextSibling)
@@ -443,6 +475,8 @@ namespace Microsoft.PythonTools.Project
                     node.RenameFolder(node.Caption);
                 }
             }
+
+            ProjectMgr.Tracker.OnItemRenamed(oldPath, newPath, VSRENAMEFILEFLAGS.VSRENAMEFILEFLAGS_Directory);
 
             // Some of the previous operation may have changed the selection so set it back to us
             IVsUIHierarchyWindow uiWindow = UIHierarchyUtilities.GetUIHierarchyWindow(this.ProjectMgr.Site, SolutionExplorer);
@@ -477,10 +511,10 @@ namespace Microsoft.PythonTools.Project
 
         protected override void OnCancelLabelEdit()
         {
-            if (_isBeingCreated)
+            if (IsBeingCreated)
             {
                 // finish the creation
-                ErrorHandler.ThrowOnFailure(SetEditLabel(VirtualNodeName));
+                FinishFolderAdd(Caption, true);
             }
         }
 
@@ -488,11 +522,15 @@ namespace Microsoft.PythonTools.Project
         {
             get
             {
-                return _isBeingCreated;
+                return ProjectMgr.FolderBeingCreated == this;
             }
             set
             {
-                _isBeingCreated = value;
+                if (value) {
+                    ProjectMgr.FolderBeingCreated = this;
+                } else {
+                    ProjectMgr.FolderBeingCreated = null;
+                }
             }
         }
 

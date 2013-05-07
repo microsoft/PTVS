@@ -14,9 +14,9 @@
 
 using System;
 using System.ComponentModel.Design;
-using System.IO;
 using System.Runtime.InteropServices;
-using Microsoft.PythonTools.Navigation;
+using Microsoft.VisualStudioTools.Navigation;
+using Microsoft.VisualStudioTools.Project;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Editor;
@@ -25,9 +25,8 @@ using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.TextManager.Interop;
-using Microsoft.PythonTools.Project;
 
-namespace Microsoft.PythonTools {
+namespace Microsoft.VisualStudioTools {
     public abstract class CommonPackage : Package, IOleComponent {
         private uint _componentID;
         private LibraryManager _libraryManager;
@@ -156,9 +155,15 @@ namespace Microsoft.PythonTools {
                 _libraryManager.OnIdle(_compMgr);
             }
 
-            CodeWindowManager.OnIdle(_compMgr);
+            var onIdle = OnIdle;
+            if (onIdle != null) {
+                onIdle(this, new ComponentManagerEventArgs(_compMgr));
+            }
+
             return 0;
         }
+
+        internal event EventHandler<ComponentManagerEventArgs> OnIdle;
 
         public int FPreTranslateMessage(MSG[] pMsg) {
             return 0;
@@ -192,5 +197,19 @@ namespace Microsoft.PythonTools {
         }
 
         #endregion
+    }
+
+    class ComponentManagerEventArgs : EventArgs {
+        private readonly IOleComponentManager _compMgr;
+
+        public ComponentManagerEventArgs(IOleComponentManager compMgr) {
+            _compMgr = compMgr;
+        }
+
+        public IOleComponentManager ComponentManager {
+            get {
+                return _compMgr;
+            }
+        }
     }
 }

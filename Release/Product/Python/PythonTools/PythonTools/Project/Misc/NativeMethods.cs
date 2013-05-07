@@ -13,7 +13,6 @@
  * ***************************************************************************/
 
 using System;
-using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
 using Microsoft.VisualStudio;
@@ -21,7 +20,7 @@ using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TextManager.Interop;
 
-namespace Microsoft.PythonTools.Project {
+namespace Microsoft.VisualStudioTools.Project {
     internal static class NativeMethods {
         // IIDS
         public static readonly Guid IID_IUnknown = new Guid("{00000000-0000-0000-C000-000000000046}");
@@ -695,6 +694,7 @@ namespace Microsoft.PythonTools.Project {
         public const uint MK_CONTROL = 0x0008; //winuser.h
         public const uint MK_SHIFT = 0x0004;
         public const int MAX_PATH = 260; // windef.h	
+        public const int MAX_FOLDER_PATH = MAX_PATH - 12;   // folders need to allow 8.3 filenames, so MAX_PATH - 12
 
         /// <summary>
         /// Specifies options for a bitmap image associated with a task item.

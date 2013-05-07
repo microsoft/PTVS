@@ -20,6 +20,8 @@ using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Language.NavigateTo.Interfaces;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudioTools;
+using Microsoft.VisualStudioTools.Navigation;
 
 namespace Microsoft.PythonTools.Navigation.NavigateTo {
     internal class PythonNavigateToItemProvider : INavigateToItemProvider {

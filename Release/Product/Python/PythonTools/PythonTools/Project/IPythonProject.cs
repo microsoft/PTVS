@@ -13,7 +13,11 @@
  * ***************************************************************************/
 
 using System.Collections.Generic;
+using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.VisualStudioTools;
+using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Project {
     /// <summary>
@@ -97,6 +101,13 @@ namespace Microsoft.PythonTools.Project {
         /// <returns>The property value without evaluating any MSBuild syntax.</returns>
         /// <remarks>New in 1.5.</remarks>
         string GetUnevaluatedProperty(string name);
+
+        /// <summary>
+        /// Gets the analyzer used for this project.
+        /// 
+        /// New in 2.0.
+        /// </summary>
+        VsProjectAnalyzer GetProjectAnalyzer();
     }
 
     public static class IPythonProjectExtensions {

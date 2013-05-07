@@ -22,13 +22,13 @@ using Microsoft.VisualStudio.Shell.Interop;
 using IServiceProvider = System.IServiceProvider;
 using ShellConstants = Microsoft.VisualStudio.Shell.Interop.Constants;
 
-namespace Microsoft.PythonTools.Project
+namespace Microsoft.VisualStudioTools.Project
 {
     /// <summary>
     /// This abstract class handles opening, saving of items in the hierarchy.
     /// </summary>
 
-    public abstract class DocumentManager
+    internal abstract class DocumentManager
     {
         #region fields
         private HierarchyNode node = null;
@@ -211,7 +211,7 @@ namespace Microsoft.PythonTools.Project
             Debug.Assert(this.node != null, "No node has been initialized for the document manager");
 
             object pvar;
-            ErrorHandler.ThrowOnFailure(this.node.GetProperty(this.node.ID, (int)__VSHPROPID.VSHPROPID_Caption, out pvar));
+            ErrorHandler.ThrowOnFailure(node.ProjectMgr.GetProperty(node.ID, (int)__VSHPROPID.VSHPROPID_Caption, out pvar));
 
             return (pvar as string);
         }

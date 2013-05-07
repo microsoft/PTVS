@@ -18,12 +18,13 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.InteropServices;
 using Microsoft.VisualStudio;
+using Microsoft.VisualStudioTools;
+using Microsoft.VisualStudioTools.Project;
 using VSLangProj;
 
 namespace Microsoft.PythonTools.Project {
-    [CLSCompliant(false)]
     [ComVisible(true)]
-    public class WebPiReferenceNode : ReferenceNode {
+    internal class WebPiReferenceNode : ReferenceNode {
         private readonly string _feed;              // The name of the assembly this refernce represents
         private readonly string _productId, _friendlyName;
         private Automation.OAWebPiReference _automationObject;
@@ -76,14 +77,12 @@ namespace Microsoft.PythonTools.Project {
         /// Closes the node.
         /// </summary>
         /// <returns></returns>
-        public override int Close() {
+        public override void Close() {
             try {
                 Dispose(true);
             } finally {
                 base.Close();
             }
-
-            return VSConstants.S_OK;
         }
 
         public override Guid ItemTypeGuid {
@@ -133,7 +132,7 @@ namespace Microsoft.PythonTools.Project {
         /// </summary>
         /// <returns>true if the assembly has already been added.</returns>
         protected override bool IsAlreadyAdded() {
-            ReferenceContainerNode referencesFolder = ProjectMgr.FindChild(ReferenceContainerNode.ReferencesNodeVirtualName) as ReferenceContainerNode;
+            ReferenceContainerNode referencesFolder = ProjectMgr.GetReferenceContainer() as ReferenceContainerNode;
             Debug.Assert(referencesFolder != null, "Could not find the References node");
 
             for (HierarchyNode n = referencesFolder.FirstChild; n != null; n = n.NextSibling) {
@@ -184,7 +183,7 @@ namespace Microsoft.PythonTools.Project {
         [AutomationBrowsable(true)]
         public override string Name {
             get {
-                return this.Node.Caption;
+                return this.HierarchyNode.Caption;
             }
         }
 
@@ -221,7 +220,7 @@ namespace Microsoft.PythonTools.Project {
         #endregion
 
         #region ctors
-        public WebPiReferenceNodeProperties(WebPiReferenceNode node)
+        internal WebPiReferenceNodeProperties(WebPiReferenceNode node)
             : base(node) {
         }
         #endregion

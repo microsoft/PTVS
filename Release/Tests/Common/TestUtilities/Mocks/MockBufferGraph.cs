@@ -14,13 +14,21 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Microsoft.VisualStudio.Text.Projection;
+using System.Collections.ObjectModel;
+using System.Windows.Documents;
 using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudio.Text.Projection;
 
 namespace TestUtilities.Mocks {
     public class MockBufferGraph : IBufferGraph {
+        private readonly MockTextView _view;
+        private readonly List<ITextBuffer> _buffers = new List<ITextBuffer>();
+
+        public MockBufferGraph(MockTextView view) {
+            _view = view;
+            _buffers.Add(view.TextBuffer);
+        }
+
         public IMappingPoint CreateMappingPoint(SnapshotPoint point, PointTrackingMode trackingMode) {
             throw new NotImplementedException();
         }
@@ -29,8 +37,18 @@ namespace TestUtilities.Mocks {
             throw new NotImplementedException();
         }
 
-        public System.Collections.ObjectModel.Collection<ITextBuffer> GetTextBuffers(Predicate<ITextBuffer> match) {
-            throw new NotImplementedException();
+        public Collection<ITextBuffer> GetTextBuffers(Predicate<ITextBuffer> match) {
+            var res = new Collection<ITextBuffer>();
+            foreach (var buffer in _buffers) {
+                if (match(buffer)) {
+                    res.Add(buffer);
+                }
+            }
+            return res;
+        }
+
+        public void AddBuffer(ITextBuffer buffer) {
+            _buffers.Add(buffer);
         }
 
         public event EventHandler<GraphBufferContentTypeChangedEventArgs> GraphBufferContentTypeChanged {
@@ -78,7 +96,14 @@ namespace TestUtilities.Mocks {
         }
 
         public SnapshotPoint? MapUpToBuffer(SnapshotPoint point, PointTrackingMode trackingMode, PositionAffinity affinity, ITextBuffer targetBuffer) {
-            throw new NotImplementedException();
+            int position = 0;
+            for (int i = 0; i < _buffers.Count; i++) {
+                if (_buffers[i] == targetBuffer) {
+                    return new SnapshotPoint(point.Snapshot, position + point.Position);
+                }
+                position += _buffers[i].CurrentSnapshot.Length;
+            }
+            return null;
         }
 
         public NormalizedSnapshotSpanCollection MapUpToFirstMatch(SnapshotSpan span, SpanTrackingMode trackingMode, Predicate<ITextSnapshot> match) {

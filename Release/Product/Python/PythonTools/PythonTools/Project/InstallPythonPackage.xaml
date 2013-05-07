@@ -1,9 +1,9 @@
-﻿<ptvs:DialogWindowVersioningWorkaround
+﻿<vstools:DialogWindowVersioningWorkaround
     x:Class="Microsoft.PythonTools.Project.InstallPythonPackage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:ui="clr-namespace:Microsoft.PythonTools.Project"
-    xmlns:ptvs="clr-namespace:Microsoft.PythonTools"
+    xmlns:vstools="clr-namespace:Microsoft.VisualStudioTools"
     Title="Install Python Package" 
     MinHeight="180  " Width="700" 
     SizeToContent="Height"
@@ -63,4 +63,4 @@
             </Button>
         </StackPanel>
     </Grid>
-</ptvs:DialogWindowVersioningWorkaround>
+</vstools:DialogWindowVersioningWorkaround>

@@ -15,13 +15,13 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Design;
-using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudioTools.Project;
 
-namespace Microsoft.PythonTools.Navigation {
+namespace Microsoft.VisualStudioTools.Navigation {
     /// <summary>
     /// Represents a simple list which the VS UI can query for items.
     /// 

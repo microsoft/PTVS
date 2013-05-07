@@ -36,6 +36,7 @@ using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Adornments;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Tagging;
+using Microsoft.VisualStudioTools;
 
 #if DEV11_OR_LATER
 using System.IO.Compression;
@@ -553,7 +554,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        internal PythonAnalyzer Project {
+        public PythonAnalyzer Project {
             get {
                 return _pyAnalyzer;
             }

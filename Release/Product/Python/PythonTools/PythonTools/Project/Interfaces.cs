@@ -19,7 +19,7 @@ using System.Runtime.InteropServices;
 using Microsoft.VisualStudio.Shell.Interop;
 using MSBuild = Microsoft.Build.Evaluation;
 
-namespace Microsoft.PythonTools.Project
+namespace Microsoft.VisualStudioTools.Project
 {
 
     /// <summary>
@@ -27,7 +27,6 @@ namespace Microsoft.PythonTools.Project
     /// </summary>
     /// <remarks>Normally this should be an internal interface but since it shouldbe available for the aggregator it must be made public.</remarks>
     [ComVisible(true)]
-
     public interface IBuildDependencyUpdate
     {
         /// <summary>
@@ -57,10 +56,7 @@ namespace Microsoft.PythonTools.Project
     /// <summary>
     /// Provides access to the reference data container.
     /// </summary>
-    /// <remarks>Normally this should be an internal interface but since it should be available for
-    /// the aggregator it must be made public.</remarks>
-    [ComVisible(true)]
-    public interface IReferenceContainerProvider
+    internal interface IReferenceContainerProvider
     {
         IReferenceContainer GetReferenceContainer();
     }
@@ -68,74 +64,11 @@ namespace Microsoft.PythonTools.Project
     /// <summary>
     /// Defines a container for manipulating references
     /// </summary>
-    /// <remarks>Normally this should be an internal interface but since it should be available for
-    /// the aggregator it must be made public.</remarks>
-    [ComVisible(true)]
-    public interface IReferenceContainer
+    internal interface IReferenceContainer
     {
         IList<ReferenceNode> EnumReferences();
         ReferenceNode AddReferenceFromSelectorData(VSCOMPONENTSELECTORDATA selectorData);
         void LoadReferencesFromBuildProject(MSBuild.Project buildProject);
-    }
-
-    /// <summary>
-    /// Defines the events that are internally defined for communication with other subsytems.
-    /// </summary>
-    [ComVisible(true)]
-    public interface IProjectEvents
-    {
-        /// <summary>
-        /// Event raised just after the project file opened.
-        /// </summary>
-        [SuppressMessage("Microsoft.Naming", "CA1713:EventsShouldNotHaveBeforeOrAfterPrefix")]
-        event EventHandler<AfterProjectFileOpenedEventArgs> AfterProjectFileOpened;
-
-        /// <summary>
-        /// Event raised before the project file closed.
-        /// </summary>
-        [SuppressMessage("Microsoft.Naming", "CA1713:EventsShouldNotHaveBeforeOrAfterPrefix")]
-        event EventHandler<BeforeProjectFileClosedEventArgs> BeforeProjectFileClosed;
-    }
-
-    /// <summary>
-    /// Interface used for delivering close event to project nodes
-    /// </summary>
-    [ComVisible(true)]
-    public interface IProjectEventsCallback
-    {
-        void BeforeClose();
-    }
-
-    /// <summary>
-    /// Defines the interface that will specify ehethrr the object is a project events listener.
-    /// </summary>
-    [ComVisible(true)]
-    public interface IProjectEventsListener
-    {
-
-        /// <summary>
-        /// Is the object a project events listener.
-        /// </summary>
-        /// <returns></returns>
-        bool IsProjectEventsListener
-        { get; set; }
-
-    }
-
-    /// <summary>
-    /// Enable getting and setting the project events provider
-    /// </summary>
-    [ComVisible(true)]
-    public interface IProjectEventsProvider
-    {
-        /// <summary>
-        /// Defines the provider for the project events
-        /// </summary>
-        IProjectEvents ProjectEventsProvider
-        {
-            get;
-            set;
-        }
     }
 
     /// <summary>

@@ -16,6 +16,7 @@ using System;
 using System.Globalization;
 using System.IO;
 using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudioTools;
 #if DEV11_OR_LATER
 using Microsoft.VisualStudio.Shell.Interop;
 #endif

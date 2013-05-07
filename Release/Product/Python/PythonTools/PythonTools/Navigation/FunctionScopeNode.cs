@@ -13,8 +13,9 @@
  * ***************************************************************************/
 
 using System.Collections.Generic;
-using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
+using Microsoft.VisualStudioTools.Navigation;
+using Microsoft.VisualStudioTools.Parsing;
 
 namespace Microsoft.PythonTools.Navigation {
     class FunctionScopeNode : IScopeNode {
@@ -47,11 +48,11 @@ namespace Microsoft.PythonTools.Navigation {
         }
 
         public SourceLocation Start {
-            get { return _func.GetStart(_func.GlobalParent); }
+            get { return AstScopeNode.FromPythonSourceLocation(_func.GetStart(_func.GlobalParent)); }
         }
 
         public SourceLocation End {
-            get { return _func.GetEnd(_func.GlobalParent); }
+            get { return AstScopeNode.FromPythonSourceLocation(_func.GetEnd(_func.GlobalParent)); }
         }
 
         public IEnumerable<IScopeNode> NestedScopes {

@@ -7,7 +7,7 @@
     <SccAuxPath>SAK</SccAuxPath>
     <SccProvider>SAK</SccProvider>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
     <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{D092D54E-FF29-4D32-9AEE-4EF704C92F67}</ProjectGuid>
@@ -17,8 +17,8 @@
     <AssemblyName>TestUtilities</AssemblyName>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
+  <PropertyGroup Condition=" '$(Platform)' == 'x86' ">
+    <PlatformTarget>x86</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.TC.RemoteTest">
@@ -79,8 +79,6 @@
     </Compile>
     <Compile Include="Mocks\MockBufferGraph.cs" />
     <Compile Include="Mocks\MockClassificationType.cs" />
-    <Compile Include="Mocks\MockClassificationTypeRegistryService.cs" />
-    <Compile Include="Mocks\MockCompletionDB.cs" />
     <Compile Include="Mocks\MockComponentModel.cs" />
     <Compile Include="Mocks\MockContentType.cs" />
     <Compile Include="Mocks\MockContentTypeRegistryService.cs" />
@@ -88,7 +86,6 @@
     <Compile Include="Mocks\MockGlyphService.cs" />
     <Compile Include="Mocks\MockMappingPoint.cs" />
     <Compile Include="Mocks\MockNormalizedTextChangeCollection.cs" />
-    <Compile Include="Mocks\MockReplWindow.cs" />
     <Compile Include="Mocks\MockTextBuffer.cs" />
     <Compile Include="Mocks\MockTextCaret.cs" />
     <Compile Include="Mocks\MockTextChange.cs" />
@@ -102,6 +99,7 @@
     <Compile Include="Mocks\MockTextView.cs" />
     <Compile Include="Mocks\MockTrackingPoint.cs" />
     <Compile Include="Mocks\MockTrackingSpan.cs" />
+    <Compile Include="..\..\..\Product\Python\PythonTools\PythonTools\CommonUtils.cs" />
     <Compile Include="NativeMethods.cs">
       <ExcludeFromStyleCop>true</ExcludeFromStyleCop>
     </Compile>
@@ -109,7 +107,6 @@
     <Compile Include="Properties\AssemblyInfo.cs">
       <ExcludeFromStyleCop>true</ExcludeFromStyleCop>
     </Compile>
-    <Compile Include="PythonPaths.cs" />
     <Compile Include="TestData.cs" />
     <Compile Include="TestExtensions.cs" />
     <Compile Include="TestMethod.cs" />
@@ -117,20 +114,6 @@
       <ExcludeFromStyleCop>true</ExcludeFromStyleCop>
     </Compile>
     <Compile Include="VSUtility.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\..\Product\Python\Analysis\Analysis.csproj">
-      <Project>{A85D479D-67A9-4BDB-904A-7D86DAF68A6F}</Project>
-      <Name>Analysis</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\Product\Python\PythonTools\PythonTools.csproj">
-      <Project>{FA7BE5F5-E04F-4613-B7AC-70CE10D1BB68}</Project>
-      <Name>PythonTools</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\Product\Python\ReplWindow\ReplWindow.csproj">
-      <Project>{20BB6FAC-44D2-4D76-ABFE-0C1E163A1A4F}</Project>
-      <Name>ReplWindow</Name>
-    </ProjectReference>
   </ItemGroup>
   <Target Name="BeforeCompile">
     <Exec Command="taskkill /f /im QTAgent32.exe" IgnoreExitCode="true" ContinueOnError="true" IgnoreStandardErrorWarningFormat="true" />

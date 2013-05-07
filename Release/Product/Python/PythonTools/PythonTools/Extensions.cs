@@ -36,6 +36,7 @@ using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Text.Editor;
+using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools {
 #if INTERACTIVE_WINDOW
@@ -192,20 +193,6 @@ namespace Microsoft.PythonTools {
 
         internal static PythonProjectNode GetPythonProject(this EnvDTE.Project project) {
             return project.GetCommonProject() as PythonProjectNode;
-        }
-
-        internal static EnvDTE.Project GetProject(this IVsHierarchy hierarchy) {
-            object project;
-
-            ErrorHandler.ThrowOnFailure(
-                hierarchy.GetProperty(
-                    VSConstants.VSITEMID_ROOT,
-                    (int)__VSHPROPID.VSHPROPID_ExtObject,
-                    out project
-                )
-            );
-
-            return (project as EnvDTE.Project);
         }
         
         internal static void GotoSource(this LocationInfo location) {
@@ -392,15 +379,6 @@ namespace Microsoft.PythonTools {
             return PythonToolsPackage.Instance.DefaultAnalyzer;
         }
 
-        internal static string GetFilePath(this ITextBuffer textBuffer) {
-            ITextDocument textDocument;
-            if (textBuffer.Properties.TryGetProperty<ITextDocument>(typeof(ITextDocument), out textDocument)) {
-                return textDocument.FilePath;
-            } else {
-                return null;
-            }
-        }
-
         /// <summary>
         /// Checks to see if this is a REPL buffer starting with a extensible command such as %cls, %load, etc...
         /// </summary>
@@ -470,13 +448,6 @@ namespace Microsoft.PythonTools {
             }
 
             return true;
-        }
-
-        internal static T[] Append<T>(this T[] list, T item) {
-            T[] res = new T[list.Length + 1];
-            list.CopyTo(res, 0);
-            res[res.Length - 1] = item;
-            return res;
         }
 
         internal static bool IsOpenGrouping(this ClassificationSpan span) {

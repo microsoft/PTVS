@@ -14,6 +14,8 @@
 
 using System;
 using System.Windows.Forms;
+using Microsoft.VisualStudioTools;
+using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Project {
     public partial class DefaultPythonLauncherOptions : UserControl, IPythonLauncherOptions {

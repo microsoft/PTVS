@@ -17,7 +17,6 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Runtime.InteropServices;
-using Microsoft.PythonTools.Project.Automation;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Editor;
@@ -27,11 +26,12 @@ using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.TextManager.Interop;
+using Microsoft.VisualStudioTools.Project.Automation;
 using VsCommands2K = Microsoft.VisualStudio.VSConstants.VSStd2KCmdID;
 using VSConstants = Microsoft.VisualStudio.VSConstants;
 
-namespace Microsoft.PythonTools.Project {
-    public class CommonFileNode : FileNode {
+namespace Microsoft.VisualStudioTools.Project {
+    internal class CommonFileNode : FileNode {
         private OAVSProjectItem _vsProjectItem;
         private CommonProjectNode _project;
 
@@ -232,7 +232,7 @@ namespace Microsoft.PythonTools.Project {
         /// <summary>
         /// Handles the menuitems
         /// </summary>
-        protected override int QueryStatusOnNode(Guid guidCmdGroup, uint cmd, IntPtr pCmdText, ref QueryStatusResult result) {
+        internal override int QueryStatusOnNode(Guid guidCmdGroup, uint cmd, IntPtr pCmdText, ref QueryStatusResult result) {
             if (guidCmdGroup == Microsoft.VisualStudio.Shell.VsMenus.guidStandardCommandSet2K) {
                 switch ((VsCommands2K)cmd) {
                     case VsCommands2K.RUNCUSTOMTOOL:
@@ -247,7 +247,7 @@ namespace Microsoft.PythonTools.Project {
         /// <summary>
         /// Common File Node can only be deleted from file system.
         /// </summary>        
-        protected override bool CanDeleteItem(__VSDELETEITEMOPERATION deleteOperation) {
+        internal override bool CanDeleteItem(__VSDELETEITEMOPERATION deleteOperation) {
             if (IsLinkFile) {
                 // we don't delete link items, we only remove them from the project.  If we were
                 // to return true when queried for both delete from storage and remove from project

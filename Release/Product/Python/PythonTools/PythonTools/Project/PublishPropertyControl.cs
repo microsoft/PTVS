@@ -16,6 +16,7 @@ using System;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Project {
     public partial class PublishPropertyControl : UserControl {

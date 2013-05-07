@@ -14,9 +14,11 @@
 
 using System;
 using System.Text;
+using Microsoft.PythonTools.Navigation;
 using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudioTools.Navigation;
 
 namespace Microsoft.PythonTools.Navigation {
     internal class PythonLibraryNode : CommonLibraryNode {

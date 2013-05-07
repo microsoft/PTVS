@@ -21,6 +21,7 @@ using EnvDTE;
 using Microsoft.PythonTools.Project;
 using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudioTools.Project;
 using TestUtilities;
 using TestUtilities.UI;
 using MSBuild = Microsoft.Build.Evaluation;
@@ -429,11 +430,11 @@ namespace PythonToolsUITests {
 
             var dialog = app.WaitForDialog();
             var addExistingDlg = new AddExistingItemDialog(dialog);
-            addExistingDlg.FileName = TestData.GetPath(@"TestData\SomeLinkedFile.py");
+            addExistingDlg.FileName = TestData.GetPath(@"TestData\LinkedFilesDir\SomeLinkedFile.py");
             addExistingDlg.AddLink();
 
             app.WaitForDialog();
-            VisualStudioApp.CheckMessageBox(MessageBoxButton.Ok, "There is already a file of the same name in this folder.");
+            VisualStudioApp.CheckMessageBox(MessageBoxButton.Ok, "There is already a link to", "SomeLinkedFile.py");
         }
 
         /// <summary>

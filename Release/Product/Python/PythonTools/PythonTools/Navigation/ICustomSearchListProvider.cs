@@ -14,7 +14,7 @@
 
 using Microsoft.VisualStudio.Shell.Interop;
 
-namespace Microsoft.PythonTools.Navigation {
+namespace Microsoft.VisualStudioTools.Navigation {
     interface ICustomSearchListProvider {
         IVsSimpleObjectList2 GetSearchList();
     }

@@ -21,7 +21,7 @@ using Microsoft.Build.Evaluation;
 using Microsoft.VisualStudio;
 using MSBuild = Microsoft.Build.Evaluation;
 
-namespace Microsoft.PythonTools.Project {
+namespace Microsoft.VisualStudioTools.Project {
     public class MsBuildProjectElement : ProjectElement {
         private MSBuild.ProjectItem _item;
 

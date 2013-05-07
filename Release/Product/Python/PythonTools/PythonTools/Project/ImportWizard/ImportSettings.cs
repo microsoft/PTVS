@@ -24,6 +24,7 @@ using System.Xml;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Language.Intellisense;
+using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Project.ImportWizard {
     internal class ImportSettings : DependencyObject {

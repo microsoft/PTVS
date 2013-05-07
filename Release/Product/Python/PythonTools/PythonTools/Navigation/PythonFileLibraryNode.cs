@@ -18,6 +18,8 @@ using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Language;
 using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudioTools.Navigation;
+using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Navigation {
     class PythonFileLibraryNode : LibraryNode {

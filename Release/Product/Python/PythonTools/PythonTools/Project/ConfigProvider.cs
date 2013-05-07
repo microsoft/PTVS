@@ -32,11 +32,11 @@ using Microsoft.VisualStudio.Shell.Interop;
     a) undocumented
     b) not really wise in the managed world
 */
-namespace Microsoft.PythonTools.Project
+namespace Microsoft.VisualStudioTools.Project
 {
 
     [ComVisible(true)]
-    public abstract class ConfigProvider : IVsCfgProvider2
+    internal abstract class ConfigProvider : IVsCfgProvider2
     {
         internal const string configString = " '$(Configuration)' == '{0}' ";
         internal const string AnyCPUPlatform = "Any CPU";
@@ -55,7 +55,7 @@ namespace Microsoft.PythonTools.Project
         /// <summary>
         /// The associated project.
         /// </summary>
-        protected ProjectNode ProjectMgr
+        internal ProjectNode ProjectMgr
         {
             get
             {

@@ -17,6 +17,7 @@ using Microsoft.PythonTools.Refactoring;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Commands {
     /// <summary>

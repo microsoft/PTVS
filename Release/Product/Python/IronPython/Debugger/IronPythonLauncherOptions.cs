@@ -16,6 +16,7 @@ using System;
 using System.Windows.Forms;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Project;
+using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.IronPythonTools.Debugger {
     public partial class IronPythonLauncherOptions : UserControl, IPythonLauncherOptions {
@@ -50,28 +51,28 @@ namespace Microsoft.IronPythonTools.Debugger {
         #region ILauncherOptions Members
 
         public void SaveSettings() {
-            _properties.SetProperty(CommonConstants.SearchPath, SearchPaths);
-            _properties.SetProperty(CommonConstants.CommandLineArguments, Arguments);
-            _properties.SetProperty(CommonConstants.InterpreterPath, InterpreterPath);
+            _properties.SetProperty(PythonConstants.SearchPathSetting, SearchPaths);
+            _properties.SetProperty(PythonConstants.CommandLineArgumentsSetting, Arguments);
+            _properties.SetProperty(PythonConstants.InterpreterPathSetting, InterpreterPath);
             _properties.SetProperty(DebugStandardLibrarySetting, DebugStandardLibrary.ToString());
-            _properties.SetProperty(CommonConstants.InterpreterArguments, _interpArgs.Text);
+            _properties.SetProperty(PythonConstants.InterpreterArgumentsSetting, _interpArgs.Text);
             RaiseIsSaved();
         }
 
         public void LoadSettings() {
             _loadingSettings = true;
-            SearchPaths = _properties.GetUnevaluatedProperty(CommonConstants.SearchPath);
-            InterpreterPath = _properties.GetUnevaluatedProperty(CommonConstants.InterpreterPath);
-            Arguments = _properties.GetUnevaluatedProperty(CommonConstants.CommandLineArguments);
+            SearchPaths = _properties.GetUnevaluatedProperty(PythonConstants.SearchPathSetting);
+            InterpreterPath = _properties.GetUnevaluatedProperty(PythonConstants.InterpreterPathSetting);
+            Arguments = _properties.GetUnevaluatedProperty(PythonConstants.CommandLineArgumentsSetting);
             DebugStandardLibrary = Convert.ToBoolean(_properties.GetProperty(DebugStandardLibrarySetting));
-            _interpArgs.Text = _properties.GetUnevaluatedProperty(CommonConstants.InterpreterArguments);
+            _interpArgs.Text = _properties.GetUnevaluatedProperty(PythonConstants.InterpreterArgumentsSetting);
             _loadingSettings = false;
         }
 
         public void ReloadSetting(string settingName) {
             switch (settingName) {
-                case CommonConstants.SearchPath:
-                    SearchPaths = _properties.GetUnevaluatedProperty(CommonConstants.SearchPath);
+                case PythonConstants.SearchPathSetting:
+                    SearchPaths = _properties.GetUnevaluatedProperty(PythonConstants.SearchPathSetting);
                     break;
             }
         }

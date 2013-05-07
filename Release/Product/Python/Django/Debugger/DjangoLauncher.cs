@@ -21,8 +21,10 @@ using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Threading;
+using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio;
+using Microsoft.VisualStudioTools.Project;
 using Microsoft.Win32;
 
 namespace Microsoft.PythonTools.Django.Debugger {
@@ -59,8 +61,8 @@ namespace Microsoft.PythonTools.Django.Debugger {
 
             public string GetProperty(string name) {
                 switch (name) {
-                    case CommonConstants.CommandLineArguments:
-                        var userArgs = _realProject.GetProperty(CommonConstants.CommandLineArguments);
+                    case PythonConstants.CommandLineArgumentsSetting:
+                        var userArgs = _realProject.GetProperty(PythonConstants.CommandLineArgumentsSetting);
                         if (String.Equals(Path.GetFileName(_realProject.GetStartupFile()), "manage.py", StringComparison.OrdinalIgnoreCase)) {
                             _launcher._testServerPort = GetFreePort();
 
@@ -118,7 +120,7 @@ namespace Microsoft.PythonTools.Django.Debugger {
 
             public string GetUnevaluatedProperty(string name) {
                 switch (name) {
-                    case CommonConstants.CommandLineArguments:
+                    case PythonConstants.CommandLineArgumentsSetting:
                     case "DjangoDebugging":
                         return GetProperty(name);
                 }
@@ -126,8 +128,11 @@ namespace Microsoft.PythonTools.Django.Debugger {
                 return _realProject.GetUnevaluatedProperty(name);
             }
 
-            #endregion
+            public VsProjectAnalyzer GetProjectAnalyzer() {
+                return _realProject.GetProjectAnalyzer();
+            }
 
+            #endregion
         }
 
         #region IPythonLauncher Members

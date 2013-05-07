@@ -26,13 +26,13 @@ using OleConstants = Microsoft.VisualStudio.OLE.Interop.Constants;
 using VsCommands = Microsoft.VisualStudio.VSConstants.VSStd97CmdID;
 using VsCommands2K = Microsoft.VisualStudio.VSConstants.VSStd2KCmdID;
 
-namespace Microsoft.PythonTools.Project
+namespace Microsoft.VisualStudioTools.Project
 {
 
-    [ComVisible(true)]
-    public class FileNode : HierarchyNode
+    internal class FileNode : HierarchyNode, IDiskBasedNode
     {
         private bool _isLinkFile;
+        private uint _docCookie;
 
         #region static fields
         private static Dictionary<string, int> extensionIcons;
@@ -90,6 +90,15 @@ namespace Microsoft.PythonTools.Project
 
                 // The file type is known and there is an image for it in the image list.
                 return imageIndex;
+            }
+        }
+
+        public uint DocCookie {
+            get {
+                return this._docCookie;
+            }
+            set {
+                this._docCookie = value;
             }
         }
 
@@ -190,10 +199,6 @@ namespace Microsoft.PythonTools.Project
         public FileNode(ProjectNode root, MsBuildProjectElement element)
             : base(root, element)
         {
-            if (this.ProjectMgr.NodeHasDesigner(this.ItemNode.GetMetadata(ProjectFileConstants.Include)))
-            {
-                this.HasDesigner = true;
-            }
         }
         #endregion
 
@@ -411,7 +416,7 @@ namespace Microsoft.PythonTools.Project
 
                 if (this is DependentFileNode)
                 {
-                    OnInvalidateItems(this.Parent);
+                    ProjectMgr.OnInvalidateItems(this.Parent);
                 }
 
             }
@@ -462,7 +467,7 @@ namespace Microsoft.PythonTools.Project
             return handlerNode;
         }
 
-        protected override int ExecCommandOnNode(Guid cmdGroup, uint cmd, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut)
+        internal override int ExecCommandOnNode(Guid cmdGroup, uint cmd, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut)
         {
             if (this.ProjectMgr == null || this.ProjectMgr.IsClosed)
             {
@@ -494,7 +499,7 @@ namespace Microsoft.PythonTools.Project
         }
 
 
-        protected override int QueryStatusOnNode(Guid cmdGroup, uint cmd, IntPtr pCmdText, ref QueryStatusResult result)
+        internal override int QueryStatusOnNode(Guid cmdGroup, uint cmd, IntPtr pCmdText, ref QueryStatusResult result)
         {
             if (cmdGroup == VsMenus.guidStandardCommandSet97)
             {
@@ -544,7 +549,7 @@ namespace Microsoft.PythonTools.Project
         /// <param name="docData">A pointer to the document in the rdt</param>
         /// <param name="newFilePath">The new file path to the document</param>
         /// <returns></returns>
-        protected override int AfterSaveItemAs(IntPtr docData, string newFilePath)
+        internal override int AfterSaveItemAs(IntPtr docData, string newFilePath)
         {
             Utilities.ArgumentNotNullOrEmpty("newFilePath", newFilePath);
 
@@ -578,7 +583,7 @@ namespace Microsoft.PythonTools.Project
             else
             {
                 //search for the target container among existing child nodes
-                targetContainer = this.ProjectMgr.FindChild(newDirectoryName);
+                targetContainer = this.ProjectMgr.FindNodeByFullPath(newDirectoryName);
                 if (targetContainer != null && (targetContainer is FileNode))
                 {
                     // We already have a file node with this name in the hierarchy.
@@ -630,8 +635,8 @@ namespace Microsoft.PythonTools.Project
                         SetIsLinkFile(isLink);
                     }
 
-                    this.RenameFileNode(oldName, newFilePath, targetContainer.ID);
-                    OnInvalidateItems(this.Parent);
+                    RenameFileNode(oldName, newFilePath, targetContainer);
+                    ProjectMgr.OnInvalidateItems(this.Parent);
                 }
             }
             catch (Exception e)
@@ -667,10 +672,19 @@ namespace Microsoft.PythonTools.Project
         #endregion
 
         #region virtual methods
-        public virtual string FileName
-        {
-            get
-            {
+        
+        public override object GetProperty(int propId) {
+            switch ((__VSHPROPID)propId) {
+                case __VSHPROPID.VSHPROPID_ItemDocCookie:
+                    if (this.DocCookie != 0) return (IntPtr)this.DocCookie; //cast to IntPtr as some callers expect VT_INT
+                    break;
+
+            }
+            return base.GetProperty(propId);
+        }
+
+        public virtual string FileName {
+            get {
                 return this.Caption;
             }
             set
@@ -720,7 +734,7 @@ namespace Microsoft.PythonTools.Project
         /// <param name="newParentId">The new parent id of the item.</param>
         /// <returns>The newly added FileNode.</returns>
         /// <remarks>While a new node will be used to represent the item, the underlying MSBuild item will be the same and as a result file properties saved in the project file will not be lost.</remarks>
-        protected virtual FileNode RenameFileNode(string oldFileName, string newFileName, uint newParentId)
+        private FileNode RenameFileNode(string oldFileName, string newFileName, HierarchyNode newParent)
         {
             if (CommonUtils.IsSamePath(oldFileName, newFileName))
             {
@@ -728,25 +742,16 @@ namespace Microsoft.PythonTools.Project
                 return null;
             }
 
-            this.OnItemDeleted();
+            ProjectMgr.OnItemDeleted(this);
             this.Parent.RemoveChild(this);
             this.ID = this.ProjectMgr.ItemIdMap.Add(this);
             this.ItemNode.Item.Xml.Include = CommonUtils.GetRelativeFilePath(ProjectMgr.ProjectHome, newFileName);
             this.ItemNode.RefreshProperties();
             this.ProjectMgr.SetProjectFileDirty(true);
-            HierarchyNode newParent;
-            if (newParentId == VSConstants.VSITEMID_ROOT)
-            {
-                newParent = ProjectMgr;
-            }
-            else
-            {
-                newParent = ((HierarchyNode)this.ProjectMgr.ItemIdMap[newParentId]);
-            }
             newParent.AddChild(this);
             this.Parent = newParent;
 
-            this.ReDraw(UIHierarchyElement.Caption);
+            ProjectMgr.ReDrawNode(this, UIHierarchyElement.Caption);
 
             //Update the new document in the RDT.
             DocumentManager.RenameDocument(this.ProjectMgr.Site, oldFileName, newFileName, ID);
@@ -812,7 +817,7 @@ namespace Microsoft.PythonTools.Project
             }
         }
 
-        protected override bool CanDeleteItem(__VSDELETEITEMOPERATION deleteOperation)
+        internal override bool CanDeleteItem(__VSDELETEITEMOPERATION deleteOperation)
         {
             if (deleteOperation == __VSDELETEITEMOPERATION.DELITEMOP_DeleteFromStorage)
             {
@@ -826,7 +831,7 @@ namespace Microsoft.PythonTools.Project
         /// </summary>
         /// <param name="oldName">Previous name in storage</param>
         /// <param name="newName">New name in storage</param>
-        protected virtual void RenameInStorage(string oldName, string newName)
+        internal virtual void RenameInStorage(string oldName, string newName)
         {
             File.Move(oldName, newName);
         }
@@ -946,9 +951,16 @@ namespace Microsoft.PythonTools.Project
             return true;
         }
 
-        private FileNode RenameFileNode(string oldFileName, string newFileName)
+        internal virtual FileNode RenameFileNode(string oldFileName, string newFileName)
         {
-            return this.RenameFileNode(oldFileName, newFileName, this.Parent.ID);
+            string newFolder = Path.GetDirectoryName(newFileName) + Path.DirectorySeparatorChar;
+            var parentFolder = ProjectMgr.FindNodeByFullPath(newFolder);
+            if (parentFolder == null) {
+                Debug.Assert(newFolder == ProjectMgr.ProjectHome);
+                parentFolder = ProjectMgr;
+            }
+
+            return this.RenameFileNode(oldFileName, newFileName, parentFolder);
         }
 
         /// <summary>
@@ -966,7 +978,7 @@ namespace Microsoft.PythonTools.Project
             this.ItemNode.RefreshProperties();
             this.ProjectMgr.SetProjectFileDirty(true);
 
-            this.ReDraw(UIHierarchyElement.Caption);
+            ProjectMgr.ReDrawNode(this, UIHierarchyElement.Caption);
             this.RenameChildNodes(this);
 
             // Refresh the property browser.
@@ -1010,5 +1022,14 @@ namespace Microsoft.PythonTools.Project
             return childNodes;
         }
         #endregion
+
+        void IDiskBasedNode.RenameForDeferredSave(string basePath, string baseNewPath) {
+            string oldLoc = CommonUtils.GetAbsoluteFilePath(basePath, ItemNode.GetMetadata(ProjectFileConstants.Include));
+            string newLoc = CommonUtils.GetAbsoluteFilePath(baseNewPath, ItemNode.GetMetadata(ProjectFileConstants.Include));
+
+            // make sure the directory is there
+            Directory.CreateDirectory(Path.GetDirectoryName(newLoc));
+            RenameDocument(oldLoc, newLoc);
+        }
     }
 }

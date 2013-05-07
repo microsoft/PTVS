@@ -14,12 +14,12 @@
 
 using Microsoft.VisualStudio.Shell.Interop;
 
-namespace Microsoft.PythonTools.Project {
+namespace Microsoft.VisualStudioTools.Project {
     /// <summary>
     /// Reference container node for project references.
     /// </summary>
-    public class CommonReferenceContainerNode : ReferenceContainerNode {
-        public CommonReferenceContainerNode(ProjectNode project)
+    internal class CommonReferenceContainerNode : ReferenceContainerNode {
+        internal CommonReferenceContainerNode(ProjectNode project)
             : base(project) {
         }
 
@@ -45,7 +45,7 @@ namespace Microsoft.PythonTools.Project {
         /// <summary>
         /// Exposed for derived classes to re-enable reference support.
         /// </summary>
-        protected ReferenceNode BaseCreateReferenceNode(ref VSCOMPONENTSELECTORDATA selectorData) {
+        internal ReferenceNode BaseCreateReferenceNode(ref VSCOMPONENTSELECTORDATA selectorData) {
             return base.CreateReferenceNode(selectorData);
         }
     }

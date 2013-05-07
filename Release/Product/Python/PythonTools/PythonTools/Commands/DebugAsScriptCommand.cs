@@ -17,6 +17,7 @@ using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.PythonTools.Project;
+using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Commands {
     /// <summary>
@@ -29,7 +30,7 @@ namespace Microsoft.PythonTools.Commands {
             // Launch with project context if there is one and it contains the active document
             // Fallback to using default python project
             var pythonProjectNode = CommonPackage.GetStartupProject() as PythonProjectNode;
-            if ((pythonProjectNode != null) && (pythonProjectNode.FindChild(file) == null)) {
+            if ((pythonProjectNode != null) && (pythonProjectNode.FindNodeByFullPath(file) == null)) {
                 pythonProjectNode = null;
             }
             IPythonProject pythonProject = pythonProjectNode as IPythonProject ?? new DefaultPythonProject(file);

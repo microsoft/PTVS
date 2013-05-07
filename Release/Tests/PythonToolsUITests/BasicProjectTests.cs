@@ -28,6 +28,7 @@ using Microsoft.PythonTools.Project.Automation;
 using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudioTools.Project.Automation;
 using TestUtilities;
 using TestUtilities.UI;
 using TestUtilities.UI.Python;

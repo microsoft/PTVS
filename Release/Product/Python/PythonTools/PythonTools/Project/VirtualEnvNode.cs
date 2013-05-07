@@ -23,6 +23,8 @@ using System.Threading.Tasks;
 using Microsoft.Build.Evaluation;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudioTools;
+using Microsoft.VisualStudioTools.Project;
 using OleConstants = Microsoft.VisualStudio.OLE.Interop.Constants;
 using VsCommands = Microsoft.VisualStudio.VSConstants.VSStd97CmdID;
 
@@ -31,7 +33,7 @@ namespace Microsoft.PythonTools.Project {
     /// Represents virtual env as a node in the Solution Explorer.
     /// </summary>
     [ComVisible(true)]
-    public class VirtualEnvNode : HierarchyNode {
+    internal class VirtualEnvNode : HierarchyNode {
         private readonly string _caption;
         private readonly FileSystemWatcher _fileWatcher;
         private readonly Timer _timer;
@@ -52,14 +54,14 @@ namespace Microsoft.PythonTools.Project {
             IsExpanded = false;
         }
 
-        public override int Close() {
+        public override void Close() {
             lock (this) {
                 _fileWatcher.Dispose();
                 _timer.Dispose();
                 _disposed = true;
             }
 
-            return base.Close();
+            base.Close();
         }
 
         private void PackagesChanged(object sender, FileSystemEventArgs e) {
@@ -118,7 +120,7 @@ namespace Microsoft.PythonTools.Project {
                     AddChild(new VirtualEnvPackageNode(ProjectMgr, line));
                 }
 
-                OnInvalidateItems(this);
+                ProjectMgr.OnInvalidateItems(this);
                 if (!prevChecked && IsExpanded) {
                     ProjectMgr.OnPropertyChanged(this, (int)__VSHPROPID.VSHPROPID_Expandable, 0);
                 }
@@ -147,7 +149,7 @@ namespace Microsoft.PythonTools.Project {
             get { return VsMenus.IDM_VS_CTXT_ITEMNODE; }
         }
 
-        protected override int ExecCommandOnNode(Guid cmdGroup, uint cmd, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut) {
+        internal override int ExecCommandOnNode(Guid cmdGroup, uint cmd, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut) {
             if (cmdGroup == VsMenus.guidStandardCommandSet97) {
                 switch ((VsCommands)cmd) {
                     case VsCommands.Delete:
@@ -178,14 +180,14 @@ namespace Microsoft.PythonTools.Project {
                             var parent = ProjectMgr.GetVirtualEnvContainerNode();
                             for (var child = parent.FirstChild; child != null; child = child.NextSibling) {
                                 if (((VirtualEnvNode)child).IsVirtualEnvEnabled) {
-                                    child.ReDraw(UIHierarchyElement.OverlayIcon);
+                                    ProjectMgr.ReDrawNode(child, UIHierarchyElement.OverlayIcon);
                                     ProjectMgr.BoldItem(child, false);
                                     break;
                                 }
                             }
 
                             ProjectMgr.SetProjectProperty(PythonConstants.VirtualEnvCurrentEnvironment, ItemNode.Item.UnevaluatedInclude);
-                            ReDraw(UIHierarchyElement.OverlayIcon);
+                            ProjectMgr.ReDrawNode(this, UIHierarchyElement.OverlayIcon);
                             ProjectMgr.SetProjectProperty(CommonConstants.InterpreterPath, InterpreterPath);
                             ProjectMgr.SetProjectProperty(PythonConstants.InterpreterId, ItemNode.GetMetadata(PythonConstants.VirtualEnvInterpreterId));
                             ProjectMgr.SetProjectProperty(PythonConstants.InterpreterVersion, ItemNode.GetMetadata(PythonConstants.VirtualEnvInterpreterVersion));
@@ -200,7 +202,7 @@ namespace Microsoft.PythonTools.Project {
 
                             ProjectMgr.SetProjectProperty(PythonConstants.VirtualEnvCurrentEnvironment, "");
                             ProjectMgr.SetProjectProperty(CommonConstants.InterpreterPath, "");
-                            ReDraw(UIHierarchyElement.OverlayIcon);
+                            ProjectMgr.ReDrawNode(this, UIHierarchyElement.OverlayIcon);
                             ProjectMgr.BoldItem(this, false);
                         }
                         return VSConstants.S_OK;
@@ -261,7 +263,7 @@ namespace Microsoft.PythonTools.Project {
         /// <summary>
         /// Virtual env node can only be removed from project.
         /// </summary>        
-        protected override bool CanDeleteItem(__VSDELETEITEMOPERATION deleteOperation) {
+        internal override bool CanDeleteItem(__VSDELETEITEMOPERATION deleteOperation) {
             return deleteOperation == __VSDELETEITEMOPERATION.DELITEMOP_RemoveFromProject;
         }
 
@@ -340,7 +342,7 @@ namespace Microsoft.PythonTools.Project {
         /// <summary>
         /// Virtual env node cannot be dragged.
         /// </summary>        
-        protected internal override StringBuilder PrepareSelectedNodesForClipBoard() {
+        protected internal override string PrepareSelectedNodesForClipBoard() {
             return null;
         }
 
@@ -354,7 +356,7 @@ namespace Microsoft.PythonTools.Project {
         /// <summary>
         /// Disable Copy/Cut/Paste commands on virtual env node.
         /// </summary>
-        protected override int QueryStatusOnNode(Guid cmdGroup, uint cmd, IntPtr pCmdText, ref QueryStatusResult result) {
+        internal override int QueryStatusOnNode(Guid cmdGroup, uint cmd, IntPtr pCmdText, ref QueryStatusResult result) {
             if (cmdGroup == VsMenus.guidStandardCommandSet97) {
                 switch ((VsCommands)cmd) {
                     case VsCommands.Delete:

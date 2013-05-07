@@ -47,8 +47,8 @@ namespace Microsoft.PythonTools.Pyvot {
     [InstalledProductRegistration("#110", "#112", AssemblyVersionInfo.Version, IconResourceID = 400)]
     // This attribute is needed to let the shell know that this package exposes some menus.
     [ProvideMenuResource("Menus.ctmenu", 1)]
-    [ProvideAutoLoad(CommonConstants.UIContextNoSolution)]  // we need to auto-load so we can respond to QueryStatus for our commands
-    [ProvideAutoLoad(CommonConstants.UIContextSolutionExists)]
+    [ProvideAutoLoad(Microsoft.VisualStudio.Shell.Interop.UIContextGuids.NoSolution)]
+    [ProvideAutoLoad(Microsoft.VisualStudio.Shell.Interop.UIContextGuids.SolutionExists)]
     [Guid(GuidList.guidPyvotPkgString)]
     internal sealed class PyvotPackage : Package {
 

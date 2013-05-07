@@ -12,15 +12,10 @@
  *
  * ***************************************************************************/
 
-using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
 using System.Runtime.InteropServices;
-using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Shell.Interop;
 
-namespace Microsoft.PythonTools.Project
+namespace Microsoft.VisualStudioTools.Project
 {
     /// <summary>
     /// Defines abstract package.
@@ -40,7 +35,7 @@ namespace Microsoft.PythonTools.Project
         /// <summary>
         /// Add your listener to this list. They should be added in the overridden Initialize befaore calling the base.
         /// </summary>
-        protected internal IList<SolutionListener> SolutionListeners
+        internal IList<SolutionListener> SolutionListeners
         {
             get
             {
@@ -57,7 +52,6 @@ namespace Microsoft.PythonTools.Project
             // Subscribe to the solution events
             this.solutionListeners.Add(new SolutionListenerForProjectOpen(this));
             this.solutionListeners.Add(new SolutionListenerForBuildDependencyUpdate(this));
-            this.solutionListeners.Add(new SolutionListenerForProjectEvents(this));
 
             foreach (SolutionListener solutionListener in this.solutionListeners)
             {

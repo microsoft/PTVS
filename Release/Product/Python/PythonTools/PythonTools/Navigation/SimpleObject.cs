@@ -16,7 +16,7 @@ using System;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 
-namespace Microsoft.PythonTools.Navigation {
+namespace Microsoft.VisualStudioTools.Navigation {
     class SimpleObject : ISimpleObject {
         #region ISimpleObject Members
 

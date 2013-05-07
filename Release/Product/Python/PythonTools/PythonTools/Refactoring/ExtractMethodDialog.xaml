@@ -5,7 +5,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
     xmlns:scm="clr-namespace:System.ComponentModel;assembly=WindowsBase" 
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-    xmlns:ui="clr-namespace:Microsoft.PythonTools"
+    xmlns:ui="clr-namespace:Microsoft.VisualStudioTools"
     mc:Ignorable="d" 
     x:ClassModifier="internal"
     Width="640" Height="350"

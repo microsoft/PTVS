@@ -37,6 +37,12 @@ namespace TestUtilities.UI {
             }
         }
 
+        public string Address {
+            get {
+                return GetAddressBox().Current.Name.Substring("Address: ".Length);
+            }
+        }
+
         private AutomationElement GetFilenameEditBox() {
             return Element.FindFirst(TreeScope.Descendants,
                 new AndCondition(
@@ -44,6 +50,15 @@ namespace TestUtilities.UI {
                     new PropertyCondition(AutomationElement.NameProperty, "Folder:")
                 )
             );
+        }
+
+        private AutomationElement GetAddressBox() {
+            return Element.FindFirst(TreeScope.Descendants,
+                new AndCondition(
+                    new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.Pane),
+                    new PropertyCondition(AutomationElement.ClassNameProperty, "Breadcrumb Parent")
+                )
+            ).FindFirst(TreeScope.Children, Condition.TrueCondition);
         }
     }
 }

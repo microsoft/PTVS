@@ -22,6 +22,7 @@ using System.Windows.Forms;
 using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Profiling {
     /// <summary>

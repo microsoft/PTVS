@@ -18,7 +18,7 @@ using System.Collections.ObjectModel;
 using System.IO;
 using Microsoft.VisualStudio.Shell.Interop;
 
-namespace Microsoft.PythonTools.Project {
+namespace Microsoft.VisualStudioTools.Project {
     class PublishProject : IPublishProject {
         private readonly CommonProjectNode _node;
         private ReadOnlyCollection<IPublishFile> _files;

@@ -17,6 +17,8 @@ using System.Runtime.InteropServices;
 using System.Text;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudioTools;
+using Microsoft.VisualStudioTools.Project;
 using OleConstants = Microsoft.VisualStudio.OLE.Interop.Constants;
 
 namespace Microsoft.PythonTools.Project {
@@ -24,14 +26,13 @@ namespace Microsoft.PythonTools.Project {
     /// Search path container node.
     /// </summary>
     [ComVisible(true)]
-    public class CommonSearchPathContainerNode : HierarchyNode {
+    internal class CommonSearchPathContainerNode : HierarchyNode {
         internal const string SearchPathsNodeVirtualName = "Search Paths";
-        private CommonProjectNode _projectNode;
+        private PythonProjectNode _projectNode;
 
-        public CommonSearchPathContainerNode(CommonProjectNode project)
+        public CommonSearchPathContainerNode(PythonProjectNode project)
             : base(project.ProjectMgr) {
             _projectNode = project;
-            this.VirtualNodeName = SearchPathsNodeVirtualName;
             this.ExcludeNodeFromScc = true;
         }
 
@@ -68,7 +69,7 @@ namespace Microsoft.PythonTools.Project {
         /// </summary>
         public override string Url {
             // TODO: This node is not real - should we return null for Url?
-            get { return this.VirtualNodeName; }
+            get { return SearchPathsNodeVirtualName; }
         }
 
         /// <summary>
@@ -93,7 +94,7 @@ namespace Microsoft.PythonTools.Project {
         /// <summary>
         /// Search path node cannot be dragged.
         /// </summary>        
-        protected internal override StringBuilder PrepareSelectedNodesForClipBoard() {
+        protected internal override string PrepareSelectedNodesForClipBoard() {
             return null;
         }
 
@@ -104,7 +105,7 @@ namespace Microsoft.PythonTools.Project {
             return (int)OleConstants.OLECMDERR_E_NOTSUPPORTED;
         }
 
-        protected override int QueryStatusOnNode(Guid cmdGroup, uint cmd, IntPtr pCmdText, ref QueryStatusResult result) {
+        internal override int QueryStatusOnNode(Guid cmdGroup, uint cmd, IntPtr pCmdText, ref QueryStatusResult result) {
             if (cmdGroup == GuidList.guidPythonToolsCmdSet) {
                 switch (cmd) {
                     case CommonConstants.AddSearchPathCommandId:
@@ -117,7 +118,7 @@ namespace Microsoft.PythonTools.Project {
             return base.QueryStatusOnNode(cmdGroup, cmd, pCmdText, ref result);
         }
 
-        protected override int ExecCommandOnNode(Guid cmdGroup, uint cmd, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut) {
+        internal override int ExecCommandOnNode(Guid cmdGroup, uint cmd, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut) {
             if (cmdGroup == GuidList.guidPythonToolsCmdSet) {
                 switch (cmd) {
                     case CommonConstants.AddSearchPathCommandId:
@@ -132,7 +133,7 @@ namespace Microsoft.PythonTools.Project {
         /// <summary>
         /// SearchPathContainer Node cannot be deleted.
         /// </summary>        
-        protected override bool CanDeleteItem(__VSDELETEITEMOPERATION deleteOperation) {
+        internal override bool CanDeleteItem(__VSDELETEITEMOPERATION deleteOperation) {
             return false;
         }
 

@@ -13,6 +13,8 @@
  * ***************************************************************************/
 
 
+using Microsoft.VisualStudioTools.Project;
+
 namespace Microsoft.PythonTools.Project {
     public interface IPythonLauncherProvider {
 

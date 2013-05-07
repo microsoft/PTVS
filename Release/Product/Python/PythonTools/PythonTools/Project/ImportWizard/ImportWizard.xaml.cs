@@ -22,6 +22,7 @@ using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Interop;
 using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Project.ImportWizard {
     /// <summary>

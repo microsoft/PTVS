@@ -22,6 +22,7 @@ using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Operations;
 using Microsoft.VisualStudio.TextManager.Interop;
+using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Navigation {
     class CodeWindowManager : IVsCodeWindowManager {
@@ -30,6 +31,10 @@ namespace Microsoft.PythonTools.Navigation {
         private readonly EditFilter _filter;
         private static readonly Dictionary<IWpfTextView, CodeWindowManager> _windows = new Dictionary<IWpfTextView, CodeWindowManager>();
         private DropDownBarClient _client;
+
+        static CodeWindowManager() {
+            PythonToolsPackage.Instance.OnIdle += OnIdle;
+        }
 
         public CodeWindowManager(IVsCodeWindow codeWindow, IWpfTextView textView) {
             _window = codeWindow;
@@ -52,13 +57,13 @@ namespace Microsoft.PythonTools.Navigation {
 #endif
         }
 
-        public static void OnIdle(IOleComponentManager compMgr) {
+        private static void OnIdle(object sender, ComponentManagerEventArgs e) {
             foreach (var window in _windows) {
-                if (compMgr.FContinueIdle() == 0) {
+                if (e.ComponentManager.FContinueIdle() == 0) {
                     break;
                 }
 
-                window.Value._filter.DoIdle(compMgr);
+                window.Value._filter.DoIdle(e.ComponentManager);
             }
         }
 

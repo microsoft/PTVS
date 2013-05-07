@@ -72,6 +72,10 @@
       <Project>{82BB3890-C943-421E-8643-7244421E8ADE}</Project>
       <Name>DebuggerUITests</Name>
     </ProjectReference>
+    <ProjectReference Include="..\TestUtilities.Python\TestUtilities.Python.csproj">
+      <Project>{a731c4c3-3741-4080-a946-c47574c1f3bf}</Project>
+      <Name>TestUtilities.Python</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="..\TestProjectAfter.settings" />
 </Project>

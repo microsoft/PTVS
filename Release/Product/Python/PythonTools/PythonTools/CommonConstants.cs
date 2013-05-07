@@ -18,8 +18,8 @@ using Microsoft.VisualStudio.OLE.Interop;
 using OleConstants = Microsoft.VisualStudio.OLE.Interop.Constants;
 using VsCommands2K = Microsoft.VisualStudio.VSConstants.VSStd2KCmdID;
 
-namespace Microsoft.PythonTools {
-    public static class CommonConstants {
+namespace Microsoft.VisualStudioTools {
+    internal static class CommonConstants {
         /// <summary>
         /// <see cref="VsConstants.UICONTEXT_NoSolution"/>.
         /// </summary>
@@ -47,6 +47,7 @@ namespace Microsoft.PythonTools {
         internal const string VirtualEnvPackagePropertiesGuid = "40B95F11-FCE4-469C-B4E7-30E723820036";
         internal const string FolderNodePropertiesGuid = "c0000081-fb55-4d5d-901b-ee624db34961";
         internal const string ProjectNodePropertiesGuid = "c0000016-9ab0-4d58-80e6-54f29e8d3144";
+        internal static Guid NoSharedCommandsGuid = new Guid("{C4EBB0A2-969D-49D9-B87A-DCA1D3DF3A5B}");
 
         //"Set As StartUp File" command
         public const string StartupFile = "StartupFile";

@@ -1,4 +1,4 @@
-﻿<pt:DialogWindowVersioningWorkaround
+﻿<ui:DialogWindowVersioningWorkaround
     x:Class="Microsoft.PythonTools.Project.ImportWizard.ImportWizard"
     x:ClassModifier="internal"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
@@ -6,6 +6,7 @@
     xmlns:l="clr-namespace:Microsoft.PythonTools.Project.ImportWizard"
     xmlns:wpf="clr-namespace:Microsoft.PythonTools.Wpf"
     xmlns:pt="clr-namespace:Microsoft.PythonTools"
+    xmlns:ui="clr-namespace:Microsoft.VisualStudioTools"
     Height="525" Width="700"
     MinHeight="500" MinWidth="500"
     ResizeMode="CanResizeWithGrip"
@@ -83,4 +84,4 @@
             </Grid>
         </StackPanel>
     </Grid>
-</pt:DialogWindowVersioningWorkaround>
+</ui:DialogWindowVersioningWorkaround>

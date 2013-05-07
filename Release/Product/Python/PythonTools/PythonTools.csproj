@@ -229,8 +229,10 @@
     <Compile Include="PythonTools\Intellisense\CompletionComparer.cs" />
     <Compile Include="PythonTools\Intellisense\FuzzyStringMatcher.cs" />
     <Compile Include="PythonTools\Intellisense\FuzzyCompletionSet.cs" />
+    <Compile Include="PythonTools\Navigation\SourceLocation.cs" />
     <Compile Include="PythonTools\Project\Automation\OAProjectConfigurationProperties.cs" />
     <Compile Include="PythonTools\Project\CreateVirtualEnvironmentView.cs" />
+    <Compile Include="PythonTools\Project\IDiskBasedNode.cs" />
     <Compile Include="PythonTools\Project\ImportWizard\SaveProjectPage.xaml.cs">
       <DependentUpon>SaveProjectPage.xaml</DependentUpon>
     </Compile>
@@ -250,7 +252,10 @@
       <DependentUpon>InstallPythonPackage.xaml</DependentUpon>
     </Compile>
     <Compile Include="PythonTools\Project\InstallPythonPackageView.cs" />
+    <Compile Include="PythonTools\Project\OverwriteFileDialog.xaml.cs" />
+    <Compile Include="PythonTools\Project\ProjectNode.IOleCommandTarget.cs" />
     <Compile Include="PythonTools\Project\PythonInterpreterView.cs" />
+    <Compile Include="PythonTools\Project\SharedCommands.cs" />
     <Compile Include="PythonTools\Project\VirtualEnvContainerNode.cs" />
     <Compile Include="PythonTools\Project\VirtualEnvContainerNodeProperties.cs" />
     <Compile Include="PythonTools\Project\VirtualEnvNode.cs" />
@@ -1200,6 +1205,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="PythonTools\Project\OverwriteFileDialog.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="PythonTools\Project\TaskProgressBar.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -1226,9 +1235,8 @@
   <ItemGroup>
     <Folder Include="Templates\Files\EmptyPackage\package\" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Templates\Files\EmptyPackage\package\" />
-  </ItemGroup>
+  <ItemGroup />
+  <ItemGroup />
   <PropertyGroup>
     <!--
     To specify a different registry root to register your package, uncomment the TargetRegistryRoot

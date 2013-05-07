@@ -17,7 +17,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
-namespace Microsoft.PythonTools.Project {
+namespace Microsoft.VisualStudioTools.Project {
     class VirtualProjectElement : ProjectElement {
         private readonly Dictionary<string, string> _virtualProperties;
 

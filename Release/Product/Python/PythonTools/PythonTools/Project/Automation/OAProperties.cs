@@ -21,7 +21,7 @@ using System.Globalization;
 using System.Reflection;
 using System.Runtime.InteropServices;
 
-namespace Microsoft.PythonTools.Project.Automation
+namespace Microsoft.VisualStudioTools.Project.Automation
 {
 	/// <summary>
 	/// Contains all of the properties of a given object that are contained in a generic collection of properties.
@@ -78,12 +78,12 @@ namespace Microsoft.PythonTools.Project.Automation
 		{
 			get
 			{
-				if(this.target.Node == null || this.target.Node.ProjectMgr == null || this.target.Node.ProjectMgr.IsClosed ||
-					this.target.Node.ProjectMgr.Site == null)
+				if (this.target.HierarchyNode == null || this.target.HierarchyNode.ProjectMgr == null || this.target.HierarchyNode.ProjectMgr.IsClosed ||
+					this.target.HierarchyNode.ProjectMgr.Site == null)
 				{
 					throw new InvalidOperationException();
 				}
-				return this.target.Node.ProjectMgr.Site.GetService(typeof(EnvDTE.DTE)) as EnvDTE.DTE;
+				return this.target.HierarchyNode.ProjectMgr.Site.GetService(typeof(EnvDTE.DTE)) as EnvDTE.DTE;
 			}
 		}
 

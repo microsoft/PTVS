@@ -14,6 +14,7 @@
 
 using System;
 using System.Windows.Forms;
+using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Project {
     public interface IPythonLauncherOptions {

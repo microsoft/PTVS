@@ -13,11 +13,8 @@
  * ***************************************************************************/
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
-namespace Microsoft.PythonTools.Project {
+namespace Microsoft.VisualStudioTools.Project {
     public sealed class DirtyChangedEventArgs : EventArgs {
         private readonly bool _isDirty;
         public static readonly DirtyChangedEventArgs DirtyValue = new DirtyChangedEventArgs(true);

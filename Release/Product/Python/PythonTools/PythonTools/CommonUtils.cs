@@ -16,7 +16,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 
-namespace Microsoft.PythonTools {
+namespace Microsoft.VisualStudioTools {
     internal static class CommonUtils {
         internal static bool TryMakeUri(string path, bool isDirectory, UriKind kind, out Uri uri) {
             if (isDirectory && !string.IsNullOrEmpty(path) && !HasEndSeparator(path)) {

@@ -19,11 +19,11 @@ using Microsoft.VisualStudio.Shell.Interop;
 using IServiceProvider = System.IServiceProvider;
 using ShellConstants = Microsoft.VisualStudio.Shell.Interop.Constants;
 
-namespace Microsoft.PythonTools.Project
+namespace Microsoft.VisualStudioTools.Project
 {
 
 
-    public abstract class SolutionListener : IVsSolutionEvents3, IVsSolutionEvents4, IDisposable
+    internal abstract class SolutionListener : IVsSolutionEvents3, IVsSolutionEvents4, IDisposable
     {
 
         #region fields
@@ -40,13 +40,12 @@ namespace Microsoft.PythonTools.Project
         #region ctors
         protected SolutionListener(IServiceProvider serviceProviderParameter)
         {
-            Utilities.ArgumentNotNull("serviceProviderParameter", serviceProviderParameter);
+            Debug.Assert(serviceProviderParameter != null);
 
             this.serviceProvider = serviceProviderParameter;
             this.solution = this.serviceProvider.GetService(typeof(SVsSolution)) as IVsSolution;
 
             Debug.Assert(this.solution != null, "Could not get the IVsSolution object from the services exposed by this project");
-            Utilities.CheckNotNull(this.solution);
         }
         #endregion
 

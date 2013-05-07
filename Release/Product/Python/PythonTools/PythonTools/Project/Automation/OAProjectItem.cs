@@ -18,20 +18,19 @@ using System.Runtime.InteropServices;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
 
-namespace Microsoft.PythonTools.Project.Automation
+namespace Microsoft.VisualStudioTools.Project.Automation
 {
     [ComVisible(true)]
-    public class OAProjectItem<T> : EnvDTE.ProjectItem
-         where T : HierarchyNode
+    public class OAProjectItem : EnvDTE.ProjectItem
     {
 
         #region fields
-        private T node;
+        private HierarchyNode node;
         private OAProject project;
         #endregion
 
         #region properties
-        protected T Node
+        internal HierarchyNode Node
         {
             get
             {
@@ -52,7 +51,7 @@ namespace Microsoft.PythonTools.Project.Automation
         #endregion
 
         #region ctors
-        public OAProjectItem(OAProject project, T node)
+        internal OAProjectItem(OAProject project, HierarchyNode node)
         {
             this.node = node;
             this.project = project;

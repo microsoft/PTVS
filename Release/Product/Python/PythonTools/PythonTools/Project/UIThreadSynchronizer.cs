@@ -14,10 +14,9 @@
 
 using System;
 using System.ComponentModel;
-using System.Threading;
 using System.Threading.Tasks;
 
-namespace Microsoft.PythonTools.Project {
+namespace Microsoft.VisualStudioTools.Project {
 
     /// <summary>
     /// Implements ISynchronizeInvoke in terms of System.Threading.Tasks.Task.

@@ -125,6 +125,9 @@ namespace TestUtilities.UI {
             if (item == null) {
                 item = InstalledTemplates.FindItem("Templates", "Other Languages", name);
             }
+            if (item == null) {
+                AutomationWrapper.DumpElement(InstalledTemplates.Element);
+            }
 #else
             var item = InstalledTemplates.FindItem("Other Languages", name);
             if (item == null) {

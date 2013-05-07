@@ -19,13 +19,13 @@ using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
 using IOleServiceProvider = Microsoft.VisualStudio.OLE.Interop.IServiceProvider;
 
-namespace Microsoft.PythonTools.Project
+namespace Microsoft.VisualStudioTools.Project
 {
     /// <summary>
     /// This class handles opening, saving of file items in the hierarchy.
     /// </summary>
 
-    public class FileDocumentManager : DocumentManager
+    internal class FileDocumentManager : DocumentManager
     {
         #region ctors
 
@@ -236,7 +236,7 @@ namespace Microsoft.PythonTools.Project
                     // of the node being opened, otherwise the debugger doesn't work.
                     if (editorType != Guid.Empty)
                     {
-                        result = uiShellOpenDocument.OpenSpecificEditor(editorFlags, fullPath, ref editorType, physicalView, ref logicalView, caption, this.Node.ProjectMgr, this.Node.ID, docDataExisting, serviceProvider, out windowFrame);
+                        result = uiShellOpenDocument.OpenSpecificEditor(editorFlags, fullPath, ref editorType, physicalView, ref logicalView, caption, this.Node.ProjectMgr.GetOuterInterface <IVsUIHierarchy>(), this.Node.ID, docDataExisting, serviceProvider, out windowFrame);
                     }
                     else
                     {
@@ -247,7 +247,7 @@ namespace Microsoft.PythonTools.Project
 
                 if (result != VSConstants.S_OK && result != VSConstants.S_FALSE && result != VSConstants.OLE_E_PROMPTSAVECANCELLED)
                 {
-                    ErrorHandler.ThrowOnFailure(result);
+                    return result;
                 }
 
                 if (windowFrame != null)
@@ -291,5 +291,12 @@ namespace Microsoft.PythonTools.Project
 
 
         #endregion
+
+        private new FileNode Node {
+            get {
+                return (FileNode)base.Node;
+            }
+        }
+
     }
 }

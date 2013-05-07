@@ -13,20 +13,21 @@
  * ***************************************************************************/
 
 using System;
-using Microsoft.PythonTools;
+using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Utilities;
 
 namespace TestUtilities.Mocks {
     public class MockTextBuffer : ITextBuffer {
-        private readonly string _filename;
+        private readonly string _filename, _contentType;
         internal MockTextSnapshot _snapshot;
         private MockTextEdit _edit;
         private PropertyCollection _properties;
 
-        public MockTextBuffer(string content, string filename = "C:\\foo.py") {
+        public MockTextBuffer(string content, string filename = "C:\\foo.py", string contentType = "Python") {
             _snapshot = new MockTextSnapshot(this, content);
             _filename = filename;
+            _contentType = contentType;
         }
 
         public void ChangeContentType(Microsoft.VisualStudio.Utilities.IContentType newContentType, object editTag) {
@@ -67,7 +68,7 @@ namespace TestUtilities.Mocks {
         }
 
         public Microsoft.VisualStudio.Utilities.IContentType ContentType {
-            get { return new MockContentType("Python", new IContentType[0]); }
+            get { return new MockContentType(_contentType, new IContentType[0]); }
         }
 
         public ITextEdit CreateEdit() {
@@ -148,16 +149,6 @@ namespace TestUtilities.Mocks {
             throw new NotImplementedException();
         }
 
-        private static readonly PythonClassifierProvider _classProvider = MakeClassifierProvider();
-
-        private static PythonClassifierProvider MakeClassifierProvider() {
-            var classReg = new MockClassificationTypeRegistryService();
-            
-            var provider = new PythonClassifierProvider(new MockContentTypeRegistryService());
-            provider._classificationRegistry = classReg;
-            return provider;
-        }
-
         public Microsoft.VisualStudio.Utilities.PropertyCollection Properties {
             get {
                 if (_properties == null) {
@@ -171,8 +162,6 @@ namespace TestUtilities.Mocks {
         }
 
         private void InitProperties() {
-            _classProvider.GetClassifier(this);
-
             _properties.AddProperty(typeof(ITextDocument), new MockTextDocument(_filename));
         }
 

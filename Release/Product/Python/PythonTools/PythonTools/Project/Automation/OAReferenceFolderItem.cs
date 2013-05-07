@@ -17,22 +17,30 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 
-namespace Microsoft.PythonTools.Project.Automation
+namespace Microsoft.VisualStudioTools.Project.Automation
 {
     /// <summary>
     /// Contains OAReferenceItem objects 
     /// </summary>
     [SuppressMessage("Microsoft.Interoperability", "CA1405:ComVisibleTypeBaseTypesShouldBeComVisible")]
     [ComVisible(true), CLSCompliant(false)]
-    public class OAReferenceFolderItem : OAProjectItem<ReferenceContainerNode>
+    public class OAReferenceFolderItem : OAProjectItem
     {
         #region ctors
-        public OAReferenceFolderItem(OAProject project, ReferenceContainerNode node)
+        internal OAReferenceFolderItem(OAProject project, ReferenceContainerNode node)
             : base(project, node)
         {
         }
 
         #endregion
+
+        private new ReferenceContainerNode Node 
+        {
+            get 
+            {
+                return (ReferenceContainerNode)base.Node;
+            }
+        }
 
         #region overridden methods
         /// <summary>

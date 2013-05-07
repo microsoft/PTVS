@@ -14,7 +14,7 @@
 
 using Microsoft.VisualStudio.Text;
 
-namespace Microsoft.PythonTools.Navigation {
+namespace Microsoft.VisualStudioTools.Navigation {
     /// <summary>
     /// Class storing the data about a parsing task on a language module.
     /// A module in dynamic languages is a source file, so here we use the file name to

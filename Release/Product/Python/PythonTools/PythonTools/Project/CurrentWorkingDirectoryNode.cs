@@ -12,11 +12,14 @@
  *
  * ***************************************************************************/
 
+using Microsoft.VisualStudioTools;
+using Microsoft.VisualStudioTools.Project;
+
 namespace Microsoft.PythonTools.Project {
     /// <summary>
     /// Represents Current Working Directory node.
     /// </summary>
-    public class CurrentWorkingDirectoryNode : BaseSearchPathNode {
+    internal class CurrentWorkingDirectoryNode : BaseSearchPathNode {
 
         public CurrentWorkingDirectoryNode(CommonProjectNode project, string path)
             : base(project, path, new VirtualProjectElement(project)) { }
@@ -28,7 +31,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         //Working Directory node cannot be deleted
-        protected override bool CanDeleteItem(Microsoft.VisualStudio.Shell.Interop.__VSDELETEITEMOPERATION deleteOperation) {
+        internal override bool CanDeleteItem(Microsoft.VisualStudio.Shell.Interop.__VSDELETEITEMOPERATION deleteOperation) {
             return false;
         }
 

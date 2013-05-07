@@ -17,6 +17,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudioTools.Project;
 using OleConstants = Microsoft.VisualStudio.OLE.Interop.Constants;
 
 namespace Microsoft.PythonTools.Project {
@@ -24,7 +25,7 @@ namespace Microsoft.PythonTools.Project {
     /// Represents a package installed in a virtual env as a node in the Solution Explorer.
     /// </summary>
     [ComVisible(true)]
-    public class VirtualEnvPackageNode : HierarchyNode {
+    internal class VirtualEnvPackageNode : HierarchyNode {
         protected PythonProjectNode _project;
         private string _caption;
 
@@ -45,7 +46,7 @@ namespace Microsoft.PythonTools.Project {
             get { return VsMenus.IDM_VS_CTXT_ITEMNODE; }
         }
 
-        protected override int ExecCommandOnNode(Guid cmdGroup, uint cmd, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut) {
+        internal override int ExecCommandOnNode(Guid cmdGroup, uint cmd, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut) {
             if (cmdGroup == GuidList.guidPythonToolsCmdSet) {
                 switch (cmd) {
                     case PythonConstants.UninstallPythonPackage:
@@ -78,7 +79,7 @@ namespace Microsoft.PythonTools.Project {
         /// mainly because we don't get all of the delete notifications from solution navigator,
         /// so we can't show our improved prompt.
         /// </summary>        
-        protected override bool CanDeleteItem(__VSDELETEITEMOPERATION deleteOperation) {
+        internal override bool CanDeleteItem(__VSDELETEITEMOPERATION deleteOperation) {
             return false;
         }
 
@@ -131,7 +132,7 @@ namespace Microsoft.PythonTools.Project {
         /// <summary>
         /// Virtual env node cannot be dragged.
         /// </summary>        
-        protected internal override StringBuilder PrepareSelectedNodesForClipBoard() {
+        protected internal override string PrepareSelectedNodesForClipBoard() {
             return null;
         }
 
@@ -145,7 +146,7 @@ namespace Microsoft.PythonTools.Project {
         /// <summary>
         /// Disable Copy/Cut/Paste commands on Search Path node.
         /// </summary>
-        protected override int QueryStatusOnNode(Guid cmdGroup, uint cmd, IntPtr pCmdText, ref QueryStatusResult result) {
+        internal override int QueryStatusOnNode(Guid cmdGroup, uint cmd, IntPtr pCmdText, ref QueryStatusResult result) {
             if (cmdGroup == GuidList.guidPythonToolsCmdSet) {
                 switch (cmd) {
                     case PythonConstants.UninstallPythonPackage:

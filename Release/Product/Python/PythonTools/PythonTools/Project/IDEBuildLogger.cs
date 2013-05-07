@@ -28,7 +28,7 @@ using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.Win32;
 using IOleServiceProvider = Microsoft.VisualStudio.OLE.Interop.IServiceProvider;
 
-namespace Microsoft.PythonTools.Project
+namespace Microsoft.VisualStudioTools.Project
 {
     /// <summary>
     /// This class implements an MSBuild logger that output events to VS outputwindow and tasklist.

@@ -17,6 +17,8 @@ using System.ComponentModel;
 using System.Runtime.InteropServices;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio;
+using Microsoft.VisualStudioTools;
+using Microsoft.VisualStudioTools.Project;
 #if DEV11_OR_LATER
 using Microsoft.VisualStudio.Shell.Interop;
 #endif

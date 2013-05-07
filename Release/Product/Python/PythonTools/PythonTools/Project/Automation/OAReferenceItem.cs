@@ -17,22 +17,30 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 
-namespace Microsoft.PythonTools.Project.Automation
+namespace Microsoft.VisualStudioTools.Project.Automation
 {
     /// <summary>
     /// Represents the automation object equivalent to a ReferenceNode object
     /// </summary>
     [SuppressMessage("Microsoft.Interoperability", "CA1405:ComVisibleTypeBaseTypesShouldBeComVisible")]
     [ComVisible(true), CLSCompliant(false)]
-    public class OAReferenceItem : OAProjectItem<ReferenceNode>
+    public class OAReferenceItem : OAProjectItem
     {
         #region ctors
-        public OAReferenceItem(OAProject project, ReferenceNode node)
+        internal OAReferenceItem(OAProject project, ReferenceNode node)
             : base(project, node)
         {
         }
 
         #endregion
+
+        private new ReferenceNode Node 
+        {
+            get 
+            {
+                return (ReferenceNode)base.Node;
+            }
+        }
 
         #region overridden methods
         /// <summary>

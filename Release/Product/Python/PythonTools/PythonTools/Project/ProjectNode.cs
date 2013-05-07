@@ -38,14 +38,19 @@ using OleConstants = Microsoft.VisualStudio.OLE.Interop.Constants;
 using VsCommands = Microsoft.VisualStudio.VSConstants.VSStd97CmdID;
 using VsCommands2K = Microsoft.VisualStudio.VSConstants.VSStd2KCmdID;
 
-namespace Microsoft.PythonTools.Project
+namespace Microsoft.VisualStudioTools.Project
 {
     /// <summary>
     /// Manages the persistent state of the project (References, options, files, etc.) and deals with user interaction via a GUI in the form a hierarchy.
     /// </summary>
 
-    [ComVisible(true)]
-    public abstract partial class ProjectNode : HierarchyNode,
+    internal abstract partial class ProjectNode : HierarchyNode,
+        IVsUIHierarchy,
+        IVsPersistHierarchyItem2,
+        IVsHierarchyDeleteHandler,
+        IVsHierarchyDropDataTarget,
+        IVsHierarchyDropDataSource,
+        IVsHierarchyDropDataSource2,
         IVsGetCfgProvider,
         IVsProject3,
         IVsAggregatableProject,
@@ -56,11 +61,9 @@ namespace Microsoft.PythonTools.Project
         IVsDependencyProvider,
         IVsSccProject2,
         IBuildDependencyUpdate,
-        IProjectEventsListener,
-        IProjectEventsCallback,
-        IProjectEventsProvider,
         IVsProjectSpecialFiles,
-        IVsProjectBuildSystem 
+        IVsProjectBuildSystem,
+        IOleCommandTarget
     {
         #region nested types
 
@@ -157,22 +160,18 @@ namespace Microsoft.PythonTools.Project
             }
 
             public int OnInvalidateItems(uint itemidParent) {
-                projectNode.findChildCache.Clear();
                 return VSConstants.S_OK;
             }
 
             public int OnItemAdded(uint itemidParent, uint itemidSiblingPrev, uint itemidAdded) {
-                projectNode.findChildCache.Clear();
                 return VSConstants.S_OK;
             }
 
             public int OnItemDeleted(uint itemid) {
-                projectNode.findChildCache.Clear();
                 return VSConstants.S_OK;
             }
 
             public int OnItemsAppended(uint itemidParent) {
-                projectNode.findChildCache.Clear();
                 return VSConstants.S_OK;
             }
 
@@ -204,6 +203,7 @@ namespace Microsoft.PythonTools.Project
             new KeyValuePair<string, string>("SourceFiles",           "SourceFilesProjectOutputGroup"),
             new KeyValuePair<string, string>("XmlSerializer",         "SGenFilesOutputGroup"),
         };
+        private EventSinkCollection _hierarchyEventSinks = new EventSinkCollection();
 
         /// <summary>A project will only try to build if it can obtain a lock on this object</summary>
         private volatile static object BuildLock = new object();
@@ -312,8 +312,6 @@ namespace Microsoft.PythonTools.Project
         /// </summary>
         private string outputBaseRelativePath = "bin";
 
-        private IProjectEvents projectEventsProvider;
-
         /// <summary>
         /// Used for flavoring to hold the XML fragments
         /// </summary>
@@ -333,12 +331,25 @@ namespace Microsoft.PythonTools.Project
         private ProjectPackage package;
 
         /// <summary>
-        /// Lookup cache from item names to their hierarchy nodes, used by <see cref="FindChild"/> to speed up repeated lookups.
+        /// Mapping from item names to their hierarchy nodes for all disk-based nodes.
         /// </summary>
-        private readonly Dictionary<string, HierarchyNode> findChildCache = new Dictionary<string, HierarchyNode>(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, HierarchyNode> _diskNodes = new Dictionary<string, HierarchyNode>(StringComparer.OrdinalIgnoreCase);
 
         // Has the object been disposed.
         private bool isDisposed;
+
+        private IVsHierarchy parentHierarchy;
+        private int parentHierarchyItemId;
+
+        private List<HierarchyNode> itemsDraggedOrCutOrCopied;
+        private CopyPasteDragSource sourceDraggedOrCutOrCopied;
+        /// <summary>
+        /// Folder node in the process of being created.  First the hierarchy node
+        /// is added, then the label is edited, and when that completes/cancels
+        /// the folder gets created.
+        /// </summary>
+        private FolderNode _folderBeingCreated;
+
         #endregion
 
         #region abstract properties
@@ -364,6 +375,20 @@ namespace Microsoft.PythonTools.Project
         #endregion
 
         #region virtual properties
+
+        /// <summary>
+        /// Represents the command guid for the project system.  This enables
+        /// using CommonConstants.cmdid* commands.
+        /// 
+        /// By default these commands are disabled if this isn't overridden
+        /// with the packages command guid.
+        /// </summary>
+        public virtual Guid SharedCommandGuid {
+            get {
+                return CommonConstants.NoSharedCommandsGuid;
+            }
+        }
+
         /// <summary>
         /// This is the project instance guid that is peristed in the project file
         /// </summary>
@@ -400,6 +425,41 @@ namespace Microsoft.PythonTools.Project
 
         #region properties
 
+        /// <summary>
+        /// Gets the folder node which is currently being added to the project via
+        /// Solution Explorer.
+        /// </summary>
+        internal FolderNode FolderBeingCreated {
+            get {
+                return _folderBeingCreated;
+            }
+            set {
+                _folderBeingCreated = value;
+            }
+        }
+
+        enum CopyPasteDragSource {
+            None,
+            Dragged,
+            Cut,
+            Copied
+        }
+
+        private CopyPasteDragSource SourceDraggedOrCutOrCopied {
+            get {
+                return this.sourceDraggedOrCutOrCopied;
+            }
+            set {
+                this.sourceDraggedOrCutOrCopied = value;
+            }
+        }
+
+        internal IList<HierarchyNode> ItemsDraggedOrCutOrCopied {
+            get {
+                return this.itemsDraggedOrCutOrCopied;
+            }
+        }
+
         public MSBuildExecution.ProjectInstance CurrentConfig
         {
             get
@@ -409,6 +469,13 @@ namespace Microsoft.PythonTools.Project
         }
 
         #region overridden properties
+
+        internal override string FullPathToChildren {
+            get {
+                return ProjectHome;
+            }
+        }
+
         public override int MenuCommandId
         {
             get
@@ -602,7 +669,7 @@ namespace Microsoft.PythonTools.Project
 
         protected virtual Stream ProjectIconsImageStripStream {
             get {
-                return typeof(ProjectNode).Assembly.GetManifestResourceStream("Microsoft.PythonTools.Project.Resources.imagelis.bmp");
+                return typeof(ProjectNode).Assembly.GetManifestResourceStream("Microsoft.VisualStudioTools.Project.Resources.imagelis.bmp");
             }
         }
 
@@ -884,6 +951,13 @@ namespace Microsoft.PythonTools.Project
 
         #region overridden methods
 
+        protected internal override void DeleteFromStorage(string path) {
+            if (File.Exists(path)) {
+                File.Delete(path);
+            }
+            base.DeleteFromStorage(path);
+        }
+
         /// <summary>
         /// Sets the properties for the project node.
         /// </summary>
@@ -896,6 +970,14 @@ namespace Microsoft.PythonTools.Project
 
             switch (id)
             {
+                case __VSHPROPID.VSHPROPID_ParentHierarchy:
+                    parentHierarchy = (IVsHierarchy)value;
+                    break;
+
+                case __VSHPROPID.VSHPROPID_ParentHierarchyItemid:
+                    parentHierarchyItemId = (int)value;
+                    break;
+
                 case __VSHPROPID.VSHPROPID_ShowProjInSolutionPage:
                     this.ShowProjectInSolutionPage = (bool)value;
                     return VSConstants.S_OK;
@@ -962,59 +1044,6 @@ namespace Microsoft.PythonTools.Project
         }
 
         /// <summary>
-        /// Closes the project node.
-        /// </summary>
-        /// <returns>A success or failure value.</returns>
-        public override int Close()
-        {
-            int hr = VSConstants.S_OK;
-            try
-            {
-                // Walk the tree and close all nodes.
-                // This has to be done before the project closes, since we want still state available for the ProjectMgr on the nodes 
-                // when nodes are closing.
-                try
-                {
-                    CloseAllNodes(this);
-                }
-                finally
-                {
-                    this.Dispose(true);
-                }
-            }
-            catch (COMException e)
-            {
-                hr = e.ErrorCode;
-            }
-            finally
-            {
-                ErrorHandler.ThrowOnFailure(base.Close());
-            }
-
-            this.isClosed = true;
-
-            return hr;
-        }
-
-        /// <summary>
-        /// Sets the service provider from which to access the services. 
-        /// </summary>
-        /// <param name="site">An instance to an Microsoft.VisualStudio.OLE.Interop object</param>
-        /// <returns>A success or failure value.</returns>
-        public override int SetSite(Microsoft.VisualStudio.OLE.Interop.IServiceProvider site)
-        {
-            this.site = new ServiceProvider(site);
-
-            if (taskProvider != null)
-            {
-                taskProvider.Dispose();
-            }
-            taskProvider = new TaskProvider(this.site);
-
-            return VSConstants.S_OK;
-        }
-
-        /// <summary>
         /// Gets the properties of the project node. 
         /// </summary>
         /// <param name="propId">The __VSHPROPID of the property.</param>
@@ -1048,6 +1077,15 @@ namespace Microsoft.PythonTools.Project
                 // Use the same icon as if the folder was closed
                 case __VSHPROPID.VSHPROPID_OpenFolderIconIndex:
                     return GetProperty((int)__VSHPROPID.VSHPROPID_IconIndex);
+
+                case __VSHPROPID.VSHPROPID_ParentHierarchyItemid:
+                    if (parentHierarchy != null) {
+                        return (IntPtr)parentHierarchyItemId; // VS requires VT_I4 | VT_INT_PTR
+            }
+                    break;
+
+                case __VSHPROPID.VSHPROPID_ParentHierarchy:
+                    return parentHierarchy;
             }
 
             switch ((__VSHPROPID2)propId)
@@ -1139,7 +1177,7 @@ namespace Microsoft.PythonTools.Project
             // Remove the entire project from the solution
             IVsSolution solution = this.Site.GetService(typeof(SVsSolution)) as IVsSolution;
             uint iOption = 1; // SLNSAVEOPT_PromptSave
-            ErrorHandler.ThrowOnFailure(solution.CloseSolutionElement(iOption, this, 0));
+            ErrorHandler.ThrowOnFailure(solution.CloseSolutionElement(iOption, this.GetOuterInterface<IVsHierarchy>(), 0));
         }
 
         /// <summary>
@@ -1180,11 +1218,6 @@ namespace Microsoft.PythonTools.Project
                     {
                         try
                         {
-                            if (this.projectEventsProvider != null)
-                            {
-                                this.projectEventsProvider.AfterProjectFileOpened -= this.OnAfterProjectOpen;
-                            }
-
                             if (this.site != null)
                             {
                                 this.site.Dispose();
@@ -1225,7 +1258,7 @@ namespace Microsoft.PythonTools.Project
         /// <param name="pCmdText">Pointer to an OLECMDTEXT structure in which to return the name and/or status information of a single command. Can be NULL to indicate that the caller does not require this information.</param>
         /// <param name="result">An out parameter specifying the QueryStatusResult of the command.</param>
         /// <returns>If the method succeeds, it returns S_OK. If it fails, it returns an error code.</returns>
-        protected override int QueryStatusOnNode(Guid cmdGroup, uint cmd, IntPtr pCmdText, ref QueryStatusResult result)
+        internal override int QueryStatusOnNode(Guid cmdGroup, uint cmd, IntPtr pCmdText, ref QueryStatusResult result)
         {
             if (cmdGroup == VsMenus.guidStandardCommandSet97)
             {
@@ -1241,20 +1274,12 @@ namespace Microsoft.PythonTools.Project
                         result |= QueryStatusResult.SUPPORTED | QueryStatusResult.ENABLED;
                         return VSConstants.S_OK;
 
-                    case VsCommands.ViewForm:
-                        if (this.HasDesigner)
-                        {
-                            result |= QueryStatusResult.SUPPORTED | QueryStatusResult.ENABLED;
-                            return VSConstants.S_OK;
-                        }
-                        break;
-
                     case VsCommands.CancelBuild:
                         result |= QueryStatusResult.SUPPORTED;
                         if (this.buildInProcess)
                             result |= QueryStatusResult.ENABLED;
                         else
-                            result |= QueryStatusResult.INVISIBLE;
+                        result |= QueryStatusResult.INVISIBLE;
                         return VSConstants.S_OK;
 
                     case VsCommands.NewFolder:
@@ -1272,7 +1297,11 @@ namespace Microsoft.PythonTools.Project
                 switch ((VsCommands2K)cmd)
                 {
                     case VsCommands2K.ADDREFERENCE:
+                        if (GetReferenceContainer() != null) {
                         result |= QueryStatusResult.SUPPORTED | QueryStatusResult.ENABLED;
+                        } else {
+                            result |= QueryStatusResult.SUPPORTED | QueryStatusResult.INVISIBLE;
+                        }
                         return VSConstants.S_OK;
 
                     case VsCommands2K.EXCLUDEFROMPROJECT:
@@ -1298,7 +1327,7 @@ namespace Microsoft.PythonTools.Project
         /// <param name="pvaIn">Pointer to a VARIANTARG structure containing input arguments. Can be NULL</param>
         /// <param name="pvaOut">VARIANTARG structure to receive command output. Can be NULL.</param>
         /// <returns>If the method succeeds, it returns S_OK. If it fails, it returns an error code.</returns>
-        protected override int ExecCommandOnNode(Guid cmdGroup, uint cmd, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut)
+        internal override int ExecCommandOnNode(Guid cmdGroup, uint cmd, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut)
         {
             if (cmdGroup == VsMenus.guidStandardCommandSet97)
             {
@@ -1321,7 +1350,7 @@ namespace Microsoft.PythonTools.Project
         /// </summary>
         /// <param name="deleteOperation">A flag that specifies the type of delete operation (delete from storage or remove from project)</param>
         /// <returns>true if item can be deleted from project</returns>
-        protected override bool CanDeleteItem(__VSDELETEITEMOPERATION deleteOperation)
+        internal override bool CanDeleteItem(__VSDELETEITEMOPERATION deleteOperation)
         {
             if (deleteOperation == __VSDELETEITEMOPERATION.DELITEMOP_RemoveFromProject)
             {
@@ -1341,27 +1370,6 @@ namespace Microsoft.PythonTools.Project
                 return new ProjectDesignerDocumentManager(this);
             }
             return null;
-        }
-
-        internal override HierarchyNode FindChild(string name, bool recurse) {
-            HierarchyNode node;
-            if (recurse) {
-                if (findChildCache.TryGetValue(name, out node)) {
-                    return node;
-                }
-            }
-
-            node = base.FindChild(name, recurse);
-            if (recurse) {
-                // Set some large but definite limit on cache size, so that we don't OOM if we keep looking for things and not finding them.
-                if (findChildCache.Count > 8192) {
-                    findChildCache.Clear();
-                }
-                if (node != null) {
-                    findChildCache[name] = node;
-                }
-            }
-            return node;
         }
 
         #endregion
@@ -1554,7 +1562,7 @@ namespace Microsoft.PythonTools.Project
                         (IVsComponentUser)this,
                         0,
                         null,
-                DynamicProjectSR.GetString(Microsoft.PythonTools.Project.SR.AddReferenceDialogTitle),   // Title
+                DynamicProjectSR.GetString(Microsoft.VisualStudioTools.Project.SR.AddReferenceDialogTitle),   // Title
                         "VS.AddReference",						  // Help topic
                         ref pX,
                         ref pY,
@@ -1826,8 +1834,8 @@ namespace Microsoft.PythonTools.Project
                 // See if the parent node already exist in the hierarchy
                 uint parentItemID;
                 string path = CommonUtils.GetAbsoluteFilePath(this.ProjectHome, dependentOf);
-                ErrorHandler.ThrowOnFailure(this.ParseCanonicalName(path, out parentItemID));
-                if (parentItemID != 0)
+                if (ErrorHandler.Succeeded(this.ParseCanonicalName(path, out parentItemID)) &&
+                    parentItemID != 0)
                     parent = this.NodeFromItemId(parentItemID);
                 Debug.Assert(parent != null, "File dependent upon a non existing item or circular dependency. Ignoring the DependentUpon metadata");
             }
@@ -2137,8 +2145,8 @@ namespace Microsoft.PythonTools.Project
             // If the folder already exists, return early
             string strFullPath = CommonUtils.GetAbsoluteDirectoryPath(ProjectHome, path);
             uint uiItemId;
-            ErrorHandler.ThrowOnFailure(this.ParseCanonicalName(strFullPath, out uiItemId));
-            if (uiItemId != 0)
+            if (ErrorHandler.Succeeded(ParseCanonicalName(strFullPath, out uiItemId)) && 
+                uiItemId != 0)
             {
                 var folder = this.NodeFromItemId(uiItemId) as FolderNode;
                 if (folder != null)
@@ -2220,8 +2228,8 @@ namespace Microsoft.PythonTools.Project
             FolderNode folderNode = null;
             uint uiItemId;
             string strFullPath = CommonUtils.GetAbsoluteDirectoryPath(ProjectHome, path);
-            ErrorHandler.ThrowOnFailure(this.ParseCanonicalName(strFullPath, out uiItemId));
-            if (uiItemId != 0)
+            if (ErrorHandler.Succeeded(this.ParseCanonicalName(strFullPath, out uiItemId)) &&
+                uiItemId != 0)
             {
                 Debug.Assert(this.NodeFromItemId(uiItemId) is FolderNode, "Not a FolderNode");
                 folderNode = (FolderNode)this.NodeFromItemId(uiItemId);
@@ -2242,9 +2250,11 @@ namespace Microsoft.PythonTools.Project
                     }
                 }
                 // If MSBuild did not know about it, create a new one
-                if (item == null)
+                if (item == null) {
                     item = this.AddFolderToMsBuild(strFullPath);
-                folderNode = this.CreateFolderNode(strFullPath, item);
+                }
+                Directory.CreateDirectory(strFullPath);
+                folderNode = this.CreateFolderNode(item);
                 parent.AddChild(folderNode);
             }
 
@@ -2257,10 +2267,9 @@ namespace Microsoft.PythonTools.Project
         /// <param name="path">Path to store for this folder</param>
         /// <param name="element">Element corresponding to the folder</param>
         /// <returns>A FolderNode that can then be added to the hierarchy</returns>
-        protected internal virtual FolderNode CreateFolderNode(string path, ProjectElement element)
+        protected internal virtual FolderNode CreateFolderNode(ProjectElement element)
         {
-            FolderNode folderNode = new FolderNode(this, path, element);
-            return folderNode;
+            return new FolderNode(this, element);
         }
 
         /// <summary>
@@ -2446,7 +2455,7 @@ namespace Microsoft.PythonTools.Project
 
             int canContinue = 0;
             IVsSolution vsSolution = (IVsSolution)this.GetService(typeof(SVsSolution));
-            if (ErrorHandler.Succeeded(vsSolution.QueryRenameProject(this, oldFile, newFile, 0, out canContinue))
+            if (ErrorHandler.Succeeded(vsSolution.QueryRenameProject(this.GetOuterInterface<IVsProject>(), oldFile, newFile, 0, out canContinue))
                 && canContinue != 0)
             {
                 bool isFileSame = CommonUtils.IsSamePath(oldFile, newFile);
@@ -2784,7 +2793,7 @@ namespace Microsoft.PythonTools.Project
             Utilities.CheckNotNull(solution);
 
             int canRenameContinue = 0;
-            ErrorHandler.ThrowOnFailure(solution.QueryRenameProject(this, this.filename, newFileName, 0, out canRenameContinue));
+            ErrorHandler.ThrowOnFailure(solution.QueryRenameProject(this.GetOuterInterface<IVsProject>(), this.filename, newFileName, 0, out canRenameContinue));
 
             if (canRenameContinue == 0)
             {
@@ -3182,6 +3191,12 @@ namespace Microsoft.PythonTools.Project
             // Process Files
             foreach (MSBuild.ProjectItem item in this.buildProject.Items.ToArray()) // copy the array, we could add folders while enumerating
             {
+                // Ignore items imported from .targets files. In particular, this will ignore the <Content>
+                // items that are generated from any <Compile> items in Microsoft.*Tools.targets.
+                if (item.IsImported) {
+                    continue;
+                }
+
                 // Ignore the item if it is a reference or folder
                 if (this.FilterItemTypeToBeAddedToHierarchy(item.ItemType))
                     continue;
@@ -3334,6 +3349,10 @@ namespace Microsoft.PythonTools.Project
 
         #region non-virtual methods
 
+        internal void InstantiateItemsDraggedOrCutOrCopiedList() {
+            itemsDraggedOrCutOrCopied = new List<HierarchyNode>();
+        }
+
         /// <summary>
         /// Overloaded method. Invokes MSBuild using the default configuration and does without logging on the output window pane.
         /// </summary>
@@ -3470,7 +3489,7 @@ namespace Microsoft.PythonTools.Project
         protected internal FolderNode CreateFolderNode(string path)
         {
             ProjectElement item = this.AddFolderToMsBuild(path);
-            FolderNode folderNode = CreateFolderNode(path, item);
+            FolderNode folderNode = CreateFolderNode(item);
             return folderNode;
         }
 
@@ -3951,8 +3970,26 @@ namespace Microsoft.PythonTools.Project
             return VSConstants.S_OK;
         }
 
+        /// <summary>
+        /// Get the outer IVsHierarchy implementation.
+        /// This is used for scenario where a flavor may be modifying the behavior
+        /// </summary>
+        internal IVsHierarchy GetOuterHierarchy() {
+            IVsHierarchy hierarchy = null;
+            // The hierarchy of a node is its project node hierarchy
+            IntPtr projectUnknown = Marshal.GetIUnknownForObject(this);
+            try {
+                hierarchy = (IVsHierarchy)Marshal.GetTypedObjectForIUnknown(projectUnknown, typeof(IVsHierarchy));
+            } finally {
+                if (projectUnknown != IntPtr.Zero) {
+                    Marshal.Release(projectUnknown);
+                }
+            }
+            return hierarchy;
+        }
+
         internal T GetOuterInterface<T>() where T : class {
-            return HierarchyNode.GetOuterHierarchy(this) as T;
+            return GetOuterHierarchy() as T;
         }
 
         protected int IsFlavorDirty()
@@ -4245,7 +4282,7 @@ namespace Microsoft.PythonTools.Project
                 string file = files[index];
                 result[0] = VSADDRESULT.ADDRESULT_Failure;
 
-                child = this.FindChild(newFileName);
+                child = this.FindNodeByFullPath(newFileName);
                 if (child != null)
                 {
                     // If the file to be added is an existing file part of the hierarchy then continue.
@@ -4323,7 +4360,7 @@ namespace Microsoft.PythonTools.Project
                 {
                     if (isLink)
                     {
-                        child = this.FindChild(file);
+                        child = this.FindNodeByFullPath(file);
                         if (child != null)
                         {
                             string message = String.Format("There is already a link to '{0}'. A project cannot have more than one link to the same file.", file);
@@ -4339,16 +4376,24 @@ namespace Microsoft.PythonTools.Project
                         }
                     }
 
+                    if (newFileName.Length >= NativeMethods.MAX_PATH) {
+                        OLEMSGICON icon = OLEMSGICON.OLEMSGICON_CRITICAL;
+                        OLEMSGBUTTON buttons = OLEMSGBUTTON.OLEMSGBUTTON_OK;
+                        OLEMSGDEFBUTTON defaultButton = OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST;
+
+                        VsShellUtilities.ShowMessageBox(Site, FolderNode.PathTooLongMessage, null, icon, buttons, defaultButton);
+
+                        result[0] = VSADDRESULT.ADDRESULT_Cancel;
+                        return (int)OleConstants.OLECMDERR_E_CANCELED;
+                    }
+
                     // we need to figure out where this file would be added and make sure there's
                     // not an existing link node at the same location
                     string filename = Path.GetFileName(newFileName);
-                    var folder = this.FindChild(Path.GetDirectoryName(newFileName));
+                    var folder = this.FindNodeByFullPath(Path.GetDirectoryName(newFileName));
                     if (folder != null)
                     {
-                        for (var folderChild = folder.FirstChild; folderChild != null; folderChild = folderChild.NextSibling)
-                        {
-                            if (Path.GetFileName(folderChild.Url) == filename)
-                            {
+                        if (folder.FindImmediateChildByName(filename) != null) {
                                 string message = "There is already a file of the same name in this folder.";
                                 string title = string.Empty;
                                 OLEMSGICON icon = OLEMSGICON.OLEMSGICON_QUERY;
@@ -4362,14 +4407,13 @@ namespace Microsoft.PythonTools.Project
                             }
                         }
                     }
-                }
 
                 // If the file to be added is not in the same path copy it.
-                if (!CommonUtils.IsSamePath(file, newFileName))
+                if (!CommonUtils.IsSamePath(file, newFileName) || Directory.Exists(newFileName))
                 {
                     if (!overwrite && File.Exists(newFileName))
                     {
-                        var existingChild = this.FindChild(file);
+                        var existingChild = this.FindNodeByFullPath(file);
                         if (existingChild == null || !existingChild.IsLinkFile)
                         {
                             string message = String.Format(CultureInfo.CurrentCulture, SR.GetString(SR.FileAlreadyExists, CultureInfo.CurrentUICulture), newFileName);
@@ -4392,7 +4436,7 @@ namespace Microsoft.PythonTools.Project
                         }
                     }
 
-                    var updatingNode = this.FindChild(file);
+                    var updatingNode = this.FindNodeByFullPath(file);
                     if (updatingNode != null && updatingNode.IsLinkFile)
                     {
                         // we just need to update the link to the new path.
@@ -4401,7 +4445,12 @@ namespace Microsoft.PythonTools.Project
                     else if (Directory.Exists(file))
                     {
                         // http://pytools.codeplex.com/workitem/546
-                        return AddDirectory(result, n, file, promptOverwrite);
+                        int hr = AddDirectory(result, n, file, promptOverwrite);
+                        if (ErrorHandler.Failed(hr)) {
+                            return hr;
+                        }
+                        result[0] = VSADDRESULT.ADDRESULT_Success;
+                        continue;
                     }
                     else if (!isLink)
                     {
@@ -4481,7 +4530,7 @@ namespace Microsoft.PythonTools.Project
 
             // Notify listeners that items were appended.
             if (actualFilesAddedIndex > 0)
-                n.OnItemsAppended(n);
+                OnItemsAppended(n);
 
             //Open files if this was requested through the editorFlags
             bool openFiles = (editorFlags & (uint)__VSSPECIFICEDITORFLAGS.VSSPECIFICEDITOR_DoOpen) != 0;
@@ -4492,7 +4541,7 @@ namespace Microsoft.PythonTools.Project
                     if (!String.IsNullOrEmpty(actualFiles[i]))
                     {
                         string name = actualFiles[i];
-                        HierarchyNode child = this.FindChild(name);
+                        HierarchyNode child = this.FindNodeByFullPath(name);
                         Debug.Assert(child != null, "We should have been able to find the new element in the hierarchy");
                         if (child != null)
                         {
@@ -4524,7 +4573,7 @@ namespace Microsoft.PythonTools.Project
         /// Adds a folder into the project recursing and adding any sub-files and sub-directories.
         /// 
         /// The user can be prompted to overwrite the existing files if the folder already exists
-        /// in the project.  They will be initially prompted to overwrite - if they answer no t
+        /// in the project.  They will be initially prompted to overwrite - if they answer no
         /// we'll set promptOverwrite to false and when we recurse we won't prompt.  If they say
         /// yes then we'll set it to true and we will prompt for individual files.  
         /// </summary>
@@ -4532,10 +4581,11 @@ namespace Microsoft.PythonTools.Project
         {
             // need to recursively add all of the directory contents
 
-            HierarchyNode targetFolder = n.FindChild(Path.GetFileName(file), false);
+            HierarchyNode targetFolder = n.FindImmediateChildByName(Path.GetFileName(file));
             if (targetFolder == null)
             {
                 var fullPath = Path.Combine(GetBaseDirectoryForAddingFiles(n), Path.GetFileName(file));
+                Directory.CreateDirectory(fullPath);
                 var newChild = CreateFolderNode(fullPath);
                 n.AddChild(newChild);
                 targetFolder = newChild;
@@ -4569,10 +4619,11 @@ If the files in the existing folder have the same names as files in the folder y
                 }
             }
 
-            // add the files...
-            var dirFiles = Directory.GetFiles(file);
             Guid empty = Guid.Empty;
 
+            // add the files...
+            var dirFiles = Directory.GetFiles(file);
+            if (dirFiles.Length > 0) {
             var subRes = AddItemWithSpecificInternal(
                 targetFolder.ID,
                 VSADDITEMOPERATION.VSADDITEMOP_CLONEFILE,
@@ -4588,15 +4639,15 @@ If the files in the existing folder have the same names as files in the folder y
                 promptOverwrite: promptOverwrite
             );
 
-            if (ErrorHandler.Failed(subRes))
-            {
+                if (ErrorHandler.Failed(subRes)) {
                 return subRes;
+            }
             }
 
             // add any subdirectories...
 
             var subDirs = Directory.GetDirectories(file);
-
+            if (subDirs.Length > 0) {
             return AddItemWithSpecificInternal(
                 targetFolder.ID,
                 VSADDITEMOPERATION.VSADDITEMOP_CLONEFILE,
@@ -4611,6 +4662,8 @@ If the files in the existing folder have the same names as files in the folder y
                 result,
                 promptOverwrite: promptOverwrite
             );
+        }
+            return VSConstants.S_OK;
         }
 
         protected virtual void LinkFileAdded(string filename)
@@ -4738,7 +4791,7 @@ If the files in the existing folder have the same names as files in the folder y
             }
             else
             {
-                HierarchyNode child = this.FindChild(mkDoc);
+                HierarchyNode child = this.FindNodeByFullPath(EnsureRootedPath(mkDoc));
                 if (child != null)
                 {
                     found = 1;
@@ -5114,7 +5167,7 @@ If the files in the existing folder have the same names as files in the folder y
             // if all the paramaters are null adn the count is 0, it means scc wants us to updated everything
             if (affectedNodes == 0 && itemidAffectedNodes == null && newGlyphs == null && newSccStatus == null)
             {
-                this.ReDraw(UIHierarchyElement.SccState);
+                ReDrawNode(this, UIHierarchyElement.SccState);
                 this.UpdateSccStateIcons();
             }
             else if (affectedNodes > 0 && itemidAffectedNodes != null && newGlyphs != null && newSccStatus != null)
@@ -5127,7 +5180,7 @@ If the files in the existing folder have the same names as files in the folder y
                         throw new ArgumentException(SR.GetString(SR.InvalidParameter, CultureInfo.CurrentUICulture), "itemidAffectedNodes");
                     }
 
-                    n.ReDraw(UIHierarchyElement.SccState);
+                    ReDrawNode(n, UIHierarchyElement.SccState);
                 }
             }
             return VSConstants.S_OK;
@@ -5210,7 +5263,7 @@ If the files in the existing folder have the same names as files in the folder y
         /// <returns></returns>
         public IReferenceContainer GetReferenceContainer()
         {
-            return this.FindChild(ReferenceContainerNode.ReferencesNodeVirtualName) as IReferenceContainer;
+            return FindImmediateChild(node => node is IReferenceContainer) as IReferenceContainer;
         }
 
         #endregion
@@ -5259,33 +5312,6 @@ If the files in the existing folder have the same names as files in the folder y
             get { return this.isProjectEventsListener; }
             set { this.isProjectEventsListener = value; }
         }
-        #endregion
-
-        #region IProjectEventsProvider Members
-
-        /// <summary>
-        /// Defines the provider for the project events
-        /// </summary>
-        IProjectEvents IProjectEventsProvider.ProjectEventsProvider
-        {
-            get
-            {
-                return this.projectEventsProvider;
-            }
-            set
-            {
-                if (null != this.projectEventsProvider)
-                {
-                    this.projectEventsProvider.AfterProjectFileOpened -= this.OnAfterProjectOpen;
-                }
-                this.projectEventsProvider = value;
-                if (null != this.projectEventsProvider)
-                {
-                    this.projectEventsProvider.AfterProjectFileOpened += this.OnAfterProjectOpen;
-                }
-            }
-        }
-
         #endregion
 
         #region IVsAggregatableProject Members
@@ -5385,7 +5411,7 @@ If the files in the existing folder have the same names as files in the folder y
                 throw new ArgumentException("Invalid item id", "item");
 
             if (node.ItemNode != null) {
-                attributeValue = node.ItemNode.GetMetadata(attributeName);
+            attributeValue = node.ItemNode.GetMetadata(attributeName);
             } else if(node == node.ProjectMgr) {
                 attributeName = node.ProjectMgr.GetProjectProperty(attributeName);
             }
@@ -6027,5 +6053,564 @@ If the files in the existing folder have the same names as files in the folder y
         }
 
         #endregion
+
+        /// <summary>
+        /// Finds a node by it's full path on disk.
+        /// </summary>
+        internal HierarchyNode FindNodeByFullPath(string name) {
+            Debug.Assert(Path.IsPathRooted(name));
+            HierarchyNode res;
+            _diskNodes.TryGetValue(name, out res);
+            return res;
+        }
+
+        #region IVsUIHierarchy methods
+
+        public virtual int ExecCommand(uint itemId, ref Guid guidCmdGroup, uint nCmdId, uint nCmdExecOpt, IntPtr pvain, IntPtr p) {
+            return this.InternalExecCommand(guidCmdGroup, nCmdId, nCmdExecOpt, pvain, p, CommandOrigin.UiHierarchy);
+        }
+
+        public virtual int QueryStatusCommand(uint itemId, ref Guid guidCmdGroup, uint cCmds, OLECMD[] cmds, IntPtr pCmdText) {
+            return this.QueryStatusSelection(guidCmdGroup, cCmds, cmds, pCmdText, CommandOrigin.UiHierarchy);
+        }
+
+        int IVsUIHierarchy.Close() {
+            return ((IVsHierarchy)this).Close();
+        }
+
+        #endregion
+
+        #region IVsHierarchy methods
+
+        public virtual int AdviseHierarchyEvents(IVsHierarchyEvents sink, out uint cookie) {
+            cookie = this._hierarchyEventSinks.Add(sink) + 1;
+            return VSConstants.S_OK;
+        }
+
+        /// <summary>
+        /// Closes the project node.
+        /// </summary>
+        /// <returns>A success or failure value.</returns>
+        int IVsHierarchy.Close() {
+            int hr = VSConstants.S_OK;
+            try {
+                // Walk the tree and close all nodes.
+                // This has to be done before the project closes, since we want still state available for the ProjectMgr on the nodes 
+                // when nodes are closing.
+                try {
+                    CloseAllNodes(this);
+                } finally {
+                    this.Dispose(true);
+                }
+            } catch (COMException e) {
+                hr = e.ErrorCode;
+            } finally {
+                base.Close();
+            }
+
+            this.isClosed = true;
+
+            return hr;
+        }
+
+        /// <summary>
+        /// Sets the service provider from which to access the services. 
+        /// </summary>
+        /// <param name="site">An instance to an Microsoft.VisualStudio.OLE.Interop object</param>
+        /// <returns>A success or failure value.</returns>
+        public virtual int SetSite(Microsoft.VisualStudio.OLE.Interop.IServiceProvider site) {
+            this.site = new ServiceProvider(site);
+
+            if (taskProvider != null) {
+                taskProvider.Dispose();
+            }
+            taskProvider = new TaskProvider(this.site);
+
+            return VSConstants.S_OK;
+        }
+
+        public virtual int GetCanonicalName(uint itemId, out string name) {
+            HierarchyNode n = NodeFromItemId(itemId);
+            name = (n != null) ? n.GetCanonicalName() : null;
+            return VSConstants.S_OK;
+        }
+
+        public virtual int GetGuidProperty(uint itemId, int propid, out Guid guid) {
+            guid = Guid.Empty;
+            HierarchyNode n = NodeFromItemId(itemId);
+            if (n != null) {
+                int hr = n.GetGuidProperty(propid, out guid);
+                __VSHPROPID vspropId = (__VSHPROPID)propid;
+                return hr;
+            }
+            if (guid == Guid.Empty) {
+                return VSConstants.DISP_E_MEMBERNOTFOUND;
+            }
+            return VSConstants.S_OK;
+        }
+
+
+        public virtual int GetProperty(uint itemId, int propId, out object propVal) {
+            propVal = null;
+            if (itemId != VSConstants.VSITEMID_ROOT && propId == (int)__VSHPROPID.VSHPROPID_IconImgList) {
+                return VSConstants.DISP_E_MEMBERNOTFOUND;
+            }
+
+            HierarchyNode n = NodeFromItemId(itemId);
+            if (n != null) {
+                propVal = n.GetProperty(propId);
+            }
+            if (propVal == null) {
+                return VSConstants.DISP_E_MEMBERNOTFOUND;
+            }
+            return VSConstants.S_OK;
+        }
+
+        public virtual int GetNestedHierarchy(uint itemId, ref Guid iidHierarchyNested, out IntPtr ppHierarchyNested, out uint pItemId) {
+            ppHierarchyNested = IntPtr.Zero;
+            pItemId = 0;
+            // If itemid is not a nested hierarchy we must return E_FAIL.
+            return VSConstants.E_FAIL;
+        }
+
+        public virtual int GetSite(out Microsoft.VisualStudio.OLE.Interop.IServiceProvider site) {
+            site = Site.GetService(typeof(Microsoft.VisualStudio.OLE.Interop.IServiceProvider)) as Microsoft.VisualStudio.OLE.Interop.IServiceProvider;
+            return VSConstants.S_OK;
+        }
+
+        /// <summary>
+        /// the canonicalName of an item is it's URL, or better phrased,
+        /// the persistence data we put into @RelPath, which is a relative URL
+        /// to the root project
+        /// returning the itemID from this means scanning the list
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="itemId"></param>
+        public virtual int ParseCanonicalName(string name, out uint itemId) {
+            // we always start at the current node and go it's children down, so 
+            //  if you want to scan the whole tree, better call 
+            // the root
+            name = EnsureRootedPath(name);
+            itemId = 0;
+            var child = FindNodeByFullPath(name);
+            if (child != null) {
+                itemId = child.HierarchyId;
+                return VSConstants.S_OK;
+            }
+
+            return VSConstants.E_FAIL;
+        }
+
+        private string EnsureRootedPath(string name) {
+            if (!Path.IsPathRooted(name)) {
+                name = CommonUtils.GetAbsoluteDirectoryPath(
+                    ProjectHome,
+                    name
+                );
+            }
+            return name;
+        }
+
+        public virtual int QueryClose(out int fCanClose) {
+            fCanClose = 1;
+            return VSConstants.S_OK;
+        }
+
+        public virtual int SetGuidProperty(uint itemId, int propid, ref Guid guid) {
+            HierarchyNode n = NodeFromItemId(itemId);
+            int rc = VSConstants.E_INVALIDARG;
+            if (n != null) {
+                rc = n.SetGuidProperty(propid, ref guid);
+            }
+            return rc;
+        }
+
+        public virtual int SetProperty(uint itemId, int propid, object value) {
+            HierarchyNode n = NodeFromItemId(itemId);
+            if (n != null) {
+                return n.SetProperty(propid, value);
+            } else {
+                return VSConstants.DISP_E_MEMBERNOTFOUND;
+            }
+        }
+        
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2233:OperationsShouldNotOverflow", MessageId = "cookie-1")]
+        public virtual int UnadviseHierarchyEvents(uint cookie) {
+            this._hierarchyEventSinks.RemoveAt(cookie - 1);
+            return VSConstants.S_OK;
+        }
+
+        public int Unused0() {
+            return VSConstants.E_NOTIMPL;
+        }
+
+        public int Unused1() {
+            return VSConstants.E_NOTIMPL;
+        }
+
+        public int Unused2() {
+            return VSConstants.E_NOTIMPL;
+        }
+
+        public int Unused3() {
+            return VSConstants.E_NOTIMPL;
+        }
+
+        public int Unused4() {
+            return VSConstants.E_NOTIMPL;
+        }
+
+        #endregion
+
+        #region Hierarchy change notification
+
+        internal void OnItemAdded(HierarchyNode parent, HierarchyNode child) {
+            Utilities.ArgumentNotNull("parent", parent);
+            Utilities.ArgumentNotNull("child", child);
+
+            IDiskBasedNode diskNode = child as IDiskBasedNode;
+            if (diskNode != null) {
+                _diskNodes[diskNode.Url] = child;
+            }
+
+            if ((EventTriggeringFlag & ProjectNode.EventTriggering.DoNotTriggerHierarchyEvents) != 0) {
+                return;
+            }
+
+            HierarchyNode prev = child.PreviousSibling;
+            uint prevId = (prev != null) ? prev.HierarchyId : VSConstants.VSITEMID_NIL;
+            foreach (IVsHierarchyEvents sink in _hierarchyEventSinks) {
+                int result = sink.OnItemAdded(parent.HierarchyId, prevId, child.HierarchyId);
+                if (ErrorHandler.Failed(result) && result != VSConstants.E_NOTIMPL) {
+                    ErrorHandler.ThrowOnFailure(result);
+                }
+            }
+        }
+
+        internal void OnItemDeleted(HierarchyNode deletedItem) {
+            IDiskBasedNode diskNode = deletedItem as IDiskBasedNode;
+            if (diskNode != null) {
+                _diskNodes.Remove(diskNode.Url);
+            }
+
+            if ((EventTriggeringFlag & ProjectNode.EventTriggering.DoNotTriggerHierarchyEvents) != 0) {
+                return;
+            }
+
+            if (_hierarchyEventSinks.Count > 0) {
+                // Note that in some cases (deletion of project node for example), an Advise
+                // may be removed while we are iterating over it. To get around this problem we
+                // take a snapshot of the advise list and walk that.
+                List<IVsHierarchyEvents> clonedSink = new List<IVsHierarchyEvents>();
+
+                foreach (IVsHierarchyEvents anEvent in _hierarchyEventSinks) {
+                    clonedSink.Add(anEvent);
+                }
+
+                foreach (IVsHierarchyEvents clonedEvent in clonedSink) {
+                    int result = clonedEvent.OnItemDeleted(deletedItem.HierarchyId);
+                    if (ErrorHandler.Failed(result) && result != VSConstants.E_NOTIMPL) {
+                        ErrorHandler.ThrowOnFailure(result);
+                    }
+                }
+            }
+        }
+
+        internal void OnItemsAppended(HierarchyNode parent) {
+            Utilities.ArgumentNotNull("parent", parent);
+
+            if ((EventTriggeringFlag & ProjectNode.EventTriggering.DoNotTriggerHierarchyEvents) != 0) {
+                return;
+            }
+
+            foreach (IVsHierarchyEvents sink in _hierarchyEventSinks) {
+                int result = sink.OnItemsAppended(parent.HierarchyId);
+
+                if (ErrorHandler.Failed(result) && result != VSConstants.E_NOTIMPL) {
+                    ErrorHandler.ThrowOnFailure(result);
+                }
+            }
+        }
+
+        [SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "propid")]
+        internal void OnPropertyChanged(HierarchyNode node, int propid, uint flags) {
+            Utilities.ArgumentNotNull("node", node);
+
+            if ((EventTriggeringFlag & ProjectNode.EventTriggering.DoNotTriggerHierarchyEvents) != 0) {
+                return;
+            }
+
+            foreach (IVsHierarchyEvents sink in _hierarchyEventSinks) {
+                int result = sink.OnPropertyChanged(node.HierarchyId, propid, flags);
+
+                if (ErrorHandler.Failed(result) && result != VSConstants.E_NOTIMPL) {
+                    ErrorHandler.ThrowOnFailure(result);
+                }
+            }
+        }
+
+        internal void OnInvalidateItems(HierarchyNode parent) {
+            Utilities.ArgumentNotNull("parent", parent);
+
+            if ((EventTriggeringFlag & ProjectNode.EventTriggering.DoNotTriggerHierarchyEvents) != 0) {
+                return;
+            }
+
+            foreach (IVsHierarchyEvents sink in _hierarchyEventSinks) {
+                int result = sink.OnInvalidateItems(parent.HierarchyId);
+
+                if (ErrorHandler.Failed(result) && result != VSConstants.E_NOTIMPL) {
+                    ErrorHandler.ThrowOnFailure(result);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Causes the hierarchy to be redrawn.
+        /// </summary>
+        /// <param name="element">Used by the hierarchy to decide which element to redraw</param>
+        [SuppressMessage("Microsoft.Naming", "CA1709:IdentifiersShouldBeCasedCorrectly", MessageId = "Re")]
+        [SuppressMessage("Microsoft.Naming", "CA1702:CompoundWordsShouldBeCasedCorrectly", MessageId = "ReDraw")]
+        internal void ReDrawNode(HierarchyNode node, UIHierarchyElement element) {
+            foreach (IVsHierarchyEvents sink in _hierarchyEventSinks) {
+                int result;
+                if ((element & UIHierarchyElement.Icon) != 0) {
+                    result = sink.OnPropertyChanged(this.ID, (int)__VSHPROPID.VSHPROPID_IconIndex, 0);
+                    Debug.Assert(ErrorHandler.Succeeded(result), "Redraw failed for node " + this.GetMkDocument());
+                }
+
+                if ((element & UIHierarchyElement.Caption) != 0) {
+                    result = sink.OnPropertyChanged(this.ID, (int)__VSHPROPID.VSHPROPID_Caption, 0);
+                    Debug.Assert(ErrorHandler.Succeeded(result), "Redraw failed for node " + this.GetMkDocument());
+                }
+
+                if ((element & UIHierarchyElement.SccState) != 0) {
+                    result = sink.OnPropertyChanged(this.ID, (int)__VSHPROPID.VSHPROPID_StateIconIndex, 0);
+                    Debug.Assert(ErrorHandler.Succeeded(result), "Redraw failed for node " + this.GetMkDocument());
+                }
+            }
+        }
+
+        #endregion
+
+        #region IVsHierarchyDeleteHandler methods
+
+        public virtual int DeleteItem(uint delItemOp, uint itemId) {
+            if (itemId == VSConstants.VSITEMID_SELECTION) {
+                return VSConstants.E_INVALIDARG;
+            }
+
+            HierarchyNode node = NodeFromItemId(itemId);
+            if (node != null) {
+                node.Remove((delItemOp & (uint)__VSDELETEITEMOPERATION.DELITEMOP_DeleteFromStorage) != 0);
+                return VSConstants.S_OK;
+            }
+
+            return VSConstants.E_FAIL;
+        }
+
+        public virtual int QueryDeleteItem(uint delItemOp, uint itemId, out int candelete) {
+            candelete = 0;
+            if (itemId == VSConstants.VSITEMID_SELECTION) {
+                return VSConstants.E_INVALIDARG;
+            }
+
+            // We ask the project what state it is. If he is a state that should not allow delete then we return.
+            if (IsCurrentStateASuppressCommandsMode()) {
+                return VSConstants.S_OK;
+            }
+
+            HierarchyNode node = NodeFromItemId(itemId);
+
+            if (node == null) {
+                return VSConstants.E_FAIL;
+            }
+
+            // Ask the nodes if they can remove the item.
+            bool canDeleteItem = node.CanDeleteItem((__VSDELETEITEMOPERATION)delItemOp);
+            if (canDeleteItem) {
+                candelete = 1;
+            }
+
+            return VSConstants.S_OK;
+        }
+
+        #endregion
+
+        #region IVsPersistHierarchyItem2 methods
+
+        /// <summary>
+        /// Saves the hierarchy item to disk. 
+        /// </summary>
+        /// <param name="saveFlag">Flags whose values are taken from the VSSAVEFLAGS enumeration.</param>
+        /// <param name="silentSaveAsName">New filename when doing silent save as</param>
+        /// <param name="itemid">Item identifier of the hierarchy item saved from VSITEMID.</param>
+        /// <param name="docData">Item identifier of the hierarchy item saved from VSITEMID.</param>
+        /// <param name="cancelled">[out] true if the save action was canceled.</param>
+        /// <returns>[out] true if the save action was canceled.</returns>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Maintainability", "CA1502:AvoidExcessiveComplexity")]
+        public virtual int SaveItem(VSSAVEFLAGS saveFlag, string silentSaveAsName, uint itemid, IntPtr docData, out int cancelled) {
+            cancelled = 0;
+
+            // Validate itemid 
+            if (itemid == VSConstants.VSITEMID_ROOT || itemid == VSConstants.VSITEMID_SELECTION) {
+                return VSConstants.E_INVALIDARG;
+            }
+
+            HierarchyNode node = this.ProjectMgr.NodeFromItemId(itemid);
+            if (node == null) {
+                return VSConstants.E_FAIL;
+            }
+
+            string existingFileMoniker = node.GetMkDocument();
+
+            // We can only perform save if the document is open
+            if (docData == IntPtr.Zero) {
+                string errorMessage = string.Format(CultureInfo.CurrentCulture, SR.GetString(SR.CanNotSaveFileNotOpeneInEditor, CultureInfo.CurrentUICulture), node.Url);
+                throw new InvalidOperationException(errorMessage);
+            }
+
+            string docNew = String.Empty;
+            int returnCode = VSConstants.S_OK;
+            IPersistFileFormat ff = null;
+            IVsPersistDocData dd = null;
+            IVsUIShell shell = Site.GetService(typeof(SVsUIShell)) as IVsUIShell;
+            Utilities.CheckNotNull(shell);
+
+            try {
+                //Save docdata object. 
+                //For the saveas action a dialog is show in order to enter new location of file.
+                //In case of a save action and the file is readonly a dialog is also shown
+                //with a couple of options, SaveAs, Overwrite or Cancel.
+                ff = Marshal.GetObjectForIUnknown(docData) as IPersistFileFormat;
+                Utilities.CheckNotNull(ff);
+
+                if (VSSAVEFLAGS.VSSAVE_SilentSave == saveFlag) {
+                    ErrorHandler.ThrowOnFailure(shell.SaveDocDataToFile(saveFlag, ff, silentSaveAsName, out docNew, out cancelled));
+                } else {
+                    dd = Marshal.GetObjectForIUnknown(docData) as IVsPersistDocData;
+                    Utilities.CheckNotNull(dd);
+
+                    ErrorHandler.ThrowOnFailure(dd.SaveDocData(saveFlag, out docNew, out cancelled));
+                }
+
+                // We can be unloaded after the SaveDocData() call if the save caused a designer to add a file and this caused
+                // the project file to be reloaded (QEQS caused a newer version of the project file to be downloaded). So we check
+                // here.
+                if (IsClosed) {
+                    cancelled = 1;
+                    return (int)OleConstants.OLECMDERR_E_CANCELED;
+                } else {
+                    // if a SaveAs occurred we need to update to the fact our item's name has changed.
+                    // this includes the following:
+                    // 	  1. call RenameDocument on the RunningDocumentTable
+                    // 	  2. update the full path name for the item in our hierarchy
+                    // 	  3. a directory-based project may need to transfer the open editor to the
+                    // 	 	 MiscFiles project if the new file is saved outside of the project directory.
+                    // 	 	 This is accomplished by calling IVsExternalFilesManager::TransferDocument                    
+
+                    // we have three options for a saveas action to be performed
+                    // 1. the flag was set (the save as command was triggered)
+                    // 2. a silent save specifying a new document name
+                    // 3. a save command was triggered but was not possible because the file has a read only attrib. Therefore
+                    //    the user has chosen to do a save as in the dialog that showed up
+                    bool emptyOrSamePath = String.IsNullOrEmpty(docNew) || CommonUtils.IsSamePath(existingFileMoniker, docNew);
+                    bool saveAs = ((saveFlag == VSSAVEFLAGS.VSSAVE_SaveAs)) ||
+                        ((saveFlag == VSSAVEFLAGS.VSSAVE_SilentSave) && !emptyOrSamePath) ||
+                        ((saveFlag == VSSAVEFLAGS.VSSAVE_Save) && !emptyOrSamePath);
+
+                    if (saveAs) {
+                        returnCode = node.AfterSaveItemAs(docData, docNew);
+
+                        // If it has been cancelled recover the old name.
+                        if ((returnCode == (int)OleConstants.OLECMDERR_E_CANCELED || returnCode == VSConstants.E_ABORT)) {
+                            // Cleanup.
+                            this.DeleteFromStorage(docNew);
+
+                            if (ff != null) {
+                                returnCode = shell.SaveDocDataToFile(VSSAVEFLAGS.VSSAVE_SilentSave, ff, existingFileMoniker, out docNew, out cancelled);
+                            }
+                        } else if (returnCode != VSConstants.S_OK) {
+                            ErrorHandler.ThrowOnFailure(returnCode);
+                        }
+                    }
+                }
+            } catch (COMException e) {
+                Trace.WriteLine("Exception :" + e.Message);
+                returnCode = e.ErrorCode;
+
+                // Try to recover
+                // changed from MPFProj:
+                // http://mpfproj10.codeplex.com/WorkItem/View.aspx?WorkItemId=6982
+                if (ff != null && cancelled == 0) {
+                    ErrorHandler.ThrowOnFailure(shell.SaveDocDataToFile(VSSAVEFLAGS.VSSAVE_SilentSave, ff, existingFileMoniker, out docNew, out cancelled));
+                }
+            }
+
+            return returnCode;
+        }
+
+        /// <summary>
+        /// Determines whether the hierarchy item changed. 
+        /// </summary>
+        /// <param name="itemId">Item identifier of the hierarchy item contained in VSITEMID.</param>
+        /// <param name="docData">Pointer to the IUnknown interface of the hierarchy item.</param>
+        /// <param name="isDirty">true if the hierarchy item changed.</param>
+        /// <returns>If the method succeeds, it returns S_OK. If it fails, it returns an error code. </returns>
+        public virtual int IsItemDirty(uint itemId, IntPtr docData, out int isDirty) {
+            IVsPersistDocData pd = (IVsPersistDocData)Marshal.GetObjectForIUnknown(docData);
+            return ErrorHandler.ThrowOnFailure(pd.IsDocDataDirty(out isDirty));
+        }
+
+        /// <summary>
+        /// Flag indicating that changes to a file can be ignored when item is saved or reloaded. 
+        /// </summary>
+        /// <param name="itemId">Specifies the item id from VSITEMID.</param>
+        /// <param name="ignoreFlag">Flag indicating whether or not to ignore changes (1 to ignore, 0 to stop ignoring).</param>
+        /// <returns>If the method succeeds, it returns S_OK. If it fails, it returns an error code.</returns>
+        public virtual int IgnoreItemFileChanges(uint itemId, int ignoreFlag) {
+            HierarchyNode n = this.ProjectMgr.NodeFromItemId(itemId);
+            if (n != null) {
+                n.IgnoreItemFileChanges(ignoreFlag == 0 ? false : true);
+            }
+
+            return VSConstants.S_OK;
+        }
+
+        /// <summary>
+        /// Called to determine whether a project item is reloadable before calling ReloadItem. 
+        /// </summary>
+        /// <param name="itemId">Item identifier of an item in the hierarchy. Valid values are VSITEMID_NIL, VSITEMID_ROOT and VSITEMID_SELECTION.</param>
+        /// <param name="isReloadable">A flag indicating that the project item is reloadable (1 for reloadable, 0 for non-reloadable).</param>
+        /// <returns>If the method succeeds, it returns S_OK. If it fails, it returns an error code. </returns>
+        [SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "Reloadable")]
+        public virtual int IsItemReloadable(uint itemId, out int isReloadable) {
+            isReloadable = 0;
+
+            HierarchyNode n = this.ProjectMgr.NodeFromItemId(itemId);
+            if (n != null) {
+                isReloadable = (n.IsItemReloadable()) ? 1 : 0;
+            }
+
+            return VSConstants.S_OK;
+        }
+
+        /// <summary>
+        /// Called to reload a project item. 
+        /// </summary>
+        /// <param name="itemId">Specifies itemid from VSITEMID.</param>
+        /// <param name="reserved">Reserved.</param>
+        /// <returns>If the method succeeds, it returns S_OK. If it fails, it returns an error code. </returns>
+        public virtual int ReloadItem(uint itemId, uint reserved) {
+            HierarchyNode n = this.ProjectMgr.NodeFromItemId(itemId);
+            if (n != null) {
+                n.ReloadItem(reserved);
+            }
+
+            return VSConstants.S_OK;
+        }
+
+        #endregion
+
     }
 }

@@ -14,14 +14,12 @@
 
 using System;
 using System.Globalization;
-using System.IO;
 using System.Runtime.InteropServices;
-using System.Windows;
 using EnvDTE;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
 
-namespace Microsoft.PythonTools.Project.Automation
+namespace Microsoft.VisualStudioTools.Project.Automation
 {
     [ComVisible(true)]
     public class OAProject : EnvDTE.Project, EnvDTE.ISupportVSProperties
@@ -32,14 +30,17 @@ namespace Microsoft.PythonTools.Project.Automation
         #endregion
 
         #region properties
-        public ProjectNode Project
+        public object Project
         {
+            get { return this.project; }
+        }
+        internal ProjectNode ProjectNode {
             get { return this.project; }
         }
         #endregion
 
         #region ctor
-        public OAProject(ProjectNode project)
+        internal OAProject(ProjectNode project)
         {
             this.project = project;
         }
@@ -180,7 +181,7 @@ namespace Microsoft.PythonTools.Project.Automation
                     
                     ErrorHandler.ThrowOnFailure(
                         solution.GetUniqueNameOfProject(
-                            HierarchyNode.GetOuterHierarchy(this.project), 
+                            project.GetOuterInterface<IVsHierarchy>(),
                             out uniqueName
                         )
                     );
@@ -392,7 +393,7 @@ namespace Microsoft.PythonTools.Project.Automation
                     }
 
                     // Get the IVsHierarchy for the project.
-                    IVsHierarchy prjHierarchy = HierarchyNode.GetOuterHierarchy(this.project);
+                    IVsHierarchy prjHierarchy = project.GetOuterInterface<IVsHierarchy>();
 
                     // Now get the soulution.
                     IVsSolution solution = this.project.Site.GetService(typeof(SVsSolution)) as IVsSolution;
@@ -415,7 +416,7 @@ namespace Microsoft.PythonTools.Project.Automation
                     string fullPath = fileName;
                     try
                     {
-                        fullPath = CommonUtils.GetAbsoluteFilePath(this.Project.ProjectFolder, fileName);
+                        fullPath = CommonUtils.GetAbsoluteFilePath(((ProjectNode)Project).ProjectFolder, fileName);
                     }
                     // We want to be consistent in the error message and exception we throw. fileName could be for example #¤&%"¤&"%  and that would trigger an ArgumentException on Path.IsRooted.
                     catch (ArgumentException ex)

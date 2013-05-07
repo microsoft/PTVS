@@ -15,6 +15,7 @@
 using System;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio.Repl;
+using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Commands {
     class SendToDefiningModuleCommand : SendToReplCommand {

@@ -14,12 +14,12 @@
 
 using Microsoft.VisualStudio;
 
-namespace Microsoft.PythonTools.Project {
+namespace Microsoft.VisualStudioTools.Project {
     /// <summary>
     /// Enables the Any CPU Platform form name for Dynamic Projects.
     /// Hooks language specific project config.
     /// </summary>
-    public class CommonConfigProvider : ConfigProvider {
+    internal class CommonConfigProvider : ConfigProvider {
         private CommonProjectNode _project;
 
         public CommonConfigProvider(CommonProjectNode project)

@@ -12,7 +12,7 @@
  *
  * ***************************************************************************/
 
-namespace Microsoft.PythonTools.Project
+namespace Microsoft.VisualStudioTools.Project
 {
     using System;
     using System.Diagnostics;

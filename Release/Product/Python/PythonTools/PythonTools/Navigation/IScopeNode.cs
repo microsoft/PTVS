@@ -13,9 +13,9 @@
  * ***************************************************************************/
 
 using System.Collections.Generic;
-using Microsoft.PythonTools.Parsing;
+using Microsoft.VisualStudioTools.Parsing;
 
-namespace Microsoft.PythonTools.Navigation {   
+namespace Microsoft.VisualStudioTools.Navigation {   
     interface IScopeNode {
         LibraryNodeType NodeType {
             get;

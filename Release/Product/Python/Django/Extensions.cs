@@ -19,11 +19,12 @@ using Microsoft.PythonTools.Project.Automation;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudioTools.Project.Automation;
 
 namespace Microsoft.PythonTools.Django {
     static class Extensions {
-        internal static PythonProjectNode GetPythonProject(this EnvDTE.Project project) {
-            return project.GetCommonProject() as PythonProjectNode;
+        internal static IPythonProject GetPythonProject(this EnvDTE.Project project) {
+            return project.GetCommonProject() as IPythonProject;
         }
 
         internal static EnvDTE.Project GetProject(this IVsHierarchy hierarchy) {
@@ -40,10 +41,10 @@ namespace Microsoft.PythonTools.Django {
             return (project as EnvDTE.Project);
         }
 
-        internal static CommonProjectNode GetCommonProject(this EnvDTE.Project project) {
+        internal static object GetCommonProject(this EnvDTE.Project project) {
             OAProject oaProj = project as OAProject;
             if (oaProj != null) {
-                var common = oaProj.Project as CommonProjectNode;
+                var common = oaProj.Project;
                 if (common != null) {
                     return common;
                 }

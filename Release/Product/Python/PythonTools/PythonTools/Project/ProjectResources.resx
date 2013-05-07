@@ -262,8 +262,17 @@ Files and folders cannot be:
   <data name="FullPathDescription" xml:space="preserve">
     <value>Location of the file</value>
   </data>
+  <data name="General" xml:space="preserve">
+    <value>General</value>
+  </data>
   <data name="ItemDoesNotExistInProjectDirectory" xml:space="preserve">
     <value>The item '{0}' does not exist in the project directory. It may have been moved, renamed or deleted.</value>
+  </data>
+  <data name="LaunchUrl" xml:space="preserve">
+    <value>Launch URL</value>
+  </data>
+  <data name="LaunchUrlDescription" xml:space="preserve">
+    <value>The URL which should be opened in the browser when launching the project</value>
   </data>
   <data name="LinkedItemsAreNotSupported" xml:space="preserve">
     <value>Cannot save '{0}' outside the project directory. Linked items are not supported.</value>
@@ -334,8 +343,26 @@ Files and folders cannot be:
   <data name="SaveOfProjectFileOutsideCurrentDirectory" xml:space="preserve">
     <value>The project file can only be saved into the project location '{0}'.</value>
   </data>
+  <data name="ScriptArguments" xml:space="preserve">
+    <value>Script arguments</value>
+  </data>
+  <data name="ScriptArgumentsDescription" xml:space="preserve">
+    <value>Arguments passed to the script on launch</value>
+  </data>
   <data name="StandardEditorViewError" xml:space="preserve">
     <value>Error opening specified view '{0}' using standard editor.</value>
+  </data>
+  <data name="StartupFile" xml:space="preserve">
+    <value>Startup file</value>
+  </data>
+  <data name="StartupFileDescription" xml:space="preserve">
+    <value>The startup file which is launched when running or debugging</value>
+  </data>
+  <data name="StartWebBrowser" xml:space="preserve">
+    <value>Start web browser</value>
+  </data>
+  <data name="StartWebBrowserDescription" xml:space="preserve">
+    <value>True to start the web browser when launching</value>
   </data>
   <data name="URL" xml:space="preserve">
     <value>URL</value>
@@ -357,6 +384,12 @@ Files and folders cannot be:
   </data>
   <data name="WinExe" xml:space="preserve">
     <value>Windows Application</value>
+  </data>
+  <data name="WorkingDirectory" xml:space="preserve">
+    <value>Working directory</value>
+  </data>
+  <data name="WorkingDirectoryDescription" xml:space="preserve">
+    <value>The working directory when launching</value>
   </data>
   <data name="AddReferenceDialogTitle" xml:space="preserve">
     <value>Add Reference</value>
@@ -540,5 +573,8 @@ Files and folders cannot be:
   </data>
   <data name="WebPiReferenceProperties" xml:space="preserve">
     <value>WebPI Reference Properties</value>
+  </data>
+  <data name="PathTooLongShortMessage" xml:space="preserve">
+    <value>The filename or extension is too long.</value>
   </data>
 </root>

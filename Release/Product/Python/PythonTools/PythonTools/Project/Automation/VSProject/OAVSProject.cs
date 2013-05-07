@@ -18,7 +18,7 @@ using System.Runtime.InteropServices;
 using EnvDTE;
 using VSLangProj;
 
-namespace Microsoft.PythonTools.Project.Automation
+namespace Microsoft.VisualStudioTools.Project.Automation
 {
     /// <summary>
     /// Represents an automation friendly version of a language-specific project.
@@ -33,7 +33,7 @@ namespace Microsoft.PythonTools.Project.Automation
         #endregion
 
         #region ctors
-        public OAVSProject(ProjectNode project)
+        internal OAVSProject(ProjectNode project)
         {
             this.project = project;
         }

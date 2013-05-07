@@ -16,7 +16,7 @@ using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Debugger.Interop;
 using System.Runtime.InteropServices;
 
-namespace Microsoft.PythonTools {
+namespace Microsoft.VisualStudioTools {
     class ProvideDebugLanguageAttribute : RegistrationAttribute {
         private readonly string _languageGuid, _languageName, _engineGuid, _eeGuid;
 

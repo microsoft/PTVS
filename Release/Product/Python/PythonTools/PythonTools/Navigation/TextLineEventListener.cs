@@ -16,7 +16,7 @@ using System;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.TextManager.Interop;
 
-namespace Microsoft.PythonTools.Navigation {
+namespace Microsoft.VisualStudioTools.Navigation {
     internal class TextLineEventListener : IVsTextLinesEvents, IDisposable {
         private const int _defaultDelay = 2000;
         private string _fileName;

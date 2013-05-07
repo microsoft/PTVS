@@ -15,6 +15,8 @@
 using System;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
+using Microsoft.VisualStudioTools;
+using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Project {
     [Guid(PythonConstants.PublishPropertyPageGuid)]

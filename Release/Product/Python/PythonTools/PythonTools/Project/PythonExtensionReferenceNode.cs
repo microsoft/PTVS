@@ -21,11 +21,12 @@ using System.Threading.Tasks;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudioTools;
+using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Project {
-    [CLSCompliant(false)]
     [ComVisible(true)]
-    public class PythonExtensionReferenceNode : ReferenceNode {
+    internal class PythonExtensionReferenceNode : ReferenceNode {
         private readonly string _filename;              // The name of the assembly this refernce represents
         private Automation.OAPythonExtensionReference _automationObject;
         private FileChangeManager _fileChangeListener;  // Defines the listener that would listen on file changes on the nested project node.
@@ -100,14 +101,12 @@ namespace Microsoft.PythonTools.Project {
         /// Closes the node.
         /// </summary>
         /// <returns></returns>
-        public override int Close() {
+        public override void Close() {
             try {
                 Dispose(true);
             } finally {
                 base.Close();
             }
-
-            return VSConstants.S_OK;
         }
 
         /// <summary>
@@ -151,7 +150,7 @@ namespace Microsoft.PythonTools.Project {
         /// </summary>
         /// <returns>true if the assembly has already been added.</returns>
         protected override bool IsAlreadyAdded() {
-            ReferenceContainerNode referencesFolder = ProjectMgr.FindChild(ReferenceContainerNode.ReferencesNodeVirtualName) as ReferenceContainerNode;
+            ReferenceContainerNode referencesFolder = ProjectMgr.GetReferenceContainer() as ReferenceContainerNode;
             Debug.Assert(referencesFolder != null, "Could not find the References node");
 
             for (HierarchyNode n = referencesFolder.FirstChild; n != null; n = n.NextSibling) {
@@ -215,7 +214,7 @@ namespace Microsoft.PythonTools.Project {
                 } else if ((e.FileChangeFlag & _VSFILECHANGEFLAGS.VSFILECHG_Del) != 0) {
                     // file was deleted, unload from our extension database
                     interp.RemoveReference(new ProjectReference(_filename, ProjectReferenceKind.ExtensionModule));
-                    OnInvalidateItems(Parent);
+                    ProjectMgr.OnInvalidateItems(Parent);
                 }
             }
         }
