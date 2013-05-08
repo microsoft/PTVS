@@ -26,6 +26,7 @@
         <CommandBinding Command="{x:Static l:InterpreterList.OpenReplCommand}" CanExecute="OpenWindow_CanExecute" Executed="OpenWindow_Executed" />
         <CommandBinding Command="{x:Static l:InterpreterList.OpenOptionsCommand}" CanExecute="OpenWindow_CanExecute" Executed="OpenWindow_Executed" />
         <CommandBinding Command="{x:Static l:InterpreterList.OpenReplOptionsCommand}" CanExecute="OpenWindow_CanExecute" Executed="OpenWindow_Executed" />
+        <CommandBinding Command="{x:Static l:InterpreterList.OpenPathCommand}" CanExecute="OpenPath_CanExecute" Executed="OpenPath_Executed" />
         <CommandBinding Command="{x:Static l:InterpreterList.MakeDefaultCommand}" CanExecute="MakeDefault_CanExecute" Executed="MakeDefault_Executed" />
         <CommandBinding Command="{x:Static l:InterpreterList.CopyReasonCommand}" CanExecute="CopyReason_CanExecute" Executed="CopyReason_Executed" />
     </UserControl.CommandBindings>
@@ -81,13 +82,13 @@
 
                     <DataTemplate x:Key="DatabaseTemplate" DataType="{x:Type l:InterpreterView}">
                         <Grid HorizontalAlignment="Stretch">
-                            <Grid Name="Status" VerticalAlignment="Center" Margin="6 1">
+                            <Grid Name="Status" VerticalAlignment="Center" Margin="0 1">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="auto" />
                                 </Grid.ColumnDefinitions>
 
-                                <Grid Grid.Column="0">
+                                <Grid Grid.Column="0" Margin="6 0">
                                     <TextBlock Name="NotRequired" VerticalAlignment="Center">
                                         Completion DB is up to date
                                     </TextBlock>
@@ -96,8 +97,13 @@
                                             Completion DB needs refresh
                                         </TextBlock>
                                         <Expander Name="ShowContent"
-                                                  HorizontalAlignment="Left" VerticalAlignment="Center"
-                                                  Header="&#xE11B;"/>
+                                                  HorizontalAlignment="Left" VerticalAlignment="Center">
+                                            <Expander.Header>
+                                                <Path Style="{StaticResource IconPath}"
+                                                      Margin="1 0 0 0"
+                                                      Data="F1M20.375,33.7956237792969L21.51171875,34.0221862792969 22.515625,34.7018737792969 23.1953125,35.6784362792969 23.421875,36.8581237792969 23.1953125,38.0260925292969 22.515625,38.9987487792969 21.50390625,39.6784362792969 20.375,39.9049987792969 19.234375,39.6745300292969 18.21875,38.9831237792969 17.5390625,38.0221862792969 17.3125,36.8581237792969 17.5390625,35.6706237792969 18.203125,34.7018737792969 19.22265625,34.0221862792969 20.375,33.7956237792969z M20.859375,4.82687377929688L24.5,5.31124877929688 27.515625,6.74874925613403 29.546875,9.10812377929688 30.28125,12.4049987792969 29.65625,15.5768737792969 28.953125,16.9128112792969 28.09375,18.1393737792969 27.1171875,19.2409362792969 26.0625,20.2174987792969 25.015625,21.1159362792969 24.046875,22.0143737792969 22.484375,23.8893737792969 21.859375,26.0456237792969 22.109375,27.8581237792969 22.3828125,28.6081237792969 22.640625,29.2331237792969 17.609375,29.2331237792969 17.3984375,28.5612487792969 17.21875,27.7174987792969 17.1015625,26.7956237792969 17.0625,25.8893737792969 17.640625,23.3268737792969 19.09375,21.1862487792969 20.015625,20.2018737792969 20.984375,19.2643737792969 21.96875,18.3424987792969 22.875,17.4518737792969 24.328125,15.5924987792969 24.921875,13.4674987792969 24.484375,11.6549987792969 23.296875,10.3424987792969 22.5,9.88937377929688 21.578125,9.57687377929688 20.5859375,9.38937377929688 19.515625,9.32687377929688 17.7509765625,9.51925659179688 16.03515625,10.0964050292969 14.3681631088257,11.0583200454712 12.75,12.4049987792969 12.75,7.06124877929688 16.7265625,5.38156127929688 20.859375,4.82687377929688z"/>
+                                            </Expander.Header>
+                                        </Expander>
                                     </StackPanel>
                                 </Grid>
                                 <Button Command="{x:Static l:InterpreterList.RegenerateCommand}" CommandParameter="{Binding}"
@@ -105,7 +111,7 @@
                                     Refresh DB
                                 </Button>
                             </Grid>
-                            <Grid Name="Refreshing" Visibility="Collapsed">
+                            <Grid Name="Refreshing" Visibility="Collapsed" Margin="6 1">
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="auto" />
                                     <RowDefinition />
@@ -117,8 +123,8 @@
                                              Grid.Row="1"
                                              Value="{Binding Progress,Mode=OneWay}"
                                              Minimum="0" Maximum="{Binding Maximum,Mode=OneWay}"
-                                             Margin="6"
                                              IsIndeterminate="False"
+                                             Margin="0 1"
                                              HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
                             </Grid>
                             <Popup Name="Reason"
@@ -142,7 +148,9 @@
                                                     MinHeight="{Binding ActualWidth,RelativeSource={RelativeSource Self}}"
                                                     VerticalAlignment="Top">
                                                 <Button.Content>
-                                                    &#xE16F;
+                                                    <Path Style="{StaticResource IconPath}"
+                                                          Width="12" Height="12"
+                                                          Data="F1M25.703125,15.4987487792969L25.703125,20.0768737792969 30.28125,20.0768737792969 25.703125,15.4987487792969z M16.5625,13.9831237792969L16.5625,33.7956237792969 31.8125,33.7956237792969 31.8125,23.1237487792969 22.65625,23.1237487792969 22.65625,13.9831237792969 16.5625,13.9831237792969z M8.921875,7.87374877929688L8.921875,27.7018737792969 13.515625,27.7018737792969 13.515625,10.9206237792969 18.078125,10.9206237792969 15.03125,7.87374877929688 8.921875,7.87374877929688z M5.890625,4.82687377929688L16.5625,4.82687377929688 22.65625,10.9206237792969 25.703125,10.9206237792969 34.859375,20.0768737792969 34.859375,36.8581237792969 13.515625,36.8581237792969 13.515625,30.7487487792969 5.890625,30.7487487792969 5.890625,4.82687377929688z" />
                                                 </Button.Content>
                                                 <Button.ToolTip>
                                                     Copy to Clipboard
@@ -170,7 +178,7 @@
 
                     <DataTemplate x:Key="OpenReplTemplate">
                         <Button Command="{x:Static l:InterpreterList.OpenReplCommand}" CommandParameter="{Binding}"
-                                Style="{DynamicResource NavigationButton}">
+                                Style="{StaticResource NavigationButtonInList}">
                             Interactive Window
                         </Button>
                     </DataTemplate>
@@ -179,15 +187,22 @@
                         <StackPanel Orientation="Vertical">
                             <Button Command="{x:Static l:InterpreterList.OpenOptionsCommand}" CommandParameter="{Binding}"
                                     Margin="4 4 4 2"
-                                    Style="{StaticResource NavigationButton}">
+                                    Style="{StaticResource NavigationButtonInList}">
                                 Interpreter Options
                             </Button>
                             <Button Command="{x:Static l:InterpreterList.OpenReplOptionsCommand}" CommandParameter="{Binding}"
                                     Margin="4 2 4 4"
-                                    Style="{StaticResource NavigationButton}">
+                                    Style="{StaticResource NavigationButtonInList}">
                                 Interactive Options
                             </Button>
                         </StackPanel>
+                    </DataTemplate>
+
+                    <DataTemplate x:Key="OpenPathTemplate">
+                        <Button Command="{x:Static l:InterpreterList.OpenPathCommand}" CommandParameter="{Binding}"
+                                Style="{StaticResource NavigationButtonInList}">
+                            View in File Explorer
+                        </Button>
                     </DataTemplate>
                 </ResourceDictionary>
             </ResourceDictionary.MergedDictionaries>
@@ -211,6 +226,7 @@
                 <GridViewColumn CellTemplate="{StaticResource MakeDefaultTemplate}" />
                 <GridViewColumn CellTemplate="{StaticResource OpenOptionsTemplate}" />
                 <GridViewColumn CellTemplate="{StaticResource DatabaseTemplate}" />
+                <GridViewColumn CellTemplate="{StaticResource OpenPathTemplate}" />
             </GridView>
         </ListView.View>
     </ListView>

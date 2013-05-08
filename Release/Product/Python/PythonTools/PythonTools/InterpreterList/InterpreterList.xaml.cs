@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -47,6 +48,7 @@ namespace Microsoft.PythonTools.InterpreterList {
         public static readonly RoutedCommand OpenReplCommand = new RoutedUICommand("Interactive Window", "OpenInteractive", typeof(InterpreterList));
         public static readonly RoutedCommand OpenOptionsCommand = new RoutedUICommand("Options", "OpenOptions", typeof(InterpreterList));
         public static readonly RoutedCommand OpenReplOptionsCommand = new RoutedUICommand("Interactive Options", "OpenInteractiveOptions", typeof(InterpreterList));
+        public static readonly RoutedCommand OpenPathCommand = new RoutedUICommand("View in File Explorer", "OpenPath", typeof(InterpreterList));
         public static readonly RoutedCommand MakeDefaultCommand = new RoutedUICommand("Make Default", "MakeDefault", typeof(InterpreterList));
         public static readonly RoutedCommand CopyReasonCommand = new RoutedUICommand("Copy", "CopyReason", typeof(InterpreterList));
 
@@ -69,11 +71,13 @@ namespace Microsoft.PythonTools.InterpreterList {
 
         void InterpretersChanged(object sender, EventArgs e) {
             if (Dispatcher.CheckAccess()) {
-                _interpreters.Clear();
-                Interpreters.Clear();
-                foreach (var interp in InterpreterView.GetInterpreters()) {
-                    _interpreters.Add(interp);
-                    Interpreters.Add(interp);
+                lock (_interpreters) {
+                    _interpreters.Clear();
+                    Interpreters.Clear();
+                    foreach (var interp in InterpreterView.GetInterpreters()) {
+                        _interpreters.Add(interp);
+                        Interpreters.Add(interp);
+                    }
                 }
             } else {
                 Dispatcher.BeginInvoke((Action)(() => InterpretersChanged(sender, e)));
@@ -83,8 +87,10 @@ namespace Microsoft.PythonTools.InterpreterList {
         void DefaultInterpreterChanged(object sender, EventArgs e) {
             var defaultId = PythonToolsPackage.Instance.InterpreterOptionsPage.DefaultInterpreterValue;
             var defaultVer = PythonToolsPackage.Instance.InterpreterOptionsPage.DefaultInterpreterVersionValue;
-            foreach (var interp in _interpreters) {
-                interp.DefaultInterpreterUpdate(defaultId, defaultVer);
+            lock (_interpreters) {
+                foreach (var interp in _interpreters) {
+                    interp.DefaultInterpreterUpdate(defaultId, defaultVer);
+                }
             }
         }
 
@@ -131,8 +137,10 @@ namespace Microsoft.PythonTools.InterpreterList {
         }
 
         private void Update(Dictionary<string, AnalysisProgress> data) {
-            foreach (var interp in _interpreters) {
-                interp.ProgressUpdate(data);
+            lock (_interpreters) {
+                foreach (var interp in _interpreters) {
+                    interp.ProgressUpdate(data);
+                }
             }
         }
 
@@ -191,6 +199,21 @@ namespace Microsoft.PythonTools.InterpreterList {
         private void CopyReason_Executed(object sender, ExecutedRoutedEventArgs e) {
             var withDb = (IInterpreterWithCompletionDatabase)((InterpreterView)e.Parameter).Interpreter;
             Clipboard.SetText(withDb.GetIsCurrentReasonNonUI(CultureInfo.CurrentUICulture));
+        }
+
+        private void OpenPath_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
+            var view = e.Parameter as InterpreterView;
+            e.CanExecute = view != null && view.Interpreter != null && !string.IsNullOrEmpty(view.Interpreter.Configuration.InterpreterPath) &&
+                File.Exists(view.Interpreter.Configuration.InterpreterPath);
+        }
+
+        private void OpenPath_Executed(object sender, ExecutedRoutedEventArgs e) {
+            var path = Path.GetDirectoryName(((InterpreterView)e.Parameter).Interpreter.Configuration.InterpreterPath);
+            Process.Start(new ProcessStartInfo {
+                FileName = path,
+                Verb = "open",
+                UseShellExecute = true
+            });
         }
     }
 }

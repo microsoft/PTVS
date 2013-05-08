@@ -57,6 +57,10 @@ namespace Microsoft.PythonTools {
             get { return ((IInterpreterWithCompletionDatabase)_realFactory).IsCurrent; }
         }
 
+        public void RefreshIsCurrent(bool alwaysRaiseEvent) {
+            ((IInterpreterWithCompletionDatabase)_realFactory).RefreshIsCurrent(alwaysRaiseEvent);
+        }
+
         public void NotifyInvalidDatabase() {
             ((IInterpreterWithCompletionDatabase)_realFactory).NotifyInvalidDatabase();
         }

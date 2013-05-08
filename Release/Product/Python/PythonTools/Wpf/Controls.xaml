@@ -30,6 +30,14 @@
         </Setter>
     </Style>
 
+    <Style x:Key="IconPath" TargetType="{x:Type Path}">
+        <Setter Property="Fill" Value="{Binding Foreground,RelativeSource={RelativeSource AncestorType=Control}}" />
+        <Setter Property="MaxWidth" Value="10" />
+        <Setter Property="MaxHeight" Value="10" />
+        <Setter Property="Margin" Value="3" />
+        <Setter Property="Stretch" Value="Uniform" />
+    </Style>
+
     <Style TargetType="{x:Type ProgressBar}">
         <Setter Property="Background" Value="{DynamicResource {x:Static wpf:Controls.ControlBackgroundKey}}" />
         <Setter Property="BorderBrush" Value="{DynamicResource {x:Static wpf:Controls.ControlBorderKey}}" />
@@ -158,6 +166,11 @@
             <Trigger Property="IsMouseOver" Value="True">
                 <Setter Property="Foreground" Value="{DynamicResource {x:Static wpf:Controls.HyperlinkHoverKey}}" />
             </Trigger>
+        </Style.Triggers>
+    </Style>
+    
+    <Style x:Key="NavigationButtonInList" BasedOn="{StaticResource NavigationButton}" TargetType="{x:Type Button}">
+        <Style.Triggers>
             <DataTrigger Binding="{Binding IsSelected,RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
                 <Setter Property="Foreground" Value="{DynamicResource {x:Static wpf:Controls.HighlightTextKey}}" />
             </DataTrigger>
@@ -165,8 +178,12 @@
     </Style>
 
     <Style TargetType="{x:Type Expander}" BasedOn="{StaticResource {x:Type Control}}">
-        <Setter Property="Header" Value="&#xE0E5;" />
-        <Setter Property="FontFamily" Value="Segoe UI Symbol" />
+        <Setter Property="Header">
+            <Setter.Value>
+                <Path Style="{StaticResource IconPath}"
+                      Data="F1M8,16.5768737792969L16,24.5768737792969 24,16.5768737792969 24,21.9206237792969 16,29.9206237792969 8,21.9206237792969 8,16.5768737792969z" />
+            </Setter.Value>
+        </Setter>
         <Setter Property="FontSize" Value="8" />
         <Setter Property="Margin" Value="4" />
         <Setter Property="Padding" Value="4" />
@@ -180,7 +197,7 @@
                         <ControlTemplate x:Key="ExpanderButton" TargetType="{x:Type ToggleButton}">
                             <Grid DataContext="{Binding RelativeSource={RelativeSource AncestorType={x:Type Expander}}}">
                                 <Ellipse Stroke="{Binding BorderBrush}"
-                                         StrokeThickness="{Binding BorderThickness}"
+                                         StrokeThickness="1"
                                          Fill="{Binding Background}"
                                          MinWidth="{Binding ActualHeight,RelativeSource={RelativeSource Self}}"
                                          MinHeight="{Binding ActualWidth,RelativeSource={RelativeSource Self}}" />
@@ -208,6 +225,8 @@
                                       ContentStringFormat="{TemplateBinding HeaderStringFormat}"
                                       ContentTemplate="{TemplateBinding HeaderTemplate}"
                                       ContentTemplateSelector="{TemplateBinding HeaderTemplateSelector}"
+                                      HorizontalContentAlignment="Center"
+                                      VerticalContentAlignment="Center"
                                       Template="{StaticResource ExpanderButton}"
                                       Padding="{TemplateBinding Padding}"
                                       FocusVisualStyle="{TemplateBinding FocusVisualStyle}"
@@ -258,6 +277,8 @@
     </Style>
 
     <Style TargetType="{x:Type CheckBox}" BasedOn="{StaticResource {x:Type Control}}">
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type CheckBox}">
@@ -276,33 +297,45 @@
                                 MinWidth="{Binding ActualHeight,RelativeSource={RelativeSource Self}}"
                                 MinHeight="{Binding ActualWidth,RelativeSource={RelativeSource Self}}">
                             <Grid x:Name="markGrid">
-                                <TextBlock x:Name="optionMark"
-                                           Text="&#xE001;"
-                                           FontFamily="Segoe UI Symbol"
-                                           FontSize="8"
-                                           Foreground="{TemplateBinding Foreground}"
-                                           HorizontalAlignment="Center"
-                                           VerticalAlignment="Center"
-                                           Margin="1"
-                                           Opacity="0" />
+                                <Path x:Name="optionMark"
+                                      Style="{StaticResource IconPath}"
+                                      Data="F1M34.296875,9.67062377929688L39.21875,13.3424987792969 23.390625,36.9674987792969 22.859375,36.9674987792969 9.296875,25.2487487792969 13.125,20.2331237792969 22.0625,27.9362487792969 34.296875,9.67062377929688z"
+                                      HorizontalAlignment="Center"
+                                      VerticalAlignment="Center"
+                                      Opacity="0" />
                                 <Rectangle x:Name="indeterminateMark"
                                            Fill="{TemplateBinding Foreground}"
                                            Margin="2"
                                            Opacity="0" />
                             </Grid>
                         </Border>
-                        <ContentPresenter x:Name="contentPresenter"
-                                          ContentTemplate="{TemplateBinding ContentTemplate}"
-                                          Content="{TemplateBinding Content}"
-                                          Grid.Column="1"
-                                          ContentStringFormat="{TemplateBinding ContentStringFormat}"
-                                          Focusable="False"
-                                          HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
-                                          Margin="{TemplateBinding Padding}"
-                                          RecognizesAccessKey="True"
-                                          VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
+                        <Grid Grid.Column="1" Margin="4 0 0 0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <ContentPresenter x:Name="contentPresenter"
+                                              Grid.Column="0"
+                                              ContentTemplate="{TemplateBinding ContentTemplate}"
+                                              Content="{TemplateBinding Content}"
+                                              ContentStringFormat="{TemplateBinding ContentStringFormat}"
+                                              Focusable="False"
+                                              HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                              Margin="{TemplateBinding Padding}"
+                                              RecognizesAccessKey="True"
+                                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
+                            <Rectangle x:Name="focusRect"
+                                       RenderOptions.EdgeMode="Aliased"
+                                       Stroke="{DynamicResource {x:Static wpf:Controls.ForegroundKey}}"
+                                       StrokeThickness="1"
+                                       StrokeDashArray="1 2"
+                                       Visibility="Hidden" />
+                        </Grid>
                     </Grid>
                     <ControlTemplate.Triggers>
+                        <Trigger Property="IsFocused" Value="True">
+                            <Setter Property="Visibility" TargetName="focusRect" Value="Visible" />
+                        </Trigger>
                         <Trigger Property="IsChecked" Value="True">
                             <Setter Property="Opacity" TargetName="optionMark" Value="1" />
                             <Setter Property="Opacity" TargetName="indeterminateMark" Value="0" />
@@ -316,25 +349,6 @@
             </Setter.Value>
         </Setter>
         <Style.Triggers>
-            <Trigger Property="HasContent" Value="True">
-                <Setter Property="FocusVisualStyle">
-                    <Setter.Value>
-                        <Style>
-                            <Setter Property="Control.Template">
-                                <Setter.Value>
-                                    <ControlTemplate>
-                                        <Rectangle Margin="14,0,0,0"
-                                                   Stroke="{TemplateBinding Foreground}"
-                                                   StrokeThickness="1"
-                                                   StrokeDashArray="1 2" />
-                                    </ControlTemplate>
-                                </Setter.Value>
-                            </Setter>
-                        </Style>
-                    </Setter.Value>
-                </Setter>
-                <Setter Property="Padding" Value="4,-1,0,0" />
-            </Trigger>
             <Trigger Property="IsEnabled" Value="False">
                 <Setter Property="Background" Value="{DynamicResource {x:Static wpf:Controls.ControlBackgroundDisabledKey}}" />
                 <Setter Property="BorderBrush" Value="{DynamicResource {x:Static wpf:Controls.ControlBorderDisabledKey}}" />
@@ -352,7 +366,6 @@
     <Style TargetType="{x:Type RepeatButton}">
         <Setter Property="Background" Value="{DynamicResource {x:Static wpf:Controls.ScrollBarArrowBackgroundKey}}" />
         <Setter Property="Foreground" Value="{DynamicResource {x:Static wpf:Controls.ScrollBarArrowKey}}" />
-        <Setter Property="FontFamily" Value="Segoe UI Symbol" />
         <Setter Property="HorizontalContentAlignment" Value="Center" />
         <Setter Property="VerticalContentAlignment" Value="Center" />
         <Setter Property="Padding" Value="1" />
@@ -428,7 +441,8 @@
                             <RowDefinition MaxHeight="{DynamicResource {x:Static SystemParameters.VerticalScrollBarButtonHeightKey}}" />
                         </Grid.RowDefinitions>
                         <RepeatButton x:Name="PART_LineUpButton" Command="ScrollBar.LineUpCommand" IsEnabled="{TemplateBinding IsMouseOver}">
-                            &#xE018;
+                            <Path Style="{StaticResource IconPath}"
+                                  Data="F1M16,18.3112487792969L27.203125,29.2956237792969 27.203125,36.8424987792969 16,26.1393737792969 4.796875,36.8424987792969 4.796875,29.2956237792969 16,18.3112487792969z"/>
                         </RepeatButton>
                         <Track x:Name="PART_Track" IsDirectionReversed="True" IsEnabled="{TemplateBinding IsMouseOver}" Grid.Row="1">
                             <Track.DecreaseRepeatButton>
@@ -442,7 +456,8 @@
                             </Track.Thumb>
                         </Track>
                         <RepeatButton x:Name="PART_LineDownButton" Command="ScrollBar.LineDownCommand" IsEnabled="{TemplateBinding IsMouseOver}" Grid.Row="2">
-                            &#xE019;
+                            <Path Style="{StaticResource IconPath}"
+                                  Data="F1M4.796875,16.1237487792969L16,26.8268737792969 27.203125,16.1237487792969 27.203125,23.6706237792969 16,34.6549987792969 4.796875,23.6706237792969 4.796875,16.1237487792969z"/>
                         </RepeatButton>
                     </Grid>
                 </ControlTemplate>
@@ -464,7 +479,8 @@
                                     <ColumnDefinition MaxWidth="{DynamicResource {x:Static SystemParameters.HorizontalScrollBarButtonWidthKey}}" />
                                 </Grid.ColumnDefinitions>
                                 <RepeatButton x:Name="PART_LineLeftButton" Command="ScrollBar.LineLeftCommand" IsEnabled="{TemplateBinding IsMouseOver}">
-                                    &#xE016;
+                                    <Path Style="{StaticResource IconPath}"
+                                          Data="F1M17.71875,12.1237487792969L25.265625,12.1237487792969 14.5625,23.3268737792969 25.265625,34.5299987792969 17.71875,34.5299987792969 6.734375,23.3268737792969 17.71875,12.1237487792969z" />
                                 </RepeatButton>
                                 <Track x:Name="PART_Track" Grid.Column="1" IsEnabled="{TemplateBinding IsMouseOver}">
                                     <Track.DecreaseRepeatButton>
@@ -478,7 +494,8 @@
                                     </Track.Thumb>
                                 </Track>
                                 <RepeatButton x:Name="PART_LineRightButton" Grid.Column="2" Command="ScrollBar.LineRightCommand" IsEnabled="{TemplateBinding IsMouseOver}">
-                                    &#xE017;
+                                    <Path Style="{StaticResource IconPath}"
+                                          Data="F1M6.734375,12.1237487792969L14.28125,12.1237487792969 25.265625,23.3268737792969 14.28125,34.5299987792969 6.734375,34.5299987792969 17.4375,23.3268737792969 6.734375,12.1237487792969z" />
                                 </RepeatButton>
                             </Grid>
                         </ControlTemplate>

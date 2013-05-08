@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Threading.Tasks;
 using System.Windows;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Interpreter;
@@ -23,7 +24,7 @@ using Microsoft.VisualStudio.ComponentModelHost;
 namespace Microsoft.PythonTools.InterpreterList {
     internal class InterpreterView : DependencyObject {
         private readonly string _identifier;
-        private bool _startedRunning;
+        private bool _startedRunning, _waitingForIsChanged;
 
         public static IEnumerable<InterpreterView> GetInterpreters() {
             var componentService = (PythonToolsPackage.GetGlobalService(typeof(SComponentModel))) as IComponentModel;
@@ -70,6 +71,10 @@ namespace Microsoft.PythonTools.InterpreterList {
                 IsCurrent = withDb.IsCurrent;
                 IsCurrentReason = withDb.GetIsCurrentReason(CultureInfo.CurrentUICulture);
             }
+            if (_waitingForIsChanged) {
+                _waitingForIsChanged = false;
+                IsRunning = false;
+            }
         }
 
         public void ProgressUpdate(Dictionary<string, AnalysisProgress> updateInfo) {
@@ -88,8 +93,14 @@ namespace Microsoft.PythonTools.InterpreterList {
                 } else {
                     update.Progress = 0;
                 }
-            } else if (IsRunning && !_startedRunning) {
-                IsRunning = false;
+            } else if (IsRunning && !_startedRunning && !_waitingForIsChanged) {
+                var withDb = Interpreter as IInterpreterWithCompletionDatabase;
+                if (withDb != null) {
+                    _waitingForIsChanged = true;
+                    Task.Factory.StartNew((Action)(() => withDb.RefreshIsCurrent(true)));
+                } else {
+                    IsRunning = false;
+                }
             }
         }
 

@@ -32,7 +32,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         private PythonTypeDatabase _typeDb;
         private bool _generating;
         private string[] _missingModules;
-        private readonly Timer _refreshLastUpdateTimesTrigger;
+        private readonly Timer _refreshIsCurrentTrigger;
         private FileSystemWatcher _libWatcher;
 
         public CPythonInterpreterFactory(Version version)
@@ -47,8 +47,8 @@ namespace Microsoft.PythonTools.Interpreter.Default {
             _id = id;
             _config = new CPythonInterpreterConfiguration(pythonPath, pythonwPath, pathEnvVar, arch, version);
 
-            _refreshLastUpdateTimesTrigger = new Timer(RefreshLastUpdateTimes_Elapsed);
-            Task.Factory.StartNew(() => RefreshLastUpdateTimes());
+            _refreshIsCurrentTrigger = new Timer(RefreshIsCurrentTimer_Elapsed);
+            Task.Factory.StartNew(() => RefreshIsCurrent(false));
 
             if (!string.IsNullOrEmpty(pythonPath) && File.Exists(pythonPath)) {
                 try {
@@ -167,7 +167,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
                             _libWatcher.EnableRaisingEvents = true;
                         }
                     }
-                    RefreshLastUpdateTimes();
+                    RefreshIsCurrent(false);
                 })) {
                 lock (this) {
                     _generating = false;
@@ -175,7 +175,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
                         _libWatcher.EnableRaisingEvents = true;
                     }
                 }
-                RefreshLastUpdateTimes();
+                RefreshIsCurrent(false);
                 return false;
             }
 
@@ -247,7 +247,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
             return null;
         }
 
-        private void RefreshLastUpdateTimes() {
+        public void RefreshIsCurrent(bool alwaysRaiseEvent) {
             bool initialValue = IsCurrent;
 
             if (Directory.Exists(DatabasePath)) {
@@ -266,19 +266,21 @@ namespace Microsoft.PythonTools.Interpreter.Default {
                 }
             }
 
-            OnIsCurrentChanged();
+            if (alwaysRaiseEvent || IsCurrent != initialValue) {
+                OnIsCurrentChanged();
+            }
         }
 
-        private void RefreshLastUpdateTimes_Elapsed(object state) {
-            RefreshLastUpdateTimes();
+        private void RefreshIsCurrentTimer_Elapsed(object state) {
+            RefreshIsCurrent(false);
         }
 
         private void OnRenamed(object sender, RenamedEventArgs e) {
-            _refreshLastUpdateTimesTrigger.Change(1000, Timeout.Infinite);
+            _refreshIsCurrentTrigger.Change(1000, Timeout.Infinite);
         }
 
         private void OnChanged(object sender, FileSystemEventArgs e) {
-            _refreshLastUpdateTimesTrigger.Change(1000, Timeout.Infinite);
+            _refreshIsCurrentTrigger.Change(1000, Timeout.Infinite);
         }
 
         public event EventHandler IsCurrentChanged;
