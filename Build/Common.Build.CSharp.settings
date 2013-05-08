@@ -10,7 +10,7 @@
 
   <PropertyGroup>
     <Language>C#</Language>        <!-- Duplicated from the C# targets file -->
-    <Platform Condition="'$(Platform)'==''">AnyCPU</Platform>
+    <Platform Condition="'$(Platform)'==''">x86</Platform>
 
     <CodeAnalysisTreatWarningsAsErrors>true</CodeAnalysisTreatWarningsAsErrors>
     <!-- This eliminates the warning CA0060, EnvDTE Version=7.0 not found, for VS 10 installations. -->
