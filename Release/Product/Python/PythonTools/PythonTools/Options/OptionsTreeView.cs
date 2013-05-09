@@ -490,9 +490,10 @@ namespace Microsoft.PythonTools.Options {
         }
 
         internal override void DrawNode(DrawTreeNodeEventArgs e) {
+            var optNode = (OptionNode)e.Node;            
             CheckBoxRenderer.DrawCheckBox(
                 e.Graphics,
-                new Point(this.Bounds.X - 14, this.Bounds.Y + 1),
+                optNode.IconBounds.Location,
                 _state ?
                     CheckBoxState.CheckedNormal :
                     CheckBoxState.UncheckedNormal
@@ -578,7 +579,7 @@ namespace Microsoft.PythonTools.Options {
                     _state.Value ?
                         CheckBoxState.CheckedNormal :
                         CheckBoxState.UncheckedNormal :
-                    CheckBoxState.MixedNormal
+                        CheckBoxState.MixedNormal
             );
         }
     }
