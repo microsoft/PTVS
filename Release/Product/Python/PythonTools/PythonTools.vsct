@@ -129,6 +129,18 @@
               <CommandFlag>DynamicVisibility</CommandFlag>
           If you do not want an image next to your command, remove the Icon node or set it to <Icon guid="guidOfficeIcon" id="msotcidNoIcon" /> -->
 
+      <Button guid="guidPythonToolsCmdSet" id="cmdidAddExistingFolder" priority="0x0500" type="Button">
+        <Parent guid="guidSHLMainMenu" id="IDG_VS_CTXT_PROJECT_ADD_ITEMS"/>
+        <CommandFlag>DefaultInvisible</CommandFlag>
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <!-- <Icon guid="guidImages" id="bmpPic2"/> -->        
+        <Strings>
+          <ButtonText>Existing &amp;Folder...</ButtonText>
+          <LocCanonicalName>Python.ExistingFolder</LocCanonicalName>
+          <CanonicalName>Python.ExistingFolder</CanonicalName>
+        </Strings>
+      </Button>
+
       <Button guid="guidPythonToolsCmdSet" id="cmdidRemoveImportsCurrentScope" priority="0x200" type="Button">
         <Parent guid="guidPythonToolsCmdSet" id="RemoveImportsGroup"/>
         <Icon guid="guidImagesRefactoring" id="imgRemoveUsing" />
@@ -779,6 +791,9 @@
 
       <IDSymbol name="SamplesMenu" value="0x4000" />
       <IDSymbol name="SamplesGroup" value="0x1020" />
+
+      <!-- Shared commands, defined in CommonConstants.cs -->
+      <IDSymbol name="cmdidAddExistingFolder" value="0x10001" />
     </GuidSymbol>
 
     <GuidSymbol name="guidImages" value="{7f103a95-8141-4004-a01d-e3f739caa27d}" >

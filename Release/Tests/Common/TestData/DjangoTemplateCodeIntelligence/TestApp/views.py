@@ -16,3 +16,7 @@ def home4(request):
     return HttpResponse(render_to_string('page3.html.djt', {'content': 'foo'}))
 
 
+def home5(request):
+    return HttpResponse(render_to_string('page4.html.djt', {'content': 'foo'}))
+
+

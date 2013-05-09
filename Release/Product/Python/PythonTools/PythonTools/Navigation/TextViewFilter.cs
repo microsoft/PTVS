@@ -44,6 +44,26 @@ namespace Microsoft.PythonTools.Language {
         /// Called from VS to see what commands we support.  
         /// </summary>
         public int QueryStatus(ref Guid pguidCmdGroup, uint cCmds, OLECMD[] prgCmds, IntPtr pCmdText) {
+            if (pguidCmdGroup == VSConstants.GUID_VSStandardCommandSet97) {
+                for (int i = 0; i < cCmds; i++) {
+                    switch((VSConstants.VSStd97CmdID)prgCmds[i].cmdID) {
+                        case VSConstants.VSStd97CmdID.MarkerCmd0:
+                        case VSConstants.VSStd97CmdID.MarkerCmd1:
+                        case VSConstants.VSStd97CmdID.MarkerCmd2:
+                        case VSConstants.VSStd97CmdID.MarkerCmd3:
+                        case VSConstants.VSStd97CmdID.MarkerCmd4:
+                        case VSConstants.VSStd97CmdID.MarkerCmd5:
+                        case VSConstants.VSStd97CmdID.MarkerCmd6:
+                        case VSConstants.VSStd97CmdID.MarkerCmd7:
+                        case VSConstants.VSStd97CmdID.MarkerCmd8:
+                        case VSConstants.VSStd97CmdID.MarkerCmd9:
+                        case VSConstants.VSStd97CmdID.MarkerEnd:
+                            // marker commands are broken on projection buffers, hide them.
+                            prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_INVISIBLE | OLECMDF.OLECMDF_SUPPORTED | OLECMDF.OLECMDF_ENABLED);
+                            return VSConstants.S_OK;
+                    }
+                }
+            }
             return _next.QueryStatus(ref pguidCmdGroup, cCmds, prgCmds, pCmdText);
         }
 

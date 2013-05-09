@@ -1067,13 +1067,7 @@ namespace Microsoft.VisualStudioTools.Project {
             }
         }
 
-#if DEV11_OR_LATER
-        public override object GetProperty(int propId) {            
-            CommonFolderNode.BoldStartupOnIcon(propId, this);
-
-            return base.GetProperty(propId);
-        }
-#else
+#if DEV10
         public override int SetProperty(int propid, object value) {
             CommonFolderNode.BoldStartupOnExpand(propid, this);
 

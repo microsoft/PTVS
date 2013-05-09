@@ -273,5 +273,27 @@ namespace Microsoft.VisualStudioTools.Project {
         }
 
         #endregion
+
+        public override object GetProperty(int propId) {
+            if (propId == (int)__VSHPROPID.VSHPROPID_IconIndex || 
+                propId == (int)__VSHPROPID.VSHPROPID_OpenFolderIconIndex) {
+                SetBoldStartup();
+            }
+            return base.GetProperty(propId);
+        }
+
+        private void SetBoldStartup() {
+            string startupFile;
+            CommonProjectNode comProj = (CommonProjectNode)ProjectMgr;
+            if (!comProj._boldedStartupItem &&
+                (startupFile = comProj.GetStartupFile()) != null &&
+                ProjectMgr.FindNodeByFullPath(CommonUtils.GetAbsoluteFilePath(comProj.ProjectFolder, startupFile)) == this) {
+
+                // we're getting a property from this file node for the 1st time, make sure we're
+                // bolded.  We can't do this until the node is created in solution navigator so we
+                // do it when it accesses our properties.
+                comProj.BoldStartupItem(this);
+            }
+        }
     }
 }

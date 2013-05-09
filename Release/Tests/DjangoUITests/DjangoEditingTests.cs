@@ -1503,10 +1503,13 @@ namespace DjangoUITests {
             );
         }
 
+        /// <summary>
+        /// http://pytools.codeplex.com/workitem/756
+        /// </summary>
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void IntellisenseCompletions7() {
-            InsertionTest("TestApp\\Templates\\page2.html.djt", 6, 4, -1, "" + Keyboard.CtrlSpace + "auto\t",
+            InsertionTest("TestApp\\Templates\\page4.html.djt", 6, 8, -1, Keyboard.CtrlSpace.ToString(),
                 paste: false,
                 checkInsertionLen: false,
                 projectName: @"TestData\DjangoTemplateCodeIntelligence.sln",
@@ -1527,22 +1530,15 @@ namespace DjangoUITests {
                     new Classification("HTML Tag Delimiter", 40, 41, "<"),
                     new Classification("HTML Element Name", 41, 45, "body"),
                     new Classification("HTML Tag Delimiter", 45, 46, ">"),
-                    new Classification("Django template tag", 50, 52, "{%"),
-                    new Classification("keyword", 53, 73, "autoescapeautoescape"),
-                    new Classification("excluded code", 73, 76, " on"),
-                    new Classification("Django template tag", 77, 79, "%}"),
-                    new Classification("Django template tag", 81, 83, "{%"),
-                    new Classification("keyword", 84, 88, "auto"),
-                    new Classification("excluded code", 88, 91, " on"),
-                    new Classification("Django template tag", 92, 94, "%}"),
-                    new Classification("Django template tag", 96, 98, "{{"),
-                    new Classification("Django template tag", 99, 101, "}}"),
-                    new Classification("HTML Tag Delimiter", 105, 107, "</"),
-                    new Classification("HTML Element Name", 107, 111, "body"),
-                    new Classification("HTML Tag Delimiter", 111, 112, ">"),
-                    new Classification("HTML Tag Delimiter", 114, 116, "</"),
-                    new Classification("HTML Element Name", 116, 120, "html"),
-                    new Classification("HTML Tag Delimiter", 120, 121, ">")
+                    new Classification("Django template tag", 50, 52, "{{"),
+                    new Classification("identifier", 53, 60, "content"),
+                    new Classification("Django template tag", 61, 63, "}}"),
+                    new Classification("HTML Tag Delimiter", 67, 69, "</"),
+                    new Classification("HTML Element Name", 69, 73, "body"),
+                    new Classification("HTML Tag Delimiter", 73, 74, ">"),
+                    new Classification("HTML Tag Delimiter", 76, 78, "</"),
+                    new Classification("HTML Element Name", 78, 82, "html"),
+                    new Classification("HTML Tag Delimiter", 82, 83, ">")
                 }
             );
         }

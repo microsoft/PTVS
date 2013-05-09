@@ -401,6 +401,8 @@ namespace Microsoft.PythonTools.Project {
             return GetAnalyzer();
         }
 
+        public event EventHandler ProjectAnalyzerChanged;
+
         public override IProjectLauncher GetLauncher() {
             return PythonToolsPackage.GetLauncher(this);
         }
@@ -546,6 +548,11 @@ namespace Microsoft.PythonTools.Project {
             AnalyzeSearchPaths(ParseSearchPath());
 
             _analyzer = analyzer;
+
+            var analyzerChanged = ProjectAnalyzerChanged;
+            if (analyzerChanged != null) {
+                analyzerChanged(this, EventArgs.Empty);
+            }
         }
 
         private void Reanalyze(HierarchyNode node, VsProjectAnalyzer newAnalyzer) {
@@ -968,5 +975,10 @@ namespace Microsoft.PythonTools.Project {
 
         #endregion
 
+        public override Guid SharedCommandGuid {
+            get {
+                return GuidList.guidPythonToolsCmdSet;
+            }
+        }
     }
 }

@@ -1087,6 +1087,7 @@ namespace ProfilingUITests {
                 Assert.IsTrue(File.Exists(filename));
 
                 VerifyReport(report, "BuiltinsProfile.f", "str.startswith", "isinstance", "marshal.dumps", "array.array.tostring");
+                VerifyReportNegative(report, "compile", "exec", "execfile", "_io.TextIOWrapper.read");
             } finally {
                 profiling.RemoveSession(session, false);
             }
@@ -1125,6 +1126,7 @@ namespace ProfilingUITests {
                 profiling.RemoveSession(session, false);
             }
         }
+
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
@@ -1181,6 +1183,30 @@ namespace ProfilingUITests {
                 Assert.IsTrue(found);
             }            
         }
+
+        private static void VerifyReportNegative(IPythonPerformanceReport report, params string[] expectedFunctions) {
+            // run vsperf
+            string[] lines = OpenPerformanceReportAsCsv(report);
+            bool[] expected = new bool[expectedFunctions.Length];
+
+            // quote the function names so they match the CSV
+            for (int i = 0; i < expectedFunctions.Length; i++) {
+                expectedFunctions[i] = "\"" + expectedFunctions[i] + "\"";
+            }
+
+            foreach (var line in lines) {
+                for (int i = 0; i < expectedFunctions.Length; i++) {
+                    if (line.StartsWith(expectedFunctions[i])) {
+                        expected[i] = true;
+                    }
+                }
+            }
+
+            foreach (var found in expected) {
+                Assert.IsFalse(found);
+            }
+        }
+
 
         private static int _counter;
 

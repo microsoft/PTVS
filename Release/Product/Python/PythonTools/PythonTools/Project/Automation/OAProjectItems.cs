@@ -106,6 +106,9 @@ namespace Microsoft.VisualStudioTools.Project.Automation
 
                 string fileDirectory = proj.GetBaseDirectoryForAddingFiles(this.NodeWithItems);
                 string templateFilePath = System.IO.Path.Combine(fileDirectory, name);
+                if (Directory.Exists(templateFilePath)) {
+                    templateFilePath += Path.DirectorySeparatorChar;
+                }
                 itemAdded = this.EvaluateAddResult(result[0], templateFilePath);
             }
 

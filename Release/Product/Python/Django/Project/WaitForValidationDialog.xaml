@@ -9,7 +9,6 @@
     Height="358" Width="550"
     x:ClassModifier="internal"
     WindowStartupLocation="CenterOwner"
-    ShowInTaskbar="False"
     WindowStyle="ToolWindow"
     Background="{x:Static SystemColors.ControlBrush}"
     TextOptions.TextFormattingMode="Display" ResizeMode="CanResizeWithGrip" MinWidth="320" MinHeight="200">
@@ -20,7 +19,7 @@
         </StackPanel>
         <DockPanel DockPanel.Dock="Top">
             <TextBlock Text="Output:" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="4" DockPanel.Dock="Top" />
-            <TextBox HorizontalAlignment="Stretch" Margin="4" Name="_textBox" VerticalAlignment="Stretch" IsReadOnly="True" TextWrapping="NoWrap" />
+            <TextBox HorizontalAlignment="Stretch" Margin="4" Name="_textBox" VerticalAlignment="Stretch" IsReadOnly="True" TextWrapping="NoWrap" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" />
         </DockPanel >
     </DockPanel>
 </ui:DialogWindowVersioningWorkaround>
