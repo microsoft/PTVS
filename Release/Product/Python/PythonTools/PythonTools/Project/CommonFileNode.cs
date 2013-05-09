@@ -274,6 +274,7 @@ namespace Microsoft.VisualStudioTools.Project {
 
         #endregion
 
+#if DEV11_OR_LATER
         public override object GetProperty(int propId) {
             if (propId == (int)__VSHPROPID.VSHPROPID_IconIndex || 
                 propId == (int)__VSHPROPID.VSHPROPID_OpenFolderIconIndex) {
@@ -295,5 +296,6 @@ namespace Microsoft.VisualStudioTools.Project {
                 comProj.BoldStartupItem(this);
             }
         }
+#endif
     }
 }

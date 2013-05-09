@@ -94,6 +94,19 @@ namespace Microsoft.VisualStudioTools.Project {
                 SetBoldStartup(parent);
             }
         }
+
+        private static void SetBoldStartup(HierarchyNode parent) {
+            string startupFile;
+            CommonProjectNode comProj = (CommonProjectNode)parent.ProjectMgr;
+            HierarchyNode startupItem;
+            if (!comProj._boldedStartupItem &&
+                (startupFile = comProj.GetStartupFile()) != null &&
+                (startupItem = parent.ProjectMgr.FindNodeByFullPath(CommonUtils.GetAbsoluteFilePath(comProj.ProjectFolder, startupFile))) != null) {
+
+                // we're expanding the parent of the 
+                comProj.BoldStartupItem(startupItem);
+            }
+        }
 #endif
 
         public new CommonProjectNode ProjectMgr {

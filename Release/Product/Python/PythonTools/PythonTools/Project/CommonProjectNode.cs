@@ -1074,6 +1074,5 @@ namespace Microsoft.VisualStudioTools.Project {
             return base.SetProperty(propid, value);
         }
 #endif
-
     }
 }
