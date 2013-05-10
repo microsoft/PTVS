@@ -383,7 +383,7 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
                 try {
                     var theseFiles = Directory.EnumerateFiles(source, pattern.Trim(), SearchOption.AllDirectories);
                     files = files.Concat(theseFiles);
-                } catch (ArgumentException) {
+                } catch {
                     // Probably an invalid pattern.
                 }
             }
