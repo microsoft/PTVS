@@ -70,6 +70,7 @@
     <Compile Include="Analyzer\StatementScope.cs" />
     <Compile Include="AssemblyInfo.cs" />
     <Compile Include="Interpreter\Default\CPythonSequenceType.cs" />
+    <Compile Include="Interpreter\Default\DefaultInterpreterFactoryCreator.cs" />
     <Compile Include="Interpreter\IPythonSequenceType.cs" />
     <Compile Include="ModulePath.cs" />
     <Compile Include="Parsing\CodeFormattingCategoryAttribute.cs" />
@@ -90,6 +91,7 @@
     <Compile Include="NamespaceSet.cs" />
     <Compile Include="NativeMethods.cs" />
     <Compile Include="Parsing\Ast\YieldFromExpression.cs" />
+    <Compile Include="RegistryWatcher.cs" />
     <Compile Include="Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>

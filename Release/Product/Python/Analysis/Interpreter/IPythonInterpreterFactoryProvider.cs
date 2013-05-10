@@ -12,6 +12,7 @@
  *
  * ***************************************************************************/
 
+using System;
 using System.Collections.Generic;
 
 namespace Microsoft.PythonTools.Interpreter {
@@ -28,5 +29,11 @@ namespace Microsoft.PythonTools.Interpreter {
         /// existing instances should not be re-created.
         /// </summary>
         IEnumerable<IPythonInterpreterFactory> GetInterpreterFactories();
+
+        /// <summary>
+        /// Raised when the result of calling <see cref="GetInterpreterFactories"/> may have changed.
+        /// </summary>
+        /// <remarks>New in 2.0.</remarks>
+        event EventHandler InterpreterFactoriesChanged;
     }
 }

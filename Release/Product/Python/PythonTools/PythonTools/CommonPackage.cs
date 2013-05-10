@@ -15,8 +15,6 @@
 using System;
 using System.ComponentModel.Design;
 using System.Runtime.InteropServices;
-using Microsoft.VisualStudioTools.Navigation;
-using Microsoft.VisualStudioTools.Project;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Editor;
@@ -25,6 +23,8 @@ using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.TextManager.Interop;
+using Microsoft.VisualStudioTools.Navigation;
+using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.VisualStudioTools {
     public abstract class CommonPackage : Package, IOleComponent {

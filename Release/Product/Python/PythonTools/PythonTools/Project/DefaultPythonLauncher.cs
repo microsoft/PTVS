@@ -60,52 +60,33 @@ namespace Microsoft.PythonTools.Project {
 
         #endregion
 
-        public string InstallPath {
-            get {
-                return Path.GetDirectoryName(InterpreterExecutable);
+        private string GetInterpreterExecutableInternal(out bool isWindows) {
+            if (!Boolean.TryParse(_project.GetProperty(CommonConstants.IsWindowsApplication) ?? string.Empty, out isWindows)) {
+                isWindows = false;
             }
-        }
-
-        private string InterpreterExecutable {
-            get {
-                return _project.GetInterpreterFactory().Configuration.InterpreterPath;
-            }
-        }
-
-        private string WindowsInterpreterExecutable {
-            get {
-                return _project.GetInterpreterFactory().Configuration.WindowsInterpreterPath;
-            }
-        }
-
-        /// <summary>
-        /// Returns full path of the language specific interpreter executable file.
-        /// </summary>
-        public string GetInterpreterExecutable(out bool isWindows) {
-            var isWindowsString = _project.GetProperty(CommonConstants.IsWindowsApplication);
-            isWindows = (isWindowsString != null) ? Convert.ToBoolean(isWindowsString) : false;
-            return isWindows ? WindowsInterpreterExecutable : InterpreterExecutable;
-        }
-
-        private string/*!*/ GetInterpreterExecutableInternal(out bool isWindows) {
+            
             string result;
             result = (_project.GetProperty(CommonConstants.InterpreterPath) ?? string.Empty).Trim();
             if (!String.IsNullOrEmpty(result)) {
-                result = CommonUtils.GetAbsoluteFilePath(_project.GetWorkingDirectory(), result);
+                result = CommonUtils.GetAbsoluteFilePath(_project.ProjectDirectory, result);
 
                 if (!File.Exists(result)) {
                     throw new FileNotFoundException(String.Format("Interpreter specified in the project does not exist: '{0}'", result), result);
                 }
 
-                isWindows = false;
                 return result;
             }
 
-            result = GetInterpreterExecutable(out isWindows);
-            if (result == null) {
-                Contract.Assert(result != null);
+            var interpreter = _project.GetInterpreterFactory();
+            var interpService = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
+            if (interpService == null || interpService.NoInterpretersValue == interpreter) {
+                PythonToolsPackage.OpenVsWebBrowser(CommonUtils.GetAbsoluteFilePath(PythonToolsPackage.GetPythonToolsInstallPath(), "NoInterpreters.html"));
+                return null;
             }
-            return result;
+
+            return isWindows ?
+                interpreter.Configuration.InterpreterPath :
+                interpreter.Configuration.WindowsInterpreterPath;
         }
 
         /// <summary>
@@ -131,7 +112,11 @@ namespace Microsoft.PythonTools.Project {
         /// Default implementation of the "Start withput Debugging" command.
         /// </summary>
         private void StartWithoutDebugger(string startupFile) {
-            Process.Start(CreateProcessStartInfoNoDebug(startupFile));
+            var psi = CreateProcessStartInfoNoDebug(startupFile);
+            if (psi == null) {
+                return;
+            }
+            Process.Start(psi);
         }
 
         /// <summary>
@@ -142,8 +127,9 @@ namespace Microsoft.PythonTools.Project {
             dbgInfo.cbSize = (uint)Marshal.SizeOf(dbgInfo);
 
             SetupDebugInfo(ref dbgInfo, startupFile);
-
-            LaunchDebugger(PythonToolsPackage.Instance, dbgInfo);
+            if (!string.IsNullOrEmpty(dbgInfo.bstrExe)) {
+                LaunchDebugger(PythonToolsPackage.Instance, dbgInfo);
+            }
         }
 
         private static void LaunchDebugger(IServiceProvider provider, VsDebugTargetInfo dbgInfo) {
@@ -169,7 +155,11 @@ namespace Microsoft.PythonTools.Project {
         private void SetupDebugInfo(ref VsDebugTargetInfo dbgInfo, string startupFile) {
             dbgInfo.dlo = DEBUG_LAUNCH_OPERATION.DLO_CreateProcess;
             bool isWindows;
-            dbgInfo.bstrExe = GetInterpreterExecutableInternal(out isWindows);
+            var interpreterPath = GetInterpreterExecutableInternal(out isWindows);
+            if (string.IsNullOrEmpty(interpreterPath)) {
+                return;
+            }
+            dbgInfo.bstrExe = interpreterPath;
             dbgInfo.bstrCurDir = _project.GetWorkingDirectory();
             dbgInfo.bstrArg = CreateCommandLineDebug(startupFile);
             dbgInfo.bstrRemoteMachine = null;
@@ -248,6 +238,9 @@ namespace Microsoft.PythonTools.Project {
 
             bool isWindows;
             string interpreter = GetInterpreterExecutableInternal(out isWindows);
+            if (string.IsNullOrEmpty(interpreter)) {
+                return null;
+            }
             ProcessStartInfo startInfo;
             if (!isWindows && (PythonToolsPackage.Instance.OptionsPage.WaitOnAbnormalExit || PythonToolsPackage.Instance.OptionsPage.WaitOnNormalExit)) {
                 command = "/c \"\"" + interpreter + "\" " + command;

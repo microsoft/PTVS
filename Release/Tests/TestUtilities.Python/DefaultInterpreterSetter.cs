@@ -13,35 +13,34 @@
  * ***************************************************************************/
 
 using System;
+using Microsoft.PythonTools;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.TC.TestHostAdapters;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace TestUtilities.UI {
     public class DefaultInterpreterSetter : IDisposable {
-        public readonly object OriginalInterpreter, OriginalVersion;
+        public readonly IPythonInterpreterFactory OriginalInterpreter;
         private bool _isDisposed;
 
         public DefaultInterpreterSetter(IPythonInterpreterFactory factory) {
-            var props = VsIdeTestHostContext.Dte.get_Properties("Python Tools", "Interpreters");
-            Assert.IsNotNull(props);
+            var sp = new ServiceProvider(VsIdeTestHostContext.Dte as Microsoft.VisualStudio.OLE.Interop.IServiceProvider);
+            var interpService = (IInterpreterOptionsService)sp.GetService(typeof(IInterpreterOptionsService));
+            Assert.IsNotNull(interpService);
 
-            OriginalInterpreter = props.Item("DefaultInterpreter").Value;
-            OriginalVersion = props.Item("DefaultInterpreterVersion").Value;
-
-            props.Item("DefaultInterpreter").Value = factory.Id;
-            props.Item("DefaultInterpreterVersion").Value = string.Format("{0}.{1}", factory.Configuration.Version.Major, factory.Configuration.Version.Minor);
+            OriginalInterpreter = interpService.DefaultInterpreter;
+            interpService.DefaultInterpreter = factory;
         }
 
         public void Dispose() {
             if (!_isDisposed) {
                 _isDisposed = true;
 
-                var props = VsIdeTestHostContext.Dte.get_Properties("Python Tools", "Interpreters");
-                Assert.IsNotNull(props);
-
-                props.Item("DefaultInterpreter").Value = OriginalInterpreter;
-                props.Item("DefaultInterpreterVersion").Value = OriginalVersion;
+                var sp = new ServiceProvider(VsIdeTestHostContext.Dte as Microsoft.VisualStudio.OLE.Interop.IServiceProvider);
+                var interpService = (IInterpreterOptionsService)sp.GetService(typeof(IInterpreterOptionsService));
+                Assert.IsNotNull(interpService);
+                interpService.DefaultInterpreter = OriginalInterpreter;
             }
         }
     }

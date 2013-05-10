@@ -66,17 +66,12 @@ namespace Microsoft.PythonTools.Options {
             base.OnVisibleChanged(e);
 
             if (Visible) {
-                var selectId = PythonToolsPackage.Instance.InterpreterOptionsPage.DefaultInterpreterValue;
-                var selectVersion = PythonToolsPackage.Instance.InterpreterOptionsPage.DefaultInterpreterVersionValue;
-                var programmaticSelection = PythonToolsPackage.Instance.NextOptionsSelection;
+                var selectInterpreter = PythonToolsPackage.Instance.NextOptionsSelection ??
+                    PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>().DefaultInterpreter;
                 PythonToolsPackage.Instance.NextOptionsSelection = null;
-                if (programmaticSelection != null) {
-                    selectId = programmaticSelection.Id;
-                    selectVersion = programmaticSelection.Configuration.Version;
-                }
 
                 foreach (var interpreter in OptionsPage._options.Keys) {
-                    if (interpreter.Id == selectId && interpreter.Configuration.Version == selectVersion) {
+                    if (interpreter == selectInterpreter) {
                         _showSettingsFor.SelectedIndex = _showSettingsFor.FindStringExact(interpreter.GetInterpreterDisplay());
                         break;
                     }
@@ -89,8 +84,9 @@ namespace Microsoft.PythonTools.Options {
         }
 
         public void NewInterpreter(IPythonInterpreterFactory factory) {
-            bool firstInterpreter;
-            if (firstInterpreter = !_showSettingsFor.Enabled) {
+            bool firstInterpreter = false;
+            if (!_showSettingsFor.Enabled) {
+                firstInterpreter = true;
                 // previously there were no interpreters installed
                 _showSettingsFor.Items.Clear();
                 _showSettingsFor.Enabled = true;

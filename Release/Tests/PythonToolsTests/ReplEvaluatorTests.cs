@@ -116,6 +116,8 @@ namespace PythonToolsTests {
             public IEnumerable<IPythonInterpreterFactory> GetInterpreterFactories() {
                 yield return new CPythonInterpreterFactory(new Version(2, 6), Guid.Empty, "Python", _pythonExe, _pythonWinExe, "PYTHONPATH", System.Reflection.ProcessorArchitecture.X86);
             }
+
+            public event EventHandler InterpreterFactoriesChanged { add { } remove { } }
         }
 
         private static void TestOutput(MockReplWindow window, PythonReplEvaluator evaluator, string code, bool success, params string[] expectedOutput) {

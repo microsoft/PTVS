@@ -212,6 +212,9 @@
     <Reference Include="WindowsFormsIntegration" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\Analysis\RegistryWatcher.cs">
+      <Link>RegistryWatcher.cs</Link>
+    </Compile>
     <Compile Include="ProvideComponentPickerPropertyPageAttribute.cs" />
     <Compile Include="ProvideEditorExtension2Attribute.cs" />
     <Compile Include="ProvideFileExtensionMapping.cs" />
@@ -230,6 +233,8 @@
     <Compile Include="PythonTools\Intellisense\FuzzyStringMatcher.cs" />
     <Compile Include="PythonTools\Intellisense\FuzzyCompletionSet.cs" />
     <Compile Include="PythonTools\Navigation\SourceLocation.cs" />
+    <Compile Include="PythonTools\Options\IInterpreterOptionsService.cs" />
+    <Compile Include="PythonTools\Options\InterpreterOptionsService.cs" />
     <Compile Include="PythonTools\Project\Automation\OAProjectConfigurationProperties.cs" />
     <Compile Include="PythonTools\Project\CreateVirtualEnvironmentView.cs" />
     <Compile Include="PythonTools\Project\IDiskBasedNode.cs" />
@@ -390,6 +395,7 @@
       <DependentUpon>WebPiComponentPickerControl.cs</DependentUpon>
     </Compile>
     <Compile Include="PythonTools\Project\WebPiReferenceNode.cs" />
+    <Compile Include="PythonTools\ProvidePythonInterpreterFactoryProviderAttribute.cs" />
     <Compile Include="PythonTools\ProvideX64DebuggerFixForIntegratedShellAttribute.cs" />
     <Compile Include="PythonTools\Refactoring\CodeFormatter.cs" />
     <Compile Include="PythonTools\Refactoring\EnclosingNodeWalker.cs" />
@@ -740,6 +746,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <!-- VSIX -->
+    <Content Include="NoInterpreters.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
     <Content Include="ptvsd\attach_server.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -835,6 +845,7 @@
     </Content>
     <Content Include="..\Icons\Dev$(VSTarget)\PythonFile.ico">
       <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>.</VSIXSubPath>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Templates\NewItem\NewPythonItems.vsdir">
@@ -1212,18 +1223,12 @@
     <Page Include="PythonTools\Project\TaskProgressBar.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
     </Page>
     <Page Include="PythonTools\Refactoring\ExtractMethodDialog.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
     <Page Include="PythonTools\Refactoring\RenameVariableDialog.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
@@ -1235,8 +1240,6 @@
   <ItemGroup>
     <Folder Include="Templates\Files\EmptyPackage\package\" />
   </ItemGroup>
-  <ItemGroup />
-  <ItemGroup />
   <PropertyGroup>
     <!--
     To specify a different registry root to register your package, uncomment the TargetRegistryRoot

@@ -23,12 +23,13 @@
         <CommandBinding Command="{x:Static l:InterpreterList.AbortCommand}" CanExecute="Abort_CanExecute" Executed="Abort_Executed" />
         <CommandBinding Command="{x:Static l:InterpreterList.RegenerateCommand}" CanExecute="Regenerate_CanExecute" Executed="Regenerate_Executed" />
         <CommandBinding Command="{x:Static l:InterpreterList.RefreshCommand}" CanExecute="Refresh_CanExecute" Executed="Refresh_Executed" />
-        <CommandBinding Command="{x:Static l:InterpreterList.OpenReplCommand}" CanExecute="OpenWindow_CanExecute" Executed="OpenWindow_Executed" />
+        <CommandBinding Command="{x:Static l:InterpreterList.OpenReplCommand}" CanExecute="OpenRepl_CanExecute" Executed="OpenRepl_Executed" />
         <CommandBinding Command="{x:Static l:InterpreterList.OpenOptionsCommand}" CanExecute="OpenWindow_CanExecute" Executed="OpenWindow_Executed" />
         <CommandBinding Command="{x:Static l:InterpreterList.OpenReplOptionsCommand}" CanExecute="OpenWindow_CanExecute" Executed="OpenWindow_Executed" />
         <CommandBinding Command="{x:Static l:InterpreterList.OpenPathCommand}" CanExecute="OpenPath_CanExecute" Executed="OpenPath_Executed" />
         <CommandBinding Command="{x:Static l:InterpreterList.MakeDefaultCommand}" CanExecute="MakeDefault_CanExecute" Executed="MakeDefault_Executed" />
         <CommandBinding Command="{x:Static l:InterpreterList.CopyReasonCommand}" CanExecute="CopyReason_CanExecute" Executed="CopyReason_Executed" />
+        <CommandBinding Command="{x:Static l:InterpreterList.WebChooseInterpreterCommand}" CanExecute="WebChooseInterpreter_CanExecute" Executed="WebChooseInterpreter_Executed" />
     </UserControl.CommandBindings>
 
     <UserControl.Resources>
@@ -209,9 +210,16 @@
         </ResourceDictionary>
     </UserControl.Resources>
 
-    <ListView HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+    <Grid>
+        <Grid.Resources>
+            <BooleanToVisibilityConverter x:Key="BVConverter" />
+            <wpf:BooleanToCollapsedConverter x:Key="BCConverter" />
+        </Grid.Resources>
+        <ListView x:Name="interpreterList"
+                  HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
               ItemContainerStyle="{StaticResource InterpreterItemStyle}"
-              ItemsSource="{Binding Source={StaticResource SortedInterpreters}}">
+                  ItemsSource="{Binding Source={StaticResource SortedInterpreters}}"
+                  Visibility="{Binding HasItems,RelativeSource={RelativeSource Self},Converter={StaticResource BVConverter}}">
         <ListView.Template>
             <ControlTemplate>
                 <ScrollViewer CanContentScroll="False">
@@ -230,4 +238,26 @@
             </GridView>
         </ListView.View>
     </ListView>
+        
+        <StackPanel Orientation="Vertical"
+                    HorizontalAlignment="Center" VerticalAlignment="Center"
+                    Visibility="{Binding HasItems,ElementName=interpreterList,Converter={StaticResource BCConverter}}">
+            <TextBlock HorizontalAlignment="Center"
+                       Margin="6">
+                We didn't find any Python interpreters
+            </TextBlock>
+            <Button Style="{StaticResource NavigationButton}"
+                    HorizontalAlignment="Center"
+                    Margin="6"
+                    Command="{x:Static l:InterpreterList.WebChooseInterpreterCommand}">
+                Go online and download one
+            </Button>
+            <Button Style="{StaticResource NavigationButton}"
+                    HorizontalAlignment="Center"
+                    Margin="6"
+                    Command="{x:Static l:InterpreterList.OpenOptionsCommand}">
+                Open Interpreter Options and add one
+            </Button>
+        </StackPanel>
+    </Grid>
 </UserControl>

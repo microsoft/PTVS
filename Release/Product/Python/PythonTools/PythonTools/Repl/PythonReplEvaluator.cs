@@ -68,7 +68,7 @@ namespace Microsoft.PythonTools.Repl {
 
         internal VsProjectAnalyzer ReplAnalyzer {
             get {
-                if (_replAnalyzer == null) {
+                if (_replAnalyzer == null && Interpreter != null) {
                     _replAnalyzer = new VsProjectAnalyzer(Interpreter, _factProvider.GetInterpreterFactories().ToArray(), _errorProviderFactory);
                     _ownsAnalyzer = true;
                 }
@@ -84,13 +84,13 @@ namespace Microsoft.PythonTools.Repl {
 
         protected override PythonLanguageVersion LanguageVersion {
             get {
-                return Interpreter.GetLanguageVersion();
+                return Interpreter != null ? Interpreter.GetLanguageVersion() : PythonLanguageVersion.None;
             }
         }
 
         internal override string DisplayName {
             get {
-                return Interpreter.GetInterpreterDisplay();
+                return Interpreter != null ? Interpreter.GetInterpreterDisplay() : string.Empty;
             }
         }
 
@@ -143,6 +143,10 @@ namespace Microsoft.PythonTools.Repl {
         protected override void Connect() {
             _interpreter = GetInterpreterFactory();
 
+            if (Interpreter == null) {
+                Window.WriteError("The interpreter is not available.");
+                return;
+            }
             var processInfo = new ProcessStartInfo(Interpreter.Configuration.InterpreterPath);
 
 #if DEBUG

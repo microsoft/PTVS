@@ -16,50 +16,82 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.Win32;
 
 namespace Microsoft.PythonTools.Interpreter.Default {
     [Export(typeof(IPythonInterpreterFactoryProvider))]
-    [Export(typeof(IDefaultInterpreterFactoryCreator))]
-    class CPythonInterpreterFactoryProvider : IPythonInterpreterFactoryProvider, IDefaultInterpreterFactoryCreator {
-        private readonly List<IPythonInterpreterFactory> _interpreters = new List<IPythonInterpreterFactory>();
+    [PartCreationPolicy(CreationPolicy.Shared)]
+    class CPythonInterpreterFactoryProvider : IPythonInterpreterFactoryProvider {
+        private readonly List<IPythonInterpreterFactory> _interpreters;
         private static readonly Guid _cpyInterpreterGuid = new Guid("{2AF0F10D-7135-4994-9156-5D01C9C11B7E}");
         private static readonly Guid _cpy64InterpreterGuid = new Guid("{9A7A9026-48C1-4688-9D5D-E5699D47D074}");
-        internal static CPythonInterpreterFactoryProvider Instance;
         const string PythonCorePath = "SOFTWARE\\Python\\PythonCore";
 
         public CPythonInterpreterFactoryProvider() {
-            Instance = this;
+            _interpreters = new List<IPythonInterpreterFactory>();
+            DiscoverInterpreterFactories();
 
-            HashSet<string> registeredPaths = new HashSet<string>();
-            using (var baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32))
-            using (var python = baseKey.OpenSubKey(PythonCorePath)) {
-                if (python != null) {
-                    RegisterInterpreters(registeredPaths, python, ProcessorArchitecture.X86);
-                }
+            try {
+                RegistryWatcher.Instance.Add(RegistryHive.CurrentUser, RegistryView.Default,
+                    PythonCorePath,
+                    Registry_Changed,
+                    recursive: true, notifyValueChange: true, notifyKeyChange: true);
+            } catch (ArgumentException) {
+                RegistryWatcher.Instance.Add(RegistryHive.CurrentUser, RegistryView.Default,
+                    "SOFTWARE",
+                    Registry_Software_Changed,
+                    recursive: false, notifyValueChange: false, notifyKeyChange: true);
+            }
+
+            try {
+                RegistryWatcher.Instance.Add(RegistryHive.LocalMachine, RegistryView.Registry32,
+                    PythonCorePath,
+                    Registry_Changed,
+                    recursive: true, notifyValueChange: true, notifyKeyChange: true);
+            } catch (ArgumentException) {
+                RegistryWatcher.Instance.Add(RegistryHive.LocalMachine, RegistryView.Registry32,
+                    "SOFTWARE",
+                    Registry_Software_Changed,
+                    recursive: false, notifyValueChange: false, notifyKeyChange: true);
             }
 
             if (Environment.Is64BitOperatingSystem) {
-                using (var baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64))
-                using (var python64 = baseKey.OpenSubKey(PythonCorePath)) {
-                    if (python64 != null) {
-                        RegisterInterpreters(registeredPaths, python64, ProcessorArchitecture.Amd64);
-                    }
-                }
-            }
-
-            var arch = Environment.Is64BitOperatingSystem ? null : (ProcessorArchitecture?)ProcessorArchitecture.X86;
-            using (var baseKey = RegistryKey.OpenBaseKey(RegistryHive.CurrentUser, RegistryView.Default))
-            using (var python = baseKey.OpenSubKey(PythonCorePath)) {
-                if (python != null) {
-                    RegisterInterpreters(registeredPaths, python, arch);
+                try {
+                    RegistryWatcher.Instance.Add(RegistryHive.LocalMachine, RegistryView.Registry64,
+                        PythonCorePath,
+                        Registry_Changed,
+                        recursive: true, notifyValueChange: true, notifyKeyChange: true);
+                } catch (ArgumentException) {
+                    RegistryWatcher.Instance.Add(RegistryHive.LocalMachine, RegistryView.Registry64,
+                        "SOFTWARE",
+                        Registry_Software_Changed,
+                        recursive: false, notifyValueChange: false, notifyKeyChange: true);
                 }
             }
         }
 
-        private void RegisterInterpreters(HashSet<string> registeredPaths, RegistryKey python, ProcessorArchitecture? arch) {
+        private void Registry_Changed(object sender, RegistryChangedEventArgs e) {
+            DiscoverInterpreterFactories();
+        }
+
+        private void Registry_Software_Changed(object sender, RegistryChangedEventArgs e) {
+            using (var root = RegistryKey.OpenBaseKey(e.Hive, e.View))
+            using (var key = root.OpenSubKey(PythonCorePath)) {
+                if (key != null) {
+                    Registry_Changed(sender, e);
+                    e.CancelWatcher = true;
+                    RegistryWatcher.Instance.Add(e.Hive, e.View, PythonCorePath, Registry_Changed,
+                        recursive: true, notifyValueChange: true, notifyKeyChange: true);
+                }
+            }
+        }
+
+        private bool RegisterInterpreters(HashSet<string> registeredPaths, RegistryKey python, ProcessorArchitecture? arch) {
+            bool anyAdded = false;
+
             foreach (var key in python.GetSubKeyNames()) {
                 Version version;
                 if (Version.TryParse(key, out version)) {
@@ -98,8 +130,8 @@ namespace Microsoft.PythonTools.Interpreter.Default {
                             description = "Python 64-bit";
                         }
 
-                        _interpreters.Add(
-                            new CPythonInterpreterFactory(
+                        if (!_interpreters.Any(f => f.Id == id && f.Configuration.Version == version)) {
+                            _interpreters.Add(new CPythonInterpreterFactory(
                                 version,
                                 id,
                                 description,
@@ -107,12 +139,48 @@ namespace Microsoft.PythonTools.Interpreter.Default {
                                 Path.Combine(basePath, "pythonw.exe"),
                                 "PYTHONPATH",
                                 actualArch ?? ProcessorArchitecture.None
-                            )
-                        );
+                            ));
+                            anyAdded = true;
+                        }
                     }
                 }
             }
+
+            return anyAdded;
         }
+
+        private void DiscoverInterpreterFactories() {
+            bool anyAdded = false;
+            HashSet<string> registeredPaths = new HashSet<string>();
+            using (var baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32))
+            using (var python = baseKey.OpenSubKey(PythonCorePath)) {
+                if (python != null) {
+                    anyAdded |= RegisterInterpreters(registeredPaths, python, ProcessorArchitecture.X86);
+                }
+            }
+
+            if (Environment.Is64BitOperatingSystem) {
+                using (var baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64))
+                using (var python64 = baseKey.OpenSubKey(PythonCorePath)) {
+                    if (python64 != null) {
+                        anyAdded |= RegisterInterpreters(registeredPaths, python64, ProcessorArchitecture.Amd64);
+                    }
+                }
+            }
+
+            var arch = Environment.Is64BitOperatingSystem ? null : (ProcessorArchitecture?)ProcessorArchitecture.X86;
+            using (var baseKey = RegistryKey.OpenBaseKey(RegistryHive.CurrentUser, RegistryView.Default))
+            using (var python = baseKey.OpenSubKey(PythonCorePath)) {
+                if (python != null) {
+                    anyAdded |= RegisterInterpreters(registeredPaths, python, arch);
+                }
+            }
+
+            if (anyAdded) {
+                OnInterpreterFactoriesChanged();
+            }
+        }
+
 
         #region IPythonInterpreterProvider Members
 
@@ -120,89 +188,13 @@ namespace Microsoft.PythonTools.Interpreter.Default {
             return _interpreters;
         }
 
-        #endregion
+        public event EventHandler InterpreterFactoriesChanged;
 
-        #region IDefaultInterpreterFactoryCreator Members
-
-        public IPythonInterpreterFactory CreateInterpreterFactory(Dictionary<InterpreterFactoryOptions, object> options) {
-            object value;
-            Version version = new Version(2, 7);
-            if (options.TryGetValue(InterpreterFactoryOptions.Version, out value)) {
-                if (value is string && Version.TryParse((string)value, out version)) {
-                } else if (value is Version) {
-                    version = (Version)value;
-                } else {
-                    throw new InvalidOperationException(String.Format("Bad version: {0}", value));
-                }
+        private void OnInterpreterFactoriesChanged() {
+            var evt = InterpreterFactoriesChanged;
+            if (evt != null) {
+                evt(this, EventArgs.Empty);
             }
-
-            Guid id;
-            if (options.TryGetValue(InterpreterFactoryOptions.Guid, out value)) {
-                if (value is string && Guid.TryParse((string)value, out id)) {
-                } else if (value is Guid) {
-                    id = (Guid)value;
-                } else {
-                    throw new InvalidOperationException(String.Format("Bad guid: {0}", value));
-                }
-            } else {
-                id = Guid.NewGuid();
-            }
-
-            string description = "";
-            if (options.TryGetValue(InterpreterFactoryOptions.Description, out value)) {
-                if (value is string) {
-                    description = (string)value;
-                } else {
-                    throw new InvalidOperationException(String.Format("Bad description: {0}", value));
-                }
-            }
-
-            string pyPath = "";
-            if (options.TryGetValue(InterpreterFactoryOptions.PythonPath, out value)) {
-                if (value is string) {
-                    pyPath = (string)value;
-                } else {
-                    throw new InvalidOperationException(String.Format("Bad Python path: {0}", value));
-                }
-            }
-
-            string pyWindowsPath = "";
-            if (options.TryGetValue(InterpreterFactoryOptions.PythonWindowsPath, out value)) {
-                if (value is string) {
-                    pyWindowsPath = (string)value;
-                } else {
-                    throw new InvalidOperationException(String.Format("Bad Python Windows path: {0}", value));
-                }
-            }
-
-            string pyPathEnvVar = "PYTHONPATH";
-            if (options.TryGetValue(InterpreterFactoryOptions.PathEnvVar, out value)) {
-                if (value is string) {
-                    pyPathEnvVar = (string)value;
-                } else {
-                    throw new InvalidOperationException(String.Format("Bad Python Windows path env var: {0}", value));
-                }
-            }
-
-            ProcessorArchitecture arch = ProcessorArchitecture.X86;
-            if (options.TryGetValue(InterpreterFactoryOptions.ProcessorArchitecture, out value)) {
-                if (value is string && Enum.TryParse<ProcessorArchitecture>((string)value, true, out arch)) {
-                } else if (value is ProcessorArchitecture) {
-                    arch = (ProcessorArchitecture)value;
-                } else {
-                    throw new InvalidOperationException(String.Format("Bad processor architecture value: {0}", value));
-                }
-            }
-
-            return new CPythonInterpreterFactory(
-                version,
-                id,
-                description,
-                pyPath,
-                pyWindowsPath,
-                pyPathEnvVar,
-                arch
-            );
         }
 
         #endregion

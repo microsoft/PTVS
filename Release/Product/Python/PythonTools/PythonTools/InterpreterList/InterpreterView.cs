@@ -26,22 +26,19 @@ namespace Microsoft.PythonTools.InterpreterList {
         private readonly string _identifier;
         private bool _startedRunning, _waitingForIsChanged;
 
-        public static IEnumerable<InterpreterView> GetInterpreters() {
-            var componentService = (PythonToolsPackage.GetGlobalService(typeof(SComponentModel))) as IComponentModel;
-            var factoryProviders = componentService.GetExtensions<IPythonInterpreterFactoryProvider>();
-
-            var defaultId = PythonToolsPackage.Instance.InterpreterOptionsPage.DefaultInterpreterValue;
-            var defaultVersion = PythonToolsPackage.Instance.InterpreterOptionsPage.DefaultInterpreterVersionValue;
-            
-            foreach (var factory in factoryProviders) {
-                foreach (var interp in factory.GetInterpreterFactories()) {
-                    if (interp != null) {
-                        yield return new InterpreterView(
-                            interp,
-                            interp.GetInterpreterDisplay(),
-                            interp.Id == defaultId && interp.Configuration.Version == defaultVersion);
-                    }
+        public static IEnumerable<InterpreterView> GetInterpreters(IInterpreterOptionsService interpService = null) {
+            if (interpService == null) {
+                interpService = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
+                if (interpService == null) {
+                    yield break;
                 }
+            }
+
+            foreach (var interp in interpService.Interpreters) {
+                yield return new InterpreterView(
+                    interp,
+                    interp.GetInterpreterDisplay(),
+                    interp == interpService.DefaultInterpreter);
             }
         }
 
@@ -104,11 +101,11 @@ namespace Microsoft.PythonTools.InterpreterList {
             }
         }
 
-        internal void DefaultInterpreterUpdate(Guid defaultId, Version defaultVer) {
+        internal void DefaultInterpreterUpdate(IPythonInterpreterFactory newDefault) {
             if (Dispatcher.CheckAccess()) {
-                IsDefault = (Interpreter.Id == defaultId && Interpreter.Configuration.Version == defaultVer);
+                IsDefault = (Interpreter == newDefault);
             } else {
-                Dispatcher.BeginInvoke((Action)(() => DefaultInterpreterUpdate(defaultId, defaultVer)));
+                Dispatcher.BeginInvoke((Action)(() => DefaultInterpreterUpdate(newDefault)));
             }
         }
 

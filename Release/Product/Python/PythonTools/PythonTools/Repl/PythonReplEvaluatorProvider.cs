@@ -14,6 +14,7 @@
 
 using System;
 using System.ComponentModel.Composition;
+using System.Linq;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.Repl;
 using Microsoft.VisualStudio.Text.Adornments;
@@ -33,8 +34,8 @@ namespace Microsoft.PythonTools.Repl {
         private const string _replGuid = "FAEC7F47-85D8-4899-8D7B-0B855B732CC8";
 
         [ImportingConstructor]
-        public PythonReplEvaluatorProvider([ImportMany]IPythonInterpreterFactoryProvider[] interpreters, IErrorProviderFactory errorProviderFactory) {
-            _interpreters = interpreters;
+        public PythonReplEvaluatorProvider([Import]IInterpreterOptionsService interpService, IErrorProviderFactory errorProviderFactory) {
+            _interpreters = interpService.KnownProviders.ToArray();
             _errorProviderFactory = errorProviderFactory;
         }
 

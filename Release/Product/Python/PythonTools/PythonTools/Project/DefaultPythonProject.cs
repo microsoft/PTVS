@@ -65,7 +65,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         IPythonInterpreterFactory IPythonProject.GetInterpreterFactory() {
-            return PythonToolsPackage.ComponentModel.GetAllPythonInterpreterFactories().GetDefaultInterpreter();
+            return PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>().DefaultInterpreter;
         }
 
         bool IPythonProject.Publish(PublishProjectOptions options) {

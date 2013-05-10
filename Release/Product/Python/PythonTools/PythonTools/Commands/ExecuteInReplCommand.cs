@@ -69,9 +69,11 @@ namespace Microsoft.PythonTools.Commands {
         private void QueryStatusMethod(object sender, EventArgs args) {
             var oleMenu = sender as OleMenuCommand;
             VsProjectAnalyzer analyzer;
+            var interpService = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
             string filename, dir;
             if (!PythonToolsPackage.TryGetStartupFileAndDirectory(out filename, out dir, out analyzer) ||
-                analyzer.InterpreterFactory.Id == PythonToolsPackage._noInterpretersFactoryGuid) {
+                interpService == null ||
+                interpService.NoInterpretersValue == analyzer.InterpreterFactory) {
                 // no interpreters installed, disable the command.
                 oleMenu.Visible = true;
                 oleMenu.Enabled = false;

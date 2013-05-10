@@ -12,6 +12,9 @@
  *
  * ***************************************************************************/
 
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
 using Microsoft.VisualStudio.Shell;
 
 namespace Microsoft.PythonTools.Wpf {
@@ -57,5 +60,16 @@ namespace Microsoft.PythonTools.Wpf {
         public static readonly object ScrollBarArrowBackgroundHoverKey = VsBrushes.ScrollBarArrowMouseOverBackgroundKey;
         public static readonly object ScrollBarArrowBackgroundPressedKey = VsBrushes.ScrollBarArrowPressedBackgroundKey;
         public static readonly object ScrollBarArrowBackgroundDisabledKey = VsBrushes.ScrollBarArrowDisabledBackgroundKey;
+    }
+
+    [ValueConversion(typeof(bool), typeof(Visibility))]
+    class BooleanToCollapsedConverter : IValueConverter {
+        public object Convert(object value, System.Type targetType, object parameter, System.Globalization.CultureInfo culture) {
+            return (value as bool? ?? false) ? Visibility.Collapsed : Visibility.Visible;
+        }
+
+        public object ConvertBack(object value, System.Type targetType, object parameter, System.Globalization.CultureInfo culture) {
+            return ((value as Visibility? ?? Visibility.Visible) == Visibility.Collapsed);
+        }
     }
 }

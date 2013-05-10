@@ -113,6 +113,9 @@
             <Component Id="cmpE4E7569D005A40AFBA05AC770949CBEA" Directory="INSTALLLOCATION" Guid="{D2E99282-2257-4559-A6FD-F69DA8D155BE}">
                 <File Id="filBD705C5EB57C4F18BDAE120949DC2348" KeyPath="yes" Source="$(var.TargetDir)\BuiltinScraper.py" />
             </Component>
+            <Component Id="cmp3255C55CE4A84BA2AE18C067CCCB2F53" Directory="INSTALLLOCATION" Guid="{F849ADFC-0EE2-4F6C-B69E-D235B8E175D2}">
+                <File Id="fil289B66CC358944D79F3C68E1DDE7300F" KeyPath="yes" Source="$(var.TargetDir)\NoInterpreters.html" />
+            </Component>
             <Component Id="cmp281B78C80A994875BBA07772007F1561" Directory="dir4C35966DF3CB4FFBBC79F3DE8EFBBB20" Guid="{685CE9DE-781F-4209-AB21-106F29425E80}">
                 <File Id="fil77FBA41B51724C4A994E90DBE3B887AD" KeyPath="yes" Source="$(var.TargetDir)\Templates\NewItem\class.py" />
             </Component>

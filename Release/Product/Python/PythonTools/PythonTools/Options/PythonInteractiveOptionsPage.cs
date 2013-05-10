@@ -83,15 +83,12 @@ namespace Microsoft.PythonTools.Options {
         }
 
         public override void LoadSettingsFromStorage() {
-            var model = (IComponentModel)PythonToolsPackage.GetGlobalService(typeof(SComponentModel));
-            var interpreters = model.GetAllPythonInterpreterFactories();
+            var interpService = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
             _options.Clear();
-            foreach (var interpreter in interpreters) {
+            foreach (var interpreter in interpService.Interpreters) {
                 string interpreterId = interpreter.GetInterpreterPath() + "\\";
 
-                _options[interpreter] =
-                    ReadOptions(interpreterId);
-
+                _options[interpreter] = ReadOptions(interpreterId);
             }
         }
 
@@ -113,10 +110,10 @@ namespace Microsoft.PythonTools.Options {
 
         public override void SaveSettingsToStorage() {
             var model = (IComponentModel)PythonToolsPackage.GetGlobalService(typeof(SComponentModel));
-            var interpreters = model.GetAllPythonInterpreterFactories();
+            var service = model.GetService<IInterpreterOptionsService>();
             var replProvider = model.GetService<IReplWindowProvider>();
 
-            foreach (var interpreter in interpreters) {
+            foreach (var interpreter in service.Interpreters) {
                 string interpreterId = interpreter.GetInterpreterPath() + "\\";
 
                 PythonInteractiveOptions options;

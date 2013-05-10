@@ -14,7 +14,6 @@
 
 using System.Windows.Forms;
 using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Project {
@@ -34,14 +33,6 @@ namespace Microsoft.PythonTools.Project {
                         return VSConstants.S_OK;
                     }
                 }
-            }
-
-            var model = (IComponentModel)ProjectMgr.GetService(typeof(SComponentModel));
-
-            var allFactories = model.GetAllPythonInterpreterFactories();
-            if (allFactories.Length == 0) {
-                MessageBox.Show("No Python interpreters are installed.\r\n\r\nPlease download a Python distribution or configure an interpreter manually in Tools->Options->Python Tools->Interpreter Options.", "No Python Interpreters Installed", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return VSConstants.S_OK;
             }
 
             return base.DebugLaunch(flags);

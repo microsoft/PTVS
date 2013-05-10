@@ -13,11 +13,15 @@
  * ***************************************************************************/
 
 using System.ComponentModel;
+using Microsoft.IronPythonTools.Interpreter;
+using Microsoft.PythonTools;
 using Microsoft.VisualStudio.Shell;
 
 namespace Microsoft.IronPythonTools {
     [PackageRegistration(UseManagedResourcesOnly = true)]
     [Description("Python Tools IronPython Interpreter")]
+    [ProvidePythonInterpreterFactoryProvider("{80659AB7-4D53-4E0C-8588-A766116CBD46}", typeof(IronPythonInterpreterFactoryProvider))]
+    [ProvidePythonInterpreterFactoryProvider("{FCC291AA-427C-498C-A4D7-4502D6449B8C}", typeof(IronPythonInterpreterFactoryProvider))]
     class IpyToolsPackage : Package {
         public IpyToolsPackage() {
         }

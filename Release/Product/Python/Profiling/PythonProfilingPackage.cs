@@ -55,7 +55,7 @@ namespace Microsoft.PythonTools.Profiling {
     [ProvideFileFilterAttribute("{81da0100-e6db-4783-91ea-c38c3fa1b81e}", "/1", "Python Performance Session (*.pyperf);*.pyperf", 100)]
     [ProvideEditorExtension(typeof(ProfilingSessionEditorFactory), ".pyperf", 50,
           ProjectGuid = "{81da0100-e6db-4783-91ea-c38c3fa1b81e}",
-          NameResourceID = 105,         
+          NameResourceID = 105,
           DefaultName = "PythonPerfSession")]
     [ProvideAutomationObject("PythonProfiling")]
     sealed class PythonProfilingPackage : Package {
@@ -110,8 +110,8 @@ namespace Microsoft.PythonTools.Profiling {
 
                 menuCommandID = new CommandID(GuidList.guidPythonProfilingCmdSet, (int)PkgCmdIDList.cmdidStopProfiling);
                 _stopCommand = oleMenuItem = new OleMenuCommand(StopProfiling, menuCommandID);
-                oleMenuItem.BeforeQueryStatus += IsProfilingInactive;                
-            
+                oleMenuItem.BeforeQueryStatus += IsProfilingInactive;
+
                 mcs.AddCommand(oleMenuItem);
             }
 
@@ -123,7 +123,7 @@ namespace Microsoft.PythonTools.Profiling {
             if (name == "PythonProfiling") {
                 if (_profilingAutomation == null) {
                     var pane = (PerfToolWindow)this.FindToolWindow(typeof(PerfToolWindow), 0, true);
-                    _profilingAutomation  = new AutomationProfiling(pane.Sessions);
+                    _profilingAutomation = new AutomationProfiling(pane.Sessions);
                 }
                 return _profilingAutomation;
             }
@@ -140,7 +140,7 @@ namespace Microsoft.PythonTools.Profiling {
             var targetView = new ProfilingTargetView();
             var dialog = new LaunchProfiling(targetView);
             var res = dialog.ShowModal() ?? false;
-            if (res  && targetView.IsValid) {
+            if (res && targetView.IsValid) {
                 var target = targetView.GetTarget();
                 if (target != null) {
                     ProfileTarget(target);
@@ -179,7 +179,7 @@ namespace Microsoft.PythonTools.Profiling {
             EnvDTE.Project projectToProfile = null;
             foreach (EnvDTE.Project project in dte.Solution.Projects) {
                 var kind = project.Kind;
-                
+
                 if (String.Equals(kind, PythonProfilingPackage.PythonProjectGuid, StringComparison.OrdinalIgnoreCase)) {
                     var guid = project.Properties.Item("Guid").Value as string;
 
@@ -199,30 +199,26 @@ namespace Microsoft.PythonTools.Profiling {
         }
 
         internal static void ProfileProject(SessionNode session, EnvDTE.Project projectToProfile, bool openReport) {
+            var model = (IComponentModel)(GetGlobalService(typeof(SComponentModel)));
+            var interpService = model.GetService<IInterpreterOptionsService>();
+
             var interpreterId = (string)projectToProfile.Properties.Item("InterpreterId").Value;
             var interpreterVersion = (string)projectToProfile.Properties.Item("InterpreterVersion").Value;
             var args = (string)projectToProfile.Properties.Item("CommandLineArguments").Value;
             var interpreterPath = (string)projectToProfile.Properties.Item("InterpreterPath").Value;
             var searchPath = (string)projectToProfile.Properties.Item("SearchPath").Value;
-            string interpreter;
 
-            Guid intGuid;
-            Version intVersion;
-            ProcessorArchitecture arch;
-            string searchPathEnvVarName;
-            if (!Guid.TryParse(interpreterId, out intGuid) ||
-                !Version.TryParse(interpreterVersion, out intVersion)) {
+            var interpreter = interpService.FindInterpreter(interpreterId, interpreterVersion);
+            if (interpreter == null) {
                 MessageBox.Show(String.Format("Could not find interpreter for project {0}", projectToProfile.Name), "Python Tools for Visual Studio");
                 return;
             }
 
-            if (!TryGetInterpreter(intVersion, intGuid, out interpreter, out searchPathEnvVarName, out arch)) {
-                // message already displayed.
-                return;
-            }
+            var arch = interpreter.Configuration.Architecture;
+            var searchPathEnvVarName = interpreter.Configuration.PathEnvironmentVariable;
 
-            if (!String.IsNullOrWhiteSpace(interpreterPath)) {
-                interpreter = interpreterPath;
+            if (String.IsNullOrWhiteSpace(interpreterPath)) {
+                interpreterPath = interpreter.Configuration.InterpreterPath;
             }
 
             string startupFile = (string)projectToProfile.Properties.Item("StartupFile").Value;
@@ -243,51 +239,25 @@ namespace Microsoft.PythonTools.Profiling {
             if (!String.IsNullOrWhiteSpace(searchPath) && !String.IsNullOrWhiteSpace(searchPathEnvVarName)) {
                 env[searchPathEnvVarName] = searchPath;
             }
-            RunProfiler(session, interpreter, startupFile, args, workingDir, env, openReport, arch);
+            RunProfiler(session, interpreterPath, startupFile, args, workingDir, env, openReport, arch);
         }
 
         private static void ProfileStandaloneTarget(SessionNode session, StandaloneTarget runTarget, bool openReport) {
-            string interpreter;
-            ProcessorArchitecture arch;
-            if (runTarget.PythonInterpreter != null) {
+            var model = (IComponentModel)(GetGlobalService(typeof(SComponentModel)));
+            var interpService = model.GetService<IInterpreterOptionsService>();
 
-                Version selectedVersion = new Version(runTarget.PythonInterpreter.Version);
-                Guid interpreterId = runTarget.PythonInterpreter.Id;
-                string searchPathEnv;
-                if (!TryGetInterpreter(selectedVersion, interpreterId, out interpreter, out searchPathEnv, out arch)) {
+            var interpreterPath = runTarget.InterpreterPath;
+            var arch = ProcessorArchitecture.X86;
+            if (runTarget.PythonInterpreter != null) {
+                var interpreter = interpService.FindInterpreter(runTarget.PythonInterpreter.Id, runTarget.PythonInterpreter.Version);
+                if (interpreter == null) {
                     return;
                 }
-            } else {
-                interpreter = runTarget.InterpreterPath;
-                arch = ProcessorArchitecture.X86;
+                interpreterPath = interpreter.Configuration.InterpreterPath;
+                arch = interpreter.Configuration.Architecture;
             }
 
-            RunProfiler(session, interpreter, runTarget.Script, runTarget.Arguments, runTarget.WorkingDirectory, null, openReport, arch);
-        }
-
-        private static bool TryGetInterpreter(Version selectedVersion, Guid interpreterId, out string interpreter, out string searchPathEnv, out ProcessorArchitecture architecture) {
-            interpreter = null;
-            architecture = ProcessorArchitecture.None;
-            searchPathEnv = null;
-            var service = (IComponentModel)(GetGlobalService(typeof(SComponentModel)));
-            var factoryProviders = service.GetExtensions<IPythonInterpreterFactoryProvider>();
-            
-            foreach (var factProvider in factoryProviders) {
-                foreach (var fact in factProvider.GetInterpreterFactories()) {
-                    if (fact.Id == interpreterId &&
-                        fact.Configuration.Version == selectedVersion) {
-                        interpreter = fact.Configuration.InterpreterPath;
-                        architecture = fact.Configuration.Architecture;
-                        searchPathEnv = fact.Configuration.PathEnvironmentVariable;
-                        break;
-                    }
-                }
-            }
-            if (interpreter == null) {
-                MessageBox.Show("Could not find selected interpreter", "Python Tools for Visual Studio");
-                return false;
-            }
-            return true;
+            RunProfiler(session, interpreterPath, runTarget.Script, runTarget.Arguments, runTarget.WorkingDirectory, null, openReport, arch);
         }
 
 
@@ -303,19 +273,19 @@ namespace Microsoft.PythonTools.Profiling {
                 outPath = Path.Combine(Path.GetTempPath(), baseName + "_" + date + "(" + count + ").vsp");
                 count++;
             }
-            
+
             process.ProcessExited += (sender, args) => {
                 var dte = (EnvDTE.DTE)PythonProfilingPackage.GetGlobalService(typeof(EnvDTE.DTE));
                 _profilingProcess = null;
                 _stopCommand.Enabled = false;
                 _startCommand.Enabled = true;
-                if (openReport && File.Exists(outPath)) {                    
+                if (openReport && File.Exists(outPath)) {
                     dte.ItemOperations.OpenFile(outPath);
                 }
             };
 
             session.AddProfile(outPath);
-            
+
             process.StartProfiling(outPath);
             _profilingProcess = process;
             _stopCommand.Enabled = true;

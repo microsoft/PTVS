@@ -121,6 +121,9 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\Analysis\RegistryWatcher.cs">
+      <Link>RegistryWatcher.cs</Link>
+    </Compile>
     <Compile Include="Debugger\IronPythonLauncher.cs" />
     <Compile Include="Debugger\IronPythonLauncherOptions.cs">
       <SubType>UserControl</SubType>

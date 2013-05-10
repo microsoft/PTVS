@@ -21,6 +21,7 @@ using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.PythonTools.Options {
     public partial class PythonInterpreterOptionsControl : UserControl {
+        private IInterpreterOptionsService _service;
         private bool _loadingOptions;
         private ToolTip _invalidVersionToolTip = new ToolTip();
         private ToolTip _invalidPathToolTip = new ToolTip();
@@ -28,6 +29,8 @@ namespace Microsoft.PythonTools.Options {
 
         public PythonInterpreterOptionsControl() {
             InitializeComponent();
+
+            _service = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
             InitInterpreters();
         }
 
@@ -35,8 +38,8 @@ namespace Microsoft.PythonTools.Options {
             base.OnVisibleChanged(e);
 
             if (Visible) {
-                var defaultId = PythonToolsPackage.Instance.InterpreterOptionsPage.DefaultInterpreterValue;
-                var defaultVersion = PythonToolsPackage.Instance.InterpreterOptionsPage.DefaultInterpreterVersionValue;
+                var defaultId = _service.DefaultInterpreter.Id;
+                var defaultVersion = _service.DefaultInterpreter.Configuration.Version;
                 var selectId = defaultId;
                 var selectVersion = defaultVersion;
                 var programmaticSelection = PythonToolsPackage.Instance.NextOptionsSelection;
@@ -61,8 +64,8 @@ namespace Microsoft.PythonTools.Options {
             _showSettingsFor.Items.Clear();
             _defaultInterpreter.Items.Clear();
 
-            var defaultId = PythonToolsPackage.Instance.InterpreterOptionsPage.DefaultInterpreterValue;
-            var defaultVersion = PythonToolsPackage.Instance.InterpreterOptionsPage.DefaultInterpreterVersionValue;
+            var defaultId = _service.DefaultInterpreter.Id;
+            var defaultVersion = _service.DefaultInterpreter.Configuration.Version;
 
             foreach (var interpreter in OptionsPage._options) {
                 var display = interpreter.Display;

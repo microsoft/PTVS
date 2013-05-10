@@ -14,14 +14,12 @@
 
 using System;
 using System.Linq;
-using System.Reflection;
 using EnvDTE;
 using EnvDTE80;
 using EnvDTE90;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Debugger.DebugEngine;
 using Microsoft.TC.TestHostAdapters;
-using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 using Path = System.IO.Path;
@@ -319,63 +317,35 @@ namespace DebuggerUITests {
             var interpreterId = (string)project.Properties.Item("InterpreterId").Value;
             var interpreterVersion = (string)project.Properties.Item("InterpreterVersion").Value;
             var interpreterPath = (string)project.Properties.Item("InterpreterPath").Value;
-            string interpreter;
-            Guid intGuid;
-            Version intVersion;
-            ProcessorArchitecture arch;
-            string searchPathEnvVarName;
-
+            
             // use the project's custom interpreter path if defined
             if (!String.IsNullOrWhiteSpace(interpreterPath)) {
-                interpreter = Path.GetFullPath(interpreterPath);
-                SD.Debug.WriteLine("Using project specified interpreter path: {0}", interpreter, null);
-                return interpreter;
+                interpreterPath = Path.GetFullPath(interpreterPath);
+                SD.Debug.WriteLine("Using project specified interpreter path: {0}", interpreterPath, null);
+                return interpreterPath;
             }
+
+            var interpService = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
+            var interpreter = interpService.FindInterpreter(interpreterId, interpreterVersion);
+
             // use the project's interpreter if we can find it
-            if (Guid.TryParse(interpreterId, out intGuid) &&
-                Version.TryParse(interpreterVersion, out intVersion) &&
-                TryGetInterpreter(intVersion, intGuid, out interpreter, out searchPathEnvVarName, out arch)) {
-                interpreter = Path.GetFullPath(interpreter);
+            if (interpreter != null) {
+                interpreterPath = Path.GetFullPath(interpreter.Configuration.InterpreterPath);
                 SD.Debug.WriteLine("Using project specified interpreter: {0}", interpreter, null);
-                return interpreter;
+                return interpreterPath;
             }
             // use the VS instance's default interpreter if there is one
             SD.Debug.WriteLine("Project specified interpreter not found: {0} - {1}", interpreterId, interpreterVersion);
-            if (TryGetInterpreter(PythonToolsPackage.Instance.InterpreterOptionsPage.DefaultInterpreterVersionValue,
-                                    PythonToolsPackage.Instance.InterpreterOptionsPage.DefaultInterpreterValue,
-                                    out interpreter, out searchPathEnvVarName, out arch)) {
-                interpreter = Path.GetFullPath(interpreter);
+            interpreter = interpService.DefaultInterpreter;
+            if (interpreter != null) {
+                interpreterPath = Path.GetFullPath(interpreter.Configuration.InterpreterPath);
                 SD.Debug.WriteLine("Using VS default interpreter: {0}", interpreter, null);
-                return interpreter;
+                return interpreterPath;
             }
             // fail
             Assert.Fail("There were no available interpreters. Could not launch project.");
             return null;
 
-        }
-
-        private static bool TryGetInterpreter(Version selectedVersion, Guid interpreterId, out string interpreter, out string searchPathEnv, out ProcessorArchitecture architecture) {
-            interpreter = null;
-            architecture = ProcessorArchitecture.None;
-            searchPathEnv = null;
-            var service = (IComponentModel)VsIdeTestHostContext.ServiceProvider.GetService(typeof(SComponentModel));
-
-            var factories = service.GetAllPythonInterpreterFactories();
-
-            foreach (var fact in factories) {
-                if (fact.Id == interpreterId &&
-                    fact.Configuration.Version == selectedVersion) {
-                    interpreter = fact.Configuration.InterpreterPath;
-                    architecture = fact.Configuration.Architecture;
-                    searchPathEnv = fact.Configuration.PathEnvironmentVariable;
-                    break;
-                }
-            }
-
-            if (interpreter == null) {
-                return false;
-            }
-            return true;
         }
 
         #endregion

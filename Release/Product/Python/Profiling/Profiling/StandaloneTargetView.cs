@@ -18,6 +18,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.ComponentModelHost;
 
@@ -43,14 +44,10 @@ namespace Microsoft.PythonTools.Profiling {
         /// </summary>
         public StandaloneTargetView() {
             var componentService = (IComponentModel)(PythonProfilingPackage.GetGlobalService(typeof(SComponentModel)));
-            var factoryProviders = componentService.GetExtensions<IPythonInterpreterFactoryProvider>();
+            var interpService = componentService.GetService<IInterpreterOptionsService>();
 
-            var availableInterpreters = new List<PythonInterpreterView>();
-            foreach (var factoryProvider in factoryProviders) {
-                foreach (var factory in factoryProvider.GetInterpreterFactories()) {
-                    availableInterpreters.Add(new PythonInterpreterView(factory));
-                }
-            }
+            var availableInterpreters = interpService.Interpreters.Select(factory => new PythonInterpreterView(factory)).ToList();
+
             _customInterpreter = new PythonInterpreterView("Other...", Guid.Empty, new Version(), null);
             availableInterpreters.Add(_customInterpreter);
             _availableInterpreters = new ReadOnlyCollection<PythonInterpreterView>(availableInterpreters);

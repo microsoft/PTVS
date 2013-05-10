@@ -84,9 +84,8 @@ namespace Microsoft.PythonTools.Commands {
             }
 
             res.AppendLine("Interpreters: ");
-            var compModel = (IComponentModel)PythonToolsPackage.GetGlobalService(typeof(SComponentModel));
-            var factoryProviders = compModel.GetExtensions<IPythonInterpreterFactoryProvider>();
-            foreach (var provider in factoryProviders) {
+            var interpService = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
+            foreach (var provider in interpService.KnownProviders) {
                 res.AppendLine("    " + provider.GetType().FullName);
                 foreach (var factory in provider.GetInterpreterFactories()) {
                     res.AppendLine("        Id: " + factory.Id);
@@ -109,7 +108,7 @@ namespace Microsoft.PythonTools.Commands {
             }
 
             res.AppendLine("Launchers:");
-            var launchProviders = compModel.GetExtensions<IPythonLauncherProvider>();
+            var launchProviders = PythonToolsPackage.ComponentModel.GetExtensions<IPythonLauncherProvider>();
             foreach (var launcher in launchProviders) {
                 res.AppendLine("    Launcher: " + launcher.GetType().FullName);
                 res.AppendLine("        " + launcher.Description);
