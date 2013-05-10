@@ -61,7 +61,7 @@ namespace Microsoft.PythonTools.Project {
         #endregion
 
         private string GetInterpreterExecutableInternal(out bool isWindows) {
-            if (!Boolean.TryParse(_project.GetProperty(CommonConstants.IsWindowsApplication) ?? string.Empty, out isWindows)) {
+            if (!Boolean.TryParse(_project.GetProperty(CommonConstants.IsWindowsApplication) ?? Boolean.FalseString, out isWindows)) {
                 isWindows = false;
             }
             
@@ -84,7 +84,7 @@ namespace Microsoft.PythonTools.Project {
                 return null;
             }
 
-            return isWindows ?
+            return !isWindows ?
                 interpreter.Configuration.InterpreterPath :
                 interpreter.Configuration.WindowsInterpreterPath;
         }
