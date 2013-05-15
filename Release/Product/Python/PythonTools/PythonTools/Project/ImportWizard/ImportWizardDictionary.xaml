@@ -16,7 +16,6 @@
             <Style x:Key="HelpText" TargetType="{x:Type TextBlock}" BasedOn="{StaticResource {x:Type TextBlock}}">
                 <Setter Property="Foreground" Value="{DynamicResource {x:Static wpf:Controls.GrayTextKey}}" />
                 <Setter Property="Padding" Value="8 0 0 5" />
-                <Setter Property="FontStyle" Value="Italic" />
             </Style>
 
             <Style TargetType="{x:Type TextBox}" BasedOn="{StaticResource {x:Type TextBox}}">

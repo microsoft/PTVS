@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using Microsoft.VisualStudio;
@@ -746,14 +747,40 @@ namespace Microsoft.VisualStudioTools.Project {
         [DllImport("user32.dll", EntryPoint = "IsDialogMessageA", SetLastError = true, CharSet = CharSet.Ansi, ExactSpelling = true, CallingConvention = CallingConvention.StdCall)]
         public static extern bool IsDialogMessageA(IntPtr hDlg, ref MSG msg);
 
-        /// <summary>
-        /// Indicates whether the file type is binary or not
-        /// </summary>
-        /// <param name="lpApplicationName">Full path to the file to check</param>
-        /// <param name="lpBinaryType">If file isbianry the bitness of the app is indicated by lpBinaryType value.</param>
-        /// <returns>True if the file is binary false otherwise</returns>
-        [DllImport("kernel32.dll")]
-        public static extern bool GetBinaryType([MarshalAs(UnmanagedType.LPWStr)]string lpApplicationName, out uint lpBinaryType);
+        [DllImport("kernel32", EntryPoint = "GetBinaryTypeW", CharSet = CharSet.Unicode, CallingConvention = CallingConvention.Winapi)]
+        private static extern bool _GetBinaryType(string lpApplicationName, out GetBinaryTypeResult lpBinaryType);
+
+        private enum GetBinaryTypeResult : uint {
+            SCS_32BIT_BINARY = 0,
+            SCS_DOS_BINARY = 1,
+            SCS_WOW_BINARY = 2,
+            SCS_PIF_BINARY = 3,
+            SCS_POSIX_BINARY = 4,
+            SCS_OS216_BINARY = 5,
+            SCS_64BIT_BINARY = 6
+        }
+
+        public static ProcessorArchitecture GetBinaryType(string path) {
+            GetBinaryTypeResult result;
+
+            if (_GetBinaryType(path, out result)) {
+                switch (result) {
+                    case GetBinaryTypeResult.SCS_32BIT_BINARY:
+                        return ProcessorArchitecture.X86;
+                    case GetBinaryTypeResult.SCS_64BIT_BINARY:
+                        return ProcessorArchitecture.Amd64;
+                    case GetBinaryTypeResult.SCS_DOS_BINARY:
+                    case GetBinaryTypeResult.SCS_WOW_BINARY:
+                    case GetBinaryTypeResult.SCS_PIF_BINARY:
+                    case GetBinaryTypeResult.SCS_POSIX_BINARY:
+                    case GetBinaryTypeResult.SCS_OS216_BINARY:
+                    default:
+                        break;
+                }
+            }
+
+            return ProcessorArchitecture.None;
+        }
 
 
         [DllImport("advapi32.dll", CharSet = CharSet.Auto, SetLastError = true)]
@@ -931,11 +958,11 @@ namespace Microsoft.VisualStudioTools.Project {
         public static extern bool
         CredRead(
             [MarshalAs(UnmanagedType.LPWStr)]
-			string targetName,
+            string targetName,
             [MarshalAs(UnmanagedType.U4)]
-			uint type,
+            uint type,
             [MarshalAs(UnmanagedType.U4)]
-			uint flags,
+            uint flags,
             out IntPtr credential
             );
 
@@ -944,7 +971,7 @@ namespace Microsoft.VisualStudioTools.Project {
         CredWrite(
             ref NativeCredential Credential,
             [MarshalAs(UnmanagedType.U4)]
-			uint flags
+            uint flags
             );
 
         [DllImport(advapi32Dll, SetLastError = true)]
@@ -957,17 +984,17 @@ namespace Microsoft.VisualStudioTools.Project {
         public static extern CredUIReturnCodes CredUIPromptForCredentials(
             CREDUI_INFO pUiInfo,  // Optional (one can pass null here)
             [MarshalAs(UnmanagedType.LPWStr)]
-			string targetName,
+            string targetName,
             IntPtr Reserved,      // Must be 0 (IntPtr.Zero)
             int iError,
             [MarshalAs(UnmanagedType.LPWStr)]
-			StringBuilder pszUserName,
+            StringBuilder pszUserName,
             [MarshalAs(UnmanagedType.U4)]
-			uint ulUserNameMaxChars,
+            uint ulUserNameMaxChars,
             [MarshalAs(UnmanagedType.LPWStr)]
-			StringBuilder pszPassword,
+            StringBuilder pszPassword,
             [MarshalAs(UnmanagedType.U4)]
-			uint ulPasswordMaxChars,
+            uint ulPasswordMaxChars,
             ref int pfSave,
             CREDUI_FLAGS dwFlags);
 
@@ -983,13 +1010,13 @@ namespace Microsoft.VisualStudioTools.Project {
             [MarshalAs(UnmanagedType.LPWStr)]
             string strUserName,
             [MarshalAs(UnmanagedType.LPWStr)]
-			StringBuilder strUser,
+            StringBuilder strUser,
             [MarshalAs(UnmanagedType.U4)]
-			uint iUserMaxChars,
+            uint iUserMaxChars,
             [MarshalAs(UnmanagedType.LPWStr)]
-			StringBuilder strDomain,
+            StringBuilder strDomain,
             [MarshalAs(UnmanagedType.U4)]
-			uint iDomainMaxChars
+            uint iDomainMaxChars
             );
 
 

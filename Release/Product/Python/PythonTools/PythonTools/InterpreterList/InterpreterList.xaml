@@ -217,27 +217,35 @@
         </Grid.Resources>
         <ListView x:Name="interpreterList"
                   HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
-              ItemContainerStyle="{StaticResource InterpreterItemStyle}"
+                  ItemContainerStyle="{StaticResource InterpreterItemStyle}"
                   ItemsSource="{Binding Source={StaticResource SortedInterpreters}}"
                   Visibility="{Binding HasItems,RelativeSource={RelativeSource Self},Converter={StaticResource BVConverter}}">
-        <ListView.Template>
-            <ControlTemplate>
-                <ScrollViewer CanContentScroll="False">
-                    <ItemsPresenter />
-                </ScrollViewer>
-            </ControlTemplate>
-        </ListView.Template>
-        <ListView.View>
-            <GridView AllowsColumnReorder="False">
-                <GridViewColumn CellTemplate="{StaticResource NameTemplate}" />
-                <GridViewColumn CellTemplate="{StaticResource OpenReplTemplate}" />
-                <GridViewColumn CellTemplate="{StaticResource MakeDefaultTemplate}" />
-                <GridViewColumn CellTemplate="{StaticResource OpenOptionsTemplate}" />
-                <GridViewColumn CellTemplate="{StaticResource DatabaseTemplate}" />
-                <GridViewColumn CellTemplate="{StaticResource OpenPathTemplate}" />
-            </GridView>
-        </ListView.View>
-    </ListView>
+            <ListView.Template>
+                <ControlTemplate>
+                    <ScrollViewer CanContentScroll="False">
+                        <StackPanel Orientation="Vertical">
+                            <ItemsPresenter />
+                            <Grid Margin="6 12">
+                                <Button Style="{StaticResource NavigationButton}"
+                                        Command="{x:Static l:InterpreterList.WebChooseInterpreterCommand}">
+                                    Go online and help me find another one
+                                </Button>
+                            </Grid>
+                        </StackPanel>
+                    </ScrollViewer>
+                </ControlTemplate>
+            </ListView.Template>
+            <ListView.View>
+                <GridView AllowsColumnReorder="False">
+                    <GridViewColumn CellTemplate="{StaticResource NameTemplate}" />
+                    <GridViewColumn CellTemplate="{StaticResource OpenReplTemplate}" />
+                    <GridViewColumn CellTemplate="{StaticResource MakeDefaultTemplate}" />
+                    <GridViewColumn CellTemplate="{StaticResource OpenOptionsTemplate}" />
+                    <GridViewColumn CellTemplate="{StaticResource DatabaseTemplate}" />
+                    <GridViewColumn CellTemplate="{StaticResource OpenPathTemplate}" />
+                </GridView>
+            </ListView.View>
+        </ListView>
         
         <StackPanel Orientation="Vertical"
                     HorizontalAlignment="Center" VerticalAlignment="Center"
@@ -250,7 +258,7 @@
                     HorizontalAlignment="Center"
                     Margin="6"
                     Command="{x:Static l:InterpreterList.WebChooseInterpreterCommand}">
-                Go online and download one
+                Go online and help me choose one
             </Button>
             <Button Style="{StaticResource NavigationButton}"
                     HorizontalAlignment="Center"

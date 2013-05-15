@@ -34,34 +34,17 @@ namespace Microsoft.PythonTools.Repl {
 
     internal class PythonReplEvaluator : BasePythonReplEvaluator {
         private readonly IErrorProviderFactory _errorProviderFactory;
-        private readonly IPythonInterpreterFactoryProvider _factProvider;
-        private readonly Guid _guid;
-        private readonly Version _version;
-        private IPythonInterpreterFactory _interpreter;
+        private readonly IPythonInterpreterFactory _interpreter;
         private VsProjectAnalyzer _replAnalyzer;
         private bool _ownsAnalyzer, _enableAttach;
 
-        public PythonReplEvaluator(IPythonInterpreterFactoryProvider factoryProvider, Guid guid, Version version, IErrorProviderFactory errorProviderFactory) {
-            _factProvider = factoryProvider;
-            _guid = guid;
-            _version = version;
+        public PythonReplEvaluator(IPythonInterpreterFactory interpreter, IErrorProviderFactory errorProviderFactory) {
+            _interpreter = interpreter;
             _errorProviderFactory = errorProviderFactory;
-        }
-
-        private IPythonInterpreterFactory GetInterpreterFactory() {
-            foreach (var factory in _factProvider.GetInterpreterFactories()) {
-                if (factory.Id == _guid && _version == factory.Configuration.Version) {
-                    return factory;
-                }
-            }
-            return null;
         }
 
         public IPythonInterpreterFactory Interpreter {
             get {
-                if (_interpreter == null) {
-                    _interpreter = GetInterpreterFactory();
-                }
                 return _interpreter;
             }
         }
@@ -69,7 +52,8 @@ namespace Microsoft.PythonTools.Repl {
         internal VsProjectAnalyzer ReplAnalyzer {
             get {
                 if (_replAnalyzer == null && Interpreter != null) {
-                    _replAnalyzer = new VsProjectAnalyzer(Interpreter, _factProvider.GetInterpreterFactories().ToArray(), _errorProviderFactory);
+                    var interpService = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
+                    _replAnalyzer = new VsProjectAnalyzer(Interpreter, interpService.Interpreters.ToArray(), _errorProviderFactory);
                     _ownsAnalyzer = true;
                 }
                 return _replAnalyzer;
@@ -141,8 +125,6 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         protected override void Connect() {
-            _interpreter = GetInterpreterFactory();
-
             if (Interpreter == null) {
                 Window.WriteError("The interpreter is not available.");
                 return;

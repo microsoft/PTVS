@@ -158,7 +158,9 @@ namespace Microsoft.PythonTools.InterpreterList {
 
         private void OpenRepl_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
             var view = e.Parameter as InterpreterView;
-            e.CanExecute = view != null && view.Interpreter != null;
+            e.CanExecute = view != null && view.Interpreter != null &&
+                !string.IsNullOrEmpty(view.Interpreter.Configuration.InterpreterPath) &&
+                File.Exists(view.Interpreter.Configuration.InterpreterPath);
         }
 
         private void OpenRepl_Executed(object sender, ExecutedRoutedEventArgs e) {
@@ -207,7 +209,7 @@ namespace Microsoft.PythonTools.InterpreterList {
 
         private void CopyReason_Executed(object sender, ExecutedRoutedEventArgs e) {
             var withDb = (IInterpreterWithCompletionDatabase)((InterpreterView)e.Parameter).Interpreter;
-            Clipboard.SetText(withDb.GetIsCurrentReasonNonUI(CultureInfo.CurrentUICulture));
+            Clipboard.SetText(withDb.GetIsCurrentReason(CultureInfo.CurrentUICulture));
         }
 
         private void OpenPath_CanExecute(object sender, CanExecuteRoutedEventArgs e) {

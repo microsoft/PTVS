@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System;
+using Microsoft.PythonTools.Options;
 
 namespace Microsoft.PythonTools.Interpreter {
     public static class InterpreterExtensions {
@@ -20,6 +21,10 @@ namespace Microsoft.PythonTools.Interpreter {
             var configurable = interpreterFactory as ConfigurablePythonInterpreterFactory;
             if (configurable != null) {
                 return configurable.Description ?? "";
+            }
+            var placeholder = interpreterFactory as InterpreterPlaceholder;
+            if (placeholder != null) {
+                return placeholder.Description ?? "";
             }
 
             return String.Format("{0} {1}", interpreterFactory.Description, FormatVersion(interpreterFactory.Configuration.Version));

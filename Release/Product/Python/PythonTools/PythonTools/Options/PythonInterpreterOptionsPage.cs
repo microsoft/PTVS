@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -32,23 +33,15 @@ namespace Microsoft.PythonTools.Options {
     [ComVisible(true)]
     public sealed class PythonInterpreterOptionsPage : PythonDialogPage {
         private PythonInterpreterOptionsControl _window;
-        private IInterpreterOptionsService _service;
-        internal List<InterpreterOptions> _options = new List<InterpreterOptions>();
+        private readonly IInterpreterOptionsService _service;
+        internal Dictionary<IPythonInterpreterFactory, InterpreterOptions> _options = new Dictionary<IPythonInterpreterFactory, InterpreterOptions>();
         private Guid _defaultInterpreter;
         private Version _defaultInterpreterVersion;
 
-        private IInterpreterOptionsService Service {
-            get {
-                if (_service == null) {
-                    _service = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
-                }
-                return _service;
-            }
-        }
-
         public PythonInterpreterOptionsPage()
             : base("Interpreters") {
-            Service.InterpretersChanged += InterpretersChanged;
+            _service = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
+            _service.InterpretersChanged += InterpretersChanged;
         }
 
         void InterpretersChanged(object sender, EventArgs e) {
@@ -75,29 +68,32 @@ namespace Microsoft.PythonTools.Options {
         }
 
         public override void LoadSettingsFromStorage() {
-            _defaultInterpreter = Service.DefaultInterpreter.Id;
-            _defaultInterpreterVersion = Service.DefaultInterpreter.Configuration.Version;
+            _defaultInterpreter = _service.DefaultInterpreter.Id;
+            _defaultInterpreterVersion = _service.DefaultInterpreter.Configuration.Version;
 
+            var placeholders = _options.Where(kv => kv.Key is InterpreterPlaceholder).ToArray();
             _options.Clear();
-            foreach (var interpreter in Service.InterpretersOrDefault) {
-                _options.Add(
-                    new InterpreterOptions() {
-                        Display = interpreter.GetInterpreterDisplay(),
-                        Id = interpreter.Id,
-                        InterpreterPath = interpreter.Configuration.InterpreterPath,
-                        WindowsInterpreterPath = interpreter.Configuration.WindowsInterpreterPath,
-                        Version = interpreter.Configuration.Version.ToString(),
-                        Architecture = FormatArchitecture(interpreter.Configuration.Architecture),
-                        PathEnvironmentVariable = interpreter.Configuration.PathEnvironmentVariable,
-                        IsConfigurable = interpreter is ConfigurablePythonInterpreterFactory,
-                        SupportsCompletionDb = interpreter is IInterpreterWithCompletionDatabase,
-                        Factory = interpreter
-                    }
-                );
+            foreach (var interpreter in _service.InterpretersOrDefault) {
+                _options[interpreter] = new InterpreterOptions {
+                    Display = interpreter.GetInterpreterDisplay(),
+                    Id = interpreter.Id,
+                    InterpreterPath = interpreter.Configuration.InterpreterPath,
+                    WindowsInterpreterPath = interpreter.Configuration.WindowsInterpreterPath,
+                    Version = interpreter.Configuration.Version.ToString(),
+                    Architecture = FormatArchitecture(interpreter.Configuration.Architecture),
+                    PathEnvironmentVariable = interpreter.Configuration.PathEnvironmentVariable,
+                    IsConfigurable = interpreter is ConfigurablePythonInterpreterFactory,
+                    SupportsCompletionDb = interpreter is IInterpreterWithCompletionDatabase,
+                    Factory = interpreter
+                };
+            }
+
+            foreach (var kv in placeholders) {
+                _options[kv.Key] = kv.Value;
             }
 
             if (_window != null) {
-                _window.InitInterpreters();
+                _window.UpdateInterpreters();
             }
         }
 
@@ -110,53 +106,65 @@ namespace Microsoft.PythonTools.Options {
         }
 
         public override void SaveSettingsToStorage() {
-            Service.BeginSuppressInterpretersChangedEvent();
+            _service.BeginSuppressInterpretersChangedEvent();
             try {
-                var configurable = Service.KnownProviders.OfType<IPythonConfigurableInterpreterFactoryProvider>().First();
+                var configurable = _service.KnownProviders.OfType<ConfigurablePythonInterpreterFactoryProvider>().FirstOrDefault();
+                Debug.Assert(configurable != null);
 
-                foreach (var option in _options) {
-                    if (option.Removed) {
-                        if (!option.Added) {
-                            // it was added and then immediately removed, don't save it.
-                            configurable.RemoveInterpreter(option.Id);
+                if (configurable != null) {
+                    foreach (var option in _options.Values) {
+                        if (option.Removed) {
+                            if (!option.Added) {
+                                // if it was added and then immediately removed, don't save it.
+                                configurable.RemoveInterpreter(option.Id);
+                            }
+                            continue;
+                        } else if (option.Added) {
+                            if (option.Id == Guid.Empty) {
+                                option.Id = Guid.NewGuid();
+                            }
+                            option.Added = false;
                         }
-                        continue;
-                    } else if (option.Added) {
-                        if (option.Id == Guid.Empty) {
-                            option.Id = Guid.NewGuid();
-                        }
-                        option.Added = false;
-                    }
 
-                    if (option.IsConfigurable) {
-                        // save configurable interpreter options
-                        configurable.SetOptions(
-                            option.Id,
-                            new Dictionary<string, object>() {
-                            { "InterpreterPath", option.InterpreterPath ?? "" },
-                            { "WindowsInterpreterPath", option.WindowsInterpreterPath ?? "" },
-                            { "PathEnvironmentVariable", option.PathEnvironmentVariable ?? "" },
-                            { "Architecture", option.Architecture ?? "x86" },
-                            { "Version", option.Version ?? "2.6" },
-                            { "Description", option.Display },
+                        if (option.IsConfigurable) {
+                            // save configurable interpreter options
+                            var actualFactory = configurable.SetOptions(
+                                option.Id,
+                                new Dictionary<string, object>() {
+                                    { "InterpreterPath", option.InterpreterPath ?? "" },
+                                    { "WindowsInterpreterPath", option.WindowsInterpreterPath ?? "" },
+                                    { "PathEnvironmentVariable", option.PathEnvironmentVariable ?? "" },
+                                    { "Architecture", option.Architecture ?? "x86" },
+                                    { "Version", option.Version ?? "2.6" },
+                                    { "Description", option.Display },
+                                }
+                            );
+                            if (option.InteractiveOptions != null) {
+                                PythonToolsPackage.Instance.InteractiveOptionsPage.SaveOptions(actualFactory, option.InteractiveOptions);
+                            }
                         }
-                        );
                     }
                 }
 
-                var defaultInterpreter = GetWindow().GetOption(GetWindow().DefaultInterpreter);
+                foreach (var factory in _options.Keys.OfType<InterpreterPlaceholder>().ToArray()) {
+                    _options.Remove(factory);
+                }
+
+                var defaultInterpreter = GetWindow().DefaultInterpreter;
 
                 if (defaultInterpreter != null) {
-                    Service.DefaultInterpreter = 
-                        Service.FindInterpreter(defaultInterpreter.Id, defaultInterpreter.Version) ??
-                        Service.Interpreters.LastOrDefault();
+                    // Search for the interpreter again, since it may be a
+                    // placeholder rather than the actual instance.
+                    _service.DefaultInterpreter = 
+                        _service.FindInterpreter(defaultInterpreter.Id, defaultInterpreter.Configuration.Version) ??
+                        _service.Interpreters.LastOrDefault();
                 } else {
-                    Service.DefaultInterpreter = Service.Interpreters.LastOrDefault();
+                    _service.DefaultInterpreter = _service.Interpreters.LastOrDefault();
                 }
-                _defaultInterpreter = Service.DefaultInterpreter.Id;
-                _defaultInterpreterVersion = Service.DefaultInterpreter.Configuration.Version;
+                _defaultInterpreter = _service.DefaultInterpreter.Id;
+                _defaultInterpreterVersion = _service.DefaultInterpreter.Configuration.Version;
             } finally {
-                Service.EndSuppressInterpretersChangedEvent();
+                _service.EndSuppressInterpretersChangedEvent();
             }
         }
 
@@ -184,9 +192,9 @@ namespace Microsoft.PythonTools.Options {
             set {
                 if (_defaultInterpreter != value) {
                     _defaultInterpreter = value;
-                    var newDefault = Service.FindInterpreter(_defaultInterpreter, _defaultInterpreterVersion);
+                    var newDefault = _service.FindInterpreter(_defaultInterpreter, _defaultInterpreterVersion);
                     if (newDefault != null) {
-                        Service.DefaultInterpreter = newDefault;
+                        _service.DefaultInterpreter = newDefault;
                     }
                 }
             }
@@ -214,9 +222,9 @@ namespace Microsoft.PythonTools.Options {
                 var ver = Version.Parse(value);
                 if (_defaultInterpreterVersion != ver) {
                     _defaultInterpreterVersion = ver;
-                    var newDefault = Service.FindInterpreter(_defaultInterpreter, _defaultInterpreterVersion);
+                    var newDefault = _service.FindInterpreter(_defaultInterpreter, _defaultInterpreterVersion);
                     if (newDefault != null) {
-                        Service.DefaultInterpreter = newDefault;
+                        _service.DefaultInterpreter = newDefault;
                     }
                 }
             }

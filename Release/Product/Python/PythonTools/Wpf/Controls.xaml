@@ -166,6 +166,9 @@
             <Trigger Property="IsMouseOver" Value="True">
                 <Setter Property="Foreground" Value="{DynamicResource {x:Static wpf:Controls.HyperlinkHoverKey}}" />
             </Trigger>
+            <Trigger Property="IsEnabled" Value="False">
+                <Setter Property="Foreground" Value="{DynamicResource {x:Static wpf:Controls.GrayTextKey}}" />
+            </Trigger>
         </Style.Triggers>
     </Style>
     
@@ -174,6 +177,9 @@
             <DataTrigger Binding="{Binding IsSelected,RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
                 <Setter Property="Foreground" Value="{DynamicResource {x:Static wpf:Controls.HighlightTextKey}}" />
             </DataTrigger>
+            <Trigger Property="IsEnabled" Value="False">
+                <Setter Property="Foreground" Value="{DynamicResource {x:Static wpf:Controls.GrayTextKey}}" />
+            </Trigger>
         </Style.Triggers>
     </Style>
 

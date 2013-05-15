@@ -19,9 +19,21 @@ namespace Microsoft.PythonTools.Options {
     /// Stores options related to the all interactive windows.
     /// </summary>
     class PythonInteractiveCommonOptions {
+        private const string DefaultPrompt = ">>> ";
+        private const string DefaultSecondaryPrompt = "... ";
+
         private bool _smartHistory, _interpreterPrompts, _inlinePrompts, _liveCompletionsOnly;
         private ReplIntellisenseMode _replIntellisenseMode;
         private string _priPrompt, _secPrompt;
+
+        public PythonInteractiveCommonOptions() {
+            _priPrompt = DefaultPrompt;
+            _secPrompt = DefaultSecondaryPrompt;
+            _inlinePrompts = true;
+            _interpreterPrompts = true;
+            _replIntellisenseMode = Repl.ReplIntellisenseMode.DontEvaluateCalls;
+            _smartHistory = true;
+        }
 
         public string PrimaryPrompt {
             get { return _priPrompt; }

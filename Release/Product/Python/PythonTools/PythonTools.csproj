@@ -235,6 +235,9 @@
     <Compile Include="PythonTools\Navigation\SourceLocation.cs" />
     <Compile Include="PythonTools\Options\IInterpreterOptionsService.cs" />
     <Compile Include="PythonTools\Options\InterpreterOptionsService.cs" />
+    <Compile Include="PythonTools\Options\InterpreterPlaceholder.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="PythonTools\Project\Automation\OAProjectConfigurationProperties.cs" />
     <Compile Include="PythonTools\Project\CreateVirtualEnvironmentView.cs" />
     <Compile Include="PythonTools\Project\IDiskBasedNode.cs" />
@@ -483,7 +486,6 @@
     <Compile Include="PythonTools\Intellisense\MonitoredBufferResult.cs" />
     <Compile Include="PythonTools\Intellisense\ParseQueue.cs" />
     <Compile Include="PythonTools\InterpreterExtensions.cs" />
-    <Compile Include="PythonTools\IPythonConfigurableInterpreterFactoryProvider.cs" />
     <Compile Include="PythonTools\ISnapshotTextReader.cs" />
     <Compile Include="PythonTools\Navigation\CommonLibraryNode.cs" />
     <Compile Include="PythonTools\Navigation\HierarchyListener.cs" />

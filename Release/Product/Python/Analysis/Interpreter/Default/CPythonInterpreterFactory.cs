@@ -247,6 +247,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
 
         public void RefreshIsCurrent(bool alwaysRaiseEvent) {
             bool initialValue = IsCurrent;
+            bool reasonChanged = false;
 
             if (Directory.Exists(DatabasePath)) {
                 var missingModules = ModulePath.GetModulesInLib(this)
@@ -258,6 +259,10 @@ namespace Microsoft.PythonTools.Interpreter.Default {
                     .ToArray();
 
                 if (missingModules.Length > 0) {
+                    var oldModules = _missingModules;
+                    if (oldModules == null || oldModules.Length != missingModules.Length || !oldModules.SequenceEqual(missingModules)) {
+                        reasonChanged = true;
+                    }
                     _missingModules = missingModules;
                 } else {
                     _missingModules = null;
@@ -266,6 +271,10 @@ namespace Microsoft.PythonTools.Interpreter.Default {
 
             if (alwaysRaiseEvent || IsCurrent != initialValue) {
                 OnIsCurrentChanged();
+                reasonChanged = true;
+            }
+            if (reasonChanged) {
+                OnIsCurrentReasonChanged();
             }
         }
 
@@ -290,12 +299,21 @@ namespace Microsoft.PythonTools.Interpreter.Default {
             }
         }
 
+        public event EventHandler IsCurrentReasonChanged;
+
+        private void OnIsCurrentReasonChanged() {
+            var evt = IsCurrentReasonChanged;
+            if (evt != null) {
+                evt(this, EventArgs.Empty);
+            }
+        }
+
         static string GetPackageName(string fullName) {
             int firstDot = fullName.IndexOf('.');
             return (firstDot > 0) ? fullName.Remove(firstDot) : fullName;
         }
 
-        public string GetIsCurrentReason(IFormatProvider culture) {
+        public string GetFriendlyIsCurrentReason(IFormatProvider culture) {
             var missingModules = _missingModules;
             if (_generating) {
                 return "Currently regenerating";
@@ -334,7 +352,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
             return "Up to date";
         }
 
-        public string GetIsCurrentReasonNonUI(IFormatProvider culture) {
+        public string GetIsCurrentReason(IFormatProvider culture) {
             var missingModules = _missingModules;
             var reason = "Database at " + DatabasePath;
             if (_generating) {

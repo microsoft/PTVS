@@ -78,12 +78,21 @@ namespace Microsoft.PythonTools {
             }
         }
 
-        public string GetIsCurrentReason(IFormatProvider culture) {
-            return ((IInterpreterWithCompletionDatabase)_realFactory).GetIsCurrentReason(culture);
+        public event EventHandler IsCurrentReasonChanged {
+            add {
+                ((IInterpreterWithCompletionDatabase)_realFactory).IsCurrentReasonChanged += value;
+            }
+            remove {
+                ((IInterpreterWithCompletionDatabase)_realFactory).IsCurrentReasonChanged -= value;
+            }
         }
 
-        public string GetIsCurrentReasonNonUI(IFormatProvider culture) {
-            return ((IInterpreterWithCompletionDatabase)_realFactory).GetIsCurrentReasonNonUI(culture);
+        public string GetFriendlyIsCurrentReason(IFormatProvider culture) {
+            return ((IInterpreterWithCompletionDatabase)_realFactory).GetFriendlyIsCurrentReason(culture);
+        }
+
+        public string GetIsCurrentReason(IFormatProvider culture) {
+            return ((IInterpreterWithCompletionDatabase)_realFactory).GetIsCurrentReason(culture);
         }
 
         #endregion

@@ -16,23 +16,36 @@ using System;
 using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.PythonTools.Options {
-    /// <summary>
-    /// Captures all of the options for an interpreter.  We can mutate this instance and then only when the user
-    /// commits the changes do we propagate these back to an interpreter.
-    /// </summary>
-    class InterpreterOptions {
-        public string Display;
-        public Guid Id;
-        public string InterpreterPath;
-        public string WindowsInterpreterPath;
-        public string Architecture;
-        public string Version;
-        public string PathEnvironmentVariable;
-        public bool Removed;
-        public bool Added;
-        public bool IsConfigurable;
-        public bool SupportsCompletionDb;
-        public IPythonInterpreterFactory Factory;
-        public PythonInteractiveOptions InteractiveOptions;
+    class InterpreterPlaceholder : IPythonInterpreterFactory {
+        public InterpreterPlaceholder(Guid id, string description) {
+            Id = id;
+            Description = description;
+        }
+        
+        public string Description {
+            get;
+            private set;
+        }
+
+        public InterpreterConfiguration Configuration {
+            get {
+                throw new NotSupportedException();
+            }
+        }
+
+        public Guid Id {
+            get;
+            private set;
+        }
+
+        public IPythonInterpreter CreateInterpreter() {
+            throw new NotSupportedException();
+        }
+
+        public IPythonInterpreterFactoryProvider Provider {
+            get {
+                throw new NotSupportedException();
+            }
+        }
     }
 }

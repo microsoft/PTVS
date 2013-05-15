@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Threading.Tasks;
 using System.Windows;
 using Microsoft.PythonTools.Analysis;
@@ -53,10 +54,11 @@ namespace Microsoft.PythonTools.InterpreterList {
 
             var withDb = interpreter as IInterpreterWithCompletionDatabase;
             if (withDb != null) {
-                CanRefresh = true;
+                CanRefresh = File.Exists(interpreter.Configuration.InterpreterPath);
                 withDb.IsCurrentChanged += Interpreter_IsCurrentChanged;
+                withDb.IsCurrentReasonChanged += Interpreter_IsCurrentChanged;
                 IsCurrent = withDb.IsCurrent;
-                IsCurrentReason = withDb.GetIsCurrentReason(CultureInfo.CurrentUICulture);
+                IsCurrentReason = withDb.GetFriendlyIsCurrentReason(CultureInfo.CurrentUICulture);
             }
             IsRunning = false;
             IsDefault = isDefault;
@@ -66,7 +68,7 @@ namespace Microsoft.PythonTools.InterpreterList {
             var withDb = sender as IInterpreterWithCompletionDatabase;
             if (withDb != null) {
                 IsCurrent = withDb.IsCurrent;
-                IsCurrentReason = withDb.GetIsCurrentReason(CultureInfo.CurrentUICulture);
+                IsCurrentReason = withDb.GetFriendlyIsCurrentReason(CultureInfo.CurrentUICulture);
             }
             if (_waitingForIsChanged) {
                 _waitingForIsChanged = false;

@@ -13,11 +13,14 @@
  * ***************************************************************************/
 
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Windows.Forms;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Options {
     public partial class PythonInterpreterOptionsControl : UserControl {
@@ -31,63 +34,65 @@ namespace Microsoft.PythonTools.Options {
             InitializeComponent();
 
             _service = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
-            InitInterpreters();
+            UpdateInterpreters();
+        }
+
+        internal void UpdateInterpreters() {
+            if (InvokeRequired) {
+                Invoke((Action)(() => UpdateInterpreters()));
+                return;
+            }
+
+            _addInterpreter.Enabled = _service.KnownProviders.OfType<ConfigurablePythonInterpreterFactoryProvider>().Any();
+
+            _showSettingsFor.BeginUpdate();
+            _defaultInterpreter.BeginUpdate();
+            try {
+                _showSettingsFor.Items.Clear();
+                _defaultInterpreter.Items.Clear();
+
+                foreach (var interpreter in OptionsPage._options.Keys.OrderBy(f => f.GetInterpreterDisplay())) {
+                    InterpreterOptions opts;
+                    if (OptionsPage._options.TryGetValue(interpreter, out opts) && !opts.Removed) {
+                        _showSettingsFor.Items.Add(interpreter);
+                        _defaultInterpreter.Items.Add(interpreter);
+                    }
+                }
+
+                if (_showSettingsFor.Items.Count > 0) {
+                    _showSettingsFor.SelectedItem = _defaultInterpreter.SelectedItem = _service.DefaultInterpreter;
+                }
+
+                if (_showSettingsFor.SelectedItem == null && _showSettingsFor.Items.Count > 0) {
+                    _showSettingsFor.SelectedIndex = 0;
+                }
+                if (_defaultInterpreter.SelectedItem == null && _defaultInterpreter.Items.Count > 0) {
+                    _defaultInterpreter.SelectedIndex = 0;
+                }
+            } finally {
+                _showSettingsFor.EndUpdate();
+                _defaultInterpreter.EndUpdate();
+            }
+
+            LoadNewOptions();
         }
 
         protected override void OnVisibleChanged(EventArgs e) {
             base.OnVisibleChanged(e);
 
             if (Visible) {
-                var defaultId = _service.DefaultInterpreter.Id;
-                var defaultVersion = _service.DefaultInterpreter.Configuration.Version;
-                var selectId = defaultId;
-                var selectVersion = defaultVersion;
-                var programmaticSelection = PythonToolsPackage.Instance.NextOptionsSelection;
+                var selection = PythonToolsPackage.Instance.NextOptionsSelection ?? _service.DefaultInterpreter;
                 PythonToolsPackage.Instance.NextOptionsSelection = null;
-                if (programmaticSelection != null) {
-                    selectId = programmaticSelection.Id;
-                    selectVersion = programmaticSelection.Configuration.Version;
-                }
+                _showSettingsFor.SelectedItem = selection;
+                _defaultInterpreter.SelectedItem = _service.DefaultInterpreter;
 
-                foreach (var interpreter in OptionsPage._options) {
-                    if (IsSameInterpreter(interpreter, defaultId, defaultVersion)) {
-                        _defaultInterpreter.SelectedIndex = _defaultInterpreter.FindStringExact(interpreter.Display);
-                    }
-                    if (IsSameInterpreter(interpreter, selectId, selectVersion)) {
-                        _showSettingsFor.SelectedIndex = _showSettingsFor.FindStringExact(interpreter.Display);
-                    }
+                if (_showSettingsFor.SelectedItem == null && _showSettingsFor.Items.Count > 0) {
+                    _showSettingsFor.SelectedIndex = 0;
+                }
+                if (_defaultInterpreter.SelectedItem == null && _defaultInterpreter.Items.Count > 0) {
+                    _defaultInterpreter.SelectedIndex = 0;
                 }
             }
-        }
-
-        internal void InitInterpreters() {
-            _showSettingsFor.Items.Clear();
-            _defaultInterpreter.Items.Clear();
-
-            var defaultId = _service.DefaultInterpreter.Id;
-            var defaultVersion = _service.DefaultInterpreter.Configuration.Version;
-
-            foreach (var interpreter in OptionsPage._options) {
-                var display = interpreter.Display;
-                int index = _defaultInterpreter.Items.Add(display);
-                _showSettingsFor.Items.Add(display);
-
-                if (IsSameInterpreter(interpreter, defaultId, defaultVersion)) {
-                    _defaultInterpreter.SelectedIndex = index;
-                    _showSettingsFor.SelectedIndex = index;
-                }
-            }
-
-            if (_showSettingsFor.Items.Count > 0 && _showSettingsFor.SelectedIndex == -1) {
-                _showSettingsFor.SelectedIndex = 0;
-            }
-
-            LoadNewOptions();
-        }
-
-        internal static bool IsSameInterpreter(InterpreterOptions interpreter, Guid id, Version version) {
-            Version vers;
-            return interpreter.Id == id && Version.TryParse(interpreter.Version, out vers) && vers == version;
         }
 
         private void LoadNewOptions() {
@@ -157,9 +162,9 @@ namespace Microsoft.PythonTools.Options {
             }
         }
 
-        public int DefaultInterpreter {
+        public IPythonInterpreterFactory DefaultInterpreter {
             get {
-                return _defaultInterpreter.SelectedIndex;
+                return _defaultInterpreter.SelectedItem as IPythonInterpreterFactory;
             }
         }
 
@@ -231,22 +236,9 @@ namespace Microsoft.PythonTools.Options {
 
         private InterpreterOptions CurrentOptions {
             get {
-                return GetOption(_showSettingsFor.SelectedIndex);
+                var fact = _showSettingsFor.SelectedItem as IPythonInterpreterFactory;
+                return fact != null ? OptionsPage._options[fact] : null;
             }
-        }
-
-        internal InterpreterOptions GetOption(int index) {
-            int curOption = 0;
-            foreach (var option in OptionsPage._options) {
-                if (!option.Removed) {
-                    if (curOption == index) {
-                        return option;
-                    }
-
-                    curOption++;
-                }
-            }
-            return null;
         }
 
         private void AddInterpreterClick(object sender, EventArgs e) {
@@ -259,34 +251,23 @@ namespace Microsoft.PythonTools.Options {
                     _defaultInterpreter.Enabled = true;
                     _showSettingsFor.Enabled = true;
                 }
-                var newOptions = new InterpreterOptions() { 
-                    Display = newInterp.InterpreterDescription, 
-                    Added = true, 
+                var id = Guid.NewGuid();
+                var newOptions = new InterpreterOptions() {
+                    Display = newInterp.InterpreterDescription,
+                    Added = true,
                     IsConfigurable = true,
-                    SupportsCompletionDb = true
+                    SupportsCompletionDb = true,
+                    Id = id,
+                    Factory = new InterpreterPlaceholder(id, newInterp.InterpreterDescription),
+                    InteractiveOptions = new PythonInteractiveOptions()
                 };
 
-                // two indicies to track: the indicies in our drop down (the realIndex) and the indicies in our
-                // options list which may still have uncommitted changes.
-                int realIndex = 0, optionsIndex = OptionsPage._options.Count;
-                for (int i = 0; i < OptionsPage._options.Count; i++) {
-                    var curOption = OptionsPage._options[i];
-                    if (String.Compare(newOptions.Display, curOption.Display) < 0) {
-                        optionsIndex = i;
-                        break;
-                    }
-                    if (!curOption.Removed) {
-                        realIndex++;
-                    }
-                }                
-
-                OptionsPage._options.Insert(optionsIndex, newOptions);
-                _showSettingsFor.Items.Insert(realIndex, newInterp.InterpreterDescription);
-                _showSettingsFor.SelectedIndex = realIndex;
-                _defaultInterpreter.Items.Insert(realIndex, newInterp.InterpreterDescription);
-                if (_defaultInterpreter.SelectedIndex == -1) {
-                    _defaultInterpreter.SelectedIndex = 0;
-                }
+                OptionsPage._options[newOptions.Factory] = newOptions;
+                _showSettingsFor.BeginUpdate();
+                UpdateInterpreters();
+                _showSettingsFor.SelectedItem = newOptions.Factory;
+                _showSettingsFor.EndUpdate();
+                PythonToolsPackage.Instance.InteractiveOptionsPage.NewInterpreter(newOptions.Factory, newOptions.InteractiveOptions);
             }
         }
 
@@ -295,21 +276,11 @@ namespace Microsoft.PythonTools.Options {
                 var res = MessageBox.Show(String.Format("Do you want to remove the interpreter {0}?", _showSettingsFor.Text), "Remove Interpreter", MessageBoxButtons.YesNo);
                 if (res == DialogResult.Yes) {
                     var curOption = CurrentOptions;
-                    curOption.Removed = true;
-                    int index = _showSettingsFor.SelectedIndex;
-                    _showSettingsFor.Items.RemoveAt(index);
-                    _defaultInterpreter.Items.RemoveAt(index);
-
-                    if (_showSettingsFor.Items.Count == 0) {
-                        // last interpreter removed...
-                        InitializeWithNoInterpreters();
+                    if (curOption != null) {
+                        curOption.Removed = true;
+                        UpdateInterpreters();
+                        PythonToolsPackage.Instance.InteractiveOptionsPage.RemoveInterpreter(curOption.Factory);
                     }
-
-                    if (_defaultInterpreter.SelectedIndex == -1) {
-                        _defaultInterpreter.SelectedIndex = 0;
-                    }
-                    _showSettingsFor.SelectedIndex = 0;
-                    
                 }
             }
         }
@@ -328,17 +299,17 @@ namespace Microsoft.PythonTools.Options {
                 _generateCompletionDb.Enabled = false;
             }
         }
-        
+
         private void GenerateCompletionDbClick(object sender, EventArgs e) {
-            if (CurrentOptions.IsConfigurable && CurrentOptions.Factory == null) {
+            if (CurrentOptions.IsConfigurable && CurrentOptions.Factory is InterpreterPlaceholder) {
                 // we need to create a dummy factory for kicking off the configuration.
                 if (CurrentOptions.Id == Guid.Empty) {
                     CurrentOptions.Id = Guid.NewGuid();
                 }
                 Version vers;
                 Version.TryParse(_version.Text, out vers);
-                
-                var factCreator = PythonToolsPackage.ComponentModel.GetService<IPythonConfigurableInterpreterFactoryProvider>();
+
+                var factCreator = PythonToolsPackage.ComponentModel.GetService<ConfigurablePythonInterpreterFactoryProvider>();
                 CurrentOptions.Factory = factCreator.CreateConfigurableInterpreterFactory(
                     CurrentOptions.Id,
                     _path.Text,
@@ -351,7 +322,7 @@ namespace Microsoft.PythonTools.Options {
             }
 
             var curFactory = CurrentOptions.Factory;
-            switch(new GenerateIntellisenseDbDialog(CurrentOptions, () => DatabaseGenerated(curFactory)).ShowDialog()) {
+            switch (new GenerateIntellisenseDbDialog(CurrentOptions, () => DatabaseGenerated(curFactory)).ShowDialog()) {
                 case DialogResult.OK:
                     MessageBox.Show("Analysis is complete and now available.", "Python Tools for Visual Studio");
                     break;
@@ -385,6 +356,24 @@ namespace Microsoft.PythonTools.Options {
             dialog.Filter = "Executable Files (*.exe)|*.exe|All Files (*.*)|*.*";
             if (dialog.ShowDialog() == DialogResult.OK) {
                 _path.Text = dialog.FileName;
+                if (_arch.SelectedIndex == -1 || (string)_arch.SelectedItem == "Unknown") {
+                    try {
+                        switch (NativeMethods.GetBinaryType(_path.Text)) {
+                            case ProcessorArchitecture.X86:
+                                _arch.SelectedIndex = _arch.FindStringExact("x86");
+                                break;
+                            case ProcessorArchitecture.Amd64:
+                                _arch.SelectedIndex = _arch.FindStringExact("x64");
+                                break;
+                            default:
+                                _arch.SelectedIndex = _arch.FindStringExact("Unknown");
+                                break;
+                        }
+                    } catch (ArgumentOutOfRangeException) {
+                        // Just a best attempt - if things fail for whatever
+                        // reason, it's not even worth informing the user.
+                    }
+                }
             }
         }
 
@@ -392,9 +381,17 @@ namespace Microsoft.PythonTools.Options {
             var dialog = new OpenFileDialog();
             dialog.CheckFileExists = true;
             dialog.Filter = "Executable Files (*.exe)|*.exe|All Files (*.*)|*.*";
-            if (dialog.ShowDialog() == DialogResult.OK)
-            {
+            if (dialog.ShowDialog() == DialogResult.OK) {
                 _windowsPath.Text = dialog.FileName;
+            }
+        }
+
+        private void Interpreter_Format(object sender, ListControlConvertEventArgs e) {
+            var factory = e.ListItem as IPythonInterpreterFactory;
+            if (factory != null) {
+                e.Value = factory.GetInterpreterDisplay();
+            } else {
+                e.Value = e.ListItem.ToString();
             }
         }
     }

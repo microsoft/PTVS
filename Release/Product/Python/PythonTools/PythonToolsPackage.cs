@@ -575,7 +575,7 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
             if (key != null) {
                 hive = ParseRegistryKey(key.Name, out subkey);
                 view = key.View;
-                return false;
+                return true;
             } else {
                 hive = RegistryHive.CurrentUser;
                 view = RegistryView.Default;
@@ -691,13 +691,19 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
         }
 
         private List<OpenReplCommand> GetReplCommands() {
+            var replCommands = new List<OpenReplCommand>();
             var interpService = ComponentModel.GetService<IInterpreterOptionsService>();
             var factories = interpService.Interpreters.ToList();
-            var defaultFactory = interpService.DefaultInterpreter;
-            factories.Remove(defaultFactory);
-            factories.Insert(0, defaultFactory);
+            if (factories.Count == 0) {
+                return replCommands;
+            }
 
-            var replCommands = new List<OpenReplCommand>();
+            var defaultFactory = interpService.DefaultInterpreter;
+            if (defaultFactory != interpService.NoInterpretersValue) {
+                factories.Remove(defaultFactory);
+                factories.Insert(0, defaultFactory);
+            }
+
             for (int i = 0; i < (PkgCmdIDList.cmdidReplWindowF - PkgCmdIDList.cmdidReplWindow) && i < factories.Count; i++) {
                 var factory = factories[i];
 

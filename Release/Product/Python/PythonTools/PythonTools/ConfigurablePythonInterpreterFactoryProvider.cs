@@ -24,7 +24,7 @@ using Microsoft.Win32;
 
 namespace Microsoft.PythonTools {
     [Export(typeof(IPythonInterpreterFactoryProvider))]
-    class ConfigurablePythonInterpreterFactoryProvider : IPythonInterpreterFactoryProvider, IPythonConfigurableInterpreterFactoryProvider {
+    class ConfigurablePythonInterpreterFactoryProvider : IPythonInterpreterFactoryProvider {
         private readonly Dictionary<Guid, IPythonInterpreterFactory> _interpreters = new Dictionary<Guid, IPythonInterpreterFactory>();
 
         private IDefaultInterpreterFactoryCreator _defaultCreator;
@@ -106,7 +106,7 @@ namespace Microsoft.PythonTools {
             return new ConfigurablePythonInterpreterFactory(fact);
         }
 
-        void IPythonConfigurableInterpreterFactoryProvider.RemoveInterpreter(Guid id) {
+        public void RemoveInterpreter(Guid id) {
             using (var userInterpreters = GetUserDefinedInterpreterKey()) {
                 if (userInterpreters != null) {
                     userInterpreters.DeleteSubKey(id.ToString("B"), false);
@@ -117,7 +117,7 @@ namespace Microsoft.PythonTools {
             }
         }
 
-        IPythonInterpreterFactory IPythonConfigurableInterpreterFactoryProvider.SetOptions(Guid id, Dictionary<string, object> values) {
+        public IPythonInterpreterFactory SetOptions(Guid id, Dictionary<string, object> values) {
             using (var userInterpreters = GetUserDefinedInterpreterKey(true)) {
                 using (var interpreterKey = userInterpreters.OpenSubKey(id.ToString("B"), true) ?? userInterpreters.CreateSubKey(id.ToString("B"))) {
                     interpreterKey.SetValue(PathKey, values[PathKey]);

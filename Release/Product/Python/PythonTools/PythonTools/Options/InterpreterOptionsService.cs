@@ -205,7 +205,7 @@ namespace Microsoft.PythonTools {
         }
 
         private static bool AreEqual(IPythonInterpreterFactory factory, Guid id, Version version) {
-            return factory != null && factory.Id.Equals(id) && factory.Configuration.Version != null && factory.Configuration.Version.Equals(version);
+            return factory != null && factory.Id.Equals(id) && (factory.Configuration.Version == null || factory.Configuration.Version.Equals(version));
         }
 
         private void LoadDefaultInterpreter(bool suppressChangeEvent = false) {
@@ -223,9 +223,9 @@ namespace Microsoft.PythonTools {
             IPythonInterpreterFactory newDefault;
             if (string.IsNullOrEmpty(idStr) || !Guid.TryParse(idStr, out id) ||
                 string.IsNullOrEmpty(versionStr) || !Version.TryParse(versionStr, out version)) {
-                newDefault = null;
+                newDefault = Interpreters.LastOrDefault();
             } else {
-                newDefault = FindInterpreter(id, version);
+                newDefault = FindInterpreter(id, version) ?? Interpreters.LastOrDefault();
             }
 
             if (suppressChangeEvent) {
@@ -304,6 +304,7 @@ namespace Microsoft.PythonTools {
                 foreach (var factory in _providers.SelectMany(provider => provider.GetInterpreterFactories())
                                                   .Where(fact => fact != null)
                                                   .OrderBy(fact => fact.GetInterpreterDisplay())) {
+                    Debug.Assert(factory != NoInterpretersValue);
                     yield return factory;
                     anyYielded = true;
                 }
@@ -318,9 +319,10 @@ namespace Microsoft.PythonTools {
             get {
                 if (_noInterpretersValue == null) {
                     try {
-                        _noInterpretersValue = PythonToolsPackage.ComponentModel.GetService<IDefaultInterpreterFactoryCreator>().CreateInterpreterFactory(
+                        var creator = PythonToolsPackage.ComponentModel.GetService<IDefaultInterpreterFactoryCreator>();
+                        _noInterpretersValue = creator.CreateInterpreterFactory(
                             new Dictionary<InterpreterFactoryOptions, object>() {
-                            { InterpreterFactoryOptions.Description, "Python 2.7 - No Interpreters Installed" },
+                            { InterpreterFactoryOptions.Description, "No Interpreters - Python" },
                             { InterpreterFactoryOptions.Guid, NoInterpretersFactoryGuid }
                         }
                         );
