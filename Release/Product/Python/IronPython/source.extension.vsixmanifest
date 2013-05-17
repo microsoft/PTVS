@@ -1,0 +1,44 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Vsix xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" Version="1.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2010">
+  <Identifier Id="0AC9CC8C-C057-4CFA-884B-0D4318BB2EFC">
+    <Name>Python Tools for Visual Studio, IronPython Support</Name>
+    <Author>Microsoft</Author>
+    <Version>2.0</Version>
+    <Description xml:space="preserve">Adds templates and intellisense support for IronPython based projects in Python Tools for Visual Studio.</Description>
+    <Locale>1033</Locale>
+    <InstalledByMsi>true</InstalledByMsi>
+    <Icon>PythonProject.ico</Icon>
+    <PreviewImage>PythonProjectBig.ico</PreviewImage>
+    <SupportedProducts>
+      <VisualStudio Version="10.0">
+        <Edition>Ultimate</Edition>
+        <Edition>Premium</Edition>
+        <Edition>Pro</Edition>
+        <Edition>IntegratedShell</Edition>
+      </VisualStudio>
+      <VisualStudio Version="11.0">
+        <Edition>Ultimate</Edition>
+        <Edition>Premium</Edition>
+        <Edition>Pro</Edition>
+        <Edition>IntegratedShell</Edition>
+      </VisualStudio>
+    </SupportedProducts>
+    <SupportedFrameworkRuntimeEdition MinVersion="4.0" />
+  </Identifier>
+  <References>
+    <Reference Id="96492FC7-7BC6-46F7-8559-66BB4E09FD1E" MinVersion="2.0" MaxVersion="2.0">
+      <Name>Python Tools for Visual Studio</Name>
+      <MoreInfoUrl>http://pytools.codeplex.com/</MoreInfoUrl>
+    </Reference>  
+  </References>
+  <Content>
+    <Assembly AssemblyName="Microsoft.PythonTools.IronPython">Microsoft.PythonTools.IronPython</Assembly>
+    <VsPackage>|%CurrentProject%;PkgdefProjectOutputGroup|</VsPackage>
+    <MefComponent>|%CurrentProject%|</MefComponent>
+    <ProjectTemplate>Templates\Projects\SilverlightProject</ProjectTemplate>
+    <ProjectTemplate>Templates\Projects\WinformsProject</ProjectTemplate>
+    <ProjectTemplate>Templates\Projects\WpfProject</ProjectTemplate>
+    <ProjectTemplate>Templates\Projects\ConsoleProject</ProjectTemplate>
+    <ItemTemplate>Templates\Files\WpfWindow</ItemTemplate>
+  </Content>
+</Vsix>

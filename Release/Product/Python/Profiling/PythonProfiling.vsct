@@ -1,0 +1,311 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<CommandTable xmlns="http://schemas.microsoft.com/VisualStudio/2005-10-18/CommandTable" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+  <!--  This is the file that defines the actual layout and type of the commands.
+        It is divided in different sections (e.g. command definition, command
+        placement, ...), with each defining a specific set of properties.
+        See the comment before each section for more details about how to
+        use it. -->
+
+  <!--  The VSCT compiler (the tool that translates this file into the binary 
+        format that VisualStudio will consume) has the ability to run a preprocessor 
+        on the vsct file; this preprocessor is (usually) the C++ preprocessor, so 
+        it is possible to define includes and macros with the same syntax used 
+        in C++ files. Using this ability of the compiler here, we include some files 
+        defining some of the constants that we will use inside the file. -->
+
+  <!--This is the file that defines the IDs for all the commands exposed by VisualStudio. -->
+  <Extern href="stdidcmd.h"/>
+
+  <!--This header contains the command ids for the menus provided by the shell. -->
+  <Extern href="vsshlids.h"/>
+  <!--The Commands section is where we the commands, menus and menu groups are defined.
+      This section uses a Guid to identify the package that provides the command defined inside it. -->
+  <Commands package="guidPythonProfilingPkg">
+    <!-- Inside this section we have different sub-sections: one for the menus, another  
+    for the menu groups, one for the buttons (the actual commands), one for the combos 
+    and the last one for the bitmaps used. Each element is identified by a command id that  
+    is a unique pair of guid and numeric identifier; the guid part of the identifier is usually  
+    called "command set" and is used to group different command inside a logically related  
+    group; your package should define its own command set in order to avoid collisions  
+    with command ids defined by other packages. -->
+    <Groups>
+      <Group guid="guidPythonProfilingCmdSet" id="perfToolbarGroup" priority="0x0000">
+        <Parent guid="guidPythonProfilingCmdSet" id="menuIdPerfToolbar"/>
+      </Group>
+      <Group guid="guidPythonProfilingCmdSet" id="perfCtxMenuGroup" priority="0x0000">
+        <Parent guid="guidPythonProfilingCmdSet" id="menuIdPerfContext"/>
+      </Group>
+      <Group guid="guidPythonProfilingCmdSet" id="perfReportsCtxMenuGroup" priority="0x0000">
+        <Parent guid="guidPythonProfilingCmdSet" id="menuIdPerfReportsContext"/>
+      </Group>
+      <Group guid="guidPythonProfilingCmdSet" id="perfSingleReportCtxMenuGroup" priority="0x0000">
+        <Parent guid="guidPythonProfilingCmdSet" id="menuIdPerfSingleReportContext"/>
+      </Group>
+
+    </Groups>
+    <Menus>
+      <Menu guid="guidPythonProfilingCmdSet" id="menuIdPerfToolbar" priority="0x0000" type="ToolWindowToolbar">
+        <Parent guid="guidPythonProfilingCmdSet" id="0"/>
+        <CommandFlag>DefaultDocked</CommandFlag>
+        <CommandFlag>NoToolbarClose</CommandFlag>
+        <CommandFlag>AlwaysCreate</CommandFlag>
+        <CommandFlag>TextChanges</CommandFlag>
+        <Strings>
+          <ButtonText>Python Performance</ButtonText>
+          <CommandName>Python Performance</CommandName>
+        </Strings>
+      </Menu>
+      
+      <!-- context menu when you click on a session node -->
+      <Menu guid="guidPythonProfilingCmdSet" id="menuIdPerfContext" priority="0x0000" type="Context">
+        <Parent guid="guidPythonProfilingCmdSet" id="menuIdPerfContext"/> 
+        <CommandFlag>AlwaysCreate</CommandFlag>
+        <Strings>
+          <ButtonText>Performance Context</ButtonText>
+          <CommandName>Performance Context</CommandName>
+        </Strings>
+      </Menu>
+      
+      <!-- context menu when you right click on the Reports folder -->
+      <Menu guid="guidPythonProfilingCmdSet" id="menuIdPerfReportsContext" priority="0x0000" type="Context">
+        <Parent guid="guidPythonProfilingCmdSet" id="menuIdPerfReportsContext"/>
+        <CommandFlag>AlwaysCreate</CommandFlag>
+        <Strings>
+          <ButtonText>Performance Reports Context</ButtonText>
+          <CommandName>Performance Reports Context</CommandName>
+        </Strings> 
+      </Menu>
+
+      <!-- context menu when you right click on a single Report -->
+      <Menu guid="guidPythonProfilingCmdSet" id="menuIdPerfSingleReportContext" priority="0x0000" type="Context">
+        <Parent guid="guidPythonProfilingCmdSet" id="menuIdPerfSingleReportContext"/>
+        <CommandFlag>AlwaysCreate</CommandFlag>
+        <Strings>
+          <ButtonText>Performance Report Context</ButtonText>
+          <CommandName>Performance Report Context</CommandName>
+        </Strings>
+      </Menu>
+    </Menus>
+
+      <!--Buttons section. -->
+    <!--This section defines the elements the user can interact with, like a menu command or a button 
+        or combo box in a toolbar. -->
+    <Buttons>
+      <!--To define a menu group you have to specify its ID, the parent menu and its display priority. 
+          The command is visible and enabled by default. If you need to change the visibility, status, etc, you can use
+          the CommandFlag node.
+          You can add more than one CommandFlag node e.g.:
+              <CommandFlag>DefaultInvisible</CommandFlag>
+              <CommandFlag>DynamicVisibility</CommandFlag>
+          If you do not want an image next to your command, remove the Icon node or set it to <Icon guid="guidOfficeIcon" id="msotcidNoIcon" /> -->
+
+      <!-- Analyze menu items -->
+      <Button guid="guidPythonProfilingCmdSet" id="cmdidStartPythonProfiling" priority="0x0100" type="Button">
+        <Parent guid="guidPerfMenuGroup" id="IDG_PERF_BAR_GENERAL" />
+        <Strings>
+          <CommandName>cmdidStartPythonProfiling</CommandName>
+          <ButtonText>Launch &amp;Python Profiling...</ButtonText>
+        </Strings>
+      </Button>
+      
+      <!-- View->Other Windows items -->
+      <Button guid="guidPythonProfilingCmdSet" id="cmdidPerfExplorer" priority="0x8000" type="Button">
+        <Parent guid="guidDiagMenuGroup" id="IDG_VIEW_OTHERWINDOWS_DIAG_MENU"/>
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <CommandFlag>DefaultInvisible</CommandFlag>
+        <Strings>
+          <CommandName>cmdidPerfExplorer</CommandName>
+          <ButtonText>Python Performance Explorer</ButtonText>
+        </Strings>
+      </Button>
+
+      <!-- Toolbar Buttons -->
+      <Button guid="guidPythonProfilingCmdSet" id="cmdidAddPerfSession" priority="0x0000" type="Button">
+        <Parent guid="guidPythonProfilingCmdSet" id="perfToolbarGroup"/>
+        <Icon guid="guidCmdBarImages" id="newSessionIcon"/>
+        <Strings>
+          <ButtonText>Add Performance Session</ButtonText>
+          <MenuText>Add Performance Session</MenuText>
+        </Strings>
+      </Button>
+      <Button guid="guidPythonProfilingCmdSet" id="cmdidStartProfiling" priority="0x0000" type="Button">
+        <Parent guid="guidPythonProfilingCmdSet" id="perfToolbarGroup"/>
+        <Icon guid="guidCmdBarImages" id="startIcon"/>
+        <CommandFlag>DefaultDisabled</CommandFlag>
+        <Strings>
+          <ButtonText>Start Profiling</ButtonText>
+          <MenuText>Start Profiling</MenuText>
+        </Strings>
+      </Button>
+      <Button guid="guidPythonProfilingCmdSet" id="cmdidStopProfiling" priority="0x0000" type="Button">
+        <Parent guid="guidPythonProfilingCmdSet" id="perfToolbarGroup"/>
+        <Icon guid="guidCmdBarImages" id="stopIcon"/>
+        <CommandFlag>DefaultDisabled</CommandFlag>
+        <Strings>
+          <ButtonText>Stop Profiling</ButtonText>
+          <MenuText>Stop Profiling</MenuText>
+        </Strings>
+      </Button>
+      
+      <!-- Context menu items for session node -->
+      <Button guid="guidPythonProfilingCmdSet" id="cmdidPerfCtxStartProfiling" priority="0x0000" type="Button">
+        <Parent guid="guidPythonProfilingCmdSet" id="perfCtxMenuGroup"/>
+        <Icon guid="guidCmdBarImages" id="startIcon"/>
+        <Strings>
+          <ButtonText>&amp;Start Profiling</ButtonText>
+          <MenuText>&amp;Start Profiling</MenuText>
+        </Strings>
+      </Button>
+      <Button guid="guidPythonProfilingCmdSet" id="cmdidPerfCtxSetAsCurrent" priority="0x0000" type="Button">
+        <Parent guid="guidPythonProfilingCmdSet" id="perfCtxMenuGroup"/>
+        <Strings>
+          <ButtonText>Set as &amp;Current Session</ButtonText>
+          <MenuText>Set as &amp;Current Session</MenuText>
+        </Strings>
+      </Button>
+      
+      <!-- Context menu items for reports folder -->
+      <Button guid="guidPythonProfilingCmdSet" id="cmdidReportsAddReport" priority="0x0000" type="Button" Condition="%(VSTARGET)=='10.0'">
+        <Parent guid="guidPythonProfilingCmdSet" id="perfReportsCtxMenuGroup"/>
+<!--        <Icon guid="guidVsShellIcons" id="cmdidVsShellOpen"/> -->
+        <Strings>
+          <ButtonText>&amp;Add Report...</ButtonText>
+          <MenuText>&amp;Add Report...</MenuText>
+        </Strings>
+      </Button>
+      <Button guid="guidPythonProfilingCmdSet" id="cmdidReportsAddReport" priority="0x0000" type="Button" Condition="%(VSTARGET)!='10.0'">
+        <Parent guid="guidPythonProfilingCmdSet" id="perfReportsCtxMenuGroup"/>
+        <Strings>
+          <ButtonText>&amp;Add Report...</ButtonText>
+          <MenuText>&amp;Add Report...</MenuText>
+        </Strings>
+      </Button>
+      <Button guid="guidPythonProfilingCmdSet" id="cmdidReportsCompareReports" priority="0x0000" type="Button">
+        <Parent guid="guidPythonProfilingCmdSet" id="perfReportsCtxMenuGroup"/>
+        <Icon guid="guidCmdBarImages" id="compareReports"/>
+        <Strings>
+          <ButtonText>&amp;Compare Performance Reports...</ButtonText>
+          <MenuText>&amp;Compare Performance Reports...</MenuText>
+        </Strings>
+      </Button>
+      
+      <!-- Context menu items for report item -->
+      <Button guid="guidPythonProfilingCmdSet" id="cmdidOpenReport" priority="0x0000" type="Button" Condition="%(VSTARGET)=='10.0'">
+        <Parent guid="guidPythonProfilingCmdSet" id="perfSingleReportCtxMenuGroup"/>
+<!--        <Icon guid="guidVsShellIcons" id="cmdidVsShellReports"/> -->
+        <Strings>
+          <ButtonText>&amp;Open</ButtonText>
+          <MenuText>&amp;Open</MenuText>
+        </Strings>
+      </Button>
+      <Button guid="guidPythonProfilingCmdSet" id="cmdidOpenReport" priority="0x0000" type="Button" Condition="%(VSTARGET)!='10.0'">
+        <Parent guid="guidPythonProfilingCmdSet" id="perfSingleReportCtxMenuGroup"/>
+        <Strings>
+          <ButtonText>&amp;Open</ButtonText>
+          <MenuText>&amp;Open</MenuText>
+        </Strings>
+      </Button>
+    </Buttons>
+   
+    <!--The bitmaps section is used to define the bitmaps that are used for the commands.-->
+    <Bitmaps>
+      <!--  The bitmap id is defined in a way that is a little bit different from the others: 
+            the declaration starts with a guid for the bitmap strip, then there is the resource id of the 
+            bitmap strip containing the bitmaps and then there are the numeric ids of the elements used 
+            inside a button definition. An important aspect of this declaration is that the element id 
+            must be the actual index (1-based) of the bitmap inside the bitmap strip. -->
+      <Bitmap guid="guidCmdBarImages" href="..\Icons\Dev12.0\ProfilingCmdBar.bmp" usedList="startIcon, newSessionIcon, stopIcon, compareReports"
+              Condition="Defined(DEV12)"/>
+      <Bitmap guid="guidCmdBarImages" href="..\Icons\Dev11.0\ProfilingCmdBar.bmp" usedList="startIcon, newSessionIcon, stopIcon, compareReports"
+              Condition="Defined(DEV11)"/>
+      <Bitmap guid="guidCmdBarImages" href="..\Icons\Dev10.0\ProfilingCmdBar.bmp" usedList="startIcon, newSessionIcon, stopIcon, compareReports"
+              Condition="Defined(DEV10)"/>
+    </Bitmaps>
+ 
+  </Commands>
+
+  <VisibilityConstraints>
+    <VisibilityItem guid="guidPythonProfilingCmdSet" id="perfToolbarGroup" context="guidExplorerContext"/>
+  </VisibilityConstraints>
+
+  <CommandPlacements>
+    <CommandPlacement guid="guidPythonProfilingCmdSet" id="cmdidStartPythonProfiling" priority="0x10">
+      <Parent guid="guidPerfMenuGroup" id="IDG_PERF_TOPLEVEL"/>
+    </CommandPlacement>
+    <CommandPlacement guid="guidPythonProfilingCmdSet" id="cmdidPerfExplorer" priority="0x10">
+      <Parent guid="guidDiagMenuGroup" id="IDG_DIAG_WINDOWS_MENU"/>
+    </CommandPlacement>
+    <CommandPlacement guid="guidPythonProfilingCmdSet" id="cmdidReportsCompareReports" priority="0x10">
+      <Parent guid="guidPythonProfilingCmdSet" id="perfSingleReportCtxMenuGroup"/>
+    </CommandPlacement>
+
+    <CommandPlacement guid="guidVSStd97" id="cmdidDelete" priority="0x10">
+      <Parent guid="guidPythonProfilingCmdSet" id="perfCtxMenuGroup"/>
+    </CommandPlacement>
+    <CommandPlacement guid="guidVSStd97" id="cmdidPropSheetOrProperties" priority="0x10">
+      <Parent guid="guidPythonProfilingCmdSet" id="perfCtxMenuGroup"/>
+    </CommandPlacement>
+
+    <CommandPlacement guid="guidVSStd97" id="cmdidDelete" priority="0x10">
+      <Parent guid="guidPythonProfilingCmdSet" id="perfSingleReportCtxMenuGroup"/>
+    </CommandPlacement>
+    <CommandPlacement guid="guidVSStd97" id="cmdidRename" priority="0x10">
+      <Parent guid="guidPythonProfilingCmdSet" id="perfSingleReportCtxMenuGroup"/>
+    </CommandPlacement>
+  </CommandPlacements>
+
+  <Symbols>
+    <!-- This is the package guid. -->
+    <GuidSymbol name="guidPythonProfilingPkg" value="{81da0100-e6db-4783-91ea-c38c3fa1b81e}" />
+
+    <!-- This is the guid used to group the menu commands together -->
+    <GuidSymbol name="guidPythonProfilingCmdSet" value="{c6e7bafe-d4b6-4e04-85af-9c83f18d8c78}">
+      <!-- Commands -->
+      <IDSymbol name="cmdidStartPythonProfiling" value="0x0100" />      
+      <IDSymbol name="cmdidPerfExplorer" value="0x0101" />
+      <IDSymbol name="cmdidAddPerfSession" value="0x0102" />
+      <IDSymbol name="cmdidStartProfiling" value="0x0103" />
+      <IDSymbol name="cmdidPerfCtxStartProfiling" value="0x104"/>
+      <IDSymbol name="cmdidPerfCtxSetAsCurrent" value="0x105"/>
+      <IDSymbol name="cmdidReportsCompareReports" value="0x106"/>
+      <IDSymbol name="cmdidReportsAddReport" value="0x107"/>
+      <IDSymbol name="cmdidOpenReport" value="0x108"/>
+      <IDSymbol name="cmdidStopProfiling" value="0x0109" />
+
+      <!-- Menus -->
+      <IDSymbol name="menuIdPerfToolbar" value="0x2000"/>
+      <IDSymbol name="menuIdPerfContext" value="0x2001"/>
+      <IDSymbol name="menuIdPerfReportsContext" value="0x2002"/>
+      <IDSymbol name="menuIdPerfSingleReportContext" value="0x2003"/>
+
+      <!-- Groups -->
+      <IDSymbol name="perfCtxMenuGroup" value="0x3000"/>
+      <IDSymbol name="perfReportsCtxMenuGroup" value="0x3001"/>
+      <IDSymbol name="perfSingleReportCtxMenuGroup" value="0x3002"/>
+      <IDSymbol name="perfToolbarGroup" value="0x3003"/>
+
+
+    </GuidSymbol>
+
+    <GuidSymbol name="guidCmdBarImages" value="{D0023B39-E866-4995-9C8A-50BB0D72E074}">
+      <IDSymbol name="startIcon" value="1"/>
+      <IDSymbol name="newSessionIcon" value="2"/>
+      <IDSymbol name="stopIcon" value="3"/>
+      <IDSymbol name="compareReports" value="4"/>
+    </GuidSymbol>
+
+    <!-- External Guids and IDs which we need to hook into -->
+    <GuidSymbol name="guidExplorerContext" value ="{3725B6C9-AE91-4b69-871B-3490DE1322BA}" />    
+    <GuidSymbol name="guidPerfMenuGroup" value="{79F7EEA7-D110-4b79-A6FB-2A25EE4D913F}" >
+      <IDSymbol name="IDG_PERF_BAR_GENERAL" value="0x1010"/>
+      <IDSymbol name="IDG_PERF_TOPLEVEL" value="0x1023"/>
+    </GuidSymbol>
+
+    <GuidSymbol name="guidDiagMenuGroup" value="{CD68F8E6-2842-4F7E-AF7b-5A019631CEB5}">
+      <IDSymbol name="IDG_DIAG_WINDOWS_MENU"      value="0x1003"/>
+      <IDSymbol name="IDG_VIEW_OTHERWINDOWS_DIAG_MENU" value="0x2002"/>
+    </GuidSymbol>
+  </Symbols>
+
+</CommandTable>

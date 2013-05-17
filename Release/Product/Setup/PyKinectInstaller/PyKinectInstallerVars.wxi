@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Include>
+  <?define ProductDescription = "Python Tools for Visual Studio - PyKinect Sample" ?>
+
+  <!-- Product GUIDs: Must just be unique-->
+  <?if "$(var.VSTargetVersion)" = "10.0" ?>
+      <?define InstallerGuid=FAE79BC9-6EB9-4A2F-A3AE-408484192118?>
+      <?define InstallerUpgradeGuid=9527F0D6-14C2-4BCF-BD11-2F96DFF88CAA?>
+      <?define ProductName = "Python Tools for Visual Studio 2010 - PyKinect Sample" ?>
+  <?elseif "$(var.VSTargetVersion)" = "11.0" ?>
+      <?define InstallerGuid=B2F923BA-3DC2-4AC3-B8A1-05202869E42D?>
+      <?define InstallerUpgradeGuid=DA0A0552-3AD3-4DA1-8A51-033E047EB3B2?>  
+      <?define ProductName = "Python Tools for Visual Studio 2012 - PyKinect Sample" ?>
+  <?else?>
+      <?define InstallerGuid=EF3C5467-8CC0-4789-AC60-9E0EB40938D9?>
+      <?define InstallerUpgradeGuid=5C803A64-3058-410B-A6E6-A954484442DC?>  
+      <?define ProductName = "Python Tools for Visual Studio 2013 - PyKinect Sample" ?>
+  <?endif ?>
+</Include>

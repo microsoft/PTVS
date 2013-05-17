@@ -1,0 +1,32 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(BuildRoot)\Build\Common.Build.targets" />
+    <!--
+    =================================================================================
+      Transforms our ConditionalEmbeddedResource into EmbeddedResource item groups by
+      doing a search/replace in the .resx file and writing out a new file.
+      
+      Currently the search and replace just updates the VS target version
+    =================================================================================
+    -->
+
+  <Target Name="ConditionalResx"
+          BeforeTargets="MainResourcesGeneration"
+          Condition="'@(ConditionalEmbeddedResource)' != ''"
+          >
+    
+          
+    <WriteLinesToFile 
+      File="@(ConditionalEmbeddedResource->'%(RootDir)%(Directory)%(Filename).xform.resx')" 
+      Lines="$([System.IO.File]::ReadAllText('%(fullpath)').Replace(&quot;_VSVERSION_&quot;,&quot;$(VSTarget)&quot;))" 
+      Overwrite="true"/> 
+      
+    <ItemGroup>
+      <EmbeddedResource Include="@(ConditionalEmbeddedResource->'%(RootDir)%(Directory)%(Filename).xform.resx')">
+        <ManifestResourceName>%(ConditionalEmbeddedResource.ManifestResourceName)</ManifestResourceName>
+        <MergeWithCTO Condition="'%(ConditionalEmbeddedResource.MergeWithCTO)' != ''">%(ConditionalEmbeddedResource.MergeWithCTO)</MergeWithCTO>
+        <LastGenOutput Condition="'%(ConditionalEmbeddedResource.LastGenOutput)' != ''">%(ConditionalEmbeddedResource.LastGenOutput)</LastGenOutput>
+        <Generator Condition="'%(ConditionalEmbeddedResource.Generator)' != ''">%(ConditionalEmbeddedResource.Generator)</Generator>
+      </EmbeddedResource>
+    </ItemGroup>
+  </Target>
+</Project>

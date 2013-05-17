@@ -1,0 +1,85 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\TestProjectBefore.settings" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>
+    </ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{B4D940A4-650D-40B0-8FD2-3DD1C310D77F}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>DjangoTests</RootNamespace>
+    <AssemblyName>DjangoTests</AssemblyName>
+    <FileAlignment>512</FileAlignment>
+    <ProjectTypeGuids>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <SccProjectName>SAK</SccProjectName>
+    <SccLocalPath>SAK</SccLocalPath>
+    <SccAuxPath>SAK</SccAuxPath>
+    <SccProvider>SAK</SccProvider>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.TC.TestHostAdapters, Version=1.0.0.0, Culture=neutral, PublicKeyToken=aa09a9889eb008f7, processorArchitecture=MSIL">
+      <HintPath>..\..\Public\TCTestHostAdapters\$(VSTarget)\Microsoft.TC.TestHostAdapters.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.CoreUtility, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+    <Reference Include="Microsoft.VisualStudio.OLE.Interop, Version=7.1.40304.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+    <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+    <Reference Include="Microsoft.VisualStudio.Shell.$(VSTarget), Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+    <Reference Include="Microsoft.VisualStudio.Shell.Immutable.10.0, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+    <Reference Include="Microsoft.VisualStudio.Shell.Interop, Version=7.1.40304.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+    <Reference Include="Microsoft.VisualStudio.Shell.Interop.10.0, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.Shell.Interop.8.0, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+    <Reference Include="Microsoft.VisualStudio.Shell.Interop.9.0, Version=9.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+    <Reference Include="Microsoft.VisualStudio.Text.Data, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+    <Reference Include="System" />
+    <Reference Include="System.Core">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Web" />
+  </ItemGroup>
+  <ItemGroup>
+    <CodeAnalysisDependentAssemblyPaths Condition=" '$(VS100COMNTOOLS)' != '' " Include="$(VS100COMNTOOLS)..\IDE\PrivateAssemblies">
+      <Visible>False</Visible>
+    </CodeAnalysisDependentAssemblyPaths>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AttributeTests.cs" />
+    <Compile Include="DjangoDebuggerTests.cs" />
+    <Compile Include="DjangoTemplateParserTests.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Product\Python\Analysis\Analysis.csproj">
+      <Project>{A85D479D-67A9-4BDB-904A-7D86DAF68A6F}</Project>
+      <Name>Analysis</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Product\Python\Debugger\Debugger.csproj">
+      <Project>{DECC7971-FA58-4DB0-9561-BFFADD393BBD}</Project>
+      <Name>Debugger</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Product\Python\Django\Django.csproj">
+      <Project>{639F1EFB-5A8B-4F8B-BF49-BC73F244D38D}</Project>
+      <Name>Django</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Common\TestUtilities\TestUtilities.csproj">
+      <Project>{D092D54E-FF29-4D32-9AEE-4EF704C92F67}</Project>
+      <Name>TestUtilities</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\DebuggerTests\DebuggerTests.csproj">
+      <Project>{E50E1B02-257C-4E10-AC1C-5ED36B48EE40}</Project>
+      <Name>DebuggerTests</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\TestUtilities.Python\TestUtilities.Python.csproj">
+      <Project>{a731c4c3-3741-4080-a946-c47574c1f3bf}</Project>
+      <Name>TestUtilities.Python</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="..\TestProjectAfter.settings" />
+</Project>

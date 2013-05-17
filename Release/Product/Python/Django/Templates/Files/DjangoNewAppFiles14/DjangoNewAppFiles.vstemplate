@@ -1,0 +1,17 @@
+<VSTemplate Version="2.0.0" Type="Item" xmlns="http://schemas.microsoft.com/developer/vstemplate/2005">
+  <TemplateData>
+    <Name>Django 1.4 App</Name>
+    <Description>An empty Django app</Description>
+    <Icon Package="{A2FE74E1-B743-11d0-AE1A-00A0C90FFFC3}" ID="4536" />
+    <ProjectType>Python</ProjectType>
+    <DefaultName>MyApp</DefaultName>
+    <SortOrder>100</SortOrder>
+  </TemplateData>
+  <TemplateContent>
+    <ProjectItem ReplaceParameters="true" TargetFileName="$fileinputname$\__init__.py">__init__.py</ProjectItem>
+    <ProjectItem ReplaceParameters="true" TargetFileName="$fileinputname$\models.py">models.py</ProjectItem>
+    <ProjectItem ReplaceParameters="true" TargetFileName="$fileinputname$\tests.py">tests.py</ProjectItem>
+    <ProjectItem ReplaceParameters="true" TargetFileName="$fileinputname$\views.py">views.py</ProjectItem>
+    <ProjectItem ReplaceParameters="true" TargetFileName="$fileinputname$\templates\index.html">DjangoTemplate.html</ProjectItem>
+  </TemplateContent>
+</VSTemplate>

@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" ?>
+<RoleModule
+  xmlns="http://schemas.microsoft.com/ServiceHosting/2008/10/ServiceDefinition"
+  namespace="Microsoft.PythonTools.Azure">
+  <Startup priority="-2">
+    <Task commandLine="Microsoft.PythonTools.AzureSetup.exe" executionContext="elevated" taskType="simple" />
+  </Startup>
+  <ConfigurationSettings>
+    <Setting name="PythonInterpreter" />
+  </ConfigurationSettings>
+</RoleModule>

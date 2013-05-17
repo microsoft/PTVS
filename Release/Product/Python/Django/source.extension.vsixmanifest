@@ -1,0 +1,50 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Vsix Version="1.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2010">
+  <Identifier Id="a8637c34-aa55-46e2-973c-9c3e09afc17b">
+    <Name>Python Tools for Visual Studio, Django Support</Name>
+    <Author>Microsoft</Author>
+    <Version>2.0</Version>
+    <Description xml:space="preserve">Provides templates and integration for the Django web framework.</Description>
+    <MoreInfoUrl>http://pytools.codeplex.com</MoreInfoUrl>
+    <GettingStartedGuide>http://pytools.codeplex.com</GettingStartedGuide>
+    <Icon>PythonProject.ico</Icon>
+    <PreviewImage>PythonProjectBig.ico</PreviewImage>
+    <Locale>1033</Locale>
+    <InstalledByMsi>true</InstalledByMsi>
+    <SupportedProducts>
+      <VisualStudio Version="10.0">
+        <Edition>Ultimate</Edition>
+        <Edition>Premium</Edition>
+        <Edition>Pro</Edition>
+        <Edition>IntegratedShell</Edition>
+        <Edition>VSTS</Edition>
+        <Edition>VSTD</Edition>
+      </VisualStudio>
+      <VisualStudio Version="11.0">
+        <Edition>Ultimate</Edition>
+        <Edition>Premium</Edition>
+        <Edition>Pro</Edition>
+        <Edition>IntegratedShell</Edition>
+        <Edition>VSTS</Edition>
+        <Edition>VSTD</Edition>
+      </VisualStudio>
+    </SupportedProducts>
+    <SupportedFrameworkRuntimeEdition MinVersion="4.0" />
+  </Identifier>
+  <References>
+    <Reference Id="Microsoft.VisualStudio.MPF" MinVersion="10.0">
+        <Name>Visual Studio MPF</Name>
+    </Reference>
+    <Reference Id="96492FC7-7BC6-46F7-8559-66BB4E09FD1E" MinVersion="2.0" MaxVersion="2.0">
+      <Name>Python Tools for Visual Studio</Name>
+      <MoreInfoUrl>http://pytools.codeplex.com/</MoreInfoUrl>
+    </Reference>
+  </References>
+  <Content>
+    <VsPackage>|%CurrentProject%;PkgdefProjectOutputGroup|</VsPackage>
+    <MefComponent>|%CurrentProject%|</MefComponent>
+    <ProjectTemplate>Templates\Projects\DjangoProject</ProjectTemplate>
+    <ProjectTemplate>Templates\Projects\AzureDjangoProject</ProjectTemplate>
+    <ItemTemplate>Templates\Files\DjangoHtmlTemplate</ItemTemplate>
+  </Content>
+</Vsix>

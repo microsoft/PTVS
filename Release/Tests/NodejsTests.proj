@@ -1,0 +1,19 @@
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <Import Project="TestProjectBefore.settings" />
+
+  <ItemGroup>
+    <ProjectFile Include="Common\TestUtilities\TestUtilities.csproj" />
+    <ProjectFile Include="Common\TestUtilities.UI\TestUtilities.UI.csproj" />
+    <ProjectFile Include="NodeTests\NodeTests.csproj" />
+    <ProjectFile Include="Nodejs.Tests.UI\Nodejs.Tests.UI.csproj" />
+    <ProjectFile Include="ProfilerTests\ProfilerTests.csproj" />
+    <ProjectFile Include="ProfilerUITests\ProfilerUITests.csproj" />
+    <ProjectFile Include="TestUtilities.UI.Nodejs\TestUtilities.UI.Nodejs.csproj" />
+  </ItemGroup>
+
+  <Import Project="$(TargetsPath)\Common.Build.Traversal.targets" />
+
+</Project>
+
+

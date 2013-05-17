@@ -1,0 +1,18 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "AddFolderExists", "AddFolderExists\AddFolderExists.pyproj", "{39D4020A-1424-481A-AD14-B426D6FC3970}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{39D4020A-1424-481A-AD14-B426D6FC3970}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{39D4020A-1424-481A-AD14-B426D6FC3970}.Release|Any CPU.ActiveCfg = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

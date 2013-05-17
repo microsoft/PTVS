@@ -1,0 +1,35 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\SetupProjectBefore.settings" />
+  <PropertyGroup>
+    <ProductVersion>3.5</ProductVersion>
+    <ProjectGuid>{16671BE6-DD23-41D9-841A-0B80D47A090D}</ProjectGuid>
+    <SchemaVersion>2.0</SchemaVersion>
+    <OutputName>DjangoMsm</OutputName>
+    <OutputType>Module</OutputType>
+    <DefineSolutionProperties>false</DefineSolutionProperties>
+    <SccProjectName>SAK</SccProjectName>
+    <SccProvider>SAK</SccProvider>
+    <SccAuxPath>SAK</SccAuxPath>
+    <SccLocalPath>SAK</SccLocalPath>
+    <DefineConstants>
+      ObjDir=$(BuildRoot)\Release\Product\Python\Django\obj\Dev$(VSTarget)\$(Configuration);
+      VSTargetVersion=$(VSTarget)
+    </DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Django.wxs" />
+    <Compile Include="DjangoVsExt.wxs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Python\Django\Django.csproj">
+      <Name>Microsoft.PythonTools.Django</Name>
+      <Project>{639F1EFB-5A8B-4F8B-BF49-BC73F244D38D}</Project>
+      <Private>True</Private>
+      <RefProjectOutputGroups>Binaries</RefProjectOutputGroups>
+      <RefTargetDir>INSTALLLOCATION</RefTargetDir>
+      <DoNotHarvest>true</DoNotHarvest>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="..\SetupProjectAfter.settings" />
+</Project>
