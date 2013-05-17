@@ -1,0 +1,235 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <Choose>
+    <When Condition=" '$(VisualStudioVersion)'=='11.0'  Or '$(TargetVisualStudioVersion)'=='VS110' ">
+      <PropertyGroup>
+        <MinimumVisualStudioVersion>11.0</MinimumVisualStudioVersion>
+        <FileUpgradeFlags>
+        </FileUpgradeFlags>
+        <UpgradeBackupLocation>
+        </UpgradeBackupLocation>
+        <OldToolsVersion>4.0</OldToolsVersion>
+      </PropertyGroup>
+    </When>
+    <When Condition=" '$(VisualStudioVersion)'=='12.0'  Or '$(TargetVisualStudioVersion)'=='VS120' ">
+      <PropertyGroup>
+        <MinimumVisualStudioVersion>12.0</MinimumVisualStudioVersion>
+        <FileUpgradeFlags>
+        </FileUpgradeFlags>
+        <UpgradeBackupLocation>
+        </UpgradeBackupLocation>
+        <OldToolsVersion>4.0</OldToolsVersion>
+      </PropertyGroup>
+    </When>
+  </Choose>
+  <Import Project="..\ProjectBefore.settings" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectTypeGuids>{82b43b9b-a64c-4715-b499-d71e9ca2bd60};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <ProjectGuid>{5AE43C93-8EF6-4D57-BC10-511035EF56C5}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Microsoft.IronPythonTools</RootNamespace>
+    <AssemblyName>Microsoft.PythonTools.IronPython</AssemblyName>
+    <FileAlignment>512</FileAlignment>
+    <SccProjectName>SAK</SccProjectName>
+    <SccLocalPath>SAK</SccLocalPath>
+    <SccAuxPath>SAK</SccAuxPath>
+    <SccProvider>SAK</SccProvider>
+    <DeployExtension>True</DeployExtension>
+    <CreateVsixContainer>True</CreateVsixContainer>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="envdte, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+      <EmbedInteropTypes>False</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="envdte80, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+      <EmbedInteropTypes>False</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="IronPython">
+      <HintPath>.\IronPython.dll</HintPath>
+    </Reference>
+    <Reference Include="IronPython.Modules">
+      <HintPath>.\IronPython.Modules.dll</HintPath>
+    </Reference>
+    <Reference Include="IronPython.Wpf">
+      <HintPath>.\IronPython.Wpf.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Dynamic">
+      <HintPath>.\Microsoft.Dynamic.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Scripting">
+      <HintPath>.\Microsoft.Scripting.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Scripting.Metadata">
+      <HintPath>.\Microsoft.Scripting.Metadata.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.ComponentModelHost, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+    <Reference Include="Microsoft.VisualStudio.CoreUtility, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+    <Reference Include="Microsoft.VisualStudio.Designer.Interfaces, Version=1.0.5000.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+      <EmbedInteropTypes>False</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.Editor" />
+    <Reference Include="Microsoft.VisualStudio.Language.Intellisense, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+    <Reference Include="Microsoft.VisualStudio.Language.StandardClassification" />
+    <Reference Include="Microsoft.VisualStudio.OLE.Interop" />
+    <Reference Include="Microsoft.VisualStudio.Shell.$(VSTarget), Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <Aliases>global</Aliases>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.Shell.Design, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+    <Reference Include="Microsoft.VisualStudio.Shell.Immutable.10.0, Version=10.0.0.0, Culture=neutral">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>$(VSSDK100Install)\VisualStudioIntegration\Common\Assemblies\v4.0\Microsoft.VisualStudio.Shell.Immutable.10.0.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.Shell.Interop" />
+    <Reference Include="Microsoft.VisualStudio.Shell.Interop.8.0" />
+    <Reference Include="Microsoft.VisualStudio.Shell.Interop.9.0" />
+    <Reference Include="Microsoft.VisualStudio.Shell.Interop.10.0" />
+    <Reference Include="Microsoft.VisualStudio.Text.Data, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+    <Reference Include="Microsoft.VisualStudio.Text.Logic, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+    <Reference Include="Microsoft.VisualStudio.Text.UI, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+    <Reference Include="Microsoft.VisualStudio.Text.UI.Wpf, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+    <Reference Include="Microsoft.VisualStudio.TextManager.Interop" />
+    <Reference Include="Microsoft.VisualStudio.TextManager.Interop.8.0, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+    <Reference Include="Microsoft.VisualStudio.VSHelp, Version=7.0.3300.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+      <EmbedInteropTypes>False</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
+    <Reference Include="System" />
+    <Reference Include="System.ComponentModel.Composition" />
+    <Reference Include="System.Configuration.Install" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Numerics" />
+    <Reference Include="System.Runtime.Remoting" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Runtime.Serialization.Formatters.Soap" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xaml" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+    <Reference Include="WindowsBase" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Debugger\IronPythonLauncher.cs" />
+    <Compile Include="Debugger\IronPythonLauncherOptions.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Debugger\IronPythonLauncherOptions.Designer.cs">
+      <DependentUpon>IronPythonLauncherOptions.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Debugger\IronPythonLauncherProvider.cs" />
+    <Compile Include="Interpreter\IronPythonConstructorFunctionTarget.cs" />
+    <Compile Include="Interpreter\IronPythonNewClsParameterInfo.cs" />
+    <Compile Include="Interpreter\IronPythonTypeGroup.cs" />
+    <Compile Include="Interpreter\IronPythonBuiltinModule.cs" />
+    <Compile Include="Interpreter\IronPythonConstant.cs" />
+    <Compile Include="Interpreter\IronPythonEvent.cs" />
+    <Compile Include="Interpreter\IronPythonInterpreterFactory.cs" />
+    <Compile Include="Interpreter\IronPythonExtensionProperty.cs" />
+    <Compile Include="Interpreter\IronPythonBuiltinFunction.cs" />
+    <Compile Include="Interpreter\IronPythonBuiltinFunctionTarget.cs" />
+    <Compile Include="Interpreter\IronPythonBuiltinMethodDescriptor.cs" />
+    <Compile Include="Interpreter\IronPythonConstructorFunction.cs" />
+    <Compile Include="Interpreter\IronPythonField.cs" />
+    <Compile Include="Interpreter\IronPythonGenericMember.cs" />
+    <Compile Include="Interpreter\IronPythonInterpreterFactoryProvider.cs" />
+    <Compile Include="Interpreter\IronPythonModule.cs" />
+    <Compile Include="Interpreter\IronPythonModuleContext.cs" />
+    <Compile Include="Interpreter\IronPythonNamespace.cs" />
+    <Compile Include="Interpreter\IronPythonParameterInfo.cs" />
+    <Compile Include="Interpreter\IronPythonProperty.cs" />
+    <Compile Include="Interpreter\IronPythonType.cs" />
+    <Compile Include="Interpreter\IronPythonInterpreter.cs" />
+    <Compile Include="Interpreter\ObjectIdentityHandle.cs" />
+    <Compile Include="Interpreter\PythonObject.cs" />
+    <Compile Include="Interpreter\RemoteInterpreter.cs" />
+    <Compile Include="Interpreter\RemoteInterpreterProxy.cs" />
+    <Compile Include="IpyToolsPackage.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Analysis\Analysis.csproj">
+      <Project>{A85D479D-67A9-4BDB-904A-7D86DAF68A6F}</Project>
+      <Name>Analysis</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\IronPythonResolver\IronPythonResolver.csproj">
+      <Project>{31f224b1-68da-4524-9a1c-95f22492775b}</Project>
+      <Name>IronPythonResolver</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\PythonTools\PythonTools.csproj">
+      <Project>{FA7BE5F5-E04F-4613-B7AC-70CE10D1BB68}</Project>
+      <Name>PythonTools</Name>
+      <Private>False</Private>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="..\Icons\Dev$(VSTarget)\PythonProject.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>.</VSIXSubPath>
+    </Content>
+    <Content Include="..\Icons\Dev$(VSTarget)\PythonProjectBig.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>.</VSIXSubPath>
+    </Content>
+  </ItemGroup>
+  <ItemDefinitionGroup>
+    <ZipProject>
+      <Language>Python</Language>
+    </ZipProject>
+    <ZipItem>
+      <Language>Python</Language>
+    </ZipItem>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ZipItem Include="Templates\Files\WpfWindow\WpfWindow.py" />
+    <ZipProject Include="Templates\Projects\ConsoleProject\ConsoleProject.pyproj" />
+    <ZipProject Include="Templates\Projects\WinformsProject\WinformsApp.pyproj" />
+    <ZipItem Include="Templates\Files\WpfWindow\WpfWindow.vstemplate" />
+    <ZipProject Include="Templates\Projects\ConsoleProject\Program.py" />
+    <ZipProject Include="Templates\Projects\ConsoleProject\ConsoleProject.vstemplate" />
+    <ZipProject Include="Templates\Projects\WpfProject\Program.py" />
+    <ZipProject Include="Templates\Projects\WinformsProject\Program.py" />
+    <ZipProject Include="Templates\Projects\WinformsProject\WinformsApp.vstemplate" />
+    <ZipProject Include="Templates\Projects\WpfProject\WpfApp.vstemplate" />
+    <None Include="source.extension.vsixmanifest">
+      <SubType>Designer</SubType>
+    </None>
+    <ZipProject Include="Templates\Projects\SilverlightProject\SilverlightProject.pyproj" />
+    <ZipProject Include="Templates\Projects\WpfProject\WpfApp.pyproj" />
+    <ZipProject Include="Templates\Projects\SilverlightProject\Program.html" />
+    <ZipProject Include="Templates\Projects\SilverlightProject\SilverlightProject.vstemplate" />
+    <ZipProject Include="Templates\Projects\SilverlightProject\Program.py" />
+    <ZipItem Include="Templates\Files\WpfWindow\WpfWindow.xaml" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Debugger\IronPythonLauncherOptions.resx">
+      <DependentUpon>IronPythonLauncherOptions.cs</DependentUpon>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <ZipProject Include="Templates\Projects\WpfProject\Program.xaml">
+      <SubType>Designer</SubType>
+    </ZipProject>
+  </ItemGroup>
+  <Import Project="..\ProjectAfter.settings" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

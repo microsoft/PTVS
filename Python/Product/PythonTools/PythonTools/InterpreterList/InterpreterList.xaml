@@ -1,0 +1,208 @@
+﻿<UserControl x:Class="Microsoft.PythonTools.InterpreterList.InterpreterList"
+             x:ClassModifier="internal"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:l="clr-namespace:Microsoft.PythonTools.InterpreterList"
+             xmlns:wpf="clr-namespace:Microsoft.PythonTools.Wpf"
+             xmlns:scm="clr-namespace:System.ComponentModel;assembly=WindowsBase"
+             mc:Ignorable="d" 
+             d:DesignHeight="400" d:DesignWidth="800"
+             TextOptions.TextFormattingMode="Display"
+             HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+             Background="{DynamicResource {x:Static wpf:Controls.BackgroundKey}}"
+             RenderOptions.EdgeMode="Aliased"
+             TextElement.Foreground="{DynamicResource {x:Static wpf:Controls.ForegroundKey}}">
+    <UserControl.InputBindings>
+        <KeyBinding Key="F5" Command="{x:Static l:InterpreterList.RefreshCommand}" />
+    </UserControl.InputBindings>
+
+    <UserControl.CommandBindings>
+        <CommandBinding Command="{x:Static l:InterpreterList.AbortCommand}" CanExecute="Abort_CanExecute" Executed="Abort_Executed" />
+        <CommandBinding Command="{x:Static l:InterpreterList.RegenerateCommand}" CanExecute="Regenerate_CanExecute" Executed="Regenerate_Executed" />
+        <CommandBinding Command="{x:Static l:InterpreterList.RefreshCommand}" CanExecute="Refresh_CanExecute" Executed="Refresh_Executed" />
+        <CommandBinding Command="{x:Static l:InterpreterList.OpenReplCommand}" CanExecute="OpenWindow_CanExecute" Executed="OpenWindow_Executed" />
+        <CommandBinding Command="{x:Static l:InterpreterList.OpenOptionsCommand}" CanExecute="OpenWindow_CanExecute" Executed="OpenWindow_Executed" />
+        <CommandBinding Command="{x:Static l:InterpreterList.OpenReplOptionsCommand}" CanExecute="OpenWindow_CanExecute" Executed="OpenWindow_Executed" />
+        <CommandBinding Command="{x:Static l:InterpreterList.MakeDefaultCommand}" CanExecute="MakeDefault_CanExecute" Executed="MakeDefault_Executed" />
+    </UserControl.CommandBindings>
+
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="pack://application:,,,/Microsoft.PythonTools;component/Wpf/Controls.xaml" />
+
+                <ResourceDictionary>
+                    <Style TargetType="{x:Type Expander}">
+                        <Setter Property="Margin" Value="4" />
+                        <Setter Property="RenderOptions.EdgeMode" Value="Unspecified" />
+                    </Style>
+
+                    <Style x:Key="InterpreterItemStyle" TargetType="ListViewItem">
+                        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="ListViewItem">
+                                    <Border Background="{TemplateBinding Background}">
+                                        <GridViewRowPresenter VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
+                                    </Border>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                        <Style.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="{DynamicResource {x:Static wpf:Controls.HotTrackKey}}" />
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter Property="Background" Value="{DynamicResource {x:Static wpf:Controls.HighlightKey}}" />
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+
+
+                    <CollectionViewSource x:Key="SortedInterpreters" Source="{Binding Interpreters}">
+                        <CollectionViewSource.SortDescriptions>
+                            <scm:SortDescription PropertyName="Name" />
+                        </CollectionViewSource.SortDescriptions>
+                    </CollectionViewSource>
+
+                    <DataTemplate x:Key="NameTemplate" DataType="{x:Type l:InterpreterView}">
+                        <TextBlock Name="InterpreterName" Text="{Binding Name}" />
+                        <DataTemplate.Triggers>
+                            <DataTrigger Binding="{Binding IsDefault}" Value="True">
+                                <Setter TargetName="InterpreterName" Property="FontWeight" Value="Bold" />
+                            </DataTrigger>
+                        </DataTemplate.Triggers>
+                    </DataTemplate>
+
+                    <DataTemplate x:Key="MakeDefaultTemplate" DataType="{x:Type l:InterpreterView}">
+                        <Button Command="{x:Static l:InterpreterList.MakeDefaultCommand}" CommandParameter="{Binding}">
+                            Make Default
+                        </Button>
+                    </DataTemplate>
+
+                    <DataTemplate x:Key="DatabaseTemplate" DataType="{x:Type l:InterpreterView}">
+                        <Grid HorizontalAlignment="Stretch">
+                            <Grid Name="Status" VerticalAlignment="Center" Margin="6 1">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <Grid Grid.Column="0">
+                                    <TextBlock Name="NotRequired" VerticalAlignment="Center">
+                                        Completion DB is up to date
+                                    </TextBlock>
+                                    <StackPanel Name="Required" Orientation="Horizontal" Visibility="Hidden">
+                                        <TextBlock VerticalAlignment="Center" FontWeight="Bold">
+                                            Completion DB needs refresh
+                                        </TextBlock>
+                                        <Expander Name="ShowContent" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="3 0 0 0" />
+                                    </StackPanel>
+                                </Grid>
+                                <Button Command="{x:Static l:InterpreterList.RegenerateCommand}" CommandParameter="{Binding}"
+                                        Grid.Column="1">
+                                    Refresh DB
+                                </Button>
+                            </Grid>
+                            <Grid Name="Refreshing" Visibility="Collapsed">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="auto" />
+                                    <RowDefinition />
+                                </Grid.RowDefinitions>
+                                <TextBlock Grid.Row="0" HorizontalAlignment="Center">
+                                    Refreshing DB
+                                </TextBlock>
+                                <ProgressBar Name="Progress"
+                                             Grid.Row="1"
+                                             Value="{Binding Progress,Mode=OneWay}"
+                                             Minimum="0" Maximum="{Binding Maximum,Mode=OneWay}"
+                                             Margin="6"
+                                             IsIndeterminate="False"
+                                             HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
+                            </Grid>
+                            <Popup Name="Reason"
+                                   PlacementTarget="{Binding ElementName=Required}"
+                                   Placement="Bottom"
+                                   Width="auto"
+                                   MaxWidth="600" MaxHeight="300"
+                                   StaysOpen="True">
+                                <Border Style="{DynamicResource TooltipBorder}">
+                                    <ScrollViewer Background="Transparent"
+                                      HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
+                                      Padding="2">
+                                        <TextBlock Text="{Binding IsCurrentReason}" />
+                                    </ScrollViewer>
+                                </Border>
+                            </Popup>
+                        </Grid>
+                        <DataTemplate.Triggers>
+                            <DataTrigger Binding="{Binding IsRunning,Mode=OneWay}" Value="true">
+                                <Setter TargetName="Status" Property="Visibility" Value="Hidden" />
+                                <Setter TargetName="Refreshing" Property="Visibility" Value="Visible" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Maximum,Mode=OneWay}" Value="0">
+                                <Setter TargetName="Progress" Property="IsIndeterminate" Value="true" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding IsCurrent,Mode=OneWay}" Value="false">
+                                <Setter TargetName="Required" Property="Visibility" Value="Visible" />
+                                <Setter TargetName="NotRequired" Property="Visibility" Value="Hidden" />
+                            </DataTrigger>
+                            <MultiTrigger>
+                                <MultiTrigger.Conditions>
+                                    <Condition SourceName="ShowContent" Property="IsExpanded" Value="True" />
+                                    <Condition SourceName="Required" Property="IsVisible" Value="True" />
+                                </MultiTrigger.Conditions>
+                                <Setter TargetName="Reason" Property="IsOpen" Value="True" />
+                            </MultiTrigger>
+                        </DataTemplate.Triggers>
+                    </DataTemplate>
+
+                    <DataTemplate x:Key="OpenReplTemplate">
+                        <Button Command="{x:Static l:InterpreterList.OpenReplCommand}" CommandParameter="{Binding}"
+                                Style="{DynamicResource NavigationButton}">
+                            Interactive Window
+                        </Button>
+                    </DataTemplate>
+
+                    <DataTemplate x:Key="OpenOptionsTemplate">
+                        <StackPanel Orientation="Vertical">
+                            <Button Command="{x:Static l:InterpreterList.OpenOptionsCommand}" CommandParameter="{Binding}"
+                                    Margin="4 4 4 2"
+                                    Style="{StaticResource NavigationButton}">
+                                Interpreter Options
+                            </Button>
+                            <Button Command="{x:Static l:InterpreterList.OpenReplOptionsCommand}" CommandParameter="{Binding}"
+                                    Margin="4 2 4 4"
+                                    Style="{StaticResource NavigationButton}">
+                                Interactive Options
+                            </Button>
+                        </StackPanel>
+                    </DataTemplate>
+                </ResourceDictionary>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <ListView HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+              ItemContainerStyle="{StaticResource InterpreterItemStyle}"
+              ItemsSource="{Binding Source={StaticResource SortedInterpreters}}">
+        <ListView.Template>
+            <ControlTemplate>
+                <ScrollViewer CanContentScroll="False">
+                    <ItemsPresenter />
+                </ScrollViewer>
+            </ControlTemplate>
+        </ListView.Template>
+        <ListView.View>
+            <GridView AllowsColumnReorder="False">
+                <GridViewColumn CellTemplate="{StaticResource NameTemplate}" />
+                <GridViewColumn CellTemplate="{StaticResource OpenReplTemplate}" />
+                <GridViewColumn CellTemplate="{StaticResource MakeDefaultTemplate}" />
+                <GridViewColumn CellTemplate="{StaticResource OpenOptionsTemplate}" />
+                <GridViewColumn CellTemplate="{StaticResource DatabaseTemplate}" />
+            </GridView>
+        </ListView.View>
+    </ListView>
+</UserControl>
