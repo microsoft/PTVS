@@ -20,6 +20,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -31,13 +32,13 @@ using Microsoft.PythonTools.Debugger.Remote;
 using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Interpreter.Default;
 using Microsoft.PythonTools.InterpreterList;
 using Microsoft.PythonTools.Navigation;
 using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Debugger.Interop;
 using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.OLE.Interop;
@@ -161,7 +162,10 @@ namespace Microsoft.PythonTools {
     [ProvideDebugException(AD7Engine.DebugEngineId, "Python Exceptions", "exceptions", "exceptions.WindowsError")]
     [ProvideDebugException(AD7Engine.DebugEngineId, "Python Exceptions", "exceptions", "exceptions.ZeroDivisionError")]
     [ProvideComponentPickerPropertyPage(typeof(PythonToolsPackage), typeof(WebPiComponentPickerControl), "WebPi", DefaultPageNameValue = "#4000")]
-    [ProvideToolWindow(typeof(InterpreterListToolWindow), Style=VsDockStyle.Linked, Window=ToolWindowGuids80.Outputwindow)]
+    [ProvideToolWindow(typeof(InterpreterListToolWindow), Style = VsDockStyle.Linked, Window = ToolWindowGuids80.Outputwindow)]
+    [ProvidePythonInterpreterFactoryProvider("{2AF0F10D-7135-4994-9156-5D01C9C11B7E}", typeof(IPythonInterpreterFactoryProvider))]
+    [ProvidePythonInterpreterFactoryProvider("{9A7A9026-48C1-4688-9D5D-E5699D47D074}", typeof(IPythonInterpreterFactoryProvider))]
+    [ProvidePythonInterpreterFactoryProvider("ConfigurablePythonInterpreterFactoryProvider", typeof(ConfigurablePythonInterpreterFactoryProvider))]
 #if DEV11_OR_LATER // TODO: UNSURE IF WE NEED THIS FOR DEV12
     [ProvideX64DebuggerFixForIntegratedShell]
 #endif
@@ -173,9 +177,7 @@ namespace Microsoft.PythonTools {
         private PythonAutomation _autoObject = new PythonAutomation();
         private IContentType _contentType;
         private PackageContainer _packageContainer;
-        internal static Guid _noInterpretersFactoryGuid = new Guid("{15CEBB59-1008-4305-97A9-CF5E2CB04711}");
         internal const string PythonExpressionEvaluatorGuid = "{D67D5DB8-3D44-4105-B4B8-47AB1BA66180}";
-        private static List<EventHandler> _earlyHandlers = new List<EventHandler>();
         private UpdateSolutionEventsListener _solutionEventListener;
         internal static SolutionAdvisor _solutionAdvisor;
 
@@ -189,12 +191,6 @@ namespace Microsoft.PythonTools {
         public PythonToolsPackage() {
             Trace.WriteLine(string.Format(CultureInfo.CurrentCulture, "Entering constructor for: {0}", this.ToString()));
             Instance = this;
-
-            // hook up any event handlers that were registered before we were sited.
-            foreach (var earlyHandler in _earlyHandlers) {
-                InterpretersChanged += earlyHandler;
-            }
-            _earlyHandlers.Clear();
 
             if (IsIpyToolsInstalled()) {
                 MessageBox.Show(
@@ -212,7 +208,7 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
 
         internal static bool IsIpyToolsInstalled() {
             // the component guid which IpyTools is installed under from IronPython 2.7
-            const string ipyToolsComponentGuid = "{2DF41B37-FAEF-4FD8-A2F5-46B57FF9E951}";  
+            const string ipyToolsComponentGuid = "{2DF41B37-FAEF-4FD8-A2F5-46B57FF9E951}";
 
             // Check if the IpyTools component is known...
             StringBuilder productBuffer = new StringBuilder(39);
@@ -234,7 +230,7 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
             IVsTextView viewAdapter;
             IVsWindowFrame pWindowFrame;
             OpenDocument(filename, out viewAdapter, out pWindowFrame);
-            
+
             ErrorHandler.ThrowOnFailure(pWindowFrame.Show());
 
             // Set the cursor at the beginning of the declaration.            
@@ -265,11 +261,10 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
 
             IVsTextLines lines;
             ErrorHandler.ThrowOnFailure(viewAdapter.GetBuffer(out lines));
-            
-            var model = Instance.GetService(typeof(SComponentModel)) as IComponentModel;
-            var adapter = model.GetService<IVsEditorAdaptersFactoryService>();
 
-            return adapter.GetDocumentBuffer(lines);            
+            var adapter = ComponentModel.GetService<IVsEditorAdaptersFactoryService>();
+
+            return adapter.GetDocumentBuffer(lines);
         }
 
         internal static IProjectLauncher GetLauncher(IPythonProject project) {
@@ -307,6 +302,24 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
                 out itemid,
                 out pWindowFrame,
                 out viewAdapter);
+        }
+
+        internal static void OpenWebBrowser(string url) {
+            var uri = new Uri(url);
+            Process.Start(new ProcessStartInfo(uri.AbsoluteUri));
+            return;
+        }
+
+        internal static void OpenVsWebBrowser(string url) {
+            var web = GetGlobalService(typeof(SVsWebBrowsingService)) as IVsWebBrowsingService;
+            if (web == null) {
+                OpenWebBrowser(url);
+                return;
+            }
+
+            IVsWindowFrame frame;
+            ErrorHandler.ThrowOnFailure(web.Navigate(url, (uint)__VSWBNAVIGATEFLAGS.VSNWB_ForceNew, out frame));
+            frame.Show();
         }
 
         protected override object GetAutomationObject(string name) {
@@ -395,28 +408,6 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
         }
 
         /// <summary>
-        /// Event is fired when the list of configured interpreters is changed.
-        /// 
-        /// New in 1.1.
-        /// </summary>
-        public static event EventHandler InterpretersChanged {
-            add {
-                if (Instance == null) {
-                    _earlyHandlers.Add(value);
-                } else {
-                    Instance.InterpreterOptionsPage.InterpretersChanged += value;
-                }
-            }
-            remove {
-                if (Instance == null) {
-                    _earlyHandlers.Remove(value);
-                } else {
-                    Instance.InterpreterOptionsPage.InterpretersChanged -= value;
-                }
-            }
-        }
-
-        /// <summary>
         /// The analyzer which is used for loose files.
         /// </summary>
         internal VsProjectAnalyzer DefaultAnalyzer {
@@ -436,11 +427,14 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
         }
 
         private VsProjectAnalyzer CreateAnalyzer() {
-            var model = GetService(typeof(SComponentModel)) as IComponentModel;
-
-            var defaultFactory = model.GetAllPythonInterpreterFactories().GetDefaultInterpreter();
+            var interpService = ComponentModel.GetService<IInterpreterOptionsService>();
+            var defaultFactory = interpService.DefaultInterpreter;
             EnsureCompletionDb(defaultFactory);
-            return new VsProjectAnalyzer(defaultFactory.CreateInterpreter(), defaultFactory, model.GetAllPythonInterpreterFactories(), model.GetService<IErrorProviderFactory>());
+            return new VsProjectAnalyzer(
+                defaultFactory.CreateInterpreter(),
+                defaultFactory,
+                interpService.Interpreters.ToArray(),
+                ComponentModel.GetService<IErrorProviderFactory>());
         }
 
         /// <summary>
@@ -477,24 +471,116 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
             }
         }
 
+        /// <summary>
+        /// Returns the Visual Studio hive for the current user's settings.
+        /// 
+        /// Settings that are covered by Import/Export settings should be stored
+        /// here.
+        /// 
+        /// This is typically something like:
+        ///     HKEY_CURRENT_USER\Software\Microsoft\VisualStudio\10.0
+        /// 
+        /// The caller is responsible for closing the returned key.
+        /// </summary>
         internal static new RegistryKey UserRegistryRoot {
             get {
-                if (Instance != null) {
-                    return ((CommonPackage)Instance).UserRegistryRoot;
+                try {
+                    if (Instance != null) {
+                        return ((CommonPackage)Instance).UserRegistryRoot;
+                    }
+                    return VSRegistry.RegistryRoot(__VsLocalRegistryType.RegType_UserSettings, writable: true);
+                } catch (ArgumentException) {
+                    // Thrown if we can't use VSRegistry, which typically means
+                    // that there's no global service provider.
+                    using (var root = RegistryKey.OpenBaseKey(RegistryHive.CurrentUser, RegistryView.Registry32)) {
+                        return root.OpenSubKey("Software\\Microsoft\\VisualStudio\\" + AssemblyVersionInfo.VSVersion, writable: true);
+                    }
                 }
-
-                return Registry.CurrentUser.OpenSubKey("Software\\Microsoft\\VisualStudio\\" + AssemblyVersionInfo.VSVersion);
             }
         }
 
+        /// <summary>
+        /// Returns the Visual Studio hive in HKEY_LOCAL_MACHINE.
+        /// 
+        /// This is typically something like:
+        ///     HKEY_LOCAL_MACHINE\Software\Microsoft\VisualStudio\10.0
+        /// 
+        /// The returned key is not writable.
+        /// 
+        /// The caller is responsible for closing the returned key.
+        /// </summary>
         internal static new RegistryKey ApplicationRegistryRoot {
             get {
                 if (Instance != null) {
                     return ((CommonPackage)Instance).ApplicationRegistryRoot;
                 }
 
+                using (var root = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32)) {
+                    return root.OpenSubKey("Software\\Microsoft\\VisualStudio\\" + AssemblyVersionInfo.VSVersion, writable: false);
+                }
+            }
+        }
 
-                return Registry.LocalMachine.OpenSubKey("Software\\Microsoft\\VisualStudio\\" + AssemblyVersionInfo.VSVersion);
+        /// <summary>
+        /// Returns the Visual Studio hive for the current user's configuration.
+        /// 
+        /// Information obtained from pkgdef files is written to this hive.
+        /// 
+        /// This is typically something like:
+        ///     HKEY_CURRENT_USER\Software\Microsoft\VisualStudio\10.0_Config
+        /// 
+        /// The caller is responsible for closing the returned key.
+        /// </summary>
+        internal static RegistryKey ConfigurationRegistryRoot {
+            get {
+                try {
+                    if (Instance != null) {
+                        return VSRegistry.RegistryRoot(Instance, __VsLocalRegistryType.RegType_Configuration, writable: true);
+                    }
+                    return VSRegistry.RegistryRoot(__VsLocalRegistryType.RegType_Configuration, writable: true);
+                } catch (ArgumentException) {
+                    // Thrown if we can't use VSRegistry, which typically means
+                    // that there's no global service provider.
+                    return Registry.CurrentUser.OpenSubKey("Software\\Microsoft\\VisualStudio\\" + AssemblyVersionInfo.VSVersion + "_Config", writable: true);
+                }
+            }
+        }
+
+        private static RegistryHive ParseRegistryKey(string key, out string subkey) {
+            int firstPart = key.IndexOf('\\');
+            if (firstPart < 0 || !key.StartsWith("HKEY", StringComparison.InvariantCultureIgnoreCase)) {
+                throw new ArgumentException("Invalid registry key: " + key, "key");
+            }
+            var hive = key.Remove(firstPart);
+            subkey = key.Substring(firstPart + 1);
+            if (hive.Equals("HKEY_CURRENT_USER", StringComparison.InvariantCultureIgnoreCase)) {
+                return RegistryHive.CurrentUser;
+            } else if (hive.Equals("HKEY_LOCAL_MACHINE", StringComparison.InvariantCultureIgnoreCase)) {
+                return RegistryHive.LocalMachine;
+            } else if (hive.Equals("HKEY_CLASSES_ROOT", StringComparison.InvariantCultureIgnoreCase)) {
+                return RegistryHive.ClassesRoot;
+            } else if (hive.Equals("HKEY_USERS", StringComparison.InvariantCultureIgnoreCase)) {
+                return RegistryHive.Users;
+            } else if (hive.Equals("HKEY_CURRENT_CONFIG", StringComparison.InvariantCultureIgnoreCase)) {
+                return RegistryHive.CurrentConfig;
+            } else if (hive.Equals("HKEY_PERFORMANCE_DATA", StringComparison.InvariantCultureIgnoreCase)) {
+                return RegistryHive.PerformanceData;
+            } else if (hive.Equals("HKEY_DYN_DATA", StringComparison.InvariantCultureIgnoreCase)) {
+                return RegistryHive.DynData;
+            }
+            throw new ArgumentException("Invalid registry key: " + key, "key");
+        }
+
+        internal static bool GetRegistryKeyLocation(RegistryKey key, out RegistryHive hive, out RegistryView view, out string subkey) {
+            if (key != null) {
+                hive = ParseRegistryKey(key.Name, out subkey);
+                view = key.View;
+                return true;
+            } else {
+                hive = RegistryHive.CurrentUser;
+                view = RegistryView.Default;
+                subkey = null;
+                return false;
             }
         }
 
@@ -528,8 +614,6 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
             uint cookie;
             connectionPoint.Advise(_langPrefs, out cookie);
 
-            var model = GetService(typeof(SComponentModel)) as IComponentModel;
-            
             // Add our command handlers for menu (commands must exist in the .vsct file)
             RegisterCommands(new Command[] { 
                 new OpenDebugReplCommand(), 
@@ -547,8 +631,9 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
 
             RegisterCommands(GetReplCommands());
 
-            InterpreterOptionsPage.InterpretersChanged += OnInterpretersChanged;
-            InterpreterOptionsPage.DefaultInterpreterChanged += UpdateDefaultAnalyzer;
+            var interpService = ComponentModel.GetService<IInterpreterOptionsService>();
+            interpService.InterpretersChanged += RefreshReplCommands;
+            interpService.DefaultInterpreterChanged += UpdateDefaultAnalyzer;
 
             _solutionEventListener = new UpdateSolutionEventsListener(PythonToolsPackage.Instance);
         }
@@ -565,10 +650,6 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
             }
         }
 
-        private void OnInterpretersChanged(object sender, EventArgs e) {
-            RefreshReplCommands();
-        }
-
         private void RegisterCommands(IEnumerable<Command> commands) {
             OleMenuCommandService mcs = GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
             if (null != mcs) {
@@ -576,11 +657,11 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
                     var beforeQueryStatus = command.BeforeQueryStatus;
                     CommandID toolwndCommandID = new CommandID(GuidList.guidPythonToolsCmdSet, command.CommandId);
                     if (beforeQueryStatus == null) {
-                        MenuCommand menuToolWin = new MenuCommand(command.DoCommand, toolwndCommandID);                        
+                        MenuCommand menuToolWin = new MenuCommand(command.DoCommand, toolwndCommandID);
                         mcs.AddCommand(menuToolWin);
                         _commands[command] = menuToolWin;
                     } else {
-                        OleMenuCommand menuToolWin = new OleMenuCommand(command.DoCommand, toolwndCommandID);                        
+                        OleMenuCommand menuToolWin = new OleMenuCommand(command.DoCommand, toolwndCommandID);
                         menuToolWin.BeforeQueryStatus += beforeQueryStatus;
                         mcs.AddCommand(menuToolWin);
                         _commands[command] = menuToolWin;
@@ -589,7 +670,7 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
             }
         }
 
-        internal void RefreshReplCommands() {
+        private void RefreshReplCommands(object sender, EventArgs e) {
             OleMenuCommandService mcs = GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
             List<OpenReplCommand> replCommands = new List<OpenReplCommand>();
             foreach (var keyValue in _commands) {
@@ -610,23 +691,20 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
         }
 
         private List<OpenReplCommand> GetReplCommands() {
-            var factories = ComponentModel.GetAllPythonInterpreterFactories();
-            var defaultFactory = factories.GetDefaultInterpreter();
-            // sort so default always comes first, and otherwise in sorted order
-            Array.Sort(factories, (x, y) => {
-                if (x == y) {
-                    return 0;
-                } else if (x == defaultFactory) {
-                    return -1;
-                } else if (y == defaultFactory) {
-                    return 1;
-                } else {
-                    return String.Compare(x.GetInterpreterDisplay(), y.GetInterpreterDisplay());
-                }
-            });
-
             var replCommands = new List<OpenReplCommand>();
-            for (int i = 0; i < (PkgCmdIDList.cmdidReplWindowF - PkgCmdIDList.cmdidReplWindow) && i < factories.Length; i++) {
+            var interpService = ComponentModel.GetService<IInterpreterOptionsService>();
+            var factories = interpService.Interpreters.ToList();
+            if (factories.Count == 0) {
+                return replCommands;
+            }
+
+            var defaultFactory = interpService.DefaultInterpreter;
+            if (defaultFactory != interpService.NoInterpretersValue) {
+                factories.Remove(defaultFactory);
+                factories.Insert(0, defaultFactory);
+            }
+
+            for (int i = 0; i < (PkgCmdIDList.cmdidReplWindowF - PkgCmdIDList.cmdidReplWindow) && i < factories.Count; i++) {
                 var factory = factories[i];
 
                 var cmd = new OpenReplCommand((int)PkgCmdIDList.cmdidReplWindow + i, factory);
@@ -700,7 +778,7 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
             using (var configKey = PythonToolsPackage.ApplicationRegistryRoot) {
                 var installDir = configKey.GetValue("InstallDir") as string;
                 if (installDir != null) {
-                    var toolsPath = Path.Combine(installDir, "Extensions\\Microsoft\\Python Tools for Visual Studio\\2.0");
+                    var toolsPath = Path.Combine(installDir, "Extensions\\Microsoft\\Python Tools for Visual Studio\\" + AssemblyVersionInfo.ReleaseVersion);
                     if (File.Exists(Path.Combine(toolsPath, "PyDebugAttach.dll"))) {
                         return toolsPath;
                     }
@@ -712,22 +790,33 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
         }
 
         public string BrowseForFileOpen(IntPtr owner, string filter, string initialPath = null) {
+            if (string.IsNullOrEmpty(initialPath)) {
+                initialPath = Environment.GetFolderPath(Environment.SpecialFolder.Personal) + Path.DirectorySeparatorChar;
+            }
+
             IVsUIShell uiShell = GetService(typeof(SVsUIShell)) as IVsUIShell;
             if (null == uiShell) {
                 using (var sfd = new System.Windows.Forms.OpenFileDialog()) {
                     sfd.AutoUpgradeEnabled = true;
                     sfd.Filter = filter;
-                    if (!string.IsNullOrEmpty(initialPath)) {
-                        sfd.FileName = Path.GetFileName(initialPath);
-                        sfd.InitialDirectory = Path.GetDirectoryName(initialPath);
+                    sfd.FileName = Path.GetFileName(initialPath);
+                    sfd.InitialDirectory = Path.GetDirectoryName(initialPath);
+                    DialogResult result;
+                    if (owner == IntPtr.Zero) {
+                        result = sfd.ShowDialog();
+                    } else {
+                        result = sfd.ShowDialog(NativeWindow.FromHandle(owner));
                     }
-                    var result = sfd.ShowDialog(NativeWindow.FromHandle(owner));
                     if (result == DialogResult.OK) {
                         return sfd.FileName;
                     } else {
                         return null;
                     }
                 }
+            }
+
+            if (owner == IntPtr.Zero) {
+                ErrorHandler.ThrowOnFailure(uiShell.GetDialogOwnerHwnd(out owner));
             }
 
             VSOPENFILENAMEW[] openInfo = new VSOPENFILENAMEW[1];
@@ -737,13 +826,9 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
             openInfo[0].nMaxFileName = 260;
             var pFileName = Marshal.AllocCoTaskMem(520);
             openInfo[0].pwzFileName = pFileName;
-            if (!string.IsNullOrEmpty(initialPath)) {
-                openInfo[0].pwzInitialDir = Path.GetDirectoryName(initialPath);
-                var nameArray = Path.GetFileName(initialPath).ToCharArray();
-                Marshal.Copy(nameArray, 0, pFileName, nameArray.Length);
-            } else {
-                Marshal.Copy(new byte[] { 0 }, 0, pFileName, 1);
-            }
+            openInfo[0].pwzInitialDir = Path.GetDirectoryName(initialPath);
+            var nameArray = (Path.GetFileName(initialPath) + "\0").ToCharArray();
+            Marshal.Copy(nameArray, 0, pFileName, nameArray.Length);
             try {
                 int hr = uiShell.GetOpenFileNameViaDlg(openInfo);
                 if (hr == VSConstants.OLE_E_PROMPTSAVECANCELLED) {
@@ -759,22 +844,33 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
         }
 
         public string BrowseForFileSave(IntPtr owner, string filter, string initialPath = null) {
+            if (string.IsNullOrEmpty(initialPath)) {
+                initialPath = Environment.GetFolderPath(Environment.SpecialFolder.Personal) + Path.DirectorySeparatorChar;
+            }
+
             IVsUIShell uiShell = GetService(typeof(SVsUIShell)) as IVsUIShell;
             if (null == uiShell) {
                 using (var sfd = new System.Windows.Forms.SaveFileDialog()) {
                     sfd.AutoUpgradeEnabled = true;
                     sfd.Filter = filter;
-                    if (!string.IsNullOrEmpty(initialPath)) {
-                        sfd.FileName = Path.GetFileName(initialPath);
-                        sfd.InitialDirectory = Path.GetDirectoryName(initialPath);
+                    sfd.FileName = Path.GetFileName(initialPath);
+                    sfd.InitialDirectory = Path.GetDirectoryName(initialPath);
+                    DialogResult result;
+                    if (owner == IntPtr.Zero) {
+                        result = sfd.ShowDialog();
+                    } else {
+                        result = sfd.ShowDialog(NativeWindow.FromHandle(owner));
                     }
-                    var result = sfd.ShowDialog(NativeWindow.FromHandle(owner));
                     if (result == DialogResult.OK) {
                         return sfd.FileName;
                     } else {
                         return null;
                     }
                 }
+            }
+
+            if (owner == IntPtr.Zero) {
+                ErrorHandler.ThrowOnFailure(uiShell.GetDialogOwnerHwnd(out owner));
             }
 
             VSSAVEFILENAMEW[] saveInfo = new VSSAVEFILENAMEW[1];
@@ -784,13 +880,9 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
             saveInfo[0].nMaxFileName = 260;
             var pFileName = Marshal.AllocCoTaskMem(520);
             saveInfo[0].pwzFileName = pFileName;
-            if (!string.IsNullOrEmpty(initialPath)) {
-                saveInfo[0].pwzInitialDir = Path.GetDirectoryName(initialPath);
-                var nameArray = Path.GetFileName(initialPath).ToCharArray();
-                Marshal.Copy(nameArray, 0, pFileName, nameArray.Length);
-            } else {
-                Marshal.Copy(new byte[] { 0 }, 0, pFileName, 1);
-            }
+            saveInfo[0].pwzInitialDir = Path.GetDirectoryName(initialPath);
+            var nameArray = (Path.GetFileName(initialPath) + "\0").ToCharArray();
+            Marshal.Copy(nameArray, 0, pFileName, nameArray.Length);
             try {
                 int hr = uiShell.GetSaveFileNameViaDlg(saveInfo);
                 if (hr == VSConstants.OLE_E_PROMPTSAVECANCELLED) {
@@ -811,13 +903,22 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
                 using (var ofd = new FolderBrowserDialog()) {
                     ofd.RootFolder = Environment.SpecialFolder.Desktop;
                     ofd.ShowNewFolderButton = false;
-                    var result = ofd.ShowDialog(NativeWindow.FromHandle(owner));
+                    DialogResult result;
+                    if (owner == IntPtr.Zero) {
+                        result = ofd.ShowDialog();
+                    } else {
+                        result = ofd.ShowDialog(NativeWindow.FromHandle(owner));
+                    }
                     if (result == DialogResult.OK) {
                         return ofd.SelectedPath;
                     } else {
                         return null;
                     }
                 }
+            }
+
+            if (owner == IntPtr.Zero) {
+                ErrorHandler.ThrowOnFailure(uiShell.GetDialogOwnerHwnd(out owner));
             }
 
             VSBROWSEINFOW[] browseInfo = new VSBROWSEINFOW[1];

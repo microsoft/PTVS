@@ -29,7 +29,7 @@ namespace Microsoft.PythonTools.Django.Intellisense {
         private readonly DjangoCompletionSourceProvider _provider;
         private readonly ITextBuffer _buffer;
 
-        private static readonly Dictionary<string, string> _nestedTags = new Dictionary<string, string>() {
+        internal static readonly Dictionary<string, string> _nestedTags = new Dictionary<string, string>() {
             { "for", "endfor" },
             { "if", "endif" },
             { "ifequal", "endifequal" },
@@ -82,25 +82,15 @@ namespace Microsoft.PythonTools.Django.Intellisense {
             }
 
             if (kind == TemplateTokenKind.Block || kind == TemplateTokenKind.Variable) {
-                int spanStart = triggerPoint.Position;
-                for (int i = triggerPoint.Position - templateStart - 1; i >= 0 && i < templateText.Length; --i, --spanStart) {
-                    char c = templateText[i];
-                    if (!char.IsLetterOrDigit(c) && c != '_') {
-                        break;
-                    }
-                }
-
-                var applicableSpan = _buffer.CurrentSnapshot.CreateTrackingSpan(
-                    spanStart,
-                    triggerPoint.Position - spanStart,
-                    SpanTrackingMode.EdgeInclusive);
-
+                ITrackingSpan applicableSpan;
+                
                 var completions = GetCompletions(
                     project,
                     kind,
                     templateText,
                     templateStart,
-                    triggerPoint);
+                    triggerPoint,
+                    out applicableSpan);
 
                 completionSets.Add(
                     new FuzzyCompletionSet(
@@ -175,10 +165,12 @@ namespace Microsoft.PythonTools.Django.Intellisense {
         /// <param name="templateStart">The offset in the buffer where the template starts</param>
         /// <param name="triggerPoint">The point in the buffer where the completion was triggered</param>
         /// <returns></returns>
-        private IEnumerable<DynamicallyVisibleCompletion> GetCompletions(DjangoProject project, TemplateTokenKind kind, string templateText, int templateStart, SnapshotPoint triggerPoint) {
+        private IEnumerable<DynamicallyVisibleCompletion> GetCompletions(DjangoProject project, TemplateTokenKind kind, string templateText, int templateStart, SnapshotPoint triggerPoint, out ITrackingSpan applicableSpan) {
             int position = triggerPoint.Position - templateStart;
             IEnumerable<CompletionInfo> tags;
             IDjangoCompletionContext context;
+
+            applicableSpan = GetWordSpan(templateText, templateStart, triggerPoint);
 
             switch (kind) {
                 case TemplateTokenKind.Block:
@@ -221,6 +213,33 @@ namespace Microsoft.PythonTools.Django.Intellisense {
                                     StripDocumentation(tag.Documentation),
                                     _provider._glyphService.GetGlyph(tag.Glyph, StandardGlyphItem.GlyphItemPublic),
                                     "tag"));
+        }
+
+        private ITrackingSpan GetWordSpan(string templateText, int templateStart, SnapshotPoint triggerPoint) {
+            ITrackingSpan applicableSpan;
+            int spanStart = triggerPoint.Position;
+            for (int i = triggerPoint.Position - templateStart - 1; i >= 0 && i < templateText.Length; --i, --spanStart) {
+                char c = templateText[i];
+                if (!char.IsLetterOrDigit(c) && c != '_') {
+                    break;
+                }
+            }
+            int length = triggerPoint.Position - spanStart;
+            for (int i = triggerPoint.Position; i < triggerPoint.Snapshot.Length; i++) {
+                char c = triggerPoint.Snapshot[i];
+                if (!char.IsLetterOrDigit(c) && c != '_') {
+                    break;
+                }
+                length++;
+            }
+
+            applicableSpan = _buffer.CurrentSnapshot.CreateTrackingSpan(
+                spanStart,
+                length,
+                SpanTrackingMode.EdgeInclusive
+            );
+
+            return applicableSpan;
         }
 
         internal static string StripDocumentation(string doc) {

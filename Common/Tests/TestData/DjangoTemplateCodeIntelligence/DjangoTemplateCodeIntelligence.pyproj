@@ -51,6 +51,7 @@
     <Content Include="TestApp\Templates\page.html.djt" />
     <Content Include="TestApp\Templates\page2.html.djt" />
     <Content Include="TestApp\Templates\page3.html.djt" />
+    <Content Include="TestApp\Templates\page4.html.djt" />
   </ItemGroup>
   <Import Project="$(VSToolsPath)\Python Tools\Microsoft.PythonTools.Django.targets" />
   <ProjectExtensions>

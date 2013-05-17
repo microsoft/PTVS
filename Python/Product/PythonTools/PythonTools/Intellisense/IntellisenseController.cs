@@ -68,6 +68,13 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
+        internal void TriggerQuickInfo() {
+            if (_quickInfoSession != null && !_quickInfoSession.IsDismissed) {
+                _quickInfoSession.Dismiss();
+            }
+            _quickInfoSession = _provider._QuickInfoBroker.TriggerQuickInfo(_textView);
+        }
+
         public void ConnectSubjectBuffer(ITextBuffer subjectBuffer) {
             PropagateAnalyzer(subjectBuffer);
 

@@ -128,7 +128,7 @@ namespace PythonToolsTests {
 
             settings.SourcePath = TestData.GetPath("TestData\\HelloWorld\\");
             settings.Filters = "*.py;*.pyproj";
-            settings.StartupFile = TestData.GetPath("TestData\\HelloWorld\\Program.py");
+            settings.StartupFile = "Program.py";
             settings.ProjectPath = TestData.GetPath("TestData\\TestDestination\\Subdirectory\\ProjectName.pyproj");
 
             var path = settings.CreateRequestedProject();

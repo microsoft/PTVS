@@ -590,6 +590,14 @@ namespace Microsoft.PythonTools.Language {
                         }
                         break;
 
+                    case VSConstants.VSStd2KCmdID.QUICKINFO:
+                        controller = _textView.Properties.GetProperty<IntellisenseController>(typeof(IntellisenseController));
+                        if (controller != null) {
+                            controller.TriggerQuickInfo();
+                            return VSConstants.S_OK;
+                        }
+                        break;
+
                     case VSConstants.VSStd2KCmdID.PARAMINFO:
                         controller = _textView.Properties.GetProperty<IntellisenseController>(typeof(IntellisenseController));
                         if (controller != null) {
@@ -845,6 +853,7 @@ namespace Microsoft.PythonTools.Language {
 
                         case VSConstants.VSStd2KCmdID.SHOWMEMBERLIST:
                         case VSConstants.VSStd2KCmdID.COMPLETEWORD:
+                        case VSConstants.VSStd2KCmdID.QUICKINFO:
                         case VSConstants.VSStd2KCmdID.PARAMINFO:
                             prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);
                             return VSConstants.S_OK;

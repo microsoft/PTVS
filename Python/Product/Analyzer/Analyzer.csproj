@@ -62,7 +62,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Analysis\Analysis.csproj">
       <Project>{A85D479D-67A9-4BDB-904A-7D86DAF68A6F}</Project>
-      <Name>Analysis</Name>
+      <Name>Microsoft.PythonTools.Analysis</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="..\ProjectAfter.settings" />

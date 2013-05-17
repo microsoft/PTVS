@@ -321,13 +321,33 @@ except (None)"}) {
 
         [TestMethod, Priority(0)]
         public void ImportCompletions() {
-            var code = "import sys, ";
-            var completions = GetCompletions(code.Length - 1, code);
+            var code = "import ";
+            var completions = GetCompletionSetCtrlSpace(-1, code);
+            AssertUtil.Contains(GetCompletionNames(completions), "sys");
+
+            code = "import sys";
+            completions = GetCompletionSetCtrlSpace(-1, code);
+            AssertUtil.Contains(GetCompletionNames(completions), "sys");
+
+            code = "import sys ";
+            completions = GetCompletionSetCtrlSpace(-1, code);
+            AssertUtil.ContainsExactly(GetCompletionNames(completions), "as");
+
+            code = "import sys as";
+            completions = GetCompletionSetCtrlSpace(-1, code);
+            AssertUtil.ContainsExactly(GetCompletionNames(completions), "as");
+
+            code = "import sys as s, ";
+            completions = GetCompletionSetCtrlSpace(-1, code);
+            AssertUtil.Contains(GetCompletionNames(completions), "sys");
+
+            code = "import sys, ";
+            completions = GetCompletionSetCtrlSpace(-1, code);
             AssertUtil.Contains(GetCompletionNames(completions), "exceptions");
 
-            var code2 = "import sys, ex";
-            var completionList = GetCompletionSetCtrlSpace(code2.Length - 1, code2);
-            AssertUtil.Contains(GetCompletionNames(completionList), "exceptions");
+            code = "import sys, ex";
+            completions = GetCompletionSetCtrlSpace(-1, code);
+            AssertUtil.Contains(GetCompletionNames(completions), "exceptions");
         }
 
         [TestMethod, Priority(0)]
@@ -366,20 +386,33 @@ except (None)"}) {
             completions = GetCompletionSetCtrlSpace(-1, code);
             Assert.IsNull(completions);
 
-            code = "from sys import settrace,";
-            completions = GetCompletionSetCtrlSpace(-1, code);
-            AssertUtil.ContainsAtLeast(GetCompletionNames(completions), "api_version");
-            AssertUtil.DoesntContain(GetCompletionNames(completions), "*");
-
-            // Only one completion after a comma
             code = "from sys import settrace ";
             completions = GetCompletionSetCtrlSpace(-1, code);
-            Assert.IsNull(completions);
+            AssertUtil.ContainsExactly(GetCompletionNames(completions), "as");
+
+            code = "from sys import settrace as";
+            completions = GetCompletionSetCtrlSpace(-1, code);
+            AssertUtil.ContainsExactly(GetCompletionNames(completions), "as");
+
+            code = "from sys import settrace,";
+            completions = GetCompletionSetCtrlSpace(-1, code);
+            AssertUtil.ContainsAtLeast(GetCompletionNames(completions), "api_version", "settrace");
+            AssertUtil.DoesntContain(GetCompletionNames(completions), "*");
 
             // No more completions after a *
             code = "from sys import *, ";
             completions = GetCompletionSetCtrlSpace(-1, code);
             Assert.IsNull(completions);
+
+            code = "from sys import settrace as ";
+            completions = GetCompletionSetCtrlSpace(-1, code);
+            Assert.IsNull(completions);
+
+            code = "from sys import settrace as st, ";
+            completions = GetCompletionSetCtrlSpace(-1, code);
+            AssertUtil.ContainsAtLeast(GetCompletionNames(completions), "api_version", "settrace");
+            AssertUtil.DoesntContain(GetCompletionNames(completions), "*");
+
         }
 
 

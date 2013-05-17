@@ -26,10 +26,9 @@ namespace TestUtilities.UI
         {
             Mouse.MoveTo(new System.Drawing.Point(0, 0));
             System.Threading.Thread.Sleep(100);
+
             Mouse.MoveTo(this.Element.GetClickablePoint());
-            System.Threading.Thread.Sleep(100);
-            Mouse.Click(System.Windows.Input.MouseButton.Left);
-            System.Threading.Thread.Sleep(100);
+            Mouse.Click(System.Windows.Input.MouseButton.Left); 
         }
 
         public string Value
@@ -43,6 +42,7 @@ namespace TestUtilities.UI
         public void ExpandCollapse()
         {            
             var pattern = (InvokePattern)Element.GetCurrentPattern(InvokePattern.Pattern);
+
             pattern.Invoke();
         }
 
@@ -50,18 +50,16 @@ namespace TestUtilities.UI
         {
             Mouse.MoveTo(new System.Drawing.Point(0, 0));
             System.Threading.Thread.Sleep(100);
+
             Mouse.MoveTo(this.Element.GetClickablePoint());
-            System.Threading.Thread.Sleep(100);
-            Mouse.DoubleClick(System.Windows.Input.MouseButton.Left);
-            System.Threading.Thread.Sleep(100);
+            Mouse.DoubleClick(System.Windows.Input.MouseButton.Left); 
         }
 
         public void ShowContextMenu()
         {
             Select();
             System.Threading.Thread.Sleep(100);
-            Mouse.Click(System.Windows.Input.MouseButton.Right);
-            System.Threading.Thread.Sleep(100);
+            Mouse.Click(System.Windows.Input.MouseButton.Right); 
             //System.Windows.Automation.AutomationElement.RootElement
         }
     }

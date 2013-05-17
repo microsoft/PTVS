@@ -1,1 +1,0 @@
-raise SystemExit(0)

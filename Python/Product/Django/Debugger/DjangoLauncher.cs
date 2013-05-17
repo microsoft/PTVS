@@ -132,6 +132,15 @@ namespace Microsoft.PythonTools.Django.Debugger {
                 return _realProject.GetProjectAnalyzer();
             }
 
+            public event EventHandler ProjectAnalyzerChanged {
+                add {
+                    _realProject.ProjectAnalyzerChanged += value;
+                }
+                remove {
+                    _realProject.ProjectAnalyzerChanged -= value;
+                }
+            }
+
             #endregion
         }
 

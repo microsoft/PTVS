@@ -18,6 +18,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Windows;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.ComponentModelHost;
@@ -38,17 +39,13 @@ namespace Microsoft.PythonTools {
         /// </summary>
         public CreateVirtualEnvironmentView(bool isCreate) {
             _isCreate = isCreate;
-            var componentService = (IComponentModel)(PythonToolsPackage.GetGlobalService(typeof(SComponentModel)));
-            var factoryProviders = componentService.GetExtensions<IPythonInterpreterFactoryProvider>();
+            var interpService = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
 
-            var availableInterpreters = new List<PythonInterpreterView>();
             // TODO: Can we filter based upon interpreters w/ virtual env installed?
-            foreach (var factoryProvider in factoryProviders) {
-                foreach (var factory in factoryProvider.GetInterpreterFactories()) {
-                    availableInterpreters.Add(new PythonInterpreterView(factory));
-                }
-            }
-            _availableInterpreters = new ReadOnlyCollection<PythonInterpreterView>(availableInterpreters);
+            _availableInterpreters = new ReadOnlyCollection<PythonInterpreterView>(
+                interpService.Interpreters
+                    .Select(fact => new PythonInterpreterView(fact))
+                    .ToList());
 
             PropertyChanged += new PropertyChangedEventHandler(OnPropertyChanged);
 

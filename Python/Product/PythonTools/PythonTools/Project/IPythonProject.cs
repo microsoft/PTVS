@@ -12,6 +12,7 @@
  *
  * ***************************************************************************/
 
+using System;
 using System.Collections.Generic;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Intellisense;
@@ -108,6 +109,13 @@ namespace Microsoft.PythonTools.Project {
         /// New in 2.0.
         /// </summary>
         VsProjectAnalyzer GetProjectAnalyzer();
+
+        /// <summary>
+        /// Raised when the analyzer for the project has changed.
+        /// 
+        /// New in 2.0.
+        /// </summary>
+        event EventHandler ProjectAnalyzerChanged;
     }
 
     public static class IPythonProjectExtensions {

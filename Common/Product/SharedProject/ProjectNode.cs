@@ -377,30 +377,6 @@ namespace Microsoft.VisualStudioTools.Project
         #region virtual properties
 
         /// <summary>
-        /// Indicates whether or not the project system supports Show All Files.
-        /// 
-        /// Subclasses will need to return true here, and will need to handle calls 
-        /// </summary>
-        public virtual bool CanShowAllFiles 
-        {
-            get 
-            {
-                return false;
-            }
-        }
-
-        /// <summary>
-        /// Indicates whether or not the project is currently in the mode where its showing all files.
-        /// </summary>
-        public virtual bool IsShowingAllFiles 
-        {
-            get 
-            {
-                return false;
-            }
-        }
-
-        /// <summary>
         /// Represents the command guid for the project system.  This enables
         /// using CommonConstants.cmdid* commands.
         /// 
@@ -2119,7 +2095,7 @@ namespace Microsoft.VisualStudioTools.Project
         /// </summary>
         /// <param name="item">msbuild item</param>
         /// <returns>FileNode added</returns>
-        public abstract FileNode CreateFileNode(ProjectElement item);
+        public abstract FileNode CreateFileNode(MsBuildProjectElement item);
 
         /// <summary>
         /// Create a file node based on a string.
@@ -2153,7 +2129,7 @@ namespace Microsoft.VisualStudioTools.Project
         /// Walks the subpaths of a project relative path and checks if the folder nodes hierarchy is already there, if not creates it.
         /// </summary>
         /// <param name="strPath">Path of the folder, can be relative to project or absolute</param>
-        public virtual HierarchyNode CreateFolderNodes(string path, bool createOnDisk = true)
+        public virtual HierarchyNode CreateFolderNodes(string path)
         {
             Utilities.ArgumentNotNullOrEmpty("path", path);
 
@@ -2187,7 +2163,7 @@ namespace Microsoft.VisualStudioTools.Project
                 throw new ArgumentException("The path is invalid", "path");
             }
             path = parts[0];
-            HierarchyNode curParent = VerifySubFolderExists(path, this, createOnDisk);
+            HierarchyNode curParent = VerifySubFolderExists(path, this);
 
             // now we have an array of subparts....
             for (int i = 1; i < parts.Length; i++)
@@ -2195,7 +2171,7 @@ namespace Microsoft.VisualStudioTools.Project
                 if (parts[i].Length > 0)
                 {
                     path = Path.Combine(path, parts[i]);
-                    curParent = VerifySubFolderExists(path, curParent, createOnDisk);
+                    curParent = VerifySubFolderExists(path, curParent);
                 }
             }
             return curParent;
@@ -2247,7 +2223,7 @@ namespace Microsoft.VisualStudioTools.Project
         /// <param name="parent">the parent node where to add the subfolder if it does not exist.</param>
         /// <returns>the foldernode correcsponding to the path.</returns>
         [SuppressMessage("Microsoft.Naming", "CA1702:CompoundWordsShouldBeCasedCorrectly", MessageId = "SubFolder")]
-        protected virtual FolderNode VerifySubFolderExists(string path, HierarchyNode parent, bool createOnDisk = true)
+        protected virtual FolderNode VerifySubFolderExists(string path, HierarchyNode parent)
         {
             FolderNode folderNode = null;
             uint uiItemId;
@@ -2277,9 +2253,7 @@ namespace Microsoft.VisualStudioTools.Project
                 if (item == null) {
                     item = this.AddFolderToMsBuild(strFullPath);
                 }
-                if (createOnDisk) {
-                    Directory.CreateDirectory(strFullPath);
-                }
+                Directory.CreateDirectory(strFullPath);
                 folderNode = this.CreateFolderNode(item);
                 parent.AddChild(folderNode);
             }
@@ -2891,7 +2865,7 @@ namespace Microsoft.VisualStudioTools.Project
         /// <returns>A Projectelement describing the newly added file.</returns>
         [SuppressMessage("Microsoft.Naming", "CA1702:CompoundWordsShouldBeCasedCorrectly", MessageId = "ToMs")]
         [SuppressMessage("Microsoft.Naming", "CA1709:IdentifiersShouldBeCasedCorrectly", MessageId = "Ms")]
-        internal virtual MsBuildProjectElement AddFileToMsBuild(string file)
+        protected virtual MsBuildProjectElement AddFileToMsBuild(string file)
         {
             MsBuildProjectElement newItem;
 
@@ -3199,7 +3173,7 @@ namespace Microsoft.VisualStudioTools.Project
 
                 // We do not need any special logic for assuring that a folder is only added once to the ui hierarchy.
                 // The below method will only add once the folder to the ui hierarchy
-                this.CreateFolderNodes(strPath, false);
+                this.CreateFolderNodes(strPath);
             }
         }
 
@@ -3218,7 +3192,7 @@ namespace Microsoft.VisualStudioTools.Project
             foreach (MSBuild.ProjectItem item in this.buildProject.Items.ToArray()) // copy the array, we could add folders while enumerating
             {
                 // Ignore items imported from .targets files. In particular, this will ignore the <Content>
-                // items that are generated from any <Compile> items in our .targets.
+                // items that are generated from any <Compile> items in Microsoft.*Tools.targets.
                 if (item.IsImported) {
                     continue;
                 }
@@ -3588,7 +3562,7 @@ namespace Microsoft.VisualStudioTools.Project
             return result;
         }
 
-        internal bool QueryFolderAdd(HierarchyNode targetFolder, string path)
+        internal bool QueryFolderAdd(HierarchyNode targetFolder, FolderNode existingFolder, string path)
         {
             if (!disableQueryEdit)
             {
@@ -3598,7 +3572,7 @@ namespace Microsoft.VisualStudioTools.Project
                     VSQUERYADDDIRECTORYRESULTS[] res = new VSQUERYADDDIRECTORYRESULTS[1];
                     ErrorHandler.ThrowOnFailure(
                         queryTrack.OnQueryAddDirectories(
-                            GetOuterInterface<IVsProject>(),
+                            this,
                             1,
                             new[] { CommonUtils.GetAbsoluteFilePath(GetBaseDirectoryForAddingFiles(targetFolder), Path.GetFileName(path)) },
                             new[] { VSQUERYADDDIRECTORYFLAGS.VSQUERYADDDIRECTORYFLAGS_padding },
@@ -3616,32 +3590,6 @@ namespace Microsoft.VisualStudioTools.Project
             return true;
         }
 
-        internal bool QueryFolderRemove(HierarchyNode targetFolder, string path) {
-            if (!disableQueryEdit) 
-            {
-                var queryTrack = this.GetService(typeof(SVsTrackProjectDocuments)) as IVsTrackProjectDocuments2;
-                if (queryTrack != null) 
-                {
-                    VSQUERYREMOVEDIRECTORYRESULTS[] res = new VSQUERYREMOVEDIRECTORYRESULTS[1];
-                    ErrorHandler.ThrowOnFailure(
-                        queryTrack.OnQueryRemoveDirectories(
-                            GetOuterInterface<IVsProject>(),
-                            1,
-                            new[] { CommonUtils.GetAbsoluteFilePath(GetBaseDirectoryForAddingFiles(targetFolder), Path.GetFileName(path)) },
-                            new[] { VSQUERYREMOVEDIRECTORYFLAGS.VSQUERYREMOVEDIRECTORYFLAGS_padding },
-                            res,
-                            res
-                        )
-                    );
-
-                    if (res[0] == VSQUERYREMOVEDIRECTORYRESULTS.VSQUERYREMOVEDIRECTORYRESULTS_RemoveNotOK) 
-                    {
-                        return false;
-                    }
-                }
-            }
-            return true;
-        }
 
         /// <summary>
         /// Given a node determines what is the directory that can accept files.
@@ -4089,6 +4037,7 @@ namespace Microsoft.VisualStudioTools.Project
 
         public virtual int Save(string fileToBeSaved, int remember, uint formatIndex)
         {
+
             // The file name can be null. Then try to use the Url.
             string tempFileToBeSaved = fileToBeSaved;
             if (String.IsNullOrEmpty(tempFileToBeSaved) && !String.IsNullOrEmpty(this.Url))
@@ -4127,7 +4076,7 @@ namespace Microsoft.VisualStudioTools.Project
                     if (!Directory.Exists(saveFolder))
                         Directory.CreateDirectory(saveFolder);
                     // Save the project
-                    SaveMSBuildProjectFile(tempFileToBeSaved);
+                    this.buildProject.Save(tempFileToBeSaved);
                     this.SetProjectFileDirty(false);
                 }
                 finally
@@ -4151,11 +4100,6 @@ namespace Microsoft.VisualStudioTools.Project
             }
 
             return result;
-        }
-
-        protected virtual void SaveMSBuildProjectFile(string filename) 
-        {
-            buildProject.Save(filename);
         }
 
         public virtual int SaveCompleted(string filename)
@@ -4229,7 +4173,7 @@ namespace Microsoft.VisualStudioTools.Project
         }
 
         // TODO: Refactor me into something sane
-        internal int AddItemWithSpecificInternal(uint itemIdLoc, VSADDITEMOPERATION op, string itemName, uint filesToOpen, string[] files, IntPtr dlgOwner, uint editorFlags, ref Guid editorType, string physicalView, ref Guid logicalView, VSADDRESULT[] result, bool? promptOverwrite = null)
+        internal int AddItemWithSpecificInternal(uint itemIdLoc, VSADDITEMOPERATION op, string itemName, uint filesToOpen, string[] files, IntPtr dlgOwner, uint editorFlags, ref Guid editorType, string physicalView, ref Guid logicalView, VSADDRESULT[] result, bool alwaysCopy = false, bool? promptOverwrite = null)
         {
             if (files == null || result == null || files.Length == 0 || result.Length == 0)
             {
@@ -4344,8 +4288,28 @@ namespace Microsoft.VisualStudioTools.Project
                     // If the file to be added is an existing file part of the hierarchy then continue.
                     if (CommonUtils.IsSamePath(file, newFileName))
                     {
-                        result[0] = VSADDRESULT.ADDRESULT_Cancel;
-                        continue;
+                        if (!alwaysCopy)
+                        {
+                            result[0] = VSADDRESULT.ADDRESULT_Cancel;
+                            continue;
+                        }
+                        else
+                        {
+                            string tmpName = CommonUtils.GetAbsoluteFilePath(Path.GetDirectoryName(newFileName), Path.GetFileNameWithoutExtension(newFileName) + " - Copy" + Path.GetExtension(newFileName));
+                            if (File.Exists(tmpName))
+                            {
+                                int count = 2;
+                                while (File.Exists(GetIncrementedFileName(newFileName, count)))
+                                {
+                                    count++;
+                                }
+                                newFileName = GetIncrementedFileName(newFileName, count);
+                            }
+                            else
+                            {
+                                newFileName = tmpName;
+                            }
+                        }
                     }
                     else if (isLink)
                     {
@@ -4362,7 +4326,12 @@ namespace Microsoft.VisualStudioTools.Project
                     }
                     else
                     {
-                        int canOverWriteExistingItem = CanOverwriteExistingItem(file, newFileName, false);
+                        if (promptOverwrite != null && !promptOverwrite.Value)
+                        {
+                            continue;
+                        }
+
+                        int canOverWriteExistingItem = CanOverwriteExistingItem(file, newFileName, promptOverwrite != null && promptOverwrite.Value);
                         if (canOverWriteExistingItem == E_CANCEL_FILE_ADD)
                         {
                             result[0] = VSADDRESULT.ADDRESULT_Cancel;
@@ -4371,6 +4340,10 @@ namespace Microsoft.VisualStudioTools.Project
                         else if (canOverWriteExistingItem == (int)OleConstants.OLECMDERR_E_CANCELED)
                         {
                             result[0] = VSADDRESULT.ADDRESULT_Cancel;
+                            if (promptOverwrite != null && promptOverwrite.Value)
+                            {
+                                continue;
+                            }
                             return canOverWriteExistingItem;
                         }
                         else if (canOverWriteExistingItem == VSConstants.S_OK)
@@ -4472,7 +4445,6 @@ namespace Microsoft.VisualStudioTools.Project
                     else if (Directory.Exists(file))
                     {
                         // http://pytools.codeplex.com/workitem/546
-                        // http://nodejstools.codeplex.com/workitem/100
                         int hr = AddDirectory(result, n, file, promptOverwrite);
                         if (ErrorHandler.Failed(hr)) {
                             return hr;
@@ -4617,18 +4589,8 @@ namespace Microsoft.VisualStudioTools.Project
                 var newChild = CreateFolderNode(fullPath);
                 n.AddChild(newChild);
                 targetFolder = newChild;
-            } 
-            else if (targetFolder.IsNonMemberItem) 
-            {
-                int hr = targetFolder.IncludeInProject(true);
-                if (ErrorHandler.Failed(hr))
-                {
-                    return hr;
-                }
-                ProjectMgr.OnItemAdded(targetFolder.Parent, targetFolder);
-                return hr;
-            } 
-            else if (promptOverwrite == null) 
+            }
+            else if (promptOverwrite == null)
             {
                 var res = MessageBox.Show(
                     String.Format(
@@ -4643,7 +4605,8 @@ If the files in the existing folder have the same names as files in the folder y
                 // no means don't prompt for any of the files
                 // cancel means forget what I'm doing
 
-                switch (res) {
+                switch (res)
+                {
                     case DialogResult.Cancel:
                         result[0] = VSADDRESULT.ADDRESULT_Cancel;
                         return (int)OleConstants.OLECMDERR_E_CANCELED;
@@ -6142,7 +6105,7 @@ If the files in the existing folder have the same names as files in the folder y
             } catch (COMException e) {
                 hr = e.ErrorCode;
             } finally {
-                Close();
+                base.Close();
             }
 
             this.isClosed = true;
@@ -6412,17 +6375,17 @@ If the files in the existing folder have the same names as files in the folder y
             foreach (IVsHierarchyEvents sink in _hierarchyEventSinks) {
                 int result;
                 if ((element & UIHierarchyElement.Icon) != 0) {
-                    result = sink.OnPropertyChanged(node.ID, (int)__VSHPROPID.VSHPROPID_IconIndex, 0);
+                    result = sink.OnPropertyChanged(this.ID, (int)__VSHPROPID.VSHPROPID_IconIndex, 0);
                     Debug.Assert(ErrorHandler.Succeeded(result), "Redraw failed for node " + this.GetMkDocument());
                 }
 
                 if ((element & UIHierarchyElement.Caption) != 0) {
-                    result = sink.OnPropertyChanged(node.ID, (int)__VSHPROPID.VSHPROPID_Caption, 0);
+                    result = sink.OnPropertyChanged(this.ID, (int)__VSHPROPID.VSHPROPID_Caption, 0);
                     Debug.Assert(ErrorHandler.Succeeded(result), "Redraw failed for node " + this.GetMkDocument());
                 }
 
                 if ((element & UIHierarchyElement.SccState) != 0) {
-                    result = sink.OnPropertyChanged(node.ID, (int)__VSHPROPID.VSHPROPID_StateIconIndex, 0);
+                    result = sink.OnPropertyChanged(this.ID, (int)__VSHPROPID.VSHPROPID_StateIconIndex, 0);
                     Debug.Assert(ErrorHandler.Succeeded(result), "Redraw failed for node " + this.GetMkDocument());
                 }
             }

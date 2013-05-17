@@ -14,6 +14,8 @@
 
 using System;
 using System.ComponentModel.Composition;
+using System.Diagnostics;
+using System.Linq;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.Repl;
 using Microsoft.VisualStudio.Text.Adornments;
@@ -28,13 +30,16 @@ namespace Microsoft.PythonTools.Repl {
     [ReplRole("Execution")]
     [ReplRole("Reset")]
     class PythonReplEvaluatorProvider : IReplEvaluatorProvider {
-        private readonly IPythonInterpreterFactoryProvider[] _interpreters;
-        private readonly IErrorProviderFactory _errorProviderFactory;
+        readonly IInterpreterOptionsService _interpService;
+        readonly IErrorProviderFactory _errorProviderFactory;
+
         private const string _replGuid = "FAEC7F47-85D8-4899-8D7B-0B855B732CC8";
 
         [ImportingConstructor]
-        public PythonReplEvaluatorProvider([ImportMany]IPythonInterpreterFactoryProvider[] interpreters, IErrorProviderFactory errorProviderFactory) {
-            _interpreters = interpreters;
+        public PythonReplEvaluatorProvider([Import] IInterpreterOptionsService interpService, [Import] IErrorProviderFactory errorProviderFactory) {
+            Debug.Assert(interpService != null);
+            Debug.Assert(errorProviderFactory != null);
+            _interpService = interpService;
             _errorProviderFactory = errorProviderFactory;
         }
 
@@ -42,14 +47,9 @@ namespace Microsoft.PythonTools.Repl {
 
         public IReplEvaluator GetEvaluator(string replId) {
             if (replId.StartsWith(_replGuid)) {
-                Guid interpreterGuid = Guid.Parse(replId.Substring(_replGuid.Length + 1, _replGuid.Length));
-                Version version = Version.Parse(replId.Substring(_replGuid.Length * 2 + 2));
-                foreach (var interpreter in _interpreters) {
-                    foreach (var factory in interpreter.GetInterpreterFactories()) {
-                        if (factory.Id == interpreterGuid && version == factory.Configuration.Version) {
-                            return new PythonReplEvaluator(interpreter, interpreterGuid, version, _errorProviderFactory);
-                        }
-                    }
+                var interpreter = _interpService.FindInterpreter(replId.Substring(_replGuid.Length + 1, _replGuid.Length), replId.Substring(_replGuid.Length * 2 + 2));
+                if (interpreter != null) {
+                    return new PythonReplEvaluator(interpreter, _errorProviderFactory);
                 }
             }
             return null;

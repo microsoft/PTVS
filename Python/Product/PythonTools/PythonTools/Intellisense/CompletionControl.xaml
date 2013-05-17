@@ -42,7 +42,7 @@
                         <TextBlock Padding="0 0 3 0">
                             Open the
                         </TextBlock>
-                        <Button Style="{DynamicResource NavigationButton}" GotFocus="Button_GotFocus">
+                        <Button Style="{StaticResource NavigationButton}" GotFocus="Button_GotFocus">
                             Interpreter List
                         </Button>
                         <TextBlock Padding="3 0 0 0">

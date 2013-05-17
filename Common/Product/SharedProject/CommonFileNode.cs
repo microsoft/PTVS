@@ -35,7 +35,7 @@ namespace Microsoft.VisualStudioTools.Project {
         private OAVSProjectItem _vsProjectItem;
         private CommonProjectNode _project;
 
-        public CommonFileNode(CommonProjectNode root, ProjectElement e)
+        public CommonFileNode(CommonProjectNode root, MsBuildProjectElement e)
             : base(root, e) {
             _project = root;
         }
@@ -86,12 +86,6 @@ namespace Microsoft.VisualStudioTools.Project {
 
         #region overridden properties
 
-        public override bool IsNonMemberItem {
-            get {
-                return ItemNode is AllFilesProjectElement;
-            }
-        }
-
         internal override object Object {
             get {
                 return this.VSProjectItem;
@@ -103,9 +97,7 @@ namespace Microsoft.VisualStudioTools.Project {
 
         public override int ImageIndex {
             get {
-                if (ItemNode.IsExcluded) {
-                    return (int)ProjectNode.ImageName.ExcludedFile;
-                } else if (!File.Exists(Url)) {
+                if (!File.Exists(Url)) {
                     return (int)ProjectNode.ImageName.MissingFile;
                 } else if (IsFormSubType) {
                     return (int)ProjectNode.ImageName.WindowsForm;
@@ -237,61 +229,6 @@ namespace Microsoft.VisualStudioTools.Project {
             return adapter.GetWpfTextView(viewAdapter);
         }
 
-        public new CommonProjectNode ProjectMgr {
-            get {
-                return (CommonProjectNode)base.ProjectMgr;
-            }
-        }
-
-        /// <summary>
-        /// Handles the exclude from project command.
-        /// </summary>
-        /// <returns></returns>
-        internal override int ExcludeFromProject() {
-            Debug.Assert(this.ProjectMgr != null, "The project item " + this.ToString() + " has not been initialised correctly. It has a null ProjectMgr");
-            if (!ProjectMgr.QueryEditProjectFile(false) ||
-                !ProjectMgr.Tracker.CanRemoveItems(new[] { Url }, new [] { VSQUERYREMOVEFILEFLAGS.VSQUERYREMOVEFILEFLAGS_NoFlags })) {
-                return VSConstants.E_FAIL;
-            }
-
-            ResetNodeProperties();
-            ItemNode.RemoveFromProjectFile();
-            if (!File.Exists(Url)) {
-                Parent.RemoveChild(this);
-                ProjectMgr.OnItemDeleted(this);
-            } else {
-                ItemNode = new AllFilesProjectElement(Url, ItemNode.ItemTypeName, ProjectMgr);
-                if (!ProjectMgr.IsShowingAllFiles) {
-                    IsVisible = false;
-                    ProjectMgr.OnInvalidateItems(Parent);
-                }
-                ProjectMgr.ReDrawNode(this, UIHierarchyElement.Icon);
-            }
-            return VSConstants.S_OK;
-        }
-
-        internal override int IncludeInProject(bool includeChildren) {
-            if (Parent.ItemNode != null && Parent.ItemNode.IsExcluded) {
-                // if our parent is excluded it needs to first be included
-                int hr = Parent.IncludeInProject(false);
-                if (ErrorHandler.Failed(hr)) {
-                    return hr;
-                }
-            }
-
-            if (!ProjectMgr.QueryEditProjectFile(false) ||
-                !ProjectMgr.Tracker.CanAddItems(new[] { Url }, new[] { VSQUERYADDFILEFLAGS.VSQUERYADDFILEFLAGS_NoFlags })) {
-                return VSConstants.E_FAIL;
-            }
-
-            ResetNodeProperties();
-            ItemNode = ProjectMgr.AddFileToMsBuild(Url);
-            IsVisible = true;
-            ProjectMgr.OnInvalidateItems(this);
-            ProjectMgr.ReDrawNode(this, UIHierarchyElement.Icon);
-            return VSConstants.S_OK;
-        }
-
         /// <summary>
         /// Handles the menuitems
         /// </summary>
@@ -301,18 +238,6 @@ namespace Microsoft.VisualStudioTools.Project {
                     case VsCommands2K.RUNCUSTOMTOOL:
                         result |= QueryStatusResult.NOTSUPPORTED | QueryStatusResult.INVISIBLE;
                         return VSConstants.S_OK;
-                    case VsCommands2K.EXCLUDEFROMPROJECT:
-                        if (ItemNode.IsExcluded) {
-                            result |= QueryStatusResult.NOTSUPPORTED | QueryStatusResult.INVISIBLE;
-                            return VSConstants.S_OK;
-                        }
-                        break;
-                    case VsCommands2K.INCLUDEINPROJECT:
-                        if (ItemNode.IsExcluded) {
-                            result |= QueryStatusResult.SUPPORTED | QueryStatusResult.ENABLED;
-                            return VSConstants.S_OK;
-                        }
-                        break;
                 }
             } 
 
@@ -348,5 +273,29 @@ namespace Microsoft.VisualStudioTools.Project {
         }
 
         #endregion
+
+#if DEV11_OR_LATER
+        public override object GetProperty(int propId) {
+            if (propId == (int)__VSHPROPID.VSHPROPID_IconIndex || 
+                propId == (int)__VSHPROPID.VSHPROPID_OpenFolderIconIndex) {
+                SetBoldStartup();
+            }
+            return base.GetProperty(propId);
+        }
+
+        private void SetBoldStartup() {
+            string startupFile;
+            CommonProjectNode comProj = (CommonProjectNode)ProjectMgr;
+            if (!comProj._boldedStartupItem &&
+                (startupFile = comProj.GetStartupFile()) != null &&
+                ProjectMgr.FindNodeByFullPath(CommonUtils.GetAbsoluteFilePath(comProj.ProjectFolder, startupFile)) == this) {
+
+                // we're getting a property from this file node for the 1st time, make sure we're
+                // bolded.  We can't do this until the node is created in solution navigator so we
+                // do it when it accesses our properties.
+                comProj.BoldStartupItem(this);
+            }
+        }
+#endif
     }
 }

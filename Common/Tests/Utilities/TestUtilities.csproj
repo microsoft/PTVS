@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="..\TestProjectBefore.settings" />
+  <Import Project="..\..\TestProjectBefore.settings" />
   <PropertyGroup>
     <SccProjectName>SAK</SccProjectName>
     <SccLocalPath>SAK</SccLocalPath>
@@ -20,18 +20,12 @@
   <PropertyGroup Condition=" '$(Platform)' == 'x86' ">
     <PlatformTarget>x86</PlatformTarget>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
-    <DefineConstants>TRACE;DEBUG;DEV11;NTVS_FEATURE_INTERACTIVEWINDOW</DefineConstants>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
-    <DefineConstants>TRACE;DEV11;NTVS_FEATURE_INTERACTIVEWINDOW</DefineConstants>
-  </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.TC.RemoteTest">
-      <HintPath>$(BuildRoot)\Common\Tests\TCTestHostAdapters\$(VSTarget)\Microsoft.TC.RemoteTest.dll</HintPath>
+      <HintPath>..\..\..\..\Release\Public\TCTestHostAdapters\$(VSTarget)\Microsoft.TC.RemoteTest.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.TC.TestHostAdapters">
-      <HintPath>$(BuildRoot)\Common\Tests\TCTestHostAdapters\$(VSTarget)\Microsoft.TC.TestHostAdapters.dll</HintPath>
+      <HintPath>..\..\..\..\Release\Public\TCTestHostAdapters\$(VSTarget)\Microsoft.TC.TestHostAdapters.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.ComponentModelHost, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.CoreUtility, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
@@ -105,7 +99,7 @@
     <Compile Include="Mocks\MockTextView.cs" />
     <Compile Include="Mocks\MockTrackingPoint.cs" />
     <Compile Include="Mocks\MockTrackingSpan.cs" />
-    <Compile Include="$(BuildRoot)\Common\Product\SharedProject\CommonUtils.cs" />
+    <Compile Include="..\..\..\Product\Python\PythonTools\PythonTools\CommonUtils.cs" />
     <Compile Include="NativeMethods.cs">
       <ExcludeFromStyleCop>true</ExcludeFromStyleCop>
     </Compile>
@@ -124,5 +118,5 @@
   <Target Name="BeforeCompile">
     <Exec Command="taskkill /f /im QTAgent32.exe" IgnoreExitCode="true" ContinueOnError="true" IgnoreStandardErrorWarningFormat="true" />
   </Target>
-  <Import Project="..\TestProjectAfter.settings" />
+  <Import Project="..\..\TestProjectAfter.settings" />
 </Project>

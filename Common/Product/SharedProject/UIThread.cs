@@ -173,39 +173,6 @@ namespace Microsoft.VisualStudioTools.Project
         }
 
         /// <summary>
-        /// Runs an action synchronously on an associated forms synchronization context
-        /// </summary>
-        /// <typeparam name="T">Return type</typeparam>
-        /// <param name="a">The function</param>
-        /// <returns></returns>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode"), System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes")]
-        internal T RunSync<T>(Func<T> a) {
-            T retValue = default(T);
-            if (this.isUnitTestingMode) {
-                return a();                
-            }
-            Exception exn = null; ;
-            Debug.Assert(this.synchronizationContext != null, "The SynchronizationContext must be captured before calling this method");
-
-            // Send on UI thread will execute immediately.
-            this.synchronizationContext.Send(ignore => {
-                try {
-                    this.MustBeCalledFromUIThread();
-                    retValue = a();
-                } catch (Exception e) {
-                    exn = e;
-                }
-            }, null
-            );
-            if (exn != null) {
-                // throw exception on calling thread, preserve stacktrace
-                if (exn.Data != null && !exn.Data.Contains(WrappedStacktraceKey)) exn.Data[WrappedStacktraceKey] = exn.StackTrace;
-                throw exn;
-            }
-            return retValue;
-        }
-
-        /// <summary>
         /// Initializes this object.
         /// </summary>
         private void Initialize()

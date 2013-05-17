@@ -12,27 +12,13 @@
  *
  * ***************************************************************************/
 
-using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Windows.Forms;
 using EnvDTE;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.TemplateWizard;
 
 namespace Microsoft.PythonTools.ImportWizard {
-    public sealed class ImportSettings {
-        public string SourceFilesPath { get; set; }
-        public string StartupFile { get; set; }
-        public string Filter { get; set; }
-        public string[] SearchPaths { get; set; }
-        public string InterpreterId { get; set; }
-        public string InterpreterVersion { get; set; }
-        public bool DjangoSupport { get; set; }
-    }
-
     public sealed class Wizard : IWizard {
         public void BeforeOpeningFile(EnvDTE.ProjectItem projectItem) { }
         public void ProjectFinishedGenerating(EnvDTE.Project project) { }
@@ -56,7 +42,7 @@ namespace Microsoft.PythonTools.ImportWizard {
         }
 
         public bool ShouldAddProjectItem(string filePath) {
-            return true;
+            return false;
         }
     }
 }

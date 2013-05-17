@@ -55,19 +55,47 @@ namespace Microsoft.PythonTools.Intellisense {
                 .TakeWhile(tok => !IsKeyword(tok, "import"))
                 .Count();
 
-            if (beforeImportToken == tokens.Count) {
-                if (tokens.Last().ClassificationType.IsOfType(PredefinedClassificationTypeNames.Identifier)) {
-                    return new ImportKeywordCompletionAnalysis(span, textBuffer, options);
-                } else {
-                    return new ImportCompletionAnalysis(tokens, span, textBuffer, options);
+            bool includeStar = false;
+            var lastToken = tokens.LastOrDefault();
+            if (lastToken != null) {
+                if (lastToken.ClassificationType.IsOfType(PredefinedClassificationTypeNames.Identifier) &&
+                    lastToken.Span.End < span.GetEndPoint(textBuffer.CurrentSnapshot).Position) {
+                    // If the last token was a name, but the cursor is not on
+                    // that name anymore...
+                    if (beforeImportToken == tokens.Count) {
+                        // "from a.b "...
+                        return new ImportKeywordCompletionAnalysis(span, textBuffer, options);
+                    } else {
+                        // "from a.b import x "...
+                        // "from a.b import x, y "...
+                        return new AsKeywordCompletionAnalysis(span, textBuffer, options);
+                    }
+                } else if (beforeImportToken == tokens.Count) {
+                    // "from "...
+                    return ImportCompletionAnalysis.Make(tokens, span, textBuffer, options);
+                } else if (beforeImportToken == tokens.Count - 1) {
+                    // "from a.b "...
+                    includeStar = true;
                 }
             }
 
-            if (tokens.Last().ClassificationType.IsOfType(PredefinedClassificationTypeNames.Identifier)) {
+            if (tokens.Take(tokens.Count - 1).Any(tok => tok != null && tok.Span != null && tok.Span.GetText() == "*")) {
+                // No completions after "*" has been imported
                 return EmptyCompletionContext;
             }
 
-            if (tokens.Take(tokens.Count - 1).Any(tok => tok != null && tok.Span != null && tok.Span.GetText() == "*")) {
+            bool seenAs = false;
+            foreach (var tok in tokens.Skip(beforeImportToken + 1)) {
+                if (IsKeyword(tok, "as")) {
+                    seenAs = true;
+                } else if (tok.ClassificationType.IsOfType(PythonPredefinedClassificationTypeNames.Comma)) {
+                    seenAs = false;
+                }
+            }
+            if (seenAs) {
+                // "from a.b import x as "...
+                // "from a.b import x, y as "...
+                // BUT NOT "from a.b import x as x1, "...
                 return EmptyCompletionContext;
             }
 
@@ -80,19 +108,19 @@ namespace Microsoft.PythonTools.Intellisense {
                     } else {
                         return EmptyCompletionContext;
                     }
-                } else if (tok.ClassificationType.IsOfType(PredefinedClassificationTypeNames.Identifier)) {
-                    ns.Add(tok.Span.GetText());
-                    expectDot = true;
                 } else {
-                    return EmptyCompletionContext;
+                    if (tok.ClassificationType.IsOfType(PredefinedClassificationTypeNames.Identifier)) {
+                        ns.Add(tok.Span.GetText());
+                        expectDot = true;
+                    } else {
+                        return EmptyCompletionContext;
+                    }
                 }
             }
 
             if (!expectDot) {
                 return EmptyCompletionContext;
             }
-
-            bool includeStar = IsKeyword(tokens.Last(), "import");
 
             return new FromImportCompletionAnalysis(ns.ToArray(), includeStar, span, textBuffer, options);
         }

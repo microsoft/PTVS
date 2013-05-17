@@ -55,7 +55,7 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
                 foreach (var tag in _htmlTags) {
                     completions.Add(new DynamicallyVisibleCompletion(
                         "/" + tag,
-                        "/" + tag + ">",
+                        "/" + tag,
                         "",
                         _completionSourceProvider._glyphService.GetGlyph(StandardGlyphGroup.GlyphXmlItem, StandardGlyphItem.GlyphItemPublic),
                         "")

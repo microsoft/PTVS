@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Diagnostics;
+using System.Linq;
 using System.Reflection;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Interpreter.Default;
@@ -23,11 +24,10 @@ using Microsoft.Win32;
 
 namespace Microsoft.PythonTools {
     [Export(typeof(IPythonInterpreterFactoryProvider))]
-    [Export(typeof(IPythonConfigurableInterpreterFactoryProvider))]
-    class ConfigurablePythonInterpreterFactoryProvider : IPythonInterpreterFactoryProvider, IPythonConfigurableInterpreterFactoryProvider {
-        private readonly List<IPythonInterpreterFactory> _interpreters = new List<IPythonInterpreterFactory>();
+    class ConfigurablePythonInterpreterFactoryProvider : IPythonInterpreterFactoryProvider {
+        private readonly Dictionary<Guid, IPythonInterpreterFactory> _interpreters = new Dictionary<Guid, IPythonInterpreterFactory>();
 
-        private readonly IDefaultInterpreterFactoryCreator _defaultCreator;
+        private IDefaultInterpreterFactoryCreator _defaultCreator;
 
         // keys used for storing information about user defined interpreters
         const string PathKey = "InterpreterPath";
@@ -38,22 +38,12 @@ namespace Microsoft.PythonTools {
         const string DescriptionKey = "Description";
         const string PythonInterpreterKey = PythonCoreConstants.BaseRegistryKey + "\\Interpreters";
 
-        [ImportingConstructor]
-        public ConfigurablePythonInterpreterFactoryProvider(IDefaultInterpreterFactoryCreator defaultCreator) {
-            _defaultCreator = defaultCreator;
+        static bool Created = false;
 
-            // look for custom configured interpreters
-            
-            using (var userInterpreters = GetUserDefinedInterpreterKey()) {
-                if (userInterpreters != null) {
-                    foreach (var guid in userInterpreters.GetSubKeyNames()) {
-                        var interp = LoadUserDefinedInterpreter(userInterpreters, guid);
-                        if (interp != null) {
-                            _interpreters.Add(interp);
-                        }
-                    }
-                }
-            }
+        public ConfigurablePythonInterpreterFactoryProvider() {
+            Debug.Assert(!Created);
+            Created = true;
+            DiscoverInterpreterFactories();
         }
 
         private IPythonInterpreterFactory LoadUserDefinedInterpreter(RegistryKey userInterpreters, string guid) {
@@ -97,6 +87,10 @@ namespace Microsoft.PythonTools {
         }
 
         public IPythonInterpreterFactory CreateConfigurableInterpreterFactory(Guid id, string path, string winPath, string pathEnvVar, string description, ProcessorArchitecture archValue, Version ver) {
+            if (_defaultCreator == null) {
+                _defaultCreator = PythonToolsPackage.ComponentModel.GetService<IDefaultInterpreterFactoryCreator>();
+            }
+
             var fact = _defaultCreator.CreateInterpreterFactory(
                     new Dictionary<InterpreterFactoryOptions, object>() {
                         { InterpreterFactoryOptions.Version, ver },
@@ -112,22 +106,18 @@ namespace Microsoft.PythonTools {
             return new ConfigurablePythonInterpreterFactory(fact);
         }
 
-        void IPythonConfigurableInterpreterFactoryProvider.RemoveInterpreter(Guid id) {
+        public void RemoveInterpreter(Guid id) {
             using (var userInterpreters = GetUserDefinedInterpreterKey()) {
                 if (userInterpreters != null) {
                     userInterpreters.DeleteSubKey(id.ToString("B"), false);
                 }
 
-                for (int i = 0; i < _interpreters.Count; i++) {
-                    if (_interpreters[i].Id == id) {
-                        _interpreters.RemoveAt(i);
-                        break;
-                    }
-                }
+                _interpreters.Remove(id);
+                OnInterpreterFactoriesChanged();
             }
         }
 
-        IPythonInterpreterFactory IPythonConfigurableInterpreterFactoryProvider.SetOptions(Guid id, Dictionary<string, object> values) {
+        public IPythonInterpreterFactory SetOptions(Guid id, Dictionary<string, object> values) {
             using (var userInterpreters = GetUserDefinedInterpreterKey(true)) {
                 using (var interpreterKey = userInterpreters.OpenSubKey(id.ToString("B"), true) ?? userInterpreters.CreateSubKey(id.ToString("B"))) {
                     interpreterKey.SetValue(PathKey, values[PathKey]);
@@ -141,16 +131,8 @@ namespace Microsoft.PythonTools {
                 var newInterp = LoadUserDefinedInterpreter(userInterpreters, id.ToString("B"));
                 Debug.Assert(newInterp != null);
 
-                for (int i = 0; i < _interpreters.Count; i++) {
-                    var interp = _interpreters[i];
-                    if (interp.Id == id) {
-                        _interpreters[i] = newInterp;
-                        return newInterp;
-                    }
-                }
-
-                // new interpreter, add it.
-                _interpreters.Add(newInterp);
+                _interpreters[newInterp.Id] = newInterp;
+                OnInterpreterFactoriesChanged();
                 return newInterp;
             }
         }
@@ -163,9 +145,49 @@ namespace Microsoft.PythonTools {
         #region IPythonInterpreterFactoryProvider Members
 
         public IEnumerable<IPythonInterpreterFactory> GetInterpreterFactories() {
-            return _interpreters;
+            return _interpreters.Values;
+        }
+
+
+        private void DiscoverInterpreterFactories() {
+            // look for custom configured interpreters
+            bool anyChange = false;
+            var notFound = new HashSet<Guid>(_interpreters.Keys);
+
+            using (var userInterpreters = GetUserDefinedInterpreterKey()) {
+                if (userInterpreters != null) {
+                    foreach (var guid in userInterpreters.GetSubKeyNames()) {
+                        var interp = LoadUserDefinedInterpreter(userInterpreters, guid);
+                        if (interp != null) {
+                            anyChange |= notFound.Remove(interp.Id);
+                            if (!_interpreters.ContainsKey(interp.Id)) {
+                                _interpreters[interp.Id] = interp;
+                                anyChange = true;
+                            }
+                        }
+                    }
+                }
+            }
+
+            foreach (var id in notFound) {
+                _interpreters.Remove(id);
+            }
+
+            if (anyChange) {
+                OnInterpreterFactoriesChanged();
+            }
+        }
+
+        public event EventHandler InterpreterFactoriesChanged;
+
+        private void OnInterpreterFactoriesChanged() {
+            var evt = InterpreterFactoriesChanged;
+            if (evt != null) {
+                evt(this, EventArgs.Empty);
+            }
         }
 
         #endregion
+
     }
 }

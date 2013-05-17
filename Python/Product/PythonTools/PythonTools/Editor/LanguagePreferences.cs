@@ -46,13 +46,13 @@ namespace Microsoft.PythonTools.Editor {
             return VSConstants.S_OK;
         }
 
-        public int OnUserPreferencesChanged2(VIEWPREFERENCES2[] pViewPrefs, FRAMEPREFERENCES2[] pFramePrefs, LANGPREFERENCES2[] pLangPrefs, FONTCOLORPREFERENCES2[] pColorPrefs) {
-            if (pLangPrefs != null) {
-                _preferences.IndentStyle = pLangPrefs[0].IndentStyle;
-                _preferences.fAutoListMembers = pLangPrefs[0].fAutoListMembers;
-                _preferences.fAutoListParams = pLangPrefs[0].fAutoListParams;
-                _preferences.fHideAdvancedAutoListMembers = pLangPrefs[0].fHideAdvancedAutoListMembers;
-                if (_preferences.fDropdownBar != (_preferences.fDropdownBar = pLangPrefs[0].fDropdownBar)) {
+        public int OnUserPreferencesChanged2(VIEWPREFERENCES2[] viewPrefs, FRAMEPREFERENCES2[] framePrefs, LANGPREFERENCES2[] langPrefs, FONTCOLORPREFERENCES2[] colorPrefs) {
+            if (langPrefs != null && langPrefs.Length > 0 && langPrefs[0].guidLang == this._preferences.guidLang) {
+                _preferences.IndentStyle = langPrefs[0].IndentStyle;
+                _preferences.fAutoListMembers = langPrefs[0].fAutoListMembers;
+                _preferences.fAutoListParams = langPrefs[0].fAutoListParams;
+                _preferences.fHideAdvancedAutoListMembers = langPrefs[0].fHideAdvancedAutoListMembers;
+                if (_preferences.fDropdownBar != (_preferences.fDropdownBar = langPrefs[0].fDropdownBar)) {
                     CodeWindowManager.ToggleNavigationBar(_preferences.fDropdownBar != 0);                    
                 }
             }

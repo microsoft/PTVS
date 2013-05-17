@@ -1,9 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="..\..\ProjectBefore.settings" />
-  <PropertyGroup>
-    <Platform>Win32</Platform>
-  </PropertyGroup>
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
@@ -63,12 +60,12 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Platform)'=='Win32'">
-    <IncludePath>$(registry:HKEY_LOCAL_MACHINE\Software\Microsoft\Kinect@SDKInstallPath)\inc;C:\Program Files (x86)\Microsoft Speech Platform SDK\Include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(registry:HKEY_LOCAL_MACHINE\Software\Microsoft\Kinect@SDKInstallPath)\lib\x86;C:\Program Files (x86)\Microsoft Speech Platform SDK\Lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>%KINECTSDK10_DIR%\inc;C:\Program Files (x86)\Microsoft Speech Platform SDK\Include;$(IncludePath)</IncludePath>
+    <LibraryPath>%KINECTSDK10_DIR%\lib\x86;C:\Program Files (x86)\Microsoft Speech Platform SDK\Lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Platform)'=='x64'">
-    <IncludePath>$(registry:HKEY_LOCAL_MACHINE\Software\Microsoft\Kinect@SDKInstallPath)\inc;C:\Program Files (x86)\Microsoft Speech Platform SDK\Include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(registry:HKEY_LOCAL_MACHINE\Software\Microsoft\Kinect@SDKInstallPath)\lib\amd64;C:\Program Files (x86)\Microsoft Speech Platform SDK\Lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>%KINECTSDK10_DIR%\inc;C:\Program Files (x86)\Microsoft Speech Platform SDK\Include;$(IncludePath)</IncludePath>
+    <LibraryPath>%KINECTSDK10_DIR%\lib\amd64;C:\Program Files (x86)\Microsoft Speech Platform SDK\Lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)'=='Debug'">
     <ClCompile>

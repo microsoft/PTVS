@@ -101,7 +101,7 @@ namespace PythonToolsTests {
                 Assert.Inconclusive("Test requires Python 2.6 to be installed and in PATH or C:\\Python26\\");
             }
 
-            return new PythonReplEvaluator(new SimpleFactoryProvider(pythonExe, pythonWinExe), Guid.Empty, new Version(2, 6), null);
+            return new PythonReplEvaluator(new SimpleFactoryProvider(pythonExe, pythonWinExe).GetInterpreterFactories().First(), null);
         }
 
         class SimpleFactoryProvider : IPythonInterpreterFactoryProvider {
@@ -116,6 +116,8 @@ namespace PythonToolsTests {
             public IEnumerable<IPythonInterpreterFactory> GetInterpreterFactories() {
                 yield return new CPythonInterpreterFactory(new Version(2, 6), Guid.Empty, "Python", _pythonExe, _pythonWinExe, "PYTHONPATH", System.Reflection.ProcessorArchitecture.X86);
             }
+
+            public event EventHandler InterpreterFactoriesChanged { add { } remove { } }
         }
 
         private static void TestOutput(MockReplWindow window, PythonReplEvaluator evaluator, string code, bool success, params string[] expectedOutput) {

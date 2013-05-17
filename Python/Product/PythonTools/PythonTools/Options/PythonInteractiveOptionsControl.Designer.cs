@@ -286,6 +286,7 @@
             this._showSettingsFor.Size = new System.Drawing.Size(364, 21);
             this._showSettingsFor.TabIndex = 1;
             this._showSettingsFor.SelectedIndexChanged += new System.EventHandler(this._showSettingsFor_SelectedIndexChanged);
+            this._showSettingsFor.Format += new System.Windows.Forms.ListControlConvertEventHandler(this.Interpreter_Format);
             // 
             // _executionModeLabel
             // 

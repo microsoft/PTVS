@@ -28,9 +28,10 @@ namespace TestUtilities.UI
                 var tabItem = FindFirstByControlType(tabName, ControlType.Pane);
                 var point = tabItem.GetClickablePoint();
                 Mouse.MoveTo(point);
-                System.Threading.Thread.Sleep(100);
                 Mouse.Click(System.Windows.Input.MouseButton.Left);
-                System.Threading.Thread.Sleep(100);                
+
+                System.Threading.Thread.Sleep(500);
+                
                 return FindFirstByControlType(tabName, ControlType.Pane);
             }
         }

@@ -16,8 +16,8 @@ using System;
 using System.ComponentModel;
 using System.IO;
 using System.Runtime.InteropServices;
-using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools.Project.Automation;
+using Microsoft.VisualStudio.Shell.Interop;
 
 namespace Microsoft.VisualStudioTools.Project {
     [ComVisible(true)]

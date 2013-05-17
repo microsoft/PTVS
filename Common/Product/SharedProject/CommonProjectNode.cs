@@ -20,7 +20,6 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
-using System.Text;
 using System.Windows.Forms;
 using System.Windows.Threading;
 using Microsoft.VisualStudio;
@@ -29,7 +28,6 @@ using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools.Navigation;
 using Microsoft.VisualStudioTools.Project.Automation;
 using Microsoft.Windows.Design.Host;
-using MSBuild = Microsoft.Build.Evaluation;
 using VsCommands2K = Microsoft.VisualStudio.VSConstants.VSStd2KCmdID;
 using VSConstants = Microsoft.VisualStudio.VSConstants;
 
@@ -58,14 +56,9 @@ namespace Microsoft.VisualStudioTools.Project {
         private int _suppressFileWatcherCount;
         private bool _isRefreshing;
         internal bool _boldedStartupItem;
-        private bool _showingAllFiles;
         private object _automationObject;
         private CommonPropertyPage _propPage;
         private readonly Dictionary<string, FileSystemEventHandler> _fileChangedHandlers = new Dictionary<string, FileSystemEventHandler>();
-        private List<FileSystemChange> _fileSystemChanges;
-        private UIThreadSynchronizer _uiSync;
-        private MSBuild.Project userBuildProject;
-        private readonly Dictionary<string, FileSystemWatcher> _symlinkWatchers = new Dictionary<string, FileSystemWatcher>();
 
         public CommonProjectNode(CommonProjectPackage/*!*/ package, ImageList/*!*/ imageList) {
             Contract.Assert(package != null);
@@ -84,8 +77,6 @@ namespace Microsoft.VisualStudioTools.Project {
             }
 
             InitializeCATIDs();
-
-            _uiSync = new UIThreadSynchronizer();
         }
 
         #region abstract methods
@@ -94,10 +85,10 @@ namespace Microsoft.VisualStudioTools.Project {
         public abstract Type GetEditorFactoryType();
         public abstract string GetProjectName();
 
-        public virtual CommonFileNode CreateCodeFileNode(ProjectElement item) {
+        public virtual CommonFileNode CreateCodeFileNode(MsBuildProjectElement item) {
             return new CommonFileNode(this, item);
         }
-        public virtual CommonFileNode CreateNonCodeFileNode(ProjectElement item) {
+        public virtual CommonFileNode CreateNonCodeFileNode(MsBuildProjectElement item) {
             return new CommonNonCodeFileNode(this, item);
         }
         public abstract string GetFormatList();
@@ -166,18 +157,6 @@ namespace Microsoft.VisualStudioTools.Project {
         #endregion
 
         #region overridden properties
-
-        public override bool CanShowAllFiles {
-            get {
-                return true;
-            }
-        }
-
-        public override bool IsShowingAllFiles {
-            get {
-                return _showingAllFiles;
-            }
-        }
 
         /// <summary>
         /// Since we appended the language images to the base image list in the constructor,
@@ -380,313 +359,21 @@ namespace Microsoft.VisualStudioTools.Project {
                 _watcher.Dispose();
             }
 
-            string userProjectFilename = FileName + ".user";
-            if (File.Exists(userProjectFilename)) {
-                userBuildProject = BuildProject.ProjectCollection.LoadProject(userProjectFilename);
-            }
-
-            bool? showAllFiles = null;
-            if (userBuildProject != null) {
-                showAllFiles = GetShowAllFilesSetting(userBuildProject.GetPropertyValue(CommonConstants.ProjectView));
-            }
-
-            _showingAllFiles = showAllFiles ??
-                GetShowAllFilesSetting(BuildProject.GetPropertyValue(CommonConstants.ProjectView)) ??
-                false;
-
-            _watcher = CreateFileSystemWatcher(ProjectHome);
-
-            // add everything that's on disk that we don't have in the project
-            MergeDiskNodes(this, ProjectHome);
-        }
-
-        private FileSystemWatcher CreateFileSystemWatcher(string dir) {
-            var watcher = new FileSystemWatcher(dir);
-            watcher.NotifyFilter |= NotifyFilters.Attributes;
-            watcher.IncludeSubdirectories = true;
-            watcher.Created += new FileSystemEventHandler(FileExistanceChanged);
-            watcher.Deleted += new FileSystemEventHandler(FileExistanceChanged);
-            watcher.Renamed += new RenamedEventHandler(FileNameChanged);
-            watcher.Changed += FileContentsChanged;
-            watcher.Error += WatcherError;
-            watcher.EnableRaisingEvents = true;
-            return watcher;
-        }
-
-        /// <summary>
-        /// When the file system watcher buffer overflows we need to scan the entire 
-        /// directory for changes.
-        /// </summary>
-        private void WatcherError(object sender, ErrorEventArgs e) {
-            bool createdChanges;
-            lock (this) {
-                List<FileSystemChange> changes;
-                GetFileChangeList(out changes, out createdChanges);
-                
-                changes.Add(new FileSystemChange(this, WatcherChangeTypes.All, null));
-            }
-
-            if (createdChanges) {
-                _uiSync.BeginInvoke(new Action(ProcessFileChanges), new object[0]);
-            }
-        }
-
-        protected override void SaveMSBuildProjectFileAs(string newFileName) {
-            base.SaveMSBuildProjectFileAs(newFileName);
-
-            if (userBuildProject != null) {
-                userBuildProject.Save(FileName + ".user");
-            }
-        }
-
-        protected override void SaveMSBuildProjectFile(string filename) {
-            base.SaveMSBuildProjectFile(filename);
-
-            if (userBuildProject != null) {
-                userBuildProject.Save(filename + ".user");
-            }
-        }
-
-        protected override void Dispose(bool disposing) {
-            base.Dispose(disposing);
-            if (this.userBuildProject != null) {
-                userBuildProject.ProjectCollection.UnloadProject(userBuildProject);
-            }
-        }
-
-        protected internal override int ShowAllFiles() {
-            if (!QueryEditProjectFile(false)) {
-                return VSConstants.E_FAIL;
-            }
-
-            if (_showingAllFiles) {
-                UpdateShowAllFiles(this, enabled: false);
-            } else {
-                UpdateShowAllFiles(this, enabled: true);
-                ExpandItem(EXPANDFLAGS.EXPF_ExpandFolder);
-            }
-
-            _showingAllFiles = !_showingAllFiles;
-
-            string newPropValue = _showingAllFiles ? CommonConstants.ShowAllFiles : CommonConstants.ProjectFiles;
-
-            var projProperty = BuildProject.GetProperty(CommonConstants.ProjectView);
-            if (projProperty != null && 
-                !projProperty.IsImported && 
-                !String.IsNullOrWhiteSpace(projProperty.EvaluatedValue)) {
-                // setting is persisted in main project file, update it there.
-                BuildProject.SetProperty(CommonConstants.ProjectView, newPropValue);
-            } else {
-                // save setting in user project file
-                if (userBuildProject == null) {
-                    // user project file doesn't exist yet, create it.
-                    userBuildProject = new MSBuild.Project(BuildProject.ProjectCollection);
-                    userBuildProject.FullPath = FileName + ".user";
-                }
-                userBuildProject.SetProperty(CommonConstants.ProjectView, newPropValue);
-                
-            }
-            SetProjectFileDirty(true);
-
-            // update project state
-            return VSConstants.S_OK;
-        }
-
-        private void UpdateShowAllFiles(HierarchyNode node, bool enabled) {
-            for (var curNode = node.FirstChild; curNode != null; curNode = curNode.NextSibling) {
-                UpdateShowAllFiles(curNode, enabled);
-
-                var allFiles = curNode.ItemNode as AllFilesProjectElement;
-                if (allFiles != null) {
-                    curNode.IsVisible = enabled;
-                    OnInvalidateItems(node);
-                }
-            }
-        }
-
-        private static bool? GetShowAllFilesSetting(string showAllFilesValue) {
-            bool? showAllFiles = null;
-            string showAllFilesSetting = showAllFilesValue.Trim();
-            if (String.Equals(showAllFilesSetting, CommonConstants.ProjectFiles)) {
-                showAllFiles = false;
-            } else if (String.Equals(showAllFilesSetting, CommonConstants.ShowAllFiles)) {
-                showAllFiles = true;
-            }
-            return showAllFiles;
-        }
-
-        /// <summary>
-        /// Walks the project home directory and creates nodes for all of the files
-        /// which are on disk but aren't part of the project.  We add these files and
-        /// display them if the user enables Show All Files.
-        /// </summary>
-        private void MergeDiskNodes(HierarchyNode curParent, string dir) {
-            foreach (var curDir in Directory.GetDirectories(dir)) {
-                if (IsFileHidden(curDir)) {
-                    continue;
-                }
-
-                if (IsFileSymLink(curDir)) {
-                    if (IsRecursiveSymLink(dir, curDir)) {
-                        // don't add recursive sym links
-                        continue;
-                    }
-
-                    // track symlinks, we won't get events on the directory
-                    CreateSymLinkWatcher(curDir);
-                }
-
-                var existing = AddAllFilesFolder(curParent, curDir + Path.DirectorySeparatorChar);
-
-                MergeDiskNodes(existing, curDir);
-            }
-
-            foreach (var file in Directory.GetFiles(dir)) {
-                if (IsFileHidden(file)) {
-                    continue;
-                }
-                AddAllFilesFile(curParent, file);
-            }
-        }
-
-        private static string GetFinalPathName(string dir) {
-            using (var dirHandle = NativeMethods.CreateFile(
-                dir,
-                NativeMethods.FileDesiredAccess.FILE_LIST_DIRECTORY,
-                NativeMethods.FileShareFlags.FILE_SHARE_DELETE |
-                    NativeMethods.FileShareFlags.FILE_SHARE_READ |
-                    NativeMethods.FileShareFlags.FILE_SHARE_WRITE,
-                IntPtr.Zero,
-                NativeMethods.FileCreationDisposition.OPEN_EXISTING,
-                NativeMethods.FileFlagsAndAttributes.FILE_FLAG_BACKUP_SEMANTICS,
-                IntPtr.Zero
-            )) {
-                if (!dirHandle.IsInvalid) {
-                    uint pathLen = NativeMethods.MAX_PATH + 1;
-                    uint res;
-                    StringBuilder filePathBuilder;
-                    for (; ; ) {
-                        filePathBuilder = new StringBuilder(checked((int)pathLen));
-                        res = NativeMethods.GetFinalPathNameByHandle(
-                            dirHandle,
-                            filePathBuilder,
-                            pathLen,
-                            0
-                        );
-                        if (res != 0 && res < pathLen) {
-                            // we had enough space, and got the filename.
-                            break;
-                        }
-                    }
-
-                    if (res != 0) {
-                        Debug.Assert(filePathBuilder.ToString().StartsWith("\\\\?\\"));
-                        return filePathBuilder.ToString().Substring(4);
-                    }
-                }
-            }
-            return dir;
-        }
-
-        private static bool IsRecursiveSymLink(string parentDir, string childDir) {
-            if (IsFileSymLink(parentDir)) {
-                // figure out the real parent dir so the check below works w/ multiple
-                // symlinks pointing at each other
-                parentDir = GetFinalPathName(parentDir);
-            }
-
-            string finalPath = GetFinalPathName(childDir);
-            // check and see if we're recursing infinitely...
-            if (CommonUtils.IsSubpathOf(finalPath, parentDir)) {
-                // skip this file
-                return true;
-            }
-            return false;
-        }
-
-        private static bool IsFileSymLink(string path) {
-            try {
-                return (File.GetAttributes(path) & FileAttributes.ReparsePoint) != 0;
-            } catch (DirectoryNotFoundException) {
-                return false;
-            } catch (FileNotFoundException) {
-                return false;
-            }
-        }
-
-        private bool IsFileHidden(string path) {
-            if (String.Equals(path, FileName, StringComparison.OrdinalIgnoreCase) ||
-                String.Equals(path, FileName + ".user", StringComparison.OrdinalIgnoreCase)) {
-                return true;
-            }
-
-            try {
-                return (File.GetAttributes(path) & (FileAttributes.Hidden | FileAttributes.System)) != 0;
-            } catch (DirectoryNotFoundException) {
-                return false;
-            } catch (FileNotFoundException) {
-                return false;
-            }
-        }
-
-        /// <summary>
-        /// Adds a file which is displayed when Show All Files is enabled
-        /// </summary>
-        private void AddAllFilesFile(HierarchyNode curParent, string file) {
-            var existing = FindNodeByFullPath(file);
-            if (existing == null) {
-                var newFile = CreateFileNode(new AllFilesProjectElement(file, GetItemType(file), this));
-                AddAllFilesNode(curParent, newFile);
-            }
-        }
-
-        /// <summary>
-        /// Adds a folder which is displayed when Show All files is enabled
-        /// </summary>
-        private HierarchyNode AddAllFilesFolder(HierarchyNode curParent, string curDir) {
-            var folderNode = FindNodeByFullPath(curDir);
-            if (folderNode == null) {
-                folderNode = CreateFolderNode(new AllFilesProjectElement(curDir, "Folder", this));
-                AddAllFilesNode(curParent, folderNode);
-
-                // Solution Explorer will expand the parent when an item is
-                // added, which we don't want
-                folderNode.ExpandItem(EXPANDFLAGS.EXPF_CollapseFolder);
-            }
-            return folderNode;
-        }
-
-        /// <summary>
-        /// Initializes and adds a file or folder visible only when Show All files is enabled
-        /// </summary>
-        private void AddAllFilesNode(HierarchyNode parent, HierarchyNode newNode) {
-            newNode.IsVisible = IsShowingAllFiles;
-            newNode.ID = ItemIdMap.Add(newNode);
-            parent.AddChild(newNode);
+            _watcher = new FileSystemWatcher(ProjectHome);
+            _watcher.IncludeSubdirectories = true;
+            _watcher.Created += new FileSystemEventHandler(FileExistanceChanged);
+            _watcher.Deleted += new FileSystemEventHandler(FileExistanceChanged);
+            _watcher.Renamed += new RenamedEventHandler(FileNameChanged);
+            _watcher.Changed += FileContentsChanged;
+            _watcher.SynchronizingObject = new UIThreadSynchronizer();
+            _watcher.EnableRaisingEvents = true;
         }
 
         private void FileContentsChanged(object sender, FileSystemEventArgs e) {
-            if (IsClosed) {
-                return;
-            }
-
             FileSystemEventHandler handler;
             if (_fileChangedHandlers.TryGetValue(e.FullPath, out handler)) {
                 handler(sender, e);
             }
-
-            bool createdChanges;
-            lock (this) {
-                List<FileSystemChange> changes;
-                GetFileChangeList(out changes, out createdChanges);
-
-                changes.Add(new FileSystemChange(this, WatcherChangeTypes.Changed, e.FullPath));
-            }
-
-            if (createdChanges) {
-                _uiSync.BeginInvoke(new Action(ProcessFileChanges), new object[0]);
-            }
-
         }
 
         internal void RegisterFileChangeNotification(FileNode node, FileSystemEventHandler handler) {
@@ -702,280 +389,32 @@ namespace Microsoft.VisualStudioTools.Project {
         }
 
         private void FileNameChanged(object sender, RenamedEventArgs e) {
-            if (IsClosed) {
-                return;
+            string oldPath = e.OldFullPath;
+            if (!File.Exists(oldPath) && Directory.Exists(oldPath)) {
+                oldPath = oldPath + "\\";
             }
 
-            bool createdChanges;
-            lock (this) {
-                List<FileSystemChange> changes;
-                GetFileChangeList(out changes, out createdChanges);
-
-                // we just generate a delete and creation here - we're just updating the hierarchy
-                // either changing icons or updating the non-project elements, so we don't need to
-                // generate rename events or anything like that.  This saves us from having to 
-                // handle updating the hierarchy in a special way for renames.
-                changes.Add(new FileSystemChange(this, WatcherChangeTypes.Deleted, e.OldFullPath));
-                changes.Add(new FileSystemChange(this, WatcherChangeTypes.Created, e.FullPath));
+            var child = FindNodeByFullPath(oldPath);
+            if (child != null) {
+                ReDrawNode(child, UIHierarchyElement.Icon);
             }
 
-            if (createdChanges) {
-                _uiSync.BeginInvoke(new Action(ProcessFileChanges), new object[0]);
+            string newPath = e.FullPath;
+            if (!File.Exists(newPath) && Directory.Exists(newPath)) {
+                newPath = newPath + "\\";
+            }
+            child = FindNodeByFullPath(newPath);
+            if (child != null) {
+                ReDrawNode(child, UIHierarchyElement.Icon);
             }
         }
 
         private void FileExistanceChanged(object sender, FileSystemEventArgs e) {
-            if (IsClosed) {
-                return;
-            }
-            bool createdChanges;
-            
-            lock (this) {
-                List<FileSystemChange> changes;
-                GetFileChangeList(out changes, out createdChanges);
-
-                changes.Add(new FileSystemChange(this, e.ChangeType, e.FullPath));
-            }
-            if (createdChanges) {
-                _uiSync.BeginInvoke(new Action(ProcessFileChanges), new object[0]);
+            var child = FindNodeByFullPath(e.FullPath);
+            if (child != null) {
+                ReDrawNode(child, UIHierarchyElement.Icon);
             }
         }
-
-        /// <summary>
-        /// Gets or creates the current list of file change events to be processed.  We update the
-        /// current list until the UI thread pulls it and starts processing it.  This keeps the
-        /// response to the event fast even if we can't immediately make it back to the UI thread and
-        /// keeps the # of posts low when the UI thread is busy.
-        /// </summary>
-        private void GetFileChangeList(out List<FileSystemChange> changes, out bool createdChanges) {
-            createdChanges = false;
-            lock (this) {
-                if (_fileSystemChanges == null) {
-                    _fileSystemChanges = new List<FileSystemChange>();
-                    createdChanges = true;
-                }
-                changes = _fileSystemChanges;
-            }
-        }
-
-        internal void CreateSymLinkWatcher(string curDir) {
-            if (!CommonUtils.HasEndSeparator(curDir)) {
-                curDir = curDir + Path.DirectorySeparatorChar;
-            }
-            _symlinkWatchers[curDir] = CreateFileSystemWatcher(curDir);
-        }
-
-        internal bool TryDeactivateSymLinkWatcher(HierarchyNode child) {
-            FileSystemWatcher watcher;
-            if (_symlinkWatchers.TryGetValue(child.Url, out watcher)) {
-                _symlinkWatchers.Remove(child.Url);
-                watcher.EnableRaisingEvents = false;
-                watcher.Dispose();
-                return true;
-            }
-            return false;
-        }
-
-        /// <summary>
-        /// Processes the current file system changes on the UI thread.
-        /// </summary>
-        private void ProcessFileChanges() {
-            List<FileSystemChange> changes;
-            lock (this) {
-                changes = _fileSystemChanges;
-                _fileSystemChanges = null;
-            }
-
-            foreach (var change in changes) {
-#if DEBUG
-                try {
-#endif
-                    change.ProcessChange();
-#if DEBUG
-                } catch (Exception e) {
-                    Debug.Fail("Unexpected exception while processing change: {0}", e.ToString());
-                    throw;
-                }
-#endif
-            }
-        }
-
-        /// <summary>
-        /// Represents an individual change to the file system.  We process these in bulk on the
-        /// UI thread.
-        /// </summary>
-        class FileSystemChange {
-            private readonly CommonProjectNode _project;
-            private readonly WatcherChangeTypes _type;
-            private readonly string _path;
-
-            public FileSystemChange(CommonProjectNode node, WatcherChangeTypes changeType, string path) {
-                _project = node;
-                _type = changeType;
-                _path = path;
-            }
-
-            private void RedrawIcon(HierarchyNode node) {
-                _project.ReDrawNode(node, UIHierarchyElement.Icon);
-
-                for (var child = node.FirstChild; child != null; child = child.NextSibling) {
-                    RedrawIcon(child);
-                }
-            }
-
-            public void ProcessChange() {
-                if (_type == WatcherChangeTypes.All) {
-                    WatcherError();
-                    return;
-                }
-
-                var child = _project.FindNodeByFullPath(_path);
-                if ((_type == WatcherChangeTypes.Deleted || _type == WatcherChangeTypes.Changed) && child == null) {
-                    child = _project.FindNodeByFullPath(_path + Path.DirectorySeparatorChar);
-                }
-                switch (_type) {
-                    case WatcherChangeTypes.Deleted:
-                        ChildDeleted(child); 
-                        break;
-                    case WatcherChangeTypes.Created: ChildCreated(child); break;
-                    case WatcherChangeTypes.Changed:
-                        // we only care about the attributes
-                        if (_project.IsFileHidden(_path)) {
-                            if (child != null) {
-                                // attributes must of changed to hidden, remove the file
-                                goto case WatcherChangeTypes.Deleted;
-                            }
-                        } else {
-                            if (child == null) {
-                                // attributes must of changed from hidden, add the file
-                                goto case WatcherChangeTypes.Created;
-                            }
-                        }
-                        break;
-                }
-            }
-
-            private void RemoveAllFilesChildren(HierarchyNode parent) {
-                bool removed = false;
-
-                for (var current = parent.FirstChild; current != null; current = current.NextSibling) {
-                    // remove our children first
-                    RemoveAllFilesChildren(current);
-
-                    _project.TryDeactivateSymLinkWatcher(current);
-
-                    // then remove us if we're an all files node
-                    if (current.ItemNode is AllFilesProjectElement) {
-                        parent.RemoveChild(current);
-                        _project.OnItemDeleted(current);
-                        removed = true;
-                    }
-                }
-
-                if (removed) {
-                    _project.OnInvalidateItems(parent);
-                }
-            }
-
-            private void WatcherError() {
-                // remove all of the existing all files nodes
-                RemoveAllFilesChildren(_project);
-
-                // merge the current ones back in
-                _project.MergeDiskNodes(_project, _project.ProjectHome);
-            }
-
-            private void ChildDeleted(HierarchyNode child) {
-                if (child != null) {
-                    _project.TryDeactivateSymLinkWatcher(child);
-
-                    if (child.ItemNode.IsExcluded) {
-                        RemoveAllFilesChildren(child);
-
-                        // deleting a show all files item, remove the node.
-                        child.Parent.RemoveChild(child);
-                        _project.OnItemDeleted(child);
-                    } else {
-                        Debug.Assert(!child.IsNonMemberItem);
-                        // deleting an item in the project, fix the icon, also
-                        // fix the icon of all children which we may have not
-                        // received delete notifications for
-                        RedrawIcon(child);
-                    }
-                }
-            }
-
-            private void ChildCreated(HierarchyNode child) {
-                if (child != null) {
-                    // creating an item which was in the project, fix the icon.
-                    _project.ReDrawNode(child, UIHierarchyElement.Icon);
-                } else {
-                    if (_project.IsFileHidden(_path)) {
-                        // don't add hidden files/folders
-                        return;
-                    }
-
-                    // creating a new item, need to create the on all files node
-                    string parentDir = Path.GetDirectoryName(CommonUtils.TrimEndSeparator(_path)) + Path.DirectorySeparatorChar;
-                    HierarchyNode parent;
-                    if (CommonUtils.IsSamePath(parentDir, _project.ProjectHome)) {
-                        parent = _project;
-                    } else {
-                        parent = _project.FindNodeByFullPath(parentDir);
-                    }
-
-                    if (parent == null) {
-                        // we've hit an error while adding too many files, the file system watcher
-                        // couldn't keep up.  That's alright, we'll merge the files in correctly 
-                        // in a little while...
-                        return;
-                    }
-
-                    IVsUIHierarchyWindow uiHierarchy = UIHierarchyUtilities.GetUIHierarchyWindow(_project.Site, HierarchyNode.SolutionExplorer);
-                    uint curState;
-                    uiHierarchy.GetItemState(_project.GetOuterInterface<IVsUIHierarchy>(),
-                        parent.ID,
-                        (uint)__VSHIERARCHYITEMSTATE.HIS_Expanded,
-                        out curState
-                    );
-
-                    if (Directory.Exists(_path)) {
-                        if (IsFileSymLink(_path)) {
-                            if (IsRecursiveSymLink(parentDir, _path)) {
-                                // don't add recusrive sym link directory
-                                return;
-                            }
-
-                            // otherwise we're going to need a new file system watcher
-                            _project.CreateSymLinkWatcher(_path);
-                        }
-
-                        var folderNode = _project.AddAllFilesFolder(parent, _path + Path.DirectorySeparatorChar);
-                        // we may have just moved a directory from another location (e.g. drag and
-                        // and drop in explorer), in which case we also need to process the items
-                        // which are in the folder that we won't receive create notifications for.
-
-                        // First, make sure we don't have any children
-                        RemoveAllFilesChildren(folderNode);
-
-                        // then add the folder nodes
-                        _project.MergeDiskNodes(folderNode, _path);
-
-                        _project.OnInvalidateItems(folderNode);
-                    } else {
-                        _project.AddAllFilesFile(parent, _path);
-                    }
-
-                    if ((curState & (uint)__VSHIERARCHYITEMSTATE.HIS_Expanded) == 0) {
-                        // Solution Explorer will expand the parent when an item is
-                        // added, which we don't want, so we check it's state before
-                        // adding, and then collapse the folder if it was expanded.
-                        parent.ExpandItem(EXPANDFLAGS.EXPF_CollapseFolder);
-                    }
-                }
-            }
-        }
-
 
         public override int GetGuidProperty(int propid, out Guid guid) {
             if ((__VSHPROPID)propid == __VSHPROPID.VSHPROPID_PreferredLanguageSID) {
@@ -1086,7 +525,7 @@ namespace Microsoft.VisualStudioTools.Project {
         /// Create a file node based on an msbuild item.
         /// </summary>
         /// <param name="item">The msbuild item to be analyzed</param>        
-        public override FileNode CreateFileNode(ProjectElement item) {
+        public override FileNode CreateFileNode(MsBuildProjectElement item) {
             Utilities.ArgumentNotNull("item", item);
 
             CommonFileNode newNode;
@@ -1125,18 +564,16 @@ namespace Microsoft.VisualStudioTools.Project {
             // Avoid adding files to the project multiple times.  Ultimately           
             // we should not use project items and instead should have virtual items.       
 
-            string path = CommonUtils.GetRelativeFilePath(ProjectHome, absFileName);
-            var prjItem = BuildProject.AddItem(GetItemType(path), path)[0];
+            Microsoft.Build.Evaluation.ProjectItem prjItem;
+
+                string path = CommonUtils.GetRelativeFilePath(ProjectHome, absFileName);
+                if (IsCodeFile(absFileName)) {
+                    prjItem = BuildProject.AddItem("Compile", path)[0];
+                } else {
+                    prjItem = BuildProject.AddItem("Content", path)[0];
+                }
 
             return CreateFileNode(new MsBuildProjectElement(this, prjItem));
-        }
-
-        internal string GetItemType(string filename) {
-            if (IsCodeFile(filename)) {
-                return "Compile";
-            } else {
-                return "Content";
-            }
         }
 
         public ProjectElement MakeProjectElement(string type, string path) {
@@ -1300,13 +737,13 @@ namespace Microsoft.VisualStudioTools.Project {
         /// Provide mapping from our browse objects and automation objects to our CATIDs
         /// </summary>
         private void InitializeCATIDs() {
+            Type fileNodePropsType = typeof(FileNodeProperties);
             // The following properties classes are specific to current language so we can use their GUIDs directly
             AddCATIDMapping(typeof(OAProject), typeof(OAProject).GUID);
             // The following is not language specific and as such we need a separate GUID
             AddCATIDMapping(typeof(FolderNodeProperties), new Guid(CommonConstants.FolderNodePropertiesGuid));
-            // These ones we use the same as language file nodes since both refer to files
-            AddCATIDMapping(typeof(FileNodeProperties), typeof(FileNodeProperties).GUID);
-            AddCATIDMapping(typeof(IncludedFileNodeProperties), typeof(IncludedFileNodeProperties).GUID);
+            // This one we use the same as language file nodes since both refer to files
+            AddCATIDMapping(typeof(FileNodeProperties), fileNodePropsType.GUID);
             // Because our property page pass itself as the object to display in its grid, 
             // we need to make it have the same CATID
             // as the browse object of the project node so that filtering is possible.
@@ -1630,13 +1067,7 @@ namespace Microsoft.VisualStudioTools.Project {
             }
         }
 
-#if DEV11_OR_LATER
-        public override object GetProperty(int propId) {            
-            CommonFolderNode.BoldStartupOnIcon(propId, this);
-
-            return base.GetProperty(propId);
-        }
-#else
+#if DEV10
         public override int SetProperty(int propid, object value) {
             CommonFolderNode.BoldStartupOnExpand(propid, this);
 

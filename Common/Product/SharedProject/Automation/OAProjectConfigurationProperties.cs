@@ -200,9 +200,7 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
                 return _project.GetProjectProperty("OutputPath");
             }
             set {
-                UIThread.Instance.RunSync(() => {
-                    _project.SetProjectProperty("OutputPath", value);
-                });
+                _project.SetProjectProperty("OutputPath", value);
             }
         }
 

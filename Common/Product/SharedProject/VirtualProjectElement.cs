@@ -51,7 +51,11 @@ namespace Microsoft.VisualStudioTools.Project {
             Debug.Assert(String.Compare(attributeName, ProjectFileConstants.Include, StringComparison.OrdinalIgnoreCase) != 0, "Use rename as this won't work");
 
             // For virtual node, use our virtual property collection
-            _virtualProperties[attributeName] = attributeValue;
+            if (_virtualProperties.ContainsKey(attributeName)) {
+                _virtualProperties.Remove(attributeName);
+            }
+
+            _virtualProperties.Add(attributeName, attributeValue);
         }
 
         /// <summary>
@@ -69,7 +73,8 @@ namespace Microsoft.VisualStudioTools.Project {
         }
 
         public override void Rename(string newPath) {
-            _virtualProperties[ProjectFileConstants.Include] = newPath;
+            string escapedPath = Microsoft.Build.Evaluation.ProjectCollection.Escape(newPath);
+            _virtualProperties[ProjectFileConstants.Include] = escapedPath;
         }
 
         public override bool Equals(object obj) {

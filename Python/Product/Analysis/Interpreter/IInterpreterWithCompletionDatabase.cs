@@ -67,12 +67,45 @@ namespace Microsoft.PythonTools.Interpreter {
         event EventHandler IsCurrentChanged;
 
         /// <summary>
-        /// Returns a string describing the reason why IsCurrent has its current value.
-        /// 
-        /// May return null if no information is available, or a string containing error
-        /// text if an error occurs.
+        /// Raised when the value returned by GetFriendlyIsCurrentReason() or
+        /// GetIsCurrentReason() changes.
         /// </summary>
-        /// <returns>New in 2.0</returns>
+        /// <remarks>New in 2.0</remarks>
+        event EventHandler IsCurrentReasonChanged;
+
+        /// <summary>
+        /// Called to manually trigger a refresh of <see cref="IsCurrent"/>.
+        /// </summary>
+        /// <param name="alwaysRaiseEvent">
+        /// True to always raise <see cref="IsCurrentChanged"/>, regardless of
+        /// whether the value changes.
+        /// </param>
+        /// <remarks>New in 2.0</remarks>
+        void RefreshIsCurrent(bool alwaysRaiseEvent);
+
+        /// <summary>
+        /// Returns a string describing the reason why IsCurrent has its current
+        /// value. The string is formatted for display according to the provided
+        /// culture and may use localized resources if available.
+        /// 
+        /// May return null if no information is available, or a string
+        /// containing error text if an error occurs.
+        /// </summary>
+        /// <remarks>New in 2.0</remarks>
+        string GetFriendlyIsCurrentReason(IFormatProvider culture);
+
+        /// <summary>
+        /// Returns a string describing the reason why IsCurrent has its current
+        /// value.
+        /// 
+        /// This string may not be suitable for displaying directly to the user.
+        /// It is always formatted using the invariant culture, but may use
+        /// resources localized to the provided culture if they are available.
+        /// 
+        /// May return null if no information is available, or a string
+        /// containing detailed exception information if an error occurs.
+        /// </summary>
+        /// <remarks>New in 2.0</remarks>
         string GetIsCurrentReason(IFormatProvider culture);
     }
 }

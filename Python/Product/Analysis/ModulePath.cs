@@ -60,6 +60,25 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         /// <summary>
+        /// The same as FullName unless the last part of the name is '__init__',
+        /// in which case this is FullName without the last part.
+        /// </summary>
+        public string ModuleName {
+            get {
+                if (Name.Equals("__init__", StringComparison.OrdinalIgnoreCase)) {
+                    int lastDot = FullName.LastIndexOf('.');
+                    if (lastDot < 0) {
+                        return string.Empty;
+                    } else {
+                        return FullName.Substring(0, lastDot);
+                    }
+                } else {
+                    return FullName;
+                }
+            }
+        }
+
+        /// <summary>
         /// True if the module is a binary file.
         /// </summary>
         public bool IsCompiled {
@@ -139,13 +158,36 @@ namespace Microsoft.PythonTools.Analysis {
         /// Returns a sequence of ModulePath items for all modules importable
         /// from the provided paths.
         /// </summary>
-        /// <param name="libPath">The main library path. All files in this path
-        /// are considered.</param>
-        /// <param name="paths">Other paths. Only files in subdirectories of
-        /// these paths are considered.</param>
-        public static IEnumerable<ModulePath> GetModulesInLib(IEnumerable<string> pathIncludingRoot, IEnumerable<string> pathExcludingRoot) {
-            return pathIncludingRoot.SelectMany(path => GetModulesInPath(path, includeTopLevelFiles: true))
-                .Concat(pathExcludingRoot.SelectMany(path => GetModulesInPath(path, includeTopLevelFiles: false)));
+        /// <param name="pathIncludingRoot">
+        /// All files in these paths are considered.
+        /// </param>
+        /// <param name="pathExcludingRoot">
+        /// Only files in subdirectories of these paths are considered.
+        /// </param>
+        /// <param name="allModuleNames">
+        /// Contains all the importable module names. Any module in this set on
+        /// entry will be excluded from the results, and each name returned from
+        /// the enumeration will be added to the set.
+        /// 
+        /// This set should use StringComparer.Ordinal.
+        /// </param>
+        public static IEnumerable<ModulePath> GetModulesInLib(
+            IEnumerable<string> pathIncludingRoot,
+            IEnumerable<string> pathExcludingRoot,
+            HashSet<string> allModuleNames) {
+            return GetModulesInPathHelper(pathIncludingRoot, true, allModuleNames)
+                .Concat(GetModulesInPathHelper(pathExcludingRoot, false, allModuleNames));
+        }
+
+        private static IEnumerable<ModulePath> GetModulesInPathHelper(IEnumerable<string> paths, bool includeTopLevelFiles, HashSet<string> allModuleNames) {
+            if (paths != null) {
+                foreach (var module in paths.SelectMany(path => GetModulesInPath(path, includeTopLevelFiles))) {
+                    if (!string.IsNullOrEmpty(module.ModuleName) && 
+                        (allModuleNames == null || allModuleNames.Add(module.ModuleName))) {
+                        yield return module;
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -165,6 +207,7 @@ namespace Microsoft.PythonTools.Analysis {
                                     line.IndexOfAny(Path.GetInvalidPathChars()) >= 0) {
                                     continue;
                                 }
+                                line = line.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
                                 if (!Path.IsPathRooted(line)) {
                                     line = Path.Combine(path, line);
                                 }
@@ -196,10 +239,15 @@ namespace Microsoft.PythonTools.Analysis {
             string libDir, virtualEnvPackages;
             PythonTypeDatabase.GetLibDirs(factory, out libDir, out virtualEnvPackages);
 
+            var allModuleNames = new HashSet<string>(StringComparer.Ordinal);
             var siteDirs = new[] { Path.Combine(libDir, "site-packages") }.AsEnumerable();
-            var libDirs = new[] { libDir }.Concat(ExpandPathFiles(siteDirs));
+            var libDirs = new[] { libDir };
+            var pthDirs = ExpandPathFiles(siteDirs);
 
-            return GetModulesInLib(libDirs, siteDirs);
+            // Concat the contents of directories referenced by .pth files
+            // to ensure that they lose naming collisions.
+            return GetModulesInLib(libDirs, siteDirs, allModuleNames)
+                .Concat(GetModulesInLib(pthDirs, null, allModuleNames));
         }
 
 

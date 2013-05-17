@@ -217,7 +217,7 @@ namespace Microsoft.VisualStudioTools.Project
 
             if (filename == Caption || Parent.FindImmediateChildByName(filename) == null)
             {
-                if (ProjectMgr.QueryFolderAdd(Parent, path))
+                if (ProjectMgr.QueryFolderAdd(Parent, this, path))
                 {
                     Directory.CreateDirectory(path);
                     IsBeingCreated = false;
@@ -230,8 +230,6 @@ namespace Microsoft.VisualStudioTools.Project
                     this.Parent.RemoveChild(this);
                     this.ID = ProjectMgr.ItemIdMap.Add(this);
                     this.Parent.AddChild(this);
-
-                    ExpandItem(EXPANDFLAGS.EXPF_SelectItem);
 
                     ProjectMgr.Tracker.OnFolderAdded(
                         path,
@@ -313,11 +311,8 @@ namespace Microsoft.VisualStudioTools.Project
                         return VSConstants.S_OK;
 
                     case VsCommands.NewFolder:
-                        if (!IsNonMemberItem) {
-                            result |= QueryStatusResult.SUPPORTED | QueryStatusResult.ENABLED;
-                            return VSConstants.S_OK;
-                        }
-                        break;
+                        result |= QueryStatusResult.SUPPORTED | QueryStatusResult.ENABLED;
+                        return VSConstants.S_OK;
                 }
             }
             else if (cmdGroup == VsMenus.guidStandardCommandSet2K)
@@ -484,7 +479,9 @@ namespace Microsoft.VisualStudioTools.Project
             ProjectMgr.Tracker.OnItemRenamed(oldPath, newPath, VSRENAMEFILEFLAGS.VSRENAMEFILEFLAGS_Directory);
 
             // Some of the previous operation may have changed the selection so set it back to us
-            ExpandItem(EXPANDFLAGS.EXPF_SelectItem);
+            IVsUIHierarchyWindow uiWindow = UIHierarchyUtilities.GetUIHierarchyWindow(this.ProjectMgr.Site, SolutionExplorer);
+            ErrorHandler.ThrowOnFailure(uiWindow.ExpandItem(this.ProjectMgr, this.ID, EXPANDFLAGS.EXPF_SelectItem));
+
         }
 
         /// <summary>

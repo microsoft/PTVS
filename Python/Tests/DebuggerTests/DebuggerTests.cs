@@ -25,6 +25,7 @@ using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.Win32;
 using TestUtilities;
+using System.Text;
 
 namespace DebuggerTests {
     [TestClass]
@@ -32,6 +33,13 @@ namespace DebuggerTests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
             TestData.Deploy();
+        }
+
+        [TestInitialize]
+        public void CheckVersion() {
+            if (Version == null) {
+                Assert.Inconclusive("Required version of Python is not installed");
+            }
         }
 
         [TestMethod, Priority(0)]
@@ -1248,7 +1256,8 @@ namespace DebuggerTests {
             // Collect these values and assert on them on the main thread
             bool threadCreated = false, threadExited = false;
             bool processExited = false;
-            int exitCode = -1;
+            int exitCode = -1000;
+            var output = new StringBuilder();
 
             process.ThreadCreated += (sender, args) => {
                 threadCreated = true;
@@ -1263,10 +1272,20 @@ namespace DebuggerTests {
             process.ExceptionRaised += (sender, args) => {
                 process.Resume();
             };
+            process.DebuggerOutput += (sender, args) => {
+                if (args.Output != null) {
+                    lock (output) {
+                        output.AppendLine(args.Output);
+                    }
+                }
+            };
 
             process.Start();
             WaitForExit(process);
 
+            Console.WriteLine("Output from process:");
+            Console.Write(output.ToString());
+            Console.WriteLine("=== End of output ===");
             Assert.IsTrue(threadCreated, "Never got notification of thread creation");
             Assert.IsTrue(threadExited, "Process failed to exit");
             Assert.IsTrue(processExited, "Process failed to exit");

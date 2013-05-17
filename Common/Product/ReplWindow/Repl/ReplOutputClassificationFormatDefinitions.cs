@@ -26,8 +26,6 @@ namespace Microsoft.VisualStudio.Repl {
     [UserVisible(true)]
     internal class InteractiveBlackFormatDefinition : ClassificationFormatDefinition {
         public const string Name = "Interactive - Black";
-        
-
 
         [Export]
         [Name(Name)]
@@ -45,7 +43,6 @@ namespace Microsoft.VisualStudio.Repl {
     [UserVisible(true)]
     internal class InteractiveDarkRedFormatDefinition : ClassificationFormatDefinition {
         public const string Name = "Interactive - DarkRed";
-        
 
         [Export]
         [Name(Name)]
@@ -64,7 +61,6 @@ namespace Microsoft.VisualStudio.Repl {
     [UserVisible(true)]
     internal class InteractiveDarkGreenFormatDefinition : ClassificationFormatDefinition {
         public const string Name = "Interactive - DarkGreen";
-        
 
         [Export]
         [Name(Name)]
@@ -83,7 +79,6 @@ namespace Microsoft.VisualStudio.Repl {
     [UserVisible(true)]
     internal class InteractiveDarkYellowFormatDefinition : ClassificationFormatDefinition {
         public const string Name = "Interactive - DarkYellow";
-        
 
         [Export]
         [Name(Name)]
@@ -118,8 +113,9 @@ namespace Microsoft.VisualStudio.Repl {
     [Name(Name)]
     [DisplayName(Name)]
     [UserVisible(true)]
-    internal class InteractiveDarkMagentaFormatDefinition : ClassificationFormatDefinition {        
+    internal class InteractiveDarkMagentaFormatDefinition : ClassificationFormatDefinition {
         public const string Name = "Interactive - DarkMagenta";
+
         [Export]
         [Name(Name)]
         [BaseDefinition(PredefinedClassificationTypeNames.NaturalLanguage)]
@@ -135,8 +131,9 @@ namespace Microsoft.VisualStudio.Repl {
     [Name(Name)]
     [DisplayName(Name)]
     [UserVisible(true)]
-    internal class InteractiveDarkCyanFormatDefinition : ClassificationFormatDefinition {        
+    internal class InteractiveDarkCyanFormatDefinition : ClassificationFormatDefinition {
         public const string Name = "Interactive - DarkCyan";
+
         [Export]
         [Name(Name)]
         [BaseDefinition(PredefinedClassificationTypeNames.NaturalLanguage)]
@@ -152,12 +149,14 @@ namespace Microsoft.VisualStudio.Repl {
     [Name(Name)]
     [DisplayName(Name)]
     [UserVisible(true)]
-    internal class InteractiveGrayFormatDefinition : ClassificationFormatDefinition {        
+    internal class InteractiveGrayFormatDefinition : ClassificationFormatDefinition {
         public const string Name = "Interactive - Gray";
+
         [Export]
         [Name(Name)]
         [BaseDefinition(PredefinedClassificationTypeNames.NaturalLanguage)]
         internal static ClassificationTypeDefinition Definition = null; // Set via MEF
+        
         public InteractiveGrayFormatDefinition() {
             ForegroundColor = Color.FromRgb(0xC0, 0xC0, 0xC0);
         }
@@ -168,8 +167,9 @@ namespace Microsoft.VisualStudio.Repl {
     [Name(Name)]
     [DisplayName(Name)]
     [UserVisible(true)]
-    internal class InteractiveDarkGrayFormatDefinition : ClassificationFormatDefinition {        
+    internal class InteractiveDarkGrayFormatDefinition : ClassificationFormatDefinition {
         public const string Name = "Interactive - DarkGray";
+
         [Export]
         [Name(Name)]
         [BaseDefinition(PredefinedClassificationTypeNames.NaturalLanguage)]
@@ -185,8 +185,9 @@ namespace Microsoft.VisualStudio.Repl {
     [Name(Name)]
     [DisplayName(Name)]
     [UserVisible(true)]
-    internal class InteractiveRedFormatDefinition : ClassificationFormatDefinition {        
+    internal class InteractiveRedFormatDefinition : ClassificationFormatDefinition {
         public const string Name = "Interactive - Red";
+        
         [Export]
         [Name(Name)]
         [BaseDefinition(PredefinedClassificationTypeNames.NaturalLanguage)]
@@ -202,8 +203,9 @@ namespace Microsoft.VisualStudio.Repl {
     [Name(Name)]
     [DisplayName(Name)]
     [UserVisible(true)]
-    internal class InteractiveGreenFormatDefinition : ClassificationFormatDefinition {        
+    internal class InteractiveGreenFormatDefinition : ClassificationFormatDefinition {
         public const string Name = "Interactive - Green";
+
         [Export]
         [Name(Name)]
         [BaseDefinition(PredefinedClassificationTypeNames.NaturalLanguage)]
@@ -219,8 +221,9 @@ namespace Microsoft.VisualStudio.Repl {
     [Name(Name)]
     [DisplayName(Name)]
     [UserVisible(true)]
-    internal class InteractiveYellowFormatDefinition : ClassificationFormatDefinition {        
+    internal class InteractiveYellowFormatDefinition : ClassificationFormatDefinition {
         public const string Name = "Interactive - Yellow";
+        
         [Export]
         [Name(Name)]
         [BaseDefinition(PredefinedClassificationTypeNames.NaturalLanguage)]
@@ -237,8 +240,9 @@ namespace Microsoft.VisualStudio.Repl {
     [DisplayName(Name)]
     [UserVisible(true)]
     [Order(After = Priority.Default, Before = Priority.High)]
-    internal class InteractiveBlueFormatDefinition : ClassificationFormatDefinition {        
+    internal class InteractiveBlueFormatDefinition : ClassificationFormatDefinition {
         public const string Name = "Interactive - Blue";
+
         [Export]
         [Name(Name)]
         [BaseDefinition(PredefinedClassificationTypeNames.NaturalLanguage)]
@@ -254,8 +258,9 @@ namespace Microsoft.VisualStudio.Repl {
     [Name(Name)]
     [DisplayName(Name)]
     [UserVisible(true)]
-    internal class InteractiveMagentaFormatDefinition : ClassificationFormatDefinition {        
+    internal class InteractiveMagentaFormatDefinition : ClassificationFormatDefinition {
         public const string Name = "Interactive - Magenta";
+
         [Export]
         [Name(Name)]
         [BaseDefinition(PredefinedClassificationTypeNames.NaturalLanguage)]
@@ -271,8 +276,9 @@ namespace Microsoft.VisualStudio.Repl {
     [Name(Name)]
     [DisplayName(Name)]
     [UserVisible(true)]
-    internal class InteractiveCyanFormatDefinition : ClassificationFormatDefinition {        
+    internal class InteractiveCyanFormatDefinition : ClassificationFormatDefinition {
         public const string Name = "Interactive - Cyan";
+        
         [Export]
         [Name(Name)]
         [BaseDefinition(PredefinedClassificationTypeNames.NaturalLanguage)]
@@ -288,8 +294,9 @@ namespace Microsoft.VisualStudio.Repl {
     [Name(Name)]
     [DisplayName(Name)]
     [UserVisible(true)]
-    internal class InteractiveWhiteFormatDefinition : ClassificationFormatDefinition {        
+    internal class InteractiveWhiteFormatDefinition : ClassificationFormatDefinition {
         public const string Name = "Interactive - White";
+
         [Export]
         [Name(Name)]
         [BaseDefinition(PredefinedClassificationTypeNames.NaturalLanguage)]

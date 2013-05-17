@@ -33,14 +33,15 @@ namespace TestUtilities {
         const string BinariesOutPath = "";
 
         const string DataAltSourcePath = @"TestData";
-        const string DataSourcePath = @"Common\Tests\TestData";
+        const string DataSourcePath = @"Release\Tests\Common\TestData";
         const string DataOutPath = @"TestData";
 
         private static string GetSolutionDir() {
             var dir = Path.GetDirectoryName((typeof(TestData)).Assembly.Location);
             while (!string.IsNullOrEmpty(dir) && 
                 Directory.Exists(dir) && 
-                !File.Exists(Path.Combine(dir, "build.root"))) {
+                !File.Exists(Path.Combine(dir, "PythonTools.sln")) && 
+                !File.Exists(Path.Combine(dir, "Run.bat"))) {
                 dir = Path.GetDirectoryName(dir);
             }
             return dir ?? "";
@@ -96,11 +97,11 @@ namespace TestUtilities {
                 Debug.Fail("Invalid deploy root", string.Format("sourceRoot={0}\ndeployRoot={1}", sourceRoot, deployRoot));
             }
 
-            var binSource = Path.Combine(sourceRoot, BinariesSourcePath);            
+            var binSource = Path.Combine(sourceRoot, BinariesSourcePath);
             if (!Directory.Exists(binSource)) {
                 binSource = Path.Combine(sourceRoot, BinariesAltSourcePath);
                 if (!Directory.Exists(binSource)) {
-                    Debug.Fail("Could not find location of test binaries." + Environment.NewLine + "    " + binSource);
+                    Debug.Fail("Could not find location of test binaries.");
                 }
             }
 
@@ -120,7 +121,7 @@ namespace TestUtilities {
                 if (!Directory.Exists(dataSource)) {
                     dataSource = Path.Combine(sourceRoot, DataAltSourcePath);
                     if (!Directory.Exists(dataSource)) {
-                        Debug.Fail("Could not find location of test data." + Environment.NewLine + "    " + dataSource);
+                        Debug.Fail("Could not find location of test data.");
                     }
                 }
 

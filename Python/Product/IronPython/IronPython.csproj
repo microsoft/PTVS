@@ -121,6 +121,9 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\Analysis\RegistryWatcher.cs">
+      <Link>RegistryWatcher.cs</Link>
+    </Compile>
     <Compile Include="Debugger\IronPythonLauncher.cs" />
     <Compile Include="Debugger\IronPythonLauncherOptions.cs">
       <SubType>UserControl</SubType>
@@ -161,7 +164,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Analysis\Analysis.csproj">
       <Project>{A85D479D-67A9-4BDB-904A-7D86DAF68A6F}</Project>
-      <Name>Analysis</Name>
+      <Name>Microsoft.PythonTools.Analysis</Name>
     </ProjectReference>
     <ProjectReference Include="..\IronPythonResolver\IronPythonResolver.csproj">
       <Project>{31f224b1-68da-4524-9a1c-95f22492775b}</Project>
@@ -169,7 +172,7 @@
     </ProjectReference>
     <ProjectReference Include="..\PythonTools\PythonTools.csproj">
       <Project>{FA7BE5F5-E04F-4613-B7AC-70CE10D1BB68}</Project>
-      <Name>PythonTools</Name>
+      <Name>Microsoft.PythonTools</Name>
       <Private>False</Private>
     </ProjectReference>
   </ItemGroup>

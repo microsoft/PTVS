@@ -24,6 +24,7 @@ using System.Windows.Input;
 using Microsoft.IronPythonTools.Interpreter;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Intellisense;
+using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Interpreter.Default;
 using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Repl;
@@ -59,9 +60,7 @@ namespace ReplWindowUITests {
         public void ReplSplitCodeTest() {
             // http://pytools.codeplex.com/workitem/606
             var eval = new PythonReplEvaluator(
-                InterpFactory,
-                new Guid("{2AF0F10D-7135-4994-9156-5D01C9C11B7E}"),
-                new Version(2, 7),
+                InterpFactory.GetInterpreterFactories().First(fact => fact.Id == new Guid("{2AF0F10D-7135-4994-9156-5D01C9C11B7E}") && fact.Configuration.Version == new Version(2, 7)),
                 null
             );
 
@@ -2923,9 +2922,16 @@ def g(): pass
             }
         }
 
+        private IPythonInterpreterFactory IronPythonInterpreter {
+            get {
+                var provider = new IronPythonInterpreterFactoryProvider();
+                return provider.GetInterpreterFactories().First();
+            }
+        }
+
         [TestMethod, Priority(0)]
         public void IronPythonModuleName() {
-            var replEval = new PythonReplEvaluator(new IronPythonInterpreterFactoryProvider(), new Guid("{80659AB7-4D53-4E0C-8588-A766116CBD46}"), new Version(2, 7), null);
+            var replEval = new PythonReplEvaluator(IronPythonInterpreter, null);
             var replWindow = new MockReplWindow(replEval);
             replEval.Initialize(replWindow);
             replWindow.ClearScreen();
@@ -2938,7 +2944,7 @@ def g(): pass
 
         [TestMethod, Priority(0)]
         public void IronPythonSignatures() {
-            var replEval = new PythonReplEvaluator(new IronPythonInterpreterFactoryProvider(), new Guid("{80659AB7-4D53-4E0C-8588-A766116CBD46}"), new Version(2, 7), null);
+            var replEval = new PythonReplEvaluator(IronPythonInterpreter, null);
             var replWindow = new MockReplWindow(replEval);
             replEval.Initialize(replWindow);
             var execute = replEval.ExecuteText("from System import Array");
@@ -2953,7 +2959,7 @@ def g(): pass
         [TestMethod, Priority(0)]
         public void IronPythonCommentInput() {
             // http://pytools.codeplex.com/workitem/649
-            var replEval = new PythonReplEvaluator(new IronPythonInterpreterFactoryProvider(), new Guid("{80659AB7-4D53-4E0C-8588-A766116CBD46}"), new Version(2, 7), null);
+            var replEval = new PythonReplEvaluator(IronPythonInterpreter, null);
             var replWindow = new MockReplWindow(replEval);
             replEval.Initialize(replWindow);
             var execute = replEval.ExecuteText("#foo\n1+2");
@@ -2964,7 +2970,7 @@ def g(): pass
         [TestMethod, Priority(0)]
         public void ConsoleWriteLineTest() {
             // http://pytools.codeplex.com/workitem/649
-            var replEval = new PythonReplEvaluator(new IronPythonInterpreterFactoryProvider(), new Guid("{80659AB7-4D53-4E0C-8588-A766116CBD46}"), new Version(2, 7), null);
+            var replEval = new PythonReplEvaluator(IronPythonInterpreter, null);
             var replWindow = new MockReplWindow(replEval);
             replEval.Initialize(replWindow);
             var execute = replEval.ExecuteText("import System");
@@ -2990,9 +2996,8 @@ def g(): pass
         [TestMethod, Priority(0)]
         public void GenericMethodCompletions() {
             // http://pytools.codeplex.com/workitem/661
-            var factProvider = new IronPythonInterpreterFactoryProvider();
-            var fact = factProvider.GetInterpreterFactories().First();
-            var replEval = new PythonReplEvaluator(factProvider, new Guid("{80659AB7-4D53-4E0C-8588-A766116CBD46}"), new Version(2, 7), null);
+            var fact = IronPythonInterpreter;
+            var replEval = new PythonReplEvaluator(fact, null);
             var replWindow = new MockReplWindow(replEval);
             replEval.Initialize(replWindow);
             var execute = replEval.ExecuteText("from System.Threading.Tasks import Task");
@@ -3023,7 +3028,7 @@ def g(): pass
         [TestMethod, Priority(0)]
         public void NoTraceFunction() {
             // http://pytools.codeplex.com/workitem/662
-            var replEval = new PythonReplEvaluator(new IronPythonInterpreterFactoryProvider(), new Guid("{80659AB7-4D53-4E0C-8588-A766116CBD46}"), new Version(2, 7), null);
+            var replEval = new PythonReplEvaluator(IronPythonInterpreter, null);
             var replWindow = new MockReplWindow(replEval);
             replEval.Initialize(replWindow);
             var execute = replEval.ExecuteText("import sys");
@@ -3040,7 +3045,7 @@ def g(): pass
         [TestMethod, Priority(0)]
         public void CommentFollowedByBlankLine() {
             // http://pytools.codeplex.com/workitem/659
-            var replEval = new PythonReplEvaluator(new IronPythonInterpreterFactoryProvider(), new Guid("{80659AB7-4D53-4E0C-8588-A766116CBD46}"), new Version(2, 7), null);
+            var replEval = new PythonReplEvaluator(IronPythonInterpreter, null);
             var replWindow = new MockReplWindow(replEval);
             replEval.Initialize(replWindow);
             var execute = replEval.ExecuteText("# foo\r\n\r\n    \r\n\t\t\r\na = 42");
@@ -3054,7 +3059,7 @@ def g(): pass
         [TestMethod, Priority(0)]
         public void AttachSupportMultiThreaded() {
             // http://pytools.codeplex.com/workitem/663
-            var replEval = new PythonReplEvaluator(new IronPythonInterpreterFactoryProvider(), new Guid("{80659AB7-4D53-4E0C-8588-A766116CBD46}"), new Version(2, 7), null);
+            var replEval = new PythonReplEvaluator(IronPythonInterpreter, null);
             replEval.CurrentOptions = new PythonInteractiveOptions() { EnableAttach = true };
             var replWindow = new MockReplWindow(replEval);
             replEval.Initialize(replWindow);

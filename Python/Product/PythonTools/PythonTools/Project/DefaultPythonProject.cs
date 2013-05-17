@@ -20,9 +20,8 @@ using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Project {
-    public class DefaultPythonProject : IPythonProject {
-
-        private string _filePath;
+    class DefaultPythonProject : IPythonProject {
+        private readonly string _filePath;
 
         public DefaultPythonProject(string filePath) {
             Debug.Assert((filePath != null), "Unexpected null filePath passed to DefaultPythonProject.DefaultPythonProject()");
@@ -66,7 +65,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         IPythonInterpreterFactory IPythonProject.GetInterpreterFactory() {
-            return PythonToolsPackage.ComponentModel.GetAllPythonInterpreterFactories().GetDefaultInterpreter();
+            return PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>().DefaultInterpreter;
         }
 
         bool IPythonProject.Publish(PublishProjectOptions options) {
@@ -82,8 +81,13 @@ namespace Microsoft.PythonTools.Project {
             return PythonToolsPackage.Instance.DefaultAnalyzer;
         }
 
+        public event System.EventHandler ProjectAnalyzerChanged {
+            add {
+            }
+            remove {
+            }
+        }
+
         #endregion
-
-
     }
 }

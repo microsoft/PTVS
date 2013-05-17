@@ -16,7 +16,7 @@ using System;
 using System.Reflection;
 
 namespace Microsoft.PythonTools.Interpreter {
-    public abstract class InterpreterConfiguration {        
+    public abstract class InterpreterConfiguration {
         /// <summary>
         /// Returns the path to the interpreter executable for launching Python applications.
         /// </summary>

@@ -180,7 +180,7 @@ namespace Microsoft.PythonTools.Intellisense {
             _comparer = new FuzzyStringMatcher(options.SearchMode);
 
             _shouldFilter = options.FilterCompletions;
-            _shouldHideAdvanced = options.HideAdvancedMembers;
+            _shouldHideAdvanced = options.HideAdvancedMembers && !_completions.All(IsAdvanced);
 
             if (_shouldFilter | _shouldHideAdvanced) {
                 _filteredCompletions = new FilteredObservableCollection<Completion>(_completions);

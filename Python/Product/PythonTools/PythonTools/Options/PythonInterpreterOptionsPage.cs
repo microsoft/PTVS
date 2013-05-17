@@ -14,10 +14,11 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.VisualStudio.ComponentModelHost;
 
 namespace Microsoft.PythonTools.Options {
     /// <summary>
@@ -32,12 +33,19 @@ namespace Microsoft.PythonTools.Options {
     [ComVisible(true)]
     public sealed class PythonInterpreterOptionsPage : PythonDialogPage {
         private PythonInterpreterOptionsControl _window;
-        internal List<InterpreterOptions> _options = new List<InterpreterOptions>();
+        private readonly IInterpreterOptionsService _service;
+        internal Dictionary<IPythonInterpreterFactory, InterpreterOptions> _options = new Dictionary<IPythonInterpreterFactory, InterpreterOptions>();
         private Guid _defaultInterpreter;
         private Version _defaultInterpreterVersion;
 
         public PythonInterpreterOptionsPage()
             : base("Interpreters") {
+            _service = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
+            _service.InterpretersChanged += InterpretersChanged;
+        }
+
+        void InterpretersChanged(object sender, EventArgs e) {
+            LoadSettingsFromStorage();
         }
 
         // replace the default UI of the dialog page w/ our own UI.
@@ -59,35 +67,33 @@ namespace Microsoft.PythonTools.Options {
             _defaultInterpreterVersion = new Version();
         }
 
-        private const string DefaultInterpreterSetting = "DefaultInterpreter";
-        private const string DefaultInterpreterVersionSetting = "DefaultInterpreterVersion";
-
         public override void LoadSettingsFromStorage() {
-            _defaultInterpreter = GetDefaultInterpreterId();
-            _defaultInterpreterVersion = GetDefaultInterpreterVersion();
+            _defaultInterpreter = _service.DefaultInterpreter.Id;
+            _defaultInterpreterVersion = _service.DefaultInterpreter.Configuration.Version;
 
-            var model = (IComponentModel)PythonToolsPackage.GetGlobalService(typeof(SComponentModel));
-            var interpreters = model.GetAllPythonInterpreterFactories();
+            var placeholders = _options.Where(kv => kv.Key is InterpreterPlaceholder).ToArray();
             _options.Clear();
-            foreach (var interpreter in interpreters) {
-                _options.Add(
-                    new InterpreterOptions() {
-                        Display = interpreter.GetInterpreterDisplay(),
-                        Id = interpreter.Id,
-                        InterpreterPath = interpreter.Configuration.InterpreterPath,
-                        WindowsInterpreterPath = interpreter.Configuration.WindowsInterpreterPath,
-                        Version = interpreter.Configuration.Version.ToString(),
-                        Architecture = FormatArchitecture(interpreter.Configuration.Architecture),
-                        PathEnvironmentVariable = interpreter.Configuration.PathEnvironmentVariable,
-                        IsConfigurable = interpreter is ConfigurablePythonInterpreterFactory,
-                        SupportsCompletionDb = interpreter is IInterpreterWithCompletionDatabase,
-                        Factory = interpreter
-                    }
-                );
+            foreach (var interpreter in _service.InterpretersOrDefault) {
+                _options[interpreter] = new InterpreterOptions {
+                    Display = interpreter.GetInterpreterDisplay(),
+                    Id = interpreter.Id,
+                    InterpreterPath = interpreter.Configuration.InterpreterPath,
+                    WindowsInterpreterPath = interpreter.Configuration.WindowsInterpreterPath,
+                    Version = interpreter.Configuration.Version.ToString(),
+                    Architecture = FormatArchitecture(interpreter.Configuration.Architecture),
+                    PathEnvironmentVariable = interpreter.Configuration.PathEnvironmentVariable,
+                    IsConfigurable = interpreter is ConfigurablePythonInterpreterFactory,
+                    SupportsCompletionDb = interpreter is IInterpreterWithCompletionDatabase,
+                    Factory = interpreter
+                };
+            }
+
+            foreach (var kv in placeholders) {
+                _options[kv.Key] = kv.Value;
             }
 
             if (_window != null) {
-                _window.InitInterpreters();
+                _window.UpdateInterpreters();
             }
         }
 
@@ -99,162 +105,129 @@ namespace Microsoft.PythonTools.Options {
             }
         }
 
-        private Version GetDefaultInterpreterVersion() {
-            string defaultInterpreterVersion = LoadString(DefaultInterpreterVersionSetting) ?? String.Empty;
-            if (!String.IsNullOrEmpty(defaultInterpreterVersion)) {
-                return new Version(defaultInterpreterVersion);
-            }
-            return new Version();
-        }
-
-        private Guid GetDefaultInterpreterId() {
-            string defaultInterpreter = LoadString(DefaultInterpreterSetting) ?? String.Empty;
-            if (!String.IsNullOrEmpty(defaultInterpreter)) {
-                return new Guid(defaultInterpreter);
-            }
-            return Guid.Empty;
-        }
-
         public override void SaveSettingsToStorage() {
-            var defaultInterpreter = GetWindow().GetOption(GetWindow().DefaultInterpreter);
+            _service.BeginSuppressInterpretersChangedEvent();
+            try {
+                var configurable = _service.KnownProviders.OfType<ConfigurablePythonInterpreterFactoryProvider>().FirstOrDefault();
+                Debug.Assert(configurable != null);
 
-            if (defaultInterpreter != null) {
-                Version defaultVersion;
-                if (!Version.TryParse(defaultInterpreter.Version, out defaultVersion)) {
-                    defaultVersion = new Version(2, 6);
-                    defaultInterpreter.Version = "2.6";
-                }
-
-                if (defaultInterpreter.Id == Guid.Empty) {
-                    defaultInterpreter.Id = Guid.NewGuid();
-                }
-
-                if (defaultInterpreter.Id != GetDefaultInterpreterId() || defaultVersion != GetDefaultInterpreterVersion()) {
-                    _defaultInterpreter = defaultInterpreter.Id;
-                    _defaultInterpreterVersion = defaultVersion;
-
-                    SaveString(DefaultInterpreterSetting, defaultInterpreter.Id.ToString());
-                    SaveString(DefaultInterpreterVersionSetting, defaultVersion.ToString());
-
-                    var defaultInterpChanged = DefaultInterpreterChanged;
-                    if (defaultInterpChanged != null) {
-                        DefaultInterpreterChanged(this, EventArgs.Empty);
-                    }
-                }
-            } else {
-                _defaultInterpreter = Guid.Empty;
-                _defaultInterpreterVersion = new Version();
-            }
-
-            var model = (IComponentModel)PythonToolsPackage.GetGlobalService(typeof(SComponentModel));
-            var configurable = model.GetService<IPythonConfigurableInterpreterFactoryProvider>();
-
-            for (int i = 0; i < _options.Count; ) {
-                var option = _options[i];
-
-                bool added = false;
-                if (option.Removed) {
-                    if (!option.Added) {
-                        // it was added and then immediately removed, don't save it.
-                        configurable.RemoveInterpreter(option.Id);
-                    }
-                    _options.RemoveAt(i);
-                    continue;
-                } else if (option.Added) {
-                    if (option.Id == Guid.Empty) {
-                        option.Id = Guid.NewGuid();
-                    }
-                    option.Added = false;
-                    added = true;
-                }
-
-                if (_defaultInterpreter == Guid.Empty) {
-                    _defaultInterpreter = _options[i].Id;
-                    Version defaultVers;
-                    if (!Version.TryParse(_options[i].Version, out defaultVers)) {
-                        defaultVers = new Version(2, 6);
-                        _options[i].Version = "2.6";
-                    }
-                    _defaultInterpreterVersion = defaultVers;
-                }
-
-                if (option.IsConfigurable) {
-                    // save configurable interpreter options
-                    var fact = configurable.SetOptions(
-                        option.Id,
-                        new Dictionary<string, object>() {
-                            { "InterpreterPath", option.InterpreterPath ?? "" },
-                            { "WindowsInterpreterPath", option.WindowsInterpreterPath ?? "" },
-                            { "PathEnvironmentVariable", option.PathEnvironmentVariable ?? "" },
-                            { "Architecture", option.Architecture ?? "x86" },
-                            { "Version", option.Version ?? "2.6" },
-                            { "Description", option.Display },
+                if (configurable != null) {
+                    foreach (var option in _options.Values) {
+                        if (option.Removed) {
+                            if (!option.Added) {
+                                // if it was added and then immediately removed, don't save it.
+                                configurable.RemoveInterpreter(option.Id);
+                            }
+                            continue;
+                        } else if (option.Added) {
+                            if (option.Id == Guid.Empty) {
+                                option.Id = Guid.NewGuid();
+                            }
+                            option.Added = false;
                         }
-                    );
 
-                    if (added) {
-                        if (PythonToolsPackage.Instance.InteractiveOptionsPage._window != null) {
-                            PythonToolsPackage.Instance.InteractiveOptionsPage._window.NewInterpreter(fact);
+                        if (option.IsConfigurable) {
+                            // save configurable interpreter options
+                            var actualFactory = configurable.SetOptions(
+                                option.Id,
+                                new Dictionary<string, object>() {
+                                    { "InterpreterPath", option.InterpreterPath ?? "" },
+                                    { "WindowsInterpreterPath", option.WindowsInterpreterPath ?? "" },
+                                    { "PathEnvironmentVariable", option.PathEnvironmentVariable ?? "" },
+                                    { "Architecture", option.Architecture ?? "x86" },
+                                    { "Version", option.Version ?? "2.6" },
+                                    { "Description", option.Display },
+                                }
+                            );
+                            if (option.InteractiveOptions != null) {
+                                PythonToolsPackage.Instance.InteractiveOptionsPage.SaveOptions(actualFactory, option.InteractiveOptions);
+                            }
                         }
                     }
                 }
 
-                i++;
-            }
+                foreach (var factory in _options.Keys.OfType<InterpreterPlaceholder>().ToArray()) {
+                    _options.Remove(factory);
+                }
 
-            var interpChanged = InterpretersChanged;
-            if (interpChanged != null) {
-                interpChanged(this, EventArgs.Empty);
+                var defaultInterpreter = GetWindow().DefaultInterpreter;
+
+                if (defaultInterpreter != null) {
+                    // Search for the interpreter again, since it may be a
+                    // placeholder rather than the actual instance.
+                    _service.DefaultInterpreter = 
+                        _service.FindInterpreter(defaultInterpreter.Id, defaultInterpreter.Configuration.Version) ??
+                        _service.Interpreters.LastOrDefault();
+                } else {
+                    _service.DefaultInterpreter = _service.Interpreters.LastOrDefault();
+                }
+                _defaultInterpreter = _service.DefaultInterpreter.Id;
+                _defaultInterpreterVersion = _service.DefaultInterpreter.Configuration.Version;
+            } finally {
+                _service.EndSuppressInterpretersChangedEvent();
             }
         }
-
-        internal event EventHandler InterpretersChanged;
-        internal event EventHandler DefaultInterpreterChanged;
 
         private static string GetInterpreterSettingPath(Guid id, Version version) {
             return id.ToString() + "\\" + version.ToString() + "\\";
         }
 
+        /// <summary>
+        /// Gets or sets the default interpreter ID.
+        /// </summary>
+        /// <remarks
+        /// The actual default will only be changed if an interpreter is
+        /// available that matches both <see cref="DefaultInterpreter"/> and
+        /// <see cref="DefaultInterpreterVersion"/>. These properties may be
+        /// invalid if an interpreter does not exist and settings have not been
+        /// saved or loaded recently.
+        /// 
+        /// Use <see cref="IInterpreterOptionsService"/> to accurately determine
+        /// the default interpreter.
+        /// </remarks>
         public Guid DefaultInterpreter {
             get {
-                return DefaultInterpreterValue;
+                return _defaultInterpreter;
             }
             set {
-                if (value != DefaultInterpreterValue) {
-                    DefaultInterpreterValue = value;
-                    RaiseDefaultInterpreterChanged();
+                if (_defaultInterpreter != value) {
+                    _defaultInterpreter = value;
+                    var newDefault = _service.FindInterpreter(_defaultInterpreter, _defaultInterpreterVersion);
+                    if (newDefault != null) {
+                        _service.DefaultInterpreter = newDefault;
+                    }
                 }
             }
         }
 
+        /// <summary>
+        /// Gets or sets the default interpreter version. This should be a
+        /// string in "major.minor" format, for example, "3.2".
+        /// </summary>
+        /// <remarks
+        /// The actual default will only be changed if an interpreter is
+        /// available that matches both <see cref="DefaultInterpreter"/> and
+        /// <see cref="DefaultInterpreterVersion"/>. These properties may be
+        /// invalid if an interpreter does not exist and settings have not been
+        /// saved or loaded recently.
+        /// 
+        /// Use <see cref="IInterpreterOptionsService"/> to accurately determine
+        /// the default interpreter.
+        /// </remarks>
         public string DefaultInterpreterVersion {
             get {
-                return DefaultInterpreterVersionValue.ToString();
+                return _defaultInterpreterVersion.ToString();
             }
             set {
-                var newValue = Version.Parse(value);
-                if (newValue != DefaultInterpreterVersionValue) {
-                    DefaultInterpreterVersionValue = newValue;
-                    RaiseDefaultInterpreterChanged();
+                var ver = Version.Parse(value);
+                if (_defaultInterpreterVersion != ver) {
+                    _defaultInterpreterVersion = ver;
+                    var newDefault = _service.FindInterpreter(_defaultInterpreter, _defaultInterpreterVersion);
+                    if (newDefault != null) {
+                        _service.DefaultInterpreter = newDefault;
+                    }
                 }
             }
-        }
-
-        internal void RaiseDefaultInterpreterChanged() {
-            var changed = DefaultInterpreterChanged;
-            if (changed != null) {
-                DefaultInterpreterChanged(this, EventArgs.Empty);
-            }
-        }
-
-        internal Guid DefaultInterpreterValue {
-            get { return _defaultInterpreter; }
-            set { _defaultInterpreter = value; }
-        }
-
-        internal Version DefaultInterpreterVersionValue {
-            get { return _defaultInterpreterVersion; }
-            set { _defaultInterpreterVersion = value; }
         }
     }
 }

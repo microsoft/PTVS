@@ -31,13 +31,7 @@ namespace TestUtilities.UI {
         }
 
         public SelectCodeTypeDialog SelectCodeTypeForDebugging() {
-            ThreadPool.QueueUserWorkItem(x => {
-                try {
-                    ClickSelect();
-                } catch (Exception e) {
-                    Assert.Fail("Unexpected Exception - ClickSelect(){0}{1}", Environment.NewLine, e.ToString());
-                } 
-            });
+            ThreadPool.QueueUserWorkItem(x => ClickSelect());
             AutomationElement sctel = null;
             for (int i = 0; i < 100 && sctel == null; i++) {
                 Thread.Sleep(100); 

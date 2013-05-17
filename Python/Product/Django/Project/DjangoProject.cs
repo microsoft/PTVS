@@ -90,30 +90,13 @@ namespace Microsoft.PythonTools.Django.Project {
 
             menuCommandID = new CommandID(VSConstants.GUID_VSStandardCommandSet97, (int)VSConstants.VSStd97CmdID.AddNewItem);
             menuItem = new OleMenuCommand(AddNewItem, menuCommandID);
-            AddCommand(menuItem);                
+            AddCommand(menuItem);
 
             var pyProj = _innerVsHierarchy.GetProject().GetPythonProject();
             if (pyProj != null) {
-                var projAnalyzer = pyProj.GetProjectAnalyzer();
-                var analyzer = projAnalyzer.Project;
-                var djangoMod = analyzer.GetModule("django");
-                if (djangoMod.Count() == 0) {
-                    // cached analysis doesn't have Django, so let's see if we can find it
-                    // on our own - http://pytools.codeplex.com/workitem/775
-                    var interpreterDir = Path.GetDirectoryName(pyProj.GetInterpreterFactory().Configuration.InterpreterPath);
-                    var djangoDir = Path.Combine(interpreterDir, "Lib", "site-packages", "django");
-                    if (Directory.Exists(djangoDir)) {
-                        HookAnalysis(analyzer, projAnalyzer, djangoDir);
-                    }
-                }
-                foreach (var mod in djangoMod) {
-                    foreach (var loc in mod.Locations) {
-                        // replace any cached analysis w/ a live one...
-                        var dirName = Path.GetDirectoryName(loc.FilePath);
-                        HookAnalysis(analyzer, projAnalyzer, dirName);
-                        break;
-                    }
-                }
+                OnProjectAnalyzerChanged(pyProj, EventArgs.Empty);
+
+                pyProj.ProjectAnalyzerChanged += OnProjectAnalyzerChanged;
             }
 
             object extObject;
@@ -134,6 +117,48 @@ namespace Microsoft.PythonTools.Django.Project {
                     }
                 } catch (COMException) {
                     // extender doesn't exist...
+                }
+            }
+        }
+
+        private void OnProjectAnalyzerChanged(object sender, EventArgs e) {
+            _tags.Clear();
+            _filters.Clear();
+            TagInfo noDoc = new TagInfo("");
+            foreach (var keyValue in DjangoCompletionSource._nestedTags) {
+                _tags[keyValue.Key] = noDoc;
+                _tags[keyValue.Value] = noDoc;
+            }
+
+            var pyProj = sender as IPythonProject;
+            if (pyProj != null) {
+                var projAnalyzer = pyProj.GetProjectAnalyzer();
+                var analyzer = projAnalyzer.Project;
+                var djangoMod = analyzer.GetModule("django");
+                if (djangoMod.Count() == 0) {
+                    // cached analysis doesn't have Django, so let's see if we can find it
+                    // on our own - http://pytools.codeplex.com/workitem/775
+
+                    // don't blow if there's no interpreters installed...
+                    // https://pytools.codeplex.com/workitem/838
+                    string interpreterPath = pyProj.GetInterpreterFactory().Configuration.InterpreterPath;
+                    if (!String.IsNullOrWhiteSpace(interpreterPath) &&
+                        interpreterPath.IndexOfAny(Path.GetInvalidPathChars()) == -1) {
+
+                        var interpreterDir = Path.GetDirectoryName(interpreterPath);
+                        var djangoDir = Path.Combine(interpreterDir, "Lib", "site-packages", "django");
+                        if (Directory.Exists(djangoDir)) {
+                            HookAnalysis(analyzer, projAnalyzer, djangoDir);
+                        }
+                    }
+                }
+                foreach (var mod in djangoMod) {
+                    foreach (var loc in mod.Locations) {
+                        // replace any cached analysis w/ a live one...
+                        var dirName = Path.GetDirectoryName(loc.FilePath);
+                        HookAnalysis(analyzer, projAnalyzer, dirName);
+                        break;
+                    }
                 }
             }
         }
@@ -254,7 +279,7 @@ namespace Microsoft.PythonTools.Django.Project {
 
         private static void RegisterTag(Dictionary<string, TagInfo> tags, string name, string documentation = null) {
             TagInfo tag;
-            if (!tags.TryGetValue(name, out tag)) {
+            if (!tags.TryGetValue(name, out tag) || String.IsNullOrWhiteSpace(tag.Documentation)) {
                 tags[name] = tag = new TagInfo(documentation);
             }
         }
@@ -766,6 +791,7 @@ namespace Microsoft.PythonTools.Django.Project {
                 }
             });
 
+            dialog.Owner = System.Windows.Application.Current.MainWindow;
             dialog.ShowDialog();
             dialog.SetText(receiver.Received.ToString());
         }

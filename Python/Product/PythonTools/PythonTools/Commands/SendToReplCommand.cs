@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.OLE.Interop;
@@ -58,6 +59,14 @@ namespace Microsoft.PythonTools.Commands {
             }
         }
 
+        private static bool IsRealInterpreter(IPythonInterpreterFactory factory) {
+            if (factory == null) {
+                return false;
+            }
+            var interpService = CommonPackage.ComponentModel.GetService<IInterpreterOptionsService>();
+            return interpService != null && interpService.NoInterpretersValue != factory;
+        }
+
         public override int? EditFilterQueryStatus(ref VisualStudio.OLE.Interop.OLECMD cmd, IntPtr pCmdText) {
             var activeView = CommonPackage.GetActiveTextView();
             if (activeView != null && activeView.TextBuffer.ContentType.IsOfType(PythonCoreConstants.ContentType)) {
@@ -66,7 +75,7 @@ namespace Microsoft.PythonTools.Commands {
                 if (activeView.Selection.IsEmpty || 
                     activeView.Selection.Mode == TextSelectionMode.Box ||
                     analyzer == null || 
-                    analyzer.InterpreterFactory.Id == PythonToolsPackage._noInterpretersFactoryGuid) {
+                    !IsRealInterpreter(analyzer.InterpreterFactory)) {
                     cmd.cmdf = (uint)(OLECMDF.OLECMDF_SUPPORTED);
                 } else {
                     cmd.cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);

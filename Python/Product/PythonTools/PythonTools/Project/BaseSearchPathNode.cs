@@ -85,7 +85,7 @@ namespace Microsoft.PythonTools.Project {
         /// <summary>
         /// Search Path Node cannot be excluded.
         /// </summary>
-        internal override int ExcludeFromProject() {
+        protected override int ExcludeFromProject() {
             return (int)OleConstants.OLECMDERR_E_NOTSUPPORTED;
         }
 
@@ -99,12 +99,6 @@ namespace Microsoft.PythonTools.Project {
                     case VsCommands.Cut:
                     case VsCommands.Paste:
                         result |= QueryStatusResult.SUPPORTED | QueryStatusResult.INVISIBLE;
-                        return VSConstants.S_OK;
-                }
-            } else if (cmdGroup == Microsoft.VisualStudioTools.Project.VsMenus.guidStandardCommandSet2K) {
-                switch ((VSConstants.VSStd2KCmdID)cmd) {
-                    case VSConstants.VSStd2KCmdID.EXCLUDEFROMPROJECT:
-                        result |= QueryStatusResult.NOTSUPPORTED | QueryStatusResult.INVISIBLE;
                         return VSConstants.S_OK;
                 }
             }

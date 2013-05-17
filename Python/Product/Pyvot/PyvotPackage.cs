@@ -18,6 +18,7 @@ using System.ComponentModel.Design;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
@@ -87,24 +88,14 @@ namespace Microsoft.PythonTools.Pyvot {
             // Add our command handlers for menu (commands must exist in the .vsct file)
             OleMenuCommandService mcs = GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
             if (null != mcs) {
-                var factories = ComponentModel.GetAllPythonInterpreterFactories();
-                var defaultFactory = factories.GetDefaultInterpreter();
-                // sort so default always comes first, and otherwise in sorted order
-                Array.Sort(factories, (x, y) => {
-                    if (x == y) {
-                        return 0;
-                    } else if (x == defaultFactory) {
-                        return -1;
-                    } else if (y == defaultFactory) {
-                        return 1;
-                    } else {
-                        return String.Compare(x.GetInterpreterDisplay(), y.GetInterpreterDisplay());
-                    }
-                });
+                var interpService = ComponentModel.GetService<IInterpreterOptionsService>();
+                var factories = interpService.Interpreters.ToList();
+                var defaultFactory = interpService.DefaultInterpreter;
+                factories.Remove(defaultFactory);
+                factories.Insert(0, defaultFactory);
+                interpService.InterpretersChanged += RefreshPerInterpreterCommands;
 
-                PythonToolsPackage.InterpretersChanged += RefreshPerInterpreterCommands;
-
-                for (var i = 0; i < factories.Length && i < (PkgCmdIDList.cmdidInstallPyvotF - PkgCmdIDList.cmdidInstallPyvot0); i++) {
+                for (var i = 0; i < factories.Count && i < (PkgCmdIDList.cmdidInstallPyvotF - PkgCmdIDList.cmdidInstallPyvot0); i++) {
                     // Create the command for the menu item.
                     var cmd = new PyvotCommand(factories[i]);
 

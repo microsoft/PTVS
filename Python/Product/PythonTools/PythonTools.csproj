@@ -68,14 +68,14 @@
     </ProjectReference>
     <ProjectReference Include="..\Attacher\Attacher.csproj">
       <Project>{666A22BB-0CB5-4C08-A20F-E17450DA6573}</Project>
-      <Name>Attacher</Name>
+      <Name>Microsoft.PythonTools.Attacher</Name>
       <!--<ReferenceOutputAssembly>false</ReferenceOutputAssembly>-->
       <IncludeOutputGroupsInVSIX>BuiltProjectOutputGroup%3bBuiltProjectOutputGroupDependencies%3bGetCopyToOutputDirectoryItems%3b</IncludeOutputGroupsInVSIX>
       <IncludeOutputGroupsInVSIXLocalOnly>DebugSymbolsProjectOutputGroup%3b</IncludeOutputGroupsInVSIXLocalOnly>
     </ProjectReference>
     <ProjectReference Include="..\AttacherX86\AttacherX86.csproj">
       <Project>{F3A5829D-EE15-4BE7-828F-2519172C6671}</Project>
-      <Name>AttacherX86</Name>
+      <Name>Microsoft.PythonTools.AttacherX86</Name>
     </ProjectReference>
     <ProjectReference Include="..\Debugger\Debugger.csproj">
       <Project>{DECC7971-FA58-4DB0-9561-BFFADD393BBD}</Project>
@@ -85,7 +85,7 @@
       <Project>{3814d9db-10e6-4478-bd98-6c5840612af8}</Project>
       <Name>Microsoft.PythonTools.ImportWizard</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\Common\Product\ReplWindow\ReplWindow.csproj">
+    <ProjectReference Include="..\ReplWindow\ReplWindow.csproj">
       <Project>{20BB6FAC-44D2-4D76-ABFE-0C1E163A1A4F}</Project>
       <Name Condition="'$(InteractiveWindow)' == ''">Microsoft.VisualStudio.ReplWindow</Name>
       <Name Condition="'$(InteractiveWindow)' != ''">Microsoft.VisualStudio.InteractiveWindow</Name>
@@ -157,7 +157,7 @@
       <Aliases>global</Aliases>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.Shell.Design" />
-    <Reference Include="Microsoft.VisualStudio.Shell.Immutable.11.0, Version=11.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+    <Reference Include="Microsoft.VisualStudio.Shell.Immutable.11.0, Version=11.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" Condition="'$(VSTarget)' != '10.0'" />
     <Reference Include="Microsoft.VisualStudio.Shell.Interop" />
     <Reference Include="Microsoft.VisualStudio.Shell.Interop.8.0" />
     <Reference Include="Microsoft.VisualStudio.Shell.Interop.9.0" />
@@ -212,6 +212,9 @@
     <Reference Include="WindowsFormsIntegration" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\Analysis\RegistryWatcher.cs">
+      <Link>RegistryWatcher.cs</Link>
+    </Compile>
     <Compile Include="ProvideComponentPickerPropertyPageAttribute.cs" />
     <Compile Include="ProvideEditorExtension2Attribute.cs" />
     <Compile Include="ProvideFileExtensionMapping.cs" />
@@ -229,7 +232,15 @@
     <Compile Include="PythonTools\Intellisense\CompletionComparer.cs" />
     <Compile Include="PythonTools\Intellisense\FuzzyStringMatcher.cs" />
     <Compile Include="PythonTools\Intellisense\FuzzyCompletionSet.cs" />
+    <Compile Include="PythonTools\Navigation\SourceLocation.cs" />
+    <Compile Include="PythonTools\Options\IInterpreterOptionsService.cs" />
+    <Compile Include="PythonTools\Options\InterpreterOptionsService.cs" />
+    <Compile Include="PythonTools\Options\InterpreterPlaceholder.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="PythonTools\Project\Automation\OAProjectConfigurationProperties.cs" />
     <Compile Include="PythonTools\Project\CreateVirtualEnvironmentView.cs" />
+    <Compile Include="PythonTools\Project\IDiskBasedNode.cs" />
     <Compile Include="PythonTools\Project\ImportWizard\SaveProjectPage.xaml.cs">
       <DependentUpon>SaveProjectPage.xaml</DependentUpon>
     </Compile>
@@ -249,13 +260,18 @@
       <DependentUpon>InstallPythonPackage.xaml</DependentUpon>
     </Compile>
     <Compile Include="PythonTools\Project\InstallPythonPackageView.cs" />
+    <Compile Include="PythonTools\Project\OverwriteFileDialog.xaml.cs" />
+    <Compile Include="PythonTools\Project\ProjectNode.IOleCommandTarget.cs" />
     <Compile Include="PythonTools\Project\PythonInterpreterView.cs" />
+    <Compile Include="PythonTools\Project\SharedCommands.cs" />
     <Compile Include="PythonTools\Project\VirtualEnvContainerNode.cs" />
     <Compile Include="PythonTools\Project\VirtualEnvContainerNodeProperties.cs" />
     <Compile Include="PythonTools\Project\VirtualEnvNode.cs" />
     <Compile Include="PythonTools\Project\VirtualEnvNodeProperties.cs" />
     <Compile Include="PythonTools\Project\VirtualEnvPackageNode.cs" />
     <Compile Include="PythonTools\Project\VirtualEnvPackageNodeProperties.cs" />
+    <Compile Include="PythonTools\ProvideDebugPortSupplierAttribute.cs" />
+    <Compile Include="PythonTools\DialogWindowVersioningWorkaround.cs" />
     <Compile Include="PythonTools\Commands\Command.cs" />
     <Compile Include="PythonTools\Commands\OpenDebugReplCommand.cs" />
     <Compile Include="PythonTools\Commands\RemoveImportsCurrentScopeCommand.cs" />
@@ -273,8 +289,12 @@
     <Compile Include="PythonTools\Commands\SendToDefiningModuleCommand.cs" />
     <Compile Include="PythonTools\Commands\SendToReplCommand.cs" />
     <Compile Include="PythonTools\Commands\DebugAsScriptCommand.cs" />
+    <Compile Include="PythonTools\CommonConstants.cs" />
+    <Compile Include="PythonTools\CommonPackage.cs" />
+    <Compile Include="PythonTools\CommonUtils.cs" />
     <Compile Include="PythonTools\ConfigurablePythonInterpreterFactory.cs" />
     <Compile Include="PythonTools\ConfigurablePythonInterpreterFactoryProvider.cs" />
+    <Compile Include="PythonTools\DebugTimer.cs" />
     <Compile Include="PythonTools\Intellisense\AnalysisSynchronizationContext.cs" />
     <Compile Include="PythonTools\Intellisense\CompletionControl.xaml.cs">
       <DependentUpon>CompletionControl.xaml</DependentUpon>
@@ -340,13 +360,45 @@
     <Compile Include="PythonTools\Options\PythonDebugInteractiveOptionsPage.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="PythonTools\Project\AssemblyReferenceNode.cs" />
+    <Compile Include="PythonTools\Project\Automation\OAReferenceFolderItem.cs" />
+    <Compile Include="PythonTools\Project\Automation\OAReferenceItem.cs" />
+    <Compile Include="PythonTools\Project\Automation\VSProject\OAWebPiReference.cs" />
+    <Compile Include="PythonTools\Project\Automation\VSProject\OAPythonExtensionReference.cs" />
+    <Compile Include="PythonTools\Project\Automation\VSProject\OAVSProject.cs" />
+    <Compile Include="PythonTools\Project\BuildDependency.cs" />
+    <Compile Include="PythonTools\Project\CommonSearchPathContainerNodeProperties.cs" />
     <Compile Include="PythonTools\Project\PythonAssemblyReferenceNode.cs" />
-    <Compile Include="PythonTools\Project\Automation\OAWebPiReference.cs" />
-    <Compile Include="PythonTools\Project\Automation\OAPythonExtensionReference.cs" />
     <Compile Include="PythonTools\Project\PythonExtensionReferenceNode.cs" />
+    <Compile Include="PythonTools\Project\IDEBuildLogger.cs" />
+    <Compile Include="PythonTools\Project\Misc\ConnectionPointContainer.cs" />
+    <Compile Include="PythonTools\Project\Automation\VSProject\OAAssemblyReference.cs" />
+    <Compile Include="PythonTools\Project\Automation\VSProject\OAProjectReference.cs" />
+    <Compile Include="PythonTools\Project\Automation\VSProject\OAReferenceBase.cs" />
+    <Compile Include="PythonTools\Project\Automation\VSProject\OAReferences.cs" />
+    <Compile Include="PythonTools\Project\CommonReferenceContainerNode.cs" />
+    <Compile Include="PythonTools\Project\FileChangeManager.cs" />
+    <Compile Include="PythonTools\Project\ProjectReferenceNode.cs" />
     <Compile Include="PythonTools\Project\PythonEncodingDetector.cs" />
     <Compile Include="PythonTools\Project\PythonProjectReferenceNode.cs" />
     <Compile Include="PythonTools\Project\PythonReferenceContainerNode.cs" />
+    <Compile Include="PythonTools\Project\ReferenceContainerNode.cs" />
+    <Compile Include="PythonTools\Project\ReferenceNode.cs" />
+    <Compile Include="PythonTools\Project\UIThread.cs" />
+    <Compile Include="PythonTools\Project\TaskProgressBar.xaml.cs">
+      <DependentUpon>TaskProgressBar.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="PythonTools\Project\UIThreadSynchronizer.cs" />
+    <Compile Include="PythonTools\Project\UpdateSolutionEventsListener.cs" />
+    <Compile Include="PythonTools\Project\ProjectResources.cs" />
+    <Compile Include="PythonTools\Project\WebPiComponentPickerControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="PythonTools\Project\WebPiComponentPickerControl.Designer.cs">
+      <DependentUpon>WebPiComponentPickerControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PythonTools\Project\WebPiReferenceNode.cs" />
+    <Compile Include="PythonTools\ProvidePythonInterpreterFactoryProviderAttribute.cs" />
     <Compile Include="PythonTools\ProvideX64DebuggerFixForIntegratedShellAttribute.cs" />
     <Compile Include="PythonTools\Refactoring\CodeFormatter.cs" />
     <Compile Include="PythonTools\Refactoring\EnclosingNodeWalker.cs" />
@@ -388,12 +440,23 @@
       <DependentUpon>DefaultPythonLauncherOptions.cs</DependentUpon>
     </Compile>
     <Compile Include="PythonTools\Project\DefaultPythonProject.cs" />
+    <Compile Include="PythonTools\Project\DirtyChangedEventArgs.cs" />
     <Compile Include="PythonTools\Project\FtpPublisher.cs" />
     <Compile Include="PythonTools\Project\FilePublisher.cs" />
+    <Compile Include="PythonTools\Project\IPublishFile.cs" />
+    <Compile Include="PythonTools\Project\IPublishProject.cs" />
     <Compile Include="PythonTools\Options\ExecutionMode.cs" />
+    <Compile Include="PythonTools\Project\IProjectPublisher.cs" />
     <Compile Include="PythonTools\Project\IPythonLauncherOptions.cs" />
     <Compile Include="PythonTools\Project\IPythonLauncherProvider.cs" />
     <Compile Include="PythonTools\Project\IPythonProject.cs" />
+    <Compile Include="PythonTools\Project\MsBuildProjectElement.cs" />
+    <Compile Include="PythonTools\Project\Output.cs" />
+    <Compile Include="PythonTools\Project\OutputGroup.cs" />
+    <Compile Include="PythonTools\Project\PublishFailedException.cs" />
+    <Compile Include="PythonTools\Project\PublishFile.cs" />
+    <Compile Include="PythonTools\Project\PublishProject.cs" />
+    <Compile Include="PythonTools\Project\PublishProjectOptions.cs" />
     <Compile Include="PythonTools\Project\PublishPropertyControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -415,6 +478,7 @@
     <Compile Include="PythonTools\Project\StartWithErrorsDialog.Designer.cs">
       <DependentUpon>StartWithErrorsDialog.cs</DependentUpon>
     </Compile>
+    <Compile Include="PythonTools\Project\VirtualProjectElement.cs" />
     <Compile Include="PythonTools\ProvidePythonExecutionModeAttribute.cs" />
     <Compile Include="PythonTools\Editor\AutoIndent.cs" />
     <Compile Include="PythonTools\Intellisense\AnalysisPriority.cs" />
@@ -422,9 +486,22 @@
     <Compile Include="PythonTools\Intellisense\MonitoredBufferResult.cs" />
     <Compile Include="PythonTools\Intellisense\ParseQueue.cs" />
     <Compile Include="PythonTools\InterpreterExtensions.cs" />
-    <Compile Include="PythonTools\IPythonConfigurableInterpreterFactoryProvider.cs" />
     <Compile Include="PythonTools\ISnapshotTextReader.cs" />
+    <Compile Include="PythonTools\Navigation\CommonLibraryNode.cs" />
+    <Compile Include="PythonTools\Navigation\HierarchyListener.cs" />
+    <Compile Include="PythonTools\Navigation\ICustomSearchListProvider.cs" />
+    <Compile Include="PythonTools\Navigation\ILibraryManager.cs" />
+    <Compile Include="PythonTools\Navigation\IScopeNode.cs" />
+    <Compile Include="PythonTools\Navigation\ISimpleObject.cs" />
+    <Compile Include="PythonTools\Navigation\Library.cs" />
+    <Compile Include="PythonTools\Navigation\LibraryManager.cs" />
+    <Compile Include="PythonTools\Navigation\LibraryNode.cs" />
+    <Compile Include="PythonTools\Navigation\LibraryTask.cs" />
+    <Compile Include="PythonTools\Navigation\ModuleId.cs" />
     <Compile Include="PythonTools\Navigation\Resources.Designer.cs" />
+    <Compile Include="PythonTools\Navigation\SimpleObject.cs" />
+    <Compile Include="PythonTools\Navigation\SimpleObjectList.cs" />
+    <Compile Include="PythonTools\Navigation\TextLineEventListener.cs" />
     <Compile Include="PythonTools\PythonAutomation.cs" />
     <Compile Include="PythonTools\Options\GenerateIntellisenseDbDialog.cs">
       <SubType>Form</SubType>
@@ -450,16 +527,79 @@
     <Compile Include="PythonTools\Options\PythonInteractiveOptionsPage.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="PythonTools\Project\WebPiReferenceNode.cs" />
+    <Compile Include="PythonTools\Project\Attributes.cs" />
+    <Compile Include="PythonTools\Project\Automation\AutomationScope.cs" />
+    <Compile Include="PythonTools\Project\Automation\OAFileItem.cs" />
+    <Compile Include="PythonTools\Project\Automation\OAFolderItem.cs" />
+    <Compile Include="PythonTools\Project\Automation\OANavigableProjectItems.cs" />
+    <Compile Include="PythonTools\Project\Automation\OANullProperty.cs" />
+    <Compile Include="PythonTools\Project\Automation\OAProject.cs" />
+    <Compile Include="PythonTools\Project\Automation\OAProjectItem.cs" />
+    <Compile Include="PythonTools\Project\Automation\OAProjectItems.cs" />
+    <Compile Include="PythonTools\Project\Automation\OAProperties.cs" />
+    <Compile Include="PythonTools\Project\Automation\OAProperty.cs" />
+    <Compile Include="PythonTools\Project\Automation\VSProject\OAVSProjectItem.cs" />
     <Compile Include="PythonTools\Project\BaseSearchPathNode.cs" />
-    <Compile Include="PythonTools\Project\CommonSearchPathContainerNodeProperties.cs" />
+    <Compile Include="PythonTools\Project\BuildPropertyPage.cs" />
+    <Compile Include="PythonTools\Project\CommonConfigProvider.cs" />
+    <Compile Include="PythonTools\Project\CommonEditorFactory.cs" />
+    <Compile Include="PythonTools\Project\CommonFileNode.cs" />
+    <Compile Include="PythonTools\Project\CommonFolderNode.cs" />
+    <Compile Include="PythonTools\Project\CommonNonCodeFileNode.cs" />
+    <Compile Include="PythonTools\Project\CommonProjectConfig.cs" />
+    <Compile Include="PythonTools\Project\CommonProjectNode.cs" />
+    <Compile Include="PythonTools\Project\CommonProjectNodeProperties.cs" />
+    <Compile Include="PythonTools\Project\CommonProjectPackage.cs" />
+    <Compile Include="PythonTools\Project\CommonPropertyPage.cs" />
     <Compile Include="PythonTools\Project\CommonSearchPathContainerNode.cs" />
     <Compile Include="PythonTools\Project\CommonSearchPathNode.cs" />
     <Compile Include="PythonTools\Project\CommonSearchPathNodeProperties.cs" />
     <Compile Include="PythonTools\Project\DefaultPythonLauncher.cs" />
     <Compile Include="PythonTools\Project\CurrentWorkingDirectoryNode.cs" />
+    <Compile Include="PythonTools\Project\ConfigProvider.cs" />
+    <Compile Include="PythonTools\Project\DataObject.cs" />
+    <Compile Include="PythonTools\Project\DependentFileNode.cs" />
+    <Compile Include="PythonTools\Project\DesignPropertyDescriptor.cs" />
+    <Compile Include="PythonTools\Project\DocumentManager.cs" />
+    <Compile Include="PythonTools\Project\EnumDependencies.cs" />
+    <Compile Include="PythonTools\Project\FileDocumentManager.cs" />
+    <Compile Include="PythonTools\Project\FileNode.cs" />
+    <Compile Include="PythonTools\Project\FolderNode.cs" />
     <Compile Include="PythonTools\Project\GlobalSuppressions.cs" />
+    <Compile Include="PythonTools\Project\HierarchyNode.cs" />
+    <Compile Include="PythonTools\Project\ImageHandler.cs" />
+    <Compile Include="PythonTools\Project\Interfaces.cs" />
+    <Compile Include="PythonTools\Project\IProjectLauncher.cs" />
+    <Compile Include="PythonTools\Project\LocalizableProperties.cs" />
+    <Compile Include="PythonTools\Project\Misc\ExternDll.cs" />
+    <Compile Include="PythonTools\Project\Misc\NativeMethods.cs" />
+    <Compile Include="PythonTools\Project\Misc\UnsafeNativeMethods.cs" />
+    <Compile Include="PythonTools\Project\NodeProperties.cs" />
+    <Compile Include="PythonTools\Project\OleServiceProvider.cs" />
+    <Compile Include="PythonTools\Project\ProjectConfig.cs" />
+    <Compile Include="PythonTools\Project\ProjectDesignerDocumentManager.cs" />
+    <Compile Include="PythonTools\Project\ProjectDocumentsListener.cs" />
+    <Compile Include="PythonTools\Project\ProjectDocumentsListenerForStartupFileUpdates.cs" />
+    <Compile Include="PythonTools\Project\ProjectElement.cs" />
+    <Compile Include="PythonTools\Project\ProjectFactory.cs" />
+    <Compile Include="PythonTools\Project\ProjectFileConstants.cs" />
+    <Compile Include="PythonTools\Project\ProjectNode.CopyPaste.cs" />
+    <Compile Include="PythonTools\Project\ProjectNode.cs" />
+    <Compile Include="PythonTools\Project\ProjectNode.Events.cs" />
+    <Compile Include="PythonTools\Project\ProjectPackage.cs" />
+    <Compile Include="PythonTools\Project\PropertiesEditorLauncher.cs" />
     <Compile Include="PythonTools\Project\PythonProjectNodeProperties.cs" />
+    <Compile Include="PythonTools\Project\Resources.cs" />
+    <Compile Include="PythonTools\Project\SolutionListener.cs" />
+    <Compile Include="PythonTools\Project\SolutionListenerForBuildDependencyUpdate.cs" />
+    <Compile Include="PythonTools\Project\SolutionListenerForProjectEvents.cs" />
+    <Compile Include="PythonTools\Project\SolutionListenerForProjectOpen.cs" />
+    <Compile Include="PythonTools\Project\StructuresEnums.cs" />
+    <Compile Include="PythonTools\Project\SuspendFileChanges.cs" />
+    <Compile Include="PythonTools\Project\TrackDocumentsHelper.cs" />
+    <Compile Include="PythonTools\Project\Utilities.cs" />
+    <Compile Include="PythonTools\Project\VsCommands.cs" />
+    <Compile Include="PythonTools\Project\VSShellUtilities.cs" />
     <Compile Include="PythonTools\Refactoring\AssignmentWalker.cs" />
     <Compile Include="PythonTools\Refactoring\FilePreviewItem.cs" />
     <Compile Include="PythonTools\Refactoring\IPreviewItem.cs" />
@@ -487,7 +627,9 @@
     <Compile Include="PythonTools\Repl\AttachDebuggerReplCommand.cs" />
     <Compile Include="PythonTools\Repl\LoadReplCommand.cs" />
     <Compile Include="PythonTools\Repl\OverloadDoc.cs" />
+    <Compile Include="PythonTools\ProvideDebugLanguageAttribute.cs" />
     <Compile Include="PythonTools\Designer\WpfEventBindingProvider.cs" />
+    <Compile Include="PythonTools\DeveloperActivityAttribute.cs" />
     <Compile Include="PythonTools\PythonClassifier.cs" />
     <Compile Include="PythonTools\PythonPredefinedClassificationTypeNames.cs" />
     <Compile Include="PythonTools\Editor\BraceMatcher.cs" />
@@ -556,6 +698,8 @@
     </Compile>
     <Compile Include="PythonTools\Project\PythonFolderNode.cs" />
     <Compile Include="PythonTools\Project\PythonNonCodeFileNode.cs" />
+    <Compile Include="PythonTools\ProvideDebugEngineAttribute.cs" />
+    <Compile Include="PythonTools\ProvideDebugExceptionAttribute.cs" />
     <Compile Include="PythonTools\PythonClassifierProvider.cs" />
     <Compile Include="PythonTools\PythonCoreConstants.cs" />
     <Compile Include="PythonTools\Repl\PythonReplEvaluator.cs" />
@@ -581,6 +725,12 @@
     <Compile Include="PythonTools\Project\PythonProjectPackage.cs" />
     <Compile Include="Guids.cs" />
     <Compile Include="PythonTools\TokenCache.cs" />
+    <Compile Include="PythonTools\VsExtensions.cs" />
+    <Compile Include="Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
     <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="PythonToolsPackage.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -598,6 +748,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <!-- VSIX -->
+    <Content Include="NoInterpreters.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
     <Content Include="ptvsd\attach_server.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -693,6 +847,7 @@
     </Content>
     <Content Include="..\Icons\Dev$(VSTarget)\PythonFile.ico">
       <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>.</VSIXSubPath>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Templates\NewItem\NewPythonItems.vsdir">
@@ -947,6 +1102,10 @@
     <EmbeddedResource Include="PythonTools\Project\PythonDebugPropertyPageControl.resx">
       <DependentUpon>PythonDebugPropertyPageControl.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="PythonTools\Project\Resources.resx">
+      <DependentUpon>Resources.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <EmbeddedResource Include="..\Icons\Dev$(VSTarget)\imagelis.bmp">
       <Link>PythonTools\Project\Resources\imagelis.bmp</Link>
     </EmbeddedResource>
@@ -973,6 +1132,9 @@
     <EmbeddedResource Include="PythonTools\Project\StartWithErrorsDialog.resx">
       <DependentUpon>StartWithErrorsDialog.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="PythonTools\Project\WebPiComponentPickerControl.resx">
+      <DependentUpon>WebPiComponentPickerControl.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="PythonTools\Navigation\Resources.resx" />
     <EmbeddedResource Include="PythonTools\Options\PythonInterpreterOptionsControl.resx">
       <DependentUpon>PythonInterpreterOptionsControl.cs</DependentUpon>
@@ -991,6 +1153,10 @@
     </EmbeddedResource>
     <EmbeddedResource Include="..\Icons\Dev$(VSTarget)\PythonPackageIcons.bmp">
       <Link>Resources\PythonPackageIcons.bmp</Link>
+    </EmbeddedResource>
+    <EmbeddedResource Include="VisualStudio.Project.resx">
+      <CustomToolNamespace>Microsoft.PythonTools</CustomToolNamespace>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <ConditionalEmbeddedResource Include="VSPackage.resx">
       <SubType>Designer</SubType>
@@ -1052,15 +1218,19 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="PythonTools\Refactoring\ExtractMethodDialog.xaml">
-      <SubType>Designer</SubType>
+    <Page Include="PythonTools\Project\OverwriteFileDialog.xaml">
       <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="PythonTools\Project\TaskProgressBar.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="PythonTools\Refactoring\ExtractMethodDialog.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
     <Page Include="PythonTools\Refactoring\RenameVariableDialog.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
@@ -1072,8 +1242,6 @@
   <ItemGroup>
     <Folder Include="Templates\Files\EmptyPackage\package\" />
   </ItemGroup>
-  <ItemGroup />
-  <ItemGroup />
   <PropertyGroup>
     <!--
     To specify a different registry root to register your package, uncomment the TargetRegistryRoot
@@ -1083,7 +1251,6 @@
     <RegisterOutputPackage>true</RegisterOutputPackage>
     <RegisterWithCodebase>true</RegisterWithCodebase>
   </PropertyGroup>
-  <Import Project="$(BuildRoot)\Common\Product\SharedProject\SharedProject.proj" />
   <Import Project="..\ProjectAfter.settings" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

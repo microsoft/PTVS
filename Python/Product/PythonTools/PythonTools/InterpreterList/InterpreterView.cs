@@ -15,6 +15,8 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
+using System.Threading.Tasks;
 using System.Windows;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Interpreter;
@@ -23,24 +25,21 @@ using Microsoft.VisualStudio.ComponentModelHost;
 namespace Microsoft.PythonTools.InterpreterList {
     internal class InterpreterView : DependencyObject {
         private readonly string _identifier;
-        private bool _startedRunning;
+        private bool _startedRunning, _waitingForIsChanged;
 
-        public static IEnumerable<InterpreterView> GetInterpreters() {
-            var componentService = (PythonToolsPackage.GetGlobalService(typeof(SComponentModel))) as IComponentModel;
-            var factoryProviders = componentService.GetExtensions<IPythonInterpreterFactoryProvider>();
-
-            var defaultId = PythonToolsPackage.Instance.InterpreterOptionsPage.DefaultInterpreterValue;
-            var defaultVersion = PythonToolsPackage.Instance.InterpreterOptionsPage.DefaultInterpreterVersionValue;
-            
-            foreach (var factory in factoryProviders) {
-                foreach (var interp in factory.GetInterpreterFactories()) {
-                    if (interp != null) {
-                        yield return new InterpreterView(
-                            interp,
-                            interp.GetInterpreterDisplay(),
-                            interp.Id == defaultId && interp.Configuration.Version == defaultVersion);
-                    }
+        public static IEnumerable<InterpreterView> GetInterpreters(IInterpreterOptionsService interpService = null) {
+            if (interpService == null) {
+                interpService = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
+                if (interpService == null) {
+                    yield break;
                 }
+            }
+
+            foreach (var interp in interpService.Interpreters) {
+                yield return new InterpreterView(
+                    interp,
+                    interp.GetInterpreterDisplay(),
+                    interp == interpService.DefaultInterpreter);
             }
         }
 
@@ -55,10 +54,11 @@ namespace Microsoft.PythonTools.InterpreterList {
 
             var withDb = interpreter as IInterpreterWithCompletionDatabase;
             if (withDb != null) {
-                CanRefresh = true;
+                CanRefresh = File.Exists(interpreter.Configuration.InterpreterPath);
                 withDb.IsCurrentChanged += Interpreter_IsCurrentChanged;
+                withDb.IsCurrentReasonChanged += Interpreter_IsCurrentChanged;
                 IsCurrent = withDb.IsCurrent;
-                IsCurrentReason = withDb.GetIsCurrentReason(CultureInfo.CurrentUICulture);
+                IsCurrentReason = withDb.GetFriendlyIsCurrentReason(CultureInfo.CurrentUICulture);
             }
             IsRunning = false;
             IsDefault = isDefault;
@@ -68,7 +68,11 @@ namespace Microsoft.PythonTools.InterpreterList {
             var withDb = sender as IInterpreterWithCompletionDatabase;
             if (withDb != null) {
                 IsCurrent = withDb.IsCurrent;
-                IsCurrentReason = withDb.GetIsCurrentReason(CultureInfo.CurrentUICulture);
+                IsCurrentReason = withDb.GetFriendlyIsCurrentReason(CultureInfo.CurrentUICulture);
+            }
+            if (_waitingForIsChanged) {
+                _waitingForIsChanged = false;
+                IsRunning = false;
             }
         }
 
@@ -88,16 +92,22 @@ namespace Microsoft.PythonTools.InterpreterList {
                 } else {
                     update.Progress = 0;
                 }
-            } else if (IsRunning && !_startedRunning) {
-                IsRunning = false;
+            } else if (IsRunning && !_startedRunning && !_waitingForIsChanged) {
+                var withDb = Interpreter as IInterpreterWithCompletionDatabase;
+                if (withDb != null) {
+                    _waitingForIsChanged = true;
+                    Task.Factory.StartNew((Action)(() => withDb.RefreshIsCurrent(true)));
+                } else {
+                    IsRunning = false;
+                }
             }
         }
 
-        internal void DefaultInterpreterUpdate(Guid defaultId, Version defaultVer) {
+        internal void DefaultInterpreterUpdate(IPythonInterpreterFactory newDefault) {
             if (Dispatcher.CheckAccess()) {
-                IsDefault = (Interpreter.Id == defaultId && Interpreter.Configuration.Version == defaultVer);
+                IsDefault = (Interpreter == newDefault);
             } else {
-                Dispatcher.BeginInvoke((Action)(() => DefaultInterpreterUpdate(defaultId, defaultVer)));
+                Dispatcher.BeginInvoke((Action)(() => DefaultInterpreterUpdate(newDefault)));
             }
         }
 

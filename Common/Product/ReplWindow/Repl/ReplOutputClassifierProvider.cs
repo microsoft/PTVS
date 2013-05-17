@@ -19,7 +19,7 @@ using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Utilities;
 
-namespace Microsoft.VisualStudio.Repl {
+namespace Microsoft.VisualStudio.Repl {    
     /// <summary>
     /// Provides the classifier for our repl error output buffer.
     /// </summary>

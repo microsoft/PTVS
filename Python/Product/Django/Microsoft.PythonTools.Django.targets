@@ -381,7 +381,7 @@ interpreter_path_emulated=$(PythonInterpreterPath)
   </ItemGroup>
 
   <!-- Transforms a VirtualEnv entry into a directory of content which we include -->
-  <Target Name="TransformVirtualEnvToContent" BeforeTargets="CollectFilesFromContent">
+  <Target Name="TransformVirtualEnvToContent" BeforeTargets="CollectFilesFromContent" Condition="'$(VirtualEnvEnabled)' != ''">
     <PropertyGroup>
       <_TempPrefixFile>$([System.IO.Path]::GetTempFileName())</_TempPrefixFile>
       <TargetPythonPrefix Condition="$(TargetPythonPrefix) == ''">D:\Python27</TargetPythonPrefix>

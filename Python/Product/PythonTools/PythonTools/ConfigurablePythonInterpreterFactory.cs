@@ -57,6 +57,10 @@ namespace Microsoft.PythonTools {
             get { return ((IInterpreterWithCompletionDatabase)_realFactory).IsCurrent; }
         }
 
+        public void RefreshIsCurrent(bool alwaysRaiseEvent) {
+            ((IInterpreterWithCompletionDatabase)_realFactory).RefreshIsCurrent(alwaysRaiseEvent);
+        }
+
         public void NotifyInvalidDatabase() {
             ((IInterpreterWithCompletionDatabase)_realFactory).NotifyInvalidDatabase();
         }
@@ -72,6 +76,19 @@ namespace Microsoft.PythonTools {
             remove {
                 ((IInterpreterWithCompletionDatabase)_realFactory).IsCurrentChanged -= value;
             }
+        }
+
+        public event EventHandler IsCurrentReasonChanged {
+            add {
+                ((IInterpreterWithCompletionDatabase)_realFactory).IsCurrentReasonChanged += value;
+            }
+            remove {
+                ((IInterpreterWithCompletionDatabase)_realFactory).IsCurrentReasonChanged -= value;
+            }
+        }
+
+        public string GetFriendlyIsCurrentReason(IFormatProvider culture) {
+            return ((IInterpreterWithCompletionDatabase)_realFactory).GetFriendlyIsCurrentReason(culture);
         }
 
         public string GetIsCurrentReason(IFormatProvider culture) {

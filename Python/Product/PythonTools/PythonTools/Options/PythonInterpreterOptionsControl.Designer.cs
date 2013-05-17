@@ -80,6 +80,7 @@
             this._defaultInterpreter.Name = "_defaultInterpreter";
             this._defaultInterpreter.Size = new System.Drawing.Size(290, 21);
             this._defaultInterpreter.TabIndex = 1;
+            this._defaultInterpreter.Format += new System.Windows.Forms.ListControlConvertEventHandler(this.Interpreter_Format);
             // 
             // _showSettingsForLabel
             // 
@@ -105,6 +106,7 @@
             this._showSettingsFor.Size = new System.Drawing.Size(185, 21);
             this._showSettingsFor.TabIndex = 3;
             this._showSettingsFor.SelectedIndexChanged += new System.EventHandler(this.ShowSettingsForSelectedIndexChanged);
+            this._showSettingsFor.Format += new System.Windows.Forms.ListControlConvertEventHandler(this.Interpreter_Format);
             // 
             // _interpreterSettingsGroup
             // 

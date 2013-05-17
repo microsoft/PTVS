@@ -14,13 +14,13 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Windows.Forms;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Repl;
 
 namespace Microsoft.PythonTools.Options {
     public partial class PythonInteractiveOptionsControl : UserControl {
-        private readonly List<IPythonInterpreterFactory> _factories = new List<IPythonInterpreterFactory>();
         internal const string PythonExecutionModeKey = PythonCoreConstants.BaseRegistryKey + "\\ReplExecutionModes";
         private readonly ExecutionMode[] _executionModes;
 
@@ -34,20 +34,47 @@ namespace Microsoft.PythonTools.Options {
                 _executionMode.Items.Add(mode.FriendlyName);
             }
 
-            foreach (var interpreter in OptionsPage._options.Keys) {
-                var display = interpreter.GetInterpreterDisplay();
+            UpdateInterpreters();
 
-                _factories.Add(interpreter);
-                _showSettingsFor.Items.Add(display);
-            }
-            
             AddToolTips();
+        }
 
-            if (_showSettingsFor.Items.Count > 0) {
-                if (_showSettingsFor.SelectedIndex == -1) {
-                    _showSettingsFor.SelectedIndex = 0;
+        internal void UpdateInterpreters() {
+            if (InvokeRequired) {
+                Invoke((Action)(() => UpdateInterpreters()));
+                return;
+            }
+
+            var previousSelection = _showSettingsFor.SelectedItem;
+            object currentSelection = null;
+
+            _showSettingsFor.BeginUpdate();
+            try {
+                _showSettingsFor.Items.Clear();
+
+                foreach (var factory in OptionsPage._options.Keys.OrderBy(f => f.GetInterpreterDisplay())) {
+                    _showSettingsFor.Items.Add(factory);
+                    if (factory == previousSelection) {
+                        currentSelection = factory;
+                    }
                 }
 
+                if (currentSelection != null) {
+                    _showSettingsFor.SelectedItem = currentSelection;
+                } else if (_showSettingsFor.Items.Count > 0) {
+                    _showSettingsFor.SelectedIndex = 0;
+                }
+            } finally {
+                _showSettingsFor.EndUpdate();
+            }
+
+            if (_showSettingsFor.Items.Count > 0) {
+                _showSettingsFor.Enabled = true;
+                _startupScript.Enabled = true;
+                _executionMode.Enabled = true;
+                _completionModeGroup.Enabled = true;
+                _liveCompletionsOnly.Enabled = true;
+                EnableOrDisableOptions(true);
                 RefreshOptions();
             } else {
                 _showSettingsFor.Enabled = false;
@@ -58,7 +85,6 @@ namespace Microsoft.PythonTools.Options {
                 _completionModeGroup.Enabled = false;
                 _liveCompletionsOnly.Enabled = false;
                 EnableOrDisableOptions(false);
-
             }
         }
 
@@ -66,49 +92,16 @@ namespace Microsoft.PythonTools.Options {
             base.OnVisibleChanged(e);
 
             if (Visible) {
-                var selectId = PythonToolsPackage.Instance.InterpreterOptionsPage.DefaultInterpreterValue;
-                var selectVersion = PythonToolsPackage.Instance.InterpreterOptionsPage.DefaultInterpreterVersionValue;
-                var programmaticSelection = PythonToolsPackage.Instance.NextOptionsSelection;
+                var selectInterpreter = PythonToolsPackage.Instance.NextOptionsSelection ??
+                    PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>().DefaultInterpreter;
                 PythonToolsPackage.Instance.NextOptionsSelection = null;
-                if (programmaticSelection != null) {
-                    selectId = programmaticSelection.Id;
-                    selectVersion = programmaticSelection.Configuration.Version;
-                }
 
-                foreach (var interpreter in OptionsPage._options.Keys) {
-                    if (interpreter.Id == selectId && interpreter.Configuration.Version == selectVersion) {
-                        _showSettingsFor.SelectedIndex = _showSettingsFor.FindStringExact(interpreter.GetInterpreterDisplay());
-                        break;
-                    }
-                }
+                _showSettingsFor.SelectedItem = selectInterpreter;
             }
         }
 
         private void EnableOrDisableOptions(bool enable) {
             _priPrompt.Enabled = _priPromptLabel.Enabled = _secPrompt.Enabled = _secPromptLabel.Enabled = _useUserDefinedPrompts.Enabled = _enableAttach.Enabled = _smartReplHistory.Enabled = _inlinePrompts.Enabled = enable;
-        }
-
-        public void NewInterpreter(IPythonInterpreterFactory factory) {
-            bool firstInterpreter;
-            if (firstInterpreter = !_showSettingsFor.Enabled) {
-                // previously there were no interpreters installed
-                _showSettingsFor.Items.Clear();
-                _showSettingsFor.Enabled = true;
-                _startupScript.Enabled = true;
-                _executionMode.Enabled = true;
-                _completionModeGroup.Enabled = true;
-                _liveCompletionsOnly.Enabled = true;
-                EnableOrDisableOptions(true);
-            }
-
-            _factories.Add(factory);
-            _showSettingsFor.Items.Add(factory.GetInterpreterDisplay());
-            OptionsPage._options[factory] = OptionsPage.GetOptions(factory);
-            if (firstInterpreter) {
-                _showSettingsFor.SelectedIndex = 0;
-            }
-
-            RefreshOptions();
         }
 
         private void AddToolTips() {
@@ -147,7 +140,14 @@ visualstudio_py_repl.BACKEND.attach()";
         }
 
         private void RefreshOptions() {
-            if (_showSettingsFor.Enabled) {
+            var factory = _showSettingsFor.SelectedItem as IPythonInterpreterFactory;
+            if (factory != null) {
+                CurrentOptions = OptionsPage._options[factory];
+            } else {
+                CurrentOptions = null;
+            }
+
+            if (CurrentOptions != null) {
                 _smartReplHistory.Checked = CurrentOptions.ReplSmartHistory;
 
                 switch (CurrentOptions.ReplIntellisenseMode) {
@@ -192,11 +192,7 @@ visualstudio_py_repl.BACKEND.attach()";
             }
         }
 
-        internal PythonInteractiveOptions CurrentOptions {
-            get {
-                return OptionsPage._options[_factories[_showSettingsFor.SelectedIndex]];
-            }
-        }
+        internal PythonInteractiveOptions CurrentOptions { get; private set; }
 
         private void _smartReplHistory_CheckedChanged(object sender, EventArgs e) {
             CurrentOptions.ReplSmartHistory = _smartReplHistory.Checked;
@@ -274,6 +270,15 @@ visualstudio_py_repl.BACKEND.attach()";
 
         private void _liveCompletionsOnly_CheckedChanged(object sender, EventArgs e) {
             CurrentOptions.LiveCompletionsOnly = _liveCompletionsOnly.Checked;
+        }
+
+        private void Interpreter_Format(object sender, ListControlConvertEventArgs e) {
+            var factory = e.ListItem as IPythonInterpreterFactory;
+            if (factory != null) {
+                e.Value = factory.GetInterpreterDisplay();
+            } else {
+                e.Value = e.ListItem.ToString();
+            }
         }
     }
 }

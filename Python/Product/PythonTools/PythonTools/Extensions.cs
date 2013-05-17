@@ -388,59 +388,6 @@ namespace Microsoft.PythonTools {
                    (snapshot[0] == '%' || snapshot[0] == '$'); // IPython and normal repl commands
         }
 
-        public static IPythonInterpreterFactory[] GetAllPythonInterpreterFactories(this IComponentModel model) {
-            var interpreters = new List<IPythonInterpreterFactory>();
-            if (model != null) {
-                foreach (var provider in model.GetExtensions<IPythonInterpreterFactoryProvider>()) {
-                    if (provider != null) {
-                        interpreters.AddRange(provider.GetInterpreterFactories());
-                    }
-                }
-            }
-            interpreters.Sort((x, y) => x.GetInterpreterDisplay().CompareTo(y.GetInterpreterDisplay()));
-            return interpreters.ToArray();
-        }
-
-        private static IPythonInterpreterFactory _noInterpretersFactory;
-
-        public static IPythonInterpreterFactory GetDefaultInterpreter(this IPythonInterpreterFactory[] factories) {
-            IPythonInterpreterFactory lastInterpreter = null, defaultInterpreter = null;
-            if (PythonToolsPackage.Instance != null) {
-                foreach (var interpreter in factories) {
-                    lastInterpreter = interpreter;
-
-                    if (interpreter.Id == PythonToolsPackage.Instance.InterpreterOptionsPage.DefaultInterpreterValue &&
-                        interpreter.Configuration.Version == PythonToolsPackage.Instance.InterpreterOptionsPage.DefaultInterpreterVersionValue) {
-                        defaultInterpreter = interpreter;
-                        break;
-                    }
-                }
-
-                if (defaultInterpreter == null && lastInterpreter != null) {
-                    // default interpreter not configured, just select the last one and make it the default.
-                    defaultInterpreter = lastInterpreter;
-                    PythonToolsPackage.Instance.InterpreterOptionsPage.DefaultInterpreterValue = defaultInterpreter.Id;
-                    PythonToolsPackage.Instance.InterpreterOptionsPage.DefaultInterpreterVersionValue = defaultInterpreter.Configuration.Version;
-                    PythonToolsPackage.Instance.InterpreterOptionsPage.SaveSettingsToStorage();
-                }
-            }
-
-            if (defaultInterpreter == null) {
-                // no interpreters installed, create a default interpreter for analysis
-                if (_noInterpretersFactory == null) {
-                    _noInterpretersFactory = PythonToolsPackage.ComponentModel.GetService<IDefaultInterpreterFactoryCreator>().CreateInterpreterFactory(
-                        new Dictionary<InterpreterFactoryOptions, object>() {
-                            { InterpreterFactoryOptions.Description, "Python 2.7 - No Interpreters Installed" },
-                            { InterpreterFactoryOptions.Guid, PythonToolsPackage._noInterpretersFactoryGuid }
-                        }
-                    );
-                }
-                defaultInterpreter = _noInterpretersFactory;
-            }
-
-            return defaultInterpreter;
-        }
-
         internal static bool IsAnalysisCurrent(this IPythonInterpreterFactory factory) {
             var interpFact = factory as IInterpreterWithCompletionDatabase;
             if (interpFact != null) {

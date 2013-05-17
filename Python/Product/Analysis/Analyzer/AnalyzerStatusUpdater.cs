@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO.MemoryMappedFiles;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -134,12 +135,13 @@ namespace Microsoft.PythonTools.Analysis {
         static readonly string MUTEX_NAME = "Microsoft.PythonTools.AnalyzerStatus.Mutex." + AssemblyVersionInfo.Version;
         static readonly string MMF_NAME = "Microsoft.PythonTools.AnalyzerStatus.File." + AssemblyVersionInfo.Version;
         const int MAX_IDENTIFIER_LENGTH = 250;
-        
+
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
         unsafe struct Data {
             public fixed char _Identifier[MAX_IDENTIFIER_LENGTH];
             public bool Initialized;
             public bool InUse;
+            public int OwnerProcessId;
             public int ItemsInQueue;
             public int MaximumItems;
 
@@ -310,10 +312,18 @@ namespace Microsoft.PythonTools.Analysis {
                 for (int i = 0; i <= knownEntries; ++i) {
                     accessor.Read(i * SIZE, out me);
                     if (me.InUse) {
-                        response[me.Identifier] = new AnalysisProgress {
-                            Progress = me.ItemsInQueue,
-                            Maximum = me.MaximumItems
-                        };
+                        try {
+                            var owner = Process.GetProcessById(me.OwnerProcessId);
+                            response[me.Identifier] = new AnalysisProgress {
+                                Progress = me.ItemsInQueue,
+                                Maximum = me.MaximumItems
+                            };
+                        } catch(InvalidOperationException) {
+                        } catch (ArgumentException) {
+                            // Process has died
+                            me.InUse = false;
+                            accessor.Write(i * SIZE, ref me);
+                        }
                     }
                 }
             }
@@ -325,10 +335,18 @@ namespace Microsoft.PythonTools.Analysis {
                 using (var accessor = _sharedData.CreateViewAccessor(knownEntries * SIZE, SIZE)) {
                     accessor.Read(0, out me);
                     if (me.InUse) {
-                        response[me.Identifier] = new AnalysisProgress {
-                            Progress = me.ItemsInQueue,
-                            Maximum = me.MaximumItems
-                        };
+                        try {
+                            var owner = Process.GetProcessById(me.OwnerProcessId);
+                            response[me.Identifier] = new AnalysisProgress {
+                                Progress = me.ItemsInQueue,
+                                Maximum = me.MaximumItems
+                            };
+                        } catch (InvalidOperationException) {
+                        } catch (ArgumentException) {
+                            // Process has died
+                            me.InUse = false;
+                            accessor.Write(0, ref me);
+                        }
                     }
                 }
             }
@@ -341,6 +359,7 @@ namespace Microsoft.PythonTools.Analysis {
                 Identifier = identifier,
                 Initialized = true,
                 InUse = true,
+                OwnerProcessId = Process.GetCurrentProcess().Id,
                 ItemsInQueue = int.MaxValue,
                 MaximumItems = 0,
             };

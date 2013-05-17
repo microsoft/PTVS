@@ -19,8 +19,6 @@ namespace Microsoft.VisualStudioTools {
     /// Interaction logic for OverwriteFileDialog.xaml
     /// </summary>
     internal partial class OverwriteFileDialog : DialogWindowVersioningWorkaround {
-        public bool ShouldOverwrite;
-
         public OverwriteFileDialog() {
             InitializeComponent();
         }
@@ -35,20 +33,18 @@ namespace Microsoft.VisualStudioTools {
             _message.Text = message;
         }
 
-        
         private void YesClick(object sender, RoutedEventArgs e) {
-            ShouldOverwrite = true;
             DialogResult = true;
             Close();
         }
 
         private void NoClick(object sender, RoutedEventArgs e) {
-            ShouldOverwrite = false;
-            DialogResult = true;
+            DialogResult = false;
             Close();
         }
 
         private void CancelClick(object sender, RoutedEventArgs e) {
+            DialogResult = null;
             Close();
         }
 

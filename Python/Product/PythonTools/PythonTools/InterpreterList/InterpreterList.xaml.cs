@@ -16,6 +16,8 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -23,6 +25,7 @@ using System.Windows.Input;
 using System.Windows.Threading;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Commands;
+using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Options;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Repl;
@@ -38,6 +41,7 @@ namespace Microsoft.PythonTools.InterpreterList {
         readonly AnalyzerStatusListener _listener;
         readonly List<InterpreterView> _interpreters;
         readonly DispatcherTimer _refreshTimer;
+        readonly IInterpreterOptionsService _interpService;
 
         public static readonly RoutedCommand RefreshCommand = new RoutedUICommand("_Refresh", "Refresh", typeof(InterpreterList));
         public static readonly RoutedCommand RegenerateCommand = new RoutedUICommand("Refresh", "Regenerate", typeof(InterpreterList));
@@ -45,17 +49,22 @@ namespace Microsoft.PythonTools.InterpreterList {
         public static readonly RoutedCommand OpenReplCommand = new RoutedUICommand("Interactive Window", "OpenInteractive", typeof(InterpreterList));
         public static readonly RoutedCommand OpenOptionsCommand = new RoutedUICommand("Options", "OpenOptions", typeof(InterpreterList));
         public static readonly RoutedCommand OpenReplOptionsCommand = new RoutedUICommand("Interactive Options", "OpenInteractiveOptions", typeof(InterpreterList));
+        public static readonly RoutedCommand OpenPathCommand = new RoutedUICommand("View in File Explorer", "OpenPath", typeof(InterpreterList));
         public static readonly RoutedCommand MakeDefaultCommand = new RoutedUICommand("Make Default", "MakeDefault", typeof(InterpreterList));
+        public static readonly RoutedCommand CopyReasonCommand = new RoutedUICommand("Copy", "CopyReason", typeof(InterpreterList));
+        public static readonly RoutedCommand WebChooseInterpreterCommand = new RoutedUICommand("Help me choose an interpreter", "WebChooseInterpreter", typeof(InterpreterList));
 
         public InterpreterList() {
             _refreshTimer = new DispatcherTimer();
             _refreshTimer.Interval = TimeSpan.FromMilliseconds(500.0);
             _refreshTimer.Tick += AutoRefresh_Elapsed;
+            _interpService = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
             
-            _interpreters = InterpreterView.GetInterpreters().ToList();
+            _interpreters = InterpreterView.GetInterpreters(_interpService).ToList();
+            _interpService.InterpretersChanged += InterpretersChanged;
+            _interpService.DefaultInterpreterChanged += DefaultInterpreterChanged;
+
             Interpreters = new ObservableCollection<InterpreterView>(_interpreters);
-            PythonToolsPackage.Instance.InterpreterOptionsPage.InterpretersChanged += InterpretersChanged;
-            PythonToolsPackage.Instance.InterpreterOptionsPage.DefaultInterpreterChanged += DefaultInterpreterChanged;
             DataContext = this;
             
             _listener = new AnalyzerStatusListener(Update);
@@ -66,11 +75,13 @@ namespace Microsoft.PythonTools.InterpreterList {
 
         void InterpretersChanged(object sender, EventArgs e) {
             if (Dispatcher.CheckAccess()) {
+                lock (_interpreters) {
                 _interpreters.Clear();
                 Interpreters.Clear();
                 foreach (var interp in InterpreterView.GetInterpreters()) {
                     _interpreters.Add(interp);
                     Interpreters.Add(interp);
+                }
                 }
             } else {
                 Dispatcher.BeginInvoke((Action)(() => InterpretersChanged(sender, e)));
@@ -78,10 +89,10 @@ namespace Microsoft.PythonTools.InterpreterList {
         }
 
         void DefaultInterpreterChanged(object sender, EventArgs e) {
-            var defaultId = PythonToolsPackage.Instance.InterpreterOptionsPage.DefaultInterpreterValue;
-            var defaultVer = PythonToolsPackage.Instance.InterpreterOptionsPage.DefaultInterpreterVersionValue;
-            foreach (var interp in _interpreters) {
-                interp.DefaultInterpreterUpdate(defaultId, defaultVer);
+            lock (_interpreters) {
+                foreach (var interp in _interpreters) {
+                    interp.DefaultInterpreterUpdate(_interpService.DefaultInterpreter);
+                }
             }
         }
 
@@ -102,13 +113,15 @@ namespace Microsoft.PythonTools.InterpreterList {
 
         private void Abort_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
             e.CanExecute = false;
+
+            // TODO: Uncomment when analysis can be aborted
+            //var interp = e.Parameter as InterpreterView;
+            //e.CanExecute = interp != null && interp.IsRunning;
         }
 
         private void Abort_Executed(object sender, ExecutedRoutedEventArgs e) {
-            var interp = e.Parameter as InterpreterView;
-            if (interp != null) {
-                interp.Abort();
-            }
+            // TODO: Uncomment when analysis can be aborted
+            //((InterpreterView)e.Parameter).Abort();
         }
 
         private void Refresh_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
@@ -126,9 +139,11 @@ namespace Microsoft.PythonTools.InterpreterList {
         }
 
         private void Update(Dictionary<string, AnalysisProgress> data) {
+            lock (_interpreters) {
             foreach (var interp in _interpreters) {
                 interp.ProgressUpdate(data);
             }
+        }
         }
 
 
@@ -138,28 +153,38 @@ namespace Microsoft.PythonTools.InterpreterList {
         }
 
         private void Regenerate_Executed(object sender, ExecutedRoutedEventArgs e) {
-            var interp = e.Parameter as InterpreterView;
-            if (interp != null) {
-                interp.Start();
-            }
+            ((InterpreterView)e.Parameter).Start();
         }
 
-        private void OpenWindow_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
+        private void OpenRepl_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
             var view = e.Parameter as InterpreterView;
-            e.CanExecute = view != null && view.Interpreter != null;
+            e.CanExecute = view != null && view.Interpreter != null &&
+                !string.IsNullOrEmpty(view.Interpreter.Configuration.InterpreterPath) &&
+                File.Exists(view.Interpreter.Configuration.InterpreterPath);
         }
 
-        private void OpenWindow_Executed(object sender, ExecutedRoutedEventArgs e) {
+        private void OpenRepl_Executed(object sender, ExecutedRoutedEventArgs e) {
             var interp = ((InterpreterView)e.Parameter).Interpreter;
-            if (e.Command == OpenReplCommand) {
                 var window = ExecuteInReplCommand.EnsureReplWindow(interp) as ToolWindowPane;
                 if (window != null) {
                     IVsWindowFrame windowFrame = (IVsWindowFrame)window.Frame;
                     ErrorHandler.ThrowOnFailure(windowFrame.Show());
                     ((IReplWindow)window).Focus();
                 }
+        }
 
-            } else if (e.Command == OpenOptionsCommand) {
+
+        private void OpenWindow_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
+            var view = e.Parameter as InterpreterView;
+            e.CanExecute = e.Parameter == null || (view != null && view.Interpreter != null);
+        }
+
+        private void OpenWindow_Executed(object sender, ExecutedRoutedEventArgs e) {
+            IPythonInterpreterFactory interp = null;
+            if (e.Parameter != null) {
+                interp = ((InterpreterView)e.Parameter).Interpreter;
+            }
+            if (e.Command == OpenOptionsCommand) {
                 PythonToolsPackage.Instance.ShowOptionPage(typeof(PythonInterpreterOptionsPage), interp);
 
             } else if (e.Command == OpenReplOptionsCommand) {
@@ -173,12 +198,43 @@ namespace Microsoft.PythonTools.InterpreterList {
         }
 
         private void MakeDefault_Executed(object sender, ExecutedRoutedEventArgs e) {
+            var view = (InterpreterView)e.Parameter;
+            _interpService.DefaultInterpreter = view.Interpreter;
+        }
+
+        private void CopyReason_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
             var view = e.Parameter as InterpreterView;
-            var page = PythonToolsPackage.Instance.InterpreterOptionsPage;
-            page.DefaultInterpreterValue = view.Interpreter.Id;
-            page.DefaultInterpreterVersionValue = view.Interpreter.Configuration.Version;
-            page.SaveSettingsToStorage();
-            page.RaiseDefaultInterpreterChanged();
+            e.CanExecute = view != null && view.Interpreter is IInterpreterWithCompletionDatabase && !view.IsCurrent;
+        }
+
+        private void CopyReason_Executed(object sender, ExecutedRoutedEventArgs e) {
+            var withDb = (IInterpreterWithCompletionDatabase)((InterpreterView)e.Parameter).Interpreter;
+            Clipboard.SetText(withDb.GetIsCurrentReason(CultureInfo.CurrentUICulture));
+        }
+
+        private void OpenPath_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
+            var view = e.Parameter as InterpreterView;
+            e.CanExecute = view != null && view.Interpreter != null && !string.IsNullOrEmpty(view.Interpreter.Configuration.InterpreterPath) &&
+                File.Exists(view.Interpreter.Configuration.InterpreterPath);
+        }
+
+        private void OpenPath_Executed(object sender, ExecutedRoutedEventArgs e) {
+            var path = Path.GetDirectoryName(((InterpreterView)e.Parameter).Interpreter.Configuration.InterpreterPath);
+            Process.Start(new ProcessStartInfo {
+                FileName = path,
+                Verb = "open",
+                UseShellExecute = true
+            });
+        }
+
+        private void WebChooseInterpreter_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
+            e.CanExecute = true;
+        }
+
+        private void WebChooseInterpreter_Executed(object sender, ExecutedRoutedEventArgs e) {
+            PythonToolsPackage.OpenWebBrowser(
+                string.Format("http://go.microsoft.com/fwlink/?LinkId=299429&clcid=0x{0:X}",
+                              CultureInfo.CurrentCulture.LCID));
         }
     }
 }

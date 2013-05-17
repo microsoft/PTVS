@@ -27,7 +27,7 @@ namespace Microsoft.VisualStudioTools.Project
     /// While the class itself is public so it can be manipulated by derived classes,
     /// its internal constructors make sure it can only be created from within the assembly.
     /// </summary>
-    internal abstract class ProjectElement
+    public abstract class ProjectElement
     {
         private readonly ProjectNode _itemProject;
         private bool _deleted;
@@ -97,14 +97,6 @@ namespace Microsoft.VisualStudioTools.Project
         public virtual void RemoveFromProjectFile()
         {
             _deleted = true;
-        }
-
-        public virtual bool IsExcluded 
-        {
-            get 
-            {
-                return false;
-            }
         }
 
         /// <summary>

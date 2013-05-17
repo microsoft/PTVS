@@ -43,22 +43,18 @@ namespace TestUtilities.UI {
 
         public static void ControlX() {
             PressAndRelease(Key.X, Key.LeftCtrl);
-            System.Threading.Thread.Sleep(500);
         }
 
         public static void ControlC() {
             PressAndRelease(Key.C, Key.LeftCtrl);
-            System.Threading.Thread.Sleep(500);
         }
 
         public static void ControlV() {
-            PressAndRelease(Key.V, Key.LeftCtrl);            
-            System.Threading.Thread.Sleep(500);
+            PressAndRelease(Key.V, Key.LeftCtrl);
         }
 
         public static void ControlZ() {
             PressAndRelease(Key.Z, Key.LeftCtrl);
-            System.Threading.Thread.Sleep(500);
         }
 
         public static void PressAndRelease(Key key, params Key[] modifier) {
@@ -143,7 +139,6 @@ namespace TestUtilities.UI {
                         break;
                 }
             }
-            System.Threading.Thread.Sleep(250);
         }
 
         #endregion
@@ -198,8 +193,6 @@ namespace TestUtilities.UI {
             if (NativeMethods.SendInput(1, ref ki, Marshal.SizeOf(ki)) == 0) {
                 throw new Win32Exception(Marshal.GetLastWin32Error());
             }
-            //Pause briefly to ensure the keyboard event was processed
-            System.Threading.Thread.Sleep(10);
         }
 
         // From the SDK:

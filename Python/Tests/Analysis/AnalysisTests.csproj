@@ -66,6 +66,7 @@
     <Compile Include="DotNetAnalysis\Generics.cs" />
     <Compile Include="IronPythonAnalysisTest.cs" />
     <Compile Include="MutateStdLibTest.cs" />
+    <Compile Include="RegistryWatcherTest.cs" />
     <Compile Include="TestExpressions.cs" />
     <Compile Include="TestRunner.cs" />
     <Compile Include="NamespaceSetTest.cs" />
@@ -76,19 +77,20 @@
     <Compile Include="UpdaterTests.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Product\Analysis\Analysis.csproj">
+    <ProjectReference Include="..\..\Product\Python\Analysis\Analysis.csproj">
       <Project>{A85D479D-67A9-4BDB-904A-7D86DAF68A6F}</Project>
       <Name>Analysis</Name>
+      <Aliases>global,analysis</Aliases>
     </ProjectReference>
-    <ProjectReference Include="..\..\Product\IronPython\IronPython.csproj">
+    <ProjectReference Include="..\..\Product\Python\IronPython\IronPython.csproj">
       <Project>{5AE43C93-8EF6-4D57-BC10-511035EF56C5}</Project>
       <Name>IronPython</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\Common\Tests\Utilities\TestUtilities.csproj">
+    <ProjectReference Include="..\Common\TestUtilities\TestUtilities.csproj">
       <Project>{D092D54E-FF29-4D32-9AEE-4EF704C92F67}</Project>
       <Name>TestUtilities</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Utilities.Python\TestUtilities.Python.csproj">
+    <ProjectReference Include="..\TestUtilities.Python\TestUtilities.Python.csproj">
       <Project>{a731c4c3-3741-4080-a946-c47574c1f3bf}</Project>
       <Name>TestUtilities.Python</Name>
     </ProjectReference>

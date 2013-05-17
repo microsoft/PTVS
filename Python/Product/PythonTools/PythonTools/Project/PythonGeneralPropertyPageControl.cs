@@ -20,19 +20,20 @@ using Microsoft.VisualStudio.ComponentModelHost;
 
 namespace Microsoft.PythonTools.Project {
     public partial class PythonGeneralPropertyPageControl : UserControl {
+        private IInterpreterOptionsService _service;
         private readonly PythonGeneralPropertyPage _propPage;
         private readonly List<IPythonInterpreterFactory> _interpreters = new List<IPythonInterpreterFactory>();
 
         public PythonGeneralPropertyPageControl() {
             InitializeComponent();
 
+            _service = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
             InitializeInterpreters();
-            PythonToolsPackage.Instance.InterpreterOptionsPage.InterpretersChanged += InterpreterOptionsPage_InterpretersChanged;
+            _service.InterpretersChanged += InterpreterOptionsPage_InterpretersChanged;
         }
 
         private void InitializeInterpreters() {
-            var model = (IComponentModel)PythonToolsPackage.GetGlobalService(typeof(SComponentModel));
-            _interpreters.AddRange(model.GetAllPythonInterpreterFactories());
+            _interpreters.AddRange(_service.InterpretersOrDefault);
 
             foreach (var interpreter in _interpreters) {
                 _defaultInterpreter.Items.Add(interpreter.GetInterpreterDisplay());
@@ -66,7 +67,7 @@ namespace Microsoft.PythonTools.Project {
 
         protected override void OnHandleDestroyed(EventArgs e) {
             base.OnHandleDestroyed(e);
-            PythonToolsPackage.Instance.InterpreterOptionsPage.InterpretersChanged -= InterpreterOptionsPage_InterpretersChanged;
+            _service.InterpretersChanged -= InterpreterOptionsPage_InterpretersChanged;
         }
 
         internal PythonGeneralPropertyPageControl(PythonGeneralPropertyPage newPythonGeneralPropertyPage)

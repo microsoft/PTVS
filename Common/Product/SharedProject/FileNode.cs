@@ -39,13 +39,6 @@ namespace Microsoft.VisualStudioTools.Project
         #endregion
 
         #region overriden Properties
-        
-        public override bool IsNonMemberItem {
-            get {
-                return ItemNode is AllFilesProjectElement;
-            }
-        }
-
         /// <summary>
         /// overwrites of the generic hierarchyitem.
         /// </summary>
@@ -203,7 +196,7 @@ namespace Microsoft.VisualStudioTools.Project
         /// </summary>
         /// <param name="root">Root of the hierarchy</param>
         /// <param name="e">Associated project element</param>
-        public FileNode(ProjectNode root, ProjectElement element)
+        public FileNode(ProjectNode root, MsBuildProjectElement element)
             : base(root, element)
         {
         }
@@ -215,11 +208,8 @@ namespace Microsoft.VisualStudioTools.Project
             if (IsLinkFile)
             {
                 return new LinkFileNodeProperties(this);
-            } else if (IsNonMemberItem) {
-                return new FileNodeProperties(this);
             }
-
-            return new IncludedFileNodeProperties(this);
+            return new FileNodeProperties(this);
         }
 
         public override object GetIconHandle(bool open)
@@ -300,7 +290,8 @@ namespace Microsoft.VisualStudioTools.Project
             // Verify that the file extension is unchanged
             string strRelPath = Path.GetFileName(this.ItemNode.GetMetadata(ProjectFileConstants.Include));
             if (!Utilities.IsInAutomationFunction(this.ProjectMgr.Site) &&
-                !String.Equals(Path.GetExtension(strRelPath), Path.GetExtension(label), StringComparison.OrdinalIgnoreCase))
+                !String.Equals(Path.GetExtension(strRelPath), Path.GetExtension(label), StringComparison.OrdinalIgnoreCase) &&
+                !IsToAndFromValidPythonExtension(label, strRelPath))
             {
                 // Prompt to confirm that they really want to change the extension of the file
                 string message = String.Format(CultureInfo.CurrentCulture, SR.GetString(SR.ConfirmExtensionChange, CultureInfo.CurrentUICulture), label);
@@ -330,6 +321,16 @@ namespace Microsoft.VisualStudioTools.Project
             return SetEditLabel(label, strRelPath);
         }
 
+        /// <summary>
+        /// Checks if both the to and from file extensions are valid Python code file extensions.
+        /// </summary>
+        private static bool IsToAndFromValidPythonExtension(string label, string strRelPath)
+        {
+            return ((Path.GetExtension(strRelPath).Equals(".py", StringComparison.OrdinalIgnoreCase) && Path.GetExtension(label).Equals(".pyw", StringComparison.OrdinalIgnoreCase)) ||
+                (Path.GetExtension(strRelPath).Equals(".pyw", StringComparison.OrdinalIgnoreCase) && Path.GetExtension(label).Equals(".py", StringComparison.OrdinalIgnoreCase))
+                );
+        }
+
         public override string GetMkDocument()
         {
             Debug.Assert(!string.IsNullOrEmpty(this.Url), "No url specified for this node");
@@ -348,6 +349,19 @@ namespace Microsoft.VisualStudioTools.Project
             {
                 File.SetAttributes(path, FileAttributes.Normal); // make sure it's not readonly.
                 File.Delete(path);
+            }
+        }
+
+        [System.ComponentModel.BrowsableAttribute(false)]
+        internal new MsBuildProjectElement ItemNode
+        {
+            get
+            {
+                return (MsBuildProjectElement)base.ItemNode;
+            }
+            set
+            {
+                base.ItemNode = value;
             }
         }
 
@@ -397,6 +411,7 @@ namespace Microsoft.VisualStudioTools.Project
                 if (!RenameDocument(oldName, newName))
                 {
                     this.ItemNode.Rename(oldrelPath);
+                    this.ItemNode.RefreshProperties();
                 }
 
                 if (this is DependentFileNode)
@@ -727,14 +742,10 @@ namespace Microsoft.VisualStudioTools.Project
                 return null;
             }
 
-            if (newParent.IsNonMemberItem) {
-                ErrorHandler.ThrowOnFailure(newParent.IncludeInProject(false));
-            }
-
             ProjectMgr.OnItemDeleted(this);
             this.Parent.RemoveChild(this);
             this.ID = this.ProjectMgr.ItemIdMap.Add(this);
-            this.ItemNode.Rename(CommonUtils.GetRelativeFilePath(ProjectMgr.ProjectHome, newFileName));
+            this.ItemNode.Item.Xml.Include = CommonUtils.GetRelativeFilePath(ProjectMgr.ProjectHome, newFileName);
             this.ItemNode.RefreshProperties();
             this.ProjectMgr.SetProjectFileDirty(true);
             newParent.AddChild(this);
@@ -746,7 +757,8 @@ namespace Microsoft.VisualStudioTools.Project
             DocumentManager.RenameDocument(this.ProjectMgr.Site, oldFileName, newFileName, ID);
 
             //Select the new node in the hierarchy
-            ExpandItem(EXPANDFLAGS.EXPF_SelectItem);
+            IVsUIHierarchyWindow uiWindow = UIHierarchyUtilities.GetUIHierarchyWindow(this.ProjectMgr.Site, SolutionExplorer);
+            ErrorHandler.ThrowOnFailure(uiWindow.ExpandItem(this.ProjectMgr, this.ID, EXPANDFLAGS.EXPF_SelectItem));
 
             RenameChildNodes(this);
 
@@ -959,10 +971,10 @@ namespace Microsoft.VisualStudioTools.Project
         {
             //Update the include for this item.
             string relName = CommonUtils.GetRelativeFilePath(this.ProjectMgr.ProjectHome, newName);
-            Debug.Assert(String.Equals(this.ItemNode.GetMetadata(ProjectFileConstants.Include), relName, StringComparison.OrdinalIgnoreCase),
+            Debug.Assert(String.Equals(this.ItemNode.Item.EvaluatedInclude, relName, StringComparison.OrdinalIgnoreCase),
                 "Not just changing the filename case");
 
-            this.ItemNode.Rename(relName);
+            this.ItemNode.Item.Xml.Include = relName;
             this.ItemNode.RefreshProperties();
             this.ProjectMgr.SetProjectFileDirty(true);
 
@@ -977,7 +989,8 @@ namespace Microsoft.VisualStudioTools.Project
             ErrorHandler.ThrowOnFailure(shell.RefreshPropertyBrowser(0));
 
             //Select the new node in the hierarchy
-            ExpandItem(EXPANDFLAGS.EXPF_SelectItem);
+            IVsUIHierarchyWindow uiWindow = UIHierarchyUtilities.GetUIHierarchyWindow(this.ProjectMgr.Site, SolutionExplorer);
+            ErrorHandler.ThrowOnFailure(uiWindow.ExpandItem(this.ProjectMgr, this.ID, EXPANDFLAGS.EXPF_SelectItem));
         }
 
         #endregion

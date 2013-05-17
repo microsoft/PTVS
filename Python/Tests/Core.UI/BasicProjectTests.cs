@@ -19,6 +19,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Threading;
 using System.Windows;
 using EnvDTE;
 using EnvDTE80;
@@ -314,6 +315,88 @@ namespace PythonToolsUITests {
             }
         }
 
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void TestAddExistingFolder() {
+            var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\AddExistingFolder.sln");
+            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            var solutionExplorer = app.SolutionExplorerTreeView;
+
+            var projectNode = solutionExplorer.WaitForItem("Solution 'AddExistingFolder' (1 project)", "AddExistingFolder");
+            AutomationWrapper.Select(projectNode);
+
+            var dialog = AddExistingFolder(app);
+            Assert.AreEqual(dialog.Address, Path.GetFullPath(@"TestData\AddExistingFolder"));
+
+            dialog.FolderName = Path.GetFullPath(@"TestData\AddExistingFolder\TestFolder");
+            dialog.SelectFolder();
+
+            Assert.AreNotEqual(solutionExplorer.WaitForItem("Solution 'AddExistingFolder' (1 project)", "AddExistingFolder", "TestFolder"), null);
+            Assert.AreNotEqual(solutionExplorer.WaitForItem("Solution 'AddExistingFolder' (1 project)", "AddExistingFolder", "TestFolder", "TestFile.txt"), null);
+
+            var subFolderNode = solutionExplorer.WaitForItem("Solution 'AddExistingFolder' (1 project)", "AddExistingFolder", "SubFolder");
+            AutomationWrapper.Select(subFolderNode);
+
+            dialog = AddExistingFolder(app);
+            Assert.AreEqual(dialog.Address, Path.GetFullPath(@"TestData\AddExistingFolder\SubFolder"));
+            dialog.FolderName = Path.GetFullPath(@"TestData\AddExistingFolder\SubFolder\TestFolder2");
+            dialog.SelectFolder();
+
+            Assert.AreNotEqual(solutionExplorer.WaitForItem("Solution 'AddExistingFolder' (1 project)", "AddExistingFolder", "SubFolder", "TestFolder2"), null);
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void TestAddExistingFolderDebugging() {
+            var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\AddExistingFolder.sln");
+            var window = project.ProjectItems.Item("Program.py").Open();
+            window.Activate();
+
+            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            var docWindow = app.GetDocument(window.Document.FullName);
+
+            var solutionExplorer = app.SolutionExplorerTreeView;
+            app.Dte.ExecuteCommand("Debug.Start");
+            app.WaitForMode(dbgDebugMode.dbgRunMode);
+
+            app.OpenSolutionExplorer();
+            var projectNode = solutionExplorer.WaitForItem("Solution 'AddExistingFolder' (1 project)", "AddExistingFolder");
+            AutomationWrapper.Select(projectNode);
+
+            try {
+                VsIdeTestHostContext.Dte.ExecuteCommand("ProjectandSolutionContextMenus.Project.Add.Existingfolder");
+
+                // try and dismiss the dialog if we successfully executed
+                try {
+                    var dialog = app.WaitForDialog();
+                    Keyboard.Type(System.Windows.Input.Key.Escape);
+                } finally {
+                    Assert.Fail("Was able to add an existing folder");
+                }
+            } catch (COMException) {
+            }
+            app.Dte.ExecuteCommand("Debug.StopDebugging");
+            app.WaitForMode(dbgDebugMode.dbgDesignMode);
+
+            projectNode = solutionExplorer.WaitForItem("Solution 'AddExistingFolder' (1 project)", "AddExistingFolder");
+            AutomationWrapper.Select(projectNode);
+
+            var addDialog = AddExistingFolder(app);
+            Assert.AreEqual(addDialog.Address, Path.GetFullPath(@"TestData\AddExistingFolder"));
+
+            addDialog.FolderName = Path.GetFullPath(@"TestData\AddExistingFolder\TestFolder");
+            addDialog.SelectFolder();
+
+            Assert.AreNotEqual(solutionExplorer.WaitForItem("Solution 'AddExistingFolder' (1 project)", "AddExistingFolder", "TestFolder"), null);
+        }
+
+        private static SelectFolderDialog AddExistingFolder(VisualStudioApp app) {
+            ThreadPool.QueueUserWorkItem((_) => VsIdeTestHostContext.Dte.ExecuteCommand("ProjectandSolutionContextMenus.Project.Add.Python.Existingfolder"));
+            var addFolderDialog = app.WaitForDialog();
+            var dialog = new SelectFolderDialog(addFolderDialog);
+            return dialog;
+        }
+        
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ProjectBuild() {
@@ -1109,29 +1192,6 @@ namespace PythonToolsUITests {
         }
 
 #endif
-
-        /// <summary>
-        /// https://pytools.codeplex.com/workitem/1155
-        /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
-        public void ExcludeSearchNode() {
-            var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\LoadSearchPaths.sln");
-
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-
-            var solutionExplorer = app.SolutionExplorerTreeView;
-
-            app.OpenSolutionExplorer();
-            var searchNode = solutionExplorer.WaitForItem("Solution 'LoadSearchPaths' (1 project)", "LoadSearchPaths", "Search Path", "..\\AddSearchPaths");
-            AutomationWrapper.Select(searchNode);
-
-            try {
-                VsIdeTestHostContext.Dte.ExecuteCommand("Project.ExcludeFromProject");
-                Assert.Fail("Was able to exclude search path");
-            } catch (COMException) {
-            }
-        }
 
         private static void CountIs(Dictionary<string, int> count, string key, int expected){
             int actual;

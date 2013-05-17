@@ -139,7 +139,7 @@ namespace Microsoft.PythonTools.Project {
         /// <summary>
         /// Virtual env Node cannot be excluded.
         /// </summary>
-        internal override int ExcludeFromProject() {
+        protected override int ExcludeFromProject() {
             return (int)OleConstants.OLECMDERR_E_NOTSUPPORTED;
         }
 

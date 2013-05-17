@@ -77,11 +77,11 @@ namespace Microsoft.PythonTools.Project {
             entry.Properties[_searchPathEntryKey] = value;
         }
 
-        public override CommonFileNode CreateCodeFileNode(ProjectElement item) {
+        public override CommonFileNode CreateCodeFileNode(MsBuildProjectElement item) {
             return new PythonFileNode(this, item);
         }
 
-        public override CommonFileNode CreateNonCodeFileNode(ProjectElement item) {
+        public override CommonFileNode CreateNonCodeFileNode(MsBuildProjectElement item) {
             return new PythonNonCodeFileNode(this, item);
         }
 
@@ -401,6 +401,8 @@ namespace Microsoft.PythonTools.Project {
             return GetAnalyzer();
         }
 
+        public event EventHandler ProjectAnalyzerChanged;
+
         public override IProjectLauncher GetLauncher() {
             return PythonToolsPackage.GetLauncher(this);
         }
@@ -422,7 +424,8 @@ namespace Microsoft.PythonTools.Project {
             DisposeInterpreter();
 
             if (_defaultInterpreter) {
-                PythonToolsPackage.Instance.InterpreterOptionsPage.DefaultInterpreterChanged -= DefaultInterpreterChanged;
+                var interpService = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
+                interpService.DefaultInterpreterChanged -= DefaultInterpreterChanged;
             }
         }
 
@@ -453,25 +456,33 @@ namespace Microsoft.PythonTools.Project {
             // check to see if we should share our analyzer with another project in the same solution.  This enables
             // refactoring, find all refs, and intellisense across projects.
             var vsSolution = (IVsSolution)GetService(typeof(SVsSolution));
-            var guid = new Guid(PythonConstants.ProjectFactoryGuid);
-            IEnumHierarchies hierarchies;
-            ErrorHandler.ThrowOnFailure((vsSolution.GetProjectEnum((uint)(__VSENUMPROJFLAGS.EPF_MATCHTYPE | __VSENUMPROJFLAGS.EPF_LOADEDINSOLUTION), ref guid, out hierarchies)));
-            IVsHierarchy[] hierarchy = new IVsHierarchy[1];
-            uint fetched;
-            var curFactory = GetInterpreterFactory();
-            while (ErrorHandler.Succeeded(hierarchies.Next(1, hierarchy, out fetched)) && fetched == 1) {
-                var pyProj = hierarchy[0].GetProject().GetPythonProject();
+            if (vsSolution != null) {
+                var guid = new Guid(PythonConstants.ProjectFactoryGuid);
+                IEnumHierarchies hierarchies;
+                ErrorHandler.ThrowOnFailure((vsSolution.GetProjectEnum((uint)(__VSENUMPROJFLAGS.EPF_MATCHTYPE | __VSENUMPROJFLAGS.EPF_LOADEDINSOLUTION), ref guid, out hierarchies)));
+                IVsHierarchy[] hierarchy = new IVsHierarchy[1];
+                uint fetched;
+                var curFactory = GetInterpreterFactory();
+                while (ErrorHandler.Succeeded(hierarchies.Next(1, hierarchy, out fetched)) && fetched == 1) {
+                    var pyProj = hierarchy[0].GetProject().GetPythonProject();
 
-                if (pyProj != this &&
-                    pyProj._analyzer != null &&
-                    pyProj._analyzer.InterpreterFactory == curFactory) {
-                    // we have the same interpreter, we'll share analysis engines across projects.
-                    return pyProj._analyzer;
+                    if (pyProj != this &&
+                        pyProj._analyzer != null &&
+                        pyProj._analyzer.InterpreterFactory == curFactory) {
+                        // we have the same interpreter, we'll share analysis engines across projects.
+                        return pyProj._analyzer;
+                    }
                 }
             }
 
-            var model = GetService(typeof(SComponentModel)) as IComponentModel;
-            return new VsProjectAnalyzer(GetInterpreter(), GetInterpreterFactory(), model.GetAllPythonInterpreterFactories(), model.GetService<IErrorProviderFactory>(), this);
+            var model = PythonToolsPackage.ComponentModel;
+            var interpService = model.GetService<IInterpreterOptionsService>();
+            return new VsProjectAnalyzer(
+                GetInterpreter(),
+                GetInterpreterFactory(),
+                interpService.Interpreters.ToArray(),
+                model.GetService<IErrorProviderFactory>(),
+                this);
         }
 
         private void CreateInterpreter() {
@@ -501,25 +512,29 @@ namespace Microsoft.PythonTools.Project {
         internal IPythonInterpreterFactory GetInterpreterFactory() {
             var interpreterId = GetProjectProperty(PythonConstants.InterpreterId, false);
             var interpreterVersion = GetProjectProperty(PythonConstants.InterpreterVersion, false);
+            Guid id;
+            Version version;
 
-            var model = GetService(typeof(SComponentModel)) as IComponentModel;
+            var interpService = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
 
-            var allFactories = model.GetAllPythonInterpreterFactories();
-            var fact = allFactories.GetInterpreterFactory(interpreterId, interpreterVersion);
+            IPythonInterpreterFactory fact = null;
+            if (Guid.TryParse(interpreterId, out id) && Version.TryParse(interpreterVersion, out version)) {
+                fact = interpService.FindInterpreter(id, version);
+            }
 
             if (fact == null) {
-                fact = allFactories.GetDefaultInterpreter();
+                fact = interpService.DefaultInterpreter;
                 if (!_defaultInterpreter) {
                     // http://pytools.codeplex.com/workitem/643
                     // Don't hook the event multiple times
 
                     _defaultInterpreter = true;
 
-                    PythonToolsPackage.Instance.InterpreterOptionsPage.DefaultInterpreterChanged += DefaultInterpreterChanged;
+                    interpService.DefaultInterpreterChanged += DefaultInterpreterChanged;
                 }
             } else {
                 if (_defaultInterpreter) {
-                    PythonToolsPackage.Instance.InterpreterOptionsPage.DefaultInterpreterChanged -= DefaultInterpreterChanged;
+                    interpService.DefaultInterpreterChanged -= DefaultInterpreterChanged;
                 }
                 _defaultInterpreter = false;
             }
@@ -546,6 +561,11 @@ namespace Microsoft.PythonTools.Project {
             AnalyzeSearchPaths(ParseSearchPath());
 
             _analyzer = analyzer;
+
+            var analyzerChanged = ProjectAnalyzerChanged;
+            if (analyzerChanged != null) {
+                analyzerChanged(this, EventArgs.Empty);
+            }
         }
 
         private void Reanalyze(HierarchyNode node, VsProjectAnalyzer newAnalyzer) {
@@ -968,5 +988,10 @@ namespace Microsoft.PythonTools.Project {
 
         #endregion
 
+        public override Guid SharedCommandGuid {
+            get {
+                return GuidList.guidPythonToolsCmdSet;
+            }
+        }
     }
 }

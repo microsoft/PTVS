@@ -20,7 +20,6 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
-using Microsoft.PythonTools.Parsing;
 
 namespace Microsoft.PythonTools.Interpreter.Default {
     class CPythonInterpreterFactory : IPythonInterpreterFactory, IInterpreterWithCompletionDatabase {
@@ -31,7 +30,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         private PythonTypeDatabase _typeDb;
         private bool _generating;
         private string[] _missingModules;
-        private readonly Timer _refreshLastUpdateTimesTrigger;
+        private readonly Timer _refreshIsCurrentTrigger;
         private FileSystemWatcher _libWatcher;
 
         public CPythonInterpreterFactory(Version version)
@@ -46,10 +45,10 @@ namespace Microsoft.PythonTools.Interpreter.Default {
             _id = id;
             _config = new CPythonInterpreterConfiguration(pythonPath, pythonwPath, pathEnvVar, arch, version);
 
-            _refreshLastUpdateTimesTrigger = new Timer(RefreshLastUpdateTimes_Elapsed);
-            Task.Factory.StartNew(() => RefreshLastUpdateTimes());
+            _refreshIsCurrentTrigger = new Timer(RefreshIsCurrentTimer_Elapsed);
+            Task.Factory.StartNew(() => RefreshIsCurrent(false));
 
-            if (!string.IsNullOrEmpty(pythonPath)) {
+            if (!string.IsNullOrEmpty(pythonPath) && File.Exists(pythonPath)) {
                 try {
                     _libWatcher = new FileSystemWatcher {
                         IncludeSubdirectories = true,
@@ -166,7 +165,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
                             _libWatcher.EnableRaisingEvents = true;
                         }
                     }
-                    RefreshLastUpdateTimes();
+                    RefreshIsCurrent(false);
                 })) {
                 lock (this) {
                     _generating = false;
@@ -174,7 +173,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
                         _libWatcher.EnableRaisingEvents = true;
                     }
                 }
-                RefreshLastUpdateTimes();
+                RefreshIsCurrent(false);
                 return false;
             }
 
@@ -246,38 +245,49 @@ namespace Microsoft.PythonTools.Interpreter.Default {
             return null;
         }
 
-        private void RefreshLastUpdateTimes() {
+        public void RefreshIsCurrent(bool alwaysRaiseEvent) {
             bool initialValue = IsCurrent;
+            bool reasonChanged = false;
 
             if (Directory.Exists(DatabasePath)) {
                 var missingModules = ModulePath.GetModulesInLib(this)
-                    .Where(mp => !mp.IsSpecialName)
-                    .Select(mp => mp.FullName)
+                    // TODO: Remove IsCompiled check when pyds referenced by pth files are properly analyzed
+                    .Where(mp => !mp.IsCompiled)
+                    .Select(mp => mp.ModuleName)
                     .Except(Directory.EnumerateFiles(DatabasePath, "*.idb").Select(f => Path.GetFileNameWithoutExtension(f)), StringComparer.OrdinalIgnoreCase)
-                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .OrderBy(name => name, StringComparer.InvariantCultureIgnoreCase)
                     .ToArray();
 
                 if (missingModules.Length > 0) {
-                    Array.Sort(missingModules, StringComparer.OrdinalIgnoreCase);
+                    var oldModules = _missingModules;
+                    if (oldModules == null || oldModules.Length != missingModules.Length || !oldModules.SequenceEqual(missingModules)) {
+                        reasonChanged = true;
+                    }
                     _missingModules = missingModules;
                 } else {
                     _missingModules = null;
                 }
             }
 
-            OnIsCurrentChanged();
+            if (alwaysRaiseEvent || IsCurrent != initialValue) {
+                OnIsCurrentChanged();
+                reasonChanged = true;
+            }
+            if (reasonChanged) {
+                OnIsCurrentReasonChanged();
+            }
         }
 
-        private void RefreshLastUpdateTimes_Elapsed(object state) {
-            RefreshLastUpdateTimes();
+        private void RefreshIsCurrentTimer_Elapsed(object state) {
+            RefreshIsCurrent(false);
         }
 
         private void OnRenamed(object sender, RenamedEventArgs e) {
-            _refreshLastUpdateTimesTrigger.Change(1000, Timeout.Infinite);
+            _refreshIsCurrentTrigger.Change(1000, Timeout.Infinite);
         }
 
         private void OnChanged(object sender, FileSystemEventArgs e) {
-            _refreshLastUpdateTimesTrigger.Change(1000, Timeout.Infinite);
+            _refreshIsCurrentTrigger.Change(1000, Timeout.Infinite);
         }
 
         public event EventHandler IsCurrentChanged;
@@ -289,7 +299,21 @@ namespace Microsoft.PythonTools.Interpreter.Default {
             }
         }
 
-        public string GetIsCurrentReason(IFormatProvider culture) {
+        public event EventHandler IsCurrentReasonChanged;
+
+        private void OnIsCurrentReasonChanged() {
+            var evt = IsCurrentReasonChanged;
+            if (evt != null) {
+                evt(this, EventArgs.Empty);
+            }
+        }
+
+        static string GetPackageName(string fullName) {
+            int firstDot = fullName.IndexOf('.');
+            return (firstDot > 0) ? fullName.Remove(firstDot) : fullName;
+        }
+
+        public string GetFriendlyIsCurrentReason(IFormatProvider culture) {
             var missingModules = _missingModules;
             if (_generating) {
                 return "Currently regenerating";
@@ -303,14 +327,44 @@ namespace Microsoft.PythonTools.Interpreter.Default {
                         string.Join(Environment.NewLine + "    ", missingModules)
                         );
                 } else {
-                    return string.Format(culture,
-                        "{0} modules have not been analyzed.",
-                        missingModules.Length
-                        );
+                    var packages = new List<string>(
+                        from m in missingModules
+                        group m by GetPackageName(m) into groupedByPackage
+                        where groupedByPackage.Count() > 1
+                        orderby groupedByPackage.Key
+                        select groupedByPackage.Key);
+
+                    if (packages.Count > 0 && packages.Count < 100) {
+                        return string.Format(culture,
+                            "{0} modules have not been analyzed.{2}Packages include:{2}    {1}",
+                            missingModules.Length,
+                            string.Join(Environment.NewLine + "    ", packages),
+                            Environment.NewLine
+                            );
+                    } else {
+                        return string.Format(culture,
+                            "{0} modules have not been analyzed.",
+                            missingModules.Length);
+                    }
                 }
             }
 
             return "Up to date";
+        }
+
+        public string GetIsCurrentReason(IFormatProvider culture) {
+            var missingModules = _missingModules;
+            var reason = "Database at " + DatabasePath;
+            if (_generating) {
+                return reason + " is regenerating";
+            } else if (!Directory.Exists(DatabasePath)) {
+                return reason + " does not exist";
+            } else if (missingModules != null) {
+                return reason + " does not contain the following modules:" + Environment.NewLine +
+                    string.Join(Environment.NewLine, missingModules);
+            }
+
+            return reason + " is up to date";
         }
     }
 }
