@@ -31,6 +31,9 @@ namespace TestUtilities.UI {
         /// </summary>
         public void ClickOK() {
             ClickButtonByAutomationId("btn_OK");
+            //The button click may result in a dialog
+            //  Allow some time for the dialog
+            System.Threading.Thread.Sleep(1000);
         }
 
         /// <summary>

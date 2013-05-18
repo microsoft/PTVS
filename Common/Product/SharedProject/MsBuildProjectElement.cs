@@ -22,7 +22,7 @@ using Microsoft.VisualStudio;
 using MSBuild = Microsoft.Build.Evaluation;
 
 namespace Microsoft.VisualStudioTools.Project {
-    public class MsBuildProjectElement : ProjectElement {
+    internal class MsBuildProjectElement : ProjectElement {
         private MSBuild.ProjectItem _item;
 
         /// <summary>

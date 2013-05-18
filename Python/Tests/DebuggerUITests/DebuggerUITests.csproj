@@ -18,6 +18,10 @@
     <SccLocalPath>SAK</SccLocalPath>
     <SccAuxPath>SAK</SccAuxPath>
     <SccProvider>SAK</SccProvider>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <OldToolsVersion>4.0</OldToolsVersion>
+    <UpgradeBackupLocation />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -76,31 +80,31 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Product\Python\Analysis\Analysis.csproj">
+    <ProjectReference Include="..\..\Product\Analysis\Analysis.csproj">
       <Project>{A85D479D-67A9-4BDB-904A-7D86DAF68A6F}</Project>
       <Name>Analysis</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\Product\Python\Debugger\Debugger.csproj">
+    <ProjectReference Include="..\..\Product\Debugger\Debugger.csproj">
       <Project>{DECC7971-FA58-4DB0-9561-BFFADD393BBD}</Project>
       <Name>Debugger</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\Product\Python\PythonTools\PythonTools.csproj">
+    <ProjectReference Include="..\..\Product\PythonTools\PythonTools.csproj">
       <Project>{FA7BE5F5-E04F-4613-B7AC-70CE10D1BB68}</Project>
       <Name>PythonTools</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Common\TestUtilities.UI\TestUtilities.UI.csproj">
+    <ProjectReference Include="..\..\..\Common\Tests\Utilities.UI\TestUtilities.UI.csproj">
       <Project>{E8150EBC-6B62-40BF-BF91-1DC60149B530}</Project>
       <Name>TestUtilities.UI</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Common\TestUtilities\TestUtilities.csproj">
+    <ProjectReference Include="..\..\..\Common\Tests\Utilities\TestUtilities.csproj">
       <Project>{D092D54E-FF29-4D32-9AEE-4EF704C92F67}</Project>
       <Name>TestUtilities</Name>
     </ProjectReference>
-    <ProjectReference Include="..\TestSccPackage\TestSccPackage.csproj">
+    <ProjectReference Include="..\SccPackage\TestSccPackage.csproj">
       <Project>{E75E5DB1-0EA0-4247-A830-FE467C016816}</Project>
       <Name>TestSccPackage</Name>
     </ProjectReference>
-    <ProjectReference Include="..\TestUtilities.Python\TestUtilities.Python.csproj">
+    <ProjectReference Include="..\Utilities.Python\TestUtilities.Python.csproj">
       <Project>{a731c4c3-3741-4080-a946-c47574c1f3bf}</Project>
       <Name>TestUtilities.Python</Name>
     </ProjectReference>

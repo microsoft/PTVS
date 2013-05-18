@@ -26,7 +26,7 @@ using Microsoft.VisualStudioTools.Project;
 namespace Microsoft.PythonTools.Project {
 
     internal class PythonFileNode : CommonFileNode {
-        internal PythonFileNode(CommonProjectNode root, MsBuildProjectElement e)
+        internal PythonFileNode(CommonProjectNode root, ProjectElement e)
             : base(root, e) { }
 
         public override string Caption {
@@ -96,7 +96,9 @@ namespace Microsoft.PythonTools.Project {
                             //We enable "Set as StartUp File" command only on current language code files, 
                             //the file is in project home dir and if the file is not the startup file already.
                             string startupFile = ((CommonProjectNode)ProjectMgr).GetStartupFile();
-                            if (IsInProjectHome() && !CommonUtils.IsSamePath(startupFile, this.Url)) {
+                            if (IsInProjectHome() && 
+                                !CommonUtils.IsSamePath(startupFile, Url) &&
+                                !IsNonMemberItem) {
                                 result |= QueryStatusResult.SUPPORTED | QueryStatusResult.ENABLED;
                             }
                             return VSConstants.S_OK;

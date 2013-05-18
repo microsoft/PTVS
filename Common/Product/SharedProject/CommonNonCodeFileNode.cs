@@ -18,7 +18,7 @@ using Microsoft.VisualStudio.Shell.Interop;
 
 namespace Microsoft.VisualStudioTools.Project {
     internal class CommonNonCodeFileNode : CommonFileNode {
-        public CommonNonCodeFileNode(CommonProjectNode root, MsBuildProjectElement e)
+        public CommonNonCodeFileNode(CommonProjectNode root, ProjectElement e)
             : base(root, e) {
         }
 

@@ -56,19 +56,19 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Product\Python\Analysis\Analysis.csproj">
+    <ProjectReference Include="..\..\Product\Analysis\Analysis.csproj">
       <Project>{A85D479D-67A9-4BDB-904A-7D86DAF68A6F}</Project>
       <Name>Analysis</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\Product\Python\Debugger\Debugger.csproj">
+    <ProjectReference Include="..\..\Product\Debugger\Debugger.csproj">
       <Project>{DECC7971-FA58-4DB0-9561-BFFADD393BBD}</Project>
       <Name>Debugger</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\Product\Python\Django\Django.csproj">
+    <ProjectReference Include="..\..\Product\Django\Django.csproj">
       <Project>{639F1EFB-5A8B-4F8B-BF49-BC73F244D38D}</Project>
       <Name>Django</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Common\TestUtilities\TestUtilities.csproj">
+    <ProjectReference Include="..\..\..\Common\Tests\Utilities\TestUtilities.csproj">
       <Project>{D092D54E-FF29-4D32-9AEE-4EF704C92F67}</Project>
       <Name>TestUtilities</Name>
     </ProjectReference>
@@ -76,7 +76,7 @@
       <Project>{E50E1B02-257C-4E10-AC1C-5ED36B48EE40}</Project>
       <Name>DebuggerTests</Name>
     </ProjectReference>
-    <ProjectReference Include="..\TestUtilities.Python\TestUtilities.Python.csproj">
+    <ProjectReference Include="..\Utilities.Python\TestUtilities.Python.csproj">
       <Project>{a731c4c3-3741-4080-a946-c47574c1f3bf}</Project>
       <Name>TestUtilities.Python</Name>
     </ProjectReference>

@@ -32,6 +32,10 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public override object GetIconHandle(bool open) {
+            if (ItemNode.IsExcluded) {
+                return base.GetIconHandle(open);
+            }
+
             for (HierarchyNode child = this.FirstChild; child != null; child = child.NextSibling) {
                 if (child.Url.EndsWith("\\__init__.py", StringComparison.Ordinal)) {
                     if (_imageList == null) {

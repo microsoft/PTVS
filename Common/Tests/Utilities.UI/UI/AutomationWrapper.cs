@@ -182,7 +182,6 @@ namespace TestUtilities.UI {
         /// </summary>
         public static void Invoke(AutomationElement button) {
             var invokePattern = (InvokePattern)button.GetCurrentPattern(InvokePattern.Pattern);
-
             invokePattern.Invoke();
         }
 
@@ -192,7 +191,6 @@ namespace TestUtilities.UI {
         /// <param name="selectionItem"></param>
         public static void Select(AutomationElement selectionItem) {
             var selectPattern = (SelectionItemPattern)selectionItem.GetCurrentPattern(SelectionItemPattern.Pattern);
-
             selectPattern.Select();
         }
 

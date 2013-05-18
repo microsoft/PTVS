@@ -32,7 +32,7 @@ namespace TestUtilities.UI {
         }
 
         public void ActivateBrowseTab() {
-            for (int i = 0; i < 10; i++) {
+            for (int i = 0; i < 20; i++) {
                 var tabItem = Element.FindFirst(
                     TreeScope.Descendants,
                     new AndCondition(
@@ -47,7 +47,7 @@ namespace TestUtilities.UI {
                     )
                 );
                 if (tabItem == null) {
-                    System.Threading.Thread.Sleep(1000);
+                    System.Threading.Thread.Sleep(500);
                     continue;
                 }
 

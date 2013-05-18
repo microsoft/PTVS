@@ -76,7 +76,7 @@ namespace Microsoft.VisualStudio.Repl {
 
         private void AppendEscapedText(string text, bool isError, int escape) {
             OutputEntryKind kind = isError ? OutputEntryKind.StdErr : OutputEntryKind.StdOut;
-            ConsoleColor color = isError ? _outColor : _errColor;
+            ConsoleColor color = isError ? _errColor : _outColor;
 
             // http://en.wikipedia.org/wiki/ANSI_escape_code
             // process any ansi color sequences...
@@ -163,6 +163,8 @@ namespace Microsoft.VisualStudio.Repl {
                                         case 37: color = ConsoleColor.Gray | (color & ConsoleColor.DarkGray); break;
                                         case 38: // xterm 286 background color
                                         case 39: // default text color
+                                            color = _outColor;
+                                            break;
                                         case 40: // background colors
                                         case 41: 
                                         case 42: 
@@ -171,6 +173,14 @@ namespace Microsoft.VisualStudio.Repl {
                                         case 45: 
                                         case 46:
                                         case 47: break;
+                                        case 90: color = ConsoleColor.DarkGray; break;
+                                        case 91: color = ConsoleColor.Red; break;
+                                        case 92: color = ConsoleColor.Green; break;
+                                        case 93: color = ConsoleColor.Yellow; break;
+                                        case 94: color = ConsoleColor.Blue; break;
+                                        case 95: color = ConsoleColor.Magenta; break;
+                                        case 96: color = ConsoleColor.Cyan; break;
+                                        case 97: color = ConsoleColor.White; break;
                                     }
                                 }
                             }

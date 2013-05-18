@@ -20,6 +20,7 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Parsing;
 
 namespace Microsoft.PythonTools.Interpreter.Default {
     class CPythonInterpreterFactory : IPythonInterpreterFactory, IInterpreterWithCompletionDatabase {
@@ -345,8 +346,8 @@ namespace Microsoft.PythonTools.Interpreter.Default {
                         return string.Format(culture,
                             "{0} modules have not been analyzed.",
                             missingModules.Length);
-                    }
                 }
+            }
             }
 
             return "Up to date";

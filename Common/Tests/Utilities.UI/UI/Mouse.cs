@@ -79,7 +79,7 @@ namespace TestUtilities.UI {
         }
 
         public static void MoveTo(System.Windows.Point point) {
-            SendMouseInput((int)point.X, (int)point.Y, 0, NativeMethods.SendMouseInputFlags.Move | NativeMethods.SendMouseInputFlags.Absolute);
+            SendMouseInput((int)point.X, (int)point.Y, 0, NativeMethods.SendMouseInputFlags.Move | NativeMethods.SendMouseInputFlags.Absolute);            
         }
         /// <summary>
         /// Moves the mouse pointer to the specified screen coordinates.
@@ -184,6 +184,7 @@ namespace TestUtilities.UI {
             if (NativeMethods.SendInput(1, ref mi, Marshal.SizeOf(mi)) == 0) {
                 throw new Win32Exception(Marshal.GetLastWin32Error());
             }
+            System.Threading.Thread.Sleep(250);
         }
 
         private static void NormalizeCoordinates(ref int x, ref int y) {

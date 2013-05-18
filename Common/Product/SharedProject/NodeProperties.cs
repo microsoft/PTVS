@@ -292,47 +292,6 @@ namespace Microsoft.VisualStudioTools.Project
             }
         }
 
-        [SRCategoryAttribute(SR.Advanced)]
-        [LocDisplayName(SR.BuildAction)]
-        [SRDescriptionAttribute(SR.BuildActionDescription)]
-        [TypeConverter(typeof(BuildActionTypeConverter))]
-        public prjBuildAction BuildAction
-        {
-            get
-            {
-                return (prjBuildAction)BuildActionTypeConverter.Instance.ConvertFromString(HierarchyNode.ItemNode.ItemTypeName);
-            }
-            set
-            {
-                this.HierarchyNode.ItemNode.ItemTypeName = BuildActionTypeConverter.Instance.ConvertToString(value);
-            }
-        }
-
-        [SRCategoryAttribute(SR.Advanced)]
-        [LocDisplayName(SR.Publish)]
-        [SRDescriptionAttribute(SR.PublishDescription)]
-        public bool Publish
-        {
-            get
-            {
-                var publish = this.HierarchyNode.ItemNode.GetMetadata("Publish");
-                if (String.IsNullOrEmpty(publish))
-                {
-                    if (this.HierarchyNode.ItemNode.ItemTypeName == "Compile")
-                    {
-                        return true;
-                    }
-                    return false;
-                }
-                return Convert.ToBoolean(publish);
-            }
-            set
-            {
-
-                this.HierarchyNode.ItemNode.SetMetadata("Publish", value.ToString());
-            }
-        }
-
         #region non-browsable properties - used for automation only
 
         [Browsable(false)]
@@ -353,16 +312,6 @@ namespace Microsoft.VisualStudioTools.Project
             }
         }
 
-        [Browsable(false)]
-        public string SourceControlStatus
-        {
-            get
-            {
-                // remove STATEICON_ and return rest of enum
-                return HierarchyNode.StateIconIndex.ToString().Substring(10);
-            }
-        }
-
         #endregion
 
         #endregion
@@ -378,6 +327,67 @@ namespace Microsoft.VisualStudioTools.Project
         {
             return SR.GetString(SR.FileProperties, CultureInfo.CurrentUICulture);
         }
+    }
+
+    [ComVisible(true)]
+    public class IncludedFileNodeProperties : FileNodeProperties 
+    {
+        internal IncludedFileNodeProperties(HierarchyNode node)
+            : base(node)
+        {
+        }
+
+        [SRCategoryAttribute(SR.Advanced)]
+        [LocDisplayName(SR.BuildAction)]
+        [SRDescriptionAttribute(SR.BuildActionDescription)]
+        [TypeConverter(typeof(BuildActionTypeConverter))]
+        public prjBuildAction BuildAction 
+        {
+            get 
+            {
+                return (prjBuildAction)BuildActionTypeConverter.Instance.ConvertFromString(HierarchyNode.ItemNode.ItemTypeName);
+            }
+            set 
+            {
+                this.HierarchyNode.ItemNode.ItemTypeName = BuildActionTypeConverter.Instance.ConvertToString(value);
+            }
+        }
+
+        [SRCategoryAttribute(SR.Advanced)]
+        [LocDisplayName(SR.Publish)]
+        [SRDescriptionAttribute(SR.PublishDescription)]
+        public bool Publish 
+        {
+            get 
+            {
+                var publish = this.HierarchyNode.ItemNode.GetMetadata("Publish");
+                if (String.IsNullOrEmpty(publish)) 
+                {
+                    if (this.HierarchyNode.ItemNode.ItemTypeName == "Compile") 
+                    {
+                        return true;
+                    }
+                    return false;
+                }
+                return Convert.ToBoolean(publish);
+            }
+            set 
+            {
+
+                this.HierarchyNode.ItemNode.SetMetadata("Publish", value.ToString());
+            }
+        }
+
+        [Browsable(false)]
+        public string SourceControlStatus 
+        {
+            get 
+            {
+                // remove STATEICON_ and return rest of enum
+                return HierarchyNode.StateIconIndex.ToString().Substring(10);
+            }
+        }
+
     }
 
     [ComVisible(true)]

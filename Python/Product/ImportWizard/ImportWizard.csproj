@@ -87,7 +87,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Analysis\Analysis.csproj">
       <Project>{a85d479d-67a9-4bdb-904a-7d86daf68a6f}</Project>
-      <Name>Microsoft.PythonTools.Analysis</Name>
+      <Name>Analysis</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

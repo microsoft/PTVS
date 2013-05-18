@@ -169,7 +169,7 @@
     </ZipItem>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <Compile Include="..\PythonTools\PythonTools\Project\SolutionListener.cs">
+    <Compile Include="$(BuildRoot)\Common\Product\SharedProject\SolutionListener.cs">
       <Link>Project\SolutionListener.cs</Link>
     </Compile>
     <Compile Include="DialogWindowVersioningWorkaround.cs" />

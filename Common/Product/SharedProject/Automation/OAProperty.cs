@@ -16,11 +16,9 @@ using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.InteropServices;
 
-namespace Microsoft.VisualStudioTools.Project.Automation
-{
+namespace Microsoft.VisualStudioTools.Project.Automation {
     [ComVisible(true)]
-    public class OAProperty : EnvDTE.Property
-    {
+    public class OAProperty : EnvDTE.Property {
         #region fields
         private OAProperties parent;
         private PropertyInfo pi;
@@ -28,8 +26,7 @@ namespace Microsoft.VisualStudioTools.Project.Automation
 
         #region ctors
 
-        public OAProperty(OAProperties parent, PropertyInfo pi)
-        {
+        public OAProperty(OAProperties parent, PropertyInfo pi) {
             this.parent = parent;
             this.pi = pi;
         }
@@ -39,18 +36,15 @@ namespace Microsoft.VisualStudioTools.Project.Automation
         /// <summary>
         /// Microsoft Internal Use Only.
         /// </summary>
-        public object Application
-        {
+        public object Application {
             get { return null; }
         }
 
         /// <summary>
         /// Gets the Collection containing the Property object supporting this property.
         /// </summary>
-        public EnvDTE.Properties Collection
-        {
-            get
-            {
+        public EnvDTE.Properties Collection {
+            get {
                 //todo: EnvDTE.Property.Collection
                 return this.parent;
             }
@@ -59,10 +53,8 @@ namespace Microsoft.VisualStudioTools.Project.Automation
         /// <summary>
         /// Gets the top-level extensibility object.
         /// </summary>
-        public EnvDTE.DTE DTE
-        {
-            get
-            {
+        public EnvDTE.DTE DTE {
+            get {
                 return this.parent.DTE;
             }
         }
@@ -75,8 +67,7 @@ namespace Microsoft.VisualStudioTools.Project.Automation
         /// <param name="index3">The index of the item to display. Reserved for future use.</param>
         /// <param name="index4">The index of the item to display. Reserved for future use.</param>
         /// <returns>The value of a property</returns>
-        public object get_IndexedValue(object index1, object index2, object index3, object index4)
-        {
+        public object get_IndexedValue(object index1, object index2, object index3, object index4) {
             Debug.Assert(pi.GetIndexParameters().Length == 0);
             return this.Value;
         }
@@ -85,18 +76,15 @@ namespace Microsoft.VisualStudioTools.Project.Automation
         /// Setter function to set properties values. 
         /// </summary>
         /// <param name="value"></param>
-        public void let_Value(object value)
-        {
+        public void let_Value(object value) {
             this.Value = value;
         }
 
         /// <summary>
         /// Gets the name of the object.
         /// </summary>
-        public string Name
-        {
-            get
-            {
+        public string Name {
+            get {
                 var attrs = pi.GetCustomAttributes(typeof(PropertyNameAttribute), true);
                 if (attrs.Length > 0) {
                     return ((PropertyNameAttribute)attrs[0]).Name;
@@ -108,30 +96,25 @@ namespace Microsoft.VisualStudioTools.Project.Automation
         /// <summary>
         /// Gets the number of indices required to access the value.
         /// </summary>
-        public short NumIndices
-        {
+        public short NumIndices {
             get { return (short)pi.GetIndexParameters().Length; }
         }
 
         /// <summary>
         /// Sets or gets the object supporting the Property object.
         /// </summary>
-        public object Object
-        {
-            get
-            {
+        public object Object {
+            get {
                 return this.parent.Target;
             }
-            set
-            {
+            set {
             }
         }
 
         /// <summary>
         /// Microsoft Internal Use Only.
         /// </summary>
-        public EnvDTE.Properties Parent
-        {
+        public EnvDTE.Properties Parent {
             get { return this.parent; }
         }
 
@@ -143,23 +126,23 @@ namespace Microsoft.VisualStudioTools.Project.Automation
         /// <param name="index3">Reserved for future use.</param>
         /// <param name="index4">Reserved for future use.</param>
         /// <param name="value">The value to set.</param>
-        public void set_IndexedValue(object index1, object index2, object index3, object index4, object value)
-        {
+        public void set_IndexedValue(object index1, object index2, object index3, object index4, object value) {
             Debug.Assert(pi.GetIndexParameters().Length == 0);
-            this.Value = value;
+            UIThread.Instance.RunSync(() => {
+                this.Value = value;
+            });
         }
 
         /// <summary>
         /// Gets or sets the value of the property returned by the Property object.
         /// </summary>
-        public object Value
-        {
+        public object Value {
             get { return pi.GetValue(this.parent.Target, null); }
-            set
-            {
-                using (AutomationScope scope = new AutomationScope(this.parent.Target.HierarchyNode.ProjectMgr.Site))
-                {
-                    this.pi.SetValue(this.parent.Target, value, null);
+            set {
+                using (AutomationScope scope = new AutomationScope(this.parent.Target.HierarchyNode.ProjectMgr.Site)) {
+                    UIThread.Instance.RunSync(() => {
+                        this.pi.SetValue(this.parent.Target, value, null);
+                    });
                 }
             }
         }

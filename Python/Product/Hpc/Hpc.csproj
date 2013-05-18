@@ -154,7 +154,7 @@
     </ProjectReference>
     <ProjectReference Include="..\PythonTools\PythonTools.csproj">
       <Project>{FA7BE5F5-E04F-4613-B7AC-70CE10D1BB68}</Project>
-      <Name>Microsoft.PythonTools</Name>
+      <Name>PythonTools</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

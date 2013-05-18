@@ -87,9 +87,9 @@ namespace TestUtilities.UI {
         }
 
         public void WaitForText(string text) {
-            for (int i = 0; i < 10; i++) {
+            for (int i = 0; i < 100; i++) {
                 if (Text != text) {
-                    System.Threading.Thread.Sleep(1000);
+                    System.Threading.Thread.Sleep(100);
                 } else {
                     break;
                 }
@@ -177,12 +177,12 @@ namespace TestUtilities.UI {
         }
 
         private static void ShowSmartTagWorker(object dummy) {
-            for (int i = 0; i < 20; i++) {
+            for (int i = 0; i < 40; i++) {
                 try {
                     VsIdeTestHostContext.Dte.ExecuteCommand("View.ShowSmartTag");
                     break;
                 } catch {
-                    System.Threading.Thread.Sleep(500);
+                    System.Threading.Thread.Sleep(250);
                 }
             }
         }
@@ -194,11 +194,11 @@ namespace TestUtilities.UI {
 
         public T WaitForSession<T>() where T : IIntellisenseSession {
             var sessionStack = IntellisenseSessionStack;
-            for (int i = 0; i < 100; i++) {
+            for (int i = 0; i < 40; i++) {
                 if (sessionStack.TopSession is T) {
                     break;
                 }
-                System.Threading.Thread.Sleep(100);
+                System.Threading.Thread.Sleep(250);
             }
 
             Assert.IsTrue(sessionStack.TopSession is T);

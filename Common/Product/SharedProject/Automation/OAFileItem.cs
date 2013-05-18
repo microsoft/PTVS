@@ -24,19 +24,16 @@ using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using VSConstants = Microsoft.VisualStudio.VSConstants;
 
-namespace Microsoft.VisualStudioTools.Project.Automation
-{
+namespace Microsoft.VisualStudioTools.Project.Automation {
     /// <summary>
     /// Represents an automation object for a file in a project
     /// </summary>
     [SuppressMessage("Microsoft.Interoperability", "CA1405:ComVisibleTypeBaseTypesShouldBeComVisible")]
     [ComVisible(true)]
-    public class OAFileItem : OAProjectItem
-    {
+    public class OAFileItem : OAProjectItem {
         #region ctors
         internal OAFileItem(OAProject project, FileNode node)
-            : base(project, node)
-        {
+            : base(project, node) {
         }
 
         #endregion
@@ -47,15 +44,13 @@ namespace Microsoft.VisualStudioTools.Project.Automation
             }
         }
 
-        public override string Name
-        {
-            get
-            {
+        public override string Name {
+            get {
                 return this.Node.FileName;
             }
-            set 
-            {
-                base.Name = value;
+            set {
+                UIThread.Instance.RunSync(() =>
+                    base.Name = value);
             }
         }
 
@@ -65,23 +60,22 @@ namespace Microsoft.VisualStudioTools.Project.Automation
         /// </summary>
         /// <exception cref="InvalidOperationException">Is thrown if the project is closed or it the service provider attached to the project is invalid.</exception>
         /// <exception cref="ComException">Is thrown if the dirty state cannot be retrived.</exception>
-        public override bool IsDirty
-        {
-            get
-            {
+        public override bool IsDirty {
+            get {
                 CheckProjectIsValid();
 
                 bool isDirty = false;
 
-                using (AutomationScope scope = new AutomationScope(this.Node.ProjectMgr.Site))
-                {
-                    DocumentManager manager = this.Node.GetDocumentManager();
-                    Utilities.CheckNotNull(manager);
+                using (AutomationScope scope = new AutomationScope(this.Node.ProjectMgr.Site)) {
+                    UIThread.Instance.RunSync(() => {
+                        DocumentManager manager = this.Node.GetDocumentManager();
+                        Utilities.CheckNotNull(manager);
 
-                    bool isOpen, isOpenedByUs;
-                    uint docCookie;
-                    IVsPersistDocData persistDocData;
-                    manager.GetDocInfo(out isOpen, out isDirty, out isOpenedByUs, out docCookie, out persistDocData);
+                        bool isOpen, isOpenedByUs;
+                        uint docCookie;
+                        IVsPersistDocData persistDocData;
+                        manager.GetDocInfo(out isOpen, out isDirty, out isOpenedByUs, out docCookie, out persistDocData);
+                    });
                 }
                 return isDirty;
             }
@@ -91,34 +85,31 @@ namespace Microsoft.VisualStudioTools.Project.Automation
         /// <summary>
         /// Gets the Document associated with the item, if one exists.
         /// </summary>
-        public override EnvDTE.Document Document
-        {
-            get
-            {
+        public override EnvDTE.Document Document {
+            get {
                 CheckProjectIsValid();
 
                 EnvDTE.Document document = null;
 
-                using (AutomationScope scope = new AutomationScope(this.Node.ProjectMgr.Site))
-                {
-                    IVsUIHierarchy hier;
-                    uint itemid;
+                using (AutomationScope scope = new AutomationScope(this.Node.ProjectMgr.Site)) {
+                    UIThread.Instance.RunSync(() => {
+                        IVsUIHierarchy hier;
+                        uint itemid;
 
-                    IVsWindowFrame windowFrame;
+                        IVsWindowFrame windowFrame;
 
-                    VsShellUtilities.IsDocumentOpen(this.Node.ProjectMgr.Site, this.Node.Url, VSConstants.LOGVIEWID_Any, out hier, out itemid, out windowFrame);
+                        VsShellUtilities.IsDocumentOpen(this.Node.ProjectMgr.Site, this.Node.Url, VSConstants.LOGVIEWID_Any, out hier, out itemid, out windowFrame);
 
-                    if (windowFrame != null)
-                    {
-                        object var;
-                        ErrorHandler.ThrowOnFailure(windowFrame.GetProperty((int)__VSFPROPID.VSFPROPID_DocCookie, out var));
-                        object documentAsObject;
-                        ErrorHandler.ThrowOnFailure(scope.Extensibility.GetDocumentFromDocCookie((int)var, out documentAsObject));
-                        Utilities.CheckNotNull(documentAsObject);
+                        if (windowFrame != null) {
+                            object var;
+                            ErrorHandler.ThrowOnFailure(windowFrame.GetProperty((int)__VSFPROPID.VSFPROPID_DocCookie, out var));
+                            object documentAsObject;
+                            ErrorHandler.ThrowOnFailure(scope.Extensibility.GetDocumentFromDocCookie((int)var, out documentAsObject));
+                            Utilities.CheckNotNull(documentAsObject);
 
-                        document = (Document)documentAsObject;
-                    }
-
+                            document = (Document)documentAsObject;
+                        }
+                    });
                 }
 
                 return document;
@@ -131,53 +122,45 @@ namespace Microsoft.VisualStudioTools.Project.Automation
         /// </summary>
         /// <param name="ViewKind">Specifies the view kind in which to open the item (file)</param>
         /// <returns>Window object</returns>
-        public override EnvDTE.Window Open(string viewKind)
-        {
+        public override EnvDTE.Window Open(string viewKind) {
             CheckProjectIsValid();
 
             IVsWindowFrame windowFrame = null;
             IntPtr docData = IntPtr.Zero;
 
-            using (AutomationScope scope = new AutomationScope(this.Node.ProjectMgr.Site))
-            {
-                try
-                {
-                    // Validate input params
-                    Guid logicalViewGuid = VSConstants.LOGVIEWID_Primary;
-                    try
-                    {
-                        if (!(String.IsNullOrEmpty(viewKind)))
-                        {
-                            logicalViewGuid = new Guid(viewKind);
+            using (AutomationScope scope = new AutomationScope(this.Node.ProjectMgr.Site)) {
+                UIThread.Instance.RunSync(() => {
+                    try {
+                        // Validate input params
+                        Guid logicalViewGuid = VSConstants.LOGVIEWID_Primary;
+                        try {
+                            if (!(String.IsNullOrEmpty(viewKind))) {
+                                logicalViewGuid = new Guid(viewKind);
+                            }
+                        } catch (FormatException) {
+                            // Not a valid guid
+                            throw new ArgumentException(SR.GetString(SR.ParameterMustBeAValidGuid, CultureInfo.CurrentUICulture), "viewKind");
+                        }
+
+                        uint itemid;
+                        IVsHierarchy ivsHierarchy;
+                        uint docCookie;
+                        IVsRunningDocumentTable rdt = this.Node.ProjectMgr.Site.GetService(typeof(SVsRunningDocumentTable)) as IVsRunningDocumentTable;
+                        Debug.Assert(rdt != null, " Could not get running document table from the services exposed by this project");
+                        Utilities.CheckNotNull(rdt);
+
+                        ErrorHandler.ThrowOnFailure(rdt.FindAndLockDocument((uint)_VSRDTFLAGS.RDT_NoLock, this.Node.Url, out ivsHierarchy, out itemid, out docData, out docCookie));
+
+                        // Open the file using the IVsProject interface
+                        // We get the outer hierarchy so that projects can customize opening.                    
+                        var project = Node.ProjectMgr.GetOuterInterface<IVsProject>();
+                        ErrorHandler.ThrowOnFailure(project.OpenItem(Node.ID, ref logicalViewGuid, docData, out windowFrame));
+                    } finally {
+                        if (docData != IntPtr.Zero) {
+                            Marshal.Release(docData);
                         }
                     }
-                    catch (FormatException)
-                    {
-                        // Not a valid guid
-                        throw new ArgumentException(SR.GetString(SR.ParameterMustBeAValidGuid, CultureInfo.CurrentUICulture), "viewKind");
-                    }
-
-                    uint itemid;
-                    IVsHierarchy ivsHierarchy;
-                    uint docCookie;
-                    IVsRunningDocumentTable rdt = this.Node.ProjectMgr.Site.GetService(typeof(SVsRunningDocumentTable)) as IVsRunningDocumentTable;
-                    Debug.Assert(rdt != null, " Could not get running document table from the services exposed by this project");
-                    Utilities.CheckNotNull(rdt);
-
-                    ErrorHandler.ThrowOnFailure(rdt.FindAndLockDocument((uint)_VSRDTFLAGS.RDT_NoLock, this.Node.Url, out ivsHierarchy, out itemid, out docData, out docCookie));
-
-                    // Open the file using the IVsProject interface
-                    // We get the outer hierarchy so that projects can customize opening.                    
-                    var project = Node.ProjectMgr.GetOuterInterface<IVsProject>();
-                    ErrorHandler.ThrowOnFailure(project.OpenItem(Node.ID, ref logicalViewGuid, docData, out windowFrame));                    
-                }
-                finally
-                {
-                    if (docData != IntPtr.Zero)
-                    {
-                        Marshal.Release(docData);
-                    }
-                }
+                });
             }
 
             // Get the automation object and return it
@@ -190,9 +173,10 @@ namespace Microsoft.VisualStudioTools.Project.Automation
         /// <param name="fileName">The name with which to save the project or project item.</param>
         /// <exception cref="InvalidOperationException">Is thrown if the save operation failes.</exception>
         /// <exception cref="ArgumentNullException">Is thrown if fileName is null.</exception>
-        public override void Save(string fileName)
-        {
-            this.DoSave(false, fileName);
+        public override void Save(string fileName) {
+            UIThread.Instance.RunSync(() => {
+                this.DoSave(false, fileName);
+            });
         }
 
         /// <summary>
@@ -200,21 +184,18 @@ namespace Microsoft.VisualStudioTools.Project.Automation
         /// </summary>
         /// <param name="fileName">The file name with which to save the solution, project, or project item. If the file exists, it is overwritten</param>
         /// <returns>true if the rename was successful. False if Save as failes</returns>
-        public override bool SaveAs(string fileName)
-        {
-            try
-            {
-                this.DoSave(true, fileName);
-            }
-            catch (InvalidOperationException)
-            {
+        public override bool SaveAs(string fileName) {
+            try {
+                UIThread.Instance.RunSync(() => {
+                    this.DoSave(true, fileName);
+                });
+            } catch (InvalidOperationException) {
                 return false;
-            }
-            catch (COMException)
-            {
+            } catch (COMException) {
                 return false;
             }
             return true;
+
         }
 
         /// <summary>
@@ -222,36 +203,31 @@ namespace Microsoft.VisualStudioTools.Project.Automation
         /// </summary>
         /// <param name="viewKind">A Constants.vsViewKind* indicating the type of view to check./param>
         /// <returns>A Boolean value indicating true if the project is open in the given view type; false if not. </returns>
-        public override bool get_IsOpen(string viewKind)
-        {
+        public override bool get_IsOpen(string viewKind) {
             CheckProjectIsValid();
 
             // Validate input params
             Guid logicalViewGuid = VSConstants.LOGVIEWID_Primary;
-            try
-            {
-                if (!(String.IsNullOrEmpty(viewKind)))
-                {
+            try {
+                if (!(String.IsNullOrEmpty(viewKind))) {
                     logicalViewGuid = new Guid(viewKind);
                 }
-            }
-            catch (FormatException)
-            {
+            } catch (FormatException) {
                 // Not a valid guid
                 throw new ArgumentException(SR.GetString(SR.ParameterMustBeAValidGuid, CultureInfo.CurrentUICulture), "viewKind");
             }
 
             bool isOpen = false;
 
-            using (AutomationScope scope = new AutomationScope(this.Node.ProjectMgr.Site))
-            {
-                IVsUIHierarchy hier;
-                uint itemid;
+            using (AutomationScope scope = new AutomationScope(this.Node.ProjectMgr.Site)) {
+                UIThread.Instance.RunSync(() => {
+                    IVsUIHierarchy hier;
+                    uint itemid;
 
-                IVsWindowFrame windowFrame;
+                    IVsWindowFrame windowFrame;
 
-                isOpen = VsShellUtilities.IsDocumentOpen(this.Node.ProjectMgr.Site, this.Node.Url, logicalViewGuid, out hier, out itemid, out windowFrame);
-
+                    isOpen = VsShellUtilities.IsDocumentOpen(this.Node.ProjectMgr.Site, this.Node.Url, logicalViewGuid, out hier, out itemid, out windowFrame);
+                });
             }
 
             return isOpen;
@@ -260,14 +236,14 @@ namespace Microsoft.VisualStudioTools.Project.Automation
         /// <summary>
         /// Gets the ProjectItems for the object.
         /// </summary>
-        public override ProjectItems ProjectItems
-        {
-            get
-            {
-                if (this.Project.ProjectNode.CanFileNodesHaveChilds)
-                    return new OAProjectItems(this.Project, this.Node);
-                else
-                    return base.ProjectItems;
+        public override ProjectItems ProjectItems {
+            get {
+                return UIThread.Instance.RunSync<ProjectItems>(() => {
+                    if (this.Project.ProjectNode.CanFileNodesHaveChilds)
+                        return new OAProjectItems(this.Project, this.Node);
+                    else
+                        return base.ProjectItems;
+                });
             }
         }
 
@@ -280,74 +256,61 @@ namespace Microsoft.VisualStudioTools.Project.Automation
         /// </summary>
         /// <param name="isCalledFromSaveAs">Flag determining which Save method called , the SaveAs or the Save.</param>
         /// <param name="fileName">The name of the project file.</param>        
-        private void DoSave(bool isCalledFromSaveAs, string fileName)
-        {
+        private void DoSave(bool isCalledFromSaveAs, string fileName) {
             Utilities.ArgumentNotNull("fileName", fileName);
 
             CheckProjectIsValid();
 
-            using (AutomationScope scope = new AutomationScope(this.Node.ProjectMgr.Site))
-            {
-                IntPtr docData = IntPtr.Zero;
+            using (AutomationScope scope = new AutomationScope(this.Node.ProjectMgr.Site)) {
 
-                try
-                {
-                    IVsRunningDocumentTable rdt = this.Node.ProjectMgr.Site.GetService(typeof(SVsRunningDocumentTable)) as IVsRunningDocumentTable;
-                    Debug.Assert(rdt != null, " Could not get running document table from the services exposed by this project");
-                    Utilities.CheckNotNull(rdt);
+                UIThread.Instance.RunSync(() => {
+                    IntPtr docData = IntPtr.Zero;
 
-                    // First we see if someone else has opened the requested view of the file.
-                    uint itemid;
-                    IVsHierarchy ivsHierarchy;
-                    uint docCookie;
-                    int canceled;
-                    string url = this.Node.Url;
+                    try {
+                        IVsRunningDocumentTable rdt = this.Node.ProjectMgr.Site.GetService(typeof(SVsRunningDocumentTable)) as IVsRunningDocumentTable;
+                        Debug.Assert(rdt != null, " Could not get running document table from the services exposed by this project");
+                        Utilities.CheckNotNull(rdt);
 
-                    ErrorHandler.ThrowOnFailure(rdt.FindAndLockDocument((uint)_VSRDTFLAGS.RDT_NoLock, url, out ivsHierarchy, out itemid, out docData, out docCookie));
+                        // First we see if someone else has opened the requested view of the file.
+                        uint itemid;
+                        IVsHierarchy ivsHierarchy;
+                        uint docCookie;
+                        int canceled;
+                        string url = this.Node.Url;
 
-                    // If an empty file name is passed in for Save then make the file name the project name.
-                    if (!isCalledFromSaveAs && fileName.Length == 0)
-                    {
-                        ErrorHandler.ThrowOnFailure(this.Node.ProjectMgr.SaveItem(VSSAVEFLAGS.VSSAVE_SilentSave, url, this.Node.ID, docData, out canceled));
-                    }
-                    else
-                    {
-                        Utilities.ValidateFileName(this.Node.ProjectMgr.Site, fileName);
+                        ErrorHandler.ThrowOnFailure(rdt.FindAndLockDocument((uint)_VSRDTFLAGS.RDT_NoLock, url, out ivsHierarchy, out itemid, out docData, out docCookie));
 
-                        // Compute the fullpath from the directory of the existing Url.
-                        string fullPath = CommonUtils.GetAbsoluteFilePath(Path.GetDirectoryName(url), fileName);
+                        // If an empty file name is passed in for Save then make the file name the project name.
+                        if (!isCalledFromSaveAs && fileName.Length == 0) {
+                            ErrorHandler.ThrowOnFailure(this.Node.ProjectMgr.SaveItem(VSSAVEFLAGS.VSSAVE_SilentSave, url, this.Node.ID, docData, out canceled));
+                        } else {
+                            Utilities.ValidateFileName(this.Node.ProjectMgr.Site, fileName);
 
-                        if (!isCalledFromSaveAs)
-                        {
-                            if (!CommonUtils.IsSamePath(this.Node.Url, fullPath))
-                            {
-                                throw new InvalidOperationException();
+                            // Compute the fullpath from the directory of the existing Url.
+                            string fullPath = CommonUtils.GetAbsoluteFilePath(Path.GetDirectoryName(url), fileName);
+
+                            if (!isCalledFromSaveAs) {
+                                if (!CommonUtils.IsSamePath(this.Node.Url, fullPath)) {
+                                    throw new InvalidOperationException();
+                                }
+
+                                ErrorHandler.ThrowOnFailure(this.Node.ProjectMgr.SaveItem(VSSAVEFLAGS.VSSAVE_SilentSave, fullPath, this.Node.ID, docData, out canceled));
+                            } else {
+                                ErrorHandler.ThrowOnFailure(this.Node.ProjectMgr.SaveItem(VSSAVEFLAGS.VSSAVE_SilentSave, fullPath, this.Node.ID, docData, out canceled));
                             }
-
-                            ErrorHandler.ThrowOnFailure(this.Node.ProjectMgr.SaveItem(VSSAVEFLAGS.VSSAVE_SilentSave, fullPath, this.Node.ID, docData, out canceled));
                         }
-                        else
-                        {
-                            ErrorHandler.ThrowOnFailure(this.Node.ProjectMgr.SaveItem(VSSAVEFLAGS.VSSAVE_SilentSave, fullPath, this.Node.ID, docData, out canceled));
+
+                        if (canceled == 1) {
+                            throw new InvalidOperationException();
+                        }
+                    } catch (COMException e) {
+                        throw new InvalidOperationException(e.Message);
+                    } finally {
+                        if (docData != IntPtr.Zero) {
+                            Marshal.Release(docData);
                         }
                     }
-
-                    if (canceled == 1)
-                    {
-                        throw new InvalidOperationException();
-                    }
-                }
-                catch (COMException e)
-                {
-                    throw new InvalidOperationException(e.Message);
-                }
-                finally
-                {
-                    if (docData != IntPtr.Zero)
-                    {
-                        Marshal.Release(docData);
-                    }
-                }
+                });
             }
 
         }

@@ -172,11 +172,11 @@ namespace TestUtilities.UI {
 
         public void WaitForSessionDismissed() {
             var sessionStack = IntellisenseSessionStack;
-            for (int i = 0; i < 100; i++) {
+            for (int i = 0; i < 20; i++) {
                 if (sessionStack.TopSession == null) {
                     break;
                 }
-                System.Threading.Thread.Sleep(100);
+                System.Threading.Thread.Sleep(500);
             }
             Assert.AreEqual(null, sessionStack.TopSession);
         }

@@ -126,7 +126,7 @@ namespace Microsoft.VisualStudioTools.Project
         /// <summary>
         /// Not supported.
         /// </summary>
-        protected override int ExcludeFromProject()
+        internal override int ExcludeFromProject()
         {
             return (int)OleConstants.OLECMDERR_E_NOTSUPPORTED;
         }

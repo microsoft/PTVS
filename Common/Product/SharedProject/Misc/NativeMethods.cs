@@ -20,6 +20,7 @@ using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TextManager.Interop;
+using Microsoft.Win32.SafeHandles;
 
 namespace Microsoft.VisualStudioTools.Project {
     internal static class NativeMethods {
@@ -801,6 +802,49 @@ namespace Microsoft.VisualStudioTools.Project {
         [return: MarshalAs(UnmanagedType.Bool)]
         public static extern bool CloseHandle(IntPtr handle);
 
+        [DllImport("kernel32.dll", SetLastError = true)]
+        public static extern uint GetFinalPathNameByHandle(
+            SafeHandle hFile,
+            [Out]StringBuilder lpszFilePath,
+            uint cchFilePath,
+            uint dwFlags
+        );
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        public static extern SafeFileHandle CreateFile(
+            string lpFileName,
+            FileDesiredAccess dwDesiredAccess,
+            FileShareFlags dwShareMode,
+            IntPtr lpSecurityAttributes,
+            FileCreationDisposition dwCreationDisposition,
+            FileFlagsAndAttributes dwFlagsAndAttributes,
+            IntPtr hTemplateFile
+        );
+
+        [Flags]
+        public enum FileDesiredAccess : uint {
+            FILE_LIST_DIRECTORY = 1
+        }
+
+        [Flags]
+        public enum FileShareFlags : uint {
+            FILE_SHARE_READ = 0x00000001,
+            FILE_SHARE_WRITE = 0x00000002,
+            FILE_SHARE_DELETE = 0x00000004
+        }
+
+        [Flags]
+        public enum FileCreationDisposition : uint {
+            OPEN_EXISTING = 3
+        }
+
+        [Flags]
+        public enum FileFlagsAndAttributes : uint {
+            FILE_FLAG_BACKUP_SEMANTICS = 0x02000000
+        }
+
+        public static IntPtr INVALID_FILE_HANDLE = new IntPtr(-1);
+
         public enum LogonType {
             LOGON32_LOGON_INTERACTIVE = 2,
             LOGON32_LOGON_NETWORK,
@@ -958,11 +1002,11 @@ namespace Microsoft.VisualStudioTools.Project {
         public static extern bool
         CredRead(
             [MarshalAs(UnmanagedType.LPWStr)]
-            string targetName,
+			string targetName,
             [MarshalAs(UnmanagedType.U4)]
-            uint type,
+			uint type,
             [MarshalAs(UnmanagedType.U4)]
-            uint flags,
+			uint flags,
             out IntPtr credential
             );
 
@@ -971,7 +1015,7 @@ namespace Microsoft.VisualStudioTools.Project {
         CredWrite(
             ref NativeCredential Credential,
             [MarshalAs(UnmanagedType.U4)]
-            uint flags
+			uint flags
             );
 
         [DllImport(advapi32Dll, SetLastError = true)]
@@ -984,17 +1028,17 @@ namespace Microsoft.VisualStudioTools.Project {
         public static extern CredUIReturnCodes CredUIPromptForCredentials(
             CREDUI_INFO pUiInfo,  // Optional (one can pass null here)
             [MarshalAs(UnmanagedType.LPWStr)]
-            string targetName,
+			string targetName,
             IntPtr Reserved,      // Must be 0 (IntPtr.Zero)
             int iError,
             [MarshalAs(UnmanagedType.LPWStr)]
-            StringBuilder pszUserName,
+			StringBuilder pszUserName,
             [MarshalAs(UnmanagedType.U4)]
-            uint ulUserNameMaxChars,
+			uint ulUserNameMaxChars,
             [MarshalAs(UnmanagedType.LPWStr)]
-            StringBuilder pszPassword,
+			StringBuilder pszPassword,
             [MarshalAs(UnmanagedType.U4)]
-            uint ulPasswordMaxChars,
+			uint ulPasswordMaxChars,
             ref int pfSave,
             CREDUI_FLAGS dwFlags);
 
@@ -1010,13 +1054,13 @@ namespace Microsoft.VisualStudioTools.Project {
             [MarshalAs(UnmanagedType.LPWStr)]
             string strUserName,
             [MarshalAs(UnmanagedType.LPWStr)]
-            StringBuilder strUser,
+			StringBuilder strUser,
             [MarshalAs(UnmanagedType.U4)]
-            uint iUserMaxChars,
+			uint iUserMaxChars,
             [MarshalAs(UnmanagedType.LPWStr)]
-            StringBuilder strDomain,
+			StringBuilder strDomain,
             [MarshalAs(UnmanagedType.U4)]
-            uint iDomainMaxChars
+			uint iDomainMaxChars
             );
 
 

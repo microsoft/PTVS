@@ -91,7 +91,7 @@ namespace Microsoft.VisualStudioTools.Project {
         }
 
         internal DynamicProjectSR() {
-            _resources = new ResourceManager("Microsoft.VisualStudioTools.Project.LocalizableDisplayNameAttribute", this.GetType().Assembly);
+            _resources = new ResourceManager("Microsoft.VisualStudioTools.SharedProject", this.GetType().Assembly);
         }
 
         private static DynamicProjectSR GetLoader() {

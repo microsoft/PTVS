@@ -22,7 +22,7 @@ namespace Microsoft.PythonTools.Project {
     class PythonNonCodeFileNode : CommonNonCodeFileNode {
         private DesignerContext _designerContext;
 
-        public PythonNonCodeFileNode(CommonProjectNode root, MsBuildProjectElement e)
+        public PythonNonCodeFileNode(CommonProjectNode root, ProjectElement e)
             : base(root, e) {
         }
 

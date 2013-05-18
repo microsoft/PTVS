@@ -14,6 +14,7 @@
 
 using System.Windows.Forms;
 using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Project {
@@ -34,6 +35,7 @@ namespace Microsoft.PythonTools.Project {
                     }
                 }
             }
+
 
             return base.DebugLaunch(flags);
         }

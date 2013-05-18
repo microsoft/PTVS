@@ -77,11 +77,11 @@ namespace Microsoft.PythonTools.Project {
             entry.Properties[_searchPathEntryKey] = value;
         }
 
-        public override CommonFileNode CreateCodeFileNode(MsBuildProjectElement item) {
+        public override CommonFileNode CreateCodeFileNode(ProjectElement item) {
             return new PythonFileNode(this, item);
         }
 
-        public override CommonFileNode CreateNonCodeFileNode(MsBuildProjectElement item) {
+        public override CommonFileNode CreateNonCodeFileNode(ProjectElement item) {
             return new PythonNonCodeFileNode(this, item);
         }
 
@@ -466,13 +466,13 @@ namespace Microsoft.PythonTools.Project {
                 while (ErrorHandler.Succeeded(hierarchies.Next(1, hierarchy, out fetched)) && fetched == 1) {
                     var pyProj = hierarchy[0].GetProject().GetPythonProject();
 
-                    if (pyProj != this &&
-                        pyProj._analyzer != null &&
-                        pyProj._analyzer.InterpreterFactory == curFactory) {
-                        // we have the same interpreter, we'll share analysis engines across projects.
-                        return pyProj._analyzer;
-                    }
+                if (pyProj != this &&
+                    pyProj._analyzer != null &&
+                    pyProj._analyzer.InterpreterFactory == curFactory) {
+                    // we have the same interpreter, we'll share analysis engines across projects.
+                    return pyProj._analyzer;
                 }
+            }
             }
 
             var model = PythonToolsPackage.ComponentModel;

@@ -74,10 +74,10 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\Common\TestUtilities.UI\UI\InteractiveWindow.cs">
+    <Compile Include="..\..\..\Common\Tests\Utilities.UI\UI\InteractiveWindow.cs">
       <Link>InteractiveWindow.cs</Link>
     </Compile>
-    <Compile Include="..\Common\TestUtilities\Mocks\MockReplWindow.cs">
+    <Compile Include="..\..\..\Common\Tests\Utilities\Mocks\MockReplWindow.cs">
       <Link>MockReplWindow.cs</Link>
     </Compile>
     <Compile Include="ComparePerfReports.cs" />
@@ -96,23 +96,23 @@
     <Compile Include="PythonVisualStudioApp.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Product\Python\Analysis\Analysis.csproj">
+    <ProjectReference Include="..\..\Product\Analysis\Analysis.csproj">
       <Project>{a85d479d-67a9-4bdb-904a-7d86daf68a6f}</Project>
       <Name>Analysis</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\Product\Python\PythonTools\PythonTools.csproj">
+    <ProjectReference Include="..\..\Product\PythonTools\PythonTools.csproj">
       <Project>{fa7be5f5-e04f-4613-b7ac-70ce10d1bb68}</Project>
       <Name>PythonTools</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\Product\Python\ReplWindow\ReplWindow.csproj">
+    <ProjectReference Include="..\..\..\Common\Product\ReplWindow\ReplWindow.csproj">
       <Project>{20bb6fac-44d2-4d76-abfe-0c1e163a1a4f}</Project>
       <Name>ReplWindow</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Common\TestUtilities.UI\TestUtilities.UI.csproj">
+    <ProjectReference Include="..\..\..\Common\Tests\Utilities.UI\TestUtilities.UI.csproj">
       <Project>{e8150ebc-6b62-40bf-bf91-1dc60149b530}</Project>
       <Name>TestUtilities.UI</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Common\TestUtilities\TestUtilities.csproj">
+    <ProjectReference Include="..\..\..\Common\Tests\Utilities\TestUtilities.csproj">
       <Project>{d092d54e-ff29-4d32-9aee-4ef704c92f67}</Project>
       <Name>TestUtilities</Name>
     </ProjectReference>

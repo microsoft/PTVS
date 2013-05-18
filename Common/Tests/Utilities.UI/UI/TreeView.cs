@@ -28,12 +28,12 @@ namespace TestUtilities.UI {
         /// </summary>
         public AutomationElement WaitForItem(params string[] path) {
             AutomationElement item = null;
-            for (int i = 0; i < 10; i++) {
+            for (int i = 0; i < 40; i++) {
                 item = FindItem(path);
                 if (item != null) {
                     break;
                 }
-                System.Threading.Thread.Sleep(1000);
+                System.Threading.Thread.Sleep(250);
             }
             return item;
         }
@@ -43,12 +43,12 @@ namespace TestUtilities.UI {
         /// </summary>
         public AutomationElement WaitForItemRemoved(params string[] path) {
             AutomationElement item = null;
-            for (int i = 0; i < 10; i++) {
+            for (int i = 0; i < 40; i++) {
                 item = FindItem(path);
                 if (item == null) {
                     break;
                 }
-                System.Threading.Thread.Sleep(1000);
+                System.Threading.Thread.Sleep(250);
             }
             return item;
         }

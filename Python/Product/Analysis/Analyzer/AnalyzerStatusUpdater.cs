@@ -135,7 +135,7 @@ namespace Microsoft.PythonTools.Analysis {
         static readonly string MUTEX_NAME = "Microsoft.PythonTools.AnalyzerStatus.Mutex." + AssemblyVersionInfo.Version;
         static readonly string MMF_NAME = "Microsoft.PythonTools.AnalyzerStatus.File." + AssemblyVersionInfo.Version;
         const int MAX_IDENTIFIER_LENGTH = 250;
-
+        
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
         unsafe struct Data {
             public fixed char _Identifier[MAX_IDENTIFIER_LENGTH];

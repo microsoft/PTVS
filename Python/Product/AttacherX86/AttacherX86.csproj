@@ -53,7 +53,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Attacher\Attacher.csproj">
       <Project>{666A22BB-0CB5-4C08-A20F-E17450DA6573}</Project>
-      <Name>Microsoft.PythonTools.Attacher</Name>
+      <Name>Attacher</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="..\ProjectAfter.settings" />
