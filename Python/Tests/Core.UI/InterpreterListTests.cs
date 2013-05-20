@@ -236,7 +236,7 @@ namespace PythonToolsUITests {
                 Assert.IsFalse((bool)progress.GetCurrentPropertyValue(AutomationElement.IsOffscreenProperty));
 
                 fact.EndGenerateCompletionDatabase(identifier, false);
-                interpreterList.Dispatcher.Invoke(CommandManager.InvalidateRequerySuggested);
+                interpreterList.Dispatcher.Invoke((Action)(() => { CommandManager.InvalidateRequerySuggested(); }));
                 Thread.Sleep(1000);
 
                 Assert.IsFalse((bool)required.GetCurrentPropertyValue(AutomationElement.IsOffscreenProperty));
@@ -251,7 +251,7 @@ namespace PythonToolsUITests {
                 Assert.IsFalse((bool)progress.GetCurrentPropertyValue(AutomationElement.IsOffscreenProperty));
 
                 fact.EndGenerateCompletionDatabase(identifier, true);
-                interpreterList.Dispatcher.Invoke(CommandManager.InvalidateRequerySuggested);
+                interpreterList.Dispatcher.Invoke((Action)(() => { CommandManager.InvalidateRequerySuggested(); }));
                 Thread.Sleep(1000);
 
                 Assert.IsTrue((bool)required.GetCurrentPropertyValue(AutomationElement.IsOffscreenProperty));
