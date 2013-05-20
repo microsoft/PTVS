@@ -67,7 +67,7 @@
                     </CollectionViewSource>
 
                     <DataTemplate x:Key="NameTemplate" DataType="{x:Type l:InterpreterView}">
-                        <TextBlock Name="InterpreterName" Text="{Binding Name}" />
+                        <Label Name="InterpreterName" Content="{Binding Name}" />
                         <DataTemplate.Triggers>
                             <DataTrigger Binding="{Binding IsDefault}" Value="True">
                                 <Setter TargetName="InterpreterName" Property="FontWeight" Value="Bold" />
@@ -90,13 +90,13 @@
                                 </Grid.ColumnDefinitions>
 
                                 <Grid Grid.Column="0" Margin="6 0">
-                                    <TextBlock Name="NotRequired" VerticalAlignment="Center">
+                                    <Label Name="NotRequired" VerticalAlignment="Center" AutomationProperties.AutomationId="RegenerateNotRequired">
                                         Completion DB is up to date
-                                    </TextBlock>
+                                    </Label>
                                     <StackPanel Name="Required" Orientation="Horizontal" Visibility="Hidden">
-                                        <TextBlock VerticalAlignment="Center" FontWeight="Bold">
+                                        <Label VerticalAlignment="Center" FontWeight="Bold" AutomationProperties.AutomationId="RegenerateRequired">
                                             Completion DB needs refresh
-                                        </TextBlock>
+                                        </Label>
                                         <Expander Name="ShowContent"
                                                   HorizontalAlignment="Left" VerticalAlignment="Center">
                                             <Expander.Header>
@@ -117,9 +117,9 @@
                                     <RowDefinition Height="auto" />
                                     <RowDefinition />
                                 </Grid.RowDefinitions>
-                                <TextBlock Grid.Row="0" HorizontalAlignment="Center">
+                                <Label Grid.Row="0" HorizontalAlignment="Center">
                                     Refreshing DB
-                                </TextBlock>
+                                </Label>
                                 <ProgressBar Name="Progress"
                                              Grid.Row="1"
                                              Value="{Binding Progress,Mode=OneWay}"
@@ -127,6 +127,11 @@
                                              IsIndeterminate="False"
                                              Margin="0 1"
                                              HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
+                            </Grid>
+                            <Grid Name="NoDatabase" Visibility="Collapsed" Margin="6 1">
+                                <Label VerticalAlignment="Center" AutomationProperties.AutomationId="NoDatabase">
+                                    Does not use a completion DB
+                                </Label>
                             </Grid>
                             <Popup Name="Reason"
                                    IsOpen="{Binding IsExpanded,ElementName=ShowContent,Mode=TwoWay}"
@@ -140,8 +145,8 @@
                                                   HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
                                                   Padding="2">
                                         <StackPanel Orientation="Horizontal">
-                                            <TextBlock Text="{Binding IsCurrentReason}"
-                                                       VerticalAlignment="Center"/>
+                                            <Label Content="{Binding IsCurrentReason}"
+                                                   VerticalAlignment="Center"/>
                                             <Button Command="{x:Static l:InterpreterList.CopyReasonCommand}"
                                                     CommandParameter="{Binding}"
                                                     FontFamily="Segoe UI Symbol"
@@ -163,6 +168,11 @@
                             </Popup>
                         </Grid>
                         <DataTemplate.Triggers>
+                            <DataTrigger Binding="{Binding CanRefresh,Mode=OneWay}" Value="false">
+                                <Setter TargetName="Status" Property="Visibility" Value="Hidden" />
+                                <Setter TargetName="Refreshing" Property="Visibility" Value="Hidden" />
+                                <Setter TargetName="NoDatabase" Property="Visibility" Value="Visible" />
+                            </DataTrigger>
                             <DataTrigger Binding="{Binding IsRunning,Mode=OneWay}" Value="true">
                                 <Setter TargetName="Status" Property="Visibility" Value="Hidden" />
                                 <Setter TargetName="Refreshing" Property="Visibility" Value="Visible" />
@@ -216,6 +226,7 @@
             <wpf:BooleanToCollapsedConverter x:Key="BCConverter" />
         </Grid.Resources>
         <ListView x:Name="interpreterList"
+                  AutomationProperties.AutomationId="PythonTools.InterpreterList"
                   HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
                   ItemContainerStyle="{StaticResource InterpreterItemStyle}"
                   ItemsSource="{Binding Source={StaticResource SortedInterpreters}}"
@@ -237,7 +248,7 @@
             </ListView.Template>
             <ListView.View>
                 <GridView AllowsColumnReorder="False">
-                    <GridViewColumn CellTemplate="{StaticResource NameTemplate}" />
+                    <GridViewColumn CellTemplate="{StaticResource NameTemplate}" x:Name="nameColumn" />
                     <GridViewColumn CellTemplate="{StaticResource OpenReplTemplate}" />
                     <GridViewColumn CellTemplate="{StaticResource MakeDefaultTemplate}" />
                     <GridViewColumn CellTemplate="{StaticResource OpenOptionsTemplate}" />

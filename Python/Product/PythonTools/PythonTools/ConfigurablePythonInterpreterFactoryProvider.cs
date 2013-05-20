@@ -86,7 +86,7 @@ namespace Microsoft.PythonTools {
             return null;
         }
 
-        public IPythonInterpreterFactory CreateConfigurableInterpreterFactory(Guid id, string path, string winPath, string pathEnvVar, string description, ProcessorArchitecture archValue, Version ver) {
+        private IPythonInterpreterFactory CreateConfigurableInterpreterFactory(Guid id, string path, string winPath, string pathEnvVar, string description, ProcessorArchitecture archValue, Version ver) {
             if (_defaultCreator == null) {
                 _defaultCreator = PythonToolsPackage.ComponentModel.GetService<IDefaultInterpreterFactoryCreator>();
             }

@@ -53,7 +53,7 @@ namespace TestUtilities.UI {
             Invoke(button);
         }
 
-        protected AutomationElement FindByName(string name) {
+        public AutomationElement FindByName(string name) {
             return Element.FindFirst(
                 TreeScope.Descendants,
                 new PropertyCondition(
@@ -66,7 +66,7 @@ namespace TestUtilities.UI {
         /// <summary>
         /// Finds the first descendent with the given automation ID.
         /// </summary>
-        protected AutomationElement FindByAutomationId(string automationId) {
+        public AutomationElement FindByAutomationId(string automationId) {
             return Element.FindFirst(
                 TreeScope.Descendants,
                 new PropertyCondition(

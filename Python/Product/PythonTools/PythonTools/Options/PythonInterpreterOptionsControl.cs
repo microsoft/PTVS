@@ -26,7 +26,6 @@ namespace Microsoft.PythonTools.Options {
     public partial class PythonInterpreterOptionsControl : UserControl {
         private IInterpreterOptionsService _service;
         private bool _loadingOptions;
-        private ToolTip _invalidVersionToolTip = new ToolTip();
         private ToolTip _invalidPathToolTip = new ToolTip();
         private ToolTip _invalidWindowsPathToolTip = new ToolTip();
 
@@ -59,15 +58,18 @@ namespace Microsoft.PythonTools.Options {
                     }
                 }
 
-                if (_showSettingsFor.Items.Count > 0) {
+                if (_showSettingsFor.Items.Count > 0 && _service.DefaultInterpreter != _service.NoInterpretersValue) {
                     _showSettingsFor.SelectedItem = _defaultInterpreter.SelectedItem = _service.DefaultInterpreter;
                 }
 
-                if (_showSettingsFor.SelectedItem == null && _showSettingsFor.Items.Count > 0) {
-                    _showSettingsFor.SelectedIndex = 0;
-                }
                 if (_defaultInterpreter.SelectedItem == null && _defaultInterpreter.Items.Count > 0) {
-                    _defaultInterpreter.SelectedIndex = 0;
+                    _defaultInterpreter.SelectedIndex = _defaultInterpreter.Items.Count - 1;
+                }
+                if (_showSettingsFor.SelectedItem == null && _showSettingsFor.Items.Count > 0) {
+                    _showSettingsFor.SelectedItem = _defaultInterpreter.SelectedItem;
+                    if (_showSettingsFor.SelectedItem == null) {
+                        _showSettingsFor.SelectedIndex = 0;
+                    }
                 }
             } finally {
                 _showSettingsFor.EndUpdate();
@@ -120,10 +122,8 @@ namespace Microsoft.PythonTools.Options {
                         }
                     }
 
-                    _version.Text = curOptions.Version;
+                    _version.SelectedIndex = _version.FindStringExact(curOptions.Version);
                     _pathEnvVar.Text = curOptions.PathEnvironmentVariable;
-
-                    UpdateGenerateCompletionDb_Enabled();
                 } finally {
                     _loadingOptions = false;
                 }
@@ -135,7 +135,6 @@ namespace Microsoft.PythonTools.Options {
         private void InitializeWithNoInterpreters() {
             _loadingOptions = true;
             _removeInterpreter.Enabled = _path.Enabled = _browsePath.Enabled = _version.Enabled = _arch.Enabled = _windowsPath.Enabled = _browseWindowsPath.Enabled = _pathEnvVar.Enabled = false;
-            _generateCompletionDb.Enabled = false;
             _showSettingsFor.Items.Add("No Python Interpreters Installed");
             _defaultInterpreter.Items.Add("No Python Interpreters Installed");
             _showSettingsFor.SelectedIndex = _defaultInterpreter.SelectedIndex = 0;
@@ -146,7 +145,7 @@ namespace Microsoft.PythonTools.Options {
 
             _path.Text = "";
             _windowsPath.Text = "";
-            _version.Text = "";
+            _version.SelectedIndex = _version.FindStringExact("2.7");
             _pathEnvVar.Text = "";
             _arch.SelectedIndex = 0;
             _loadingOptions = false;
@@ -174,9 +173,26 @@ namespace Microsoft.PythonTools.Options {
                     ShowErrorBalloon(_invalidPathToolTip, _pathLabel, _path, "The path contains invalid characters.");
                 } else {
                     CurrentOptions.InterpreterPath = _path.Text;
+                    if (_arch.SelectedIndex == -1 || (string)_arch.SelectedItem == "Unknown") {
+                        try {
+                            switch (NativeMethods.GetBinaryType(_path.Text)) {
+                                case ProcessorArchitecture.X86:
+                                    _arch.SelectedIndex = _arch.FindStringExact("x86");
+                                    break;
+                                case ProcessorArchitecture.Amd64:
+                                    _arch.SelectedIndex = _arch.FindStringExact("x64");
+                                    break;
+                                default:
+                                    _arch.SelectedIndex = _arch.FindStringExact("Unknown");
+                                    break;
+                            }
+                        } catch (ArgumentOutOfRangeException) {
+                            // Just a best attempt - if things fail for whatever
+                            // reason, it's not even worth informing the user.
+                        }
+                    }
                     HideErrorBalloon(_invalidPathToolTip, _pathLabel);
                 }
-                UpdateGenerateCompletionDb_Enabled();
             }
         }
 
@@ -205,7 +221,6 @@ namespace Microsoft.PythonTools.Options {
                     CurrentOptions.WindowsInterpreterPath = _windowsPath.Text;
                     HideErrorBalloon(_invalidWindowsPathToolTip, _windowsPathLabel);
                 }
-                UpdateGenerateCompletionDb_Enabled();
             }
         }
 
@@ -221,16 +236,9 @@ namespace Microsoft.PythonTools.Options {
             }
         }
 
-        private void VersionTextChanged(object sender, EventArgs e) {
+        private void Version_SelectedIndexChanged(object sender, EventArgs e) {
             if (!_loadingOptions) {
-                Version vers;
-                if (Version.TryParse(_version.Text, out vers)) {
-                    CurrentOptions.Version = _version.Text;
-                    HideErrorBalloon(_invalidVersionToolTip, _versionLabel);
-                } else {
-                    ShowErrorBalloon(_invalidVersionToolTip, _versionLabel, _version, "Version is an invalid format and will not be saved.\r\n\r\nValid formats are in the form of Major.Minor[.Build[.Revision]].");
-                }
-                UpdateGenerateCompletionDb_Enabled();
+                CurrentOptions.Version = _version.SelectedItem as string;
             }
         }
 
@@ -285,95 +293,12 @@ namespace Microsoft.PythonTools.Options {
             }
         }
 
-        private void UpdateGenerateCompletionDb_Enabled() {
-            Version ver;
-
-            if (CurrentOptions.SupportsCompletionDb &&
-                (!CurrentOptions.IsConfigurable ||
-                 (!string.IsNullOrWhiteSpace(_path.Text) && _path.Text.IndexOfAny(Path.GetInvalidPathChars()) == -1 &&
-                  !string.IsNullOrWhiteSpace(_windowsPath.Text) && _windowsPath.Text.IndexOfAny(Path.GetInvalidPathChars()) == -1 &&
-                  !string.IsNullOrWhiteSpace(_version.Text) && Version.TryParse(_version.Text, out ver)))) {
-
-                _generateCompletionDb.Enabled = true;
-            } else {
-                _generateCompletionDb.Enabled = false;
-            }
-        }
-
-        private void GenerateCompletionDbClick(object sender, EventArgs e) {
-            if (CurrentOptions.IsConfigurable && CurrentOptions.Factory is InterpreterPlaceholder) {
-                // we need to create a dummy factory for kicking off the configuration.
-                if (CurrentOptions.Id == Guid.Empty) {
-                    CurrentOptions.Id = Guid.NewGuid();
-                }
-                Version vers;
-                Version.TryParse(_version.Text, out vers);
-
-                var factCreator = PythonToolsPackage.ComponentModel.GetService<ConfigurablePythonInterpreterFactoryProvider>();
-                CurrentOptions.Factory = factCreator.CreateConfigurableInterpreterFactory(
-                    CurrentOptions.Id,
-                    _path.Text,
-                    _windowsPath.Text,
-                    _pathEnvVar.Text,
-                    _showSettingsFor.Text,
-                    ProcessorArchitecture.X86,
-                    vers
-                );
-            }
-
-            var curFactory = CurrentOptions.Factory;
-            switch (new GenerateIntellisenseDbDialog(CurrentOptions, () => DatabaseGenerated(curFactory)).ShowDialog()) {
-                case DialogResult.OK:
-                    MessageBox.Show("Analysis is complete and now available.", "Python Tools for Visual Studio");
-                    break;
-                case DialogResult.Ignore:
-                    MessageBox.Show("Analysis is proceeding in the background, it will become available when completed.", "Python Tools for Visual Studio");
-                    break;
-            }
-        }
-
-        private void DatabaseGenerated(IPythonInterpreterFactory curFactory) {
-            // default analyzer
-            if (PythonToolsPackage.Instance.DefaultAnalyzer.InterpreterFactory == curFactory) {
-                PythonToolsPackage.Instance.RecreateAnalyzer();
-            }
-
-            // all open projects
-            foreach (EnvDTE.Project project in PythonToolsPackage.Instance.DTE.Solution.Projects) {
-                var pyProj = project.GetPythonProject();
-                if (pyProj != null) {
-                    var analyzer = pyProj.GetAnalyzer();
-                    if (analyzer != null && analyzer.InterpreterFactory == curFactory) {
-                        pyProj.ClearInterpreter();
-                    }
-                }
-            }
-        }
-
         private void BrowsePathClick(object sender, EventArgs e) {
             var dialog = new OpenFileDialog();
             dialog.CheckFileExists = true;
             dialog.Filter = "Executable Files (*.exe)|*.exe|All Files (*.*)|*.*";
             if (dialog.ShowDialog() == DialogResult.OK) {
                 _path.Text = dialog.FileName;
-                if (_arch.SelectedIndex == -1 || (string)_arch.SelectedItem == "Unknown") {
-                    try {
-                        switch (NativeMethods.GetBinaryType(_path.Text)) {
-                            case ProcessorArchitecture.X86:
-                                _arch.SelectedIndex = _arch.FindStringExact("x86");
-                                break;
-                            case ProcessorArchitecture.Amd64:
-                                _arch.SelectedIndex = _arch.FindStringExact("x64");
-                                break;
-                            default:
-                                _arch.SelectedIndex = _arch.FindStringExact("Unknown");
-                                break;
-                        }
-                    } catch (ArgumentOutOfRangeException) {
-                        // Just a best attempt - if things fail for whatever
-                        // reason, it's not even worth informing the user.
-                    }
-                }
             }
         }
 
@@ -389,7 +314,11 @@ namespace Microsoft.PythonTools.Options {
         private void Interpreter_Format(object sender, ListControlConvertEventArgs e) {
             var factory = e.ListItem as IPythonInterpreterFactory;
             if (factory != null) {
+#if DEBUG
+                e.Value = factory.GetInterpreterDisplay() + " (" + factory.GetType().Name + ")";
+#else
                 e.Value = factory.GetInterpreterDisplay();
+#endif
             } else {
                 e.Value = e.ListItem.ToString();
             }

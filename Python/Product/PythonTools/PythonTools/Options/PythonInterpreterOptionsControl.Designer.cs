@@ -39,11 +39,10 @@
             this._archLabel = new System.Windows.Forms.Label();
             this._arch = new System.Windows.Forms.ComboBox();
             this._versionLabel = new System.Windows.Forms.Label();
-            this._version = new System.Windows.Forms.TextBox();
+            this._version = new System.Windows.Forms.ComboBox();
             this._pathEnvVarLabel = new System.Windows.Forms.Label();
             this._pathEnvVar = new System.Windows.Forms.TextBox();
             this.tableLayoutPanel4 = new System.Windows.Forms.TableLayoutPanel();
-            this._generateCompletionDb = new System.Windows.Forms.Button();
             this._removeInterpreter = new System.Windows.Forms.Button();
             this._toolTips = new System.Windows.Forms.ToolTip(this.components);
             this._addInterpreter = new System.Windows.Forms.Button();
@@ -118,7 +117,7 @@
             this._interpreterSettingsGroup.Margin = new System.Windows.Forms.Padding(6, 8, 6, 8);
             this._interpreterSettingsGroup.Name = "_interpreterSettingsGroup";
             this._interpreterSettingsGroup.Padding = new System.Windows.Forms.Padding(6, 8, 6, 8);
-            this._interpreterSettingsGroup.Size = new System.Drawing.Size(403, 201);
+            this._interpreterSettingsGroup.Size = new System.Drawing.Size(403, 202);
             this._interpreterSettingsGroup.TabIndex = 1;
             this._interpreterSettingsGroup.TabStop = false;
             this._interpreterSettingsGroup.Text = "Interpreter Settings";
@@ -155,7 +154,7 @@
             this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tableLayoutPanel3.Size = new System.Drawing.Size(391, 172);
+            this.tableLayoutPanel3.Size = new System.Drawing.Size(391, 173);
             this.tableLayoutPanel3.TabIndex = 0;
             // 
             // _pathLabel
@@ -270,7 +269,7 @@
             this._versionLabel.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this._versionLabel.AutoEllipsis = true;
             this._versionLabel.AutoSize = true;
-            this._versionLabel.Location = new System.Drawing.Point(6, 91);
+            this._versionLabel.Location = new System.Drawing.Point(6, 92);
             this._versionLabel.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
             this._versionLabel.Name = "_versionLabel";
             this._versionLabel.Size = new System.Drawing.Size(96, 13);
@@ -282,19 +281,29 @@
             // 
             this._version.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
             this.tableLayoutPanel3.SetColumnSpan(this._version, 2);
+            this._version.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this._version.FormattingEnabled = true;
+            this._version.Items.AddRange(new object[] {
+            "2.5",
+            "2.6",
+            "2.7",
+            "3.0",
+            "3.1",
+            "3.2",
+            "3.3"});
             this._version.Location = new System.Drawing.Point(153, 88);
             this._version.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
             this._version.Name = "_version";
-            this._version.Size = new System.Drawing.Size(232, 20);
+            this._version.Size = new System.Drawing.Size(232, 21);
             this._version.TabIndex = 9;
-            this._version.TextChanged += new System.EventHandler(this.VersionTextChanged);
+            this._version.SelectedIndexChanged += new System.EventHandler(this.Version_SelectedIndexChanged);
             // 
             // _pathEnvVarLabel
             // 
             this._pathEnvVarLabel.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this._pathEnvVarLabel.AutoEllipsis = true;
             this._pathEnvVarLabel.AutoSize = true;
-            this._pathEnvVarLabel.Location = new System.Drawing.Point(6, 117);
+            this._pathEnvVarLabel.Location = new System.Drawing.Point(6, 118);
             this._pathEnvVarLabel.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
             this._pathEnvVarLabel.Name = "_pathEnvVarLabel";
             this._pathEnvVarLabel.Size = new System.Drawing.Size(135, 13);
@@ -306,7 +315,7 @@
             // 
             this._pathEnvVar.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
             this.tableLayoutPanel3.SetColumnSpan(this._pathEnvVar, 2);
-            this._pathEnvVar.Location = new System.Drawing.Point(153, 114);
+            this._pathEnvVar.Location = new System.Drawing.Point(153, 115);
             this._pathEnvVar.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
             this._pathEnvVar.Name = "_pathEnvVar";
             this._pathEnvVar.Size = new System.Drawing.Size(232, 20);
@@ -315,16 +324,16 @@
             // 
             // tableLayoutPanel4
             // 
+            this.tableLayoutPanel4.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
             this.tableLayoutPanel4.AutoSize = true;
             this.tableLayoutPanel4.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.tableLayoutPanel4.ColumnCount = 2;
+            this.tableLayoutPanel4.ColumnCount = 3;
             this.tableLayoutPanel3.SetColumnSpan(this.tableLayoutPanel4, 3);
-            this.tableLayoutPanel4.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 60F));
+            this.tableLayoutPanel4.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 30F));
             this.tableLayoutPanel4.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 40F));
-            this.tableLayoutPanel4.Controls.Add(this._generateCompletionDb, 0, 0);
+            this.tableLayoutPanel4.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 30F));
             this.tableLayoutPanel4.Controls.Add(this._removeInterpreter, 1, 0);
-            this.tableLayoutPanel4.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tableLayoutPanel4.Location = new System.Drawing.Point(0, 137);
+            this.tableLayoutPanel4.Location = new System.Drawing.Point(0, 138);
             this.tableLayoutPanel4.Margin = new System.Windows.Forms.Padding(0);
             this.tableLayoutPanel4.Name = "tableLayoutPanel4";
             this.tableLayoutPanel4.RowCount = 1;
@@ -332,32 +341,17 @@
             this.tableLayoutPanel4.Size = new System.Drawing.Size(391, 35);
             this.tableLayoutPanel4.TabIndex = 12;
             // 
-            // _generateCompletionDb
-            // 
-            this._generateCompletionDb.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
-            this._generateCompletionDb.AutoSize = true;
-            this._generateCompletionDb.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this._generateCompletionDb.Location = new System.Drawing.Point(6, 3);
-            this._generateCompletionDb.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
-            this._generateCompletionDb.Name = "_generateCompletionDb";
-            this._generateCompletionDb.Padding = new System.Windows.Forms.Padding(12, 3, 12, 3);
-            this._generateCompletionDb.Size = new System.Drawing.Size(222, 29);
-            this._generateCompletionDb.TabIndex = 0;
-            this._generateCompletionDb.Text = "&Generate IntelliSense Database";
-            this._generateCompletionDb.UseVisualStyleBackColor = true;
-            this._generateCompletionDb.Click += new System.EventHandler(this.GenerateCompletionDbClick);
-            // 
             // _removeInterpreter
             // 
             this._removeInterpreter.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
             this._removeInterpreter.AutoSize = true;
             this._removeInterpreter.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this._removeInterpreter.Location = new System.Drawing.Point(240, 3);
+            this._removeInterpreter.Location = new System.Drawing.Point(123, 3);
             this._removeInterpreter.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
             this._removeInterpreter.Name = "_removeInterpreter";
             this._removeInterpreter.Padding = new System.Windows.Forms.Padding(12, 3, 12, 3);
-            this._removeInterpreter.Size = new System.Drawing.Size(145, 29);
-            this._removeInterpreter.TabIndex = 1;
+            this._removeInterpreter.Size = new System.Drawing.Size(144, 29);
+            this._removeInterpreter.TabIndex = 13;
             this._removeInterpreter.Text = "&Remove Interpreter";
             this._removeInterpreter.UseVisualStyleBackColor = true;
             this._removeInterpreter.Click += new System.EventHandler(this.RemoveInterpreterClick);
@@ -447,11 +441,9 @@
         private System.Windows.Forms.ToolTip _toolTips;
         private System.Windows.Forms.Button _addInterpreter;
         private System.Windows.Forms.Label _versionLabel;
-        private System.Windows.Forms.TextBox _version;
         private System.Windows.Forms.Label _pathLabel;
         private System.Windows.Forms.Label _windowsPathLabel;
         private System.Windows.Forms.Label _archLabel;
-        private System.Windows.Forms.Button _generateCompletionDb;
         private System.Windows.Forms.ComboBox _arch;
         private System.Windows.Forms.TextBox _path;
         private System.Windows.Forms.TextBox _windowsPath;
@@ -464,6 +456,7 @@
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel3;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel4;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
+        private System.Windows.Forms.ComboBox _version;
 
     }
 }

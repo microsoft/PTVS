@@ -85,6 +85,11 @@
     <Compile Include="Django\NewAppDialog.cs" />
     <Compile Include="Django\PythonProjectDebugProperties.cs" />
     <Compile Include="FormattingOptionsTreeView.cs" />
+    <Compile Include="MockInterpreterConfiguration.cs" />
+    <Compile Include="MockInterpreterOptionsService.cs" />
+    <Compile Include="MockPythonInterpreter.cs" />
+    <Compile Include="MockPythonInterpreterFactory.cs" />
+    <Compile Include="MockPythonInterpreterFactoryProvider.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PythonLaunchWithErrorsDialog.cs" />
     <Compile Include="PythonPaths.cs" />

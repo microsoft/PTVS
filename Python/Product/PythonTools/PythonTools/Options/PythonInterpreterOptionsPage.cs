@@ -135,7 +135,7 @@ namespace Microsoft.PythonTools.Options {
                                     { "WindowsInterpreterPath", option.WindowsInterpreterPath ?? "" },
                                     { "PathEnvironmentVariable", option.PathEnvironmentVariable ?? "" },
                                     { "Architecture", option.Architecture ?? "x86" },
-                                    { "Version", option.Version ?? "2.6" },
+                                    { "Version", option.Version ?? "2.7" },
                                     { "Description", option.Display },
                                 }
                             );

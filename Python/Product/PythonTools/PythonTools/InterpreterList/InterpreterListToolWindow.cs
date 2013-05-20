@@ -28,8 +28,8 @@ namespace Microsoft.PythonTools.InterpreterList {
         
         public InterpreterListToolWindow() {
             Caption = Title;
-            
-            Content = new InterpreterList();
+
+            Content = new InterpreterList(PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>());
         }
     }
 }

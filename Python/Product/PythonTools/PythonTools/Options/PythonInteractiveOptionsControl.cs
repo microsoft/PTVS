@@ -275,7 +275,11 @@ visualstudio_py_repl.BACKEND.attach()";
         private void Interpreter_Format(object sender, ListControlConvertEventArgs e) {
             var factory = e.ListItem as IPythonInterpreterFactory;
             if (factory != null) {
+#if DEBUG
+                e.Value = factory.GetInterpreterDisplay() + " (" + factory.GetType().Name + ")";
+#else
                 e.Value = factory.GetInterpreterDisplay();
+#endif
             } else {
                 e.Value = e.ListItem.ToString();
             }

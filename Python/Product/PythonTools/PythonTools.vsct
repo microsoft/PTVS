@@ -196,7 +196,7 @@
       <Button guid="guidPythonToolsCmdSet" id="cmdidInterpreterList" priority="0x7e00" type="Button">
         <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1"/>
         <Strings>
-          <CommandName>cmdidInterpreterList</CommandName>
+          <CommandName>InterpreterList</CommandName>
           <ButtonText>Python Interpreters</ButtonText>
         </Strings>
       </Button>

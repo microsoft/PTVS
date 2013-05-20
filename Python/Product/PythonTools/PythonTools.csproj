@@ -238,7 +238,6 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="PythonTools\Project\CreateVirtualEnvironmentView.cs" />
-
     <Compile Include="PythonTools\Project\ImportWizard\SaveProjectPage.xaml.cs">
       <DependentUpon>SaveProjectPage.xaml</DependentUpon>
     </Compile>
@@ -432,16 +431,9 @@
     <Compile Include="PythonTools\Intellisense\MonitoredBufferResult.cs" />
     <Compile Include="PythonTools\Intellisense\ParseQueue.cs" />
     <Compile Include="PythonTools\InterpreterExtensions.cs" />
-    <Compile Include="PythonTools\IPythonConfigurableInterpreterFactoryProvider.cs" />
     <Compile Include="PythonTools\ISnapshotTextReader.cs" />
     <Compile Include="PythonTools\Navigation\Resources.Designer.cs" />
     <Compile Include="PythonTools\PythonAutomation.cs" />
-    <Compile Include="PythonTools\Options\GenerateIntellisenseDbDialog.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="PythonTools\Options\GenerateIntellisenseDbDialog.Designer.cs">
-      <DependentUpon>GenerateIntellisenseDbDialog.cs</DependentUpon>
-    </Compile>
     <Compile Include="PythonTools\Options\InterpreterOptions.cs" />
     <Compile Include="PythonTools\Options\IPythonOptions.cs" />
     <Compile Include="PythonTools\Options\NewInterpreter.cs">
@@ -934,9 +926,6 @@
     <Resource Include="..\Icons\Dev$(VSTarget)\PyProjectBig.png" />
     <EmbeddedResource Include="PythonTools\Commands\DiagnosticsForm.resx">
       <DependentUpon>DiagnosticsForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="PythonTools\Options\GenerateIntellisenseDbDialog.resx">
-      <DependentUpon>GenerateIntellisenseDbDialog.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="PythonTools\Options\NewInterpreter.resx">
       <DependentUpon>NewInterpreter.cs</DependentUpon>

@@ -170,6 +170,17 @@ namespace Microsoft.PythonTools {
             return container.GetExportedValues<IPythonInterpreterFactoryProvider>();
         }
 
+        // Used for testing.
+        internal IPythonInterpreterFactoryProvider[] SetProviders(IPythonInterpreterFactoryProvider[] providers) {
+            var oldProviders = _providers;
+            _providers = providers;
+            var evt = InterpretersChanged;
+            if (evt != null) {
+                evt(this, EventArgs.Empty);
+            }
+            return oldProviders;
+        }
+
         public IEnumerable<IPythonInterpreterFactory> Interpreters {
             get {
                 return _providers.SelectMany(provider => provider.GetInterpreterFactories())

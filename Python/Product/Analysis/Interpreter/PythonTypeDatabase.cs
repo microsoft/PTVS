@@ -206,43 +206,64 @@ namespace Microsoft.PythonTools.Interpreter {
                     " \"" + extensionModuleFilename + "\"" +                                              // extension module path
                     " \"" + dbFile.Substring(0, dbFile.Length - 4) + "\"";                                // output file path (minus .idb)
 
-                var proc = Process.Start(psi);
-                OutputDataReceiver receiver = new OutputDataReceiver();
-                proc.OutputDataReceived += receiver.OutputDataReceived;
-                proc.ErrorDataReceived += receiver.OutputDataReceived;
-
-                proc.BeginOutputReadLine();
-                proc.BeginErrorReadLine();
-
-                if (_cancel.CanBeCanceled) {
-                    if (WaitHandle.WaitAny(new[] { _cancel.WaitHandle, new ProcessWaitHandle(proc) }) != 1) {
-                        // we were cancelled
-                        return null;
+                Process proc = null;
+                try {
+                    try {
+                        proc = Process.Start(psi);
+                    } catch (InvalidOperationException ex) {
+                        throw new CannotAnalyzeExtensionException("Interpreter failed to execute", ex);
+                    } catch (IOException ex) {
+                        throw new CannotAnalyzeExtensionException("Interpreter failed to execute", ex);
+                    } catch (Win32Exception ex) {
+                        throw new CannotAnalyzeExtensionException("Interpreter failed to execute", ex);
                     }
-                } else {
-                    proc.WaitForExit();
-                }
+                    var receiver = new OutputDataReceiver();
+                    proc.OutputDataReceived += receiver.OutputDataReceived;
+                    proc.ErrorDataReceived += receiver.OutputDataReceived;
 
-                if (proc.ExitCode == 0) {
-                    // [FileName]|interpGuid|interpVersion|DateTimeStamp|[db_file.idb]
-                    // save the new entry in the DB file
-                    existingModules.Add(
-                        String.Format("{0}|{1}|{2}|{3}|{4}",
-                            extensionModuleFilename,
-                            interpreter.Id,
-                            interpreter.Configuration.Version,
-                            new FileInfo(extensionModuleFilename).LastWriteTime.ToString("O"),
-                            dbFile
-                        )
-                    );
+                    proc.BeginOutputReadLine();
+                    proc.BeginErrorReadLine();
 
-                    fs.Seek(0, SeekOrigin.Begin);
-                    fs.SetLength(0);
-                    var sw = new StreamWriter(fs);
-                    sw.Write(String.Join(Environment.NewLine, existingModules));
-                    sw.Flush();
-                } else {
-                    throw new CannotAnalyzeExtensionException(receiver.Received.ToString());
+                    if (_cancel.CanBeCanceled) {
+                        if (WaitHandle.WaitAny(new[] { _cancel.WaitHandle, new ProcessWaitHandle(proc) }) != 1) {
+                            // we were cancelled
+                            return null;
+                        }
+                    } else {
+                        try {
+                            proc.WaitForExit();
+                        } catch (Win32Exception ex) {
+                            throw new CannotAnalyzeExtensionException("Interpreter failed to execute", ex);
+                        } catch (SystemException ex) {
+                            throw new CannotAnalyzeExtensionException("Interpreter failed to execute", ex);
+                        }
+                    }
+
+                    if (proc != null && proc.ExitCode == 0) {
+                        // [FileName]|interpGuid|interpVersion|DateTimeStamp|[db_file.idb]
+                        // save the new entry in the DB file
+                        existingModules.Add(
+                            String.Format("{0}|{1}|{2}|{3}|{4}",
+                                extensionModuleFilename,
+                                interpreter.Id,
+                                interpreter.Configuration.Version,
+                                new FileInfo(extensionModuleFilename).LastWriteTime.ToString("O"),
+                                dbFile
+                            )
+                        );
+
+                        fs.Seek(0, SeekOrigin.Begin);
+                        fs.SetLength(0);
+                        var sw = new StreamWriter(fs);
+                        sw.Write(String.Join(Environment.NewLine, existingModules));
+                        sw.Flush();
+                    } else {
+                        throw new CannotAnalyzeExtensionException(receiver.Received.ToString());
+                    }
+                } finally {
+                    if (proc != null) {
+                        proc.Dispose();
+                    }
                 }
 
                 return dbFile;
@@ -422,21 +443,21 @@ namespace Microsoft.PythonTools.Interpreter {
                 }
 
                 if ((request.DatabaseOptions & GenerateDatabaseOptions.StdLibDatabase) != 0) {
-                    psi = new ProcessStartInfo();
-                    psi.CreateNoWindow = true;
-                    psi.UseShellExecute = false;
-                    psi.FileName = Path.Combine(GetPythonToolsInstallPath(), "Microsoft.PythonTools.Analyzer.exe");
-                    string libDir;
-                    string virtualEnvPackages;
-                    GetLibDirs(request, out libDir, out virtualEnvPackages);
+                    try {
+                        psi = new ProcessStartInfo();
+                        psi.CreateNoWindow = true;
+                        psi.UseShellExecute = false;
+                        psi.FileName = Path.Combine(GetPythonToolsInstallPath(), "Microsoft.PythonTools.Analyzer.exe");
+                        string libDir;
+                        string virtualEnvPackages;
+                        GetLibDirs(request, out libDir, out virtualEnvPackages);
 
-                    if (File.Exists(psi.FileName)) {
-                        psi.Arguments = BuildArguments(request, outPath, libDir, virtualEnvPackages);
+                        if (File.Exists(psi.FileName)) {
+                            psi.Arguments = BuildArguments(request, outPath, libDir, virtualEnvPackages);
 
-                        proc = new Process();
-                        proc.StartInfo = psi;
+                            proc = new Process();
+                            proc.StartInfo = psi;
 
-                        try {
                             LogEvent(request, "START_STDLIB " + psi.Arguments);
                             proc.Start();
                             proc.WaitForExit();
@@ -446,14 +467,12 @@ namespace Microsoft.PythonTools.Interpreter {
                             } else {
                                 LogEvent(request, "FAIL_STDLIB " + proc.ExitCode);
                             }
-                        } catch (Win32Exception ex) {
-                            // failed to start the process           
-                            LogEvent(request, "FAIL_STDLIB " + ex.ToString().Replace("\r\n", " -- "));
                         }
-
-                        databaseGenerationCompleted();
+                    } catch (Exception ex) {
+                        // failed to start the process
+                        LogEvent(request, "FAIL_STDLIB " + ex.ToString().Replace("\r\n", " -- "));
                     }
-                } else {
+
                     databaseGenerationCompleted();
                 }
             });
@@ -517,25 +536,30 @@ namespace Microsoft.PythonTools.Interpreter {
                     psi.UseShellExecute = false;
                     psi.CreateNoWindow = true;
 
-                    var proc = Process.Start(psi);
+                    try {
+                        var proc = Process.Start(psi);
 
-                    OutputDataReceiver receiver = new OutputDataReceiver();
-                    proc.OutputDataReceived += receiver.OutputDataReceived;
-                    proc.ErrorDataReceived += receiver.OutputDataReceived;
+                        OutputDataReceiver receiver = new OutputDataReceiver();
+                        proc.OutputDataReceived += receiver.OutputDataReceived;
+                        proc.ErrorDataReceived += receiver.OutputDataReceived;
 
-                    proc.BeginErrorReadLine();
-                    proc.BeginOutputReadLine();
+                        proc.BeginErrorReadLine();
+                        proc.BeginOutputReadLine();
 
-                    proc.WaitForExit();
+                        proc.WaitForExit();
 
-                    string siteFilename = receiver.Received.ToString().Trim();
+                        string siteFilename = receiver.Received.ToString().Trim();
 
-                    if (!String.IsNullOrWhiteSpace(siteFilename) &&
-                        siteFilename.IndexOfAny(Path.GetInvalidPathChars()) == -1) {
-                        var dirName = Path.GetDirectoryName(siteFilename);
-                        if (Directory.Exists(dirName)) {
-                            libDir = dirName;
+                        if (!String.IsNullOrWhiteSpace(siteFilename) &&
+                            siteFilename.IndexOfAny(Path.GetInvalidPathChars()) == -1) {
+                            var dirName = Path.GetDirectoryName(siteFilename);
+                            if (Directory.Exists(dirName)) {
+                                libDir = dirName;
+                            }
                         }
+                    } catch (IOException) {
+                    } catch (InvalidOperationException) {
+                    } catch (Win32Exception) {
                     }
                 }
             }

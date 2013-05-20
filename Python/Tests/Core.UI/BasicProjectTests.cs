@@ -35,6 +35,7 @@ using TestUtilities.UI;
 using TestUtilities.UI.Python;
 using VSLangProj;
 using ST = System.Threading;
+using MessageBoxButton = TestUtilities.UI.MessageBoxButton;
 
 namespace PythonToolsUITests {
     [TestClass]
@@ -1118,8 +1119,8 @@ namespace PythonToolsUITests {
 
 
 #if DEV11_OR_LATER
-        private static IEnumerable<Window> GetOpenDocumentWindows(DTE dte) {
-            foreach (var win in VsIdeTestHostContext.Dte.Windows.OfType<Window>()) {
+        private static IEnumerable<EnvDTE.Window> GetOpenDocumentWindows(DTE dte) {
+            foreach (var win in VsIdeTestHostContext.Dte.Windows.OfType<EnvDTE.Window>()) {
                 if (win.Document != null) {
                     yield return win;
                 }

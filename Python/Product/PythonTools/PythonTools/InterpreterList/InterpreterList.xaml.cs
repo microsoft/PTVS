@@ -54,19 +54,19 @@ namespace Microsoft.PythonTools.InterpreterList {
         public static readonly RoutedCommand CopyReasonCommand = new RoutedUICommand("Copy", "CopyReason", typeof(InterpreterList));
         public static readonly RoutedCommand WebChooseInterpreterCommand = new RoutedUICommand("Help me choose an interpreter", "WebChooseInterpreter", typeof(InterpreterList));
 
-        public InterpreterList() {
+        public InterpreterList(IInterpreterOptionsService service) {
             _refreshTimer = new DispatcherTimer();
             _refreshTimer.Interval = TimeSpan.FromMilliseconds(500.0);
             _refreshTimer.Tick += AutoRefresh_Elapsed;
-            _interpService = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
-            
+            _interpService = service;
+
             _interpreters = InterpreterView.GetInterpreters(_interpService).ToList();
             _interpService.InterpretersChanged += InterpretersChanged;
             _interpService.DefaultInterpreterChanged += DefaultInterpreterChanged;
 
             Interpreters = new ObservableCollection<InterpreterView>(_interpreters);
             DataContext = this;
-            
+
             _listener = new AnalyzerStatusListener(Update);
             InitializeComponent();
 
@@ -76,13 +76,20 @@ namespace Microsoft.PythonTools.InterpreterList {
         void InterpretersChanged(object sender, EventArgs e) {
             if (Dispatcher.CheckAccess()) {
                 lock (_interpreters) {
-                _interpreters.Clear();
-                Interpreters.Clear();
-                foreach (var interp in InterpreterView.GetInterpreters()) {
-                    _interpreters.Add(interp);
-                    Interpreters.Add(interp);
+                    _interpreters.Clear();
+                    Interpreters.Clear();
+                    foreach (var interp in InterpreterView.GetInterpreters(_interpService)) {
+                        _interpreters.Add(interp);
+                        Interpreters.Add(interp);
+                    }
                 }
-                }
+                // The column only resizes when the value changes. Since it's
+                // currently set to NaN, we need to set it to something else
+                // first. Setting it to ActualWidth results in no visible
+                // effects to the user, since the column is already ActualWidth
+                // wide.
+                nameColumn.Width = nameColumn.ActualWidth;
+                nameColumn.Width = double.NaN;
             } else {
                 Dispatcher.BeginInvoke((Action)(() => InterpretersChanged(sender, e)));
             }
@@ -106,7 +113,7 @@ namespace Microsoft.PythonTools.InterpreterList {
             get { return (ObservableCollection<InterpreterView>)GetValue(InterpretersProperty); }
             private set { SetValue(InterpretersPropertyKey, value); }
         }
-        
+
         private static readonly DependencyPropertyKey InterpretersPropertyKey = DependencyProperty.RegisterReadOnly("Interpreters", typeof(ObservableCollection<InterpreterView>), typeof(InterpreterList), new PropertyMetadata());
         public static readonly DependencyProperty InterpretersProperty = InterpretersPropertyKey.DependencyProperty;
 
@@ -138,12 +145,12 @@ namespace Microsoft.PythonTools.InterpreterList {
             _listener.RequestUpdate();
         }
 
-        private void Update(Dictionary<string, AnalysisProgress> data) {
+        internal void Update(Dictionary<string, AnalysisProgress> data) {
             lock (_interpreters) {
-            foreach (var interp in _interpreters) {
-                interp.ProgressUpdate(data);
+                foreach (var interp in _interpreters) {
+                    interp.ProgressUpdate(data);
+                }
             }
-        }
         }
 
 
@@ -165,12 +172,12 @@ namespace Microsoft.PythonTools.InterpreterList {
 
         private void OpenRepl_Executed(object sender, ExecutedRoutedEventArgs e) {
             var interp = ((InterpreterView)e.Parameter).Interpreter;
-                var window = ExecuteInReplCommand.EnsureReplWindow(interp) as ToolWindowPane;
-                if (window != null) {
-                    IVsWindowFrame windowFrame = (IVsWindowFrame)window.Frame;
-                    ErrorHandler.ThrowOnFailure(windowFrame.Show());
-                    ((IReplWindow)window).Focus();
-                }
+            var window = ExecuteInReplCommand.EnsureReplWindow(interp) as ToolWindowPane;
+            if (window != null) {
+                IVsWindowFrame windowFrame = (IVsWindowFrame)window.Frame;
+                ErrorHandler.ThrowOnFailure(windowFrame.Show());
+                ((IReplWindow)window).Focus();
+            }
         }
 
 
