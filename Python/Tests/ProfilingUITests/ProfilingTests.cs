@@ -51,7 +51,7 @@ namespace ProfilingUITests {
             VsIdeTestHostContext.Dte.Solution.Close(false);
 
             var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte);
-
+            app.OpenPythonPerformance();
             app.PythonPerformanceExplorerToolBar.NewPerfSession();
 
             var profiling = (IPythonProfiling)VsIdeTestHostContext.Dte.GetObject("PythonProfiling");
@@ -100,12 +100,56 @@ namespace ProfilingUITests {
             }
         }
 
+        /// <summary>
+        /// https://pytools.codeplex.com/workitem/1179
+        /// </summary>
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void DeleteMultipleSessions() {
+            VsIdeTestHostContext.Dte.Solution.Close(false);
+
+            var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte);
+            app.OpenPythonPerformance();
+            app.PythonPerformanceExplorerToolBar.NewPerfSession();
+            app.PythonPerformanceExplorerToolBar.NewPerfSession();
+
+            var profiling = (IPythonProfiling)VsIdeTestHostContext.Dte.GetObject("PythonProfiling");
+
+            app.OpenPythonPerformance();
+            var perf = app.PythonPerformanceExplorerTreeView.WaitForItem("Performance *");
+            Assert.IsNotNull(perf);
+
+            var perf2 = app.PythonPerformanceExplorerTreeView.WaitForItem("Performance1 *");
+
+            Mouse.MoveTo(perf.GetClickablePoint());
+            Mouse.Click(System.Windows.Input.MouseButton.Left);
+
+            Keyboard.Press(System.Windows.Input.Key.LeftShift);
+
+            try {
+                Mouse.MoveTo(perf2.GetClickablePoint());
+                Mouse.Click(System.Windows.Input.MouseButton.Left);
+            } finally {
+                Keyboard.Release(System.Windows.Input.Key.LeftShift);
+            }
+
+            Keyboard.PressAndRelease(System.Windows.Input.Key.Delete);
+
+            app.WaitForDialog();
+
+            Keyboard.PressAndRelease(System.Windows.Input.Key.D, System.Windows.Input.Key.LeftAlt);
+
+            Assert.IsNull(app.PythonPerformanceExplorerTreeView.WaitForItemRemoved("Performance *"));
+            Assert.IsNull(app.PythonPerformanceExplorerTreeView.WaitForItemRemoved("Performance1 *"));
+        }
+
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void NewProfilingSessionOpenSolution() {
             var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte);
             var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\ProfileTest.sln");
 
+            app.OpenPythonPerformance();
             app.PythonPerformanceExplorerToolBar.NewPerfSession();
 
             var profiling = (IPythonProfiling)VsIdeTestHostContext.Dte.GetObject("PythonProfiling");
@@ -619,6 +663,7 @@ namespace ProfilingUITests {
                 System.Threading.Thread.Sleep(1000);
                 Assert.IsTrue(profiling.IsProfiling);
                 var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte);
+                app.OpenPythonPerformance();
                 app.PythonPerformanceExplorerToolBar.Stop();
 
                 while (profiling.IsProfiling) {

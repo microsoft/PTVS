@@ -13,7 +13,9 @@
  * ***************************************************************************/
 
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Xml.Serialization;
 
 namespace Microsoft.PythonTools.Profiling {
@@ -228,10 +230,21 @@ namespace Microsoft.PythonTools.Profiling {
 
         [XmlElement("Report")]
         public Report[] Report {
+            get {
+                return AllReports.Values.ToArray();
+            }
+            set {
+                AllReports = new SortedDictionary<uint, Report>();
+                for (uint i = 0; i < value.Length; i++) {
+                    AllReports[i + SessionNode.StartingReportId] = value[i];
+                }
+            }
+        }
+
+        internal SortedDictionary<uint, Report> AllReports {
             get;
             set;
         }
-
 
         internal Reports Clone() {
             var res = new Reports();

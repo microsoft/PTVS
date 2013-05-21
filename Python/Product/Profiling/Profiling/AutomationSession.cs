@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 
 namespace Microsoft.PythonTools.Profiling {
@@ -43,12 +44,12 @@ namespace Microsoft.PythonTools.Profiling {
         public IPythonPerformanceReport GetReport(object item) {
             if (item is int) {
                 int id = (int)item - 1;
-                if (id >= 0 && id < _node.Reports.Length) {
-                    return new ReportWrapper(_node.Reports[id]);
+                if (id >= 0 && id < _node.Reports.Count) {
+                    return new ReportWrapper(_node.Reports.Values.ElementAt(id));
                 }
             } else if (item is string) {
                 string filename = (string)item;
-                foreach (var report in _node.Reports) {
+                foreach (var report in _node.Reports.Values) {
                     if (filename == report.Filename || Path.GetFileNameWithoutExtension(report.Filename) == filename) {
                         return new ReportWrapper(report);
                     }

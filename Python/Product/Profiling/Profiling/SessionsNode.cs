@@ -21,6 +21,7 @@ using System.Reflection;
 using System.Windows.Forms;
 using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools.Project;
 
@@ -33,8 +34,9 @@ namespace Microsoft.PythonTools.Profiling {
     /// </summary>
     class SessionsNode : BaseHierarchyNode, IVsHierarchyDeleteHandler {
         private readonly List<SessionNode> _sessions = new List<SessionNode>();
+        internal readonly EventSinkCollection _sessionsCollection = new EventSinkCollection();
         private readonly IVsUIHierarchyWindow _window;
-        internal int _activeSession = -1;
+        internal uint _activeSession = VSConstants.VSITEMID_NIL;
         internal static ImageList _imageList = InitImageList();
         const string _rootName = "Python Performance Sessions";
 
@@ -95,20 +97,19 @@ namespace Microsoft.PythonTools.Profiling {
                 }
             }
 
-            uint itemid = (uint)_sessions.Count;
-            var node = new SessionNode(this, target, filename);
-            _sessions.Add(node);
-
             uint prevSibl;
-            if (itemid != 0) {
-                prevSibl = itemid - 1;
+            if (_sessions.Count > 0) {
+                prevSibl = _sessions[_sessions.Count - 1].ItemId;
             } else {
                 prevSibl = VSConstants.VSITEMID_NIL;
             }
 
-            OnItemAdded(VSConstants.VSITEMID_ROOT, prevSibl, itemid);
+            var node = new SessionNode(this, target, filename);
+            _sessions.Add(node);
 
-            if (_activeSession == -1) {
+            OnItemAdded(VSConstants.VSITEMID_ROOT, prevSibl, node.ItemId);
+
+            if (_activeSession == VSConstants.VSITEMID_NIL) {
                 SetActiveSession(node);
             }
 
@@ -116,23 +117,23 @@ namespace Microsoft.PythonTools.Profiling {
         }
 
         internal void SetActiveSession(SessionNode node) {
-            int oldItem = _activeSession;
-            if (oldItem != -1) {
-                _window.ExpandItem(this, (uint)_activeSession, EXPANDFLAGS.EXPF_UnBoldItem);
+            uint oldItem = _activeSession;
+            if (oldItem != VSConstants.VSITEMID_NIL) {
+                _window.ExpandItem(this, _activeSession, EXPANDFLAGS.EXPF_UnBoldItem);
             }
 
-            _activeSession = _sessions.IndexOf(node);
-            Debug.Assert(_activeSession != -1);
+            _activeSession = node.ItemId;
 
-            _window.ExpandItem(this, (uint)_activeSession, EXPANDFLAGS.EXPF_BoldItem);
+            _window.ExpandItem(this, _activeSession, EXPANDFLAGS.EXPF_BoldItem);
         }
 
         #region IVsUIHierarchy Members
 
         public override int GetNestedHierarchy(uint itemid, ref Guid iidHierarchyNested, out IntPtr ppHierarchyNested, out uint pitemidNested) {
-            if (itemid >= 0 && itemid < _sessions.Count) {
+            var item = _sessionsCollection[itemid];
+            if (item != null) {
                 if (iidHierarchyNested == typeof(IVsHierarchy).GUID || iidHierarchyNested == typeof(IVsUIHierarchy).GUID) {
-                    ppHierarchyNested = System.Runtime.InteropServices.Marshal.GetComInterfaceForObject(_sessions[(int)itemid], typeof(IVsUIHierarchy));
+                    ppHierarchyNested = System.Runtime.InteropServices.Marshal.GetComInterfaceForObject(item, typeof(IVsUIHierarchy));
                     pitemidNested = VSConstants.VSITEMID_ROOT;
                     return VSConstants.S_OK;
                 }
@@ -158,16 +159,18 @@ namespace Microsoft.PythonTools.Profiling {
 
                 case __VSHPROPID.VSHPROPID_FirstChild:
                     if (itemid == VSConstants.VSITEMID_ROOT && _sessions.Count > 0)
-                        pvar = 0;
+                        pvar = _sessions[0].ItemId;
                     else
                         pvar = VSConstants.VSITEMID_NIL;
                     break;
 
                 case __VSHPROPID.VSHPROPID_NextSibling:
-                    if (itemid != VSConstants.VSITEMID_ROOT && itemid < _sessions.Count - 1)
-                        pvar = itemid + 1;
-                    else
-                        pvar = VSConstants.VSITEMID_NIL;
+                    pvar = VSConstants.VSITEMID_NIL;
+                    for(int i = 0; i<_sessions.Count; i++) {
+                        if (_sessions[i].ItemId == itemid && i < _sessions.Count - 1) {
+                            pvar = _sessions[i + 1].ItemId;
+                        }
+                    }
                     break;
 
                 case __VSHPROPID.VSHPROPID_Expandable:
@@ -205,8 +208,9 @@ namespace Microsoft.PythonTools.Profiling {
                     break;
 
                 case __VSHPROPID.VSHPROPID_ParentHierarchy:
-                    if (itemid >= 0 && itemid < _sessions.Count)
+                    if (_sessionsCollection[itemid] != null) {
                         pvar = this as IVsHierarchy;
+                    }
                     break;
             }
 
@@ -225,12 +229,12 @@ namespace Microsoft.PythonTools.Profiling {
             if (item != null) {
                 switch ((__VSDELETEITEMOPERATION)dwDelItemOp) {
                     case __VSDELETEITEMOPERATION.DELITEMOP_DeleteFromStorage:
-                        var session = _sessions[(int)itemid];
                         File.Delete(item.Filename);
                         goto case __VSDELETEITEMOPERATION.DELITEMOP_RemoveFromProject;
                     case __VSDELETEITEMOPERATION.DELITEMOP_RemoveFromProject:
                         item.Removed();
-                        _sessions.RemoveAt((int)itemid);
+                        _sessions.Remove(item);
+                        _sessionsCollection.RemoveAt(itemid);
                         OnItemDeleted(itemid);
                         // our itemids have all changed, invalidate them
                         OnInvalidateItems(VSConstants.VSITEMID_ROOT);
@@ -241,7 +245,7 @@ namespace Microsoft.PythonTools.Profiling {
                     if (_sessions.Count > 0) {
                         SetActiveSession(_sessions[0]);
                     } else {
-                        _activeSession = -1;
+                        _activeSession = VSConstants.VSITEMID_NIL;
                     }
                 }
                 return VSConstants.S_OK;
@@ -264,16 +268,13 @@ namespace Microsoft.PythonTools.Profiling {
         }
 
         private SessionNode GetItem(uint itemid) {
-            if (itemid < _sessions.Count) {
-                return _sessions[(int)itemid];
-            }
-            return null;
+            return (SessionNode)_sessionsCollection[itemid];
         }
 
 
         internal void StartProfiling() {
-            if (_activeSession != -1) {
-                _sessions[_activeSession].StartProfiling();
+            if (_activeSession != VSConstants.VSITEMID_NIL) {
+                GetItem(_activeSession).StartProfiling();
             }
         }
 

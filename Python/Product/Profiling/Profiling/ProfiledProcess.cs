@@ -41,7 +41,34 @@ namespace Microsoft.PythonTools.Profiling {
             _dir = dir;
             _arch = arch;
 
-            var processInfo = new ProcessStartInfo(_exe);
+            ProcessStartInfo processInfo;
+            string pythonInstallDir = GetPythonToolsInstallPath();
+            string dll = _arch == ProcessorArchitecture.Amd64 ? "VsPyProf.dll" : "VsPyProfX86.dll";
+            string arguments = "\"" + Path.Combine(pythonInstallDir, "proflaun.py") + "\" " +
+                "\"" + Path.Combine(pythonInstallDir, dll) + "\" " +
+                "\"" + dir + "\" " +
+                _args;
+
+            if (PythonToolsPackage.Instance.OptionsPage.WaitOnNormalExit ||
+                PythonToolsPackage.Instance.OptionsPage.WaitOnAbnormalExit) {
+                string command = "/c \"\"" + _exe + "\" " + arguments;
+
+                if (PythonToolsPackage.Instance.OptionsPage.WaitOnNormalExit &&
+                    PythonToolsPackage.Instance.OptionsPage.WaitOnAbnormalExit) {
+                    command += " & pause";
+                } else if (PythonToolsPackage.Instance.OptionsPage.WaitOnNormalExit) {
+                    command += " & if not errorlevel 1 pause";
+                } else if (PythonToolsPackage.Instance.OptionsPage.WaitOnAbnormalExit) {
+                    command += " & if errorlevel 1 pause";
+                }
+                command += "\"";
+                processInfo = new ProcessStartInfo(
+                    Path.Combine(Environment.SystemDirectory, "cmd.exe"), 
+                    command
+                );
+            } else {
+                processInfo = new ProcessStartInfo(_exe, arguments);
+            }
 
             processInfo.CreateNoWindow = false;
             processInfo.UseShellExecute = false;
@@ -52,13 +79,6 @@ namespace Microsoft.PythonTools.Profiling {
                     processInfo.EnvironmentVariables[keyValue.Key] = keyValue.Value;
                 }
             }
-
-            string pythonInstallDir = GetPythonToolsInstallPath();
-            string dll = _arch == ProcessorArchitecture.Amd64 ? "VsPyProf.dll" : "VsPyProfX86.dll";
-            processInfo.Arguments = "\"" + Path.Combine(pythonInstallDir, "proflaun.py") + "\" " +
-                "\"" + Path.Combine(pythonInstallDir, dll) + "\" " +
-                "\"" + dir + "\" " +
-                _args;
 
             _process = new Process();
             _process.StartInfo = processInfo;
