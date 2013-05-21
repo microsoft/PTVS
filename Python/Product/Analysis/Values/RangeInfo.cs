@@ -22,11 +22,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
             : base(state.ClassInfos[BuiltinTypeId.List]) {
         }
 
-        public override INamespaceSet GetEnumeratorTypes(Node node, AnalysisUnit unit) {
+        public override IAnalysisSet GetEnumeratorTypes(Node node, AnalysisUnit unit) {
             return ProjectState.ClassInfos[BuiltinTypeId.Int].SelfSet;
         }
 
-        public override INamespaceSet GetIndex(Node node, AnalysisUnit unit, INamespaceSet index) {
+        public override IAnalysisSet GetIndex(Node node, AnalysisUnit unit, IAnalysisSet index) {
             // TODO: Return correct index value if we have a constant
             /*int? constIndex = SequenceInfo.GetConstantIndex(index);
 

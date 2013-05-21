@@ -142,7 +142,7 @@ TRACE and will also log detailed analysis information to CSV file.
 #endif
                 Console.WriteLine("Test failed: {0}, {1} ({2}ms)", name, sw.Elapsed, sw.ElapsedMilliseconds);
                 Console.WriteLine(e);
-                AnalysisLog.Dump();
+                AnalysisLog.Flush();
                 return false;
             }
         }
@@ -191,7 +191,7 @@ TRACE and will also log detailed analysis information to CSV file.
                 Console.ForegroundColor = fg;
 
                 if (VERBOSE) {
-                    AnalysisLog.Dump();
+                    AnalysisLog.Flush();
                 }
 
                 IdDispenser.Clear();
@@ -234,7 +234,7 @@ TRACE and will also log detailed analysis information to CSV file.
                 Console.ForegroundColor = fg;
 
                 if (VERBOSE) {
-                    AnalysisLog.Dump();
+                    AnalysisLog.Flush();
                 }
 
                 IdDispenser.Clear();
@@ -276,7 +276,7 @@ TRACE and will also log detailed analysis information to CSV file.
                     Console.ForegroundColor = fg;
 
                     if (VERBOSE) {
-                        AnalysisLog.Dump();
+                        AnalysisLog.Flush();
                     }
 
                     IdDispenser.Clear();

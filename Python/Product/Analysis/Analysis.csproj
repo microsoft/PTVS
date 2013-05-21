@@ -25,7 +25,7 @@
   <Import Project="..\ProjectBefore.settings" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <Platform>AnyCPU</Platform>
     <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectTypeGuids>{82b43b9b-a64c-4715-b499-d71e9ca2bd60};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
@@ -36,6 +36,7 @@
     <AssemblyName>Microsoft.PythonTools.Analysis</AssemblyName>
     <FileAlignment>512</FileAlignment>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <!--<DefineConstants>$(DefineConstants);FULL_VALIDATION</DefineConstants>-->
     <SccProjectName>SAK</SccProjectName>
     <SccLocalPath>SAK</SccLocalPath>
     <SccAuxPath>SAK</SccAuxPath>
@@ -61,6 +62,7 @@
     <Compile Include="AnalysisExtensions.cs" />
     <Compile Include="AnalysisLimits.cs" />
     <Compile Include="AnalysisLog.cs" />
+    <Compile Include="AnalysisValue.cs" />
     <Compile Include="AnalysisVariable.cs" />
     <Compile Include="Analyzer\AnalyzerStatusUpdater.cs" />
     <Compile Include="Analyzer\ComprehensionScope.cs" />
@@ -88,9 +90,11 @@
     <Compile Include="Interpreter\ProjectReferenceKind.cs" />
     <Compile Include="Interpreter\SharedDatabaseState.cs" />
     <Compile Include="ModuleTable.cs" />
-    <Compile Include="NamespaceSet.cs" />
+    <Compile Include="AnalysisSet.cs" />
     <Compile Include="NativeMethods.cs" />
     <Compile Include="Parsing\Ast\YieldFromExpression.cs" />
+    <Compile Include="ProjectEntryExtensions.cs" />
+    <Compile Include="PythonAnalyzer.Specializations.cs" />
     <Compile Include="RegistryWatcher.cs" />
     <Compile Include="Resources.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -125,7 +129,6 @@
     <Compile Include="NoneType.cs" />
     <Compile Include="HashSetExtensions.cs" />
     <Compile Include="IAnalysisCookie.cs" />
-    <Compile Include="IAnalysisValue.cs" />
     <Compile Include="IAnalysisVariable.cs" />
     <Compile Include="Analyzer\ClassScope.cs" />
     <Compile Include="Analyzer\DDG.cs" />
@@ -276,7 +279,7 @@
     <Compile Include="Analyzer\AnalysisUnit.cs" />
     <Compile Include="Parsing\SourceLocation.cs" />
     <Compile Include="Unpickler.cs" />
-    <Compile Include="AnalysisValue.cs" />
+    <Compile Include="Validation.cs" />
     <Compile Include="Values\ArgumentSet.cs" />
     <Compile Include="Values\BoundBuiltinMethodInfo.cs" />
     <Compile Include="Values\BuiltinClassInfo.cs" />
@@ -287,14 +290,13 @@
     <Compile Include="Values\BuiltinModule.cs" />
     <Compile Include="Values\BuiltinNamespace.cs" />
     <Compile Include="Values\CallChain.cs" />
+    <Compile Include="Values\MergeStrengths.cs" />
     <Compile Include="Values\ObjectBuiltinClassInfo.cs" />
     <Compile Include="Values\BuiltinPropertyInfo.cs" />
-    <Compile Include="CallInfo.cs" />
     <Compile Include="Values\ClassInfo.cs" />
     <Compile Include="Values\ConstantInfo.cs" />
     <Compile Include="Values\IterBoundBuiltinMethod.cs" />
     <Compile Include="Values\SequenceBuiltinInstanceInfo.cs" />
-    <Compile Include="Values\SpecializedCallableNoAnalyze.cs" />
     <Compile Include="Values\IteratorInfo.cs" />
     <Compile Include="Values\IterableInfo.cs" />
     <Compile Include="Values\DependencyInfo.cs" />
@@ -317,8 +319,7 @@
     <Compile Include="Values\BoundMethodInfo.cs" />
     <Compile Include="Values\ModuleInfo.cs" />
     <Compile Include="Values\MultipleMemberInfo.cs" />
-    <Compile Include="Values\Namespace.cs" />
-    <Compile Include="Values\NamespaceSetExtensions.cs" />
+    <Compile Include="Values\AnalysisSetExtensions.cs" />
     <Compile Include="Values\NumericInstanceInfo.cs" />
     <Compile Include="Values\RangeInfo.cs" />
     <Compile Include="Values\ReflectedNamespace.cs" />

@@ -30,17 +30,17 @@ namespace Microsoft.PythonTools.Analysis.Values {
             get { return _type; }
         }
 
-        public override INamespaceSet GetDescriptor(Node node, Namespace instance, Namespace context, Interpreter.AnalysisUnit unit) {
+        public override IAnalysisSet GetDescriptor(Node node, AnalysisValue instance, AnalysisValue context, Interpreter.AnalysisUnit unit) {
             if (instance == ProjectState._noneInst) {
                 return base.GetDescriptor(node, instance, context, unit);
             }
 
-            return ((BuiltinClassInfo)ProjectState.GetNamespaceFromObjects(_value.Type)).Instance.SelfSet;
+            return ((BuiltinClassInfo)ProjectState.GetAnalysisValueFromObjects(_value.Type)).Instance.SelfSet;
         }
 
-        public override INamespaceSet GetStaticDescriptor(Interpreter.AnalysisUnit unit) {
+        public override IAnalysisSet GetStaticDescriptor(Interpreter.AnalysisUnit unit) {
             if (_value.IsStatic) {
-                var klass = (BuiltinClassInfo)ProjectState.GetNamespaceFromObjects(_value.Type);
+                var klass = (BuiltinClassInfo)ProjectState.GetAnalysisValueFromObjects(_value.Type);
                 return klass.Instance.SelfSet;
             }
 

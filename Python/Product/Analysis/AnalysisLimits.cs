@@ -41,6 +41,7 @@ namespace Microsoft.PythonTools.Analysis {
             limits.DictKeyTypes = 5;
             limits.DictValueTypes = 20;
             limits.IndexTypes = 5;
+            limits.AssignedTypes = 50;
             limits.UnifyCallsToNew = true;
             return limits;
         }
@@ -56,6 +57,7 @@ namespace Microsoft.PythonTools.Analysis {
         private const string DictKeyTypesId = "DictKeyTypes";
         private const string DictValueTypesId = "DictValueTypes";
         private const string IndexTypesId = "IndexTypes";
+        private const string AssignedTypesId = "AssignedTypes";
         private const string UnifyCallsToNewId = "UnifyCallsToNew";
 
         /// <summary>
@@ -83,6 +85,7 @@ namespace Microsoft.PythonTools.Analysis {
                 limits.DictKeyTypes = (key.GetValue(DictKeyTypesId) as int?) ?? limits.DictKeyTypes;
                 limits.DictValueTypes = (key.GetValue(DictValueTypesId) as int?) ?? limits.DictValueTypes;
                 limits.IndexTypes = (key.GetValue(IndexTypesId) as int?) ?? limits.IndexTypes;
+                limits.AssignedTypes = (key.GetValue(AssignedTypesId) as int?) ?? limits.AssignedTypes;
                 limits.UnifyCallsToNew = ((key.GetValue(UnifyCallsToNewId) as int?) ?? (limits.UnifyCallsToNew ? 1 : 0)) != 0;
             }
 
@@ -104,6 +107,7 @@ namespace Microsoft.PythonTools.Analysis {
             key.SetValue(DictKeyTypesId, DictKeyTypes, RegistryValueKind.DWord);
             key.SetValue(DictValueTypesId, DictValueTypes, RegistryValueKind.DWord);
             key.SetValue(IndexTypesId, IndexTypes, RegistryValueKind.DWord);
+            key.SetValue(AssignedTypesId, AssignedTypes, RegistryValueKind.DWord);
             key.SetValue(UnifyCallsToNewId, UnifyCallsToNew ? 1 : 0, RegistryValueKind.DWord);
         }
 
@@ -119,6 +123,7 @@ namespace Microsoft.PythonTools.Analysis {
             DictKeyTypes = 10;
             DictValueTypes = 30;
             IndexTypes = 30;
+            AssignedTypes = 100;
         }
 
         /// <summary>
@@ -213,5 +218,12 @@ namespace Microsoft.PythonTools.Analysis {
         /// similar types. This does not apply to dictionaries.
         /// </summary>
         public int IndexTypes { get; set; }
+
+        /// <summary>
+        /// The number of values in a normal variable at which to start
+        /// combining similar types. This is only applied by assignment
+        /// analysis.
+        /// </summary>
+        public int AssignedTypes { get; set; }
     }
 }

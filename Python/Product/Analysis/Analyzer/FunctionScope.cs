@@ -34,7 +34,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             }
         }
 
-        internal void AddReturnTypes(Node node, AnalysisUnit unit, INamespaceSet types, bool enqueue = true) {
+        internal void AddReturnTypes(Node node, AnalysisUnit unit, IAnalysisSet types, bool enqueue = true) {
             if (Generator != null) {
                 Generator.AddReturn(node, unit, types, enqueue);
             } else {
@@ -99,7 +99,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
 
         public FunctionInfo Function {
             get {
-                return Namespace as FunctionInfo;
+                return AnalysisValue as FunctionInfo;
             }
         }
 
@@ -167,12 +167,12 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             }
         }
 
-        public override IEnumerable<Namespace> GetMergedNamespaces() {
-            yield return Namespace;
+        public override IEnumerable<AnalysisValue> GetMergedAnalysisValues() {
+            yield return AnalysisValue;
             if (Function._allCalls != null) {
                 foreach (var callUnit in Function._allCalls.Values) {
                     if (callUnit.Scope != this) {
-                        yield return callUnit.Scope.Namespace;
+                        yield return callUnit.Scope.AnalysisValue;
                     }
                 }
             }

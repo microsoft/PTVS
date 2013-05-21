@@ -20,19 +20,19 @@ using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Values {
     struct ArgumentSet {
-        public readonly INamespaceSet[] Args;
+        public readonly IAnalysisSet[] Args;
 
-        public ArgumentSet(INamespaceSet[] args) {
+        public ArgumentSet(IAnalysisSet[] args) {
             this.Args = args;
         }
 
-        public INamespaceSet SequenceArgs {
+        public IAnalysisSet SequenceArgs {
             get {
                 return Args[Args.Length - 2];
             }
         }
 
-        public INamespaceSet DictArgs {
+        public IAnalysisSet DictArgs {
             get {
                 return Args[Args.Length - 1];
             }
@@ -59,7 +59,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return x.Args.Length == y.Args.Length;
         }
 
-        public static ArgumentSet FromArgs(FunctionDefinition node, AnalysisUnit unit, INamespaceSet[] args, NameExpression[] keywordArgs) {
+        public static ArgumentSet FromArgs(FunctionDefinition node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgs) {
             // TODO: Warn when a keyword argument is provided and it maps to
             // something which is also a positional argument:
             // def f(a, b, c):
@@ -69,20 +69,20 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
             int kwArgsOffset = args.Length - keywordArgs.Length;
 
-            var seqArgs = NamespaceSet.EmptyUnion;
-            var dictArgs = NamespaceSet.EmptyUnion;
+            var seqArgs = AnalysisSet.EmptyUnion;
+            var dictArgs = AnalysisSet.EmptyUnion;
             int listArgsIndex = -1;
             int dictArgsIndex = -1;
 
             int argCount = node.Parameters.Count;
-            var newArgs = new INamespaceSet[argCount + 2];
+            var newArgs = new IAnalysisSet[argCount + 2];
             for (int i = 0; i < node.Parameters.Count; ++i) {
                 if (node.Parameters[i].Kind == ParameterKind.List) {
                     listArgsIndex = i;
                 } else if (node.Parameters[i].Kind == ParameterKind.Dictionary) {
                     dictArgsIndex = i;
                 }
-                newArgs[i] = NamespaceSet.Empty;
+                newArgs[i] = AnalysisSet.Empty;
             }
 
             int lastPositionFilled = -1;
@@ -168,7 +168,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return new ArgumentSet(newArgs);
         }
 
-        private static INamespaceSet ReduceArgs(INamespaceSet args, int limit) {
+        private static IAnalysisSet ReduceArgs(IAnalysisSet args, int limit) {
             for (int j = 0; j <= UnionComparer.MAX_STRENGTH; ++j) {
                 if (args.Count > limit) {
                     args = args.AsUnion(j);

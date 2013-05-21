@@ -26,8 +26,8 @@ using Microsoft.PythonTools.Parsing.Ast;
 namespace Microsoft.PythonTools.Analysis {
     class SaveAnalysis {
         private List<string> _errors = new List<string>();
-        private Dictionary<Namespace, string> _classNames = new Dictionary<Namespace, string>();
-        private List<Namespace> _path = new List<Namespace>();
+        private Dictionary<AnalysisValue, string> _classNames = new Dictionary<AnalysisValue, string>();
+        private List<AnalysisValue> _path = new List<AnalysisValue>();
         private Dictionary<string, Dictionary<string, object>> _typeNames = new Dictionary<string, Dictionary<string, object>>();
         private Dictionary<string, string> _MemoizedStrings = new Dictionary<string, string>();
         private Dictionary<string, Dictionary<string, object>> _moduleNames = new Dictionary<string, Dictionary<string, object>>();
@@ -124,7 +124,7 @@ namespace Microsoft.PythonTools.Analysis {
             return GetMemberValue(variableDef.TypesNoCopy, declModule, isRef);
         }
 
-        private object GetMemberValue(INamespaceSet types, ModuleInfo declModule, bool isRef) {
+        private object GetMemberValue(IAnalysisSet types, ModuleInfo declModule, bool isRef) {
             if (types.Count == 1) {
                 var type = types.First();
                 var res = GetMemberValueInternal(type, declModule, isRef);
@@ -152,7 +152,7 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
-        private object GetMemberValueInternal(Namespace type, ModuleInfo declModule, bool isRef) {
+        private object GetMemberValueInternal(AnalysisValue type, ModuleInfo declModule, bool isRef) {
             SpecializedNamespace specialCallable = type as SpecializedNamespace;
             if (specialCallable != null) {
                 return GetMemberValueInternal(specialCallable.Original, declModule, isRef);
@@ -186,7 +186,8 @@ namespace Microsoft.PythonTools.Analysis {
                 case PythonMemberType.Class:
                     ClassInfo ci = type as ClassInfo;
                     if (ci != null) {
-                        if (isRef || ci.DeclaringModule.MyScope != declModule) {
+                        if (isRef || ci.DeclaringModule.GetModuleInfo() != declModule) {
+                            // TODO: Save qualified name so that classes defined in classes/function can be resolved
                             return GetTypeName(ci.DeclaringModule.ModuleName, ci.Name);
                         } else {
                             return GenerateClass(ci, declModule);
@@ -246,7 +247,7 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
-        private static string GetMemberKind(Namespace type, ModuleInfo declModule, bool isRef) {
+        private static string GetMemberKind(AnalysisValue type, ModuleInfo declModule, bool isRef) {
             SpecializedNamespace specialCallable = type as SpecializedNamespace;
             if (specialCallable != null) {
                 return GetMemberKind(specialCallable.Original, declModule, isRef);
@@ -261,7 +262,7 @@ namespace Microsoft.PythonTools.Analysis {
                 case PythonMemberType.Method: return "method";
                 case PythonMemberType.Property: return "property";
                 case PythonMemberType.Class:
-                    if (isRef || type is BuiltinClassInfo || (type is ClassInfo && ((ClassInfo)type).DeclaringModule.MyScope != declModule)) {
+                    if (isRef || type is BuiltinClassInfo || (type is ClassInfo && type.DeclaringModule.GetModuleInfo() != declModule)) {
                         return "typeref";
                     }
                     return "type";
@@ -275,12 +276,12 @@ namespace Microsoft.PythonTools.Analysis {
         private object GenerateProperty(FunctionInfo prop) {
             return new Dictionary<string, object>() {
                 { "doc", MemoizeString(prop.Documentation) },
-                { "type", GenerateTypeName(GetFunctionReturnTypes(prop), prop.DeclaringModule.MyScope, true) },
-                { "location", GenerateLocation(prop.Location) }
+                { "type", GenerateTypeName(GetFunctionReturnTypes(prop), prop.DeclaringModule.GetModuleInfo(), true) },
+                { "location", GenerateLocation(prop.Locations) }
             };
         }
 
-        private static INamespaceSet GetFunctionReturnTypes(FunctionInfo func) {
+        private static IAnalysisSet GetFunctionReturnTypes(FunctionInfo func) {
             return func.GetReturnValue();
         }
 
@@ -297,7 +298,7 @@ namespace Microsoft.PythonTools.Analysis {
                 { "members", GetClassMembers(ci, declModule) },
                 { "doc", MemoizeString(ci.Documentation) },
                 { "builtin", false },
-                { "location", GenerateLocation(ci.Location) }
+                { "location", GenerateLocation(ci.Locations) }
             };
         }
 
@@ -345,7 +346,7 @@ namespace Microsoft.PythonTools.Analysis {
             List<object> res = new List<object>();
             foreach (var baseClassSet in ci.Bases) {
                 foreach (var baseClass in baseClassSet) {
-                    var typeName = GenerateTypeName(baseClass, ci.DeclaringModule.MyScope, true);
+                    var typeName = GenerateTypeName(baseClass, ((ProjectEntry)ci.DeclaringModule).GetModuleInfo(), true);
                     if (typeName != null) {
                         res.Add(typeName);
                     }
@@ -354,20 +355,20 @@ namespace Microsoft.PythonTools.Analysis {
             return res;
         }
 
-        private object GenerateTypeName(INamespaceSet name, ModuleInfo declModule, bool isRef) {
+        private object GenerateTypeName(IAnalysisSet name, ModuleInfo declModule, bool isRef) {
             if (name.Count == 0) {
                 return null;
             } else if (name.Count == 1) {
                 return GenerateTypeName(name.First(), declModule, isRef);
             }
 
-            return name.Select(ns => GenerateTypeName(ns, declModule, isRef)).ToList<object>();
+            return name.Select(ns => GenerateTypeName(ns, declModule, isRef)).Distinct().ToList<object>();
         }
 
-        private object GenerateTypeName(Namespace baseClass, ModuleInfo declModule, bool isRef) {
+        private object GenerateTypeName(AnalysisValue baseClass, ModuleInfo declModule, bool isRef) {
             ClassInfo ci = baseClass as ClassInfo;
             if (ci != null) {
-                return GetTypeName(ci.DeclaringModule.MyScope.Name, ci.ClassDefinition.Name);
+                return GetTypeName(((ProjectEntry)ci.DeclaringModule).GetModuleInfo().Name, ci.ClassDefinition.Name);
             }
 
             BuiltinClassInfo bci = baseClass as BuiltinClassInfo;
@@ -440,7 +441,7 @@ namespace Microsoft.PythonTools.Analysis {
             List<object> res = new List<object>();
             foreach (var mroClassSet in ci.Mro) {
                 foreach (var mroClass in mroClassSet) {
-                    var typeName = GenerateTypeName(mroClass, ci.DeclaringModule.MyScope, true);
+                    var typeName = GenerateTypeName(mroClass, ci.DeclaringModule.GetModuleInfo(), true);
                     if (typeName != null) {
                         res.Add(typeName);
                     }
@@ -450,11 +451,12 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         private Dictionary<string, object> GenerateFunction(FunctionInfo fi) {
+            // TODO: Include inner classes/functions
             return new Dictionary<string, object>() {
                 { "doc", fi.Documentation },
                 { "builtin", false },
                 { "static", fi.IsStatic },
-                { "location", GenerateLocation(fi.Location) },
+                { "location", GenerateLocation(fi.Locations) },
                 { "overloads", GenerateOverloads(fi) }
             };
         }
@@ -463,22 +465,32 @@ namespace Microsoft.PythonTools.Analysis {
             return new object[] { location.Line, location.Column };
         }
 
+        private static object[] GenerateLocation(IEnumerable<LocationInfo> locations) {
+            // TODO: Support saving and loading multiple locations for a single definition
+            Debug.Assert(locations.Count() == 1);
+            var location = locations.FirstOrDefault();
+            if (location != null) {
+                return new object[] { location.Line, location.Column };
+            }
+            return new object[0];
+        }
+
         private List<object> GenerateOverloads(FunctionInfo fi) {
             var res = new List<object>();
 
             // TODO: Store distinct calls as separate overloads
             res.Add(new Dictionary<string, object> {
                 { "args", GenerateArgInfo(fi, fi.GetParameterTypes()) },
-                { "ret_type", GenerateTypeName(fi.GetReturnValue(), fi.DeclaringModule.MyScope, true) }
+                { "ret_type", GenerateTypeName(fi.GetReturnValue(), fi.DeclaringModule.GetModuleInfo(), true) }
             });
 
             return res;
         }
 
-        private object[] GenerateArgInfo(FunctionInfo fi, INamespaceSet[] parameters) {
+        private object[] GenerateArgInfo(FunctionInfo fi, IAnalysisSet[] parameters) {
             var res = new object[Math.Min(fi.FunctionDefinition.Parameters.Count, parameters.Length)];
             for (int i = 0; i < res.Length; i++) {
-                res[i] = GenerateParameter(fi.FunctionDefinition.Parameters[i], parameters[i], fi.DeclaringModule.MyScope);
+                res[i] = GenerateParameter(fi.FunctionDefinition.Parameters[i], parameters[i], fi.DeclaringModule.GetModuleInfo());
             }
             return res;
         }
@@ -494,7 +506,7 @@ namespace Microsoft.PythonTools.Analysis {
             return res;
         }
 
-        private object GenerateParameter(Parameter param, INamespaceSet typeInfo, ModuleInfo declModule) {
+        private object GenerateParameter(Parameter param, IAnalysisSet typeInfo, ModuleInfo declModule) {
             Dictionary<string, object> res = new Dictionary<string, object>();
             // TODO: Serialize default values
             if (param.Kind == ParameterKind.Dictionary) {

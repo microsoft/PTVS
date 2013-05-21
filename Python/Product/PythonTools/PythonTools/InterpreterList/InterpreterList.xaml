@@ -239,7 +239,7 @@
                             <Grid Margin="6 12">
                                 <Button Style="{StaticResource NavigationButton}"
                                         Command="{x:Static l:InterpreterList.WebChooseInterpreterCommand}">
-                                    Go online and help me find another one
+                                    Go online and help me find another interpreter
                                 </Button>
                             </Grid>
                         </StackPanel>

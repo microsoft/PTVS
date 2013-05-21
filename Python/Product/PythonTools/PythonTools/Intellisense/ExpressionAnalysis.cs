@@ -14,6 +14,7 @@
 
 using System.Collections.Generic;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.VisualStudio.Text;
 
@@ -73,14 +74,14 @@ namespace Microsoft.PythonTools.Intellisense {
         /// <summary>
         /// The possible values of the expression (types, constants, functions, modules, etc...)
         /// </summary>
-        public IEnumerable<IAnalysisValue> Values {
+        public IEnumerable<AnalysisValue> Values {
             get {
                 if (_analysis != null) {
                     lock (_analyzer) {
                         return _analysis.GetValuesByIndex(_expr, _index);
                     }
                 }
-                return new IAnalysisValue[0];
+                return new AnalysisValue[0];
             }
         }
 

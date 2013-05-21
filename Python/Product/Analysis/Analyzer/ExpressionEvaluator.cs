@@ -26,7 +26,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
         private readonly AnalysisUnit _unit;
         private readonly bool _mergeScopes;
 
-        internal static readonly INamespaceSet[] EmptyNamespaces = new INamespaceSet[0];
+        internal static readonly IAnalysisSet[] EmptySets = new IAnalysisSet[0];
         internal static readonly NameExpression[] EmptyNames = new NameExpression[0];
 
         /// <summary>
@@ -48,13 +48,13 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
         /// <summary>
         /// Returns possible variable refs associated with the expr in the expression evaluators scope.
         /// </summary>
-        public INamespaceSet Evaluate(Expression node) {
+        public IAnalysisSet Evaluate(Expression node) {
             var res = EvaluateWorker(node);
             Debug.Assert(res != null);
             return res;
         }
 
-        public INamespaceSet EvaluateMaybeNull(Expression node) {
+        public IAnalysisSet EvaluateMaybeNull(Expression node) {
             if (node == null) {
                 return null;
             }
@@ -65,7 +65,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
         /// <summary>
         /// Returns a sequence of possible types associated with the name in the expression evaluators scope.
         /// </summary>
-        public INamespaceSet LookupNamespaceByName(Node node, string name, bool addRef = true) {
+        public IAnalysisSet LookupAnalysisSetByName(Node node, string name, bool addRef = true) {
             if (_mergeScopes) {
                 var scope = Scope.EnumerateTowardsGlobal.FirstOrDefault(s => (s == Scope || s.VisibleToChildren) && s.Variables.ContainsKey(name));
                 if (scope != null) {
@@ -126,24 +126,24 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
         public InterpreterScope Scope;
 #endif
 
-        private INamespaceSet[] Evaluate(IList<Arg> nodes) {
-            var result = new INamespaceSet[nodes.Count];
+        private IAnalysisSet[] Evaluate(IList<Arg> nodes) {
+            var result = new IAnalysisSet[nodes.Count];
             for (int i = 0; i < nodes.Count; i++) {
                 result[i] = Evaluate(nodes[i].Expression);
             }
             return result;
         }
 
-        private INamespaceSet EvaluateWorker(Node node) {
+        private IAnalysisSet EvaluateWorker(Node node) {
             EvalDelegate eval;
             if (_evaluators.TryGetValue(node.GetType(), out eval)) {
                 return eval(this, node);
             }
 
-            return NamespaceSet.Empty;
+            return AnalysisSet.Empty;
         }
 
-        delegate INamespaceSet EvalDelegate(ExpressionEvaluator ee, Node node);
+        delegate IAnalysisSet EvalDelegate(ExpressionEvaluator ee, Node node);
 
         private static Dictionary<Type, EvalDelegate> _evaluators = new Dictionary<Type, EvalDelegate> {
             { typeof(AndExpression), ExpressionEvaluator.EvaluateAnd },
@@ -172,46 +172,46 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             { typeof(SliceExpression), ExpressionEvaluator.EvaluateSlice },
         };
 
-        private static INamespaceSet EvaluateSequence(ExpressionEvaluator ee, Node node) {
+        private static IAnalysisSet EvaluateSequence(ExpressionEvaluator ee, Node node) {
             // Covers both ListExpression and TupleExpression
             // TODO: We need to update the sequence on each re-evaluation, not just
             // evaluate it once.
             return ee.MakeSequence(ee, node);
         }
 
-        private static INamespaceSet EvaluateParenthesis(ExpressionEvaluator ee, Node node) {
+        private static IAnalysisSet EvaluateParenthesis(ExpressionEvaluator ee, Node node) {
             var n = (ParenthesisExpression)node;
             return ee.Evaluate(n.Expression);
         }
 
-        private static INamespaceSet EvaluateOr(ExpressionEvaluator ee, Node node) {
+        private static IAnalysisSet EvaluateOr(ExpressionEvaluator ee, Node node) {
             // TODO: Warn if lhs is always false
             var n = (OrExpression)node;
             var result = ee.Evaluate(n.Left);
             return result.Union(ee.Evaluate(n.Right));
         }
 
-        private static INamespaceSet EvaluateName(ExpressionEvaluator ee, Node node) {
+        private static IAnalysisSet EvaluateName(ExpressionEvaluator ee, Node node) {
             var n = (NameExpression)node;
-            var res = ee.LookupNamespaceByName(node, n.Name);
+            var res = ee.LookupAnalysisSetByName(node, n.Name);
             foreach (var value in res) {
                 value.AddReference(node, ee._unit);
             }
             return res;
         }
 
-        private static INamespaceSet EvaluateMember(ExpressionEvaluator ee, Node node) {
+        private static IAnalysisSet EvaluateMember(ExpressionEvaluator ee, Node node) {
             var n = (MemberExpression)node;
             return ee.Evaluate(n.Target).GetMember(node, ee._unit, n.Name);
         }
 
-        private static INamespaceSet EvaluateIndex(ExpressionEvaluator ee, Node node) {
+        private static IAnalysisSet EvaluateIndex(ExpressionEvaluator ee, Node node) {
             var n = (IndexExpression)node;
 
             return ee.Evaluate(n.Target).GetIndex(n, ee._unit, ee.Evaluate(n.Index));
         }
 
-        private static INamespaceSet EvaluateSet(ExpressionEvaluator ee, Node node) {
+        private static IAnalysisSet EvaluateSet(ExpressionEvaluator ee, Node node) {
             var n = (SetExpression)node;
 
             var setInfo = (SetInfo)ee.Scope.GetOrMakeNodeValue(node, x => new SetInfo(ee.ProjectState, x));
@@ -222,20 +222,20 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             return setInfo;
         }
 
-        private static INamespaceSet EvaluateDictionary(ExpressionEvaluator ee, Node node) {
+        private static IAnalysisSet EvaluateDictionary(ExpressionEvaluator ee, Node node) {
             var n = (DictionaryExpression)node;
-            INamespaceSet result = ee.Scope.GetOrMakeNodeValue(node, _ => {
+            IAnalysisSet result = ee.Scope.GetOrMakeNodeValue(node, _ => {
                 var dictInfo = new DictionaryInfo(ee._unit.ProjectEntry, node);
                 result = dictInfo.SelfSet;
 
-                var keys = new HashSet<Namespace>();
-                var values = new HashSet<Namespace>();
+                var keys = new HashSet<AnalysisValue>();
+                var values = new HashSet<AnalysisValue>();
                 foreach (var x in n.Items) {
                     dictInfo.SetIndex(
                         node,
                         ee._unit,
-                        ee.EvaluateMaybeNull(x.SliceStart) ?? NamespaceSet.Empty,
-                        ee.EvaluateMaybeNull(x.SliceStop) ?? NamespaceSet.Empty
+                        ee.EvaluateMaybeNull(x.SliceStart) ?? AnalysisSet.Empty,
+                        ee.EvaluateMaybeNull(x.SliceStop) ?? AnalysisSet.Empty
                     );
                 }
 
@@ -244,34 +244,34 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             return result;
         }
 
-        private static INamespaceSet EvaluateConstant(ExpressionEvaluator ee, Node node) {
+        private static IAnalysisSet EvaluateConstant(ExpressionEvaluator ee, Node node) {
             var n = (ConstantExpression)node;
             if (n.Value is double ||
                 (n.Value is int && ((int)n.Value) > 100)) {
-                return ((BuiltinClassInfo)ee.ProjectState.GetNamespaceFromObjects(ee.ProjectState.GetTypeFromObject(n.Value))).Instance.SelfSet;
+                return ((BuiltinClassInfo)ee.ProjectState.GetAnalysisValueFromObjects(ee.ProjectState.GetTypeFromObject(n.Value))).Instance.SelfSet;
             }
 
             return ee.ProjectState.GetConstant(n.Value);
         }
 
-        private static INamespaceSet EvaluateConditional(ExpressionEvaluator ee, Node node) {
+        private static IAnalysisSet EvaluateConditional(ExpressionEvaluator ee, Node node) {
             var n = (ConditionalExpression)node;
             ee.Evaluate(n.Test);
             var result = ee.Evaluate(n.TrueExpression);
             return result.Union(ee.Evaluate(n.FalseExpression));
         }
 
-        private static INamespaceSet EvaluateBackQuote(ExpressionEvaluator ee, Node node) {
+        private static IAnalysisSet EvaluateBackQuote(ExpressionEvaluator ee, Node node) {
             return ee.ProjectState.ClassInfos[BuiltinTypeId.Str].SelfSet;
         }
 
-        private static INamespaceSet EvaluateAnd(ExpressionEvaluator ee, Node node) {
+        private static IAnalysisSet EvaluateAnd(ExpressionEvaluator ee, Node node) {
             var n = (AndExpression)node;
             var result = ee.Evaluate(n.Left);
             return result.Union(ee.Evaluate(n.Right));
         }
 
-        private static INamespaceSet EvaluateCall(ExpressionEvaluator ee, Node node) {
+        private static IAnalysisSet EvaluateCall(ExpressionEvaluator ee, Node node) {
             // Get the argument types that we're providing at this call site
             var n = (CallExpression)node;
             var argTypes = ee.Evaluate(n.Args);
@@ -279,7 +279,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             // Then lookup the possible methods we're calling
             var targetRefs = ee.Evaluate(n.Target);
 
-            var res = NamespaceSet.Empty;
+            var res = AnalysisSet.Empty;
             var namedArgs = GetNamedArguments(n.Args);
             foreach (var target in targetRefs) {
                 res = res.Union(target.Call(node, ee._unit, argTypes, namedArgs));
@@ -303,18 +303,18 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             return res ?? EmptyNames;
         }
 
-        private static INamespaceSet EvaluateUnary(ExpressionEvaluator ee, Node node) {
+        private static IAnalysisSet EvaluateUnary(ExpressionEvaluator ee, Node node) {
             var n = (UnaryExpression)node;
             return ee.Evaluate(n.Expression).UnaryOperation(node, ee._unit, n.Op); ;
         }
 
-        private static INamespaceSet EvaluateBinary(ExpressionEvaluator ee, Node node) {
+        private static IAnalysisSet EvaluateBinary(ExpressionEvaluator ee, Node node) {
             var n = (BinaryExpression)node;
 
             return ee.Evaluate(n.Left).BinaryOperation(node, ee._unit, n.Operator, ee.Evaluate(n.Right));
         }
 
-        private static INamespaceSet EvaluateYield(ExpressionEvaluator ee, Node node) {
+        private static IAnalysisSet EvaluateYield(ExpressionEvaluator ee, Node node) {
             var yield = (YieldExpression)node;
             var scope = ee.Scope as FunctionScope;
             if (scope != null && scope.Generator != null) {
@@ -326,10 +326,10 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                 gen.Sends.AddDependency(ee._unit);
                 return gen.Sends.Types;
             }
-            return NamespaceSet.Empty;
+            return AnalysisSet.Empty;
         }
 
-        private static INamespaceSet EvaluateYieldFrom(ExpressionEvaluator ee, Node node) {
+        private static IAnalysisSet EvaluateYieldFrom(ExpressionEvaluator ee, Node node) {
             var yield = (YieldFromExpression)node;
             var scope = ee.Scope as FunctionScope;
             if (scope != null && scope.Generator != null) {
@@ -342,10 +342,10 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                 return gen.Returns.Types;
             }
 
-            return NamespaceSet.Empty;
+            return AnalysisSet.Empty;
         }
 
-        private static INamespaceSet EvaluateListComprehension(ExpressionEvaluator ee, Node node) {
+        private static IAnalysisSet EvaluateListComprehension(ExpressionEvaluator ee, Node node) {
             if (!ee._unit.ProjectState.LanguageVersion.Is3x()) {
                 // list comprehension is in enclosing scope in 2.x
                 ListComprehension listComp = (ListComprehension)node;
@@ -381,7 +381,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             }
         }
 
-        private static INamespaceSet EvaluateComprehension(ExpressionEvaluator ee, Node node) {
+        private static IAnalysisSet EvaluateComprehension(ExpressionEvaluator ee, Node node) {
             InterpreterScope scope;
             if (!ee._unit.Scope.TryGetNodeScope(node, out scope)) {
                 // we can fail to find the module if the underlying interpreter triggers a module
@@ -390,15 +390,15 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                 // re-analyzed immediately after.  We continue analyzing, and we don't find
                 // the node.  We can safely ignore it here as the re-analysis will kick in
                 // and get us the right info.
-                return NamespaceSet.Empty;
+                return AnalysisSet.Empty;
             }
 
             ComprehensionScope compScope = (ComprehensionScope)scope;
 
-            return compScope.Namespace.SelfSet;
+            return compScope.AnalysisValue.SelfSet;
         }
 
-        internal void AssignTo(Node assignStmt, Expression left, INamespaceSet values) {
+        internal void AssignTo(Node assignStmt, Expression left, IAnalysisSet values) {
             if (left is NameExpression) {
                 var l = (NameExpression)left;
                 if (l.Name != null) {
@@ -413,6 +413,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                     }
 
                     vars.AddAssignment(left, _unit);
+                    vars.MakeUnionStrongerIfMoreThan(ProjectState.Limits.AssignedTypes, values);
                     vars.AddTypes(_unit, values);
 
                     if (Scope is ClassScope && l.Name == "__metaclass__") {
@@ -443,27 +444,27 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                             AssignTo(assignStmt, l.Items[i], value.GetIndex(assignStmt, _unit, ProjectState.GetConstant(i)));
                         }
                     } else {
-                        AssignTo(assignStmt, l.Items[i], NamespaceSet.Empty);
+                        AssignTo(assignStmt, l.Items[i], AnalysisSet.Empty);
                     }
                 }
             }
         }
 
-        private static INamespaceSet EvaluateLambda(ExpressionEvaluator ee, Node node) {
+        private static IAnalysisSet EvaluateLambda(ExpressionEvaluator ee, Node node) {
             var lambda = (LambdaExpression)node;
 
             return ee.Scope.GetOrMakeNodeValue(node, n => MakeLambdaFunction(lambda, ee));
         }
 
-        private static INamespaceSet MakeLambdaFunction(LambdaExpression node, ExpressionEvaluator ee) {
+        private static IAnalysisSet MakeLambdaFunction(LambdaExpression node, ExpressionEvaluator ee) {
             var res = OverviewWalker.AddFunction(node.Function, ee._unit, ee.Scope);
             if (res != null) {
                 return res.SelfSet;
             }
-            return NamespaceSet.Empty;
+            return AnalysisSet.Empty;
         }
 
-        private static INamespaceSet EvaluateSlice(ExpressionEvaluator ee, Node node) {
+        private static IAnalysisSet EvaluateSlice(ExpressionEvaluator ee, Node node) {
             SliceExpression se = node as SliceExpression;
             ee.EvaluateMaybeNull(se.SliceStart);
             ee.EvaluateMaybeNull(se.SliceStop);
@@ -478,7 +479,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             );*/
         }
 
-        private INamespaceSet MakeSequence(ExpressionEvaluator ee, Node node) {
+        private IAnalysisSet MakeSequence(ExpressionEvaluator ee, Node node) {
             var sequence = (SequenceInfo)ee.Scope.GetOrMakeNodeValue(node, x => {
                 if (node is ListExpression) {
                     return new ListInfo(VariableDef.EmptyArray, _unit.ProjectState.ClassInfos[BuiltinTypeId.List], node).SelfSet;
@@ -488,7 +489,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                 }
             });
             var seqItems = ((SequenceExpression)node).Items;
-            var indexValues = new INamespaceSet[seqItems.Count];
+            var indexValues = new IAnalysisSet[seqItems.Count];
 
             for (int i = 0; i < seqItems.Count; i++) {
                 indexValues[i] = Evaluate(seqItems[i]);

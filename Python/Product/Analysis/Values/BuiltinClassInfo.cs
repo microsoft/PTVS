@@ -39,17 +39,21 @@ namespace Microsoft.PythonTools.Analysis.Values {
             get { return _type; }
         }
 
-        public override BuiltinTypeId TypeId {
+        internal override bool IsOfType(IAnalysisSet klass) {
+            return klass.Contains(ProjectState.ClassInfos[BuiltinTypeId.Type]);
+        }
+
+        internal override BuiltinTypeId TypeId {
             get { return _type.TypeId; }
         }
 
-        public override INamespaceSet Call(Node node, AnalysisUnit unit, INamespaceSet[] args, NameExpression[] keywordArgNames) {
+        public override IAnalysisSet Call(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
             // TODO: More Type propagation
             IAdvancedPythonType advType = _type as IAdvancedPythonType;
             if (advType != null) {
                 var types = advType.GetTypesPropagatedOnCall();
                 if (types != null) {
-                    INamespaceSet[] propagating = new INamespaceSet[types.Count];
+                    IAnalysisSet[] propagating = new IAnalysisSet[types.Count];
                     for (int i = 0; i < propagating.Length; i++) {
                         propagating[i] = unit.ProjectState.GetInstance(types[i]).SelfSet;
                     }
@@ -68,7 +72,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public IEnumerable<INamespaceSet> Mro {
+        public IEnumerable<IAnalysisSet> Mro {
             get { return new[] { SelfSet }; }
         }
 
@@ -78,7 +82,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public override INamespaceSet GetInstanceType() {
+        public override IAnalysisSet GetInstanceType() {
             return Instance;
         }
 
@@ -119,7 +123,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return Documentation;
         }
 
-        public override INamespaceSet GetMember(Node node, AnalysisUnit unit, string name) {
+        public override IAnalysisSet GetMember(Node node, AnalysisUnit unit, string name) {
             var res = base.GetMember(node, unit, name);
             if (res.Count > 0) {
                 _referencedMembers.AddReference(node, unit, name);
@@ -128,21 +132,21 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return res;
         }
 
-        public override void SetMember(Node node, AnalysisUnit unit, string name, INamespaceSet value) {
+        public override void SetMember(Node node, AnalysisUnit unit, string name, IAnalysisSet value) {
             var res = base.GetMember(node, unit, name);
             if (res.Count > 0) {
                 _referencedMembers.AddReference(node, unit, name);
             }
         }
 
-        public override INamespaceSet GetIndex(Node node, AnalysisUnit unit, INamespaceSet index) {
+        public override IAnalysisSet GetIndex(Node node, AnalysisUnit unit, IAnalysisSet index) {
             // TODO: Needs to actually do indexing on type
             var clrType = _type as IAdvancedPythonType;
             if (clrType == null || !clrType.IsGenericTypeDefinition) {
-                return NamespaceSet.Empty;
+                return AnalysisSet.Empty;
             }
-            
-            var result = NamespaceSet.Create();
+
+            var result = AnalysisSet.Create();
             foreach (var indexType in index) {
                 if (indexType is BuiltinClassInfo) {
                     var clrIndexType = indexType.PythonType;
@@ -156,7 +160,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     List<IPythonType>[] types = GetSequenceTypes(indexType as SequenceInfo);
 
                     if (!MissingType(types)) {
-                        foreach (IPythonType[] indexTypes in GetTypeCombinations(types)) {                            
+                        foreach (IPythonType[] indexTypes in GetTypeCombinations(types)) {
                             try {
                                 var klass = ProjectState.MakeGenericType(clrType, indexTypes);
                                 result = result.Add(klass);
@@ -258,27 +262,48 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return "Class " + _type.Name;
         }
 
-        private const int MERGE_TO_BASE_STRENGTH = 1;
-
-        public override bool UnionEquals(Namespace ns, int strength) {
-            if (strength < MERGE_TO_BASE_STRENGTH) {
-                return base.UnionEquals(ns, strength);
-            } else {
-                var ci = ns as ClassInfo;
-                if (this != ProjectState.ClassInfos[BuiltinTypeId.Object] && 
-                    ci != null && ci.Mro.AnyContains(this)) {
-                    return true;
+        internal override AnalysisValue UnionMergeTypes(AnalysisValue ns, int strength) {
+            if (strength >= MergeStrength.ToObject) {
+                AnalysisValue type;
+                if (TypeId == ns.TypeId && (type = ProjectState.ClassInfos[TypeId]) != null) {
+                    return type;
                 }
+                return ProjectState.ClassInfos[BuiltinTypeId.Type];
+
+            } else if (strength >= MergeStrength.ToBaseClass) {
+                return ProjectState.ClassInfos[TypeId] ?? this;
+
+            }
+
+            return base.UnionMergeTypes(ns, strength);
+        }
+
+        internal override bool UnionEquals(AnalysisValue ns, int strength) {
+            if (strength >= MergeStrength.ToObject) {
+                var type = ProjectState.ClassInfos[BuiltinTypeId.Type];
+                return ns is ClassInfo || ns is BuiltinClassInfo || ns == type || ns == type.Instance;
+
+            } else if (strength >= MergeStrength.ToBaseClass) {
+                if (this == ProjectState.ClassInfos[BuiltinTypeId.Type]) {
+                    return false;
+                }
+                
                 var bci = ns as BuiltinClassInfo;
-                if (bci != null && TypeId == bci.TypeId) {
-                    return true;
+                if (bci != null) {
+                    return TypeId == bci.TypeId;
+                }
+
+                var ci = ns as ClassInfo;
+                if (ci != null && TypeId != BuiltinTypeId.Object) {
+                    return ci.Mro.AnyContains(this);
                 }
             }
+
             return base.UnionEquals(ns, strength);
         }
 
-        public override int UnionHashCode(int strength) {
-            if (strength < MERGE_TO_BASE_STRENGTH) {
+        internal override int UnionHashCode(int strength) {
+            if (strength < MergeStrength.ToBaseClass) {
                 return base.UnionHashCode(strength);
             } else {
                 return ProjectState.ClassInfos[BuiltinTypeId.Type].GetHashCode();
@@ -306,7 +331,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public override IEnumerable<LocationInfo> References {
+        internal override IEnumerable<LocationInfo> References {
             get {
                 if (_references != null) {
                     return _references.AllReferences;

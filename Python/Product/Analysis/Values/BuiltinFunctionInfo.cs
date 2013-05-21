@@ -22,7 +22,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         private IPythonFunction _function;
         private string _doc;
         private ReadOnlyCollection<OverloadResult> _overloads;
-        private readonly INamespaceSet _returnTypes;
+        private readonly IAnalysisSet _returnTypes;
         private BuiltinMethodInfo _method;
 
         public BuiltinFunctionInfo(IPythonFunction function, PythonAnalyzer projectState)
@@ -36,12 +36,17 @@ namespace Microsoft.PythonTools.Analysis.Values {
             get { return _type; }
         }
 
-        public override INamespaceSet Call(Node node, Interpreter.AnalysisUnit unit, INamespaceSet[] args, NameExpression[] keywordArgNames) {
+        internal override bool IsOfType(IAnalysisSet klass) {
+            return klass.Contains(ProjectState.ClassInfos[BuiltinTypeId.Function]) ||
+                klass.Contains(ProjectState.ClassInfos[BuiltinTypeId.BuiltinFunction]);
+        }
+
+        public override IAnalysisSet Call(Node node, Interpreter.AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
             return _returnTypes.GetInstanceType();
         }
 
-        public override INamespaceSet GetDescriptor(Node node, Namespace instance, Namespace context, Interpreter.AnalysisUnit unit) {
-            if (_function.IsStatic || instance == ProjectState._noneInst) {
+        public override IAnalysisSet GetDescriptor(Node node, AnalysisValue instance, AnalysisValue context, Interpreter.AnalysisUnit unit) {
+            if (_function.IsStatic || instance.IsOfType(ProjectState.ClassInfos[BuiltinTypeId.NoneType])) {
                 return base.GetDescriptor(node, instance, context, unit);
             } else if (_method == null) {
                 _method = new BuiltinMethodInfo(_function, PythonMemberType.Method, ProjectState);
@@ -107,6 +112,27 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public override ILocatedMember GetLocatedMember() {
             return _function as ILocatedMember;
+        }
+
+        internal override bool UnionEquals(AnalysisValue ns, int strength) {
+            if (strength >= MergeStrength.ToObject) {
+                return ns is BuiltinFunctionInfo || ns is FunctionInfo || ns == ProjectState.ClassInfos[BuiltinTypeId.Function].Instance;
+            }
+            return base.UnionEquals(ns, strength);
+        }
+
+        internal override int UnionHashCode(int strength) {
+            if (strength >= MergeStrength.ToObject) {
+                return ProjectState.ClassInfos[BuiltinTypeId.Function].Instance.UnionHashCode(strength);
+            }
+            return base.UnionHashCode(strength);
+        }
+
+        internal override AnalysisValue UnionMergeTypes(AnalysisValue ns, int strength) {
+            if (strength >= MergeStrength.ToObject) {
+                return ProjectState.ClassInfos[BuiltinTypeId.Function].Instance;
+            }
+            return base.UnionMergeTypes(ns, strength);
         }
     }
 }

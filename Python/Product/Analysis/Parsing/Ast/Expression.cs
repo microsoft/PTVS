@@ -15,8 +15,6 @@
 
 namespace Microsoft.PythonTools.Parsing.Ast {
     public abstract class Expression : Node {
-        internal static Expression[] EmptyArray = new Expression[0];
-
         internal Expression() {
         }
 

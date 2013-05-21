@@ -21,7 +21,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             : base(classObj, projectState) {
         }
 
-        public override SequenceInfo MakeFromIndexes(Node node, ProjectEntry entry) {
+        internal override SequenceInfo MakeFromIndexes(Node node, ProjectEntry entry) {
             if (_indexTypes.Count > 0) {
                 var vals = new[] { new VariableDef() };
                 vals[0].AddTypes(entry, _indexTypes, false);

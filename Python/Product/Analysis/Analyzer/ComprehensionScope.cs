@@ -17,7 +17,7 @@ using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Interpreter {
     sealed class ComprehensionScope : InterpreterScope {
-        public ComprehensionScope(Namespace comprehensionResult, Comprehension comprehension, InterpreterScope outerScope)
+        public ComprehensionScope(AnalysisValue comprehensionResult, Comprehension comprehension, InterpreterScope outerScope)
             : base(comprehensionResult, comprehension, outerScope) {
         }
 
@@ -37,7 +37,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             OuterScope.ClearNodeScopes();
         }
 
-        public override INamespaceSet AddNodeValue(Node node, INamespaceSet variable) {
+        public override IAnalysisSet AddNodeValue(Node node, IAnalysisSet variable) {
             return OuterScope.AddNodeValue(node, variable);
         }
 

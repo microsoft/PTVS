@@ -23,7 +23,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             : base(klass) {
         }
 
-        public override INamespaceSet BinaryOperation(Node node, AnalysisUnit unit, PythonOperator operation, INamespaceSet rhs) {
+        public override IAnalysisSet BinaryOperation(Node node, AnalysisUnit unit, PythonOperator operation, IAnalysisSet rhs) {
             switch (operation) {
                 case PythonOperator.GreaterThan:
                 case PythonOperator.LessThan:

@@ -76,11 +76,11 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             return ((FunctionScope)Scope).UpdateParameters(this, callArgs, enqueue, defScope);
         }
 
-        protected override ModuleInfo GetDeclaringModule() {
+        internal override ModuleInfo GetDeclaringModule() {
             return base.GetDeclaringModule() ?? _declUnit.DeclaringModule;
         }
 
-        protected override void AnalyzeWorker(DDG ddg, CancellationToken cancel) {
+        internal override void AnalyzeWorker(DDG ddg, CancellationToken cancel) {
             // Resolve default parameters and decorators in the outer scope but
             // continue to associate changes with this unit.
             ddg.Scope = _declUnit.Scope;
@@ -139,10 +139,10 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
 
             if (!Function.IsStatic && Ast.Parameters.Count > 0) {
                 VariableDef param;
-                INamespaceSet firstParam;
+                IAnalysisSet firstParam;
                 var clsScope = ddg.Scope as ClassScope;
                 if (clsScope == null) {
-                    firstParam = Function.IsClassMethod ? ProjectState.ClassInfos[BuiltinTypeId.Type].SelfSet : NamespaceSet.Empty;
+                    firstParam = Function.IsClassMethod ? ProjectState.ClassInfos[BuiltinTypeId.Type].SelfSet : AnalysisSet.Empty;
                 } else {
                     firstParam = Function.IsClassMethod ? clsScope.Class.SelfSet : clsScope.Class.Instance.SelfSet;
                 }

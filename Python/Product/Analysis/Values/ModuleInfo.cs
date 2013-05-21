@@ -20,23 +20,23 @@ using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Values {
-    internal class ModuleInfo : Namespace, IReferenceableContainer, IModule {
+    internal class ModuleInfo : AnalysisValue, IReferenceableContainer, IModule {
         private readonly string _name;
         private readonly ProjectEntry _projectEntry;
-        private Dictionary<Node, INamespaceSet> _sequences;  // sequences defined in the module
+        private Dictionary<Node, IAnalysisSet> _sequences;  // sequences defined in the module
         private readonly ModuleScope _scope;
         private readonly Dictionary<Node, InterpreterScope> _scopes;    // scopes from Ast node to InterpreterScope
         private readonly WeakReference _weakModule;
         private readonly IModuleContext _context;
         private Dictionary<string, WeakReference> _packageModules;
-        private Dictionary<string, Tuple<Func<CallExpression, AnalysisUnit, INamespaceSet[], NameExpression[], INamespaceSet>, bool>> _specialized;
+        private Dictionary<string, Tuple<CallDelegate, bool>> _specialized;
         private ModuleInfo _parentPackage;
         private DependentData _definition = new DependentData();
 
         public ModuleInfo(string moduleName, ProjectEntry projectEntry, IModuleContext moduleContext) {
             _name = moduleName;
             _projectEntry = projectEntry;
-            _sequences = new Dictionary<Node, INamespaceSet>();
+            _sequences = new Dictionary<Node, IAnalysisSet>();
             _scope = new ModuleScope(this);
             _weakModule = new WeakReference(this);
             _context = moduleContext;
@@ -50,8 +50,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
             _scope.ClearNodeScopes();
         }
 
-        public override IDictionary<string, INamespaceSet> GetAllMembers(IModuleContext moduleContext) {
-            var res = new Dictionary<string, INamespaceSet>();
+        public override IDictionary<string, IAnalysisSet> GetAllMembers(IModuleContext moduleContext) {
+            var res = new Dictionary<string, IAnalysisSet>();
             foreach (var kvp in _scope.Variables) {
                 kvp.Value.ClearOldValues();
                 if (kvp.Value._dependencies.Count > 0) {
@@ -91,12 +91,12 @@ namespace Microsoft.PythonTools.Analysis.Values {
             _packageModules[realName] = childPackage.WeakModule;
         }
 
-        public IEnumerable<KeyValuePair<string, Namespace>> GetChildrenPackages(IModuleContext moduleContext) {
+        public IEnumerable<KeyValuePair<string, AnalysisValue>> GetChildrenPackages(IModuleContext moduleContext) {
             if (_packageModules != null) {
                 foreach (var keyValue in _packageModules) {
                     var res = keyValue.Value.Target as IModule;
                     if (res != null) {
-                        yield return new KeyValuePair<string, Namespace>(keyValue.Key, (Namespace)res);
+                        yield return new KeyValuePair<string, AnalysisValue>(keyValue.Key, (AnalysisValue)res);
                     }
                 }
             }
@@ -115,12 +115,12 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return null;
         }
 
-        public void SpecializeFunction(string name, Func<CallExpression, AnalysisUnit, INamespaceSet[], NameExpression[], INamespaceSet> dlg, bool analyze) {
+        public void SpecializeFunction(string name, CallDelegate callable, bool mergeOriginalAnalysis) {
             lock (this) {
                 if (_specialized == null) {
-                    _specialized = new Dictionary<string, Tuple<Func<CallExpression, AnalysisUnit, INamespaceSet[], NameExpression[], INamespaceSet>, bool>>();
+                    _specialized = new Dictionary<string, Tuple<CallDelegate, bool>>();
                 }
-                _specialized[name] = new Tuple<Func<CallExpression, AnalysisUnit, INamespaceSet[], NameExpression[], INamespaceSet>, bool>(dlg, analyze);
+                _specialized[name] = Tuple.Create(callable, mergeOriginalAnalysis);
             }
         }
 
@@ -134,11 +134,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        private void SpecializeOneFunction(string name, Func<CallExpression, AnalysisUnit, INamespaceSet[], NameExpression[], INamespaceSet> dlg, bool analyze) {
+        private void SpecializeOneFunction(string name, CallDelegate callable, bool mergeOriginalAnalysis) {
             int lastIndex;
             VariableDef def;
             if (Scope.Variables.TryGetValue(name, out def)) {
-                SpecializeVariableDef(dlg, def, analyze);
+                SpecializeVariableDef(def, callable, mergeOriginalAnalysis);
             } else if ((lastIndex = name.LastIndexOf('.')) != -1 && 
                 Scope.Variables.TryGetValue(name.Substring(0, lastIndex), out def)) {
                     var methodName = name.Substring(lastIndex + 1, name.Length - (lastIndex + 1));
@@ -147,34 +147,34 @@ namespace Microsoft.PythonTools.Analysis.Values {
                         if (ci != null) {
                             VariableDef methodDef;
                             if (ci.Scope.Variables.TryGetValue(methodName, out methodDef)) {
-                                SpecializeVariableDef(dlg, methodDef, analyze);
+                                SpecializeVariableDef(methodDef, callable, mergeOriginalAnalysis);
                             }
                         }
                     }
             }
         }
 
-        private static void SpecializeVariableDef(Func<CallExpression, AnalysisUnit, INamespaceSet[], NameExpression[], INamespaceSet> dlg, VariableDef def, bool analyze) {
-            List<Namespace> items = new List<Namespace>();
+        private static void SpecializeVariableDef(VariableDef def, CallDelegate callable, bool mergeOriginalAnalysis) {
+            List<AnalysisValue> items = new List<AnalysisValue>();
             foreach (var v in def.TypesNoCopy) {
                 if (!(v is SpecializedNamespace) && v.DeclaringModule != null) {
                     items.Add(v);
                 }
             }
 
-            def._dependencies = default(SingleDict<IProjectEntry, TypedDependencyInfo<Namespace>>);
+            def._dependencies = default(SingleDict<IProjectEntry, TypedDependencyInfo<AnalysisValue>>);
             foreach (var item in items) {
-                def.AddTypes(item.DeclaringModule, SpecializedCallable.MakeSpecializedCallable(dlg, analyze, item).SelfSet);
+                def.AddTypes(item.DeclaringModule, new SpecializedCallable(item, callable, mergeOriginalAnalysis).SelfSet);
             }
         }
 
-        public override INamespaceSet GetMember(Node node, AnalysisUnit unit, string name) {
+        public override IAnalysisSet GetMember(Node node, AnalysisUnit unit, string name) {
             ModuleDefinition.AddDependency(unit);
 
             return Scope.CreateEphemeralVariable(node, unit, name).Types;
         }
 
-        public override void SetMember(Node node, AnalysisUnit unit, string name, INamespaceSet value) {
+        public override void SetMember(Node node, AnalysisUnit unit, string name, IAnalysisSet value) {
             var variable = Scope.CreateVariable(node, unit, name, false);
             if (variable.AddTypes(unit, value)) {
                 ModuleDefinition.EnqueueDependents();
@@ -273,7 +273,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
 
 
-        public INamespaceSet GetModuleMember(Node node, AnalysisUnit unit, string name, bool addRef = true, InterpreterScope linkedScope = null, string linkedName = null) {
+        public IAnalysisSet GetModuleMember(Node node, AnalysisUnit unit, string name, bool addRef = true, InterpreterScope linkedScope = null, string linkedName = null) {
             var importedValue = Scope.CreateVariable(node, unit, name, addRef);
             ModuleDefinition.AddDependency(unit);
 

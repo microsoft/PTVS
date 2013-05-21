@@ -70,12 +70,12 @@ namespace Microsoft.PythonTools.Interpreter.Default {
                     // or if someone has locked the file for some reason, also don't crash...
                 }
 
-                _loadDepth--;
-
                 // don't run fixups until we've processed all of the inter-dependent modules.
-                if (_loadDepth == 0) {
+                if (_loadDepth == 1) {
                     _typeDb.RunFixups();
                 }
+
+                _loadDepth--;
             }
         }
 
@@ -247,6 +247,12 @@ namespace Microsoft.PythonTools.Interpreter.Default {
                 return _properties;
             }
         }
+
+        public IModuleContext AnalysisContext {
+            get { return null; }
+        }
+
+        public void RemovedFromProject() { }
 
         #endregion
 

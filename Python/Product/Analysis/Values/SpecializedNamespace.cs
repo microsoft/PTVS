@@ -20,26 +20,26 @@ using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Values {
-    abstract class SpecializedNamespace : Namespace {
-        protected readonly Namespace _original, _inst;
-        private INamespaceSet _descriptor;
+    abstract class SpecializedNamespace : AnalysisValue {
+        protected readonly AnalysisValue _original, _inst;
+        private IAnalysisSet _descriptor;
 
-        public SpecializedNamespace(Namespace original) {
+        public SpecializedNamespace(AnalysisValue original) {
             _original = original;
         }
 
-        public SpecializedNamespace(Namespace original, Namespace inst) {
+        public SpecializedNamespace(AnalysisValue original, AnalysisValue inst) {
             _original = original;
             _inst = inst;
         }
 
-        internal Namespace Original {
+        internal AnalysisValue Original {
             get {
                 return _original;
             }
         }
 
-        public override INamespaceSet Call(Node node, AnalysisUnit unit, INamespaceSet[] args, NameExpression[] keywordArgNames) {
+        public override IAnalysisSet Call(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
             return _original.Call(node, unit, args, keywordArgNames);
         }
 
@@ -47,15 +47,15 @@ namespace Microsoft.PythonTools.Analysis.Values {
             _original.AddReference(node, analysisUnit);
         }
 
-        public override void AugmentAssign(AugmentedAssignStatement node, AnalysisUnit unit, INamespaceSet value) {
+        public override void AugmentAssign(AugmentedAssignStatement node, AnalysisUnit unit, IAnalysisSet value) {
             _original.AugmentAssign(node, unit, value);
         }
 
-        public override INamespaceSet BinaryOperation(Node node, AnalysisUnit unit, Parsing.PythonOperator operation, INamespaceSet rhs) {
+        public override IAnalysisSet BinaryOperation(Node node, AnalysisUnit unit, Parsing.PythonOperator operation, IAnalysisSet rhs) {
             return _original.BinaryOperation(node, unit, operation, rhs);
         }
 
-        public override ProjectEntry DeclaringModule {
+        public override IPythonProjectEntry DeclaringModule {
             get {
                 return _original.DeclaringModule;
             }
@@ -83,7 +83,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public override IDictionary<string, INamespaceSet> GetAllMembers(IModuleContext moduleContext) {
+        public override IDictionary<string, IAnalysisSet> GetAllMembers(IModuleContext moduleContext) {
             return _original.GetAllMembers(moduleContext);
         }
 
@@ -91,7 +91,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return _original.GetConstantValue();
         }
 
-        public override INamespaceSet GetDescriptor(Node node, Namespace instance, Namespace context, AnalysisUnit unit) {
+        public override IAnalysisSet GetDescriptor(Node node, AnalysisValue instance, AnalysisValue context, AnalysisUnit unit) {
             if (_descriptor == null) {
                 var res = _original.GetDescriptor(node, instance, context, unit);
                 // TODO: This kinda sucks...
@@ -108,13 +108,13 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return _descriptor;
         }
 
-        protected abstract SpecializedNamespace Clone(Namespace original, Namespace instance);
+        protected abstract SpecializedNamespace Clone(AnalysisValue original, AnalysisValue instance);
 
-        public override INamespaceSet GetEnumeratorTypes(Node node, AnalysisUnit unit) {
+        public override IAnalysisSet GetEnumeratorTypes(Node node, AnalysisUnit unit) {
             return _original.GetEnumeratorTypes(node, unit);
         }
 
-        public override INamespaceSet GetIndex(Node node, AnalysisUnit unit, INamespaceSet index) {
+        public override IAnalysisSet GetIndex(Node node, AnalysisUnit unit, IAnalysisSet index) {
             return _original.GetIndex(node, unit, index);
         }
 
@@ -122,15 +122,15 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return _original.GetLength();
         }
 
-        public override INamespaceSet GetMember(Node node, AnalysisUnit unit, string name) {
+        public override IAnalysisSet GetMember(Node node, AnalysisUnit unit, string name) {
             return _original.GetMember(node, unit, name);
         }
 
-        public override INamespaceSet GetStaticDescriptor(AnalysisUnit unit) {
+        public override IAnalysisSet GetStaticDescriptor(AnalysisUnit unit) {
             return _original.GetStaticDescriptor(unit);
         }
 
-        public override bool IsOfType(BuiltinClassInfo klass) {
+        internal override bool IsOfType(IAnalysisSet klass) {
             return _original.IsOfType(klass);
         }
 
@@ -152,7 +152,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public override IEnumerable<LocationInfo> References {
+        internal override IEnumerable<LocationInfo> References {
             get {
                 return _original.References;
             }
@@ -164,15 +164,15 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public override INamespaceSet ReverseBinaryOperation(Node node, AnalysisUnit unit, Parsing.PythonOperator operation, INamespaceSet rhs) {
+        public override IAnalysisSet ReverseBinaryOperation(Node node, AnalysisUnit unit, Parsing.PythonOperator operation, IAnalysisSet rhs) {
             return _original.ReverseBinaryOperation(node, unit, operation, rhs);
         }
 
-        public override void SetIndex(Node node, AnalysisUnit unit, INamespaceSet index, INamespaceSet value) {
+        public override void SetIndex(Node node, AnalysisUnit unit, IAnalysisSet index, IAnalysisSet value) {
             _original.SetIndex(node, unit, index, value);
         }
 
-        public override void SetMember(Node node, AnalysisUnit unit, string name, INamespaceSet value) {
+        public override void SetMember(Node node, AnalysisUnit unit, string name, IAnalysisSet value) {
             _original.SetMember(node, unit, name, value);
         }
 
@@ -182,13 +182,13 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public override BuiltinTypeId TypeId {
+        internal override BuiltinTypeId TypeId {
             get {
                 return _original.TypeId;
             }
         }
 
-        public override INamespaceSet UnaryOperation(Node node, AnalysisUnit unit, Parsing.PythonOperator operation) {
+        public override IAnalysisSet UnaryOperation(Node node, AnalysisUnit unit, Parsing.PythonOperator operation) {
             return _original.UnaryOperation(node, unit, operation);
         }
     }

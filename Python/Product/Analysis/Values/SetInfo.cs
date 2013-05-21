@@ -21,7 +21,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public SetInfo(PythonAnalyzer projectState, Node node)
             : base(VariableDef.EmptyArray, projectState.ClassInfos[BuiltinTypeId.Set], node) { }
 
-        public void AddTypes(AnalysisUnit unit, INamespaceSet types) {
+        public void AddTypes(AnalysisUnit unit, IAnalysisSet types) {
             base.AddTypes(unit, new[] { types });
         }
     }

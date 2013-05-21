@@ -2701,7 +2701,7 @@ def g(): pass
                 yield return "Type:       int";
                 //yield return "Base Class: <type 'int'>";
                 yield return "String Form:42";
-                //yield return "Namespace:  Interactive";
+                //yield return "AnalysisValue:  Interactive";
                 yield return "Docstring:";
                 yield return "int(x[, base]) -> integer";
                 yield return "";
@@ -2778,7 +2778,7 @@ def g(): pass
                 yield return "Type:       int";
                 //yield return "Base Class: <type 'int'>";
                 yield return "String Form:42";
-                //yield return "Namespace:  Interactive";
+                //yield return "AnalysisValue:  Interactive";
                 yield return "Docstring:";
                 yield return "int(x[, base]) -> integer";
                 yield return "";

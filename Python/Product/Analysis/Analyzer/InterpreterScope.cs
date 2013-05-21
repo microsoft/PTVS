@@ -20,34 +20,34 @@ using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Interpreter {
     abstract class InterpreterScope {
-        private readonly Namespace _ns;
+        private readonly AnalysisValue _av;
         private readonly Node _node;
         public readonly InterpreterScope OuterScope;
         public readonly List<InterpreterScope> Children = new List<InterpreterScope>();
         private Dictionary<string, HashSet<VariableDef>> _linkedVariables;
 
         private readonly Dictionary<Node, InterpreterScope> _nodeScopes;
-        private readonly Dictionary<Node, INamespaceSet> _nodeValues;
+        private readonly Dictionary<Node, IAnalysisSet> _nodeValues;
         private readonly Dictionary<string, VariableDef> _variables;
 
-        public InterpreterScope(Namespace ns, Node ast, InterpreterScope outerScope) {
-            _ns = ns;
+        public InterpreterScope(AnalysisValue av, Node ast, InterpreterScope outerScope) {
+            _av = av;
             _node = ast;
             OuterScope = outerScope;
 
             _nodeScopes = new Dictionary<Node, InterpreterScope>();
-            _nodeValues = new Dictionary<Node, INamespaceSet>();
+            _nodeValues = new Dictionary<Node, IAnalysisSet>();
             _variables = new Dictionary<string, VariableDef>();
 
 #if DEBUG
             NodeScopes = new ReadOnlyDictionary<Node, InterpreterScope>(_nodeScopes);
-            NodeValues = new ReadOnlyDictionary<Node, INamespaceSet>(_nodeValues);
+            NodeValues = new ReadOnlyDictionary<Node, IAnalysisSet>(_nodeValues);
             Variables = new ReadOnlyDictionary<string, VariableDef>(_variables);
 #endif
         }
 
-        public InterpreterScope(Namespace ns, InterpreterScope outerScope)
-            : this(ns, null, outerScope) { }
+        public InterpreterScope(AnalysisValue av, InterpreterScope outerScope)
+            : this(av, null, outerScope) { }
 
         public InterpreterScope GlobalScope {
             get {
@@ -124,7 +124,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             private set;
         }
 
-        public ReadOnlyDictionary<Node, INamespaceSet> NodeValues {
+        public ReadOnlyDictionary<Node, IAnalysisSet> NodeValues {
             get;
             private set;
         }
@@ -137,7 +137,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             get { return _nodeScopes; }
         }
 
-        public IDictionary<Node, INamespaceSet> NodeValues {
+        public IDictionary<Node, IAnalysisSet> NodeValues {
             get { return _nodeValues; }
         }
 #endif
@@ -167,7 +167,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             return value;
         }
 
-        public void SetVariable(Node node, AnalysisUnit unit, string name, INamespaceSet value, bool addRef = true) {
+        public void SetVariable(Node node, AnalysisUnit unit, string name, IAnalysisSet value, bool addRef = true) {
             var variable = CreateVariable(node, unit, name, false);
 
             variable.AddTypes(unit, value);
@@ -198,8 +198,8 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             }
         }
 
-        public virtual INamespaceSet GetMergedVariableTypes(string name) {
-            var res = NamespaceSet.Empty;
+        public virtual IAnalysisSet GetMergedVariableTypes(string name) {
+            var res = AnalysisSet.Empty;
             foreach (var val in GetMergedVariables(name)) {
                 res = res.Union(val.TypesNoCopy);
             }
@@ -207,8 +207,8 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             return res;
         }
 
-        public virtual IEnumerable<Namespace> GetMergedNamespaces() {
-            yield return Namespace;
+        public virtual IEnumerable<AnalysisValue> GetMergedAnalysisValues() {
+            yield return AnalysisValue;
         }
 
         public virtual VariableDef CreateVariable(Node node, AnalysisUnit unit, string name, bool addRef = true) {
@@ -265,7 +265,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             _nodeScopes.Clear();
         }
 
-        public virtual INamespaceSet AddNodeValue(Node node, INamespaceSet variable) {
+        public virtual IAnalysisSet AddNodeValue(Node node, IAnalysisSet variable) {
             return _nodeValues[node] = variable;
         }
 
@@ -283,9 +283,9 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             }
         }
 
-        public Namespace Namespace {
+        public AnalysisValue AnalysisValue {
             get {
-                return _ns;
+                return _av;
             }
         }
 
@@ -312,7 +312,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             return linkedVars;
         }
 
-        internal bool TryGetNodeValue(Node node, out INamespaceSet variable) {
+        internal bool TryGetNodeValue(Node node, out IAnalysisSet variable) {
             foreach (var s in EnumerateTowardsGlobal) {
                 if (s._nodeValues.TryGetValue(node, out variable)) {
                     return true;
@@ -336,8 +336,8 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
         /// Cached node variables so that we don't continually create new entries for basic nodes such
         /// as sequences, lambdas, etc...
         /// </summary>
-        public INamespaceSet GetOrMakeNodeValue(Node node, Func<Node, INamespaceSet> maker) {
-            INamespaceSet result;
+        public IAnalysisSet GetOrMakeNodeValue(Node node, Func<Node, IAnalysisSet> maker) {
+            IAnalysisSet result;
             if (!TryGetNodeValue(node, out result)) {
                 result = maker(node);
                 AddNodeValue(node, result);

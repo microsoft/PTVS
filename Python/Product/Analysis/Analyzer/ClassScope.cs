@@ -24,7 +24,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
 
         public ClassInfo Class {
             get {
-                return (ClassInfo)Namespace;
+                return (ClassInfo)AnalysisValue;
             }
         }
 

@@ -60,17 +60,17 @@ namespace Microsoft.PythonTools.Analysis.Values {
             : base(indexTypes, iterType, node) {
         }
 
-        public override INamespaceSet GetIterator(Node node, AnalysisUnit unit) {
+        public override IAnalysisSet GetIterator(Node node, AnalysisUnit unit) {
             return SelfSet;
         }
 
-        public override INamespaceSet GetMember(Node node, AnalysisUnit unit, string name) {
+        public override IAnalysisSet GetMember(Node node, AnalysisUnit unit, string name) {
             if (unit.ProjectState.LanguageVersion.Is2x() && name == "next" ||
                 unit.ProjectState.LanguageVersion.Is3x() && name == "__next__") {
                 if (_next == null) {
                     var next = this._type.GetMember(unit.ProjectEntry.MyScope.InterpreterContext, name);
                     if (next != null) {
-                        _next = new NextBoundMethod((BuiltinMethodInfo)unit.ProjectState.GetNamespaceFromObjects(next), this);
+                        _next = new NextBoundMethod((BuiltinMethodInfo)unit.ProjectState.GetAnalysisValueFromObjects(next), this);
                     }
                 }
 
@@ -81,7 +81,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 if (_iter == null) {
                     var iter = this._type.GetMember(unit.ProjectEntry.MyScope.InterpreterContext, name);
                     if (iter != null) {
-                        _iter = new IterBoundBuiltinMethodInfo((BuiltinMethodInfo)unit.ProjectState.GetNamespaceFromObjects(iter), this);
+                        _iter = new IterBoundBuiltinMethodInfo((BuiltinMethodInfo)unit.ProjectState.GetAnalysisValueFromObjects(iter), this);
                     }
                 }
 
@@ -100,7 +100,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 _myIter = myDict;
             }
 
-            public override INamespaceSet Call(Node node, AnalysisUnit unit, INamespaceSet[] args, NameExpression[] keywordArgNames) {
+            public override IAnalysisSet Call(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
                 return _myIter.UnionType;
             }
         }

@@ -32,8 +32,8 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
     /// AnalysisUnit which is dependent upon the variable.  If the value of a variable changes then all of the dependent
     /// AnalysisUnit's will be re-enqueued.  This proceeds until we reach a fixed point.
     /// </summary>
-    internal class AnalysisUnit : ISet<AnalysisUnit> {
-        protected InterpreterScope _scope;
+    public class AnalysisUnit : ISet<AnalysisUnit> {
+        internal InterpreterScope _scope;
         private ModuleInfo _declaringModule;
 #if DEBUG
         private long _analysisTime;
@@ -45,13 +45,13 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
         }
 #endif
 
-        public static AnalysisUnit EvalUnit = new AnalysisUnit(null, null, null, true);
+        internal static AnalysisUnit EvalUnit = new AnalysisUnit(null, null, null, true);
 
-        public AnalysisUnit(ScopeStatement ast, InterpreterScope scope)
+        internal AnalysisUnit(ScopeStatement ast, InterpreterScope scope)
             : this(ast, (ast != null ? ast.GlobalParent : null), scope, false) {
         }
 
-        public AnalysisUnit(Node ast, PythonAst tree, InterpreterScope scope, bool forEval) {
+        internal AnalysisUnit(Node ast, PythonAst tree, InterpreterScope scope, bool forEval) {
             Ast = ast;
             Tree = tree;
             _scope = scope;
@@ -61,15 +61,15 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
         /// <summary>
         /// True if this analysis unit is currently in the queue.
         /// </summary>
-        public bool IsInQueue;
+        internal bool IsInQueue;
 
         /// <summary>
         /// True if this analysis unit is being used to evaluate the result of the analysis.  In this
         /// mode we don't track references or re-queue items.
         /// </summary>
-        public readonly bool ForEval;
+        internal readonly bool ForEval;
 
-        protected virtual ModuleInfo GetDeclaringModule() {
+        internal virtual ModuleInfo GetDeclaringModule() {
             if (_scope != null) {
                 var moduleScope = _scope.EnumerateTowardsGlobal.OfType<ModuleScope>().FirstOrDefault();
                 if (moduleScope != null) {
@@ -82,7 +82,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
         /// <summary>
         /// The global scope that the code associated with this analysis unit is declared within.
         /// </summary>
-        public ModuleInfo DeclaringModule {
+        internal ModuleInfo DeclaringModule {
             get {
                 if (_declaringModule == null) {
                     _declaringModule = GetDeclaringModule();
@@ -91,7 +91,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             }
         }
 
-        public ProjectEntry ProjectEntry {
+        internal ProjectEntry ProjectEntry {
             get { return DeclaringModule.ProjectEntry; }
         }
 
@@ -99,11 +99,11 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             get { return DeclaringModule.ProjectEntry.ProjectState; }
         }
 
-        public AnalysisUnit CopyForEval() {
+        internal AnalysisUnit CopyForEval() {
             return new AnalysisUnit(Ast, Tree, _scope, true);
         }
 
-        public void Enqueue() {
+        internal void Enqueue() {
             if (!ForEval && !IsInQueue) {
                 ProjectState.Queue.Append(this);
                 AnalysisLog.Enqueue(ProjectState.Queue, this);
@@ -116,11 +116,11 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
         /// <summary>
         /// The AST which will be analyzed when this node is analyzed
         /// </summary>
-        public readonly Node Ast;
+        internal readonly Node Ast;
 
-        public readonly PythonAst Tree;
+        internal readonly PythonAst Tree;
 
-        public void Analyze(DDG ddg, CancellationToken cancel) {
+        internal void Analyze(DDG ddg, CancellationToken cancel) {
 #if DEBUG
             long startTime = _sw.ElapsedMilliseconds;
             try {
@@ -142,7 +142,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
 #endif
         }
 
-        protected virtual void AnalyzeWorker(DDG ddg, CancellationToken cancel) {
+        internal virtual void AnalyzeWorker(DDG ddg, CancellationToken cancel) {
             DeclaringModule.Scope.ClearLinkedVariables();
 
             ddg.SetCurrentUnit(this);
@@ -175,7 +175,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
         /// <summary>
         /// The chain of scopes in which this analysis is defined.
         /// </summary>
-        public InterpreterScope Scope {
+        internal InterpreterScope Scope {
             get { return _scope; }
         }
 
@@ -292,6 +292,46 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
         }
 
         #endregion
+
+        /// <summary>
+        /// Looks up a sequence of types associated with the name using the
+        /// normal Python semantics.
+        /// 
+        /// This function is only safe to call during analysis. After analysis
+        /// has completed, use a <see cref="ModuleAnalysis"/> instance.
+        /// </summary>
+        /// <param name="node">The node to associate with the lookup.</param>
+        /// <param name="name">The full name of the value to find.</param>
+        /// <returns>
+        /// All values matching the provided name, or null if the name could not
+        /// be resolved.
+        /// 
+        /// An empty sequence is returned if the name is found but currently has
+        /// no values.
+        /// </returns>
+        /// <remarks>
+        /// Calling this function will associate this unit with the requested
+        /// variable. Future updates to the variable may result in the unit
+        /// being reanalyzed.
+        /// </remarks>
+        public IAnalysisSet FindAnalysisValueByName(Node node, string name) {
+            foreach (var scope in Scope.EnumerateTowardsGlobal) {
+                if (scope == Scope || scope.VisibleToChildren) {
+                    var refs = scope.GetVariable(node, this, name, true);
+                    if (refs != null) {
+                        var linkedVars = scope.GetLinkedVariablesNoCreate(name);
+                        if (linkedVars != null) {
+                            foreach (var linkedVar in linkedVars) {
+                                linkedVar.AddReference(node, this);
+                            }
+                        }
+                        return refs.Types;
+                    }
+                }
+            }
+
+            return ProjectState.BuiltinModule.GetMember(node, this, name);
+        }
     }
 
     /// <summary>
@@ -316,7 +356,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             _baseClassNode = baseClassNode;
         }
 
-        protected override void AnalyzeWorker(DDG ddg, CancellationToken cancel) {
+        internal override void AnalyzeWorker(DDG ddg, CancellationToken cancel) {
             ddg.SetCurrentUnit(this);
 
             InterpreterScope scope;
@@ -361,14 +401,14 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             }
         }
 
-        protected override void AnalyzeWorker(DDG ddg, CancellationToken cancel) {
+        internal override void AnalyzeWorker(DDG ddg, CancellationToken cancel) {
             InterpreterScope scope;
             if (!ddg.Scope.TryGetNodeScope(Ast, out scope)) {
                 return;
             }
 
             var classInfo = ((ClassScope)scope).Class;
-            var bases = new List<INamespaceSet>();
+            var bases = new List<IAnalysisSet>();
 
             if (Ast.Bases.Count == 0) {
                 if (ddg.ProjectState.LanguageVersion.Is3x()) {
@@ -412,7 +452,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             ddg.WalkBody(Ast.Body, classInfo.AnalysisUnit);
         }
 
-        internal static INamespaceSet EvaluateBaseClass(DDG ddg, ClassInfo newClass, int indexInBaseList, Expression baseClass) {
+        internal static IAnalysisSet EvaluateBaseClass(DDG ddg, ClassInfo newClass, int indexInBaseList, Expression baseClass) {
             baseClass.Walk(ddg);
             var bases = ddg._eval.Evaluate(baseClass);
 
@@ -439,14 +479,14 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             AnalysisLog.NewUnit(this);
         }
 
-        protected override void AnalyzeWorker(DDG ddg, CancellationToken cancel) {
+        internal override void AnalyzeWorker(DDG ddg, CancellationToken cancel) {
             // evaluate the 1st iterator in the outer scope
             ddg.Scope = _outerUnit.Scope;
 
             var comp = (Comprehension)Ast;
             ComprehensionFor forComp = comp.Iterators[0] as ComprehensionFor;
 
-            var listTypes = NamespaceSet.Empty;
+            var listTypes = AnalysisSet.Empty;
             if (forComp != null) {
                 listTypes = ddg._eval.Evaluate(forComp.List);
             }
@@ -469,10 +509,10 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                 new ComprehensionScope(new GeneratorInfo(outerUnit.ProjectState, node), node, outerScope),
                 outerUnit) { }
 
-        protected override void AnalyzeWorker(DDG ddg, CancellationToken cancel) {
+        internal override void AnalyzeWorker(DDG ddg, CancellationToken cancel) {
             base.AnalyzeWorker(ddg, cancel);
 
-            var generator = (GeneratorInfo)Scope.Namespace;
+            var generator = (GeneratorInfo)Scope.AnalysisValue;
             var node = (GeneratorExpression)Ast;
 
             generator.AddYield(node, this, ddg._eval.Evaluate(node.Item));
@@ -485,10 +525,10 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             new ComprehensionScope(new SetInfo(outerUnit.ProjectState, node), node, outerScope),
             outerUnit) { }
 
-        protected override void AnalyzeWorker(DDG ddg, CancellationToken cancel) {
+        internal override void AnalyzeWorker(DDG ddg, CancellationToken cancel) {
             base.AnalyzeWorker(ddg, cancel);
 
-            var set = (SetInfo)Scope.Namespace;
+            var set = (SetInfo)Scope.AnalysisValue;
             var node = (SetComprehension)Ast;
 
             set.AddTypes(this, ddg._eval.Evaluate(node.Item));
@@ -502,10 +542,10 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             new ComprehensionScope(new DictionaryInfo(outerUnit.ProjectEntry, node), node, outerScope),
             outerUnit) { }
 
-        protected override void AnalyzeWorker(DDG ddg, CancellationToken cancel) {
+        internal override void AnalyzeWorker(DDG ddg, CancellationToken cancel) {
             base.AnalyzeWorker(ddg, cancel);
 
-            var dict = (DictionaryInfo)Scope.Namespace;
+            var dict = (DictionaryInfo)Scope.AnalysisValue;
             var node = (DictionaryComprehension)Ast;
 
             dict.SetIndex(node, this, ddg._eval.Evaluate(node.Key), ddg._eval.Evaluate(node.Value));
@@ -518,10 +558,10 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             new ComprehensionScope(new ListInfo(VariableDef.EmptyArray, outerUnit.ProjectState.ClassInfos[BuiltinTypeId.List], node), node, outerScope),
             outerUnit) { }
 
-        protected override void AnalyzeWorker(DDG ddg, CancellationToken cancel) {
+        internal override void AnalyzeWorker(DDG ddg, CancellationToken cancel) {
             base.AnalyzeWorker(ddg, cancel);
 
-            var list = (ListInfo)Scope.Namespace;
+            var list = (ListInfo)Scope.AnalysisValue;
             var node = (ListComprehension)Ast;
 
             list.AddTypes(this, new[] { ddg._eval.Evaluate(node.Item) });

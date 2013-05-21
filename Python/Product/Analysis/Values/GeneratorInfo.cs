@@ -42,7 +42,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         private GeneratorNextBoundBuiltinMethodInfo NextMethod {
             get {
                 if (_nextMethod == null) {
-                    INamespaceSet nextMeth;
+                    IAnalysisSet nextMeth;
                     string nextName = (ProjectState.LanguageVersion.Is3x()) ? "__next__" : "next";
                     if (TryGetMember(nextName, out nextMeth)) {
                         _nextMethod = new GeneratorNextBoundBuiltinMethodInfo(this, (BuiltinMethodInfo)nextMeth.First());
@@ -55,7 +55,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         private GeneratorSendBoundBuiltinMethodInfo SendMethod {
             get {
                 if (_sendMethod == null) {
-                    INamespaceSet sendMeth;
+                    IAnalysisSet sendMeth;
                     if (TryGetMember("send", out sendMeth)) {
                         _sendMethod = new GeneratorSendBoundBuiltinMethodInfo(this, (BuiltinMethodInfo)sendMeth.First());
                     }
@@ -65,7 +65,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
 
-        public override INamespaceSet GetMember(Node node, AnalysisUnit unit, string name) {
+        public override IAnalysisSet GetMember(Node node, AnalysisUnit unit, string name) {
             switch(name) {
                 case "next":
                     if (NextMethod != null && unit.ProjectState.LanguageVersion.Is2x()) {
@@ -87,11 +87,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return base.GetMember(node, unit, name);
         }
 
-        public override INamespaceSet GetIterator(Node node, AnalysisUnit unit) {
+        public override IAnalysisSet GetIterator(Node node, AnalysisUnit unit) {
             return SelfSet;
         }
 
-        public override INamespaceSet GetEnumeratorTypes(Node node, AnalysisUnit unit) {
+        public override IAnalysisSet GetEnumeratorTypes(Node node, AnalysisUnit unit) {
             Yields.AddDependency(unit);
 
             return Yields.Types;
@@ -101,21 +101,21 @@ namespace Microsoft.PythonTools.Analysis.Values {
             base.AddReference(node, analysisUnit);
         }
 
-        public void AddYield(Node node, AnalysisUnit unit, INamespaceSet yieldValue, bool enqueue = true) {
+        public void AddYield(Node node, AnalysisUnit unit, IAnalysisSet yieldValue, bool enqueue = true) {
             Yields.MakeUnionStrongerIfMoreThan(ProjectState.Limits.YieldTypes, yieldValue);
             Yields.AddTypes(unit, yieldValue, enqueue);
         }
 
-        public void AddReturn(Node node, AnalysisUnit unit, INamespaceSet returnValue, bool enqueue = true) {
+        public void AddReturn(Node node, AnalysisUnit unit, IAnalysisSet returnValue, bool enqueue = true) {
             Returns.MakeUnionStrongerIfMoreThan(ProjectState.Limits.ReturnTypes, returnValue);
             Returns.AddTypes(unit, returnValue, enqueue);
         }
 
-        public void AddSend(Node node, AnalysisUnit unit, INamespaceSet sendValue, bool enqueue = true) {
+        public void AddSend(Node node, AnalysisUnit unit, IAnalysisSet sendValue, bool enqueue = true) {
             Sends.AddTypes(unit, sendValue, enqueue);
         }
 
-        public void AddYieldFrom(Node node, AnalysisUnit unit, INamespaceSet yieldsFrom, bool enqueue = true) {
+        public void AddYieldFrom(Node node, AnalysisUnit unit, IAnalysisSet yieldsFrom, bool enqueue = true) {
             foreach (var ns in yieldsFrom) {
                 AddYield(node, unit, ns.GetEnumeratorTypes(node, unit), enqueue);
                 var gen = ns as GeneratorInfo;
@@ -125,62 +125,5 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 }
             }
         }
-
-        private const int REQUIRED_STRENGTH = 1;
-
-        //public override bool UnionEquals(Namespace ns, int strength) {
-        //    if (strength < REQUIRED_STRENGTH) {
-        //        return Equals(ns);
-        //    }
-
-        //    var sgi = ns as SimpleGeneratorInfo;
-        //    if (sgi != null) {
-        //        return true;
-        //    }
-
-        //    var gi = ns as GeneratorInfo;
-        //    if (gi == null) {
-        //        return false;
-        //    }
-
-        //    return _node == gi._node;
-        //}
-
-        //public override int UnionHashCode(int strength) {
-        //    if (strength < REQUIRED_STRENGTH) {
-        //        return GetHashCode();
-        //    }
-        //    return ClassInfo.GetHashCode();
-        //}
-
-        //internal override Namespace UnionMergeTypes(Namespace ns, int strength) {
-        //    if (strength < REQUIRED_STRENGTH) {
-        //        return this;
-        //    }
-
-        //    var sgi = ns as SimpleGeneratorInfo;
-        //    if (sgi != null) {
-        //        Yields.CopyTo(sgi.Yields);
-        //        return sgi;
-        //    }
-
-        //    var gi = ns as GeneratorInfo;
-        //    if (gi == null || Equals(ns)) {
-        //        return this;
-        //    }
-
-        //    bool anyAdded = false;
-        //    var newGi = new SimpleGeneratorInfo(ProjectState);
-
-        //    Yields.CopyTo(newGi.Yields);
-        //    anyAdded |= gi.Yields.CopyTo(newGi.Yields);
-
-        //    if (!anyAdded) {
-        //        return this;
-        //    }
-
-        //    newGi.Yields.EnqueueDependents();
-        //    return newGi;
-        //}
     }
 }

@@ -1034,6 +1034,11 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private void AnalyzeDirectoryWorker(string dir, bool addDir, Action<IProjectEntry> onFileAnalyzed, CancellationToken cancel) {
+            if (string.IsNullOrEmpty(dir)) {
+                Debug.Assert(!string.IsNullOrEmpty(dir));
+                return;
+            }
+            
             if (addDir) {
                 lock (this) {
                     _pyAnalyzer.AddAnalysisDirectory(dir);

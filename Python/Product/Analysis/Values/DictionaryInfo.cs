@@ -54,27 +54,27 @@ namespace Microsoft.PythonTools.Analysis.Values {
             _node = node;
         }
 
-        public override IEnumerable<KeyValuePair<IEnumerable<AnalysisValue>, IEnumerable<AnalysisValue>>> GetItems() {
+        public override IEnumerable<KeyValuePair<IAnalysisSet, IAnalysisSet>> GetItems() {
             foreach (var keyValue in _keysAndValues.KeyValueTypes) {
-                yield return new KeyValuePair<IEnumerable<AnalysisValue>, IEnumerable<AnalysisValue>>(
-                    new [] { keyValue.Key },
+                yield return new KeyValuePair<IAnalysisSet, IAnalysisSet>(
+                    keyValue.Key,
                     keyValue.Value
                 );
             }
         }
 
-        public override INamespaceSet GetIndex(Node node, AnalysisUnit unit, INamespaceSet index) {
+        public override IAnalysisSet GetIndex(Node node, AnalysisUnit unit, IAnalysisSet index) {
             _keysAndValues.AddDependency(unit);
             return _keysAndValues.GetValueType(index);
         }
 
-        public override INamespaceSet GetEnumeratorTypes(Node node, AnalysisUnit unit) {
+        public override IAnalysisSet GetEnumeratorTypes(Node node, AnalysisUnit unit) {
             _keysAndValues.AddDependency(unit);
 
             return _keysAndValues.KeyTypes;
         }
 
-        public override void SetIndex(Node node, AnalysisUnit unit, INamespaceSet index, INamespaceSet value) {
+        public override void SetIndex(Node node, AnalysisUnit unit, IAnalysisSet index, IAnalysisSet value) {
             AddTypes(node, unit, index, value);
         }
 
@@ -82,7 +82,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return _keysAndValues.CopyFrom(other._keysAndValues, enqueue);
         }
 
-        internal bool AddTypes(Node node, AnalysisUnit unit, INamespaceSet key, INamespaceSet value, bool enqueue = true) {
+        internal bool AddTypes(Node node, AnalysisUnit unit, IAnalysisSet key, IAnalysisSet value, bool enqueue = true) {
             if (_keysAndValues.AddTypes(unit, key, value, enqueue)) {
                 if (_iterValuesMethod != null) {
                     _iterValuesMethod.Update(unit, value, enqueue);
@@ -97,6 +97,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     _valuesMethod.Update(unit, value, enqueue);
                 }
                 if (_keyValueTuple != null) {
+                    _keyValueTuple.IndexTypes[0].MakeUnionStrongerIfMoreThan(ProjectState.Limits.DictKeyTypes, key);
+                    _keyValueTuple.IndexTypes[1].MakeUnionStrongerIfMoreThan(ProjectState.Limits.DictValueTypes, value);
                     _keyValueTuple.IndexTypes[0].AddTypes(unit, key, enqueue);
                     _keyValueTuple.IndexTypes[1].AddTypes(unit, value, enqueue);
                 }
@@ -105,8 +107,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return false;
         }
 
-        public override INamespaceSet GetMember(Node node, AnalysisUnit unit, string name) {
-            var res = NamespaceSet.Empty;
+        public override IAnalysisSet GetMember(Node node, AnalysisUnit unit, string name) {
+            var res = AnalysisSet.Empty;
             switch (name) {
                 case "get":
                     res = GetOrMakeSpecializedMethod(ref _getMethod, "get", GetMaker);
@@ -157,9 +159,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return res ?? base.GetMember(node, unit, name);
         }
 
-        private INamespaceSet GetOrMakeSpecializedMethod(ref SpecializedDictionaryMethod method, string name, Func<DictionaryInfo, BuiltinMethodInfo, SpecializedDictionaryMethod> maker) {
+        private IAnalysisSet GetOrMakeSpecializedMethod(ref SpecializedDictionaryMethod method, string name, Func<DictionaryInfo, BuiltinMethodInfo, SpecializedDictionaryMethod> maker) {
             if (method == null) {
-                INamespaceSet itemsMeth;
+                IAnalysisSet itemsMeth;
                 if (TryGetMember(name, out itemsMeth)) {
                     method = maker(this, (BuiltinMethodInfo)itemsMeth.First());
                 }
@@ -176,9 +178,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public override string Description {
             get {
                 // dict({k : v})
-                Namespace keyType = _keysAndValues.KeyTypes.GetUnionType();
+                AnalysisValue keyType = _keysAndValues.KeyTypes.GetUnionType();
                 string keyName = keyType == null ? null : keyType.ShortDescription;
-                Namespace valueType = _keysAndValues.AllValueTypes.GetUnionType();
+                AnalysisValue valueType = _keysAndValues.AllValueTypes.GetUnionType();
                 string valueName = valueType == null ? null : valueType.ShortDescription;
 
                 if (keyName != null || valueName != null) {
@@ -199,7 +201,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public override ProjectEntry DeclaringModule {
+        public override IPythonProjectEntry DeclaringModule {
             get {
                 return _declaringModule;
             }
@@ -211,12 +213,34 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        private const int IGNORE_NODE_STRENGTH = 1;
+        internal override AnalysisValue UnionMergeTypes(AnalysisValue ns, int strength) {
+            if (strength < MergeStrength.IgnoreIterableNode) {
+                return ClassInfo.Instance;
+            }
+            return base.UnionMergeTypes(ns, strength);
+        }
 
-        public override bool UnionEquals(Namespace ns, int strength) {
-            var di = ns as DictionaryInfo;
-            if (di != null && strength < IGNORE_NODE_STRENGTH) {
-                return di.ClassInfo == ClassInfo && di._node.Equals(_node);
+        internal override int UnionHashCode(int strength) {
+            if (strength < MergeStrength.IgnoreIterableNode) {
+                return ClassInfo.Instance.UnionHashCode(strength);
+            }
+            return base.UnionHashCode(strength);
+        }
+
+        internal override bool UnionEquals(AnalysisValue ns, int strength) {
+            if (strength < MergeStrength.IgnoreIterableNode) {
+                if (ns == ProjectState.ClassInfos[BuiltinTypeId.Dict].Instance) {
+                    return true;
+                }
+                var ci = ns as ConstantInfo;
+                if (ci != null && ci.ClassInfo == ProjectState.ClassInfos[BuiltinTypeId.Dict]) {
+                    return true;
+                }
+                var di = ns as DictionaryInfo;
+                if (di != null) {
+                    return di._node.Equals(_node);
+                }
+                return false;
             }
             return base.UnionEquals(ns, strength);
         }
@@ -233,11 +257,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
             private readonly DictionaryInfo _dictInfo;
 
             public UpdateItemsAnalysisUnit(DictionaryInfo dictInfo)
-                : base(null, dictInfo.DeclaringModule.MyScope.Scope) {
+                : base(null, ((ProjectEntry)dictInfo.DeclaringModule).MyScope.Scope) {
                 _dictInfo = dictInfo;
             }
 
-            protected override void AnalyzeWorker(DDG ddg, CancellationToken cancel) {
+            internal override void AnalyzeWorker(DDG ddg, CancellationToken cancel) {
                 _dictInfo._keysAndValues.CopyKeysTo(_dictInfo._keyValueTuple.IndexTypes[0]);
                 _dictInfo._keysAndValues.CopyValuesTo(_dictInfo._keyValueTuple.IndexTypes[1]);
             }
@@ -284,7 +308,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 _myDict = myDict;
             }
 
-            public virtual void Update(AnalysisUnit unit, INamespaceSet newTypes, bool enqueue) {
+            public virtual void Update(AnalysisUnit unit, IAnalysisSet newTypes, bool enqueue) {
             }
         }
 
@@ -297,7 +321,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 : base(method, myDict) {
             }
 
-            public override INamespaceSet Call(Node node, AnalysisUnit unit, INamespaceSet[] args, NameExpression[] keywordArgNames) {
+            public override IAnalysisSet Call(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
                 _myDict._keysAndValues.AddDependency(unit);
 
                 if (_list == null) {
@@ -317,7 +341,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 : base(method, myDict) {
             }
 
-            public override INamespaceSet Call(Node node, AnalysisUnit unit, INamespaceSet[] args, NameExpression[] keywordArgNames) {
+            public override IAnalysisSet Call(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
                 _myDict._keysAndValues.AddDependency(unit);
 
                 if (args.Length == 1) {
@@ -326,7 +350,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     return _myDict._keysAndValues.GetValueType(args[0]).Union(args[1]);
                 }
 
-                return NamespaceSet.Empty;
+                return AnalysisSet.Empty;
             }
         }
 
@@ -337,7 +361,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 : base(method, myDict) {
             }
 
-            public override INamespaceSet Call(Node node, AnalysisUnit unit, INamespaceSet[] args, NameExpression[] keywordArgNames) {
+            public override IAnalysisSet Call(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
                 _myDict._keysAndValues.AddDependency(unit);
 
                 if (_list == null) {
@@ -348,7 +372,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 return _list;
             }
 
-            public override void Update(AnalysisUnit unit, INamespaceSet newTypes, bool enqueue) {
+            public override void Update(AnalysisUnit unit, IAnalysisSet newTypes, bool enqueue) {
                 if (_list != null) {
                     _list.IndexTypes[0].AddTypes(unit, newTypes, enqueue);
                     _list.UnionType = null;
@@ -363,7 +387,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 : base(method, myDict) {
             }
 
-            public override INamespaceSet Call(Node node, AnalysisUnit unit, INamespaceSet[] args, NameExpression[] keywordArgNames) {
+            public override IAnalysisSet Call(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
                 _myDict._keysAndValues.AddDependency(unit);
 
                 if (_list == null) {
@@ -374,7 +398,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 return _list;
             }
 
-            public override void Update(AnalysisUnit unit, INamespaceSet newTypes, bool enqueue) {
+            public override void Update(AnalysisUnit unit, IAnalysisSet newTypes, bool enqueue) {
                 if (_list != null) {
                     _list.IndexTypes[0].AddTypes(unit, newTypes, enqueue);
                     _list.UnionType = null;
@@ -389,7 +413,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 : base(method, myDict) {
             }
 
-            public override INamespaceSet Call(Node node, AnalysisUnit unit, INamespaceSet[] args, NameExpression[] keywordArgNames) {
+            public override IAnalysisSet Call(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
                 _myDict._keysAndValues.AddDependency(unit);
 
                 if (_list == null) {
@@ -400,7 +424,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 return _list;
             }
 
-            public override void Update(AnalysisUnit unit, INamespaceSet newTypes, bool enqueue) {
+            public override void Update(AnalysisUnit unit, IAnalysisSet newTypes, bool enqueue) {
                 if (_list != null) {
                     _list.IndexTypes[0].AddTypes(unit, newTypes, enqueue);
                     _list.UnionType = null;
@@ -415,7 +439,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 : base(method, myDict) {
             }
 
-            public override INamespaceSet Call(Node node, AnalysisUnit unit, INamespaceSet[] args, NameExpression[] keywordArgNames) {
+            public override IAnalysisSet Call(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
                 _myDict._keysAndValues.AddDependency(unit);
 
                 if (_list == null) {
@@ -426,7 +450,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 return _list;
             }
 
-            public override void Update(AnalysisUnit unit, INamespaceSet newTypes, bool enqueue) {
+            public override void Update(AnalysisUnit unit, IAnalysisSet newTypes, bool enqueue) {
                 if (_list != null) {
                     _list.IndexTypes[0].AddTypes(unit, newTypes, enqueue);
                     _list.UnionType = null;
@@ -441,7 +465,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 : base(method, myDict) {
             }
 
-            public override INamespaceSet Call(Node node, AnalysisUnit unit, INamespaceSet[] args, NameExpression[] keywordArgNames) {
+            public override IAnalysisSet Call(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
                 _myDict._keysAndValues.AddDependency(unit);
 
                 if (_list == null) {
@@ -456,7 +480,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 : base(method, myDict) {
             }
 
-            public override INamespaceSet Call(Node node, AnalysisUnit unit, INamespaceSet[] args, NameExpression[] keywordArgNames) {
+            public override IAnalysisSet Call(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
                 _myDict._keysAndValues.AddDependency(unit);
 
                 return _myDict._keysAndValues.AllValueTypes;
@@ -468,7 +492,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 : base(method, myDict) {
             }
 
-            public override INamespaceSet Call(Node node, AnalysisUnit unit, INamespaceSet[] args, NameExpression[] keywordArgNames) {
+            public override IAnalysisSet Call(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
                 _myDict._keysAndValues.AddDependency(unit);
 
                 return _myDict.KeyValueTuple;
@@ -480,7 +504,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 : base(method, myDict) {
             }
 
-            public override INamespaceSet Call(Node node, AnalysisUnit unit, INamespaceSet[] args, NameExpression[] keywordArgNames) {
+            public override IAnalysisSet Call(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
                 if (args.Length >= 1) {
                     foreach (var type in args[0]) {
                         DictionaryInfo otherDict = type as DictionaryInfo;
@@ -491,7 +515,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 }
                 // TODO: Process keyword args and add those values to our dictionary, plus a string key
 
-                return NamespaceSet.Empty;
+                return AnalysisSet.Empty;
             }
         }
 
@@ -548,8 +572,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        internal void MakeUnionStrongerIfMoreThan(int typeCount, INamespaceSet extraTypes = null) {
-            if (_keysAndValues.AllValueTypes.Count + (extraTypes ?? NamespaceSet.Empty).Count >= typeCount) {
+        internal void MakeUnionStrongerIfMoreThan(int typeCount, IAnalysisSet extraTypes = null) {
+            if (_keysAndValues.AllValueTypes.Count + (extraTypes ?? AnalysisSet.Empty).Count >= typeCount) {
                 foreach (var dep in _keysAndValues._dependencies.Values) {
                     dep.MakeUnionStronger();
                 }

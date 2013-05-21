@@ -22,7 +22,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
     /// </summary>
     internal class IterableInfo : BuiltinInstanceInfo {
         internal readonly Node _node;
-        private INamespaceSet _unionType;        // all types that have been seen
+        private IAnalysisSet _unionType;        // all types that have been seen
         private VariableDef[] _indexTypes;     // types for known indices
         private IterBoundBuiltinMethodInfo _iterMethod;
 
@@ -37,7 +37,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             set { _indexTypes = value; }
         }
 
-        public INamespaceSet UnionType {
+        public IAnalysisSet UnionType {
             get {
                 EnsureUnionType();
                 return _unionType;
@@ -45,11 +45,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
             set { _unionType = value; }
         }
 
-        public override INamespaceSet GetEnumeratorTypes(Node node, AnalysisUnit unit) {
+        public override IAnalysisSet GetEnumeratorTypes(Node node, AnalysisUnit unit) {
             if (_indexTypes.Length == 0) {
                 _indexTypes = new[] { new VariableDef() };
                 _indexTypes[0].AddDependency(unit);
-                return NamespaceSet.Empty;
+                return AnalysisSet.Empty;
             } else {
                 _indexTypes[0].AddDependency(unit);
             }
@@ -58,7 +58,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return _unionType;
         }
 
-        public override INamespaceSet GetMember(Node node, AnalysisUnit unit, string name) {
+        public override IAnalysisSet GetMember(Node node, AnalysisUnit unit, string name) {
             if (name == "__iter__") {
                 if (_iterMethod == null) {
                     var iterImpl = (base.GetMember(node, unit, name).FirstOrDefault() as BuiltinMethodInfo) ?? new IterBuiltinMethodInfo(PythonType, ProjectState);
@@ -70,7 +70,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return base.GetMember(node, unit, name);
         }
 
-        internal bool AddTypes(AnalysisUnit unit, INamespaceSet[] types) {
+        internal bool AddTypes(AnalysisUnit unit, IAnalysisSet[] types) {
             if (_indexTypes.Length < types.Length) {
                 VariableDef[] newTypes = new VariableDef[types.Length];
                 for (int i = 0; i < _indexTypes.Length; i++) {
@@ -100,7 +100,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return MakeDescription(this, typeName, UnionType);
         }
 
-        internal static string MakeDescription(Namespace type, string typeName, INamespaceSet indexTypes) {
+        internal static string MakeDescription(AnalysisValue type, string typeName, IAnalysisSet indexTypes) {
             if (type.Push()) {
                 try {
                     if (indexTypes == null || indexTypes.Count == 0) {
@@ -127,9 +127,15 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         protected void EnsureUnionType() {
             if (_unionType == null) {
-                INamespaceSet unionType = NamespaceSet.EmptyUnion;
-                foreach (var set in _indexTypes) {
-                    unionType = unionType.Union(set.TypesNoCopy);
+                IAnalysisSet unionType = AnalysisSet.EmptyUnion;
+                if (Push()) {
+                    try {
+                        foreach (var set in _indexTypes) {
+                            unionType = unionType.Union(set.TypesNoCopy);
+                        }
+                    } finally {
+                        Pop();
+                    }
                 }
                 _unionType = unionType;
             }
@@ -141,18 +147,16 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        private const int IGNORE_NODE_STRENGTH = 1;
-
-        public override bool UnionEquals(Namespace ns, int strength) {
-            var si = ns as IterableInfo;
-            if (si != null && strength < IGNORE_NODE_STRENGTH) {
-                return si.ClassInfo == ClassInfo && si._node.Equals(_node);
+        internal override bool UnionEquals(AnalysisValue ns, int strength) {
+            if (strength < MergeStrength.IgnoreIterableNode) {
+                var si = ns as IterableInfo;
+                if (si != null && !_node.Equals(_node)) {
+                    // If nodes are not equal, iterables cannot be merged.
+                    return false;
+                }
             }
-            return base.UnionEquals(ns, strength);
-        }
 
-        internal override Namespace UnionMergeTypes(Namespace ns, int strength) {
-            return ClassInfo.Instance;
+            return base.UnionEquals(ns, strength);
         }
     }
 }

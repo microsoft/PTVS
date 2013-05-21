@@ -34,7 +34,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public override INamespaceSet GetMember(Node node, AnalysisUnit unit, string name) {
+        public override IAnalysisSet GetMember(Node node, AnalysisUnit unit, string name) {
             var res = base.GetMember(node, unit, name);
             if (res.Count > 0) {
                 _references.AddReference(node, unit, name);
@@ -42,11 +42,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return res;
         }
 
-        public override IDictionary<string, INamespaceSet> GetAllMembers(IModuleContext moduleContext) {
+        public override IDictionary<string, IAnalysisSet> GetAllMembers(IModuleContext moduleContext) {
             var res = ProjectState.GetAllMembers(_interpreterModule, moduleContext);
             if (_specializedValues != null) {
                 foreach (var value in _specializedValues) {
-                    INamespaceSet existing;
+                    IAnalysisSet existing;
                     if(!res.TryGetValue(value.Key, out existing)) {
                         res[value.Key] = value.Value;
                     } else {
@@ -101,22 +101,22 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public IModule GetChildPackage(IModuleContext context, string name) {
             var mem = _type.GetMember(context, name);
             if (mem != null) {
-                return ProjectState.GetNamespaceFromObjects(mem) as IModule;
+                return ProjectState.GetAnalysisValueFromObjects(mem) as IModule;
             }
             return null;
         }
 
-        public IEnumerable<KeyValuePair<string, Namespace>> GetChildrenPackages(IModuleContext context) {
+        public IEnumerable<KeyValuePair<string, AnalysisValue>> GetChildrenPackages(IModuleContext context) {
             foreach (var name in _type.GetChildrenModules()) {
-                yield return new KeyValuePair<string, Namespace>(name, ProjectState.GetNamespaceFromObjects(_type.GetMember(context, name)));
+                yield return new KeyValuePair<string, AnalysisValue>(name, ProjectState.GetAnalysisValueFromObjects(_type.GetMember(context, name)));
             }
         }
 
-        public void SpecializeFunction(string name, Func<CallExpression, AnalysisUnit, INamespaceSet[], NameExpression[], INamespaceSet> dlg, bool analyze) {
+        public void SpecializeFunction(string name, CallDelegate callable, bool mergeOriginalAnalysis) {
             try {
                 foreach (var v in this[name]) {
                     if (!(v is SpecializedNamespace)) {
-                        this[name] = SpecializedCallable.MakeSpecializedCallable(dlg, analyze, v).SelfSet;
+                        this[name] = new SpecializedCallable(v, callable, mergeOriginalAnalysis).SelfSet;
                         break;
                     }
                 }
@@ -133,7 +133,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
 
-        public INamespaceSet GetModuleMember(Node node, AnalysisUnit unit, string name, bool addRef = true, InterpreterScope linkedScope = null, string linkedName = null) {
+        public IAnalysisSet GetModuleMember(Node node, AnalysisUnit unit, string name, bool addRef = true, InterpreterScope linkedScope = null, string linkedName = null) {
             var res = GetMember(node, unit, name);
             InterpreterModule.Imported(unit.DeclaringModule.InterpreterContext);
             return res;

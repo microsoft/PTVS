@@ -49,7 +49,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// </summary>
         /// <param name="exprText">The expression to determine the result of.</param>
         /// <param name="index">The 0-based absolute index into the file where the expression should be evaluated within the module.</param>
-        public IEnumerable<IAnalysisValue> GetValuesByIndex(string exprText, int index) {
+        public IEnumerable<AnalysisValue> GetValuesByIndex(string exprText, int index) {
             var scope = FindScope(index);
             var privatePrefix = GetPrivatePrefixClassName(scope);
             var expr = Statement.GetExpression(GetAstFromText(exprText, privatePrefix).Body);
@@ -58,7 +58,7 @@ namespace Microsoft.PythonTools.Analysis {
             var eval = new ExpressionEvaluator(unit.CopyForEval(), scope, mergeScopes: true);
 
             var values = eval.Evaluate(expr);
-            var res = NamespaceSet.EmptyUnion;
+            var res = AnalysisSet.EmptyUnion;
             foreach (var v in values) {
                 MultipleMemberInfo multipleMembers = v as MultipleMemberInfo;
                 if (multipleMembers != null) {
@@ -305,7 +305,7 @@ namespace Microsoft.PythonTools.Analysis {
                 var result = new List<MemberResult>();
 
                 foreach (var scope in FindScope(index).EnumerateTowardsGlobal) {
-                    result.Add(new MemberResult(scope.Name, scope.GetMergedNamespaces()));
+                    result.Add(new MemberResult(scope.Name, scope.GetMergedAnalysisValues()));
                 }
 
                 return result;
@@ -339,12 +339,12 @@ namespace Microsoft.PythonTools.Analysis {
                 foreach (var baseClass in mro.Skip(1).SelectMany()) {
                     ClassInfo klass;
                     BuiltinClassInfo builtinClass;
-                    IEnumerable<Namespace> source;
+                    IEnumerable<AnalysisValue> source;
 
                     if ((klass = baseClass as ClassInfo) != null) {
                         source = klass.Scope.Children
-                            .Where(child => child != null && child.Namespace != null)
-                            .Select(child => child.Namespace);
+                            .Where(child => child != null && child.AnalysisValue != null)
+                            .Select(child => child.AnalysisValue);
                     } else if ((builtinClass = baseClass as BuiltinClassInfo) != null) {
                         source = builtinClass.GetAllMembers(InterpreterContext).Values
                             .SelectMany(children => children)
@@ -393,18 +393,18 @@ namespace Microsoft.PythonTools.Analysis {
         /// </summary>
         /// <param name="index">The 0-based absolute index into the file where the available mebmers should be looked up.</param>
         public IEnumerable<MemberResult> GetAllAvailableMembersByIndex(int index, GetMemberOptions options = GetMemberOptions.IntersectMultipleResults) {
-            var result = new Dictionary<string, List<Namespace>>();
+            var result = new Dictionary<string, List<AnalysisValue>>();
 
             // collect builtins
             foreach (var variable in ProjectState.BuiltinModule.GetAllMembers(ProjectState._defaultContext)) {
-                result[variable.Key] = new List<Namespace>(variable.Value);
+                result[variable.Key] = new List<AnalysisValue>(variable.Value);
             }
 
             // collect variables from user defined scopes
             var scope = FindScope(index);
             foreach (var s in scope.EnumerateTowardsGlobal) {
                 foreach (var kvp in s.GetAllMergedVariables()) {
-                    result[kvp.Key] = new List<Namespace>(kvp.Value.TypesNoCopy);
+                    result[kvp.Key] = new List<AnalysisValue>(kvp.Value.TypesNoCopy);
                 }
             }
 
@@ -526,8 +526,8 @@ namespace Microsoft.PythonTools.Analysis {
             get { return _scope; }
         }
 
-        internal IEnumerable<MemberResult> GetMemberResults(IEnumerable<Namespace> vars, InterpreterScope scope, GetMemberOptions options) {
-            IList<Namespace> namespaces = new List<Namespace>();
+        internal IEnumerable<MemberResult> GetMemberResults(IEnumerable<AnalysisValue> vars, InterpreterScope scope, GetMemberOptions options) {
+            IList<AnalysisValue> namespaces = new List<AnalysisValue>();
             foreach (var ns in vars) {
                 if (ns != null) {
                     namespaces.Add(ns);
@@ -544,11 +544,11 @@ namespace Microsoft.PythonTools.Analysis {
                 return SingleMemberResult(GetPrivatePrefix(scope), options, newMembers);
             }
 
-            Dictionary<string, List<Namespace>> memberDict = null;
-            Dictionary<string, List<Namespace>> ownerDict = null;
+            Dictionary<string, List<AnalysisValue>> memberDict = null;
+            Dictionary<string, List<AnalysisValue>> ownerDict = null;
             HashSet<string> memberSet = null;
             int namespacesCount = namespaces.Count;
-            foreach (Namespace ns in namespaces) {
+            foreach (AnalysisValue ns in namespaces) {
                 if (ProjectState._noneInst == ns) {
                     namespacesCount -= 1;
                     continue;
@@ -563,12 +563,12 @@ namespace Microsoft.PythonTools.Analysis {
                 if (memberSet == null) {
                     // first namespace, add everything
                     memberSet = new HashSet<string>(newMembers.Keys);
-                    memberDict = new Dictionary<string, List<Namespace>>();
-                    ownerDict = new Dictionary<string, List<Namespace>>();
+                    memberDict = new Dictionary<string, List<AnalysisValue>>();
+                    ownerDict = new Dictionary<string, List<AnalysisValue>>();
                     foreach (var kvp in newMembers) {
-                        var tmp = new List<Namespace>(kvp.Value);
+                        var tmp = new List<AnalysisValue>(kvp.Value);
                         memberDict[kvp.Key] = tmp;
-                        ownerDict[kvp.Key] = new List<Namespace> { ns };
+                        ownerDict[kvp.Key] = new List<AnalysisValue> { ns };
                     }
                 } else {
                     // 2nd or nth namespace, union or intersect
@@ -597,13 +597,13 @@ namespace Microsoft.PythonTools.Analysis {
 
                     // update memberDict
                     foreach (var name in adding) {
-                        List<Namespace> values;
+                        List<AnalysisValue> values;
                         if (!memberDict.TryGetValue(name, out values)) {
-                            memberDict[name] = values = new List<Namespace>();
+                            memberDict[name] = values = new List<AnalysisValue>();
                         }
                         values.AddRange(newMembers[name]);
                         if (!ownerDict.TryGetValue(name, out values)) {
-                            ownerDict[name] = values = new List<Namespace>();
+                            ownerDict[name] = values = new List<AnalysisValue>();
                         }
                         values.Add(ns);
                     }
@@ -776,13 +776,13 @@ namespace Microsoft.PythonTools.Analysis {
             return curScope;
         }
 
-        private static IEnumerable<MemberResult> MemberDictToResultList(string privatePrefix, GetMemberOptions options, Dictionary<string, List<Namespace>> memberDict,
-            Dictionary<string, List<Namespace>> ownerDict = null, int maximumOwners = 0) {
+        private static IEnumerable<MemberResult> MemberDictToResultList(string privatePrefix, GetMemberOptions options, Dictionary<string, List<AnalysisValue>> memberDict,
+            Dictionary<string, List<AnalysisValue>> ownerDict = null, int maximumOwners = 0) {
             foreach (var kvp in memberDict) {
                 string name = GetMemberName(privatePrefix, options, kvp.Key);
                 string completion = name;
                 if (name != null) {
-                    List<Namespace> owners;
+                    List<AnalysisValue> owners;
                     if (ownerDict != null && ownerDict.TryGetValue(kvp.Key, out owners) &&
                         owners.Count >= 1 && owners.Count < maximumOwners) {
                         // This member came from less than the full set of types.
@@ -821,7 +821,7 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
-        private static IEnumerable<MemberResult> SingleMemberResult(string privatePrefix, GetMemberOptions options, IDictionary<string, INamespaceSet> memberDict) {
+        private static IEnumerable<MemberResult> SingleMemberResult(string privatePrefix, GetMemberOptions options, IDictionary<string, IAnalysisSet> memberDict) {
             foreach (var kvp in memberDict) {
                 string name = GetMemberName(privatePrefix, options, kvp.Key);
                 if (name != null) {
@@ -869,7 +869,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// </summary>
         private AnalysisUnit GetNearestEnclosingAnalysisUnit(InterpreterScope scopes) {
             var units = from scope in scopes.EnumerateTowardsGlobal
-                        let ns = scope.Namespace
+                        let ns = scope.AnalysisValue
                         where ns != null
                         let unit = ns.AnalysisUnit
                         where unit != null

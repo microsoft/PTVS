@@ -18,7 +18,7 @@ using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Values {
-    class BoundBuiltinMethodInfo : Namespace {
+    class BoundBuiltinMethodInfo : AnalysisValue {
         private readonly BuiltinMethodInfo _method;
         private OverloadResult[] _overloads;
 
@@ -59,7 +59,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public override INamespaceSet Call(Node node, AnalysisUnit unit, INamespaceSet[] args, NameExpression[] keywordArgNames) {
+        public override IAnalysisSet Call(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
             return _method.ReturnTypes.GetInstanceType();
         }
 

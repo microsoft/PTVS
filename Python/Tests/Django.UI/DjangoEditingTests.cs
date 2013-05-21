@@ -14,12 +14,15 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Threading;
 using EnvDTE;
 using Microsoft.PythonTools;
+using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Parsing;
 using Microsoft.TC.TestHostAdapters;
-using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
@@ -34,8 +37,36 @@ namespace DjangoUITests {
             TestData.Deploy();
         }
 
+        private IPythonInterpreterFactory PreviousDefault;
+
+        [TestInitialize]
+        public void ChangeDefaultInterpreter() {
+            var model = (IComponentModel)VsIdeTestHostContext.ServiceProvider.GetService(typeof(SComponentModel));
+            var interpService = model.GetService<IInterpreterOptionsService>();
+            PreviousDefault = interpService.DefaultInterpreter;
+
+            foreach (var ver in PythonPaths.Versions) {
+                if (!ver.IsCPython) {
+                    continue;
+                }
+
+                foreach (var p in Directory.EnumerateDirectories(Path.Combine(ver.LibPath, "site-packages"))) {
+                    if (Path.GetFileName(p).StartsWith("django")) {
+                        interpService.DefaultInterpreter = interpService.FindInterpreter(ver.Interpreter, ver.Version.ToVersion());
+                        return;
+                    }
+                }
+            }
+
+            Assert.Fail("Could not find Django installation");
+        }
+
         [TestCleanup]
         public void MyTestCleanup() {
+            var model = (IComponentModel)VsIdeTestHostContext.ServiceProvider.GetService(typeof(SComponentModel));
+            var interpService = model.GetService<IInterpreterOptionsService>();
+            interpService.DefaultInterpreter = PreviousDefault;
+
             VsIdeTestHostContext.Dte.Solution.Close(false);
         }
 

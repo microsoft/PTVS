@@ -25,47 +25,37 @@ namespace Microsoft.PythonTools.Analysis.Values {
     /// ways.
     /// </summary>
     class SpecializedCallable : SpecializedNamespace {
-        private readonly Func<CallExpression, AnalysisUnit, INamespaceSet[], NameExpression[], INamespaceSet> _call;
+        private readonly CallDelegate _callable;
+        private readonly bool _mergeOriginalAnalysis;
 
-        public SpecializedCallable(Namespace original, Func<CallExpression, AnalysisUnit, INamespaceSet[], NameExpression[], INamespaceSet> call)
+        public SpecializedCallable(AnalysisValue original, CallDelegate callable, bool mergeOriginalAnalysis)
             : base(original) {
-            _call = call;
+            _callable = callable;
+            _mergeOriginalAnalysis = mergeOriginalAnalysis;
         }
 
-        public SpecializedCallable(Namespace original, Namespace inst, Func<CallExpression, AnalysisUnit, INamespaceSet[], NameExpression[], INamespaceSet> call)
+        public SpecializedCallable(AnalysisValue original, AnalysisValue inst, CallDelegate callable, bool suppressNormalAnalysis)
             : base(original, inst) {
-            _call = call;
+            _callable = callable;
+            _mergeOriginalAnalysis = suppressNormalAnalysis;
         }
 
-        internal static SpecializedNamespace MakeSpecializedCallable(Func<CallExpression, AnalysisUnit, INamespaceSet[], NameExpression[], INamespaceSet> dlg, bool analyze, Namespace v) {
-            SpecializedNamespace special;
-            if (analyze) {
-                special = new SpecializedCallable(v, dlg);
-            } else {
-                special = new SpecializedCallableNoAnalyze(v, dlg);
-            }
-            return special;
-        }
-
-        public override INamespaceSet Call(Node node, AnalysisUnit unit, INamespaceSet[] args, NameExpression[] keywordArgNames) {
+        public override IAnalysisSet Call(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
             var realArgs = args;
             if (_inst != null) {
                 realArgs = Utils.Concat(_inst.SelfSet, args);
             }
 
-            var analyzed = _original.Call(node, unit, args, keywordArgNames);
-            var res = _call((CallExpression)node, unit, realArgs, keywordArgNames);
-            if (res == null) {
-                return analyzed;
-            } else if (analyzed.Count == 0) {
-                return res;
-            } else {
-                return res.Union(analyzed);
+            var res = _callable(node, unit, args, keywordArgNames);
+            if (_mergeOriginalAnalysis) {
+                return res.Union(_original.Call(node, unit, args, keywordArgNames));
             }
+
+            return res;
         }
 
-        protected override SpecializedNamespace Clone(Namespace original, Namespace instance) {
-            return new SpecializedCallable(original, instance, _call);
+        protected override SpecializedNamespace Clone(AnalysisValue original, AnalysisValue instance) {
+            return new SpecializedCallable(original, instance, _callable, _mergeOriginalAnalysis);
         }
     }
 }

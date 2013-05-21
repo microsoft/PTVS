@@ -18,6 +18,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Interpreter.Default;
 using Microsoft.PythonTools.Parsing;
@@ -146,7 +147,7 @@ MultipleInheritance = test.MultipleInheritance
                 Assert.AreEqual("function f1", newMod.Analysis.GetValuesByIndex("f1", pos).First().Description);
                 Assert.AreEqual("bound method x", newMod.Analysis.GetValuesByIndex("dx", pos).First().Description);
                 Assert.AreEqual("function g", newMod.Analysis.GetValuesByIndex("scg", pos).First().Description);
-                var unionMembers = new List<IAnalysisValue>(newMod.Analysis.GetValuesByIndex("union", pos));
+                var unionMembers = new List<AnalysisValue>(newMod.Analysis.GetValuesByIndex("union", pos));
                 Assert.AreEqual(unionMembers.Count, 2);
                 AssertUtil.ContainsExactly(unionMembers.Select(x => x.PythonType.Name), "X", "Y");
 

@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using Microsoft.PythonTools.Analysis.Interpreter;
 
@@ -74,7 +75,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
     }
 
     internal class KeyValueDependencyInfo : DependencyInfo {
-        internal Dictionary<Namespace, INamespaceSet> KeyValues = new Dictionary<Namespace, INamespaceSet>();
+        internal Dictionary<AnalysisValue, IAnalysisSet> KeyValues = new Dictionary<AnalysisValue, IAnalysisSet>();
 
         public KeyValueDependencyInfo(int version)
             : base(version) {
@@ -91,16 +92,16 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 cmp = UnionComparer.Instances[cmp.Strength + 1];
             }
 
-            var matches = new Dictionary<Namespace, List<KeyValuePair<Namespace, INamespaceSet>>>(cmp);
+            var matches = new Dictionary<AnalysisValue, List<KeyValuePair<AnalysisValue, IAnalysisSet>>>(cmp);
             foreach (var keyValue in KeyValues) {
-                List<KeyValuePair<Namespace, INamespaceSet>> values;
+                List<KeyValuePair<AnalysisValue, IAnalysisSet>> values;
                 if (!matches.TryGetValue(keyValue.Key, out values)) {
-                    values = matches[keyValue.Key] = new List<KeyValuePair<Namespace, INamespaceSet>>();
+                    values = matches[keyValue.Key] = new List<KeyValuePair<AnalysisValue, IAnalysisSet>>();
                 }
                 values.Add(keyValue);
             }
 
-            KeyValues = new Dictionary<Namespace, INamespaceSet>(cmp);
+            KeyValues = new Dictionary<AnalysisValue, IAnalysisSet>(cmp);
             foreach (var list in matches.Values) {
                 bool dummy;
                 var key = list[0].Key;
@@ -116,21 +117,38 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
     }
 
-    internal class TypedDependencyInfo<T> : DependencyInfo where T : Namespace {
-        private INamespaceSet _types;
+    internal class TypedDependencyInfo<T> : DependencyInfo where T : AnalysisValue {
+        private IAnalysisSet _types;
         public ISet<EncodedLocation> _references, _assignments;
+#if FULL_VALIDATION
+        internal int _changeCount = 0;
+#endif
 
         public TypedDependencyInfo(int version)
-            : this(version, NamespaceSet.Empty) { }
+            : this(version, AnalysisSet.Empty) { }
 
-        public TypedDependencyInfo(int version, INamespaceSet emptySet)
+        public TypedDependencyInfo(int version, IAnalysisSet emptySet)
             : base(version) {
             _types = emptySet;
         }
 
-        public bool AddType(Namespace ns) {
+        static bool TAKE_COPIES = false;
+
+        public bool AddType(AnalysisValue ns) {
             bool wasChanged;
-            _types = _types.Add(ns, out wasChanged);
+            IAnalysisSet prev;
+            if (TAKE_COPIES) {
+                prev = _types.Clone();
+            } else {
+                prev = _types;
+            }
+            _types = prev.Add(ns, out wasChanged);
+#if FULL_VALIDATION
+            _changeCount += wasChanged ? 1 : 0;
+            // The value doesn't mean anything, we just want to know if a variable is being
+            // updated too often.
+            Validation.Assert<ChangeCountExceededException>(_changeCount < 10000);
+#endif
             return wasChanged;
         }
 
@@ -140,11 +158,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return wasChanged;
         }
 
-        public INamespaceSet ToImmutableTypeSet() {
+        public IAnalysisSet ToImmutableTypeSet() {
             return _types.Clone();
         }
 
-        public INamespaceSet Types {
+        public IAnalysisSet Types {
             get {
                 return _types;
             }

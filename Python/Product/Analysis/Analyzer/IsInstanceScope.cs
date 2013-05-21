@@ -47,12 +47,12 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             return OuterScope.GetMergedVariables(name);
         }
 
-        public override INamespaceSet GetMergedVariableTypes(string name) {
+        public override IAnalysisSet GetMergedVariableTypes(string name) {
             VariableDef res;
             if (Variables.TryGetValue(name, out res)) {
                 return res.Types;
             }
-            return NamespaceSet.Empty;
+            return AnalysisSet.Empty;
         }
 
         public override IEnumerable<KeyValuePair<string, VariableDef>> GetAllMergedVariables() {
@@ -72,7 +72,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             OuterScope.ClearVariables();
         }
 
-        internal VariableDef CreateTypedVariable(Node node, AnalysisUnit unit, string name, INamespaceSet types, bool addRef = true) {
+        internal VariableDef CreateTypedVariable(Node node, AnalysisUnit unit, string name, IAnalysisSet types, bool addRef = true) {
             VariableDef res, outer, immediateOuter;
             if (!Variables.TryGetValue(name, out res)) {
                 // Normal CreateVariable would use AddVariable, which will put
@@ -95,7 +95,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             return res;
         }
 
-        private void PropagateIsInstanceTypes(Node node, AnalysisUnit unit, INamespaceSet typeSet, VariableDef variable) {
+        private void PropagateIsInstanceTypes(Node node, AnalysisUnit unit, IAnalysisSet typeSet, VariableDef variable) {
             foreach (var typeObj in typeSet) {
                 ClassInfo classInfo;
                 BuiltinClassInfo builtinClassInfo;
@@ -119,7 +119,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             }
         }
 
-        public override INamespaceSet AddNodeValue(Node node, INamespaceSet variable) {
+        public override IAnalysisSet AddNodeValue(Node node, IAnalysisSet variable) {
             return OuterScope.AddNodeValue(node, variable);
         }
 

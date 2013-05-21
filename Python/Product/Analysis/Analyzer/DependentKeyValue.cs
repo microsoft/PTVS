@@ -30,18 +30,18 @@ namespace Microsoft.PythonTools.Analysis.Values {
     /// Currently that includes strings, types, small integers, etc...
     /// </summary>
     class DependentKeyValue : DependentData<KeyValueDependencyInfo> {
-        private static Dictionary<Namespace, INamespaceSet> EmptyDict = new Dictionary<Namespace, INamespaceSet>();
-        private INamespaceSet _allValues;
+        private static Dictionary<AnalysisValue, IAnalysisSet> EmptyDict = new Dictionary<AnalysisValue, IAnalysisSet>();
+        private IAnalysisSet _allValues;
 
         protected override KeyValueDependencyInfo NewDefinition(int version) {
             return new KeyValueDependencyInfo(version);
         }
 
-        public bool AddTypes(AnalysisUnit unit, IEnumerable<Namespace> keyTypes, IEnumerable<Namespace> valueTypes, bool enqueue = true) {
+        public bool AddTypes(AnalysisUnit unit, IEnumerable<AnalysisValue> keyTypes, IEnumerable<AnalysisValue> valueTypes, bool enqueue = true) {
             return AddTypes(unit.ProjectEntry, unit.ProjectState, keyTypes, valueTypes, enqueue);
         }
 
-        public bool AddTypes(IProjectEntry projectEntry, PythonAnalyzer projectState, IEnumerable<Namespace> keyTypes, IEnumerable<Namespace> valueTypes, bool enqueue = true) {
+        public bool AddTypes(IProjectEntry projectEntry, PythonAnalyzer projectState, IEnumerable<AnalysisValue> keyTypes, IEnumerable<AnalysisValue> valueTypes, bool enqueue = true) {
             var dependencies = GetDependentItems(projectEntry);
 
             if (dependencies.KeyValues.Count > projectState.Limits.DictKeyTypes) {
@@ -50,9 +50,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
             bool anyAdded = false;
             foreach (var key in keyTypes) {
-                INamespaceSet values;
+                IAnalysisSet values;
                 if (!dependencies.KeyValues.TryGetValue(key, out values)) {
-                    values = NamespaceSet.Create(valueTypes);
+                    values = AnalysisSet.Create(valueTypes);
                     anyAdded = true;
                 } else {
                     bool added;
@@ -75,13 +75,13 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return anyAdded;
         }
 
-        public INamespaceSet KeyTypes {
+        public IAnalysisSet KeyTypes {
             get {
                 if (_dependencies.Count == 0) {
-                    return NamespaceSet.Empty;
+                    return AnalysisSet.Empty;
                 }
 
-                var res = NamespaceSet.Empty; ;
+                var res = AnalysisSet.Empty; ;
                 foreach (var keyValue in _dependencies.Values) {
                     res = res.Union(keyValue.KeyValues.Keys);
                 }
@@ -90,16 +90,16 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public INamespaceSet AllValueTypes {
+        public IAnalysisSet AllValueTypes {
             get {
                 if (_allValues != null) {
                     return _allValues;
                 }
                 if (_dependencies.Count == 0) {
-                    return NamespaceSet.Empty;
+                    return AnalysisSet.Empty;
                 }
 
-                var res = NamespaceSet.Empty;
+                var res = AnalysisSet.Empty;
                 foreach (var dependency in _dependencies.Values) {
                     foreach (var keyValue in dependency.KeyValues) {
                         res = res.Union(keyValue.Value);
@@ -111,15 +111,15 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public INamespaceSet GetValueType(INamespaceSet keyTypes) {
-            var res = NamespaceSet.Empty;
+        public IAnalysisSet GetValueType(IAnalysisSet keyTypes) {
+            var res = AnalysisSet.Empty;
             if (_dependencies.Count != 0) {
-                Namespace ns = keyTypes as Namespace;
+                AnalysisValue ns = keyTypes as AnalysisValue;
                 foreach (var keyValue in _dependencies.Values) {
-                    INamespaceSet union;
+                    IAnalysisSet union;
                     if (ns != null) {
                         // optimize for the case where we're just looking up
-                        // a single Namespace object which hasn't been copied into
+                        // a single AnalysisValue object which hasn't been copied into
                         // a set
                         if (keyValue.KeyValues.TryGetValue(ns, out union)) {
                             res = res.Union(union);
@@ -147,22 +147,22 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 }
             }
 
-            return res ?? NamespaceSet.Empty;
+            return res ?? AnalysisSet.Empty;
         }
 
-        public Dictionary<Namespace, INamespaceSet> KeyValueTypes {
+        public Dictionary<AnalysisValue, IAnalysisSet> KeyValueTypes {
             get {
                 if (_dependencies.Count != 0) {
-                    Dictionary<Namespace, INamespaceSet> res = null;
+                    Dictionary<AnalysisValue, IAnalysisSet> res = null;
                     foreach (var mod in _dependencies.Values) {
                         if (res == null) {
-                            res = new Dictionary<Namespace, INamespaceSet>();
+                            res = new Dictionary<AnalysisValue, IAnalysisSet>();
                             foreach (var keyValue in mod.KeyValues) {
                                 res[keyValue.Key] = keyValue.Value;
                             }
                         } else {
                             foreach (var keyValue in mod.KeyValues) {
-                                INamespaceSet existing;
+                                IAnalysisSet existing;
                                 if (!res.TryGetValue(keyValue.Key, out existing)) {
                                     res[keyValue.Key] = keyValue.Value;
                                 } else {
@@ -193,7 +193,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 }
 
                 foreach (var keyValue in otherDependency.Value.KeyValues) {
-                    INamespaceSet union;
+                    IAnalysisSet union;
                     if (!deps.KeyValues.TryGetValue(keyValue.Key, out union)) {
                         deps.KeyValues[keyValue.Key] = union = keyValue.Value;
                         anyAdded = true;

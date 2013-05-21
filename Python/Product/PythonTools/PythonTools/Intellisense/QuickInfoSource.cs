@@ -62,7 +62,7 @@ namespace Microsoft.PythonTools.Intellisense {
             bool first = true;
             var result = new StringBuilder();
             int count = 0;
-            List<IAnalysisValue> listVars = new List<IAnalysisValue>(vars.Values);
+            List<AnalysisValue> listVars = new List<AnalysisValue>(vars.Values);
             HashSet<string> descriptions = new HashSet<string>();
             bool multiline = false;
             foreach (var v in listVars) {

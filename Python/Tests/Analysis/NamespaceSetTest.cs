@@ -13,13 +13,13 @@
  * ***************************************************************************/
 
 using System.Linq;
-using Microsoft.PythonTools.Analysis.Values;
-using Microsoft.PythonTools.Analysis.Values.NamespaceSetDetails;
+using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Analysis.AnalysisSetDetails;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 
 namespace AnalysisTests {
-    class TestNamespace : Namespace {
+    class TestNamespace : AnalysisValue {
         public string _name;
         public override string Name {
             get { return _name; }
@@ -43,7 +43,7 @@ namespace AnalysisTests {
             return Name.GetHashCode() ^ Value.GetHashCode();
         }
 
-        public override bool UnionEquals(Namespace ns, int strength) {
+        internal override bool UnionEquals(AnalysisValue ns, int strength) {
             var tns = ns as TestNamespace;
             if (tns == null) {
                 return false;
@@ -51,11 +51,11 @@ namespace AnalysisTests {
             return Name.Equals(tns.Name);
         }
 
-        public override int UnionHashCode(int strength) {
+        internal override int UnionHashCode(int strength) {
             return Name.GetHashCode();
         }
 
-        internal override Namespace UnionMergeTypes(Namespace ns, int strength) {
+        internal override AnalysisValue UnionMergeTypes(AnalysisValue ns, int strength) {
             var tns = ns as TestNamespace;
             if (tns == null || object.ReferenceEquals(this, tns)) {
                 return this;
@@ -70,154 +70,154 @@ namespace AnalysisTests {
 
     [TestClass]
     public class NamespaceSetTest {
-        private static readonly Namespace nsA1 = new TestNamespace { _name = "A", Value = "a" };
-        private static readonly Namespace nsA2 = new TestNamespace { _name = "A", Value = "x" };
-        private static readonly Namespace nsAU1 = nsA1.UnionMergeTypes(nsA2, 100);
-        private static readonly Namespace nsAU2 = nsAU1.UnionMergeTypes(nsA2, 100);
-        private static readonly Namespace nsAU3 = nsAU2.UnionMergeTypes(nsA2, 100);
-        private static readonly Namespace nsAU4 = nsAU3.UnionMergeTypes(nsA2, 100);
+        private static readonly AnalysisValue nsA1 = new TestNamespace { _name = "A", Value = "a" };
+        private static readonly AnalysisValue nsA2 = new TestNamespace { _name = "A", Value = "x" };
+        private static readonly AnalysisValue nsAU1 = nsA1.UnionMergeTypes(nsA2, 100);
+        private static readonly AnalysisValue nsAU2 = nsAU1.UnionMergeTypes(nsA2, 100);
+        private static readonly AnalysisValue nsAU3 = nsAU2.UnionMergeTypes(nsA2, 100);
+        private static readonly AnalysisValue nsAU4 = nsAU3.UnionMergeTypes(nsA2, 100);
 
-        private static readonly Namespace nsB1 = new TestNamespace { _name = "B", Value = "b" };
-        private static readonly Namespace nsB2 = new TestNamespace { _name = "B", Value = "y" };
-        private static readonly Namespace nsBU1 = nsB1.UnionMergeTypes(nsB2, 100);
-        private static readonly Namespace nsBU2 = nsBU1.UnionMergeTypes(nsB2, 100);
-        private static readonly Namespace nsBU3 = nsBU2.UnionMergeTypes(nsB2, 100);
-        private static readonly Namespace nsBU4 = nsBU3.UnionMergeTypes(nsB2, 100);
+        private static readonly AnalysisValue nsB1 = new TestNamespace { _name = "B", Value = "b" };
+        private static readonly AnalysisValue nsB2 = new TestNamespace { _name = "B", Value = "y" };
+        private static readonly AnalysisValue nsBU1 = nsB1.UnionMergeTypes(nsB2, 100);
+        private static readonly AnalysisValue nsBU2 = nsBU1.UnionMergeTypes(nsB2, 100);
+        private static readonly AnalysisValue nsBU3 = nsBU2.UnionMergeTypes(nsB2, 100);
+        private static readonly AnalysisValue nsBU4 = nsBU3.UnionMergeTypes(nsB2, 100);
 
-        private static readonly Namespace nsC1 = new TestNamespace { _name = "C", Value = "c" };
-        private static readonly Namespace nsC2 = new TestNamespace { _name = "C", Value = "z" };
-        private static readonly Namespace nsCU1 = nsC1.UnionMergeTypes(nsC2, 100);
-        private static readonly Namespace nsCU2 = nsCU1.UnionMergeTypes(nsC2, 100);
-        private static readonly Namespace nsCU3 = nsCU2.UnionMergeTypes(nsC2, 100);
-        private static readonly Namespace nsCU4 = nsCU3.UnionMergeTypes(nsC2, 100);
+        private static readonly AnalysisValue nsC1 = new TestNamespace { _name = "C", Value = "c" };
+        private static readonly AnalysisValue nsC2 = new TestNamespace { _name = "C", Value = "z" };
+        private static readonly AnalysisValue nsCU1 = nsC1.UnionMergeTypes(nsC2, 100);
+        private static readonly AnalysisValue nsCU2 = nsCU1.UnionMergeTypes(nsC2, 100);
+        private static readonly AnalysisValue nsCU3 = nsCU2.UnionMergeTypes(nsC2, 100);
+        private static readonly AnalysisValue nsCU4 = nsCU3.UnionMergeTypes(nsC2, 100);
 
-        [TestMethod, TestCategory("NamespaceSet")]
+        [TestMethod, TestCategory("AnalysisSet")]
         public void SetOfOne_Object() {
-            var set = NamespaceSet.Create(nsA1);
+            var set = AnalysisSet.Create(nsA1);
             Assert.AreSame(nsA1, set);
 
-            set = NamespaceSet.Create(new[] { nsA1 }.AsEnumerable());
+            set = AnalysisSet.Create(new[] { nsA1 }.AsEnumerable());
             Assert.AreSame(nsA1, set);
 
-            set = NamespaceSet.Create(new[] { nsA1, nsA1 }.AsEnumerable());
+            set = AnalysisSet.Create(new[] { nsA1, nsA1 }.AsEnumerable());
             Assert.AreSame(nsA1, set);
 
-            set = NamespaceSet.Create(new[] { nsA1, nsA2 }.AsEnumerable());
+            set = AnalysisSet.Create(new[] { nsA1, nsA2 }.AsEnumerable());
             Assert.AreNotSame(nsA1, set);
         }
 
-        [TestMethod, TestCategory("NamespaceSet")]
+        [TestMethod, TestCategory("AnalysisSet")]
         public void SetOfOne_Union() {
-            var set = NamespaceSet.CreateUnion(nsA1, UnionComparer.Instances[0]);
-            Assert.IsInstanceOfType(set, typeof(NamespaceSetOneUnion));
+            var set = AnalysisSet.CreateUnion(nsA1, UnionComparer.Instances[0]);
+            Assert.IsInstanceOfType(set, typeof(AnalysisSetOneUnion));
             AssertUtil.ContainsExactly(set, nsA1);
 
-            set = NamespaceSet.CreateUnion(new[] { nsA1 }.AsEnumerable(), UnionComparer.Instances[0]);
-            Assert.IsInstanceOfType(set, typeof(NamespaceSetOneUnion));
+            set = AnalysisSet.CreateUnion(new[] { nsA1 }.AsEnumerable(), UnionComparer.Instances[0]);
+            Assert.IsInstanceOfType(set, typeof(AnalysisSetOneUnion));
             AssertUtil.ContainsExactly(set, nsA1);
 
-            set = NamespaceSet.CreateUnion(new[] { nsA1, nsA1 }.AsEnumerable(), UnionComparer.Instances[0]);
-            Assert.IsInstanceOfType(set, typeof(NamespaceSetOneUnion));
+            set = AnalysisSet.CreateUnion(new[] { nsA1, nsA1 }.AsEnumerable(), UnionComparer.Instances[0]);
+            Assert.IsInstanceOfType(set, typeof(AnalysisSetOneUnion));
             AssertUtil.ContainsExactly(set, nsA1);
 
-            set = NamespaceSet.CreateUnion(new[] { nsA1, nsA2 }.AsEnumerable(), UnionComparer.Instances[0]);
-            Assert.IsInstanceOfType(set, typeof(NamespaceSetOneUnion));
+            set = AnalysisSet.CreateUnion(new[] { nsA1, nsA2 }.AsEnumerable(), UnionComparer.Instances[0]);
+            Assert.IsInstanceOfType(set, typeof(AnalysisSetOneUnion));
             AssertUtil.ContainsExactly(set, nsAU1);
         }
 
-        [TestMethod, TestCategory("NamespaceSet")]
+        [TestMethod, TestCategory("AnalysisSet")]
         public void SetOfTwo_Object() {
-            var set = NamespaceSet.Create(new[] { nsA1, nsA2 });
-            Assert.IsInstanceOfType(set, typeof(NamespaceSetTwoObject));
+            var set = AnalysisSet.Create(new[] { nsA1, nsA2 });
+            Assert.IsInstanceOfType(set, typeof(AnalysisSetTwoObject));
             AssertUtil.ContainsExactly(set, nsA1, nsA2);
 
-            set = NamespaceSet.Create(new[] { nsA1, nsA1, nsA2, nsA2 });
-            Assert.IsInstanceOfType(set, typeof(NamespaceSetTwoObject));
+            set = AnalysisSet.Create(new[] { nsA1, nsA1, nsA2, nsA2 });
+            Assert.IsInstanceOfType(set, typeof(AnalysisSetTwoObject));
             AssertUtil.ContainsExactly(set, nsA1, nsA2);
         }
 
-        [TestMethod, TestCategory("NamespaceSet")]
+        [TestMethod, TestCategory("AnalysisSet")]
         public void SetOfTwo_Union() {
-            var set = NamespaceSet.CreateUnion(new[] { nsA1, nsA2, nsB1, nsB2 }, UnionComparer.Instances[0]);
-            Assert.IsInstanceOfType(set, typeof(NamespaceSetTwoUnion));
+            var set = AnalysisSet.CreateUnion(new[] { nsA1, nsA2, nsB1, nsB2 }, UnionComparer.Instances[0]);
+            Assert.IsInstanceOfType(set, typeof(AnalysisSetTwoUnion));
             AssertUtil.ContainsExactly(set, nsAU1, nsBU1);
 
-            set = NamespaceSet.CreateUnion(new[] { nsA1, nsA1, nsA2, nsA2, nsB1, nsB1, nsB2, nsB2 }, UnionComparer.Instances[0]);
-            Assert.IsInstanceOfType(set, typeof(NamespaceSetTwoUnion));
+            set = AnalysisSet.CreateUnion(new[] { nsA1, nsA1, nsA2, nsA2, nsB1, nsB1, nsB2, nsB2 }, UnionComparer.Instances[0]);
+            Assert.IsInstanceOfType(set, typeof(AnalysisSetTwoUnion));
             AssertUtil.ContainsExactly(set, nsAU2, nsBU2);
         }
 
-        [TestMethod, TestCategory("NamespaceSet")]
+        [TestMethod, TestCategory("AnalysisSet")]
         public void ManySet_Object() {
-            var set = NamespaceSet.Create(new[] { nsA1, nsA2, nsB1, nsB2 });
-            Assert.IsInstanceOfType(set, typeof(NamespaceSetManyObject));
+            var set = AnalysisSet.Create(new[] { nsA1, nsA2, nsB1, nsB2 });
+            Assert.IsInstanceOfType(set, typeof(AnalysisSetManyObject));
             Assert.AreEqual(4, set.Count);
             AssertUtil.ContainsExactly(set, nsA1, nsA2, nsB1, nsB2);
 
-            set = NamespaceSet.Create(new[] { nsA1, nsA1, nsA2, nsA2, nsB1, nsB1, nsB2, nsB2 });
-            Assert.IsInstanceOfType(set, typeof(NamespaceSetManyObject));
+            set = AnalysisSet.Create(new[] { nsA1, nsA1, nsA2, nsA2, nsB1, nsB1, nsB2, nsB2 });
+            Assert.IsInstanceOfType(set, typeof(AnalysisSetManyObject));
             Assert.AreEqual(4, set.Count);
             AssertUtil.ContainsExactly(set, nsA1, nsA2, nsB1, nsB2);
         }
 
-        [TestMethod, TestCategory("NamespaceSet")]
+        [TestMethod, TestCategory("AnalysisSet")]
         public void ManySet_Union() {
-            var set = NamespaceSet.CreateUnion(new[] { nsA1, nsA2, nsB1, nsB2, nsC1 }, UnionComparer.Instances[0]);
-            Assert.IsInstanceOfType(set, typeof(NamespaceSetManyUnion));
+            var set = AnalysisSet.CreateUnion(new[] { nsA1, nsA2, nsB1, nsB2, nsC1 }, UnionComparer.Instances[0]);
+            Assert.IsInstanceOfType(set, typeof(AnalysisSetManyUnion));
             Assert.AreEqual(3, set.Count);
             AssertUtil.ContainsExactly(set, nsAU1, nsBU1, nsC1);
 
-            set = NamespaceSet.CreateUnion(new[] { nsA1, nsA1, nsA2, nsA2, nsB1, nsB1, nsB2, nsB2, nsC1 }, UnionComparer.Instances[0]);
-            Assert.IsInstanceOfType(set, typeof(NamespaceSetManyUnion));
+            set = AnalysisSet.CreateUnion(new[] { nsA1, nsA1, nsA2, nsA2, nsB1, nsB1, nsB2, nsB2, nsC1 }, UnionComparer.Instances[0]);
+            Assert.IsInstanceOfType(set, typeof(AnalysisSetManyUnion));
             Assert.AreEqual(3, set.Count);
             AssertUtil.ContainsExactly(set, nsAU2, nsBU2, nsC1);
         }
 
 
 
-        [TestMethod, TestCategory("NamespaceSet")]
+        [TestMethod, TestCategory("AnalysisSet")]
         public void EmptySet_Add_Object() {
-            var set = NamespaceSet.Empty;
-            Assert.IsInstanceOfType(set, typeof(NamespaceSetEmptyObject));
+            var set = AnalysisSet.Empty;
+            Assert.IsInstanceOfType(set, typeof(AnalysisSetEmptyObject));
 
-            set = NamespaceSet.Create();
-            Assert.IsInstanceOfType(set, typeof(NamespaceSetEmptyObject));
-            Assert.AreSame(NamespaceSet.Empty, set);
+            set = AnalysisSet.Create();
+            Assert.IsInstanceOfType(set, typeof(AnalysisSetEmptyObject));
+            Assert.AreSame(AnalysisSet.Empty, set);
 
             bool added;
             set = set.Add(nsA1, out added, false);
             Assert.IsTrue(added);
             Assert.AreSame(nsA1, set);
 
-            set = NamespaceSet.Empty;
+            set = AnalysisSet.Empty;
             set = set.Add(nsA1, out added, true);
             Assert.IsTrue(added);
             Assert.AreSame(nsA1, set);
         }
 
-        [TestMethod, TestCategory("NamespaceSet")]
+        [TestMethod, TestCategory("AnalysisSet")]
         public void EmptySet_Add_Union() {
-            var set = NamespaceSet.EmptyUnion;
-            Assert.IsInstanceOfType(set, typeof(NamespaceSetEmptyUnion));
+            var set = AnalysisSet.EmptyUnion;
+            Assert.IsInstanceOfType(set, typeof(AnalysisSetEmptyUnion));
 
-            set = NamespaceSet.CreateUnion(UnionComparer.Instances[0]);
-            Assert.IsInstanceOfType(set, typeof(NamespaceSetEmptyUnion));
-            Assert.AreSame(NamespaceSet.EmptyUnion, set);
+            set = AnalysisSet.CreateUnion(UnionComparer.Instances[0]);
+            Assert.IsInstanceOfType(set, typeof(AnalysisSetEmptyUnion));
+            Assert.AreSame(AnalysisSet.EmptyUnion, set);
 
             bool added;
             set = set.Add(nsA1, out added, false);
             Assert.IsTrue(added);
             AssertUtil.ContainsExactly(set, nsA1);
 
-            set = NamespaceSet.EmptyUnion;
+            set = AnalysisSet.EmptyUnion;
             set = set.Add(nsA1, out added, true);
             Assert.IsTrue(added);
             AssertUtil.ContainsExactly(set, nsA1);
         }
 
-        [TestMethod, TestCategory("NamespaceSet")]
+        [TestMethod, TestCategory("AnalysisSet")]
         public void SetOfOne_Add_Object() {
-            var set = NamespaceSet.Create(nsA1);
+            var set = AnalysisSet.Create(nsA1);
 
             bool added;
             set = set.Add(nsA1, out added, true);
@@ -229,45 +229,45 @@ namespace AnalysisTests {
             Assert.IsFalse(added);
 
             set = set.Add(nsB1, out added, true);
-            Assert.IsInstanceOfType(set, typeof(NamespaceSetTwoObject));
+            Assert.IsInstanceOfType(set, typeof(AnalysisSetTwoObject));
             Assert.IsTrue(added);
 
-            set = NamespaceSet.Create(nsA1);
+            set = AnalysisSet.Create(nsA1);
             var set2 = set.Add(nsA1, out added, true);
             Assert.AreSame(set, set2);
             Assert.IsFalse(added);
             AssertUtil.ContainsExactly(set2, nsA1);
         }
 
-        [TestMethod, TestCategory("NamespaceSet")]
+        [TestMethod, TestCategory("AnalysisSet")]
         public void SetOfOne_Add_Union() {
-            var set = NamespaceSet.CreateUnion(nsA1, UnionComparer.Instances[0]);
+            var set = AnalysisSet.CreateUnion(nsA1, UnionComparer.Instances[0]);
 
             bool added;
             set = set.Add(nsA1, out added, true);
-            Assert.IsInstanceOfType(set, typeof(NamespaceSetOneUnion));
+            Assert.IsInstanceOfType(set, typeof(AnalysisSetOneUnion));
             Assert.IsFalse(added);
 
             set = set.Add(nsA1, out added, false);
-            Assert.IsInstanceOfType(set, typeof(NamespaceSetOneUnion));
+            Assert.IsInstanceOfType(set, typeof(AnalysisSetOneUnion));
             Assert.IsFalse(added);
 
             set = set.Add(nsB1, out added, true);
-            Assert.IsInstanceOfType(set, typeof(NamespaceSetTwoUnion));
+            Assert.IsInstanceOfType(set, typeof(AnalysisSetTwoUnion));
             AssertUtil.ContainsExactly(set, nsA1, nsB1);
             Assert.IsTrue(added);
 
-            set = NamespaceSet.CreateUnion(nsA1, UnionComparer.Instances[0]);
+            set = AnalysisSet.CreateUnion(nsA1, UnionComparer.Instances[0]);
             var set2 = set.Add(nsA2, out added, true);
             Assert.AreNotSame(set, set2);
             Assert.IsTrue(added);
             AssertUtil.ContainsExactly(set2, nsAU1);
         }
 
-        [TestMethod, TestCategory("NamespaceSet")]
+        [TestMethod, TestCategory("AnalysisSet")]
         public void SetOfTwo_Add_Object() {
-            var set = NamespaceSet.Create(new[] { nsA1, nsB1 });
-            INamespaceSet set2;
+            var set = AnalysisSet.Create(new[] { nsA1, nsB1 });
+            IAnalysisSet set2;
 
             bool added;
             foreach (var o in new[] { nsA1, nsB1 }) {
@@ -293,10 +293,10 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod, TestCategory("NamespaceSet")]
+        [TestMethod, TestCategory("AnalysisSet")]
         public void SetOfTwo_Add_Union() {
-            var set = NamespaceSet.CreateUnion(new[] { nsA1, nsB1 }, UnionComparer.Instances[0]);
-            INamespaceSet set2;
+            var set = AnalysisSet.CreateUnion(new[] { nsA1, nsB1 }, UnionComparer.Instances[0]);
+            IAnalysisSet set2;
 
             bool added;
             foreach (var o in new[] { nsA1, nsB1 }) {
@@ -323,21 +323,21 @@ namespace AnalysisTests {
 
             set2 = set.Add(nsA2, out added, true);
             Assert.AreNotSame(set, set2);
-            Assert.IsInstanceOfType(set2, typeof(NamespaceSetTwoUnion));
+            Assert.IsInstanceOfType(set2, typeof(AnalysisSetTwoUnion));
             AssertUtil.ContainsExactly(set2, nsAU1, nsB1);
             Assert.IsTrue(added);
 
             set2 = set.Add(nsB2, out added, false);
             Assert.AreNotSame(set, set2);
-            Assert.IsInstanceOfType(set2, typeof(NamespaceSetTwoUnion));
+            Assert.IsInstanceOfType(set2, typeof(AnalysisSetTwoUnion));
             AssertUtil.ContainsExactly(set2, nsA1, nsBU1);
             Assert.IsTrue(added);
         }
 
-        [TestMethod, TestCategory("NamespaceSet")]
+        [TestMethod, TestCategory("AnalysisSet")]
         public void ManySet_Add_Object() {
-            var set = NamespaceSet.Create(new[] { nsA1, nsB1, nsC1 });
-            INamespaceSet set2;
+            var set = AnalysisSet.Create(new[] { nsA1, nsB1, nsC1 });
+            IAnalysisSet set2;
 
             bool added;
             foreach (var o in new[] { nsA1, nsB1, nsC1 }) {
@@ -351,7 +351,7 @@ namespace AnalysisTests {
             }
 
             foreach (var o in new[] { nsA2, nsB2, nsC2 }) {
-                set = NamespaceSet.Create(new[] { nsA1, nsB1, nsC1 });
+                set = AnalysisSet.Create(new[] { nsA1, nsB1, nsC1 });
                 set2 = set.Add(o, out added, false);
                 Assert.AreNotSame(set, set2);
                 AssertUtil.ContainsExactly(set2, nsA1, nsB1, nsC1, o);
@@ -364,10 +364,10 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod, TestCategory("NamespaceSet")]
+        [TestMethod, TestCategory("AnalysisSet")]
         public void ManySet_Add_Union() {
-            var set = NamespaceSet.CreateUnion(new[] { nsA1, nsB1, nsC1 }, UnionComparer.Instances[0]);
-            INamespaceSet set2;
+            var set = AnalysisSet.CreateUnion(new[] { nsA1, nsB1, nsC1 }, UnionComparer.Instances[0]);
+            IAnalysisSet set2;
 
             bool added;
             foreach (var o in new[] { nsA1, nsB1, nsC1 }) {
@@ -382,26 +382,26 @@ namespace AnalysisTests {
 
             set2 = set.Add(nsA2, out added, true);
             Assert.AreSame(set, set2);
-            Assert.IsInstanceOfType(set2, typeof(NamespaceSetManyUnion));
+            Assert.IsInstanceOfType(set2, typeof(AnalysisSetManyUnion));
             AssertUtil.ContainsExactly(set2, nsAU1, nsB1, nsC1);
             Assert.IsTrue(added);
 
-            set = NamespaceSet.CreateUnion(new[] { nsA1, nsB1, nsC1 }, UnionComparer.Instances[0]);
+            set = AnalysisSet.CreateUnion(new[] { nsA1, nsB1, nsC1 }, UnionComparer.Instances[0]);
             set2 = set.Add(nsA2, out added, false);
             Assert.AreNotSame(set, set2);
-            Assert.IsInstanceOfType(set2, typeof(NamespaceSetManyUnion));
+            Assert.IsInstanceOfType(set2, typeof(AnalysisSetManyUnion));
             AssertUtil.ContainsExactly(set2, nsAU1, nsB1, nsC1);
             Assert.IsTrue(added);
 
             set2 = set.Add(nsB2, out added, false);
             Assert.AreNotSame(set, set2);
-            Assert.IsInstanceOfType(set2, typeof(NamespaceSetManyUnion));
+            Assert.IsInstanceOfType(set2, typeof(AnalysisSetManyUnion));
             AssertUtil.ContainsExactly(set2, nsA1, nsBU1, nsC1);
             Assert.IsTrue(added);
 
             set2 = set.Add(nsC2, out added, false);
             Assert.AreNotSame(set, set2);
-            Assert.IsInstanceOfType(set2, typeof(NamespaceSetManyUnion));
+            Assert.IsInstanceOfType(set2, typeof(AnalysisSetManyUnion));
             AssertUtil.ContainsExactly(set2, nsA1, nsB1, nsCU1);
             Assert.IsTrue(added);
         }

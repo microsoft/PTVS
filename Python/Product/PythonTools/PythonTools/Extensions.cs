@@ -191,6 +191,28 @@ namespace Microsoft.PythonTools {
             return null;
         }
 
+        public static IModuleContext GetModuleContext(this ITextBuffer buffer) {
+            if (buffer == null) {
+                return null;
+            }
+
+            var analyzer = buffer.GetAnalyzer();
+            if (analyzer == null) {
+                return null;
+            }
+
+            var path = buffer.GetFilePath();
+            if (string.IsNullOrEmpty(path)) {
+                return null;
+            }
+
+            var entry = analyzer.GetAnalysisFromFile(path);
+            if (entry == null) {
+                return null;
+            }
+            return entry.AnalysisContext;
+        }
+
         internal static PythonProjectNode GetPythonProject(this EnvDTE.Project project) {
             return project.GetCommonProject() as PythonProjectNode;
         }

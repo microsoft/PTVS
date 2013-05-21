@@ -12,8 +12,8 @@
  *
  * ***************************************************************************/
 
-using System;
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.PythonTools.Analysis.Interpreter;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
@@ -23,7 +23,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
     /// <summary>
     /// Represents an instance of a class implemented in Python
     /// </summary>
-    internal class InstanceInfo : Namespace, IReferenceableContainer {
+    internal class InstanceInfo : AnalysisValue, IReferenceableContainer {
         private readonly ClassInfo _classInfo;
         private Dictionary<string, VariableDef> _instanceAttrs;
 
@@ -31,8 +31,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
             _classInfo = classInfo;
         }
 
-        public override IDictionary<string, INamespaceSet> GetAllMembers(IModuleContext moduleContext) {
-            var res = new Dictionary<string, INamespaceSet>();
+        public override IDictionary<string, IAnalysisSet> GetAllMembers(IModuleContext moduleContext) {
+            var res = new Dictionary<string, IAnalysisSet>();
             if (_instanceAttrs != null) {
                 foreach (var kvp in _instanceAttrs) {
                     var types = kvp.Value.TypesNoCopy;
@@ -72,10 +72,10 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return res;
         }
 
-        private static void MergeTypes(Dictionary<string, INamespaceSet> res, string key, IEnumerable<Namespace> types) {
-            INamespaceSet set;
+        private static void MergeTypes(Dictionary<string, IAnalysisSet> res, string key, IEnumerable<AnalysisValue> types) {
+            IAnalysisSet set;
             if (!res.TryGetValue(key, out set)) {
-                res[key] = set = NamespaceSet.Create(types);
+                res[key] = set = AnalysisSet.Create(types);
             } else {
                 res[key] = set.Union(types);
             }
@@ -93,9 +93,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public override INamespaceSet GetMember(Node node, AnalysisUnit unit, string name) {
+        public override IAnalysisSet GetMember(Node node, AnalysisUnit unit, string name) {
             // __getattribute__ takes precedence over everything.
-            INamespaceSet getattrRes = NamespaceSet.Empty;
+            IAnalysisSet getattrRes = AnalysisSet.Empty;
             var getAttribute = _classInfo.GetMemberNoReferences(node, unit.CopyForEval(), "__getattribute__");
             if (getAttribute.Count > 0) {
                 foreach (var getAttrFunc in getAttribute) {
@@ -169,7 +169,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return res;
         }
 
-        public override INamespaceSet GetDescriptor(Node node, Namespace instance, Namespace context, AnalysisUnit unit) {
+        public override IAnalysisSet GetDescriptor(Node node, AnalysisValue instance, AnalysisValue context, AnalysisUnit unit) {
             var getter = _classInfo.GetMemberNoReferences(node, unit, "__get__");
             if (getter.Count > 0) {
                 var get = getter.GetDescriptor(node, this, _classInfo, unit);
@@ -178,7 +178,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return SelfSet;
         }
 
-        public override void SetMember(Node node, AnalysisUnit unit, string name, INamespaceSet value) {
+        public override void SetMember(Node node, AnalysisUnit unit, string name, IAnalysisSet value) {
             if (_instanceAttrs == null) {
                 _instanceAttrs = new Dictionary<string, VariableDef>();
             }
@@ -207,7 +207,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             _classInfo.GetMember(node, unit, name);
         }
 
-        public override INamespaceSet BinaryOperation(Node node, AnalysisUnit unit, PythonOperator operation, INamespaceSet rhs) {
+        public override IAnalysisSet BinaryOperation(Node node, AnalysisUnit unit, PythonOperator operation, IAnalysisSet rhs) {
             string op = null;
             switch (operation) {
                 case PythonOperator.Multiply: op = "__mul__"; break;
@@ -236,7 +236,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return base.BinaryOperation(node, unit, operation, rhs);
         }
 
-        public override INamespaceSet ReverseBinaryOperation(Node node, AnalysisUnit unit, PythonOperator operation, INamespaceSet rhs) {
+        public override IAnalysisSet ReverseBinaryOperation(Node node, AnalysisUnit unit, PythonOperator operation, IAnalysisSet rhs) {
             string op = null;
             switch (operation) {
                 case PythonOperator.Multiply: op = "__rmul__"; break;
@@ -265,7 +265,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return base.ReverseBinaryOperation(node, unit, operation, rhs);
         }
 
-        public override ProjectEntry DeclaringModule {
+        public override IPythonProjectEntry DeclaringModule {
             get {
                 return _classInfo.DeclaringModule;
             }
@@ -295,6 +295,10 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
+        internal override bool IsOfType(IAnalysisSet klass) {
+            return klass.Contains(ClassInfo) || klass.Contains(ProjectState.ClassInfos[BuiltinTypeId.Object]);
+        }
+
         public ClassInfo ClassInfo {
             get { return _classInfo; }
         }
@@ -303,51 +307,63 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return ClassInfo.AnalysisUnit.FullName + " instance";
         }
 
-        private const int MERGE_TO_BASE_STRENGTH = 1;
-        private const int MERGE_TO_OBJECT_STRENGTH = 3;
-
-        public override bool UnionEquals(Namespace ns, int strength) {
-            if (strength < MERGE_TO_BASE_STRENGTH) {
-                return base.UnionEquals(ns, strength);
-            } else if (strength < MERGE_TO_OBJECT_STRENGTH) {
-                InstanceInfo inst = ns as InstanceInfo;
-                if (inst == null) {
+        internal override bool UnionEquals(AnalysisValue ns, int strength) {
+            if (strength >= MergeStrength.ToObject) {
+                if (ns.TypeId == BuiltinTypeId.NoneType) {
+                    // II + BII(None) => do not merge
                     return false;
                 }
 
-                return inst.ClassInfo.UnionEquals(ClassInfo, strength);
-            } else {
-                return ns is InstanceInfo || ns.IsOfType(ProjectState.ClassInfos[BuiltinTypeId.Object]);
+                // II + II => BII(object)
+                // II + BII => BII(object)
+                var obj = ProjectState.ClassInfos[BuiltinTypeId.Object];
+                return ns is InstanceInfo || 
+                    (ns is BuiltinInstanceInfo && ns.TypeId != BuiltinTypeId.Type && ns.TypeId != BuiltinTypeId.Function) ||
+                    ns == obj.Instance;
+
+            } else if (strength >= MergeStrength.ToBaseClass) {
+                var ii = ns as InstanceInfo;
+                if (ii != null) {
+                    return ii.ClassInfo.UnionEquals(ClassInfo, strength);
+                }
+                var bii = ns as BuiltinInstanceInfo;
+                if (bii != null) {
+                    return bii.ClassInfo.UnionEquals(ClassInfo, strength);
+                }
             }
+
+            return base.UnionEquals(ns, strength);
         }
 
-        public override int UnionHashCode(int strength) {
-            if (strength < MERGE_TO_BASE_STRENGTH) {
-                return base.UnionHashCode(strength);
-            } else if (strength < MERGE_TO_OBJECT_STRENGTH) {
-                return ClassInfo.UnionHashCode(strength);
-            } else {
+        internal override int UnionHashCode(int strength) {
+            if (strength >= MergeStrength.ToObject) {
                 return ProjectState.ClassInfos[BuiltinTypeId.Object].Instance.UnionHashCode(strength);
+
+            } else if (strength >= MergeStrength.ToBaseClass) {
+                return ClassInfo.UnionHashCode(strength);
             }
+
+            return base.UnionHashCode(strength);
         }
 
-        internal override Namespace UnionMergeTypes(Namespace ns, int strength) {
-            if (strength < MERGE_TO_BASE_STRENGTH) {
-                return base.UnionMergeTypes(ns, strength);
-            } else if (strength < MERGE_TO_OBJECT_STRENGTH) {
-                var inst = ns as InstanceInfo;
-                if (inst == null) {
-                    return this;
-                }
-
-                var classInfo = inst.ClassInfo.UnionMergeTypes(ClassInfo, strength) as ClassInfo;
-                if (classInfo == null) {
-                    return this;
-                }
-                return classInfo.Instance;
-            } else {
+        internal override AnalysisValue UnionMergeTypes(AnalysisValue ns, int strength) {
+            if (strength >= MergeStrength.ToObject) {
+                // II + II => BII(object)
+                // II + BII => BII(object)
                 return ProjectState.ClassInfos[BuiltinTypeId.Object].Instance;
+
+            } else if (strength >= MergeStrength.ToBaseClass) {
+                var ii = ns as InstanceInfo;
+                if (ii != null) {
+                    return ii.ClassInfo.UnionMergeTypes(ClassInfo, strength).GetInstanceType().Single();
+                }
+                var bii = ns as BuiltinInstanceInfo;
+                if (bii != null) {
+                    return bii.ClassInfo.UnionMergeTypes(ClassInfo, strength).GetInstanceType().Single();
+                }
             }
+
+            return base.UnionMergeTypes(ns, strength);
         }
 
         #region IVariableDefContainer Members

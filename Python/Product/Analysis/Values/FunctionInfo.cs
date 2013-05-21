@@ -25,8 +25,8 @@ using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Values {
-    internal class FunctionInfo : Namespace, IReferenceableContainer {
-        private Dictionary<Namespace, INamespaceSet> _methods;
+    internal class FunctionInfo : AnalysisValue, IReferenceableContainer {
+        private Dictionary<AnalysisValue, IAnalysisSet> _methods;
         private Dictionary<string, VariableDef> _functionAttrs;
         private readonly FunctionDefinition _functionDefinition;
         private readonly FunctionAnalysisUnit _analysisUnit;
@@ -61,7 +61,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public override ProjectEntry DeclaringModule {
+        public override IPythonProjectEntry DeclaringModule {
             get {
                 return _analysisUnit.ProjectEntry;
             }
@@ -85,7 +85,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public override INamespaceSet Call(Node node, AnalysisUnit unit, INamespaceSet[] args, NameExpression[] keywordArgNames) {
+        public override IAnalysisSet Call(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
             var callArgs = ArgumentSet.FromArgs(FunctionDefinition, unit, args, keywordArgNames);
 
             if (_allCalls == null) {
@@ -103,7 +103,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     if (unit.ForEval) {
                         // Call expressions that weren't analyzed get the union result
                         // of all calls to this function.
-                        var res = NamespaceSet.Empty;
+                        var res = AnalysisSet.Empty;
                         foreach (var call in _allCalls.Values) {
                             res = res.Union(call.ReturnValue.TypesNoCopy);
                         }
@@ -157,24 +157,24 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 }
                 if (retTypes.Count <= 10) {
                     var seenNames = new HashSet<string>();
-                    foreach (var ns in retTypes) {
-                        if (ns == null) {
+                    foreach (var av in retTypes) {
+                        if (av == null) {
                             continue;
                         }
 
-                        if (ns.Push()) {
+                        if (av.Push()) {
                             try {
-                                if (!string.IsNullOrWhiteSpace(ns.ShortDescription) && seenNames.Add(ns.ShortDescription)) {
+                                if (!string.IsNullOrWhiteSpace(av.ShortDescription) && seenNames.Add(av.ShortDescription)) {
                                     if (first) {
                                         result.Append(" -> ");
                                         first = false;
                                     } else {
                                         result.Append(", ");
                                     }
-                                    AppendDescription(result, ns);
+                                    AppendDescription(result, av);
                                 }
                             } finally {
-                                ns.Pop();
+                                av.Pop();
                             }
                         } else {
                             result.Append("...");
@@ -246,19 +246,19 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        private static void AppendDescription(StringBuilder result, Namespace key) {
+        private static void AppendDescription(StringBuilder result, AnalysisValue key) {
             result.Append(key.ShortDescription);
         }
 
-        public override INamespaceSet GetDescriptor(Node node, Namespace instance, Namespace context, AnalysisUnit unit) {
+        public override IAnalysisSet GetDescriptor(Node node, AnalysisValue instance, AnalysisValue context, AnalysisUnit unit) {
             if ((instance == ProjectState._noneInst && !IsClassMethod) || IsStatic) {
                 return SelfSet;
             }
             if (_methods == null) {
-                _methods = new Dictionary<Namespace, INamespaceSet>();
+                _methods = new Dictionary<AnalysisValue, IAnalysisSet>();
             }
 
-            INamespaceSet result;
+            IAnalysisSet result;
             if (!_methods.TryGetValue(instance, out result) || result == null) {
                 if (IsClassMethod) {
                     _methods[instance] = result = new BoundMethodInfo(this, context).SelfSet;
@@ -268,7 +268,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
 
             if (IsProperty) {
-                return result.Call(node, unit, ExpressionEvaluator.EmptyNamespaces, ExpressionEvaluator.EmptyNames);
+                return result.Call(node, unit, ExpressionEvaluator.EmptySets, ExpressionEvaluator.EmptyNames);
             }
 
             return result;
@@ -382,7 +382,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return newParam;
         }
 
-        public override void SetMember(Node node, AnalysisUnit unit, string name, INamespaceSet value) {
+        public override void SetMember(Node node, AnalysisUnit unit, string name, IAnalysisSet value) {
             if (_functionAttrs == null) {
                 _functionAttrs = new Dictionary<string, VariableDef>();
             }
@@ -395,7 +395,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             varRef.AddTypes(unit, value);
         }
 
-        public override INamespaceSet GetMember(Node node, AnalysisUnit unit, string name) {
+        public override IAnalysisSet GetMember(Node node, AnalysisUnit unit, string name) {
             VariableDef tmp;
             if (_functionAttrs != null && _functionAttrs.TryGetValue(name, out tmp)) {
                 tmp.AddDependency(unit);
@@ -411,14 +411,14 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return ProjectState.ClassInfos[BuiltinTypeId.Function].GetMember(node, unit, name);
         }
 
-        public override IDictionary<string, INamespaceSet> GetAllMembers(IModuleContext moduleContext) {
+        public override IDictionary<string, IAnalysisSet> GetAllMembers(IModuleContext moduleContext) {
             if (_functionAttrs == null || _functionAttrs.Count == 0) {
                 return ProjectState.ClassInfos[BuiltinTypeId.Function].GetAllMembers(moduleContext);
             }
 
-            var res = new Dictionary<string, INamespaceSet>(ProjectState.ClassInfos[BuiltinTypeId.Function].Instance.GetAllMembers(moduleContext));
+            var res = new Dictionary<string, IAnalysisSet>(ProjectState.ClassInfos[BuiltinTypeId.Function].Instance.GetAllMembers(moduleContext));
             foreach (var variable in _functionAttrs) {
-                INamespaceSet existing;
+                IAnalysisSet existing;
                 if (!res.TryGetValue(variable.Key, out existing)) {
                     res[variable.Key] = variable.Value.Types;
                 } else {
@@ -436,14 +436,14 @@ namespace Microsoft.PythonTools.Analysis.Values {
             VariableDef param;
             var name = FunctionDefinition.Parameters[index].Name;
             if (scope.Variables.TryGetValue(name, out param)) {
-                var ns = ProjectState.GetNamespacesFromObjects(info.ParameterTypes);
+                var av = ProjectState.GetAnalysisSetFromObjects(info.ParameterTypes);
 
                 if ((info.IsParamArray && !(param is ListParameterVariableDef)) ||
                     (info.IsKeywordDict && !(param is DictParameterVariableDef))) {
                     return false;
                 }
 
-                param.AddTypes(unit, ns);
+                param.AddTypes(unit, av);
             }
 
             return true;
@@ -472,8 +472,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        internal INamespaceSet[] GetParameterTypes(int unionStrength = 0) {
-            var result = new INamespaceSet[FunctionDefinition.Parameters.Count];
+        internal IAnalysisSet[] GetParameterTypes(int unionStrength = 0) {
+            var result = new IAnalysisSet[FunctionDefinition.Parameters.Count];
             var units = new HashSet<AnalysisUnit>();
             units.Add(AnalysisUnit);
             if (_allCalls != null) {
@@ -482,8 +482,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
             for (int i = 0; i < result.Length; ++i) {
                 result[i] = (unionStrength >= 0 && unionStrength <= UnionComparer.MAX_STRENGTH)
-                    ? NamespaceSet.CreateUnion(UnionComparer.Instances[unionStrength])
-                    : NamespaceSet.Empty;
+                    ? AnalysisSet.CreateUnion(UnionComparer.Instances[unionStrength])
+                    : AnalysisSet.Empty;
 
                 VariableDef param;
                 foreach (var unit in units) {
@@ -496,10 +496,10 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return result;
         }
 
-        internal INamespaceSet GetReturnValue(int unionStrength = 0) {
+        internal IAnalysisSet GetReturnValue(int unionStrength = 0) {
             var result = (unionStrength >= 0 && unionStrength <= UnionComparer.MAX_STRENGTH)
-                ? NamespaceSet.CreateUnion(UnionComparer.Instances[unionStrength])
-                : NamespaceSet.Empty;
+                ? AnalysisSet.CreateUnion(UnionComparer.Instances[unionStrength])
+                : AnalysisSet.Empty;
 
             var units = new HashSet<AnalysisUnit>();
             units.Add(AnalysisUnit);
@@ -523,7 +523,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public override IEnumerable<LocationInfo> References {
+        internal override IEnumerable<LocationInfo> References {
             get {
                 if (_references != null) {
                     return _references.AllReferences;
@@ -536,43 +536,29 @@ namespace Microsoft.PythonTools.Analysis.Values {
             get { return ProjectState.Types[BuiltinTypeId.Function]; }
         }
 
-        public override bool Equals(object obj) {
-            var other = obj as FunctionInfo;
-            if (other == null) {
-                return false;
+        internal override bool IsOfType(IAnalysisSet klass) {
+            return klass.Contains(ProjectState.ClassInfos[BuiltinTypeId.Function]);
+        }
+
+        internal override bool UnionEquals(AnalysisValue av, int strength) {
+            if (strength >= MergeStrength.ToObject) {
+                return av is FunctionInfo || av is BuiltinFunctionInfo || av == ProjectState.ClassInfos[BuiltinTypeId.Function].Instance;
             }
-
-            return Name == other.Name && ((Location == null && other.Location == null) || (Location != null && Location.Equals(other.Location)));
+            return base.UnionEquals(av, strength);
         }
 
-        public override int GetHashCode() {
-            return Location == null ? GetType().GetHashCode() : Location.GetHashCode();
-        }
-
-        private const int REQUIRED_STRENGTH = 3;
-
-        public override bool UnionEquals(Namespace ns, int strength) {
-            if (strength < REQUIRED_STRENGTH) {
-                return base.UnionEquals(ns, strength);
-            } else {
-                return ns.IsOfType(ProjectState.ClassInfos[BuiltinTypeId.Function]) || ns is FunctionInfo;
-            }
-        }
-
-        public override int UnionHashCode(int strength) {
-            if (strength < REQUIRED_STRENGTH) {
-                return base.UnionHashCode(strength);
-            } else {
+        internal override int UnionHashCode(int strength) {
+            if (strength >= MergeStrength.ToObject) {
                 return ProjectState.ClassInfos[BuiltinTypeId.Function].Instance.UnionHashCode(strength);
             }
+            return base.UnionHashCode(strength);
         }
 
-        internal override Namespace UnionMergeTypes(Namespace ns, int strength) {
-            if (strength < REQUIRED_STRENGTH) {
-                return base.UnionMergeTypes(ns, strength);
-            } else {
+        internal override AnalysisValue UnionMergeTypes(AnalysisValue av, int strength) {
+            if (strength >= MergeStrength.ToObject) {
                 return ProjectState.ClassInfos[BuiltinTypeId.Function].Instance;
             }
+            return base.UnionMergeTypes(av, strength);
         }
 
         #region IReferenceableContainer Members

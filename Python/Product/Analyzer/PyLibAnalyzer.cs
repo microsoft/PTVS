@@ -14,13 +14,13 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading;
-using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Interpreter.Default;
 using Microsoft.PythonTools.Parsing;
@@ -107,7 +107,7 @@ namespace Microsoft.PythonTools.Analysis {
                                 Console.WriteLine("Missing filename after {0}", args[i]);
                                 return -1;
                             }
-                            AnalysisLog.Output = new StreamWriter(args[i + 1], true, Encoding.UTF8);
+                            AnalysisLog.Output = new StreamWriter(new FileStream(args[i + 1], FileMode.Create, FileAccess.Write, FileShare.Read), Encoding.UTF8);
                             i++;
                             break;
                     }
@@ -125,15 +125,34 @@ namespace Microsoft.PythonTools.Analysis {
 
             Thread.CurrentThread.Priority = System.Threading.ThreadPriority.Lowest;
             try {
+                if (!Directory.Exists(outdir)) {
+                    Directory.CreateDirectory(outdir);
+                }
                 using (var writer = new StreamWriter(File.Open(Path.Combine(outdir, "AnalysisLog.txt"), FileMode.Create, FileAccess.ReadWrite, FileShare.Read))) {
-                    try {
+#if DEBUG
+                    // Running with the debugger attached will skip the
+                    // unhandled exception handling to allow easier debugging.
+                    if (Debugger.IsAttached) {
+                        // Ensure that this code block matches the protected one
+                        // below.
+
                         // TODO: Add trigger to cancel analysis
-                        new PyLibAnalyzer(dirs, indir, id, version).AnalyzeStdLib(writer, outdir, CancellationToken.None);
-                    } catch (Exception e) {
-                        Console.WriteLine("Error while saving analysis: {0}", e.ToString());
-                        Log(writer, "ANALYSIS FAIL: \"" + e.ToString().Replace("\r\n", " -- ") + "\"");
-                        return -3;
+                        var analyzer = new PyLibAnalyzer(dirs, indir, id, version);
+                        analyzer.AnalyzeStdLib(writer, outdir, CancellationToken.None);
+                    } else {
+#endif
+                        try {
+                            // TODO: Add trigger to cancel analysis
+                            var analyzer = new PyLibAnalyzer(dirs, indir, id, version);
+                            analyzer.AnalyzeStdLib(writer, outdir, CancellationToken.None);
+                        } catch (Exception e) {
+                            Console.WriteLine("Error while saving analysis: {0}", e.ToString());
+                            Log(writer, "ANALYSIS FAIL: \"" + e.ToString().Replace("\r\n", " -- ") + "\"");
+                            return -3;
+                        }
+#if DEBUG
                     }
+#endif
                 }
             } catch (IOException) {
                 // another process is already analyzing this project.  This happens when we have 2 VSs started at the same time w/o the
@@ -170,9 +189,10 @@ namespace Microsoft.PythonTools.Analysis {
             using (var updater = new AnalyzerStatusUpdater(identifier)) {
                 var allModuleNames = new HashSet<string>(StringComparer.Ordinal);
 
-                var siteDirs = _dirs.Select(dir => Path.Combine(dir, "site-packages")).ToArray();
+                var siteDirs = _dirs.Select(dir => Path.Combine(dir, "site-packages")).Where(dir => Directory.Exists(dir)).ToArray();
                 // Concat the contents of directories referenced by .pth files
-                // to ensure that they lose naming collisions.
+                // to ensure that they are overruled by normal packages in
+                // naming collisions.
                 var allModules = ModulePath.GetModulesInLib(_dirs, siteDirs, allModuleNames)
                     .Concat(ModulePath.GetModulesInLib(ModulePath.ExpandPathFiles(siteDirs), null, allModuleNames));
 
@@ -188,9 +208,25 @@ namespace Microsoft.PythonTools.Analysis {
                     progressTotal += files.Count;
                 }
 
+                using (var key = Registry.CurrentUser.OpenSubKey(AnalysisLimitsKey)) {
+                    if (key != null) {
+                        var logPath = key.GetValue("LogPath") as string;
+                        if (!string.IsNullOrEmpty(logPath) && AnalysisLog.Output == null) {
+                            try {
+                                AnalysisLog.Output = new StreamWriter(new FileStream(logPath, FileMode.Create, FileAccess.Write, FileShare.Read), Encoding.UTF8);
+                                AnalysisLog.AsCSV = logPath.EndsWith(".csv", StringComparison.InvariantCultureIgnoreCase);
+                            } catch (Exception ex) {
+                                Log(writer, "Failed to open {0} for logging: {1}", logPath, string.Join("--", ex.ToString().Split('\r', '\n').Where(s => !string.IsNullOrWhiteSpace(s))));
+                            }
+                        }
+                    }
+                }
+
+
                 foreach (var files in fileGroups) {
                     if (files.Count > 0) {
                         Log(writer, "GROUP START \"{0}\"", files[0].LibraryPath);
+                        AnalysisLog.StartFileGroup(files[0].LibraryPath, files.Count);
                         Console.WriteLine("Now analyzing: {0}", files[0].LibraryPath);
                         var fact = new CPythonInterpreterFactory(_version.ToVersion());
                         var projectState = new PythonAnalyzer(new CPythonInterpreter(fact, new PythonTypeDatabase(_indir, _version.Is3x())), _version);
@@ -210,7 +246,9 @@ namespace Microsoft.PythonTools.Analysis {
                         }, 10);
 
                         using (var key = Registry.CurrentUser.OpenSubKey(AnalysisLimitsKey)) {
-                            projectState.Limits = AnalysisLimits.LoadFromStorage(key, defaultToStdLib: true);
+                            if (key != null) {
+                                projectState.Limits = AnalysisLimits.LoadFromStorage(key, defaultToStdLib: true);
+                            }
                         }
 
                         var modules = new List<IPythonProjectEntry>();
@@ -257,9 +295,11 @@ namespace Microsoft.PythonTools.Analysis {
                         Log(writer, "SAVING GROUP: \"" + Path.GetDirectoryName(files[0].SourceFile) + "\"");
                         new SaveAnalysis().Save(projectState, outdir);
                         Log(writer, "GROUP END \"" + Path.GetDirectoryName(files[0].SourceFile) + "\"");
+                        AnalysisLog.EndFileGroup();
                     }
 
                     progressOffset += files.Count;
+                    AnalysisLog.Flush();
                 }
             }
         }

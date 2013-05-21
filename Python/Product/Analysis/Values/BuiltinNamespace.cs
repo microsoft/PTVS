@@ -22,36 +22,36 @@ namespace Microsoft.PythonTools.Analysis.Values {
     /// <summary>
     /// Base class for things which get their members primarily via a built-in .NET type.
     /// </summary>
-    class BuiltinNamespace<MemberContainerType> : Namespace where MemberContainerType : IMemberContainer {
+    class BuiltinNamespace<MemberContainerType> : AnalysisValue where MemberContainerType : IMemberContainer {
         private readonly PythonAnalyzer _projectState;
         internal readonly MemberContainerType _type;
-        internal Dictionary<string, INamespaceSet> _specializedValues;
+        internal Dictionary<string, IAnalysisSet> _specializedValues;
 
         public BuiltinNamespace(MemberContainerType pythonType, PythonAnalyzer projectState) {
             _projectState = projectState;
             _type = pythonType;
         }
 
-        public override INamespaceSet GetMember(Node node, AnalysisUnit unit, string name) {
-            INamespaceSet specializedRes;
+        public override IAnalysisSet GetMember(Node node, AnalysisUnit unit, string name) {
+            IAnalysisSet specializedRes;
             if (_specializedValues != null && _specializedValues.TryGetValue(name, out specializedRes)) {
                 return specializedRes;
             }
 
             var res = _type.GetMember(unit.DeclaringModule.InterpreterContext, name);
             if (res != null) {
-                return ProjectState.GetNamespaceFromObjects(res).SelfSet;
+                return ProjectState.GetAnalysisValueFromObjects(res).SelfSet;
             }
-            return NamespaceSet.Empty;
+            return AnalysisSet.Empty;
         }
 
-        public override IDictionary<string, INamespaceSet> GetAllMembers(IModuleContext moduleContext) {
+        public override IDictionary<string, IAnalysisSet> GetAllMembers(IModuleContext moduleContext) {
             return ProjectState.GetAllMembers(_type, moduleContext);
         }
 
-        public INamespaceSet this[string name] {
+        public IAnalysisSet this[string name] {
             get {
-                INamespaceSet value;
+                IAnalysisSet value;
                 if (TryGetMember(name, out value)) {
                     return value;
                 }
@@ -59,21 +59,21 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
             set {
                 if (_specializedValues == null) {
-                    _specializedValues = new Dictionary<string, INamespaceSet>();
+                    _specializedValues = new Dictionary<string, IAnalysisSet>();
                 }
                 _specializedValues[name] = value;
             }
         }
 
-        public bool TryGetMember(string name, out INamespaceSet value) {
-            INamespaceSet res;
+        public bool TryGetMember(string name, out IAnalysisSet value) {
+            IAnalysisSet res;
             if (_specializedValues != null && _specializedValues.TryGetValue(name, out res)) {
                 value = res;
                 return true;
             }
             var member = _type.GetMember(ProjectState._defaultContext, name);
             if (member != null) {
-                value = ProjectState.GetNamespaceFromObjects(member);
+                value = ProjectState.GetAnalysisValueFromObjects(member);
                 return true;
             }
             value = null;

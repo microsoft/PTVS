@@ -16,6 +16,8 @@ using System.Text;
 
 namespace Microsoft.PythonTools.Parsing.Ast {
     public class NameExpression : Expression {
+        public static readonly NameExpression[] EmptyArray = new NameExpression[0];
+
         private readonly string _name;
 
         public NameExpression(string name) {

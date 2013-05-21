@@ -114,7 +114,7 @@ namespace Microsoft.PythonTools.Analysis {
                             curModName = name.Substring(dotStart + 1, dotEnd - dotStart - 1);
                         }
 
-                        INamespaceSet existing;
+                        IAnalysisSet existing;
                         if (parentModule.TryGetMember(curModName, out existing)) {
                             if (existing == newMod) {
                                 // we hit somewhere within the hierarchy where we're already
@@ -190,7 +190,7 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
-        private bool ShouldMergeModules(BuiltinModule module, INamespaceSet existing) {
+        private bool ShouldMergeModules(BuiltinModule module, IAnalysisSet existing) {
             if (existing.Count == 1) {
                 var existingValue = existing.First();
                 if (existingValue is ConstantInfo && existingValue.PythonType == _analyzer.Types[BuiltinTypeId.Object]) {
@@ -269,11 +269,11 @@ namespace Microsoft.PythonTools.Analysis {
                 this._name = name;
             }
 
-            public override Namespace Module {
+            public override AnalysisValue Module {
                 get {
                     var res = _moduleTable.LoadModule(_name);
                     if (res != null) {
-                        return res.Namespace;
+                        return res.AnalysisModule;
                     }
                     return null;
                 }
@@ -328,9 +328,9 @@ namespace Microsoft.PythonTools.Analysis {
                 _reference = reference;
             }
 
-            public override Namespace Module {
+            public override AnalysisValue Module {
                 get {
-                    return _reference.Namespace;
+                    return _reference.AnalysisModule;
                 }
             }
 
@@ -456,7 +456,7 @@ namespace Microsoft.PythonTools.Analysis {
     }
 
     abstract class ModuleLoadState {
-        public abstract Namespace Module {
+        public abstract AnalysisValue Module {
             get;
         }
 

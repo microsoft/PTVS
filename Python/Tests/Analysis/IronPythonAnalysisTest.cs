@@ -110,8 +110,8 @@ x = System.StringComparison.OrdinalIgnoreCase
             ");
 
             var x = entry.GetValuesByIndex("x", 1).First();
-            Debug.Assert(x.ResultType == PythonMemberType.EnumInstance);
-            Assert.AreEqual(x.ResultType, PythonMemberType.EnumInstance);
+            Debug.Assert(x.MemberType == PythonMemberType.EnumInstance);
+            Assert.AreEqual(x.MemberType, PythonMemberType.EnumInstance);
         }
 
         [TestMethod, Priority(0)]

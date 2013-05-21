@@ -19,6 +19,7 @@ using System.Linq;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Django.Project;
 using Microsoft.PythonTools.Django.TemplateParsing;
+using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
 
@@ -742,12 +743,16 @@ namespace DjangoTests {
 
         #region IDjangoCompletionContext Members
 
-        public Dictionary<string, HashSet<Microsoft.PythonTools.Analysis.AnalysisValue>> Variables {
+        public Dictionary<string, HashSet<AnalysisValue>> Variables {
             get { return _variables; }
         }
 
         public Dictionary<string, TagInfo> Filters {
             get { return _filters; }
+        }
+
+        public IModuleContext ModuleContext {
+            get { return null; }
         }
 
         #endregion

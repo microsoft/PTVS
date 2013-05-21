@@ -20,8 +20,6 @@ using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Values {
-    using AnalysisKeyValuePair = KeyValuePair<IEnumerable<AnalysisValue>, IEnumerable<AnalysisValue>>;
-
     /// <summary>
     /// Specialized built-in instance for sequences (lists, tuples)
     /// </summary>
@@ -34,10 +32,10 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return IndexTypes.Length;
         }
 
-        public override INamespaceSet BinaryOperation(Node node, AnalysisUnit unit, PythonOperator operation, INamespaceSet rhs) {
+        public override IAnalysisSet BinaryOperation(Node node, AnalysisUnit unit, PythonOperator operation, IAnalysisSet rhs) {
             switch (operation) {
                 case PythonOperator.Multiply:
-                    INamespaceSet res = NamespaceSet.Empty;
+                    IAnalysisSet res = AnalysisSet.Empty;
                     foreach (var type in rhs) {
                         var typeId = type.TypeId;
 
@@ -56,7 +54,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return base.BinaryOperation(node, unit, operation, rhs);
         }
 
-        public override INamespaceSet GetIndex(Node node, AnalysisUnit unit, INamespaceSet index) {
+        public override IAnalysisSet GetIndex(Node node, AnalysisUnit unit, IAnalysisSet index) {
             int? constIndex = GetConstantIndex(index);
 
             if (constIndex != null && constIndex.Value < IndexTypes.Length) {
@@ -80,7 +78,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return UnionType;
         }
 
-        private SliceInfo GetSliceIndex(INamespaceSet index) {
+        private SliceInfo GetSliceIndex(IAnalysisSet index) {
             foreach (var type in index) {
                 if (type is SliceInfo) {
                     return type as SliceInfo;
@@ -89,7 +87,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return null;
         }
 
-        internal static int? GetConstantIndex(INamespaceSet index) {
+        internal static int? GetConstantIndex(IAnalysisSet index) {
             int? constIndex = null;
             int typeCount = 0;
             foreach (var type in index) {
@@ -122,11 +120,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public override IEnumerable<AnalysisKeyValuePair> GetItems() {
+        public override IEnumerable<KeyValuePair<IAnalysisSet, IAnalysisSet>> GetItems() {
             for (int i = 0; i < IndexTypes.Length; i++) {
                 var value = IndexTypes[i];
 
-                yield return new AnalysisKeyValuePair(
+                yield return new KeyValuePair<IAnalysisSet, IAnalysisSet>(
                     ProjectState.GetConstant(i),
                     value.Types
                 );
@@ -139,7 +137,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             : base(variableDef, builtinClassInfo, node) {
         }
 
-        internal void SetIndex(AnalysisUnit unit, int index, INamespaceSet value) {
+        internal void SetIndex(AnalysisUnit unit, int index, IAnalysisSet value) {
             if (index >= IndexTypes.Length) {
                 var newTypes = new VariableDef[index + 1];
                 for (int i = 0; i < newTypes.Length; ++i) {
@@ -154,7 +152,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             IndexTypes[index].AddTypes(unit, value);
         }
 
-        public override void SetIndex(Node node, AnalysisUnit unit, INamespaceSet index, INamespaceSet value) {
+        public override void SetIndex(Node node, AnalysisUnit unit, IAnalysisSet index, IAnalysisSet value) {
             int? constIndex = GetConstantIndex(index);
 
             if (constIndex != null) {
@@ -172,10 +170,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
             get {
                 return base.ShortDescription;
             }
-        }
-
-        internal override Namespace UnionMergeTypes(Namespace ns, int strength) {
-            return this;
         }
 
         public override string ToString() {
@@ -199,7 +193,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        internal bool MakeUnionStrongerIfMoreThan(int typeCount, INamespaceSet extraTypes = null) {
+        internal bool MakeUnionStrongerIfMoreThan(int typeCount, IAnalysisSet extraTypes = null) {
             bool anyChanged = false;
             if (IndexTypes != null) {
                 foreach (var it in IndexTypes) {

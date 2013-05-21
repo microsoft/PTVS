@@ -20,8 +20,8 @@ using Microsoft.PythonTools.Parsing.Ast;
 namespace Microsoft.PythonTools.Analysis.Values {
     class SequenceBuiltinInstanceInfo : BuiltinInstanceInfo {
         private readonly bool _supportsMod;
-        private readonly INamespaceSet _indexTypes;
-        private INamespaceSet _iterMethod;
+        private readonly IAnalysisSet _indexTypes;
+        private IAnalysisSet _iterMethod;
 
         public SequenceBuiltinInstanceInfo(BuiltinClassInfo klass, bool sequenceOfSelf, bool supportsMod)
             : base(klass) {
@@ -33,19 +33,19 @@ namespace Microsoft.PythonTools.Analysis.Values {
             } else if (sequenceOfSelf) {
                 _indexTypes = SelfSet;
             } else {
-                _indexTypes = NamespaceSet.Empty;
+                _indexTypes = AnalysisSet.Empty;
             }
         }
 
-        public override INamespaceSet GetIndex(Node node, AnalysisUnit unit, INamespaceSet index) {
+        public override IAnalysisSet GetIndex(Node node, AnalysisUnit unit, IAnalysisSet index) {
             return _indexTypes;
         }
 
-        public override INamespaceSet GetEnumeratorTypes(Node node, AnalysisUnit unit) {
+        public override IAnalysisSet GetEnumeratorTypes(Node node, AnalysisUnit unit) {
             return _indexTypes;
         }
 
-        public override INamespaceSet GetMember(Node node, AnalysisUnit unit, string name) {
+        public override IAnalysisSet GetMember(Node node, AnalysisUnit unit, string name) {
             if (name == "__iter__") {
                 if (_iterMethod == null) {
                     var indexTypes = new[] { new VariableDef() };
@@ -58,8 +58,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return base.GetMember(node, unit, name);
         }
 
-        public override INamespaceSet BinaryOperation(Node node, AnalysisUnit unit, Parsing.PythonOperator operation, INamespaceSet rhs) {
-            var res = NamespaceSet.Empty;
+        public override IAnalysisSet BinaryOperation(Node node, AnalysisUnit unit, Parsing.PythonOperator operation, IAnalysisSet rhs) {
+            var res = AnalysisSet.Empty;
             switch (operation) {
                 case PythonOperator.Add:
                     foreach (var type in rhs) {

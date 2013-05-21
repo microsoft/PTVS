@@ -25,26 +25,33 @@ namespace Microsoft.PythonTools.Analysis.Values {
         private readonly PythonMemberType _memberType;
         private string _doc;
 
-        public ConstantInfo(object value, PythonAnalyzer projectState)
-            : base((BuiltinClassInfo)projectState.GetNamespaceFromObjectsThrowOnNull(projectState.GetTypeFromObject(value))) {
+        internal ConstantInfo(BuiltinClassInfo klass, object value)
+            : base(klass) {
             _value = value;
             _memberType = PythonMemberType.Constant;
-            _builtinInfo = ((BuiltinClassInfo)projectState.GetNamespaceFromObjects(_type)).Instance;
+            _builtinInfo = klass.Instance;
+        }
+
+        public ConstantInfo(object value, PythonAnalyzer projectState)
+            : base((BuiltinClassInfo)projectState.GetAnalysisValueFromObjectsThrowOnNull(projectState.GetTypeFromObject(value))) {
+            _value = value;
+            _memberType = PythonMemberType.Constant;
+            _builtinInfo = ((BuiltinClassInfo)projectState.GetAnalysisValueFromObjects(_type)).Instance;
         }
 
         public ConstantInfo(IPythonConstant value, PythonAnalyzer projectState)
-            : base((BuiltinClassInfo)projectState.GetNamespaceFromObjects(value.Type)) {
+            : base((BuiltinClassInfo)projectState.GetAnalysisValueFromObjects(value.Type)) {
             _value = value;
             _memberType = value.MemberType;
-            _builtinInfo = ((BuiltinClassInfo)projectState.GetNamespaceFromObjects(value.Type)).Instance;
+            _builtinInfo = ((BuiltinClassInfo)projectState.GetAnalysisValueFromObjects(value.Type)).Instance;
         }
 
-        public override INamespaceSet BinaryOperation(Node node, AnalysisUnit unit, PythonOperator operation, INamespaceSet rhs) {
+        public override IAnalysisSet BinaryOperation(Node node, AnalysisUnit unit, PythonOperator operation, IAnalysisSet rhs) {
             return NumericOp(node, this, unit, operation, rhs) ?? _builtinInfo.BinaryOperation(node, unit, operation, rhs);
         }
 
-        internal static INamespaceSet NumericOp(Node node, BuiltinInstanceInfo lhs, AnalysisUnit unit, PythonOperator operation, INamespaceSet rhs) {
-            var res = NamespaceSet.Empty;
+        internal static IAnalysisSet NumericOp(Node node, BuiltinInstanceInfo lhs, AnalysisUnit unit, PythonOperator operation, IAnalysisSet rhs) {
+            var res = AnalysisSet.Empty;
             var lhsType = lhs.TypeId;
 
             foreach(var ns in rhs) {
@@ -99,31 +106,31 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return res.Count > 0 ? res : null;
         }
 
-        public override INamespaceSet UnaryOperation(Node node, AnalysisUnit unit, PythonOperator operation) {
+        public override IAnalysisSet UnaryOperation(Node node, AnalysisUnit unit, PythonOperator operation) {
             return _builtinInfo.UnaryOperation(node, unit, operation);
         }
 
-        public override INamespaceSet Call(Node node, AnalysisUnit unit, INamespaceSet[] args, NameExpression[] keywordArgNames) {
+        public override IAnalysisSet Call(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
             return _builtinInfo.Call(node, unit, args, keywordArgNames);
         }
 
-        public override void AugmentAssign(AugmentedAssignStatement node, AnalysisUnit unit, INamespaceSet value) {
+        public override void AugmentAssign(AugmentedAssignStatement node, AnalysisUnit unit, IAnalysisSet value) {
             _builtinInfo.AugmentAssign(node, unit, value);
         }
 
-        public override INamespaceSet GetDescriptor(Node node, Namespace instance, Namespace context, AnalysisUnit unit) {
+        public override IAnalysisSet GetDescriptor(Node node, AnalysisValue instance, AnalysisValue context, AnalysisUnit unit) {
             return _builtinInfo.GetDescriptor(node, instance, context, unit);
         }
 
-        public override INamespaceSet GetMember(Node node, AnalysisUnit unit, string name) {
+        public override IAnalysisSet GetMember(Node node, AnalysisUnit unit, string name) {
             return _builtinInfo.GetMember(node, unit, name);
         }
 
-        public override void SetMember(Node node, AnalysisUnit unit, string name, INamespaceSet value) {
+        public override void SetMember(Node node, AnalysisUnit unit, string name, IAnalysisSet value) {
             _builtinInfo.SetMember(node, unit, name, value);
         }
 
-        public override INamespaceSet GetIndex(Node node, AnalysisUnit unit, INamespaceSet index) {
+        public override IAnalysisSet GetIndex(Node node, AnalysisUnit unit, IAnalysisSet index) {
             // indexing/slicing strings should return the string type.
             if (_value is AsciiString || _value is string) {
                 return ClassInfo.Instance;
@@ -132,11 +139,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return base.GetIndex(node, unit, index);
         }
 
-        public override void SetIndex(Node node, AnalysisUnit unit, INamespaceSet index, INamespaceSet value) {
+        public override void SetIndex(Node node, AnalysisUnit unit, IAnalysisSet index, IAnalysisSet value) {
             _builtinInfo.SetIndex(node, unit, index, value);
         }
 
-        public override IDictionary<string, INamespaceSet> GetAllMembers(IModuleContext moduleContext) {
+        public override IDictionary<string, IAnalysisSet> GetAllMembers(IModuleContext moduleContext) {
             return _builtinInfo.GetAllMembers(moduleContext);
         }
 
@@ -177,13 +184,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return _value;
         }
 
-        public override bool UnionEquals(Namespace ns, int strength) {
-            var ci = ns as ConstantInfo;
-            if (ci != null && ClassInfo.Equals(ci.ClassInfo)) {
-                return true;
-            }
-            return base.UnionEquals(ns, strength);
-        }
+        // Union merging for ConstantInfo is handled in BuiltinInstanceInfo.
 
         public override bool Equals(object obj) {
             if (obj == null || GetType() != obj.GetType()) {
@@ -212,7 +213,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public override BuiltinTypeId TypeId {
+        internal override BuiltinTypeId TypeId {
             get {
                 return ClassInfo.PythonType.TypeId;
             }

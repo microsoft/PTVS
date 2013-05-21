@@ -30,52 +30,55 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             if (cancel.IsCancellationRequested) {
                 return;
             }
-            
-            // Including a marker at the end of the queue allows us to see in
-            // the log how frequently the queue empties.
-            var endOfQueueMarker = new AnalysisUnit(null, null);
-            int queueCountAtStart = queue.Count;
-            int reportInterval = reportQueueInterval - 1;
+            try {
+                // Including a marker at the end of the queue allows us to see in
+                // the log how frequently the queue empties.
+                var endOfQueueMarker = new AnalysisUnit(null, null);
+                int queueCountAtStart = queue.Count;
+                int reportInterval = reportQueueInterval - 1;
 
-            if (queueCountAtStart > 0) {
-                queue.Append(endOfQueueMarker);
-            }
+                if (queueCountAtStart > 0) {
+                    queue.Append(endOfQueueMarker);
+                }
 
-            while (queue.Count > 0 && !cancel.IsCancellationRequested) {
-                _unit = queue.PopLeft();
+                while (queue.Count > 0 && !cancel.IsCancellationRequested) {
+                    _unit = queue.PopLeft();
 
-                if (_unit == endOfQueueMarker) {
-                    AnalysisLog.EndOfQueue(queueCountAtStart, queue.Count);
-                    if (reportInterval < 0 && reportQueueSize != null) {
+                    if (_unit == endOfQueueMarker) {
+                        AnalysisLog.EndOfQueue(queueCountAtStart, queue.Count);
+                        if (reportInterval < 0 && reportQueueSize != null) {
+                            reportQueueSize(queue.Count);
+                        }
+
+                        queueCountAtStart = queue.Count;
+                        if (queueCountAtStart > 0) {
+                            queue.Append(endOfQueueMarker);
+                        }
+                        continue;
+                    }
+
+                    AnalysisLog.Dequeue(queue, _unit);
+                    if (reportInterval == 0 && reportQueueSize != null) {
                         reportQueueSize(queue.Count);
+                        reportInterval = reportQueueInterval - 1;
+                    } else if (reportInterval > 0) {
+                        reportInterval -= 1;
                     }
 
-                    queueCountAtStart = queue.Count;
-                    if (queueCountAtStart > 0) {
-                        queue.Append(endOfQueueMarker);
-                    }
-                    continue;
+                    _unit.IsInQueue = false;
+                    SetCurrentUnit(_unit);
+                    _unit.Analyze(this, cancel);
                 }
 
-                AnalysisLog.Dequeue(queue, _unit);
-                if (reportInterval == 0 && reportQueueSize != null) {
-                    reportQueueSize(queue.Count);
-                    reportInterval = reportQueueInterval - 1;
-                } else if (reportInterval > 0) {
-                    reportInterval -= 1;
+                if (reportQueueSize != null) {
+                    reportQueueSize(0);
                 }
 
-                _unit.IsInQueue = false;
-                SetCurrentUnit(_unit);
-                _unit.Analyze(this, cancel);
-            }
-
-            if (reportQueueSize != null) {
-                reportQueueSize(0);
-            }
-
-            if (cancel.IsCancellationRequested) {
-                AnalysisLog.Cancelled(queue);
+                if (cancel.IsCancellationRequested) {
+                    AnalysisLog.Cancelled(queue);
+                }
+            } finally {
+                AnalysisLog.Flush();
             }
         }
 
@@ -179,7 +182,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                         _eval.AssignTo(node, node.Left, listType.GetEnumeratorTypes(node, _unit));
                     }
                 } else {
-                    _eval.AssignTo(node, node.Left, NamespaceSet.Empty);
+                    _eval.AssignTo(node, node.Left, AnalysisSet.Empty);
                 }
             }
 
@@ -310,8 +313,8 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             return false;
         }
 
-        internal List<Namespace> LookupBaseMethods(string name, IEnumerable<INamespaceSet> bases, Node node, AnalysisUnit unit) {
-            var result = new List<Namespace>();
+        internal List<AnalysisValue> LookupBaseMethods(string name, IEnumerable<IAnalysisSet> bases, Node node, AnalysisUnit unit) {
+            var result = new List<AnalysisValue>();
             foreach (var b in bases) {
                 foreach (var curType in b) {
                     BuiltinClassInfo klass = curType as BuiltinClassInfo;
@@ -419,7 +422,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                 var def = Scope.CreateVariable(nameNode, _unit, saveName);
                 if (!TryGetUserModule(importing, out modRef)) {
                     var builtinModule = ProjectState.ImportBuiltinModule(importing, bottom);
-                    var ns = builtinModule as Namespace;
+                    var ns = builtinModule as AnalysisValue;
 
                     if (builtinModule != null && ns != null) {
                         builtinModule.Imported(_unit);
@@ -434,7 +437,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                     if (modRef.Module != null) {
                         modRef.Module.Imported(_unit);
 
-                        def.AddTypes(_unit, modRef.Namespace);
+                        def.AddTypes(_unit, modRef.AnalysisModule);
                         def.AddAssignment(nameNode, _unit);
                         continue;
                     } else {
@@ -592,7 +595,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             node.Body.Walk(this);
             if (node.Handlers != null) {
                 foreach (var handler in node.Handlers) {
-                    var test = NamespaceSet.Empty;
+                    var test = AnalysisSet.Empty;
                     if (handler.Test != null) {
                         var testTypes = _eval.Evaluate(handler.Test);
 

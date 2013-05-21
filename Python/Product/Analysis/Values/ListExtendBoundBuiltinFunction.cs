@@ -27,7 +27,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             _list = list;
         }
 
-        public override INamespaceSet Call(Node node, AnalysisUnit unit, INamespaceSet[] args, NameExpression[] keywordArgNames) {
+        public override IAnalysisSet Call(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
             if (args.Length == 1) {
                 foreach (var type in args[0]) {
                     _list.AppendItem(node, unit, type.GetEnumeratorTypes(node, unit));

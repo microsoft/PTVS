@@ -26,8 +26,10 @@ namespace Microsoft.PythonTools.Interpreter {
     class SharedDatabaseState : ITypeDatabaseReader {
         private readonly Dictionary<string, IPythonModule> _modules = new Dictionary<string, IPythonModule>();
         private readonly List<Action> _fixups = new List<Action>();
+        private List<Action<IPythonType, bool>> _objectTypeFixups = new List<Action<IPythonType, bool>>();
         private readonly string _dbDir;
         private readonly Dictionary<IPythonType, CPythonConstant> _constants = new Dictionary<IPythonType, CPythonConstant>();
+        private readonly Dictionary<string, IPythonType> _sequenceTypes = new Dictionary<string, IPythonType>();
         private readonly bool _is3x;
         private readonly Version _langVersion;  // language version, null when we have a generated database, set when using the shared DB.
         private readonly List<WeakReference> _corruptListeners = new List<WeakReference>();
@@ -120,38 +122,38 @@ namespace Microsoft.PythonTools.Interpreter {
             return null;
         }
 
+        private void AddObjectTypeFixup(Action<IPythonType, bool> assign) {
+            var obj = ObjectType;
+            if (obj != null) {
+                assign(obj, false);
+            } else if (_objectTypeFixups != null) {
+                _objectTypeFixups.Add(assign);
+            } else {
+                throw new InvalidOperationException("Cannot find builtin type 'object'");
+            }
+        }
+
         private IPythonType ObjectType {
             get {
                 if (_objectType == null) {
                     _objectType = _builtinModule.GetAnyMember(GetBuiltinTypeName(BuiltinTypeId.Object)) as IPythonType;
+                    if (_objectType != null) {
+                        var fixups = _objectTypeFixups;
+                        _objectTypeFixups = null;
+                        foreach (var assign in fixups) {
+                            assign(_objectType, false);
+                        }
+                    }
                 }
                 return _objectType;
             }
         }
 
         /// <summary>
-        /// Looks up a type and queues a fixup if the type is not yet available.  Receives a delegate
-        /// which assigns the value to the appropriate field.
+        /// Looks up a type and queues a fixup if the type is not yet available.
+        /// Receives a delegate which assigns the value to the appropriate field.
         /// </summary>
-        public void LookupType(object typeRef, Action<IPythonType, bool> assign, PythonTypeDatabase instanceDb = null) {
-            foreach (var keyValue in LookupTypes(typeRef, instanceDb)) {
-                if (keyValue.Key == null) {
-                    AddFixup(
-                        () => {
-                            foreach (var delayedType in LookupTypes(typeRef, instanceDb)) {
-                                var value = delayedType.Key ?? ObjectType;
-                                Debug.Assert(value != null);
-                                assign(value, delayedType.Value);
-                            }
-                        }
-                    );
-                } else {
-                    assign(keyValue.Key, keyValue.Value);
-                }
-            }
-        }
-
-        private IEnumerable<KeyValuePair<IPythonType, bool>> LookupTypes(object typeRefOrList, PythonTypeDatabase instanceDb) {
+        public void LookupType(object typeRefOrList, Action<IPythonType, bool> assign, PythonTypeDatabase instanceDb = null) {
             var typeRef = typeRefOrList as Dictionary<string, object>;
             if (typeRef != null) {
                 object value;
@@ -172,41 +174,69 @@ namespace Microsoft.PythonTools.Interpreter {
 
                 if (typeName == null) {
                     Debug.Assert(modName == null, "moduleref should not be passed to LookupType");
-                    res = ObjectType;
+                    AddObjectTypeFixup(assign);
+                    return;
                 } else {
                     IPythonModule module;
                     if (modName == null) {
                         res = BuiltinModule.GetAnyMember(typeName) as IPythonType;
+                        if (res != null) {
+                            assign(res, isInstanceMember);
+                        } else {
+                            AddObjectTypeFixup(assign);
+                        }
                     } else {
                         module = GetModule(modName, out isInstanceMember, instanceDb);
-                        if (module != null) {
-                            IBuiltinPythonModule builtin = module as IBuiltinPythonModule;
-                            if (builtin != null) {
-                                res = builtin.GetAnyMember(typeName) as IPythonType;
-                            } else {
-                                res = module.GetMember(null, typeName) as IPythonType;
-                            }
+                        if (module == null) {
+                            AddFixup(() => {
+                                // Fixup 1: Module was not found.
+                                bool isInstanceMember2;
+                                var mod2 = GetModule(modName, out isInstanceMember2, instanceDb);
+                                if (mod2 != null) {
+                                    AssignMemberFromModule(mod2, typeName, indexTypes, assign, isInstanceMember2, true);
+                                }
+                            });
+                            return;
                         }
-                    }
-                    if (indexTypes != null && res != null) {
-                        res = new CPythonSequenceType(res, this, indexTypes);
+                        AssignMemberFromModule(module, typeName, indexTypes, assign, isInstanceMember, true);
                     }
                 }
-                yield return new KeyValuePair<IPythonType, bool>(res, isInstanceMember);
-                yield break;
+                return;
             }
 
             var multiple = typeRefOrList as List<object>;
             if (multiple != null) {
                 foreach (var typeInfo in multiple) {
-                    foreach (var res in LookupTypes(typeInfo, instanceDb)) {
-                        yield return res;
-                    }
+                    LookupType(typeInfo, assign, instanceDb);
                 }
-                yield break;
             }
+        }
 
-            yield return new KeyValuePair<IPythonType, bool>(ObjectType, false);
+        private void AssignMemberFromModule(IPythonModule module, string typeName, List<object> indexTypes, Action<IPythonType, bool> assign, bool isInstanceMember, bool addFixups) {
+            IPythonType res;
+            IBuiltinPythonModule builtin;
+            if ((builtin = module as IBuiltinPythonModule) != null) {
+                res = builtin.GetAnyMember(typeName) as IPythonType;
+            } else {
+                res = module.GetMember(null, typeName) as IPythonType;
+            }
+            if (indexTypes != null && res != null) {
+                res = new CPythonSequenceType(res, this, indexTypes);
+            }
+            if (res == null) {
+                if (addFixups) {
+                    AddFixup(() => {
+                        // Fixup 2: Type was not found in module, and we're on our second attempt
+                        AssignMemberFromModule(module, typeName, indexTypes, assign, isInstanceMember, false);
+                    });
+                    return;
+                } else {
+                    // TODO: Maybe skip this to reduce noise in loaded database
+                    AddObjectTypeFixup(assign);
+                }
+            } else {
+                assign(res, isInstanceMember);
+            }
         }
 
         public string GetBuiltinTypeName(BuiltinTypeId id) {

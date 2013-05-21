@@ -27,9 +27,9 @@ namespace Microsoft.PythonTools.Analysis {
             Module = module;
         }
 
-        public Namespace Namespace {
+        public AnalysisValue AnalysisModule {
             get {
-                return Module as Namespace;
+                return Module as AnalysisValue;
             }
         }
 

@@ -200,7 +200,7 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
                     HashSet<AnalysisValue> values;
                     if (context.Variables != null && context.Variables.TryGetValue(varName, out values)) {
                         var newTags = new Dictionary<string, PythonMemberType>();
-                        foreach (var member in values.SelectMany(item => item.GetAllMembers())) {
+                        foreach (var member in values.SelectMany(item => item.GetAllMembers(context.ModuleContext))) {
                             string name = member.Key;
                             PythonMemberType type, newType = GetMemberType(member.Value);
 
@@ -239,7 +239,7 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
             return Enumerable.Empty<CompletionInfo>();
         }
 
-        private static PythonMemberType GetMemberType(ISet<AnalysisValue> values) {
+        private static PythonMemberType GetMemberType(IAnalysisSet values) {
             PythonMemberType newType = PythonMemberType.Unknown;
             foreach (var value in values) {
                 if (value.MemberType == newType) {

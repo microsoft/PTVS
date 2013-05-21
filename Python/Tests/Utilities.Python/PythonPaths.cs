@@ -38,6 +38,13 @@ namespace TestUtilities {
         public static readonly PythonVersion Python32 = GetCPythonVersion(PythonLanguageVersion.V32);
         public static readonly PythonVersion Python33 = GetCPythonVersion(PythonLanguageVersion.V33);
         public static readonly PythonVersion IronPython27 = GetIronPythonVersion(false);
+        public static readonly PythonVersion Python25_x64 = GetCPythonVersion(PythonLanguageVersion.V25, true);
+        public static readonly PythonVersion Python26_x64 = GetCPythonVersion(PythonLanguageVersion.V26, true);
+        public static readonly PythonVersion Python27_x64 = GetCPythonVersion(PythonLanguageVersion.V27, true);
+        public static readonly PythonVersion Python30_x64 = GetCPythonVersion(PythonLanguageVersion.V30, true);
+        public static readonly PythonVersion Python31_x64 = GetCPythonVersion(PythonLanguageVersion.V31, true);
+        public static readonly PythonVersion Python32_x64 = GetCPythonVersion(PythonLanguageVersion.V32, true);
+        public static readonly PythonVersion Python33_x64 = GetCPythonVersion(PythonLanguageVersion.V33, true);
         public static readonly PythonVersion IronPython27_x64 = GetIronPythonVersion(true);
 
         private static PythonVersion GetIronPythonVersion(bool x64) {
@@ -66,17 +73,19 @@ namespace TestUtilities {
             return null;
         }
 
-        private static PythonVersion GetCPythonVersion(PythonLanguageVersion version) {
-            foreach (var baseKey in new[] { Registry.LocalMachine, Registry.CurrentUser }) {
-                using (var python = baseKey.OpenSubKey(PythonCorePath)) {
-                    var res = TryGetCPythonPath(version, python);
-                    if (res != null) {
-                        return res;
+        private static PythonVersion GetCPythonVersion(PythonLanguageVersion version, bool x64 = false) {
+            if (!x64) {
+                foreach (var baseKey in new[] { Registry.LocalMachine, Registry.CurrentUser }) {
+                    using (var python = baseKey.OpenSubKey(PythonCorePath)) {
+                        var res = TryGetCPythonPath(version, python);
+                        if (res != null) {
+                            return res;
+                        }
                     }
                 }
             }
 
-            if (Environment.Is64BitOperatingSystem) {
+            if (Environment.Is64BitOperatingSystem && x64) {
                 foreach (var baseHive in new[] { RegistryHive.LocalMachine, RegistryHive.CurrentUser }) {
                     var python64 = RegistryKey.OpenBaseKey(baseHive, RegistryView.Registry64).OpenSubKey(PythonCorePath);
                     var res = TryGetCPythonPath(version, python64);
@@ -88,13 +97,21 @@ namespace TestUtilities {
 
             var path = "C:\\Python" + version.ToString().Substring(1) + "\\python.exe";
             var arch = Microsoft.PythonTools.Analysis.NativeMethods.GetBinaryType(path);
-            if (arch == ProcessorArchitecture.X86) {
+            if (arch == ProcessorArchitecture.X86 && !x64) {
                 return new PythonVersion(path, version, CPythonGuid);
-            } else if (arch == ProcessorArchitecture.Amd64) {
+            } else if (arch == ProcessorArchitecture.Amd64 && x64) {
                 return new PythonVersion(path, version, CPython64Guid);
-            } else {
-                return null;
             }
+
+            if (x64) {
+                path = "C:\\Python" + version.ToString().Substring(1) + "_x64\\python.exe";
+                arch = Microsoft.PythonTools.Analysis.NativeMethods.GetBinaryType(path);
+                if (arch == ProcessorArchitecture.Amd64) {
+                    return new PythonVersion(path, version, CPython64Guid);
+                }
+            }
+
+            return null;
         }
 
         private static PythonVersion TryGetCPythonPath(PythonLanguageVersion version, RegistryKey python) {
@@ -132,6 +149,13 @@ namespace TestUtilities {
                 if (Python32 != null) yield return Python32;
                 if (Python33 != null) yield return Python33;
                 if (IronPython27 != null) yield return IronPython27;
+                if (Python25_x64 != null) yield return Python25_x64;
+                if (Python26_x64 != null) yield return Python26_x64;
+                if (Python27_x64 != null) yield return Python27_x64;
+                if (Python30_x64 != null) yield return Python30_x64;
+                if (Python31_x64 != null) yield return Python31_x64;
+                if (Python32_x64 != null) yield return Python32_x64;
+                if (Python33_x64 != null) yield return Python33_x64;
                 if (IronPython27_x64 != null) yield return IronPython27_x64;
             }
         }
@@ -142,12 +166,14 @@ namespace TestUtilities {
         public readonly PythonLanguageVersion Version;
         public readonly Guid Interpreter;
         public readonly bool IsCPython;
+        public readonly bool Isx64;
 
         public PythonVersion(string path, PythonLanguageVersion pythonLanguageVersion, Guid interpreter) {
             Path = path;
             Version = pythonLanguageVersion;
             Interpreter = interpreter;
             IsCPython = (Interpreter == PythonPaths.CPythonGuid || Interpreter == PythonPaths.CPython64Guid);
+            Isx64 = (Interpreter == PythonPaths.CPython64Guid || Interpreter == PythonPaths.IronPython64Guid);
         }
 
         public string LibPath {

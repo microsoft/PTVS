@@ -19,6 +19,7 @@ using System.Linq;
 using System.Threading;
 using Microsoft.PythonTools.Analysis.Interpreter;
 using Microsoft.PythonTools.Analysis.Values;
+using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis {
@@ -28,7 +29,7 @@ namespace Microsoft.PythonTools.Analysis {
     /// To analyze a file the tree should be updated with a call to UpdateTree and then PreParse
     /// should be called on all files.  Finally Parse should then be called on all files.
     /// </summary>
-    internal sealed class ProjectEntry : IPythonProjectEntry, IProjectEntry2 {
+    internal sealed class ProjectEntry : IPythonProjectEntry {
         private readonly PythonAnalyzer _projectState;
         private readonly string _moduleName;
         private readonly string _filePath;
@@ -274,6 +275,10 @@ namespace Microsoft.PythonTools.Analysis {
             get { return _myScope; }
         }
 
+        public IModuleContext AnalysisContext {
+            get { return _myScope.InterpreterContext; }
+        }
+
         public string ModuleName {
             get {
                 return _moduleName;
@@ -343,18 +348,18 @@ namespace Microsoft.PythonTools.Analysis {
         Dictionary<object, object> Properties {
             get;
         }
-    }
 
-    /// <summary>
-    /// Implements support for project entry features.  New in PTVS 1.1.
-    /// </summary>
-    public interface IProjectEntry2 {
         /// <summary>
         /// Called when the project entry is removed from the project.
         /// 
         /// Implementors of this method must ensure this method is thread safe.
         /// </summary>
         void RemovedFromProject();
+
+
+        IModuleContext AnalysisContext {
+            get;
+        }
     }
 
     /// <summary>

@@ -20,7 +20,7 @@ using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Values {
     class IterBoundBuiltinMethodInfo : BoundBuiltinMethodInfo {
-        private readonly INamespaceSet _iterator;
+        private readonly IAnalysisSet _iterator;
         private readonly BuiltinClassInfo _iterClass;
         private readonly VariableDef[] _indexTypes;
 
@@ -36,12 +36,12 @@ namespace Microsoft.PythonTools.Analysis.Values {
             _iterClass = IteratorInfo.GetIteratorTypeFromType(iterable.ClassInfo, iterable.ClassInfo.ProjectState._evalUnit);
         }
 
-        public IterBoundBuiltinMethodInfo(BuiltinMethodInfo method, INamespaceSet iterator)
+        public IterBoundBuiltinMethodInfo(BuiltinMethodInfo method, IAnalysisSet iterator)
             : base(method) {
             _iterator = iterator;
         }
 
-        public override INamespaceSet Call(Node node, AnalysisUnit unit, INamespaceSet[] args, NameExpression[] keywordArgNames) {
+        public override IAnalysisSet Call(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
             if (args.Length == 0) {
                 if (_iterator != null) {
                     return _iterator;
@@ -49,7 +49,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 Debug.Assert(_iterClass != null);
                 return unit.Scope.GetOrMakeNodeValue(node, n => new IteratorInfo(_indexTypes, _iterClass, n));
             }
-            return NamespaceSet.Empty;
+            return AnalysisSet.Empty;
         }
     }
 

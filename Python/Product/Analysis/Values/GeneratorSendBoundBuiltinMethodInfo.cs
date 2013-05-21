@@ -24,7 +24,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             _generator = generator;
         }
 
-        public override INamespaceSet Call(Node node, AnalysisUnit unit, INamespaceSet[] args, NameExpression[] keywordArgNames) {
+        public override IAnalysisSet Call(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
             if (args.Length == 1) {
                 _generator.AddSend(node, unit, args[0]);
             }

@@ -101,7 +101,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
     /// A VariableDef represents a collection of type information and dependencies
     /// upon that type information.  
     /// 
-    /// The collection of type information is represented by a set of Namespace
+    /// The collection of type information is represented by a set of AnalysisValue
     /// objects.  This set includes all of the types that are known to have been
     /// seen for this variable.
     /// 
@@ -128,7 +128,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
     /// 
     /// TODO: We should store built-in types not keyed off of the ModuleInfo.
     /// </summary>
-    class VariableDef : DependentData<TypedDependencyInfo<Namespace>>, IReferenceable {
+    class VariableDef : DependentData<TypedDependencyInfo<AnalysisValue>>, IReferenceable {
         internal static VariableDef[] EmptyArray = new VariableDef[0];
         
         /// <summary>
@@ -144,7 +144,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         static readonly ConditionalWeakTable<VariableDef, object> LockedVariableDefs = new ConditionalWeakTable<VariableDef, object>();
         static readonly object LockedVariableDefsValue = new object();
 
-        private INamespaceSet _emptySet = NamespaceSet.Empty;
+        private IAnalysisSet _emptySet = AnalysisSet.Empty;
 
         /// <summary>
         /// Marks the current VariableDef as exceeding the limit and not to be
@@ -232,14 +232,14 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 #endif
 
-        protected override TypedDependencyInfo<Namespace> NewDefinition(int version) {
-            return new TypedDependencyInfo<Namespace>(version, _emptySet);
+        protected override TypedDependencyInfo<AnalysisValue> NewDefinition(int version) {
+            return new TypedDependencyInfo<AnalysisValue>(version, _emptySet);
         }
 
-        protected int EstimateTypeCount(INamespaceSet extraTypes = null) {
+        protected int EstimateTypeCount(IAnalysisSet extraTypes = null) {
             // Use a fast estimate of the number of types we have, since this
             // function will be called very often.
-            var roughSet = new HashSet<Namespace>();
+            var roughSet = new HashSet<AnalysisValue>();
             foreach (var info in _dependencies.Values) {
                 roughSet.UnionWith(info.Types);
             }
@@ -249,19 +249,19 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return roughSet.Count;
         }
 
-        public bool AddTypes(AnalysisUnit unit, IEnumerable<Namespace> newTypes, bool enqueue = true) {
+        public bool AddTypes(AnalysisUnit unit, IEnumerable<AnalysisValue> newTypes, bool enqueue = true) {
             return AddTypes(unit.ProjectEntry, newTypes, enqueue);
         }
 
-#if DEBUG
         // Set checks ensure that the wasChanged result is correct. The checks
         // are memory intensive, since they perform the add an extra time. The
         // flag is static but non-const to allow it to be enabled while
         // debugging.
+#if FULL_VALIDATION || DEBUG
         private static bool ENABLE_SET_CHECK = false;
 #endif
 
-        public bool AddTypes(IProjectEntry projectEntry, IEnumerable<Namespace> newTypes, bool enqueue = true) {
+        public bool AddTypes(IProjectEntry projectEntry, IEnumerable<AnalysisValue> newTypes, bool enqueue = true) {
             object dummy;
             if (LockedVariableDefs.TryGetValue(this, out dummy)) {
                 return false;
@@ -275,16 +275,16 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
                     var dependencies = GetDependentItems(newTypesEntry);
 
-#if DEBUG
+#if DEBUG || FULL_VALIDATION
                     if (ENABLE_SET_CHECK) {
                         bool testAdded;
                         var original = dependencies.ToImmutableTypeSet();
                         var afterAdded = original.Add(value, out testAdded, false);
                         if (afterAdded.Comparer == original.Comparer) {
                             if (testAdded) {
-                                Debug.Assert(!ObjectComparer.Instance.Equals(afterAdded, original));
+                                Validation.Assert(!ObjectComparer.Instance.Equals(afterAdded, original));
                             } else {
-                                Debug.Assert(ObjectComparer.Instance.Equals(afterAdded, original));
+                                Validation.Assert(ObjectComparer.Instance.Equals(afterAdded, original));
                             }
                         }
                     }
@@ -309,13 +309,13 @@ namespace Microsoft.PythonTools.Analysis.Values {
         /// that this VariableDef will not be mutated while you would be enumerating over
         /// the resulting set.
         /// </summary>
-        public INamespaceSet TypesNoCopy {
+        public IAnalysisSet TypesNoCopy {
             get {
                 var res = _emptySet;
                 if (_dependencies.Count != 0) {
-                    TypedDependencyInfo<Namespace> oneDependency;
+                    TypedDependencyInfo<AnalysisValue> oneDependency;
                     if (_dependencies.TryGetSingleValue(out oneDependency)) {
-                        res = oneDependency.Types ?? NamespaceSet.Empty;
+                        res = oneDependency.Types ?? AnalysisSet.Empty;
                     } else {
 
                         foreach (var mod in _dependencies.DictValues) {
@@ -337,7 +337,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         /// resulting set will not mutate in the future even if the types in the VariableDef
         /// change in the future.
         /// </summary>
-        public INamespaceSet Types {
+        public IAnalysisSet Types {
             get {
                 return TypesNoCopy.Clone();
             }
@@ -450,7 +450,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         /// <returns>True if the type set was modified. This may be safely
         /// ignored in many cases, since modifications will reenqueue dependent
         /// units automatically.</returns>
-        internal bool MakeUnionStrongerIfMoreThan(int typeCount, INamespaceSet extraTypes = null) {
+        internal bool MakeUnionStrongerIfMoreThan(int typeCount, IAnalysisSet extraTypes = null) {
             if (EstimateTypeCount(extraTypes) >= typeCount) {
                 return MakeUnionStronger();
             }
@@ -467,7 +467,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             if (strength > UnionStrength) {
                 bool anyChanged = false;
 
-                _emptySet = NamespaceSet.CreateUnion(strength);
+                _emptySet = AnalysisSet.CreateUnion(strength);
                 foreach (var value in _dependencies.Values) {
                     anyChanged |= value.MakeUnion(strength);
                 }

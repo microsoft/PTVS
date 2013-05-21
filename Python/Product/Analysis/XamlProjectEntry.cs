@@ -15,6 +15,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
+using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.PythonTools.Analysis {
     sealed class XamlProjectEntry : IXamlProjectEntry {
@@ -87,6 +88,12 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
+        public IModuleContext AnalysisContext {
+            get { return null; }
+        }
+
+        public void RemovedFromProject() { }
+
         #endregion
 
         #region IXamlProjectEntry Members
@@ -96,6 +103,7 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         #endregion
+
     }
 
     public interface IXamlProjectEntry : IExternalProjectEntry {

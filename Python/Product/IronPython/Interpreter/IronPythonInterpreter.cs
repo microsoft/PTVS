@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -25,8 +26,7 @@ using IronPython.Runtime;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
-using Microsoft.Win32;
-using System.Collections.Concurrent;
+using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.IronPythonTools.Interpreter {
     class IronPythonInterpreter : IPythonInterpreter, IDotNetPythonInterpreter, IPythonInterpreter2, IDisposable {
@@ -162,11 +162,11 @@ namespace Microsoft.IronPythonTools.Interpreter {
         }
 
         private void SpecializeClrFunctions() {
-            _state.SpecializeFunction("clr", "AddReference", (n) => AddReference(n, null));
-            _state.SpecializeFunction("clr", "AddReferenceByPartialName", (n) => AddReference(n, LoadAssemblyByPartialName));
-            _state.SpecializeFunction("clr", "AddReferenceByName", (n) => AddReference(n, null));
-            _state.SpecializeFunction("clr", "AddReferenceToFile", (n) => AddReference(n, LoadAssemblyFromFile));
-            _state.SpecializeFunction("clr", "AddReferenceToFileAndPath", (n) => AddReference(n, LoadAssemblyFromFileWithPath));
+            _state.SpecializeFunction("clr", "AddReference", (n, u, p, kw) => AddReference(n, null), true);
+            _state.SpecializeFunction("clr", "AddReferenceByPartialName", (n, u, p, kw) => AddReference(n, LoadAssemblyByPartialName), true);
+            _state.SpecializeFunction("clr", "AddReferenceByName", (n, u, p, kw) => AddReference(n, null), true);
+            _state.SpecializeFunction("clr", "AddReferenceToFile", (n, u, p, kw) => AddReference(n, LoadAssemblyFromFile), true);
+            _state.SpecializeFunction("clr", "AddReferenceToFileAndPath", (n, u, p, kw) => AddReference(n, LoadAssemblyFromFileWithPath), true);
         }
 
         private void AnalysisDirectoryChanged(object sender, EventArgs e) {
@@ -240,10 +240,14 @@ namespace Microsoft.IronPythonTools.Interpreter {
             return File.Exists(Path.Combine(dir, "ipy.exe"));
         }
 
-        private void AddReference(Microsoft.PythonTools.Parsing.Ast.CallExpression node, Func<string, ObjectHandle> partialLoader) {
+        private IAnalysisSet AddReference(Node node, Func<string, ObjectHandle> partialLoader) {
             // processes a call to clr.AddReference updating project state
             // so that it contains the newly loaded assembly.
-            foreach (var arg in node.Args) {
+            var callExpr = node as CallExpression;
+            if (callExpr == null) {
+                return AnalysisSet.Empty;
+            }
+            foreach (var arg in callExpr.Args) {
                 var cexpr = arg.Expression as Microsoft.PythonTools.Parsing.Ast.ConstantExpression;
                 if (cexpr == null || !(cexpr.Value is string || cexpr.Value is AsciiString)) {
                     // can't process this add reference
@@ -300,6 +304,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
                     }
                 }
             }
+            return AnalysisSet.Empty;
         }
 
         internal void RaiseModuleNamesChanged() {

@@ -20,13 +20,13 @@ using Microsoft.PythonTools.Parsing.Ast;
 namespace Microsoft.PythonTools.Analysis.Values {
     interface IModule {
         IModule GetChildPackage(IModuleContext context, string name);
-        IEnumerable<KeyValuePair<string, Namespace>> GetChildrenPackages(IModuleContext context);
+        IEnumerable<KeyValuePair<string, AnalysisValue>> GetChildrenPackages(IModuleContext context);
 
-        void SpecializeFunction(string name, System.Func<CallExpression, AnalysisUnit, INamespaceSet[], NameExpression[], INamespaceSet> dlg, bool analyze);
+        void SpecializeFunction(string name, CallDelegate callable, bool mergeOriginalAnalysis);
 
-        IDictionary<string, INamespaceSet> GetAllMembers(IModuleContext context);
+        IDictionary<string, IAnalysisSet> GetAllMembers(IModuleContext context);
         IEnumerable<string> GetModuleMemberNames(IModuleContext context);
-        INamespaceSet GetModuleMember(Node node, AnalysisUnit unit, string name, bool addRef = true, InterpreterScope linkedScope = null, string linkedName = null);
+        IAnalysisSet GetModuleMember(Node node, AnalysisUnit unit, string name, bool addRef = true, InterpreterScope linkedScope = null, string linkedName = null);
         void Imported(AnalysisUnit unit);
     }
 }

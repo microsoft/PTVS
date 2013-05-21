@@ -17,10 +17,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using Microsoft.PythonTools;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Django.Project;
 using Microsoft.PythonTools.Django.TemplateParsing;
 using Microsoft.PythonTools.Intellisense;
+using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Text;
 
@@ -108,10 +110,12 @@ namespace Microsoft.PythonTools.Django.Intellisense {
         class ProjectBlockCompletionContext : IDjangoCompletionContext {
             private readonly DjangoProject _project;
             private readonly string _filename;
+            private readonly IModuleContext _module;
             private readonly HashSet<string> _loopVars;
 
             public ProjectBlockCompletionContext(DjangoProject project, ITextBuffer buffer) {
                 _project = project;
+                _module = buffer.GetModuleContext();
                 _filename = buffer.GetFilePath();
                 TemplateProjectionBuffer projBuffer;
                 if (buffer.Properties.TryGetProperty(typeof(TemplateProjectionBuffer), out projBuffer)) {
@@ -154,6 +158,13 @@ namespace Microsoft.PythonTools.Django.Intellisense {
                 }
             }
 
+
+
+            public IModuleContext ModuleContext {
+                get {
+                    return _module;
+                }
+            }
         }
 
         /// <summary>

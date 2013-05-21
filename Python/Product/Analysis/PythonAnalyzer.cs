@@ -32,11 +32,11 @@ namespace Microsoft.PythonTools.Analysis {
     /// <summary>
     /// Performs analysis of multiple Python code files and enables interrogation of the resulting analysis.
     /// </summary>
-    public class PythonAnalyzer : IGroupableAnalysisProject, IDisposable {
+    public partial class PythonAnalyzer : IGroupableAnalysisProject, IDisposable {
         private readonly IPythonInterpreter _interpreter;
         private readonly ModuleTable _modules;
         private readonly ConcurrentDictionary<string, ModuleInfo> _modulesByFilename;
-        private readonly Dictionary<object, Namespace> _itemCache;
+        private readonly Dictionary<object, AnalysisValue> _itemCache;
         private readonly string _builtinName;
         internal BuiltinModule _builtinModule;
         private readonly ConcurrentDictionary<string, XamlProjectEntry> _xamlByFilename = new ConcurrentDictionary<string, XamlProjectEntry>();
@@ -66,7 +66,7 @@ namespace Microsoft.PythonTools.Analysis {
             _builtinName = builtinName;
             _modules = new ModuleTable(this, _interpreter, _interpreter.GetModuleNames());
             _modulesByFilename = new ConcurrentDictionary<string, ModuleInfo>(StringComparer.OrdinalIgnoreCase);
-            _itemCache = new Dictionary<object, Namespace>();
+            _itemCache = new Dictionary<object, AnalysisValue>();
 
             _queue = new Deque<AnalysisUnit>();
 
@@ -86,43 +86,14 @@ namespace Microsoft.PythonTools.Analysis {
             Types = new KnownTypes(this);
             ClassInfos = (IKnownClasses)Types;
 
-            _noneInst = (ConstantInfo)GetNamespaceFromObjects(null);
+            _noneInst = (ConstantInfo)GetCached(_nullKey, () => new ConstantInfo(ClassInfos[BuiltinTypeId.NoneType], (object)null));
 
-            SpecializeFunction(_builtinName, "range", (n, unit, args, argNames) => unit.Scope.GetOrMakeNodeValue(n, (nn) => new RangeInfo(Types[BuiltinTypeId.List], unit.ProjectState).SelfSet), analyze: false);
-            SpecializeFunction(_builtinName, "min", ReturnUnionOfInputs);
-            SpecializeFunction(_builtinName, "max", ReturnUnionOfInputs);
-            SpecializeFunction(_builtinName, "getattr", SpecialGetAttr, analyze: false);
-            SpecializeFunction(_builtinName, "next", SpecialNext, analyze: false);
-            SpecializeFunction(_builtinName, "iter", SpecialIter, analyze: false);
-            SpecializeFunction(_builtinName, "super", SpecialSuper, analyze: false);
+            DoNotUnionInMro = AnalysisSet.Create(new AnalysisValue[] {
+                ClassInfos[BuiltinTypeId.Object],
+                ClassInfos[BuiltinTypeId.Type]
+            });
 
-            // analyzing the copy module causes an explosion in types (it gets called w/ all sorts of types to be
-            // copied, and always returns the same type).  So we specialize these away so they return the type passed
-            // in and don't do any analyze.  Ditto for the rest of the functions here...  
-            SpecializeFunction("copy", "deepcopy", CopyFunction, analyze: false);
-            SpecializeFunction("copy", "copy", CopyFunction, analyze: false);
-            SpecializeFunction("pickle", "dumps", ReturnsBytes, analyze: false);
-            SpecializeFunction("UserDict.UserDict", "update", Nop, analyze: false);
-            SpecializeFunction("pprint", "pprint", Nop, analyze: false);
-            SpecializeFunction("pprint", "pformat", ReturnsString, analyze: false);
-            SpecializeFunction("pprint", "saferepr", ReturnsString, analyze: false);
-            SpecializeFunction("pprint", "_safe_repr", ReturnsString, analyze: false);
-            SpecializeFunction("pprint", "_format", ReturnsString, analyze: false);
-            SpecializeFunction("pprint.PrettyPrinter", "_format", ReturnsString, analyze: false);
-            SpecializeFunction("decimal.Decimal", "__new__", Nop, analyze: false);
-            SpecializeFunction("StringIO.StringIO", "write", Nop, analyze: false);
-            SpecializeFunction("threading.Thread", "__init__", Nop, analyze: false);
-            SpecializeFunction("subprocess.Popen", "__init__", Nop, analyze: false);
-            SpecializeFunction("Tkinter.Toplevel", "__init__", Nop, analyze: false);
-            SpecializeFunction("weakref.WeakValueDictionary", "update", Nop, analyze: false);
-            SpecializeFunction("os._Environ", "get", ReturnsString, analyze: false);
-            SpecializeFunction("os._Environ", "update", Nop, analyze: false);
-            SpecializeFunction("ntpath", "expandvars", ReturnsString, analyze: false);
-            SpecializeFunction("idlelib.EditorWindow.EditorWindow", "__init__", Nop, analyze: false);
-
-            // cached for quick checks to see if we're a call to clr.AddReference
-
-            SpecializeFunction("wpf", "LoadComponent", LoadComponent);
+            AddBuiltInSpecializations();
         }
 
         /// <summary>
@@ -191,10 +162,7 @@ namespace Microsoft.PythonTools.Analysis {
             if (pyEntry != null) {
                 ModuleReference modRef;
                 Modules.TryRemove(pyEntry.ModuleName, out modRef);
-                var projEntry2 = entry as IProjectEntry2;
-                if (projEntry2 != null) {
-                    projEntry2.RemovedFromProject();
-                }
+                entry.RemovedFromProject();
             }
         }
 
@@ -276,7 +244,7 @@ namespace Microsoft.PythonTools.Analysis {
                 _loaded = loaded;
             }
 
-            public IEnumerable<Namespace> GetLazyModules() {
+            public IEnumerable<AnalysisValue> GetLazyModules() {
                 foreach (var value in _loaded) {
                     yield return value.Module;
                 }
@@ -404,69 +372,6 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         /// <summary>
-        /// Specializes the provided function in the given module name to return an instance of the given type.
-        /// 
-        /// The type is a fully qualified module name (e.g. thread.LockType).  
-        /// </summary>
-        /// <param name="moduleName"></param>
-        /// <param name="name"></param>
-        /// <param name="returnType"></param>
-        public void SpecializeFunction(string moduleName, string name, string returnType) {
-            int lastDot;
-            if ((lastDot = returnType.LastIndexOf('.')) == -1) {
-                throw new ArgumentException(String.Format("Expected module.typename for return type, got '{0}'", returnType));
-            }
-
-            string retModule = returnType.Substring(0, lastDot);
-            string typeName = returnType.Substring(lastDot + 1);
-
-            SpecializeFunction(moduleName, name, (call, unit, types, argNames) => {
-                ModuleReference modRef;
-                if (Modules.TryGetValue(retModule, out modRef)) {
-                    if (modRef.Module != null) {
-                        var res = NamespaceSet.Empty;
-                        foreach (var value in modRef.Namespace.GetMember(call, unit, typeName)) {
-                            if (value is ClassInfo) {
-                                res = res.Union(((ClassInfo)value).Instance.SelfSet);
-                            } else {
-                                res = res.Union(value.SelfSet);
-                            }
-                        }
-                        return res;
-                    }
-                }
-                return null;
-            });
-        }
-
-        /// <summary>
-        /// Enables specializaing a call.
-        /// 
-        /// New in 1.5.
-        /// </summary>
-        public void SpecializeFunction(string moduleName, string name, Func<CallExpression, CallInfo, IEnumerable<AnalysisValue>> dlg) {
-            SpecializeFunction(moduleName, name, (call, unit, types, argNames) => {
-                var res = dlg(call, new CallInfo(types, argNames));
-                if (res != null) {
-                    var set = NamespaceSet.Empty;
-                    foreach (var obj in res) {
-                        set = set.Union(obj.AsNamespace());
-                    }
-                    return set;
-                }
-                return null;
-            });
-        }
-
-        public void SpecializeFunction(string moduleName, string name, Action<CallExpression> dlg) {
-            SpecializeFunction(moduleName, name, (call, unit, types, argNames) => { dlg(call); return null; });
-        }
-
-        public void SpecializeFunction(string moduleName, string name, Action<PythonAnalyzer, CallExpression> dlg) {
-            SpecializeFunction(moduleName, name, (call, unit, types, argNames) => { dlg(this, call); return null; });
-        }
-
-        /// <summary>
         /// Gets the list of directories which should be analyzed.
         /// 
         /// This property is thread safe.
@@ -531,129 +436,9 @@ namespace Microsoft.PythonTools.Analysis {
             private set;
         }
 
-        /// <summary>
-        /// Replaces a built-in function (specified by module name and function name) with a customized
-        /// delegate which provides specific behavior for handling when that function is called.
-        /// 
-        /// Currently this just provides a hook when the function is called - it could be expanded
-        /// to providing the interpretation of when the function is called as well.
-        /// </summary>
-        private void SpecializeFunction(string moduleName, string name, Func<CallExpression, AnalysisUnit, INamespaceSet[], NameExpression[], INamespaceSet> dlg, bool analyze = true, bool save = true) {
-            ModuleReference module;
-
-            int lastDot;
-            string realModName = null;
-            if (Modules.TryGetValue(moduleName, out module)) {
-                IModule mod = module.Module as IModule;
-                Debug.Assert(mod != null);
-                if (mod != null) {
-                    mod.SpecializeFunction(name, dlg, analyze);
-                }
-            } else if ((lastDot = moduleName.LastIndexOf('.')) != -1 &&
-                Modules.TryGetValue(realModName = moduleName.Substring(0, lastDot), out module)) {
-
-                IModule mod = module.Module as IModule;
-                Debug.Assert(mod != null);
-                if (mod != null) {
-                    mod.SpecializeFunction(moduleName.Substring(lastDot + 1, moduleName.Length - (lastDot + 1)) + "." + name, dlg, analyze);
-                }
-            }
-
-            if (save) {
-                SaveDelayedSpecialization(moduleName, name, dlg, analyze, realModName);
-            }
-        }
-
-        private INamespaceSet LoadComponent(CallExpression node, AnalysisUnit unit, INamespaceSet[] args, NameExpression[] argNames) {
-            if (args.Length == 2 && Interpreter is IDotNetPythonInterpreter) {
-                var xaml = args[1];
-                var self = args[0];
-
-                foreach (var arg in xaml) {
-                    string strConst = arg.GetConstantValue() as string;
-                    if (strConst == null) {
-                        var bytes = arg.GetConstantValue() as AsciiString;
-                        if (bytes != null) {
-                            strConst = bytes.String;
-                        }
-                    }
-
-                    if (strConst != null) {
-                        // process xaml file, add attributes to self
-                        string xamlPath = Path.Combine(Path.GetDirectoryName(unit.DeclaringModule.ProjectEntry.FilePath), strConst);
-                        XamlProjectEntry xamlProject;
-                        if (_xamlByFilename.TryGetValue(xamlPath, out xamlProject)) {
-                            // TODO: Get existing analysis if it hasn't changed.
-                            var analysis = xamlProject.Analysis;
-
-                            if (analysis == null) {
-                                xamlProject.Analyze(CancellationToken.None);
-                                analysis = xamlProject.Analysis;
-                            }
-
-                            xamlProject.AddDependency(unit.ProjectEntry);
-
-                            var evalUnit = unit.CopyForEval();
-
-                            // add named objects to instance
-                            foreach (var keyValue in analysis.NamedObjects) {
-                                var type = keyValue.Value;
-                                if (type.Type.UnderlyingType != null) {
-
-                                    var ns = GetNamespaceFromObjects(((IDotNetPythonInterpreter)Interpreter).GetBuiltinType(type.Type.UnderlyingType));
-                                    if (ns is BuiltinClassInfo) {
-                                        ns = ((BuiltinClassInfo)ns).Instance;
-                                    }
-                                    self.SetMember(node, evalUnit, keyValue.Key, ns.SelfSet);
-                                }
-
-                                // TODO: Better would be if SetMember took something other than a node, then we'd
-                                // track references w/o this extra effort.
-                                foreach (var inst in self) {
-                                    InstanceInfo instInfo = inst as InstanceInfo;
-                                    if (instInfo != null && instInfo.InstanceAttributes != null) {
-                                        VariableDef def;
-                                        if (instInfo.InstanceAttributes.TryGetValue(keyValue.Key, out def)) {
-                                            def.AddAssignment(
-                                                new EncodedLocation(SourceLocationResolver.Instance, new SourceLocation(1, type.LineNumber, type.LineOffset)),
-                                                xamlProject
-                                            );
-                                        }
-                                    }
-                                }
-                            }
-
-                            // add references to event handlers
-                            foreach (var keyValue in analysis.EventHandlers) {
-                                // add reference to methods...
-                                var member = keyValue.Value;
-
-                                // TODO: Better would be if SetMember took something other than a node, then we'd
-                                // track references w/o this extra effort.
-                                foreach (var inst in self) {
-                                    InstanceInfo instInfo = inst as InstanceInfo;
-                                    if (instInfo != null) {
-                                        ClassInfo ci = instInfo.ClassInfo;
-
-                                        VariableDef def;
-                                        if (ci.Scope.Variables.TryGetValue(keyValue.Key, out def)) {
-                                            def.AddReference(
-                                                new EncodedLocation(SourceLocationResolver.Instance, new SourceLocation(1, member.LineNumber, member.LineOffset)),
-                                                xamlProject
-                                            );
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-
-                // load component returns self
-                return self;
-            }
-
-            return NamespaceSet.Empty;
+        internal IAnalysisSet DoNotUnionInMro {
+            get;
+            private set;
         }
 
         internal Deque<AnalysisUnit> Queue {
@@ -667,7 +452,7 @@ namespace Microsoft.PythonTools.Analysis {
                 return null;
             }
             if (curIndex >= names.Length) {
-                return GetNamespaceFromObjects(member) as IModule;
+                return GetAnalysisValueFromObjects(member) as IModule;
             }
 
             var ipm = member as IPythonModule;
@@ -696,7 +481,7 @@ namespace Microsoft.PythonTools.Analysis {
             foreach (var member in mod.Members) {
                 modules.Add(ImportFromIMember(member, names, curIndex));
             }
-            var mods = modules.OfType<Namespace>().ToArray();
+            var mods = modules.OfType<AnalysisValue>().ToArray();
             if (mods.Length == 0) {
                 return null;
             } else if (mods.Length == 1) {
@@ -741,144 +526,14 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             if (mod != null) {
-                return (BuiltinModule)GetNamespaceFromObjects(mod);
+                return (BuiltinModule)GetAnalysisValueFromObjects(mod);
             }
 
             return null;
         }
 
-        private INamespaceSet Nop(CallExpression call, AnalysisUnit unit, INamespaceSet[] args, NameExpression[] argNames) {
-            return NamespaceSet.Empty;
-        }
-
-        private INamespaceSet CopyFunction(CallExpression call, AnalysisUnit unit, INamespaceSet[] args, NameExpression[] argNames) {
-            if (args.Length > 0) {
-                return args[0];
-            }
-            return NamespaceSet.Empty;
-        }
-
-        private INamespaceSet ReturnsBytes(CallExpression call, AnalysisUnit unit, INamespaceSet[] args, NameExpression[] argNames) {
-            return ClassInfos[BuiltinTypeId.Bytes].Instance;
-        }
-
-        private INamespaceSet ReturnsString(CallExpression call, AnalysisUnit unit, INamespaceSet[] args, NameExpression[] argNames) {
-            return ClassInfos[BuiltinTypeId.Str].Instance;
-        }
-
-        private INamespaceSet SpecialGetAttr(CallExpression call, AnalysisUnit unit, INamespaceSet[] args, NameExpression[] argNames) {
-            var res = NamespaceSet.Empty;
-            if (args.Length >= 2) {
-                if (args.Length >= 3) {
-                    // getattr(foo, 'bar', baz), baz is a possible return value.
-                    res = args[2];
-                }
-
-                foreach (var value in args[0]) {
-                    foreach (var name in args[1]) {
-                        // getattr(foo, 'bar') - attempt to do the getattr and return the proper value
-                        var strValue = name.GetConstantValueAsString();
-                        if (strValue != null) {
-                            res = res.Union(value.GetMember(call, unit, strValue));
-                        }
-                    }
-                }
-            }
-            return res;
-        }
-
-        private INamespaceSet SpecialNext(CallExpression call, AnalysisUnit unit, INamespaceSet[] args, NameExpression[] argNames) {
-            var nextName = (unit.ProjectState.LanguageVersion.Is3x()) ? "__next__" : "next";
-            var newArgs = args.Skip(1).ToArray();
-            var newNames = argNames.Skip(1).ToArray();
-
-            return args[0].GetMember(call, unit, nextName).Call(call, unit, newArgs, newNames);
-        }
-
-        private INamespaceSet SpecialIter(CallExpression call, AnalysisUnit unit, INamespaceSet[] args, NameExpression[] argNames) {
-            if (args.Length == 1) {
-                return args[0].GetIterator(call, unit);
-            } else if (args.Length == 2) {
-                var iterator = unit.Scope.GetOrMakeNodeValue(call, n => {
-                    var iterTypes = new[] { new VariableDef() };
-                    return new IteratorInfo(iterTypes, ClassInfos[BuiltinTypeId.CallableIterator], call);
-                });
-                foreach (var iter in iterator.OfType<IteratorInfo>()) {
-                    // call the callable object
-                    // the sentinel's type is never seen, so don't include it
-                    iter.AddTypes(unit, new[] { args[0].Call(call, unit, ExpressionEvaluator.EmptyNamespaces, ExpressionEvaluator.EmptyNames) });
-                }
-                return iterator;
-            } else {
-                return NamespaceSet.Empty;
-            }
-        }
-
-        private INamespaceSet SpecialSuper(CallExpression call, AnalysisUnit unit, INamespaceSet[] args, NameExpression[] argNames) {
-            if (args.Length < 0 || args.Length > 2) {
-                return NamespaceSet.Empty;
-            }
-
-            var classes = NamespaceSet.Empty;
-            var instances = NamespaceSet.Empty;
-
-            if (args.Length == 0) {
-                if (unit.ProjectState.LanguageVersion.Is3x()) {
-                    // No-arg version is magic in 3k - first arg is implicitly the enclosing class, and second is implicitly
-                    // the first argument of the enclosing method. Look up that information from the scope.
-                    // We want to find the nearest enclosing class scope, and the function scope that is immediately beneath
-                    // that class scope. If there is no such combo, a no-arg super() is invalid.
-                    var scopes = unit.Scope;
-                    ClassScope classScope = null;
-                    FunctionScope funcScope = null;
-                    foreach (var s in scopes.EnumerateTowardsGlobal) {
-                        funcScope = s as FunctionScope;
-                        if (funcScope != null) {
-                            classScope = s.OuterScope as ClassScope;
-                            if (classScope != null) {
-                                break;
-                            }
-                        }
-                    }
-
-                    if (classScope != null && funcScope != null) {
-                        classes = classScope.Class.SelfSet;
-                        // Get first arg of function.
-                        if (funcScope.Function.FunctionDefinition.Parameters.Count > 0) {
-                            instances = classScope.Class.Instance.SelfSet;
-                        }
-                    }
-                }
-            } else {
-                classes = args[0];
-                if (args.Length > 1) {
-                    instances = args[1];
-                }
-            }
-
-            if (classes == null) {
-                return NamespaceSet.Empty;
-            }
-
-            return unit.Scope.GetOrMakeNodeValue(call, (node) => {
-                var res = NamespaceSet.Empty;
-                foreach (var classInfo in classes.OfType<ClassInfo>()) {
-                    res = res.Add(new SuperInfo(classInfo, instances));
-                }
-                return res;
-            });
-        }
-
-        private INamespaceSet ReturnUnionOfInputs(CallExpression call, AnalysisUnit unit, INamespaceSet[] args, NameExpression[] argNames) {
-            var res = NamespaceSet.Empty;
-            foreach (var set in args) {
-                res = res.Union(set);
-            }
-            return res;
-        }
-
-        internal Namespace GetCached(object key, Func<Namespace> maker) {
-            Namespace result;
+        internal AnalysisValue GetCached(object key, Func<AnalysisValue> maker) {
+            AnalysisValue result;
             if (!_itemCache.TryGetValue(key, out result)) {
                 // Set the key to prevent recursion
                 _itemCache[key] = null;
@@ -910,29 +565,33 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
-        internal INamespaceSet GetNamespacesFromObjects(object objects) {
+        internal IAnalysisSet GetAnalysisSetFromObjects(object objects) {
             var typeList = objects as IEnumerable<object>;
             if (typeList == null) {
-                return NamespaceSet.Empty;
+                return AnalysisSet.Empty;
             }
-            return NamespaceSet.UnionAll(typeList.Select(GetNamespaceFromObjects));
+            return AnalysisSet.UnionAll(typeList.Select(GetAnalysisValueFromObjects));
         }
 
-        internal INamespaceSet GetNamespacesFromObjects(IEnumerable<IPythonType> typeList) {
+        internal IAnalysisSet GetAnalysisSetFromObjects(IEnumerable<IPythonType> typeList) {
             if (typeList == null) {
-                return NamespaceSet.Empty;
+                return AnalysisSet.Empty;
             }
-            return NamespaceSet.UnionAll(typeList.Select(GetNamespaceFromObjects));
+            return AnalysisSet.UnionAll(typeList.Select(GetAnalysisValueFromObjects));
         }
 
-        internal Namespace GetNamespaceFromObjectsThrowOnNull(object attr) {
+        internal AnalysisValue GetAnalysisValueFromObjectsThrowOnNull(object attr) {
             if (attr == null) {
                 throw new ArgumentNullException("attr");
             }
-            return GetNamespaceFromObjects(attr);
+            return GetAnalysisValueFromObjects(attr);
         }
         
-        internal Namespace GetNamespaceFromObjects(object attr) {
+        internal AnalysisValue GetAnalysisValueFromObjects(object attr) {
+            if (attr == null) {
+                return _noneInst;
+            }
+
             var attrType = (attr != null) ? attr.GetType() : typeof(NoneType);
             if (attr is IPythonType) {
                 return GetBuiltinType((IPythonType)attr);
@@ -959,9 +618,9 @@ namespace Microsoft.PythonTools.Analysis {
                 IPythonMultipleMembers multMembers = (IPythonMultipleMembers)attr;
                 var members = multMembers.Members;
                 return GetCached(attr, () => {
-                    Namespace[] nses = new Namespace[members.Count];
+                    AnalysisValue[] nses = new AnalysisValue[members.Count];
                     for (int i = 0; i < members.Count; i++) {
-                        nses[i] = GetNamespaceFromObjects(members[i]);
+                        nses[i] = GetAnalysisValueFromObjects(members[i]);
                     }
                     return new MultipleMemberInfo(nses);
                 }
@@ -973,11 +632,11 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
-        internal IDictionary<string, INamespaceSet> GetAllMembers(IMemberContainer container, IModuleContext moduleContext) {
+        internal IDictionary<string, IAnalysisSet> GetAllMembers(IMemberContainer container, IModuleContext moduleContext) {
             var names = container.GetMemberNames(moduleContext);
-            var result = new Dictionary<string, INamespaceSet>();
+            var result = new Dictionary<string, IAnalysisSet>();
             foreach (var name in names) {
-                result[name] = GetNamespaceFromObjects(container.GetMember(moduleContext, name));
+                result[name] = GetAnalysisValueFromObjects(container.GetMember(moduleContext, name));
             }
 
             return result;
@@ -991,12 +650,12 @@ namespace Microsoft.PythonTools.Analysis {
             get { return _modulesByFilename; }
         }
 
-        internal INamespaceSet GetConstant(IPythonConstant value) {
+        internal IAnalysisSet GetConstant(IPythonConstant value) {
             object key = value ?? _nullKey;
             return GetCached(key, () => new ConstantInfo(value, this)).SelfSet;
         }
 
-        internal INamespaceSet GetConstant(object value) {
+        internal IAnalysisSet GetConstant(object value) {
             object key = value ?? _nullKey;
             return GetCached(key, () => new ConstantInfo(value, this)).SelfSet;
         }
@@ -1035,7 +694,7 @@ namespace Microsoft.PythonTools.Analysis {
         internal BuiltinClassInfo MakeGenericType(IAdvancedPythonType clrType, params IPythonType[] clrIndexType) {
             var res = clrType.MakeGenericType(clrIndexType);
 
-            return (BuiltinClassInfo)GetNamespaceFromObjects(res);
+            return (BuiltinClassInfo)GetAnalysisValueFromObjects(res);
         }
 
         #endregion
@@ -1113,44 +772,5 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         #endregion
-
-        /// <summary>
-        /// Processes any delayed specialization for when a module is added for the 1st time.
-        /// </summary>
-        /// <param name="moduleName"></param>
-        private void DoDelayedSpecialization(string moduleName) {
-            lock (_specializationInfo) {
-                List<SpecializationInfo> specInfo;
-                if (_specializationInfo.TryGetValue(moduleName, out specInfo)) {
-                    foreach (var curSpec in specInfo) {
-                        SpecializeFunction(curSpec.ModuleName, curSpec.Name, curSpec.Delegate, curSpec.Analyze, save: false);
-                    }
-                }
-            }
-        }
-
-        private void SaveDelayedSpecialization(string moduleName, string name, Func<CallExpression, AnalysisUnit, INamespaceSet[], NameExpression[], INamespaceSet> dlg, bool analyze, string realModName) {
-            lock (_specializationInfo) {
-                List<SpecializationInfo> specList;
-                if (!_specializationInfo.TryGetValue(realModName ?? moduleName, out specList)) {
-                    _specializationInfo[realModName ?? moduleName] = specList = new List<SpecializationInfo>();
-                }
-
-                specList.Add(new SpecializationInfo(moduleName, name, dlg, analyze));
-            }
-        }
-
-        class SpecializationInfo {
-            public readonly string Name, ModuleName;
-            public readonly Func<CallExpression, AnalysisUnit, INamespaceSet[], NameExpression[], INamespaceSet> Delegate;
-            public readonly bool Analyze;
-
-            public SpecializationInfo(string moduleName, string name, Func<CallExpression, AnalysisUnit, INamespaceSet[], NameExpression[], INamespaceSet> dlg, bool analyze) {
-                ModuleName = moduleName;
-                Name = name;
-                Delegate = dlg;
-                Analyze = analyze;
-            }
-        }
     }
 }

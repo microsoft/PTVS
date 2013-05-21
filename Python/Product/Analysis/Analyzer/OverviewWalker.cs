@@ -73,7 +73,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                 unit.Enqueue();
                 scope = classScope;
             }
-            return scope.Namespace as ClassInfo;
+            return scope.AnalysisValue as ClassInfo;
         }
 
         public override void PostWalk(ClassDefinition node) {
@@ -171,7 +171,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
 
                 unit.Enqueue();
             }
-            return scope.Namespace as FunctionInfo;
+            return scope.AnalysisValue as FunctionInfo;
         }
 
         public override bool Walk(GeneratorExpression node) {

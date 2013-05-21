@@ -24,12 +24,12 @@ namespace Microsoft.PythonTools.Analysis.Values {
             : base(classObj, projectState) {
         }
 
-        public override INamespaceSet GetMember(Parsing.Ast.Node node, Interpreter.AnalysisUnit unit, string name) {
+        public override IAnalysisSet GetMember(Parsing.Ast.Node node, Interpreter.AnalysisUnit unit, string name) {
             if (name == "__new__") {
                 if (_new == null) {
                     var func = this._type.GetMember(unit.ProjectEntry.MyScope.InterpreterContext, name);
                     if (func != null) {
-                        _new = new NewFunction((BuiltinFunctionInfo)unit.ProjectState.GetNamespaceFromObjects(func), ProjectState);
+                        _new = new NewFunction((BuiltinFunctionInfo)unit.ProjectState.GetAnalysisValueFromObjects(func), ProjectState);
                     }
                 }
                 if (_new != null) {
@@ -44,9 +44,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 : base(function.Function, projectState) {
             }
 
-            public override INamespaceSet Call(Node node, AnalysisUnit unit, INamespaceSet[] args, NameExpression[] keywordArgNames) {
+            public override IAnalysisSet Call(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
                 if (args.Length >= 1) {
-                    var instance = NamespaceSet.Empty;
+                    var instance = AnalysisSet.Empty;
                     foreach (var n in args[0]) {
                         var bci = n as BuiltinClassInfo;
                         var ci = n as ClassInfo;

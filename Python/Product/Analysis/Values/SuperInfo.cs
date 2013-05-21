@@ -23,14 +23,14 @@ namespace Microsoft.PythonTools.Analysis.Values {
     /// <summary>
     /// Represents an instance of super() bound to a certain specific class and, optionally, to an object instance.
     /// </summary>
-    internal class SuperInfo : Namespace {
+    internal class SuperInfo : AnalysisValue {
         private AnalysisUnit _analysisUnit;
         private readonly ClassInfo _classInfo;
-        private readonly INamespaceSet _instances;
+        private readonly IAnalysisSet _instances;
 
-        public SuperInfo(ClassInfo classInfo, INamespaceSet instances = null) {
+        public SuperInfo(ClassInfo classInfo, IAnalysisSet instances = null) {
             _classInfo = classInfo;
-            _instances = instances ?? NamespaceSet.Empty;
+            _instances = instances ?? AnalysisSet.Empty;
         }
 
         public override AnalysisUnit AnalysisUnit {
@@ -60,33 +60,33 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public override IDictionary<string, INamespaceSet> GetAllMembers(IModuleContext moduleContext) {
+        public override IDictionary<string, IAnalysisSet> GetAllMembers(IModuleContext moduleContext) {
             var mro = ClassInfo.Mro;
             if (!mro.IsValid) {
-                return new Dictionary<string, INamespaceSet>();
+                return new Dictionary<string, IAnalysisSet>();
             }
             // First item in MRO list is always the class itself.
             return Mro.GetAllMembersOfMro(mro.Skip(1), moduleContext);
         }
 
-        private Namespace GetObjectMember(IModuleContext moduleContext, string name) {
-            return AnalysisUnit.ProjectState.GetNamespaceFromObjects(AnalysisUnit.ProjectState.Types[BuiltinTypeId.Object].GetMember(moduleContext, name));
+        private AnalysisValue GetObjectMember(IModuleContext moduleContext, string name) {
+            return AnalysisUnit.ProjectState.GetAnalysisValueFromObjects(AnalysisUnit.ProjectState.Types[BuiltinTypeId.Object].GetMember(moduleContext, name));
         }
 
-        public override INamespaceSet GetMember(Node node, AnalysisUnit unit, string name) {
+        public override IAnalysisSet GetMember(Node node, AnalysisUnit unit, string name) {
             var mro = ClassInfo.Mro;
             if (!mro.IsValid) {
-                return NamespaceSet.Empty;
+                return AnalysisSet.Empty;
             }
 
             // First item in MRO list is always the class itself.
             var member = Mro.GetMemberFromMroNoReferences(mro.Skip(1), node, unit, name, addRef: true);
             if (member == null) {
-                return NamespaceSet.Empty;
+                return AnalysisSet.Empty;
             }
 
             var instances = _instances.Any() ? _instances : unit.ProjectState._noneInst.SelfSet;
-            INamespaceSet result = NamespaceSet.Empty;
+            IAnalysisSet result = AnalysisSet.Empty;
             foreach (var instance in instances) {
                 var desc = member.GetDescriptor(node, instance, this, unit);
                 result = result.Union(desc);

@@ -24,7 +24,7 @@ namespace Microsoft.PythonTools.Analysis {
             return false;
         }
 
-        public static bool AnyContains(this IEnumerable<INamespaceSet> source, Namespace value) {
+        public static bool AnyContains(this IEnumerable<IAnalysisSet> source, AnalysisValue value) {
             foreach (var set in source) {
                 if (set.Contains(value)) {
                     return true;

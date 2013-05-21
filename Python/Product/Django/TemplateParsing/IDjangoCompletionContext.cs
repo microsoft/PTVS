@@ -15,6 +15,7 @@
 using System.Collections.Generic;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Django.Project;
+using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.PythonTools.Django.TemplateParsing {
     /// <summary>
@@ -29,6 +30,10 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
         }
 
         Dictionary<string, TagInfo> Filters {
+            get;
+        }
+
+        IModuleContext ModuleContext {
             get;
         }
     }

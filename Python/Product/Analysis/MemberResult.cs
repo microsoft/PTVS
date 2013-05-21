@@ -23,10 +23,10 @@ namespace Microsoft.PythonTools.Analysis {
     public struct MemberResult {
         private readonly string _name;
         private string _completion;
-        private readonly Func<IEnumerable<Namespace>> _vars;
+        private readonly Func<IEnumerable<AnalysisValue>> _vars;
         private readonly Func<PythonMemberType> _type;
 
-        internal MemberResult(string name, IEnumerable<Namespace> vars) {
+        internal MemberResult(string name, IEnumerable<AnalysisValue> vars) {
             _name = _completion = name;
             _vars = () => vars;
             _type = null;
@@ -39,7 +39,7 @@ namespace Microsoft.PythonTools.Analysis {
             _vars = () => Empty;
         }
 
-        internal MemberResult(string name, string completion, IEnumerable<Namespace> vars, PythonMemberType? type) {
+        internal MemberResult(string name, string completion, IEnumerable<AnalysisValue> vars, PythonMemberType? type) {
             _name = name;
             _vars = () => vars;
             _completion = completion;
@@ -51,7 +51,7 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
-        internal MemberResult(string name, Func<IEnumerable<Namespace>> vars, Func<PythonMemberType> type) {
+        internal MemberResult(string name, Func<IEnumerable<AnalysisValue>> vars, Func<PythonMemberType> type) {
             _name = _completion = name;
             _vars = vars;
             _type = type;
@@ -61,7 +61,7 @@ namespace Microsoft.PythonTools.Analysis {
             return new MemberResult(Name, completion, Namespaces, MemberType);
         }
 
-        private static Namespace[] Empty = new Namespace[0];
+        private static AnalysisValue[] Empty = new AnalysisValue[0];
 
         public string Name {
             get { return _name; }
@@ -162,7 +162,7 @@ namespace Microsoft.PythonTools.Analysis {
             return result;
         }
 
-        internal IEnumerable<Namespace> Namespaces {
+        internal IEnumerable<AnalysisValue> Namespaces {
             get {
                 return _vars();
             }

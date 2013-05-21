@@ -38,7 +38,11 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
-        public static void Dump() {
+        public static void Flush() {
+            Dump();
+        }
+
+        private static void Dump() {
             var items = LogItems;
             LogItems = null;
             if (Output != null && items != null) {
@@ -142,6 +146,23 @@ namespace Microsoft.PythonTools.Analysis {
 
         public static void ReduceCallDepth(FunctionInfo functionInfo, int callCount, int newLimit) {
             Add("R", functionInfo, callCount, newLimit);
+        }
+
+        internal static void StartFileGroup(string library, int fileCount) {
+            Add("FG", library, fileCount);
+        }
+
+        internal static void EndFileGroup() {
+            Add("EFG");
+        }
+
+        internal static void Assert(bool condition, string message = null) {
+            if (!condition) {
+                try {
+                    throw new InvalidOperationException(message);
+                } catch (InvalidOperationException) {
+                }
+            }
         }
     }
 }

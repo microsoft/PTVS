@@ -17,45 +17,45 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 
-namespace Microsoft.PythonTools.Analysis.Values {
+namespace Microsoft.PythonTools.Analysis {
     /// <summary>
-    /// Represents an unordered collection of <see cref="Namespace" /> objects;
+    /// Represents an unordered collection of <see cref="AnalysisValue" /> objects;
     /// in effect, a set of Python types. There are multiple implementing
-    /// classes, including <see cref="Namespace" /> itself, to improve memory
+    /// classes, including <see cref="AnalysisValue" /> itself, to improve memory
     /// usage for small sets.
     /// 
-    /// <see cref="NamespaceSet" /> does not implement this interface, but
+    /// <see cref="AnalysisSet" /> does not implement this interface, but
     /// provides factory and extension methods.
     /// </summary>
-    internal interface INamespaceSet : IEnumerable<Namespace> {
-        INamespaceSet Add(Namespace item, bool canMutate = true);
-        INamespaceSet Add(Namespace item, out bool wasChanged, bool canMutate = true);
-        INamespaceSet Union(IEnumerable<Namespace> items, bool canMutate = true);
-        INamespaceSet Union(IEnumerable<Namespace> items, out bool wasChanged, bool canMutate = true);
-        INamespaceSet Clone();
+    public interface IAnalysisSet : IEnumerable<AnalysisValue> {
+        IAnalysisSet Add(AnalysisValue item, bool canMutate = true);
+        IAnalysisSet Add(AnalysisValue item, out bool wasChanged, bool canMutate = true);
+        IAnalysisSet Union(IEnumerable<AnalysisValue> items, bool canMutate = true);
+        IAnalysisSet Union(IEnumerable<AnalysisValue> items, out bool wasChanged, bool canMutate = true);
+        IAnalysisSet Clone();
 
-        bool Contains(Namespace item);
-        bool SetEquals(INamespaceSet other);
+        bool Contains(AnalysisValue item);
+        bool SetEquals(IAnalysisSet other);
 
         int Count { get; }
-        IEqualityComparer<Namespace> Comparer { get; }
+        IEqualityComparer<AnalysisValue> Comparer { get; }
     }
 
     /// <summary>
     /// Provides factory and extension methods for objects implementing
-    /// <see cref="INamespaceSet" />.
+    /// <see cref="IAnalysisSet" />.
     /// </summary>
-    internal static class NamespaceSet {
+    public static class AnalysisSet {
         /// <summary>
         /// An empty set that does not combine types. This object is immutable
         /// and can be used without cloning.
         /// </summary>
-        public static readonly INamespaceSet Empty = Create();
+        public static readonly IAnalysisSet Empty = Create();
         /// <summary>
         /// An empty set that combines types with a strength of zero. This
         /// object is immutable and can be used without cloning.
         /// </summary>
-        public static readonly INamespaceSet EmptyUnion = CreateUnion(UnionComparer.Instances[0]);
+        public static readonly IAnalysisSet EmptyUnion = CreateUnion(UnionComparer.Instances[0]);
 
         #region Constructors
 
@@ -63,17 +63,17 @@ namespace Microsoft.PythonTools.Analysis.Values {
         /// Returns an empty set that does not combine types. This is exactly
         /// equivalent to accessing <see cref="Empty" />.
         /// </summary>
-        public static INamespaceSet Create() {
-            return NamespaceSetDetails.NamespaceSetEmptyObject.Instance;
+        public static IAnalysisSet Create() {
+            return AnalysisSetDetails.AnalysisSetEmptyObject.Instance;
         }
 
         /// <summary>
         /// Returns a set containing only <paramref name="ns" />. This is
         /// exactly equivalent to casting <paramref name="ns" /> to <see
-        /// cref="INamespaceSet" />.
+        /// cref="IAnalysisSet" />.
         /// </summary>
         /// <param name="ns">The namespace to contain in the set.</param>
-        public static INamespaceSet Create(Namespace ns) {
+        public static IAnalysisSet Create(AnalysisValue ns) {
             return ns;
         }
 
@@ -82,9 +82,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
         /// This is the usual way of creating a new set from any sequence.
         /// </summary>
         /// <param name="ns">The namespaces to contain in the set.</param>
-        public static INamespaceSet Create(IEnumerable<Namespace> ns) {
+        public static IAnalysisSet Create(IEnumerable<AnalysisValue> ns) {
             // TODO: Replace Trim() call with more efficient enumeration.
-            return new NamespaceSetDetails.NamespaceSetManyObject(ns).Trim();
+            return new AnalysisSetDetails.AnalysisSetManyObject(ns).Trim();
         }
 
         /// <summary>
@@ -102,8 +102,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
         /// <exception name="InvalidOperationException"><paramref
         /// name="comparer" /> is not an instance of <see cref="ObjectComparer"
         /// /> or <see cref="UnionComparer" />.</exception>
-        public static INamespaceSet Create(IEnumerable<Namespace> ns, IEqualityComparer<Namespace> comparer) {
-            var set = ns as INamespaceSet;
+        public static IAnalysisSet Create(IEnumerable<AnalysisValue> ns, IEqualityComparer<AnalysisValue> comparer) {
+            var set = ns as IAnalysisSet;
             if (set == null) {
                 UnionComparer uc;
                 if (comparer is ObjectComparer) {
@@ -131,13 +131,13 @@ namespace Microsoft.PythonTools.Analysis.Values {
         /// </summary>
         /// <param name="strength">The strength to use for the comparer.
         /// </param>
-        public static INamespaceSet CreateUnion(int strength) {
+        public static IAnalysisSet CreateUnion(int strength) {
             if (strength < 0) {
                 strength = 0;
             } else if (strength > UnionComparer.MAX_STRENGTH) {
                 strength = UnionComparer.MAX_STRENGTH;
             }
-            return NamespaceSetDetails.NamespaceSetEmptyUnion.Instances[strength];
+            return AnalysisSetDetails.AnalysisSetEmptyUnion.Instances[strength];
         }
 
         /// <summary>
@@ -145,22 +145,22 @@ namespace Microsoft.PythonTools.Analysis.Values {
         /// cref="UnionComparer" />.
         /// </summary>
         /// <param name="comparer">The comparer to use for the set.</param>
-        public static INamespaceSet CreateUnion(UnionComparer comparer) {
-            return NamespaceSetDetails.NamespaceSetEmptyUnion.Instances[comparer.Strength];
+        internal static IAnalysisSet CreateUnion(UnionComparer comparer) {
+            return AnalysisSetDetails.AnalysisSetEmptyUnion.Instances[comparer.Strength];
         }
 
         /// <summary>
         /// Returns a set containing only <paramref name="ns" /> that uses the
         /// specified <see cref="UnionComparer" />.
         /// 
-        /// This is different to casting from <see cref="Namespace" /> to <see
-        /// cref="INamespaceSet" />, because the implementation in <see
-        /// cref="Namespace" /> always uses <see cref="ObjectComparer" />.
+        /// This is different to casting from <see cref="AnalysisValue" /> to <see
+        /// cref="IAnalysisSet" />, because the implementation in <see
+        /// cref="AnalysisValue" /> always uses <see cref="ObjectComparer" />.
         /// </summary>
         /// <param name="ns">The namespace to contain in the set.</param>
         /// <param name="comparer">The comparer to use for the set.</param>
-        public static INamespaceSet CreateUnion(Namespace ns, UnionComparer comparer) {
-            return new NamespaceSetDetails.NamespaceSetOneUnion(ns, comparer);
+        internal static IAnalysisSet CreateUnion(AnalysisValue ns, UnionComparer comparer) {
+            return new AnalysisSetDetails.AnalysisSetOneUnion(ns, comparer);
         }
 
         /// <summary>
@@ -171,10 +171,10 @@ namespace Microsoft.PythonTools.Analysis.Values {
         /// </summary>
         /// <param name="ns">The namespaces to contain in the set.</param>
         /// <param name="comparer">The comparer to use for the set.</param>
-        public static INamespaceSet CreateUnion(IEnumerable<Namespace> ns, UnionComparer comparer) {
+        internal static IAnalysisSet CreateUnion(IEnumerable<AnalysisValue> ns, UnionComparer comparer) {
             bool dummy;
             // TODO: Replace Trim() call with more intelligent enumeration.
-            return new NamespaceSetDetails.NamespaceSetManyUnion(ns.UnionIter(comparer, out dummy), comparer).Trim();
+            return new AnalysisSetDetails.AnalysisSetManyUnion(ns.UnionIter(comparer, out dummy), comparer).Trim();
         }
 
         /// <summary>
@@ -184,7 +184,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         /// <param name="sets">The sets to contain in the set.</param>
         /// <param name="canMutate">True if sets in <paramref name="sets"/> may
         /// be modified.</param>
-        public static INamespaceSet UnionAll(IEnumerable<INamespaceSet> sets, bool canMutate = true) {
+        public static IAnalysisSet UnionAll(IEnumerable<IAnalysisSet> sets, bool canMutate = true) {
             return Empty.UnionAll(sets, canMutate);
         }
 
@@ -197,7 +197,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         /// set.</param>
         /// <param name="canMutate">True if sets in <paramref name="sets"/> may
         /// be modified.</param>
-        public static INamespaceSet UnionAll(IEnumerable<INamespaceSet> sets, out bool wasChanged, bool canMutate = true) {
+        public static IAnalysisSet UnionAll(IEnumerable<IAnalysisSet> sets, out bool wasChanged, bool canMutate = true) {
             return Empty.UnionAll(sets, out wasChanged, canMutate);
         }
 
@@ -211,7 +211,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         /// name="set"/> is returned unmodified.
         /// </summary>
         /// <param name="set">The set to increase the strength of.</param>
-        public static INamespaceSet AsStrongerUnion(this INamespaceSet set) {
+        public static IAnalysisSet AsStrongerUnion(this IAnalysisSet set) {
             var comparer = set.Comparer as UnionComparer;
             if (comparer != null) {
                 return set.AsUnion(comparer.Strength + 1);
@@ -227,7 +227,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         /// </summary>
         /// <param name="set">The set to convert to a union.</param>
         /// <param name="strength">The strength of the union.</param>
-        public static INamespaceSet AsUnion(this INamespaceSet set, int strength) {
+        public static IAnalysisSet AsUnion(this IAnalysisSet set, int strength) {
             bool dummy;
             return set.AsUnion(strength, out dummy);
         }
@@ -241,7 +241,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         /// <param name="strength">The strength of the union.</param>
         /// <param name="wasChanged">Returns True if the contents of the
         /// returned set are different to <paramref name="set"/>.</param>
-        public static INamespaceSet AsUnion(this INamespaceSet set, int strength, out bool wasChanged) {
+        public static IAnalysisSet AsUnion(this IAnalysisSet set, int strength, out bool wasChanged) {
             if (strength > UnionComparer.MAX_STRENGTH) {
                 strength = UnionComparer.MAX_STRENGTH;
             } else if (strength < 0) {
@@ -260,11 +260,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
         /// <param name="comparer">The comparer to use for the set.</param>
         /// <param name="wasChanged">Returns True if the contents of the
         /// returned set are different to <paramref name="set"/>.</param>
-        public static INamespaceSet AsUnion(this INamespaceSet set, UnionComparer comparer, out bool wasChanged) {
-            if ((set is NamespaceSetDetails.NamespaceSetOneUnion ||
-                set is NamespaceSetDetails.NamespaceSetTwoUnion ||
-                set is NamespaceSetDetails.NamespaceSetEmptyUnion ||
-                set is NamespaceSetDetails.NamespaceSetManyUnion) &&
+        internal static IAnalysisSet AsUnion(this IAnalysisSet set, UnionComparer comparer, out bool wasChanged) {
+            if ((set is AnalysisSetDetails.AnalysisSetOneUnion ||
+                set is AnalysisSetDetails.AnalysisSetTwoUnion ||
+                set is AnalysisSetDetails.AnalysisSetEmptyUnion ||
+                set is AnalysisSetDetails.AnalysisSetManyUnion) &&
                 set.Comparer == comparer) {
                 wasChanged = false;
                 return set;
@@ -272,51 +272,75 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
             wasChanged = true;
 
-            var ns = set as Namespace;
+            var ns = set as AnalysisValue;
             if (ns != null) {
                 return CreateUnion(ns, comparer);
             }
-            var ns1 = set as NamespaceSetDetails.NamespaceSetOneObject;
+            var ns1 = set as AnalysisSetDetails.AnalysisSetOneObject;
             if (ns1 != null) {
                 return CreateUnion(ns1.Value, comparer);
             }
-            var ns2 = set as NamespaceSetDetails.NamespaceSetTwoObject;
+            var ns2 = set as AnalysisSetDetails.AnalysisSetTwoObject;
             if (ns2 != null) {
                 if (comparer.Equals(ns2.Value1, ns2.Value2)) {
                     bool dummy;
-                    return new NamespaceSetDetails.NamespaceSetOneUnion(comparer.MergeTypes(ns2.Value1, ns2.Value2, out dummy), comparer);
+                    return new AnalysisSetDetails.AnalysisSetOneUnion(comparer.MergeTypes(ns2.Value1, ns2.Value2, out dummy), comparer);
                 } else {
-                    return new NamespaceSetDetails.NamespaceSetTwoUnion(ns2.Value1, ns2.Value2, comparer);
+                    return new AnalysisSetDetails.AnalysisSetTwoUnion(ns2.Value1, ns2.Value2, comparer);
                 }
             }
 
-            return new NamespaceSetDetails.NamespaceSetManyUnion(set, comparer);
+            return new AnalysisSetDetails.AnalysisSetManyUnion(set, comparer);
         }
 
         /// <summary>
         /// Merges the provided sequence using the specified <see
         /// cref="UnionComparer"/>.
         /// </summary>
-        internal static IEnumerable<Namespace> UnionIter(this IEnumerable<Namespace> items, UnionComparer comparer, out bool wasChanged) {
+#if FULL_VALIDATION
+        internal static IEnumerable<AnalysisValue> UnionIter(this IEnumerable<AnalysisValue> items, UnionComparer comparer, out bool wasChanged) {
+            var originalItems = items.ToList();
+            var newItems = UnionIterInternal(items, comparer, out wasChanged).ToList();
+
+            Validation.Assert(newItems.Count <= originalItems.Count);
+            if (wasChanged) {
+                Validation.Assert(newItems.Count < originalItems.Count);
+                foreach (var x in newItems) {
+                    foreach (var y in newItems) {
+                        if (object.ReferenceEquals(x, y)) continue;
+
+                        Validation.Assert(!comparer.Equals(x, y));
+                        Validation.Assert(!comparer.Equals(y, x));
+                    }
+                }
+            }
+
+            return newItems;
+        }
+
+        private static IEnumerable<AnalysisValue> UnionIterInternal(IEnumerable<AnalysisValue> items, UnionComparer comparer, out bool wasChanged) {
+#else
+        internal static IEnumerable<AnalysisValue> UnionIter(this IEnumerable<AnalysisValue> items, UnionComparer comparer, out bool wasChanged) {
+#endif
             wasChanged = false;
 
-            var asSet = items as INamespaceSet;
+            var asSet = items as IAnalysisSet;
             if (asSet != null && asSet.Comparer == comparer) {
                 return items;
             }
 
-            var newItems = new List<Namespace>();
+            var newItems = new List<AnalysisValue>();
             var anyMerged = true;
 
             while (anyMerged) {
                 anyMerged = false;
-                var matches = new Dictionary<Namespace, List<Namespace>>(comparer);
+                var matches = new Dictionary<AnalysisValue, List<AnalysisValue>>(comparer);
 
                 foreach (var ns in items) {
-                    List<Namespace> list;
+                    List<AnalysisValue> list;
                     if (matches.TryGetValue(ns, out list)) {
                         if (list == null) {
-                            matches[ns] = list = new List<Namespace>();
+                            matches[ns] = list = new List<AnalysisValue>();
                         }
                         list.Add(ns);
                     } else {
@@ -331,6 +355,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     if (keyValue.Value != null) {
                         foreach (var other in keyValue.Value) {
                             bool merged;
+#if FULL_VALIDATION
+                            Validation.Assert(comparer.Equals(item, other));
+#endif
                             item = comparer.MergeTypes(item, other, out merged);
                             if (merged) {
                                 anyMerged = true;
@@ -349,34 +376,34 @@ namespace Microsoft.PythonTools.Analysis.Values {
         /// <summary>
         /// Removes excess capacity from <paramref name="set"/>.
         /// </summary>
-        public static INamespaceSet Trim(this INamespaceSet set) {
-            if (set is NamespaceSetDetails.NamespaceSetManyObject) {
+        public static IAnalysisSet Trim(this IAnalysisSet set) {
+            if (set is AnalysisSetDetails.AnalysisSetManyObject) {
                 switch (set.Count) {
                     case 0:
                         return Empty;
                     case 1:
                         return set.First();
                     case 2:
-                        return new NamespaceSetDetails.NamespaceSetTwoObject(set);
+                        return new AnalysisSetDetails.AnalysisSetTwoObject(set);
                     default:
                         return set;
                 }
-            } else if (set is NamespaceSetDetails.NamespaceSetManyUnion) {
+            } else if (set is AnalysisSetDetails.AnalysisSetManyUnion) {
                 switch (set.Count) {
                     case 0:
-                        return NamespaceSetDetails.NamespaceSetEmptyUnion.Instances[((UnionComparer)set.Comparer).Strength];
+                        return AnalysisSetDetails.AnalysisSetEmptyUnion.Instances[((UnionComparer)set.Comparer).Strength];
                     case 1:
-                        return new NamespaceSetDetails.NamespaceSetOneUnion(set.First(), (UnionComparer)set.Comparer);
+                        return new AnalysisSetDetails.AnalysisSetOneUnion(set.First(), (UnionComparer)set.Comparer);
                     case 2: {
-                            var tup = NamespaceSetDetails.NamespaceSetTwoUnion.FromEnumerable(set, (UnionComparer)set.Comparer);
+                            var tup = AnalysisSetDetails.AnalysisSetTwoUnion.FromEnumerable(set, (UnionComparer)set.Comparer);
                             if (tup == null) {
                                 return set;
                             } else if (tup.Item1 == null && tup.Item2 == null) {
-                                return NamespaceSetDetails.NamespaceSetEmptyUnion.Instances[((UnionComparer)set.Comparer).Strength];
+                                return AnalysisSetDetails.AnalysisSetEmptyUnion.Instances[((UnionComparer)set.Comparer).Strength];
                             } else if (tup.Item2 == null) {
-                                return new NamespaceSetDetails.NamespaceSetOneUnion(tup.Item1, (UnionComparer)set.Comparer);
+                                return new AnalysisSetDetails.AnalysisSetOneUnion(tup.Item1, (UnionComparer)set.Comparer);
                             } else {
-                                return new NamespaceSetDetails.NamespaceSetTwoUnion(tup.Item1, tup.Item2, (UnionComparer)set.Comparer);
+                                return new AnalysisSetDetails.AnalysisSetTwoUnion(tup.Item1, tup.Item2, (UnionComparer)set.Comparer);
                             }
                         }
                     default:
@@ -392,7 +419,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         /// </summary>
         /// <param name="sets">The sets to merge into this set.</param>
         /// <param name="canMutate">True if this set may be modified.</param>
-        public static INamespaceSet UnionAll(this INamespaceSet set, IEnumerable<INamespaceSet> sets, bool canMutate = true) {
+        public static IAnalysisSet UnionAll(this IAnalysisSet set, IEnumerable<IAnalysisSet> sets, bool canMutate = true) {
             bool dummy;
             return set.UnionAll(sets, out dummy, canMutate);
         }
@@ -404,7 +431,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         /// <param name="wasChanged">Returns True if the contents of the
         /// returned set are different to the original set.</param>
         /// <param name="canMutate">True if this set may be modified.</param>
-        public static INamespaceSet UnionAll(this INamespaceSet set, IEnumerable<INamespaceSet> sets, out bool wasChanged, bool canMutate = true) {
+        public static IAnalysisSet UnionAll(this IAnalysisSet set, IEnumerable<IAnalysisSet> sets, out bool wasChanged, bool canMutate = true) {
             bool changed;
             wasChanged = false;
             foreach (var s in sets) {
@@ -420,34 +447,42 @@ namespace Microsoft.PythonTools.Analysis.Values {
         #endregion
     }
 
-    sealed class ObjectComparer : IEqualityComparer<Namespace>, IEqualityComparer<INamespaceSet> {
+    sealed class ObjectComparer : IEqualityComparer<AnalysisValue>, IEqualityComparer<IAnalysisSet> {
         public static readonly ObjectComparer Instance = new ObjectComparer();
 
-        public bool Equals(Namespace x, Namespace y) {
+        public bool Equals(AnalysisValue x, AnalysisValue y) {
+#if FULL_VALIDATION
+            if (x != null && y != null) {
+                Validation.Assert(x.Equals(y) == y.Equals(x));
+                if (x.Equals(y)) {
+                    Validation.Assert(x.GetHashCode() == y.GetHashCode());
+                }
+            }
+#endif
             return (x == null) ? (y == null) : x.Equals(y);
         }
 
-        public int GetHashCode(Namespace obj) {
+        public int GetHashCode(AnalysisValue obj) {
             return (obj == null) ? 0 : obj.GetHashCode();
         }
 
-        public bool Equals(INamespaceSet set1, INamespaceSet set2) {
+        public bool Equals(IAnalysisSet set1, IAnalysisSet set2) {
             if (set1.Comparer == this) {
                 return set1.SetEquals(set2);
             } else if (set2.Comparer == this) {
                 return set2.SetEquals(set1);
             } else {
                 return set1.All(ns => set2.Contains(ns, this)) &&
-                    (set2.Comparer == set1.Comparer || set2.All(ns => set1.Contains(ns, this)));
+                       set2.All(ns => set1.Contains(ns, this));
             }
         }
 
-        public int GetHashCode(INamespaceSet obj) {
+        public int GetHashCode(IAnalysisSet obj) {
             return obj.Aggregate(GetHashCode(), (hash, ns) => hash ^ GetHashCode(ns));
         }
     }
 
-    sealed class UnionComparer : IEqualityComparer<Namespace>, IEqualityComparer<INamespaceSet> {
+    sealed class UnionComparer : IEqualityComparer<AnalysisValue>, IEqualityComparer<IAnalysisSet> {
         public const int MAX_STRENGTH = 3;
         public static readonly UnionComparer[] Instances = Enumerable.Range(0, MAX_STRENGTH + 1).Select(i => new UnionComparer(i)).ToArray();
 
@@ -458,28 +493,43 @@ namespace Microsoft.PythonTools.Analysis.Values {
             Strength = strength;
         }
 
-        public bool Equals(Namespace x, Namespace y) {
+        public bool Equals(AnalysisValue x, AnalysisValue y) {
+#if FULL_VALIDATION
+            if (x != null && y != null) {
+                Validation.Assert(x.UnionEquals(y, Strength) == y.UnionEquals(x, Strength), string.Format("{0}\n{1}\n{2}", Strength, x, y));
+                if (x.UnionEquals(y, Strength)) {
+                    Validation.Assert(x.UnionHashCode(Strength) == y.UnionHashCode(Strength), string.Format("Strength:{0}\n{1} - {2}\n{3} - {4}", Strength, x, x.UnionHashCode(Strength), y, y.UnionHashCode(Strength)));
+                }
+            }
+#endif
             if (Object.ReferenceEquals(x, y)) {
                 return true;
             }
             return (x == null) ? (y == null) : x.UnionEquals(y, Strength);
         }
 
-        public int GetHashCode(Namespace obj) {
+        public int GetHashCode(AnalysisValue obj) {
             return (obj == null) ? 0 : obj.UnionHashCode(Strength);
         }
 
-        public Namespace MergeTypes(Namespace x, Namespace y, out bool wasChanged) {
+        public AnalysisValue MergeTypes(AnalysisValue x, AnalysisValue y, out bool wasChanged) {
             if (Object.ReferenceEquals(x, y)) {
                 wasChanged = false;
                 return x;
             }
             var z = x.UnionMergeTypes(y, Strength);
             wasChanged = !Object.ReferenceEquals(x, z);
+#if FULL_VALIDATION
+            var z2 = y.UnionMergeTypes(x, Strength);
+            if (!object.ReferenceEquals(z, z2)) {
+                Validation.Assert(z.UnionEquals(z2, Strength), string.Format("{0}\n{1} + {2} => {3}\n{2} + {1} => {4}", Strength, x, y, z, z2));
+                Validation.Assert(z2.UnionEquals(z, Strength), string.Format("{0}\n{1} + {2} => {3}\n{2} + {1} => {4}", Strength, y, x, z2, z));
+            }
+#endif
             return z;
         }
 
-        public bool Equals(INamespaceSet set1, INamespaceSet set2) {
+        public bool Equals(IAnalysisSet set1, IAnalysisSet set2) {
             if (set1.Comparer == this) {
                 return set1.SetEquals(set2);
             } else if (set2.Comparer == this) {
@@ -490,35 +540,35 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public int GetHashCode(INamespaceSet obj) {
+        public int GetHashCode(IAnalysisSet obj) {
             return obj.Aggregate(GetHashCode(), (hash, ns) => hash ^ GetHashCode(ns));
         }
     }
 
 
 
-    namespace NamespaceSetDetails {
+    namespace AnalysisSetDetails {
         sealed class DebugViewProxy {
             [DebuggerBrowsable(DebuggerBrowsableState.Never)]
             public const string DisplayString = "{this}, {Comparer.GetType().Name,nq}";
 
-            public DebugViewProxy(INamespaceSet source) {
+            public DebugViewProxy(IAnalysisSet source) {
                 Data = source.ToArray();
                 Comparer = source.Comparer;
             }
 
             [DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
-            public Namespace[] Data;
+            public AnalysisValue[] Data;
 
             public override string ToString() {
                 return ToString(Data);
             }
 
-            public static string ToString(INamespaceSet source) {
+            public static string ToString(IAnalysisSet source) {
                 return ToString(source.ToArray());
             }
 
-            public static string ToString(Namespace[] source) {
+            public static string ToString(AnalysisValue[] source) {
                 var data = source.ToArray();
                 if (data.Length == 0) {
                     return "{}";
@@ -529,7 +579,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 }
             }
 
-            public IEqualityComparer<Namespace> Comparer {
+            public IEqualityComparer<AnalysisValue> Comparer {
                 get;
                 private set;
             }
@@ -540,77 +590,102 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         [DebuggerDisplay(DebugViewProxy.DisplayString), DebuggerTypeProxy(typeof(DebugViewProxy))]
-        sealed class NamespaceSetManyObject : INamespaceSet {
-            public readonly HashSet<Namespace> Set;
+        sealed class AnalysisSetManyObject : IAnalysisSet {
+            public readonly HashSet<AnalysisValue> Set;
 
-            public NamespaceSetManyObject(IEnumerable<Namespace> items) {
-                Set = new HashSet<Namespace>(items, ObjectComparer.Instance);
+            public AnalysisSetManyObject(IEnumerable<AnalysisValue> items) {
+                Set = new HashSet<AnalysisValue>(items, ObjectComparer.Instance);
             }
 
-            internal NamespaceSetManyObject(NamespaceSetTwoObject firstTwo, Namespace third) {
-                Set = new HashSet<Namespace>(ObjectComparer.Instance);
+            internal AnalysisSetManyObject(AnalysisSetTwoObject firstTwo, AnalysisValue third) {
+                Set = new HashSet<AnalysisValue>(ObjectComparer.Instance);
                 Set.Add(firstTwo.Value1);
                 Set.Add(firstTwo.Value2);
                 Set.Add(third);
             }
 
-            public INamespaceSet Add(Namespace item, bool canMutate = true) {
+            public IAnalysisSet Add(AnalysisValue item, bool canMutate = true) {
+                if (canMutate) {
+                    Set.Add(item);
+                    return this;
+                }
                 if (Set.Contains(item)) {
                     return this;
                 }
-                var set = canMutate ? this : new NamespaceSetManyObject(this.Set);
+                var set = new AnalysisSetManyObject(this.Set);
                 set.Set.Add(item);
                 return set;
             }
 
-            public INamespaceSet Add(Namespace item, out bool wasChanged, bool canMutate = true) {
+            public IAnalysisSet Add(AnalysisValue item, out bool wasChanged, bool canMutate = true) {
+                if (canMutate) {
+                    wasChanged = Set.Add(item);
+                    return this;
+                }
                 if (Set.Contains(item)) {
                     wasChanged = false;
                     return this;
                 }
-                var set = canMutate ? this : new NamespaceSetManyObject(this.Set);
+                var set = new AnalysisSetManyObject(this.Set);
                 wasChanged = set.Set.Add(item);
                 return set;
             }
 
-            public INamespaceSet Union(IEnumerable<Namespace> items, bool canMutate = true) {
+            public IAnalysisSet Union(IEnumerable<AnalysisValue> items, bool canMutate = true) {
+                if (items == null) {
+                    return this;
+                }
+                if (canMutate) {
+                    Set.UnionWith(items);
+                    return this;
+                }
                 if (Set.IsSupersetOf(items)) {
                     return this;
                 }
-                var set = canMutate ? this : new NamespaceSetManyObject(this.Set);
+                var set = new AnalysisSetManyObject(this.Set);
                 set.Set.UnionWith(items);
                 return set;
             }
 
-            public INamespaceSet Union(IEnumerable<Namespace> items, out bool wasChanged, bool canMutate = true) {
+            public IAnalysisSet Union(IEnumerable<AnalysisValue> items, out bool wasChanged, bool canMutate = true) {
+                if (items == null) {
+                    wasChanged = false;
+                    return this;
+                }
+                if (canMutate) {
+                    var prevCount = Count;
+                    Set.UnionWith(items);
+                    wasChanged = prevCount != Count;
+                    return this;
+                }
                 if (Set.IsSupersetOf(items)) {
                     wasChanged = false;
                     return this;
                 }
-                var set = canMutate ? this : new NamespaceSetManyObject(this.Set);
+                var set = new AnalysisSetManyObject(this.Set);
                 wasChanged = true;
                 set.Set.UnionWith(items);
                 return set;
             }
 
-            public INamespaceSet Clone() {
+            public IAnalysisSet Clone() {
                 switch (Set.Count) {
                     case 0:
-                        return new NamespaceSetEmptyObject();
+                        return new AnalysisSetEmptyObject();
                     case 1:
-                        return new NamespaceSetOneObject(Set.First());
+                        return new AnalysisSetOneObject(Set.First());
                     case 2:
-                        return new NamespaceSetTwoObject(Set);
+                        return new AnalysisSetTwoObject(Set);
                     default:
-                        return new NamespaceSetManyObject(Set);
+                        return new AnalysisSetManyObject(Set);
                 }
             }
 
-            public bool Contains(Namespace item) {
+            public bool Contains(AnalysisValue item) {
                 return Set.Contains(item);
             }
 
-            public bool SetEquals(INamespaceSet other) {
+            public bool SetEquals(IAnalysisSet other) {
                 if (other == null) {
                     return false;
                 }
@@ -633,7 +708,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 get { return Set.Count; }
             }
 
-            public IEnumerator<Namespace> GetEnumerator() {
+            public IEnumerator<AnalysisValue> GetEnumerator() {
                 return Set.GetEnumerator();
             }
 
@@ -641,7 +716,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 return Set.GetEnumerator();
             }
 
-            public IEqualityComparer<Namespace> Comparer {
+            public IEqualityComparer<AnalysisValue> Comparer {
                 get { return ObjectComparer.Instance; }
             }
 
@@ -651,50 +726,50 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         [DebuggerDisplay(DebugViewProxy.DisplayString), DebuggerTypeProxy(typeof(DebugViewProxy))]
-        sealed class NamespaceSetEmptyObject : INamespaceSet {
-            public static readonly INamespaceSet Instance = new NamespaceSetEmptyObject();
+        sealed class AnalysisSetEmptyObject : IAnalysisSet {
+            public static readonly IAnalysisSet Instance = new AnalysisSetEmptyObject();
 
-            public INamespaceSet Add(Namespace item, bool canMutate = true) {
+            public IAnalysisSet Add(AnalysisValue item, bool canMutate = true) {
                 return item;
             }
 
-            public INamespaceSet Add(Namespace item, out bool wasChanged, bool canMutate = true) {
+            public IAnalysisSet Add(AnalysisValue item, out bool wasChanged, bool canMutate = true) {
                 wasChanged = true;
                 return item;
             }
 
-            public INamespaceSet Union(IEnumerable<Namespace> items, bool canMutate = true) {
-                if (items is NamespaceSetEmptyObject || items is NamespaceSetEmptyUnion) {
+            public IAnalysisSet Union(IEnumerable<AnalysisValue> items, bool canMutate = true) {
+                if (items == null || items is AnalysisSetEmptyObject || items is AnalysisSetEmptyUnion) {
                     return this;
                 }
-                if (items is Namespace || items is NamespaceSetOneObject || items is NamespaceSetTwoObject) {
-                    return (INamespaceSet)items;
+                if (items is AnalysisValue || items is AnalysisSetOneObject || items is AnalysisSetTwoObject) {
+                    return (IAnalysisSet)items;
                 }
-                return items.Any() ? NamespaceSet.Create(items) : this;
+                return items.Any() ? AnalysisSet.Create(items) : this;
             }
 
-            public INamespaceSet Union(IEnumerable<Namespace> items, out bool wasChanged, bool canMutate = true) {
-                if (items is NamespaceSetEmptyObject || items is NamespaceSetEmptyUnion) {
+            public IAnalysisSet Union(IEnumerable<AnalysisValue> items, out bool wasChanged, bool canMutate = true) {
+                if (items == null || items is AnalysisSetEmptyObject || items is AnalysisSetEmptyUnion) {
                     wasChanged = false;
                     return this;
                 }
-                if (items is Namespace || items is NamespaceSetOneObject || items is NamespaceSetTwoObject) {
+                if (items is AnalysisValue || items is AnalysisSetOneObject || items is AnalysisSetTwoObject) {
                     wasChanged = true;
-                    return (INamespaceSet)items;
+                    return (IAnalysisSet)items;
                 }
                 wasChanged = items.Any();
-                return wasChanged ? NamespaceSet.Create(items) : this;
+                return wasChanged ? AnalysisSet.Create(items) : this;
             }
 
-            public INamespaceSet Clone() {
+            public IAnalysisSet Clone() {
                 return this;
             }
 
-            public bool Contains(Namespace item) {
+            public bool Contains(AnalysisValue item) {
                 return false;
             }
 
-            public bool SetEquals(INamespaceSet other) {
+            public bool SetEquals(IAnalysisSet other) {
                 return other != null && other.Count == 0;
             }
 
@@ -702,7 +777,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 get { return 0; }
             }
 
-            public IEnumerator<Namespace> GetEnumerator() {
+            public IEnumerator<AnalysisValue> GetEnumerator() {
                 yield break;
             }
 
@@ -710,7 +785,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 return GetEnumerator();
             }
 
-            public IEqualityComparer<Namespace> Comparer {
+            public IEqualityComparer<AnalysisValue> Comparer {
                 get { return ObjectComparer.Instance; }
             }
 
@@ -719,81 +794,85 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-
         [DebuggerDisplay(DebugViewProxy.DisplayString), DebuggerTypeProxy(typeof(DebugViewProxy))]
-        sealed class NamespaceSetOneObject : INamespaceSet {
-            public readonly Namespace Value;
+        sealed class AnalysisSetOneObject : IAnalysisSet {
+            public readonly AnalysisValue Value;
 
-            public NamespaceSetOneObject(Namespace value) {
+            public AnalysisSetOneObject(AnalysisValue value) {
                 Value = value;
             }
 
-            public INamespaceSet Add(Namespace item, bool canMutate = true) {
+            public IAnalysisSet Add(AnalysisValue item, bool canMutate = true) {
                 if (ObjectComparer.Instance.Equals(Value, item)) {
                     return this;
                 } else {
-                    return new NamespaceSetTwoObject(Value, item);
+                    return new AnalysisSetTwoObject(Value, item);
                 }
             }
 
-            public INamespaceSet Add(Namespace item, out bool wasChanged, bool canMutate = true) {
+            public IAnalysisSet Add(AnalysisValue item, out bool wasChanged, bool canMutate = true) {
                 if (ObjectComparer.Instance.Equals(Value, item)) {
                     wasChanged = false;
                     return this;
                 } else {
                     wasChanged = true;
-                    return new NamespaceSetTwoObject(Value, item);
+                    return new AnalysisSetTwoObject(Value, item);
                 }
             }
 
-            public INamespaceSet Union(IEnumerable<Namespace> items, bool canMutate = true) {
-                NamespaceSetOneObject ns1;
-                NamespaceSetTwoObject ns2;
-                if ((ns1 = items as NamespaceSetOneObject) != null) {
+            public IAnalysisSet Union(IEnumerable<AnalysisValue> items, bool canMutate = true) {
+                AnalysisSetOneObject ns1;
+                AnalysisSetTwoObject ns2;
+                if (items == null) {
+                    return this;
+                } else if ((ns1 = items as AnalysisSetOneObject) != null) {
                     return Add(ns1.Value, canMutate);
-                } else if ((ns2 = items as NamespaceSetTwoObject) != null) {
+                } else if ((ns2 = items as AnalysisSetTwoObject) != null) {
                     if (ns2.Contains(Value)) {
                         return ns2;
                     }
-                    return new NamespaceSetManyObject(ns2, Value);
+                    return new AnalysisSetManyObject(ns2, Value);
                 } else {
-                    return new NamespaceSetManyObject(items).Add(Value);
+                    return new AnalysisSetManyObject(items).Add(Value);
                 }
             }
 
-            public INamespaceSet Union(IEnumerable<Namespace> items, out bool wasChanged, bool canMutate = true) {
-                NamespaceSetOneObject ns1;
-                NamespaceSetTwoObject ns2;
-                if ((ns1 = items as NamespaceSetOneObject) != null) {
+            public IAnalysisSet Union(IEnumerable<AnalysisValue> items, out bool wasChanged, bool canMutate = true) {
+                AnalysisSetOneObject ns1;
+                AnalysisSetTwoObject ns2;
+                if (items == null) {
+                    wasChanged = false;
+                    return this;
+                } else if ((ns1 = items as AnalysisSetOneObject) != null) {
                     return Add(ns1.Value, out wasChanged, canMutate);
-                } else if ((ns2 = items as NamespaceSetTwoObject) != null) {
+                } else if ((ns2 = items as AnalysisSetTwoObject) != null) {
                     wasChanged = true;
                     if (ns2.Contains(Value)) {
                         return ns2;
                     }
-                    return new NamespaceSetManyObject(ns2, Value);
+                    return new AnalysisSetManyObject(ns2, Value);
                 } else {
-                    return new NamespaceSetManyObject(items).Add(Value, out wasChanged);
+                    return new AnalysisSetManyObject(items).Add(Value, out wasChanged);
                 }
             }
 
-            public INamespaceSet Clone() {
+            public IAnalysisSet Clone() {
                 return this;
             }
 
-            public bool Contains(Namespace item) {
+            public bool Contains(AnalysisValue item) {
                 return ObjectComparer.Instance.Equals(Value, item);
             }
 
-            public bool SetEquals(INamespaceSet other) {
-                Namespace ns;
-                NamespaceSetOneObject ns1o;
-                NamespaceSetOneUnion ns1u;
-                if ((ns = other as Namespace) != null) {
+            public bool SetEquals(IAnalysisSet other) {
+                AnalysisValue ns;
+                AnalysisSetOneObject ns1o;
+                AnalysisSetOneUnion ns1u;
+                if ((ns = other as AnalysisValue) != null) {
                     return ObjectComparer.Instance.Equals(Value, ns);
-                } else if ((ns1o = other as NamespaceSetOneObject) != null) {
+                } else if ((ns1o = other as AnalysisSetOneObject) != null) {
                     return ObjectComparer.Instance.Equals(Value, ns1o.Value);
-                } else if ((ns1u = other as NamespaceSetOneUnion) != null) {
+                } else if ((ns1u = other as AnalysisSetOneUnion) != null) {
                     return ObjectComparer.Instance.Equals(Value, ns1u.Value);
                 } else if (other != null && other.Count == 1) {
                     return ObjectComparer.Instance.Equals(Value, other.First());
@@ -806,15 +885,15 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 get { return 1; }
             }
 
-            public IEnumerator<Namespace> GetEnumerator() {
-                return new SetOfOneEnumerator<Namespace>(Value);
+            public IEnumerator<AnalysisValue> GetEnumerator() {
+                return new SetOfOneEnumerator<AnalysisValue>(Value);
             }
 
             System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() {
                 return GetEnumerator();
             }
 
-            public IEqualityComparer<Namespace> Comparer {
+            public IEqualityComparer<AnalysisValue> Comparer {
                 get { return ObjectComparer.Instance; }
             }
 
@@ -824,15 +903,15 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         [DebuggerDisplay(DebugViewProxy.DisplayString), DebuggerTypeProxy(typeof(DebugViewProxy))]
-        sealed class NamespaceSetTwoObject : INamespaceSet {
-            public readonly Namespace Value1, Value2;
+        sealed class AnalysisSetTwoObject : IAnalysisSet {
+            public readonly AnalysisValue Value1, Value2;
 
-            public NamespaceSetTwoObject(Namespace value1, Namespace value2) {
+            public AnalysisSetTwoObject(AnalysisValue value1, AnalysisValue value2) {
                 Value1 = value1;
                 Value2 = value2;
             }
 
-            public NamespaceSetTwoObject(IEnumerable<Namespace> set) {
+            public AnalysisSetTwoObject(IEnumerable<AnalysisValue> set) {
                 using (var e = set.GetEnumerator()) {
                     if (!e.MoveNext()) {
                         throw new InvalidOperationException("Sequence requires exactly two values");
@@ -848,59 +927,64 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 }
             }
 
-            public INamespaceSet Add(Namespace item, bool canMutate = true) {
+            public IAnalysisSet Add(AnalysisValue item, bool canMutate = true) {
                 if (ObjectComparer.Instance.Equals(Value1, item) || ObjectComparer.Instance.Equals(Value2, item)) {
                     return this;
                 }
-                return new NamespaceSetManyObject(this, item);
+                return new AnalysisSetManyObject(this, item);
             }
 
-            public INamespaceSet Add(Namespace item, out bool wasChanged, bool canMutate = true) {
+            public IAnalysisSet Add(AnalysisValue item, out bool wasChanged, bool canMutate = true) {
                 if (ObjectComparer.Instance.Equals(Value1, item) || ObjectComparer.Instance.Equals(Value2, item)) {
                     wasChanged = false;
                     return this;
                 }
                 wasChanged = true;
-                return new NamespaceSetManyObject(this, item);
+                return new AnalysisSetManyObject(this, item);
             }
 
-            public INamespaceSet Union(IEnumerable<Namespace> items, bool canMutate = true) {
-                Namespace ns;
-                NamespaceSetOneObject ns1;
-                if ((ns = items as Namespace) != null) {
+            public IAnalysisSet Union(IEnumerable<AnalysisValue> items, bool canMutate = true) {
+                AnalysisValue ns;
+                AnalysisSetOneObject ns1;
+                if (items == null) {
+                    return this;
+                } else if ((ns = items as AnalysisValue) != null) {
                     return Add(ns, canMutate);
-                } else if ((ns1 = items as NamespaceSetOneObject) != null) {
+                } else if ((ns1 = items as AnalysisSetOneObject) != null) {
                     return Add(ns1.Value, canMutate);
                 } else {
-                    return new NamespaceSetManyObject(items).Add(Value1).Add(Value2);
+                    return new AnalysisSetManyObject(items).Add(Value1).Add(Value2);
                 }
             }
 
-            public INamespaceSet Union(IEnumerable<Namespace> items, out bool wasChanged, bool canMutate = true) {
-                Namespace ns;
-                NamespaceSetOneObject ns1;
-                if ((ns = items as Namespace) != null) {
+            public IAnalysisSet Union(IEnumerable<AnalysisValue> items, out bool wasChanged, bool canMutate = true) {
+                AnalysisValue ns;
+                AnalysisSetOneObject ns1;
+                if (items == null) {
+                    wasChanged = false;
+                    return this;
+                } else if ((ns = items as AnalysisValue) != null) {
                     return Add(ns, out wasChanged, canMutate);
-                } else if ((ns1 = items as NamespaceSetOneObject) != null) {
+                } else if ((ns1 = items as AnalysisSetOneObject) != null) {
                     return Add(ns1.Value, out wasChanged, canMutate);
                 } else {
                     bool wasChanged1, wasChanged2;
-                    var set = new NamespaceSetManyObject(items).Add(Value1, out wasChanged1).Add(Value2, out wasChanged2);
+                    var set = new AnalysisSetManyObject(items).Add(Value1, out wasChanged1).Add(Value2, out wasChanged2);
                     wasChanged = wasChanged1 || wasChanged2;
                     return set;
                 }
             }
 
-            public INamespaceSet Clone() {
+            public IAnalysisSet Clone() {
                 return this;
             }
 
-            public bool Contains(Namespace item) {
+            public bool Contains(AnalysisValue item) {
                 return ObjectComparer.Instance.Equals(Value1, item) || ObjectComparer.Instance.Equals(Value2, item);
             }
 
-            public bool SetEquals(INamespaceSet other) {
-                var ns2 = other as NamespaceSetTwoObject;
+            public bool SetEquals(IAnalysisSet other) {
+                var ns2 = other as AnalysisSetTwoObject;
                 if (ns2 != null) {
                     return ObjectComparer.Instance.Equals(Value1, ns2.Value1) && ObjectComparer.Instance.Equals(Value2, ns2.Value2) ||
                         ObjectComparer.Instance.Equals(Value1, ns2.Value2) && ObjectComparer.Instance.Equals(Value2, ns2.Value1);
@@ -920,7 +1004,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 get { return 2; }
             }
 
-            public IEnumerator<Namespace> GetEnumerator() {
+            public IEnumerator<AnalysisValue> GetEnumerator() {
                 yield return Value1;
                 yield return Value2;
             }
@@ -929,7 +1013,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 return GetEnumerator();
             }
 
-            public IEqualityComparer<Namespace> Comparer {
+            public IEqualityComparer<AnalysisValue> Comparer {
                 get { return ObjectComparer.Instance; }
             }
 
@@ -942,15 +1026,15 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
 
         [DebuggerDisplay(DebugViewProxy.DisplayString), DebuggerTypeProxy(typeof(DebugViewProxy))]
-        sealed class NamespaceSetManyUnion : INamespaceSet {
-            public readonly HashSet<Namespace> Set;
+        sealed class AnalysisSetManyUnion : IAnalysisSet {
+            public readonly HashSet<AnalysisValue> Set;
 
-            public NamespaceSetManyUnion(IEnumerable<Namespace> items, UnionComparer comparer) {
-                Set = new HashSet<Namespace>(items, comparer);
+            public AnalysisSetManyUnion(IEnumerable<AnalysisValue> items, UnionComparer comparer) {
+                Set = new HashSet<AnalysisValue>(items, comparer);
             }
 
-            internal NamespaceSetManyUnion(NamespaceSetTwoUnion firstTwo, Namespace third, UnionComparer comparer, out bool wasChanged) {
-                Set = new HashSet<Namespace>(comparer);
+            internal AnalysisSetManyUnion(AnalysisSetTwoUnion firstTwo, AnalysisValue third, UnionComparer comparer, out bool wasChanged) {
+                Set = new HashSet<AnalysisValue>(comparer);
                 Set.Add(firstTwo.Value1);
                 wasChanged = true;
                 if (!Set.Add(firstTwo.Value2) || !Set.Add(third)) {
@@ -959,16 +1043,16 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 }
             }
 
-            private NamespaceSetManyUnion(HashSet<Namespace> set) {
+            private AnalysisSetManyUnion(HashSet<AnalysisValue> set) {
                 Set = set;
             }
 
-            public INamespaceSet Add(Namespace item, bool canMutate = true) {
+            public IAnalysisSet Add(AnalysisValue item, bool canMutate = true) {
                 bool dummy;
                 return Add(item, out dummy, canMutate);
             }
 
-            public INamespaceSet Add(Namespace item, out bool wasChanged, bool canMutate = true) {
+            public IAnalysisSet Add(AnalysisValue item, out bool wasChanged, bool canMutate = true) {
                 var set = Set;
                 if (canMutate) {
                     if (set.Add(item)) {
@@ -976,11 +1060,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
                         return this;
                     }
                 } else if (!set.Contains(item)) {
-                    set = new HashSet<Namespace>(set, set.Comparer);
+                    set = new HashSet<AnalysisValue>(set, set.Comparer);
                     wasChanged = set.Add(item);
-                    return wasChanged ? new NamespaceSetManyUnion(set) : this;
+                    return wasChanged ? new AnalysisSetManyUnion(set) : this;
                 } else {
-                    set = new HashSet<Namespace>(set, set.Comparer);
+                    set = new HashSet<AnalysisValue>(set, set.Comparer);
                 }
 
                 var cmp = Comparer;
@@ -990,7 +1074,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     if (cmp.Equals(ns, newItem)) {
                         bool changed = false;
                         newItem = cmp.MergeTypes(ns, newItem, out changed);
-                        newItemAlreadyInSet |= !changed;
+                        newItemAlreadyInSet = !changed;
                     }
                 }
                 if (!newItemAlreadyInSet) {
@@ -1000,13 +1084,16 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     wasChanged = (set.RemoveWhere(ns => !Object.ReferenceEquals(ns, newItem) && cmp.Equals(ns, newItem)) > 0);
                 }
 
-                return (canMutate | !wasChanged) ? this : new NamespaceSetManyUnion(set);
+                return (canMutate | !wasChanged) ? this : new AnalysisSetManyUnion(set);
             }
 
-            public INamespaceSet Union(IEnumerable<Namespace> items, bool canMutate = true) {
+            public IAnalysisSet Union(IEnumerable<AnalysisValue> items, bool canMutate = true) {
+                if (items == null) {
+                    return this;
+                }
                 bool anyAdded = false;
                 var cmp = Comparer;
-                var set = canMutate ? Set : new HashSet<Namespace>(Set, Set.Comparer);
+                var set = canMutate ? Set : new HashSet<AnalysisValue>(Set, Set.Comparer);
                 foreach (var item in items) {
                     if (set.Add(item)) {
                         anyAdded = true;
@@ -1025,13 +1112,17 @@ namespace Microsoft.PythonTools.Analysis.Values {
                         set.Add(newItem);
                     }
                 }
-                return (canMutate | !anyAdded) ? this : new NamespaceSetManyUnion(set);
+                return (canMutate | !anyAdded) ? this : new AnalysisSetManyUnion(set);
             }
 
-            public INamespaceSet Union(IEnumerable<Namespace> items, out bool wasChanged, bool canMutate = true) {
+            public IAnalysisSet Union(IEnumerable<AnalysisValue> items, out bool wasChanged, bool canMutate = true) {
+                if (items == null) {
+                    wasChanged = false;
+                    return this;
+                } 
                 bool anyAdded = false;
                 var cmp = Comparer;
-                var set = canMutate ? Set : new HashSet<Namespace>(Set, Set.Comparer);
+                var set = canMutate ? Set : new HashSet<AnalysisValue>(Set, Set.Comparer);
                 wasChanged = false;
                 foreach (var item in items) {
                     if (set.Add(item)) {
@@ -1053,37 +1144,37 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     }
                 }
                 wasChanged = anyAdded;
-                return (canMutate | !anyAdded) ? this : new NamespaceSetManyUnion(set);
+                return (canMutate | !anyAdded) ? this : new AnalysisSetManyUnion(set);
             }
 
-            public INamespaceSet Clone() {
+            public IAnalysisSet Clone() {
                 switch (Set.Count) {
                     case 0:
-                        return NamespaceSetEmptyUnion.Instances[Comparer.Strength];
+                        return AnalysisSetEmptyUnion.Instances[Comparer.Strength];
                     case 1:
-                        return new NamespaceSetOneUnion(Set.First(), Comparer);
+                        return new AnalysisSetOneUnion(Set.First(), Comparer);
                     case 2: {
-                            var tup = NamespaceSetTwoUnion.FromEnumerable(Set, Comparer);
+                            var tup = AnalysisSetTwoUnion.FromEnumerable(Set, Comparer);
                             if (tup == null) {
-                                return new NamespaceSetManyUnion(Set, Comparer);
+                                return new AnalysisSetManyUnion(Set, Comparer);
                             } else if (tup.Item1 == null && tup.Item2 == null) {
-                                return NamespaceSetEmptyUnion.Instances[Comparer.Strength];
+                                return AnalysisSetEmptyUnion.Instances[Comparer.Strength];
                             } else if (tup.Item2 == null) {
-                                return new NamespaceSetOneUnion(tup.Item1, Comparer);
+                                return new AnalysisSetOneUnion(tup.Item1, Comparer);
                             } else {
-                                return new NamespaceSetTwoUnion(tup.Item1, tup.Item2, Comparer);
+                                return new AnalysisSetTwoUnion(tup.Item1, tup.Item2, Comparer);
                             }
                         }
                     default:
-                        return new NamespaceSetManyUnion(Set, Comparer);
+                        return new AnalysisSetManyUnion(Set, Comparer);
                 }
             }
 
-            public bool Contains(Namespace item) {
+            public bool Contains(AnalysisValue item) {
                 return Set.Contains(item);
             }
 
-            public bool SetEquals(INamespaceSet other) {
+            public bool SetEquals(IAnalysisSet other) {
                 if (other == null) {
                     return false;
                 }
@@ -1106,7 +1197,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 get { return Set.Count; }
             }
 
-            public IEnumerator<Namespace> GetEnumerator() {
+            public IEnumerator<AnalysisValue> GetEnumerator() {
                 return Set.GetEnumerator();
             }
 
@@ -1118,7 +1209,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 get { return (UnionComparer)Set.Comparer; }
             }
 
-            IEqualityComparer<Namespace> INamespaceSet.Comparer {
+            IEqualityComparer<AnalysisValue> IAnalysisSet.Comparer {
                 get { return Set.Comparer; }
             }
 
@@ -1128,53 +1219,55 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         [DebuggerDisplay(DebugViewProxy.DisplayString), DebuggerTypeProxy(typeof(DebugViewProxy))]
-        sealed class NamespaceSetEmptyUnion : INamespaceSet {
-            public static readonly INamespaceSet[] Instances = UnionComparer.Instances.Select(cmp => new NamespaceSetEmptyUnion(cmp)).ToArray();
+        sealed class AnalysisSetEmptyUnion : IAnalysisSet {
+            public static readonly IAnalysisSet[] Instances = UnionComparer.Instances.Select(cmp => new AnalysisSetEmptyUnion(cmp)).ToArray();
 
             private readonly UnionComparer _comparer;
 
-            public NamespaceSetEmptyUnion(UnionComparer comparer) {
+            public AnalysisSetEmptyUnion(UnionComparer comparer) {
                 _comparer = comparer;
             }
 
-            public INamespaceSet Add(Namespace item, bool canMutate = true) {
-                return new NamespaceSetOneUnion(item, Comparer);
+            public IAnalysisSet Add(AnalysisValue item, bool canMutate = true) {
+                return new AnalysisSetOneUnion(item, Comparer);
             }
 
-            public INamespaceSet Add(Namespace item, out bool wasChanged, bool canMutate = true) {
+            public IAnalysisSet Add(AnalysisValue item, out bool wasChanged, bool canMutate = true) {
                 wasChanged = true;
-                return new NamespaceSetOneUnion(item, Comparer);
+                return new AnalysisSetOneUnion(item, Comparer);
             }
 
-            public INamespaceSet Union(IEnumerable<Namespace> items, bool canMutate = true) {
-                if (items is NamespaceSetOneUnion || items is NamespaceSetTwoUnion || items is NamespaceSetEmptyUnion) {
-                    return (INamespaceSet)items;
+            public IAnalysisSet Union(IEnumerable<AnalysisValue> items, bool canMutate = true) {
+                if (items == null) {
+                    return this;
+                } else if (items is AnalysisSetOneUnion || items is AnalysisSetTwoUnion || items is AnalysisSetEmptyUnion) {
+                    return (IAnalysisSet)items;
                 }
-                return items.Any() ? NamespaceSet.CreateUnion(items, Comparer) : this;
+                return items.Any() ? AnalysisSet.CreateUnion(items, Comparer) : this;
             }
 
-            public INamespaceSet Union(IEnumerable<Namespace> items, out bool wasChanged, bool canMutate = true) {
-                if (items is NamespaceSetEmptyObject || items is NamespaceSetEmptyUnion) {
+            public IAnalysisSet Union(IEnumerable<AnalysisValue> items, out bool wasChanged, bool canMutate = true) {
+                if (items == null || items is AnalysisSetEmptyObject || items is AnalysisSetEmptyUnion) {
                     wasChanged = false;
                     return this;
                 }
-                if (items is NamespaceSetOneUnion || items is NamespaceSetTwoUnion) {
+                if (items is AnalysisSetOneUnion || items is AnalysisSetTwoUnion) {
                     wasChanged = true;
-                    return (INamespaceSet)items;
+                    return (IAnalysisSet)items;
                 }
                 wasChanged = items.Any();
-                return wasChanged ? NamespaceSet.CreateUnion(items, Comparer) : this;
+                return wasChanged ? AnalysisSet.CreateUnion(items, Comparer) : this;
             }
 
-            public INamespaceSet Clone() {
+            public IAnalysisSet Clone() {
                 return this;
             }
 
-            public bool Contains(Namespace item) {
+            public bool Contains(AnalysisValue item) {
                 return false;
             }
 
-            public bool SetEquals(INamespaceSet other) {
+            public bool SetEquals(IAnalysisSet other) {
                 return other != null && other.Count == 0;
             }
 
@@ -1182,7 +1275,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 get { return 0; }
             }
 
-            public IEnumerator<Namespace> GetEnumerator() {
+            public IEnumerator<AnalysisValue> GetEnumerator() {
                 yield break;
             }
 
@@ -1194,8 +1287,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 get { return _comparer; }
             }
 
-            IEqualityComparer<Namespace> INamespaceSet.Comparer {
-                get { return ((NamespaceSetEmptyUnion)this).Comparer; }
+            IEqualityComparer<AnalysisValue> IAnalysisSet.Comparer {
+                get { return ((AnalysisSetEmptyUnion)this).Comparer; }
             }
 
             public override string ToString() {
@@ -1203,88 +1296,92 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-
         [DebuggerDisplay(DebugViewProxy.DisplayString), DebuggerTypeProxy(typeof(DebugViewProxy))]
-        sealed class NamespaceSetOneUnion : INamespaceSet {
-            public readonly Namespace Value;
+        sealed class AnalysisSetOneUnion : IAnalysisSet {
+            public readonly AnalysisValue Value;
             private readonly UnionComparer _comparer;
 
-            public NamespaceSetOneUnion(Namespace value, UnionComparer comparer) {
+            public AnalysisSetOneUnion(AnalysisValue value, UnionComparer comparer) {
                 Value = value;
                 _comparer = comparer;
             }
 
-            public INamespaceSet Add(Namespace item, bool canMutate = true) {
+            public IAnalysisSet Add(AnalysisValue item, bool canMutate = true) {
                 if (Object.ReferenceEquals(Value, item)) {
                     return this;
                 } else if (Comparer.Equals(Value, item)) {
                     bool wasChanged;
                     var newItem = Comparer.MergeTypes(Value, item, out wasChanged);
-                    return wasChanged ? new NamespaceSetOneUnion(newItem, Comparer) : this;
+                    return wasChanged ? new AnalysisSetOneUnion(newItem, Comparer) : this;
                 } else {
-                    return new NamespaceSetTwoUnion(Value, item, Comparer);
+                    return new AnalysisSetTwoUnion(Value, item, Comparer);
                 }
             }
 
-            public INamespaceSet Add(Namespace item, out bool wasChanged, bool canMutate = true) {
+            public IAnalysisSet Add(AnalysisValue item, out bool wasChanged, bool canMutate = true) {
                 if (Object.ReferenceEquals(Value, item)) {
                     wasChanged = false;
                     return this;
                 } else if (Comparer.Equals(Value, item)) {
                     var newItem = Comparer.MergeTypes(Value, item, out wasChanged);
-                    return wasChanged ? new NamespaceSetOneUnion(newItem, Comparer) : this;
+                    return wasChanged ? new AnalysisSetOneUnion(newItem, Comparer) : this;
                 } else {
                     wasChanged = true;
-                    return new NamespaceSetTwoUnion(Value, item, Comparer);
+                    return new AnalysisSetTwoUnion(Value, item, Comparer);
                 }
             }
 
-            public INamespaceSet Union(IEnumerable<Namespace> items, bool canMutate = true) {
-                Namespace ns;
-                NamespaceSetOneUnion ns1;
-                NamespaceSetOneObject nsO1;
-                NamespaceSetTwoUnion ns2;
-                if ((ns = items as Namespace) != null) {
+            public IAnalysisSet Union(IEnumerable<AnalysisValue> items, bool canMutate = true) {
+                AnalysisValue ns;
+                AnalysisSetOneUnion ns1;
+                AnalysisSetOneObject nsO1;
+                AnalysisSetTwoUnion ns2;
+                if (items == null) {
+                    return this;
+                } else if ((ns = items as AnalysisValue) != null) {
                     return Add(ns, canMutate);
-                } else if ((ns1 = items as NamespaceSetOneUnion) != null) {
+                } else if ((ns1 = items as AnalysisSetOneUnion) != null) {
                     return Add(ns1.Value, canMutate);
-                } else if ((nsO1 = items as NamespaceSetOneObject) != null) {
+                } else if ((nsO1 = items as AnalysisSetOneObject) != null) {
                     return Add(nsO1.Value, canMutate);
-                } else if ((ns2 = items as NamespaceSetTwoUnion) != null && ns2.Comparer == Comparer) {
+                } else if ((ns2 = items as AnalysisSetTwoUnion) != null && ns2.Comparer == Comparer) {
                     return ns2.Add(Value, false);
                 } else {
-                    return new NamespaceSetManyUnion(items, Comparer).Add(Value).Trim();
+                    return new AnalysisSetManyUnion(items, Comparer).Add(Value).Trim();
                 }
             }
 
-            public INamespaceSet Union(IEnumerable<Namespace> items, out bool wasChanged, bool canMutate = true) {
-                Namespace ns;
-                NamespaceSetOneUnion ns1;
-                NamespaceSetOneObject nsO1;
-                NamespaceSetTwoUnion ns2;
-                if ((ns = items as Namespace) != null) {
+            public IAnalysisSet Union(IEnumerable<AnalysisValue> items, out bool wasChanged, bool canMutate = true) {
+                AnalysisValue ns;
+                AnalysisSetOneUnion ns1;
+                AnalysisSetOneObject nsO1;
+                AnalysisSetTwoUnion ns2;
+                if (items == null) {
+                    wasChanged = false;
+                    return this;
+                } else if ((ns = items as AnalysisValue) != null) {
                     return Add(ns, out wasChanged, canMutate);
-                } else if ((ns1 = items as NamespaceSetOneUnion) != null) {
+                } else if ((ns1 = items as AnalysisSetOneUnion) != null) {
                     return Add(ns1.Value, out wasChanged, canMutate);
-                } else if ((nsO1 = items as NamespaceSetOneObject) != null) {
+                } else if ((nsO1 = items as AnalysisSetOneObject) != null) {
                     return Add(nsO1.Value, out wasChanged, canMutate);
-                } else if ((ns2 = items as NamespaceSetTwoUnion) != null && ns2.Comparer == Comparer) {
+                } else if ((ns2 = items as AnalysisSetTwoUnion) != null && ns2.Comparer == Comparer) {
                     return ns2.Add(Value, out wasChanged, false);
                 } else {
-                    return new NamespaceSetManyUnion(Value, Comparer).Union(items, out wasChanged).Trim();
+                    return new AnalysisSetManyUnion(Value, Comparer).Union(items, out wasChanged).Trim();
                 }
             }
 
-            public INamespaceSet Clone() {
+            public IAnalysisSet Clone() {
                 return this;
             }
 
-            public bool Contains(Namespace item) {
+            public bool Contains(AnalysisValue item) {
                 return Comparer.Equals(Value, item);
             }
 
-            public bool SetEquals(INamespaceSet other) {
-                var ns1 = other as NamespaceSetOneUnion;
+            public bool SetEquals(IAnalysisSet other) {
+                var ns1 = other as AnalysisSetOneUnion;
                 if (ns1 != null) {
                     return Comparer.Equals(Value, ns1.Value);
                 } else if (other == null) {
@@ -1300,8 +1397,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 get { return 1; }
             }
 
-            public IEnumerator<Namespace> GetEnumerator() {
-                return new SetOfOneEnumerator<Namespace>(Value);
+            public IEnumerator<AnalysisValue> GetEnumerator() {
+                return new SetOfOneEnumerator<AnalysisValue>(Value);
             }
 
             System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() {
@@ -1312,8 +1409,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 get { return _comparer; }
             }
 
-            IEqualityComparer<Namespace> INamespaceSet.Comparer {
-                get { return ((NamespaceSetOneUnion)this).Comparer; }
+            IEqualityComparer<AnalysisValue> IAnalysisSet.Comparer {
+                get { return ((AnalysisSetOneUnion)this).Comparer; }
             }
 
             public override string ToString() {
@@ -1322,39 +1419,39 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         [DebuggerDisplay(DebugViewProxy.DisplayString), DebuggerTypeProxy(typeof(DebugViewProxy))]
-        sealed class NamespaceSetTwoUnion : INamespaceSet {
-            public readonly Namespace Value1, Value2;
+        sealed class AnalysisSetTwoUnion : IAnalysisSet {
+            public readonly AnalysisValue Value1, Value2;
             private readonly UnionComparer _comparer;
 
-            public NamespaceSetTwoUnion(Namespace value1, Namespace value2, UnionComparer comparer) {
+            public AnalysisSetTwoUnion(AnalysisValue value1, AnalysisValue value2, UnionComparer comparer) {
                 Debug.Assert(!comparer.Equals(value1, value2));
                 Value1 = value1;
                 Value2 = value2;
                 _comparer = comparer;
             }
 
-            internal static Tuple<Namespace, Namespace> FromEnumerable(IEnumerable<Namespace> set, UnionComparer comparer) {
+            internal static Tuple<AnalysisValue, AnalysisValue> FromEnumerable(IEnumerable<AnalysisValue> set, UnionComparer comparer) {
                 using (var e = set.GetEnumerator()) {
                     if (!e.MoveNext()) {
-                        return new Tuple<Namespace, Namespace>(null, null);
+                        return new Tuple<AnalysisValue, AnalysisValue>(null, null);
                     }
                     var value1 = e.Current;
                     if (!e.MoveNext()) {
-                        return new Tuple<Namespace, Namespace>(value1, null);
+                        return new Tuple<AnalysisValue, AnalysisValue>(value1, null);
                     }
                     var value2 = e.Current;
                     if (comparer.Equals(e.Current, value1)) {
                         bool dummy;
-                        return new Tuple<Namespace, Namespace>(comparer.MergeTypes(value1, value2, out dummy), null);
+                        return new Tuple<AnalysisValue, AnalysisValue>(comparer.MergeTypes(value1, value2, out dummy), null);
                     }
                     if (e.MoveNext()) {
                         return null;
                     }
-                    return new Tuple<Namespace, Namespace>(value1, value2);
+                    return new Tuple<AnalysisValue, AnalysisValue>(value1, value2);
                 }
             }
 
-            public NamespaceSetTwoUnion(IEnumerable<Namespace> set, UnionComparer comparer) {
+            public AnalysisSetTwoUnion(IEnumerable<AnalysisValue> set, UnionComparer comparer) {
                 _comparer = comparer;
                 var tup = FromEnumerable(set, comparer);
                 if (tup == null || tup.Item2 == null) {
@@ -1364,12 +1461,12 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 Value2 = tup.Item2;
             }
 
-            public INamespaceSet Add(Namespace item, bool canMutate = true) {
+            public IAnalysisSet Add(AnalysisValue item, bool canMutate = true) {
                 bool dummy;
                 return Add(item, out dummy, canMutate);
             }
 
-            public INamespaceSet Add(Namespace item, out bool wasChanged, bool canMutate = true) {
+            public IAnalysisSet Add(AnalysisValue item, out bool wasChanged, bool canMutate = true) {
                 bool dummy;
                 if (Object.ReferenceEquals(Value1, item) || Object.ReferenceEquals(Value2, item)) {
                     wasChanged = false;
@@ -1380,9 +1477,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
                         return this;
                     }
                     if (Comparer.Equals(Value2, newValue)) {
-                        return new NamespaceSetOneUnion(Comparer.MergeTypes(Value2, newValue, out dummy), Comparer);
+                        return new AnalysisSetOneUnion(Comparer.MergeTypes(Value2, newValue, out dummy), Comparer);
                     } else {
-                        return new NamespaceSetTwoUnion(newValue, Value2, Comparer);
+                        return new AnalysisSetTwoUnion(newValue, Value2, Comparer);
                     }
                 } else if (Comparer.Equals(Value2, item)) {
                     var newValue = Comparer.MergeTypes(Value2, item, out wasChanged);
@@ -1390,55 +1487,60 @@ namespace Microsoft.PythonTools.Analysis.Values {
                         return this;
                     }
                     if (Comparer.Equals(Value1, newValue)) {
-                        return new NamespaceSetOneUnion(Comparer.MergeTypes(Value1, newValue, out dummy), Comparer);
+                        return new AnalysisSetOneUnion(Comparer.MergeTypes(Value1, newValue, out dummy), Comparer);
                     } else {
-                        return new NamespaceSetTwoUnion(Value1, newValue, Comparer);
+                        return new AnalysisSetTwoUnion(Value1, newValue, Comparer);
                     }
                 }
                 wasChanged = true;
-                return new NamespaceSetManyUnion(this, item, Comparer, out dummy);
+                return new AnalysisSetManyUnion(this, item, Comparer, out dummy);
             }
 
-            public INamespaceSet Union(IEnumerable<Namespace> items, bool canMutate = true) {
-                Namespace ns;
-                NamespaceSetOneObject ns1o;
-                NamespaceSetOneUnion ns1u;
-                if ((ns = items as Namespace) != null) {
+            public IAnalysisSet Union(IEnumerable<AnalysisValue> items, bool canMutate = true) {
+                AnalysisValue ns;
+                AnalysisSetOneObject ns1o;
+                AnalysisSetOneUnion ns1u;
+                if (items == null) {
+                    return this;
+                } else if ((ns = items as AnalysisValue) != null) {
                     return Add(ns, canMutate);
-                } else if ((ns1o = items as NamespaceSetOneObject) != null) {
+                } else if ((ns1o = items as AnalysisSetOneObject) != null) {
                     return Add(ns1o.Value, canMutate);
-                } else if ((ns1u = items as NamespaceSetOneUnion) != null) {
+                } else if ((ns1u = items as AnalysisSetOneUnion) != null) {
                     return Add(ns1u.Value, canMutate);
                 } else {
-                    return new NamespaceSetManyUnion(this, Comparer).Union(items);
+                    return new AnalysisSetManyUnion(this, Comparer).Union(items);
                 }
             }
 
-            public INamespaceSet Union(IEnumerable<Namespace> items, out bool wasChanged, bool canMutate = true) {
-                Namespace ns;
-                NamespaceSetOneObject ns1o;
-                NamespaceSetOneUnion ns1u;
-                if ((ns = items as Namespace) != null) {
+            public IAnalysisSet Union(IEnumerable<AnalysisValue> items, out bool wasChanged, bool canMutate = true) {
+                AnalysisValue ns;
+                AnalysisSetOneObject ns1o;
+                AnalysisSetOneUnion ns1u;
+                if (items == null) {
+                    wasChanged = false;
+                    return this;
+                } else if ((ns = items as AnalysisValue) != null) {
                     return Add(ns, out wasChanged, canMutate);
-                } else if ((ns1o = items as NamespaceSetOneObject) != null) {
+                } else if ((ns1o = items as AnalysisSetOneObject) != null) {
                     return Add(ns1o.Value, out wasChanged, canMutate);
-                } else if ((ns1u = items as NamespaceSetOneUnion) != null) {
+                } else if ((ns1u = items as AnalysisSetOneUnion) != null) {
                     return Add(ns1u.Value, out wasChanged, canMutate);
                 } else {
-                    return new NamespaceSetManyUnion(this, Comparer).Union(items, out wasChanged);
+                    return new AnalysisSetManyUnion(this, Comparer).Union(items, out wasChanged);
                 }
             }
 
-            public INamespaceSet Clone() {
+            public IAnalysisSet Clone() {
                 return this;
             }
 
-            public bool Contains(Namespace item) {
+            public bool Contains(AnalysisValue item) {
                 return Comparer.Equals(Value1, item) || Comparer.Equals(Value2, item);
             }
 
-            public bool SetEquals(INamespaceSet other) {
-                var ns2 = other as NamespaceSetTwoUnion;
+            public bool SetEquals(IAnalysisSet other) {
+                var ns2 = other as AnalysisSetTwoUnion;
                 if (ns2 != null) {
                     return Comparer.Equals(Value1, ns2.Value1) && Comparer.Equals(Value2, ns2.Value2) ||
                         Comparer.Equals(Value1, ns2.Value2) && Comparer.Equals(Value2, ns2.Value1);
@@ -1453,7 +1555,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 get { return 2; }
             }
 
-            public IEnumerator<Namespace> GetEnumerator() {
+            public IEnumerator<AnalysisValue> GetEnumerator() {
                 yield return Value1;
                 yield return Value2;
             }
@@ -1466,8 +1568,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 get { return _comparer; }
             }
 
-            IEqualityComparer<Namespace> INamespaceSet.Comparer {
-                get { return ((NamespaceSetTwoUnion)this).Comparer; }
+            IEqualityComparer<AnalysisValue> IAnalysisSet.Comparer {
+                get { return ((AnalysisSetTwoUnion)this).Comparer; }
             }
 
             public override string ToString() {

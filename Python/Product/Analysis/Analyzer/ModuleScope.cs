@@ -21,7 +21,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             : base(moduleInfo, null) {
         }
 
-        public ModuleInfo Module { get { return Namespace as ModuleInfo; } }
+        public ModuleInfo Module { get { return AnalysisValue as ModuleInfo; } }
 
         public override string Name {
             get { return Module.Name; }

@@ -23,30 +23,30 @@ namespace Microsoft.PythonTools.Analysis.Values {
     /// Specialized ClassInfo for sequence types.
     /// </summary>
     abstract class SequenceBuiltinClassInfo : BuiltinClassInfo {
-        protected readonly INamespaceSet _indexTypes;
+        protected readonly IAnalysisSet _indexTypes;
 
         public SequenceBuiltinClassInfo(IPythonType classObj, PythonAnalyzer projectState)
             : base(classObj, projectState) {
             var seqType = classObj as IPythonSequenceType;
             if (seqType != null && seqType.IndexTypes != null) {
-                _indexTypes = projectState.GetNamespacesFromObjects(seqType.IndexTypes).GetInstanceType();
+                _indexTypes = projectState.GetAnalysisSetFromObjects(seqType.IndexTypes).GetInstanceType();
             } else {
-                _indexTypes = NamespaceSet.Empty;
+                _indexTypes = AnalysisSet.Empty;
             }
         }
 
-        internal INamespaceSet IndexTypes {
+        internal IAnalysisSet IndexTypes {
             get { return _indexTypes; }
         }
 
-        public override INamespaceSet Call(Node node, AnalysisUnit unit, INamespaceSet[] args, NameExpression[] keywordArgNames) {
+        public override IAnalysisSet Call(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
             if (args.Length == 1) {
                 var res = unit.Scope.GetOrMakeNodeValue(
                     node,
                     (node_) => MakeFromIndexes(node_, unit.ProjectEntry)
                 ) as SequenceInfo;
 
-                List<INamespaceSet> seqTypes = new List<INamespaceSet>();
+                List<IAnalysisSet> seqTypes = new List<IAnalysisSet>();
                 foreach (var type in args[0]) {
                     SequenceInfo seqInfo = type as SequenceInfo;
                     if (seqInfo != null) {
@@ -75,7 +75,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return base.Call(node, unit, args, keywordArgNames);
         }
 
-        private static string GetInstanceShortDescription(Namespace ns) {
+        private static string GetInstanceShortDescription(AnalysisValue ns) {
             var bci = ns as BuiltinClassInfo;
             if (bci != null) {
                 return bci.Instance.ShortDescription;
@@ -101,24 +101,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        private const int MERGE_TO_SAME_BASE = 2;
-
-        internal override Namespace UnionMergeTypes(Namespace ns, int strength) {
-            if (_indexTypes.Any() && strength >= MERGE_TO_SAME_BASE) {
-                return ProjectState.ClassInfos[TypeId] ?? base.UnionMergeTypes(ns, strength);
-            }
-            return base.UnionMergeTypes(ns, strength);
-        }
-
-        public override bool UnionEquals(Namespace ns, int strength) {
-            if (_indexTypes.Any() && strength >= MERGE_TO_SAME_BASE) {
-                return TypeId == ns.TypeId;
-            }
-            return base.UnionEquals(ns, strength);
-        }
-
-        public override int UnionHashCode(int strength) {
-            if (_indexTypes.Any()) {
+        internal override int UnionHashCode(int strength) {
+            if (strength < MergeStrength.ToObject && _indexTypes.Any()) {
                 var type = ProjectState.ClassInfos[TypeId];
                 if (type != null) {
                     // Use our unspecialized type's hash code.
@@ -128,6 +112,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return base.UnionHashCode(strength);
         }
 
-        public abstract SequenceInfo MakeFromIndexes(Node node, ProjectEntry entry);
+        internal abstract SequenceInfo MakeFromIndexes(Node node, ProjectEntry entry);
     }
 }

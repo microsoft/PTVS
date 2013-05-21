@@ -1290,9 +1290,9 @@ def f(abc):
             var entry = ProcessText(@"
 x = [('abc', 42, True), ('abc', 23, False),]
 for some_str, some_int, some_bool in x:
-    print some_str		
-    print some_int		
-    print some_bool	    
+    print some_str
+    print some_int
+    print some_bool
 ");
             AssertUtil.ContainsExactly(entry.GetTypesByIndex("some_str", 1), BytesType);
             AssertUtil.ContainsExactly(entry.GetTypesByIndex("some_int", 1), IntType);
@@ -3359,7 +3359,7 @@ x([])
 ";
             var entry = ProcessText(text);
             var values = entry.GetValuesByIndex("self.abc", text.IndexOf("self.abc")).ToList();
-            Assert.AreEqual(1, values.Count);
+            Assert.AreEqual(4, values.Count);
         }
 
         [TestMethod, Priority(0)]
@@ -3926,7 +3926,7 @@ class C(object):
             baz.Analyze(CancellationToken.None);
 
             Assert.AreEqual(foo.Analysis.GetValuesByIndex("C", 1).First().Description, "class C");
-            Assert.IsTrue(foo.Analysis.GetValuesByIndex("C", 1).First().Location.FilePath.EndsWith("bar.py"));
+            Assert.IsTrue(foo.Analysis.GetValuesByIndex("C", 1).First().Locations.Single().FilePath.EndsWith("bar.py"));
 
             barSrc = GetSourceUnit(@"
 ", @"bar.py");
@@ -3944,7 +3944,7 @@ class C(object):
             foo.Analyze(CancellationToken.None);
 
             Assert.AreEqual(foo.Analysis.GetValuesByIndex("C", 1).First().Description, "class C");
-            Assert.IsTrue(foo.Analysis.GetValuesByIndex("C", 1).First().Location.FilePath.EndsWith("baz.py"));
+            Assert.IsTrue(foo.Analysis.GetValuesByIndex("C", 1).First().Locations.Single().FilePath.EndsWith("baz.py"));
         }
 
         [TestMethod, Priority(0)]
@@ -4863,12 +4863,12 @@ pass
 
             var entry = ProcessText(text);
 
-            var vars = new List<IAnalysisValue>(entry.GetValuesByIndex("x[0]", text.IndexOf("pass")));
+            var vars = new List<AnalysisValue>(entry.GetValuesByIndex("x[0]", text.IndexOf("pass")));
             Assert.AreEqual(1, vars.Count);
             Assert.AreEqual(IntType, vars[0].PythonType);
 
             foreach (string value in new[] { "ly", "lz", "ty", "tz", "lyt", "tyt" }) {
-                vars = new List<IAnalysisValue>(entry.GetValuesByIndex(value + "[0]", text.IndexOf("pass")));
+                vars = new List<AnalysisValue>(entry.GetValuesByIndex(value + "[0]", text.IndexOf("pass")));
                 Assert.AreEqual(1, vars.Count, "value: {0}", value);
                 Assert.AreEqual(IntType, vars[0].PythonType, "value: {0}", value);
             }

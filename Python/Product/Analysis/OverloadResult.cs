@@ -20,7 +20,7 @@ using System.Threading.Tasks;
 using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.PythonTools.Analysis {
-    class OverloadResult : IOverloadResult {
+    public class OverloadResult : IOverloadResult {
         private readonly ParameterResult[] _parameters;
         private readonly string _name;
 
