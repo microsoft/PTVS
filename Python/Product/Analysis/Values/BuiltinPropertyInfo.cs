@@ -35,13 +35,12 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 return base.GetDescriptor(node, instance, context, unit);
             }
 
-            return ((BuiltinClassInfo)ProjectState.GetAnalysisValueFromObjects(_value.Type)).Instance.SelfSet;
+            return ProjectState.GetAnalysisValueFromObjects(_value.Type).GetInstanceType();
         }
 
         public override IAnalysisSet GetStaticDescriptor(Interpreter.AnalysisUnit unit) {
             if (_value.IsStatic) {
-                var klass = (BuiltinClassInfo)ProjectState.GetAnalysisValueFromObjects(_value.Type);
-                return klass.Instance.SelfSet;
+                return ProjectState.GetAnalysisValueFromObjects(_value.Type).GetInstanceType();
             }
 
             return base.GetStaticDescriptor(unit);

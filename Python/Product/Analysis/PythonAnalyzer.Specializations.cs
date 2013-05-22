@@ -331,8 +331,9 @@ namespace Microsoft.PythonTools.Analysis {
                             if (type.Type.UnderlyingType != null) {
 
                                 var ns = unit.ProjectState.GetAnalysisValueFromObjects(((IDotNetPythonInterpreter)unit.ProjectState.Interpreter).GetBuiltinType(type.Type.UnderlyingType));
-                                if (ns is BuiltinClassInfo) {
-                                    ns = ((BuiltinClassInfo)ns).Instance;
+                                var bci = ns as BuiltinClassInfo;
+                                if (bci != null) {
+                                    ns = bci.Instance;
                                 }
                                 self.SetMember(node, evalUnit, keyValue.Key, ns.SelfSet);
                             }

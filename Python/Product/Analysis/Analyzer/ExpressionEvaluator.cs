@@ -248,7 +248,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             var n = (ConstantExpression)node;
             if (n.Value is double ||
                 (n.Value is int && ((int)n.Value) > 100)) {
-                return ((BuiltinClassInfo)ee.ProjectState.GetAnalysisValueFromObjects(ee.ProjectState.GetTypeFromObject(n.Value))).Instance.SelfSet;
+                return ee.ProjectState.GetAnalysisValueFromObjects(ee.ProjectState.GetTypeFromObject(n.Value)).GetInstanceType();
             }
 
             return ee.ProjectState.GetConstant(n.Value);
