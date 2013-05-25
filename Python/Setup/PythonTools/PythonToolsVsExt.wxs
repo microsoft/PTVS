@@ -1,0 +1,411 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+    <Fragment>
+        <DirectoryRef Id="INSTALLLOCATION">
+            <Directory Id="dir0D2EB39806B8FE87825F141262A782D4" Name="Templates" />
+            <Directory Id="dir1B4805CEC92CD8586B8C95875EA0F7DF" Name="CompletionDB" />
+            <Directory Id="GAC" Name="GAC" />
+            <Directory Id="dir550D5637E4804BC5AA8590B918C5FB54" Name="ptvsd" />
+        </DirectoryRef>
+    </Fragment>
+    <Fragment>
+        <ComponentGroup Id="PythonToolsExt">
+            <!-- Per user components -->
+            <Component Id="PerUserInstallRegistry" Directory="INSTALLLOCATION" Guid="{F0602549-7439-4DEC-8DCC-BF986EA53DF0}">
+                <Condition>NOT ALLUSERS = 1</Condition>
+                <RegistryKey Root='HKCU' Key='Software\Microsoft\VisualStudio\$(var.VSTargetVersion)\ExtensionManager\EnabledExtensions'>
+                    <RegistryValue Type='string' Name='96492FC7-7BC6-46F7-8559-66BB4E09FD1E,2.0' Value='[EXTENSION_INSTALLPATH]Extensions\Microsoft\Python Tools for Visual Studio\2.0\'/>
+                </RegistryKey>
+                <RegistryKey Root='HKCU' Key='Software\Microsoft\VisualStudio\$(var.VSTargetVersion)\ExtensionManager\ExtensionTypes'>
+                    <RegistryValue Type='string' Name='96492FC7-7BC6-46F7-8559-66BB4E09FD1E,2.0' Value='Tool'/>
+                </RegistryKey>
+            </Component>
+            
+            <!-- All user components -->
+            <Component Id="cmp5BDDB568168248128EC9CF83E9466234" Directory="GAC" Guid="{224E48AF-A97D-4F05-B514-A86FEB4A8804}" >
+                <Condition>ALLUSERS = 1</Condition>
+                <File Id="fil08DEB3712AB6448C8A369B97AE879B82" KeyPath="yes" Source="$(var.TargetDir)\Microsoft.PythonTools.dll" Assembly=".net"/>
+            </Component>
+            <Component Id="cmp405551D10EB0492D917A0485605C59F8" Directory="GAC" Guid="{7E4B1A16-010E-489E-A87B-BF8C5703DDC0}" >
+                <Condition>ALLUSERS = 1</Condition>
+                <File Id="fil4FCAAD86363A4F83AF6CD8AD61DCCA24" KeyPath="yes" Source="$(var.TargetDir)\Microsoft.PythonTools.Analysis.dll" Assembly=".net"/>
+            </Component>
+            <Component Id="cmp3723207D6F2145329EC08053A702A410" Directory="GAC" Guid="{0827FC63-ACCC-4861-9652-76E76A63732B}" >
+                <Condition>ALLUSERS = 1</Condition>
+                <File Id="fil6A9A63D82A864CE1B93D313CE0447135" KeyPath="yes" Source="$(var.TargetDir)\Microsoft.PythonTools.Attacher.exe" Assembly=".net"/>
+            </Component>
+            <Component Id="cmp51C3DCAB961D460BA67710418F3C2125" Directory="GAC" Guid="{8706DC70-E1E1-48CD-B3AA-ABDA7A2BB6F0}" >
+                <Condition>ALLUSERS = 1</Condition>
+                <File Id="filD4798D96AC5E4F9A96A44CA110175A98" KeyPath="yes" Source="$(var.TargetDir)\Microsoft.PythonTools.Debugger.dll" Assembly=".net"/>
+            </Component>
+            <Component Id="cmp6E562A0FD5B04BC1ABA4B46F899FFABC" Directory="GAC" Guid="{72A17B9C-E63D-4399-9B5D-755552C444A7}" >
+                <Condition>ALLUSERS = 1</Condition>
+                <File Id="fil2D46C9A322D8435988BAED1587312F45" KeyPath="yes" Source="$(var.TargetDir)\Microsoft.PythonTools.ImportWizard.dll" Assembly=".net"/>
+            </Component>
+
+            <!-- Both per user and all user components -->
+            <Component Id="cmp859EFD7B5E5F8E214EC472E7DC763EBF" Directory="INSTALLLOCATION" Guid="{FCF50E4C-2843-4D32-A900-B1D0FCE2F297}">
+                <File Id="fil4E68ECDFDC7C76EEDFACF0055409671A" KeyPath="yes" Source="$(var.ObjDir)\extension.vsixmanifest" />
+            </Component>
+            <Component Id="cmp0FFB8552F419932DD6BE904CC8D85285" Directory="INSTALLLOCATION" Guid="{AADACAD1-1608-4140-B199-87835279BC8A}">
+                <File Id="filEA44832E31014ACCD5CCF344E1C297ED" KeyPath="yes" Source="$(var.TargetDir)\Python Tools for VS License.rtf" />
+            </Component>
+            <Component Id="cmp933245C25D4D40B39BC2114A7B478532" Directory="INSTALLLOCATION" Guid="{52EF00B2-106D-49DE-87F3-19CBEB103A98}">
+                <File Id="fil372262577A664D3BBFFD30A7DDDAE72E" KeyPath="yes" Source="$(var.TargetDir)\PythonFile.ico" />
+            </Component>
+            <Component Id="cmp6D5E90B270732C7CF3CA0505224114C6" Directory="INSTALLLOCATION" Guid="{43A11BE3-DC0C-49D6-A1CF-7A2C12629A8B}">
+                <File Id="filE15A5066C20482C91FF1B652A7525942" KeyPath="yes" Source="$(var.TargetDir)\PythonProject.ico" />
+            </Component>
+            <Component Id="cmpD8230A7821204B19B812CF984972DD19" Directory="INSTALLLOCATION" Guid="{85628118-CFDA-4FC9-87B7-67B023D8844D}">
+                <File Id="filA04236B904B24049B9E4D28C2CB17667" KeyPath="yes" Source="$(var.TargetDir)\PythonProjectBig.ico" />
+            </Component>
+            <Component Id="cmp871624C85D2241E2898EF79193F0F767" Directory="INSTALLLOCATION" Guid="{5AAE252A-9356-43F0-91FD-3B318BEB0561}">
+                <File Id="fil364FCEF261FC4ACCB09299E3D6C5FBAC" KeyPath="yes" Source="$(var.TargetDir)\Microsoft.PythonTools.Attacher.exe" />
+            </Component>
+            <Component Id="cmp8544C5F2FB724B3E8194DD7ED9D4E758" Directory="INSTALLLOCATION" Guid="{ADFE545B-279A-49F1-9EFC-FD68169D27E9}">
+                <File Id="fil9A7BB1E0E2E34A559431093F34AE8FD5" KeyPath="yes" Source="$(var.TargetDir)\Microsoft.PythonTools.AttacherX86.exe" />
+            </Component>
+            <Component Id="cmpE0C6677BC31578D494A5BA7F9334A21A" Directory="INSTALLLOCATION" Guid="{CC8DFC01-5E8C-4002-8D7F-D8D5C41DFAD5}">
+                <File Id="fil1A9BDED26621E88A50C420E21E07E2E5" KeyPath="yes" Source="$(var.TargetDir)\Microsoft.PythonTools.dll" />
+            </Component>
+            <Component Id="cmp0682E31FB4514A42A91282B71C4120C9" Directory="INSTALLLOCATION" Guid="{A04C1163-16FA-4A61-A9D4-0014FC723919}">
+                <File Id="filE45ED780D98B4660978A5D1E74084517" KeyPath="yes" Source="$(var.TargetDir)\Microsoft.PythonTools.Analysis.dll" />
+            </Component>
+            <Component Id="cmpEDB9BE8986ED443DAE68C5B39405ACEF" Directory="INSTALLLOCATION" Guid="{25135ADF-6873-420E-AAA3-242214599B63}">
+                <File Id="fil2EE3FFF3C2CA48CF8452EE5B975F0F0D" KeyPath="yes" Source="$(var.TargetDir)\Microsoft.PythonTools.Debugger.dll" />
+            </Component>
+            <Component Id="cmp7BC1D524BF6A4012B043A09263C70396" Directory="INSTALLLOCATION" Guid="{5B186383-5754-44E0-B443-34C0B9A8FC80}">
+                <File Id="filA20456929DAF4C77AC6C2BB6741C622C" KeyPath="yes" Source="$(var.TargetDir)\Microsoft.PythonTools.ImportWizard.dll" />
+            </Component>
+            <Component Id="cmpAECA7C7BA8604DC995F00FFD6208A8AE" Directory="INSTALLLOCATION" Guid="{C69AD6BF-3B48-41EF-A2DE-AB1EB65C72A1}">
+                <File Id="fil83E122C66D1C4B21ABC1129A0FC1C2F1" KeyPath="yes" Source="$(var.TargetDir)\Microsoft.PythonTools.Analyzer.exe" />
+            </Component>
+            <Component Id="cmp50EB27AE2F75F8F149082ADB2443249D" Directory="INSTALLLOCATION" Guid="{55198E93-DE1C-483E-8411-37DECFCB5264}">
+                <File Id="filA6BD0112AD2B09494FB8515F88C32A16" KeyPath="yes" Source="$(var.TargetDir)\Microsoft.PythonTools.pkgdef" />
+            </Component>
+            <Component Id="cmpD952633F9D61461CB2BE953CE8FA8DF4" Directory="INSTALLLOCATION" Guid="{FFBE09DC-4E59-419C-8DA1-251BE063CDA9}">
+                <File Id="fil78842041AE234509AADFDD849E910D64" KeyPath="yes" Source="$(var.TargetDir)\visualstudio_py_repl.py" />
+            </Component>
+            <Component Id="cmpE73B565175EF4E05847E5813A4FC7FE5" Directory="INSTALLLOCATION" Guid="{6E9587D0-20F1-48CF-B3C3-90CC197B6B58}">
+                <File Id="filBA970A57E66D46D7A10EC9B49E231A33" KeyPath="yes" Source="$(var.TargetDir)\visualstudio_ipython_repl.py" />
+            </Component>
+            <Component Id="cmp152F3F6773894625BE4156A752510029" Directory="INSTALLLOCATION" Guid="{247687AA-B548-4673-A36B-6A1855C087EE}">
+                <File Id="fil1462CA00441D4802B3048998E9773F34" KeyPath="yes" Source="$(var.TargetDir)\visualstudio_py_launcher.py" />
+            </Component>
+            <Component Id="cmpDB0F99EF784848118948BD253AAD3DAC" Directory="INSTALLLOCATION" Guid="{F7F114D3-373E-4E9F-B9BE-39F825B8E836}">
+                <File Id="filA1E852F7F32640F1B95890D8FFDF3A15" KeyPath="yes" Source="$(var.TargetDir)\visualstudio_py_debugger.py" />
+            </Component>
+            <Component Id="cmp1393F48D784445999595E484B451E3BC" Directory="INSTALLLOCATION" Guid="{C476FF73-0141-4A00-A467-CC6011632293}">
+                <File Id="fil28E24E1EDA274E3AA3F9F60DF884FA5C" KeyPath="yes" Source="$(var.TargetDir)\visualstudio_py_util.py" />
+            </Component>
+            <Component Id="cmp67E450890B9C4F48901224A227A5C4CC" Directory="INSTALLLOCATION" Guid="{B04EE073-FC98-4F4C-A02D-0219E6B202B6}">
+                <File Id="fil939E6C6B5F3D48A8A6C64E29C3688CC1" KeyPath="yes" Source="$(var.TargetDir)\PythonScraper.py" />
+            </Component>
+            <Component Id="cmpB00A7775504B4EB2B150EB7A1FF09BE4" Directory="INSTALLLOCATION" Guid="{07E40788-8514-4153-9510-FD5607597305}">
+                <File Id="fil22E71EFD0875400CAC464BFA7581AA98" KeyPath="yes" Source="$(var.TargetDir)\ExtensionScraper.py" />
+            </Component>
+            <Component Id="cmpFBCB9BCEEA4349AB8B9CD0296BB2010E" Directory="INSTALLLOCATION" Guid="{E7F1AB15-9725-4770-ACF8-FADD85AF45FE}">
+                <File Id="filF1F2F4BBDC7D4A29B9714547D345A2EA" KeyPath="yes" Source="$(var.TargetDir)\IronPythonScraper.py" />
+            </Component>
+            <Component Id="cmpE4E7569D005A40AFBA05AC770949CBEA" Directory="INSTALLLOCATION" Guid="{D2E99282-2257-4559-A6FD-F69DA8D155BE}">
+                <File Id="filBD705C5EB57C4F18BDAE120949DC2348" KeyPath="yes" Source="$(var.TargetDir)\BuiltinScraper.py" />
+            </Component>
+            <Component Id="cmp3255C55CE4A84BA2AE18C067CCCB2F53" Directory="INSTALLLOCATION" Guid="{F849ADFC-0EE2-4F6C-B69E-D235B8E175D2}">
+                <File Id="fil289B66CC358944D79F3C68E1DDE7300F" KeyPath="yes" Source="$(var.TargetDir)\NoInterpreters.html" />
+            </Component>
+            <Component Id="cmp281B78C80A994875BBA07772007F1561" Directory="dir4C35966DF3CB4FFBBC79F3DE8EFBBB20" Guid="{685CE9DE-781F-4209-AB21-106F29425E80}">
+                <File Id="fil77FBA41B51724C4A994E90DBE3B887AD" KeyPath="yes" Source="$(var.TargetDir)\Templates\NewItem\class.py" />
+            </Component>
+            <Component Id="cmp81A02A35AD5741CFAD1EB249A2A9A450" Directory="dir4C35966DF3CB4FFBBC79F3DE8EFBBB20" Guid="{A161D43D-2EB6-46BB-BE80-6506A3584174}">
+                <File Id="fil8462F52A3BD34CA4A8E8F2F70A792EDC" KeyPath="yes" Source="$(var.TargetDir)\Templates\NewItem\class.pyw" />
+            </Component>
+            <Component Id="cmp4E3790527B974A9C8DACBE8845DAEFE8" Directory="dir4C35966DF3CB4FFBBC79F3DE8EFBBB20" Guid="{45F69668-4B8A-40B4-AA87-4C2B779966E0}">
+                <File Id="fil67AD59D3C84546DD884F86EEE6D1E4E6" KeyPath="yes" Source="$(var.TargetDir)\Templates\NewItem\module.py" />
+            </Component>
+            <Component Id="cmpB8B394D138D94605B7CA01E736510CB9" Directory="dir4C35966DF3CB4FFBBC79F3DE8EFBBB20" Guid="{2D040B2C-2C4C-466C-8EDA-5D06AFB38081}">
+                <File Id="filB9593EF134F7497E966ACC7C35FEB7CA" KeyPath="yes" Source="$(var.TargetDir)\Templates\NewItem\module.pyw" />
+            </Component>
+            <Component Id="cmpB938B4EA7BB94D7F9FB6FB7650B0CA88" Directory="dir4C35966DF3CB4FFBBC79F3DE8EFBBB20" Guid="{54547C3E-D86C-40C9-85C5-91A8CF3EDA93}">
+                <File Id="filADFBA8BEFE9E42CAB841543A6F84D7F1" KeyPath="yes" Source="$(var.TargetDir)\Templates\NewItem\NewPythonItems.vsdir" />
+            </Component>
+            <Component Id="cmpEE3557B31D8245178251B6F1FFAD529D" Directory="dirD5195BC5D1C101171FEF8AD9B89AA866" Guid="{19DC2DB5-8303-40C3-8529-45FD843685CD}">
+                <File Id="fil0BA0EEA2FC68E80AD0214890CEC8F83F" KeyPath="yes" Source="$(var.TargetDir)\ItemTemplates\Python\EmptyPackage.zip" />
+            </Component>
+            <Component Id="cmpA361CE8A7384E191107235678B8EEAEC" Directory="dir62A3191423702D512B04C68A15CF9E38" Guid="{C9CB017F-7245-48E4-BF12-F26FF4168AF7}">
+                <File Id="filA978F5681675A6AD62419FF664CAD281" KeyPath="yes" Source="$(var.TargetDir)\ItemTemplates\Python\EmptyPyFile.zip" />
+            </Component>
+            <Component Id="cmpEA22F203D13A097F254EA336CC391B72" Directory="dir7674B77CEAEF043F1A589EB485D2FEF6" Guid="{DA90A1AB-EDC5-4D28-8C01-821FD5D2EF92}">
+                <File Id="filF28BA8CAC3482FBB1B947A162A12F328" KeyPath="yes" Source="$(var.TargetDir)\ItemTemplates\Python\PyClass.zip" />
+            </Component>
+            <Component Id="cmp78345A4E7E944A24AB7FCB4675EA2E2C" Directory="dir462EFAD2D9A94D268FA8EDE31994CB19" Guid="{F94B32FD-4532-45DD-AAE2-81A5E96861B0}">
+                <File Id="fil4A3F1FCBCA8D4269A7739CE80BB024A9" KeyPath="yes" Source="$(var.TargetDir)\ItemTemplates\Python\TextFile.zip" />
+            </Component>
+            <Component Id="cmpF2FFD4C8F8F3A803EFF2ACC027975136" Directory="dir8A804F37A06868229FBCA080587FD3F2" Guid="{5D696F4F-0141-4CC9-A3EB-DAB200E4E3AB}">
+                <File Id="filF3356809E63779C8D279862E6C856094" KeyPath="yes" Source="$(var.TargetDir)\ProjectTemplates\Python\ConsoleAppProject.zip" />
+            </Component>
+            <Component Id="cmp8135586F02804D91A8DB72CC7FC6ACD4" Directory="dirC7642DBB71044CACB35A2064AA9697E4" Guid="{5982C49A-8FAA-4351-BA08-2F6DDD71B0F8}">
+                <File Id="filA06AE3FFF4054E38B7EBD00CA9F67187" KeyPath="yes" Source="$(var.TargetDir)\ProjectTemplates\Python\FromExistingCode.zip" />
+            </Component>
+            <Component Id="cmp5E1CEDE43A189A6AACBB60829AD63E1D" Directory="dir1B4805CEC92CD8586B8C95875EA0F7DF" Guid="{6BF9570B-B452-4D37-AC11-7376E0D43881}">
+                <File Id="filF929E14C8F0D95906776F9E4446FE9C8" KeyPath="yes" Source="$(var.TargetDir)\CompletionDB\array.idb" />
+            </Component>
+            <Component Id="cmpC2D50FB6244BD53B1B1A25702ADCB8D4" Directory="dir1B4805CEC92CD8586B8C95875EA0F7DF" Guid="{22E6227C-4EB1-4DF8-B94A-1E7EAD3E6737}">
+                <File Id="filA9B47B8BAAE365521AC14257660D35B7" KeyPath="yes" Source="$(var.TargetDir)\CompletionDB\binascii.idb" />
+            </Component>
+            <Component Id="cmp4A864AE37686EE60E3A15F276BE2D7E4" Directory="dir1B4805CEC92CD8586B8C95875EA0F7DF" Guid="{87A605A0-C846-4329-AAC2-3A262195A42C}">
+                <File Id="filC3A7CB0DF72311AB4BFEAF581AA00668" KeyPath="yes" Source="$(var.TargetDir)\CompletionDB\cmath.idb" />
+            </Component>
+            <Component Id="cmpA3121C9ACF119EA0B69F19702A9C2F61" Directory="dir1B4805CEC92CD8586B8C95875EA0F7DF" Guid="{45F051B5-7F3E-4C59-9B36-24EFC164C42F}">
+                <File Id="fil1D43A3B40CA3768CD4A6704AE57A9348" KeyPath="yes" Source="$(var.TargetDir)\CompletionDB\copy_reg.idb" />
+            </Component>
+            <Component Id="cmpD0631667E04B32B1D9E5E94A4D12EF13" Directory="dir1B4805CEC92CD8586B8C95875EA0F7DF" Guid="{F000B243-957A-4D12-BD84-3454C103F7A8}">
+                <File Id="fil75FE62829F80B0059A53BC54075CD290" KeyPath="yes" Source="$(var.TargetDir)\CompletionDB\cPickle.idb" />
+            </Component>
+            <Component Id="cmpBFC460C22E13C58BB4374A465202EE03" Directory="dir1B4805CEC92CD8586B8C95875EA0F7DF" Guid="{AC7C7BEE-0802-4E7B-94A3-8749DDE9E6F7}">
+                <File Id="filEDE84F4F66A893DCCCE7FDAA99A2A449" KeyPath="yes" Source="$(var.TargetDir)\CompletionDB\cStringIO.idb" />
+            </Component>
+            <Component Id="cmp148FC89801464A853707E171D83527F3" Directory="dir1B4805CEC92CD8586B8C95875EA0F7DF" Guid="{89170EB6-ED4A-401D-A02D-82A492ED0147}">
+                <File Id="filFCC1F597A27DEC36D6966B35B04BCD05" KeyPath="yes" Source="$(var.TargetDir)\CompletionDB\datetime.idb" />
+            </Component>
+            <Component Id="cmpAD94081A3A20CFE4C60E2A720070D844" Directory="dir1B4805CEC92CD8586B8C95875EA0F7DF" Guid="{8C6BDA11-D103-49E6-A550-37B58BDB1524}">
+                <File Id="filA53EBC4E60E73927FB15D4D547309719" KeyPath="yes" Source="$(var.TargetDir)\CompletionDB\errno.idb" />
+            </Component>
+            <Component Id="cmp29546664D18631AE5C70CD85FA153DD9" Directory="dir1B4805CEC92CD8586B8C95875EA0F7DF" Guid="{2CFEE5A2-ADA2-4330-8718-E6465E937A82}">
+                <File Id="fil51AD8D070EF3A6CE01D6964CEE868FBD" KeyPath="yes" Source="$(var.TargetDir)\CompletionDB\exceptions.idb" />
+            </Component>
+            <Component Id="cmp3B9F81A97062CB936B978C12B15C5425" Directory="dir1B4805CEC92CD8586B8C95875EA0F7DF" Guid="{6A00DB46-4C11-47F6-A71C-FDD67B9D228A}">
+                <File Id="fil33F2FD5B7158357E433EBD6728889554" KeyPath="yes" Source="$(var.TargetDir)\CompletionDB\future_builtins.idb" />
+            </Component>
+            <Component Id="cmp3D23FC974FC8BF344484B9014092F905" Directory="dir1B4805CEC92CD8586B8C95875EA0F7DF" Guid="{F48FB975-5198-4B1E-A924-DFA1EA2DE619}">
+                <File Id="fil10EF346CE2D44A4645E5862B7A7AD2AC" KeyPath="yes" Source="$(var.TargetDir)\CompletionDB\gc.idb" />
+            </Component>
+            <Component Id="cmp36038EF4AC5196B9E260C41295C70D8B" Directory="dir1B4805CEC92CD8586B8C95875EA0F7DF" Guid="{41C32B93-2573-4271-81E4-94C6B355C1EA}">
+                <File Id="fil4CFFC5985240CA5D36294FB45852C739" KeyPath="yes" Source="$(var.TargetDir)\CompletionDB\imp.idb" />
+            </Component>
+            <Component Id="cmpEF9A36559CF23B36AF9FFA37697AB308" Directory="dir1B4805CEC92CD8586B8C95875EA0F7DF" Guid="{839D82AD-FE24-47D6-87DC-8207116382DB}">
+                <File Id="filF0391327EF905BF06E086D48AC3836A8" KeyPath="yes" Source="$(var.TargetDir)\CompletionDB\itertools.idb" />
+            </Component>
+            <Component Id="cmp8031913D09247840EBA0E9422D685AA3" Directory="dir1B4805CEC92CD8586B8C95875EA0F7DF" Guid="{7D105160-DA30-4366-9EEF-574E2FCE2388}">
+                <File Id="fil58AD535E938A74A8A255A89F008092C1" KeyPath="yes" Source="$(var.TargetDir)\CompletionDB\marshal.idb" />
+            </Component>
+            <Component Id="cmpC7E54C4BEDED3A86D119B73247C5603D" Directory="dir1B4805CEC92CD8586B8C95875EA0F7DF" Guid="{DA1DD874-707F-43DE-AEF6-0485FC448165}">
+                <File Id="filE079D5F72F8218580F86AA82F122E556" KeyPath="yes" Source="$(var.TargetDir)\CompletionDB\math.idb" />
+            </Component>
+            <Component Id="cmp2321850B7827C70ED82814A5A8FF4358" Directory="dir1B4805CEC92CD8586B8C95875EA0F7DF" Guid="{11B4DE52-F3EC-4485-B0C2-741B2EDE444E}">
+                <File Id="filEC7E6CBDAC40759B851AB3D3E525FD05" KeyPath="yes" Source="$(var.TargetDir)\CompletionDB\mmap.idb" />
+            </Component>
+            <Component Id="cmp95F43FF1608E23102504A1A40FD83C67" Directory="dir1B4805CEC92CD8586B8C95875EA0F7DF" Guid="{CF95C06D-768A-4EAF-892C-98A45288C01E}">
+                <File Id="fil3757233C8F1D2784CC544E81D853C05D" KeyPath="yes" Source="$(var.TargetDir)\CompletionDB\msvcrt.idb" />
+            </Component>
+            <Component Id="cmpE97DDA79BD93F0874DCA58B17850C1C3" Directory="dir1B4805CEC92CD8586B8C95875EA0F7DF" Guid="{AF274681-7158-488F-95FA-BAA58AABA0C2}">
+                <File Id="fil84DFDD44DCBD1405513C3E2D768884D8" KeyPath="yes" Source="$(var.TargetDir)\CompletionDB\nt.idb" />
+            </Component>
+            <Component Id="cmp74D249B355121668118B2720FDED8B84" Directory="dir1B4805CEC92CD8586B8C95875EA0F7DF" Guid="{4D29FA60-AC1A-43AC-8014-A34530FEDBD2}">
+                <File Id="fil603B0F25D0CEB0FB4DE7544BEF9DC5E8" KeyPath="yes" Source="$(var.TargetDir)\CompletionDB\operator.idb" />
+            </Component>
+            <Component Id="cmp6EA96261C5DD0A928F5C1D70FDA54927" Directory="dir1B4805CEC92CD8586B8C95875EA0F7DF" Guid="{5CB4C603-61B0-40AD-BB42-18E65F948D63}">
+                <File Id="fil1AB9D69BA802C6CAB641E115DE3F8EF7" KeyPath="yes" Source="$(var.TargetDir)\CompletionDB\re.idb" />
+            </Component>
+            <Component Id="cmpB71180244DF80F363B59CF6ED2B5C52F" Directory="dir1B4805CEC92CD8586B8C95875EA0F7DF" Guid="{C41B9BFF-1ACE-42E5-BDD5-5A6CC32EEB32}">
+                <File Id="fil497460EF42CEC615D1091CF64BF84A2D" KeyPath="yes" Source="$(var.TargetDir)\CompletionDB\select.idb" />
+            </Component>
+            <Component Id="cmp3F35E27A38EEC4B3A4FF7CEAC70BC5B1" Directory="dir1B4805CEC92CD8586B8C95875EA0F7DF" Guid="{7A31BCDB-148C-44A5-8A81-1568903553E3}">
+                <File Id="fil0C8B609723F7E33FA878884D3E613E8E" KeyPath="yes" Source="$(var.TargetDir)\CompletionDB\signal.idb" />
+            </Component>
+            <Component Id="cmp960AD000A32A3E6F8FDF48969C47BF51" Directory="dir1B4805CEC92CD8586B8C95875EA0F7DF" Guid="{0B13BA81-2E42-4EF8-9ECC-C30D4A6ADCA2}">
+                <File Id="filCB60FF279BB5BE2C1795A8363222759D" KeyPath="yes" Source="$(var.TargetDir)\CompletionDB\socket.idb" />
+            </Component>
+            <Component Id="cmpD67DAB97516BE4E87BD5E7F53408165E" Directory="dir1B4805CEC92CD8586B8C95875EA0F7DF" Guid="{E94189F9-CAEE-4086-9175-EC9FA7FC5443}">
+                <File Id="fil82E34B9353B11724EB3C3662CD7585FB" KeyPath="yes" Source="$(var.TargetDir)\CompletionDB\sys.idb" />
+            </Component>
+            <Component Id="cmp4AE5CD5874D62D544DAE7D693679A6BC" Directory="dir1B4805CEC92CD8586B8C95875EA0F7DF" Guid="{6605D17A-D870-4A00-9C2C-1D9081FE13DF}">
+                <File Id="fil4C76ADDB5618FDC9A0B3CBCB9C0EE9E1" KeyPath="yes" Source="$(var.TargetDir)\CompletionDB\thread.idb" />
+            </Component>
+            <Component Id="cmp9FDAC44BCF68934A8572124DA7E1ED74" Directory="dir1B4805CEC92CD8586B8C95875EA0F7DF" Guid="{92D84818-8351-4FDA-BFE7-ACB88CEADDD9}">
+                <File Id="fil239ADA4722C2140FE8F0DFBEF96AE8C1" KeyPath="yes" Source="$(var.TargetDir)\CompletionDB\time.idb" />
+            </Component>
+            <Component Id="cmpB9D1F2120D69CECF7349730062E4F6B6" Directory="dir1B4805CEC92CD8586B8C95875EA0F7DF" Guid="{70F12FC3-10A4-424A-9896-7815CBF2FAAA}">
+                <File Id="fil74DA7FD94CCB0414E6A8A847B4E2ADB3" KeyPath="yes" Source="$(var.TargetDir)\CompletionDB\wpf.idb" />
+            </Component>
+            <Component Id="cmpDF753CFAF39C1B9DC9BD5B705935A698" Directory="dir1B4805CEC92CD8586B8C95875EA0F7DF" Guid="{7415D470-4FFB-42AD-97CA-DFD6443EA615}">
+                <File Id="filAC79839970CE792068FE82A078B11AE3" KeyPath="yes" Source="$(var.TargetDir)\CompletionDB\xxsubtype.idb" />
+            </Component>
+            <Component Id="cmpBE42C802466405B52FA1F96396D28394" Directory="dir1B4805CEC92CD8586B8C95875EA0F7DF" Guid="{2030438B-3325-444D-82B1-4B995F00BC73}">
+                <File Id="fil42738D5463404834D4434F27688B22B2" KeyPath="yes" Source="$(var.TargetDir)\CompletionDB\_codecs.idb" />
+            </Component>
+            <Component Id="cmpE593B8BFE650EAC098A8CAC064821EFA" Directory="dir1B4805CEC92CD8586B8C95875EA0F7DF" Guid="{CE05E4C5-A3BF-4B60-B5BC-AEE1F74BCAC2}">
+                <File Id="filF67B00C37FA5F86202A1FE3F5B6305D7" KeyPath="yes" Source="$(var.TargetDir)\CompletionDB\_collections.idb" />
+            </Component>
+            <Component Id="cmpF9332EA41F5476B9DFE65ED1037B16C6" Directory="dir1B4805CEC92CD8586B8C95875EA0F7DF" Guid="{8F780F27-B329-48CB-A926-AFD0DC789932}">
+                <File Id="fil22BF0389BD8630C937559BF5E4E98FBF" KeyPath="yes" Source="$(var.TargetDir)\CompletionDB\_ctypes.idb" />
+            </Component>
+            <Component Id="cmp577B573AD0AC876007FBB47B840140A6" Directory="dir1B4805CEC92CD8586B8C95875EA0F7DF" Guid="{A67DF1C0-56EC-4B6E-A36F-CC7E7D4D17B3}">
+                <File Id="fil58EB5B78906F5B55FEE96F0267190F38" KeyPath="yes" Source="$(var.TargetDir)\CompletionDB\_ctypes_test.idb" />
+            </Component>
+            <Component Id="cmpC98439E42661A8AF60034C34865C6211" Directory="dir1B4805CEC92CD8586B8C95875EA0F7DF" Guid="{E2C0DD55-CA78-4B0A-83AC-044B30A517C9}">
+                <File Id="fil12B39E1B9963AD74D336BE19A2825CFE" KeyPath="yes" Source="$(var.TargetDir)\CompletionDB\_functools.idb" />
+            </Component>
+            <Component Id="cmp6FBFC0BA65019909CEB0962A790A7302" Directory="dir1B4805CEC92CD8586B8C95875EA0F7DF" Guid="{6AD189FD-029A-49C3-B221-5920AA637016}">
+                <File Id="fil64C4396A5AE39B79F55977877B31F06F" KeyPath="yes" Source="$(var.TargetDir)\CompletionDB\_heapq.idb" />
+            </Component>
+            <Component Id="cmp4408D304127F4911DB22DCA530197EE0" Directory="dir1B4805CEC92CD8586B8C95875EA0F7DF" Guid="{8CDB23F1-10FA-4C86-83BF-179FDFFD429B}">
+                <File Id="filC590E372F56972413938554A6958B542" KeyPath="yes" Source="$(var.TargetDir)\CompletionDB\_io.idb" />
+            </Component>
+            <Component Id="cmp35BFFC5D8BE06D72E917497273D25AF4" Directory="dir1B4805CEC92CD8586B8C95875EA0F7DF" Guid="{0CC93E3F-67E6-44DA-8D7A-845900854611}">
+                <File Id="fil103D5FE25835B04A6C39723E3717E069" KeyPath="yes" Source="$(var.TargetDir)\CompletionDB\_locale.idb" />
+            </Component>
+            <Component Id="cmpAEE7E4A53D382D4F610625BF676125FC" Directory="dir1B4805CEC92CD8586B8C95875EA0F7DF" Guid="{4012B370-8BA7-4ACC-8FCF-8C3F492C7B56}">
+                <File Id="fil9EDAA832309ADC5CB3AA4ECBC7F46CBD" KeyPath="yes" Source="$(var.TargetDir)\CompletionDB\_md5.idb" />
+            </Component>
+            <Component Id="cmp6353E784CC8FBE8415C8B8451FA74A0D" Directory="dir1B4805CEC92CD8586B8C95875EA0F7DF" Guid="{8602AD4C-3C10-4439-AE78-F95C10A1603B}">
+                <File Id="fil283F87AFFCD0E4D35458E4ADD5D9AB15" KeyPath="yes" Source="$(var.TargetDir)\CompletionDB\_random.idb" />
+            </Component>
+            <Component Id="cmp020502044BE52B6BD86A9622D11E3558" Directory="dir1B4805CEC92CD8586B8C95875EA0F7DF" Guid="{A0235A16-55C3-45FB-BC83-A138A459B19A}">
+                <File Id="fil7E7FD2CB52A732B53A443362FA6E34A4" KeyPath="yes" Source="$(var.TargetDir)\CompletionDB\_sha.idb" />
+            </Component>
+            <Component Id="cmpE699D9AF9A1C11680929F9EB5E6CDF33" Directory="dir1B4805CEC92CD8586B8C95875EA0F7DF" Guid="{0576C0B0-91D7-41D2-A771-FAF7BE490AB1}">
+                <File Id="filDFA5EEC0E4CA9826185C5DDC67397243" KeyPath="yes" Source="$(var.TargetDir)\CompletionDB\_sha256.idb" />
+            </Component>
+            <Component Id="cmpB6EA8A72C0BFBC1E410F5FAE6C1FB387" Directory="dir1B4805CEC92CD8586B8C95875EA0F7DF" Guid="{581FFDBC-753C-44C4-A474-70C48F7F2C26}">
+                <File Id="filD20FE7ADB00964BC8D4EFD96FB688273" KeyPath="yes" Source="$(var.TargetDir)\CompletionDB\_sha512.idb" />
+            </Component>
+            <Component Id="cmp6DBB764E1564707173ED5D99E9AA8BFC" Directory="dir1B4805CEC92CD8586B8C95875EA0F7DF" Guid="{DF7FED6F-1810-4E1F-B275-4A99586F2503}">
+                <File Id="filE432B90EFD99C6A820BA05920B24432B" KeyPath="yes" Source="$(var.TargetDir)\CompletionDB\_sre.idb" />
+            </Component>
+            <Component Id="cmp3FE4F599DD72709CEF5896A3264E60BB" Directory="dir1B4805CEC92CD8586B8C95875EA0F7DF" Guid="{5760F14A-6FC5-4FF7-876E-590B7CE3B4FA}">
+                <File Id="filE2DBB6CE269E509768ED83413650D827" KeyPath="yes" Source="$(var.TargetDir)\CompletionDB\_ssl.idb" />
+            </Component>
+            <Component Id="cmpA9A0C780E88CBAF0A75F4E62C69462FF" Directory="dir1B4805CEC92CD8586B8C95875EA0F7DF" Guid="{7EE26C56-CA10-4527-AF10-4E29A634742C}">
+                <File Id="filD545A5388FC8073D48748E50D9A05C58" KeyPath="yes" Source="$(var.TargetDir)\CompletionDB\_struct.idb" />
+            </Component>
+            <Component Id="cmp5884E5C4D820B3CB12CB2BFE9F9EE477" Directory="dir1B4805CEC92CD8586B8C95875EA0F7DF" Guid="{B5A48884-E64F-42AE-A462-D3486F6A0893}">
+                <File Id="fil67B40CC4D17AFE39AF1443156E2D8709" KeyPath="yes" Source="$(var.TargetDir)\CompletionDB\_subprocess.idb" />
+            </Component>
+            <Component Id="cmp24D3393FB28C0DAB4FFC9C292AEE2A6E" Directory="dir1B4805CEC92CD8586B8C95875EA0F7DF" Guid="{B6C56832-6D09-4EBD-BE0E-E57846BC1B85}">
+                <File Id="filC6FE24D950EB063B99B2458157B1C47B" KeyPath="yes" Source="$(var.TargetDir)\CompletionDB\_warnings.idb" />
+            </Component>
+            <Component Id="cmp19E62E9BB28E004BD8ABDD4B294C45C3" Directory="dir1B4805CEC92CD8586B8C95875EA0F7DF" Guid="{D04817A5-0C71-4DA6-A964-C94AB2646123}">
+                <File Id="fil353DC8408D29CC1057F31C6A65515891" KeyPath="yes" Source="$(var.TargetDir)\CompletionDB\_weakref.idb" />
+            </Component>
+            <Component Id="cmpB1A791DE2903E0E0963BEDC2EA3130AA" Directory="dir1B4805CEC92CD8586B8C95875EA0F7DF" Guid="{EE1A27FF-FE3A-444B-B95F-9CB45FF11CBD}">
+                <File Id="fil4F9BD586CA3E811E324DE2737E184208" KeyPath="yes" Source="$(var.TargetDir)\CompletionDB\_winreg.idb" />
+            </Component>
+            <Component Id="cmpAA6BF6D2FD0918918A7BFBE87041CFBE" Directory="dir1B4805CEC92CD8586B8C95875EA0F7DF" Guid="{5A47F81C-51CC-4F17-B26C-0D2397427B76}">
+                <File Id="fil3AE95E00ADA9A685C723B39AF457CD4A" KeyPath="yes" Source="$(var.TargetDir)\CompletionDB\__builtin__.idb" />
+            </Component>
+            <Component Id="cmp0A3AD07C7B1940738D4EC76BA8FDB2DD" Directory="INSTALLLOCATION" Guid="{62900633-12C9-441A-AD7B-28AD9DE9FF93}">
+                <File Id="fil8E09A46F99354C3580E4F7500BAC7346" KeyPath="yes" Source="$(var.TargetDir)\PyDebugAttach.dll" />
+            </Component>
+            <Component Id="cmpD347FDE36E244F478BF31A6B7CA70458" Directory="INSTALLLOCATION" Guid="{F8B00369-E01C-430B-8F54-6B389FB13F68}">
+                <File Id="fil7AED81D9701E48FA942D4591A0D81849" KeyPath="yes" Source="$(var.TargetDir)\PyDebugAttachX86.dll" />
+            </Component>
+
+            <!-- WebPI Components -->
+            <Component Id="cmp784174C81EAD4818B81A267856573A28" Directory="Dir_PythonToolsMsBuild" Guid="{0228219C-9AD9-482A-B461-E6827A2A6DA9}">
+                <File Id="filAB7B8ABBA4A44C5488E0B9348E96699F" KeyPath="yes" Source="$(var.TargetDir)\WebpiCmdLine\Microsoft.Web.Deployment.dll" />
+            </Component>
+            <Component Id="cmp7EE160E60F1B4FAE948017F2D2C04038" Directory="Dir_PythonToolsMsBuild" Guid="{8400A599-BBF9-4916-9479-6E5B23A5A953}">
+                <File Id="fil9398F9303B5647069556EC099743B577" KeyPath="yes" Source="$(var.TargetDir)\WebpiCmdLine\Microsoft.Web.PlatformInstaller.dll" />
+            </Component>
+            <Component Id="cmpE263FDCA7B0245F28A8B107D3C1A6B76" Directory="Dir_PythonToolsMsBuild" Guid="{F7BC0CD1-2EC2-472F-9731-5CF1AC57B4EB}">
+                <File Id="fil3922C5CFF6D24C688200DF91C921572E" KeyPath="yes" Source="$(var.TargetDir)\WebpiCmdLine\Microsoft.Web.PlatformInstaller.UI.dll" />
+            </Component>
+            <Component Id="cmp3BF695351809415F9720EAFCFCDB5B92" Directory="Dir_PythonToolsMsBuild" Guid="{E36E9F62-19E4-4BE6-A5E5-6AE24E6AE48C}">
+                <File Id="fil709C98DE8F9D4037A908D337A11E2FF9" KeyPath="yes" Source="$(var.TargetDir)\WebpiCmdLine\WebPICmdLine.exe" />
+            </Component>
+            <Component Id="cmp109DC1ED01AD41309094176C759C5993" Directory="Dir_PythonToolsMsBuild" Guid="{51CAF78D-F4A6-4E69-BF75-7642CB5A6AD2}">
+                <File Id="filE50FABEC7DFA46A2B15E45A40C1F2696" KeyPath="yes" Source="$(var.TargetDir)\WebpiCmdLine\WebPICmdLine.exe.config" />
+            </Component>
+            <Component Id="cmpB03399D3B158416B9968685B3BBC67E7" Directory="dir550D5637E4804BC5AA8590B918C5FB54" Guid="{519512D1-9F16-48AF-8D71-99A18A1A9F7E}">
+              <File Id="fil413A9D671B4E49D7A312831E11EE64BD" KeyPath="yes" Source="$(var.TargetDir)\visualstudio_py_repl.py" />
+            </Component>
+            <Component Id="cmp2CE4F623807B4A3B91867F71019CDA12" Directory="dir550D5637E4804BC5AA8590B918C5FB54" Guid="{86A4432B-6BB2-4C6C-947E-782E21A0AE1C}">
+              <File Id="fil6DAD7293178C43FD9A6C5555036C32B0" KeyPath="yes" Source="$(var.TargetDir)\visualstudio_py_debugger.py" />
+            </Component>
+            <Component Id="cmpCC0524F077D04474BABBF66644F1AB04" Directory="dir550D5637E4804BC5AA8590B918C5FB54" Guid="{5EEA2DDD-AC8A-4A32-958F-768E96895E72}">
+              <File Id="filC194540AD9184FA5B13807364A666176" KeyPath="yes" Source="$(var.TargetDir)\visualstudio_py_util.py" />
+            </Component>
+            <Component Id="cmp0CB867460D334B0F97FBB733530B903F" Directory="dir550D5637E4804BC5AA8590B918C5FB54" Guid="{15493026-7494-4DC9-92C7-D8728652B59C}">
+              <File Id="filF08102B4E3334178B72D36536BF1FB89" KeyPath="yes" Source="$(var.TargetDir)\ptvsd\attach_server.py" />
+            </Component>
+            <Component Id="cmp93B2912AA65744D19E7F7C60F8F33850" Directory="dir550D5637E4804BC5AA8590B918C5FB54" Guid="{4A19349F-1316-42B9-B694-9BF52084701F}">
+              <File Id="fil0D872412BDDF4653A7A66C026C31A86C" KeyPath="yes" Source="$(var.TargetDir)\ptvsd\__init__.py" />
+            </Component>
+            <Component Id="cmp63F59CCB28BB48C5BB67D7B08E776099" Directory="dir550D5637E4804BC5AA8590B918C5FB54" Guid="{8AE068E7-7625-436E-AD0A-51FF13BDE6E5}">
+              <File Id="fil367A2890295845708024C1AC5D8140A5" KeyPath="yes" Source="$(var.TargetDir)\ptvsd\__main__.py" />
+            </Component>
+            <Component Id="cmpDB59A8DAF5AF4EF5BF5C73297E6D80CF" Directory="dir550D5637E4804BC5AA8590B918C5FB54" Guid="{6CD3060F-AF10-40AF-94F9-071069EAF7C8}">
+              <Shortcut Id="PTVSDShortcut"
+                        Name="ptvsd Package"
+                        Directory="ApplicationProgramsFolder"
+                        Description="Python Tools for Visual Studio Debugger package"
+                        Target="[$cmpDB59A8DAF5AF4EF5BF5C73297E6D80CF]" />
+              <RegistryValue Root='HKCU' Key='SOFTWARE\Microsoft\PythonTools\$(var.VSTargetVersion)' Type='string' Name='ptvsd' Value='[$cmpDB59A8DAF5AF4EF5BF5C73297E6D80CF]' KeyPath='yes' />
+              <RemoveFolder Id='DeleteApplicationProgramsFolder' Directory='ApplicationProgramsFolder' On='uninstall'/>
+            </Component>
+        </ComponentGroup>
+    </Fragment>
+    <Fragment>
+        <DirectoryRef Id="dirD5195BC5D1C101171FEF8AD9B89AA866" />
+    </Fragment>
+    <Fragment>
+        <DirectoryRef Id="dir62A3191423702D512B04C68A15CF9E38" />
+    </Fragment>
+    <Fragment>
+        <DirectoryRef Id="dir7674B77CEAEF043F1A589EB485D2FEF6" />
+    </Fragment>
+    <Fragment>
+        <DirectoryRef Id="dir462EFAD2D9A94D268FA8EDE31994CB19" />
+    </Fragment>
+    <Fragment>
+        <DirectoryRef Id="dir8A804F37A06868229FBCA080587FD3F2" />
+    </Fragment>
+    <Fragment>
+        <DirectoryRef Id="dirC7642DBB71044CACB35A2064AA9697E4" />
+    </Fragment>
+    <Fragment>
+        <DirectoryRef Id="dir0D2EB39806B8FE87825F141262A782D4">
+            <Directory Id="dir09D551762C64E912856A96ED35E3D478" Name="Files" />
+        </DirectoryRef>
+    </Fragment>
+    <Fragment>
+        <DirectoryRef Id="dir0D2EB39806B8FE87825F141262A782D4">
+            <Directory Id="dir618B2AB2A5714E7090C606039F60C756" Name="Projects" />
+        </DirectoryRef>
+    </Fragment>
+    <Fragment>
+        <DirectoryRef Id="dir0D2EB39806B8FE87825F141262A782D4">
+            <Directory Id="dir4C35966DF3CB4FFBBC79F3DE8EFBBB20" Name="NewItem" />
+        </DirectoryRef>
+    </Fragment>
+    <Fragment>
+        <DirectoryRef Id="dir09D551762C64E912856A96ED35E3D478">
+            <Directory Id="dir62A3191423702D512B04C68A15CF9E38" Name="EmptyPyFile" />
+        </DirectoryRef>
+    </Fragment>
+    <Fragment>
+        <DirectoryRef Id="dir09D551762C64E912856A96ED35E3D478">
+            <Directory Id="dir7674B77CEAEF043F1A589EB485D2FEF6" Name="PyClass" />
+        </DirectoryRef>
+    </Fragment>
+    <Fragment>
+        <DirectoryRef Id="dir09D551762C64E912856A96ED35E3D478">
+            <Directory Id="dir462EFAD2D9A94D268FA8EDE31994CB19" Name="TextFile" />
+        </DirectoryRef>
+    </Fragment>
+    <Fragment>
+        <DirectoryRef Id="dir618B2AB2A5714E7090C606039F60C756">
+            <Directory Id="dir8A804F37A06868229FBCA080587FD3F2" Name="ConsoleAppProject" />
+        </DirectoryRef>
+    </Fragment>
+    <Fragment>
+        <DirectoryRef Id="dir618B2AB2A5714E7090C606039F60C756">
+            <Directory Id="dirC7642DBB71044CACB35A2064AA9697E4" Name="FromExistingCode" />
+        </DirectoryRef>
+    </Fragment>
+  <Fragment>
+        <DirectoryRef Id="dir09D551762C64E912856A96ED35E3D478">
+            <Directory Id="dirD5195BC5D1C101171FEF8AD9B89AA866" Name="EmptyPackage" />
+        </DirectoryRef>
+    </Fragment>
+</Wix>

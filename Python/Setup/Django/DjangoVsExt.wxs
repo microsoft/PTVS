@@ -1,0 +1,94 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+    <Fragment>
+        <DirectoryRef Id="INSTALLLOCATION">
+            <Directory Id="dirF0D3CF56D8C94E078A27303E15108536" Name="Templates" />
+        </DirectoryRef>
+    </Fragment>
+    <Fragment>
+        <ComponentGroup Id="DjangoVsExt">
+            <!-- Per user components -->
+            <Component Id="PerUserInstallRegistry" Directory="INSTALLLOCATION" Guid="{4B9498D3-AA15-4DA7-951B-47A49883AF73}">
+                <Condition>NOT ALLUSERS = 1</Condition>
+                <RegistryKey Root='HKCU' Key='Software\Microsoft\VisualStudio\$(var.VSTargetVersion)\ExtensionManager\EnabledExtensions'>
+                    <RegistryValue Type='string' Name='a8637c34-aa55-46e2-973c-9c3e09afc17b,2.0' Value='[EXTENSION_INSTALLPATH]Extensions\Microsoft\Python Tools Django Support\2.0\'/>
+                </RegistryKey>
+                <RegistryKey Root='HKCU' Key='Software\Microsoft\VisualStudio\$(var.VSTargetVersion)\ExtensionManager\ExtensionTypes'>
+                    <RegistryValue Type='string' Name='a8637c34-aa55-46e2-973c-9c3e09afc17b,2.0' Value='Tool'/>
+                </RegistryKey>
+            </Component>
+
+            <Component Id="cmpA3B88C22BEA14947969A6DBAC37EAC3C" Directory="INSTALLLOCATION" Guid="{CBD6D4DA-7DA8-4D07-92C5-53D9E72769A2}">
+                <File Id="fil92CB7762778A45D582343F2F3E3B5E0C" KeyPath="yes" Source="$(var.TargetDir)\PythonProject.ico" />
+            </Component>
+            <Component Id="cmp3DB4060D02CA456E814470F70D38EE9D" Directory="INSTALLLOCATION" Guid="{9945B619-B1D7-43F7-BD64-1E2E32615FAD}">
+                <File Id="fil7C031EE5F18742A0A51C2865B7B93DE6" KeyPath="yes" Source="$(var.TargetDir)\PythonProjectBig.ico" />
+            </Component>
+
+            <!-- Both per user and all user components -->
+            <Component Id="cmp85EAAEE386C1446FA54E83CDB83B078F" Directory="INSTALLLOCATION" Guid="{9AF3CFB7-BD81-4E27-9FD0-43CFDD9FAE72}">
+                <File Id="fil87C095A96C5B482C9D76ADBD4A724803" KeyPath="yes" Source="$(var.ObjDir)\extension.vsixmanifest" />
+            </Component>
+            <Component Id="cmp4C5840915DD748D3BBEA60BC204FFB18" Directory="INSTALLLOCATION" Guid="{7176A2F6-D007-44D4-8819-C88786F31D20}">
+                <File Id="fil94D0D491095E44A1B0953FA3E77F9A6A" KeyPath="yes" Source="$(var.TargetDir)\Microsoft.PythonTools.Django.dll" />
+            </Component>
+            <Component Id="cmp529D4DBADD5343BC9BA9C9D10627E979" Directory="INSTALLLOCATION" Guid="{505D2DA1-16AB-4FE3-8415-9237474E3190}">
+                <File Id="filBAF64E97BE09427086DEBB9703D146C6" KeyPath="yes" Source="$(var.TargetDir)\Microsoft.PythonTools.Django.pkgdef" />
+            </Component>
+            <Component Id="cmp843B7FB2D6434D2799C80D60D9842459" Directory="dir117EF6E430844404B5E87390FC3DFD4E" Guid="{26F95137-B41F-47CB-B3A2-6769E513D11F}">
+                <File Id="filC0DD732153BC4B168791158F3DEF4CAD" KeyPath="yes" Source="$(var.TargetDir)\ProjectTemplates\Python\DjangoProject.zip" />
+            </Component>
+            <Component Id="cmpE95A9B6479B549C5BCFADF24CBF605FD" Directory="dir25D6546B68914D63B88D47F600FEEDFE" Guid="{1296CCF7-C82C-4D7A-8086-9742FD984D3B}">
+                <File Id="filAD9E9715475C402D8927BFA29168E597" KeyPath="yes" Source="$(var.TargetDir)\ItemTemplates\Python\DjangoHtml.zip" />
+            </Component>
+
+
+            <Component Id="cmp8FD2DCD84D064839ADBA2841550496C7" Directory="dir25D6546B68914D63B88D47F600FEEDFE" Guid="{1654E889-E8E9-4B57-BEAD-DD268EB0C709}">
+                <File Id="filAD5040460E0C42D8BE43C8E81DBAD43F" KeyPath="yes" Source="$(var.TargetDir)\ItemTemplates\Python\DjangoNewAppFiles14.zip" />
+            </Component>
+            
+            
+            <Component Id="cmp713F43FC911740F58F249EC82C7A9313" Directory="Dir_PythonToolsMsBuild" Guid="{E191EBE8-37D1-4320-98CF-571675A57BB6}">
+                <File Id="fil9CBB3D409E8F49C2B278CBE48F700F43" KeyPath="yes" Source="$(var.TargetDir)\wfastcgi.py" />
+            </Component>
+            <Component Id="cmp4FD921172E724700A7C19D19663D3FDE" Directory="Dir_PythonToolsMsBuild" Guid="{6CA3EDD5-E639-41D8-A063-1082659BA9DE}">
+                <File Id="filC7455A97B04D4226B3D48288A5456A10" KeyPath="yes" Source="$(var.TargetDir)\Microsoft.PythonTools.Django.targets" />
+            </Component>
+
+            <Component Id="cmp1FEFFD263DCA4D68A92B728C4B4AA381" Directory="Dir_PythonToolsMsBuild" Guid="{FBED67AB-7541-40A5-B775-DDFB5582C391}">
+                <File Id="fil7D682D06949A44D283580BCE6C38ED68" KeyPath="yes" Source="$(var.TargetDir)\Microsoft.PythonTools.WebRole.dll" />
+            </Component>
+            <Component Id="cmpB5F5D813C5064532B18AE23510C59445" Directory="Dir_PythonToolsMsBuild" Guid="{69BC20F5-7A60-41BC-AEAD-632388B532BC}" >
+                <File Id="fil9FC854A330164BC08899E2EE5352F14B" KeyPath="yes" Source="$(var.TargetDir)\Microsoft.PythonTools.AzureSetup.exe" />
+            </Component>
+            <Component Id="cmp93917E0E57784690AA56E4655F77CCD2" Directory="Dir_PythonToolsMsBuild" Guid="{EA371872-4305-4DB9-9281-1B21F1A56BC6}" >
+                <File Id="fil9943C86CCCD64C819C835AD211971097" KeyPath="yes" Source="$(var.TargetDir)\Microsoft.PythonTools.AzureSetup.exe.config" />
+            </Component>
+        </ComponentGroup>
+    </Fragment>
+    <Fragment>
+        <DirectoryRef Id="dirF0D3CF56D8C94E078A27303E15108536">
+            <Directory Id="dirDA7AFFEC217E48F596C479C46EAC4797" Name="Projects" />
+        </DirectoryRef>
+    </Fragment>
+    <Fragment>
+        <DirectoryRef Id="dirF0D3CF56D8C94E078A27303E15108536">
+            <Directory Id="dirC3001A197C764F83A0D06485365F13EF" Name="Files" />
+        </DirectoryRef>
+    </Fragment>
+    <Fragment>
+        <DirectoryRef Id="dirDA7AFFEC217E48F596C479C46EAC4797">
+            <Directory Id="dir117EF6E430844404B5E87390FC3DFD4E" Name="DjangoProject" />
+        </DirectoryRef>
+    </Fragment>
+    <Fragment>
+        <DirectoryRef Id="dirC3001A197C764F83A0D06485365F13EF">
+            <Directory Id="dir25D6546B68914D63B88D47F600FEEDFE" Name="DjangoHtmlTemplate" />
+        </DirectoryRef>
+    </Fragment>
+    <Fragment>
+        <DirectoryRef Id="dirC3001A197C764F83A0D06485365F13EF">
+            <Directory Id="dir1BD051D972A14535AD8882E451431619" Name="DjangoNewAppFiles" />
+        </DirectoryRef>
+    </Fragment>
+</Wix>

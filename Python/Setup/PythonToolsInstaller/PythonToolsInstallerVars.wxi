@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Include>
+  <?define ProductDescription = "Python Tools for Visual Studio" ?>
+
+  <!-- Product GUIDs: Must just be unique-->
+  <?if "$(var.VSTargetVersion)" = "10.0" ?>
+      <?define InstallerGuid=*?>
+      <?define InstallerUpgradeGuid=4D6FE7B2-2E09-4553-A90C-8CBC6DCE508A?>
+      <?define ProductName = "Python Tools for Visual Studio 2010" ?>
+  <?elseif "$(var.VSTargetVersion)" = "11.0" ?>
+      <?define InstallerGuid=*?>
+      <?define InstallerUpgradeGuid=6A060E66-FDD1-49EC-AD4A-13A0BA2B5F7C?>  
+      <?define ProductName = "Python Tools for Visual Studio 2012" ?>
+  <?else?>
+      <?define InstallerGuid=*?>
+      <?define InstallerUpgradeGuid=D3FFD34D-B716-4496-BFF0-0C34E536DC64?>  
+      <?define ProductName = "Python Tools for Visual Studio 2013" ?>
+  <?endif ?>
+</Include>

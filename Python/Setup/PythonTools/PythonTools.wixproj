@@ -1,0 +1,82 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\SetupProjectBefore.settings" />
+  <PropertyGroup>
+    <ProductVersion>3.5</ProductVersion>
+    <ProjectGuid>{0D7C4C3A-A08F-4B91-BD1C-C4C79C013484}</ProjectGuid>
+    <SchemaVersion>2.0</SchemaVersion>
+    <OutputName>PythonTools</OutputName>
+    <OutputType>Module</OutputType>
+    <DefineSolutionProperties>false</DefineSolutionProperties>
+    <SccProjectName>SAK</SccProjectName>
+    <SccProvider>SAK</SccProvider>
+    <SccAuxPath>SAK</SccAuxPath>
+    <SccLocalPath>SAK</SccLocalPath>
+    <DefineConstants>
+      ObjDir=$(BuildRoot)\Python\Product\PythonTools\obj\Dev$(VSTarget)\$(Configuration);
+      VSTargetVersion=$(VSTarget)
+    </DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="PythonTools.wxs" />
+    <Compile Include="PythonToolsVsExt.wxs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="$(BuildRoot)\Python\Product\PythonTools\PythonTools.csproj">
+      <Name>Microsoft.PythonTools</Name>
+      <Project>{FA7BE5F5-E04F-4613-B7AC-70CE10D1BB68}</Project>
+      <Private>True</Private>
+      <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
+      <RefTargetDir>INSTALLLOCATION</RefTargetDir>
+      <DoNotHarvest>true</DoNotHarvest>
+    </ProjectReference>
+    <ProjectReference Include="$(BuildRoot)\Python\Product\Analysis\Analysis.csproj">
+      <Name>Microsoft.PythonTools.Analysis</Name>
+      <Project>{A85D479D-67A9-4BDB-904A-7D86DAF68A6F}</Project>
+      <Private>True</Private>
+      <RefProjectOutputGroups>Binaries</RefProjectOutputGroups>
+      <RefTargetDir>INSTALLLOCATION</RefTargetDir>
+      <DoNotHarvest>true</DoNotHarvest>
+    </ProjectReference>
+    <ProjectReference Include="$(BuildRoot)\Python\Product\Analyzer\Analyzer.csproj">
+      <Name>Microsoft.PythonTools.Analyzer</Name>
+      <Project>{29A4FA1F-A562-4ED1-86FB-5850EF5DA92C}</Project>
+      <Private>True</Private>
+      <RefProjectOutputGroups>Binaries</RefProjectOutputGroups>
+      <RefTargetDir>INSTALLLOCATION</RefTargetDir>
+      <DoNotHarvest>true</DoNotHarvest>
+    </ProjectReference>
+    <ProjectReference Include="$(BuildRoot)\Python\Product\Attacher\Attacher.csproj">
+      <Name>Microsoft.Pythontools.Attacher</Name>
+      <Project>{666A22BB-0CB5-4C08-A20F-E17450DA6573}</Project>
+      <Private>True</Private>
+      <DoNotHarvest>true</DoNotHarvest>
+    </ProjectReference>
+    <ProjectReference Include="$(BuildRoot)\Python\Product\AttacherX86\AttacherX86.csproj">
+      <Name>Microsoft.Pythontools.PyAttacherX64</Name>
+      <Project>{F3A5829D-EE15-4BE7-828F-2519172C6671}</Project>
+      <Private>True</Private>
+      <DoNotHarvest>true</DoNotHarvest>
+    </ProjectReference>
+    <ProjectReference Include="$(BuildRoot)\Python\Product\Debugger\Debugger.csproj">
+      <Name>Microsoft.PythonTools.Debugger</Name>
+      <Project>{DECC7971-FA58-4DB0-9561-BFFADD393BBD}</Project>
+      <Private>True</Private>
+      <RefProjectOutputGroups>Binaries</RefProjectOutputGroups>
+      <RefTargetDir>INSTALLLOCATION</RefTargetDir>
+      <DoNotHarvest>true</DoNotHarvest>
+    </ProjectReference>
+    <ProjectReference Include="$(BuildRoot)\Python\Product\MpiShim\MpiShim.csproj">
+      <Name>Microsoft.PythonTools.MpiShim</Name>
+      <Project>{11DCE865-22FA-41B8-9D56-9FBEA8FAB146}</Project>
+      <Private>True</Private>
+      <RefProjectOutputGroups>Binaries</RefProjectOutputGroups>
+      <RefTargetDir>INSTALLLOCATION</RefTargetDir>
+      <DoNotHarvest>true</DoNotHarvest>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="..\SetupProjectAfter.settings" />
+  <!--<Target Name="BuildOtherProjects" BeforeTargets="Link">
+       <MSBuild Projects="..\..\Python\PyDebugAttach\PyDebugAttach.vcxproj" Properties="Platform=x64"/>
+  </Target>-->
+</Project>
