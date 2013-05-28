@@ -14,6 +14,7 @@
 
 using System;
 using System.IO;
+using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools;
 
@@ -34,7 +35,8 @@ namespace Microsoft.PythonTools.Commands {
                     .ContinueWith(t => {
                         var path = t.Result;
                         if (!string.IsNullOrEmpty(path) && File.Exists(path)) {
-                            PythonToolsPackage.Instance.DTE.ExecuteCommand("File.OpenProject", "\"" + path + "\"");
+                            object outRef = null, pathRef = path;
+                            PythonToolsPackage.Instance.DTE.Commands.Raise(VSConstants.GUID_VSStandardCommandSet97.ToString(), (int)VSConstants.VSStd97CmdID.OpenProject, ref pathRef, ref outRef);
                         }
                         statusBar.SetText("");
                     }, System.Threading.Tasks.TaskScheduler.FromCurrentSynchronizationContext());

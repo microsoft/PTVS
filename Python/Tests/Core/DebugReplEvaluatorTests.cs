@@ -57,6 +57,7 @@ namespace PythonToolsTests {
 
         [TestInitialize]
         public void TestInit() {
+            Version.AssertInstalled();
             _evaluator = new PythonDebugReplEvaluator();
             _window = new MockReplWindow(_evaluator);
             _evaluator.Initialize(_window);

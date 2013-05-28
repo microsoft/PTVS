@@ -14,6 +14,7 @@
 
 using System.Collections.Generic;
 using System.IO;
+using System.Windows.Forms;
 using EnvDTE;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.TemplateWizard;
@@ -33,10 +34,20 @@ namespace Microsoft.PythonTools.ImportWizard {
                 // If it fails (doesn't exist/contains files/read-only), let the directory stay.
             }
 
-            var provider = new ServiceProvider((Microsoft.VisualStudio.OLE.Interop.IServiceProvider)automationObject);
-            var dte = provider.GetService(typeof(DTE)) as DTE;
-            if (dte != null) {
-                System.Threading.Tasks.Task.Factory.StartNew(() => dte.ExecuteCommand("Tools.ImportPythonProject"));
+            var dte = automationObject as DTE;
+            if (dte == null) {
+                var provider = automationObject as Microsoft.VisualStudio.OLE.Interop.IServiceProvider;
+                if (provider == null) {
+                }
+                dte = new ServiceProvider(provider).GetService(typeof(DTE)) as DTE;
+            }
+            if (dte == null) {
+                MessageBox.Show("Unable to start wizard: no automation object available.", "Python Tools for Visual Studio");
+            } else {
+                System.Threading.Tasks.Task.Factory.StartNew(() => {
+                    object inObj = null, outObj = null;
+                    dte.Commands.Raise(GuidList.guidPythonToolsCmdSetString, (int)PkgCmdIDList.cmdidImportWizard, ref inObj, ref outObj);
+                });
             }
             throw new WizardCancelledException();
         }

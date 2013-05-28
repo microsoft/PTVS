@@ -165,13 +165,8 @@ namespace Microsoft.PythonTools {
                 OpenReplCommand replCommand = command.Key as OpenReplCommand;
                 if (replCommand != null && replCommand.Description == description) {
                     var dte = (EnvDTE.DTE)PythonToolsPackage.GetGlobalService(typeof(EnvDTE.DTE));
-                    string name = "View.PythonInteractive";
-                    if (replCommand.CommandId == PkgCmdIDList.cmdidReplWindow) {
-                        name += "Default";
-                    } else {
-                        name += replCommand.CommandId - PkgCmdIDList.cmdidReplWindow;
-                    }
-                    dte.ExecuteCommand(name);
+                    object inObj = null, outObj = null;
+                    dte.Commands.Raise(GuidList.guidPythonToolsCmdSetString, replCommand.CommandId, ref inObj, ref outObj);
                     return;
                 }
             }

@@ -316,7 +316,8 @@ namespace Microsoft.PythonTools.Repl {
 
                 using (new SocketLock(this)) {
                     if (_completion != null) {
-                        _completion.SetCanceled();
+                        bool success = _completion.TrySetCanceled();
+                        Debug.Assert(success);
                     }
                 }
             }
@@ -363,17 +364,17 @@ namespace Microsoft.PythonTools.Repl {
                 ThreadPool.QueueUserWorkItem(x => {
                     string input = Window.ReadStandardInput();
                     input = input != null ? UnfixNewLines(input) : "\n";
-                    if (Stream != null) {
-                        try {
-                            using (new SocketLock(this)) {
+                    try {
+                        using (new SocketLock(this)) {
+                            if (Stream != null) {
                                 Stream.Write(InputLineCommandBytes);
                                 SendString(input);
                             }
-                        } catch (IOException) {
-                        } catch (SocketException) {
-                        } catch (DisconnectedException) {
-                        } catch (NullReferenceException) {
                         }
+                    } catch (IOException) {
+                    } catch (SocketException) {
+                    } catch (DisconnectedException) {
+                    } catch (NullReferenceException) {
                     }
                 });
             }
@@ -847,7 +848,8 @@ namespace Microsoft.PythonTools.Repl {
                 }
 
                 if (_completion != null) {
-                    _completion.SetResult(ExecutionResult.Failure);
+                    bool success = _completion.TrySetResult(ExecutionResult.Failure);
+                    Debug.Assert(success);
                 }
             }
 
