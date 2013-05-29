@@ -18,7 +18,7 @@ using System.Linq;
 using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Parsing.Ast;
 
-namespace Microsoft.PythonTools.Analysis.Interpreter {
+namespace Microsoft.PythonTools.Analysis.Analyzer {
     sealed class FunctionScope : InterpreterScope {
         private ListParameterVariableDef _seqParameters;
         private DictParameterVariableDef _dictParameters;
@@ -64,6 +64,15 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
             }
         }
 
+        internal void AddParameterReferences(AnalysisUnit caller, NameExpression[] names) {
+            foreach (var name in names) {
+                VariableDef param;
+                if (name != null && Variables.TryGetValue(name.Name, out param)) {
+                    param.AddReference(name, caller);
+                }
+            }
+        }
+
         internal bool UpdateParameters(FunctionAnalysisUnit unit, ArgumentSet others, bool enqueue = true, FunctionScope scopeWithDefaultParameters = null) {
             EnsureParameters(unit, scopeWithDefaultParameters);
 
@@ -77,6 +86,7 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
                 VariableDef param;
                 if (!Variables.TryGetValue(astParams[i].Name, out param)) {
                     Debug.Assert(false, "Parameter " + astParams[i].Name + " has no variable in this scope");
+                    param = AddVariable(astParams[i].Name);
                 }
                 param.MakeUnionStrongerIfMoreThan(limits.NormalArgumentTypes, others.Args[i]);
                 added |= param.AddTypes(entry, others.Args[i], false);

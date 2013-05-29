@@ -15,13 +15,10 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Globalization;
 using System.Linq;
-using System.Numerics;
 using System.Text;
-using Microsoft.PythonTools.Analysis.Interpreter;
+using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Values {
@@ -122,15 +119,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
 
             if (updateArguments && calledUnit.UpdateParameters(callArgs)) {
-#if DEBUG
-                // Checks whether these arguments can be added ad nauseum.
-                if (calledUnit.UpdateParameters(callArgs) && calledUnit.UpdateParameters(callArgs) && calledUnit.UpdateParameters(callArgs)) {
-                    AnalysisLog.Add("BadArgs", calledUnit, callArgs);
-                }
-#endif
                 AnalysisLog.UpdateUnit(calledUnit);
             }
-
+            if (keywordArgNames != null && keywordArgNames.Any()) {
+                calledUnit.AddNamedParameterReferences(unit, keywordArgNames);
+            }
 
             calledUnit.ReturnValue.AddDependency(unit);
             return calledUnit.ReturnValue.Types;
@@ -304,25 +297,94 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public override ICollection<OverloadResult> Overloads {
-            get {
-                var parameters = new ParameterResult[FunctionDefinition.Parameters.Count];
-                for (int i = 0; i < FunctionDefinition.Parameters.Count; i++) {
-                    var curParam = FunctionDefinition.Parameters[i];
-                    VariableDef param;
-                    if (AnalysisUnit.Scope.Variables.TryGetValue(curParam.Name, out param)) {
-                        parameters[i] = MakeParameterResult(ProjectState, curParam, DeclaringModule.Tree,
-                            ProjectEntry.Analysis.ToVariables(param));
-                    }
+        private class StringArrayComparer : IEqualityComparer<string[]> {
+            private IEqualityComparer<string> _comparer;
+
+            public StringArrayComparer() {
+                _comparer = StringComparer.Ordinal;
+            }
+
+            public StringArrayComparer(IEqualityComparer<string> comparer) {
+                _comparer = comparer;
+            }
+            
+            public bool Equals(string[] x, string[] y) {
+                if (x == null || y == null) {
+                    return x == null && y == null;
                 }
 
-                return new OverloadResult[] {
-                    new SimpleOverloadResult(parameters, FunctionDefinition.Name, Documentation)
-                };
+                if (x.Length != y.Length) {
+                    return false;
+                }
+
+                for (int i = 0; i < x.Length; ++i) {
+                    if (!_comparer.Equals(x[i], y[i])) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+
+            public int GetHashCode(string[] obj) {
+                if (obj == null) {
+                    return 0;
+                }
+                int hc = 261563 ^ obj.Length;
+                foreach (var p in obj) {
+                    hc ^= _comparer.GetHashCode(p);
+                }
+                return hc;
             }
         }
 
-        internal static ParameterResult MakeParameterResult(PythonAnalyzer state, Parameter curParam, PythonAst tree, IEnumerable<IAnalysisVariable> variables = null) {
+        public override IEnumerable<OverloadResult> Overloads {
+            get {
+                var references = new Dictionary<string[], IEnumerable<AnalysisVariable>[]>(new StringArrayComparer());
+
+                var units = new HashSet<AnalysisUnit>();
+                units.Add(AnalysisUnit);
+                if (_allCalls != null) {
+                    units.UnionWith(_allCalls.Values);
+                }
+
+                foreach (var unit in units) {
+                    var vars = FunctionDefinition.Parameters.Select(p => {
+                        VariableDef param;
+                        if (unit.Scope.Variables.TryGetValue(p.Name, out param)) {
+                            return param;
+                        }
+                        return null;
+                    }).ToArray();
+
+                    var parameters = vars
+                        .Select(p => string.Join(", ", p.TypesNoCopy.Select(av => av.ShortDescription).OrderBy(s => s).Distinct()))
+                        .ToArray();
+
+                    IEnumerable<AnalysisVariable>[] refs;
+                    if (references.TryGetValue(parameters, out refs)) {
+                        refs = refs.Zip(vars, (r, v) => r.Concat(ProjectEntry.Analysis.ToVariables(v))).ToArray();
+                    } else {
+                        refs = vars.Select(v => ProjectEntry.Analysis.ToVariables(v)).ToArray();
+                    }
+                    references[parameters] = refs;
+                }
+
+                foreach (var keyValue in references) {
+                    yield return new SimpleOverloadResult(
+                        FunctionDefinition.Parameters.Select((p, i) => {
+                            var name = MakeParameterName(ProjectState, p, DeclaringModule.Tree);
+                            var type = keyValue.Key[i];
+                            var refs = keyValue.Value[i];
+                            return new ParameterResult(name, string.Empty, type, false, refs);
+                        }).ToArray(),
+                        FunctionDefinition.Name,
+                        Documentation
+                    );
+                }
+            }
+        }
+
+        internal static string MakeParameterName(PythonAnalyzer state, Parameter curParam, PythonAst tree) {
             string name = curParam.Name;
             if (curParam.IsDictionary) {
                 name = "**" + name;
@@ -378,8 +440,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 }
             }
 
-            var newParam = new ParameterResult(name, String.Empty, "object", false, variables);
-            return newParam;
+            return name;
         }
 
         public override void SetMember(Node node, AnalysisUnit unit, string name, IAnalysisSet value) {

@@ -14,7 +14,7 @@
 
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.PythonTools.Analysis.Interpreter;
+using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
@@ -45,7 +45,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return base.GetInstanceType();
         }
 
-        public override ICollection<OverloadResult> Overloads {
+        public override IEnumerable<OverloadResult> Overloads {
             get {
                 // TODO: look for __call__ and return overloads
                 return base.Overloads;

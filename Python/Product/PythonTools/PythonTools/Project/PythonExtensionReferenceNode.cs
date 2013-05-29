@@ -40,14 +40,16 @@ namespace Microsoft.PythonTools.Project {
             : base(root, element) {
             _filename = filename;
 
-            var interp = root.GetInterpreter() as IPythonInterpreter2;
-            if (interp != null) {
-                AnalyzeReference(interp);
-            }
+            AnalyzeReference(root.GetInterpreter());
             InitializeFileChangeEvents();
         }
 
-        private void AnalyzeReference(IPythonInterpreter2 interp) {
+        private void AnalyzeReference(IPythonInterpreter interp) {
+            if (interp == null) {
+                _failedToAnalyze = true;
+                return;
+            }
+
             _failedToAnalyze = false;
             var task = interp.AddReferenceAsync(new ProjectReference(_filename, ProjectReferenceKind.ExtensionModule));
 
@@ -204,7 +206,7 @@ namespace Microsoft.PythonTools.Project {
             Debug.Assert(e != null, "No event args specified for the FileChangedOnDisk event");
 
 
-            var interp = ((PythonProjectNode)ProjectMgr).GetInterpreter() as IPythonInterpreter2;
+            var interp = ((PythonProjectNode)ProjectMgr).GetInterpreter();
             if (interp != null && CommonUtils.IsSamePath(e.FileName, _filename)) {
                 if ((e.FileChangeFlag & (_VSFILECHANGEFLAGS.VSFILECHG_Attr | _VSFILECHANGEFLAGS.VSFILECHG_Size | _VSFILECHANGEFLAGS.VSFILECHG_Time | _VSFILECHANGEFLAGS.VSFILECHG_Add)) != 0) {
                     // file was modified, unload and reload the extension module from our database.
@@ -227,7 +229,7 @@ namespace Microsoft.PythonTools.Project {
                 return;
             }
 
-            var interp = ((PythonProjectNode)ProjectMgr).GetInterpreter() as IPythonInterpreter2;
+            var interp = ((PythonProjectNode)ProjectMgr).GetInterpreter();
             if (interp != null) {
                 interp.RemoveReference(new ProjectReference(_filename, ProjectReferenceKind.ExtensionModule));
             }

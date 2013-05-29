@@ -1987,7 +1987,7 @@ def a():
 
         [TestMethod, Priority(0)]
         public void KeywordParameter() {
-            RefactorTest("foo", "abc", 
+            RefactorTest("foo", "abc",
             new[] { 
                     new FileInput(
 @"
@@ -2006,7 +2006,7 @@ f(foo = 10)
                 new ExpectedPreviewItem("test.py",
                     new ExpectedPreviewItem("def f(abc):"),
                     new ExpectedPreviewItem("f(abc = 10)")
-                )   
+                )
             );
 
             RefactorTest("foo", "abc",
@@ -2303,6 +2303,10 @@ def g(a, b, c):
         }
 
         private void RefactorTest(string newName, string caretText, FileInput[] inputs, bool mutateTest = true, Version version = null, params ExpectedPreviewItem[] items) {
+            for (int i = 0; i < inputs.Length; ++i) {
+                Console.WriteLine("Test code {0} {1}:\r\n{2}\r\n", i, inputs[i].Filename, inputs[i].Input);
+            }
+            
             foreach(bool preview in new[] { true, false } ) {
                 OneRefactorTest(newName, caretText, inputs, version, preview, null, items);
 
@@ -2344,7 +2348,11 @@ def g(a, b, c):
         }
 
         private static void OneRefactorTest(string newName, string caretText, FileInput[] inputs, Version version, bool preview, string error, ExpectedPreviewItem[] expected = null) {
+            Console.WriteLine("Replacing {0} with {1}", caretText, newName);
+
             var fact = new CPythonInterpreterFactory(version ?? new Version(2, 6), new Guid(), "test interpreter", "C:\\foo\\python.exe", "C:\\foo\\pythonw.exe", "PYTHONPATH", ProcessorArchitecture.X86);
+            var classifierProvider = new PythonClassifierProvider(new MockContentTypeRegistryService());
+            classifierProvider._classificationRegistry = new MockClassificationTypeRegistryService();
             using (var analyzer = new VsProjectAnalyzer(fact, new[] { fact }, new MockErrorProviderFactory())) {
                 for (int loops = 0; loops < 2; loops++) {
                     MockTextBuffer[] buffers = new MockTextBuffer[inputs.Length];
@@ -2356,6 +2364,8 @@ def g(a, b, c):
                         buffers[i] = new MockTextBuffer(inputs[i].Input, filename);
                         views[i] = new MockTextView(buffers[i]);
                         buffers[i].AddProperty(typeof(VsProjectAnalyzer), analyzer);
+                        classifierProvider.GetClassifier(buffers[i]);
+
                         bufferTable[filename] = buffers[i];
                         analysis.Add(analyzer.MonitorTextBuffer(views[i], buffers[i]));
                     }

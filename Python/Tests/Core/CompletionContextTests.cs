@@ -79,6 +79,9 @@ namespace PythonToolsTests {
             var fact = new CPythonInterpreterFactory(version.ToVersion());
             var analyzer = new VsProjectAnalyzer(fact, new[] { fact }, new MockErrorProviderFactory());
             buffer.AddProperty(typeof(VsProjectAnalyzer), analyzer);
+            var classifierProvider = new PythonClassifierProvider(new MockContentTypeRegistryService());
+            classifierProvider._classificationRegistry = new MockClassificationTypeRegistryService();
+            classifierProvider.GetClassifier(buffer);
             var monitoredBuffer = analyzer.MonitorTextBuffer(new MockTextView(buffer), buffer);
             analyzer.WaitForCompleteAnalysis(x => true);
             while (((IPythonProjectEntry)buffer.GetAnalysis()).Analysis == null) {
@@ -524,6 +527,9 @@ baz
                 using (var analyzer = new VsProjectAnalyzer(fact, new[] { fact }, new MockErrorProviderFactory())) {
                     var buffer = new MockTextBuffer(code);
                     buffer.AddProperty(typeof(VsProjectAnalyzer), analyzer);
+                    var classifierProvider = new PythonClassifierProvider(new MockContentTypeRegistryService());
+                    classifierProvider._classificationRegistry = new MockClassificationTypeRegistryService();
+                    classifierProvider.GetClassifier(buffer);
                     var snapshot = (MockTextSnapshot)buffer.CurrentSnapshot;
 #pragma warning disable 618
                     var context = snapshot.GetCompletions(
@@ -739,6 +745,9 @@ class B(dict):
             using (var analyzer = new VsProjectAnalyzer(fact, new[] { fact }, new MockErrorProviderFactory())) {
                 var buffer = new MockTextBuffer(code);
                 buffer.AddProperty(typeof(VsProjectAnalyzer), analyzer);
+                var classifierProvider = new PythonClassifierProvider(new MockContentTypeRegistryService());
+                classifierProvider._classificationRegistry = new MockClassificationTypeRegistryService();
+                classifierProvider.GetClassifier(buffer);
                 var snapshot = (MockTextSnapshot)buffer.CurrentSnapshot;
 
                 var monitoredBuffer = analyzer.MonitorTextBuffer(new MockTextView(buffer), buffer);
@@ -816,6 +825,9 @@ class B(dict):
         private static ExpressionAnalysis AnalyzeExpressionWorker(int location, string sourceCode, bool forCompletion, VsProjectAnalyzer analyzer) {
             var buffer = new MockTextBuffer(sourceCode);
             buffer.AddProperty(typeof(VsProjectAnalyzer), analyzer);
+            var classifierProvider = new PythonClassifierProvider(new MockContentTypeRegistryService());
+            classifierProvider._classificationRegistry = new MockClassificationTypeRegistryService();
+            classifierProvider.GetClassifier(buffer);
             var textView = new MockTextView(buffer);
             var item = analyzer.MonitorTextBuffer(textView, textView.TextBuffer); // We leak here because we never un-monitor, but it's a test.
             while (!item.ProjectEntry.IsAnalyzed) {
@@ -876,6 +888,9 @@ class B(dict):
         private static CompletionAnalysis GetCompletionsWorker(int location, string sourceCode, bool intersectMembers, VsProjectAnalyzer analyzer) {
             var buffer = new MockTextBuffer(sourceCode);
             buffer.AddProperty(typeof(VsProjectAnalyzer), analyzer);
+            var classifierProvider = new PythonClassifierProvider(new MockContentTypeRegistryService());
+            classifierProvider._classificationRegistry = new MockClassificationTypeRegistryService();
+            classifierProvider.GetClassifier(buffer);
             var snapshot = (MockTextSnapshot)buffer.CurrentSnapshot;
 
             var monitoredBuffer = analyzer.MonitorTextBuffer(new MockTextView(buffer), buffer);
@@ -910,6 +925,9 @@ class B(dict):
             using (var analyzer = new VsProjectAnalyzer(fact, new[] { fact }, new MockErrorProviderFactory())) {
                 var buffer = new MockTextBuffer(sourceCode);
                 buffer.AddProperty(typeof(VsProjectAnalyzer), analyzer);
+                var classifierProvider = new PythonClassifierProvider(new MockContentTypeRegistryService());
+                classifierProvider._classificationRegistry = new MockClassificationTypeRegistryService();
+                classifierProvider.GetClassifier(buffer);
                 var snapshot = (MockTextSnapshot)buffer.CurrentSnapshot;
                 var context = snapshot.GetSignatures(new MockTrackingSpan(snapshot, location, 1));
                 Assert.AreEqual(expectedExpression, context.Text, sourceCode);

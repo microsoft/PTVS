@@ -15,7 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.PythonTools.Analysis.Interpreter;
+using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
 
@@ -101,18 +101,14 @@ namespace Microsoft.PythonTools.Analysis.Values {
         /// <summary>
         /// Returns the overloads available for calling the constructor of the type.
         /// </summary>
-        public override ICollection<OverloadResult> Overloads {
+        public override IEnumerable<OverloadResult> Overloads {
             get {
                 // TODO: sometimes might have a specialized __init__.
                 // This just covers typical .NET types
                 var ctors = _type.GetConstructors();
 
                 if (ctors != null) {
-                    var result = new OverloadResult[ctors.Overloads.Count];
-                    for (int i = 0; i < result.Length; i++) {
-                        result[i] = new BuiltinFunctionOverloadResult(ProjectState, ctors.Overloads[i], 1, _type.Name, GetDoc);
-                    }
-                    return result;
+                    return ctors.Overloads.Select(ctor => new BuiltinFunctionOverloadResult(ProjectState, ctor, 1, _type.Name, GetDoc));
                 }
                 return new OverloadResult[0];
             }

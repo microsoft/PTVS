@@ -49,7 +49,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
 
                 content.Append(param.Name);
-                if (param.Type != null && param.Type != "object") {
+                if (!string.IsNullOrEmpty(param.Type) && param.Type != "object") {
                     content.Append(": ");
                     content.Append(param.Type);
                 }

@@ -14,6 +14,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Interpreter;
 
@@ -54,6 +56,14 @@ namespace TestUtilities.Python {
 
         public void NotifyInvalidDatabase() {
             IsDatabaseInvalid = true;
+        }
+
+        public Task AddReferenceAsync(ProjectReference reference, CancellationToken cancellationToken = default(CancellationToken)) {
+            throw new NotImplementedException();
+        }
+
+        public void RemoveReference(ProjectReference reference) {
+            throw new NotImplementedException();
         }
     }
 }

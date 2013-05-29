@@ -13,7 +13,7 @@
  * ***************************************************************************/
 
 using System.Collections.Generic;
-using Microsoft.PythonTools.Analysis.Interpreter;
+using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
 

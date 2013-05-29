@@ -13,14 +13,13 @@
  * ***************************************************************************/
 
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
 
-namespace Microsoft.PythonTools.Analysis.Interpreter {
+namespace Microsoft.PythonTools.Analysis.Analyzer {
     /// <summary>
     /// Provides analysis of a function called with a specific set of arguments.  We analyze each function
     /// with each unique set of arguments (the cartesian product of the arguments).
@@ -74,6 +73,10 @@ namespace Microsoft.PythonTools.Analysis.Interpreter {
         internal bool UpdateParameters(ArgumentSet callArgs, bool enqueue = true) {
             var defScope = _originalUnit != null ? _originalUnit.Scope as FunctionScope : null;
             return ((FunctionScope)Scope).UpdateParameters(this, callArgs, enqueue, defScope);
+        }
+
+        internal void AddNamedParameterReferences(AnalysisUnit caller, NameExpression[] names) {
+            ((FunctionScope)Scope).AddParameterReferences(caller, names);
         }
 
         internal override ModuleInfo GetDeclaringModule() {

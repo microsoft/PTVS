@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace AnalyzerStatusTests {

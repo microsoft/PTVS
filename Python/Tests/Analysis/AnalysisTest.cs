@@ -2088,8 +2088,20 @@ def f(abc):
                 new VariableLocation(3, 11, VariableType.Reference),
                 new VariableLocation(5, 9, VariableType.Reference));
 
+            // named arguments
+            text = @"
+def f(abc):
+    print abc
 
-            // grammer test - statements
+f(abc = 123)
+";
+            entry = ProcessText(text);
+            VerifyReferences(entry.GetVariablesByIndex("abc", text.IndexOf("abc")),
+                new VariableLocation(2, 7, VariableType.Definition),
+                new VariableLocation(3, 11, VariableType.Reference),
+                new VariableLocation(5, 3, VariableType.Reference));
+
+            // grammar test - statements
             text = @"
 def f(abc):
     try: pass
@@ -3118,6 +3130,37 @@ abc.Cmeth(['foo'], 'bar')
             var entry = ProcessText(text);
             AssertUtil.ContainsExactly(entry.GetTypesByIndex("xvar", text.IndexOf("x = 42")), ListType);
             AssertUtil.ContainsExactly(entry.GetTypesByIndex("xvar", text.IndexOf("pass")));
+        }
+
+
+        [TestMethod, Priority(0)]
+        public void FunctionOverloads() {
+            var text = @"
+def f(a, b, c=0):
+    pass
+
+f(1, 1, 1)
+f(3.14, 3.14, 3.14)
+f('a', 'b', 'c')
+f(1, 3.14, 'c')
+f('a', 'b', 1)
+";
+            var entry = ProcessText(text);
+            var f = entry.GetSignaturesByIndex("f", 0).Select(sig => {
+                return string.Format("{0}({1})", sig.Name, string.Join(", ", sig.Parameters.Select(p => string.Format("{0} := ({1})", p.Name, p.Type))));
+            }).ToList();
+            foreach (var sig in f) {
+                Console.WriteLine(sig);
+            }
+            Assert.AreEqual(6, f.Count);
+            AssertUtil.ContainsExactly(f,
+                "f(a := (), b := (), c = 0 := (int))",
+                "f(a := (int), b := (int), c = 0 := (int))",
+                "f(a := (float), b := (float), c = 0 := (float, int))",
+                "f(a := (str), b := (str), c = 0 := (int, str))",
+                "f(a := (int), b := (float), c = 0 := (int, str))",
+                "f(a := (str), b := (str), c = 0 := (int))"
+            );
         }
 
         internal static readonly Regex ValidParameterName = new Regex(@"^(\*|\*\*)?[a-z_][a-z0-9_]*( *=.+)?", RegexOptions.IgnoreCase);
@@ -4886,7 +4929,7 @@ pass
 
                 new SaveAnalysis().Save(stdLib, tmpFolder);
 
-                File.Copy(Path.Combine(CPythonInterpreterFactory.GetBaselineDatabasePath(), "__builtin__.idb"), Path.Combine(tmpFolder, "__builtin__.idb"), true);
+                File.Copy(Path.Combine(PythonInterpreterFactory.GetBaselineDatabasePath(), "__builtin__.idb"), Path.Combine(tmpFolder, "__builtin__.idb"), true);
 
                 var newPs = new PythonAnalyzer(new CPythonInterpreter(new TypeDatabase(tmpFolder)), PythonLanguageVersion.V27);
             }

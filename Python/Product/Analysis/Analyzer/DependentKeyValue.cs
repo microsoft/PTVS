@@ -13,9 +13,8 @@
  * ***************************************************************************/
 
 using System.Collections.Generic;
-using Microsoft.PythonTools.Analysis.Interpreter;
 
-namespace Microsoft.PythonTools.Analysis.Values {
+namespace Microsoft.PythonTools.Analysis.Analyzer {
     /// <summary>
     /// Like a VariableDef, but used for tracking key/value pairs in a dictionary.
     /// 

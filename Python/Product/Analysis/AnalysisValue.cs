@@ -15,7 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.PythonTools.Analysis.Interpreter;
+using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
@@ -28,7 +28,6 @@ namespace Microsoft.PythonTools.Analysis {
     public class AnalysisValue : IAnalysisSet {
         [ThreadStatic]
         private static HashSet<AnalysisValue> _processing;
-        private static OverloadResult[] EmptyOverloadResult = new OverloadResult[0];
 
         protected AnalysisValue() { }
 
@@ -69,9 +68,9 @@ namespace Microsoft.PythonTools.Analysis {
             get { return LocationInfo.Empty; }
         }
 
-        public virtual ICollection<OverloadResult> Overloads {
+        public virtual IEnumerable<OverloadResult> Overloads {
             get {
-                return EmptyOverloadResult;
+                return Enumerable.Empty<OverloadResult>();
             }
         }
 

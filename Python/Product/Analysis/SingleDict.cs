@@ -18,7 +18,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 
-namespace Microsoft.PythonTools.Analysis.Interpreter {
+namespace Microsoft.PythonTools.Analysis {
     /// <summary>
     /// A simple dictionary like object which has efficient storage when there's only a single item in the dictionary.
     /// </summary>

@@ -28,7 +28,6 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Xml;
 using Microsoft.PythonTools.Analysis;
-using Microsoft.PythonTools.Analysis.Interpreter;
 using Microsoft.PythonTools.Django.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;

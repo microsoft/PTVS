@@ -64,10 +64,10 @@
     <Compile Include="AnalysisLog.cs" />
     <Compile Include="AnalysisValue.cs" />
     <Compile Include="AnalysisVariable.cs" />
+    <Compile Include="Analyzer\FunctionAnalysisUnit.cs" />
     <Compile Include="Analyzer\AnalyzerStatusUpdater.cs" />
     <Compile Include="Analyzer\ComprehensionScope.cs" />
     <Compile Include="Analyzer\DependentKeyValue.cs" />
-    <Compile Include="Analyzer\FunctionAnalysisUnit.cs" />
     <Compile Include="Analyzer\IsInstanceScope.cs" />
     <Compile Include="Analyzer\StatementScope.cs" />
     <Compile Include="AssemblyInfo.cs" />
@@ -84,7 +84,6 @@
     <Compile Include="IEnumerableExtensions.cs" />
     <Compile Include="Interpreter\ProjectAssemblyReference.cs" />
     <Compile Include="Interpreter\CannotAnalyzeExtensionException.cs" />
-    <Compile Include="Interpreter\IPythonInterpreter2.cs" />
     <Compile Include="Interpreter\ITypeDatabaseReader.cs" />
     <Compile Include="Interpreter\ProjectReference.cs" />
     <Compile Include="Interpreter\ProjectReferenceKind.cs" />
@@ -132,14 +131,13 @@
     <Compile Include="IAnalysisVariable.cs" />
     <Compile Include="Analyzer\ClassScope.cs" />
     <Compile Include="Analyzer\DDG.cs" />
-    <Compile Include="Analyzer\EmptySet.cs" />
     <Compile Include="Analyzer\ExpressionEvaluator.cs" />
     <Compile Include="Analyzer\FunctionScope.cs" />
     <Compile Include="Analyzer\InterpreterScope.cs" />
     <Compile Include="Analyzer\ModuleScope.cs" />
     <Compile Include="Analyzer\OverviewWalker.cs" />
-    <Compile Include="Analyzer\SingleDict.cs" />
-    <Compile Include="Analyzer\VariableDef.cs" />
+    <Compile Include="SingleDict.cs" />
+    <Compile Include="VariableDef.cs" />
     <Compile Include="Interpreter\Default\InterpreterFactoryOptions.cs" />
     <Compile Include="Interpreter\Default\CPythonFunctionOverload.cs" />
     <Compile Include="Interpreter\Default\CPythonMethodDescriptor.cs" />
@@ -276,7 +274,7 @@
     <Compile Include="PythonAnalyzer.cs" />
     <Compile Include="SaveAnalysis.cs" />
     <Compile Include="EncodedLocation.cs" />
-    <Compile Include="Analyzer\AnalysisUnit.cs" />
+    <Compile Include="AnalysisUnit.cs" />
     <Compile Include="Parsing\SourceLocation.cs" />
     <Compile Include="Unpickler.cs" />
     <Compile Include="Validation.cs" />
@@ -299,7 +297,7 @@
     <Compile Include="Values\SequenceBuiltinInstanceInfo.cs" />
     <Compile Include="Values\IteratorInfo.cs" />
     <Compile Include="Values\IterableInfo.cs" />
-    <Compile Include="Values\DependencyInfo.cs" />
+    <Compile Include="Analyzer\DependencyInfo.cs" />
     <Compile Include="Values\DictionaryInfo.cs" />
     <Compile Include="Values\EnumInstanceInfo.cs" />
     <Compile Include="Values\FunctionInfo.cs" />
@@ -308,7 +306,7 @@
     <Compile Include="Values\GeneratorSendBoundBuiltinMethodInfo.cs" />
     <Compile Include="Values\IModule.cs" />
     <Compile Include="Values\InstanceInfo.cs" />
-    <Compile Include="Values\IReferenceable.cs" />
+    <Compile Include="Analyzer\IReferenceable.cs" />
     <Compile Include="Values\ListAppendBoundBuiltinMethodInfo.cs" />
     <Compile Include="Values\ListBuiltinClassInfo.cs" />
     <Compile Include="Values\ListExtendBoundBuiltinFunction.cs" />
@@ -319,7 +317,7 @@
     <Compile Include="Values\BoundMethodInfo.cs" />
     <Compile Include="Values\ModuleInfo.cs" />
     <Compile Include="Values\MultipleMemberInfo.cs" />
-    <Compile Include="Values\AnalysisSetExtensions.cs" />
+    <Compile Include="AnalysisSetExtensions.cs" />
     <Compile Include="Values\NumericInstanceInfo.cs" />
     <Compile Include="Values\RangeInfo.cs" />
     <Compile Include="Values\ReflectedNamespace.cs" />

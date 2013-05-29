@@ -14,7 +14,7 @@
 
 using System.Collections.Generic;
 
-namespace Microsoft.PythonTools.Analysis.Values {
+namespace Microsoft.PythonTools.Analysis.Analyzer {
     interface IReferenceableContainer {
         IEnumerable<IReferenceable> GetDefinitions(string name);
     }

@@ -19,7 +19,7 @@ using System.IO.MemoryMappedFiles;
 using System.Runtime.InteropServices;
 using System.Threading;
 
-namespace Microsoft.PythonTools.Analysis {
+namespace Microsoft.PythonTools.Analysis.Analyzer {
     /// <summary>
     /// Structure represeting an analysis operation's progress.
     /// </summary>

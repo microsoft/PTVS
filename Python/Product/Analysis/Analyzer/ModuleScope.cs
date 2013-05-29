@@ -14,7 +14,7 @@
 
 using Microsoft.PythonTools.Analysis.Values;
 
-namespace Microsoft.PythonTools.Analysis.Interpreter {
+namespace Microsoft.PythonTools.Analysis.Analyzer {
     sealed class ModuleScope : InterpreterScope {
 
         public ModuleScope(ModuleInfo moduleInfo)

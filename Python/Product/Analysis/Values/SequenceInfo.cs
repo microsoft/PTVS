@@ -14,7 +14,6 @@
 
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.PythonTools.Analysis.Interpreter;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
@@ -203,4 +202,25 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return anyChanged;
         }
     }
+
+    /// <summary>
+    /// Represents a *args parameter for a function definition.  Holds onto a SequenceInfo which
+    /// includes all of the types passed in via splatting or extra position arguments.
+    /// </summary>
+    sealed class ListParameterVariableDef : LocatedVariableDef {
+        public readonly StarArgsSequenceInfo List;
+
+        public ListParameterVariableDef(AnalysisUnit unit, Node location)
+            : base(unit.DeclaringModule.ProjectEntry, location) {
+            List = new StarArgsSequenceInfo(VariableDef.EmptyArray, unit.ProjectState.ClassInfos[BuiltinTypeId.Tuple], location);
+            base.AddTypes(unit, List);
+        }
+
+        public ListParameterVariableDef(AnalysisUnit unit, Node location, VariableDef copy)
+            : base(unit.DeclaringModule.ProjectEntry, location, copy) {
+            List = new StarArgsSequenceInfo(VariableDef.EmptyArray, unit.ProjectState.ClassInfos[BuiltinTypeId.Tuple], location);
+            base.AddTypes(unit, List);
+        }
+    }
+
 }

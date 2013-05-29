@@ -21,7 +21,7 @@ using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 
-namespace Microsoft.PythonTools.Analysis.Interpreter {
+namespace Microsoft.PythonTools.Analysis.Analyzer {
     internal class ExpressionEvaluator {
         private readonly AnalysisUnit _unit;
         private readonly bool _mergeScopes;

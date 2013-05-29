@@ -920,7 +920,10 @@ namespace Microsoft.PythonTools.Intellisense {
         private static CompletionAnalysis TrySpecialCompletions(ITextSnapshot snapshot, ITrackingSpan span, ITrackingPoint point, CompletionOptions options) {
             var snapSpan = span.GetSpan(snapshot);
             var buffer = snapshot.TextBuffer;
-            var classifier = (PythonClassifier)buffer.Properties.GetProperty(typeof(PythonClassifier));
+            var classifier = buffer.GetPythonClassifier();
+            if (classifier == null) {
+                return null;
+            }
             var tokens = classifier.GetClassificationSpans(new SnapshotSpan(snapSpan.Start.GetContainingLine().Start, snapSpan.Start));
             if (tokens.Count > 0) {
                 // Check for context-sensitive intellisense
@@ -1672,9 +1675,9 @@ namespace Microsoft.PythonTools.Intellisense {
 
         internal void RemoveReference(ProjectAssemblyReference reference) {
             lock (this) {
-                IPythonInterpreter2 interp2 = Interpreter as IPythonInterpreter2;
-                if (interp2 != null) {
-                    interp2.RemoveReference(reference);
+                var interp = Interpreter;
+                if (interp != null) {
+                    interp.RemoveReference(reference);
                 }
             }
         }

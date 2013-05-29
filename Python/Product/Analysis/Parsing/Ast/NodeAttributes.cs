@@ -12,7 +12,6 @@
  *
  * ***************************************************************************/
 
-using System.Text;
 
 namespace Microsoft.PythonTools.Parsing.Ast {
     internal static class NodeAttributes {

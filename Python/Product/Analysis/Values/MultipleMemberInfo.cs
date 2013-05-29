@@ -14,10 +14,9 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Text;
-using Microsoft.PythonTools.Analysis.Interpreter;
+using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
@@ -40,48 +39,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
             get { return PythonMemberType.Multiple; }
         }
 
-        public override ICollection<OverloadResult> Overloads {
+        public override IEnumerable<OverloadResult> Overloads {
             get {
-                List<OverloadResult> res = new List<OverloadResult>();
-                foreach (var member in _members) {
-                    AppendOverloads(res, member.Overloads);
-                }
-                return res.ToArray();
-            }
-        }
-
-        /// <summary>
-        /// Appends the overloads and avoids adding duplicates.
-        /// </summary>
-        internal static void AppendOverloads(List<OverloadResult> appendTo, IEnumerable<OverloadResult> newOverloads) {
-            bool contains = false;
-            foreach (var overload in newOverloads) {
-                for (int i = 0; i < appendTo.Count; i++) {
-                    if (appendTo[i].Name == overload.Name &&
-                        appendTo[i].Documentation == overload.Documentation &&
-                        appendTo[i].Parameters.Length == overload.Parameters.Length) {
-                        bool differParams = false;
-                        for (int j = 0; j < overload.Parameters.Length; j++) {
-                            if (overload.Parameters[j].DefaultValue != appendTo[i].Parameters[j].DefaultValue ||
-                                overload.Parameters[j].Documentation != appendTo[i].Parameters[j].Documentation ||
-                                overload.Parameters[j].IsOptional != appendTo[i].Parameters[j].IsOptional ||
-                                overload.Parameters[j].Name != appendTo[i].Parameters[j].Name ||
-                                overload.Parameters[j].Type != appendTo[i].Parameters[j].Type) {
-                                differParams = true;
-                                break;
-                            }
-                        }
-
-                        if (!differParams) {
-                            contains = true;
-                            break;
-                        }
-                    }
-                }
-
-                if (!contains) {
-                    appendTo.Add(overload);
-                }
+                return _members.SelectMany(m => m.Overloads).Distinct(OverloadResultComparer.Instance);
             }
         }
 

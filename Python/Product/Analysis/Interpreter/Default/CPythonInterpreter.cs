@@ -22,7 +22,7 @@ using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Parsing;
 
 namespace Microsoft.PythonTools.Interpreter.Default {
-    class CPythonInterpreter : IPythonInterpreter, IPythonInterpreter2 {
+    class CPythonInterpreter : IPythonInterpreter {
         private PythonTypeDatabase _typeDb;
         private HashSet<ProjectReference> _references;
         private readonly IPythonInterpreterFactory _factory;
@@ -102,10 +102,6 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         }
 
         public event EventHandler ModuleNamesChanged;
-
-        #endregion
-
-        #region IPythonInterpreter2 Members
 
         public Task AddReferenceAsync(ProjectReference reference, CancellationToken cancellationToken = default(CancellationToken)) {
             if (reference == null) {

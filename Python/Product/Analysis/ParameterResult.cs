@@ -16,7 +16,7 @@ using System;
 using System.Collections.Generic;
 
 namespace Microsoft.PythonTools.Analysis {
-    public class ParameterResult {
+    public class ParameterResult : IEquatable<ParameterResult> {
         public string Name { get; private set; }
         public string Documentation { get; private set; }
         public string Type { get; private set; }
@@ -54,6 +54,26 @@ namespace Microsoft.PythonTools.Analysis {
                 return doc.Substring(0, MaxDocLength) + "...";
             }
             return doc;
+        }
+
+        public override bool Equals(object obj) {
+            return Equals(obj as ParameterResult);
+        }
+
+        public override int GetHashCode() {
+            return Name.GetHashCode() ^
+                Type.GetHashCode() ^
+                IsOptional.GetHashCode() ^
+                (DefaultValue ?? "").GetHashCode();
+        }
+
+        public bool Equals(ParameterResult other) {
+            return other != null &&
+                Name == other.Name &&
+                Documentation == other.Documentation &&
+                Type == other.Type &&
+                IsOptional == other.IsOptional &&
+                DefaultValue == other.DefaultValue;
         }
     }
 }

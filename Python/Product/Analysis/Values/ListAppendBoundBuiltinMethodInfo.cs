@@ -12,7 +12,6 @@
  *
  * ***************************************************************************/
 
-using Microsoft.PythonTools.Analysis.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Values {

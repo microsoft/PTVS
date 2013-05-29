@@ -30,7 +30,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             get { return _type; }
         }
 
-        public override IAnalysisSet GetDescriptor(Node node, AnalysisValue instance, AnalysisValue context, Interpreter.AnalysisUnit unit) {
+        public override IAnalysisSet GetDescriptor(Node node, AnalysisValue instance, AnalysisValue context, AnalysisUnit unit) {
             if (instance == ProjectState._noneInst) {
                 return base.GetDescriptor(node, instance, context, unit);
             }
@@ -38,7 +38,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return ProjectState.GetAnalysisValueFromObjects(_value.Type).GetInstanceType();
         }
 
-        public override IAnalysisSet GetStaticDescriptor(Interpreter.AnalysisUnit unit) {
+        public override IAnalysisSet GetStaticDescriptor(AnalysisUnit unit) {
             if (_value.IsStatic) {
                 return ProjectState.GetAnalysisValueFromObjects(_value.Type).GetInstanceType();
             }

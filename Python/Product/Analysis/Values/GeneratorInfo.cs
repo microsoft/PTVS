@@ -13,7 +13,6 @@
  * ***************************************************************************/
 
 using System.Linq;
-using Microsoft.PythonTools.Analysis.Interpreter;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;

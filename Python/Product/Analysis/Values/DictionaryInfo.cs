@@ -17,7 +17,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
-using Microsoft.PythonTools.Analysis.Interpreter;
+using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
@@ -578,6 +578,26 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     dep.MakeUnionStronger();
                 }
             }
+        }
+    }
+
+    /// <summary>
+    /// Represents a **args parameter for a function definition.  Holds onto a DictionaryInfo
+    /// which includes all of the types passed in via splatting or unused keyword arguments.
+    /// </summary>
+    sealed class DictParameterVariableDef : LocatedVariableDef {
+        public readonly StarArgsDictionaryInfo Dict;
+
+        public DictParameterVariableDef(AnalysisUnit unit, Node location)
+            : base(unit.DeclaringModule.ProjectEntry, location) {
+            Dict = new StarArgsDictionaryInfo(unit.ProjectEntry, location);
+            AddTypes(unit, Dict);
+        }
+
+        public DictParameterVariableDef(AnalysisUnit unit, Node location, VariableDef copy)
+            : base(unit.DeclaringModule.ProjectEntry, location, copy) {
+            Dict = new StarArgsDictionaryInfo(unit.ProjectEntry, location);
+            AddTypes(unit, Dict);
         }
     }
 }

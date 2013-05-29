@@ -12,16 +12,14 @@
  *
  * ***************************************************************************/
 
-using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using Microsoft.PythonTools.Analysis.Interpreter;
-using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.Parsing.Ast;
 
-namespace Microsoft.PythonTools.Analysis.Values {
+namespace Microsoft.PythonTools.Analysis {
     abstract class DependentData<TStorageType> where TStorageType : DependencyInfo {
         internal SingleDict<IProjectEntry, TStorageType> _dependencies;
 
@@ -548,43 +546,4 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
     }
 
-    /// <summary>
-    /// Represents a *args parameter for a function definition.  Holds onto a SequenceInfo which
-    /// includes all of the types passed in via splatting or extra position arguments.
-    /// </summary>
-    sealed class ListParameterVariableDef : LocatedVariableDef {
-        public readonly StarArgsSequenceInfo List;
-
-        public ListParameterVariableDef(AnalysisUnit unit, Node location)
-            : base(unit.DeclaringModule.ProjectEntry, location) {
-            List = new StarArgsSequenceInfo(VariableDef.EmptyArray, unit.ProjectState.ClassInfos[BuiltinTypeId.Tuple], location);
-            base.AddTypes(unit, List);
-        }
-
-        public ListParameterVariableDef(AnalysisUnit unit, Node location, VariableDef copy)
-            : base(unit.DeclaringModule.ProjectEntry, location, copy) {
-            List = new StarArgsSequenceInfo(VariableDef.EmptyArray, unit.ProjectState.ClassInfos[BuiltinTypeId.Tuple], location);
-            base.AddTypes(unit, List);
-        }
-    }
-
-    /// <summary>
-    /// Represents a **args parameter for a function definition.  Holds onto a DictionaryInfo
-    /// which includes all of the types passed in via splatting or unused keyword arguments.
-    /// </summary>
-    sealed class DictParameterVariableDef : LocatedVariableDef {
-        public readonly StarArgsDictionaryInfo Dict;
-
-        public DictParameterVariableDef(AnalysisUnit unit, Node location)
-            : base(unit.DeclaringModule.ProjectEntry, location) {
-            Dict = new StarArgsDictionaryInfo(unit.ProjectEntry, location);
-            AddTypes(unit, Dict);
-        }
-
-        public DictParameterVariableDef(AnalysisUnit unit, Node location, VariableDef copy)
-            : base(unit.DeclaringModule.ProjectEntry, location, copy) {
-            Dict = new StarArgsDictionaryInfo(unit.ProjectEntry, location);
-            AddTypes(unit, Dict);
-        }
-    }
 }

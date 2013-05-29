@@ -19,6 +19,7 @@ using System.IO;
 using System.Threading.Tasks;
 using System.Windows;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.ComponentModelHost;
 

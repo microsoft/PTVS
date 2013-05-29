@@ -13,7 +13,6 @@
  * ***************************************************************************/
 
 using System.Collections.Generic;
-using Microsoft.PythonTools.Analysis.Interpreter;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
 
@@ -63,7 +62,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return _method.ReturnTypes.GetInstanceType();
         }
 
-        public override ICollection<OverloadResult> Overloads {
+        public override IEnumerable<OverloadResult> Overloads {
             get {
                 if (_overloads == null) {
                     var overloads = _method.Function.Overloads;

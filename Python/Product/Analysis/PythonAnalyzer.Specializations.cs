@@ -18,7 +18,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
-using Microsoft.PythonTools.Analysis.Interpreter;
+using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
@@ -212,12 +212,15 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         IAnalysisSet SpecialNext(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
+            if (args.Length > 0) {
+                var nextName = (unit.ProjectState.LanguageVersion.Is3x()) ? "__next__" : "next";
+                var newArgs = args.Skip(1).ToArray();
+                var newNames = (keywordArgNames.Any()) ? keywordArgNames.Skip(1).ToArray() : keywordArgNames;
 
-            var nextName = (unit.ProjectState.LanguageVersion.Is3x()) ? "__next__" : "next";
-            var newArgs = args.Skip(1).ToArray();
-            var newNames = (keywordArgNames.Any()) ? keywordArgNames.Skip(1).ToArray() : keywordArgNames;
-
-            return args[0].GetMember(node, unit, nextName).Call(node, unit, newArgs, newNames);
+                return args[0].GetMember(node, unit, nextName).Call(node, unit, newArgs, newNames);
+            } else {
+                return AnalysisSet.Empty;
+            }
         }
 
         IAnalysisSet SpecialIter(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {

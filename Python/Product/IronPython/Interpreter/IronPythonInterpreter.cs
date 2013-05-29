@@ -29,7 +29,7 @@ using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.IronPythonTools.Interpreter {
-    class IronPythonInterpreter : IPythonInterpreter, IDotNetPythonInterpreter, IPythonInterpreter2, IDisposable {
+    class IronPythonInterpreter : IPythonInterpreter, IDotNetPythonInterpreter, IDisposable {
         private readonly Dictionary<ObjectIdentityHandle, IMember> _members = new Dictionary<ObjectIdentityHandle, IMember>();
         private readonly ConcurrentDictionary<string, IronPythonModule> _modules = new ConcurrentDictionary<string, IronPythonModule>();
         private readonly ConcurrentBag<string> _assemblyLoadSet = new ConcurrentBag<string>();
@@ -378,6 +378,51 @@ namespace Microsoft.IronPythonTools.Interpreter {
             _typeDb.OnDatabaseCorrupt();
         }
 
+        public Task AddReferenceAsync(ProjectReference reference, CancellationToken cancellationToken = default(CancellationToken)) {
+            switch (reference.Kind) {
+                case ProjectReferenceKind.Assembly:
+                    var asmRef = (ProjectAssemblyReference)reference;
+
+                    return Task.Factory.StartNew(() => {
+                        if (!Remote.LoadAssemblyReference(asmRef.Name)) {
+                            throw new Exception("Failed to load assembly: " + asmRef.Name);
+                        }
+
+                        lock (_projectReferenceSet) {
+                            _projectReferenceSet.Add(reference);
+                        }
+
+                        // re-analyze clr.AddReference calls w/ new assemblie names
+                        ClearAssemblyLoadSet();
+
+                        // the names haven't changed yet, but we want to re-analyze the clr.AddReference calls,
+                        // and then the names may change for real..
+                        RaiseModuleNamesChanged();
+                    });
+            }
+            return Task.Factory.StartNew(() => { });
+        }
+
+        public void RemoveReference(ProjectReference reference) {
+            switch (reference.Kind) {
+                case ProjectReferenceKind.Assembly:
+                    var asmRef = (ProjectAssemblyReference)reference;
+
+                    if (Remote.UnloadAssemblyReference(asmRef.Name)) {
+                        ReloadRemoteDomain();
+
+                        lock (_projectReferenceSet) {
+                            _projectReferenceSet.Remove(reference);
+
+                            foreach (var prevRef in _projectReferenceSet) {
+                                Remote.LoadAssemblyReference(prevRef.Name);
+                            }
+                        }
+                    }
+                    break;
+            }
+        }
+
         #endregion
 
         internal IPythonType GetTypeFromType(ObjectIdentityHandle type) {
@@ -494,54 +539,5 @@ namespace Microsoft.IronPythonTools.Interpreter {
             Debug.WriteLine(String.Format("IronPythonInterpreter leaked {0}", _id));
         }
 #endif
-
-        #region IPythonInterpreter2 Members
-
-        public Task AddReferenceAsync(ProjectReference reference, CancellationToken cancellationToken = default(CancellationToken)) {
-            switch (reference.Kind) {
-                case ProjectReferenceKind.Assembly:
-                    var asmRef = (ProjectAssemblyReference)reference;
-
-                    return Task.Factory.StartNew(() => {
-                        if (!Remote.LoadAssemblyReference(asmRef.Name)) {
-                            throw new Exception("Failed to load assembly: " + asmRef.Name);
-                        }
-
-                        lock (_projectReferenceSet) {
-                            _projectReferenceSet.Add(reference);
-                        }
-
-                        // re-analyze clr.AddReference calls w/ new assemblie names
-                        ClearAssemblyLoadSet();
-
-                        // the names haven't changed yet, but we want to re-analyze the clr.AddReference calls,
-                        // and then the names may change for real..
-                        RaiseModuleNamesChanged();
-                    });
-            }
-            return Task.Factory.StartNew(() => { });
-        }
-
-        public void RemoveReference(ProjectReference reference) {
-            switch (reference.Kind) {
-                case ProjectReferenceKind.Assembly:
-                    var asmRef = (ProjectAssemblyReference)reference;
-
-                    if (Remote.UnloadAssemblyReference(asmRef.Name)) {
-                        ReloadRemoteDomain();
-
-                        lock (_projectReferenceSet) {
-                            _projectReferenceSet.Remove(reference);
-
-                            foreach (var prevRef in _projectReferenceSet) {
-                                Remote.LoadAssemblyReference(prevRef.Name);
-                            }
-                        }
-                    }
-                    break;
-            }
-        }
-
-        #endregion
     }
 }

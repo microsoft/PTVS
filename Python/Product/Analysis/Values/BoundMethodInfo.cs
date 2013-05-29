@@ -12,11 +12,9 @@
  *
  * ***************************************************************************/
 
-using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Text;
-using Microsoft.PythonTools.Analysis.Interpreter;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
 
@@ -99,21 +97,17 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public override ICollection<OverloadResult> Overloads {
+        public override IEnumerable<OverloadResult> Overloads {
             get {
                 var p = _function.FunctionDefinition.Parameters;
 
                 var pp = p.Count == 0 ? new ParameterResult[0] : new ParameterResult[p.Count - 1];
                 for (int i = 1; i < p.Count; i++) {
-                    pp[i - 1] = FunctionInfo.MakeParameterResult(_function.ProjectState, p[i], DeclaringModule.Tree);
+                    pp[i - 1] = new ParameterResult(FunctionInfo.MakeParameterName(_function.ProjectState, p[i], DeclaringModule.Tree));
                 }
                 string doc = _function.Documentation;
 
-                return new ReadOnlyCollection<OverloadResult>(
-                    new OverloadResult[] {
-                        new SimpleOverloadResult(pp, _function.FunctionDefinition.Name, doc)
-                    }
-                );
+                yield return new SimpleOverloadResult(pp, _function.FunctionDefinition.Name, doc);
             }
         }
 

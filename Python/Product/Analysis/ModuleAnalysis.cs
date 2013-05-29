@@ -19,7 +19,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using Microsoft.PythonTools.Analysis.Interpreter;
+using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
@@ -277,18 +277,20 @@ namespace Microsoft.PythonTools.Analysis {
                     if (expr is ListExpression ||
                         expr is TupleExpression ||
                         expr is DictionaryExpression) {
-                        return new OverloadResult[0];
+                        return Enumerable.Empty<IOverloadResult>();
                     }
                     var lookup = eval.Evaluate(expr);
 
-                    var result = new List<OverloadResult>();
+                    var result = new HashSet<OverloadResult>(OverloadResultComparer.Instance);
 
                     // TODO: Include relevant type info on the parameter...
                     foreach (var ns in lookup) {
-                        MultipleMemberInfo.AppendOverloads(result, ns.Overloads);
+                        if (ns.Overloads != null) {
+                            result.UnionWith(ns.Overloads);
+                        }
                     }
 
-                    return result.ToArray();
+                    return result;
                 }
             } catch (Exception) {
                 // TODO: log exception

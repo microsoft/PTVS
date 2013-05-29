@@ -16,7 +16,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Microsoft.PythonTools.Analysis.Interpreter;
 using Microsoft.PythonTools.Analysis.Values;
 
 namespace Microsoft.PythonTools.Analysis {
@@ -148,15 +147,15 @@ namespace Microsoft.PythonTools.Analysis {
             Add("R", functionInfo, callCount, newLimit);
         }
 
-        internal static void StartFileGroup(string library, int fileCount) {
+        public static void StartFileGroup(string library, int fileCount) {
             Add("FG", library, fileCount);
         }
 
-        internal static void EndFileGroup() {
+        public static void EndFileGroup() {
             Add("EFG");
         }
 
-        internal static void Assert(bool condition, string message = null) {
+        public static void Assert(bool condition, string message = null) {
             if (!condition) {
                 try {
                     throw new InvalidOperationException(message);

@@ -13,11 +13,9 @@
  * ***************************************************************************/
 
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using Microsoft.PythonTools.Analysis.Interpreter;
 
-namespace Microsoft.PythonTools.Analysis.Values {
+namespace Microsoft.PythonTools.Analysis.Analyzer {
     /// <summary>
     /// contains information about dependencies.  Each DependencyInfo is 
     /// attached to a VariableRef in a dictionary keyed off of the ProjectEntry.

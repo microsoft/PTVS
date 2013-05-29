@@ -581,7 +581,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public override ReferenceNode CreateReferenceNodeForFile(string filename) {
-            var interp = this.GetInterpreter() as IPythonInterpreter2;
+            var interp = this.GetInterpreter();
             CancellationTokenSource cancelSource = new CancellationTokenSource();
             var task = interp.AddReferenceAsync(new ProjectReference(filename, ProjectReferenceKind.ExtensionModule), cancelSource.Token);
 

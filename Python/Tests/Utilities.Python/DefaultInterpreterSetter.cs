@@ -16,6 +16,7 @@ using System;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.TC.TestHostAdapters;
+using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -26,7 +27,8 @@ namespace TestUtilities.UI {
 
         public DefaultInterpreterSetter(IPythonInterpreterFactory factory) {
             var sp = new ServiceProvider(VsIdeTestHostContext.Dte as Microsoft.VisualStudio.OLE.Interop.IServiceProvider);
-            var interpService = (IInterpreterOptionsService)sp.GetService(typeof(IInterpreterOptionsService));
+            var model = (IComponentModel)sp.GetService(typeof(SComponentModel));
+            var interpService = model.GetService<IInterpreterOptionsService>();
             Assert.IsNotNull(interpService);
 
             OriginalInterpreter = interpService.DefaultInterpreter;
@@ -38,7 +40,8 @@ namespace TestUtilities.UI {
                 _isDisposed = true;
 
                 var sp = new ServiceProvider(VsIdeTestHostContext.Dte as Microsoft.VisualStudio.OLE.Interop.IServiceProvider);
-                var interpService = (IInterpreterOptionsService)sp.GetService(typeof(IInterpreterOptionsService));
+                var model = (IComponentModel)sp.GetService(typeof(SComponentModel));
+                var interpService = model.GetService<IInterpreterOptionsService>();
                 Assert.IsNotNull(interpService);
                 interpService.DefaultInterpreter = OriginalInterpreter;
             }

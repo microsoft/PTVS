@@ -12,7 +12,6 @@
  *
  * ***************************************************************************/
 
-using Microsoft.PythonTools.Analysis.Interpreter;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
 
@@ -24,7 +23,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             : base(classObj, projectState) {
         }
 
-        public override IAnalysisSet GetMember(Parsing.Ast.Node node, Interpreter.AnalysisUnit unit, string name) {
+        public override IAnalysisSet GetMember(Parsing.Ast.Node node, AnalysisUnit unit, string name) {
             if (name == "__new__") {
                 if (_new == null) {
                     var func = this._type.GetMember(unit.ProjectEntry.MyScope.InterpreterContext, name);

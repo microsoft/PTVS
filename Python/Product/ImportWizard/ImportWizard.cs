@@ -37,9 +37,9 @@ namespace Microsoft.PythonTools.ImportWizard {
             var dte = automationObject as DTE;
             if (dte == null) {
                 var provider = automationObject as Microsoft.VisualStudio.OLE.Interop.IServiceProvider;
-                if (provider == null) {
+                if (provider != null) {
+                    dte = new ServiceProvider(provider).GetService(typeof(DTE)) as DTE;
                 }
-                dte = new ServiceProvider(provider).GetService(typeof(DTE)) as DTE;
             }
             if (dte == null) {
                 MessageBox.Show("Unable to start wizard: no automation object available.", "Python Tools for Visual Studio");

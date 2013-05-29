@@ -17,7 +17,7 @@ using System.Collections.Generic;
 using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Parsing.Ast;
 
-namespace Microsoft.PythonTools.Analysis.Interpreter {
+namespace Microsoft.PythonTools.Debugger {
     /// <summary>
     /// Extracts a flat list of all the sections of code protected by exception
     /// handlers.

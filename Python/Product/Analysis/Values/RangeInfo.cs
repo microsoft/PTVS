@@ -12,7 +12,6 @@
  *
  * ***************************************************************************/
 
-using Microsoft.PythonTools.Analysis.Interpreter;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
 

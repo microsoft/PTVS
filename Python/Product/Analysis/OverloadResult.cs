@@ -209,4 +209,46 @@ namespace Microsoft.PythonTools.Analysis {
             return new ParameterResult(name, "", typeName, isOptional, null, defaultValue);
         }
     }
+
+    class OverloadResultComparer : EqualityComparer<OverloadResult> {
+        public static IEqualityComparer<OverloadResult> Instance = new OverloadResultComparer();
+
+        public override bool Equals(OverloadResult x, OverloadResult y) {
+            if (x == null | y == null) {
+                return x == null & y == null;
+            }
+
+            if (x.Name != y.Name || x.Documentation != y.Documentation) {
+                return false;
+            }
+
+            if (x.Parameters == null | y.Parameters == null) {
+                return x.Parameters == null & y.Parameters == null;
+            }
+
+            if (x.Parameters.Length != y.Parameters.Length) {
+                return false;
+            }
+
+            for (int i = 0; i < x.Parameters.Length; ++i) {
+                if (!x.Parameters[i].Equals(y.Parameters[i])) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        public override int GetHashCode(OverloadResult obj) {
+            // Don't use Documentation for hash code, since it changes over time
+            // in some implementations of IOverloadResult.
+            int hc = 552127 ^ obj.Name.GetHashCode();
+            if (obj.Parameters != null) {
+                foreach (var p in obj.Parameters) {
+                    hc ^= p.GetHashCode();
+                }
+            }
+            return hc;
+        }
+    }
 }

@@ -20,7 +20,7 @@ using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 
-namespace Microsoft.PythonTools.Analysis.Interpreter {
+namespace Microsoft.PythonTools.Analysis.Analyzer {
     /// <summary>
     /// Performs the 1st pass over the AST to gather all of the classes and
     /// function definitions.

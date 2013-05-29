@@ -25,18 +25,12 @@ namespace Microsoft.PythonTools.Project {
 
         public PythonAssemblyReferenceNode(PythonProjectNode root, ProjectElement element)
             : base(root, element) {
-            var interp = root.GetInterpreter() as IPythonInterpreter2;
-            if (interp != null) {
-                AnalyzeReference(interp);
-            }
+            AnalyzeReference(root.GetInterpreter());
         }
 
         public PythonAssemblyReferenceNode(PythonProjectNode root, string assemblyPath)
             : base(root, assemblyPath) {
-            var interp = root.GetInterpreter() as IPythonInterpreter2;
-            if (interp != null) {
-                AnalyzeReference(interp);
-            }
+            AnalyzeReference(root.GetInterpreter());
         }
 
         protected override void OnAssemblyReferenceChangedOnDisk(object sender, FileChangedOnDiskEventArgs e) {
@@ -57,10 +51,9 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private void AnalyzeReference(IPythonInterpreter interp) {
-            var interp2 = interp as IPythonInterpreter2;
-            if (interp2 != null) {
+            if (interp != null) {
                 _failedToAnalyze = false;
-                var task = interp2.AddReferenceAsync(new ProjectAssemblyReference(AssemblyName, Url));
+                var task = interp.AddReferenceAsync(new ProjectAssemblyReference(AssemblyName, Url));
 
                 // check if we get an exception, and if so mark ourselves as a dangling reference.
                 task.ContinueWith(new TaskFailureHandler(TaskScheduler.FromCurrentSynchronizationContext(), this).HandleAddRefFailure);
@@ -77,7 +70,7 @@ namespace Microsoft.PythonTools.Project {
 
         public override void Remove(bool removeFromStorage) {
             base.Remove(removeFromStorage);
-            var interp = ((PythonProjectNode)ProjectMgr).GetInterpreter() as IPythonInterpreter2;
+            var interp = ((PythonProjectNode)ProjectMgr).GetInterpreter();
             if (interp != null) {
                 interp.RemoveReference(new ProjectAssemblyReference(AssemblyName, Url));
             }

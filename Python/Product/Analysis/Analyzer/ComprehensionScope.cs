@@ -12,10 +12,9 @@
  *
  * ***************************************************************************/
 
-using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Parsing.Ast;
 
-namespace Microsoft.PythonTools.Analysis.Interpreter {
+namespace Microsoft.PythonTools.Analysis.Analyzer {
     sealed class ComprehensionScope : InterpreterScope {
         public ComprehensionScope(AnalysisValue comprehensionResult, Comprehension comprehension, InterpreterScope outerScope)
             : base(comprehensionResult, comprehension, outerScope) {

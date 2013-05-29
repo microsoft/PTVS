@@ -21,11 +21,10 @@ using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Threading;
-using Microsoft.PythonTools.Analysis.Interpreter;
+using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
-using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.PythonTools.PyAnalysis;
 
 namespace Microsoft.PythonTools.Analysis {

@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
@@ -25,7 +26,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
         private string _doc;
         private readonly IAnalysisSet _returnTypes;
         private BoundBuiltinMethodInfo _boundMethod;
-        private OverloadResult[] _overloads;
 
         public BuiltinMethodInfo(IPythonMethodDescriptor method, PythonAnalyzer projectState)
             : base(projectState.Types[BuiltinTypeId.BuiltinMethodDescriptor], projectState) {
@@ -47,11 +47,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
             get { return _type; }
         }
 
-        public override IAnalysisSet Call(Node node, Interpreter.AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
+        public override IAnalysisSet Call(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
             return _returnTypes.GetInstanceType();
         }
 
-        public override IAnalysisSet GetDescriptor(Node node, AnalysisValue instance, AnalysisValue context, Interpreter.AnalysisUnit unit) {
+        public override IAnalysisSet GetDescriptor(Node node, AnalysisValue instance, AnalysisValue context, AnalysisUnit unit) {
             if (instance == ProjectState._noneInst) {
                 return base.GetDescriptor(node, instance, context, unit);
             }
@@ -84,17 +84,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public override ICollection<OverloadResult> Overloads {
+        public override IEnumerable<OverloadResult> Overloads {
             get {
-                if (_overloads == null) {
-                    var overloads = Function.Overloads;
-                    var result = new OverloadResult[overloads.Count];
-                    for (int i = 0; i < result.Length; i++) {
-                        result[i] = new BuiltinFunctionOverloadResult(ProjectState, _function.Name, overloads[i], 0, new ParameterResult("self"));
-                    }
-                    _overloads = result;
-                }
-                return _overloads;
+                return Function.Overloads.Select(overload => new BuiltinFunctionOverloadResult(ProjectState, _function.Name, overload, 0, new ParameterResult("self")));
             }
         }
 

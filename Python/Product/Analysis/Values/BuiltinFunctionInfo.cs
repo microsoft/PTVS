@@ -41,11 +41,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 klass.Contains(ProjectState.ClassInfos[BuiltinTypeId.BuiltinFunction]);
         }
 
-        public override IAnalysisSet Call(Node node, Interpreter.AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
+        public override IAnalysisSet Call(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
             return _returnTypes.GetInstanceType();
         }
 
-        public override IAnalysisSet GetDescriptor(Node node, AnalysisValue instance, AnalysisValue context, Interpreter.AnalysisUnit unit) {
+        public override IAnalysisSet GetDescriptor(Node node, AnalysisValue instance, AnalysisValue context, AnalysisUnit unit) {
             if (_function.IsStatic || instance.IsOfType(ProjectState.ClassInfos[BuiltinTypeId.NoneType])) {
                 return base.GetDescriptor(node, instance, context, unit);
             } else if (_method == null) {
@@ -76,7 +76,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public override ICollection<OverloadResult> Overloads {
+        public override IEnumerable<OverloadResult> Overloads {
             get {
                 if (_overloads == null) {
                     var overloads = _function.Overloads;

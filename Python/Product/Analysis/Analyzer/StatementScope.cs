@@ -12,10 +12,9 @@
  *
  * ***************************************************************************/
 
-using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Parsing.Ast;
 
-namespace Microsoft.PythonTools.Analysis.Interpreter {
+namespace Microsoft.PythonTools.Analysis.Analyzer {
     class StatementScope : InterpreterScope {
         public int _startIndex, _endIndex;
 
