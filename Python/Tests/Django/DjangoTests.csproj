@@ -50,6 +50,9 @@
     </CodeAnalysisDependentAssemblyPaths>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\..\Product\Analysis\Interpreter\ProcessOutput.cs">
+      <Link>ProcessOutput.cs</Link>
+    </Compile>
     <Compile Include="AttributeTests.cs" />
     <Compile Include="DjangoDebuggerTests.cs" />
     <Compile Include="DjangoTemplateParserTests.cs" />

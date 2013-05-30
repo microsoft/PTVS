@@ -12,17 +12,20 @@
  *
  * ***************************************************************************/
 
+extern alias analysis;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
+using Microsoft.PythonTools;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 using Assert = Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
+using ProcessOutput = analysis::Microsoft.PythonTools.ProcessOutput;
 
 namespace PythonToolsTests {
     [TestClass]
@@ -114,31 +117,23 @@ namespace PythonToolsTests {
             var outputPath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
             Directory.CreateDirectory(outputPath);
 
-            string args = String.Join(" ",
-                "/dir", '"' + TestData.GetPath(@"TestData\PathStdLib") + '"',
-                "/version", "V27",
-                "/outdir", '"' + outputPath + '"',
-                "/indir", '"' + TestData.GetPath("CompletionDB") + '"'
-            );
-
             // run the analyzer
-            var startInfo = new ProcessStartInfo("Microsoft.PythonTools.Analyzer.exe", args);
-            startInfo.RedirectStandardOutput = true;
-            startInfo.RedirectStandardError = true;
-            startInfo.UseShellExecute = false;
-
-            Console.WriteLine("\"{0}\" {1}", startInfo.FileName, startInfo.Arguments);
-            var proc = Process.Start(startInfo);
-            
-            var receiver = new OutputReceiver();
-            proc.OutputDataReceived += receiver.OutputDataReceived;
-            proc.ErrorDataReceived += receiver.OutputDataReceived;
-            proc.BeginErrorReadLine();
-            proc.BeginOutputReadLine();
-            proc.WaitForExit();
-
-            Console.WriteLine(receiver.Output);
-            Assert.AreEqual(0, proc.ExitCode);
+            using (var output = ProcessOutput.RunHiddenAndCapture("Microsoft.PythonTools.Analyzer.exe",
+                "/lib", TestData.GetPath(@"TestData\PathStdLib"),
+                "/version", "2.7",
+                "/outdir", outputPath,
+                "/indir", TestData.GetPath("CompletionDB"))) {
+                output.Wait();
+                Console.WriteLine("* Stdout *");
+                foreach (var line in output.StandardOutputLines) {
+                    Console.WriteLine(line);
+                }
+                Console.WriteLine("* Stderr *");
+                foreach (var line in output.StandardErrorLines) {
+                    Console.WriteLine(line);
+                }
+                Assert.AreEqual(0, output.ExitCode);
+            }
 
             File.Copy(TestData.GetPath(@"CompletionDB\__builtin__.idb"), Path.Combine(outputPath, "__builtin__.idb"));
 

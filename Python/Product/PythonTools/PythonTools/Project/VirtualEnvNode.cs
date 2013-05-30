@@ -16,11 +16,13 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Build.Evaluation;
+using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools;
@@ -77,23 +79,11 @@ namespace Microsoft.PythonTools.Project {
                 return;
             }
 
-            Process process;
-            try {
-                process = Process.Start(MakePipCommand("freeze"));
-            } catch (Exception e) {
-                // race with interpreter being deleted?  other failure?  
-                Debug.WriteLine(e);
-                return;
+            HashSet<string> lines;
+            using (var output = RunPipAndCapture("freeze")) {
+                output.Wait();
+                lines = new HashSet<string>(output.StandardOutputLines);
             }
-
-            StringBuilder packages = new StringBuilder();
-            process.OutputDataReceived += (sender, args) => {
-                packages.Append(args.Data + Environment.NewLine);
-            };
-            process.BeginOutputReadLine();
-            process.WaitForExit();
-
-            var lines = new HashSet<string>(packages.ToString().Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries));
 
             _scheduler.StartNew(() => {
                 if (ProjectMgr == null || ProjectMgr.IsClosed) {
@@ -127,18 +117,22 @@ namespace Microsoft.PythonTools.Project {
             }).Wait();
         }
 
-        internal ProcessStartInfo MakePipCommand(string cmd) {
+        internal ProcessOutput RunPip(params string[] cmd) {
             string pipPath = Path.Combine(Path.Combine(Url, "Scripts", "pip.exe"));
-            ProcessStartInfo startInfo;
             if (File.Exists(pipPath)) {
-                startInfo = new ProcessStartInfo(pipPath, cmd);
+                return ProcessOutput.Run(pipPath, cmd, null, null, false, OutputWindowRedirector.GetGeneral(ProjectMgr.Site));
             } else {
-                startInfo = new ProcessStartInfo(InterpreterPath, "-m pip " + cmd);
+                return ProcessOutput.Run(InterpreterPath, new[] { "-m", "pip" }.Concat(cmd), null, null, false, OutputWindowRedirector.GetGeneral(ProjectMgr.Site));
             }
-            startInfo.CreateNoWindow = true;
-            startInfo.UseShellExecute = false;
-            startInfo.RedirectStandardOutput = true;
-            return startInfo;
+        }
+
+        internal ProcessOutput RunPipAndCapture(params string[] cmd) {
+            string pipPath = Path.Combine(Path.Combine(Url, "Scripts", "pip.exe"));
+            if (File.Exists(pipPath)) {
+                return ProcessOutput.Run(pipPath, cmd, null, null, false, null);
+            } else {
+                return ProcessOutput.Run(InterpreterPath, new[] { "-m", "pip" }.Concat(cmd), null, null, false, null);
+            }
         }
 
         public override Guid ItemTypeGuid {
@@ -218,7 +212,7 @@ namespace Microsoft.PythonTools.Project {
             var window = new InstallPythonPackage(view);
             var res = window.ShowDialog();
             if (res != null && res.Value) {
-                var psi = MakePipCommand("install " + view.Name);
+                var psi = RunPip("install", view.Name);
 
                 // don't process events while we're installing, we'll
                 // rescan once we're done

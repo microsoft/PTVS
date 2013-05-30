@@ -275,7 +275,7 @@ f([1, 2], 3)
             File.Copy(Path.Combine(PythonTypeDatabase.BaselineDatabasePath, "__builtin__.idb"), Path.Combine(tmpFolder, "__builtin__.idb"), true);
 
             return new SaveLoadResult(
-                new PythonAnalyzer(new CPythonInterpreter(new CPythonInterpreterFactory(version.ToVersion()), new PythonTypeDatabase(tmpFolder)), version),
+                new PythonAnalyzer(InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(version.ToVersion(), tmpFolder)),
                 tmpFolder
             );
         }

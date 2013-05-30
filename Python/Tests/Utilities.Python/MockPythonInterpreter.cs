@@ -15,9 +15,9 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.VisualStudio.Shell;
 
 namespace TestUtilities.Python {
     public class MockPythonInterpreter : IPythonInterpreter {
@@ -54,11 +54,7 @@ namespace TestUtilities.Python {
             throw new NotImplementedException();
         }
 
-        public void NotifyInvalidDatabase() {
-            IsDatabaseInvalid = true;
-        }
-
-        public Task AddReferenceAsync(ProjectReference reference, CancellationToken cancellationToken = default(CancellationToken)) {
+        public System.Threading.Tasks.Task AddReferenceAsync(ProjectReference reference, CancellationToken cancellationToken = default(CancellationToken)) {
             throw new NotImplementedException();
         }
 

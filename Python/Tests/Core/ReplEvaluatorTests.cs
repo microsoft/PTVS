@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Interpreter.Default;
@@ -107,14 +108,25 @@ namespace PythonToolsTests {
         class SimpleFactoryProvider : IPythonInterpreterFactoryProvider {
             private readonly string _pythonExe;
             private readonly string _pythonWinExe;
+            private readonly string _pythonLib;
 
             public SimpleFactoryProvider(string pythonExe, string pythonWinExe) {
                 _pythonExe = pythonExe;
                 _pythonWinExe = pythonWinExe;
+                _pythonLib = Path.Combine(Path.GetDirectoryName(pythonExe), "Lib");
             }
 
             public IEnumerable<IPythonInterpreterFactory> GetInterpreterFactories() {
-                yield return new CPythonInterpreterFactory(new Version(2, 6), Guid.Empty, "Python", _pythonExe, _pythonWinExe, "PYTHONPATH", System.Reflection.ProcessorArchitecture.X86);
+                yield return InterpreterFactoryCreator.CreateInterpreterFactory(new InterpreterFactoryCreationOptions {
+                    LanguageVersion = new Version(2, 6),
+                    Description = "Python",
+                    InterpreterPath = _pythonExe,
+                    WindowInterpreterPath = _pythonWinExe,
+                    LibraryPath = _pythonLib,
+                    PathEnvironmentVariableName = "PYTHONPATH",
+                    Architecture = ProcessorArchitecture.X86,
+                    WatchLibraryForNewModules = false
+                });
             }
 
             public event EventHandler InterpreterFactoriesChanged { add { } remove { } }

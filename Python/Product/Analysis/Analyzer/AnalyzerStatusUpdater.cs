@@ -15,13 +15,37 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO.MemoryMappedFiles;
 using System.Runtime.InteropServices;
 using System.Threading;
+using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.PythonTools.Analysis.Analyzer {
     /// <summary>
-    /// Structure represeting an analysis operation's progress.
+    /// Enumeration representing the current analysis operation.
+    /// </summary>
+    public enum AnalysisStatus : int {
+        /// <summary>
+        /// Analysis is being prepared.
+        /// </summary>
+        Preparing = 0,
+        /// <summary>
+        /// Builtin and compiled modules are being scraped.
+        /// </summary>
+        Scraping = 1,
+        /// <summary>
+        /// Files with available source are being analyzed.
+        /// </summary>
+        Analyzing = 2,
+        /// <summary>
+        /// Analysis has completed.
+        /// </summary>
+        Complete = 3
+    }
+    
+    /// <summary>
+    /// Structure representing an analysis operation's progress.
     /// </summary>
     public struct AnalysisProgress {
         /// <summary>
@@ -32,6 +56,10 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         /// The value that <see cref="Progress"/> is approaching.
         /// </summary>
         public int Maximum;
+        /// <summary>
+        /// The status of the current analysis.
+        /// </summary>
+        public AnalysisStatus Status;
     }
 
     /// <summary>
@@ -60,8 +88,8 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         /// The value that <paramref name="progress"/> is approaching. This is
         /// permitted to vary during analysis.
         /// </param>
-        public void UpdateStatus(int progress, int maximum) {
-            base.UpdateStatusImplementation(progress, maximum);
+        public void UpdateStatus(AnalysisStatus status, int progress, int maximum) {
+            base.UpdateStatusImplementation(status, progress, maximum);
         }
     }
 
@@ -78,7 +106,21 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         /// in response to a call to <see cref="RequestUpdate"/>.
         /// </param>
         public AnalyzerStatusListener(Action<Dictionary<string, AnalysisProgress>> callback)
-            : base(callback) {
+            : base(callback, TimeSpan.MaxValue) {
+        }
+
+        /// <summary>
+        /// Constructs an updater that will receive events.
+        /// </summary>
+        /// <param name="callback">
+        /// The function to call when updates are received. This is only raised
+        /// in response to a call to <see cref="RequestUpdate"/>.
+        /// </param>
+        /// <param name="period">
+        /// Call <see cref="RequestUpdate"/> repeatedly at this interval.
+        /// </param>
+        public AnalyzerStatusListener(Action<Dictionary<string, AnalysisProgress>> callback, TimeSpan period)
+            : base(callback, period) {
         }
 
         /// <summary>
@@ -114,6 +156,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
     public class AnalyzerStatusUpdaterImplementation : IDisposable {
         readonly Thread _worker;
         readonly string _identifier;
+        readonly TimeSpan _period;
 
         readonly object _requestLock = new object();
         readonly Action<Dictionary<string, AnalysisProgress>> _callback;
@@ -144,6 +187,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             public int OwnerProcessId;
             public int ItemsInQueue;
             public int MaximumItems;
+            public int _Status;
 
             public string Identifier {
                 get {
@@ -173,11 +217,35 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                     }
                 }
             }
+
+            public AnalysisStatus Status {
+                get {
+                    return (AnalysisStatus)_Status;
+                }
+                set {
+                    _Status = (int)value;
+                }
+            }
         }
 
-        internal AnalyzerStatusUpdaterImplementation(Action<Dictionary<string, AnalysisProgress>> callback) {
+        /// <summary>
+        /// Gets a unique identifier for the factory.
+        /// </summary>
+        public static string GetIdentifier(IPythonInterpreterFactory factory) {
+            return GetIdentifier(factory.Id, factory.Configuration.Version);
+        }
+
+        /// <summary>
+        /// Gets a unique identifier for the factory.
+        /// </summary>
+        public static string GetIdentifier(Guid id, Version version) {
+            return string.Format(CultureInfo.InvariantCulture, "{0};{1}", id, version);
+        }
+
+        internal AnalyzerStatusUpdaterImplementation(Action<Dictionary<string, AnalysisProgress>> callback, TimeSpan period) {
             _callback = callback;
             _identifier = null;
+            _period = period;
             _newRequest = new AutoResetEvent(false);
             _worker = new Thread(ThreadProc);
             _worker.Name = "AnalyzerStatusUpdater Listener";
@@ -205,13 +273,14 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             }
         }
 
-        protected void UpdateStatusImplementation(int progress, int maximum) {
+        protected void UpdateStatusImplementation(AnalysisStatus status, int progress, int maximum) {
             if (_identifier == null) {
                 throw new InvalidOperationException("Cannot update status without providing an identifier");
             }
 
             lock (_latestUpdateLock) {
                 _latestUpdate = new AnalysisProgress {
+                    Status = status,
                     Progress = progress,
                     Maximum = maximum
                 };
@@ -260,7 +329,11 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             Dictionary<string, AnalysisProgress> response = null;
 
             for (; ; ) {
-                _newRequest.WaitOne();
+                if (_identifier == null && _period.TotalDays < 1) {
+                    _newRequest.WaitOne((int)_period.TotalMilliseconds);
+                } else {
+                    _newRequest.WaitOne();
+                }
                 if (_abort) {
                     break;
                 }
@@ -277,6 +350,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                         }
 
                         using (var accessor = _sharedData.CreateViewAccessor(_dataOffset, SIZE)) {
+                            me.Status = update.Status;
                             me.ItemsInQueue = update.Progress;
                             me.MaximumItems = update.Maximum;
                             accessor.Write(0, ref me);
@@ -315,6 +389,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                         try {
                             var owner = Process.GetProcessById(me.OwnerProcessId);
                             response[me.Identifier] = new AnalysisProgress {
+                                Status = me.Status,
                                 Progress = me.ItemsInQueue,
                                 Maximum = me.MaximumItems
                             };
@@ -338,6 +413,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                         try {
                             var owner = Process.GetProcessById(me.OwnerProcessId);
                             response[me.Identifier] = new AnalysisProgress {
+                                Status = me.Status,
                                 Progress = me.ItemsInQueue,
                                 Maximum = me.MaximumItems
                             };
@@ -360,6 +436,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 Initialized = true,
                 InUse = true,
                 OwnerProcessId = Process.GetCurrentProcess().Id,
+                Status = AnalysisStatus.Preparing,
                 ItemsInQueue = int.MaxValue,
                 MaximumItems = 0,
             };

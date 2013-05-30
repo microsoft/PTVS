@@ -1312,6 +1312,7 @@ namespace DebuggerTests {
 
         [TestMethod, Priority(0)]
         public void TestInterpreterArguments() {
+            Version.AssertInstalled();
             var debugger = new PythonDebugger();
 
             // test which verifies we have no doc string when running w/ -OO

@@ -722,7 +722,7 @@ namespace Microsoft.PythonTools.Django.Project {
                     // TODO: Use the actual Django version
                     var sln = (EnvDTE80.Solution2)project.DTE.Solution;
                     var newAppTemplate = sln.GetProjectItemTemplate("DjangoNewAppFiles14.zip", "Python");
-                    parentItems.AddFromTemplate(newAppTemplate, dialog.ViewModel.Name);
+                   parentItems.AddFromTemplate(newAppTemplate, dialog.ViewModel.Name);
                 }
             }
         }

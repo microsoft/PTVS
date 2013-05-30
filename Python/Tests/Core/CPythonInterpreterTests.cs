@@ -14,7 +14,7 @@
 
 using System;
 using System.Linq;
-using Microsoft.PythonTools.Interpreter.Default;
+using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 

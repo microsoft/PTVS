@@ -48,13 +48,14 @@ namespace Microsoft.IronPythonTools.Interpreter {
             : this(factory, null) {
         }
 
-        public IronPythonInterpreter(IronPythonInterpreterFactory factory, PythonTypeDatabase typeDb) {
+        internal IronPythonInterpreter(IronPythonInterpreterFactory factory, PythonTypeDatabase typeDb) {
 #if DEBUG
             _id = Interlocked.Increment(ref _interpreterCount);
             Debug.WriteLine(String.Format("IronPython Interpreter Created {0}", _id));
             Debug.WriteLine(new StackTrace(true).ToString());
 #endif
             _factory = factory;
+            _factory.NewDatabase += Factory_NewDatabase;
 
             AppDomain.CurrentDomain.AssemblyResolve += AssemblyResolver.Instance.CurrentDomain_AssemblyResolve;
 
@@ -73,8 +74,15 @@ namespace Microsoft.IronPythonTools.Interpreter {
                 lock (this) {
                     _typeDb.BuiltinModule = (IronPythonBuiltinModule)_modules["__builtin__"];
                 }
-            } else if (factory.ConfigurableDatabaseExists()) {
-                LoadNewTypeDb();
+            }
+        }
+
+        private void Factory_NewDatabase(object sender, NewDatabaseEventArgs e) {
+            _typeDb = e.Database;
+            if (_typeDb != null) {
+                lock (this) {
+                    _typeDb.BuiltinModule = (IronPythonBuiltinModule)_modules["__builtin__"];
+                }
             }
         }
 
@@ -482,15 +490,6 @@ namespace Microsoft.IronPythonTools.Interpreter {
         }
 
         #endregion
-
-        internal void LoadNewTypeDb() {
-            IronPythonBuiltinModule builtin;
-            lock (this) {
-                builtin = (IronPythonBuiltinModule)_modules["__builtin__"];
-            }
-
-            _typeDb = new PythonTypeDatabase(_factory.DatabasePath, false, builtin);
-        }
 
         class DomainUnloader : IDisposable {
             private readonly AppDomain _domain;

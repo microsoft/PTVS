@@ -4,18 +4,36 @@
 
   <ItemGroup>
     <ProjectFile Include="Analysis\Analysis.csproj"/>
+    <ProjectFile Include="VSInterpreters\VSInterpreters.csproj"/>
     <ProjectFile Include="Analyzer\Analyzer.csproj"/>
-    <ProjectFile Include="Attacher\Attacher.csproj"/>
-    <ProjectFile Include="AttacherX86\AttacherX86.csproj"/>
-    <ProjectFile Include="Hpc\Hpc.csproj"/>
-    <ProjectFile Include="IronPython\IronPython.csproj"/>
-    <ProjectFile Include="Profiling\Profiling.csproj"/>
-    <ProjectFile Include="PythonTools\PythonTools.csproj"/>
-
-    <ProjectFile Include="ReplWindow\ReplWindow.csproj"/>
 
     <ProjectFile Include="PyDebugAttach\PyDebugAttach.vcxproj"/>
+    <ProjectFile Include="PyDebugAttach\PyDebugAttachX86.vcxproj"/>
+    <ProjectFile Include="Attacher\Attacher.csproj"/>
+    <ProjectFile Include="AttacherX86\AttacherX86.csproj"/>
+    <ProjectFile Include="Debugger\Debugger.csproj"/>
+
+    <ProjectFile Include="PythonTools\PythonTools.csproj"/>
+
+    <ProjectFile Include="MpiShim\MpiShim.csproj"/>
+    <ProjectFile Include="Hpc\Hpc.csproj"/>
+
+    <ProjectFile Include="IronPythonResolver\IronPythonResolver.csproj"/>
+    <ProjectFile Include="IronPython\IronPython.Interpreter.csproj"/>
+    <ProjectFile Include="IronPython\IronPython.csproj"/>
+
     <ProjectFile Include="VsPyProf\VsPyProf.vcxproj"/>
+    <ProjectFile Include="VsPyProf\VsPyProfX86.vcxproj"/>
+    <ProjectFile Include="Profiling\Profiling.csproj"/>
+
+    <ProjectFile Include="PyKinect\PyKinectAudio\PyKinectAudio.vcxproj"/>
+    <ProjectFile Include="PyKinect\PyKinect.csproj"/>
+
+    <ProjectFile Include="Pyvot\Pyvot.csproj"/>
+
+    <ProjectFile Include="AzureSetup\AzureSetup.csproj"/>
+    <ProjectFile Include="WebRole\WebRole.csproj"/>
+    <ProjectFile Include="Django\Django.csproj"/>
   </ItemGroup>
 
   <Import Project="$(TargetsPath)\Common.Build.Traversal.targets" />

@@ -21,56 +21,33 @@ using System.Reflection;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.Win32;
 
-namespace Microsoft.PythonTools.Interpreter.Default {
+namespace Microsoft.PythonTools.Interpreter {
     [Export(typeof(IPythonInterpreterFactoryProvider))]
     [PartCreationPolicy(CreationPolicy.Shared)]
     class CPythonInterpreterFactoryProvider : IPythonInterpreterFactoryProvider {
         private readonly List<IPythonInterpreterFactory> _interpreters;
-        private static readonly Guid _cpyInterpreterGuid = new Guid("{2AF0F10D-7135-4994-9156-5D01C9C11B7E}");
-        private static readonly Guid _cpy64InterpreterGuid = new Guid("{9A7A9026-48C1-4688-9D5D-E5699D47D074}");
         const string PythonCorePath = "SOFTWARE\\Python\\PythonCore";
 
         public CPythonInterpreterFactoryProvider() {
             _interpreters = new List<IPythonInterpreterFactory>();
             DiscoverInterpreterFactories();
 
-            try {
-                RegistryWatcher.Instance.Add(RegistryHive.CurrentUser, RegistryView.Default,
-                    PythonCorePath,
-                    Registry_Changed,
-                    recursive: true, notifyValueChange: true, notifyKeyChange: true);
-            } catch (ArgumentException) {
-                RegistryWatcher.Instance.Add(RegistryHive.CurrentUser, RegistryView.Default,
-                    "SOFTWARE",
-                    Registry_Software_Changed,
-                    recursive: false, notifyValueChange: false, notifyKeyChange: true);
-            }
-
-            try {
-                RegistryWatcher.Instance.Add(RegistryHive.LocalMachine, RegistryView.Registry32,
-                    PythonCorePath,
-                    Registry_Changed,
-                    recursive: true, notifyValueChange: true, notifyKeyChange: true);
-            } catch (ArgumentException) {
-                RegistryWatcher.Instance.Add(RegistryHive.LocalMachine, RegistryView.Registry32,
-                    "SOFTWARE",
-                    Registry_Software_Changed,
-                    recursive: false, notifyValueChange: false, notifyKeyChange: true);
-            }
-
+            WatchOrWatchSoftware(RegistryHive.CurrentUser, RegistryView.Default, PythonCorePath);
+            WatchOrWatchSoftware(RegistryHive.LocalMachine, RegistryView.Registry32, PythonCorePath);
             if (Environment.Is64BitOperatingSystem) {
-                try {
-                    RegistryWatcher.Instance.Add(RegistryHive.LocalMachine, RegistryView.Registry64,
-                        PythonCorePath,
-                        Registry_Changed,
-                        recursive: true, notifyValueChange: true, notifyKeyChange: true);
-                } catch (ArgumentException) {
-                    RegistryWatcher.Instance.Add(RegistryHive.LocalMachine, RegistryView.Registry64,
-                        "SOFTWARE",
-                        Registry_Software_Changed,
-                        recursive: false, notifyValueChange: false, notifyKeyChange: true);
-                }
+                WatchOrWatchSoftware(RegistryHive.LocalMachine, RegistryView.Registry64, PythonCorePath);
             }
+        }
+
+        private void WatchOrWatchSoftware(RegistryHive hive, RegistryView view, string key) {
+            try {
+                RegistryWatcher.Instance.Add(hive, view, key, Registry_Changed,
+                    recursive: true, notifyValueChange: true, notifyKeyChange: true);
+                return;
+            } catch (ArgumentException) {
+            }
+            RegistryWatcher.Instance.Add(hive, view, "SOFTWARE", Registry_Software_Changed,
+                recursive: false, notifyValueChange: false, notifyKeyChange: true);
         }
 
         private void Registry_Changed(object sender, RegistryChangedEventArgs e) {
@@ -120,25 +97,29 @@ namespace Microsoft.PythonTools.Interpreter.Default {
 
                         var actualArch = arch;
                         if (!actualArch.HasValue) {
-                            actualArch = NativeMethods.GetBinaryType(Path.Combine(basePath, "python.exe"));
+                            actualArch = NativeMethods.GetBinaryType(Path.Combine(basePath, CPythonInterpreterFactoryConstants.ConsoleExecutable));
                         }
 
-                        var id = _cpyInterpreterGuid;
-                        var description = "Python";
+                        var id = CPythonInterpreterFactoryConstants.Guid32;
+                        var description = CPythonInterpreterFactoryConstants.Description32;
                         if (actualArch == ProcessorArchitecture.Amd64) {
-                            id = _cpy64InterpreterGuid;
-                            description = "Python 64-bit";
+                            id = CPythonInterpreterFactoryConstants.Guid64;
+                            description = CPythonInterpreterFactoryConstants.Description64;
                         }
 
                         if (!_interpreters.Any(f => f.Id == id && f.Configuration.Version == version)) {
-                            _interpreters.Add(new CPythonInterpreterFactory(
-                                version,
-                                id,
-                                description,
-                                Path.Combine(basePath, "python.exe"),
-                                Path.Combine(basePath, "pythonw.exe"),
-                                "PYTHONPATH",
-                                actualArch ?? ProcessorArchitecture.None
+                            _interpreters.Add(InterpreterFactoryCreator.CreateInterpreterFactory(
+                                new InterpreterFactoryCreationOptions {
+                                    LanguageVersion = version,
+                                    Id = id,
+                                    Description = description,
+                                    InterpreterPath = Path.Combine(basePath, CPythonInterpreterFactoryConstants.ConsoleExecutable),
+                                    WindowInterpreterPath = Path.Combine(basePath, CPythonInterpreterFactoryConstants.WindowsExecutable),
+                                    LibraryPath = Path.Combine(basePath, CPythonInterpreterFactoryConstants.LibrarySubPath),
+                                    PathEnvironmentVariableName = CPythonInterpreterFactoryConstants.PathEnvironmentVariableName,
+                                    Architecture = actualArch ?? ProcessorArchitecture.None,
+                                    WatchLibraryForNewModules = true
+                                }
                             ));
                             anyAdded = true;
                         }

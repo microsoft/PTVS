@@ -20,7 +20,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Interpreter.Default;
@@ -44,16 +43,8 @@ namespace Microsoft.PythonTools.Interpreter {
         private static string _completionDatabasePath;
         private static string _baselineDatabasePath;
 
-        public PythonTypeDatabase(string databaseDirectory, bool is3x = false, IBuiltinPythonModule builtinsModule = null) {
-            _sharedState = new SharedDatabaseState(databaseDirectory, is3x, builtinsModule);
-            _sharedState.ListenForCorruptDatabase(this);
-        }
-
-        /// <summary>
-        /// Constructor used for the default type database specified with a version.
-        /// </summary>
-        internal PythonTypeDatabase(string databaseDirectory, Version languageVersion) {
-            _sharedState = new SharedDatabaseState(databaseDirectory, languageVersion);
+        public PythonTypeDatabase(string databaseDirectory, Version languageVersion, IBuiltinPythonModule builtinsModule = null) {
+            _sharedState = new SharedDatabaseState(databaseDirectory, languageVersion, builtinsModule);
             _sharedState.ListenForCorruptDatabase(this);
         }
 
@@ -193,53 +184,23 @@ namespace Microsoft.PythonTools.Interpreter {
                     dbFile = Path.Combine(_typeDb._sharedState.DatabaseDirectory, moduleName + "." + ++retryCount + ".$project.idb");
                 }
 
-                var psi = new ProcessStartInfo();
-                psi.CreateNoWindow = true;
-                psi.UseShellExecute = false;
-                psi.FileName = interpreter.Configuration.InterpreterPath;
-                psi.RedirectStandardOutput = true;
-                psi.RedirectStandardError = true;
-                psi.Arguments =
-                    "\"" + Path.Combine(GetPythonToolsInstallPath(), "ExtensionScraper.py") + "\"" +      // script to run
-                    " scrape" +                                                                           // scrape
-                    " -" +                                                                                // no module name
-                    " \"" + extensionModuleFilename + "\"" +                                              // extension module path
-                    " \"" + dbFile.Substring(0, dbFile.Length - 4) + "\"";                                // output file path (minus .idb)
-
-                Process proc = null;
-                try {
-                    try {
-                        proc = Process.Start(psi);
-                    } catch (InvalidOperationException ex) {
-                        throw new CannotAnalyzeExtensionException("Interpreter failed to execute", ex);
-                    } catch (IOException ex) {
-                        throw new CannotAnalyzeExtensionException("Interpreter failed to execute", ex);
-                    } catch (Win32Exception ex) {
-                        throw new CannotAnalyzeExtensionException("Interpreter failed to execute", ex);
-                    }
-                    var receiver = new OutputDataReceiver();
-                    proc.OutputDataReceived += receiver.OutputDataReceived;
-                    proc.ErrorDataReceived += receiver.OutputDataReceived;
-
-                    proc.BeginOutputReadLine();
-                    proc.BeginErrorReadLine();
-
+                using (var output = interpreter.Run(
+                    Path.Combine(GetPythonToolsInstallPath(), "ExtensionScraper.py"),   // script to run
+                    "scrape",                                                           // scrape
+                    "-",                                                                // no module name
+                    extensionModuleFilename,                                            // extension module path
+                    dbFile.Substring(0, dbFile.Length - 4)                              // output file path (minus .idb)
+                    )) {
                     if (_cancel.CanBeCanceled) {
-                        if (WaitHandle.WaitAny(new[] { _cancel.WaitHandle, new ProcessWaitHandle(proc) }) != 1) {
+                        if (WaitHandle.WaitAny(new[] { _cancel.WaitHandle, output.WaitHandle }) != 1) {
                             // we were cancelled
                             return null;
                         }
                     } else {
-                        try {
-                            proc.WaitForExit();
-                        } catch (Win32Exception ex) {
-                            throw new CannotAnalyzeExtensionException("Interpreter failed to execute", ex);
-                        } catch (SystemException ex) {
-                            throw new CannotAnalyzeExtensionException("Interpreter failed to execute", ex);
-                        }
+                        output.Wait();
                     }
 
-                    if (proc != null && proc.ExitCode == 0) {
+                    if (output.ExitCode == 0) {
                         // [FileName]|interpGuid|interpVersion|DateTimeStamp|[db_file.idb]
                         // save the new entry in the DB file
                         existingModules.Add(
@@ -254,15 +215,12 @@ namespace Microsoft.PythonTools.Interpreter {
 
                         fs.Seek(0, SeekOrigin.Begin);
                         fs.SetLength(0);
-                        var sw = new StreamWriter(fs);
-                        sw.Write(String.Join(Environment.NewLine, existingModules));
-                        sw.Flush();
+                        using (var sw = new StreamWriter(fs)) {
+                            sw.Write(String.Join(Environment.NewLine, existingModules));
+                            sw.Flush();
+                        }
                     } else {
-                        throw new CannotAnalyzeExtensionException(receiver.Received.ToString());
-                    }
-                } finally {
-                    if (proc != null) {
-                        proc.Dispose();
+                        throw new CannotAnalyzeExtensionException(string.Join(Environment.NewLine, output.StandardErrorLines));
                     }
                 }
 
@@ -389,110 +347,36 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         /// <summary>
-        /// Creates a new completion database based upon the specified request.  Calls back the provided delegate when
-        /// the generation has finished.
+        /// Invokes Analyzer.exe for the specified factory.
         /// </summary>
-        public static bool Generate(PythonTypeDatabaseCreationRequest request, Action databaseGenerationCompleted) {
-            if (String.IsNullOrEmpty(request.Factory.Configuration.InterpreterPath)) {
-                return false;
-            }
+        public static void Generate(PythonTypeDatabaseCreationRequest request) {
+            var fact = request.Factory;
+            var outPath = request.OutputPath;
 
-            string outPath = request.OutputPath;
+            ThreadPool.QueueUserWorkItem(x => {
+                var path = Path.Combine(GetPythonToolsInstallPath(), "Microsoft.PythonTools.Analyzer.exe");
 
-            Thread t = new Thread(x => {
-                if (!Directory.Exists(outPath)) {
-                    Directory.CreateDirectory(outPath);
-                }
+                Directory.CreateDirectory(CompletionDatabasePath);
 
-                var psi = new ProcessStartInfo();
-                psi.CreateNoWindow = true;
-                psi.UseShellExecute = false;
-                psi.FileName = request.Factory.Configuration.InterpreterPath;
-                psi.Arguments =
-                    "\"" + Path.Combine(GetPythonToolsInstallPath(), "PythonScraper.py") + "\"" +       // script to run
-                    " \"" + outPath + "\"" +                       // output dir
-                    " \"" + BaselineDatabasePath + "\"";           // baseline file
-                psi.RedirectStandardError = true;
-                psi.RedirectStandardOutput = true;
+                using (var output = ProcessOutput.RunHiddenAndCapture(path,
+                    "/id", fact.Id.ToString("B"),
+                    "/version", fact.Configuration.Version.ToString(),
+                    "/python", fact.Configuration.InterpreterPath,
+                    "/library", fact.Configuration.LibraryPath,
+                    "/outdir", outPath,
+                    "/basedb", BaselineDatabasePath,
+                    "/log", Path.Combine(outPath, "AnalysisLog.txt"),
+                    "/glog", Path.Combine(CompletionDatabasePath, "AnalysisLog.txt"))) {
 
-                var proc = new Process();
-                proc.StartInfo = psi;
-                StringBuilder output = new StringBuilder();
-                try {
-                    LogEvent(request, "START_SCRAPE " + psi.Arguments);
+                    output.Wait();
 
-                    proc.Start();
-                    proc.BeginErrorReadLine();
-                    proc.BeginOutputReadLine();
-                    proc.OutputDataReceived += (sender, args) => output.AppendLine(args.Data);
-                    proc.ErrorDataReceived += (sender, args) => output.AppendLine(args.Data);
-                    proc.WaitForExit();
-                    LogEvent(request, "OUTPUT\r\n    " + output.Replace("\r\n", "\r\n    "));
-                } catch (Win32Exception ex) {
-                    // failed to start process, interpreter doesn't exist?           
-                    LogEvent(request, "FAIL_SCRAPE " + ex.ToString().Replace("\r\n", " -- "));
-                    LogEvent(request, "    " + output.Replace("\r\n", "\r\n    "));
-                    databaseGenerationCompleted();
-                    return;
-                }
-
-                if (proc.ExitCode != 0) {
-                    LogEvent(request, "FAIL_SCRAPE " + proc.ExitCode);
-                } else {
-                    LogEvent(request, "DONE (SCRAPE)");
-                }
-
-                if ((request.DatabaseOptions & GenerateDatabaseOptions.StdLibDatabase) != 0) {
-                    try {
-                        psi = new ProcessStartInfo();
-                        psi.CreateNoWindow = true;
-                        psi.UseShellExecute = false;
-                        psi.FileName = Path.Combine(GetPythonToolsInstallPath(), "Microsoft.PythonTools.Analyzer.exe");
-                        string libDir;
-                        string virtualEnvPackages;
-                        GetLibDirs(request, out libDir, out virtualEnvPackages);
-
-                        if (File.Exists(psi.FileName)) {
-                            psi.Arguments = BuildArguments(request, outPath, libDir, virtualEnvPackages);
-
-                            proc = new Process();
-                            proc.StartInfo = psi;
-
-                            LogEvent(request, "START_STDLIB " + psi.Arguments);
-                            proc.Start();
-                            proc.WaitForExit();
-
-                            if (proc.ExitCode == 0) {
-                                LogEvent(request, "DONE (STDLIB)");
-                            } else {
-                                LogEvent(request, "FAIL_STDLIB " + proc.ExitCode);
-                            }
-                        }
-                    } catch (Exception ex) {
-                        // failed to start the process
-                        LogEvent(request, "FAIL_STDLIB " + ex.ToString().Replace("\r\n", " -- "));
+                    if (output.ExitCode.HasValue && output.ExitCode > -10 && output.ExitCode < 0) {
+                        File.AppendAllLines(Path.Combine(CompletionDatabasePath, "AnalysisLog.txt"), 
+                            new [] { "FAIL_STDLIB: " + output.Arguments }.Concat(output.StandardErrorLines));
+                        request.OnFailedToStart();
                     }
-
-                    databaseGenerationCompleted();
                 }
             });
-            t.Start();
-            return true;
-        }
-
-        private static string BuildArguments(PythonTypeDatabaseCreationRequest request, string outPath, string libDir, string virtualEnvPackages) {
-            string args = "/dir " + "\"" + libDir + "\"" +
-                " /version V" + request.Factory.Configuration.Version.ToString().Replace(".", "") +
-                " /outdir " + "\"" + outPath + "\"" +
-                " /indir " + "\"" + outPath + "\"" +
-                " /id " + request.Factory.Id.ToString();
-
-            if (virtualEnvPackages != null) {
-                args += " /dir \"" + virtualEnvPackages + "\"";
-            }
-
-
-            return args;
         }
 
         private static void GetLibDirs(PythonTypeDatabaseCreationRequest request, out string libDir, out string virtualEnvPackages) {
@@ -527,39 +411,12 @@ namespace Microsoft.PythonTools.Interpreter {
                     }
                 } else {
                     // try and find the lib dir based upon where site.py lives
-                    var psi = new ProcessStartInfo(
-                        factory.Configuration.InterpreterPath,
-                        "-c \"import site; print site.__file__\""
-                    );
-                    psi.RedirectStandardOutput = true;
-                    psi.RedirectStandardError = true;
-                    psi.UseShellExecute = false;
-                    psi.CreateNoWindow = true;
-
-                    try {
-                        var proc = Process.Start(psi);
-
-                        OutputDataReceiver receiver = new OutputDataReceiver();
-                        proc.OutputDataReceived += receiver.OutputDataReceived;
-                        proc.ErrorDataReceived += receiver.OutputDataReceived;
-
-                        proc.BeginErrorReadLine();
-                        proc.BeginOutputReadLine();
-
-                        proc.WaitForExit();
-
-                        string siteFilename = receiver.Received.ToString().Trim();
-
-                        if (!String.IsNullOrWhiteSpace(siteFilename) &&
-                            siteFilename.IndexOfAny(Path.GetInvalidPathChars()) == -1) {
-                            var dirName = Path.GetDirectoryName(siteFilename);
-                            if (Directory.Exists(dirName)) {
-                                libDir = dirName;
-                            }
-                        }
-                    } catch (IOException) {
-                    } catch (InvalidOperationException) {
-                    } catch (Win32Exception) {
+                    using (var output = factory.Run("-c", "import site; print(site.__file__)")) {
+                        output.Wait();
+                        libDir = output.StandardOutputLines
+                            .Where(line => !string.IsNullOrWhiteSpace(line) && line.IndexOfAny(Path.GetInvalidPathChars()) == -1)
+                            .Select(line => Path.GetDirectoryName(line))
+                            .FirstOrDefault(dir => Directory.Exists(dir));
                     }
                 }
             }
@@ -607,28 +464,6 @@ namespace Microsoft.PythonTools.Interpreter {
                     );
                 }
                 return _completionDatabasePath;
-            }
-        }
-
-        private static void LogEvent(PythonTypeDatabaseCreationRequest request, string contents) {
-            for (int i = 0; i < 10; i++) {
-                try {
-                    File.AppendAllText(
-                        GlobalLogFilename,
-                        String.Format(
-                            "\"{0}\" \"{1}\" \"{2}\" \"{3}\"{4}",
-                            DateTime.Now.ToString("s"),
-                            request.Factory.Configuration.InterpreterPath,
-                            request.OutputPath,
-                            contents,
-                            Environment.NewLine
-                        )
-                    );
-                    return;
-                } catch (IOException) {
-                    // racing with someone else generating?
-                    Thread.Sleep(25);
-                }
             }
         }
 

@@ -54,7 +54,7 @@ namespace TestUtilities.Mocks {
         public IPythonInterpreterFactory Factory {
             get {
                 if (_factory == null) {
-                    _factory = new CPythonInterpreterFactory(LanguageVersion.ToVersion(), Database);
+                    _factory = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(LanguageVersion.ToVersion(), Database);
                 }
                 return _factory;
             }

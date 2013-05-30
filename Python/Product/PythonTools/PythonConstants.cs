@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System;
+using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools {
     public static class PythonConstants {
@@ -74,6 +75,7 @@ namespace Microsoft.PythonTools {
         public const string CommandLineArgumentsSetting = "CommandLineArguments";
         public const string StartupFileSetting = "StartupFile";
         public const string IsWindowsApplicationSetting = "IsWindowsApplication";
-
+        public const string WorkingDirectorySetting = CommonConstants.WorkingDirectory;
+        public const string ProjectHomeSetting = CommonConstants.ProjectHome;
     }
 }

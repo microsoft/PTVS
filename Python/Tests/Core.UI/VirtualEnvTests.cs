@@ -96,7 +96,7 @@ namespace PythonToolsUITests {
                 app.Dte.Solution.Projects.Item(1).Name,
                 "Virtual Environments",
                 "env",
-                "azure==0.6.1");
+                "azure==0.6.2");
 
             Assert.IsNotNull(azure);
             ((SelectionItemPattern)azure.GetCurrentPattern(SelectionItemPattern.Pattern)).Select();

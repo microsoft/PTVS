@@ -13,42 +13,70 @@
  * ***************************************************************************/
 
 using System;
+using System.IO;
 using System.Reflection;
 
 namespace Microsoft.PythonTools.Interpreter {
-    public abstract class InterpreterConfiguration {
+    public sealed class InterpreterConfiguration {
+        readonly string _interpreterPath;
+        readonly string _windowsInterpreterPath;
+        readonly string _libraryPath;
+        readonly string _pathEnvironmentVariable;
+        readonly ProcessorArchitecture _architecture;
+        readonly Version _version;
+
+        public InterpreterConfiguration(string path, string winPath, string libraryPath, string pathVar, ProcessorArchitecture arch, Version version) {
+            _interpreterPath = path;
+            _windowsInterpreterPath = winPath ?? path;
+            _libraryPath = libraryPath ?? Path.Combine(Path.GetDirectoryName(path), "Lib");
+            _pathEnvironmentVariable = pathVar;
+            _architecture = arch;
+            _version = version;
+        }
+
         /// <summary>
         /// Returns the path to the interpreter executable for launching Python applications.
         /// </summary>
-        public abstract string InterpreterPath {
-            get;
+        public string InterpreterPath {
+            get { return _interpreterPath; }
         }
 
         /// <summary>
         /// Returns the path to the interpreter executable for launching Python applications
         /// which are windows applications (pythonw.exe, ipyw.exe)
         /// </summary>
-        public abstract string WindowsInterpreterPath {
-            get;
+        public string WindowsInterpreterPath {
+            get { return _windowsInterpreterPath; }
+        }
+
+        /// <summary>
+        /// The path to the standard library associated with this interpreter.
+        /// This may be null if the interpreter does not support standard
+        /// library analysis.
+        /// </summary>
+        public string LibraryPath {
+            get { return _libraryPath; }
         }
 
         /// <summary>
         /// Gets the environment variable which should be used to set sys.path.
         /// </summary>
-        public abstract string PathEnvironmentVariable {
-            get;
+        public string PathEnvironmentVariable {
+            get { return _pathEnvironmentVariable; }
         }
 
-        public abstract ProcessorArchitecture Architecture {
-            get;
+        /// <summary>
+        /// The architecture of the interpreter executable.
+        /// </summary>
+        public ProcessorArchitecture Architecture {
+            get { return _architecture; }
         }
 
         /// <summary>
         /// The language version of the interpreter (e.g. 2.7).
         /// </summary>
-        public abstract Version Version {
-            get;
+        public Version Version {
+            get { return _version; }
         }
-
     }
 }

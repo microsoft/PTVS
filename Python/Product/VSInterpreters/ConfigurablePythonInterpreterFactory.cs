@@ -13,9 +13,8 @@
  * ***************************************************************************/
 
 using System;
-using Microsoft.PythonTools.Interpreter;
 
-namespace Microsoft.PythonTools {
+namespace Microsoft.PythonTools.Interpreter {
     class ConfigurablePythonInterpreterFactory : IPythonInterpreterFactory, IInterpreterWithCompletionDatabase {
         private readonly IPythonInterpreterFactory _realFactory;
 
@@ -45,8 +44,8 @@ namespace Microsoft.PythonTools {
 
         #region IInterpreterWithCompletionDatabase Members
 
-        public bool GenerateCompletionDatabase(GenerateDatabaseOptions options, Action databaseGenerationCompleted) {
-            return ((IInterpreterWithCompletionDatabase)_realFactory).GenerateCompletionDatabase(options, databaseGenerationCompleted);
+        public void GenerateCompletionDatabase(Action failedToStart = null) {
+            ((IInterpreterWithCompletionDatabase)_realFactory).GenerateCompletionDatabase(failedToStart);
         }
 
         public void AutoGenerateCompletionDatabase() {
@@ -57,12 +56,29 @@ namespace Microsoft.PythonTools {
             get { return ((IInterpreterWithCompletionDatabase)_realFactory).IsCurrent; }
         }
 
-        public void RefreshIsCurrent(bool alwaysRaiseEvent) {
-            ((IInterpreterWithCompletionDatabase)_realFactory).RefreshIsCurrent(alwaysRaiseEvent);
+        public void RefreshIsCurrent() {
+            ((IInterpreterWithCompletionDatabase)_realFactory).RefreshIsCurrent();
         }
 
         public void NotifyInvalidDatabase() {
             ((IInterpreterWithCompletionDatabase)_realFactory).NotifyInvalidDatabase();
+        }
+
+        public void NotifyGeneratingDatabase(bool isGenerating) {
+            ((IInterpreterWithCompletionDatabase)_realFactory).NotifyGeneratingDatabase(isGenerating);
+        }
+
+        public void NotifyNewDatabase() {
+            ((IInterpreterWithCompletionDatabase)_realFactory).NotifyNewDatabase();
+        }
+
+        public event EventHandler<NewDatabaseEventArgs> NewDatabase {
+            add {
+                ((IInterpreterWithCompletionDatabase)_realFactory).NewDatabase += value;
+            }
+            remove {
+                ((IInterpreterWithCompletionDatabase)_realFactory).NewDatabase -= value;
+            }
         }
 
         public string GetAnalysisLogContent(IFormatProvider culture) {
@@ -96,5 +112,6 @@ namespace Microsoft.PythonTools {
         }
 
         #endregion
+
     }
 }

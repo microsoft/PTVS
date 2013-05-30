@@ -12,16 +12,24 @@
  *
  * ***************************************************************************/
 
+using System;
+
 namespace Microsoft.PythonTools.Interpreter {
     public sealed class PythonTypeDatabaseCreationRequest {
         public PythonTypeDatabaseCreationRequest() {
-            DatabaseOptions = GenerateDatabaseOptions.StdLibDatabase;
         }
-
-        public GenerateDatabaseOptions DatabaseOptions { get; set; }
 
         public IPythonInterpreterFactory Factory { get; set; }
 
         public string OutputPath { get; set; }
+
+        public event EventHandler FailedToStart;
+
+        internal void OnFailedToStart() {
+            var evt = FailedToStart;
+            if (evt != null) {
+                evt(this, EventArgs.Empty);
+            }
+        }
     }
 }

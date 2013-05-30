@@ -34,6 +34,7 @@ using Microsoft.VisualStudio.Text.Adornments;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 using Microsoft.Windows.Design.Host;
+using NativeMethods = Microsoft.VisualStudioTools.Project.NativeMethods;
 using VsCommands2K = Microsoft.VisualStudio.VSConstants.VSStd2KCmdID;
 
 namespace Microsoft.PythonTools.Project {
@@ -466,13 +467,13 @@ namespace Microsoft.PythonTools.Project {
                 while (ErrorHandler.Succeeded(hierarchies.Next(1, hierarchy, out fetched)) && fetched == 1) {
                     var pyProj = hierarchy[0].GetProject().GetPythonProject();
 
-                if (pyProj != this &&
-                    pyProj._analyzer != null &&
-                    pyProj._analyzer.InterpreterFactory == curFactory) {
-                    // we have the same interpreter, we'll share analysis engines across projects.
-                    return pyProj._analyzer;
+                    if (pyProj != this &&
+                        pyProj._analyzer != null &&
+                        pyProj._analyzer.InterpreterFactory == curFactory) {
+                        // we have the same interpreter, we'll share analysis engines across projects.
+                        return pyProj._analyzer;
+                    }
                 }
-            }
             }
 
             var model = PythonToolsPackage.ComponentModel;
@@ -761,14 +762,18 @@ namespace Microsoft.PythonTools.Project {
             var createVirtualEnv = new CreateVirtualEnvironment(view);
             var res = createVirtualEnv.ShowDialog();
             if (res != null && res.Value) {
-                var psi = new ProcessStartInfo(view.Interpreter.Path, "-m virtualenv " + view.Name);
-                psi.WorkingDirectory = view.Location;
-
                 EnqueueVirtualEnvRequest(
-                    psi, 
-                    "Creating virtual environment...", 
-                    "Virtual environment created successfully", 
-                    "Error in creating virtual environment: {0}", 
+                    ProcessOutput.Run(
+                        view.Interpreter.Path,
+                        new[] { "-m", "virtualenv", view.Name },
+                        view.Location,
+                        new[] { new KeyValuePair<string, string>("PYTHONUNBUFFERED", "1") },
+                        false,
+                        OutputWindowRedirector.GetGeneral(Site)
+                    ),
+                    "Creating virtual environment...",
+                    "Virtual environment created successfully",
+                    "Error in creating virtual environment: {0}",
                     () => AddVirtualEnvPath(Path.Combine(view.Location, view.Name), view.Interpreter.Version, view.Interpreter.Id)
                 );
             }
@@ -786,26 +791,18 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-        internal void EnqueueVirtualEnvRequest(ProcessStartInfo psi, string initialMsg, string success, string error, Action onSuccess, Action onError = null) {
-            psi.UseShellExecute = false;
-            psi.RedirectStandardOutput = true;
-            psi.RedirectStandardError = true;
-            psi.CreateNoWindow = true;
-            psi.EnvironmentVariables["PYTHONUNBUFFERED"] = "1";
-
+        internal void EnqueueVirtualEnvRequest(ProcessOutput process, string initialMsg, string success, string error, Action onSuccess, Action onError = null) {
             if (_virtualEnvCreationRequests == null) {
                 _virtualEnvCreationRequests = new List<VirtualEnvRequestHandler>();
             }
 
-            // make sure we have the General pane, it's not created for us in VS 2010
-            IVsOutputWindow outputWindow = GetService(typeof(SVsOutputWindow)) as IVsOutputWindow;
-            IVsOutputWindowPane pane;
-            outputWindow.CreatePane(VSConstants.OutputWindowPaneGuid.GeneralPane_guid, "General", 1, 0);
-            outputWindow.GetPane(VSConstants.OutputWindowPaneGuid.GeneralPane_guid, out pane);
-            
-            var process = Process.Start(psi);
+            var redirector = process.Redirector as OutputWindowRedirector;
+            if (redirector == null) {
+                redirector = OutputWindowRedirector.GetGeneral(Site);
+            }
+
             var handler = new VirtualEnvRequestHandler(
-                pane,
+                redirector,
                 process,
                 this,
                 onSuccess,
@@ -813,24 +810,17 @@ namespace Microsoft.PythonTools.Project {
                 TaskScheduler.FromCurrentSynchronizationContext(),
                 success,
                 error);
-            
+
             lock (_virtualEnvCreationRequests) {
                 // keep the Process object alive so we receive events even after GC
                 _virtualEnvCreationRequests.Add(handler);
             }
-            
-            process.Exited += handler.VirtualEnvCreationExited;
-            process.EnableRaisingEvents = true;
-            process.OutputDataReceived += handler.CreateVirtualEnvOutputDataReceived;
-            process.ErrorDataReceived += handler.CreateVirtualEnvOutputDataReceived;
-            process.BeginOutputReadLine();
-            process.BeginErrorReadLine();
 
             var statusBar = (IVsStatusbar)CommonPackage.GetGlobalService(typeof(SVsStatusbar));
             statusBar.SetText(initialMsg + SeeOutputWindowForMoreDetails);
-            
-            pane.Activate();
-            pane.OutputString(initialMsg + Environment.NewLine);
+
+            redirector.Show();
+            redirector.WriteLine(initialMsg);
         }
 
         const string SeeOutputWindowForMoreDetails = " (See Output Window for more details)";
@@ -840,12 +830,13 @@ namespace Microsoft.PythonTools.Project {
             private readonly PythonProjectNode _node;
             private readonly TaskScheduler _scheduler;
             private readonly Action _onSuccess, _onError;
-            private readonly Process _process;
-            private readonly IVsOutputWindowPane _outPane;
+            private readonly ProcessOutput _process;
+            private readonly OutputWindowRedirector _outPane;
 
-            public VirtualEnvRequestHandler(IVsOutputWindowPane outPane, Process process, PythonProjectNode node, Action onSuccess, Action onError, TaskScheduler scheduler, string success, string error) {
+            public VirtualEnvRequestHandler(OutputWindowRedirector outPane, ProcessOutput process, PythonProjectNode node, Action onSuccess, Action onError, TaskScheduler scheduler, string success, string error) {
                 _outPane = outPane;
                 _process = process;
+                _process.Exited += VirtualEnvCreationExited;
                 _node = node;
                 _scheduler = scheduler;
                 _onSuccess = onSuccess;
@@ -855,37 +846,31 @@ namespace Microsoft.PythonTools.Project {
                 _error = error;
             }
 
-            public void VirtualEnvCreationExited(object sender, EventArgs e) {
+            private void VirtualEnvCreationExited(object sender, EventArgs e) {
                 lock (_node._virtualEnvCreationRequests) {
                     // no longer keep the process object alive.
                     _node._virtualEnvCreationRequests.Remove(this);
                 }
 
-                var proc = (Process)sender;
+                var proc = (ProcessOutput)sender;
 
-                var statusBar = (IVsStatusbar)CommonPackage.GetGlobalService(typeof(SVsStatusbar));                
+                var statusBar = (IVsStatusbar)CommonPackage.GetGlobalService(typeof(SVsStatusbar));
 
                 if (proc.ExitCode == 0) {
                     statusBar.SetText(_success + SeeOutputWindowForMoreDetails);
                     if (_outPane != null) {
-                        _outPane.OutputStringThreadSafe(_success + Environment.NewLine);
+                        _outPane.WriteLine(_success);
                     }
                     _scheduler.StartNew(_onSuccess).Wait();
                 } else {
                     var msg = String.Format(_error, proc.ExitCode);
-                    statusBar.SetText(_error + SeeOutputWindowForMoreDetails);
+                    statusBar.SetText(msg + SeeOutputWindowForMoreDetails);
                     if (_outPane != null) {
-                        _outPane.OutputStringThreadSafe(msg + Environment.NewLine);
+                        _outPane.WriteErrorLine(msg);
                     }
                     if (_onError != null) {
                         _scheduler.StartNew(_onError).Wait();
                     }
-                }
-            }
-
-            public void CreateVirtualEnvOutputDataReceived(object sender, DataReceivedEventArgs e) {
-                if (_outPane != null && e.Data != null) {
-                    _outPane.OutputStringThreadSafe(e.Data + Environment.NewLine);
                 }
             }
         }

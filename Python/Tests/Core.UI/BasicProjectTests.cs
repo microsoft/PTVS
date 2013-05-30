@@ -494,8 +494,8 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ChangeDefaultInterpreterProjectClosed() {
+            var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte);
             try {
-                var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte);
                 try {
                     app.SelectDefaultInterpreter("Python 2.6");
                 } catch (System.Windows.Automation.ElementNotAvailableException) {
@@ -511,6 +511,7 @@ namespace PythonToolsUITests {
 
                 app.SelectDefaultInterpreter("Python 2.7");
             } finally {
+                app.DismissAllDialogs();
                 VsIdeTestHostContext.Dte.Solution.Close();
                 GC.Collect();
                 GC.WaitForPendingFinalizers();

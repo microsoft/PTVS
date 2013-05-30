@@ -71,9 +71,15 @@
     <Compile Include="Analyzer\IsInstanceScope.cs" />
     <Compile Include="Analyzer\StatementScope.cs" />
     <Compile Include="AssemblyInfo.cs" />
+    <Compile Include="Interpreter\Default\AnalysisOnlyInterpreterFactory.cs" />
+    <Compile Include="Interpreter\Default\CPythonInterpreterFactory.cs" />
     <Compile Include="Interpreter\Default\CPythonSequenceType.cs" />
-    <Compile Include="Interpreter\Default\DefaultInterpreterFactoryCreator.cs" />
+    <Compile Include="Interpreter\InterpreterFactoryCreator.cs" />
+    <Compile Include="Interpreter\InterpreterFactoryCreationOptions.cs" />
+    <Compile Include="Interpreter\ProcessOutput.cs" />
     <Compile Include="Interpreter\IPythonSequenceType.cs" />
+    <Compile Include="Interpreter\NewDatabaseEventArgs.cs" />
+    <Compile Include="Interpreter\PythonInterpreterFactoryExtensions.cs" />
     <Compile Include="ModulePath.cs" />
     <Compile Include="Parsing\CodeFormattingCategoryAttribute.cs" />
     <Compile Include="Parsing\CodeFormattingDefaultSettingAttribute.cs" />
@@ -90,11 +96,9 @@
     <Compile Include="Interpreter\SharedDatabaseState.cs" />
     <Compile Include="ModuleTable.cs" />
     <Compile Include="AnalysisSet.cs" />
-    <Compile Include="NativeMethods.cs" />
     <Compile Include="Parsing\Ast\YieldFromExpression.cs" />
     <Compile Include="ProjectEntryExtensions.cs" />
     <Compile Include="PythonAnalyzer.Specializations.cs" />
-    <Compile Include="RegistryWatcher.cs" />
     <Compile Include="Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -138,19 +142,15 @@
     <Compile Include="Analyzer\OverviewWalker.cs" />
     <Compile Include="SingleDict.cs" />
     <Compile Include="VariableDef.cs" />
-    <Compile Include="Interpreter\Default\InterpreterFactoryOptions.cs" />
     <Compile Include="Interpreter\Default\CPythonFunctionOverload.cs" />
     <Compile Include="Interpreter\Default\CPythonMethodDescriptor.cs" />
     <Compile Include="Interpreter\Default\CPythonConstant.cs" />
     <Compile Include="Interpreter\Default\CPythonInterpreter.cs" />
-    <Compile Include="Interpreter\Default\CPythonInterpreterConfiguration.cs" />
-    <Compile Include="Interpreter\Default\CPythonInterpreterFactory.cs" />
-    <Compile Include="Interpreter\Default\CPythonInterpreterFactoryProvider.cs" />
+    <Compile Include="Interpreter\PythonInterpreterFactoryWithDatabase.cs" />
     <Compile Include="Interpreter\Default\CPythonModule.cs" />
     <Compile Include="Interpreter\Default\CPythonParameterInfo.cs" />
     <Compile Include="Interpreter\Default\CPythonProperty.cs" />
     <Compile Include="Interpreter\Default\CPythonType.cs" />
-    <Compile Include="Interpreter\Default\IDefaultInterpreterFactoryCreator.cs" />
     <Compile Include="Interpreter\PythonTypeDatabase.cs" />
     <Compile Include="Interpreter\GenerateDatabaseOptions.cs" />
     <Compile Include="Interpreter\IAdvancedPythonType.cs" />

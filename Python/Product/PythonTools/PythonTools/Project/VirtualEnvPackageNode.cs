@@ -86,7 +86,7 @@ namespace Microsoft.PythonTools.Project {
         public override void Remove(bool removeFromStorage) {
             Parent.BeginPackageChange();
             ProjectMgr.EnqueueVirtualEnvRequest(
-                ((VirtualEnvNode)Parent).MakePipCommand("uninstall -y " + _caption),
+                ((VirtualEnvNode)Parent).RunPip("uninstall", "-y", _caption),
                 "Uninstalling " + _caption,
                 "Successfully uninstalled " + _caption,
                 "Failed to uninstall " + _caption,

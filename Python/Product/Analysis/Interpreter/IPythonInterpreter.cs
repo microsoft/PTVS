@@ -62,26 +62,17 @@ namespace Microsoft.PythonTools.Interpreter {
         IModuleContext CreateModuleContext();
 
         /// <summary>
-        /// Called to inform the interpreter that its database requires regeneration.
-        /// 
-        /// This should typically forward the call to the interpreter factory, which controls the database.
-        /// 
-        /// New in 2.0
-        /// </summary>
-        void NotifyInvalidDatabase();
-
-        /// <summary>
         /// Asynchronously loads the assocated project reference into the interpreter.
         /// 
         /// Returns a new task which can be waited upon for completion of the reference being added.
         /// </summary>
-        /// <remarks>New in 1.1.</remarks>
+        /// <remarks>New in 2.0.</remarks>
         Task AddReferenceAsync(ProjectReference reference, CancellationToken cancellationToken = default(CancellationToken));
 
         /// <summary>
         /// Removes the associated project reference from the interpreter.
         /// </summary>
-        /// <remarks>New in 1.1.</remarks>
+        /// <remarks>New in 2.0.</remarks>
         void RemoveReference(ProjectReference reference);
     }
 }

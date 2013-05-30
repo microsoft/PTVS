@@ -388,9 +388,11 @@ try {
                     "Microsoft.PythonTools.AttacherX86.exe", 
                     "Microsoft.PythonTools.Debugger.dll", 
                     "Microsoft.PythonTools.dll", 
+                    "Microsoft.PythonTools.VSInterpreters.dll",
                     "Microsoft.PythonTools.Hpc.dll", 
                     "Microsoft.PythonTools.ImportWizard.dll", 
                     "Microsoft.PythonTools.IronPython.dll", 
+                    "Microsoft.PythonTools.IronPython.Interpreter.dll", 
                     "Microsoft.PythonTools.MpiShim.exe", 
                     "Microsoft.PythonTools.Profiling.dll", 
                     "Microsoft.VisualStudio.ReplWindow.dll",
@@ -400,7 +402,8 @@ try {
                     "Microsoft.PythonTools.AzureSetup.exe",
                     "Microsoft.IronPythonTools.Resolver.dll",
                     "Microsoft.PythonTools.Pyvot.dll"
-                    ) | ForEach {@{path="$destdir\Binaries\$_"; name=$projectName}})
+                    ) | ForEach {@{path="$destdir\Binaries\$_"; name=$projectName}} `
+                      | Where-Object {Test-Path $_.path})
                 
                 $native_files = @((
                     "PyDebugAttach.dll",
@@ -408,7 +411,8 @@ try {
                     "VsPyProf.dll",
                     "VsPyProfX86.dll",
                     "PyKinectAudio.dll"
-                    ) | ForEach {@{path="$destdir\Binaries\$_"; name=$projectName}})
+                    ) | ForEach {@{path="$destdir\Binaries\$_"; name=$projectName}} `
+                      | Where-Object {Test-Path $_.path})
 
                 $job1 = begin_sign_files $managed_files "$destdir\SignedBinaries" $approvers `
                     $projectName $projectUrl "$projectName - managed code" $projectKeywords `

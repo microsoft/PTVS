@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.Win32;
@@ -96,7 +97,7 @@ namespace TestUtilities {
             }
 
             var path = "C:\\Python" + version.ToString().Substring(1) + "\\python.exe";
-            var arch = Microsoft.PythonTools.Analysis.NativeMethods.GetBinaryType(path);
+            var arch = Microsoft.PythonTools.Interpreter.NativeMethods.GetBinaryType(path);
             if (arch == ProcessorArchitecture.X86 && !x64) {
                 return new PythonVersion(path, version, CPythonGuid);
             } else if (arch == ProcessorArchitecture.Amd64 && x64) {
@@ -105,7 +106,7 @@ namespace TestUtilities {
 
             if (x64) {
                 path = "C:\\Python" + version.ToString().Substring(1) + "_x64\\python.exe";
-                arch = Microsoft.PythonTools.Analysis.NativeMethods.GetBinaryType(path);
+                arch = Microsoft.PythonTools.Interpreter.NativeMethods.GetBinaryType(path);
                 if (arch == ProcessorArchitecture.Amd64) {
                     return new PythonVersion(path, version, CPython64Guid);
                 }
@@ -124,7 +125,7 @@ namespace TestUtilities {
                         var installPath = versionKey.GetValue("");
                         if (installPath != null) {
                             var path = Path.Combine(installPath.ToString(), "python.exe");
-                            var arch = Microsoft.PythonTools.Analysis.NativeMethods.GetBinaryType(path);
+                            var arch = Microsoft.PythonTools.Interpreter.NativeMethods.GetBinaryType(path);
                             if (arch == ProcessorArchitecture.X86) {
                                 return new PythonVersion(path, version, CPythonGuid);
                             } else if (arch == ProcessorArchitecture.Amd64) {
@@ -179,6 +180,16 @@ namespace TestUtilities {
         public string LibPath {
             get {
                 return System.IO.Path.Combine(System.IO.Path.GetDirectoryName(Path), "Lib");
+            }
+        }
+
+        public InterpreterConfiguration Configuration {
+            get {
+                return new InterpreterConfiguration(
+                    Path, null, LibPath, "PYTHONPATH",
+                   Isx64 ? ProcessorArchitecture.Amd64 : ProcessorArchitecture.X86,
+                   Version.ToVersion()
+                );
             }
         }
     }

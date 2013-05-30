@@ -16,6 +16,7 @@ using System;
 using System.Linq;
 using AnalysisTests;
 using Microsoft.PythonTools.Intellisense;
+using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Interpreter.Default;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
@@ -1531,7 +1532,7 @@ def f(x):
         }
 
         private void ExtractMethodTest(string input, Func<Span> extract, TestResult expected, string scopeName = null, string targetName = "g", Version version = null, params string[] parameters) {
-            var fact = new CPythonInterpreterFactory(version ?? new Version(2, 7), Guid.Empty, "", "", "", "PYTHONPATH", System.Reflection.ProcessorArchitecture.X86);
+            var fact = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(version ?? new Version(2, 7));
             using (var analyzer = new VsProjectAnalyzer(fact, new[] { fact }, new MockErrorProviderFactory())) {
                 var buffer = new MockTextBuffer(input);
                 var view = new MockTextView(buffer);

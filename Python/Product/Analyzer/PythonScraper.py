@@ -1790,36 +1790,3 @@ if __name__ == "__main__":
     f = open(os.path.join(outpath, 'database.ver'), 'w')
     f.write(CURRENT_DATABASE_VERSION)
     f.close()
-
-    # inspect extension modules installed into site-packages
-    def package_inspector(site_packages, dirname, fnames):
-        for filename in fnames:
-            if filename.lower().endswith('.pyd'):
-                # Spawn scraping out to a subprocess incase the module causes a crash.
-                pkg_name = filename[:-4]
-
-                cur_dirname = dirname
-                while os.path.exists(os.path.join(cur_dirname, '__init__.py')):
-                    head, tail = os.path.split(cur_dirname)
-                    pkg_name = tail + '.' + pkg_name
-                    cur_dirname = head
-
-                # The win32com package automatically loads extension modules from
-                # "site-packages\win32comext" and exposes them as children of itself.
-                # For example, "win32comext\axcontrol\axcontrol.pyd" should be imported
-                # as "win32com.axcontrol.axcontrol"
-                # win32comext\ does not include "__init__.py", so it will be the last part
-                # of the remaining path name.
-                if os.path.split(cur_dirname)[1] == 'win32comext':
-                    pkg_name = 'win32com.' + pkg_name
-
-                subprocess.call([sys.executable,
-                                 os.path.join(os.path.dirname(__file__), 'ExtensionScraper.py'),
-                                 'scrape',
-                                 pkg_name,      # name to pass to __import__()
-                                 '-',           # not providing a path
-                                 os.path.join(outpath, pkg_name)])
-
-    site_packages = os.path.join(os.path.join(sys.prefix, 'Lib'), 'site-packages')
-    for root, dirs, files in os.walk(site_packages):
-        package_inspector(site_packages, root, files)

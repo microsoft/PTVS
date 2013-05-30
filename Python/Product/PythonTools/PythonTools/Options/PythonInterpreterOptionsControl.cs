@@ -175,7 +175,7 @@ namespace Microsoft.PythonTools.Options {
                     CurrentOptions.InterpreterPath = _path.Text;
                     if (_arch.SelectedIndex == -1 || (string)_arch.SelectedItem == "Unknown") {
                         try {
-                            switch (NativeMethods.GetBinaryType(_path.Text)) {
+                            switch (Microsoft.PythonTools.Interpreter.NativeMethods.GetBinaryType(_path.Text)) {
                                 case ProcessorArchitecture.X86:
                                     _arch.SelectedIndex = _arch.FindStringExact("x86");
                                     break;
@@ -314,11 +314,7 @@ namespace Microsoft.PythonTools.Options {
         private void Interpreter_Format(object sender, ListControlConvertEventArgs e) {
             var factory = e.ListItem as IPythonInterpreterFactory;
             if (factory != null) {
-#if DEBUG
-                e.Value = factory.GetInterpreterDisplay() + " (" + factory.GetType().Name + ")";
-#else
                 e.Value = factory.GetInterpreterDisplay();
-#endif
             } else {
                 e.Value = e.ListItem.ToString();
             }

@@ -44,5 +44,28 @@ namespace Microsoft.PythonTools.Parsing {
         public static Version ToVersion(this PythonLanguageVersion version) {
             return new Version(((int)version) >> 8, ((int)version) & 0xff);
         }
+
+        public static PythonLanguageVersion ToLanguageVersion(this Version version) {
+            switch (version.Major) {
+                case 2:
+                    switch (version.Minor) {
+                        case 4: return PythonLanguageVersion.V24;
+                        case 5: return PythonLanguageVersion.V25;
+                        case 6: return PythonLanguageVersion.V26;
+                        case 7: return PythonLanguageVersion.V27;
+                    }
+                    break;
+                case 3:
+                    switch (version.Minor) {
+                        case 0: return PythonLanguageVersion.V30;
+                        case 1: return PythonLanguageVersion.V31;
+                        case 2: return PythonLanguageVersion.V32;
+                        case 3: return PythonLanguageVersion.V33;
+                    }
+                    break;
+            }
+            throw new InvalidOperationException(String.Format("Unsupported Python version: {0}", version.ToString()));
+        }
+
     }
 }

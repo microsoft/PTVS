@@ -26,7 +26,7 @@ using Microsoft.VisualStudio.ComponentModelHost;
 namespace Microsoft.PythonTools.InterpreterList {
     internal class InterpreterView : DependencyObject {
         private readonly string _identifier;
-        private bool _startedRunning, _waitingForIsChanged;
+        private bool _startedRunning;
 
         public static IEnumerable<InterpreterView> GetInterpreters(IInterpreterOptionsService interpService = null) {
             if (interpService == null) {
@@ -47,11 +47,7 @@ namespace Microsoft.PythonTools.InterpreterList {
         public InterpreterView(IPythonInterpreterFactory interpreter, string name, bool isDefault) {
             Interpreter = interpreter;
             Name = name;
-            Identifier = _identifier = string.Format(
-                CultureInfo.InvariantCulture,
-                "{0};{1}",
-                interpreter.Id,
-                interpreter.GetLanguageVersion());
+            Identifier = _identifier = AnalyzerStatusListener.GetIdentifier(interpreter);
 
             var withDb = interpreter as IInterpreterWithCompletionDatabase;
             if (withDb != null) {
@@ -71,17 +67,25 @@ namespace Microsoft.PythonTools.InterpreterList {
                 IsCurrent = withDb.IsCurrent;
                 IsCurrentReason = withDb.GetFriendlyIsCurrentReason(CultureInfo.CurrentUICulture);
             }
-            if (_waitingForIsChanged) {
-                _waitingForIsChanged = false;
-                IsRunning = false;
-            }
         }
 
         public void ProgressUpdate(Dictionary<string, AnalysisProgress> updateInfo) {
+            var withDb = Interpreter as IInterpreterWithCompletionDatabase;
+            if (withDb == null) {
+                return;
+            }
+
             AnalysisProgress update;
             if (updateInfo.TryGetValue(_identifier, out update)) {
-                IsRunning = true;
-                _startedRunning = false;
+                if (!IsRunning) {
+                    // We're analyzing, but we weren't started by this process.
+                    IsRunning = true;
+                    withDb.NotifyGeneratingDatabase(true);
+                }
+                if (_startedRunning) {
+                    // We're analyzing and we were started by this process.
+                    _startedRunning = false;
+                }
 
                 if (update.Progress < int.MaxValue) {
                     Dispatcher.BeginInvoke((Action)(() => {
@@ -93,14 +97,13 @@ namespace Microsoft.PythonTools.InterpreterList {
                 } else {
                     update.Progress = 0;
                 }
-            } else if (IsRunning && !_startedRunning && !_waitingForIsChanged) {
-                var withDb = Interpreter as IInterpreterWithCompletionDatabase;
-                if (withDb != null) {
-                    _waitingForIsChanged = true;
-                    Task.Factory.StartNew((Action)(() => withDb.RefreshIsCurrent(true)));
-                } else {
+            } else if (IsRunning && !_startedRunning) {
+                _startedRunning = true;
+                Task.Factory.StartNew((Action)(() => {
+                    _startedRunning = false;
                     IsRunning = false;
-                }
+                    withDb.NotifyNewDatabase();
+                }));
             }
         }
 
@@ -116,9 +119,13 @@ namespace Microsoft.PythonTools.InterpreterList {
             if (Dispatcher.CheckAccess()) {
                 var withDb = Interpreter as IInterpreterWithCompletionDatabase;
                 if (withDb != null) {
-                    IsRunning = _startedRunning = withDb.GenerateCompletionDatabase(
-                        GenerateDatabaseOptions.BuiltinDatabase | GenerateDatabaseOptions.StdLibDatabase,
-                        () => { });
+                    IsRunning = _startedRunning = true;
+                    withDb.GenerateCompletionDatabase(() => {
+                        // Only called if the analyzer fails to start.
+                        _startedRunning = false; 
+                        withDb.RefreshIsCurrent();
+                        IsRunning = false;
+                    });
                 }
             } else {
                 Dispatcher.BeginInvoke((Action)(() => Start()));

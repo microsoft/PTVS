@@ -16,7 +16,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.PythonTools.Interpreter;
 
-namespace Microsoft.PythonTools {
+namespace Microsoft.PythonTools.Interpreter {
     /// <summary>
     /// Provides information about the available interpreters and the current
     /// default. Instances of this service should be obtained using MEF.

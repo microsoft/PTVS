@@ -76,7 +76,7 @@ namespace PythonToolsTests {
         }
 
         private static VsProjectAnalyzer AnalyzeTextBuffer(MockTextBuffer buffer, PythonLanguageVersion version = PythonLanguageVersion.V27) {
-            var fact = new CPythonInterpreterFactory(version.ToVersion());
+            var fact = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(version.ToVersion());
             var analyzer = new VsProjectAnalyzer(fact, new[] { fact }, new MockErrorProviderFactory());
             buffer.AddProperty(typeof(VsProjectAnalyzer), analyzer);
             var classifierProvider = new PythonClassifierProvider(new MockContentTypeRegistryService());
@@ -434,7 +434,7 @@ except (None)"}) {
         }
 
         private static void OSPathImportTest(MockCompletionDB db) {
-            var fact = new CPythonInterpreterFactory(db.LanguageVersion.ToVersion(), db.Database);
+            var fact = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(db.LanguageVersion.ToVersion(), db.Database);
 
             var code = "from ";
             var completions = GetCompletionSetCtrlSpace(-1, code, factory: fact);
@@ -523,7 +523,7 @@ baz
                 Console.WriteLine(i);
                 var analysis = AnalyzeExpression(i, code, forCompletion: false);
 
-                var fact = new CPythonInterpreterFactory(PythonLanguageVersion.V27.ToVersion());
+                var fact = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(PythonLanguageVersion.V27.ToVersion());
                 using (var analyzer = new VsProjectAnalyzer(fact, new[] { fact }, new MockErrorProviderFactory())) {
                     var buffer = new MockTextBuffer(code);
                     buffer.AddProperty(typeof(VsProjectAnalyzer), analyzer);
@@ -741,7 +741,7 @@ class B(dict):
         private static HashSet<string> EditAndGetCompletions(string code, string editText, int editInsert, string completeAfter, PythonLanguageVersion version = PythonLanguageVersion.V27) {
             CompletionAnalysis context;
 
-            var fact = new CPythonInterpreterFactory(version.ToVersion());
+            var fact = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(version.ToVersion());
             using (var analyzer = new VsProjectAnalyzer(fact, new[] { fact }, new MockErrorProviderFactory())) {
                 var buffer = new MockTextBuffer(code);
                 buffer.AddProperty(typeof(VsProjectAnalyzer), analyzer);
@@ -797,7 +797,7 @@ class B(dict):
             if (location < 0) {
                 location = sourceCode.Length + location + 1;
             }
-            var fact = new CPythonInterpreterFactory(PythonLanguageVersion.V27.ToVersion());
+            var fact = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(PythonLanguageVersion.V27.ToVersion());
             using (var analyzer = new VsProjectAnalyzer(fact, new[] { fact }, new MockErrorProviderFactory())) {
                 return AnalyzeExpressionWorker(location, sourceCode, forCompletion, analyzer);
             }
@@ -807,7 +807,7 @@ class B(dict):
             if (location < 0) {
                 location = sourceCode.Length + location + 1;
             }
-            var fact = new CPythonInterpreterFactory(PythonLanguageVersion.V27.ToVersion());
+            var fact = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(PythonLanguageVersion.V27.ToVersion());
             using (var analyzer = new VsProjectAnalyzer(fact, new[] { fact }, new MockErrorProviderFactory())) {
                 var analysis = AnalyzeExpressionWorker(location, sourceCode, forCompletion, analyzer);
 
@@ -850,7 +850,7 @@ class B(dict):
             if (location < 0) {
                 location = sourceCode.Length + location + 1;
             }
-            var fact = new CPythonInterpreterFactory(PythonLanguageVersion.V27.ToVersion());
+            var fact = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(PythonLanguageVersion.V27.ToVersion());
             using (var analyzer = new VsProjectAnalyzer(fact, new[] { fact }, new MockErrorProviderFactory())) {
                 return GetCompletionsWorker(location, sourceCode, intersectMembers, analyzer);
             }
@@ -862,7 +862,7 @@ class B(dict):
             }
 
             if (factory == null) {
-                factory = new CPythonInterpreterFactory(PythonLanguageVersion.V27.ToVersion());
+                factory = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(PythonLanguageVersion.V27.ToVersion());
             }
             using (var analyzer = new VsProjectAnalyzer(factory, new[] { factory }, new MockErrorProviderFactory())) {
                 return GetCompletionsWorker(location, sourceCode, intersectMembers, analyzer).GetCompletions(new MockGlyphService());
@@ -921,7 +921,7 @@ class B(dict):
             if (location < 0) {
                 location = sourceCode.Length + location;
             }
-            var fact = new CPythonInterpreterFactory(version.ToVersion());
+            var fact = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(version.ToVersion());
             using (var analyzer = new VsProjectAnalyzer(fact, new[] { fact }, new MockErrorProviderFactory())) {
                 var buffer = new MockTextBuffer(sourceCode);
                 buffer.AddProperty(typeof(VsProjectAnalyzer), analyzer);

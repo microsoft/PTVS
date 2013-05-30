@@ -32,7 +32,6 @@ using Microsoft.PythonTools.Debugger.Remote;
 using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Interpreter.Default;
 using Microsoft.PythonTools.InterpreterList;
 using Microsoft.PythonTools.Navigation;
 using Microsoft.PythonTools.Options;
@@ -42,8 +41,10 @@ using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Debugger.Interop;
 using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.OLE.Interop;
+using Microsoft.VisualStudio.Settings;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudio.Shell.Settings;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Adornments;
 using Microsoft.VisualStudio.TextManager.Interop;
@@ -52,6 +53,7 @@ using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Navigation;
 using Microsoft.VisualStudioTools.Project;
 using Microsoft.Win32;
+using NativeMethods = Microsoft.VisualStudioTools.Project.NativeMethods;
 
 namespace Microsoft.PythonTools {
     /// <summary>
@@ -163,8 +165,8 @@ namespace Microsoft.PythonTools {
     [ProvideDebugException(AD7Engine.DebugEngineId, "Python Exceptions", "exceptions", "exceptions.ZeroDivisionError")]
     [ProvideComponentPickerPropertyPage(typeof(PythonToolsPackage), typeof(WebPiComponentPickerControl), "WebPi", DefaultPageNameValue = "#4000")]
     [ProvideToolWindow(typeof(InterpreterListToolWindow), Style = VsDockStyle.Linked, Window = ToolWindowGuids80.Outputwindow)]
-    [ProvidePythonInterpreterFactoryProvider("{2AF0F10D-7135-4994-9156-5D01C9C11B7E}", typeof(IPythonInterpreterFactoryProvider))]
-    [ProvidePythonInterpreterFactoryProvider("{9A7A9026-48C1-4688-9D5D-E5699D47D074}", typeof(IPythonInterpreterFactoryProvider))]
+    [ProvidePythonInterpreterFactoryProvider(CPythonInterpreterFactoryConstants.Id32, typeof(CPythonInterpreterFactoryConstants))]
+    [ProvidePythonInterpreterFactoryProvider(CPythonInterpreterFactoryConstants.Id64, typeof(CPythonInterpreterFactoryConstants))]
     [ProvidePythonInterpreterFactoryProvider("ConfigurablePythonInterpreterFactoryProvider", typeof(ConfigurablePythonInterpreterFactoryProvider))]
 #if DEV11_OR_LATER // TODO: UNSURE IF WE NEED THIS FOR DEV12
     [ProvideX64DebuggerFixForIntegratedShell]
@@ -208,7 +210,7 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
 
         internal static bool IsIpyToolsInstalled() {
             // the component guid which IpyTools is installed under from IronPython 2.7
-            const string ipyToolsComponentGuid = "{2DF41B37-FAEF-4FD8-A2F5-46B57FF9E951}";
+            const string ipyToolsComponentGuid = "{2DF41B37-FAEF-4FD8-A2F5-46B57FF9E951}";  
 
             // Check if the IpyTools component is known...
             StringBuilder productBuffer = new StringBuilder(39);
@@ -230,7 +232,7 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
             IVsTextView viewAdapter;
             IVsWindowFrame pWindowFrame;
             OpenDocument(filename, out viewAdapter, out pWindowFrame);
-
+            
             ErrorHandler.ThrowOnFailure(pWindowFrame.Show());
 
             // Set the cursor at the beginning of the declaration.            
@@ -261,10 +263,10 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
 
             IVsTextLines lines;
             ErrorHandler.ThrowOnFailure(viewAdapter.GetBuffer(out lines));
-
+            
             var adapter = ComponentModel.GetService<IVsEditorAdaptersFactoryService>();
 
-            return adapter.GetDocumentBuffer(lines);
+            return adapter.GetDocumentBuffer(lines);            
         }
 
         internal static IProjectLauncher GetLauncher(IPythonProject project) {
@@ -471,6 +473,12 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
             }
         }
 
+        internal static SettingsManager Settings {
+            get {
+                return SettingsManagerCreator.GetSettingsManager(Instance);
+            }
+        }
+
         /// <summary>
         /// Returns the Visual Studio hive for the current user's settings.
         /// 
@@ -485,9 +493,9 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
         internal static new RegistryKey UserRegistryRoot {
             get {
                 try {
-                    if (Instance != null) {
-                        return ((CommonPackage)Instance).UserRegistryRoot;
-                    }
+                if (Instance != null) {
+                    return ((CommonPackage)Instance).UserRegistryRoot;
+                }
                     return VSRegistry.RegistryRoot(__VsLocalRegistryType.RegType_UserSettings, writable: true);
                 } catch (ArgumentException) {
                     // Thrown if we can't use VSRegistry, which typically means
@@ -657,11 +665,11 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
                     var beforeQueryStatus = command.BeforeQueryStatus;
                     CommandID toolwndCommandID = new CommandID(GuidList.guidPythonToolsCmdSet, command.CommandId);
                     if (beforeQueryStatus == null) {
-                        MenuCommand menuToolWin = new MenuCommand(command.DoCommand, toolwndCommandID);
+                        MenuCommand menuToolWin = new MenuCommand(command.DoCommand, toolwndCommandID);                        
                         mcs.AddCommand(menuToolWin);
                         _commands[command] = menuToolWin;
                     } else {
-                        OleMenuCommand menuToolWin = new OleMenuCommand(command.DoCommand, toolwndCommandID);
+                        OleMenuCommand menuToolWin = new OleMenuCommand(command.DoCommand, toolwndCommandID);                        
                         menuToolWin.BeforeQueryStatus += beforeQueryStatus;
                         mcs.AddCommand(menuToolWin);
                         _commands[command] = menuToolWin;
@@ -799,8 +807,8 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
                 using (var sfd = new System.Windows.Forms.OpenFileDialog()) {
                     sfd.AutoUpgradeEnabled = true;
                     sfd.Filter = filter;
-                    sfd.FileName = Path.GetFileName(initialPath);
-                    sfd.InitialDirectory = Path.GetDirectoryName(initialPath);
+                        sfd.FileName = Path.GetFileName(initialPath);
+                        sfd.InitialDirectory = Path.GetDirectoryName(initialPath);
                     DialogResult result;
                     if (owner == IntPtr.Zero) {
                         result = sfd.ShowDialog();
@@ -826,9 +834,9 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
             openInfo[0].nMaxFileName = 260;
             var pFileName = Marshal.AllocCoTaskMem(520);
             openInfo[0].pwzFileName = pFileName;
-            openInfo[0].pwzInitialDir = Path.GetDirectoryName(initialPath);
+                openInfo[0].pwzInitialDir = Path.GetDirectoryName(initialPath);
             var nameArray = (Path.GetFileName(initialPath) + "\0").ToCharArray();
-            Marshal.Copy(nameArray, 0, pFileName, nameArray.Length);
+                Marshal.Copy(nameArray, 0, pFileName, nameArray.Length);
             try {
                 int hr = uiShell.GetOpenFileNameViaDlg(openInfo);
                 if (hr == VSConstants.OLE_E_PROMPTSAVECANCELLED) {
@@ -853,8 +861,8 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
                 using (var sfd = new System.Windows.Forms.SaveFileDialog()) {
                     sfd.AutoUpgradeEnabled = true;
                     sfd.Filter = filter;
-                    sfd.FileName = Path.GetFileName(initialPath);
-                    sfd.InitialDirectory = Path.GetDirectoryName(initialPath);
+                        sfd.FileName = Path.GetFileName(initialPath);
+                        sfd.InitialDirectory = Path.GetDirectoryName(initialPath);
                     DialogResult result;
                     if (owner == IntPtr.Zero) {
                         result = sfd.ShowDialog();
@@ -880,9 +888,9 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
             saveInfo[0].nMaxFileName = 260;
             var pFileName = Marshal.AllocCoTaskMem(520);
             saveInfo[0].pwzFileName = pFileName;
-            saveInfo[0].pwzInitialDir = Path.GetDirectoryName(initialPath);
+                saveInfo[0].pwzInitialDir = Path.GetDirectoryName(initialPath);
             var nameArray = (Path.GetFileName(initialPath) + "\0").ToCharArray();
-            Marshal.Copy(nameArray, 0, pFileName, nameArray.Length);
+                Marshal.Copy(nameArray, 0, pFileName, nameArray.Length);
             try {
                 int hr = uiShell.GetSaveFileNameViaDlg(saveInfo);
                 if (hr == VSConstants.OLE_E_PROMPTSAVECANCELLED) {

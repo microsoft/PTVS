@@ -14,12 +14,10 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
-using Microsoft.PythonTools.Parsing;
 
 namespace Microsoft.PythonTools.Interpreter.Default {
     class CPythonInterpreter : IPythonInterpreter {
@@ -30,6 +28,18 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         public CPythonInterpreter(IPythonInterpreterFactory interpFactory, PythonTypeDatabase typeDb) {
             _typeDb = typeDb;
             _factory = interpFactory;
+            var withDb = interpFactory as IInterpreterWithCompletionDatabase;
+            if (withDb != null) {
+                withDb.NewDatabase += Factory_NewDatabase;
+            }
+        }
+
+        private void Factory_NewDatabase(object sender, NewDatabaseEventArgs e) {
+            _typeDb = e.Database;
+            var modsChanged = ModuleNamesChanged;
+            if (modsChanged != null) {
+                modsChanged(this, EventArgs.Empty);
+            }
         }
 
         #region IPythonInterpreter Members
@@ -57,7 +67,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
                 }
             }
 
-            var name = SharedDatabaseState.GetBuiltinTypeName(id, _factory.GetLanguageVersion().Is3x());
+            var name = SharedDatabaseState.GetBuiltinTypeName(id, _factory.Configuration.Version);
             var res = _typeDb.BuiltinModule.GetAnyMember(name) as IPythonType;
             if (res == null) {
                 throw new KeyNotFoundException(string.Format("{0} ({1})", id, (int)id));
@@ -79,26 +89,6 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         }
 
         public void Initialize(PythonAnalyzer state) {
-        }
-
-        public void NotifyInvalidDatabase() {
-            var withDb = _factory as IInterpreterWithCompletionDatabase;
-            if (withDb != null) {
-                withDb.NotifyInvalidDatabase();
-            }
-        }
-
-        internal PythonTypeDatabase TypeDb {
-            get {
-                return _typeDb;
-            }
-            set {
-                _typeDb = value;
-                var modsChanged = ModuleNamesChanged;
-                if (modsChanged != null) {
-                    modsChanged(this, EventArgs.Empty);
-                }
-            }
         }
 
         public event EventHandler ModuleNamesChanged;
@@ -169,5 +159,6 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         }
 
         #endregion
+
     }
 }

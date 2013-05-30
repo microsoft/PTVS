@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Intellisense;
+using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Interpreter.Default;
 using Microsoft.PythonTools.Refactoring;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -1987,7 +1988,7 @@ def a():
 
         [TestMethod, Priority(0)]
         public void KeywordParameter() {
-            RefactorTest("foo", "abc",
+            RefactorTest("foo", "abc", 
             new[] { 
                     new FileInput(
 @"
@@ -2006,7 +2007,7 @@ f(foo = 10)
                 new ExpectedPreviewItem("test.py",
                     new ExpectedPreviewItem("def f(abc):"),
                     new ExpectedPreviewItem("f(abc = 10)")
-                )
+                )   
             );
 
             RefactorTest("foo", "abc",
@@ -2350,7 +2351,7 @@ def g(a, b, c):
         private static void OneRefactorTest(string newName, string caretText, FileInput[] inputs, Version version, bool preview, string error, ExpectedPreviewItem[] expected = null) {
             Console.WriteLine("Replacing {0} with {1}", caretText, newName);
 
-            var fact = new CPythonInterpreterFactory(version ?? new Version(2, 6), new Guid(), "test interpreter", "C:\\foo\\python.exe", "C:\\foo\\pythonw.exe", "PYTHONPATH", ProcessorArchitecture.X86);
+            var fact = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(version ?? new Version(2, 6));
             var classifierProvider = new PythonClassifierProvider(new MockContentTypeRegistryService());
             classifierProvider._classificationRegistry = new MockClassificationTypeRegistryService();
             using (var analyzer = new VsProjectAnalyzer(fact, new[] { fact }, new MockErrorProviderFactory())) {

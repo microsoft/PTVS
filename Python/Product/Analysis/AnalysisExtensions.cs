@@ -27,25 +27,7 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         public static PythonLanguageVersion GetLanguageVersion(this IPythonInterpreterFactory factory) {
-            switch (factory.Configuration.Version.Major) {
-                case 2:
-                    switch (factory.Configuration.Version.Minor) {
-                        case 4: return PythonLanguageVersion.V24;
-                        case 5: return PythonLanguageVersion.V25;
-                        case 6: return PythonLanguageVersion.V26;
-                        case 7: return PythonLanguageVersion.V27;
-                    }
-                    break;
-                case 3:
-                    switch (factory.Configuration.Version.Minor) {
-                        case 0: return PythonLanguageVersion.V30;
-                        case 1: return PythonLanguageVersion.V31;
-                        case 2: return PythonLanguageVersion.V32;
-                        case 3: return PythonLanguageVersion.V33;
-                    }
-                    break;
-            }
-            throw new InvalidOperationException(String.Format("Unsupported Python version: {0}", factory.Configuration.Version.ToString()));
+            return factory.Configuration.Version.ToLanguageVersion();
         }
 
         public static IPythonInterpreterFactory GetInterpreterFactory(this IPythonInterpreterFactory[] factories, Guid id, Version version) {

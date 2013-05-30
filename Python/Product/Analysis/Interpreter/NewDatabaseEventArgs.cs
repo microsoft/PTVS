@@ -12,18 +12,27 @@
  *
  * ***************************************************************************/
 
-using System.Collections.Generic;
+using System;
 
-namespace Microsoft.PythonTools.Interpreter.Default {
+namespace Microsoft.PythonTools.Interpreter {
     /// <summary>
-    /// Provides a factory for creating a default Python interpreter factory which is configured to run against
-    /// a custom Python interpreter.  By default the interpreter factory picks up all interpreters registered
-    /// in the registry.  This provides a mechanism to create interpreters whose configuration is stored elsewhere.
+    /// The data passed in the
+    /// <see cref="IInterpreterWithCompletionDatabase.NewDatabase"/> event.
     /// </summary>
-    public interface IDefaultInterpreterFactoryCreator {
+    public class NewDatabaseEventArgs : EventArgs {
+        readonly PythonTypeDatabase _database;
+
+        public NewDatabaseEventArgs(PythonTypeDatabase database) {
+            _database = database;
+        }
+
         /// <summary>
-        /// Creates a new interpreter factory with the specified options.
+        /// The updated database.
         /// </summary>
-        IPythonInterpreterFactory CreateInterpreterFactory(Dictionary<InterpreterFactoryOptions, object> options);
+        public PythonTypeDatabase Database {
+            get {
+                return _database;
+            }
+        }
     }
 }

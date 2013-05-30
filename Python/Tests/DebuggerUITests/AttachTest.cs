@@ -19,6 +19,7 @@ using EnvDTE80;
 using EnvDTE90;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Debugger.DebugEngine;
+using Microsoft.PythonTools.Interpreter;
 using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;

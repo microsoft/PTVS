@@ -22,15 +22,14 @@ namespace Microsoft.PythonTools.Interpreter {
     /// </summary>
     public interface IInterpreterWithCompletionDatabase {
         /// <summary>
-        /// Generates the completeion database.  After analysis is complete databaseGenerationCompleted should be called.
-        /// 
-        /// Returns true if analysis is proceeding on a background thread, false if the analysis completed synchronessly.
+        /// Generates the completeion database.
         /// </summary>
-        bool GenerateCompletionDatabase(GenerateDatabaseOptions options, Action databaseGenerationCompleted);
+        void GenerateCompletionDatabase(Action failedToStart = null);
 
         /// <summary>
-        /// Generates the completion database if it has not already been generated.  Called only if the user has
-        /// not disabled the option to automatically generate a completion database.
+        /// Generates the completion database if it has not already been
+        /// generated.  Called only if the user has not disabled the option to
+        /// automatically generate a completion database.
         /// 
         /// The database should be generated in the background.
         /// </summary>
@@ -50,6 +49,29 @@ namespace Microsoft.PythonTools.Interpreter {
         /// </summary>
         /// <remarks>New in 2.0</remarks>
         void NotifyInvalidDatabase();
+
+        /// <summary>
+        /// Called to inform the interpreter that its database is being
+        /// generated. This is called to update the interpreter's internal state
+        /// when generation was already running or is aborted without any other
+        /// notification.
+        /// </summary>
+        /// <param name="isGenerating">True if the database is being generated;
+        /// otherwise, false.</param>
+        /// <remarks>New in 2.0</remarks>
+        void NotifyGeneratingDatabase(bool isGenerating);
+
+        /// <summary>
+        /// Called to inform the interpreter that its database has been
+        /// replaced.
+        /// </summary>
+        /// <remarks>New in 2.0</remarks>
+        void NotifyNewDatabase();
+
+        /// <summary>
+        /// Raised when a new database is available.
+        /// </summary>
+        event EventHandler<NewDatabaseEventArgs> NewDatabase;
 
         /// <summary>
         /// Returns logged information about the analysis of the interpreter's library.
@@ -76,12 +98,8 @@ namespace Microsoft.PythonTools.Interpreter {
         /// <summary>
         /// Called to manually trigger a refresh of <see cref="IsCurrent"/>.
         /// </summary>
-        /// <param name="alwaysRaiseEvent">
-        /// True to always raise <see cref="IsCurrentChanged"/>, regardless of
-        /// whether the value changes.
-        /// </param>
         /// <remarks>New in 2.0</remarks>
-        void RefreshIsCurrent(bool alwaysRaiseEvent);
+        void RefreshIsCurrent();
 
         /// <summary>
         /// Returns a string describing the reason why IsCurrent has its current

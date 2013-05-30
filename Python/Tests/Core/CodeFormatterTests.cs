@@ -16,6 +16,7 @@ using System;
 using System.Linq;
 using AnalysisTests;
 using Microsoft.PythonTools.Intellisense;
+using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Interpreter.Default;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
@@ -167,7 +168,7 @@ class Bar(object):
         }
 
         private static void CodeFormattingTest(string input, object selection, string expected, object expectedSelection, CodeFormattingOptions options, bool selectResult = true) {
-            var fact = new CPythonInterpreterFactory(new Version(2, 7), Guid.Empty, "", "", "", "PYTHONPATH", System.Reflection.ProcessorArchitecture.X86);
+            var fact = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(new Version(2, 7));
             using (var analyzer = new VsProjectAnalyzer(fact, new[] { fact }, new MockErrorProviderFactory())) {
                 var buffer = new MockTextBuffer(input);
                 buffer.AddProperty(typeof(VsProjectAnalyzer), analyzer);

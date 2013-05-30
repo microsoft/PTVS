@@ -64,9 +64,9 @@
     <Compile Include="DatabaseTest.cs" />
     <Compile Include="DeserializationTests.cs" />
     <Compile Include="DotNetAnalysis\Generics.cs" />
+    <Compile Include="ProcessOutputTests.cs" />
     <Compile Include="IronPythonAnalysisTest.cs" />
     <Compile Include="MutateStdLibTest.cs" />
-    <Compile Include="RegistryWatcherTest.cs" />
     <Compile Include="TestExpressions.cs" />
     <Compile Include="TestRunner.cs" />
     <Compile Include="NamespaceSetTest.cs" />
@@ -80,7 +80,7 @@
     <ProjectReference Include="..\..\Product\Analysis\Analysis.csproj">
       <Project>{A85D479D-67A9-4BDB-904A-7D86DAF68A6F}</Project>
       <Name>Analysis</Name>
-      <Aliases>global,analysis</Aliases>
+      <Aliases>global</Aliases>
     </ProjectReference>
     <ProjectReference Include="..\..\Product\IronPython\IronPython.csproj">
       <Project>{5AE43C93-8EF6-4D57-BC10-511035EF56C5}</Project>
@@ -89,6 +89,10 @@
     <ProjectReference Include="..\..\..\Common\Tests\Utilities\TestUtilities.csproj">
       <Project>{D092D54E-FF29-4D32-9AEE-4EF704C92F67}</Project>
       <Name>TestUtilities</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Product\IronPython\IronPython.Interpreter.csproj">
+      <Project>{012293b1-168a-4c48-a678-db8361b50ba7}</Project>
+      <Name>IronPython.Interpreter</Name>
     </ProjectReference>
     <ProjectReference Include="..\Utilities.Python\TestUtilities.Python.csproj">
       <Project>{a731c4c3-3741-4080-a946-c47574c1f3bf}</Project>
@@ -99,7 +103,7 @@
     <None Include="app.config" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\Product\Python\PythonTools\CompletionDB\*.idb">
+    <None Include="..\..\Product\PythonTools\CompletionDB\*.idb">
       <Link>CompletionDB\%(Filename)%(Extension)</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

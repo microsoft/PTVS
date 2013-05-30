@@ -14,6 +14,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.Composition;
+using System.ComponentModel.Composition.Hosting;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -29,289 +31,510 @@ using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.Win32;
 
 namespace Microsoft.PythonTools.Analysis {
-    internal class PyLibAnalyzer {
+    internal class PyLibAnalyzer : IDisposable {
         private const string AnalysisLimitsKey = "Software\\Microsoft\\VisualStudio\\" + AssemblyVersionInfo.VSVersion + "\\PythonTools\\Analysis\\StandardLibrary";
 
-        private readonly string[] _dirs;
-        private readonly string _indir;
         private readonly Guid _id;
-        private readonly PythonLanguageVersion _version;
+        private readonly Version _version;
+        private readonly string _interpreter;
+        private readonly string _library;
+        private readonly string _outDir;
+        private readonly string _baseDb;
+        private readonly string _logPrivate, _logGlobal, _logDiagnostic;
 
-        private PyLibAnalyzer(List<string> dirs, string indir, Guid id, PythonLanguageVersion version) {
-            _dirs = dirs.ToArray();
-            _indir = indir;
-            _id = id;
-            _version = version;
+        private readonly AnalyzerStatusUpdater _updater;
+        private CancellationToken _cancel;
+        private TextWriterTraceListener _listener;
+        private List<List<ModulePath>> _fileGroups;
+
+        private static void Help() {
+            Console.WriteLine("Python Library Analyzer {0} ({1})", AssemblyVersionInfo.StableVersion, AssemblyVersionInfo.Version);
+            Console.WriteLine("Generates a cached analysis database for a Python interpreter.");
+            Console.WriteLine();
+            Console.WriteLine(" /id         [GUID]             - specify GUID of the interpreter being used");
+            Console.WriteLine(" /v[ersion]  [version]          - specify language version to be used (x.y format)");
+            Console.WriteLine(" /py[thon]   [filename]         - full path to the Python interpreter to use");
+            Console.WriteLine(" /lib[rary]  [directory]        - full path to the Python library to analyze");
+            Console.WriteLine(" /outdir     [output dir]       - specify output directory for analysis (default is current dir)");
+
+            Console.WriteLine(" /basedb     [input dir]        - specify directory for baseline analysis.");
+            Console.WriteLine(" /log        [filename]         - write analysis log");
+            Console.WriteLine(" /glog       [filename]         - write start/stop events");
+            Console.WriteLine(" /diag       [filename]         - write detailed (CSV) analysis log");
         }
 
-        public static int Main(string[] args) {
-            List<string> dirs = new List<string>();
-            PythonLanguageVersion version = PythonLanguageVersion.V27;
-            string outdir = Environment.CurrentDirectory;
-            string indir = Assembly.GetExecutingAssembly().Location;
-            Guid id = Guid.Empty;
-            for (int i = 0; i < args.Length; i++) {
-                if (args[i].StartsWith("/") || args[i].StartsWith("-")) {
-                    switch (args[i].Substring(1).ToLower()) {
-                        case "dir":
-                            if (i == args.Length - 1) {
-                                Help();
-                                Console.WriteLine("Missing directory after {0}", args[i]);
-                                return -1;
-                            }
-                            dirs.Add(args[i + 1]);
-                            i++;
-                            break;
-                        case "version":
-                            if (i == args.Length - 1) {
-                                Help();
-                                Console.WriteLine("Missing version after {0}", args[i]);
-                                return -1;
-                            }
-                            if (!Enum.TryParse<PythonLanguageVersion>(args[i + 1], true, out version)) {
-                                Help();
-                                Console.WriteLine("Bad version specified: {0}", args[i + 1]);
-                                return -1;
-                            }
-                            i++;
-                            break;
-                        case "outdir":
-                            if (i == args.Length - 1) {
-                                Help();
-                                Console.WriteLine("Missing output dir after {0}", args[i]);
-                                return -1;
-                            }
-                            outdir = args[i + 1];
-                            i++;
-                            break;
-                        case "indir":
-                            if (i == args.Length - 1) {
-                                Help();
-                                Console.WriteLine("Missing input dir after {0}", args[i]);
-                                return -1;
-                            }
-                            indir = args[i + 1];
-                            i++;
-                            break;
-                        case "id":
-                            if (i == args.Length - 1) {
-                                Help();
-                                Console.WriteLine("Missing GUID after {0}", args[i]);
-                                return -1;
-                            }
-                            Guid.TryParse(args[i + 1], out id);
-                            i++;
-                            break;
-                        case "log":
-                            if (i == args.Length - 1) {
-                                Help();
-                                Console.WriteLine("Missing filename after {0}", args[i]);
-                                return -1;
-                            }
-                            AnalysisLog.Output = new StreamWriter(new FileStream(args[i + 1], FileMode.Create, FileAccess.Write, FileShare.Read), Encoding.UTF8);
-                            i++;
-                            break;
+        private static IEnumerable<KeyValuePair<string, string>> ParseArguments(IEnumerable<string> args) {
+            string currentKey = null;
+
+            using (var e = args.GetEnumerator()) {
+                while (e.MoveNext()) {
+                    if (e.Current.StartsWith("/")) {
+                        if (currentKey != null) {
+                            yield return new KeyValuePair<string, string>(currentKey, null);
+                        }
+                        currentKey = e.Current.Substring(1).Trim();
+                    } else {
+                        yield return new KeyValuePair<string, string>(currentKey, e.Current);
+                        currentKey = null;
                     }
                 }
             }
+        }
 
-            if (dirs.Count == 0) {
+        public static int Main(string[] args) {
+            PyLibAnalyzer inst;
+            try {
+                inst = MakeFromArguments(args);
+            } catch (ArgumentNullException ex) {
+                Console.Error.WriteLine("{0} is a required argument", ex.Message);
+                Help();
+                return -1;
+            } catch (ArgumentException ex) {
+                Console.Error.WriteLine("'{0}' is not valid for {1}", ex.Message, ex.ParamName);
+                Help();
+                return -1;
+            } catch (InvalidOperationException ex) {
+                Console.Error.WriteLine(ex.Message);
                 Help();
                 return -2;
             }
 
-            if (id == Guid.Empty) {
-                id = Guid.NewGuid();
-            }
-
-            Thread.CurrentThread.Priority = System.Threading.ThreadPriority.Lowest;
             try {
-                if (!Directory.Exists(outdir)) {
-                    Directory.CreateDirectory(outdir);
-                }
-                using (var writer = new StreamWriter(File.Open(Path.Combine(outdir, "AnalysisLog.txt"), FileMode.Create, FileAccess.ReadWrite, FileShare.Read))) {
-#if DEBUG
-                    // Running with the debugger attached will skip the
-                    // unhandled exception handling to allow easier debugging.
-                    if (Debugger.IsAttached) {
-                        // Ensure that this code block matches the protected one
-                        // below.
-
-                        // TODO: Add trigger to cancel analysis
-                        var analyzer = new PyLibAnalyzer(dirs, indir, id, version);
-                        analyzer.AnalyzeStdLib(writer, outdir, CancellationToken.None);
-                    } else {
-#endif
-                        try {
-                            // TODO: Add trigger to cancel analysis
-                            var analyzer = new PyLibAnalyzer(dirs, indir, id, version);
-                            analyzer.AnalyzeStdLib(writer, outdir, CancellationToken.None);
-                        } catch (Exception e) {
-                            Console.WriteLine("Error while saving analysis: {0}", e.ToString());
-                            Log(writer, "ANALYSIS FAIL: \"" + e.ToString().Replace("\r\n", " -- ") + "\"");
-                            return -3;
-                        }
-#if DEBUG
-                    }
-#endif
-                }
-            } catch (IOException) {
-                // another process is already analyzing this project.  This happens when we have 2 VSs started at the same time w/o the
-                // database being created yet.  Wait for that process to finish and then we can exit ourselves and both VS's will pick 
-                // up the new analysis.
-
-                while (true) {
+                for (bool ready = false; !ready; ) {
                     try {
-                        using (var writer = new StreamWriter(File.Open(Path.Combine(outdir, "AnalysisLog.txt"), FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.Read))) {
-                            break;
-                        }
+                        inst.StartTraceListener();
+                        ready = true;
                     } catch (IOException) {
                         Thread.Sleep(20000);
                     }
                 }
+
+                inst.LogToGlobal("START_STDLIB");
+
+
+#if DEBUG
+                // Running with the debugger attached will skip the
+                // unhandled exception handling to allow easier debugging.
+                if (Debugger.IsAttached) {
+                    // Ensure that this code block matches the protected one
+                    // below.
+
+                    inst.Prepare();
+                    inst.Scrape();
+                    inst.Analyze();
+                } else {
+#endif
+                    try {
+                        inst.Prepare();
+                        inst.Scrape();
+                        inst.Analyze();
+                    } catch (Exception e) {
+                        Console.WriteLine("Error while saving analysis: {0}{1}", Environment.NewLine, e.ToString());
+                        inst.LogToGlobal("FAIL_STDLIB" + Environment.NewLine + e.ToString());
+                        Trace.TraceError("ANALYSIS FAIL:{0}{1}", Environment.NewLine, e.ToString());
+                        return -10;
+                    }
+#if DEBUG
+                }
+#endif
+
+                inst.LogToGlobal("DONE_STDLIB");
+
+            } finally {
+                inst.Dispose();
             }
 
             return 0;
         }
 
-        private static void Help() {
-            Console.WriteLine("Python Library Analyzer");
-            Console.WriteLine();
-            Console.WriteLine(" /dir     [directory]        - analyze provided directory (multiple directories can be provided)");
-            Console.WriteLine(" /version [version]          - specify language version to be used ({0})", String.Join(", ", Enum.GetNames(typeof(PythonLanguageVersion))));
-            Console.WriteLine(" /outdir  [output dir]       - specify output directory for analysis (default is current dir)");
-            Console.WriteLine(" /indir   [input dir]        - specify input directory for baseline analysis");
-            Console.WriteLine(" /id      [GUID]             - specify GUID of the interpreter being used");
-            Console.WriteLine(" /log     [filename]         - write detailed (CSV) analysis log");
+        public PyLibAnalyzer(Guid id,
+                             Version langVersion,
+                             string interpreter,
+                             string library,
+                             string baseDb,
+                             string outDir,
+                             string logPrivate,
+                             string logGlobal,
+                             string logDiagnostic) {
+            _id = id;
+            _version = langVersion;
+            _interpreter = interpreter;
+            _library = library;
+            _baseDb = baseDb;
+            _outDir = outDir;
+            _logPrivate = logPrivate;
+            _logGlobal = logGlobal;
+            _logDiagnostic = logDiagnostic;
+
+            if (_id != Guid.Empty) {
+                var identifier = AnalyzerStatusUpdater.GetIdentifier(_id, _version);
+                _updater = new AnalyzerStatusUpdater(identifier);
+                // Immediately inform any listeners that we've started running
+                // successfully.
+                _updater.UpdateStatus(AnalysisStatus.Preparing, 0, 0);
+            }
+            // TODO: Link cancellation into the updater
+            _cancel = CancellationToken.None;
         }
 
-        private void AnalyzeStdLib(StreamWriter writer, string outdir, CancellationToken cancel) {
-            var identifier = string.Format(CultureInfo.InvariantCulture, "{0};{1}", _id, _version);
-            using (var updater = new AnalyzerStatusUpdater(identifier)) {
-                var allModuleNames = new HashSet<string>(StringComparer.Ordinal);
-
-                var siteDirs = _dirs.Select(dir => Path.Combine(dir, "site-packages")).Where(dir => Directory.Exists(dir)).ToArray();
-                // Concat the contents of directories referenced by .pth files
-                // to ensure that they are overruled by normal packages in
-                // naming collisions.
-                var allModules = ModulePath.GetModulesInLib(_dirs, siteDirs, allModuleNames)
-                    .Concat(ModulePath.GetModulesInLib(ModulePath.ExpandPathFiles(siteDirs), null, allModuleNames));
-
-                var fileGroups = allModules
-                    .Where(mp => !mp.IsCompiled)
-                    .GroupBy(mp => mp.LibraryPath, StringComparer.OrdinalIgnoreCase)
-                    .Select(group => group.ToList())
-                    .ToList();
-
-                int progressOffset = 0;
-                int progressTotal = 0;
-                foreach (var files in fileGroups) {
-                    progressTotal += files.Count;
-                }
-
-                using (var key = Registry.CurrentUser.OpenSubKey(AnalysisLimitsKey)) {
-                    if (key != null) {
-                        var logPath = key.GetValue("LogPath") as string;
-                        if (!string.IsNullOrEmpty(logPath) && AnalysisLog.Output == null) {
-                            try {
-                                AnalysisLog.Output = new StreamWriter(new FileStream(logPath, FileMode.Create, FileAccess.Write, FileShare.Read), Encoding.UTF8);
-                                AnalysisLog.AsCSV = logPath.EndsWith(".csv", StringComparison.InvariantCultureIgnoreCase);
-                            } catch (Exception ex) {
-                                Log(writer, "Failed to open {0} for logging: {1}", logPath, string.Join("--", ex.ToString().Split('\r', '\n').Where(s => !string.IsNullOrWhiteSpace(s))));
-                            }
-                        }
+        public void LogToGlobal(string message) {
+            if (!string.IsNullOrEmpty(_logGlobal)) {
+                for (int retries = 10; retries > 0; --retries) {
+                    try {
+                        File.AppendAllText(_logGlobal, string.Format("{0:s} {1} {2}{3}", DateTime.Now, message, Environment.CommandLine, Environment.NewLine));
+                        break;
+                    } catch (DirectoryNotFoundException) {
+                        // Create the directory and try again
+                        Directory.CreateDirectory(Path.GetDirectoryName(_logGlobal));
+                    } catch (IOException) {
+                        // racing with someone else generating?
+                        Thread.Sleep(25);
                     }
                 }
+            }
+        }
+
+        public void Dispose() {
+            if (_updater != null) {
+                _updater.Dispose();
+            }
+        }
+
+        private static PyLibAnalyzer MakeFromArguments(IEnumerable<string> args) {
+            var options = ParseArguments(args).ToDictionary(kv => kv.Key, kv => kv.Value, StringComparer.InvariantCultureIgnoreCase);
+
+            string value;
+
+            Guid id;
+            Version version;
+            string interpreter, library, outDir, baseDb;
+            string logPrivate, logGlobal, logDiagnostic;
+
+            if (!options.TryGetValue("id", out value)) {
+                id = Guid.Empty;
+            } else if (!Guid.TryParse(value, out id)) {
+                throw new ArgumentException(value, "id");
+            }
+
+            if (!options.TryGetValue("version", out value) && !options.TryGetValue("v", out value)) {
+                throw new ArgumentNullException("version");
+            } else if (!Version.TryParse(value, out version)) {
+                throw new ArgumentException(value, "version");
+            }
+
+            if (!options.TryGetValue("python", out value) && !options.TryGetValue("py", out value)) {
+                value = null;
+            }
+            if (!string.IsNullOrEmpty(value) && value.IndexOfAny(Path.GetInvalidPathChars()) >= 0) {
+                throw new ArgumentException(value, "python");
+            }
+            interpreter = value;
+
+            if (!options.TryGetValue("library", out value) && !options.TryGetValue("lib", out value)) {
+                throw new ArgumentNullException("library");
+            }
+            if (string.IsNullOrEmpty(value) || value.IndexOfAny(Path.GetInvalidPathChars()) >= 0) {
+                throw new ArgumentException(value, "library");
+            }
+            library = value;
+
+            if (!options.TryGetValue("outdir", out value)) {
+                value = Environment.CurrentDirectory;
+            }
+            if (string.IsNullOrEmpty(value) || value.IndexOfAny(Path.GetInvalidPathChars()) >= 0) {
+                throw new ArgumentException(value, "outdir");
+            }
+            outDir = value;
+
+            if (!options.TryGetValue("basedb", out value)) {
+                value = Environment.CurrentDirectory;
+            }
+            if (string.IsNullOrEmpty(value) || value.IndexOfAny(Path.GetInvalidPathChars()) >= 0) {
+                throw new ArgumentException(value, "basedb");
+            }
+            baseDb = value;
+
+            // Private log defaults to in current directory
+            if (!options.TryGetValue("log", out value)) {
+                value = Path.Combine(Environment.CurrentDirectory, "Analysislog.txt");
+            }
+            if (string.IsNullOrEmpty(value) || value.IndexOfAny(Path.GetInvalidPathChars()) >= 0) {
+                throw new ArgumentException(value, "log");
+            }
+            if (!Path.IsPathRooted(value)) {
+                value = Path.Combine(outDir, value);
+            }
+            logPrivate = value;
+
+            // Global log defaults to null - we don't write start/stop events.
+            if (!options.TryGetValue("glog", out value)) {
+                value = null;
+            }
+            if (!string.IsNullOrEmpty(value) && value.IndexOfAny(Path.GetInvalidPathChars()) >= 0) {
+                throw new ArgumentException(value, "glog");
+            }
+            if (!string.IsNullOrEmpty(value) && !Path.IsPathRooted(value)) {
+                value = Path.Combine(outDir, value);
+            }
+            logGlobal = value;
+
+            // Diagnostic log defaults to registry setting or else we don't use it.
+            if (!options.TryGetValue("diag", out value)) {
+                using (var key = Registry.CurrentUser.OpenSubKey(AnalysisLimitsKey)) {
+                    if (key != null) {
+                        value = key.GetValue("LogPath") as string;
+                    }
+                }
+            }
+            if (!string.IsNullOrEmpty(value) && value.IndexOfAny(Path.GetInvalidPathChars()) >= 0) {
+                throw new ArgumentException(value, "diag");
+            }
+            if (!string.IsNullOrEmpty(value) && !Path.IsPathRooted(value)) {
+                value = Path.Combine(outDir, value);
+            }
+            logDiagnostic = value;
+
+            return new PyLibAnalyzer(id, version, interpreter, library, baseDb, outDir, logPrivate, logGlobal, logDiagnostic);
+        }
+
+        private void StartTraceListener() {
+            if (string.IsNullOrEmpty(_logPrivate) || _logPrivate.IndexOfAny(Path.GetInvalidPathChars()) >= 0) {
+                return;
+            }
+
+            Directory.CreateDirectory(Path.GetDirectoryName(_logPrivate));
+            _listener = new TextWriterTraceListenerWithDateTime(new FileStream(_logPrivate, FileMode.Create, FileAccess.Write, FileShare.Read));
+            Trace.Listeners.Add(_listener);
+            Trace.AutoFlush = true;
+        }
+
+        private void Prepare() {
+            if (_updater != null) {
+                _updater.UpdateStatus(AnalysisStatus.Preparing, 0, 0);
+            }
+
+            var libPaths = new[] { _library };
+
+            var siteDirs = libPaths.Select(path => Path.Combine(path, "site-packages"))
+                                   .Where(path => Directory.Exists(path))
+                                   .ToArray();
+            // Concat the contents of directories referenced by .pth files
+            // to ensure that they are overruled by normal packages in
+            // naming collisions.
+            var allModuleNames = new HashSet<string>(StringComparer.Ordinal);
+
+            _fileGroups = ModulePath.GetModulesInLib(libPaths, siteDirs, allModuleNames)
+                .Concat(ModulePath.GetModulesInLib(ModulePath.ExpandPathFiles(siteDirs), null, allModuleNames))
+                .GroupBy(mp => mp.LibraryPath, StringComparer.OrdinalIgnoreCase)
+                .Select(group => group.ToList())
+                .ToList();
+        }
+
+        private string PythonScraperPath {
+            get {
+                var dir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+                var file = Path.Combine(dir, "PythonScraper.py");
+                return file;
+            }
+        }
+
+        private string ExtensionScraperPath {
+            get {
+                var dir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+                var file = Path.Combine(dir, "ExtensionScraper.py");
+                return file;
+            }
+        }
+
+        private void Scrape() {
+            if (!Directory.Exists(_outDir)) {
+                Directory.CreateDirectory(_outDir);
+            }
+            if (string.IsNullOrEmpty(_interpreter)) {
+                return;
+            }
+
+            if (_updater != null) {
+                _updater.UpdateStatus(AnalysisStatus.Scraping, 0, 0);
+            }
+
+            // Scape builtin Python types
+            Trace.TraceInformation("SCRAPE BEGIN: {0} {1} {2} {3}", _interpreter, PythonScraperPath, _outDir, _baseDb);
+            using (var output = ProcessOutput.RunHiddenAndCapture(_interpreter, PythonScraperPath, _outDir, _baseDb)) {
+                output.Wait();
+
+                if (output.StandardOutputLines.Any()) {
+                    Trace.TraceInformation("SCRAPE OUTPUT: {0}{1}", Environment.NewLine, string.Join(Environment.NewLine, output.StandardOutputLines));
+                }
+                if (output.StandardErrorLines.Any()) {
+                    Trace.TraceWarning("SCRAPE ERRORS: {0}{1}", Environment.NewLine, string.Join(Environment.NewLine, output.StandardErrorLines));
+                }
+
+                if (output.ExitCode != 0) {
+                    if (output.ExitCode.HasValue) {
+                        Trace.TraceError("SCRAPE FAIL: ({0})", output.ExitCode);
+                    } else {
+                        Trace.TraceError("SCRAPE FAIL: (~)");
+                    }
+                    return;
+                } else {
+                    Trace.TraceInformation("SCRAPE COMPLETE: 0");
+                }
+            }
+
+            var scrapeFiles = _fileGroups.SelectMany(l => l)
+                .Where(mp => mp.IsCompiled)
+                .ToList();
+
+            foreach (var file in scrapeFiles) {
+                var destFile = Path.Combine(_outDir, file.ModuleName);
+                Trace.TraceInformation("SCRAPE BEGIN: {0} {1} {2} {3} {4} {5}", _interpreter, ExtensionScraperPath, "scrape", file.ModuleName, "-", destFile);
+                using (var output = ProcessOutput.RunHiddenAndCapture(_interpreter, ExtensionScraperPath, "scrape", file.ModuleName, "-", destFile)) {
+                    output.Wait();
+
+                    if (output.StandardOutputLines.Any()) {
+                        Trace.TraceInformation("SCRAPE OUTPUT: {0}{1}", Environment.NewLine, string.Join(Environment.NewLine, output.StandardOutputLines));
+                    }
+                    if (output.StandardErrorLines.Any()) {
+                        Trace.TraceWarning("SCRAPE ERRORS: {0}{1}", Environment.NewLine, string.Join(Environment.NewLine, output.StandardErrorLines));
+                    }
+
+                    if (output.ExitCode != 0) {
+                        if (output.ExitCode.HasValue) {
+                            Trace.TraceError("SCRAPE FAIL: ({0}) {1}", output.ExitCode, file.ModuleName);
+                        } else {
+                            Trace.TraceError("SCRAPE FAIL: (~) {0}", file.ModuleName);
+                        }
+                    } else {
+                        Trace.TraceInformation("SCRAPE COMPLETE: (0) {0}", file.ModuleName);
+                    }
+                }
+            }
+        }
+
+        private void Analyze() {
+            if (_updater != null) {
+                _updater.UpdateStatus(AnalysisStatus.Analyzing, 0, 1);
+            }
+
+            int progressOffset = 0;
+            int progressTotal = 0;
+            foreach (var files in _fileGroups) {
+                progressTotal += files.Count;
+            }
+
+            if (!string.IsNullOrEmpty(_logDiagnostic) && AnalysisLog.Output == null) {
+                try {
+                    AnalysisLog.Output = new StreamWriter(new FileStream(_logDiagnostic, FileMode.Create, FileAccess.Write, FileShare.Read), Encoding.UTF8);
+                    AnalysisLog.AsCSV = _logDiagnostic.EndsWith(".csv", StringComparison.InvariantCultureIgnoreCase);
+                } catch (Exception ex) {
+                    Trace.TraceWarning("Failed to open {0} for logging: {1}", _logDiagnostic, string.Join("--", ex.ToString().Split('\r', '\n').Where(s => !string.IsNullOrWhiteSpace(s))));
+                }
+            }
 
 
-                foreach (var files in fileGroups) {
-                    if (files.Count > 0) {
-                        Log(writer, "GROUP START \"{0}\"", files[0].LibraryPath);
-                        AnalysisLog.StartFileGroup(files[0].LibraryPath, files.Count);
-                        Console.WriteLine("Now analyzing: {0}", files[0].LibraryPath);
-                        var fact = new CPythonInterpreterFactory(_version.ToVersion());
-                        var projectState = new PythonAnalyzer(new CPythonInterpreter(fact, new PythonTypeDatabase(_indir, _version.Is3x())), _version);
+            foreach (var files in _fileGroups) {
+                if (_cancel.IsCancellationRequested) {
+                    break;
+                }
 
-                        int mostItemsInQueue = 0;
+                if (files.Count > 0) {
+                    Trace.TraceInformation("GROUP START \"{0}\"", files[0].LibraryPath);
+                    AnalysisLog.StartFileGroup(files[0].LibraryPath, files.Count);
+                    Console.WriteLine("Now analyzing: {0}", files[0].LibraryPath);
 
+                    var factory = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(_version, _outDir);
+                    var projectState = new PythonAnalyzer(factory);
+
+                    int mostItemsInQueue = 0;
+                    if (_updater != null) {
                         projectState.SetQueueReporting(itemsInQueue => {
                             if (itemsInQueue > mostItemsInQueue) {
                                 mostItemsInQueue = itemsInQueue;
                             }
 
                             if (mostItemsInQueue > 0) {
-                                updater.UpdateStatus(progressOffset + (files.Count * (mostItemsInQueue - itemsInQueue)) / mostItemsInQueue, progressTotal);
+                                _updater.UpdateStatus(AnalysisStatus.Analyzing, progressOffset + (files.Count * (mostItemsInQueue - itemsInQueue)) / mostItemsInQueue, progressTotal);
                             } else {
-                                updater.UpdateStatus(0, 0);
+                                _updater.UpdateStatus(AnalysisStatus.Analyzing, 0, 0);
                             }
                         }, 10);
-
-                        using (var key = Registry.CurrentUser.OpenSubKey(AnalysisLimitsKey)) {
-                            if (key != null) {
-                                projectState.Limits = AnalysisLimits.LoadFromStorage(key, defaultToStdLib: true);
-                            }
-                        }
-
-                        var modules = new List<IPythonProjectEntry>();
-                        for (int i = 0; i < files.Count; i++) {
-                            modules.Add(projectState.AddModule(files[i].ModuleName, files[i].SourceFile));
-                        }
-
-                        var nodes = new List<PythonAst>();
-                        for (int i = 0; i < modules.Count; i++) {
-                            PythonAst ast = null;
-                            try {
-                                var sourceUnit = new FileStream(files[i].SourceFile, FileMode.Open, FileAccess.Read, FileShare.Read);
-
-                                Log(writer, "PARSE START: \"{0}\" (\"{1}\")", modules[i].ModuleName, modules[i].FilePath);
-                                ast = Parser.CreateParser(sourceUnit, _version, new ParserOptions() { BindReferences = true }).ParseFile();
-                                Log(writer, "PARSE END: \"{0}\" (\"{1}\")", modules[i].ModuleName, modules[i].FilePath);
-                            } catch (Exception ex) {
-                                Log(writer, "PARSE ERROR: \"{0}\" \"{1}\" \"{2}\"", modules[i].ModuleName, modules[i].FilePath, ex.ToString().Replace("\r\n", " -- "));
-                            }
-                            nodes.Add(ast);
-                        }
-
-                        for (int i = 0; i < modules.Count; i++) {
-                            var ast = nodes[i];
-
-                            if (ast != null) {
-                                modules[i].UpdateTree(ast, null);
-                            }
-                        }
-
-                        for (int i = 0; i < modules.Count; i++) {
-                            var ast = nodes[i];
-                            if (ast != null) {
-                                Log(writer, "ANALYSIS START: \"" + modules[i].FilePath + "\"");
-                                modules[i].Analyze(cancel, true);
-                                Log(writer, "ANALYSIS END: \"" + modules[i].FilePath + "\"");
-                            }
-                        }
-
-                        if (modules.Count > 0) {
-                            modules[0].AnalysisGroup.AnalyzeQueuedEntries(cancel);
-                        }
-
-                        Log(writer, "SAVING GROUP: \"" + Path.GetDirectoryName(files[0].SourceFile) + "\"");
-                        new SaveAnalysis().Save(projectState, outdir);
-                        Log(writer, "GROUP END \"" + Path.GetDirectoryName(files[0].SourceFile) + "\"");
-                        AnalysisLog.EndFileGroup();
                     }
 
-                    progressOffset += files.Count;
-                    AnalysisLog.Flush();
+                    using (var key = Registry.CurrentUser.OpenSubKey(AnalysisLimitsKey)) {
+                        if (key != null) {
+                            projectState.Limits = AnalysisLimits.LoadFromStorage(key, defaultToStdLib: true);
+                        }
+                    }
+
+                    var modules = new List<IPythonProjectEntry>();
+                    for (int i = 0; i < files.Count; i++) {
+                        modules.Add(projectState.AddModule(files[i].ModuleName, files[i].SourceFile));
+                    }
+
+                    var nodes = new List<PythonAst>();
+                    for (int i = 0; i < modules.Count && !_cancel.IsCancellationRequested; i++) {
+                        PythonAst ast = null;
+                        try {
+                            var sourceUnit = new FileStream(files[i].SourceFile, FileMode.Open, FileAccess.Read, FileShare.Read);
+
+                            Trace.TraceInformation("PARSE START: \"{0}\" (\"{1}\")", modules[i].ModuleName, modules[i].FilePath);
+                            ast = Parser.CreateParser(sourceUnit, _version.ToLanguageVersion(), new ParserOptions() { BindReferences = true }).ParseFile();
+                            Trace.TraceInformation("PARSE END: \"{0}\" (\"{1}\")", modules[i].ModuleName, modules[i].FilePath);
+                        } catch (Exception ex) {
+                            Trace.TraceError("PARSE ERROR: \"{0}\" \"{1}\"{2}{3}", modules[i].ModuleName, modules[i].FilePath, Environment.NewLine, ex.ToString());
+                        }
+                        nodes.Add(ast);
+                    }
+
+                    for (int i = 0; i < modules.Count && !_cancel.IsCancellationRequested; i++) {
+                        var ast = nodes[i];
+
+                        if (ast != null) {
+                            modules[i].UpdateTree(ast, null);
+                        }
+                    }
+
+                    for (int i = 0; i < modules.Count && !_cancel.IsCancellationRequested; i++) {
+                        var ast = nodes[i];
+                        if (ast != null) {
+                            Trace.TraceInformation("ANALYSIS START: \"{0}\"", modules[i].FilePath);
+                            modules[i].Analyze(_cancel, true);
+                            Trace.TraceInformation("ANALYSIS END: \"{0}\"", modules[i].FilePath);
+                        }
+                    }
+
+                    if (modules.Count > 0 && !_cancel.IsCancellationRequested) {
+                        modules[0].AnalysisGroup.AnalyzeQueuedEntries(_cancel);
+                    }
+
+                    if (_cancel.IsCancellationRequested) {
+                        break;
+                    }
+
+                    Trace.TraceInformation("SAVING GROUP: \"{0}\"", Path.GetDirectoryName(files[0].SourceFile));
+                    new SaveAnalysis().Save(projectState, _outDir);
+                    Trace.TraceInformation("GROUP END \"{0}\"", Path.GetDirectoryName(files[0].SourceFile));
+                    AnalysisLog.EndFileGroup();
                 }
+
+                progressOffset += files.Count;
+                AnalysisLog.Flush();
             }
         }
+    }
 
-        private static void Log(StreamWriter writer, string contents, params object[] arguments) {
-            writer.WriteLine(
-                "\"{0}\" {1}",
-                DateTime.Now.ToString("s"),
-                string.Format(CultureInfo.InvariantCulture, contents, arguments)
-            );
-            writer.Flush();
+    class TextWriterTraceListenerWithDateTime : TextWriterTraceListener {
+        public TextWriterTraceListenerWithDateTime(Stream stream) : base(stream) {
+#if DEBUG
+            this.Filter = new EventTypeFilter(SourceLevels.Information);
+#else
+            this.Filter = new EventTypeFilter(SourceLevels.Warning);
+#endif
+        }
+
+        public override void WriteLine(string message) {
+            Writer.WriteLine(DateTime.Now.ToString("s") + ": " + message);
         }
     }
 }

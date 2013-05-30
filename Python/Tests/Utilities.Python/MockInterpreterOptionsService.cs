@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Interpreter;
 
@@ -26,7 +27,7 @@ namespace TestUtilities.Python {
 
         public MockInterpreterOptionsService() {
             _providers = new List<IPythonInterpreterFactoryProvider>();
-            _noInterpretersValue = new MockPythonInterpreterFactory(Guid.NewGuid(), "No Interpreters", new MockInterpreterConfiguration("2.7"));
+            _noInterpretersValue = new MockPythonInterpreterFactory(Guid.NewGuid(), "No Interpreters", new InterpreterConfiguration("", "", "", "", ProcessorArchitecture.None, new Version(2, 7)));
         }
 
         public void AddProvider(IPythonInterpreterFactoryProvider provider) {
@@ -108,5 +109,9 @@ namespace TestUtilities.Python {
         }
 
         public event EventHandler DefaultInterpreterChanged;
+
+        public bool IsInterpreterGeneratingDatabase(IPythonInterpreterFactory interpreter) {
+            throw new NotImplementedException();
+        }
     }
 }

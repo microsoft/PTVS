@@ -15,10 +15,12 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using DebuggerTests;
+using Microsoft.PythonTools;
 using Microsoft.PythonTools.Debugger;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
@@ -51,29 +53,29 @@ namespace DjangoTests {
             if (_dbstate != requiredState) {
                 switch (requiredState) {
                     case DbState.BarApp:
-                        var psi = new ProcessStartInfo();
-                        psi.Arguments = "manage.py syncdb --noinput";
-                        psi.WorkingDirectory = Path.Combine(Environment.CurrentDirectory, DebuggerTestPath);
-                        psi.FileName = Version.Path;
-                        var proc = Process.Start(psi);
-                        proc.WaitForExit();
-                        Assert.AreEqual(0, proc.ExitCode);
+                        using (var output = ProcessOutput.Run(Version.Path,
+                            new [] {"manage.py", "syncdb", "--noinput"},
+                            Path.Combine(Environment.CurrentDirectory, DebuggerTestPath),
+                            null, false, null)) {
+                            output.Wait();
+                            Console.WriteLine(" ** stdout **");
+                            Console.WriteLine(string.Join(Environment.NewLine, output.StandardOutputLines));
+                            Console.WriteLine(" ** stderr **");
+                            Console.WriteLine(string.Join(Environment.NewLine, output.StandardErrorLines));
+                            Assert.AreEqual(0, output.ExitCode);
+                        }
 
-                        psi = new ProcessStartInfo();
-                        psi.Arguments = "manage.py loaddata data.json";
-                        psi.WorkingDirectory = Path.Combine(Environment.CurrentDirectory, DebuggerTestPath);
-                        psi.FileName = Version.Path;
-                        psi.UseShellExecute = false;
-                        psi.CreateNoWindow = true;
-                        psi.RedirectStandardOutput = true;
-                        psi.RedirectStandardError = true;
-                        proc = Process.Start(psi);
-                        proc.OutputDataReceived += OutputDataReceived;
-                        proc.ErrorDataReceived += OutputDataReceived;
-                        proc.BeginErrorReadLine();
-                        proc.BeginOutputReadLine();
-                        proc.WaitForExit();
-                        Assert.AreEqual(0, proc.ExitCode);
+                        using (var output = ProcessOutput.Run(Version.Path,
+                            new [] {"manage.py", "loaddata", "data.json"},
+                            Path.Combine(Environment.CurrentDirectory, DebuggerTestPath),
+                            null, false, null)) {
+                            output.Wait();
+                            Console.WriteLine(" ** stdout **");
+                            Console.WriteLine(string.Join(Environment.NewLine, output.StandardOutputLines));
+                            Console.WriteLine(" ** stderr **");
+                            Console.WriteLine(string.Join(Environment.NewLine, output.StandardErrorLines));
+                            Assert.AreEqual(0, output.ExitCode);
+                        }
                         break;
                 }
                 _dbstate = requiredState;
@@ -215,9 +217,19 @@ namespace DjangoTests {
             }
         }
 
+        private PythonVersion _version;
         internal override PythonVersion Version {
             get {
-                return PythonPaths.Python27;
+                if (_version == null) {
+                    _version = PythonPaths.Versions.Reverse().FirstOrDefault(v =>
+                        v != null &&
+                        Directory.Exists(v.LibPath) &&
+                        Directory.EnumerateDirectories(Path.Combine(v.LibPath, "site-packages")).Any(d =>
+                            Path.GetFileName(d).StartsWith("django")
+                        )
+                    );
+                }
+                return _version;
             }
         }
 

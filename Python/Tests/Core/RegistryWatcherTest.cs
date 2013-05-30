@@ -12,15 +12,14 @@
  *
  * ***************************************************************************/
 
-extern alias analysis;
 using System;
 using System.Linq;
 using System.Threading;
-using analysis::Microsoft.PythonTools;
+using Microsoft.PythonTools;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.Win32;
 
-namespace AnalysisTests {
+namespace PythonToolsTests {
     [TestClass]
     public class RegistryWatcherTest {
         const string TESTKEY = @"Software\PythonToolsTestKey";

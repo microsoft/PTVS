@@ -129,14 +129,14 @@ namespace Microsoft.PythonTools.Options {
                         if (option.IsConfigurable) {
                             // save configurable interpreter options
                             var actualFactory = configurable.SetOptions(
-                                option.Id,
-                                new Dictionary<string, object>() {
-                                    { "InterpreterPath", option.InterpreterPath ?? "" },
-                                    { "WindowsInterpreterPath", option.WindowsInterpreterPath ?? "" },
-                                    { "PathEnvironmentVariable", option.PathEnvironmentVariable ?? "" },
-                                    { "Architecture", option.Architecture ?? "x86" },
-                                    { "Version", option.Version ?? "2.7" },
-                                    { "Description", option.Display },
+                                new InterpreterFactoryCreationOptions {
+                                    Id = option.Id,
+                                    InterpreterPath = option.InterpreterPath ?? "",
+                                    WindowInterpreterPath = option.WindowsInterpreterPath ?? "",
+                                    PathEnvironmentVariableName = option.PathEnvironmentVariable ?? "",
+                                    ArchitectureString = option.Architecture ?? "x86",
+                                    LanguageVersionString = option.Version ?? "2.7",
+                                    Description = option.Display,
                                 }
                             );
                             if (option.InteractiveOptions != null) {
@@ -146,23 +146,30 @@ namespace Microsoft.PythonTools.Options {
                     }
                 }
 
-                foreach (var factory in _options.Keys.OfType<InterpreterPlaceholder>().ToArray()) {
-                    _options.Remove(factory);
-                }
-
                 var defaultInterpreter = GetWindow().DefaultInterpreter;
 
                 if (defaultInterpreter != null) {
+                    Version ver;
+                    if (defaultInterpreter is InterpreterPlaceholder) {
+                        ver = Version.Parse(_options[defaultInterpreter].Version);
+                    } else {
+                        ver = defaultInterpreter.Configuration.Version;
+                    }
+
                     // Search for the interpreter again, since it may be a
                     // placeholder rather than the actual instance.
                     _service.DefaultInterpreter = 
-                        _service.FindInterpreter(defaultInterpreter.Id, defaultInterpreter.Configuration.Version) ??
+                        _service.FindInterpreter(defaultInterpreter.Id, ver) ??
                         _service.Interpreters.LastOrDefault();
                 } else {
                     _service.DefaultInterpreter = _service.Interpreters.LastOrDefault();
                 }
                 _defaultInterpreter = _service.DefaultInterpreter.Id;
                 _defaultInterpreterVersion = _service.DefaultInterpreter.Configuration.Version;
+
+                foreach (var factory in _options.Keys.OfType<InterpreterPlaceholder>().ToArray()) {
+                    _options.Remove(factory);
+                }
             } finally {
                 _service.EndSuppressInterpretersChangedEvent();
             }

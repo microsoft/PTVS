@@ -20,7 +20,7 @@
                     <RegistryValue Type='string' Name='96492FC7-7BC6-46F7-8559-66BB4E09FD1E,2.0' Value='Tool'/>
                 </RegistryKey>
             </Component>
-            
+
             <!-- All user components -->
             <Component Id="cmp5BDDB568168248128EC9CF83E9466234" Directory="GAC" Guid="{224E48AF-A97D-4F05-B514-A86FEB4A8804}" >
                 <Condition>ALLUSERS = 1</Condition>
@@ -41,6 +41,10 @@
             <Component Id="cmp6E562A0FD5B04BC1ABA4B46F899FFABC" Directory="GAC" Guid="{72A17B9C-E63D-4399-9B5D-755552C444A7}" >
                 <Condition>ALLUSERS = 1</Condition>
                 <File Id="fil2D46C9A322D8435988BAED1587312F45" KeyPath="yes" Source="$(var.TargetDir)\Microsoft.PythonTools.ImportWizard.dll" Assembly=".net"/>
+            </Component>
+            <Component Id="cmp8205E409A38649F780FC57F1A06BBBC3" Directory="GAC" Guid="{78E7CDD0-2D53-447F-9584-5D48FA33B8D5}" >
+                <Condition>ALLUSERS = 1</Condition>
+                <File Id="fil4A54AD7F6B9E44C687993D9F2CD6431A" KeyPath="yes" Source="$(var.TargetDir)\Microsoft.PythonTools.VSInterpreters.dll" Assembly=".net"/>
             </Component>
 
             <!-- Both per user and all user components -->
@@ -79,6 +83,9 @@
             </Component>
             <Component Id="cmpAECA7C7BA8604DC995F00FFD6208A8AE" Directory="INSTALLLOCATION" Guid="{C69AD6BF-3B48-41EF-A2DE-AB1EB65C72A1}">
                 <File Id="fil83E122C66D1C4B21ABC1129A0FC1C2F1" KeyPath="yes" Source="$(var.TargetDir)\Microsoft.PythonTools.Analyzer.exe" />
+            </Component>
+            <Component Id="cmp8287D95F1497479A85767903C9F88FA1" Directory="INSTALLLOCATION" Guid="{CE82D032-5D6B-4847-B431-C3070D704C01}">
+                <File Id="filF7E9BDFC2B58492A925D5AC7591111F4" KeyPath="yes" Source="$(var.TargetDir)\Microsoft.PythonTools.VSInterpreters.dll" />
             </Component>
             <Component Id="cmp50EB27AE2F75F8F149082ADB2443249D" Directory="INSTALLLOCATION" Guid="{55198E93-DE1C-483E-8411-37DECFCB5264}">
                 <File Id="filA6BD0112AD2B09494FB8515F88C32A16" KeyPath="yes" Source="$(var.TargetDir)\Microsoft.PythonTools.pkgdef" />
@@ -317,31 +324,31 @@
                 <File Id="filE50FABEC7DFA46A2B15E45A40C1F2696" KeyPath="yes" Source="$(var.TargetDir)\WebpiCmdLine\WebPICmdLine.exe.config" />
             </Component>
             <Component Id="cmpB03399D3B158416B9968685B3BBC67E7" Directory="dir550D5637E4804BC5AA8590B918C5FB54" Guid="{519512D1-9F16-48AF-8D71-99A18A1A9F7E}">
-              <File Id="fil413A9D671B4E49D7A312831E11EE64BD" KeyPath="yes" Source="$(var.TargetDir)\visualstudio_py_repl.py" />
+                <File Id="fil413A9D671B4E49D7A312831E11EE64BD" KeyPath="yes" Source="$(var.TargetDir)\visualstudio_py_repl.py" />
             </Component>
             <Component Id="cmp2CE4F623807B4A3B91867F71019CDA12" Directory="dir550D5637E4804BC5AA8590B918C5FB54" Guid="{86A4432B-6BB2-4C6C-947E-782E21A0AE1C}">
-              <File Id="fil6DAD7293178C43FD9A6C5555036C32B0" KeyPath="yes" Source="$(var.TargetDir)\visualstudio_py_debugger.py" />
+                <File Id="fil6DAD7293178C43FD9A6C5555036C32B0" KeyPath="yes" Source="$(var.TargetDir)\visualstudio_py_debugger.py" />
             </Component>
             <Component Id="cmpCC0524F077D04474BABBF66644F1AB04" Directory="dir550D5637E4804BC5AA8590B918C5FB54" Guid="{5EEA2DDD-AC8A-4A32-958F-768E96895E72}">
-              <File Id="filC194540AD9184FA5B13807364A666176" KeyPath="yes" Source="$(var.TargetDir)\visualstudio_py_util.py" />
+                <File Id="filC194540AD9184FA5B13807364A666176" KeyPath="yes" Source="$(var.TargetDir)\visualstudio_py_util.py" />
             </Component>
             <Component Id="cmp0CB867460D334B0F97FBB733530B903F" Directory="dir550D5637E4804BC5AA8590B918C5FB54" Guid="{15493026-7494-4DC9-92C7-D8728652B59C}">
-              <File Id="filF08102B4E3334178B72D36536BF1FB89" KeyPath="yes" Source="$(var.TargetDir)\ptvsd\attach_server.py" />
+                <File Id="filF08102B4E3334178B72D36536BF1FB89" KeyPath="yes" Source="$(var.TargetDir)\ptvsd\attach_server.py" />
             </Component>
             <Component Id="cmp93B2912AA65744D19E7F7C60F8F33850" Directory="dir550D5637E4804BC5AA8590B918C5FB54" Guid="{4A19349F-1316-42B9-B694-9BF52084701F}">
-              <File Id="fil0D872412BDDF4653A7A66C026C31A86C" KeyPath="yes" Source="$(var.TargetDir)\ptvsd\__init__.py" />
+                <File Id="fil0D872412BDDF4653A7A66C026C31A86C" KeyPath="yes" Source="$(var.TargetDir)\ptvsd\__init__.py" />
             </Component>
             <Component Id="cmp63F59CCB28BB48C5BB67D7B08E776099" Directory="dir550D5637E4804BC5AA8590B918C5FB54" Guid="{8AE068E7-7625-436E-AD0A-51FF13BDE6E5}">
-              <File Id="fil367A2890295845708024C1AC5D8140A5" KeyPath="yes" Source="$(var.TargetDir)\ptvsd\__main__.py" />
+                <File Id="fil367A2890295845708024C1AC5D8140A5" KeyPath="yes" Source="$(var.TargetDir)\ptvsd\__main__.py" />
             </Component>
             <Component Id="cmpDB59A8DAF5AF4EF5BF5C73297E6D80CF" Directory="dir550D5637E4804BC5AA8590B918C5FB54" Guid="{6CD3060F-AF10-40AF-94F9-071069EAF7C8}">
-              <Shortcut Id="PTVSDShortcut"
-                        Name="ptvsd Package"
-                        Directory="ApplicationProgramsFolder"
-                        Description="Python Tools for Visual Studio Debugger package"
-                        Target="[$cmpDB59A8DAF5AF4EF5BF5C73297E6D80CF]" />
-              <RegistryValue Root='HKCU' Key='SOFTWARE\Microsoft\PythonTools\$(var.VSTargetVersion)' Type='string' Name='ptvsd' Value='[$cmpDB59A8DAF5AF4EF5BF5C73297E6D80CF]' KeyPath='yes' />
-              <RemoveFolder Id='DeleteApplicationProgramsFolder' Directory='ApplicationProgramsFolder' On='uninstall'/>
+                <Shortcut Id="PTVSDShortcut"
+                          Name="ptvsd Package"
+                          Directory="ApplicationProgramsFolder"
+                          Description="Python Tools for Visual Studio Debugger package"
+                          Target="[$cmpDB59A8DAF5AF4EF5BF5C73297E6D80CF]" />
+                <RegistryValue Root='HKCU' Key='SOFTWARE\Microsoft\PythonTools\$(var.VSTargetVersion)' Type='string' Name='ptvsd' Value='[$cmpDB59A8DAF5AF4EF5BF5C73297E6D80CF]' KeyPath='yes' />
+                <RemoveFolder Id='DeleteApplicationProgramsFolder' Directory='ApplicationProgramsFolder' On='uninstall'/>
             </Component>
         </ComponentGroup>
     </Fragment>
@@ -403,7 +410,7 @@
             <Directory Id="dirC7642DBB71044CACB35A2064AA9697E4" Name="FromExistingCode" />
         </DirectoryRef>
     </Fragment>
-  <Fragment>
+    <Fragment>
         <DirectoryRef Id="dir09D551762C64E912856A96ED35E3D478">
             <Directory Id="dirD5195BC5D1C101171FEF8AD9B89AA866" Name="EmptyPackage" />
         </DirectoryRef>

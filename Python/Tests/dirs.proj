@@ -9,6 +9,7 @@
     <ProjectFile Include="Django\DjangoTests.csproj" />
     <ProjectFile Include="Django.UI\DjangoUITests.csproj" />
     <ProjectFile Include="FastCgi\FastCgiTest.csproj" />
+    <ProjectFile Include="VSInterpretersTests\VSInterpretersTests.csproj" />
     <ProjectFile Include="ProfilingUITests\ProfilingUITests.csproj" />
     <ProjectFile Include="Core\PythonToolsTests.csproj" />
     <ProjectFile Include="Core.UI\PythonToolsUITests.csproj" />
