@@ -86,12 +86,6 @@ namespace Microsoft.VisualStudioTools.Project {
 
         #region overridden properties
 
-        public override bool IsNonMemberItem {
-            get {
-                return ItemNode is AllFilesProjectElement;
-            }
-        }
-
         internal override object Object {
             get {
                 return this.VSProjectItem;
@@ -266,6 +260,7 @@ namespace Microsoft.VisualStudioTools.Project {
                     ProjectMgr.OnInvalidateItems(Parent);
                 }
                 ProjectMgr.ReDrawNode(this, UIHierarchyElement.Icon);
+                ProjectMgr.OnPropertyChanged(this, (int)__VSHPROPID.VSHPROPID_IsNonMemberItem, 0);
             }
             return VSConstants.S_OK;
         }
@@ -289,6 +284,7 @@ namespace Microsoft.VisualStudioTools.Project {
             IsVisible = true;
             ProjectMgr.OnInvalidateItems(this);
             ProjectMgr.ReDrawNode(this, UIHierarchyElement.Icon);
+            ProjectMgr.OnPropertyChanged(this, (int)__VSHPROPID.VSHPROPID_IsNonMemberItem, 0);
             return VSConstants.S_OK;
         }
 

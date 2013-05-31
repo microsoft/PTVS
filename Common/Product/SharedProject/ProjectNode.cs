@@ -6649,5 +6649,10 @@ If the files in the existing folder have the same names as files in the folder y
 
         #endregion
 
+        public void UpdatePathForDeferredSave(string oldPath, string newPath) {
+            var existing = _diskNodes[oldPath];
+            _diskNodes.Remove(oldPath);
+            _diskNodes.Add(newPath, existing);
+        }
     }
 }

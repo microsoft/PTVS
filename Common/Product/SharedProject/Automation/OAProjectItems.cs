@@ -224,6 +224,9 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
         private EnvDTE.ProjectItem EvaluateAddResult(VSADDRESULT result, string path) {
             return UIThread.Instance.RunSync<EnvDTE.ProjectItem>(() => {
                 if (result == VSADDRESULT.ADDRESULT_Success) {
+                    if (Directory.Exists(path) && !CommonUtils.HasEndSeparator(path)) {
+                        path = path + Path.DirectorySeparatorChar;
+                    }
                     HierarchyNode nodeAdded = this.NodeWithItems.ProjectMgr.FindNodeByFullPath(path);
                     Debug.Assert(nodeAdded != null, "We should have been able to find the new element in the hierarchy");
                     if (nodeAdded != null) {

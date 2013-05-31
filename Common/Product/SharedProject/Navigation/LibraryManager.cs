@@ -33,7 +33,7 @@ namespace Microsoft.VisualStudioTools.Navigation {
     /// navigation tools (class view or object browser) from the source files inside a
     /// hierarchy.
     /// </summary>
-    internal abstract class LibraryManager : IDisposable, IVsRunningDocTableEvents {
+    internal abstract partial class LibraryManager : IDisposable, IVsRunningDocTableEvents {
         private readonly CommonPackage/*!*/ _package;
         private readonly Dictionary<uint, TextLineEventListener> _documents;
         private readonly Dictionary<IVsHierarchy, HierarchyListener> _hierarchies;
@@ -41,7 +41,7 @@ namespace Microsoft.VisualStudioTools.Navigation {
         private readonly Library _library;
         private readonly IVsEditorAdaptersFactoryService _adapterFactory;
         private uint _objectManagerCookie;
-        private uint _runningDocTableCookie;         
+        private uint _runningDocTableCookie;
         
         public LibraryManager(CommonPackage/*!*/ package) {
             Contract.Assert(package != null);
@@ -105,9 +105,7 @@ namespace Microsoft.VisualStudioTools.Navigation {
             
             RegisterLibrary();
         
-            HierarchyListener listener = new HierarchyListener(hierarchy, _package);
-            listener.OnAddItem += new EventHandler<HierarchyEventArgs>(OnNewFile);
-            listener.OnDeleteItem += new EventHandler<HierarchyEventArgs>(OnDeleteFile);
+            HierarchyListener listener = new HierarchyListener(hierarchy, this);
             listener.StartListening(true);
             _hierarchies.Add(hierarchy, listener);
             RegisterForRDTEvents();
@@ -163,9 +161,7 @@ namespace Microsoft.VisualStudioTools.Navigation {
             _documents[document].OnFileChangedImmediate += delegate(object sender, TextLineChange[] changes, int fLast) {
                 lineChanged(sender, changes, fLast);
             };
-            _documents[document].OnFileChanged += delegate(object sender, HierarchyEventArgs args) {
-                onIdle(args.TextBuffer);
-            };
+            _documents[document].OnFileChanged += (sender, args) => onIdle(args.TextBuffer);
         }
 
         #endregion
@@ -262,7 +258,7 @@ namespace Microsoft.VisualStudioTools.Navigation {
 
         private void OnNewFile(object sender, HierarchyEventArgs args) {
             IVsHierarchy hierarchy = sender as IVsHierarchy;
-            if (null == hierarchy) {
+            if (null == hierarchy || IsNonMemberItem(hierarchy, args.ItemID)) {
                 return;
             }
 
@@ -271,15 +267,29 @@ namespace Microsoft.VisualStudioTools.Navigation {
                 buffer = _adapterFactory.GetDocumentBuffer(args.TextBuffer);
             }
 
+            var id = new ModuleId(hierarchy, args.ItemID);
             OnNewFile(new LibraryTask(args.CanonicalName, buffer, new ModuleId(hierarchy, args.ItemID)));
         }
 
+        /// <summary>
+        /// Handles the delete event, checking to see if this is a project item.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="args"></param>
         private void OnDeleteFile(object sender, HierarchyEventArgs args) {
             IVsHierarchy hierarchy = sender as IVsHierarchy;
-            if (null == hierarchy) {
+            if (null == hierarchy || IsNonMemberItem(hierarchy, args.ItemID)) {
                 return;
             }
 
+            OnDeleteFile(hierarchy, args);
+        }
+
+        /// <summary>
+        /// Does a delete w/o checking if it's a non-meber item, for handling the
+        /// transition from member item to non-member item.
+        /// </summary>
+        private void OnDeleteFile(IVsHierarchy hierarchy, HierarchyEventArgs args) {
             ModuleId id = new ModuleId(hierarchy, args.ItemID);
             LibraryNode node = null;
             lock (_files) {
@@ -292,14 +302,27 @@ namespace Microsoft.VisualStudioTools.Navigation {
             }
         }
 
+        private void IsNonMemberItemChanged(object sender, HierarchyEventArgs args) {
+            IVsHierarchy hierarchy = sender as IVsHierarchy;
+            if (null == hierarchy) {
+                return;
+            }
+
+            if (!IsNonMemberItem(hierarchy, args.ItemID)) {
+                OnNewFile(hierarchy, args);
+            } else {
+                OnDeleteFile(hierarchy, args);
+            }
+        }
+
         /// <summary>
-        /// Checks whether this hierarchy item is a project member (files in search path aren't
-        /// considered as project members).
+        /// Checks whether this hierarchy item is a project member (on disk items from show all
+        /// files aren't considered project members).
         /// </summary>
-        private bool IsProjectMember(IVsHierarchy hierarchy, uint itemId) {
+        private bool IsNonMemberItem(IVsHierarchy hierarchy, uint itemId) {
             object val;
             int hr = hierarchy.GetProperty(itemId, (int)__VSHPROPID.VSHPROPID_IsNonMemberItem, out val);
-            return ErrorHandler.Succeeded(hr) && !(bool)val;
+            return ErrorHandler.Succeeded(hr) && (bool)val;
         }
 
         #endregion

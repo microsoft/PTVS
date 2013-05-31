@@ -47,12 +47,15 @@ namespace Microsoft.PythonTools.Project {
             _caption = Path.GetFileName(item.EvaluatedInclude);
             _scheduler = TaskScheduler.FromCurrentSynchronizationContext();
 
-            _fileWatcher = new FileSystemWatcher(CommonUtils.GetAbsoluteDirectoryPath(project.ProjectHome, item.EvaluatedInclude), "*");
-            _fileWatcher.IncludeSubdirectories = true;
-            _fileWatcher.Deleted += PackagesChanged;
-            _fileWatcher.Created += PackagesChanged;
-            _fileWatcher.EnableRaisingEvents = true;
-            _timer = new Timer(CheckPackages);
+            var envDir = CommonUtils.GetAbsoluteDirectoryPath(project.ProjectHome, item.EvaluatedInclude);
+            if (Directory.Exists(envDir)) { // TODO: Need to handle watching for creation, and show broken icon
+                _fileWatcher = new FileSystemWatcher(envDir, "*");
+                _fileWatcher.IncludeSubdirectories = true;
+                _fileWatcher.Deleted += PackagesChanged;
+                _fileWatcher.Created += PackagesChanged;
+                _fileWatcher.EnableRaisingEvents = true;
+                _timer = new Timer(CheckPackages);
+            }
             IsExpanded = false;
         }
 

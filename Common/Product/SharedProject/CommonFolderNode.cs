@@ -120,6 +120,7 @@ namespace Microsoft.VisualStudioTools.Project {
                     ProjectMgr.OnInvalidateItems(Parent);
                 }
                 ProjectMgr.ReDrawNode(this, UIHierarchyElement.Icon);
+                ProjectMgr.OnPropertyChanged(this, (int)__VSHPROPID.VSHPROPID_IsNonMemberItem, 0);
             }
             return VSConstants.S_OK;
         }
@@ -155,7 +156,7 @@ namespace Microsoft.VisualStudioTools.Project {
                 }
             }
             ProjectMgr.ReDrawNode(this, UIHierarchyElement.Icon);
-            
+            ProjectMgr.OnPropertyChanged(this, (int)__VSHPROPID.VSHPROPID_IsNonMemberItem, 0);
             return VSConstants.S_OK;
         }
 

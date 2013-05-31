@@ -280,11 +280,20 @@ namespace Microsoft.PythonTools.Django.Intellisense {
                 if (region.Kind == TemplateTokenKind.Block && region.Block != null) {
                     var cmd = region.Block.ParseInfo.Command;
 
-                    if (_nestedEndTags.Contains(cmd)) {
+                    if (cmd == "elif") {
+                        if (depth == 0) {
+                            included.Add("endif");
+                        }
+                        // otherwise elif both starts and ends a block, 
+                        // so depth remains the same.
+                    } else if (_nestedEndTags.Contains(cmd)) {
                         depth++;
                     } else if (_nestedStartTags.Contains(cmd)) {
                         if (depth == 0) {
                             included.Add(_nestedTags[cmd]);
+                            if (cmd == "if") {
+                                included.Add("elif");
+                            }
                         }
 
                         // we happily let depth go negative, it'll prevent us from
@@ -296,7 +305,7 @@ namespace Microsoft.PythonTools.Django.Intellisense {
             }
 
             foreach (var value in results) {
-                if (!_nestedEndTags.Contains(value.DisplayText) ||
+                if (!(_nestedEndTags.Contains(value.DisplayText) || value.DisplayText == "elif") ||
                     included.Contains(value.DisplayText)) {
                     yield return value;
                 }
@@ -309,9 +318,9 @@ namespace Microsoft.PythonTools.Django.Intellisense {
 
             for (; ; ) {
                 string curFilename = filename.Replace('\\', '/');
-                Dictionary<string, HashSet<AnalysisValue>> res;
+                TemplateVariables res;
                 if (project._templateFiles.TryGetValue(curFilename, out res)) {
-                    return res;
+                    return res.GetAllValues();
                 }
                 curLevel = Path.GetDirectoryName(curLevel);  // C:\Foo\Bar\Baz\foo.html gets us C:\Foo\Bar\Baz
                 var fn2 = Path.GetFileName(curLevel);            // Gets us Baz

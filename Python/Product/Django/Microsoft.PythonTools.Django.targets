@@ -7,36 +7,43 @@
 
   <!-- *********************************************************************************** -->
   <!-- Normal install environment, use the current version -->
-  <PropertyGroup Condition="$(PTVS_DEV) == '' and $(MSBuildThisFile)!='Microsoft.PythonTools.Django.Developer.targets'">
+  <PropertyGroup>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <AzureDjangoSupportPath>$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\</AzureDjangoSupportPath>
     <PTVSSupportPath>$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\</PTVSSupportPath>
   </PropertyGroup>
-  <!-- *********************************************************************************** -->
-  <!-- Dev environment for PTVS, use the current version -->
-  <PropertyGroup Condition="$(PTVS_DEV) == 'true' or $(MSBuildThisFile)=='Microsoft.PythonTools.Django.Developer.targets'">
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
-    <DjangoSupportVersion>2.0</DjangoSupportVersion>
-    <AzureDjangoSupportPath
-      Condition="Exists('$(LOCALAPPDATA)\Microsoft\VisualStudio\$(VisualStudioVersion)Exp\Extensions\Microsoft\Python Tools for Visual Studio, Django Support\$(DjangoSupportVersion)\wfastcgi.py')">$(LOCALAPPDATA)\Microsoft\VisualStudio\$(VisualStudioVersion)Exp\Extensions\Microsoft\Python Tools for Visual Studio, Django Support\$(DjangoSupportVersion)\</AzureDjangoSupportPath>
 
-    <PTVSSupportPath
-      Condition="Exists('$(LOCALAPPDATA)\Microsoft\VisualStudio\$(VisualStudioVersion)Exp\Extensions\Microsoft\Python Tools for Visual Studio\$(DjangoSupportVersion)\WebPICmdLine.exe')">$(LOCALAPPDATA)\Microsoft\VisualStudio\$(VisualStudioVersion)Exp\Extensions\Microsoft\Python Tools for Visual Studio\$(DjangoSupportVersion)\</PTVSSupportPath>
+  <Target Name="GetTargetFrameworkVersion" Returns="$(TargetFrameworkVersion)" />
+  <Target Name="GetTargetFrameworkDirectories" Returns="" />
+  <Target Name="GetTargetFrameworkMoniker" Returns="" />
+  <Target Name="GetTargetFrameworkMonikerDisplayName" Returns="" />
+  <Target Name="CreateManifestResourceNames" Returns="" />
+
+  <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" />
+  <!-- 
+  <ItemGroup>
+    <VirtualEnvEnabled Include="%(VirtualEnv)" 
+                       Condition="'%(Id)' == '$(InterpreterId)' and %(Version) == '$(InterpreterVersion)'"></VirtualEnvEnabled>  
+  </ItemGroup>
+  <PropertyGroup Condition="'$(VirtualEnvEnabled)' != ''">
+    <VirtualEnvInterpreterPath></VirtualEnvInterpreterPath>
   </PropertyGroup>
-
-  <Target Name="GetTargetFrameworkVersion" Returns="$(TargetFrameworkVersion)" Condition="$(PTVS_DEV) == '' or $(MSBuildThisFile)=='Microsoft.PythonTools.Django.Developer.targets'"/>
-  <Target Name="GetTargetFrameworkDirectories" Returns="" Condition="$(PTVS_DEV) == '' or $(MSBuildThisFile)=='Microsoft.PythonTools.Django.Developer.targets'"/>
-  <Target Name="GetTargetFrameworkMoniker" Returns="" Condition="$(PTVS_DEV) == '' or $(MSBuildThisFile)=='Microsoft.PythonTools.Django.Developer.targets'"/>
-  <Target Name="GetTargetFrameworkMonikerDisplayName" Returns="" Condition="$(PTVS_DEV) == '' or $(MSBuildThisFile)=='Microsoft.PythonTools.Django.Developer.targets'"/>
-  <Target Name="CreateManifestResourceNames" Returns="" Condition="$(PTVS_DEV) == '' or $(MSBuildThisFile)=='Microsoft.PythonTools.Django.Developer.targets'"/>
-
-  <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" Condition="$(PTVS_DEV) == '' or $(MSBuildThisFile)=='Microsoft.PythonTools.Django.Developer.targets'"/>
+  -->
+  <ItemGroup>
+    <PythonAzureDeploymentFile Include="$(AzureDjangoSupportPath)Microsoft.PythonTools.AzureSetup.exe"></PythonAzureDeploymentFile>
+    <PythonAzureDeploymentFile Include="$(AzureDjangoSupportPath)Microsoft.PythonTools.AzureSetup.exe.config"></PythonAzureDeploymentFile>
+    <!-- WebPI Files -->
+    <PythonAzureDeploymentFile Include="$(PTVSSupportPath)WebPICmdLine.exe"></PythonAzureDeploymentFile>
+    <PythonAzureDeploymentFile Include="$(PTVSSupportPath)WebPICmdLine.exe.config"></PythonAzureDeploymentFile>
+    <PythonAzureDeploymentFile Include="$(PTVSSupportPath)Microsoft.Web.PlatformInstaller.UI.dll"></PythonAzureDeploymentFile>
+    <PythonAzureDeploymentFile Include="$(PTVSSupportPath)Microsoft.Web.PlatformInstaller.dll"></PythonAzureDeploymentFile>
+    <PythonAzureDeploymentFile Include="$(PTVSSupportPath)Microsoft.Web.Deployment.dll"></PythonAzureDeploymentFile>
+    <!-- WebRole files -->
+    <PythonAzureDeploymentFile Include="$(AzureDjangoSupportPath)wfastcgi.py"></PythonAzureDeploymentFile>
+    <PythonAzureDeploymentFile Include="$(AzureDjangoSupportPath)Microsoft.PythonTools.WebRole.dll"></PythonAzureDeploymentFile>
+  </ItemGroup>
 
   <Target Name="ResolvePythonInterpreterPath" >
-    <Message Text="InterpreterId=$(InterpreterId)"/>
-    <Message Text="InterpreterVersion=$(InterpreterVersion)"/>
-    <Message Text="IsWindowsInterpreter=$(IsWindowsInterpreter)"/>
-
     <PropertyGroup Condition="$(IsWindowsApplication) == 'true'">
       <PythonInterpreterSuffix>w</PythonInterpreterSuffix>
     </PropertyGroup>
@@ -57,7 +64,6 @@
 
     <Message Text="DefaultInterpreterId=$(InterpreterId)"/>
     <Message Text="DefaultInterpreterVersion=$(InterpreterVersion)"/>
-    
 
     <PropertyGroup Condition="$(InterpreterId)=='2af0f10d-7135-4994-9156-5d01c9c11b7e'">
       <!-- X86 CPython Interpreter -->
@@ -91,95 +97,211 @@
     <PropertyGroup>
       <PythonVersionNoDot>$(InterpreterVersion.Replace(".", ""))</PythonVersionNoDot>
     </PropertyGroup>
-    <Message Text="InterpretPath=$(PythonInterpreterPath)"/>
-    <Message Text="InterpretVersionNoDot=$(PythonVersionNoDot)"/>
+    <Message Text="InterpreterVersion=$(InterpreterVersion)" Importance="low"/>
+    <Message Text="PythonInterpreterPath=$(PythonInterpreterPath)" Importance="low"/>
   </Target>
 
-  <Target Name="Build" Condition="$(PTVS_DEV) == '' or $(MSBuildThisFile)=='Microsoft.PythonTools.Django.Developer.targets'"
-          >
-    <Message Text="Content=@(Content->'%(RelativeDir)%(Filename)%(Extension)')"/>
+  <Target Name="Build" >
+    <!-- 
     <Copy
         SourceFiles="@(Compile)"
         DestinationFiles="@(Compile->'$(IntermediateOutputPath)%(RelativeDir)%(Filename)%(Extension)')"
         SkipUnchangedFiles="true">
-      <!-- <Output TaskParameter="DestinationFiles" ItemName="FilesCopiedToIntermediate"/> -->
     </Copy>
     <Copy SourceFiles="@(Include)"
           DestinationFiles="@(Include->'$(IntermediateOutputPath)%(RelativeDir)%(Filename)%(Extension)')"
           SkipUnchangedFiles="true">
-      <!-- <Output TaskParameter="DestinationFiles" ItemName="FilesCopiedToIntermediate"/> -->
     </Copy>
     <Copy SourceFiles="@(Content)"
           DestinationFiles="@(Content->'$(IntermediateOutputPath)%(RelativeDir)%(Filename)%(Extension)')"
           SkipUnchangedFiles="true">
-      <!-- <Output TaskParameter="DestinationFiles" ItemName="FilesCopiedToIntermediate"/> -->
     </Copy>
-
-    <!-- WebPI Files -->
-    <Copy SourceFiles="$(PTVSSupportPath)WebPICmdLine.exe"
-            DestinationFiles="bin\WebPICmdLine.exe"
-            SkipUnchangedFiles="true">
-      <Output TaskParameter="DestinationFiles" ItemName="FilesCopiedToIntermediate"/>
-    </Copy>
-    <Copy SourceFiles="$(PTVSSupportPath)WebPICmdLine.exe.config"
-            DestinationFiles="bin\WebPICmdLine.exe.config"
-            SkipUnchangedFiles="true">
-      <Output TaskParameter="DestinationFiles" ItemName="FilesCopiedToIntermediate"/>
-    </Copy>
-    <Copy SourceFiles="$(PTVSSupportPath)Microsoft.Web.PlatformInstaller.UI.dll"
-            DestinationFiles="bin\Microsoft.Web.PlatformInstaller.UI.dll"
-            SkipUnchangedFiles="true">
-      <Output TaskParameter="DestinationFiles" ItemName="FilesCopiedToIntermediate"/>
-    </Copy>
-    <Copy SourceFiles="$(PTVSSupportPath)Microsoft.Web.PlatformInstaller.dll"
-            DestinationFiles="bin\Microsoft.Web.PlatformInstaller.dll"
-            SkipUnchangedFiles="true">
-      <Output TaskParameter="DestinationFiles" ItemName="FilesCopiedToIntermediate"/>
-    </Copy>
-    <Copy SourceFiles="$(PTVSSupportPath)Microsoft.Web.Deployment.dll"
-            DestinationFiles="bin\Microsoft.Web.Deployment.dll"
-            SkipUnchangedFiles="true">
-      <Output TaskParameter="DestinationFiles" ItemName="FilesCopiedToIntermediate"/>
-    </Copy>
-
-    <!-- WebRole files -->
-    <Copy SourceFiles="$(AzureDjangoSupportPath)wfastcgi.py"
-            DestinationFiles="bin\wfastcgi.py"
-            SkipUnchangedFiles="true">
-      <Output TaskParameter="DestinationFiles" ItemName="FilesCopiedToIntermediate"/>
-    </Copy>
-    <Copy SourceFiles="$(AzureDjangoSupportPath)Microsoft.PythonTools.WebRole.dll"
-            DestinationFiles="bin\Microsoft.PythonTools.WebRole.dll"
+-->
+    <Copy SourceFiles="@(PythonAzureDeploymentFile)"
+          DestinationFolder="bin"
           SkipUnchangedFiles="true">
       <Output TaskParameter="DestinationFiles" ItemName="FilesCopiedToIntermediate"/>
     </Copy>
-    <MakeDir Directories="$(IntermediateOutputPath)\bin"/>
-    <Copy SourceFiles="$(AzureDjangoSupportPath)Microsoft.PythonTools.AzureSetup.exe" DestinationFolder="bin"/>
-    <Copy SourceFiles="$(AzureDjangoSupportPath)Microsoft.PythonTools.AzureSetup.exe.config" DestinationFolder="bin"/>
-    <Message Text="AzureSupport: $(AzureDjangoSupportPath)"/>
 
-    <!-- <WriteLinesToFile File="$(IntermediateOutputPath)\bin\InstallPython.cmd" Lines="$(_DjangoInstallPythonCode)" Overwrite="true"/> -->
-    <ItemGroup>
-      <InstallPython Include="bin\Microsoft.PythonTools.AzureSetup.exe"/>
-      <InstallPython Include="bin\Microsoft.PythonTools.AzureSetup.exe.config"/>
-    </ItemGroup>
+    <Message Text="AzureSupport: $(AzureDjangoSupportPath)" Importance="low"/>
     <Message Text="FilesCopiedToIntermediate=@(FilesCopiedToIntermediate)" Importance="low"/>
   </Target>
+
+  <Target Name="ResolveDeploymentSettings">
+    <PropertyGroup Condition="'$(_PythonDeploymentMethod)' == ''">
+      <!-- We are deploying via cloud tools to a service if we didn't 
+           set this before doing GenerateGlobalPublishSetting which happens
+           only when we're publishing via web deploy -->
+      <_PythonDeploymentMethod>CloudServiceDeploy</_PythonDeploymentMethod>
+    </PropertyGroup>
+
+    <Message Text="Building to deploying Django via $(_PythonDeploymentMethod)"  Importance="low"/>
+
+    <!-- ******************* -->
+    <!-- Deployment settings -->
+    <!-- ******************* -->
+    <PropertyGroup Condition="'$(_PythonDeploymentMethod)' == 'WebDeploy'">
+      <!-- Set the deployment locations assuming deployment to Antares, user could override these in the project file -->
+      <DeployedPythonInterpreterPath Condition="'$(DeployedPythonInterpreterPath)' == ''">D:\Python27\python.exe</DeployedPythonInterpreterPath>
+      <DeployedSiteRoot Condition="'$(DeployedSiteRoot)' == ''">D:\home\site\wwwroot</DeployedSiteRoot>
+      <DeployedWFastCgiPath Condition="'$(DeployedWFastCgiPath)' == ''">D:\Python27\Scripts\wfastcgi.py</DeployedWFastCgiPath>
+    </PropertyGroup>
+
+    <!-- Setup default deployment values if none have yet been provided-->
+    <PropertyGroup>
+      <!-- Set default deployment options for unspecified values.  These assume the values will be replaced (typically by
+          AzureSetup) on the deployment. -->
+      <DeployedPythonInterpreterPath Condition="'$(DeployedPythonInterpreterPath)' == ''">%INTERPRETERPATH%</DeployedPythonInterpreterPath>
+      <DeployedSiteRoot Condition="'$(DeployedSiteRoot)' == ''">%RootDir%</DeployedSiteRoot>
+      <DeployedWFastCgiPath Condition="'$(DeployedWFastCgiPath)' == ''">%WFASTCGIPATH%</DeployedWFastCgiPath>
+    </PropertyGroup>
+
+    <Message Text="Deployment site root is $(DeployedSiteRoot)" Importance="low"/>
+    <Message Text="Deployment WFastCgi path is $(DeployedWFastCgiPath)" Importance="low"/>
+    <Message Text="Deployment Python interpreter path is $(DeployedPythonInterpreterPath)" Importance="low"/>
+  </Target>
+
+  <!-- ************* -->
+  <!-- WSGI settings -->
+  <!-- ************* -->
+  <Target Name="ResolveWsgiSettings" DependsOnTargets="ResolveDeploymentSettings">
+    <PropertyGroup>
+      <WsgiHandler Condition="'$(WsgiHandler)' == ''">django.core.handlers.wsgi.WSGIHandler()</WsgiHandler>
+      <WsgiAppSettings Condition="'$(WsgiLogPath)' != ''">
+        <![CDATA[$(WsgiAppSettings)
+    <add key="WSGI_LOG" value="$(WsgiLogPath)"/>]]>
+      </WsgiAppSettings>
+    </PropertyGroup>
+  </Target>
+
+  <Target Name="ConfigureVirtualEnv" 
+          BeforeTargets="CreateWebConfig" 
+          DependsOnTargets="ResolveWsgiSettings" 
+          Condition="'$(VirtualEnvEnabled)' != ''">
+    <PropertyGroup>
+      <!-- Setup for when virtual env is enabled in a project.  We use a bootstrap
+            wfastcgi handler which does activate_this on the deployed env. -->
+      <VirtualEnvWsgiHandler>$(WsgiHandler)</VirtualEnvWsgiHandler>
+      <VirtualEnvDeploymentPath Condition="'$(VirtualEnvDeploymentPath)' == ''">$(DeployedSiteRoot)</VirtualEnvDeploymentPath>
+      <WsgiHandler>ptvs_virtualenv_proxy.handler</WsgiHandler>
+      <WsgiAppSettings>
+        <![CDATA[$(WsgiAppSettings)
+    <add key="WSGI_ALT_VIRTUALENV_HANDLER" value="$(VirtualEnvWsgiHandler)"/>
+    <add key="WSGI_ALT_VIRTUALENV_ACTIVATE_THIS" value="$(VirtualEnvDeploymentPath)\$(VirtualEnvEnabled)\Scripts\activate_this.py"/>]]>
+      </WsgiAppSettings>
+    </PropertyGroup>
+  </Target>
+
+  <Target Name="CreateVirtualEnvProxy" BeforeTargets="Build" Condition="'$(VirtualEnvEnabled)' != ''">
+    <!-- Contains code for a proxy handler which does virtual env's activate_this, and then gets
+            the real FastCGI handler.  This enables running on systems where we need to execute using
+            the main Python interpreter. -->
+    <PropertyGroup>
+      <_CurrentVirtualEnvFastCgiProxy Condition="$([System.IO.File]::Exists('ptvs_virtualenv_proxy.py'))">$([System.IO.File]::ReadAllText('ptvs_virtualenv_proxy.py'))</_CurrentVirtualEnvFastCgiProxy>
+      <_VirtualEnvFastCgiProxy>
+        <![CDATA[
+import os
+import datetime
+
+def log(txt):
+    """Logs fatal errors to a log file if WSGI_LOG env var is defined"""
+    log_file = os.environ.get('WSGI_LOG')
+    if log_file:
+        f = file(log_file, 'a+')
+        try:
+            f.write(str(datetime.datetime.now()))
+            f.write(': ')
+            f.write(txt)
+        finally:
+          f.close()
+
+def get_wsgi_handler(handler_name):
+      if not handler_name:
+          raise Exception('WSGI_ALT_VIRTUALENV_HANDLER env var must be set')
+    
+      module, _, callable = handler_name.rpartition('.')
+      if not module:
+          raise Exception('WSGI_ALT_VIRTUALENV_HANDLER must be set to module_name.wsgi_handler, got %s' % handler_name)
+    
+      if isinstance(callable, unicode):
+          callable = callable.encode('ascii')
+
+      if callable.endswith('()'):
+          callable = callable.rstrip('()')
+          handler = getattr(__import__(module, fromlist=[callable]), callable)()
+      else:
+          handler = getattr(__import__(module, fromlist=[callable]), callable)
+    
+      if handler is None:
+          raise Exception('WSGI_ALT_VIRTUALENV_HANDLER "' + handler_name + '" was set to None')
+            
+      return handler
+      
+activate_this = os.getenv('WSGI_ALT_VIRTUALENV_ACTIVATE_THIS')
+if activate_this is None:
+    raise Exception('WSGI_ALT_VIRTUALENV_ACTIVATE_THIS is not set')
+
+log('doing activation' + '\n')
+execfile(activate_this, dict(__file__=activate_this))
+log('getting handler ' + os.getenv('WSGI_ALT_VIRTUALENV_HANDLER') + '\n')
+handler = get_wsgi_handler(os.getenv('WSGI_ALT_VIRTUALENV_HANDLER'))
+log('got handler ' + repr(handler))
+]]>
+      </_VirtualEnvFastCgiProxy>
+    </PropertyGroup>
+    
+    <WriteLinesToFile File="ptvs_virtualenv_proxy.py" Condition="'$(VirtualEnvEnabled)' != '' and '$(_CurrentVirtualEnvFastCgiProxy)' != '$(_VirtualEnvFastCgiProxy)'" Lines="$(_VirtualEnvFastCgiProxy)" Overwrite="true"/>
+    <ItemGroup>
+      <Content Include="ptvs_virtualenv_proxy.py" Condition="'$(VirtualEnvEnabled)' != ''"/>
+    </ItemGroup>
+  </Target>
+
+  <Target
+    Name="CreatePythonAzureSetupConfig"
+    BeforeTargets="Build"
+    DependsOnTargets="ResolveDeploymentSettings;ResolvePythonInterpreterPath">
+
+    <PropertyGroup Condition="'$(_PythonDeploymentMethod)' == 'CloudServiceDeploy'">
+      <!-- AzureSetup.cfg variables, these need to be written out here so we can switch on them
+           in AzureSetup.exe based upon whether we're emulated or not. -->
+      <_CloudServiceAzureSetupConfig>
+        <![CDATA[
+interpreter_path=%SystemDrive%\Python$(PythonVersionNoDot)\python.exe
+interpreter_path_emulated=$(PythonInterpreterPath)
+]]>
+      </_CloudServiceAzureSetupConfig>
+    </PropertyGroup>
+
+    <WriteLinesToFile File="bin\AzureSetup.cfg"
+                      Lines="$(_CloudServiceAzureSetupConfig)" 
+                      Overwrite="true"
+                      Condition="'$(_PythonDeploymentMethod)' == 'CloudServiceDeploy'"/>
+    <WriteLinesToFile File="bin\AzureSetup.cfg"
+                      Lines="@(WebPiReference->'webpi_install=%(Feed);%(ProductId)')" 
+                      Overwrite="false"
+                      Condition="'$(_PythonDeploymentMethod)' == 'CloudServiceDeploy'"/>
+  
+    <ItemGroup Condition="'$(_PythonDeploymentMethod)' == 'CloudServiceDeploy'">
+      <Content Include="bin\AzureSetup.cfg"/>
+    </ItemGroup>
+  </Target>
+
   <Target Name="CreateWebConfig"
-          Condition="$(PTVS_DEV) == '' or $(MSBuildThisFile)=='Microsoft.PythonTools.Django.Developer.targets'"
           BeforeTargets="Build"
-          DependsOnTargets="ResolvePythonInterpreterPath"
-          >
+          DependsOnTargets="ResolvePythonInterpreterPath;ResolveDeploymentSettings;ResolveWsgiSettings">
     <ItemGroup>
       <_FoundWebConfig Include="@(Content)" Condition=" '%(Content.Filename)%(Content.Extension)' == 'web.config' " />
       <_FoundWebConfig Include="@(Include)" Condition=" '%(Content.Filename)%(Content.Extension)' == 'web.config' " />
       <_FoundTopLevelInit Include="@(Content)" Condition=" '%(Content.Filename)%(Content.Extension)' == '__init__.py' " />
       <_FoundTopLevelInit Include="@(Include)" Condition=" '%(Content.Filename)%(Content.Extension)' == '__init__.py' " />
     </ItemGroup>
+
     <Message Text="Didn't find top level init..." Condition="@(_FoundTopLevelInit) == ''"/>
     <Message Text="Generating web.config automatically..." Condition="@(_FoundWebConfig) == ''"/>
     <Message Text="Skipping generation of web.config automatically because it already exists in the project..." Condition="@(_FoundWebConfig) != ''"/>
+
     <PropertyGroup>
+      <_CurrentDjangoWebConfigCode Condition="$([System.IO.File]::Exists('web.config'))">$([System.IO.File]::ReadAllText('web.config'))</_CurrentDjangoWebConfigCode>
       <_DjangoWebConfigCode>
         <![CDATA[<?xml version="1.0"?>
 <!-- Generated web.config for Django azure projects.  You can add a web.config file to your project to customize this. -->
@@ -195,8 +317,10 @@
     </trace>
   </system.diagnostics>
 
-  <appSettings>
-    <add key="WSGI_HANDLER" value="django.core.handlers.wsgi.WSGIHandler()"/>
+  <appSettings>$(WsgiAppSettings)
+    <add key="WSGI_HANDLER" value="$(WsgiHandler)"/>
+    <add key="PYTHONPATH" value="$(DeployedSiteRoot)"/>
+    <add key="DJANGO_SETTINGS_MODULE" value="$(MSBuildProjectName).settings" />
   </appSettings>
 
   <system.web>
@@ -210,7 +334,7 @@
            path="*" 
            verb="*" 
            modules="FastCgiModule" 
-           scriptProcessor="INTERPRETERPATH|WFASTCGIPATH" 
+           scriptProcessor="$(DeployedPythonInterpreterPath)|$(DeployedWFastCgiPath)" 
            resourceType="Unspecified" 
            requireAccess="Script" />
     </handlers>
@@ -218,90 +342,67 @@
 </configuration>
 ]]>
       </_DjangoWebConfigCode>
-      <_AzureSetupInfo>
-        <![CDATA[
-settings_module=$(MSBuildProjectName).settings
-python_path=%RootDir%
-interpreter_path=%SystemDrive%\Python$(PythonVersionNoDot)\python.exe
-interpreter_path_emulated=$(PythonInterpreterPath)
-]]>
-      </_AzureSetupInfo>
-
     </PropertyGroup>
-    <WriteLinesToFile File="web.config" Condition="@(_FoundWebConfig) == ''" Lines="$(_DjangoWebConfigCode)" Overwrite="true"/>
-    <MakeDir Directories="bin"/>
-    <WriteLinesToFile File="bin\AzureSetup.cfg"
-                      Lines="$(_AzureSetupInfo)" Overwrite="true"/>
-    <WriteLinesToFile File="bin\AzureSetup.cfg"
-                      Lines="@(WebPiReference->'webpi_install=%(Feed);%(ProductId)')" Overwrite="false"/>
+
+    <WriteLinesToFile File="web.config" Condition="@(_FoundWebConfig) == '' and '$(_CurrentDjangoWebConfigCode)' != '$(_DjangoWebConfigCode)'" Lines="$(_DjangoWebConfigCode)" Overwrite="true"/>
+
+    <ItemGroup>
+      <Content Include="web.config" Condition="@(_FoundWebConfig) == ''" />
+    </ItemGroup>
   </Target>
+
+  <!--- Detects if we're deploying via web deploy, and sets _PythonDeploymentMethod appropriately.
+        Otherwise we'll assume we're deploying to cloud service. -->
+  <Target Name="_HostDeployDetectTarget" BeforeTargets="GenerateGlobalPublishSetting">
+    <PropertyGroup>
+      <!-- We are deploying via web deploy to a shared host -->
+      <_PythonDeploymentMethod>WebDeploy</_PythonDeploymentMethod>
+    </PropertyGroup>
+  </Target>
+
   <Target
     Name="GetTargetPath"
     DependsOnTargets="Build"
-    Returns="@(ScriptAndWebDeployFiles)"
-    Condition="$(PTVS_DEV) == '' or $(MSBuildThisFile)=='Microsoft.PythonTools.Django.Developer.targets'"
-    >
-    <Warning Text="!!!!!!!!! USING DEVELOPMENT VERSION OF Microsoft.PythonTools.Django.targets" Condition="$(MSBuildThisFile)=='Microsoft.PythonTools.Django.Developer.targets'"/>
-
+    Returns="@(ScriptAndWebDeployFiles)">
     <ItemGroup>
       <ScriptAndWebDeployFiles Include="@(InstallPython->'%(FullPath)')"/>
-      <ScriptAndWebDeployFiles Include="@(FilesCopiedToIntermediate->'%(RootDir)%(Directory)%(Filename)%(Extension)')"/>
+      <PythonAzureDeploymentFileLocal Include="@(PythonAzureDeploymentFile->'bin\%(Filename)%(Extension)')" />
+      <ScriptAndWebDeployFiles Include="@(PythonAzureDeploymentFileLocal->'%(RootDir)%(Directory)%(Filename)%(Extension)')"/>
     </ItemGroup>
-    <Message Text="ScriptAndWebDeployFiles=@(ScriptAndWebDeployFiles)"  />
+    <Message Text="ScriptAndWebDeployFiles=@(ScriptAndWebDeployFiles)"  Importance="low"/>
   </Target>
-  <Target Name="WatGetTargetFrameworkDirectories" Returns="" Condition="$(PTVS_DEV) == '' or $(MSBuildThisFile)=='Microsoft.PythonTools.Django.Developer.targets'" />
-  <Target Name="BuiltProjectOutputGroupDependencies" Returns="" Condition="$(PTVS_DEV) == '' or $(MSBuildThisFile)=='Microsoft.PythonTools.Django.Developer.targets'" />
-  <Target Name="WatGetTargetFrameworkMoniker" Returns="" Condition="$(PTVS_DEV) == '' or $(MSBuildThisFile)=='Microsoft.PythonTools.Django.Developer.targets'"/>
-  <Target Name="WatGetTargetFrameworkMonikerDisplayName" Returns="" Condition="$(PTVS_DEV) == '' or $(MSBuildThisFile)=='Microsoft.PythonTools.Django.Developer.targets'" />
+
+  <Target Name="WatGetTargetFrameworkDirectories" Returns=""  />
+  <Target Name="BuiltProjectOutputGroupDependencies" Returns=""  />
+  <Target Name="WatGetTargetFrameworkMoniker" Returns="" />
+  <Target Name="WatGetTargetFrameworkMonikerDisplayName" Returns=""  />
 
   <PropertyGroup>
     <CleanWPPAllFilesInSingleFolder Condition="'$(CleanWPPAllFilesInSingleFolder)' == ''">false</CleanWPPAllFilesInSingleFolder>
   </PropertyGroup>
-  
+
   <Import Project="$(VSToolsPath)\WebApplications\Microsoft.WebApplication.targets" Condition="'$(VSToolsPath)' != ''" />
 
   <Target
     Name="PipelineTransformPhase"
     DependsOnTargets="Build;ResolvePythonInterpreterPath"
     Returns="@(TransformedFilenames)"
-    Condition="$(PTVS_DEV) == '' or $(MSBuildThisFile)=='Microsoft.PythonTools.Django.Developer.targets'">
-    <!-- Target used for generating a package which can be uploaded to web server -->
+    >
+    <!-- Target used for generating a package which can be uploaded to web server.  This isn't called when doing F5 to
+         run in the emulator. -->
     <PropertyGroup>
       <PythonRuntimeDir>$([System.IO.Path]::GetDirectoryName($(PythonInterpreterPath)))</PythonRuntimeDir>
     </PropertyGroup>
     <ItemGroup>
-      <Content Include="@(Compile)"></Content> <!-- Python compile files are actually content -->
+      <ContentFiles Include="@(Compile)"></ContentFiles> <!-- Python compile files are actually content -->
       <ContentFiles Include="@(Content)"></ContentFiles>
       <ContentFiles Include="@(Include)"></ContentFiles>
 
-      <GeneratedFiles Include="bin\AzureSetup.cfg"/>
-      <GeneratedFiles Include="@(InstallPython->'%(FullPath)')"/>
+      <GeneratedFiles Include="@(PythonAzureDeploymentFile)" />
 
-      <GeneratedFiles Include="$(PTVSSupportPath)WebPICmdLine.exe"/>
-      <GeneratedFiles Include="$(PTVSSupportPath)WebPICmdLine.exe.config"/>
-      <GeneratedFiles Include="$(PTVSSupportPath)Microsoft.Web.PlatformInstaller.UI.dll"/>
-      <GeneratedFiles Include="$(PTVSSupportPath)Microsoft.Web.PlatformInstaller.dll"/>
-      <GeneratedFiles Include="$(PTVSSupportPath)Microsoft.Web.Deployment.dll"/>
-
-      <GeneratedFiles Include="$(AzureDjangoSupportPath)wfastcgi.py"/>
-      <GeneratedFiles Include="$(AzureDjangoSupportPath)Microsoft.PythonTools.WebRole.dll"/>
-
-      <TopLevelFiles Include="web.config"></TopLevelFiles>
-
-      <!-- <PythonInterpreterFiles Include="$(PythonRuntimeDir)\**\*.*"/> -->
-
-      <!--
-      <TransformedFilenames Include="@(PythonInterpreterFiles)">
-        <DestinationRelativePath>Python\%(RecursiveDir)%(Filename)%(Extension)</DestinationRelativePath>
-        <Exclude>false</Exclude>
-        <FromTarget>Unknown</FromTarget>
-        <Category>Run</Category>
-        <ProjectFileType>Default</ProjectFileType>
-      </TransformedFilenames>
-    -->
-      
       <TransformedFilenames Include="@(ContentFiles->'%(FullPath)')">
-        <DestinationRelativePath>%(RelativeDir)%(Filename)%(Extension)</DestinationRelativePath>
+        <DestinationRelativePath Condition="'%(ContentFiles.Link)' == ''">%(RelativeDir)%(Filename)%(Extension)</DestinationRelativePath>
+        <DestinationRelativePath Condition="'%(ContentFiles.Link)' != ''">%(ContentFiles.Link)</DestinationRelativePath>
         <Exclude>false</Exclude>
         <FromTarget>Unknown</FromTarget>
         <Category>Run</Category>
@@ -324,11 +425,10 @@ interpreter_path_emulated=$(PythonInterpreterPath)
         <ProjectFileType>Default</ProjectFileType>
       </TransformedFilenames>
     </ItemGroup>
-    <Message Text="Current Project: $(MSBuildProjectName)"/>
   </Target>
 
-  <Target Name="GenerateManifests" Returns="" Condition="$(PTVS_DEV) == '' or $(MSBuildThisFile)=='Microsoft.PythonTools.Django.Developer.targets'"/>
-  <Target Name="PrepareForBuild" DependsOnTargets="$(PrepareForBuildDependsOn)" Condition="$(PTVS_DEV) == '' or $(MSBuildThisFile)=='Microsoft.PythonTools.Django.Developer.targets'">
+  <Target Name="GenerateManifests" Returns="" />
+  <Target Name="PrepareForBuild" DependsOnTargets="$(PrepareForBuildDependsOn)" >
     <!-- 
         These CreateProperty calls are required because TargetDir and TargetPath are defined 
         to contain an item list. We want that item list to be expanded so that it can be used
@@ -381,42 +481,28 @@ interpreter_path_emulated=$(PythonInterpreterPath)
   </ItemGroup>
 
   <!-- Transforms a VirtualEnv entry into a directory of content which we include -->
-  <Target Name="TransformVirtualEnvToContent" BeforeTargets="CollectFilesFromContent" Condition="'$(VirtualEnvEnabled)' != ''">
-    <PropertyGroup>
-      <_TempPrefixFile>$([System.IO.Path]::GetTempFileName())</_TempPrefixFile>
+  <Target Name="TransformVirtualEnvToContent" BeforeTargets="CollectFilesFromContent;Build" Condition="'$(VirtualEnvEnabled)' != ''">
+    <PropertyGroup >
+      <OrigPrefixPath>$(IntermediateOutputPath)\bin\deployment-updated-orig-prefix.txt</OrigPrefixPath>
       <TargetPythonPrefix Condition="$(TargetPythonPrefix) == ''">D:\Python27</TargetPythonPrefix>
     </PropertyGroup>
-    <WriteLinesToFile Lines="$(TargetPythonPrefix)" File="$(_TempPrefixFile)" />
-    
+    <WriteLinesToFile Lines="$(TargetPythonPrefix)" File="$(OrigPrefixPath)" Overwrite="true"/>
+
     <ItemGroup>
       <!-- We take the virtual env as is, but we transform the orig-prefix.txt to 
       match the location of Python on the server -->
 
       <!-- Expand the virtual env, capturing the filename, this 2 step process ensures we handle fully qualified
            paths for virtual environments so that we don't overwrite files in the env directory when deploying -->
-      <VirtualEnvXForm Include="%(VirtualEnv.Identity)\**\*"
+      <Content Include="%(VirtualEnv.Identity)\**\*"
                Condition="'%(VirtualEnv.Identity)' == '$(VirtualEnvEnabled)'"
                Exclude="%(VirtualEnv.Identity)\Lib\orig-prefix.txt" >
-        <BasePath>%(VirtualEnv.Filename)</BasePath>
-      </VirtualEnvXForm>
-
-      <!-- And then turn that into the files for packaging with correct relative paths -->
-      <FilesForPackagingFromProject
-        Include="%(VirtualEnvXForm.Identity)">
-        <DestinationRelativePath>%(VirtualEnvXForm.BasePath)\%(VirtualEnvXForm.RecursiveDir)%(VirtualEnvXForm.Filename)%(VirtualEnvXForm.Extension)</DestinationRelativePath>
-        <FromTarget>CollectFilesFromContent</FromTarget>
-        <Category>Run</Category>
-        <Exclude>$(ExcludeLinkFilesInProject)</Exclude>
-        <ProjectFileType>Link</ProjectFileType>
-      </FilesForPackagingFromProject>
+      </Content>
 
       <!-- include the patched orig-prefix.txt file -->
-      <Content Include="$(_TempPrefixFile)" 
-               Condition="'%(VirtualEnv.Identity)' == '$(VirtualEnvEnabled)'">
+      <Content Include="$(OrigPrefixPath)" Condition="'%(VirtualEnv.Identity)' == '$(VirtualEnvEnabled)'">
         <Link>%(VirtualEnv.Filename)\Lib\orig-prefix.txt</Link>
-      </Content>      
+      </Content>
     </ItemGroup>
   </Target>
-
-  <Import Project="$(AzureDjangoSupportPath)Microsoft.PythonTools.Django.Developer.targets" Condition="$(PTVS_DEV) == 'true' and $(MSBuildThisFile)=='Microsoft.PythonTools.Django.targets'"/>
 </Project>

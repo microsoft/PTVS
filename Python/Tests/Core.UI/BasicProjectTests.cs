@@ -484,6 +484,13 @@ namespace PythonToolsUITests {
                 project.ProjectItems.Item("SubFolder").ProjectItems.Item("SubItem.py").Name = "NewSubItem.py";
 
                 project.ProjectItems.Item("ProgramDelete.py").Delete();
+
+                // rename the folder
+                project.ProjectItems.Item("SubFolder").Name = "SubFolderNew";
+                Assert.AreEqual(project.ProjectItems.Item("SubFolderNew").Name, "SubFolderNew");
+                project.Save();
+                var projectFileContents = File.ReadAllText(project.FullName);
+                Assert.AreNotEqual(-1, projectFileContents.IndexOf("\"SubFolderNew"), "Failed to find relative path for SubFolder");
             } finally {
                 VsIdeTestHostContext.Dte.Solution.Close();
                 GC.Collect();

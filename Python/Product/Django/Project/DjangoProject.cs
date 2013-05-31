@@ -19,7 +19,6 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -29,6 +28,7 @@ using System.Windows.Forms;
 using System.Xml;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Django.Intellisense;
+using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.PythonTools.Project;
@@ -40,7 +40,7 @@ using Microsoft.VisualStudio.Shell.Interop;
 
 namespace Microsoft.PythonTools.Django.Project {
     [Guid("564253E9-EF07-4A40-89CF-790E61F53368")]
-    class DjangoProject : FlavoredProjectBase, IOleCommandTarget, IVsProjectFlavorCfgProvider, IVsProject, IDjangoProject {
+    partial class DjangoProject : FlavoredProjectBase, IOleCommandTarget, IVsProjectFlavorCfgProvider, IVsProject, IDjangoProject {
         internal DjangoPackage _package;
         internal IVsProject _innerProject;
         internal IVsProject3 _innerProject3;
@@ -50,9 +50,11 @@ namespace Microsoft.PythonTools.Django.Project {
         private List<OleMenuCommand> _commands = new List<OleMenuCommand>();
         internal Dictionary<string, TagInfo> _tags = new Dictionary<string, TagInfo>();
         internal Dictionary<string, TagInfo> _filters = new Dictionary<string, TagInfo>();
-        internal Dictionary<string, Dictionary<string, HashSet<AnalysisValue>>> _templateFiles = new Dictionary<string, Dictionary<string, HashSet<AnalysisValue>>>(StringComparer.OrdinalIgnoreCase);
+        internal Dictionary<string, TemplateVariables> _templateFiles = new Dictionary<string, TemplateVariables>(StringComparer.OrdinalIgnoreCase);
         private ConditionalWeakTable<Node, ContextMarker> _contextTable = new ConditionalWeakTable<Node, ContextMarker>();
         private readonly Dictionary<string, GetTemplateAnalysisValue> _templateAnalysis = new Dictionary<string, GetTemplateAnalysisValue>();
+        private static Dictionary<string, string> _knownTags = MakeKnownTagsTable();
+        private static Dictionary<string, string> _knownFilters = MakeKnownFiltersTable();
 
 #if HAVE_ICONS
         private static ImageList _images;
@@ -72,7 +74,7 @@ namespace Microsoft.PythonTools.Django.Project {
         /// </summary>      
         protected override void InitializeForOuter(string fileName, string location, string name, uint flags, ref Guid guidProject, out bool cancel) {
             base.InitializeForOuter(fileName, location, name, flags, ref guidProject, out cancel);
-
+            
             // register the open command with the menu service provided by the base class.  We can't just handle this
             // internally because we kick off the context menu, pass ourselves as the IOleCommandTarget, and then our
             // base implementation dispatches via the menu service.  So we could either have a different IOleCommandTarget
@@ -103,8 +105,8 @@ namespace Microsoft.PythonTools.Django.Project {
             object extObject;
             ErrorHandler.ThrowOnFailure(
                 _innerVsHierarchy.GetProperty(
-                    VSConstants.VSITEMID_ROOT,
-                    (int)__VSHPROPID.VSHPROPID_ExtObject,
+                    VSConstants.VSITEMID_ROOT, 
+                    (int)__VSHPROPID.VSHPROPID_ExtObject, 
                     out extObject
                 )
             );
@@ -115,6 +117,13 @@ namespace Microsoft.PythonTools.Django.Project {
                     dynamic webAppExtender = proj.get_Extender("WebApplication");
                     if (webAppExtender != null) {
                         webAppExtender.StartWebServerOnDebug = false;
+                        
+                        // https://pytools.codeplex.com/workitem/1044
+                        // Venus wants to reconfigure the project on startup if it's 
+                        // set to use the development server.  That's going to fail, so
+                        // let's prevent it from doing anything here.
+                        webAppExtender.UseIIS = true;
+                        webAppExtender.IISUrl = "";
                     }
                 } catch (COMException) {
                     // extender doesn't exist...
@@ -122,56 +131,42 @@ namespace Microsoft.PythonTools.Django.Project {
             }
         }
 
+        #endregion
+
         private void OnProjectAnalyzerChanged(object sender, EventArgs e) {
             _tags.Clear();
             _filters.Clear();
-            TagInfo noDoc = new TagInfo("");
-            foreach (var keyValue in DjangoCompletionSource._nestedTags) {
-                _tags[keyValue.Key] = noDoc;
-                _tags[keyValue.Value] = noDoc;
+            
+            foreach (var keyValue in _knownTags) {
+                _tags[keyValue.Key] = new TagInfo(keyValue.Value);
+            }
+            foreach (var keyValue in _knownFilters) {
+                _filters[keyValue.Key] = new TagInfo(keyValue.Value);
             }
 
             var pyProj = sender as IPythonProject;
             if (pyProj != null) {
                 var projAnalyzer = pyProj.GetProjectAnalyzer();
                 var analyzer = projAnalyzer.Project;
-                var djangoMod = analyzer.GetModule("django");
-                if (djangoMod.Count() == 0) {
-                    // cached analysis doesn't have Django, so let's see if we can find it
-                    // on our own - http://pytools.codeplex.com/workitem/775
-
-                    // don't blow if there's no interpreters installed...
-                    // https://pytools.codeplex.com/workitem/838
-                    string interpreterPath = pyProj.GetInterpreterFactory().Configuration.InterpreterPath;
-                    if (!String.IsNullOrWhiteSpace(interpreterPath) &&
-                        interpreterPath.IndexOfAny(Path.GetInvalidPathChars()) == -1) {
-
-                        var interpreterDir = Path.GetDirectoryName(interpreterPath);
-                        var djangoDir = Path.Combine(interpreterDir, "Lib", "site-packages", "django");
-                        if (Directory.Exists(djangoDir)) {
-                            HookAnalysis(analyzer, projAnalyzer, djangoDir);
-                        }
-                    }
-                }
-                foreach (var mod in djangoMod) {
-                    foreach (var loc in mod.Locations) {
-                        // replace any cached analysis w/ a live one...
-                        var dirName = Path.GetDirectoryName(loc.FilePath);
-                        HookAnalysis(analyzer, projAnalyzer, dirName);
-                        break;
-                    }
-                }
+                HookAnalysis(analyzer, projAnalyzer);
             }
         }
 
-        private void HookAnalysis(PythonAnalyzer analyzer, PythonTools.Intellisense.VsProjectAnalyzer projAnalyzer, string dirName) {
-            projAnalyzer.AnalyzeDirectory(dirName);
+        private void HookAnalysis(PythonAnalyzer analyzer, VsProjectAnalyzer projAnalyzer) {
             analyzer.SpecializeFunction("django.template.loader", "render_to_string", RenderToStringProcessor, true);
+            analyzer.SpecializeFunction("django.shortcuts", "render_to_response", RenderToStringProcessor, true);
+            analyzer.SpecializeFunction("django.shortcuts", "render", RenderProcessor, true);
+            analyzer.SpecializeFunction("django.contrib.gis.shortcuts", "render_to_kml", RenderToStringProcessor, true);
+            analyzer.SpecializeFunction("django.contrib.gis.shortcuts", "render_to_kmz", RenderToStringProcessor, true);
+            analyzer.SpecializeFunction("django.contrib.gis.shortcuts", "render_to_text", RenderToStringProcessor, true);
 
             analyzer.SpecializeFunction("django.template.base.Library", "filter", FilterProcessor, true);
             analyzer.SpecializeFunction("django.template.base.Library", "filter_function", FilterProcessor, true);
+
             analyzer.SpecializeFunction("django.template.base.Library", "tag", TagProcessor, true);
             analyzer.SpecializeFunction("django.template.base.Library", "tag_function", TagProcessor, true);
+            analyzer.SpecializeFunction("django.template.base.Library", "assignment_tag", TagProcessor, true);
+
             analyzer.SpecializeFunction("django.template.base.Parser", "parse", ParseProcessor, true);
             analyzer.SpecializeFunction("django.template.base", "import_library", "django.template.base.Library", true);
 
@@ -253,7 +248,7 @@ namespace Microsoft.PythonTools.Django.Project {
                     var parser = unit.FindAnalysisValueByName(node, "django.template.base.Parser");
                     if (parser != null) {
                         func.Call(node, unit, new[] { parser, null }, null);
-                    }
+                }
                 }
             } else if (args.Length >= 2) {
                 // library.filter(value)
@@ -267,7 +262,6 @@ namespace Microsoft.PythonTools.Django.Project {
                         if (parser != null) {
                             name.Call(node, unit, new[] { parser, null }, NameExpression.EmptyArray);
                         }
-
                     }
                 }
             } else if (args.Length == 1) {
@@ -276,18 +270,6 @@ namespace Microsoft.PythonTools.Django.Project {
                     if (name.Name != null) {
                         RegisterTag(tags, name.Name, name.Documentation);
                     }
-                }
-            }
-        }
-
-        private static void RegisterTag(Dictionary<string, HashSet<AnalysisValue>> tags, string name, IEnumerable<AnalysisValue> value = null) {
-            HashSet<AnalysisValue> set;
-            if (!tags.TryGetValue(name, out set)) {
-                tags[name] = set = new HashSet<AnalysisValue>();
-            }
-            if (value != null) {
-                foreach (var curVal in value) {
-                    set.Add(curVal);
                 }
             }
         }
@@ -306,17 +288,31 @@ namespace Microsoft.PythonTools.Django.Project {
                     if (strName != null) {
                         var dictArgs = args[1];
 
-                        AddTemplateMapping(strName, dictArgs);
+                        AddTemplateMapping(unit, strName, dictArgs);
                     }
                 }
             }
             return AnalysisSet.Empty;
         }
 
-        private void AddTemplateMapping(string filename, IEnumerable<AnalysisValue> dictArgs) {
-            Dictionary<string, HashSet<AnalysisValue>> tags;
+        private IAnalysisSet RenderProcessor(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
+            if (args.Length == 3) {
+                foreach (var name in args[1]) {
+                    var strName = name.GetConstantValueAsString();
+                    if (strName != null) {
+                        var dictArgs = args[2];
+
+                        AddTemplateMapping(unit, strName, dictArgs);
+                    }
+                }
+            }
+            return AnalysisSet.Empty;
+        }
+
+        private void AddTemplateMapping(AnalysisUnit unit, string filename, IEnumerable<AnalysisValue> dictArgs) {
+            TemplateVariables tags;
             if (!_templateFiles.TryGetValue(filename, out tags)) {
-                _templateFiles[filename] = tags = new Dictionary<string, HashSet<AnalysisValue>>();
+                _templateFiles[filename] = tags = new TemplateVariables();
             }
 
             foreach (var dict in dictArgs) {
@@ -324,7 +320,7 @@ namespace Microsoft.PythonTools.Django.Project {
                     foreach (var key in keyValue.Key) {
                         var keyName = key.GetConstantValueAsString();
                         if (keyName != null) {
-                            RegisterTag(tags, keyName, keyValue.Value);
+                            tags.UpdateVariable(keyName, unit, keyValue.Value);
                         }
                     }
                 }
@@ -367,7 +363,7 @@ namespace Microsoft.PythonTools.Django.Project {
 
                             string filename = GetTemplateValue.Filename;
 
-                            GetTemplateValue.Project.AddTemplateMapping(filename, context.Arguments);
+                            GetTemplateValue.Project.AddTemplateMapping(unit, filename, context.Arguments);
                         }
                     }
                 }
@@ -433,7 +429,7 @@ namespace Microsoft.PythonTools.Django.Project {
 
                                 string filename = templateValue.Filename;
 
-                                AddTemplateMapping(filename, context.Arguments);
+                                AddTemplateMapping(unit, filename, context.Arguments);
                             }
                         }
                     }
@@ -565,7 +561,7 @@ namespace Microsoft.PythonTools.Django.Project {
                             ErrorHandler.ThrowOnFailure(multiItemSelect.GetSelectedItems(flags, numberOfSelectedItems, vsItemSelections));
 
                             foreach (VSITEMSELECTION vsItemSelection in vsItemSelections) {
-                                yield return vsItemSelection;
+                                yield return new VSITEMSELECTION() { itemid = vsItemSelection.itemid, pHier = hierarchy };
                             }
                         }
                     }
@@ -867,10 +863,10 @@ namespace Microsoft.PythonTools.Django.Project {
                 return true;
             } else if (itemType == VSConstants.GUID_ItemType_PhysicalFile) {
                 // multiple files selected
-                res = ShowContextMenu(pvaIn, VsMenus.IDM_VS_CTXT_WEBITEMNODE);
+                res = ShowContextMenu(pvaIn, VsMenus.IDM_VS_CTXT_ITEMNODE);
                 return true;
             } else if (itemType == VSConstants.GUID_ItemType_PhysicalFolder) {
-                res = ShowContextMenu(pvaIn, VsMenus.IDM_VS_CTXT_WEBFOLDER);
+                res = ShowContextMenu(pvaIn, VsMenus.IDM_VS_CTXT_FOLDERNODE);
                 return true;
             }
             res = VSConstants.E_FAIL;
@@ -929,8 +925,6 @@ namespace Microsoft.PythonTools.Django.Project {
             // Add our commands (this must run after we called base.SetInnerProject)            
             _menuService = ((System.IServiceProvider)this).GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
         }
-
-        #endregion
 
         protected override int GetProperty(uint itemId, int propId, out object property) {
 #if HAVE_ICONS
@@ -1090,13 +1084,13 @@ namespace Microsoft.PythonTools.Django.Project {
                                     writer.WriteAttributeString("commandLine", "Microsoft.PythonTools.AzureSetup.exe");
                                     writer.WriteAttributeString("executionContext", "elevated");
                                     writer.WriteAttributeString("taskType", "simple");
-
+                                    
                                     writer.WriteStartElement("Environment");
                                     writer.WriteStartElement("Variable");
                                     writer.WriteAttributeString("name", "EMULATED");
                                     writer.WriteStartElement("RoleInstanceValue");
                                     writer.WriteAttributeString("xpath", "/RoleEnvironment/Deployment/@emulated");
-
+                                    
                                     writer.WriteEndElement(); // RoleInstanceValue
                                     writer.WriteEndElement(); // Variable
                                     writer.WriteEndElement(); // Environment
@@ -1156,7 +1150,15 @@ namespace Microsoft.PythonTools.Django.Project {
         }
 
         int IOleCommandTarget.QueryStatus(ref Guid pguidCmdGroup, uint cCmds, OLECMD[] prgCmds, IntPtr pCmdText) {
-            if (pguidCmdGroup == GuidList.guidVenusCmdId) {
+            if (pguidCmdGroup == GuidList.guidEureka) {
+                for (int i = 0; i < prgCmds.Length; i++) {
+                    switch (prgCmds[i].cmdID) {
+                        case 0x102: // View in Web Page Inspector from Eureka web tools
+                            prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_INVISIBLE | OLECMDF.OLECMDF_SUPPORTED | OLECMDF.OLECMDF_ENABLED);
+                            return VSConstants.S_OK;
+                    }
+                }
+            } else if (pguidCmdGroup == GuidList.guidVenusCmdId) {
                 for (int i = 0; i < prgCmds.Length; i++) {
                     switch (prgCmds[i].cmdID) {
                         case 0x034: /* add app assembly folder */
@@ -1204,7 +1206,7 @@ namespace Microsoft.PythonTools.Django.Project {
 
             return ((IOleCommandTarget)_menuService).QueryStatus(ref pguidCmdGroup, cCmds, prgCmds, pCmdText);
         }
-
+        
         #region IVsProjectFlavorCfgProvider Members
 
         public int CreateProjectFlavorCfg(IVsCfg pBaseProjectCfg, out IVsProjectFlavorCfg ppFlavorCfg) {
@@ -1215,7 +1217,7 @@ namespace Microsoft.PythonTools.Django.Project {
             IVsProjectFlavorCfg webCfg;
             ErrorHandler.ThrowOnFailure(
                 _innerVsProjectFlavorCfgProvider.CreateProjectFlavorCfg(
-                    pBaseProjectCfg,
+                    pBaseProjectCfg, 
                     out webCfg
                 )
             );
@@ -1224,7 +1226,7 @@ namespace Microsoft.PythonTools.Django.Project {
         }
 
         #endregion
-
+        
         #region IVsProject Members
 
         int IVsProject.AddItem(uint itemidLoc, VSADDITEMOPERATION dwAddItemOperation, string pszItemName, uint cFilesToOpen, string[] rgpszFilesToOpen, IntPtr hwndDlgOwner, VSADDRESULT[] pResult) {

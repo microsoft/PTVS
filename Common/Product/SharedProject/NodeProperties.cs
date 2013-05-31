@@ -329,6 +329,25 @@ namespace Microsoft.VisualStudioTools.Project
         }
     }
 
+    public class ExcludedFileNodeProperties : FileNodeProperties {
+        internal ExcludedFileNodeProperties(HierarchyNode node)
+            : base(node)
+        {
+        }
+
+        [SRCategoryAttribute(SR.Advanced)]
+        [LocDisplayName(SR.BuildAction)]
+        [SRDescriptionAttribute(SR.BuildActionDescription)]
+        [TypeConverter(typeof(BuildActionTypeConverter))]
+        public prjBuildAction BuildAction 
+        {
+            get 
+            {
+                return prjBuildAction.prjBuildActionNone;
+            }
+        }
+    }
+
     [ComVisible(true)]
     public class IncludedFileNodeProperties : FileNodeProperties 
     {

@@ -216,7 +216,7 @@ namespace Microsoft.VisualStudioTools.Project
             {
                 return new LinkFileNodeProperties(this);
             } else if (IsNonMemberItem) {
-                return new FileNodeProperties(this);
+                return new ExcludedFileNodeProperties(this);
             }
 
             return new IncludedFileNodeProperties(this);
@@ -1014,9 +1014,12 @@ namespace Microsoft.VisualStudioTools.Project
             string oldLoc = CommonUtils.GetAbsoluteFilePath(basePath, ItemNode.GetMetadata(ProjectFileConstants.Include));
             string newLoc = CommonUtils.GetAbsoluteFilePath(baseNewPath, ItemNode.GetMetadata(ProjectFileConstants.Include));
 
+            ProjectMgr.UpdatePathForDeferredSave(oldLoc, newLoc);
             // make sure the directory is there
             Directory.CreateDirectory(Path.GetDirectoryName(newLoc));
-            RenameDocument(oldLoc, newLoc);
+            if (File.Exists(oldLoc)) {
+                File.Move(oldLoc, newLoc);
+            }
         }
     }
 }

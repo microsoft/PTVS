@@ -149,6 +149,7 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
                 {"ifequal", DjangoIfOrIfNotEqualBlock.Parse},
                 {"ifnotequal", DjangoIfOrIfNotEqualBlock.Parse},
                 {"if", DjangoIfBlock.Parse},
+                {"elif", DjangoIfBlock.Parse},
                 {"ifchanged", DjangoMultiVariableArgumentBlock.Parse},
                 {"ssi", DjangoUnknownBlock.Parse},
                 {"load", DjangoLoadBlock.Parse},
@@ -510,7 +511,7 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
         }
 
         public override IEnumerable<BlockClassification> GetSpans() {
-            yield return new BlockClassification(new Span(ParseInfo.Start, 2), Classification.Keyword);
+            yield return new BlockClassification(new Span(ParseInfo.Start, ParseInfo.Command.Length), Classification.Keyword);
             foreach (var arg in Args) {
                 yield return arg;
             }

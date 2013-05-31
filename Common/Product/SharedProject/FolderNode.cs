@@ -436,7 +436,11 @@ namespace Microsoft.VisualStudioTools.Project
         }
 
         void IDiskBasedNode.RenameForDeferredSave(string basePath, string baseNewPath) {
-            ItemNode.Rename(CommonUtils.GetAbsoluteDirectoryPath(baseNewPath, ItemNode.GetMetadata(ProjectFileConstants.Include)));
+            string oldPath = Path.Combine(basePath, ItemNode.GetMetadata(ProjectFileConstants.Include));
+            string newPath = Path.Combine(baseNewPath, ItemNode.GetMetadata(ProjectFileConstants.Include));
+            Directory.CreateDirectory(newPath);
+
+            ProjectMgr.UpdatePathForDeferredSave(oldPath, newPath);
         }
 
         #endregion
@@ -453,7 +457,7 @@ namespace Microsoft.VisualStudioTools.Project
             string oldPath = Url;
             if (!String.Equals(Path.GetFileName(Url), newName, StringComparison.Ordinal))
             {
-                RenameDirectory(CommonUtils.GetAbsoluteDirectoryPath(this.ProjectMgr.ProjectHome, newPath));
+                RenameDirectory(CommonUtils.GetAbsoluteDirectoryPath(ProjectMgr.ProjectHome, newPath));
             }
 
             // Reparent the folder
@@ -461,7 +465,7 @@ namespace Microsoft.VisualStudioTools.Project
             Parent.RemoveChild(this);
             ID = ProjectMgr.ItemIdMap.Add(this);
 
-            ItemNode.Rename(newPath);
+            ItemNode.Rename(CommonUtils.GetRelativeDirectoryPath(ProjectMgr.ProjectHome, newPath));
             ProjectMgr.SetProjectFileDirty(true);
 
             Parent.AddChild(this);

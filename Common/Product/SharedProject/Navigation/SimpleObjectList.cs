@@ -28,7 +28,7 @@ namespace Microsoft.VisualStudioTools.Navigation {
     /// VS assumes that these lists do not change once VS has gotten ahold of them.  Therefore if the
     /// list is changing over time it should be thrown away and a new list should be placed in the parent.
     /// </summary>
-    public class SimpleObjectList<T> : IVsSimpleObjectList2 where T : ISimpleObject {
+    class SimpleObjectList<T> : IVsSimpleObjectList2 where T : ISimpleObject {
         private readonly List<T> _children;
         private uint _updateCount;
 

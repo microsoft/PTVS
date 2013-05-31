@@ -423,6 +423,8 @@ namespace Microsoft.VisualStudioTools.Project {
                 List<FileSystemChange> changes;
                 GetFileChangeList(out changes, out createdChanges);
                 
+                
+                changes.Clear(); // none of the other changes matter now, we'll rescan the world
                 changes.Add(new FileSystemChange(this, WatcherChangeTypes.All, null));
             }
 
@@ -620,6 +622,11 @@ namespace Microsoft.VisualStudioTools.Project {
                 return true;
             }
 
+            if(!File.Exists(path) && !Directory.Exists(path)) {
+                // if the file has disappeared avoid the exception...
+                return false;
+            }
+
             try {
                 return (File.GetAttributes(path) & (FileAttributes.Hidden | FileAttributes.System)) != 0;
             } catch (DirectoryNotFoundException) {
@@ -787,6 +794,10 @@ namespace Microsoft.VisualStudioTools.Project {
             }
 
             foreach (var change in changes) {
+                if (IsClosed) {
+                    return;
+                }
+
 #if DEBUG
                 try {
 #endif
@@ -1547,6 +1558,9 @@ namespace Microsoft.VisualStudioTools.Project {
                 return VSConstants.OLE_E_PROMPTSAVECANCELLED;
             }
 
+            _watcher.EnableRaisingEvents = false;
+            _watcher.Dispose();
+
             // we don't use RenameProjectFile because it sends the OnAfterRenameProject event too soon
             // and causes VS to think the solution has changed on disk.  We need to send it after all 
             // updates are complete.
@@ -1589,6 +1603,8 @@ namespace Microsoft.VisualStudioTools.Project {
 
             shell.RefreshPropertyBrowser(0);
 
+            _watcher = CreateFileSystemWatcher(ProjectHome);
+
             return VSConstants.S_OK;
         }
 
@@ -1605,11 +1621,11 @@ namespace Microsoft.VisualStudioTools.Project {
                         if (isDirty) {
                             child.ProjectMgr.SaveItem(VSSAVEFLAGS.VSSAVE_Save, null, docCookie, IntPtr.Zero, out cancelled);
                         }
+                    }
 
-                        IDiskBasedNode diskNode = child as IDiskBasedNode;
-                        if (diskNode != null) {
-                            diskNode.RenameForDeferredSave(basePath, baseNewPath);
-                        }
+                    IDiskBasedNode diskNode = child as IDiskBasedNode;
+                    if (diskNode != null) {
+                        diskNode.RenameForDeferredSave(basePath, baseNewPath);
                     }
 
                     MoveFilesForDeferredSave(child, basePath, baseNewPath);

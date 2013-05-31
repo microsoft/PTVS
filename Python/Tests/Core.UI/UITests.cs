@@ -600,6 +600,58 @@ namespace PythonToolsUITests {
         }
 
         /// <summary>
+        /// http://pytools.codeplex.com/workitem/1222
+        /// </summary>
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void DjangoMultiSelectContextMenu() {
+            DebuggerUITests.DebugProject.OpenProject(@"TestData\DjangoApplication.sln");
+
+            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            app.OpenSolutionExplorer();
+            var window = app.SolutionExplorerTreeView;
+
+            var manageNode = window.FindItem("Solution 'DjangoApplication' (1 project)", "DjangoApplication", "manage.py");
+            Mouse.MoveTo(manageNode.GetClickablePoint());
+            Mouse.Click(MouseButton.Left);
+
+            Keyboard.Press(Key.LeftShift);
+            Keyboard.PressAndRelease(Key.Down);
+            Keyboard.Release(Key.LeftShift);
+
+            Mouse.MoveTo(manageNode.GetClickablePoint());
+            Mouse.Click(MouseButton.Right);
+
+            Keyboard.Type("j"); // Exclude from Project
+            Assert.IsNull(window.WaitForItemRemoved("Solution 'DjangoApplication' (1 project)", "DjangoApplication", "manage.py"));
+        }
+
+        /// <summary>
+        /// http://pytools.codeplex.com/workitem/1223
+        /// </summary>
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void DjangoIncludeInProject() {
+            DebuggerUITests.DebugProject.OpenProject(@"TestData\DjangoApplication.sln");
+
+            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            app.OpenSolutionExplorer();
+            var window = app.SolutionExplorerTreeView;
+
+            app.Dte.ExecuteCommand("Project.ShowAllFiles"); // start showing all
+
+            var folderNode = window.WaitForItem("Solution 'DjangoApplication' (1 project)", "DjangoApplication", "Folder");
+            Mouse.MoveTo(folderNode.GetClickablePoint());
+            Mouse.Click(MouseButton.Right);
+
+            Keyboard.Type("j"); // Exclude from Project
+            app.Dte.ExecuteCommand("Project.ShowAllFiles"); // stop showing all
+
+            Assert.IsNull(window.WaitForItemRemoved("Solution 'DjangoApplication' (1 project)", "DjangoApplication", "notinproject.py"));
+            Assert.IsNotNull(window.WaitForItem("Solution 'DjangoApplication' (1 project)", "DjangoApplication", "Folder", "test.py"));
+        }
+
+        /// <summary>
         /// Verify we get called w/ a project which does have source control enabled.
         /// </summary>
         [TestMethod, Priority(0), TestCategory("Core")]

@@ -173,9 +173,11 @@
       <Link>Project\SolutionListener.cs</Link>
     </Compile>
     <Compile Include="DialogWindowVersioningWorkaround.cs" />
+    <Compile Include="Project\DjangoProject.TagsAndFilters.cs" />
     <Compile Include="Project\DjangoProjectConfig.cs" />
     <Compile Include="Project\IDjangoProject.cs" />
     <Compile Include="Project\ProjectSmuggler.cs" />
+    <Compile Include="Project\TemplateVariables.cs" />
     <Compile Include="ProvideLanguageTemplatesAttribute.cs" />
     <Compile Include="Debugger\DjangoLauncher.cs" />
     <Compile Include="Debugger\DjangoLauncherProvider.cs" />

@@ -439,19 +439,7 @@ def start_file_watcher(path, restartRegex):
 
     thread.start_new_thread(watcher, (path, restart))
 
-
-def get_wsgi_handler(physical_path):
-    env = get_environment(physical_path)
-    os.environ.update(env)
-    for env_name in env:
-        if env_name.lower() == 'pythonpath':
-            for path_location in env[env_name].split(';'):
-                sys.path.append(path_location)
-            break
-    
-    handler_ex = None
-    try:
-        handler_name = os.getenv('WSGI_HANDLER')
+def get_wsgi_handler(handler_name):
         if not handler_name:
             raise Exception('WSGI_HANDLER env var must be set')
     
@@ -470,6 +458,22 @@ def get_wsgi_handler(physical_path):
     
         if handler is None:
             raise Exception('WSGI_HANDLER "' + handler_name + '" was set to None')
+
+        return handler
+
+def read_wsgi_handler(physical_path):
+    env = get_environment(physical_path)
+    os.environ.update(env)
+    for env_name in env:
+        if env_name.lower() == 'pythonpath':
+            for path_location in env[env_name].split(';'):
+                sys.path.append(path_location)
+            break
+    
+    handler_ex = None
+    try:
+        handler_name = os.getenv('WSGI_HANDLER')
+        handler = get_wsgi_handler(handler_name)
     except:
         handler = None
         handler_ex = sys.exc_info()
@@ -509,7 +513,7 @@ if __name__ == '__main__':
                 if not initialized:
                     os.chdir(physical_path)
 
-                    env, handler, handler_ex = get_wsgi_handler(physical_path)
+                    env, handler, handler_ex = read_wsgi_handler(physical_path)
 
                     start_file_watcher(physical_path, env.get('WSGI_RESTART_FILE_REGEX'))
 

@@ -92,6 +92,15 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
+        /// <summary>
+        /// Returns the project entry which this analysis unit analyzes.
+        /// </summary>
+        public IPythonProjectEntry Project {
+            get {
+                return ProjectEntry;
+            }
+        }
+
         internal ProjectEntry ProjectEntry {
             get { return DeclaringModule.ProjectEntry; }
         }

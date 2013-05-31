@@ -193,6 +193,7 @@ namespace DjangoUITests {
             });
 
             var newItem = new NewItemDialog(AutomationElement.FromHandle(app.WaitForDialog()));
+            AutomationWrapper.Select(newItem.ProjectTypes.FindItem("Django HTML Template"));
             newItem.FileName = "NewPage.html";
             newItem.ClickOK();
             

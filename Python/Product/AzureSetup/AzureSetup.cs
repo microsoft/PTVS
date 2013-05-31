@@ -156,13 +156,13 @@ namespace AzureSetup {
                     pythonPath = Path.Combine(physicalDir, "..");
                 }
 
-                UpdateIISAppCmd(interpreter, physicalDir, isDebug, fastCgiPath, settingsName, pythonPath);
+                UpdateIISAppCmd(interpreter, physicalDir, isDebug, fastCgiPath);
 
                 UpdateWebConfig(interpreter, physicalDir, fastCgiPath);
             }
         }
 
-        private static void UpdateIISAppCmd(string interpreter, string physicalDir, bool isDebug, string fastCgiPath, string settingsName, string pythonPath) {
+        private static void UpdateIISAppCmd(string interpreter, string physicalDir, bool isDebug, string fastCgiPath) {
             var appCmd = Environment.GetEnvironmentVariable("APPCMD");
             if (String.IsNullOrEmpty(appCmd)) {
                 appCmd = Path.Combine(Environment.GetEnvironmentVariable("WINDIR"), "System32\\inetsrv\\appcmd.exe");
@@ -181,9 +181,6 @@ namespace AzureSetup {
                 interpreter,
                 fastCgiPath
             );
-
-            AppCmdSetEnv(interpreter, fastCgiPath, appCmd, "DJANGO_SETTINGS_MODULE", settingsName);
-            AppCmdSetEnv(interpreter, fastCgiPath, appCmd, "PYTHONPATH", pythonPath);
         }
 
         private static void AppCmdSetProperty(string interpreter, string fastCgiPath, string appCmd, string propertyName, string value) {
@@ -270,7 +267,10 @@ namespace AzureSetup {
             }
 
             var text = File.ReadAllText(readFrom);
-            File.WriteAllText(webConfig, text.Replace("WFASTCGIPATH", fastCgiPath.Replace("\"", "&quot;")).Replace("INTERPRETERPATH", interpreter));
+            string newText = text.Replace("%WFASTCGIPATH%", fastCgiPath.Replace("\"", "&quot;"))
+                             .Replace("%INTERPRETERPATH%", interpreter)
+                             .Replace("%RootDir%", physicalDir);
+            File.WriteAllText(webConfig, newText);
         }
 
         private static void InstallWebPiProducts(string webpiCmdLinePath, List<string> webpiInstalls) {

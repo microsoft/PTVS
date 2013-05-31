@@ -40,6 +40,10 @@
 	{% endif %}
 
 	{% if foo %}
+	{% elif bar %}
+	{% endif %}
+
+	{% if foo %}
 	{% else %}
 	{% endif %}
 
