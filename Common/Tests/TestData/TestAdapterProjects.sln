@@ -1,0 +1,26 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "TestAdapterLibraryBar", "TestAdapterLibraryBar\TestAdapterLibraryBar.pyproj", "{C8500705-811F-4BC7-8EAF-75696B3B3836}"
+EndProject
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "TestAdapterTestA", "TestAdapterTestA\TestAdapterTestA.pyproj", "{D0C7948A-DE98-4D88-A6EB-3A73BD1CC06F}"
+EndProject
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "TestAdapterTestB", "TestAdapterTestB\TestAdapterTestB.pyproj", "{6C1A1C06-73A2-406B-8C7F-A81C5C210AD7}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C8500705-811F-4BC7-8EAF-75696B3B3836}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C8500705-811F-4BC7-8EAF-75696B3B3836}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D0C7948A-DE98-4D88-A6EB-3A73BD1CC06F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D0C7948A-DE98-4D88-A6EB-3A73BD1CC06F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6C1A1C06-73A2-406B-8C7F-A81C5C210AD7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6C1A1C06-73A2-406B-8C7F-A81C5C210AD7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

@@ -454,7 +454,7 @@ namespace Microsoft.PythonTools.Analysis {
 
             foreach (var baseSet in bases) {
                 foreach (var baseClassInfo in baseSet.OfType<ClassInfo>()) {
-                    baseClassInfo.Mro.AddDependency(this);
+                    baseClassInfo._mro.AddDependency(this);
                 }
             }
 

@@ -389,6 +389,7 @@ try {
                     "Microsoft.PythonTools.Debugger.dll", 
                     "Microsoft.PythonTools.dll", 
                     "Microsoft.PythonTools.VSInterpreters.dll",
+                    "Microsoft.PythonTools.TestAdapter.dll",
                     "Microsoft.PythonTools.Hpc.dll", 
                     "Microsoft.PythonTools.ImportWizard.dll", 
                     "Microsoft.PythonTools.IronPython.dll", 

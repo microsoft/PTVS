@@ -118,6 +118,7 @@ namespace Microsoft.PythonTools {
             _itemAdded = _entries[0].EventHandle;
             
             _thread = new Thread(Worker);
+            _thread.IsBackground = true;
             _thread.Start(this);
         }
 

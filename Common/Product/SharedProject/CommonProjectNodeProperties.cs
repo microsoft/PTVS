@@ -50,7 +50,7 @@ namespace Microsoft.VisualStudioTools.Project {
         }
 
         /// <summary>
-        /// Returns/Sets the StartupFile project property
+        /// Returns/Sets the WorkingDirectory project property
         /// </summary>
         [SRCategoryAttribute(SR.General)]
         [LocDisplayName(SR.WorkingDirectory)]
@@ -92,7 +92,9 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <summary>
         /// Gets the home directory for the project.
         /// </summary>
-        [Browsable(false)]
+        [SRCategoryAttribute(SR.Misc)]
+        [LocDisplayName(SR.ProjectHome)]
+        [SRDescriptionAttribute(SR.ProjectHomeDescription)]
         public string ProjectHome {
             get {
                 return Node.ProjectMgr.ProjectHome;

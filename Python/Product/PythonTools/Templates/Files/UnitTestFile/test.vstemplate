@@ -1,0 +1,13 @@
+<VSTemplate Version="2.0.0" Type="Item" xmlns="http://schemas.microsoft.com/developer/vstemplate/2005">
+  <TemplateData>
+    <Name>Python Unit Test</Name>
+    <Description>A .py file for writing unit tests.</Description>
+    <Icon Package="{6dbd7c1e-1f1b-496d-ac7c-c55dae66c783}" ID="404" />
+    <ProjectType>Python</ProjectType>
+    <DefaultName>test.py</DefaultName>
+  </TemplateData>
+  <TemplateContent>
+    <References/>
+    <ProjectItem SubType="Code" ReplaceParameters="true" TargetFileName="$fileinputname$.$fileinputextension$">test.py</ProjectItem>
+  </TemplateContent>
+</VSTemplate>

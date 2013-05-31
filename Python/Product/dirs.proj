@@ -13,6 +13,8 @@
     <ProjectFile Include="AttacherX86\AttacherX86.csproj"/>
     <ProjectFile Include="Debugger\Debugger.csproj"/>
 
+    <ProjectFile Include="TestAdapter\TestAdapter.csproj" Condition="'$(VSTarget)' != '10.0'"/>
+
     <ProjectFile Include="PythonTools\PythonTools.csproj"/>
 
     <ProjectFile Include="MpiShim\MpiShim.csproj"/>

@@ -72,8 +72,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public IEnumerable<IAnalysisSet> Mro {
-            get { return new[] { SelfSet }; }
+        public override IEnumerable<IAnalysisSet> Mro {
+            get { yield return SelfSet; }
         }
 
         public BuiltinInstanceInfo Instance {

@@ -36,6 +36,7 @@ except ImportError:
         # in the local attach scenario, visualstudio_py_util should already be defined
         _vspu = visualstudio_py_util
 to_bytes = _vspu.to_bytes
+exec_file = _vspu.exec_file
 read_bytes = _vspu.read_bytes
 read_int = _vspu.read_int
 read_string = _vspu.read_string
@@ -178,7 +179,7 @@ def get_thread_from_id(id):
         THREADS_LOCK.release()
 
 def should_send_frame(frame):
-    return frame is not None and frame.f_code not in (get_code(debug), get_code(execfile), get_code(new_thread_wrapper))
+    return frame is not None and frame.f_code not in (get_code(debug), get_code(exec_file), get_code(new_thread_wrapper))
 
 def lookup_builtin(name, frame):
     try:
@@ -1668,18 +1669,6 @@ def write_object(conn, obj_type, obj_repr, hex_repr, type_name, obj_len):
         write_int(conn, 1)
 
 
-try:
-    execfile
-except NameError:
-    # Py3k, execfile no longer exists
-    def execfile(file, globals, locals): 
-        f = open(file, "rb")
-        try:
-            exec(compile(f.read().replace(to_bytes('\r\n'), to_bytes('\n')), file, 'exec'), globals, locals) 
-        finally:
-            f.close()
-
-
 debugger_thread_id = -1
 _INTERCEPTING_FOR_ATTACH = False
 def intercept_threads(for_attach = False):
@@ -1979,7 +1968,7 @@ def debug(file, port_num, debug_id, globals_obj, locals_obj, wait_on_exception, 
     # now execute main file
     try:
         try:
-            execfile(file, globals_obj, locals_obj)
+            exec_file(file, globals_obj)
         finally:
             sys.settrace(None)
             THREADS_LOCK.acquire()

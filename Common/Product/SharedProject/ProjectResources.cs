@@ -153,6 +153,8 @@ namespace Microsoft.VisualStudioTools.Project
         internal const string ProjectFileDescription = "ProjectFileDescription";
         internal const string ProjectFolder = "ProjectFolder";
         internal const string ProjectFolderDescription = "ProjectFolderDescription";
+        internal const string ProjectHome = "ProjectHome";
+        internal const string ProjectHomeDescription = "ProjectHomeDescription";
         internal const string ProjectProperties = "ProjectProperties";
         internal const string Quiet = "Quiet";
         internal const string QueryReloadNestedProject = "QueryReloadNestedProject";

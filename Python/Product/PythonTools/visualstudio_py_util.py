@@ -12,6 +12,8 @@
  #
  # ###########################################################################
 
+import imp
+import os
 import sys
 import struct
 
@@ -27,6 +29,52 @@ if sys.version_info[0] >= 3:
 else:
     def to_bytes(cmd_str):
         return cmd_str
+
+def exec_file(file, global_variables):
+    '''Executes the provided script as if it were the original script provided
+    to python.exe. The functionality is similar to `runpy.run_path`, which was
+    added in Python 2.7/3.2.
+
+    The following values in `global_variables` will be set to the following
+    values, if they are not already set::
+        __name__ = '<run_path>'
+        __file__ = file
+        __cached__ = None
+        __loader__ = None
+        __package__ = __name__.rpartition('.')[0]
+
+    The `sys.modules` entry for ``__name__`` will be set to a new module, and
+    ``sys.path[0]`` will be changed to the value of `file` without the filename.
+    Both values are restored when this function exits.
+    '''
+    mod_name = global_variables.setdefault('__name__', '<run_path>')
+    prev_syspath0 = sys.path[0]
+    try:
+        try:
+            prev_sysmodule = sys.modules[mod_name]
+        except KeyError:
+            prev_sysmodule = None
+        mod = sys.modules[mod_name] = imp.new_module(mod_name)
+        mod.__dict__.update(global_variables)
+        global_variables = mod.__dict__
+        global_variables.setdefault('__file__', file)
+        global_variables.setdefault('__cached__', None)
+        global_variables.setdefault('__loader__', None)
+        global_variables.setdefault('__package__', mod_name.rpartition('.')[0])
+
+        sys.path[0] = os.path.split(file)[0]
+        try:
+            f = open(file, "rb")
+            code_obj = compile(f.read().replace(to_bytes('\r\n'), to_bytes('\n')) + to_bytes('\n'), file, 'exec')
+        finally:
+            f.close()
+        exec(code_obj, global_variables)
+    finally:
+        sys.path[0] = prev_syspath0
+        if prev_sysmodule:
+            sys.modules[mod_name] = prev_sysmodule
+        else:
+            del sys.modules[mod_name]
 
 
 UNICODE_PREFIX = to_bytes('U')

@@ -250,6 +250,45 @@ namespace Microsoft.PythonTools.Analysis {
                 .Concat(GetModulesInLib(pthDirs, null, allModuleNames));
         }
 
+        /// <summary>
+        /// Returns true if the provided path references an importable Python
+        /// module. This function does not access the filesystem.
+        /// </summary>
+        public static bool IsPythonFile(string path) {
+            var name = Path.GetFileName(path);
+            var nameMatch = PythonFileRegex.Match(name);
+            if (nameMatch == null || !nameMatch.Success) {
+                nameMatch = PythonBinaryRegex.Match(name);
+            }
+            return nameMatch != null && nameMatch.Success;
+        }
 
+        /// <summary>
+        /// Returns a new ModulePath value determined from the provided full
+        /// path to a Python file. This function will access the filesystem to
+        /// determine the package name.
+        /// </summary>
+        /// <exception cref="ArgumentException">
+        /// path is not a valid Python module.
+        /// </exception>
+        public static ModulePath FromFullPath(string path) {
+            var name = Path.GetFileName(path);
+            var nameMatch = PythonFileRegex.Match(name);
+            if (nameMatch == null || !nameMatch.Success) {
+                nameMatch = PythonBinaryRegex.Match(name);
+            }
+            if (nameMatch == null || !nameMatch.Success) {
+                throw new ArgumentException("Not a valid Python module: " + path);
+            }
+
+            var fullName = nameMatch.Groups["name"].Value;
+            var remainder = Path.GetDirectoryName(path);
+            while (!string.IsNullOrEmpty(remainder) && File.Exists(Path.Combine(remainder, "__init__.py"))) {
+                fullName = Path.GetFileName(remainder) + "." + fullName;
+                remainder = Path.GetDirectoryName(remainder);
+            }
+
+            return new ModulePath(fullName, path, remainder);
+        }
     }
 }

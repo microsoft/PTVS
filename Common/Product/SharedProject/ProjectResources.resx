@@ -577,4 +577,10 @@ Files and folders cannot be:
   <data name="PathTooLongShortMessage" xml:space="preserve">
     <value>The filename or extension is too long.</value>
   </data>
+  <data name="ProjectHome" xml:space="preserve">
+    <value>Project Home</value>
+  </data>
+  <data name="ProjectHomeDescription" xml:space="preserve">
+    <value>The base location for all files in the project</value>
+  </data>
 </root>

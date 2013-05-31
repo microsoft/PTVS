@@ -74,6 +74,14 @@
       <RefTargetDir>INSTALLLOCATION</RefTargetDir>
       <DoNotHarvest>true</DoNotHarvest>
     </ProjectReference>
+    <ProjectReference Include="$(BuildRoot)\Python\TestAdapter\TestAdapter.csproj" Condition="'$(VSTarget)' != '10.0'">
+      <Name>Microsoft.PythonTools.TestAdapter</Name>
+      <Project>{5085DF35-3A32-4894-835E-E5A3956D4F57}</Project>
+      <Private>True</Private>
+      <RefProjectOutputGroups>Binaries</RefProjectOutputGroups>
+      <RefTargetDir>INSTALLLOCATION</RefTargetDir>
+      <DoNotHarvest>true</DoNotHarvest>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="..\SetupProjectAfter.settings" />
   <!--<Target Name="BuildOtherProjects" BeforeTargets="Link">

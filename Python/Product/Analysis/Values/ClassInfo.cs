@@ -25,7 +25,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
     internal class ClassInfo : AnalysisValue, IReferenceableContainer {
         private AnalysisUnit _analysisUnit;
         private readonly List<IAnalysisSet> _bases;
-        private Mro _mro;
+        internal Mro _mro;
         private readonly InstanceInfo _instanceInfo;
         private ClassScope _scope;
         private readonly int _declVersion;
@@ -264,7 +264,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public Mro Mro {
+        public override IEnumerable<IAnalysisSet> Mro {
             get {
                 return _mro;
             }
@@ -273,14 +273,14 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public void ClearBases() {
             _bases.Clear();
             _baseUserType = null;
-            Mro.Recompute();
+            _mro.Recompute();
         }
 
         public void SetBases(IEnumerable<IAnalysisSet> bases) {
             _bases.Clear();
             _bases.AddRange(bases);
             _baseUserType = null;
-            Mro.Recompute();
+            _mro.Recompute();
         }
 
         public void SetBase(int index, IAnalysisSet baseSet) {
@@ -289,7 +289,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
             _bases[index] = baseSet;
             _baseUserType = null;
-            Mro.Recompute();
+            _mro.Recompute();
         }
 
         public InstanceInfo Instance {
@@ -326,7 +326,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public override IDictionary<string, IAnalysisSet> GetAllMembers(IModuleContext moduleContext) {
-            var result = Mro.GetAllMembers(moduleContext);
+            var result = _mro.GetAllMembers(moduleContext);
 
             if (_metaclass != null) {
                 foreach (var type in _metaclass.Types) {
@@ -374,7 +374,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public IAnalysisSet GetMemberNoReferences(Node node, AnalysisUnit unit, string name, bool addRef = true) {
-            var result = Mro.GetMemberNoReferences(node, unit, name, addRef);
+            var result = _mro.GetMemberNoReferences(node, unit, name, addRef);
             if (result != null && result.Count > 0) {
                 return result;
             }
@@ -655,7 +655,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     var builtInClass = baseClass as BuiltinClassInfo;
                     if (klass != null && klass.Push()) {
                         try {
-                            if (!klass.Mro.IsValid) {
+                            if (!klass._mro.IsValid) {
                                 isValid = false;
                                 break;
                             }

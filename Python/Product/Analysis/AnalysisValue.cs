@@ -148,6 +148,12 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
+        public virtual IEnumerable<IAnalysisSet> Mro {
+            get {
+                yield break;
+            }
+        }
+
         public virtual AnalysisUnit AnalysisUnit {
             get { return null; }
         }

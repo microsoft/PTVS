@@ -723,7 +723,7 @@ c = C()
 
             var clsC = entry.GetValuesByIndex("C", code.IndexOf("c =")).FirstOrDefault() as ClassInfo;
             Assert.IsNotNull(clsC);
-            Assert.IsFalse(clsC.Mro.IsValid);
+            Assert.IsFalse(clsC._mro.IsValid);
 
             // Unsuccessful: cannot order F and E
             code = @"
@@ -736,7 +736,7 @@ G.remember2buy
             entry = ProcessText(code);
             var clsG = entry.GetValuesByIndex("G", code.IndexOf("G.remember2buy")).FirstOrDefault() as ClassInfo;
             Assert.IsNotNull(clsG);
-            Assert.IsFalse(clsG.Mro.IsValid);
+            Assert.IsFalse(clsG._mro.IsValid);
 
 
             // Successful: exchanging bases of G fixes the ordering issue
