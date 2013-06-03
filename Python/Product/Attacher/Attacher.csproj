@@ -40,7 +40,14 @@
     <SccAuxPath>SAK</SccAuxPath>
     <SccProvider>SAK</SccProvider>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
+  <PropertyGroup>
+    <!--
+         This binary must run as a 64-bit process when used as a command-line tool to enable attaching to other 64-bit processes.
+         The reason why we use AnyCPU + Prefer32Bit=false here instead of just specifying it as x86 is because it is also
+         referenced as a library by other projects, which are themselves 32-bit (as they run inside VS). Keeping it as AnyCPU
+         means that it runs in 32-bit when used as a library, and Prefer32Bit=false makes it run 64-bit when run as an .exe
+         on a 64-bit OS (and we don't need to run it as an .exe on 32-bit OS).
+    -->
     <PlatformTarget>AnyCPU</PlatformTarget>
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
