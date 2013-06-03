@@ -128,7 +128,6 @@ namespace Microsoft.PythonTools.TestAdapter {
             testCase.DisplayName = methodName;
             testCase.LineNumber = sourceLocation != null ? sourceLocation.Line : 0;
             testCase.CodeFilePath = sourceLocation != null ? sourceLocation.FilePath : String.Empty;
-            testCase.Traits.Add("File", classFilePath);
             discoverySink.SendTestCase(testCase);
         }
 

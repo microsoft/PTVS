@@ -60,7 +60,6 @@ namespace TestAdapterTests {
                 Assert.AreEqual(expectedTest.SourceCodeLineNumber, actualTestCase.LineNumber, expectedFullyQualifiedName);
                 Assert.IsTrue(IsSameFile(expectedTest.SourceCodeFilePath, actualTestCase.CodeFilePath), expectedFullyQualifiedName);
                 Assert.IsTrue(IsSameFile(expectedTest.ProjectFilePath, actualTestCase.Source), expectedFullyQualifiedName);
-                Assert.IsTrue(IsSameFile(expectedTest.ClassFilePath, actualTestCase.Traits.Single(t => t.Name == "File").Value), expectedFullyQualifiedName);
 
                 sink.Tests.Remove(actualTestCase);
             }
@@ -81,7 +80,6 @@ namespace TestAdapterTests {
             foreach (var tst in testCases) {
                 Debug.WriteLine("Test: " + tst.FullyQualifiedName);
                 Debug.WriteLine("Source: " + tst.Source);
-                Debug.WriteLine("Class File: " + tst.Traits.Single(t => t.Name == "File").Value);
                 Debug.WriteLine("Display: " + tst.DisplayName);
                 Debug.WriteLine("Location: " + tst.CodeFilePath);
                 Debug.WriteLine("Location: " + tst.LineNumber.ToString());
@@ -98,7 +96,6 @@ namespace TestAdapterTests {
             test.CodeFilePath = TestData.GetPath(relativeCodeFilePath);
             test.LineNumber = codeLineNumber;
             test.DisplayName = methodName;
-            test.Traits.Add("File", TestData.GetPath(relativeClassFilePath));
             return test;
         }
     }

@@ -48,7 +48,6 @@ namespace TestAdapterTests {
                 var tc = new TestCase(expectedFullyQualifiedName, new Uri(TestExecutor.ExecutorUriString), this.ProjectFilePath);
                 tc.CodeFilePath = this.SourceCodeFilePath;
                 tc.LineNumber = this.SourceCodeLineNumber;
-                tc.Traits.Add("File", this.ClassFilePath);
                 return tc;
             }
         }
