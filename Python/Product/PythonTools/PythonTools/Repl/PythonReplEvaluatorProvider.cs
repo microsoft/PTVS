@@ -60,12 +60,12 @@ namespace Microsoft.PythonTools.Repl {
         /// Creates an interpreter which was created programmatically by some plugin
         /// </summary>
         private IReplEvaluator CreateConfigurableInterpreter(string replId) {
-            string[] components = replId.Split(new[] { '|' }, 5);
-            if (components.Length == 5) {
-                string workingDir = components[0];
-                string options = components[1];
-                string interpreter = components[2];
-                string interpreterVersion = components[3];
+            string[] components = replId.Split(new[] { '|' }, 6);
+            if (components.Length == 6) {
+                string workingDir = components[1];
+                string options = components[2];
+                string interpreter = components[3];
+                string interpreterVersion = components[4];
                 // we don't care about the user identifier
 
                 var pyInterpreter = _interpService.FindInterpreter(interpreter, interpreterVersion);
