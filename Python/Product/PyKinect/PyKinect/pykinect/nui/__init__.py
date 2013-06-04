@@ -381,7 +381,12 @@ depth_value The depth value in depth image space.
 
 Returns: color_x, color_y - the x and y coordinate in the color image space
 """
-        return self.runtime._nui.NuiImageGetColorPixelCoordinatesFromDepthPixel(color_resolution, view_area, depth_x, depth_y, depth_value)
+        return self.runtime._nui.NuiImageGetColorPixelCoordinatesFromDepthPixel(
+            color_resolution, 
+            view_area, 
+            depth_x, 
+            depth_y, 
+            depth_value)
         
 
 def TransformSmoothParameters(vPoint):

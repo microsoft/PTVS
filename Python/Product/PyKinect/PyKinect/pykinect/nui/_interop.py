@@ -133,7 +133,14 @@ class _NuiInstance(ctypes.c_voidp):
     _NuiImageStreamGetImageFrameFlags = 8
     _NuiImageStreamGetNextFrame = ctypes.WINFUNCTYPE(ctypes.HRESULT, ctypes.c_voidp, ctypes.c_uint32, ctypes.POINTER(ImageFrame))(9, 'NuiImageStreamGetNextFrame')
     _NuiImageStreamReleaseFrame = ctypes.WINFUNCTYPE(ctypes.HRESULT, ctypes.c_voidp, ctypes.POINTER(ImageFrame))(10, 'NuiImageStreamReleaseFrame')
-    _NuiImageGetColorPixelCoordinatesFromDepthPixel = ctypes.WINFUNCTYPE(ctypes.HRESULT, ImageResolution, ctypes.POINTER(ImageViewArea), ctypes.c_long, ctypes.c_long, ctypes.c_uint16, ctypes.POINTER(ctypes.c_long), ctypes.POINTER(ctypes.c_long))(11, 'NuiImageGetColorPixelCoordinatesFromDepthPixel')
+    _NuiImageGetColorPixelCoordinatesFromDepthPixel = ctypes.WINFUNCTYPE(ctypes.HRESULT, 
+        ImageResolution, 
+        ctypes.POINTER(ImageViewArea), 
+        ctypes.c_long, 
+        ctypes.c_long, 
+        ctypes.c_uint16, 
+        ctypes.POINTER(ctypes.c_long), 
+        ctypes.POINTER(ctypes.c_long))(11, 'NuiImageGetColorPixelCoordinatesFromDepthPixel')
     _NuiImageGetColorPixelCoordinatesFromDepthPixelAtResolution = 12
     _NuiImageGetColorPixelCoordinateFrameFromDepthPixelFrameAtResolution = 13
     _NuiCameraElevationSetAngle = ctypes.WINFUNCTYPE(ctypes.HRESULT, ctypes.c_long)(14, 'NuiCameraElevationSetAngle')
@@ -177,7 +184,7 @@ class _NuiInstance(ctypes.c_voidp):
 
     def NuiImageGetColorPixelCoordinatesFromDepthPixel(self, eColorResolution, pcViewArea, lDepthX, lDepthY, usDepthValue):
         x, y = ctypes.c_long(), ctypes.c_long()
-        _NuiInstance._NuiImageGetColorPixelCoordinatesFromDepthPixel(eColorResolution, pcViewArea, lDepthX, lDepthY, usDepthValue, byref(x), byref(y))
+        _NuiInstance._NuiImageGetColorPixelCoordinatesFromDepthPixel(self, eColorResolution, pcViewArea, lDepthX, lDepthY, usDepthValue, byref(x), byref(y))
         return x.value, y.value
 
     def NuiCameraElevationSetAngle(self, lAngleDegrees):
