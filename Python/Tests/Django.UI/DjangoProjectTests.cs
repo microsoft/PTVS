@@ -21,6 +21,7 @@ using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 using TestUtilities.UI;
+using TestUtilities.UI.Python;
 using TestUtilities.UI.Python.Django;
 
 namespace DjangoUITests {
@@ -104,7 +105,7 @@ namespace DjangoUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void StartNewApp() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte);
             var newProjDialog = app.FileNewProject();
 
             newProjDialog.FocusLanguageNode();
@@ -166,17 +167,10 @@ namespace DjangoUITests {
                 }
             });
 
-            var dlg = new NewAppDialog(app.WaitForDialog());
-            for (int i = 0; i < 100; i++) {
-                try {
-                    dlg.Ok();
-                    break;
-                } catch (ElementNotEnabledException) {
-                    // wait for app to be enabled.
-                    Thread.Sleep(1000);
-                }
-            }
-
+            var console = app.GetInteractiveWindow("Django Management Console - " + app.Dte.Solution.Projects.Item(1).Name);
+            Assert.IsNotNull(console);
+            console.WaitForTextEnd("Executing manage.py validate", "0 errors found", ">>> ");
+            
             projItem = app.SolutionExplorerTreeView.FindItem(
                 "Solution '" + app.Dte.Solution.Projects.Item(1).Name + "' (1 project)",
                 app.Dte.Solution.Projects.Item(1).Name

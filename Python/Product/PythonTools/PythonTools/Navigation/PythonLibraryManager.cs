@@ -27,7 +27,7 @@ namespace Microsoft.PythonTools.Navigation {
     /// and builds the informations to expose to the class view or object browser.
     /// </summary>
     [Guid(PythonConstants.LibraryManagerServiceGuid)]
-    public interface IPythonLibraryManager : ILibraryManager {        
+    internal interface IPythonLibraryManager : ILibraryManager {
     }
 
     /// <summary>

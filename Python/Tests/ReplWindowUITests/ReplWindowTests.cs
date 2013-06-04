@@ -3059,8 +3059,7 @@ def g(): pass
         [TestMethod, Priority(0)]
         public void AttachSupportMultiThreaded() {
             // http://pytools.codeplex.com/workitem/663
-            var replEval = new PythonReplEvaluator(IronPythonInterpreter, null);
-            replEval.CurrentOptions = new PythonInteractiveOptions() { EnableAttach = true };
+            var replEval = new PythonReplEvaluator(IronPythonInterpreter, null, new ReplTestReplOptions());
             var replWindow = new MockReplWindow(replEval);
             replEval.Initialize(replWindow);
             var code = new[] {
@@ -3085,10 +3084,63 @@ def g(): pass
         }
     }
 
+    class ReplTestReplOptions : PythonReplEvaluatorOptions {
+        public override bool EnableAttach {
+            get { return true; }
+        }
 
+        public override string InterpreterOptions {
+            get { return "";  }
+        }
 
+        public override string WorkingDirectory {
+            get { return ""; }
+        }
 
+        public override string StartupScript {
+            get { return null; }
+        }
 
+        public override string SearchPaths {
+            get { return ""; }
+        }
+
+        public override string InterpreterArguments {
+            get { return ""; }
+        }
+
+        public override VsProjectAnalyzer ProjectAnalyzer {
+            get { return null; }
+        }
+
+        public override bool UseInterpreterPrompts {
+            get { return true; }
+        }
+
+        public override string ExecutionMode {
+            get { return ""; }
+        }
+
+        public override bool InlinePrompts {
+            get { return false; }
+        }
+
+        public override bool ReplSmartHistory {
+            get { return false; }
+        }
+
+        public override bool LiveCompletionsOnly {
+            get { return false; }
+        }
+
+        public override string PrimaryPrompt {
+            get { return ">>>"; }
+        }
+
+        public override string SecondaryPrompt {
+            get { return "..."; }
+        }
+    }
 
     [TestClass]
     public class Python26x64ReplWindowTests : Python26ReplWindowTests {

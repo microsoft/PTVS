@@ -39,6 +39,9 @@
       <Name>Python Tools for Visual Studio</Name>
       <MoreInfoUrl>http://pytools.codeplex.com/</MoreInfoUrl>
     </Reference>
+    <Reference Id="ce8d8e55-ad29-423e-aca2-810d0b16cdc4" MinVersion="2.0">
+      <Name>Microsoft.VisualStudio.InteractiveWindow</Name>
+    </Reference>
   </References>
   <Content>
     <VsPackage>|%CurrentProject%;PkgdefProjectOutputGroup|</VsPackage>

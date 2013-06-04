@@ -48,12 +48,12 @@ namespace Microsoft.PythonTools.Repl {
     using IReplEvaluator = IInteractiveEngine;
 #endif
 
-    internal abstract class BasePythonReplEvaluator : IReplEvaluator, IMultipleScopeEvaluator, IPythonReplIntellisense {
+    internal abstract class BasePythonReplEvaluator : IPythonReplEvaluator, IReplEvaluator, IMultipleScopeEvaluator, IPythonReplIntellisense {
         private CommandProcessorThread _curListener;
         private IReplWindow _window;
         private bool _multipleScopes = true, _attached;
-        private PythonInteractiveCommonOptions _options;
         internal Task<ExecutionResult> _lastExecutionResult;
+        private readonly PythonReplEvaluatorOptions _options;
 
         internal static readonly object InputBeforeReset = new object();    // used to mark buffers which are no longer valid because we've done a reset
 
@@ -69,7 +69,8 @@ namespace Microsoft.PythonTools.Repl {
         private static readonly byte[] ExecuteFileCommandBytes = MakeCommand("excf");
         private static readonly byte[] DebugAttachCommandBytes = MakeCommand("dbga");
 
-        protected BasePythonReplEvaluator() {
+        protected BasePythonReplEvaluator(PythonReplEvaluatorOptions options) {
+            _options = options;
         }
 
         protected abstract PythonLanguageVersion AnalyzerProjectLanguageVersion { get; }
@@ -78,27 +79,14 @@ namespace Microsoft.PythonTools.Repl {
 
         internal abstract string DisplayName { get; }
 
-        internal PythonInteractiveCommonOptions CurrentOptions {
+        internal PythonReplEvaluatorOptions CurrentOptions {
             get {
-                if (PythonToolsPackage.Instance == null) {
-                    // running outside of VS, make this work for tests.
-                    if (_options == null) {
-                        _options = CreatePackageOptions();
-                    }
-                    return _options;
-                }
-                return GetPackageOptions();
-            }
-            set {
-                _options = value;
+                return _options;
             }
         }
 
         protected virtual void OnConnected() {
         }
-
-        protected abstract PythonInteractiveCommonOptions CreatePackageOptions();
-        protected abstract PythonInteractiveCommonOptions GetPackageOptions();
 
         protected void SetMultipleScopes(bool multipleScopes) {
             if (multipleScopes != _multipleScopes) {
@@ -658,6 +646,14 @@ namespace Microsoft.PythonTools.Repl {
                 SendString(text);
             }
 
+            public bool IsConnected {
+                get {
+                    using (new SocketLock(this)) {
+                        return _connected && _socket != null && _socket.Connected && _stream != null;
+                    }
+                }
+            }
+
             public void ExecuteFile(string filename, string extraArgs) {
                 using (new SocketLock(this)) {
                     if (!_connected) {
@@ -1051,6 +1047,33 @@ namespace Microsoft.PythonTools.Repl {
                 _window.WriteError("Current interactive window is disconnected." + Environment.NewLine);
             }
             return ExecutionResult.Failed;
+        }
+
+        public bool IsDisconnected {
+            get {
+                var curListener = _curListener;
+                if (curListener != null) {
+                    return !curListener.IsConnected;
+                }
+
+                return false;
+            }
+        }
+
+        public bool IsExecuting {
+            get {
+                return _lastExecutionResult != null && !_lastExecutionResult.IsCompleted;
+            }
+        }
+
+        public void ExecuteFile(string filename, string extraArgs) {
+            EnsureConnected();
+
+            if (_curListener != null) {
+                _curListener.ExecuteFile(filename, extraArgs);
+            } else {
+                _window.WriteError("Current interactive window is disconnected." + Environment.NewLine);
+            }
         }
 
         public void ExecuteFile(string filename) {

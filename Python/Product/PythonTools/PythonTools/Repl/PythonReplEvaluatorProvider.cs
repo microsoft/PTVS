@@ -27,13 +27,12 @@ namespace Microsoft.PythonTools.Repl {
 #endif
     
     [Export(typeof(IReplEvaluatorProvider))]
-    [ReplRole("Execution")]
-    [ReplRole("Reset")]
     class PythonReplEvaluatorProvider : IReplEvaluatorProvider {
         readonly IInterpreterOptionsService _interpService;
         readonly IErrorProviderFactory _errorProviderFactory;
 
         private const string _replGuid = "FAEC7F47-85D8-4899-8D7B-0B855B732CC8";
+        internal const string _configurableGuid = "3C4CB167-E213-4377-8909-437139C3C553";
 
         [ImportingConstructor]
         public PythonReplEvaluatorProvider([Import] IInterpreterOptionsService interpService, [Import] IErrorProviderFactory errorProviderFactory) {
@@ -51,6 +50,39 @@ namespace Microsoft.PythonTools.Repl {
                 if (interpreter != null) {
                     return new PythonReplEvaluator(interpreter, _errorProviderFactory);
                 }
+            } else if (replId.StartsWith(_configurableGuid)) {
+                return CreateConfigurableInterpreter(replId);
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Creates an interpreter which was created programmatically by some plugin
+        /// </summary>
+        private IReplEvaluator CreateConfigurableInterpreter(string replId) {
+            string[] components = replId.Split(new[] { '|' }, 5);
+            if (components.Length == 5) {
+                string workingDir = components[0];
+                string options = components[1];
+                string interpreter = components[2];
+                string interpreterVersion = components[3];
+                // we don't care about the user identifier
+
+                var pyInterpreter = _interpService.FindInterpreter(interpreter, interpreterVersion);
+                // TODO: We'll need to look in virtual env's here too
+                if (pyInterpreter != null) {
+                    PythonReplCreationOptions optionsVal;
+                    Enum.TryParse<PythonReplCreationOptions>(options, out optionsVal);
+                    var replOptions = new ConfigurablePythonReplOptions(
+                        workingDir
+                    );
+
+                    if (optionsVal.HasFlag(PythonReplCreationOptions.DontPersist)) {
+                        return new PythonReplEvaluatorDontPersist(pyInterpreter, _errorProviderFactory, replOptions);
+                    } else {
+                        return new PythonReplEvaluator(pyInterpreter, _errorProviderFactory, replOptions);
+                    }
+                }
             }
             return null;
         }
@@ -63,4 +95,5 @@ namespace Microsoft.PythonTools.Repl {
                 interpreter.Configuration.Version;
         }
     }
+
 }

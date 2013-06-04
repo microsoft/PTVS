@@ -404,9 +404,11 @@
     <Compile Include="PythonTools\Repl\DebugReplStepOverCommand.cs" />
     <Compile Include="PythonTools\Repl\DebugReplThreadCommand.cs" />
     <Compile Include="PythonTools\Repl\DebugReplThreadsCommand.cs" />
+    <Compile Include="PythonTools\Repl\IPythonReplEvaluator.cs" />
     <Compile Include="PythonTools\Repl\IPythonReplIntellisense.cs" />
     <Compile Include="PythonTools\Repl\PythonDebugReplEvaluator.cs" />
     <Compile Include="PythonTools\Repl\PythonDebugReplEvaluatorProvider.cs" />
+    <Compile Include="PythonTools\Repl\PythonReplCreationOptions.cs" />
     <Compile Include="PythonTools\SnapshotSpanSourceCodeStream.cs" />
     <Compile Include="PythonTools\Editor\SmartIndentProvider.cs" />
     <Compile Include="PythonTools\Intellisense\DecoratorCompletionAnalysis.cs" />

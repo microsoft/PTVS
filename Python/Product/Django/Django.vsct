@@ -48,7 +48,18 @@
          group as the part of a menu contained between two lines. The parent of a group 
          must be a menu. -->
     <Buttons>
-      <Button guid="guidDjangoCmdSet" id="cmdidValidateDjangoApp" priority="0x0600" type="Button">
+      <Button guid="guidDjangoCmdSet" id="cmdidDjangoShell" priority="0x0400" type="Button">
+        <Parent guid="guidSHLMainMenu" id="IDG_VS_CTXT_PROJECT_BUILD"/>
+        <!-- <Icon guid="guidImages" id="bmpPic1"/> -->
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <CommandFlag>DefaultInvisible</CommandFlag>
+        <Strings>
+          <ButtonText>Open Django Shell</ButtonText>
+        </Strings>
+
+      </Button>
+
+      <Button guid="guidDjangoCmdSet" id="cmdidValidateDjangoApp" priority="0x0450" type="Button">
         <Parent guid="guidSHLMainMenu" id="IDG_VS_CTXT_PROJECT_BUILD"/>
         <!-- <Icon guid="guidImages" id="bmpPic1"/> -->
         <CommandFlag>DynamicVisibility</CommandFlag>
@@ -59,7 +70,7 @@
 
       </Button>
 
-      <Button guid="guidDjangoCmdSet" id="cmdidSyncDb" priority="0x0600" type="Button">
+      <Button guid="guidDjangoCmdSet" id="cmdidSyncDb" priority="0x0470" type="Button">
         <Parent guid="guidSHLMainMenu" id="IDG_VS_CTXT_PROJECT_BUILD"/>
         <!-- <Icon guid="guidImages" id="bmpPic1"/> -->
 
@@ -130,6 +141,7 @@
       <IDSymbol name="cmdidStartApp" value ="0x1002"/>
       <IDSymbol name="cmdidGotoTemplateSource" value="0x1003"/>
       <IDSymbol name="cmdidSyncDb" value="0x1004"/>
+      <IDSymbol name="cmdidDjangoShell" value ="0x1005"/>
     </GuidSymbol>
 
     <GuidSymbol name="guidDjangoEditorFactory" value="{96108b8f-2a98-4f6b-a6b6-69e04e7b7d3f}" />

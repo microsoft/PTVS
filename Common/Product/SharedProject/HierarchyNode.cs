@@ -313,6 +313,19 @@ namespace Microsoft.VisualStudioTools.Project
             }
         }
 
+        public HierarchyNode PreviousVisibleSibling 
+        {
+            get 
+            {
+                var prev = PreviousSibling;
+                while (prev != null && !prev.IsVisible) 
+                {
+                    prev = prev.PreviousSibling;
+                }
+                return prev;
+            }
+        }
+
         public HierarchyNode NextVisibleSibling 
         {
             get 

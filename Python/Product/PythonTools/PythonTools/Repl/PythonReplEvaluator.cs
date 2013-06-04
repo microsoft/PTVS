@@ -23,6 +23,8 @@ using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Parsing;
+using Microsoft.PythonTools.Project;
+using Microsoft.VisualStudio.Repl;
 using Microsoft.VisualStudio.Text.Adornments;
 using Microsoft.VisualStudioTools;
 
@@ -32,13 +34,20 @@ namespace Microsoft.PythonTools.Repl {
     using IReplEvaluator = IInteractiveEngine;
 #endif
 
+    [ReplRole("Execution")]
+    [ReplRole("Reset")]
     internal class PythonReplEvaluator : BasePythonReplEvaluator {
         private readonly IErrorProviderFactory _errorProviderFactory;
         private readonly IPythonInterpreterFactory _interpreter;
         private VsProjectAnalyzer _replAnalyzer;
         private bool _ownsAnalyzer, _enableAttach;
 
-        public PythonReplEvaluator(IPythonInterpreterFactory interpreter, IErrorProviderFactory errorProviderFactory) {
+        public PythonReplEvaluator(IPythonInterpreterFactory interpreter, IErrorProviderFactory errorProviderFactory) 
+            : this(interpreter, errorProviderFactory, new DefaultPythonReplEvaluatorOptions(PythonToolsPackage.Instance.InteractiveOptionsPage.GetOptions(interpreter))) {
+        }
+
+        public PythonReplEvaluator(IPythonInterpreterFactory interpreter, IErrorProviderFactory errorProviderFactory, PythonReplEvaluatorOptions options)
+            : base(options) {
             _interpreter = interpreter;
             _errorProviderFactory = errorProviderFactory;
         }
@@ -84,38 +93,6 @@ namespace Microsoft.PythonTools.Repl {
             }
         }
 
-        protected override PythonInteractiveCommonOptions CreatePackageOptions() {
-            return new PythonInteractiveOptions();
-        }
-
-        protected override PythonInteractiveCommonOptions GetPackageOptions() {
-            return PythonToolsPackage.Instance.InteractiveOptionsPage.GetOptions(Interpreter);
-        }
-
-        private bool EnableAttach {
-            get {
-                return ((PythonInteractiveOptions)CurrentOptions).EnableAttach;
-            }
-        }
-
-        private string StartupScript {
-            get {
-                return ((PythonInteractiveOptions)CurrentOptions).StartupScript;
-            }
-        }
-
-        private string InterpreterOptions {
-            get {
-                return ((PythonInteractiveOptions)CurrentOptions).InterpreterOptions;
-            }
-        }
-
-        private string ExecutionMode {
-            get {
-                return ((PythonInteractiveOptions)CurrentOptions).ExecutionMode;
-            }
-        }
-
         protected override void Close() {
             base.Close();
             if (_ownsAnalyzer && _replAnalyzer != null) {
@@ -152,59 +129,58 @@ namespace Microsoft.PythonTools.Repl {
 
             List<string> args = new List<string>();
 
-            if (!String.IsNullOrWhiteSpace(InterpreterOptions)) {
-                args.Add(InterpreterOptions);
+            if (!String.IsNullOrWhiteSpace(CurrentOptions.InterpreterOptions)) {
+                args.Add(CurrentOptions.InterpreterOptions);
             }
 
-            string filename, dir, extraArgs = null;
-            VsProjectAnalyzer analyzer;
-            if (PythonToolsPackage.TryGetStartupFileAndDirectory(out filename, out dir, out analyzer)) {
-                processInfo.WorkingDirectory = dir;
-                var startupProj = PythonToolsPackage.GetStartupProject();
-                if (startupProj != null) {
-                    string searchPath = startupProj.GetProjectProperty(CommonConstants.SearchPath, true);
-                    string pathEnvVar = Interpreter.Configuration.PathEnvironmentVariable;
-                    if (!string.IsNullOrEmpty(searchPath) && !String.IsNullOrWhiteSpace(pathEnvVar)) {
-                        processInfo.EnvironmentVariables[pathEnvVar] = searchPath;
-                    }
+            var workingDir = CurrentOptions.WorkingDirectory;
+            if (workingDir != null) {
+                processInfo.WorkingDirectory = workingDir;
+            }
 
-                    string interpArgs = startupProj.GetProjectProperty(CommonConstants.InterpreterArguments, true);
-                    if (!String.IsNullOrWhiteSpace(interpArgs)) {
-                        args.Add(interpArgs);
-                    }
-
-                    extraArgs = startupProj.GetProjectProperty(CommonConstants.CommandLineArguments, true);
-                }
-                if (analyzer.InterpreterFactory == _interpreter) {
-                    if (_replAnalyzer != null && _replAnalyzer != analyzer) {
-                        analyzer.SwitchAnalyzers(_replAnalyzer);
-                    }
-                    _replAnalyzer = analyzer;
-                    _ownsAnalyzer = false;
+            var searchPaths = CurrentOptions.SearchPaths;
+            if (searchPaths != null) {
+                string pathEnvVar = Interpreter.Configuration.PathEnvironmentVariable;
+                if (!string.IsNullOrEmpty(searchPaths) && !String.IsNullOrWhiteSpace(pathEnvVar)) {
+                    processInfo.EnvironmentVariables[pathEnvVar] = searchPaths;
                 }
             }
 
-            args.Add("\"" + Path.Combine(PythonToolsPackage.GetPythonToolsInstallPath(), "visualstudio_py_repl.py") + "\"");
+            var interpreterArgs = CurrentOptions.InterpreterArguments;
+            if (!String.IsNullOrWhiteSpace(interpreterArgs)) {
+                args.Add(interpreterArgs);
+            }
+
+            var analyzer = CurrentOptions.ProjectAnalyzer;
+            if (analyzer != null && analyzer.InterpreterFactory == _interpreter) {
+                if (_replAnalyzer != null && _replAnalyzer != analyzer) {
+                    analyzer.SwitchAnalyzers(_replAnalyzer);
+                }
+                _replAnalyzer = analyzer;
+                _ownsAnalyzer = false;
+            }
+
+            args.Add(ProcessOutput.QuoteSingleArgument(Path.Combine(PythonToolsPackage.GetPythonToolsInstallPath(), "visualstudio_py_repl.py")));
             args.Add("--port");
             args.Add(portNum.ToString());
 
-            if (!String.IsNullOrWhiteSpace(StartupScript)) {
+            if (!String.IsNullOrWhiteSpace(CurrentOptions.StartupScript)) {
                 args.Add("--launch_file");
-                args.Add("\"" + StartupScript + "\"");
+                args.Add(ProcessOutput.QuoteSingleArgument(CurrentOptions.StartupScript));
             }
 
-            _enableAttach = EnableAttach;
-            if (EnableAttach) {
+            _enableAttach = CurrentOptions.EnableAttach;
+            if (CurrentOptions.EnableAttach) {
                 args.Add("--enable-attach");
             }
 
             bool multipleScopes = true;
-            if (!String.IsNullOrWhiteSpace(ExecutionMode)) {
+            if (!String.IsNullOrWhiteSpace(CurrentOptions.ExecutionMode)) {
                 // change ID to module name if we have a registered mode
                 var modes = Microsoft.PythonTools.Options.ExecutionMode.GetRegisteredModes();
-                string modeValue = ExecutionMode;
+                string modeValue = CurrentOptions.ExecutionMode;
                 foreach (var mode in modes) {
-                    if (mode.Id == ExecutionMode) {
+                    if (mode.Id == CurrentOptions.ExecutionMode) {
                         modeValue = mode.Type;
                         multipleScopes = mode.SupportsMultipleScopes;
                         break;
@@ -228,6 +204,246 @@ namespace Microsoft.PythonTools.Repl {
             }
 
             CreateCommandProcessor(conn, null, processInfo.RedirectStandardOutput, process);
+        }
+    }
+
+    [ReplRole("DontPersist")]
+    class PythonReplEvaluatorDontPersist : PythonReplEvaluator {
+        public PythonReplEvaluatorDontPersist(IPythonInterpreterFactory interpreter, IErrorProviderFactory errorProviderFactory, PythonReplEvaluatorOptions options) :
+            base(interpreter, errorProviderFactory, options) {
+        }
+    }
+
+    /// <summary>
+    /// Base class used for providing REPL options
+    /// </summary>
+    abstract class PythonReplEvaluatorOptions {
+        public abstract string InterpreterOptions {
+            get;
+        }
+
+        public abstract string WorkingDirectory {
+            get;
+        }
+
+        public abstract string StartupScript {
+            get;
+        }
+
+        public abstract string SearchPaths {
+            get;
+        }
+
+        public abstract string InterpreterArguments {
+            get;
+        }
+
+        public abstract VsProjectAnalyzer ProjectAnalyzer {
+            get;
+        }
+
+        public abstract bool UseInterpreterPrompts {
+            get;
+        }
+
+        public abstract string ExecutionMode {
+            get;
+        }
+
+        public abstract bool EnableAttach {
+            get;
+        }
+
+        public abstract bool InlinePrompts {
+            get;
+        }
+
+        public abstract bool ReplSmartHistory {
+            get;
+        }
+
+        public abstract bool LiveCompletionsOnly {
+            get;
+        }
+
+        public abstract string PrimaryPrompt {
+            get;
+        }
+
+        public abstract string SecondaryPrompt {
+            get;
+        }
+    }
+
+    class ConfigurablePythonReplOptions : PythonReplEvaluatorOptions {
+        private readonly string _workingDir;
+
+        public ConfigurablePythonReplOptions(string workingDir) {
+            _workingDir = workingDir;
+        }
+
+        public override string InterpreterOptions {
+            get { return ""; }
+        }
+
+        public override string WorkingDirectory {
+            get { return _workingDir; }
+        }
+
+        public override string StartupScript {
+            get { return ""; }
+        }
+
+        public override string SearchPaths {
+            get { return ""; }
+        }
+
+        public override string InterpreterArguments {
+            get { return ""; }
+        }
+
+        public override VsProjectAnalyzer ProjectAnalyzer {
+            get {
+                return null;
+            }
+        }
+
+        public override bool UseInterpreterPrompts {
+            get { return true; }
+        }
+
+        public override string ExecutionMode {
+            get { return null; }
+        }
+
+        public override bool EnableAttach {
+            get { return false; }
+        }
+
+        public override bool InlinePrompts {
+            get { return true; }
+        }
+
+        public override bool ReplSmartHistory {
+            get { return true; }
+        }
+
+        public override bool LiveCompletionsOnly {
+            get { return false; }
+        }
+
+        public override string PrimaryPrompt {
+            get { return ">>> "; }
+        }
+
+        public override string SecondaryPrompt {
+            get { return "... "; }
+        }
+    }
+
+    /// <summary>
+    /// Provides REPL options based upon options stored in our UI.
+    /// </summary>
+    class DefaultPythonReplEvaluatorOptions : PythonReplEvaluatorOptions {
+        private readonly PythonInteractiveCommonOptions _options;
+
+        public DefaultPythonReplEvaluatorOptions(PythonInteractiveCommonOptions options) {
+            _options = options;
+        }
+
+        public override string InterpreterOptions {
+            get {
+                return ((PythonInteractiveOptions)_options).InterpreterOptions;
+            }
+        }
+
+        public override bool EnableAttach {
+            get {
+                return ((PythonInteractiveOptions)_options).EnableAttach;
+            }
+        }
+
+        public override string StartupScript {
+            get {
+                return ((PythonInteractiveOptions)_options).StartupScript;
+            }
+        }
+
+        public override string ExecutionMode {
+            get {
+                return ((PythonInteractiveOptions)_options).ExecutionMode;
+            }
+        }
+
+        public override string WorkingDirectory {
+            get {
+                var startupProj = PythonToolsPackage.GetStartupProject();
+                if (startupProj != null) {
+                    return startupProj.GetWorkingDirectory();
+                }
+
+                var textView = CommonPackage.GetActiveTextView();
+                if (textView != null) {
+                    return Path.GetDirectoryName(textView.GetFilePath());
+                }
+
+                return null;
+            }
+        }
+
+        public override string SearchPaths {
+            get {
+                var startupProj = PythonToolsPackage.GetStartupProject();
+                if (startupProj != null) {
+                    return startupProj.GetProjectProperty(CommonConstants.SearchPath, true);
+                }
+
+                return null;
+            }
+        }
+
+        public override string InterpreterArguments {
+            get {
+                var startupProj = PythonToolsPackage.GetStartupProject();
+                if (startupProj != null) {
+                    return startupProj.GetProjectProperty(CommonConstants.InterpreterArguments, true);
+                }
+                return null;
+            }
+        }
+
+        public override VsProjectAnalyzer ProjectAnalyzer {
+            get { 
+                var startupProj = PythonToolsPackage.GetStartupProject();
+                if (startupProj != null) {
+                    return ((PythonProjectNode)startupProj).GetAnalyzer();
+                }
+                return null;
+            }
+        }
+
+        public override bool UseInterpreterPrompts {
+            get { return _options.UseInterpreterPrompts; }
+        }
+
+        public override bool InlinePrompts {
+            get { return _options.InlinePrompts;  }
+        }
+
+        public override bool ReplSmartHistory {
+            get { return _options.ReplSmartHistory; }
+        }
+
+        public override bool LiveCompletionsOnly {
+            get { return _options.LiveCompletionsOnly; }
+        }
+
+        public override string PrimaryPrompt {
+            get { return _options.PrimaryPrompt; }
+        }
+
+        public override string SecondaryPrompt {
+            get { return _options.SecondaryPrompt;  }
         }
     }
 }

@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -22,6 +23,7 @@ using System.Windows.Input;
 using EnvDTE;
 using Microsoft.TC.TestHostAdapters;
 using Microsoft.TestSccPackage;
+using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -651,6 +653,85 @@ namespace PythonToolsUITests {
             Assert.IsNotNull(window.WaitForItem("Solution 'DjangoApplication' (1 project)", "DjangoApplication", "Folder", "test.py"));
         }
 
+        /// <summary>
+        /// http://pytools.codeplex.com/workitem/1223
+        /// </summary>
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void AddItemPreviousSiblingNotVisible() {
+            var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\AddItemPreviousSiblingNotVisible.sln");
+
+            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            app.OpenSolutionExplorer();
+            var window = app.SolutionExplorerTreeView;
+
+            var projectNode = window.WaitForItem("Solution 'AddItemPreviousSiblingNotVisible' (1 project)", "HelloWorld");
+            Assert.IsNotNull(projectNode);
+            AutomationWrapper.Select(projectNode);
+
+            IVsSolution solutionService = VsIdeTestHostContext.ServiceProvider.GetService(typeof(SVsSolution)) as IVsSolution;
+            Debug.Assert(solutionService != null);
+
+            IVsHierarchy selectedHierarchy;
+            ErrorHandler.ThrowOnFailure(solutionService.GetProjectOfUniqueName(project.UniqueName, out selectedHierarchy));
+            Debug.Assert(selectedHierarchy != null);
+            HierarchyEvents events = new HierarchyEvents();
+            uint cookie;
+            selectedHierarchy.AdviseHierarchyEvents(events, out cookie);
+
+            var newItem = new NewItemDialog(AutomationElement.FromHandle(app.OpenDialogWithDteExecuteCommand("Project.AddNewItem")));
+            AutomationWrapper.Select(newItem.ProjectTypes.FindItem("Python Unit Test"));
+            newItem.ClickOK();
+
+            var test2 = window.WaitForItem("Solution 'AddItemPreviousSiblingNotVisible' (1 project)", "HelloWorld", "test2.py");
+            Assert.IsNotNull(test2);
+
+            selectedHierarchy.UnadviseHierarchyEvents(cookie);
+
+            object caption;
+            ErrorHandler.ThrowOnFailure(
+                selectedHierarchy.GetProperty(
+                    events.SiblingPrev,
+                    (int)__VSHPROPID.VSHPROPID_Caption,
+                    out caption
+                )
+            );
+
+            Assert.AreEqual("Program.py", caption);
+        }
+
+        class HierarchyEvents : IVsHierarchyEvents {
+            public uint SiblingPrev;
+
+            #region IVsHierarchyEvents Members
+
+            public int OnInvalidateIcon(IntPtr hicon) {
+                return VSConstants.S_OK;
+            }
+
+            public int OnInvalidateItems(uint itemidParent) {
+                return VSConstants.S_OK;
+            }
+
+            public int OnItemAdded(uint itemidParent, uint itemidSiblingPrev, uint itemidAdded) {
+                SiblingPrev = itemidSiblingPrev;
+                return VSConstants.S_OK;
+            }
+
+            public int OnItemDeleted(uint itemid) {
+                return VSConstants.S_OK;
+            }
+
+            public int OnItemsAppended(uint itemidParent) {
+                return VSConstants.S_OK;
+            }
+
+            public int OnPropertyChanged(uint itemid, int propid, uint flags) {
+                return VSConstants.S_OK;
+            }
+
+            #endregion
+        }
         /// <summary>
         /// Verify we get called w/ a project which does have source control enabled.
         /// </summary>

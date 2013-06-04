@@ -37,10 +37,12 @@ using Microsoft.PythonTools.Navigation;
 using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Project;
+using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Debugger.Interop;
 using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.OLE.Interop;
+using Microsoft.VisualStudio.Repl;
 using Microsoft.VisualStudio.Settings;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -948,6 +950,43 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
                     Marshal.FreeCoTaskMem(pDirName);
                 }
             }
+        }
+        
+        /// <summary>
+        /// Creates a new Python REPL window which is independent from the default Python REPL windows.
+        /// 
+        /// The interpreter can be configured to persist across REPL sessions or not.
+        /// </summary>
+        /// <param name="id">An ID which can be used to retrieve the window again and can survive across VS sessions.
+        /// 
+        /// The ID cannot include the | character.</param>
+        /// <param name="title">The title of the window to be displayed</param>
+        /// <param name="interpreter">The interpreter to be used.  This implies the language version and provides the path to the Python interpreter to be used.</param>
+        /// <param name="startupFile">The file to be executed on the startup of the REPL.  Can be null, which will result in an interactive REPL.</param>
+        /// <param name="workingDir">The working directory of the REPL process</param>
+        /// <param name="options">Specifies various options for creation of the REPL window</param>
+        public IReplWindow CreatePythonRepl(string id, string title, IPythonInterpreterFactory interpreter, string workingDir, PythonReplCreationOptions options) {
+            Utilities.ArgumentNotNull("interpreter", interpreter);
+            Utilities.ArgumentNotNull("id", id);
+            Utilities.ArgumentNotNull("title", title);
+
+            // Full ID as parsed by PythonReplEvaulatorProvider
+            string fullId = String.Format("{0}|{1}|{2}|{3}|{4}|{5}",
+                PythonReplEvaluatorProvider._configurableGuid,
+                workingDir,
+                options.ToString(),
+                interpreter.Id,
+                interpreter.Configuration.Version,
+                id
+            );
+            var replProvider = ComponentModel.GetService<IReplWindowProvider>();
+
+            return replProvider.FindReplWindow(fullId) ?? replProvider.CreateReplWindow(
+                ContentType,
+                title,
+                typeof(PythonLanguageInfo).GUID,
+                fullId
+            );
         }
 
         #region IVsComponentSelectorProvider Members

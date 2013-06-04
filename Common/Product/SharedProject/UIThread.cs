@@ -143,7 +143,10 @@ namespace Microsoft.VisualStudioTools.Project
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode"), System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes")]
         internal void RunSync(Action a)
         {
-            if (this.isUnitTestingMode)
+            // if we're already on the UI thread run immediately - this prevents
+            // re-entrancy at unexpected times when we're already on the UI thread.
+            if (this.isUnitTestingMode || 
+                uithread == Thread.CurrentThread)   
             {
                 a();
                 return;

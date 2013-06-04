@@ -6314,7 +6314,7 @@ If the files in the existing folder have the same names as files in the folder y
                 return;
             }
 
-            HierarchyNode prev = child.PreviousSibling;
+            HierarchyNode prev = child.PreviousVisibleSibling;
             uint prevId = (prev != null) ? prev.HierarchyId : VSConstants.VSITEMID_NIL;
             foreach (IVsHierarchyEvents sink in _hierarchyEventSinks) {
                 int result = sink.OnItemAdded(parent.HierarchyId, prevId, child.HierarchyId);

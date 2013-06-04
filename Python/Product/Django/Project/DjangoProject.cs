@@ -32,11 +32,14 @@ using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.PythonTools.Project;
+using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.OLE.Interop;
+using Microsoft.VisualStudio.Repl;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Flavor;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Django.Project {
     [Guid("564253E9-EF07-4A40-89CF-790E61F53368")]
@@ -74,7 +77,7 @@ namespace Microsoft.PythonTools.Django.Project {
         /// </summary>      
         protected override void InitializeForOuter(string fileName, string location, string name, uint flags, ref Guid guidProject, out bool cancel) {
             base.InitializeForOuter(fileName, location, name, flags, ref guidProject, out cancel);
-            
+
             // register the open command with the menu service provided by the base class.  We can't just handle this
             // internally because we kick off the context menu, pass ourselves as the IOleCommandTarget, and then our
             // base implementation dispatches via the menu service.  So we could either have a different IOleCommandTarget
@@ -105,8 +108,8 @@ namespace Microsoft.PythonTools.Django.Project {
             object extObject;
             ErrorHandler.ThrowOnFailure(
                 _innerVsHierarchy.GetProperty(
-                    VSConstants.VSITEMID_ROOT, 
-                    (int)__VSHPROPID.VSHPROPID_ExtObject, 
+                    VSConstants.VSITEMID_ROOT,
+                    (int)__VSHPROPID.VSHPROPID_ExtObject,
                     out extObject
                 )
             );
@@ -149,8 +152,8 @@ namespace Microsoft.PythonTools.Django.Project {
                 var projAnalyzer = pyProj.GetProjectAnalyzer();
                 var analyzer = projAnalyzer.Project;
                 HookAnalysis(analyzer, projAnalyzer);
-            }
-        }
+                        }
+                    }
 
         private void HookAnalysis(PythonAnalyzer analyzer, VsProjectAnalyzer projAnalyzer) {
             analyzer.SpecializeFunction("django.template.loader", "render_to_string", RenderToStringProcessor, true);
@@ -248,7 +251,7 @@ namespace Microsoft.PythonTools.Django.Project {
                     var parser = unit.FindAnalysisValueByName(node, "django.template.base.Parser");
                     if (parser != null) {
                         func.Call(node, unit, new[] { parser, null }, null);
-                }
+                    }
                 }
             } else if (args.Length >= 2) {
                 // library.filter(value)
@@ -623,6 +626,7 @@ namespace Microsoft.PythonTools.Django.Project {
                             return VSConstants.S_OK;
                         case PkgCmdIDList.cmdidValidateDjangoApp:
                         case PkgCmdIDList.cmdidSyncDb:
+                        case PkgCmdIDList.cmdidDjangoShell:
                             prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);
                             return VSConstants.S_OK;
                     }
@@ -667,6 +671,9 @@ namespace Microsoft.PythonTools.Django.Project {
                 }
             } else if (pguidCmdGroup == GuidList.guidDjangoCmdSet) {
                 switch (nCmdID) {
+                    case PkgCmdIDList.cmdidDjangoShell:
+                        GetDjangoManagementConsoleWindow();
+                        return VSConstants.S_OK;
                     case PkgCmdIDList.cmdidValidateDjangoApp:
                         ValidateDjangoApp();
                         return VSConstants.S_OK;
@@ -724,40 +731,18 @@ namespace Microsoft.PythonTools.Django.Project {
         }
 
         private void ValidateDjangoApp() {
-            var proc = RunManageCommand("validate");
-            if (proc != null) {
-                var dialog = new WaitForValidationDialog(proc, "Validate App Results");
-
-                ShowValidationDialog(dialog, proc);
-            } else {
-                MessageBox.Show("Could not find Python interpreter for project.");
-            }
+            RunManageCommand("validate");
         }
 
         private void SyncDb() {
-            var proc = RunManageCommand("syncdb");
-            if (proc != null) {
-                var dialog = new WaitForValidationDialog(proc, "Sync DB Results");
-
-                ShowValidationDialog(dialog, proc);
-            } else {
-                MessageBox.Show("Could not find Python interpreter for project.");
-            }
+            RunManageCommand("syncdb");
         }
 
-        private Process RunManageCommand(string arguments) {
-            var pyProj = _innerVsHierarchy.GetPythonInterpreterFactory();
-            if (pyProj != null) {
-                ProcessStartInfo psi;
-                var interpreterPath = pyProj.Configuration.InterpreterPath;
-                var pyProject = _innerVsHierarchy.GetProject().GetPythonProject();
-                var managePyPath = (pyProject != null) ? pyProject.GetStartupFile() : null;
-                if (string.IsNullOrEmpty(managePyPath)) {
-                    psi = new ProcessStartInfo(interpreterPath, "manage.py " + arguments);
-                } else {
-                    psi = new ProcessStartInfo(interpreterPath, "\"" + managePyPath + "\" " + arguments);
-                }
+        private static string DjangoReplId = "CF818027-FF53-4139-9F41-B8DDCB0BAC1C";
 
+        private void RunManageCommand(string arguments) {
+            var replWindow = GetDjangoManagementConsoleWindow();
+            if (replWindow != null) {
                 object projectDir;
                 ErrorHandler.ThrowOnFailure(_innerVsHierarchy.GetProperty(
                     (uint)VSConstants.VSITEMID.Root,
@@ -765,69 +750,83 @@ namespace Microsoft.PythonTools.Django.Project {
                     out projectDir)
                 );
 
-                if (projectDir != null) {
-                    psi.WorkingDirectory = projectDir.ToString();
-
-                    psi.CreateNoWindow = true;
-                    psi.UseShellExecute = false;
-                    psi.RedirectStandardOutput = true;
-                    psi.RedirectStandardError = true;
-
-                    return Process.Start(psi);
+                var pyProject = _innerVsHierarchy.GetProject().GetPythonProject();
+                var managePyPath = (pyProject != null) ? pyProject.GetStartupFile() : null;
+                if (string.IsNullOrEmpty(managePyPath)) {
+                    managePyPath = "manage.py";
                 }
+
+                var evaluator = ((IPythonReplEvaluator)replWindow.Evaluator);
+                if (evaluator.IsDisconnected) {
+                    evaluator.Reset().ContinueWith(
+                        (task) => {
+                            if (!task.IsFaulted) {
+                                DoRunManageCommand(arguments, (string)projectDir, managePyPath, replWindow, evaluator);
+                            }
+                        }
+                    );
+                } else if (evaluator.IsExecuting) {
+                    replWindow.WriteError(@"Cannot execute management command - a command is currently running.
+Either stop the current command, or reset the REPL window.");
+                } else {
+                    DoRunManageCommand(arguments, (string)projectDir, managePyPath, replWindow, evaluator);
+                }
+            } else {
+                MessageBox.Show("Unable to run management command - no Python interpreters are configured");
+            }
+        }
+
+        private IReplWindow GetDjangoManagementConsoleWindow() {
+            var pyProj = _innerVsHierarchy.GetPythonInterpreterFactory();
+            if (pyProj != null) {
+                object projectDir;
+                ErrorHandler.ThrowOnFailure(_innerVsHierarchy.GetProperty(
+                    (uint)VSConstants.VSITEMID.Root,
+                    (int)__VSHPROPID.VSHPROPID_ProjectDir,
+                    out projectDir)
+                );
+
+                object projectName;
+                ErrorHandler.ThrowOnFailure(_innerVsHierarchy.GetProperty(
+                    (uint)VSConstants.VSITEMID.Root,
+                    (int)__VSHPROPID.VSHPROPID_ProjectName,
+                    out projectName)
+                );
+
+                Guid projectIdGuid;
+                ErrorHandler.ThrowOnFailure(_innerVsHierarchy.GetGuidProperty(
+                    (uint)VSConstants.VSITEMID.Root,
+                    (int)__VSHPROPID.VSHPROPID_ProjectIDGuid,
+                    out projectIdGuid)
+                );
+
+                IReplWindow replWindow = PythonToolsPackage.Instance.CreatePythonRepl(
+                    DjangoReplId + projectIdGuid.ToString(),
+                    "Django Management Console - " + projectName,
+                    pyProj,
+                    (projectDir ?? "").ToString(),
+                    Repl.PythonReplCreationOptions.DontPersist
+                );
+
+                IVsWindowFrame windowFrame = (IVsWindowFrame)((ToolWindowPane)replWindow).Frame;
+                ErrorHandler.ThrowOnFailure(windowFrame.Show());
+
+                return replWindow;
             }
             return null;
         }
 
-        private static void ShowValidationDialog(WaitForValidationDialog dialog, Process proc) {
-            var curScheduler = System.Threading.Tasks.TaskScheduler.FromCurrentSynchronizationContext();
-            var receiver = new OutputDataReceiver(curScheduler, dialog);
-            proc.OutputDataReceived += receiver.OutputDataReceived;
-            proc.ErrorDataReceived += receiver.OutputDataReceived;
-
-            proc.BeginErrorReadLine();
-            proc.BeginOutputReadLine();
-
-            // when the process exits allow the user to press ok, disable cancelling...
-            ThreadPool.QueueUserWorkItem(x => {
-                proc.WaitForExit();
-                var task = System.Threading.Tasks.Task.Factory.StartNew(
-                    () => dialog.EnableOk(),
-                    default(CancellationToken),
-                    System.Threading.Tasks.TaskCreationOptions.None,
-                    curScheduler
-                );
-                task.Wait();
-                if (task.Exception != null) {
-                    Debug.Assert(false);
-                    Debug.WriteLine(task.Exception);
-                }
-            });
-
-            dialog.Owner = System.Windows.Application.Current.MainWindow;
-            dialog.ShowDialog();
-            dialog.SetText(receiver.Received.ToString());
-        }
-
-        class OutputDataReceiver {
-            public readonly StringBuilder Received = new StringBuilder();
-            private readonly TaskScheduler _scheduler;
-            private readonly WaitForValidationDialog _dialog;
-
-            public OutputDataReceiver(TaskScheduler scheduler, WaitForValidationDialog dialog) {
-                _scheduler = scheduler;
-                _dialog = dialog;
-            }
-
-            public void OutputDataReceived(object sender, DataReceivedEventArgs e) {
-                Received.Append(e.Data + Environment.NewLine);
-                System.Threading.Tasks.Task.Factory.StartNew(
-                    () => _dialog.SetText(Received.ToString()),
-                    default(CancellationToken),
-                    System.Threading.Tasks.TaskCreationOptions.None,
-                    _scheduler
-                );
-            }
+        private static void DoRunManageCommand(string arguments, string projectDir, string managePyPath, IReplWindow replWindow, IPythonReplEvaluator evaluator) {
+            replWindow.WriteLine(
+                String.Format("Executing {0} {1}",
+                    CommonUtils.CreateFriendlyDirectoryPath(projectDir, managePyPath),
+                    arguments
+                )
+            );
+            evaluator.ExecuteFile(
+                managePyPath,
+                arguments
+            );
         }
 
         private bool TryHandleRightClick(IntPtr pvaIn, out int res) {
@@ -1084,13 +1083,13 @@ namespace Microsoft.PythonTools.Django.Project {
                                     writer.WriteAttributeString("commandLine", "Microsoft.PythonTools.AzureSetup.exe");
                                     writer.WriteAttributeString("executionContext", "elevated");
                                     writer.WriteAttributeString("taskType", "simple");
-                                    
+
                                     writer.WriteStartElement("Environment");
                                     writer.WriteStartElement("Variable");
                                     writer.WriteAttributeString("name", "EMULATED");
                                     writer.WriteStartElement("RoleInstanceValue");
                                     writer.WriteAttributeString("xpath", "/RoleEnvironment/Deployment/@emulated");
-                                    
+
                                     writer.WriteEndElement(); // RoleInstanceValue
                                     writer.WriteEndElement(); // Variable
                                     writer.WriteEndElement(); // Environment
@@ -1206,7 +1205,7 @@ namespace Microsoft.PythonTools.Django.Project {
 
             return ((IOleCommandTarget)_menuService).QueryStatus(ref pguidCmdGroup, cCmds, prgCmds, pCmdText);
         }
-        
+
         #region IVsProjectFlavorCfgProvider Members
 
         public int CreateProjectFlavorCfg(IVsCfg pBaseProjectCfg, out IVsProjectFlavorCfg ppFlavorCfg) {
@@ -1217,7 +1216,7 @@ namespace Microsoft.PythonTools.Django.Project {
             IVsProjectFlavorCfg webCfg;
             ErrorHandler.ThrowOnFailure(
                 _innerVsProjectFlavorCfgProvider.CreateProjectFlavorCfg(
-                    pBaseProjectCfg, 
+                    pBaseProjectCfg,
                     out webCfg
                 )
             );
@@ -1226,7 +1225,7 @@ namespace Microsoft.PythonTools.Django.Project {
         }
 
         #endregion
-        
+
         #region IVsProject Members
 
         int IVsProject.AddItem(uint itemidLoc, VSADDITEMOPERATION dwAddItemOperation, string pszItemName, uint cFilesToOpen, string[] rgpszFilesToOpen, IntPtr hwndDlgOwner, VSADDRESULT[] pResult) {

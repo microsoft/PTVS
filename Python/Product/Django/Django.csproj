@@ -68,6 +68,7 @@
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.Shell.Interop" />
+    <Reference Include="Microsoft.VisualStudio.Shell.Interop.11.0, Version=11.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" Condition="'$(VSTarget)' != '10.0'"/>
     <Reference Include="Microsoft.VisualStudio.Shell.Interop.8.0" />
     <Reference Include="Microsoft.VisualStudio.Shell.Interop.9.0" />
     <Reference Include="Microsoft.VisualStudio.Shell.Interop.10.0" />
@@ -172,6 +173,9 @@
     <Compile Include="$(BuildRoot)\Common\Product\SharedProject\SolutionListener.cs">
       <Link>Project\SolutionListener.cs</Link>
     </Compile>
+    <Compile Include="..\..\..\Common\Product\SharedProject\CommonUtils.cs">
+      <Link>Project\CommonUtils.cs</Link>
+    </Compile>
     <Compile Include="DialogWindowVersioningWorkaround.cs" />
     <Compile Include="Project\DjangoProject.TagsAndFilters.cs" />
     <Compile Include="Project\DjangoProjectConfig.cs" />
@@ -202,9 +206,6 @@
       <DependentUpon>NewAppDialog.xaml</DependentUpon>
     </Compile>
     <Compile Include="Project\NewAppDialogViewModel.cs" />
-    <Compile Include="Project\WaitForValidationDialog.xaml.cs">
-      <DependentUpon>WaitForValidationDialog.xaml</DependentUpon>
-    </Compile>
     <Compile Include="ProvideDebugLanguageAttribute.cs" />
     <Compile Include="ProvideEditorExtension2Attribute.cs" />
     <Compile Include="DjangoLanguageInfo.cs" />
@@ -321,6 +322,10 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\..\Common\Product\ReplWindow\ReplWindow.csproj">
+      <Project>{20bb6fac-44d2-4d76-abfe-0c1e163a1a4f}</Project>
+      <Name>ReplWindow</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Analysis\Analysis.csproj">
       <Project>{A85D479D-67A9-4BDB-904A-7D86DAF68A6F}</Project>
       <Name>Analysis</Name>
@@ -351,10 +356,6 @@
     <Page Include="Project\NewAppDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Project\WaitForValidationDialog.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
     </Page>
   </ItemGroup>
   <ItemGroup>

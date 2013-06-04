@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.Design;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.Drawing;
@@ -924,7 +925,7 @@ namespace Microsoft.VisualStudioTools.Project {
                     if (_project.IsFileHidden(_path)) {
                         // don't add hidden files/folders
                         return;
-            }
+                    }
 
                     // creating a new item, need to create the on all files node
                     string parentDir = Path.GetDirectoryName(CommonUtils.TrimEndSeparator(_path)) + Path.DirectorySeparatorChar;
@@ -955,7 +956,7 @@ namespace Microsoft.VisualStudioTools.Project {
                             if (IsRecursiveSymLink(parentDir, _path)) {
                                 // don't add recusrive sym link directory
                                 return;
-        }
+                            }
 
                             // otherwise we're going to need a new file system watcher
                             _project.CreateSymLinkWatcher(_path);
@@ -1031,11 +1032,9 @@ namespace Microsoft.VisualStudioTools.Project {
                 _projectDocListenerForStartupFileUpdates.Dispose();
                 _projectDocListenerForStartupFileUpdates = null;
             }
-            if (null != Site) {
-                LibraryManager libraryManager = Site.GetService(GetLibraryManagerType()) as LibraryManager;
-                if (null != libraryManager) {
-                    libraryManager.UnregisterHierarchy(InteropSafeHierarchy);
-                }
+            LibraryManager libraryManager = ((IServiceContainer)Package).GetService(GetLibraryManagerType()) as LibraryManager;
+            if (null != libraryManager) {
+                libraryManager.UnregisterHierarchy(InteropSafeHierarchy);
             }
             _watcher.EnableRaisingEvents = false;
             _watcher.Dispose();

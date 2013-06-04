@@ -278,7 +278,8 @@ namespace Microsoft.VisualStudioTools.Project
                 // Now get the name of the assembly from the project.
                 // Some project system throw if the property does not exist. We expect an ArgumentException.
                 EnvDTE.Property assemblyNameProperty = null;
-                if (ReferencedProjectObject != null)
+                if (ReferencedProjectObject != null && 
+                    !(ReferencedProjectObject is Automation.OAProject)) // our own projects don't have assembly names
                 {
                     try
                     {
@@ -467,6 +468,7 @@ namespace Microsoft.VisualStudioTools.Project
             {
                 return false;
             }
+            
 
             //If the Project is unloaded return false
             if (this.ReferencedProjectObject == null)

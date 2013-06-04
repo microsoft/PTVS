@@ -98,7 +98,7 @@ namespace Microsoft.PythonTools.Project {
                     var task = interp.AddReferenceAsync(_curReference);
 
                     task.ContinueWith(new TaskFailureHandler(TaskScheduler.FromCurrentSynchronizationContext(), this).HandleAddRefFailure);
-                } else {
+                } else if(!(ReferencedProjectObject is Microsoft.VisualStudioTools.Project.Automation.OAProject)) {
                     _failedToAnalyze = true;
                 }
             }

@@ -24,11 +24,7 @@
   <ItemGroup>
     <VirtualEnvEnabled Include="%(VirtualEnv)" 
                        Condition="'%(Id)' == '$(InterpreterId)' and %(Version) == '$(InterpreterVersion)'"></VirtualEnvEnabled>  
-  </ItemGroup>
-  <PropertyGroup Condition="'$(VirtualEnvEnabled)' != ''">
-    <VirtualEnvInterpreterPath></VirtualEnvInterpreterPath>
-  </PropertyGroup>
-  -->
+  </ItemGroup> -->
   <ItemGroup>
     <PythonAzureDeploymentFile Include="$(AzureDjangoSupportPath)Microsoft.PythonTools.AzureSetup.exe"></PythonAzureDeploymentFile>
     <PythonAzureDeploymentFile Include="$(AzureDjangoSupportPath)Microsoft.PythonTools.AzureSetup.exe.config"></PythonAzureDeploymentFile>
@@ -65,19 +61,19 @@
     <Message Text="DefaultInterpreterId=$(InterpreterId)"/>
     <Message Text="DefaultInterpreterVersion=$(InterpreterVersion)"/>
 
-    <PropertyGroup Condition="$(InterpreterId)=='2af0f10d-7135-4994-9156-5d01c9c11b7e'">
+    <PropertyGroup Condition="$(InterpreterId)=='2af0f10d-7135-4994-9156-5d01c9c11b7e' or $(InterpreterId)=='{2af0f10d-7135-4994-9156-5d01c9c11b7e}'">
       <!-- X86 CPython Interpreter -->
       <PythonInterpreterPath>$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\SOFTWARE\Python\PythonCore\$(InterpreterVersion)\InstallPath', '', '', RegistryView.Registry32))python$(PythonInterpreterSuffix).exe</PythonInterpreterPath>
     </PropertyGroup>
-    <PropertyGroup Condition="$(InterpreterId)=='9a7a9026-48c1-4688-9d5d-e5699d47d074'">
+    <PropertyGroup Condition="$(InterpreterId)=='9a7a9026-48c1-4688-9d5d-e5699d47d074' or $(InterpreterId)=='{9a7a9026-48c1-4688-9d5d-e5699d47d074}'">
       <!-- X64 CPython Interpreter -->
       <PythonInterpreterPath>$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\SOFTWARE\Python\PythonCore\$(InterpreterVersion)\InstallPath', '', '', RegistryView.Registry64))python$(PythonInterpreterSuffix).exe</PythonInterpreterPath>
     </PropertyGroup>
-    <PropertyGroup Condition="$(InterpreterId)=='80659AB7-4D53-4E0C-8588-A766116CBD46'">
+    <PropertyGroup Condition="$(InterpreterId)=='80659AB7-4D53-4E0C-8588-A766116CBD46' or $(InterpreterId)=='{80659AB7-4D53-4E0C-8588-A766116CBD46}'">
       <!-- X86 IronPython Interpreter -->
       <PythonInterpreterPath>$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\SOFTWARE\IronPython\$(InterpreterVersion)\InstallPath', '', '', RegistryView.Registry64))ipy$(PythonInterpreterSuffix).exe</PythonInterpreterPath>
     </PropertyGroup>
-    <PropertyGroup Condition="$(InterpreterId)=='FCC291AA-427C-498C-A4D7-4502D6449B8C'">
+    <PropertyGroup Condition="$(InterpreterId)=='FCC291AA-427C-498C-A4D7-4502D6449B8C' or $(InterpreterId)=='{FCC291AA-427C-498C-A4D7-4502D6449B8C}'">
       <!-- X64 IronPython Interpreter -->
       <PythonInterpreterPath>$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\SOFTWARE\IronPython\$(InterpreterVersion)\InstallPath', '', '', RegistryView.Registry64))ipy$(PythonInterpreterSuffix)64.exe</PythonInterpreterPath>
     </PropertyGroup>
@@ -89,16 +85,26 @@
 
     <PropertyGroup Condition="$(PythonInterpreterPath)==''">
       <!-- Custom interpreter, read from registry -->
-
-
       <PythonInterpreterPath>$([MSBuild]::GetRegistryValueFromView('HKEY_CURRENT_USER\SOFTWARE\Microsoft\VisualStudio\$(VisualStudioVersion)\PythonTools\Interpreters\{$(InterpreterId)}', 'InterpreterPath', null, RegistryView.Registry32))</PythonInterpreterPath>
     </PropertyGroup>
 
     <PropertyGroup>
       <PythonVersionNoDot>$(InterpreterVersion.Replace(".", ""))</PythonVersionNoDot>
     </PropertyGroup>
+
+    <PropertyGroup Condition="'$(VirtualEnvEnabled)' != ''">
+      <VirtualEnvInterpreterPath>$(VirtualEnvEnabled)\Scripts\python.exe</VirtualEnvInterpreterPath>
+    </PropertyGroup>
+
+    <PropertyGroup>
+      <TargetPythonInterpreterPath Condition="'$(VirtualEnvInterpreterPath)' != ''">$(VirtualEnvInterpreterPath)</TargetPythonInterpreterPath>
+      <TargetPythonInterpreterPath Condition="'$(TargetPythonInterpreterPath)' == ''">$(PythonInterpreterPath)</TargetPythonInterpreterPath>
+    </PropertyGroup>
+
     <Message Text="InterpreterVersion=$(InterpreterVersion)" Importance="low"/>
     <Message Text="PythonInterpreterPath=$(PythonInterpreterPath)" Importance="low"/>
+    <Message Text="VirtualEnvInterpreterPath=$(VirtualEnvInterpreterPath)" Importance="low"/>
+    <Message Text="TargetPythonInterpreterPath=$(TargetPythonInterpreterPath)" Importance="low"/>
   </Target>
 
   <Target Name="Build" >
@@ -267,11 +273,12 @@ log('got handler ' + repr(handler))
       <_CloudServiceAzureSetupConfig>
         <![CDATA[
 interpreter_path=%SystemDrive%\Python$(PythonVersionNoDot)\python.exe
-interpreter_path_emulated=$(PythonInterpreterPath)
+interpreter_path_emulated=$(TargetPythonInterpreterPath)
 ]]>
       </_CloudServiceAzureSetupConfig>
     </PropertyGroup>
 
+    <MakeDir Directories="bin"/>
     <WriteLinesToFile File="bin\AzureSetup.cfg"
                       Lines="$(_CloudServiceAzureSetupConfig)" 
                       Overwrite="true"
@@ -288,7 +295,7 @@ interpreter_path_emulated=$(PythonInterpreterPath)
 
   <Target Name="CreateWebConfig"
           BeforeTargets="Build"
-          DependsOnTargets="ResolvePythonInterpreterPath;ResolveDeploymentSettings;ResolveWsgiSettings">
+          DependsOnTargets="ResolvePythonInterpreterPath;ResolveDeploymentSettings;ResolveWsgiSettings;CreateDjangoRewriteConditions">
     <ItemGroup>
       <_FoundWebConfig Include="@(Content)" Condition=" '%(Content.Filename)%(Content.Extension)' == 'web.config' " />
       <_FoundWebConfig Include="@(Include)" Condition=" '%(Content.Filename)%(Content.Extension)' == 'web.config' " />
@@ -296,8 +303,8 @@ interpreter_path_emulated=$(PythonInterpreterPath)
       <_FoundTopLevelInit Include="@(Include)" Condition=" '%(Content.Filename)%(Content.Extension)' == '__init__.py' " />
     </ItemGroup>
 
-    <Message Text="Didn't find top level init..." Condition="@(_FoundTopLevelInit) == ''"/>
-    <Message Text="Generating web.config automatically..." Condition="@(_FoundWebConfig) == ''"/>
+    <Message Text="Didn't find top level init..." Condition="'@(_FoundTopLevelInit)' == ''"/>
+    <Message Text="Generating web.config automatically..." Condition="'@(_FoundWebConfig)' == ''"/>
     <Message Text="Skipping generation of web.config automatically because it already exists in the project..." Condition="@(_FoundWebConfig) != ''"/>
 
     <PropertyGroup>
@@ -331,13 +338,23 @@ interpreter_path_emulated=$(PythonInterpreterPath)
     <modules runAllManagedModulesForAllRequests="true"/>
     <handlers>
       <add name="Django FastCGI" 
-           path="*" 
+           path="handler.fcgi" 
            verb="*" 
            modules="FastCgiModule" 
            scriptProcessor="$(DeployedPythonInterpreterPath)|$(DeployedWFastCgiPath)" 
            resourceType="Unspecified" 
            requireAccess="Script" />
     </handlers>
+    <rewrite>
+      <rules>
+        <rule name="Configure Python" stopProcessing="true">
+          <match url="(.*)" ignoreCase="false" />
+          <conditions>$(DjangoRewriteConditions)
+          </conditions>
+          <action type="Rewrite" url="handler.fcgi/{R:1}" appendQueryString="true" />
+        </rule>
+      </rules>
+    </rewrite>
   </system.webServer>
 </configuration>
 ]]>
@@ -390,9 +407,6 @@ interpreter_path_emulated=$(PythonInterpreterPath)
     >
     <!-- Target used for generating a package which can be uploaded to web server.  This isn't called when doing F5 to
          run in the emulator. -->
-    <PropertyGroup>
-      <PythonRuntimeDir>$([System.IO.Path]::GetDirectoryName($(PythonInterpreterPath)))</PythonRuntimeDir>
-    </PropertyGroup>
     <ItemGroup>
       <ContentFiles Include="@(Compile)"></ContentFiles> <!-- Python compile files are actually content -->
       <ContentFiles Include="@(Content)"></ContentFiles>
@@ -467,6 +481,88 @@ interpreter_path_emulated=$(PythonInterpreterPath)
     <MakeDir Directories="$(OutDir);$(IntermediateOutputPath);@(DocFileItem->'%(RelativeDir)')" />
   </Target>
 
+  <!--- Gets the fully qualified path to the project home.  -->
+  <Target Name="ResolveQualifiedProjectHome">
+    <Message Text="Combining $(MSBuildProjectDirectory) with $(ProjectHome)"/>
+    <CombinePath BasePath="$(MSBuildProjectDirectory)" Paths="$(ProjectHome)">
+      <Output TaskParameter="CombinedPaths" PropertyName="QualifiedProjectHome"/>
+    </CombinePath>
+    <Message Text="QualifiedProjectHome: $(QualifiedProjectHome)"/>
+  </Target>
+  
+  <!-- Looks up the STATIC_URL setting in the Django project.  If this is a relative path then
+       when we publish we will automatically make static files available at that path.
+   -->
+  <Target Name="DetectStaticUrlPath" 
+          DependsOnTargets="ResolvePythonInterpreterPath;ResolveQualifiedProjectHome">
+
+    <PropertyGroup Condition="'$(DjangoStaticUrlSetting)' == ''">
+      <_TempStaticUrlFile>$([System.IO.Path]::GetTempFileName())</_TempStaticUrlFile>
+    </PropertyGroup>
+    
+    <Exec Command="&quot;$(TargetPythonInterpreterPath)&quot; -c &quot;from $(MSBuildProjectName) import settings; print(settings.STATIC_URL)&quot; > &quot;$(_TempStaticUrlFile)&quot;"  
+          WorkingDirectory="$(QualifiedProjectHome)" Condition="'$(_TempStaticUrlFile)' != ''"/>
+    
+    <ReadLinesFromFile File="$(_TempStaticUrlFile)" Condition="'$(_TempStaticUrlFile)' != ''">
+      <Output TaskParameter="Lines" PropertyName="DjangoStaticUrlSetting"/>
+    </ReadLinesFromFile>
+    
+    <Delete Files="$(_TempStaticUrlFile)" Condition="'$(_TempStaticUrlFile)' != ''"/>
+
+    <Message Text="DjangoStaticUrlSetting=$(DjangoStaticUrlSetting)"/>
+  </Target>
+
+  <!-- Looks up the STATIC_URL setting in the Django project.  If this is a relative path then
+       when we publish we will automatically make static files available at that path.
+   -->
+  <Target Name="DetectStaticRootPath"
+          DependsOnTargets="ResolvePythonInterpreterPath;ResolveQualifiedProjectHome">
+
+    <PropertyGroup Condition="'$(DjangoStaticRootSetting)' == ''">
+      <_TempStaticRootFile>$([System.IO.Path]::GetTempFileName())</_TempStaticRootFile>
+    </PropertyGroup>
+
+    <Exec Command="&quot;$(TargetPythonInterpreterPath)&quot; -c &quot;from $(MSBuildProjectName) import settings; print(settings.STATIC_ROOT)&quot; > &quot;$(_TempStaticRootFile)&quot;"
+          WorkingDirectory="$(QualifiedProjectHome)" Condition="'$(_TempStaticRootFile)' != ''"/>
+
+    <ReadLinesFromFile File="$(_TempStaticRootFile)" Condition="'$(_TempStaticRootFile)' != ''">
+      <Output TaskParameter="Lines" PropertyName="DjangoStaticRootSetting"/>
+    </ReadLinesFromFile>
+
+    <Delete Files="$(_TempStaticUrlFile)" Condition="'$(_TempStaticRootFile)' != ''"/>
+
+    <Message Text="DjangoStaticRootSetting=$(DjangoStaticRootSetting)"/>
+  </Target>
+
+  <!-- Runs the django manage.py collectstatic command to gather the static files in the
+      user's project if they're configured for serving project files.  Then adds the resulting
+      collected files to -->
+  <Target Name="DjangoCollectStaticFiles" 
+          DependsOnTargets="DetectStaticRootPath;ResolvePythonInterpreterPath;ResolveQualifiedProjectHome"
+          BeforeTargets="CollectFilesFromContent;Build" 
+          Condition="'$(DisableStaticFiles)' != 'true'">
+    <Exec Command="&quot;$(TargetPythonInterpreterPath)&quot; &quot;$(QualifiedProjectHome)\manage.py&quot; collectstatic --noinput"
+          WorkingDirectory="$(QualifiedProjectHome)" Condition="'$(DjangoStaticRootSetting)' != ''"/>
+
+    <ItemGroup>
+      <Content Include="$(DjangoStaticRootSetting)\\**\*"
+               Condition="'$(DjangoStaticRootSetting)' != ''"/>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="CreateDjangoRewriteConditions" 
+          DependsOnTargets="DetectStaticUrlPath"
+          Outputs="DjangoRewriteConditions">
+    <PropertyGroup Condition="'$(DjangoStaticUrlSetting)' != ''">
+      <EscapedDjangoStaticUrlSetting>$([System.Text.RegularExpressions.Regex]::Escape($(DjangoStaticUrlSetting)))</EscapedDjangoStaticUrlSetting>
+      <DjangoRewriteConditions><![CDATA[
+            <add input="{REQUEST_URI}" pattern="^$(EscapedDjangoStaticUrlSetting).*" ignoreCase="true" negate="true"/>]]>
+      </DjangoRewriteConditions>
+    </PropertyGroup>
+
+    <Message Text="DjangoRewriteConditions=$(DjangoRewriteConditions)"/>
+  </Target>
+  
   <!-- ##################################################################################### -->
   <!-- Web Publishing support -->
   <!-- Web applications use this for publishing, but we don't have an intermediate assembly. -->
@@ -486,6 +582,7 @@ interpreter_path_emulated=$(PythonInterpreterPath)
       <OrigPrefixPath>$(IntermediateOutputPath)\bin\deployment-updated-orig-prefix.txt</OrigPrefixPath>
       <TargetPythonPrefix Condition="$(TargetPythonPrefix) == ''">D:\Python27</TargetPythonPrefix>
     </PropertyGroup>
+    <MakeDir Directories="$(IntermediateOutputPath)\bin"/>
     <WriteLinesToFile Lines="$(TargetPythonPrefix)" File="$(OrigPrefixPath)" Overwrite="true"/>
 
     <ItemGroup>

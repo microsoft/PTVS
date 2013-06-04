@@ -538,7 +538,8 @@ namespace Microsoft.PythonTools.Repl {
         private int _frameId;
         private PythonLanguageVersion _languageVersion;
 
-        public PythonDebugProcessReplEvaluator(PythonProcess process) {
+        public PythonDebugProcessReplEvaluator(PythonProcess process)
+            : base(new DefaultPythonReplEvaluatorOptions(PythonToolsPackage.Instance.InteractiveDebugOptionsPage.Options)) {
             _process = process;
             _threadId = process.GetThreads()[0].Id;
             _languageVersion = process.LanguageVersion;
@@ -578,22 +579,6 @@ namespace Microsoft.PythonTools.Repl {
             get {
                 return "Debug" + _languageVersion.ToString();
             }
-        }
-
-        protected override PythonInteractiveCommonOptions CreatePackageOptions() {
-            PythonInteractiveCommonOptions options = new PythonInteractiveCommonOptions();
-            options.PrimaryPrompt = ">>> ";
-            options.SecondaryPrompt = "... ";
-            options.InlinePrompts = true;
-            options.UseInterpreterPrompts = true;
-            options.ReplIntellisenseMode = ReplIntellisenseMode.DontEvaluateCalls;
-            options.ReplSmartHistory = true;
-            options.LiveCompletionsOnly = false;
-            return options;
-        }
-
-        protected override PythonInteractiveCommonOptions GetPackageOptions() {
-            return PythonToolsPackage.Instance.InteractiveDebugOptionsPage.Options;
         }
 
         protected override void Close() {

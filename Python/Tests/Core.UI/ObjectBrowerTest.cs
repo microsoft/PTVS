@@ -52,12 +52,12 @@ namespace PythonToolsUITests {
             System.Threading.Thread.Sleep(1000);
 
             int nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
-            Assert.AreEqual(1, nodeCount, "Node count: " + nodeCount.ToString());
+            Assert.AreEqual(3, nodeCount, "Node count: " + nodeCount.ToString());
 
-            string str = objectBrowser.TypeBrowserPane.Nodes[0].Value;
+            string str = objectBrowser.TypeBrowserPane.Nodes[2].Value;
             Assert.AreEqual("Program.py", str, "");
 
-            objectBrowser.TypeBrowserPane.Nodes[0].Select();
+            objectBrowser.TypeBrowserPane.Nodes[2].Select();
             System.Threading.Thread.Sleep(1000);
 
             nodeCount = objectBrowser.TypeNavigatorPane.Nodes.Count;
@@ -68,6 +68,12 @@ namespace PythonToolsUITests {
 
             str = objectBrowser.DetailPane.Value;
             Assert.AreEqual("Program.py", str.Trim(), "");
+
+            VsIdeTestHostContext.Dte.Solution.Close(false);
+
+            System.Threading.Thread.Sleep(1000);
+            nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
+            Assert.AreEqual(1, nodeCount, "Node count: " + nodeCount.ToString());
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
@@ -82,13 +88,13 @@ namespace PythonToolsUITests {
             System.Threading.Thread.Sleep(1000);
 
             int nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
-            Assert.AreEqual(1, nodeCount, "Node count: " + nodeCount.ToString());
+            Assert.AreEqual(3, nodeCount, "Node count: " + nodeCount.ToString());
 
             string str = objectBrowser.TypeBrowserPane.Nodes[0].Value;
             Assert.AreEqual("Program.py", str, "");
 
             nodeCount = objectBrowser.TypeNavigatorPane.Nodes.Count;
-            Assert.AreEqual(1, nodeCount, "Node Count: " + nodeCount.ToString());
+            Assert.AreEqual(2, nodeCount, "Node Count: " + nodeCount.ToString());
 
             objectBrowser.SearchText.SetValue("f");
             System.Threading.Thread.Sleep(1000);
