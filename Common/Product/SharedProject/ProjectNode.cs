@@ -2938,17 +2938,6 @@ namespace Microsoft.VisualStudioTools.Project
             return newItem;
         }
 
-        /// <summary>
-        /// Determines whether an item can be owerwritten in the hierarchy.
-        /// </summary>
-        /// <param name="originalFileName">The orginal filname.</param>
-        /// <param name="computedNewFileName">The computed new file name, that will be copied to the project directory or into the folder .</param>
-        /// <returns>S_OK for success, or an error message</returns>
-        protected virtual int CanOverwriteExistingItem(string originalFileName, string computedNewFileName)
-        {
-            return CanOverwriteExistingItem(originalFileName, computedNewFileName, false);
-        }
-
         const int E_CANCEL_FILE_ADD = unchecked((int)0xA0010001);      // Severity = Error, Customer Bit set, Facility = 1, Error = 1
 
         /// <summary>
@@ -2964,7 +2953,7 @@ namespace Microsoft.VisualStudioTools.Project
         /// <param name="computedNewFileName"></param>
         /// <param name="canCancel"></param>
         /// <returns></returns>
-        protected virtual int CanOverwriteExistingItem(string originalFileName, string computedNewFileName, bool canCancel)
+        protected int CanOverwriteExistingItem(string originalFileName, string computedNewFileName, bool inProject = true)
         {
             if (String.IsNullOrEmpty(originalFileName) || String.IsNullOrEmpty(computedNewFileName))
             {
@@ -2993,13 +2982,9 @@ namespace Microsoft.VisualStudioTools.Project
 
 
             // File already exists in project... message box
-            message = String.Format(SR.GetString(SR.FileAlreadyInProject, CultureInfo.CurrentUICulture), Path.GetFileName(originalFileName));
+            message = String.Format(SR.GetString(inProject ? SR.FileAlreadyInProject : SR.FileAlreadyExists, CultureInfo.CurrentUICulture), Path.GetFileName(originalFileName));
             icon = OLEMSGICON.OLEMSGICON_QUERY;
             buttons = OLEMSGBUTTON.OLEMSGBUTTON_YESNO;
-            if (canCancel)
-            {
-                buttons = OLEMSGBUTTON.OLEMSGBUTTON_YESNOCANCEL;
-            }
             int msgboxResult = VsShellUtilities.ShowMessageBox(this.Site, title, message, icon, buttons, defaultButton);
             if (msgboxResult == NativeMethods.IDCANCEL)
             {
@@ -3011,15 +2996,6 @@ namespace Microsoft.VisualStudioTools.Project
             }
 
             return VSConstants.S_OK;
-        }
-
-        /// <summary>
-        /// Handle owerwriting of an existing item in the hierarchy.
-        /// </summary>
-        /// <param name="existingNode">The node that exists.</param>
-        protected virtual void OverwriteExistingItem(HierarchyNode existingNode)
-        {
-
         }
 
         /// <summary>
@@ -4344,6 +4320,11 @@ namespace Microsoft.VisualStudioTools.Project
                     // If the file to be added is an existing file part of the hierarchy then continue.
                     if (CommonUtils.IsSamePath(file, newFileName))
                     {
+                        if (child.IsNonMemberItem) 
+                        {
+                            // https://pytools.codeplex.com/workitem/1251
+                            ErrorHandler.ThrowOnFailure(child.IncludeInProject(false));
+                        }
                         result[0] = VSADDRESULT.ADDRESULT_Cancel;
                         continue;
                     }
@@ -4362,7 +4343,7 @@ namespace Microsoft.VisualStudioTools.Project
                     }
                     else
                     {
-                        int canOverWriteExistingItem = CanOverwriteExistingItem(file, newFileName, false);
+                        int canOverWriteExistingItem = CanOverwriteExistingItem(file, newFileName, !child.IsNonMemberItem);
                         if (canOverWriteExistingItem == E_CANCEL_FILE_ADD)
                         {
                             result[0] = VSADDRESULT.ADDRESULT_Cancel;
@@ -4519,7 +4500,10 @@ namespace Microsoft.VisualStudioTools.Project
 
                 if (overwrite)
                 {
-                    this.OverwriteExistingItem(child);
+                    if (child.IsNonMemberItem) 
+                    {
+                        ErrorHandler.ThrowOnFailure(child.IncludeInProject(false));
+                    }
                 }
                 else if (linkedFile != null || isLink)
                 {

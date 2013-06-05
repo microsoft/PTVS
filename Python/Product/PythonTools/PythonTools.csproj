@@ -247,6 +247,7 @@
       <Link>PythonInterpreterFactoryExtensions.cs</Link>
     </Compile>
     <Compile Include="ProvideComponentPickerPropertyPageAttribute.cs" />
+    <Compile Include="ProvideDiffSupportedContentTypeAttribute.cs" />
     <Compile Include="ProvideEditorExtension2Attribute.cs" />
     <Compile Include="ProvideFileExtensionMapping.cs" />
     <Compile Include="ProvideFileFilterAttribute.cs" />

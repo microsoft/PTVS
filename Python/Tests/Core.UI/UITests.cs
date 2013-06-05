@@ -700,6 +700,58 @@ namespace PythonToolsUITests {
             Assert.AreEqual("Program.py", caption);
         }
 
+        /// <summary>
+        /// https://pytools.codeplex.com/workitem/1251
+        /// </summary>
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void AddExistingItem() {
+            var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\AddExistingItem.sln");
+
+            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            app.OpenSolutionExplorer();
+            var window = app.SolutionExplorerTreeView;
+
+            var projectNode = window.WaitForItem("Solution 'AddExistingItem' (1 project)", "HelloWorld");
+            Assert.IsNotNull(projectNode, "projectNode");
+            AutomationWrapper.Select(projectNode);
+
+            var addExistingDlg = new AddExistingItemDialog(app.OpenDialogWithDteExecuteCommand("Project.AddExistingItem"));
+            addExistingDlg.FileName = TestData.GetPath(@"TestData\AddExistingItem\Program2.py");
+            addExistingDlg.Add();
+            Assert.IsNotNull(window.WaitForItem("Solution 'AddExistingItem' (1 project)", "HelloWorld", "Program2.py"));
+        }
+
+        /// <summary>
+        /// https://pytools.codeplex.com/workitem/1221
+        /// </summary>
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void AddNewFileOverwritingExistingFileNotInProject() {
+            var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\AddExistingItem.sln");
+
+            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            app.OpenSolutionExplorer();
+            var window = app.SolutionExplorerTreeView;
+
+            var projectNode = window.WaitForItem("Solution 'AddExistingItem' (1 project)", "HelloWorld");
+            Assert.IsNotNull(projectNode, "projectNode");
+            AutomationWrapper.Select(projectNode);
+
+
+            var addExistingDlg = new AddExistingItemDialog(app.OpenDialogWithDteExecuteCommand("Project.AddExistingItem"));
+            addExistingDlg.FileName = TestData.GetPath(@"TestData\AddExistingItem\Program2.py");
+            addExistingDlg.Add();
+
+            VisualStudioApp.CheckMessageBox(
+                MessageBoxButton.Yes,
+                "A file with the same name 'Program2.py' already exists. Do you want to overwrite it?"
+            );
+
+            Assert.IsNotNull(window.WaitForItem("Solution 'AddExistingItem' (1 project)", "HelloWorld", "Program2.py"));
+        }
+
+
         class HierarchyEvents : IVsHierarchyEvents {
             public uint SiblingPrev;
 

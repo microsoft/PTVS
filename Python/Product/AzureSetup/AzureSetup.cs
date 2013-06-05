@@ -176,11 +176,6 @@ namespace AzureSetup {
                 fastCgiPath,
                 isDebug ? "1" : "10000"
             );
-            RunAppCmd(appCmd,
-                "set config /section:system.webServer/handlers \"/+[name='Python_via_FastCGI',path='*',verb='*',modules='FastCgiModule',scriptProcessor='{0}|{1}',resourceType='Unspecified']\"",
-                interpreter,
-                fastCgiPath
-            );
         }
 
         private static void AppCmdSetProperty(string interpreter, string fastCgiPath, string appCmd, string propertyName, string value) {

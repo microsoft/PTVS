@@ -705,7 +705,10 @@ namespace FastCgiTest {
                     piece => {
                         if (partCount++ == 0) {
                             Assert.AreEqual("Hello world!", piece);
-                            File.WriteAllText("TestData\\WFastCgi\\StreamingHandler\\progress.txt", "");
+
+                            var req = WebRequest.Create(GetLocalUrl() + "/foo");
+                            var response = req.GetResponse();
+                            var reader = new StreamReader(response.GetResponseStream());
                         } else {
                             Assert.AreEqual(partCount, 2);
                             Assert.AreEqual("goodbye world!", piece);

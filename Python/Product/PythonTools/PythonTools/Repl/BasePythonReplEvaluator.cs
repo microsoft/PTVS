@@ -198,6 +198,7 @@ namespace Microsoft.PythonTools.Repl {
 
             private void ProcessExited(object sender, EventArgs e) {
                 Window.WriteError("The Python REPL process has exited\r\n");
+                _connected = false;
                 if (_preConnectionOutput != null) {
                     lock (_preConnectionOutput) {
                         Window.WriteError(FixNewLines(_preConnectionOutput.ToString()));

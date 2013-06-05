@@ -170,6 +170,7 @@ namespace Microsoft.PythonTools {
     [ProvidePythonInterpreterFactoryProvider(CPythonInterpreterFactoryConstants.Id32, typeof(CPythonInterpreterFactoryConstants))]
     [ProvidePythonInterpreterFactoryProvider(CPythonInterpreterFactoryConstants.Id64, typeof(CPythonInterpreterFactoryConstants))]
     [ProvidePythonInterpreterFactoryProvider("ConfigurablePythonInterpreterFactoryProvider", typeof(ConfigurablePythonInterpreterFactoryProvider))]
+    [ProvideDiffSupportedContentType(".py;.pyw", ";")]
 #if DEV11_OR_LATER // TODO: UNSURE IF WE NEED THIS FOR DEV12
     [ProvideX64DebuggerFixForIntegratedShell]
 #endif
