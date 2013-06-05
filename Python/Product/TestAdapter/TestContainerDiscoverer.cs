@@ -78,12 +78,29 @@ namespace Microsoft.PythonTools.TestAdapter {
                 var solution = (IVsSolution)_serviceProvider.GetService(typeof(SVsSolution));
 
                 // Get all loaded projects
-                var loadedProjects = solution.EnumerateLoadedProjects();
+                var loadedProjects = EnumerateLoadedProjects(solution);
 
                 var result = loadedProjects
                     .SelectMany(p => GetTestContainers(p));
 
                 return result;
+            }
+        }
+
+        private static IEnumerable<IVsProject> EnumerateLoadedProjects(IVsSolution solution) {
+            var guid = new Guid(PythonConstants.ProjectFactoryGuid);
+            IEnumHierarchies hierarchies;
+            ErrorHandler.ThrowOnFailure((solution.GetProjectEnum(
+                (uint)(__VSENUMPROJFLAGS.EPF_MATCHTYPE | __VSENUMPROJFLAGS.EPF_LOADEDINSOLUTION),
+                ref guid,
+                out hierarchies)));
+            IVsHierarchy[] hierarchy = new IVsHierarchy[1];
+            uint fetched;
+            while (ErrorHandler.Succeeded(hierarchies.Next(1, hierarchy, out fetched)) && fetched == 1) {
+                var project = hierarchy[0] as IVsProject;
+                if (project != null) {
+                    yield return project;
+                }
             }
         }
 

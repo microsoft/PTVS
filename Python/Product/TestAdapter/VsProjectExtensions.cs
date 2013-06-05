@@ -73,7 +73,16 @@ namespace Microsoft.PythonTools.TestAdapter {
         /// </summary>
         public static string GetProjectHome(this IVsProject project) {
             var hier = (IVsHierarchy)project;
-            var proj = hier.GetProperty<EnvDTE.Project>(__VSHPROPID.VSHPROPID_ExtObject);
+            object extObject;
+            ErrorHandler.ThrowOnFailure(hier.GetProperty(
+                (uint)VSConstants.VSITEMID.Root,
+                (int)__VSHPROPID.VSHPROPID_ExtObject,
+                out extObject
+            ));
+            var proj = extObject as EnvDTE.Project;
+            if (proj == null) {
+                return null;
+            }
             return proj.Properties.Item("ProjectHome").Value as string;
         }
 
