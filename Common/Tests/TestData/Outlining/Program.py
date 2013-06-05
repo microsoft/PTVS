@@ -22,4 +22,8 @@ elif True:
     pass
 #comment
         
+for i in xrange(100):
+    print('hello')
     
+while True:
+    print('hello')

@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -38,18 +39,31 @@ namespace Microsoft.PythonTools.Repl {
     [ReplRole("Reset")]
     internal class PythonReplEvaluator : BasePythonReplEvaluator {
         private readonly IErrorProviderFactory _errorProviderFactory;
-        private readonly IPythonInterpreterFactory _interpreter;
+        private IPythonInterpreterFactory _interpreter;
+        private readonly IInterpreterOptionsService _interpreterService;
         private VsProjectAnalyzer _replAnalyzer;
         private bool _ownsAnalyzer, _enableAttach;
 
-        public PythonReplEvaluator(IPythonInterpreterFactory interpreter, IErrorProviderFactory errorProviderFactory) 
-            : this(interpreter, errorProviderFactory, new DefaultPythonReplEvaluatorOptions(PythonToolsPackage.Instance.InteractiveOptionsPage.GetOptions(interpreter))) {
+        public PythonReplEvaluator(IPythonInterpreterFactory interpreter, IErrorProviderFactory errorProviderFactory, IInterpreterOptionsService interpreterService = null) 
+            : this(interpreter, errorProviderFactory, new DefaultPythonReplEvaluatorOptions(PythonToolsPackage.Instance.InteractiveOptionsPage.GetOptions(interpreter)), interpreterService) {
         }
 
-        public PythonReplEvaluator(IPythonInterpreterFactory interpreter, IErrorProviderFactory errorProviderFactory, PythonReplEvaluatorOptions options)
+        public PythonReplEvaluator(IPythonInterpreterFactory interpreter, IErrorProviderFactory errorProviderFactory, PythonReplEvaluatorOptions options, IInterpreterOptionsService interpreterService = null)
             : base(options) {
             _interpreter = interpreter;
             _errorProviderFactory = errorProviderFactory;
+            _interpreterService = interpreterService;
+            if (_interpreterService != null) {
+                _interpreterService.InterpretersChanged += InterpretersChanged;
+            }
+        }
+
+        void InterpretersChanged(object sender, EventArgs e) {
+            var interpreter = _interpreterService.FindInterpreter(Interpreter.Id, Interpreter.Configuration.Version);
+            if (interpreter != null && interpreter != _interpreter) {
+                // the interpreter has been reconfigured, we want the new settings
+                _interpreter = interpreter;
+            }
         }
 
         public IPythonInterpreterFactory Interpreter {
@@ -60,9 +74,8 @@ namespace Microsoft.PythonTools.Repl {
 
         internal VsProjectAnalyzer ReplAnalyzer {
             get {
-                if (_replAnalyzer == null && Interpreter != null) {
-                    var interpService = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
-                    _replAnalyzer = new VsProjectAnalyzer(Interpreter, interpService.Interpreters.ToArray(), _errorProviderFactory);
+                if (_replAnalyzer == null && Interpreter != null && _interpreterService != null) {
+                    _replAnalyzer = new VsProjectAnalyzer(Interpreter, _interpreterService.Interpreters.ToArray(), _errorProviderFactory);
                     _ownsAnalyzer = true;
                 }
                 return _replAnalyzer;
@@ -99,11 +112,17 @@ namespace Microsoft.PythonTools.Repl {
                 _replAnalyzer.Dispose();
                 _replAnalyzer = null;
             }
+            if (_interpreterService != null) {
+                _interpreterService.InterpretersChanged -= InterpretersChanged;
+            }
         }
 
         protected override void Connect() {
             if (Interpreter == null) {
                 Window.WriteError("The interpreter is not available.");
+                return;
+            } else if (String.IsNullOrWhiteSpace(Interpreter.Configuration.InterpreterPath)) {
+                Window.WriteError(String.Format("The interpreter {0} cannot be started.  The path to the interpreter has not been configured." + Environment.NewLine + "Please update the interpreter in Tools->Options->Python Tools->Interpreter Options" + Environment.NewLine, Interpreter.Description));
                 return;
             }
             var processInfo = new ProcessStartInfo(Interpreter.Configuration.InterpreterPath);
@@ -199,18 +218,32 @@ namespace Microsoft.PythonTools.Repl {
             try {
                 process.Start();
             } catch (Exception e) {
-                Window.WriteError(String.Format("Failed to start interactive process: {0}{1}{2}", Environment.NewLine, e.ToString(), Environment.NewLine));
+                Win32Exception wex = e as Win32Exception;
+                if (wex != null && wex.NativeErrorCode == Microsoft.VisualStudioTools.Project.NativeMethods.ERROR_FILE_NOT_FOUND) {
+                    Window.WriteError(
+                        String.Format(
+                            "Failed to start interactive process, the interpreter could not be found: {0}{1}",
+                            Interpreter.Configuration.InterpreterPath,
+                            Environment.NewLine
+                        )
+                    );
+                } else {
+                    Window.WriteError(String.Format("Failed to start interactive process: {0}{1}{2}", Environment.NewLine, e.ToString(), Environment.NewLine));
+                }
                 return;
             }
 
             CreateCommandProcessor(conn, null, processInfo.RedirectStandardOutput, process);
         }
+
+        const int ERROR_FILE_NOT_FOUND = 2;
     }
+
 
     [ReplRole("DontPersist")]
     class PythonReplEvaluatorDontPersist : PythonReplEvaluator {
-        public PythonReplEvaluatorDontPersist(IPythonInterpreterFactory interpreter, IErrorProviderFactory errorProviderFactory, PythonReplEvaluatorOptions options) :
-            base(interpreter, errorProviderFactory, options) {
+        public PythonReplEvaluatorDontPersist(IPythonInterpreterFactory interpreter, IErrorProviderFactory errorProviderFactory, PythonReplEvaluatorOptions options, IInterpreterOptionsService interpreterService) :
+            base(interpreter, errorProviderFactory, options, interpreterService) {
         }
     }
 

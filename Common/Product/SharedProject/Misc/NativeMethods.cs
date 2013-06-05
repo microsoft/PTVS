@@ -27,6 +27,8 @@ namespace Microsoft.VisualStudioTools.Project {
         // IIDS
         public static readonly Guid IID_IUnknown = new Guid("{00000000-0000-0000-C000-000000000046}");
 
+        public const int ERROR_FILE_NOT_FOUND = 2;
+
         public const int
         CLSCTX_INPROC_SERVER = 0x1;
 

@@ -187,7 +187,7 @@ namespace Microsoft.PythonTools {
 
             private static TagSpan GetForSpan(PythonAst ast, ITextSnapshot snapshot, ForStatement forStmt) {
                 if (forStmt.List != null) {
-                    return GetTagSpan(snapshot, forStmt.StartIndex, forStmt.EndIndex, forStmt.List.EndIndex - forStmt.StartIndex + 1);
+                    return GetTagSpan(snapshot, forStmt.StartIndex, forStmt.EndIndex, forStmt.List.EndIndex);
                 }
                 return null;
             }
@@ -197,7 +197,7 @@ namespace Microsoft.PythonTools {
                     snapshot, 
                     whileStmt.StartIndex, 
                     whileStmt.EndIndex, 
-                    whileStmt.Test.EndIndex - whileStmt.StartIndex + 1
+                    whileStmt.Test.EndIndex
                 );
             }
 

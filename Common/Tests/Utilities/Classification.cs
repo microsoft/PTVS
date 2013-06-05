@@ -69,7 +69,7 @@ namespace TestUtilities {
             }
         }
 
-        private static string FormatString(string p) {
+        public static string FormatString(string p) {
             StringBuilder res = new StringBuilder();
             for (int i = 0; i < p.Length; i++) {
                 switch (p[i]) {

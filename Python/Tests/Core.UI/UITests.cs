@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -784,6 +785,121 @@ namespace PythonToolsUITests {
 
             #endregion
         }
+
+        class DocumentEvents : IVsTrackProjectDocumentsEvents2, IDisposable {
+            public readonly List<string> Events = new List<string>();
+            private readonly uint _cookie;
+
+            public DocumentEvents() {
+                var trackDocs = VsIdeTestHostContext.ServiceProvider.GetService(typeof(SVsTrackProjectDocuments)) as IVsTrackProjectDocuments2;
+                trackDocs.AdviseTrackProjectDocumentsEvents(this, out _cookie);
+            }
+
+            #region IVsTrackProjectDocumentsEvents2 Members
+
+            public int OnAfterAddDirectoriesEx(int cProjects, int cDirectories, IVsProject[] rgpProjects, int[] rgFirstIndices, string[] rgpszMkDocuments, VSADDDIRECTORYFLAGS[] rgFlags) {
+                Events.Add("OnAfterAddDirectoriesEx");
+                return VSConstants.S_OK;
+            }
+
+            public int OnAfterAddFilesEx(int cProjects, int cFiles, IVsProject[] rgpProjects, int[] rgFirstIndices, string[] rgpszMkDocuments, VSADDFILEFLAGS[] rgFlags) {
+                Events.Add("OnAfterAddFilesEx");
+                return VSConstants.S_OK;
+            }
+
+            public int OnAfterRemoveDirectories(int cProjects, int cDirectories, IVsProject[] rgpProjects, int[] rgFirstIndices, string[] rgpszMkDocuments, VSREMOVEDIRECTORYFLAGS[] rgFlags) {
+                Events.Add("OnAfterRemoveDirectories");
+                return VSConstants.S_OK;
+            }
+
+            public int OnAfterRemoveFiles(int cProjects, int cFiles, IVsProject[] rgpProjects, int[] rgFirstIndices, string[] rgpszMkDocuments, VSREMOVEFILEFLAGS[] rgFlags) {
+                Events.Add("OnAfterRemoveFiles");
+                return VSConstants.S_OK;
+            }
+
+            public int OnAfterRenameDirectories(int cProjects, int cDirs, IVsProject[] rgpProjects, int[] rgFirstIndices, string[] rgszMkOldNames, string[] rgszMkNewNames, VSRENAMEDIRECTORYFLAGS[] rgFlags) {
+                Events.Add("OnAfterRenameDirectories");
+                return VSConstants.S_OK;
+            }
+
+            public int OnAfterRenameFiles(int cProjects, int cFiles, IVsProject[] rgpProjects, int[] rgFirstIndices, string[] rgszMkOldNames, string[] rgszMkNewNames, VSRENAMEFILEFLAGS[] rgFlags) {
+                Events.Add("OnAfterRenameFiles");
+                return VSConstants.S_OK;
+            }
+
+            public int OnAfterSccStatusChanged(int cProjects, int cFiles, IVsProject[] rgpProjects, int[] rgFirstIndices, string[] rgpszMkDocuments, uint[] rgdwSccStatus) {
+                Events.Add("OnAfterSccStatusChanged");
+                return VSConstants.S_OK;
+            }
+
+            public int OnQueryAddDirectories(IVsProject pProject, int cDirectories, string[] rgpszMkDocuments, VSQUERYADDDIRECTORYFLAGS[] rgFlags, VSQUERYADDDIRECTORYRESULTS[] pSummaryResult, VSQUERYADDDIRECTORYRESULTS[] rgResults) {
+                Events.Add("OnQueryAddDirectories");
+                return VSConstants.S_OK;
+            }
+
+            public int OnQueryAddFiles(IVsProject pProject, int cFiles, string[] rgpszMkDocuments, VSQUERYADDFILEFLAGS[] rgFlags, VSQUERYADDFILERESULTS[] pSummaryResult, VSQUERYADDFILERESULTS[] rgResults) {
+                Events.Add("OnQueryAddFiles");
+                return VSConstants.S_OK;
+            }
+
+            public int OnQueryRemoveDirectories(IVsProject pProject, int cDirectories, string[] rgpszMkDocuments, VSQUERYREMOVEDIRECTORYFLAGS[] rgFlags, VSQUERYREMOVEDIRECTORYRESULTS[] pSummaryResult, VSQUERYREMOVEDIRECTORYRESULTS[] rgResults) {
+                Events.Add("OnQueryRemoveDirectories");
+                return VSConstants.S_OK;
+            }
+
+            public int OnQueryRemoveFiles(IVsProject pProject, int cFiles, string[] rgpszMkDocuments, VSQUERYREMOVEFILEFLAGS[] rgFlags, VSQUERYREMOVEFILERESULTS[] pSummaryResult, VSQUERYREMOVEFILERESULTS[] rgResults) {
+                Events.Add("OnQueryRemoveFiles");
+                return VSConstants.S_OK;
+            }
+
+            public int OnQueryRenameDirectories(IVsProject pProject, int cDirs, string[] rgszMkOldNames, string[] rgszMkNewNames, VSQUERYRENAMEDIRECTORYFLAGS[] rgFlags, VSQUERYRENAMEDIRECTORYRESULTS[] pSummaryResult, VSQUERYRENAMEDIRECTORYRESULTS[] rgResults) {
+                Events.Add("OnQueryRenameDirectories");
+                return VSConstants.S_OK;
+            }
+
+            public int OnQueryRenameFiles(IVsProject pProject, int cFiles, string[] rgszMkOldNames, string[] rgszMkNewNames, VSQUERYRENAMEFILEFLAGS[] rgFlags, VSQUERYRENAMEFILERESULTS[] pSummaryResult, VSQUERYRENAMEFILERESULTS[] rgResults) {
+                Events.Add("OnQueryRenameFiles");
+                return VSConstants.S_OK;
+            }
+
+            #endregion
+
+            #region IDisposable Members
+
+            public void Dispose() {
+                var trackDocs = VsIdeTestHostContext.ServiceProvider.GetService(typeof(SVsTrackProjectDocuments)) as IVsTrackProjectDocuments2;
+                trackDocs.UnadviseTrackProjectDocumentsEvents(_cookie);
+            }
+
+            #endregion
+        }
+
+        /// <summary>
+        /// Verify we get called w/ a project which does have source control enabled.
+        /// </summary>
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void SourceControlRenameFolder() {
+            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+
+            // close any projects before switching source control...
+            VsIdeTestHostContext.Dte.Solution.Close();
+
+            app.SelectSourceControlProvider("Test Source Provider");
+            try {
+                var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\SourceControl.sln");
+
+                using (var docEvents = new DocumentEvents()) {
+                    project.ProjectItems.Item("TestFolder").Name = "Renamed";
+
+                    Assert.AreEqual("OnQueryRenameFiles;OnAfterRenameFiles", String.Join(";", docEvents.Events));
+                }
+                app.Dte.Solution.Close();
+            } finally {
+                app.SelectSourceControlProvider("None");
+            }
+        }
+
         /// <summary>
         /// Verify we get called w/ a project which does have source control enabled.
         /// </summary>

@@ -18,8 +18,8 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
+using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Interpreter.Default;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
@@ -176,6 +176,98 @@ namespace PythonToolsTests {
             if (!completed) {
                 Assert.Fail("command didn't complete in 3 seconds");
             }
+        }
+
+        [TestMethod, Priority(0)]
+        public void NoInterpreterPath() {
+            // http://pytools.codeplex.com/workitem/662
+
+            var emptyFact = InterpreterFactoryCreator.CreateInterpreterFactory(
+                new InterpreterFactoryCreationOptions() {
+                    Description = "Test Interpreter"
+                }
+            );
+            var replEval = new PythonReplEvaluator(emptyFact, null, new ReplTestReplOptions());
+            var replWindow = new MockReplWindow(replEval);
+            replEval.Initialize(replWindow);
+            var execute = replEval.ExecuteText("42");
+            Assert.IsTrue(replWindow.Error.IndexOf("The interpreter Test Interpreter cannot be started.  The path to the interpreter has not been configured.") != -1);
+        }
+
+        [TestMethod, Priority(0)]
+        public void BadInterpreterPath() {
+            // http://pytools.codeplex.com/workitem/662
+
+            var emptyFact = InterpreterFactoryCreator.CreateInterpreterFactory(
+                new InterpreterFactoryCreationOptions() {
+                    Description = "Test Interpreter",
+                    InterpreterPath = "C:\\Does\\Not\\Exist\\Some\\Interpreter.exe"
+                }
+            );
+            var replEval = new PythonReplEvaluator(emptyFact, null, new ReplTestReplOptions());
+            var replWindow = new MockReplWindow(replEval);
+            replEval.Initialize(replWindow);
+            var execute = replEval.ExecuteText("42");
+            Assert.IsTrue(replWindow.Error.IndexOf("Failed to start interactive process, the interpreter could not be found: C:\\Does\\Not\\Exist\\Some\\Interpreter.exe") != -1);
+        }    
+    }
+
+
+    class ReplTestReplOptions : PythonReplEvaluatorOptions {
+        public override bool EnableAttach {
+            get { return true; }
+        }
+
+        public override string InterpreterOptions {
+            get { return ""; }
+        }
+
+        public override string WorkingDirectory {
+            get { return ""; }
+        }
+
+        public override string StartupScript {
+            get { return null; }
+        }
+
+        public override string SearchPaths {
+            get { return ""; }
+        }
+
+        public override string InterpreterArguments {
+            get { return ""; }
+        }
+
+        public override VsProjectAnalyzer ProjectAnalyzer {
+            get { return null; }
+        }
+
+        public override bool UseInterpreterPrompts {
+            get { return true; }
+        }
+
+        public override string ExecutionMode {
+            get { return ""; }
+        }
+
+        public override bool InlinePrompts {
+            get { return false; }
+        }
+
+        public override bool ReplSmartHistory {
+            get { return false; }
+        }
+
+        public override bool LiveCompletionsOnly {
+            get { return false; }
+        }
+
+        public override string PrimaryPrompt {
+            get { return ">>>"; }
+        }
+
+        public override string SecondaryPrompt {
+            get { return "..."; }
         }
     }
 }

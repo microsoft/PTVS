@@ -25,7 +25,6 @@ using Microsoft.IronPythonTools.Interpreter;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Interpreter.Default;
 using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Repl;
 using Microsoft.TC.TestHostAdapters;
@@ -38,6 +37,7 @@ using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Tagging;
+using PythonToolsTests;
 using TestUtilities;
 using TestUtilities.Mocks;
 using TestUtilities.UI;
@@ -61,7 +61,8 @@ namespace ReplWindowUITests {
             // http://pytools.codeplex.com/workitem/606
             var eval = new PythonReplEvaluator(
                 InterpFactory.GetInterpreterFactories().First(fact => fact.Id == new Guid("{2AF0F10D-7135-4994-9156-5D01C9C11B7E}") && fact.Configuration.Version == new Version(2, 7)),
-                null
+                null,
+                new ReplTestReplOptions()
             );
 
             var testCases = new[] {
@@ -2931,7 +2932,7 @@ def g(): pass
 
         [TestMethod, Priority(0)]
         public void IronPythonModuleName() {
-            var replEval = new PythonReplEvaluator(IronPythonInterpreter, null);
+            var replEval = new PythonReplEvaluator(IronPythonInterpreter, null, new ReplTestReplOptions());
             var replWindow = new MockReplWindow(replEval);
             replEval.Initialize(replWindow);
             replWindow.ClearScreen();
@@ -2944,7 +2945,7 @@ def g(): pass
 
         [TestMethod, Priority(0)]
         public void IronPythonSignatures() {
-            var replEval = new PythonReplEvaluator(IronPythonInterpreter, null);
+            var replEval = new PythonReplEvaluator(IronPythonInterpreter, null, new ReplTestReplOptions());
             var replWindow = new MockReplWindow(replEval);
             replEval.Initialize(replWindow);
             var execute = replEval.ExecuteText("from System import Array");
@@ -2959,7 +2960,7 @@ def g(): pass
         [TestMethod, Priority(0)]
         public void IronPythonCommentInput() {
             // http://pytools.codeplex.com/workitem/649
-            var replEval = new PythonReplEvaluator(IronPythonInterpreter, null);
+            var replEval = new PythonReplEvaluator(IronPythonInterpreter, null, new ReplTestReplOptions());
             var replWindow = new MockReplWindow(replEval);
             replEval.Initialize(replWindow);
             var execute = replEval.ExecuteText("#foo\n1+2");
@@ -2970,7 +2971,7 @@ def g(): pass
         [TestMethod, Priority(0)]
         public void ConsoleWriteLineTest() {
             // http://pytools.codeplex.com/workitem/649
-            var replEval = new PythonReplEvaluator(IronPythonInterpreter, null);
+            var replEval = new PythonReplEvaluator(IronPythonInterpreter, null, new ReplTestReplOptions());
             var replWindow = new MockReplWindow(replEval);
             replEval.Initialize(replWindow);
             var execute = replEval.ExecuteText("import System");
@@ -2997,7 +2998,7 @@ def g(): pass
         public void GenericMethodCompletions() {
             // http://pytools.codeplex.com/workitem/661
             var fact = IronPythonInterpreter;
-            var replEval = new PythonReplEvaluator(fact, null);
+            var replEval = new PythonReplEvaluator(fact, null, new ReplTestReplOptions());
             var replWindow = new MockReplWindow(replEval);
             replEval.Initialize(replWindow);
             var execute = replEval.ExecuteText("from System.Threading.Tasks import Task");
@@ -3028,7 +3029,7 @@ def g(): pass
         [TestMethod, Priority(0)]
         public void NoTraceFunction() {
             // http://pytools.codeplex.com/workitem/662
-            var replEval = new PythonReplEvaluator(IronPythonInterpreter, null);
+            var replEval = new PythonReplEvaluator(IronPythonInterpreter, null, new ReplTestReplOptions());
             var replWindow = new MockReplWindow(replEval);
             replEval.Initialize(replWindow);
             var execute = replEval.ExecuteText("import sys");
@@ -3045,7 +3046,7 @@ def g(): pass
         [TestMethod, Priority(0)]
         public void CommentFollowedByBlankLine() {
             // http://pytools.codeplex.com/workitem/659
-            var replEval = new PythonReplEvaluator(IronPythonInterpreter, null);
+            var replEval = new PythonReplEvaluator(IronPythonInterpreter, null, new ReplTestReplOptions());
             var replWindow = new MockReplWindow(replEval);
             replEval.Initialize(replWindow);
             var execute = replEval.ExecuteText("# foo\r\n\r\n    \r\n\t\t\r\na = 42");
@@ -3081,64 +3082,6 @@ def g(): pass
             finalExecute.Wait();
             Assert.AreEqual(finalExecute.Result, ExecutionResult.Success);
             Assert.AreEqual(replWindow.Output, "42\r\n");
-        }
-    }
-
-    class ReplTestReplOptions : PythonReplEvaluatorOptions {
-        public override bool EnableAttach {
-            get { return true; }
-        }
-
-        public override string InterpreterOptions {
-            get { return "";  }
-        }
-
-        public override string WorkingDirectory {
-            get { return ""; }
-        }
-
-        public override string StartupScript {
-            get { return null; }
-        }
-
-        public override string SearchPaths {
-            get { return ""; }
-        }
-
-        public override string InterpreterArguments {
-            get { return ""; }
-        }
-
-        public override VsProjectAnalyzer ProjectAnalyzer {
-            get { return null; }
-        }
-
-        public override bool UseInterpreterPrompts {
-            get { return true; }
-        }
-
-        public override string ExecutionMode {
-            get { return ""; }
-        }
-
-        public override bool InlinePrompts {
-            get { return false; }
-        }
-
-        public override bool ReplSmartHistory {
-            get { return false; }
-        }
-
-        public override bool LiveCompletionsOnly {
-            get { return false; }
-        }
-
-        public override string PrimaryPrompt {
-            get { return ">>>"; }
-        }
-
-        public override string SecondaryPrompt {
-            get { return "..."; }
         }
     }
 

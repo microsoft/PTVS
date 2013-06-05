@@ -48,7 +48,7 @@ namespace Microsoft.PythonTools.Repl {
             if (replId.StartsWith(_replGuid)) {
                 var interpreter = _interpService.FindInterpreter(replId.Substring(_replGuid.Length + 1, _replGuid.Length), replId.Substring(_replGuid.Length * 2 + 2));
                 if (interpreter != null) {
-                    return new PythonReplEvaluator(interpreter, _errorProviderFactory);
+                    return new PythonReplEvaluator(interpreter, _errorProviderFactory, _interpService);
                 }
             } else if (replId.StartsWith(_configurableGuid)) {
                 return CreateConfigurableInterpreter(replId);
@@ -78,9 +78,9 @@ namespace Microsoft.PythonTools.Repl {
                     );
 
                     if (optionsVal.HasFlag(PythonReplCreationOptions.DontPersist)) {
-                        return new PythonReplEvaluatorDontPersist(pyInterpreter, _errorProviderFactory, replOptions);
+                        return new PythonReplEvaluatorDontPersist(pyInterpreter, _errorProviderFactory, replOptions, _interpService);
                     } else {
-                        return new PythonReplEvaluator(pyInterpreter, _errorProviderFactory, replOptions);
+                        return new PythonReplEvaluator(pyInterpreter, _errorProviderFactory, replOptions, _interpService);
                     }
                 }
             }

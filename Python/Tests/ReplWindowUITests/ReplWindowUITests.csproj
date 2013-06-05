@@ -105,6 +105,10 @@
       <Project>{D092D54E-FF29-4D32-9AEE-4EF704C92F67}</Project>
       <Name>TestUtilities</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Core\PythonToolsTests.csproj">
+      <Project>{61d65f46-7957-47c1-8ba3-48d192236d5d}</Project>
+      <Name>PythonToolsTests</Name>
+    </ProjectReference>
     <ProjectReference Include="..\DebuggerUITests\DebuggerUITests.csproj">
       <Project>{82BB3890-C943-421E-8643-7244421E8ADE}</Project>
       <Name>DebuggerUITests</Name>

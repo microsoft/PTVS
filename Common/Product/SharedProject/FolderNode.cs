@@ -470,19 +470,28 @@ namespace Microsoft.VisualStudioTools.Project
 
             Parent.AddChild(this);
 
-            // Let all children know of the new path
-            for (HierarchyNode child = this.FirstChild; child != null; child = child.NextSibling)
+            var oldTriggerFlag = ProjectMgr.EventTriggeringFlag;
+            ProjectMgr.EventTriggeringFlag |= ProjectNode.EventTriggering.DoNotTriggerTrackerEvents;
+            try 
             {
-                FolderNode node = child as FolderNode;
+                // Let all children know of the new path
+                for (HierarchyNode child = this.FirstChild; child != null; child = child.NextSibling) 
+                {
+                    FolderNode node = child as FolderNode;
 
-                if (node == null)
-                {
-                    child.SetEditLabel(child.GetEditLabel());
+                    if (node == null) 
+                    {
+                        child.SetEditLabel(child.GetEditLabel());
+                    } 
+                    else 
+                    {
+                        node.RenameFolder(node.Caption);
+                    }
                 }
-                else
-                {
-                    node.RenameFolder(node.Caption);
-                }
+            } 
+            finally 
+            {
+                ProjectMgr.EventTriggeringFlag = oldTriggerFlag;
             }
 
             ProjectMgr.Tracker.OnItemRenamed(oldPath, newPath, VSRENAMEFILEFLAGS.VSRENAMEFILEFLAGS_Directory);

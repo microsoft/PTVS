@@ -6118,11 +6118,7 @@ If the files in the existing folder have the same names as files in the folder y
                 // Walk the tree and close all nodes.
                 // This has to be done before the project closes, since we want still state available for the ProjectMgr on the nodes 
                 // when nodes are closing.
-                try {
-                    CloseAllNodes(this);
-                } finally {
-                    this.Dispose(true);
-                }
+                CloseAllNodes(this);
             } catch (COMException e) {
                 hr = e.ErrorCode;
             } finally {

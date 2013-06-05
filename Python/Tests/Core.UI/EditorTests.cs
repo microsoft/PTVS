@@ -72,7 +72,9 @@ namespace PythonToolsUITests {
                 new ExpectedTag(40, 50, "\r\n    pass"),
                 new ExpectedTag(72, 82, "\r\n    pass"),
                 new ExpectedTag(104, 131, "\r\n    pass\r\nelse:\r\n    pass"),
-                new ExpectedTag(153, 185, "\r\n    pass\r\nelif True:\r\n    pass")
+                new ExpectedTag(153, 185, "\r\n    pass\r\nelif True:\r\n    pass"),
+                new ExpectedTag(228, 248, "\r\n    print('hello')"),
+                new ExpectedTag(267, 287, "\r\n    print('hello')")
             );
         }
 
@@ -623,6 +625,15 @@ x\
         private void VerifyTags(ITextBuffer buffer, IEnumerable<IMappingTagSpan<IOutliningRegionTag>> tags, params ExpectedTag[] expected) {
             var ltags = new List<IMappingTagSpan<IOutliningRegionTag>>(tags);
 
+            foreach (var tag in ltags) {
+                int start = tag.Span.Start.GetInsertionPoint(x => x == buffer).Value.Position;
+                int end = tag.Span.End.GetInsertionPoint(x => x == buffer).Value.Position;
+                Console.WriteLine("new ExpectedTag({0}, {1}, \"{2}\"),",
+                    start,
+                    end,
+                    Classification.FormatString(buffer.CurrentSnapshot.GetText(Span.FromBounds(start, end)))
+                );
+            }
             Assert.AreEqual(expected.Length, ltags.Count);
 
             for (int i = 0; i < ltags.Count; i++) {
