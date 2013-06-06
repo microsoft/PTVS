@@ -43,7 +43,7 @@ def type_to_typelist(type_obj):
 
 
 def get_default_value(param):
-    if param.DefaultValue != DBNull.Value and not isinstance(param.DefaultValue, Missing):
+    if param.DefaultValue is not DBNull.Value and param.DefaultValue is not Missing.Value:
         return repr(param.DefaultValue)
     elif param.IsOptional:
         missing = CompilerHelpers.GetMissingValue(param.ParameterType)

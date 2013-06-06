@@ -69,7 +69,6 @@
     <Compile Include="CommentBlockTests.cs" />
     <Compile Include="CommonUtilsTests.cs" />
     <Compile Include="CompletionContextTests.cs" />
-    <Compile Include="CompletionDBTest.cs" />
     <Compile Include="CPythonInterpreterTests.cs" />
     <Compile Include="DebugReplEvaluatorTests.cs" />
     <Compile Include="ExtractMethodTests.cs" />

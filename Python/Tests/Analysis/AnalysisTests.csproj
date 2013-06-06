@@ -35,6 +35,7 @@
     <Reference Include="IronPython.Modules">
       <HintPath>..\..\Product\Python\IronPython\IronPython.Modules.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.CSharp" />
     <Reference Include="Microsoft.Dynamic">
       <HintPath>..\..\Product\Python\IronPython\Microsoft.Dynamic.dll</HintPath>
     </Reference>
@@ -61,6 +62,7 @@
     <Compile Include="AnalysisTest.cs" />
     <Compile Include="AnalysisTest.Perf.cs" />
     <Compile Include="BaseAnalysisTest.cs" />
+    <Compile Include="CompletionDBTest.cs" />
     <Compile Include="DatabaseTest.cs" />
     <Compile Include="DeserializationTests.cs" />
     <Compile Include="DotNetAnalysis\Generics.cs" />
@@ -80,7 +82,7 @@
     <ProjectReference Include="..\..\Product\Analysis\Analysis.csproj">
       <Project>{A85D479D-67A9-4BDB-904A-7D86DAF68A6F}</Project>
       <Name>Analysis</Name>
-      <Aliases>global</Aliases>
+      <Aliases>global,analysis</Aliases>
     </ProjectReference>
     <ProjectReference Include="..\..\Product\IronPython\IronPython.csproj">
       <Project>{5AE43C93-8EF6-4D57-BC10-511035EF56C5}</Project>
@@ -105,6 +107,10 @@
   <ItemGroup>
     <None Include="..\..\Product\PythonTools\CompletionDB\*.idb">
       <Link>CompletionDB\%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\..\Product\Analyzer\*.py">
+      <Link>%(Filename)%(Extension)</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
