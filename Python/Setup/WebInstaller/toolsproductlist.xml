@@ -2,14 +2,14 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
   <webpiFile version="4.0.0.0" />
 
-  <title>Tools Platform Installer 4.0 Feed</title>
-  <link href="http://www.microsoft.com/web/webpi/4.0/ToolsProductList.xml" />
+  <title>Tools Platform Installer 4.5 Feed</title>
+  <link href="http://pytools/webpi/production/ToolsProductList.xml" />
   <updated>2009-3-17T16:30:00Z</updated>
   <author>
     <name>Microsoft</name>
     <uri>http://www.microsoft.com/</uri>
   </author>
-  <id>http://www.microsoft.com/web/webpi/4.0/ToolsProductList.xml</id>
+  <id>http://pytools/webpi/production/ToolsProductList.xml</id>
 
   <!-- Resources -->
   <resourcesList>
@@ -19,59 +19,59 @@
     </resources>
     <resources>
       <culture>de</culture>
-      <url>http://www.microsoft.com/web/webpi/4.0/resources/ToolsProductList_de.xml</url>
+      <url>http://www.microsoft.com/web/webpi/4.5/resources/ToolsProductList_de.xml</url>
     </resources>
     <resources>
       <culture>es</culture>
-      <url>http://www.microsoft.com/web/webpi/4.0/resources/ToolsProductList_es.xml</url>
+      <url>http://www.microsoft.com/web/webpi/4.5/resources/ToolsProductList_es.xml</url>
     </resources>
     <resources>
       <culture>fr</culture>
-      <url>http://www.microsoft.com/web/webpi/4.0/resources/ToolsProductList_fr.xml</url>
+      <url>http://www.microsoft.com/web/webpi/4.5/resources/ToolsProductList_fr.xml</url>
     </resources>
     <resources>
       <culture>it</culture>
-      <url>http://www.microsoft.com/web/webpi/4.0/resources/ToolsProductList_it.xml</url>
+      <url>http://www.microsoft.com/web/webpi/4.5/resources/ToolsProductList_it.xml</url>
     </resources>
     <resources>
       <culture>ja</culture>
-      <url>http://www.microsoft.com/web/webpi/4.0/resources/ToolsProductList_ja.xml</url>
+      <url>http://www.microsoft.com/web/webpi/4.5/resources/ToolsProductList_ja.xml</url>
     </resources>
     <resources>
       <culture>ko</culture>
-      <url>http://www.microsoft.com/web/webpi/4.0/resources/ToolsProductList_ko.xml</url>
+      <url>http://www.microsoft.com/web/webpi/4.5/resources/ToolsProductList_ko.xml</url>
     </resources>
     <resources>
       <culture>ru</culture>
-      <url>http://www.microsoft.com/web/webpi/4.0/resources/ToolsProductList_ru.xml</url>
+      <url>http://www.microsoft.com/web/webpi/4.5/resources/ToolsProductList_ru.xml</url>
     </resources>
     <resources>
       <culture>zh-cn</culture>
-      <url>http://www.microsoft.com/web/webpi/4.0/resources/ToolsProductList_zh-cn.xml</url>
+      <url>http://www.microsoft.com/web/webpi/4.5/resources/ToolsProductList_zh-cn.xml</url>
     </resources>
     <resources>
       <culture>zh-tw</culture>
-      <url>http://www.microsoft.com/web/webpi/4.0/resources/ToolsProductList_zh-tw.xml</url>
+      <url>http://www.microsoft.com/web/webpi/4.5/resources/ToolsProductList_zh-tw.xml</url>
     </resources>
     <resources>
       <culture>zh-hk</culture>
-      <url>http://www.microsoft.com/web/webpi/4.0/resources/ToolsProductList_zh-tw.xml</url>
+      <url>http://www.microsoft.com/web/webpi/4.5/resources/ToolsProductList_zh-tw.xml</url>
     </resources>
     <resources>
       <culture>tr</culture>
-      <url>http://www.microsoft.com/web/webpi/4.0/resources/ToolsProductList_tr.xml</url>
+      <url>http://www.microsoft.com/web/webpi/4.5/resources/ToolsProductList_tr.xml</url>
     </resources>
     <resources>
       <culture>pl</culture>
-      <url>http://www.microsoft.com/web/webpi/4.0/resources/ToolsProductList_pl.xml</url>
+      <url>http://www.microsoft.com/web/webpi/4.5/resources/ToolsProductList_pl.xml</url>
     </resources>
     <resources>
       <culture>pt-br</culture>
-      <url>http://www.microsoft.com/web/webpi/4.0/resources/ToolsProductList_pt-br.xml</url>
+      <url>http://www.microsoft.com/web/webpi/4.5/resources/ToolsProductList_pt-br.xml</url>
     </resources>
     <resources>
       <culture>cs</culture>
-      <url>http://www.microsoft.com/web/webpi/4.0/resources/ToolsProductList_cs.xml</url>
+      <url>http://www.microsoft.com/web/webpi/4.5/resources/ToolsProductList_cs.xml</url>
     </resources>
   </resourcesList>
 
@@ -83,13 +83,191 @@
     </language>
   </languages>
 
-  <!-- Start Windows Azure SDK for Node, PHP, and Python -->
+  <entry>
+    <productId>HDP-PREVIEW</productId>
+    <title resourceName="Entry_HDP-PREVIEW_Title">Hortonworks Data Platform for Windows (Developer Preview)</title>
+    <version>1.1.0</version>
+    <summary resourceName="Entry_HDP-PREVIEW_Summary">Developer preview of Apache Hadoop, Hive, Pig, Sqoop, Oozie, HCatalog, and Templeton.</summary>
+    <id>http://www.microsoft.com/web/webpi/HDP-1.1.0.1-PREVIEW</id>
+    <updated>2013-05-13T12:00:00Z</updated>
+    <published>2013-05-13T12:00:00Z</published>
+    <link href="http://hortonworks.com/partners/microsoft/" />
+    <images>
+      <icon>http://www.microsoft.com/web/media/gallery/apps-screenshots/IIS_WebPlatformInstaller_GenericWizardArt.png</icon>
+    </images>
+    <author>
+      <name>Hortonworks</name>
+      <uri>http://www.hortonworks.com/</uri>
+    </author>
+    <keywords>
+      <keywordId>Server</keywordId>
+    </keywords>
+    <searchExclude />
+    <discoveryHint>
+      <registry>
+        <keyPath>HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Installer\Products\CFB337F5ACACF1146ACDA53ADE16F1C1</keyPath>
+      </registry>
+    </discoveryHint>
+    <dependency>
+      <and>
+        <dependency>
+          <productId>VC10Redist_x64</productId>
+        </dependency>
+        <dependency>
+            <productId>NETFramework4</productId>
+        </dependency>
+        <dependency>
+            <productId>Python27</productId>
+        </dependency>
+      </and>
+    </dependency>
+    <installers>
+      <installer>
+        <id>1</id>
+        <languageId>en</languageId>
+        <architectures>
+          <x64 />
+        </architectures>
+      <osList>
+          <!-- Windows 7 SP1 or Windows Server 2008 R2 SP1 or higher -->
+          <os>
+            <minimumVersion>
+              <osMajorVersion>6</osMajorVersion>
+              <osMinorVersion>1</osMinorVersion>
+              <spMajorVersion>1</spMajorVersion>
+            </minimumVersion>
+            <maximumVersion>
+              <osMajorVersion>6</osMajorVersion>
+              <osMinorVersion>1</osMinorVersion>
+            </maximumVersion>
+          </os>
+          <!-- Windows 8 or Windows Server 2012 or higher -->
+          <os>
+            <minimumVersion>
+              <osMajorVersion>6</osMajorVersion>
+              <osMinorVersion>2</osMinorVersion>
+              <spMajorVersion>0</spMajorVersion>
+            </minimumVersion>
+          </os>
+        </osList>
+        <eulaURL>http://go.microsoft.com/fwlink/?LinkId=269732</eulaURL>
+        <installerFile>
+          <fileSize>434500</fileSize>
+          <installerURL>http://go.microsoft.com/fwlink/?LinkId=269734</installerURL>
+        </installerFile>
+        <installCommands>
+          <msiInstall>
+            <msi>%InstallerFile%</msi>
+            <properties>WEBPI=1</properties>
+          </msiInstall>
+        </installCommands>
+        <helpLink>http://hortonworks.com/partners/microsoft/</helpLink>
+      </installer>
+    </installers>
+  </entry>
+
+  <entry>
+    <productId>HDINSIGHT-PREVIEW</productId>
+    <title resourceName="Entry_HDINSIGHT-PREVIEW_Title">Microsoft HDInsight Developer Preview</title>
+    <version>0.6.0.0</version>
+    <summary resourceName="Entry_HDINSIGHT-PREVIEW_Summary">Preview release of Microsoft HDInsight, powered by the Hortonworks Data Platform (including Apache Hadoop, Hive, Pig, Sqoop, Oozie, HCatalog, and Templeton).</summary>
+    <id>http://www.microsoft.com/web/webpi/HDINSIGHT</id>
+    <updated>2013-05-13T12:00:00Z</updated>    
+    <longSummary resourceName="Entry_HDINSIGHT-PREVIEW_LongSummary">HDInsight is Microsoft's Hadoop-based distribution, built on the Hortonworks Data Platform for Windows (HDP).  It combines the simplicity of Windows with the power and reliability of the HDP to deliver big data insights from Apache Hadoop. This is a preview release targeting developer scenarios and as such only support single-node deployments. </longSummary>
+    <published>2013-05-13T12:00:00Z</published>
+    <images>
+      <icon>http://www.microsoft.com/web/media/gallery/apps-screenshots/IIS_WebPlatformInstaller_GenericWizardArt.png</icon>
+    </images>
+    <author>
+      <name>Microsoft</name>
+      <uri>http://www.microsoft.com/</uri>
+    </author>
+    <keywords>
+      <keywordId>Server</keywordId>
+    </keywords>
+    <discoveryHint>
+      <registry>
+        <keyPath>HKEY_LOCAL_MACHINE\SOFTWARE\Classes\Installer\Products\7C4AE974BABAAC645AAB1323F2B6C6E8</keyPath>
+      </registry>
+    </discoveryHint>
+    <dependency>
+      <and>
+        <dependency>
+            <productId>IIS7</productId>
+        </dependency>
+        <dependency>
+            <productId>ASPNET</productId>
+        </dependency>
+        <dependency>
+          <productId>NETFramework45</productId>
+        </dependency>
+        <dependency>
+            <productId>BasicAuthentication</productId>
+        </dependency>
+        <dependency>
+            <productId>WindowsAuthentication</productId>
+        </dependency>
+        <dependency>
+            <productId>HDP-PREVIEW</productId>
+        </dependency>
+      </and>
+    </dependency>
+    <installers>
+      <installer>
+        <id>1</id>
+        <languageId>en</languageId>
+        <architectures>
+          <x64 />
+        </architectures>
+        <osList>
+          <!-- Windows 7 SP1 or Windows Server 2008 R2 SP1 or higher -->
+          <os>
+            <minimumVersion>
+              <osMajorVersion>6</osMajorVersion>
+              <osMinorVersion>1</osMinorVersion>
+              <spMajorVersion>1</spMajorVersion>
+            </minimumVersion>
+            <maximumVersion>
+              <osMajorVersion>6</osMajorVersion>
+              <osMinorVersion>1</osMinorVersion>
+            </maximumVersion>
+          </os>
+          <!-- Windows 8 or Windows Server 2012 or higher -->
+          <os>
+            <minimumVersion>
+              <osMajorVersion>6</osMajorVersion>
+              <osMinorVersion>2</osMinorVersion>
+              <spMajorVersion>0</spMajorVersion>
+            </minimumVersion>
+          </os>
+        </osList>
+        <eulaURL>http://go.microsoft.com/fwlink/?LinkId=269733</eulaURL>
+        <installerFile>
+          <fileSize>29892</fileSize>
+          <installerURL>http://go.microsoft.com/fwlink/?LinkId=269735</installerURL>
+        </installerFile>
+        <installCommands>
+         <msiInstall>
+            <msi>%InstallerFile%</msi>
+            <properties>WEBPI=1</properties>
+          </msiInstall>
+        </installCommands>
+        <postFinish>
+          <command>
+            <path>http://localhost:8085/</path>
+            <description>Microsoft HDInsight Dashboard will now be opened in a web browser. In the dashboard, select your cluster and then click on the Getting Started tile for more information.</description>
+          </command>
+        </postFinish>
+        <helpLink>http://go.microsoft.com/fwlink/?LinkId=269731</helpLink>
+      </installer>
+    </installers>
+  </entry>
   <entry>
     <productId>AzureNodeSDK</productId>
-    <title resourceName="Entry_AzureNodeSDK_Title">Windows Azure SDK for Node.js - June 2012</title>
-    <version>0.6.0</version>
-    <published>2012-06-07T12:00:00Z</published>
-    <updated>2012-06-07T12:00:00Z</updated>
+    <title resourceName="Entry_AzureNodeSDK_Title">Windows Azure SDK for Node.js</title>
+    <version>0.6.14</version>
+    <published>2013-05-09T12:00:00Z</published>
+    <updated>2013-05-09T12:00:00Z</updated>
     <summary resourceName="Entry_AzureNodeSDK_Summary">The Windows Azure SDK for Node.js provides developers with Tools and APIs for building and deploying Node.js applications to Windows Azure.</summary>
     <longSummary resourceName="Entry_AzureNodeSDK_LongSummary">Windows Azure SDK for Node.js provides developers with client libraries, PowerShell commandlets and other tools for building and deploying Node.js applications to Windows Azure.</longSummary>
     <link href="http://www.windowsazure.com/en-us/develop/nodejs" />
@@ -100,26 +278,29 @@
     <keywords>
       <keywordId>ProductTools</keywordId>
       <keywordId>ProductSpotlight</keywordId>
+      <keywordId>WindowsAzure</keywordId>
     </keywords>
     <images>
-      <icon>http://www.microsoft.com/web/media/gallery/apps-screenshots/wa_vs_graphic.png</icon>
+      <icon>http://go.microsoft.com/?linkid=9813800</icon>
     </images>
     <discoveryHint>
       <and>
-        <discoveryHint idref="DH_iisnode_if_iis7_exists"/>
-        <discoveryHint idref="DH_AzurePowerShell"/>
+        <discoveryHint idref="DH_iisnode_if_iis7_exists" />
+        <discoveryHint idref="DH_iisnodedev_exists" />
+        <discoveryHint idref="DH_AzurePowerShell" />
+        <discoveryHint idref="DH_WindowsAzureLibrariesNET_1_8" />
         <discoveryHint>
           <or>
             <discoveryHint>
               <file>
                 <filePath>%programfiles%\nodejs\node.exe</filePath>
-                <minimumVersion>0.6.17</minimumVersion>
+                <minimumVersion>0.6.20</minimumVersion>
               </file>
             </discoveryHint>
             <discoveryHint>
               <file>
                 <filePath>%programfiles(x86)%\nodejs\node.exe</filePath>
-                <minimumVersion>0.6.17</minimumVersion>
+                <minimumVersion>0.6.20</minimumVersion>
               </file>
             </discoveryHint>
           </or>
@@ -129,12 +310,6 @@
     <dependency>
       <and>
         <dependency>
-          <productId>WindowsAzureSDKOnly_1_7</productId>
-        </dependency>
-        <dependency>
-          <productId>WindowsAzureEmulator_1_7</productId>
-        </dependency>
-        <dependency>
           <productId>WindowsAzurePowerShell</productId>
         </dependency>
         <dependency>
@@ -142,6 +317,15 @@
         </dependency>
         <dependency>
           <productId>iisnode_if_iis7_exists</productId>
+        </dependency>
+        <dependency>
+          <productId>iisnodedev</productId>
+        </dependency>
+        <dependency>
+          <productId>WindowsAzureSDK_1_8</productId>
+        </dependency>
+        <dependency>
+          <productId>NETFramework35</productId>
         </dependency>
       </and>
     </dependency>
@@ -151,7 +335,19 @@
         <id>1</id>
         <eulaURL>https://raw.github.com/WindowsAzure/azure-sdk-tools/master/LICENSE.txt</eulaURL>
         <languageId>en</languageId>
-        <!--osList idref="NETFramework4OSList_VistaPlus" /-->
+        <osList idref="WindowsAzurePowerShell_Higher_Than_6.1_SP1" />
+        <installCommands>
+          <cmdline>
+            <exe>%windir%\system32\cmd.exe</exe>
+            <commandLineArguments>/C echo noop</commandLineArguments>
+          </cmdline>
+        </installCommands>
+      </installer>
+      <installer>
+        <id>2</id>
+        <eulaURL>https://raw.github.com/WindowsAzure/azure-sdk-tools/master/LICENSE.txt</eulaURL>
+        <languageId>en</languageId>
+        <osList idref="WindowsAzurePowerShell_Higher_Than_6.0_SP2_Lower_Than_6.1_Server_Only" />
         <installCommands>
           <cmdline>
             <exe>%windir%\system32\cmd.exe</exe>
@@ -161,14 +357,12 @@
       </installer>
     </installers>
   </entry>
-
-
   <entry>
     <productId>AzurePHPSDK</productId>
-    <title resourceName="Entry_AzurePHPSDK_Title">Windows Azure SDK for PHP - June 2012</title>
-    <version>1.0.0</version>
-    <published>2012-06-07T12:00:00Z</published>
-    <updated>2012-06-07T12:00:00Z</updated>
+    <title resourceName="Entry_AzurePHPSDK_Title">Windows Azure SDK for PHP - October 2012</title>
+    <version>1.0.8</version>
+    <published>2013-05-09T12:00:00Z</published>
+    <updated>2013-05-09T12:00:00Z</updated>
     <summary resourceName="Entry_AzurePHPSDK_Summary">The Windows Azure SDK for PHP provides developers with Tools and APIs for building and deploying PHP applications to Windows Azure.</summary>
     <longSummary resourceName="Entry_AzurePHPSDK_LongSummary">The Windows Azure SDK for PHP provides developers with client libraries, PowerShell commandlets and other tools for building and deploying PHP applications to Windows Azure.</longSummary>
     <link href="http://www.windowsazure.com/en-us/develop/php" />
@@ -179,9 +373,10 @@
     <keywords>
       <keywordId>ProductTools</keywordId>
       <keywordId>ProductSpotlight</keywordId>
+      <keywordId>WindowsAzure</keywordId>
     </keywords>
     <images>
-      <icon>http://www.microsoft.com/web/media/gallery/apps-screenshots/wa_vs_graphic.png</icon>
+      <icon>http://go.microsoft.com/?linkid=9813800</icon>
     </images>
     <discoveryHint>
       <and>
@@ -189,31 +384,29 @@
           <or>
             <discoveryHint>
               <file>
-                <filePath>%ProgramFiles%\PHP\v5.3\php-cgi.exe</filePath>
-                <minimumVersion>5.3.12</minimumVersion>
+                <filePath>%ProgramFiles%\iis express\PHP\v5.3\php-cgi.exe</filePath>
+                <minimumVersion>5.3.23</minimumVersion>
               </file>
             </discoveryHint>
             <discoveryHint>
               <file>
-                <filePath>%ProgramFiles(x86)%\PHP\v5.3\php-cgi.exe</filePath>
-                <minimumVersion>5.3.12</minimumVersion>
+                <filePath>%ProgramFiles(x86)%\iis express\PHP\v5.3\php-cgi.exe</filePath>
+                <minimumVersion>5.3.23</minimumVersion>
               </file>
             </discoveryHint>
           </or>
         </discoveryHint>
-        <discoveryHint idref="DH_AzurePowerShell"/>
+        <discoveryHint idref="DH_AzurePowerShell" />
+        <discoveryHint idref="DH_WindowsAzureLibrariesNET_1_8" />
       </and>
     </discoveryHint>
     <dependency>
       <and>
         <dependency>
-          <productId>WindowsAzureSDKOnly_1_7</productId>
-        </dependency>
-        <dependency>
-          <productId>WindowsAzureEmulator_1_7</productId>
-        </dependency>
-        <dependency>
           <productId>WindowsAzurePowerShell</productId>
+        </dependency>
+        <dependency>
+          <productId>WindowsAzureSDK_1_8</productId>
         </dependency>
         <!--dependency-->
         <!-- already chained in by PHP53 via IIS7 -->
@@ -221,7 +414,10 @@
           <productId>UrlRewrite2</productId>
         </dependency-->
         <dependency>
-          <productId>PHP53</productId>
+          <productId>PHP53ForIISExpress</productId>
+        </dependency>
+        <dependency>
+          <productId>NETFramework35</productId>
         </dependency>
       </and>
     </dependency>
@@ -232,6 +428,101 @@
         <eulaURL>https://raw.github.com/WindowsAzure/azure-sdk-tools/master/LICENSE.txt</eulaURL>
         <languageId>en</languageId>
         <!--osList idref="NETFramework4OSList_VistaPlus" /-->
+        <osList idref="WindowsAzurePowerShell_Higher_Than_6.1_SP1" />
+        <installCommands>
+          <cmdline>
+            <exe>%windir%\system32\cmd.exe</exe>
+            <commandLineArguments>/C echo noop</commandLineArguments>
+          </cmdline>
+        </installCommands>
+      </installer>
+      <installer>
+        <id>2</id>
+        <eulaURL>https://raw.github.com/WindowsAzure/azure-sdk-tools/master/LICENSE.txt</eulaURL>
+        <languageId>en</languageId>
+        <!--osList idref="NETFramework4OSList_VistaPlus" /-->
+        <osList idref="WindowsAzurePowerShell_Higher_Than_6.0_SP2_Lower_Than_6.1_Server_Only" />
+        <installCommands>
+          <cmdline>
+            <exe>%windir%\system32\cmd.exe</exe>
+            <commandLineArguments>/C echo noop</commandLineArguments>
+          </cmdline>
+        </installCommands>
+      </installer>
+    </installers>
+  </entry>
+
+  <!-- ##Windows Azure SDK for Ruby ##################################### -->
+  <entry>
+    <productId>AzureRubySDK</productId>
+    <title resourceName="Entry_AzureRubySDK_Title">Windows Azure SDK for Ruby</title>
+    <version>0.5.0</version>
+    <published>2013-05-09T12:00:00Z</published>
+    <updated>2013-05-09T12:00:00Z</updated>
+    <summary resourceName="Entry_AzureRubySDK_Summary">The Windows Azure SDK for Ruby provides developers with Tools and APIs for building and deploying Ruby applications to Windows Azure.</summary>
+    <longSummary resourceName="Entry_AzureRubySDK_LongSummary">Windows Azure SDK for Ruby provides developers with client libraries, PowerShell commandlets and other tools for building and deploying Ruby applications to Windows Azure.</longSummary>
+    <link href="http://www.windowsazure.com/en-us/develop/ruby" />
+    <author>
+      <name>Microsoft Corporation</name>
+      <uri>http://www.microsoft.com/</uri>
+    </author>
+    <keywords>
+      <keywordId>ProductTools</keywordId>
+      <keywordId>ProductSpotlight</keywordId>
+      <keywordId>WindowsAzure</keywordId>
+    </keywords>
+    <images>
+      <icon>http://go.microsoft.com/?linkid=9813800</icon>
+    </images>
+    <discoveryHint>
+      <and>
+        <discoveryHint idref="DH_AzurePowerShell" />
+        <discoveryHint idref="DH_WindowsAzureLibrariesNET_1_8" />
+        <discoveryHint>
+          <file>
+            <filePath>C:\Ruby200\bin\ruby.exe</filePath>
+            <minimumVersion>2.0.0.0</minimumVersion>
+          </file>
+        </discoveryHint>
+      </and>
+    </discoveryHint>
+    <dependency>
+      <and>
+        <dependency>
+          <productId>WindowsAzurePowerShell</productId>
+        </dependency>
+        <dependency>
+          <productId>WindowsAzureSDK_1_8</productId>
+        </dependency>
+        <dependency>
+          <productId>NETFramework35</productId>
+        </dependency>
+      </and>
+    </dependency>
+    <related>
+      <relatedProduct>
+        <productId>Ruby_2_0_x32</productId>
+      </relatedProduct>
+    </related>
+    <installers>
+      <!-- English no-op -->
+      <installer>
+        <id>1</id>
+        <eulaURL>https://raw.github.com/WindowsAzure/azure-sdk-tools/master/LICENSE.txt</eulaURL>
+        <languageId>en</languageId>
+        <osList idref="WindowsAzurePowerShell_Higher_Than_6.1_SP1" />
+        <installCommands>
+          <cmdline>
+            <exe>%windir%\system32\cmd.exe</exe>
+            <commandLineArguments>/C echo noop</commandLineArguments>
+          </cmdline>
+        </installCommands>
+      </installer>
+      <installer>
+        <id>2</id>
+        <eulaURL>https://raw.github.com/WindowsAzure/azure-sdk-tools/master/LICENSE.txt</eulaURL>
+        <languageId>en</languageId>
+        <osList idref="WindowsAzurePowerShell_Higher_Than_6.0_SP2_Lower_Than_6.1_Server_Only" />
         <installCommands>
           <cmdline>
             <exe>%windir%\system32\cmd.exe</exe>
@@ -259,11 +550,12 @@
       <uri>http://go.microsoft.com/fwlink/?LinkId=252036</uri>
     </author>
     <images>
-      <icon>http://go.microsoft.com/fwlink/?LinkId=252047</icon>
+      <icon>http://go.microsoft.com/?linkid=9813800</icon>
     </images>
     <keywords>
       <keywordId>ProductTools</keywordId>
       <keywordId>ProductSpotlight</keywordId>
+      <keywordId>WindowsAzure</keywordId>
     </keywords>
 
     <discoveryHint>
@@ -317,19 +609,22 @@
       <uri>http://go.microsoft.com/fwlink/?LinkId=252036</uri>
     </author>
     <images>
-      <icon>http://go.microsoft.com/fwlink/?LinkId=252047</icon>
+      <icon>http://go.microsoft.com/?linkid=9813800</icon>
     </images>
     <keywords>
       <keywordId>ProductTools</keywordId>
       <keywordId>FrameworkRuntime</keywordId>
+      <keywordId>WindowsAzure</keywordId>
     </keywords>
 
-    <!-- TODO Update this to include discovery hints of all children -->
+    <!-- TODO Update this around December 2012 -->
+    <!-- 
     <discoveryHint>
       <file>
         <filePath>%SystemDrive%\Python27\Lib\site-packages\azure\__init__.py</filePath>
       </file>
     </discoveryHint>
+    -->
 
     <dependency>
       <and>
@@ -348,8 +643,133 @@
         <dependency>
           <productId>Django</productId>
         </dependency>
+      </and>
+    </dependency>
+
+    <installers>
+      <installer>
+        <id>1</id>
+        <languageId>en</languageId>
+        <eulaURL>http://go.microsoft.com/fwlink/?LinkId=252059</eulaURL>
+        <installCommands>
+          <cmdLine>
+            <exe>%TMP%\pip_installhelper_27_x86.bat</exe>
+            <commandLineArguments>--log %TMP%\azure.log install azure --upgrade</commandLineArguments>
+            <ignoreExitCode>false</ignoreExitCode>
+          </cmdLine>
+        </installCommands>
+        <logFiles>
+          <location>%TMP%\azure.log</location>
+        </logFiles>
+        <helpLink>http://go.microsoft.com/fwlink/?LinkId=252044</helpLink>
+      </installer>
+    </installers>
+  </entry>
+
+  <entry>
+    <productId>AzurePythonSDK_Oct2012</productId>
+    <title resourceName="Entry_AzurePythonSDK_Oct2012_Title">Windows Azure SDK for Python - October 2012</title>
+    <version>June 2012</version>
+    <published>2012-10-31T12:00:00Z</published>
+    <updated>2012-10-31T12:00:00Z</updated>
+    <summary resourceName="Entry_AzurePythonSDK_Oct2012_Summary">Python development support for Windows Azure within Visual Studio."</summary>
+    <longSummary resourceName="Entry_AzurePythonSDK_Oct2012_LongSummary">The Windows Azure SDK for Python provides developers with Python frameworks, packages, and Microsoft Visual Studio tools (if installed) for building scalable services for deployment to Windows Azure."</longSummary>
+    <productFamily resourceName="Python">Python</productFamily>
+
+    <link href="http://go.microsoft.com/fwlink/?LinkId=252044" />
+    <author>
+      <name>Microsoft</name>
+      <uri>http://go.microsoft.com/fwlink/?LinkId=252036</uri>
+    </author>
+    <images>
+      <icon>http://go.microsoft.com/?linkid=9813800</icon>
+    </images>
+    <keywords>
+      <keywordId>ProductTools</keywordId>
+      <keywordId>ProductSpotlight</keywordId>
+      <keywordId>WindowsAzure</keywordId>
+    </keywords>
+
+    <discoveryHint>
+      <registry>
+        <keyPath>HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows Azure SDK for Python - October 2012</keyPath>
+      </registry>
+    </discoveryHint>
+
+    <dependency>
+      <productId>AzurePythonSDKCore_Oct2012</productId>
+    </dependency>
+    <related>
+      <relatedProduct>
+        <productId>PythonToolsForVS</productId>
+      </relatedProduct>
+    </related>
+
+    <installers>
+      <installer>
+        <id>1</id>
+        <languageId>en</languageId>
+        <eulaURL>http://go.microsoft.com/fwlink/?LinkID=252059</eulaURL>
+        <installCommands>
+          <cmdline>
+            <exe>%SystemRoot%\System32\cmd.exe</exe>
+            <commandLineArguments>/C reg.exe add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows Azure SDK for Python - October 2012" /ve /f</commandLineArguments>
+            <ignoreExitCode>false</ignoreExitCode>
+          </cmdline>
+        </installCommands>
+        <helpLink>http://go.microsoft.com/fwlink/?LinkId=252044</helpLink>
+      </installer>
+    </installers>
+  </entry>
+
+  <entry>
+    <productId>AzurePythonSDKCore_Oct2012</productId>
+    <title resourceName="Entry_AzurePythonSDKCore_Oct2012_Title">Windows Azure SDK for Python (Core) - October 2012</title>
+    <version>June 2012</version>
+    <published>2012-10-31T12:00:00Z</published>
+    <updated>2012-10-31T12:00:00Z</updated>
+    <summary resourceName="Entry_AzurePythonSDKCore_Oct2012_Summary">Python development support for Windows Azure.</summary>
+    <longSummary resourceName="Entry_AzurePythonSDKCore_Oct2012_LongSummary">The Windows Azure SDK for Python provides developers with Python modules and packages for building scalable services for deployment to Windows Azure.</longSummary>
+    <productFamily resourceName="Python">Python</productFamily>
+    <link href="http://go.microsoft.com/fwlink/?LinkId=252044" />
+    <author>
+      <name>Microsoft</name>
+      <uri>http://go.microsoft.com/fwlink/?LinkId=252036</uri>
+    </author>
+    <images>
+      <icon>http://go.microsoft.com/?linkid=9813800</icon>
+    </images>
+    <keywords>
+      <keywordId>ProductTools</keywordId>
+      <keywordId>FrameworkRuntime</keywordId>
+      <keywordId>WindowsAzure</keywordId>
+    </keywords>
+
+    <!-- TODO Update this around December 2012 -->
+    <!-- 
+    <discoveryHint>
+      <file>
+        <filePath>%SystemDrive%\Python27\Lib\site-packages\azure\__init__.py</filePath>
+      </file>
+    </discoveryHint>
+    -->
+
+    <dependency>
+      <and>
         <dependency>
-          <productId>AzurePython</productId>
+          <productId>WindowsAzureSDK_Only_1_8</productId>
+        </dependency>
+        <dependency>
+          <productId>WindowsAzureEmulator_1_8</productId>
+        </dependency>
+        <dependency>
+          <productId>Python27</productId>
+        </dependency>
+        <dependency>
+          <productId>PythonDetectInstalls</productId>
+        </dependency>
+        <dependency>
+          <productId>Django</productId>
         </dependency>
       </and>
     </dependency>
@@ -375,35 +795,43 @@
   </entry>
 
 
-
   <entry>
     <productId>WindowsAzurePowershell</productId>
     <title resourceName="Entry_AzurePowerShell_Title">Windows Azure PowerShell</title>
-    <version>0.6.0</version>
-    <published>2012-06-07T12:00:00Z</published>
-    <updated>2012-06-07T12:00:00Z</updated>
+    <version>0.6.14</version>
+    <published>2013-05-09T12:00:00Z</published>
+    <updated>2013-05-09T12:00:00Z</updated>
     <summary resourceName="Entry_AzurePowershell_Summary">The Windows Azure PowerShell provides developers and IT/Pros with Windows PowerShell cmdlets for building, deploying and managing Windows Azure services.</summary>
     <longSummary resourceName="Entry_AzurePowershell_LongSummary">The Windows Azure PowerShell provides developers and IT/Pros with Windows PowerShell cmdlets for building, deploying and managing Windows Azure services.</longSummary>
-    <link href="http://www.windowsazure.com/en-us/develop/nodejs" />
+    <link href="https://www.windowsazure.com/en-us/manage/downloads/" />
     <author>
       <name>Microsoft Corporation</name>
       <uri>http://www.microsoft.com/</uri>
     </author>
     <images>
-      <icon>http://www.microsoft.com/web/media/gallery/apps-screenshots/wa_vs_graphic.png</icon>
+      <icon>http://go.microsoft.com/?linkid=9813800</icon>
     </images>
     <keywords>
       <keywordId>ProductTools</keywordId>
       <keywordId>ProductSpotlight</keywordId>
+      <keywordId>WindowsAzure</keywordId>
     </keywords>
-    <discoveryHint idref="DH_AzurePowerShell"/>
+    <discoveryHint>
+      <and>
+        <discoveryHint idref="DH_AzurePowerShell"/>
+        <discoveryHint idref="DH_WindowsAzureLibrariesNET_1_8"/>
+      </and>
+    </discoveryHint>
     <dependency>
       <and>
         <dependency>
-          <productId>NETFramework35</productId>
+          <productId>WindowsManagementFramework_86_64</productId>
         </dependency>
         <dependency>
-          <productId>PowerShell2</productId>
+          <productId>WindowsAzureSDK_1_8</productId>
+        </dependency>
+        <dependency>
+          <productId>NETFramework35</productId>
         </dependency>
       </and>
     </dependency>
@@ -412,10 +840,70 @@
         <id>1</id>
         <languageId>en</languageId>
         <eulaURL>http://www.apache.org/licenses/LICENSE-2.0</eulaURL>
+        <osList idref="WindowsAzurePowerShell_Higher_Than_6.1_SP1" />
         <installerFile>
-          <fileSize>7408</fileSize>
-          <trackingURL>http://www.microsoft.com/web/handlers/webpi.ashx?command=incrementproddownloadcount&amp;appid=AzureNodePowershell</trackingURL>
-          <installerURL>http://github.com/downloads/WindowsAzure/azure-sdk-tools/windowsazure-powershell.0.6.0.msi</installerURL>
+          <fileSize>4488</fileSize>
+          <trackingURL>http://www.microsoft.com/web/handlers/webpi.ashx?command=incrementproddownloadcount&amp;prodid=WindowsAzurePowershell&amp;version=0.6.14&amp;prodlang=en</trackingURL>
+          <installerURL>http://go.microsoft.com/fwlink/?LinkID=279888&amp;clcid=0x409</installerURL>
+        </installerFile>
+        <installCommands>
+          <msiInstall>
+            <msi>%InstallerFile%</msi>
+          </msiInstall>
+        </installCommands>
+        <helpLink>http://to.do/</helpLink>
+      </installer>
+      <installer>
+        <id>2</id>
+        <languageId>en</languageId>
+        <eulaURL>http://www.apache.org/licenses/LICENSE-2.0</eulaURL>
+        <osList idref="WindowsAzurePowerShell_Higher_Than_6.0_SP2_Lower_Than_6.1_Server_Only" />
+        <installerFile>
+          <fileSize>4488</fileSize>
+          <trackingURL>http://www.microsoft.com/web/handlers/webpi.ashx?command=incrementproddownloadcount&amp;prodid=WindowsAzurePowershell&amp;version=0.6.14&amp;prodlang=en</trackingURL>
+          <installerURL>http://go.microsoft.com/fwlink/?LinkID=279888&amp;clcid=0x409</installerURL>
+        </installerFile>
+        <installCommands>
+          <msiInstall>
+            <msi>%InstallerFile%</msi>
+          </msiInstall>
+        </installCommands>
+        <helpLink>http://to.do/</helpLink>
+      </installer>
+    </installers>
+  </entry>
+
+  <entry>
+    <productId>WindowsAzureXPlatCLI</productId>
+    <title resourceName="Entry_AzureXPlatCLI_Title">Windows Azure Cross-platform Command Line Tools</title>
+    <version>0.6.16</version>
+    <published>2013-05-10T12:00:00Z</published>
+    <updated>2013-05-10T12:00:00Z</updated>
+    <summary resourceName="Entry_AzureXPlatCLI_Summary">The Windows Azure Cross-platform Command Line Tools provide developers and IT/Pros with commands which run on any operating systems for building, deploying and managing Windows Azure services.</summary>
+    <longSummary resourceName="Entry_AzureXPlatCLI_LongSummary">The Windows Azure Cross-platform Command Line Tools provide developers and IT/Pros with commands which run on any operating systems for building, deploying and managing Windows Azure services.</longSummary>
+    <link href="https://www.windowsazure.com/en-us/manage/downloads/" />
+    <author>
+      <name>Microsoft Corporation</name>
+      <uri>http://www.microsoft.com/</uri>
+    </author>
+    <images>
+      <icon>http://go.microsoft.com/?linkid=9813800</icon>
+    </images>
+    <keywords>
+      <keywordId>ProductTools</keywordId>
+      <keywordId>ProductSpotlight</keywordId>
+      <keywordId>WindowsAzure</keywordId>
+    </keywords>
+    <discoveryHint idref="DH_AzureXPlatCLI"/>
+    <installers>
+      <installer>
+        <id>1</id>
+        <languageId>en</languageId>
+        <eulaURL>http://www.apache.org/licenses/LICENSE-2.0</eulaURL>
+        <installerFile>
+          <fileSize>4776</fileSize>
+          <trackingURL>http://www.microsoft.com/web/handlers/webpi.ashx?command=incrementproddownloadcount&amp;prodid=WindowsAzureXPlatCLI&amp;version=0.6.16&amp;prodlang=en</trackingURL>
+          <installerURL>http://go.microsoft.com/fwlink/?LinkID=275464&amp;clcid=0x409</installerURL>
         </installerFile>
         <installCommands>
           <msiInstall>
@@ -431,14 +919,14 @@
   and will install x86 binaries on x86 machines, only if IIS exists-->
   <entry>
     <productId>iisnode_if_iis7_exists</productId>
-    <title resourceName="Entry_iisnode_Title">IISNode for IIS</title>
+    <title resourceName="Entry_iisnode_if_iis7_exists_Title">IISNode for IIS (IIS exists)</title>
     <version>0.1.19</version>
-    <summary resourceName="Entry_iisnode_Summary">Host node.js applications side by side with other application types in IIS 7.x.</summary>
-    <longSummary resourceName="Entry_iisnode_LongSummary">This package contains a native IIS 7.x module for hosting node.js application in IIS 7.x. The module supports running node.js applications side by side with other application types (ASP.NET, PHP, WCF, static files). It supports auto-update of application code, scalability to multi-core machines, and access to node.js log files over HTTP.</longSummary>
+    <summary resourceName="Entry_iisnode_if_iis7_exists_Summary">Host node.js applications side by side with other application types in IIS 7.x.</summary>
+    <longSummary resourceName="Entry_iisnode_if_iis7_exists_LongSummary">This package contains a native IIS 7.x module for hosting node.js application in IIS 7.x. The module supports running node.js applications side by side with other application types (ASP.NET, PHP, WCF, static files). It supports auto-update of application code, scalability to multi-core machines, and access to node.js log files over HTTP.</longSummary>
     <id>http://go.microsoft.com/?linkid=9790232</id>
     <link href="http://www.microsoft.com/web/webpi/iisnode" />
     <published>2012-05-09T12:00:00Z</published>
-    <updated>2012-05-09T12:00:00Z</updated>
+    <updated>2012-06-07T12:00:00Z</updated>
     <author>
       <name>Microsoft Corporation</name>
       <uri>http://www.microsoft.com/</uri>
@@ -446,11 +934,11 @@
     <images>
       <icon>http://www.iis.net/favicon.ico</icon>
     </images>
-    <discoveryHint idref="DH_iisnode_if_iis7_exists"/>
+    <discoveryHint idref="DH_iisnode_if_iis7_exists" />
     <dependency>
       <and>
         <dependency>
-          <productId>VC10Redist</productId>
+          <productId>VC10Redist_NoWow</productId>
         </dependency>
         <dependency>
           <productId>NodeJS</productId>
@@ -501,21 +989,154 @@
     </installers>
   </entry>
 
+   <!-- iisnode which will install both x86 and x64 binaries on the machine, but will not perform any registration with
+  IIS or IIS Express -->
+  <entry>
+    <productId>iisnodedev</productId>
+    <title resourceName="Entry_iisnodedev_Title">IISNode Developer Version</title>
+    <version>0.1.21</version>
+    <summary resourceName="Entry_iisnodedev_Summary">Host node.js applications side by side with other application types in IIS 7.x.</summary>
+    <longSummary resourceName="Entry_iisnodedev_LongSummary">This package contains a native IIS 7.x module for hosting node.js application in IIS 7.x. The module supports running node.js applications side by side with other application types (ASP.NET, PHP, WCF, static files). It supports auto-update of application code, scalability to multi-core machines, and access to node.js log files over HTTP.</longSummary>
+    <id>http://go.microsoft.com/?linkid=9790232</id>
+    <link href="http://www.microsoft.com/web/webpi/iisnode" />
+    <published>2012-05-09T12:00:00Z</published>
+    <updated>2012-08-06T12:00:00Z</updated>
+    <author>
+      <name>Microsoft Corporation</name>
+      <uri>http://www.microsoft.com/</uri>
+    </author>
+    <searchExclude />
+    <images>
+      <icon>http://www.iis.net/favicon.ico</icon>
+    </images>
+    <discoveryHint idref="DH_iisnodedev_exists" />
+    <dependency>
+      <and>
+         <dependency>
+          <productId>VC10Redist_NoWoW</productId>
+        </dependency>
+        <dependency>
+          <productId>NodeJS</productId>
+        </dependency>
+      </and>
+    </dependency>
+    <!-- Installers-->  
+    <installers>
+     <installer>
+        <id>1</id>
+        <architectures>
+          <x86 />
+        </architectures>
+        <eulaURL>https://raw.github.com/WindowsAzure/iisnode/master/LICENSE.txt</eulaURL>
+        <installerFile>
+          <fileSize>1077</fileSize>
+          <installerURL>https://github.com/downloads/WindowsAzure/iisnode/iisnode-dev-v0.1.21.msi</installerURL>
+          <sha1>aa13aeb47389463394e739a7181f9eb9300ea505</sha1>
+        </installerFile>
+        <installCommands>
+          <msiInstall>
+            <msi>%InstallerFile%</msi>
+          </msiInstall>
+        </installCommands>
+        <helpLink>http://go.microsoft.com/?linkid=9790234</helpLink>
+      </installer>
+      <installer>
+        <id>2</id>
+        <architectures>
+          <x64 />
+        </architectures>
+        <eulaURL>https://raw.github.com/WindowsAzure/iisnode/master/LICENSE.txt</eulaURL>
+        <installerFile>
+          <fileSize>1077</fileSize>
+          <installerURL>https://github.com/downloads/WindowsAzure/iisnode/iisnode-dev-v0.1.21.msi</installerURL>
+          <sha1>aa13aeb47389463394e739a7181f9eb9300ea505</sha1>
+        </installerFile>
+        <installCommands>
+          <msiInstall>
+            <msi>%InstallerFile%</msi>
+          </msiInstall>
+        </installCommands>
+        <helpLink>http://go.microsoft.com/?linkid=9790234</helpLink>
+      </installer>
+    </installers>
+  </entry>
+
 
   <!-- end Windows Azure SDK for Node, PHP, and Python-->
 
   <!-- Start Python feed updates -->
 
+  <!-- ##VS 2013############################################################## -->  
+  <entry>
+    <productId>NonVS2013RTM</productId>
+    <metadata>
+      <title resourceName="Entry_NonVS2013RTM_Title">Non Visual Studio 2013 RTM</title>
+      <version>2.0.20520.0</version>
+      <longSummary resourceName="Entry_NonVS2013RTM_Summary">Non Visual Studio 2013 RTM before proceeding.</longSummary>
+      <id>http://www.microsoft.com/web/wai/NonVS2013RTM</id>
+      <author>
+        <name>Microsoft</name>
+        <uri>http://www.microsoft.com/</uri>
+      </author>
+      <external />
+      <link href="http://www.microsoft.com/express/" />
+    </metadata>
+    <discoveryHint>
+      <not>
+        <discoveryHint>
+          <or>
+            <discoveryHint>
+              <and>
+                <discoveryHint>
+                  <registry>
+                    <keyPath>HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\DevDiv\vs\Servicing\12.0\devenv</keyPath>
+                    <valueName>Install</valueName>
+                    <valueValue>1</valueValue>
+                  </registry>
+                </discoveryHint>
+                <discoveryHint>
+                  <registry>
+                    <keyPath>HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\DevDiv\vs\Servicing\12.0\devenv</keyPath>
+                    <valueName>Version</valueName>
+                    <minimumVersion>12.0.20520</minimumVersion>
+                  </registry>
+                </discoveryHint>
+              </and>
+            </discoveryHint>
+            <discoveryHint>
+              <and>
+                <discoveryHint>
+                  <registry>
+                    <keyPath>HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\DevDiv\vs\Servicing\12.0\devenv</keyPath>
+                    <valueName>Install</valueName>
+                    <valueValue>1</valueValue>
+                  </registry>
+                </discoveryHint>
+                <discoveryHint>
+                  <registry>
+                    <keyPath>HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\DevDiv\vs\Servicing\12.0\devenv</keyPath>
+                    <valueName>Version</valueName>
+                    <minimumVersion>12.0.20530</minimumVersion>
+                  </registry>
+                </discoveryHint>
+              </and>
+            </discoveryHint>
+          </or>
+        </discoveryHint>
+      </not>
+    </discoveryHint>
+  </entry>
+  
+  
   <!-- ##PTVS############################################################## -->
   <entry>
     <productId>PythonToolsForVS</productId>
-    <title resourceName="Entry_PythonToolsForVS_Title">Python Tools for Visual Studio 2010 - 1.5 Beta 1</title>
-    <version>1.5 Beta 1</version>
-    <published>2012-6-7T12:00:00Z</published>
-    <updated>2012-6-7T12:00:00Z</updated>
-    <summary resourceName="Entry_PythonToolsForVS_Summary">Adds support for Python to Visual Studio.</summary>
-    <longSummary resourceName="Entry_PythonToolsForVS_LongSummary">
-Adds support for the Python programming language to Professional, Ultimate, and the "integrated shell" versions of Visual Studio.
+    <title resourceName="Entry_PythonToolsForVS_Title">Python Tools for Visual Studio 2010 - 1.5</title>
+    <version>1.5</version>
+    <published>2012-10-31T12:00:00Z</published>
+    <updated>2012-10-31T12:00:00Z</updated>
+    <summary resourceName="Entry_PythonToolsForVS_Summary">Adds support for Python to Visual Studio 2010.</summary>
+    <longSummary resourceName="Entry_PythonToolsForVS_LongSummary">Adds support for the Python programming language to Professional, Ultimate, and the "integrated shell" versions of Visual Studio 2010.
     </longSummary>
     <productFamily resourceName="Python">Python</productFamily>
     <link href="http://go.microsoft.com/fwlink/?LinkId=252036" />
@@ -533,16 +1154,18 @@ Adds support for the Python programming language to Professional, Ultimate, and 
     <discoveryHint>
       <or>
       <discoveryHint>
-          <file>
-            <filePath>%programfiles(x86)%\Microsoft Visual Studio 10.0\Common7\IDE\Extensions\Microsoft\Python Tools for Visual Studio\1.5\Microsoft.PythonTools.dll</filePath>
-            <minimumVersion>1.1.50530.0</minimumVersion>
-          </file>
+        <registry>
+          <keyPath>HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{42AB2A92-BD50-4E64-9CCA-E7646923FBCB}</keyPath>
+          <valueName>DisplayVersion</valueName>
+          <valueValue>1.5.51026.0</valueValue>
+        </registry>
       </discoveryHint>
       <discoveryHint>
-          <file>
-            <filePath>%programfiles%\Microsoft Visual Studio 10.0\Common7\IDE\Extensions\Microsoft\Python Tools for Visual Studio\1.5\Microsoft.PythonTools.dll</filePath>
-            <minimumVersion>1.1.50530.0</minimumVersion>
-          </file>
+        <registry>
+          <keyPath>HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\{42AB2A92-BD50-4E64-9CCA-E7646923FBCB}</keyPath>
+          <valueName>DisplayVersion</valueName>
+          <valueValue>1.5.51026.0</valueValue> 
+        </registry>
       </discoveryHint>
      </or>
     </discoveryHint>
@@ -566,9 +1189,9 @@ Adds support for the Python programming language to Professional, Ultimate, and 
         <languageId>en</languageId>
         <eulaURL>http://go.microsoft.com/fwlink/?LinkId=252037</eulaURL>
         <installerFile>
-          <fileSize>3352</fileSize>
-          <trackingURL>http://www.microsoft.com/web/handlers/webpi.ashx?command=incrementproddownloadcount&amp;appid=PythonToolsForVS</trackingURL>
-          <installerURL>http://go.microsoft.com/fwlink/?LinkId=254293</installerURL>
+          <fileSize>3878</fileSize>
+          <trackingURL>http://www.microsoft.com/web/handlers/webpi.ashx?command=incrementproddownloadcount&amp;prodid=PythonToolsForVS</trackingURL>
+          <installerURL>http://go.microsoft.com/fwlink/?LinkId=271244</installerURL>
         </installerFile>
         <installCommands> 
           <msiInstall>
@@ -579,8 +1202,287 @@ Adds support for the Python programming language to Professional, Ultimate, and 
       </installer>
     </installers>
   </entry>
+
+  <entry>
+    <productId>PythonToolsForVS2012</productId>
+    <title resourceName="Entry_PythonToolsForVS2012_Title">Python Tools for Visual Studio 2012 - 1.5</title>
+    <version>1.5</version>
+    <published>2012-10-31T12:00:00Z</published>
+    <updated>2012-10-31T12:00:00Z</updated>
+    <summary resourceName="Entry_PythonToolsForVS2012_Summary">Adds support for Python to Visual Studio 2012.</summary>
+    <longSummary resourceName="Entry_PythonToolsForVS2012_LongSummary">Adds support for the Python programming language to Professional, Ultimate, and the "integrated shell" versions of Visual Studio 2012.
+    </longSummary>
+    <productFamily resourceName="Python">Python</productFamily>
+    <link href="http://go.microsoft.com/fwlink/?LinkId=252036" />
+    <author>
+      <name>Microsoft's Python Tools Team</name>
+      <uri>http://go.microsoft.com/fwlink/?LinkId=252036</uri>
+    </author>
+    <images>
+      <icon>http://go.microsoft.com/fwlink/?LinkId=252041</icon>
+    </images>
+    <keywords>
+      <keywordId>ProductTools</keywordId>
+      <keywordId>ProductSpotlight</keywordId>
+    </keywords>
+    <discoveryHint>
+      <or>
+      <discoveryHint>
+        <registry>
+          <keyPath>HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{E0E12AF3-DBD6-4707-A39E-5EC39430C659}</keyPath>
+          <valueName>DisplayVersion</valueName>
+          <valueValue>1.5.51026.0</valueValue>
+        </registry>
+      </discoveryHint>
+      <discoveryHint>
+        <registry>
+          <keyPath>HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\{E0E12AF3-DBD6-4707-A39E-5EC39430C659}</keyPath>
+          <valueName>DisplayVersion</valueName>
+          <valueValue>1.5.51026.0</valueValue> 
+        </registry>
+      </discoveryHint>
+     </or>
+    </discoveryHint>
+
+    <incompatibilities>
+      <incompatibleProduct>
+        <productId>NonVS11RTM</productId>
+        <errorMessage resourceName="IncompatibleProduct_PythonToolsForVS2012_NonVS11RTM_ErrorMessage">You must install Microsoft Visual Studio 2012 before you can install Python Tools for Visual Studio 2012.</errorMessage>
+      </incompatibleProduct>
+    </incompatibilities>
+
+    <installers>
+      <installer>
+        <id>1</id>
+        <languageId>en</languageId>
+        <eulaURL>http://go.microsoft.com/fwlink/?LinkId=252037</eulaURL>
+        <installerFile>
+          <fileSize>3780</fileSize>
+          <trackingURL>http://www.microsoft.com/web/handlers/webpi.ashx?command=incrementproddownloadcount&amp;prodid=PythonToolsForVS</trackingURL>
+          <installerURL>http://go.microsoft.com/fwlink/?LinkId=271245</installerURL> 
+        </installerFile>
+        <installCommands> 
+          <msiInstall>
+            <msi>%InstallerFile%</msi>
+          </msiInstall>
+        </installCommands>
+        <helpLink>http://go.microsoft.com/fwlink/?LinkId=252038</helpLink>
+      </installer>
+    </installers>
+  </entry>
+
+  <!-- ##PTVS 2.0############################################################## -->
+  <entry>
+    <productId>PythonTools20ForVS2010</productId>
+    <title resourceName="Entry_PythonTools20ForVS2010_Title">Python Tools for Visual Studio 2010 - 2.0 Beta</title>
+    <version>2.0</version>
+    <published>2013-06-01T12:00:00Z</published>
+    <updated>2013-06-01T12:00:00Z</updated>
+    <summary resourceName="Entry_PythonTools20ForVS2010_Summary">Adds support for Python to Visual Studio 2010.</summary>
+    <longSummary resourceName="Entry_PythonTools20ForVS2010_LongSummary">
+      Adds support for the Python programming language to Professional, Ultimate, and the "integrated shell" versions of Visual Studio 2010.
+    </longSummary>
+    <productFamily resourceName="Python">Python</productFamily>
+    <link href="http://go.microsoft.com/fwlink/?LinkId=252036" />
+    <author>
+      <name>Microsoft's Python Tools Team</name>
+      <uri>http://go.microsoft.com/fwlink/?LinkId=252036</uri>
+    </author>
+    <images>
+      <icon>http://go.microsoft.com/fwlink/?LinkId=252041</icon>
+    </images>
+    <keywords>
+      <keywordId>ProductTools</keywordId>
+    </keywords>
+    <discoveryHint>
+      <or>
+        <discoveryHint>
+          <registry>
+            <keyPath>HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{A66F66EB-54EE-4BD2-B759-1DACC2C29476}</keyPath>
+            <valueName>DisplayVersion</valueName>
+            <valueValue>2.0.10604.0</valueValue>
+          </registry>
+        </discoveryHint>
+        <discoveryHint>
+          <registry>
+            <keyPath>HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\{A66F66EB-54EE-4BD2-B759-1DACC2C29476}</keyPath>
+            <valueName>DisplayVersion</valueName>
+            <valueValue>2.0.10604.0</valueValue>
+          </registry>
+        </discoveryHint>
+      </or>
+    </discoveryHint>
+
+    <dependency>
+      <or>
+        <!-- If either the VS2010 integrated shell or VS2010 SP1 prereqs are installed, we're good to
+        go -->
+        <dependency>
+          <productId>VS2010SI</productId>
+        </dependency>
+        <dependency>
+          <productId>VS2010SP1Prerequisite</productId>
+        </dependency>
+      </or>
+    </dependency>
+
+    <installers>
+      <installer>
+        <id>1</id>
+        <languageId>en</languageId>
+        <eulaURL>http://go.microsoft.com/fwlink/?LinkId=252037</eulaURL>
+        <installerFile>
+          <fileSize>3878</fileSize>
+          <trackingURL>http://www.microsoft.com/web/handlers/webpi.ashx?command=incrementproddownloadcount&amp;prodid=PythonTools20ForVS2010</trackingURL>
+          <installerURL>http://go.microsoft.com/fwlink/?LinkId=306319</installerURL>
+        </installerFile>
+        <installCommands>
+          <msiInstall>
+            <msi>%InstallerFile%</msi>
+          </msiInstall>
+        </installCommands>
+        <helpLink>http://go.microsoft.com/fwlink/?LinkId=252038</helpLink>
+      </installer>
+    </installers>
+  </entry>
+
+  <entry>
+    <productId>PythonTools20ForVS2012</productId>
+    <title resourceName="Entry_PythonTools20ForVS2012_Title">Python Tools for Visual Studio 2012 - 2.0 Beta</title>
+    <version>1.5</version>
+    <published>2013-06-01T12:00:00Z</published>
+    <updated>2013-06-01T12:00:00Z</updated>
+    <summary resourceName="Entry_PythonTools20ForVS2012_Summary">Adds support for Python to Visual Studio 2012.</summary>
+    <longSummary resourceName="Entry_PythonTools20ForVS2012_LongSummary">
+      Adds support for the Python programming language to Professional, Ultimate, and the "integrated shell" versions of Visual Studio 2012.
+    </longSummary>
+    <productFamily resourceName="Python">Python</productFamily>
+    <link href="http://go.microsoft.com/fwlink/?LinkId=252036" />
+    <author>
+      <name>Microsoft's Python Tools Team</name>
+      <uri>http://go.microsoft.com/fwlink/?LinkId=252036</uri>
+    </author>
+    <images>
+      <icon>http://go.microsoft.com/fwlink/?LinkId=252041</icon>
+    </images>
+    <keywords>
+      <keywordId>ProductTools</keywordId>
+    </keywords>
+    <discoveryHint>
+      <or>
+        <discoveryHint>
+          <registry>
+            <keyPath>HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{72D69224-A971-4AE0-BA34-654AD1BE5E79}</keyPath>
+            <valueName>DisplayVersion</valueName>
+            <valueValue>2.0.10604.0</valueValue>
+          </registry>
+        </discoveryHint>
+        <discoveryHint>
+          <registry>
+            <keyPath>HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\{72D69224-A971-4AE0-BA34-654AD1BE5E79}</keyPath>
+            <valueName>DisplayVersion</valueName>
+            <valueValue>2.0.10604.0</valueValue>
+          </registry>
+        </discoveryHint>
+      </or>
+    </discoveryHint>
+
+    <incompatibilities>
+      <incompatibleProduct>
+        <productId>NonVS11RTM</productId>
+        <errorMessage resourceName="IncompatibleProduct_PythonToolsForVS2012_NonVS11RTM_ErrorMessage">You must install Microsoft Visual Studio 2012 before you can install Python Tools for Visual Studio 2012.</errorMessage>
+      </incompatibleProduct>
+    </incompatibilities>
+
+    <installers>
+      <installer>
+        <id>1</id>
+        <languageId>en</languageId>
+        <eulaURL>http://go.microsoft.com/fwlink/?LinkId=252037</eulaURL>
+        <installerFile>
+          <fileSize>3780</fileSize>
+          <trackingURL>http://www.microsoft.com/web/handlers/webpi.ashx?command=incrementproddownloadcount&amp;prodid=PythonTools20ForVS2012</trackingURL>
+          <installerURL>http://go.microsoft.com/fwlink/?LinkId=306320</installerURL>
+        </installerFile>
+        <installCommands>
+          <msiInstall>
+            <msi>%InstallerFile%</msi>
+          </msiInstall>
+        </installCommands>
+        <helpLink>http://go.microsoft.com/fwlink/?LinkId=252038</helpLink>
+      </installer>
+    </installers>
+  </entry>
+
+  <entry>
+    <productId>PythonTools20ForVS2013</productId>
+    <title resourceName="Entry_PythonTools20ForVS2013_Title">Python Tools for Visual Studio 2013 - 2.0 Beta</title>
+    <version>1.5</version>
+    <published>2013-06-01T12:00:00Z</published>
+    <updated>2013-06-01T12:00:00Z</updated>
+    <summary resourceName="Entry_PythonTools20ForVS2013_Summary">Adds support for Python to Visual Studio 2013.</summary>
+    <longSummary resourceName="Entry_PythonTools20ForVS2013_LongSummary">
+      Adds support for the Python programming language to Professional, Ultimate, and the "integrated shell" versions of Visual Studio 2013.
+    </longSummary>
+    <productFamily resourceName="Python">Python</productFamily>
+    <link href="http://go.microsoft.com/fwlink/?LinkId=252036" />
+    <author>
+      <name>Microsoft's Python Tools Team</name>
+      <uri>http://go.microsoft.com/fwlink/?LinkId=252036</uri>
+    </author>
+    <images>
+      <icon>http://go.microsoft.com/fwlink/?LinkId=252041</icon>
+    </images>
+    <keywords>
+      <keywordId>ProductTools</keywordId>
+    </keywords>
+    <discoveryHint>
+      <or>
+        <discoveryHint>
+          <registry>
+            <keyPath>HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{1677096D-AF73-4D0A-A531-6CD3FEFF2804}</keyPath>
+            <valueName>DisplayVersion</valueName>
+            <valueValue>2.0.10604.0</valueValue>
+          </registry>
+        </discoveryHint>
+        <discoveryHint>
+          <registry>
+            <keyPath>HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\{1677096D-AF73-4D0A-A531-6CD3FEFF2804}</keyPath>
+            <valueName>DisplayVersion</valueName>
+            <valueValue>2.0.10604.0</valueValue>
+          </registry>
+        </discoveryHint>
+      </or>
+    </discoveryHint>
+
+    <incompatibilities>
+      <incompatibleProduct>
+        <productId>NonVS2013RTM</productId>
+        <errorMessage resourceName="IncompatibleProduct_PythonTools20ForVS2013_NonVS2013RTM_ErrorMessage">You must install Microsoft Visual Studio 2013 before you can install Python Tools for Visual Studio 2013.</errorMessage>
+      </incompatibleProduct>
+    </incompatibilities>
+
+    <installers>
+      <installer>
+        <id>1</id>
+        <languageId>en</languageId>
+        <eulaURL>http://go.microsoft.com/fwlink/?LinkId=252037</eulaURL>
+        <installerFile>
+          <fileSize>3780</fileSize>
+          <trackingURL>http://www.microsoft.com/web/handlers/webpi.ashx?command=incrementproddownloadcount&amp;prodid=PythonTools20ForVS2013</trackingURL>
+          <installerURL>http://go.microsoft.com/fwlink/?LinkId=306321</installerURL>
+        </installerFile>
+        <installCommands>
+          <msiInstall>
+            <msi>%InstallerFile%</msi>
+          </msiInstall>
+        </installCommands>
+        <helpLink>http://go.microsoft.com/fwlink/?LinkId=252038</helpLink>
+      </installer>
+    </installers>
+  </entry>
   
-  <!-- ##CPython######################################################### -->
+    <!-- ##CPython######################################################### -->
   <entry>
     <productId>Python27</productId>
     <title resourceName="Entry_Python27_Title">Python 2.7 (32-bit)</title>
@@ -631,7 +1533,7 @@ Adds support for the Python programming language to Professional, Ultimate, and 
         <installCommands> 
           <msiInstall>
             <msi>%InstallerFile%</msi>
-            <properties>ALLUSERS=1</properties>
+            <properties>ALLUSERS=1 COMPILEALL=1</properties>
           </msiInstall>
           <cmdLine>
             <exe>%systemroot%\System32\WindowsPowerShell\v1.0\powershell.exe</exe>
@@ -648,6 +1550,55 @@ Adds support for the Python programming language to Professional, Ultimate, and 
       </installer>
     </installers>
   </entry>
+
+   <!-- WFastCgi for Python 2.7 -->
+  <entry>
+    <productId>WFastCgi15Py27</productId>
+    <title resourceName="Entry_WFastCgi15Py27_Title">WFastCGI Gateway for IIS and Python 2.7</title>
+    <version>1.5</version>
+    <published>2012-10-31T12:00:00Z</published>
+    <updated>2012-12-18T12:00:00Z</updated>
+    <summary resourceName="Entry_WFastCgi15Py27_Summary">Gateway between IIS FastCgi and Python's WSGI protocol.</summary>
+    <longSummary resourceName="Entry_WFastCgi15Py27_LongSummary">A pure Python script which communicates with IIS's native FastCGI module and translates into Python's WSGI protocol.</longSummary>
+    <productFamily resourceName="Python">Python</productFamily>
+    <link href="http://go.microsoft.com/fwlink/?LinkId=252044" />
+    <author>
+      <name>Microsoft</name>
+      <uri>http://go.microsoft.com/fwlink/?LinkId=252036</uri>
+    </author>
+    <images>
+      <icon>http://go.microsoft.com/?linkid=9813800</icon>
+    </images>
+    <keywords>
+      <keywordId>ProductTools</keywordId>
+      <keywordId>FrameworkRuntime</keywordId>
+      <keywordId>WindowsAzure</keywordId>
+    </keywords>
+
+    <dependency>
+      <productId>Python27</productId>
+    </dependency>
+
+    <installers>
+      <installer>
+        <id>1</id>
+        <languageId>en</languageId>
+        <eulaURL>http://go.microsoft.com/fwlink/?LinkId=252037</eulaURL>
+        <installerFile>
+          <fileSize>908</fileSize>
+          <trackingURL>http://www.microsoft.com/web/handlers/webpi.ashx?command=incrementproddownloadcount&amp;prodid=WFastCgi15Py27</trackingURL>
+          <installerURL>http://go.microsoft.com/fwlink/?LinkID=275483</installerURL> 
+        </installerFile>
+        <installCommands> 
+          <msiInstall>
+            <msi>%InstallerFile%</msi>
+          </msiInstall>
+        </installCommands>
+        <helpLink>http://go.microsoft.com/fwlink/?LinkId=252038</helpLink>
+      </installer>
+    </installers>
+  </entry>
+  
 
   <!-- ##Install Helpers################################################### -->
   <entry>
@@ -884,71 +1835,6 @@ Adds support for the Python programming language to Professional, Ultimate, and 
     </installers>
   </entry>
 
-  <!-- ##azure (Python)#################################################### -->
-  <entry>
-    <productId>AzurePython</productId>
-    <title resourceName="Entry_AzurePython_Title">azure (Python)</title>
-    <version>0.5.1</version>
-    <summary resourceName="Entry_AzurePython_Summary">Windows Azure client libraries for Python</summary>
-    <updated>2012-6-15T12:00:00Z</updated>
-    <longSummary resourceName="Entry_AzurePython_LongSummary">Python client libraries enabling usage of Windows Azure resources.</longSummary>
-    <productFamily resourceName="Python">Python</productFamily>
-    <images>
-      <icon>http://go.microsoft.com/fwlink/?LinkId=252047</icon>
-    </images>
-    <keywords>
-      <keywordId>ProductTools</keywordId>
-      <keywordId>FrameworkRuntime</keywordId>
-    </keywords>
-    <published>2012-6-7T12:00:00Z</published>
-    <link href="http://go.microsoft.com/fwlink/?LinkId=252044" />
-    <author>
-      <name>Microsoft</name>
-      <uri>http://go.microsoft.com/fwlink/?LinkId=252036</uri>
-    </author>
-    <!-- TODO Update this around December 2012 -->
-    <!-- 
-    <discoveryHint>
-      <file>
-        <filePath>%SystemDrive%\Python27\Lib\site-packages\azure-0.5.1-py2.7.egg-info\PKG-INFO</filePath>
-      </file>
-    </discoveryHint>
-    -->
-
-    <dependency>
-      <and>
-        <dependency>
-          <productId>Python27</productId>
-        </dependency>
-        <dependency>
-          <productId>PythonDetectInstalls</productId>
-        </dependency>
-        <dependency>
-          <productId>PyPI</productId>
-        </dependency>
-      </and>
-    </dependency>
-
-    <installers>
-      <installer>
-        <id>1</id>
-        <languageId>en</languageId>
-        <eulaURL>http://go.microsoft.com/fwlink/?LinkId=252059</eulaURL>
-        <installCommands>
-          <cmdLine>
-            <exe>%TMP%\pip_installhelper_27_x86.bat</exe>
-            <commandLineArguments>--log %TMP%\azurepython.log install azure --upgrade</commandLineArguments>
-            <ignoreExitCode>false</ignoreExitCode>
-          </cmdLine>
-        </installCommands>
-        <logFiles>
-          <location>%TMP%\azurepython.log</location>
-        </logFiles>
-        <helpLink>http://go.microsoft.com/fwlink/?LinkId=252044</helpLink>
-      </installer>
-    </installers>
-  </entry>
-
   <!-- ##Visual Studio 2010 Integrated Shell ############################## -->
   <entry>
     <productId>VS2010SI</productId>
@@ -1023,8 +1909,8 @@ Adds support for the Python programming language to Professional, Ultimate, and 
       <installer>
         <id>1</id>
         <languageId>en</languageId>
-        <osList idref="OSList_VS2010_Shell"></osList>
-        <eulaURL>http://go.microsoft.com/fwlink/?LinkId=252060</eulaURL>
+        <osList idref="OSList_VS2010_Shell" />
+        <eulaURL>http://www.microsoft.com/web/webpi/eula/vsintegratedshell.rtf</eulaURL>
         <showsUI>True</showsUI>
         <installerFile>
           <fileSize>173811</fileSize>
@@ -1074,8 +1960,8 @@ Adds support for the Python programming language to Professional, Ultimate, and 
       <installer>
         <id>10</id>
         <languageId>zh-tw</languageId>
-        <osList idref="OSList_VS2010_Shell"></osList>
-        <eulaURL>http://go.microsoft.com/fwlink/?LinkId=252060</eulaURL>
+        <osList idref="OSList_VS2010_Shell" />
+        <eulaURL>http://www.microsoft.com/web/webpi/eula/vsintegratedshell.rtf</eulaURL>
         <showsUI>True</showsUI>
         <installerFile>
           <fileSize>173811</fileSize>
@@ -1125,8 +2011,8 @@ Adds support for the Python programming language to Professional, Ultimate, and 
       <installer>
         <id>9</id>
         <languageId>zh-cn</languageId>
-        <osList idref="OSList_VS2010_Shell"></osList>
-        <eulaURL>http://go.microsoft.com/fwlink/?LinkId=252060</eulaURL>
+        <osList idref="OSList_VS2010_Shell" />
+        <eulaURL>http://www.microsoft.com/web/webpi/eula/vsintegratedshell.rtf</eulaURL>
         <showsUI>True</showsUI>
         <installerFile>
           <fileSize>173811</fileSize>
@@ -1176,8 +2062,8 @@ Adds support for the Python programming language to Professional, Ultimate, and 
       <installer>
         <id>8</id>
         <languageId>es</languageId>
-        <osList idref="OSList_VS2010_Shell"></osList>
-        <eulaURL>http://go.microsoft.com/fwlink/?LinkId=252060</eulaURL>
+        <osList idref="OSList_VS2010_Shell" />
+        <eulaURL>http://www.microsoft.com/web/webpi/eula/vsintegratedshell.rtf</eulaURL>
         <showsUI>True</showsUI>
         <installerFile>
           <fileSize>173811</fileSize>
@@ -1227,8 +2113,8 @@ Adds support for the Python programming language to Professional, Ultimate, and 
       <installer>
         <id>7</id>
         <languageId>ru</languageId>
-        <osList idref="OSList_VS2010_Shell"></osList>
-        <eulaURL>http://go.microsoft.com/fwlink/?LinkId=252060</eulaURL>
+        <osList idref="OSList_VS2010_Shell" />
+        <eulaURL>http://www.microsoft.com/web/webpi/eula/vsintegratedshell.rtf</eulaURL>
         <showsUI>True</showsUI>
         <installerFile>
           <fileSize>173811</fileSize>
@@ -1278,8 +2164,8 @@ Adds support for the Python programming language to Professional, Ultimate, and 
       <installer>
         <id>6</id>
         <languageId>ko</languageId>
-        <osList idref="OSList_VS2010_Shell"></osList>
-        <eulaURL>http://go.microsoft.com/fwlink/?LinkId=252060</eulaURL>
+        <osList idref="OSList_VS2010_Shell" />
+        <eulaURL>http://www.microsoft.com/web/webpi/eula/vsintegratedshell.rtf</eulaURL>
         <showsUI>True</showsUI>
         <installerFile>
           <fileSize>173811</fileSize>
@@ -1329,8 +2215,8 @@ Adds support for the Python programming language to Professional, Ultimate, and 
       <installer>
         <id>5</id>
         <languageId>ja</languageId>
-        <osList idref="OSList_VS2010_Shell"></osList>
-        <eulaURL>http://go.microsoft.com/fwlink/?LinkId=252060</eulaURL>
+        <osList idref="OSList_VS2010_Shell" />
+        <eulaURL>http://www.microsoft.com/web/webpi/eula/vsintegratedshell.rtf</eulaURL>
         <showsUI>True</showsUI>
         <installerFile>
           <fileSize>173811</fileSize>
@@ -1380,8 +2266,8 @@ Adds support for the Python programming language to Professional, Ultimate, and 
       <installer>
         <id>4</id>
         <languageId>it</languageId>
-        <osList idref="OSList_VS2010_Shell"></osList>
-        <eulaURL>http://go.microsoft.com/fwlink/?LinkId=252060</eulaURL>
+        <osList idref="OSList_VS2010_Shell" />
+        <eulaURL>http://www.microsoft.com/web/webpi/eula/vsintegratedshell.rtf</eulaURL>
         <showsUI>True</showsUI>
         <installerFile>
           <fileSize>173811</fileSize>
@@ -1431,8 +2317,8 @@ Adds support for the Python programming language to Professional, Ultimate, and 
       <installer>
         <id>3</id>
         <languageId>de</languageId>
-        <osList idref="OSList_VS2010_Shell"></osList>
-        <eulaURL>http://go.microsoft.com/fwlink/?LinkId=252060</eulaURL>
+        <osList idref="OSList_VS2010_Shell" />
+        <eulaURL>http://www.microsoft.com/web/webpi/eula/vsintegratedshell.rtf</eulaURL>
         <showsUI>True</showsUI>
         <installerFile>
           <fileSize>173811</fileSize>
@@ -1482,8 +2368,8 @@ Adds support for the Python programming language to Professional, Ultimate, and 
       <installer>
         <id>2</id>
         <languageId>fr</languageId>
-        <osList idref="OSList_VS2010_Shell"></osList>
-        <eulaURL>http://go.microsoft.com/fwlink/?LinkId=252060</eulaURL>
+        <osList idref="OSList_VS2010_Shell" />
+        <eulaURL>http://www.microsoft.com/web/webpi/eula/vsintegratedshell.rtf</eulaURL>
         <showsUI>True</showsUI>
         <installerFile>
           <fileSize>173811</fileSize>
@@ -1678,7 +2564,7 @@ Adds support for the Python programming language to Professional, Ultimate, and 
         <installCommands>
           <cmdLine>
             <exe>%InstallerFile%</exe>
-            <commandLineArguments></commandLineArguments>
+            <commandLineArguments />
             <ignoreExitCode>false</ignoreExitCode>
           </cmdLine>
         </installCommands>
@@ -3343,6 +4229,32 @@ Adds support for the Python programming language to Professional, Ultimate, and 
           </minimumVersion>
       </os>
     </osList>
+    <osList id="WindowsAzurePowerShell_Higher_Than_6.1_SP1">
+      <os>
+        <minimumVersion>
+          <osMajorVersion>6</osMajorVersion>
+          <osMinorVersion>1</osMinorVersion>
+          <spMajorVersion>1</spMajorVersion>
+        </minimumVersion>
+      </os>
+    </osList>
+    <osList id="WindowsAzurePowerShell_Higher_Than_6.0_SP2_Lower_Than_6.1_Server_Only">
+      <os>
+        <minimumVersion>
+          <osMajorVersion>6</osMajorVersion>
+          <osMinorVersion>0</osMinorVersion>
+          <spMajorVersion>2</spMajorVersion>
+        </minimumVersion>
+        <maximumVersion>
+          <osMajorVersion>6</osMajorVersion>
+          <osMinorVersion>0</osMinorVersion>
+          <spMajorVersion>10</spMajorVersion>
+        </maximumVersion>
+        <osTypes>
+          <Server />
+        </osTypes>
+      </os>
+    </osList>
   </osLists>
 
    <discoveryHints>
@@ -3351,18 +4263,38 @@ Adds support for the Python programming language to Professional, Ultimate, and 
        <or>
          <discoveryHint>
            <file>
-             <filePath>%programfiles%\Microsoft SDKs\Windows Azure\PowerShell\Microsoft.WindowsAzure.Management.dll</filePath>
-             <minimumVersion>0.6.0</minimumVersion>
+             <filePath>%programfiles%\Microsoft SDKs\Windows Azure\PowerShell\Azure\Microsoft.WindowsAzure.Management.dll</filePath>
+             <minimumVersion>0.6.13.1</minimumVersion>
            </file>
          </discoveryHint>
          <discoveryHint>
            <file>
-             <filePath>%programfiles(x86)%\Microsoft SDKs\Windows Azure\PowerShell\Microsoft.WindowsAzure.Management.dll</filePath>
-             <minimumVersion>0.6.0</minimumVersion>
+             <filePath>%programfiles(x86)%\Microsoft SDKs\Windows Azure\PowerShell\Azure\Microsoft.WindowsAzure.Management.dll</filePath>
+             <minimumVersion>0.6.13.1</minimumVersion>
            </file>
          </discoveryHint>
        </or>
      </discoveryHint>
+
+     <discoveryHint id="DH_AzureXPlatCLI">
+       <or>
+         <discoveryHint>
+           <registry>
+             <keyPath>HKEY_LOCAL_MACHINE\Software\Microsoft\Windows Azure Command Line Tools</keyPath>
+             <valueName>version</valueName>
+             <minimumVersion>0.6.16</minimumVersion>
+           </registry>
+         </discoveryHint>
+         <discoveryHint>
+           <registry>
+             <keyPath>HKEY_LOCAL_MACHINE\Software\Wow6432Node\Microsoft\Windows Azure Command Line Tools</keyPath>
+             <valueName>version</valueName>
+             <minimumVersion>0.6.16</minimumVersion>
+           </registry>
+         </discoveryHint>
+       </or>
+     </discoveryHint>
+
      <!-- discovery hint for the iisnode_if_iis7_exist product. returns true if IISNode is installed or if IIS7 is not installed-->
      <discoveryHint id="DH_iisnode_if_iis7_exists">
        <or>
@@ -3395,6 +4327,46 @@ Adds support for the Python programming language to Professional, Ultimate, and 
        </or>
      </discoveryHint>
 
+
+
+    <discoveryHint id="DH_iisnodedev_exists">
+     <or>
+      <discoveryHint>
+       <file>
+         <filePath>%programfiles%\iisnode-dev\release\x86\iisnode.dll</filePath>
+         <minimumVersion>0.1.21</minimumVersion>
+       </file>
+      </discoveryHint>
+      <discoveryHint>
+       <file>
+         <filePath>%programfiles(x86)%\iisnode-dev\release\x86\iisnode.dll</filePath>
+         <minimumVersion>0.1.21</minimumVersion>
+       </file>
+      </discoveryHint>
+     </or>
+    </discoveryHint>
+     
+     <!--DH_WindowsAzureLibrariesNET_1_8-->
+     <discoveryHint id="DH_WindowsAzureLibrariesNET_1_8">
+       <or>
+         <discoveryHint>
+           <registry>
+             <keyPath>HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Microsoft SDKs\Windows Azure Libraries for .NET\v1.8</keyPath>
+             <valueName>ProductVersion</valueName>
+             <minimumVersion>1.8</minimumVersion>
+           </registry>
+         </discoveryHint>
+         <discoveryHint>
+           <registry>
+             <keyPath>HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\Microsoft SDKs\Windows Azure Libraries for .NET\v1.8</keyPath>
+             <valueName>ProductVersion</valueName>
+             <minimumVersion>1.8</minimumVersion>
+           </registry>
+         </discoveryHint>
+       </or>
+     </discoveryHint>
+
+
      <!-- DH_WindowsAzureEmulator_1_7_Only-->
      <discoveryHint id="DH_WindowsAzureEmulator_1_7_Only">
        <registry>
@@ -3414,7 +4386,7 @@ Adds support for the Python programming language to Professional, Ultimate, and 
      </discoveryHint>
 
      <!--DH_WindowsAzureEmulator_1_6_Only_Orup-->
-     <discoveryHint id="DH_WindowsAzureEmulator_1_6_Only_Orup" >
+     <discoveryHint id="DH_WindowsAzureEmulator_1_6_Only_Orup">
        <or>
          <discoveryHint idref="DH_WindowsAzureEmulator_1_7_Only" />
          <discoveryHint idref="DH_WindowsAzureEmulator_1_6_Only" />

@@ -14,8 +14,8 @@
 $CURRPATH = split-path -parent $MyInvocation.MyCommand.Definition;
 pushd $CURRPATH;
 
-$stagedWebsite = "\\pytools\demos\hosted\tmp\";
-$stagedWebprodList = "http://pytools/demos/tmp/webproductlist.xml";
+$stagedWebsite = "\\pytools\WebPI\Production\";
+$stagedWebprodList = "http://pytools/WebPI/Production/webproductlist.xml";
 
 
 if (test-path "$env:ProgramFiles\Microsoft\Web Platform Installer\WebpiCmd.exe") {
@@ -63,7 +63,7 @@ echo ""
 
 #Sanity check 2
 echo "Please check that the listed feeds below include:"
-echo "  'toolsproductlist http://pytools/demos/tmp/toolsproductlist.xml'"
+echo "  'toolsproductlist http://pytools/WebPI/Production/toolsproductlist.xml'"
 echo "now:"
 webpicmd /list /ListOption:FEEDS
 echo "Done!"
