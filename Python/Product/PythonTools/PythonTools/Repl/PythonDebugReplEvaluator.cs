@@ -539,12 +539,21 @@ namespace Microsoft.PythonTools.Repl {
         private PythonLanguageVersion _languageVersion;
 
         public PythonDebugProcessReplEvaluator(PythonProcess process)
-            : base(new DefaultPythonReplEvaluatorOptions(PythonToolsPackage.Instance.InteractiveDebugOptionsPage.Options)) {
+            : base(GetOptions()) {
             _process = process;
             _threadId = process.GetThreads()[0].Id;
             _languageVersion = process.LanguageVersion;
 
             EnsureConnected();
+        }
+
+        private static PythonReplEvaluatorOptions GetOptions() {
+            if(PythonToolsPackage.Instance != null) {
+                return new DefaultPythonReplEvaluatorOptions(PythonToolsPackage.Instance.InteractiveDebugOptionsPage.Options);
+            }
+
+            // running in a test, just use a simple set of options
+            return new ConfigurablePythonReplOptions("");
         }
 
         public PythonProcess Process {
