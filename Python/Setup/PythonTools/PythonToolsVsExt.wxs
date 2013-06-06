@@ -317,6 +317,21 @@
                 <File Id="fil7AED81D9701E48FA942D4591A0D81849" KeyPath="yes" Source="$(var.TargetDir)\PyDebugAttachX86.dll" />
             </Component>
 
+            <?if "$(var.VSTargetVersion)" != "10.0" ?>
+            <Component Id="cmpB9D19167C9944EB1880D0B3E2EE2CD78" Directory="INSTALLLOCATION" Guid="{B2E65062-DD6B-4501-B8E0-34CC6BF47491}">
+                <File Id="fil0CC20894AD324A70AB88CB9C47B5A9D6" KeyPath="yes" Source="$(var.TargetDir)\Microsoft.PythonTools.Debugger.Helper.x86.dll" />
+            </Component>
+            <Component Id="cmpDD248C92AAA0404C927319E04CAA4457" Directory="INSTALLLOCATION" Guid="{5A94B74A-37F1-488B-8061-2ED8EFA07339}">
+                <File Id="fil4E7C55F596E940E59BEC516EA59B8F7A" KeyPath="yes" Source="$(var.TargetDir)\Microsoft.PythonTools.Debugger.Helper.x64.dll" />
+            </Component>
+            <Component Id="cmp02208775F86A43038596F590A140CAD5" Directory="INSTALLLOCATION" Guid="{0BB25E59-E482-45A6-A150-06736B5BECD0}">
+                <File Id="fil4EE1C0828B9D4225BFA8255A4674BA8D" KeyPath="yes" Source="$(var.TargetDir)\DkmDebugger.vsdconfig" />
+            </Component>
+            <Component Id="cmp0A4562D361BD41D0ACDCF5F7407D5374" Directory="INSTALLLOCATION" Guid="{57546414-3B27-4023-BB3A-4069A9286E5F}">
+                <File Id="fil6A5D74EA57D74FE4B47FCA8E22A76318" KeyPath="yes" Source="$(var.TargetDir)\PythonDkm.natvis" />
+            </Component>
+            <?endif ?>
+
             <!-- Unit test adapter -->
             <?if not $(var.VSTargetVersion)=10.0 ?>
             <Component Id="cmpCBB923502AB44891ACEC19829D8660DC" Directory="INSTALLLOCATION" Guid="{CBB92350-2AB4-4891-ACEC-19829D8660DC}">

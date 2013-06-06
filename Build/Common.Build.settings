@@ -59,6 +59,11 @@
     <DevEnvDir Condition="'$(VSTarget)'=='10.0'">$(VS100COMNTOOLS)..\IDE\</DevEnvDir>
     <DevEnvDir Condition="'$(VSTarget)'=='11.0'">$(VS110COMNTOOLS)..\IDE\</DevEnvDir>
     <DevEnvDir Condition="'$(VSTarget)'=='12.0'">$(VS120COMNTOOLS)..\IDE\</DevEnvDir>
+
+    <VSSDKDir Condition="'$(VSTarget)'=='10.0'">$(VSSDK100Install)</VSSDKDir>
+    <VSSDKDir Condition="'$(VSTarget)'=='11.0'">$(VSSDK110Install)</VSSDKDir>
+    <VSSDKDir Condition="'$(VSTarget)'=='12.0'">$(VSSDK120Install)</VSSDKDir>
+
   </PropertyGroup>
 
   <Import Project="$(TargetsPath)\Common.Build.CSharp.settings" Condition="'$(MSBuildProjectExtension)' == '.csproj' or '$(MSBuildProjectExtension)' == '.tmp_proj'" />

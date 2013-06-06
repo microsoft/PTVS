@@ -75,6 +75,10 @@ namespace Microsoft.PythonTools {
         public const string CommandLineArgumentsSetting = "CommandLineArguments";
         public const string StartupFileSetting = "StartupFile";
         public const string IsWindowsApplicationSetting = "IsWindowsApplication";
+
+        //Mixed-mode debugging project property
+        public const string EnableNativeCodeDebugging = "EnableNativeCodeDebugging";
+
         public const string WorkingDirectorySetting = CommonConstants.WorkingDirectory;
         public const string ProjectHomeSetting = CommonConstants.ProjectHome;
     }

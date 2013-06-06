@@ -82,7 +82,11 @@
       <Group guid="guidPythonToolsCmdSet" id="VirtualEnvItemsGroup" priority="0x0600">
         <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_ITEMNODE"/>
       </Group>
-      
+
+      <Group guid="guidPythonToolsCmdSet" id="DebuggerPythonContextGroup" priority="0x0000">
+        <Parent guid="guidPythonToolsCmdSet" id="DebuggerPythonContextMenu"/>
+      </Group>
+
     </Groups>
 
     <Menus>
@@ -117,6 +121,17 @@
           <CommandName>&amp;Refactor</CommandName>
         </Strings>
       </Menu>
+
+      <!-- Group for Python-specific display options on Debug windows context menu -->
+      <Menu guid="guidPythonToolsCmdSet" id="DebuggerPythonContextMenu" priority="0x301" type="Context">
+        <Parent guid="guidVSDebugGroup" id="IDG_DEBUG_DISPLAY"/>
+        <Strings>
+          <ButtonText>Python</ButtonText>
+          <CommandName>&amp;Python</CommandName>
+        </Strings>
+      </Menu>
+
+
     </Menus>
 
     <!--Buttons section: buttons include both buttons on toolbars as well as individual menu items -->
@@ -576,7 +591,51 @@
           <ButtonText>&amp;Rename...</ButtonText>
         </Strings>
       </Button>
-    
+
+      <!--================================================================================================================-->
+      <!--========================================== Debugger context menu ===============================================-->
+      <!--================================================================================================================-->
+      
+      <Button guid="guidPythonToolsCmdSet" id="cmdidShowCppView" priority="0x001" type="Button">
+        <Parent guid="guidPythonToolsCmdSet" id="DebuggerPythonContextGroup"/>
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <CommandFlag>DefaultInvisible</CommandFlag>
+        <Strings>
+          <CommandName>PythonDebugging.CppView</CommandName>
+          <ButtonText>Show &amp;C++ View Nodes</ButtonText>
+        </Strings>
+      </Button>
+
+      <Button guid="guidPythonToolsCmdSet" id="cmdidShowPythonView" priority="0x002" type="Button">
+        <Parent guid="guidPythonToolsCmdSet" id="DebuggerPythonContextGroup"/>
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <CommandFlag>DefaultInvisible</CommandFlag>
+        <Strings>
+          <CommandName>PythonDebugging.PythonView</CommandName>
+          <ButtonText>Show &amp;Python View Nodes</ButtonText>
+        </Strings>
+      </Button>
+
+      <Button guid="guidPythonToolsCmdSet" id="cmdidShowNativePythonFrames" priority="0x003" type="Button">
+        <Parent guid="guidPythonToolsCmdSet" id="DebuggerPythonContextGroup"/>
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <CommandFlag>DefaultInvisible</CommandFlag>
+        <Strings>
+          <CommandName>PythonDebugging.ShowNativePythonFrames</CommandName>
+          <ButtonText>Show &amp;Native Python Frames</ButtonText>
+        </Strings>
+      </Button>
+
+      <Button guid="guidPythonToolsCmdSet" id="cmdidUsePythonStepping" priority="0x004" type="Button">
+        <Parent guid="guidPythonToolsCmdSet" id="DebuggerPythonContextGroup"/>
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <CommandFlag>DefaultInvisible</CommandFlag>
+        <Strings>
+          <CommandName>PythonDebugging.UsePythonStepping</CommandName>
+          <ButtonText>Use Python &amp;Stepping</ButtonText>
+        </Strings>
+      </Button>
+
     </Buttons>
 
 
@@ -774,6 +833,11 @@
       <IDSymbol name="cmdidUninstallPythonPackage" value="0x400A" />
       <IDSymbol name="cmdidCreateVirtualEnv" value="0x400B" />      
 
+      <IDSymbol name="cmdidShowCppView" value="0x400C" />
+      <IDSymbol name="cmdidShowPythonView" value="0x400D" />
+      <IDSymbol name="cmdidShowNativePythonFrames" value="0x400E" />
+      <IDSymbol name="cmdidUsePythonStepping" value="0x400F" />
+
       <!-- Groups -->
       <IDSymbol name="EditorContextGroup" value="0x1010" />
       <IDSymbol name="EditMenuGroup" value="0x1011" />
@@ -783,11 +847,13 @@
       <IDSymbol name="RefactoringCommon" value="0x1055" />
       <IDSymbol name="DocWinTabGroup" value="0x1056" />
       <IDSymbol name="VirtualEnvItemsGroup" value="0x1057" />
-      
+      <IDSymbol name="DebuggerPythonContextGroup" value="0x1058" />
+
       <!-- Menus -->
       <IDSymbol name="ToolsMenu" value ="0x2001" />
       <IDSymbol name="RemoveImportsMenu" value ="0x2002" />
       <IDSymbol name="RefactoringCtxMenuIntShell" value="0x2003"/>
+      <IDSymbol name="DebuggerPythonContextMenu" value="0x2004" />
 
       <IDSymbol name="SamplesMenu" value="0x4000" />
       <IDSymbol name="SamplesGroup" value="0x1020" />

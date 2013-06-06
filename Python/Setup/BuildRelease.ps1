@@ -409,6 +409,8 @@ try {
                 $native_files = @((
                     "PyDebugAttach.dll",
                     "PyDebugAttachX86.dll",
+                    "Microsoft.PythonTools.Debugger.Helper.x86.dll",
+                    "Microsoft.PythonTools.Debugger.Helper.x64.dll",
                     "VsPyProf.dll",
                     "VsPyProfX86.dll",
                     "PyKinectAudio.dll"

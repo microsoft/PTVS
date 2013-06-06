@@ -24,6 +24,7 @@ using System.Windows.Forms;
 using Microsoft.PythonTools.Debugger.DebugEngine;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.Debugger;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools;
@@ -64,7 +65,7 @@ namespace Microsoft.PythonTools.Project {
             if (!Boolean.TryParse(_project.GetProperty(CommonConstants.IsWindowsApplication) ?? Boolean.FalseString, out isWindows)) {
                 isWindows = false;
             }
-            
+
             string result;
             result = (_project.GetProperty(CommonConstants.InterpreterPath) ?? string.Empty).Trim();
             if (!String.IsNullOrEmpty(result)) {
@@ -103,13 +104,13 @@ namespace Microsoft.PythonTools.Project {
         /// Creates language specific command line for starting the project with debigging.
         /// </summary>
         public string CreateCommandLineDebug(string startupFile) {
-            string cmdLineArgs = _project.GetProperty(CommonConstants.CommandLineArguments) ??  string.Empty;
+            string cmdLineArgs = _project.GetProperty(CommonConstants.CommandLineArguments) ?? string.Empty;
 
             return String.Format("\"{0}\" {1}", startupFile, cmdLineArgs);
         }
 
         /// <summary>
-        /// Default implementation of the "Start withput Debugging" command.
+        /// Default implementation of the "Start without Debugging" command.
         /// </summary>
         private void StartWithoutDebugger(string startupFile) {
             var psi = CreateProcessStartInfoNoDebug(startupFile);
@@ -125,10 +126,15 @@ namespace Microsoft.PythonTools.Project {
         private void StartWithDebugger(string startupFile) {
             VsDebugTargetInfo dbgInfo = new VsDebugTargetInfo();
             dbgInfo.cbSize = (uint)Marshal.SizeOf(dbgInfo);
-
             SetupDebugInfo(ref dbgInfo, startupFile);
             if (!string.IsNullOrEmpty(dbgInfo.bstrExe)) {
-                LaunchDebugger(PythonToolsPackage.Instance, dbgInfo);
+                try {
+                    LaunchDebugger(PythonToolsPackage.Instance, dbgInfo);
+                } finally {
+                    if (dbgInfo.pClsidList != IntPtr.Zero) {
+                        Marshal.FreeCoTaskMem(dbgInfo.pClsidList);
+                    }
+                }
             }
         }
 
@@ -152,7 +158,12 @@ namespace Microsoft.PythonTools.Project {
         /// <summary>
         /// Sets up debugger information.
         /// </summary>
-        private void SetupDebugInfo(ref VsDebugTargetInfo dbgInfo, string startupFile) {
+        private unsafe void SetupDebugInfo(ref VsDebugTargetInfo dbgInfo, string startupFile) {
+            bool enableNativeCodeDebugging = false;
+#if DEV11_OR_LATER
+            bool.TryParse(_project.GetProperty(PythonConstants.EnableNativeCodeDebugging), out enableNativeCodeDebugging);
+#endif
+
             dbgInfo.dlo = DEBUG_LAUNCH_OPERATION.DLO_CreateProcess;
             bool isWindows;
             var interpreterPath = GetInterpreterExecutableInternal(out isWindows);
@@ -163,37 +174,40 @@ namespace Microsoft.PythonTools.Project {
             dbgInfo.bstrCurDir = _project.GetWorkingDirectory();
             dbgInfo.bstrArg = CreateCommandLineDebug(startupFile);
             dbgInfo.bstrRemoteMachine = null;
-
             dbgInfo.fSendStdoutToOutputWindow = 0;
-            StringDictionary env = new StringDictionary();
-            string interpArgs = _project.GetProperty(CommonConstants.InterpreterArguments);
-            dbgInfo.bstrOptions = AD7Engine.VersionSetting + "=" + _project.GetInterpreterFactory().GetLanguageVersion().ToString();
-            if (!isWindows) {
-                if (PythonToolsPackage.Instance.OptionsPage.WaitOnAbnormalExit) {
-                    dbgInfo.bstrOptions += ";" + AD7Engine.WaitOnAbnormalExitSetting + "=True";
+
+            if (!enableNativeCodeDebugging) {
+                string interpArgs = _project.GetProperty(CommonConstants.InterpreterArguments);
+                dbgInfo.bstrOptions = AD7Engine.VersionSetting + "=" + _project.GetInterpreterFactory().GetLanguageVersion().ToString();
+                if (!isWindows) {
+                    if (PythonToolsPackage.Instance.OptionsPage.WaitOnAbnormalExit) {
+                        dbgInfo.bstrOptions += ";" + AD7Engine.WaitOnAbnormalExitSetting + "=True";
+                    }
+                    if (PythonToolsPackage.Instance.OptionsPage.WaitOnNormalExit) {
+                        dbgInfo.bstrOptions += ";" + AD7Engine.WaitOnNormalExitSetting + "=True";
+                    }
                 }
-                if (PythonToolsPackage.Instance.OptionsPage.WaitOnNormalExit) {
-                    dbgInfo.bstrOptions += ";" + AD7Engine.WaitOnNormalExitSetting + "=True";
+                if (PythonToolsPackage.Instance.OptionsPage.TeeStandardOutput) {
+                    dbgInfo.bstrOptions += ";" + AD7Engine.RedirectOutputSetting + "=True";
                 }
-            }
-            if (PythonToolsPackage.Instance.OptionsPage.TeeStandardOutput) {
-                dbgInfo.bstrOptions += ";" + AD7Engine.RedirectOutputSetting + "=True";
-            }
-            if (PythonToolsPackage.Instance.OptionsPage.BreakOnSystemExitZero) {
-                dbgInfo.bstrOptions += ";" + AD7Engine.BreakSystemExitZero + "=True";
-            }
-            if (PythonToolsPackage.Instance.OptionsPage.DebugStdLib) {
-                dbgInfo.bstrOptions += ";" + AD7Engine.DebugStdLib + "=True";
-            }
-            if (!String.IsNullOrWhiteSpace(interpArgs)) {
-                dbgInfo.bstrOptions += ";" + AD7Engine.InterpreterOptions + "=" + interpArgs.Replace(";", ";;");
-            }
-            var djangoDebugging = _project.GetProperty("DjangoDebugging");
-            bool enableDjango;
-            if (!String.IsNullOrWhiteSpace(djangoDebugging) && Boolean.TryParse(djangoDebugging, out enableDjango)) {
-                dbgInfo.bstrOptions += ";" + AD7Engine.EnableDjangoDebugging + "=True";
+                if (PythonToolsPackage.Instance.OptionsPage.BreakOnSystemExitZero) {
+                    dbgInfo.bstrOptions += ";" + AD7Engine.BreakSystemExitZero + "=True";
+                }
+                if (PythonToolsPackage.Instance.OptionsPage.DebugStdLib) {
+                    dbgInfo.bstrOptions += ";" + AD7Engine.DebugStdLib + "=True";
+                }
+                if (!String.IsNullOrWhiteSpace(interpArgs)) {
+                    dbgInfo.bstrOptions += ";" + AD7Engine.InterpreterOptions + "=" + interpArgs.Replace(";", ";;");
+                }
+
+                var djangoDebugging = _project.GetProperty("DjangoDebugging");
+                bool enableDjango;
+                if (!String.IsNullOrWhiteSpace(djangoDebugging) && Boolean.TryParse(djangoDebugging, out enableDjango)) {
+                    dbgInfo.bstrOptions += ";" + AD7Engine.EnableDjangoDebugging + "=True";
+                }
             }
 
+            StringDictionary env = new StringDictionary();
             SetupEnvironment(env);
             if (env.Count > 0) {
                 // add any inherited env vars
@@ -215,9 +229,20 @@ namespace Microsoft.PythonTools.Project {
                 buf.Append("\0");
                 dbgInfo.bstrEnv = buf.ToString();
             }
-            // Set the Python debugger
-            dbgInfo.clsidCustom = new Guid(AD7Engine.DebugEngineId);
-            dbgInfo.grfLaunch = (uint)__VSDBGLAUNCHFLAGS.DBGLAUNCH_StopDebuggingOnEnd;
+
+            if (enableNativeCodeDebugging) {
+#if DEV11_OR_LATER
+                dbgInfo.dwClsidCount = 2;
+                dbgInfo.pClsidList = Marshal.AllocCoTaskMem(sizeof(Guid) * 2);
+                var engineGuids = (Guid*)dbgInfo.pClsidList;
+                engineGuids[0] = dbgInfo.clsidCustom = DkmEngineId.NativeEng;
+                engineGuids[1] = AD7Engine.DebugEngineGuid;
+#endif
+            } else {
+                // Set the Python debugger
+                dbgInfo.clsidCustom = new Guid(AD7Engine.DebugEngineId);
+                dbgInfo.grfLaunch = (uint)__VSDBGLAUNCHFLAGS.DBGLAUNCH_StopDebuggingOnEnd;
+            }
         }
 
         /// <summary>

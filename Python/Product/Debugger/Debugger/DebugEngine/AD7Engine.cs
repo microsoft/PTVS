@@ -21,6 +21,7 @@ using System.Windows.Forms;
 using Microsoft.PythonTools.Debugger.Remote;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.Debugger;
 using Microsoft.VisualStudio.Debugger.Interop;
 
 namespace Microsoft.PythonTools.Debugger.DebugEngine {
@@ -41,6 +42,10 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
     public sealed class AD7Engine : IDebugEngine2, IDebugEngineLaunch2, IDebugProgram3, IDebugSymbolSettings100 {
         // used to send events to the debugger. Some examples of these events are thread create, exception thrown, module load.
         private IDebugEventCallback2 _events;
+
+        // A flag indicating that we're in mixed-mode debugging. If true, most of the fields below are not valid,
+        // since all debugging is handled by Concord.
+        private bool _mixedMode;
 
         // The core of the engine is implemented by PythonProcess - we wrap and expose that to VS.
         private PythonProcess _process;
@@ -208,6 +213,36 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             _threadIdMapping.Remove(vsTid);
         }
 
+        private static bool IsNativeDebuggingEnabled(IDebugProgram2 program) {
+#if DEV11_OR_LATER
+            IDebugProcess2 process;
+            program.GetProcess(out process);
+
+            IEnumDebugPrograms2 enumPrograms;
+            process.EnumPrograms(out enumPrograms);
+
+            bool result = false;
+            while (true) {
+                IDebugProgram2[] programs = new IDebugProgram2[1];
+                uint fetched = 0;
+                if (enumPrograms.Next(1, programs, ref fetched) != VSConstants.S_OK || fetched != 1 || programs[0] == null) {
+                    break;
+                }
+
+                string engineName;
+                Guid engineGuid;
+                programs[0].GetEngineInfo(out engineName, out engineGuid);
+                if (engineGuid == DkmEngineId.NativeEng) {
+                    result = true;
+                }
+            }
+
+            return result;
+#else
+            return false;
+#endif
+        }
+
         #region IDebugEngine2 Members
 
         // Attach the debug engine to a program. 
@@ -237,6 +272,16 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             if (_process == null) {                
                 // TODO: Where do we get the language version from?
                 _events = ad7Callback;
+
+                // Check whether we're debugging Python alongside native. If so, let Concord handle everything.
+                if (IsNativeDebuggingEnabled(program)) {
+                    _attached = true;
+                    _mixedMode = true;
+                    AD7EngineCreateEvent.Send(this);
+                    AD7ProgramCreateEvent.Send(this);
+                    Debug.WriteLine("PythonEngine Attach bailing out early - mixed-mode debugging");
+                    return VSConstants.S_OK;
+                }
 
                 // Check if we're attaching remotely using the Python remote debugging transport
                 var remoteProgram = program as PythonRemoteDebugProgram;
@@ -315,6 +360,10 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         // This is normally called in response to the user clicking on the pause button in the debugger.
         // When the break is complete, an AsyncBreakComplete event will be sent back to the debugger.
         int IDebugEngine2.CauseBreak() {
+            if (_mixedMode) {
+                return VSConstants.E_NOTIMPL;
+            }
+
             AssertMainThread();
 
             return ((IDebugProgram2)this).CauseBreak();
@@ -329,6 +378,10 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         // was received and processed. The only event we send in this fashion is Program Destroy.
         // It responds to that event by shutting down the engine.
         int IDebugEngine2.ContinueFromSynchronousEvent(IDebugEvent2 eventObject) {
+            if (_mixedMode) {
+                return VSConstants.E_NOTIMPL;
+            }
+
             AssertMainThread();
 
             if (eventObject is AD7ProgramDestroyEvent) {
@@ -354,6 +407,11 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         // Creates a pending breakpoint in the engine. A pending breakpoint is contains all the information needed to bind a breakpoint to 
         // a location in the debuggee.
         int IDebugEngine2.CreatePendingBreakpoint(IDebugBreakpointRequest2 pBPRequest, out IDebugPendingBreakpoint2 ppPendingBP) {
+            if (_mixedMode) {
+                ppPendingBP = null;
+                return VSConstants.E_NOTIMPL;
+            }
+
             Debug.WriteLine("Creating pending break point");
             Debug.Assert(_breakpointManager != null);
             ppPendingBP = null;
@@ -365,6 +423,10 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         // Informs a DE that the program specified has been atypically terminated and that the DE should 
         // clean up all references to the program and send a program destroy event.
         int IDebugEngine2.DestroyProgram(IDebugProgram2 pProgram) {
+            if (_mixedMode) {
+                return VSConstants.E_NOTIMPL;
+            }
+
             Debug.WriteLine("PythonEngine DestroyProgram");
             // Tell the SDM that the engine knows that the program is exiting, and that the
             // engine will send a program destroy. We do this because the Win32 debug api will always
@@ -380,6 +442,10 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         }
 
         int IDebugEngine2.RemoveAllSetExceptions(ref Guid guidType) {
+            if (_mixedMode) {
+                return VSConstants.E_NOTIMPL;
+            }
+
             _breakOnException.Clear();
             _defaultBreakOnExceptionMode = (int)enum_EXCEPTION_STATE.EXCEPTION_STOP_USER_UNCAUGHT;
 
@@ -388,6 +454,10 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         }
 
         int IDebugEngine2.RemoveSetException(EXCEPTION_INFO[] pException) {
+            if (_mixedMode) {
+                return VSConstants.E_NOTIMPL;
+            }
+
             bool sendUpdate = false;
             for (int i = 0; i < pException.Length; i++) {
                 if (pException[i].guidType == DebugEngineGuid) {
@@ -407,6 +477,10 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         }
 
         int IDebugEngine2.SetException(EXCEPTION_INFO[] pException) {
+            if (_mixedMode) {
+                return VSConstants.E_NOTIMPL;
+            }
+
             bool sendUpdate = false;
             for (int i = 0; i < pException.Length; i++) {
                 if (pException[i].guidType == DebugEngineGuid) {
@@ -452,6 +526,10 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
 
         // Determines if a process can be terminated.
         int IDebugEngineLaunch2.CanTerminateProcess(IDebugProcess2 process) {
+            if (_mixedMode) {
+                return VSConstants.S_OK;
+            }
+
             Debug.WriteLine("PythonEngine CanTerminateProcess");
 
             AssertMainThread();
@@ -474,6 +552,11 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         // in which case Visual Studio uses the IDebugEngineLaunch2::LaunchSuspended method
         // The IDebugEngineLaunch2::ResumeProcess method is called to start the process after the process has been successfully launched in a suspended state.
         int IDebugEngineLaunch2.LaunchSuspended(string pszServer, IDebugPort2 port, string exe, string args, string dir, string env, string options, enum_LAUNCH_FLAGS launchFlags, uint hStdInput, uint hStdOutput, uint hStdError, IDebugEventCallback2 ad7Callback, out IDebugProcess2 process) {
+            if (_mixedMode) {
+                process = null;
+                return VSConstants.E_NOTIMPL;
+            }
+
             Debug.WriteLine("--------------------------------------------------------------------------------");
             Debug.WriteLine("PythonEngine LaunchSuspended Begin " + launchFlags + " " + GetHashCode());
             AssertMainThread();
@@ -615,6 +698,10 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
 
         // Resume a process launched by IDebugEngineLaunch2.LaunchSuspended
         int IDebugEngineLaunch2.ResumeProcess(IDebugProcess2 process) {
+            if (_mixedMode) {
+                return VSConstants.E_NOTIMPL;
+            }
+
             Debug.WriteLine("Python Debugger ResumeProcess Begin");
 
             AssertMainThread();
@@ -661,6 +748,10 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         // This function is used to terminate a process that the engine launched
         // The debugger will call IDebugEngineLaunch2::CanTerminateProcess before calling this method.
         int IDebugEngineLaunch2.TerminateProcess(IDebugProcess2 process) {
+            if (_mixedMode) {
+                return VSConstants.E_NOTIMPL;
+            }
+
             Debug.WriteLine("PythonEngine TerminateProcess");
 
             AssertMainThread();
@@ -701,6 +792,10 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         // The debugger calls CauseBreak when the user clicks on the pause button in VS. The debugger should respond by entering
         // breakmode. 
         public int CauseBreak() {
+            if (_mixedMode) {
+                return VSConstants.E_NOTIMPL;
+            }
+
             Debug.WriteLine("PythonEngine CauseBreak");
             AssertMainThread();
 
@@ -713,6 +808,10 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         // but have stepping state remain. An example is when a tracepoint is executed, 
         // and the debugger does not want to actually enter break mode.
         public int Continue(IDebugThread2 pThread) {
+            if (_mixedMode) {
+                return VSConstants.E_NOTIMPL;
+            }
+
             AssertMainThread();
 
             AD7Thread thread = (AD7Thread)pThread;
@@ -731,21 +830,32 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             Debug.WriteLine("PythonEngine Detach");
             AssertMainThread();
 
-            _breakpointManager.ClearBoundBreakpoints();
+            if (_mixedMode) {
+                Send(new AD7ProgramDestroyEvent(0), AD7ProgramDestroyEvent.IID, null);
+            } else {
+                AssertMainThread();
+
+                _breakpointManager.ClearBoundBreakpoints();
 
             var detaching = EngineDetaching;
             if (detaching != null) {
                 detaching(this, new AD7EngineEventArgs(this));
             }
 
-            _process.Detach();
-            _ad7ProgramId = Guid.Empty;
+                _process.Detach();
+            }
 
+            _ad7ProgramId = Guid.Empty;
             return VSConstants.S_OK;
         }
 
         // Enumerates the code contexts for a given position in a source file.
         public int EnumCodeContexts(IDebugDocumentPosition2 pDocPos, out IEnumDebugCodeContexts2 ppEnum) {
+            if (_mixedMode) {
+                ppEnum = null;
+                return VSConstants.E_NOTIMPL;
+            }
+
             string filename;
             pDocPos.GetFileName(out filename);
             TEXT_POSITION[] beginning = new TEXT_POSITION[1], end = new TEXT_POSITION[1];
@@ -766,8 +876,12 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
 
         // EnumModules is called by the debugger when it needs to enumerate the modules in the program.
         public int EnumModules(out IEnumDebugModules2 ppEnum) {
-            AssertMainThread();
+            if (_mixedMode) {
+                ppEnum = null;
+                return VSConstants.E_NOTIMPL;
+            }
 
+            AssertMainThread();
 
             AD7Module[] moduleObjects = new AD7Module[_modules.Count];
             int i = 0;
@@ -785,6 +899,11 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
 
         // EnumThreads is called by the debugger when it needs to enumerate the threads in the program.
         public int EnumThreads(out IEnumDebugThreads2 ppEnum) {
+            if (_mixedMode) {
+                ppEnum = null;
+                return VSConstants.E_NOTIMPL;
+            }
+
             AssertMainThread();
 
             AD7Thread[] threadObjects = new AD7Thread[_threads.Count];
@@ -860,6 +979,10 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         /// In case there is any thread synchronization or communication between threads, other threads in the program should run when a particular thread is stepping.
         /// </summary>
         public int Step(IDebugThread2 pThread, enum_STEPKIND sk, enum_STEPUNIT Step) {
+            if (_mixedMode) {
+                return VSConstants.E_NOTIMPL;
+            }
+
             var thread = ((AD7Thread)pThread).GetDebuggedThread();
             switch (sk) {
                 case enum_STEPKIND.STEP_INTO: thread.StepInto(); break;
@@ -890,6 +1013,10 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         // stepping state cleared.  See http://msdn.microsoft.com/en-us/library/bb145596.aspx for a
         // description of different ways we can resume.
         public int ExecuteOnThread(IDebugThread2 pThread) {
+            if (_mixedMode) {
+                return VSConstants.E_NOTIMPL;
+            }
+
             AssertMainThread();
 
             // clear stepping state on the thread the user was currently on

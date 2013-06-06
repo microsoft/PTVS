@@ -41,6 +41,10 @@ namespace Microsoft.PythonTools.Project {
 
             _toolTip.SetToolTip(_interpreterPath, interpPathHelp);
             _toolTip.SetToolTip(_interpreterPathLabel, interpPathHelp);
+
+#if DEV11_OR_LATER
+            _mixedMode.Visible = true;
+#endif
         }
 
         #region ILauncherOptionsControl Members
@@ -50,6 +54,7 @@ namespace Microsoft.PythonTools.Project {
             _properties.SetProperty(CommonConstants.CommandLineArguments, Arguments);
             _properties.SetProperty(CommonConstants.InterpreterPath, InterpreterPath);
             _properties.SetProperty(CommonConstants.InterpreterArguments, InterpreterArguments);
+            _properties.SetProperty(PythonConstants.EnableNativeCodeDebugging, EnableNativeCodeDebugging.ToString());
             RaiseIsSaved();
         }
 
@@ -59,6 +64,11 @@ namespace Microsoft.PythonTools.Project {
             InterpreterPath = _properties.GetUnevaluatedProperty(CommonConstants.InterpreterPath);
             Arguments = _properties.GetUnevaluatedProperty(CommonConstants.CommandLineArguments);
             InterpreterArguments = _properties.GetUnevaluatedProperty(CommonConstants.InterpreterArguments);
+
+            bool enableNativeCodeDebugging;
+            bool.TryParse(_properties.GetUnevaluatedProperty(PythonConstants.EnableNativeCodeDebugging), out enableNativeCodeDebugging);
+            EnableNativeCodeDebugging = enableNativeCodeDebugging;
+
             _loadingSettings = false;
         }
 
@@ -98,6 +108,11 @@ namespace Microsoft.PythonTools.Project {
             set { _interpArgs.Text = value; }
         }
 
+        public bool EnableNativeCodeDebugging {
+            get { return _mixedMode.Checked; }
+            set { _mixedMode.Checked = value; }
+        }
+
         private void RaiseIsDirty() {
             if (!_loadingSettings) {
                 var isDirty = DirtyChanged;
@@ -130,5 +145,8 @@ namespace Microsoft.PythonTools.Project {
             RaiseIsDirty();
         }
 
+        private void _mixedMode_CheckedChanged(object sender, EventArgs e) {
+            RaiseIsDirty();
+        }
     }
 }

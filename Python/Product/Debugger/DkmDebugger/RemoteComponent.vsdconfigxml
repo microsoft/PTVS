@@ -1,0 +1,71 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<!--
+ 
+  Copyright (c) Microsoft Corporation.
+ 
+  This source code is subject to terms and conditions of the Apache License, Version 2.0. A
+  copy of the license can be found in the License.html file at the root of this distribution. If
+  you cannot locate the Apache License, Version 2.0, please send an email to
+  vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound
+  by the terms of the Apache License, Version 2.0.
+ 
+  You must not remove this notice, or any other, from this software.
+ 
+-->
+<Configuration xmlns="http://schemas.microsoft.com/vstudio/vsdconfig/2008">
+
+  <DefineGuid Name="guidPythonDebugRemoteCompId" Value="BCFD7074-A4D3-42A9-B1B6-C975304C882A"/>
+  <DefineGuid Name="guidPythonDebugLocalCompId" Value="E42AC982-8F0B-45DE-8F22-EC045687F2EC"/>
+  <DefineGuid Name="guidPythonExceptionCategory" Value="EC1375B7-E2CE-43E8-BF75-DC638DE1F1F9"/>
+  <DefineGuid Name="guidPythonLanguageId" Value="DA3C7D59-F9E4-4697-BEE7-3A0703AF6BFF"/>
+  <DefineGuid Name="guidPythonRuntimeId" Value="0B253BA3-E62E-4428-A583-36E33EA26E54"/>
+  <DefineGuid Name="guidPythonTraceManagerSourceId" Value="5B0A4B66-C7A5-4D51-9581-9C89AF483691"/>
+  <DefineGuid Name="guidPythonStepTargetSourceId" Value="5653D51F-7824-41A0-9CE5-96D2E4AFC18B"/>
+
+  <ManagedComponent
+    ComponentId="guidPythonDebugRemoteCompId"
+    ComponentLevel="40500"
+    AssemblyName="Microsoft.PythonTools.Debugger">
+
+    <Class Name="Microsoft.PythonTools.DkmDebugger.RemoteComponent">
+      <Implements>
+
+        <InterfaceGroup>
+          <Filter>
+            <SourceId RequiredValue="guidPythonDebugRemoteCompId"/>
+          </Filter>
+          <Interface Name="IDkmCustomMessageForwardReceiver"/>
+        </InterfaceGroup>
+
+        <InterfaceGroup>
+          <Filter>
+            <RuntimeId RequiredValue="DkmRuntimeId.Native"/>
+          </Filter>
+          <Interface Name="IDkmModuleInstanceLoadNotification"/>
+        </InterfaceGroup>
+
+        <InterfaceGroup>
+          <Filter>
+            <SourceId RequiredValue="guidPythonDebugLocalCompId"/>
+            <SourceId RequiredValue="guidPythonTraceManagerSourceId"/>
+            <SourceId RequiredValue="guidPythonStepTargetSourceId"/>
+          </Filter>
+          <Interface Name="IDkmRuntimeBreakpointReceived"/>
+        </InterfaceGroup>
+        
+        <InterfaceGroup>
+          <Filter>
+            <RuntimeId RequiredValue="guidPythonRuntimeId"/>
+          </Filter>
+          <Interface Name="IDkmRuntimeStepper"/>
+          <Interface Name="IDkmRuntimeMonitorBreakpointHandler"/>
+          <Interface Name="IDkmExceptionController"/>
+          <Interface Name="IDkmExceptionFormatter"/>
+        </InterfaceGroup>
+        
+      </Implements>
+    </Class>
+
+  </ManagedComponent>
+
+</Configuration>

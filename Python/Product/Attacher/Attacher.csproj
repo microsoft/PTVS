@@ -54,6 +54,14 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Windows.Forms" />
+    <ProjectReference Include="..\DebuggerHelper\DebuggerHelper.vcxproj">
+      <Project>{25956dfa-17a2-4109-b9e5-d46cce1ed52f}</Project>
+      <Name>DebuggerHelper</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\DebuggerHelper\DebuggerHelperX86.vcxproj">
+      <Project>{a2a795f7-27d0-4801-88da-95b368f070ad}</Project>
+      <Name>DebuggerHelperX86</Name>
+    </ProjectReference>
     <ProjectReference Include="..\PyDebugAttach\PyDebugAttach.vcxproj">
       <Project>{AC19CAA0-5C69-4B20-8A18-D4B6B65F22B8}</Project>
       <Name>PyDebugAttach</Name>

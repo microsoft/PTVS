@@ -70,7 +70,7 @@ namespace Microsoft.PythonTools.Debugger {
 
             ListenForConnection();
 
-            using (var result = DebugAttach.Attach(pid, DebugConnectionListener.ListenerPort, _processGuid)) {
+            using (var result = DebugAttach.AttachAD7(pid, DebugConnectionListener.ListenerPort, _processGuid)) {
                 if (result.Error != ConnErrorMessages.None) {
                     throw new AttachException(result.Error);
                 }

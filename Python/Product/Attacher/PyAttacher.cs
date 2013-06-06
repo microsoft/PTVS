@@ -66,26 +66,47 @@ namespace Microsoft.PythonTools.Debugger {
         }
 
         public static int Main(string[] args) {
-            int pid, portNum;
-            Guid debugId;
-
-            if (args.Length == 1 && args[0] == "CHECK") {
-                return RunCheck();
-            } else if (args.Length != 4 || !Int32.TryParse(args[0], out pid) || !Int32.TryParse(args[1], out portNum) || !Guid.TryParse(args[2], out debugId)) {
-                Help();
-                return -1;
+            if (args.Length < 1) {
+                return Help();
             }
 
-            EventWaitHandle doneEvent;
-            try {
-                doneEvent = AutoResetEvent.OpenExisting(args[3]);
-            } catch {
-                Help();
-                return -2;
-            }
+            switch (args[0]) {
+                case "CHECK":
+                    if (args.Length != 1) {
+                        return Help();
+                    }
+                    return RunCheck();
 
-            var res = AttachWorker(pid, portNum, debugId, doneEvent);
-            return ((int)res._error) | (res._langVersion << 16);
+                case "ATTACH_AD7": {
+                        int pid, portNum;
+                        Guid debugId;
+                        if (args.Length != 5 || !Int32.TryParse(args[1], out pid) || !Int32.TryParse(args[2], out portNum) || !Guid.TryParse(args[3], out debugId)) {
+                            return Help();
+                        }
+
+                        EventWaitHandle doneEvent;
+                        try {
+                            doneEvent = AutoResetEvent.OpenExisting(args[4]);
+                        } catch {
+                            return Help(-2);
+                        }
+
+                        var res = AttachAD7Worker(pid, portNum, debugId, doneEvent);
+                        return ((int)res._error) | (res._langVersion << 16);
+                    };
+
+                case "ATTACH_DKM": {
+                        int pid;
+                        if (args.Length != 2 || !Int32.TryParse(args[1], out pid)) {
+                            return Help();
+                        }
+
+                        return (int)AttachDkmWorker(pid);
+                    };
+
+                default:
+                    return Help();
+            }
         }
 
         public static bool IsPythonProcess(int id) {
@@ -108,7 +129,7 @@ namespace Microsoft.PythonTools.Debugger {
             return HasPython(id);
         }
 
-        public static DebugAttach Attach(int pid, int portNum, Guid debugId) {
+        public static DebugAttach AttachAD7(int pid, int portNum, Guid debugId) {
             bool isTarget64Bit = Is64BitProcess(pid);
             bool isAttacher64Bit = Environment.Is64BitProcess;
 
@@ -125,7 +146,7 @@ namespace Microsoft.PythonTools.Debugger {
                 } while (eventHandle == IntPtr.Zero);
 
                 try {
-                    string args = String.Format("{0} {1} {2} {3}", pid, portNum, debugId, name);
+                    string args = String.Format("ATTACH_AD7 {0} {1} {2} {3}", pid, portNum, debugId, name);
                     var process = isTarget64Bit ? Create64BitProcess(args) : Create32BitProcess(args);
 
                     var attachDoneEvent = AutoResetEvent.OpenExisting(name);
@@ -137,7 +158,20 @@ namespace Microsoft.PythonTools.Debugger {
                 }
             }
 
-            return AttachWorker(pid, portNum, debugId);
+            return AttachAD7Worker(pid, portNum, debugId);
+        }
+
+        public static ConnErrorMessages AttachDkm(int pid) {
+            bool isTarget64Bit = Is64BitProcess(pid);
+            bool isAttacher64Bit = Environment.Is64BitProcess;
+            if (isAttacher64Bit == isTarget64Bit) {
+                return AttachDkmWorker(pid);
+            } else {
+                string args = String.Format("ATTACH_DKM {0}", pid);
+                var process = isTarget64Bit ? Create64BitProcess(args) : Create32BitProcess(args);
+                process.WaitForExit();
+                return (ConnErrorMessages)(process.ExitCode & 0xffff);
+            }
         }
 
         /// <summary>
@@ -169,8 +203,12 @@ namespace Microsoft.PythonTools.Debugger {
             }
         }
 
-        private static void Help() {
-            Console.WriteLine("Expected: (TargetPID PortNum EventName) | CHECK");
+        private static int Help(int exitCode = -1) {
+            Console.WriteLine("Usage: {0} {CHECK | ATTACH_AD7 | ATTACH_DKM} [<parameters>]", Assembly.GetEntryAssembly().ManifestModule.Name);
+            Console.WriteLine("Parameters for:");
+            Console.WriteLine("\tATTACH_AD7:\t<target pid> <port num> <debug id> <event name>");
+            Console.WriteLine("\tATTACH_DKM:\t<target pid>");
+            return exitCode;
         }
 
         internal static int RunCheck() {
@@ -264,7 +302,7 @@ namespace Microsoft.PythonTools.Debugger {
         /// <summary>
         /// Attaches to the specified PID and returns a DebugAttach object indicating the result.
         /// </summary>
-        internal static DebugAttach AttachWorker(int pid, int portNum, Guid debugId, EventWaitHandle attachDoneEvent = null) {
+        internal static DebugAttach AttachAD7Worker(int pid, int portNum, Guid debugId, EventWaitHandle attachDoneEvent = null) {
             var hProcess = OpenProcess(ProcessAccessFlags.All, false, pid);
             if (hProcess != IntPtr.Zero) {
                 string basePath = GetPythonToolsInstallPath();
@@ -288,22 +326,52 @@ namespace Microsoft.PythonTools.Debugger {
                 // being loaded or unloaded, EnumProcessModules may fail or return incorrect 
                 // information.
                 // So we'll retry a handful of times to get the attach...
-                ConnErrorMessages? error = null;
+                ConnErrorMessages error = ConnErrorMessages.None;
                 for (int i = 0; i < 5; i++) {
-                    IntPtr kernelMod;
-                    if ((error = TryAttach(hProcess, out kernelMod)) == null) {
-                        return InjectDebugger(dllPath, hProcess, kernelMod, portNum, pid, debugId, attachDoneEvent);
+                    IntPtr hKernel32;
+                    if ((error = FindKernel32(hProcess, out hKernel32)) == ConnErrorMessages.None) {
+                        return InjectDebugger(dllPath, hProcess, hKernel32, portNum, pid, debugId, attachDoneEvent);
                     }
                 }
 
-                return new DebugAttach(error.Value);
+                return new DebugAttach(error);
             }
 
             return new DebugAttach(ConnErrorMessages.CannotOpenProcess);
         }
 
-        private static ConnErrorMessages? TryAttach(IntPtr hProcess, out IntPtr kernelMod) {
-            kernelMod = IntPtr.Zero;
+        internal static ConnErrorMessages AttachDkmWorker(int pid) {
+            var hProcess = OpenProcess(ProcessAccessFlags.All, false, pid);
+            if (hProcess == IntPtr.Zero) {
+                return ConnErrorMessages.CannotOpenProcess;
+            }
+
+            string basePath = GetPythonToolsInstallPath();
+            string dllName = string.Format("Microsoft.PythonTools.Debugger.Helper.{0}.dll", IntPtr.Size == 4 ? "x86" : "x64");
+            string dllPath;
+            if (string.IsNullOrEmpty(basePath) || !File.Exists(dllPath = Path.Combine(basePath, dllName))) {
+                return ConnErrorMessages.PyDebugAttachNotFound;
+            }
+
+            // http://msdn.microsoft.com/en-us/library/windows/desktop/ms682631(v=vs.85).aspx
+            // If the module list in the target process is corrupted or not yet initialized, 
+            // or if the module list changes during the function call as a result of DLLs 
+            // being loaded or unloaded, EnumProcessModules may fail or return incorrect 
+            // information.
+            // So we'll retry a handful of times to get the attach...
+            ConnErrorMessages error = ConnErrorMessages.None;
+            for (int i = 0; i < 5; i++) {
+                IntPtr hKernel32;
+                if ((error = FindKernel32(hProcess, out hKernel32)) == ConnErrorMessages.None) {
+                    return InjectDll(dllPath, hProcess, hKernel32);
+                }
+            }
+            return error;
+        }
+
+
+        private static ConnErrorMessages FindKernel32(IntPtr hProcess, out IntPtr hKernel32) {
+            hKernel32 = IntPtr.Zero;
             int modSize = IntPtr.Size * 1024;
 
             IntPtr hMods = Marshal.AllocHGlobal(modSize);
@@ -342,8 +410,8 @@ namespace Microsoft.PythonTools.Debugger {
                     if (GetModuleBaseName(hProcess, curMod, modName, MAX_PATH) != 0) {
                         if (String.Equals(modName.ToString(), "kernel32.dll", StringComparison.OrdinalIgnoreCase)) {
                             // kernel module, we want to use this to inject ourselves
-                            kernelMod = curMod;
-                            return null;
+                            hKernel32 = curMod;
+                            return ConnErrorMessages.None;
                         }
                     }
                 }
@@ -385,7 +453,26 @@ namespace Microsoft.PythonTools.Debugger {
             }
         }
 
-        private static DebugAttach InjectDebugger(string dllPath, IntPtr hProcess, IntPtr curMod, int portNum, int pid, Guid debugId, EventWaitHandle attachDoneEvent) {
+        private static ConnErrorMessages InjectDll(string dllPath, IntPtr hProcess, IntPtr hKernel32) {
+            var ourLibName = VirtualAllocEx(hProcess, IntPtr.Zero, (uint)dllPath.Length, AllocationType.Commit, MemoryProtection.ReadWrite);
+            if (ourLibName == IntPtr.Zero) {
+                return ConnErrorMessages.OutOfMemory;
+            }
+
+            int bytesWritten;
+            if (!WriteProcessMemory(hProcess, ourLibName, dllPath, dllPath.Length * 2, out bytesWritten)) {
+                throw new Win32Exception(Marshal.GetLastWin32Error());
+            }
+
+            var hThread = CreateRemoteThread(hProcess, IntPtr.Zero, 0, GetProcAddress(hKernel32, "LoadLibraryW"), ourLibName, 0, IntPtr.Zero);
+            if (hThread == IntPtr.Zero) {
+                throw new Win32Exception(Marshal.GetLastWin32Error());
+            }
+
+            return ConnErrorMessages.None;
+        }
+
+        private static DebugAttach InjectDebugger(string dllPath, IntPtr hProcess, IntPtr hKernel32, int portNum, int pid, Guid debugId, EventWaitHandle attachDoneEvent) {
             // create our our shared memory region so that we can read the port number from the other side and we can indicate when
             // the attach has completed
             try {
@@ -433,19 +520,9 @@ namespace Microsoft.PythonTools.Debugger {
                                 viewStream.WriteByte((byte)guid[i]);
                             }
 
-                            var ourLibName = VirtualAllocEx(hProcess, IntPtr.Zero, (uint)dllPath.Length, AllocationType.Commit, MemoryProtection.ReadWrite);
-                            if (ourLibName == IntPtr.Zero) {
-                                return new DebugAttach(ConnErrorMessages.OutOfMemory);
-                            }
-
-                            int bytesWritten;
-                            if (!WriteProcessMemory(hProcess, ourLibName, dllPath, dllPath.Length * 2, out bytesWritten)) {
-                                throw new Win32Exception(Marshal.GetLastWin32Error());
-                            }
-
-                            var hThread = CreateRemoteThread(hProcess, IntPtr.Zero, 0, GetProcAddress(curMod, "LoadLibraryW"), ourLibName, 0, IntPtr.Zero);
-                            if (hThread == IntPtr.Zero) {
-                                throw new Win32Exception(Marshal.GetLastWin32Error());
+                            var injectDllError = InjectDll(dllPath, hProcess, hKernel32);
+                            if (injectDllError != ConnErrorMessages.None) {
+                                return new DebugAttach(injectDllError);
                             }
 
                             viewStream.Position = errorCodePosition;

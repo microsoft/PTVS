@@ -1,0 +1,53 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<!--
+ 
+  Copyright (c) Microsoft Corporation.
+ 
+  This source code is subject to terms and conditions of the Apache License, Version 2.0. A
+  copy of the license can be found in the License.html file at the root of this distribution. If
+  you cannot locate the Apache License, Version 2.0, please send an email to
+  vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound
+  by the terms of the Apache License, Version 2.0.
+ 
+  You must not remove this notice, or any other, from this software.
+ 
+-->
+<Configuration xmlns="http://schemas.microsoft.com/vstudio/vsdconfig/2008">
+
+  <DefineGuid Name="guidPythonDebugLocalStackWalkingCompId" Value="538659BC-990B-4F53-B3C8-834D54397E15"/>
+  <DefineGuid Name="guidPythonEngineId" Value="EC1375B7-E2CE-43E8-BF75-DC638DE1F1F9"/>
+  <DefineGuid Name="guidPythonRuntimeId" Value="0B253BA3-E62E-4428-A583-36E33EA26E54"/>
+
+  <ManagedComponent
+    ComponentId="guidPythonDebugLocalStackWalkingCompId"
+    ComponentLevel="9996006"
+    AssemblyName="Microsoft.PythonTools.Debugger">
+    
+    <Class Name="Microsoft.PythonTools.DkmDebugger.LocalStackWalkingComponent">
+      <Implements>
+
+        <InterfaceGroup>
+          <Filter>
+            <SourceId RequiredValue="guidPythonDebugLocalStackWalkingCompId"/>
+          </Filter>
+          <Interface Name="IDkmCustomMessageCallbackReceiver"/>
+        </InterfaceGroup>
+
+        <InterfaceGroup>
+          <Filter>
+            <RuntimeId RequiredValue="DkmRuntimeId.Native"/>
+          </Filter>
+          <Interface Name="IDkmModuleInstanceLoadNotification"/>
+        </InterfaceGroup>
+
+        <InterfaceGroup>
+          <Filter>
+            <RuntimeId RequiredValue="guidPythonRuntimeId"/>
+          </Filter>
+          <Interface Name="IDkmRuntimeInstanceLoadNotification"/>
+        </InterfaceGroup>
+
+      </Implements>
+    </Class>
+  </ManagedComponent>
+</Configuration>

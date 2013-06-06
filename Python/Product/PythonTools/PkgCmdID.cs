@@ -49,5 +49,10 @@ namespace Microsoft.PythonTools
         public const uint cmdidReplWindowF = 0x20F;
         public const uint cmdidDebugReplWindow = 0x210;
         public const uint cmdidInterpreterList = 0x220;
+
+        public const uint cmdidShowCppView = 0x400C;
+        public const uint cmdidShowPythonView = 0x400D;
+        public const uint cmdidShowNativePythonFrames = 0x400E;
+        public const uint cmdidUsePythonStepping = 0x400F;
     };
 }
