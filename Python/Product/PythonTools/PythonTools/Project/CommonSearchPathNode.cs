@@ -43,28 +43,6 @@ namespace Microsoft.PythonTools.Project {
             set { _index = value; }
         }
 
-        internal override int ExecCommandOnNode(Guid cmdGroup, uint cmd, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut) {
-            if (cmdGroup == VsMenus.guidStandardCommandSet97) {
-                switch ((VsCommands)cmd) {
-                    case VsCommands.Delete:
-                    case VsCommands.Remove:
-                        string message = string.Format(
-                            DynamicProjectSR.GetString(DynamicProjectSR.SearchPathRemoveConfirmation),
-                            this.Caption);
-                        string title = string.Empty;
-                        OLEMSGICON icon = OLEMSGICON.OLEMSGICON_WARNING;
-                        OLEMSGBUTTON buttons = OLEMSGBUTTON.OLEMSGBUTTON_OK | OLEMSGBUTTON.OLEMSGBUTTON_OKCANCEL;
-                        OLEMSGDEFBUTTON defaultButton = OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST;
-                        int res = Microsoft.VisualStudio.Shell.VsShellUtilities.ShowMessageBox(this.ProjectMgr.Site, title, message, icon, buttons, defaultButton);
-                        if (res == 1) {
-                            Remove(false);
-                        }
-                        return VSConstants.S_OK;
-                }
-            }
-            return base.ExecCommandOnNode(cmdGroup, cmd, nCmdexecopt, pvaIn, pvaOut);
-        }
-
         /// <summary>
         /// Generic Search Path Node can only be removed from project.
         /// </summary>        

@@ -106,12 +106,16 @@ namespace Microsoft.PythonTools.Repl {
             }
         }
 
-        protected override void Close() {
-            base.Close();
+        public override void Dispose() {
             if (_ownsAnalyzer && _replAnalyzer != null) {
                 _replAnalyzer.Dispose();
                 _replAnalyzer = null;
             }
+            base.Dispose();
+        }
+
+        protected override void Close() {
+            base.Close();
             if (_interpreterService != null) {
                 _interpreterService.InterpretersChanged -= InterpretersChanged;
             }

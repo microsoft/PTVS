@@ -38,6 +38,12 @@ namespace Microsoft.PythonTools.Project {
             this.ExcludeNodeFromScc = true;
         }
 
+        public override Guid ItemTypeGuid {
+            get {
+                return CommonConstants.SearchPathItemTypeGuid;
+            }
+        }
+
         /// <summary>
         /// Show friendly node caption - relative path or normalized absolute path.
         /// </summary>

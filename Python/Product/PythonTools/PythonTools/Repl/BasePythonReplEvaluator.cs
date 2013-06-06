@@ -1199,7 +1199,7 @@ namespace Microsoft.PythonTools.Repl {
 
         #region IDisposable Members
 
-        public void Dispose() {
+        public virtual void Dispose() {
             try {
                 Close();
             } catch {

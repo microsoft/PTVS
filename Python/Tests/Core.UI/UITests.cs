@@ -209,6 +209,11 @@ namespace PythonToolsUITests {
             // Entered in file as .\NotHere\
             var path4 = window.FindItem("Solution 'LoadSearchPaths' (1 project)", "LoadSearchPaths", "Search Path", "NotHere");
             Assert.IsNotNull(path4, "Could not find NotHere");
+
+            // Entered in file as .\NotHere\
+            AutomationWrapper.Select(path4);
+            Keyboard.Type(Key.Delete);  // should not prompt, https://pytools.codeplex.com/workitem/1233
+            Assert.IsNull(window.WaitForItemRemoved("Solution 'LoadSearchPaths' (1 project)", "LoadSearchPaths", "Search Path", "NotHere"));
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]

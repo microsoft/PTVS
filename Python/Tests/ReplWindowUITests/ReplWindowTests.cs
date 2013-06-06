@@ -2930,6 +2930,44 @@ def g(): pass
             }
         }
 
+        /// <summary>
+        /// “x = 42”
+        /// “x.” should bring up intellisense completion
+        /// </summary>
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void ResetRepl() {
+            var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte); 
+            var interactive = Prepare();
+
+            const string code = "x = 42";
+            Keyboard.Type(code + "\r");
+
+            interactive.WaitForText(ReplPrompt + code, ReplPrompt);
+
+            Keyboard.Type("x.");
+
+            interactive.WaitForText(ReplPrompt + code, ReplPrompt + "x.");
+
+            var session = interactive.WaitForSession<ICompletionSession>();
+            Assert.IsNotNull(session.SelectedCompletionSet);
+            Keyboard.Type(Key.Escape);
+            Keyboard.Type(Key.Back);
+            Keyboard.Type(Key.Back);
+
+            interactive.Reset();
+
+            Keyboard.Type("x.");
+
+            System.Threading.Thread.Sleep(1000);
+            // make sure we didn't pop up an exception dialog
+            app.WaitForDialogDismissed();
+
+            // and make sure we have no completions for the old buffers
+            var sessionStack = interactive.IntellisenseSessionStack;
+            Assert.IsNull(sessionStack.TopSession);
+        }
+
         [TestMethod, Priority(0)]
         public void IronPythonModuleName() {
             var replEval = new PythonReplEvaluator(IronPythonInterpreter, null, new ReplTestReplOptions());
