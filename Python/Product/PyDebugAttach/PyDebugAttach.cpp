@@ -796,11 +796,11 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
         if(version >= PythonVersion_30) {
             intFromLong = (PyInt_FromLong*)GetProcAddress(module, "PyLong_FromLong");
             intFromSizeT = (PyInt_FromSize_t*)GetProcAddress(module, "PyLong_FromSize_t");
-			if(version >= PythonVersion_33) {
-				strFromString = (PyString_FromString*)GetProcAddress(module, "PyUnicode_FromString");
-			} else {
-				strFromString = (PyString_FromString*)GetProcAddress(module, "PyUnicodeUCS2_FromString");
-			}
+            if(version >= PythonVersion_33) {
+                strFromString = (PyString_FromString*)GetProcAddress(module, "PyUnicode_FromString");
+            } else {
+                strFromString = (PyString_FromString*)GetProcAddress(module, "PyUnicodeUCS2_FromString");
+            }
         }else{
             intFromLong = (PyInt_FromLong*)GetProcAddress(module, "PyInt_FromLong");
             strFromString = (PyString_FromString*)GetProcAddress(module, "PyString_FromString");
@@ -820,8 +820,8 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
         auto getThreadTls = (PyThread_get_key_value*)GetProcAddress(module, "PyThread_get_key_value");
         auto setThreadTls = (PyThread_set_key_value*)GetProcAddress(module, "PyThread_set_key_value");
         auto delThreadTls = (PyThread_delete_key_value*)GetProcAddress(module, "PyThread_delete_key_value");
-		auto pyGilStateEnsure = (PyGILState_EnsureFunc*)GetProcAddress(module, "PyGILState_Ensure");
-		auto pyGilStateRelease = (PyGILState_ReleaseFunc*)GetProcAddress(module, "PyGILState_Release");
+        auto pyGilStateEnsure = (PyGILState_EnsureFunc*)GetProcAddress(module, "PyGILState_Ensure");
+        auto pyGilStateRelease = (PyGILState_ReleaseFunc*)GetProcAddress(module, "PyGILState_Release");
         auto PyCFrame_Type = (PyTypeObject*)GetProcAddress(module, "PyCFrame_Type");
 
         if (addPendingCall== nullptr || curPythonThread == nullptr || interpHeap == nullptr || gilEnsure == nullptr || gilRelease== nullptr || threadHead==nullptr ||
@@ -830,7 +830,7 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
             getBuiltins == nullptr || dictSetItem == nullptr || intFromLong == nullptr || pyErrRestore == nullptr || pyErrFetch == nullptr ||
             errOccurred == nullptr || pyImportMod == nullptr || pyGetAttr == nullptr || pyNone == nullptr || pySetAttr == nullptr || boolFromLong == nullptr ||
             getThreadTls == nullptr || setThreadTls == nullptr || delThreadTls == nullptr || releaseLock == nullptr ||
-			pyGilStateEnsure == nullptr || pyGilStateRelease == nullptr) {
+            pyGilStateEnsure == nullptr || pyGilStateRelease == nullptr) {
                 // we're missing some APIs, we cannot attach.
                 connInfo.ReportError(ConnError_PythonNotFound);
                 return false;
@@ -918,25 +918,25 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
                 if (!threadsInited()) { 
                     if(*curPythonThread == nullptr) {
                         // no threads are currently running, it is safe to initialize multi threading.
-						PyGILState_STATE gilState;
-						if(version >= PythonVersion_32) {
-							// in 3.2 due to the new GIL and later we can't call Py_InitThreads 
-							// without a thread being initialized.  
-							// So we use PyGilState_Ensure here to first
-							// initialize the current thread, and then we use
-							// Py_InitThreads to bring up multi-threading.
-							// Some context here: http://bugs.python.org/issue11329
-							// http://pytools.codeplex.com/workitem/834
-							gilState = pyGilStateEnsure();
-						}
+                        PyGILState_STATE gilState;
+                        if(version >= PythonVersion_32) {
+                            // in 3.2 due to the new GIL and later we can't call Py_InitThreads 
+                            // without a thread being initialized.  
+                            // So we use PyGilState_Ensure here to first
+                            // initialize the current thread, and then we use
+                            // Py_InitThreads to bring up multi-threading.
+                            // Some context here: http://bugs.python.org/issue11329
+                            // http://pytools.codeplex.com/workitem/834
+                            gilState = pyGilStateEnsure();
+                        }
                         initThreads();
-						
-						if(version >= PythonVersion_32) {
-							// we will release the GIL here
-							pyGilStateRelease(gilState);
-						} else {
-	                        releaseLock();
-						}
+                        
+                        if(version >= PythonVersion_32) {
+                            // we will release the GIL here
+                            pyGilStateRelease(gilState);
+                        } else {
+                            releaseLock();
+                        }
                     }else if(!addedPendingCall) {
                         // someone holds the GIL but no one is actively adding any pending calls.  We can pend our call
                         // and initialize threads.
@@ -1153,16 +1153,16 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
                         // update all of the frames so they have our trace func
                         auto curFrame = (PyFrameObject*)GetPyObjectPointerNoDebugInfo(isDebug, frame);
                         while(curFrame != nullptr) {
-							// Special case for CFrame objects
+                            // Special case for CFrame objects
                             // Stackless CFrame does not have a trace function
                             // This will just prevent a crash on attach.
-							if( PyCFrame_Type != NULL && (((PyObject*) curFrame)->ob_type != PyCFrame_Type) )
-							{
-								DecRef(curFrame->f_trace, isDebug);
-								IncRef(*traceFunc);
-								curFrame->f_trace = traceFunc.ToPython();
-							}
-							curFrame = (PyFrameObject*)GetPyObjectPointerNoDebugInfo(isDebug, curFrame->f_back);
+                            if(((PyObject*) curFrame)->ob_type != PyCFrame_Type)
+                            {
+                                DecRef(curFrame->f_trace, isDebug);
+                                IncRef(*traceFunc);
+                                curFrame->f_trace = traceFunc.ToPython();
+                            }
+                            curFrame = (PyFrameObject*)GetPyObjectPointerNoDebugInfo(isDebug, curFrame->f_back);
                         }
 
                         delThreadTls(threadStateIndex);
@@ -1310,7 +1310,7 @@ int TraceGeneral(int interpreterId, PyObject *obj, PyFrameObject *frame, int wha
             case PythonVersion_30:
             case PythonVersion_31:
             case PythonVersion_32:
-			case PythonVersion_33:
+            case PythonVersion_33:
                 curThread->_30_31.c_tracefunc(curThread->_30_31.c_traceobj, frame, what, arg);
                 break;
         }
