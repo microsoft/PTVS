@@ -22,7 +22,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace InterpretersTests {
     [TestClass]
     public class InterpretersTests {
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void MinimumAssembliesLoaded() {
             var assembliesBefore = new HashSet<Assembly>(AppDomain.CurrentDomain.GetAssemblies());
             // This assembly is probably already loaded, but let's pretend that

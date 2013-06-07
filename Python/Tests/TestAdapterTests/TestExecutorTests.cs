@@ -32,7 +32,7 @@ namespace TestAdapterTests {
             TestData.Deploy();
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void TestRun() {
             var executor = new TestExecutor();
             var recorder = new MockTestExecutionRecorder();
@@ -51,7 +51,7 @@ namespace TestAdapterTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void TestRunAll() {
             var executor = new TestExecutor();
             var recorder = new MockTestExecutionRecorder();
@@ -69,7 +69,7 @@ namespace TestAdapterTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void TestCancel() {
             var executor = new TestExecutor();
             var recorder = new MockTestExecutionRecorder();

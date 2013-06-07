@@ -32,7 +32,7 @@ namespace TestAdapterTests {
             TestData.Deploy();
         }
 
-        [TestMethod]
+        [TestMethod, Priority(0)]
         public void TestDiscover() {
             var ctx = new MockDiscoveryContext();
             var sink = new MockTestCaseDiscoverySink();
