@@ -43,7 +43,7 @@ namespace DebuggerTests {
         /// </summary>
         internal void BreakpointTest(string filename, int[] linenos, int[] lineHits, string[] conditions = null, bool[] breakWhenChanged = null, 
                                      string cwd = null, string breakFilename = null, bool checkBound = true, bool checkThread = true, string arguments = "", 
-                                     Action processLoaded = null, PythonDebugOptions debugOptions = PythonDebugOptions.None,
+                                     Action processLoaded = null, PythonDebugOptions debugOptions = PythonDebugOptions.RedirectOutput,
                                     bool waitForExit = true) {
             var debugger = new PythonDebugger();
             PythonThread thread = null;
@@ -151,11 +151,11 @@ namespace DebuggerTests {
             return breakPoint;
         }
 
-        internal PythonProcess DebugProcess(PythonDebugger debugger, string filename, Action<PythonProcess, PythonThread> onLoaded = null, string interpreterOptions = null, PythonDebugOptions debugOptions = PythonDebugOptions.None, string cwd = null, string arguments = "") {
+        internal PythonProcess DebugProcess(PythonDebugger debugger, string filename, Action<PythonProcess, PythonThread> onLoaded = null, string interpreterOptions = null, PythonDebugOptions debugOptions = PythonDebugOptions.RedirectOutput, string cwd = null, string arguments = "") {
             return DebugProcess(debugger, Version, filename, onLoaded, interpreterOptions, debugOptions, cwd, arguments);
         }
 
-        internal static PythonProcess DebugProcess(PythonDebugger debugger, PythonVersion version, string filename, Action<PythonProcess, PythonThread> onLoaded = null, string interpreterOptions = null, PythonDebugOptions debugOptions = PythonDebugOptions.None, string cwd = null, string arguments = "") {
+        internal static PythonProcess DebugProcess(PythonDebugger debugger, PythonVersion version, string filename, Action<PythonProcess, PythonThread> onLoaded = null, string interpreterOptions = null, PythonDebugOptions debugOptions = PythonDebugOptions.RedirectOutput, string cwd = null, string arguments = "") {
             string fullPath = Path.GetFullPath(filename);
             string dir = cwd ?? Path.GetFullPath(Path.GetDirectoryName(filename));
             if (!String.IsNullOrEmpty(arguments)) {
@@ -164,6 +164,9 @@ namespace DebuggerTests {
                 arguments = "\"" + fullPath + "\"";
             }
             var process = debugger.CreateProcess(version.Version, version.Path, arguments, dir, "", interpreterOptions, debugOptions);
+            process.DebuggerOutput += (sender, args) => {
+                Console.WriteLine("{0}: {1}", args.Thread.Id, args.Output);
+            };
             process.ProcessLoaded += (sender, args) => {
                 if (onLoaded != null) {
                     onLoaded(process, args.Thread);
@@ -174,28 +177,33 @@ namespace DebuggerTests {
             return process;
         }
 
-        internal void LocalsTest(string filename, int lineNo, string[] paramNames, string[] localsNames, string breakFilename = null, string arguments = "", Action processLoaded = null, PythonDebugOptions debugOptions = PythonDebugOptions.None, bool waitForExit = true) {
+        internal void LocalsTest(string filename, int lineNo, string[] paramNames, string[] localsNames, string breakFilename = null, string arguments = "", Action processLoaded = null, PythonDebugOptions debugOptions = PythonDebugOptions.RedirectOutput, bool waitForExit = true) {
             PythonThread thread = RunAndBreak(filename, lineNo, breakFilename: breakFilename, arguments: arguments, processLoaded: processLoaded, debugOptions: debugOptions);
             PythonProcess process = thread.Process;
+            try {
+                var frames = thread.Frames;
+                var localsExpected = new HashSet<string>(localsNames);
+                var paramsExpected = new HashSet<string>(paramNames);
 
-            var frames = thread.Frames;
-            var localsExpected = new HashSet<string>(localsNames);
-            var paramsExpected = new HashSet<string>(paramNames);
+                AssertUtil.ContainsExactly(frames[0].Locals.Select(x => x.Expression), localsExpected);
+                AssertUtil.ContainsExactly(frames[0].Parameters.Select(x => x.Expression), paramsExpected);
+                Assert.AreEqual(frames[0].FileName, breakFilename ?? Path.GetFullPath(DebuggerTestPath + filename), true);
 
-            AssertUtil.ContainsExactly(frames[0].Locals.Select(x => x.Expression), localsExpected);
-            AssertUtil.ContainsExactly(frames[0].Parameters.Select(x => x.Expression), paramsExpected);
-            Assert.AreEqual(frames[0].FileName, breakFilename ?? Path.GetFullPath(DebuggerTestPath + filename), true);
+                process.Continue();
 
-            process.Continue();
-
-            if (waitForExit) {
-                WaitForExit(process);
-            } else {
-                process.Terminate();
+                if (waitForExit) {
+                    WaitForExit(process);
+                } else {
+                    process.Terminate();
+                }
+            } finally {
+                if (!process.HasExited) {
+                    process.Terminate();
+                }
             }
         }
 
-        internal PythonThread RunAndBreak(string filename, int lineNo, string breakFilename = null, string arguments = "", Action processLoaded = null, PythonDebugOptions debugOptions = PythonDebugOptions.None) {
+        internal PythonThread RunAndBreak(string filename, int lineNo, string breakFilename = null, string arguments = "", Action processLoaded = null, PythonDebugOptions debugOptions = PythonDebugOptions.RedirectOutput) {
             PythonThread thread;
 
             var debugger = new PythonDebugger();
@@ -257,10 +265,10 @@ namespace DebuggerTests {
         }
 
         internal void StepTest(string filename, int[] breakLines, Action<PythonProcess>[] breakAction, params ExpectedStep[] kinds) {
-            StepTest(filename, null, null, breakLines, breakAction, null, PythonDebugOptions.None, true, kinds);
+            StepTest(filename, null, null, breakLines, breakAction, null, PythonDebugOptions.RedirectOutput, true, kinds);
         }
 
-        internal void StepTest(string filename, string breakFile, string arguments, int[] breakLines, Action<PythonProcess>[] breakAction, Action processLoaded, PythonDebugOptions options = PythonDebugOptions.None, bool waitForExit = true, params ExpectedStep[] kinds) {
+        internal void StepTest(string filename, string breakFile, string arguments, int[] breakLines, Action<PythonProcess>[] breakAction, Action processLoaded, PythonDebugOptions options = PythonDebugOptions.RedirectOutput, bool waitForExit = true, params ExpectedStep[] kinds) {
             var debugger = new PythonDebugger();
             if (breakFile == null) {
                 breakFile = filename;

@@ -187,21 +187,21 @@ namespace TestUtilities
         }
 
         [System.Diagnostics.DebuggerStepThrough]
-        public static void ContainsExactly<T>(IEnumerable<T> source, IEnumerable<T> values) {
-            ContainsExactly(new HashSet<T>(source), values.ToArray());
+        public static void ContainsExactly<T>(IEnumerable<T> source, IEnumerable<T> expected) {
+            ContainsExactly(new HashSet<T>(source), expected.ToArray());
         }
 
         [System.Diagnostics.DebuggerStepThrough]
-        public static void ContainsExactly<T>(IEnumerable<T> source, params T[] values) {
-            ContainsExactly(new HashSet<T>(source), values);
+        public static void ContainsExactly<T>(IEnumerable<T> source, params T[] expected) {
+            ContainsExactly(new HashSet<T>(source), expected);
         }
 
         [System.Diagnostics.DebuggerStepThrough]
-        public static void ContainsExactly<T>(HashSet<T> set, params T[] values) {
-            if (set.ContainsExactly(values)) {
+        public static void ContainsExactly<T>(HashSet<T> set, params T[] expected) {
+            if (set.ContainsExactly(expected)) {
                 return;
             }
-            Assert.Fail(String.Format("Expected {0}, got {1}", MakeText(values), MakeText(set)));
+            Assert.Fail(String.Format("Expected {0}, got {1}", MakeText(expected), MakeText(set)));
         }
 
         [System.Diagnostics.DebuggerStepThrough]

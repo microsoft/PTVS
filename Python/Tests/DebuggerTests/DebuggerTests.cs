@@ -518,9 +518,11 @@ namespace DebuggerTests {
 
         [TestMethod, Priority(0)]
         public void GlobalsTest() {
-            if (Version.Version >= PythonLanguageVersion.V32) {
+            if (Version.Version >= PythonLanguageVersion.V33) {
+                LocalsTest("GlobalsTest.py", 4, new string[] { }, new[] { "x", "y", "__file__", "__name__", "__package__", "__builtins__", "__doc__", "__cached__", "__loader__" });
+            } else if (Version.Version >= PythonLanguageVersion.V32) {
                 LocalsTest("GlobalsTest.py", 4, new string[] { }, new[] { "x", "y", "__file__", "__name__", "__package__", "__builtins__", "__doc__", "__cached__" });
-            } else if (Version.Version >= PythonLanguageVersion.V26 && GetType() != typeof(DebuggerTestsIpy)) { // IronPython doesn't set __package__
+            } else if (Version.Version >= PythonLanguageVersion.V26) {
                 LocalsTest("GlobalsTest.py", 4, new string[] { }, new[] { "x", "y", "__file__", "__name__", "__package__", "__builtins__", "__doc__" });
             } else {
                 LocalsTest("GlobalsTest.py", 4, new string[] { }, new[] { "x", "y", "__file__", "__name__", "__builtins__", "__doc__" });
@@ -683,7 +685,7 @@ namespace DebuggerTests {
                     "\"" + fullPath + "\"",
                     dir,
                     "",
-                    debugOptions: steppingStdLib ? PythonDebugOptions.DebugStdLib : PythonDebugOptions.None);
+                    debugOptions: steppingStdLib ? (PythonDebugOptions.DebugStdLib | PythonDebugOptions.RedirectOutput) : PythonDebugOptions.RedirectOutput);
 
                 PythonThread thread = null;
                 process.ThreadCreated += (sender, args) => {
@@ -1054,7 +1056,7 @@ namespace DebuggerTests {
 
         private void TestException(PythonDebugger debugger, string filename, bool resumeProcess,
             int defaultExceptionMode, ICollection<KeyValuePair<string, int>> exceptionModes, params ExceptionInfo[] exceptions) {
-            TestException(debugger, filename, resumeProcess, defaultExceptionMode, exceptionModes, PythonDebugOptions.None, exceptions);
+            TestException(debugger, filename, resumeProcess, defaultExceptionMode, exceptionModes, PythonDebugOptions.RedirectOutput, exceptions);
         }
 
         private void TestException(PythonDebugger debugger, string filename, bool resumeProcess,
@@ -1119,14 +1121,14 @@ namespace DebuggerTests {
                 DebuggerTestPath + @"SysExitZeroRaise.py",
                 true, 32,
                 new KeyValuePair<string, int>[0],
-                PythonDebugOptions.None
+                PythonDebugOptions.RedirectOutput
             );
 
             TestException(debugger,
                 DebuggerTestPath + @"SysExitZero.py",
                 true, 32,
                 new KeyValuePair<string, int>[0],
-                PythonDebugOptions.None
+                PythonDebugOptions.RedirectOutput
             );
         }
 
@@ -1258,7 +1260,7 @@ namespace DebuggerTests {
             bool processExited = false;
             int exitCode = -1000;
             var output = new StringBuilder();
-
+            AutoResetEvent hasExited = new AutoResetEvent(false);
             process.ThreadCreated += (sender, args) => {
                 threadCreated = true;
             };
@@ -1267,6 +1269,7 @@ namespace DebuggerTests {
             };
             process.ProcessExited += (sender, args) => {
                 exitCode = args.ExitCode;
+                hasExited.Set();
                 processExited = true;
             };
             process.ExceptionRaised += (sender, args) => {
@@ -1281,7 +1284,10 @@ namespace DebuggerTests {
             };
 
             process.Start();
-            WaitForExit(process);
+            if (!hasExited.WaitOne(DefaultWaitForExitTimeout)) {
+                Assert.Fail("Process didn't exit");
+                process.Terminate();
+            }
 
             Console.WriteLine("Output from process:");
             Console.Write(output.ToString());
@@ -1292,7 +1298,7 @@ namespace DebuggerTests {
             Assert.AreEqual(expectedExitCode, exitCode, String.Format("Unexpected Python process exit code for '{0}'", filename));
         }
 
-        private new PythonProcess DebugProcess(PythonDebugger debugger, string filename, Action<PythonProcess, PythonThread> onLoaded = null, string interpreterOptions = null, PythonDebugOptions debugOptions = PythonDebugOptions.None, string cwd = null, string pythonExe = null) {
+        private new PythonProcess DebugProcess(PythonDebugger debugger, string filename, Action<PythonProcess, PythonThread> onLoaded = null, string interpreterOptions = null, PythonDebugOptions debugOptions = PythonDebugOptions.RedirectOutput, string cwd = null, string pythonExe = null) {
             string fullPath = Path.GetFullPath(filename);
             string dir = cwd ?? Path.GetFullPath(Path.GetDirectoryName(filename));
             var process = debugger.CreateProcess(Version.Version, pythonExe ?? Version.Path, "\"" + fullPath + "\"", dir, "", interpreterOptions, debugOptions);

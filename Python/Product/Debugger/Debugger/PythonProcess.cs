@@ -47,7 +47,7 @@ namespace Microsoft.PythonTools.Debugger {
         private readonly object _socketLock = new object();
 
         private int _pid;
-        private bool _sentExited;
+        private bool _sentExited, _startedProcess;
         private Socket _socket;
         private Stream _stream;
         private int _breakpointCounter;
@@ -187,6 +187,7 @@ namespace Microsoft.PythonTools.Debugger {
 
         public void Start(bool startListening = true) {
             _process.Start();
+            _startedProcess = true;
             _pid = _process.Id;
             if (startListening) {
                 StartListening();
@@ -403,7 +404,9 @@ namespace Microsoft.PythonTools.Debugger {
                     switch (sockExc.SocketErrorCode) {
                         case SocketError.ConnectionAborted:
                         case SocketError.ConnectionReset:
-                            _process_Exited(this, EventArgs.Empty);
+                            if (!_startedProcess) { // if we started the process wait until we receive the process exited event
+                                _process_Exited(this, EventArgs.Empty);
+                            }
                             break;
                     }
                 }
