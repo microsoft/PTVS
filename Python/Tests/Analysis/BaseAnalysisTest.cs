@@ -30,7 +30,7 @@ namespace AnalysisTests {
     /// <summary>
     /// Base class w/ common infrastructure for analysis unit tests.
     /// </summary>
-    public class BaseAnalysisTest {
+    public class BaseAnalysisTest : IDisposable {
         public IPythonInterpreter Interpreter;
         public IPythonType PyObjectType, IntType, LongType, BytesType, UnicodeType, FloatType, TypeType, ListType, TupleType, SetType, BoolType, FunctionType, ComplexType, GeneratorType, NoneType, ModuleType;
         public string[] _objectMembers, _functionMembers;
@@ -118,5 +118,16 @@ namespace AnalysisTests {
                 entry.UpdateTree(parser.ParseFile(), null);
             }
         }
+
+        #region IDisposable Members
+
+        public void Dispose() {
+            IDisposable dispose = Interpreter as IDisposable;
+            if (dispose != null) {
+                dispose.Dispose();
+            }
+        }
+
+        #endregion
     }
 }
