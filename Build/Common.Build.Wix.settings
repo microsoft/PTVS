@@ -11,7 +11,7 @@
 
   <PropertyGroup>
     <Language>WiX</Language>
-    <WixToolsVersion Condition="'$(WixToolsVersion)'==''">3.6</WixToolsVersion>
+    <WixToolsVersion Condition="'$(WixToolsVersion)'==''">3.5</WixToolsVersion>
     <WixToolPath Condition="'$(WixToolPath)'==''">$(BuildRoot)\Tools\Wix\$(WixToolsVersion)</WixToolPath>
     <WixExtDir Condition="'$(WixExtDir)'==''">$(BuildRoot)\Tools\Wix\$(WixToolsVersion)</WixExtDir>
     <WixTargetsPath>$(WixToolPath)\Targets\Wix.targets</WixTargetsPath>
