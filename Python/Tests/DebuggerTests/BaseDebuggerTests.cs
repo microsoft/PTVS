@@ -182,8 +182,8 @@ namespace DebuggerTests {
             var localsExpected = new HashSet<string>(localsNames);
             var paramsExpected = new HashSet<string>(paramNames);
 
-            AssertUtil.ContainsExactly(localsExpected, frames[0].Locals.Select(x => x.Expression));
-            AssertUtil.ContainsExactly(paramsExpected, frames[0].Parameters.Select(x => x.Expression));
+            AssertUtil.ContainsExactly(frames[0].Locals.Select(x => x.Expression), localsExpected);
+            AssertUtil.ContainsExactly(frames[0].Parameters.Select(x => x.Expression), paramsExpected);
             Assert.AreEqual(frames[0].FileName, breakFilename ?? Path.GetFullPath(DebuggerTestPath + filename), true);
 
             process.Continue();
