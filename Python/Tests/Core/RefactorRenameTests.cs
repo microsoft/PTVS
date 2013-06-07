@@ -2248,7 +2248,7 @@ def g(a, b, c):
                     new FileInput(
                         "import test; test.abc()",
                         "import test; test.foo()",
-                        "a.py"
+                        "C:\\a.py"
                     )
                 }
             );
@@ -2262,7 +2262,7 @@ def g(a, b, c):
                     new FileInput(
                         "import test; test.abc",
                         "import test; test.foo",
-                        "a.py"
+                        "C:\\a.py"
                     )
                 }
             );
@@ -2276,7 +2276,7 @@ def g(a, b, c):
                     new FileInput(
                         "from test import abc",
                         "from test import foo",
-                        "a.py"
+                        "C:\\a.py"
                     )
                 }
             );
@@ -2292,7 +2292,7 @@ def g(a, b, c):
         class FileInput {
             public readonly string Input, Output, Filename;
 
-            public FileInput(string input, string output, string filename = "test.py") {
+            public FileInput(string input, string output, string filename = "C:\\test.py") {
                 Input = input;
                 Output = output;
                 Filename = filename;
@@ -2345,7 +2345,7 @@ def g(a, b, c):
         }
 
         private static void CannotRename(string caretText, string text, string error) {
-            OneRefactorTest("foo", caretText, new[] { new FileInput(text, null), new FileInput("def bar(): pass", "", "abc.py") }, null, false, error, null);
+            OneRefactorTest("foo", caretText, new[] { new FileInput(text, null), new FileInput("def bar(): pass", "", "C:\\abc.py") }, null, false, error, null);
         }
 
         private static void OneRefactorTest(string newName, string caretText, FileInput[] inputs, Version version, bool preview, string error, ExpectedPreviewItem[] expected = null) {
@@ -2361,7 +2361,7 @@ def g(a, b, c):
                     Dictionary<string, ITextBuffer> bufferTable = new Dictionary<string, ITextBuffer>();
                     List<MonitoredBufferResult> analysis = new List<MonitoredBufferResult>();
                     for (int i = 0; i < inputs.Length; i++) {
-                        var filename = TestData.GetPath(inputs[i].Filename);
+                        var filename = inputs[i].Filename;
                         buffers[i] = new MockTextBuffer(inputs[i].Input, filename);
                         views[i] = new MockTextView(buffers[i]);
                         buffers[i].AddProperty(typeof(VsProjectAnalyzer), analyzer);

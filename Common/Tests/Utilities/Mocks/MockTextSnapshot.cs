@@ -45,11 +45,11 @@ namespace TestUtilities.Mocks {
         }
 
         public ITrackingPoint CreateTrackingPoint(int position, PointTrackingMode trackingMode, TrackingFidelityMode trackingFidelity) {
-            throw new NotImplementedException();
+            return new MockTrackingPoint(this, position);
         }
 
         public ITrackingPoint CreateTrackingPoint(int position, PointTrackingMode trackingMode) {
-            throw new NotImplementedException();
+            return new MockTrackingPoint(this, position);
         }
 
         public ITrackingSpan CreateTrackingSpan(int start, int length, SpanTrackingMode trackingMode, TrackingFidelityMode trackingFidelity) {
