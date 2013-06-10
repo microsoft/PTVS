@@ -227,6 +227,7 @@
     <Reference Include="System.Net" />
     <Reference Include="System.Numerics" />
     <Reference Include="System.Web.ApplicationServices" />
+    <Reference Include="System.Web.Extensions" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
     <Reference Include="PresentationCore" />
@@ -261,6 +262,7 @@
     <Compile Include="ProvideFileExtensionMapping.cs" />
     <Compile Include="ProvideFileFilterAttribute.cs" />
     <Compile Include="PythonTools\Commands\OpenInterpreterListCommand.cs" />
+    <Compile Include="PythonTools\Commands\SurveyNewsCommand.cs" />
     <Compile Include="PythonTools\InterpreterList\InterpreterListToolWindow.cs" />
     <Compile Include="PythonTools\InterpreterList\InterpreterView.cs" />
     <Compile Include="PythonTools\InterpreterList\InterpreterList.xaml.cs">
@@ -276,6 +278,7 @@
     <Compile Include="PythonTools\Options\InterpreterPlaceholder.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="PythonTools\Options\SurveyNewsPolicy.cs" />
     <Compile Include="PythonTools\OutputWindowRedirector.cs" />
     <Compile Include="PythonTools\Project\CreateVirtualEnvironmentView.cs" />
     <Compile Include="PythonTools\Project\ImportWizard\SaveProjectPage.xaml.cs">

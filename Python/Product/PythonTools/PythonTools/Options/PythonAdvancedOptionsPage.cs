@@ -24,6 +24,9 @@ namespace Microsoft.PythonTools.Options {
                      _updateSearchPathsWhenAddingLinkedFiles, _debugStdLib;
         private int? _crossModuleAnalysisLimit; // not exposed via the UI
         private Severity _indentationInconsistencySeverity;
+        private SurveyNewsPolicy _surveyNewsCheck;
+        private DateTime _surveyNewsLastCheck;
+        private string _surveyNewsFeedUrl;
         private PythonAdvancedOptionsControl _window;
 
         public PythonAdvancedOptionsPage()
@@ -115,6 +118,20 @@ namespace Microsoft.PythonTools.Options {
             set { _debugStdLib = value; }
         }
 
+        public SurveyNewsPolicy SurveyNewsCheck {
+            get { return _surveyNewsCheck; }
+            set { _surveyNewsCheck = value; }
+        }
+
+        public DateTime SurveyNewsLastCheck {
+            get { return _surveyNewsLastCheck; }
+            set { _surveyNewsLastCheck = value; }
+        }
+
+        public string SurveyNewsFeedUrl {
+            get { return _surveyNewsFeedUrl; }
+            set { _surveyNewsFeedUrl = value; }
+        }
         public event EventHandler IndentationInconsistencyChanged;
 
         #endregion
@@ -129,7 +146,12 @@ namespace Microsoft.PythonTools.Options {
             _breakOnSystemExitZero = false;
             _updateSearchPathsWhenAddingLinkedFiles = true;
             _debugStdLib = false;
+            _surveyNewsCheck = SurveyNewsPolicy.CheckOnceWeek;
+            _surveyNewsLastCheck = DateTime.MinValue;
+            _surveyNewsFeedUrl = DefaultSurveyNewsFeedUrl;
         }
+
+        private const string DefaultSurveyNewsFeedUrl = "http://go.microsoft.com/fwlink/?LinkId=303967";
 
         private const string DontPromptBeforeRunningWithBuildErrorSetting = "DontPromptBeforeRunningWithBuildError";
         private const string IndentationInconsistencySeveritySetting = "IndentationInconsistencySeverity";
@@ -141,6 +163,9 @@ namespace Microsoft.PythonTools.Options {
         private const string BreakOnSystemExitZeroSetting = "BreakOnSystemExitZero";
         private const string UpdateSearchPathsWhenAddingLinkedFilesSetting = "UpdateSearchPathsWhenAddingLinkedFiles";
         private const string DebugStdLibSetting = "DebugStdLib";
+        private const string SurveyNewsCheckSetting = "SurveyNewsCheck";
+        private const string SurveyNewsLastCheckSetting = "SurveyNewsLastCheck";
+        private const string SurveyNewsFeedUrlSetting = "SurveyNewsFeedUrl";
 
         public override void LoadSettingsFromStorage() {
             _promptBeforeRunningWithBuildError = !(LoadBool(DontPromptBeforeRunningWithBuildErrorSetting) ?? false);
@@ -152,6 +177,9 @@ namespace Microsoft.PythonTools.Options {
             _indentationInconsistencySeverity = LoadEnum<Severity>(IndentationInconsistencySeveritySetting) ?? Severity.Warning;
             _updateSearchPathsWhenAddingLinkedFiles = LoadBool(UpdateSearchPathsWhenAddingLinkedFilesSetting) ?? true;
             _debugStdLib = LoadBool(DebugStdLibSetting) ?? false;
+            _surveyNewsCheck = LoadEnum<SurveyNewsPolicy>(SurveyNewsCheckSetting) ?? SurveyNewsPolicy.CheckOnceWeek;
+            _surveyNewsLastCheck = LoadDateTime(SurveyNewsLastCheckSetting) ?? DateTime.MinValue;
+            _surveyNewsFeedUrl = LoadString(SurveyNewsFeedUrlSetting) ?? DefaultSurveyNewsFeedUrl;
             var analysisLimit = LoadString(CrossModuleAnalysisLimitSetting);
             if (analysisLimit == null) {
                 _crossModuleAnalysisLimit = 1300;    // default analysis limit
@@ -172,6 +200,8 @@ namespace Microsoft.PythonTools.Options {
             SaveBool(UpdateSearchPathsWhenAddingLinkedFilesSetting, _updateSearchPathsWhenAddingLinkedFiles);
             SaveEnum(IndentationInconsistencySeveritySetting, _indentationInconsistencySeverity);
             SaveBool(DebugStdLibSetting, _debugStdLib);
+            SaveEnum(SurveyNewsCheckSetting, _surveyNewsCheck);
+            SaveDateTime(SurveyNewsLastCheckSetting, _surveyNewsLastCheck);
             if (_crossModuleAnalysisLimit != null) {
                 SaveInt(CrossModuleAnalysisLimitSetting, _crossModuleAnalysisLimit.Value);
             } else {

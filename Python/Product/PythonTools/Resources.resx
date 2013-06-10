@@ -129,6 +129,9 @@
   <data name="MissingStartupScript" xml:space="preserve">
     <value />
   </data>
+  <data name="NoSurveyNewsAvailable" xml:space="preserve">
+    <value>There are no surveys or news available at this time.  Please check again later.</value>
+  </data>
   <data name="ReferencesNodeName" xml:space="preserve">
     <value>References</value>
   </data>

@@ -502,6 +502,14 @@
         </Strings>
       </Button>
 
+      <Button guid="guidPythonToolsCmdSet" id="cmdidSurveyNews" priority="0x005" type="Button">
+        <Parent guid="guidPythonToolsCmdSet" id="ToolsMenuItemsGroup"/>
+        <Strings>
+          <ButtonText>Survey/News...</ButtonText>
+          <CommandName>cmdidSurveyNews</CommandName>
+        </Strings>
+      </Button>
+
       <!--================================================================================================================-->
       <!--============================================= Virtual Env Commands =============================================-->
       <!--================================================================================================================-->
@@ -801,7 +809,8 @@
       <IDSymbol name="cmdidExtractMethod" value ="0x010a" />
       <IDSymbol name="cmdidDebugAsScript" value ="0x010b" />
       <IDSymbol name="cmdidImportWizard" value ="0x010d" />
-      
+      <IDSymbol name="cmdidSurveyNews" value ="0x010e" />
+
       <IDSymbol name="cmdidReplWindow" value="0x0201" />
       <IDSymbol name="cmdidReplWindow2" value="0x0202" />
       <IDSymbol name="cmdidReplWindow3" value="0x0203" />

@@ -31,6 +31,7 @@ namespace Microsoft.PythonTools
         public const uint cmdidExtractMethodIntegratedShell = 0x10a;
         public const uint cmdidDebugAsScript = 0x10b;
         public const uint cmdidImportWizard = 0x10d;
+        public const uint cmdidSurveyNews = 0x10e;
 
         public const uint cmdidReplWindow = 0x201;
         public const uint cmdidReplWindow2 = 0x202;

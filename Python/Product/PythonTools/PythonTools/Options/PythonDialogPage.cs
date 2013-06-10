@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System;
+using System.Globalization;
 using System.Runtime.InteropServices;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -58,6 +59,10 @@ namespace Microsoft.PythonTools.Options {
 
         internal void SaveEnum<T>(string name, T value) where T : struct {
             SaveString(name, value.ToString());
+        }
+
+        internal void SaveDateTime(string name, DateTime value) {
+            SaveString(name, value.ToString(CultureInfo.InvariantCulture));
         }
 
         internal int? LoadInt(string name) {
@@ -109,6 +114,19 @@ namespace Microsoft.PythonTools.Options {
             T enumRes;
             if (Enum.TryParse<T>(res, out enumRes)) {
                 return enumRes;
+            }
+            return null;
+        }
+
+        internal DateTime? LoadDateTime(string name) {
+            string res = LoadString(name);
+            if (res == null) {
+                return null;
+            }
+
+            DateTime dateRes;
+            if (DateTime.TryParse(res, CultureInfo.InvariantCulture, DateTimeStyles.None, out dateRes)) {
+                return dateRes;
             }
             return null;
         }

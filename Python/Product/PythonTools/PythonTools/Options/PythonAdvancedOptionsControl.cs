@@ -22,6 +22,11 @@ namespace Microsoft.PythonTools.Options {
         private const int WarningIndex = 1;
         private const int DontIndex = 2;
 
+        private const int SurveyNewsNeverIndex = 0;
+        private const int SurveyNewsOnceDayIndex = 1;
+        private const int SurveyNewsOnceWeekIndex = 2;
+        private const int SurveyNewsOnceMonthIndex = 3;
+
         public PythonAdvancedOptionsControl() {
             InitializeComponent();
             _promptOnBuildError.Checked = PythonToolsPackage.Instance.OptionsPage.PromptBeforeRunningWithBuildError;
@@ -30,6 +35,13 @@ namespace Microsoft.PythonTools.Options {
                 case Severity.Error: _indentationInconsistentCombo.SelectedIndex = ErrorIndex; break;
                 case Severity.Warning: _indentationInconsistentCombo.SelectedIndex = WarningIndex; break;
                 default: _indentationInconsistentCombo.SelectedIndex = DontIndex; break;
+            }
+
+            switch (PythonToolsPackage.Instance.OptionsPage.SurveyNewsCheck) {
+                case SurveyNewsPolicy.Disabled: _surveyNewsCheckCombo.SelectedIndex = SurveyNewsNeverIndex; break;
+                case SurveyNewsPolicy.CheckOnceDay: _surveyNewsCheckCombo.SelectedIndex = SurveyNewsOnceDayIndex; break;
+                case SurveyNewsPolicy.CheckOnceWeek: _surveyNewsCheckCombo.SelectedIndex = SurveyNewsOnceWeekIndex; break;
+                case SurveyNewsPolicy.CheckOnceMonth: _surveyNewsCheckCombo.SelectedIndex = SurveyNewsOnceMonthIndex; break;
             }
 
             _waitOnAbnormalExit.Checked = PythonToolsPackage.Instance.OptionsPage.WaitOnAbnormalExit;
@@ -79,6 +91,15 @@ namespace Microsoft.PythonTools.Options {
 
         private void _debugStdLib_CheckedChanged(object sender, EventArgs e) {
             PythonToolsPackage.Instance.OptionsPage.DebugStdLib = _debugStdLib.Checked;
+        }
+
+        private void _surveyNewsCheckCombo_SelectedIndexChanged(object sender, EventArgs e) {
+            switch (_surveyNewsCheckCombo.SelectedIndex) {
+                case SurveyNewsNeverIndex: PythonToolsPackage.Instance.OptionsPage.SurveyNewsCheck = SurveyNewsPolicy.Disabled; break;
+                case SurveyNewsOnceDayIndex: PythonToolsPackage.Instance.OptionsPage.SurveyNewsCheck = SurveyNewsPolicy.CheckOnceDay; break;
+                case SurveyNewsOnceWeekIndex: PythonToolsPackage.Instance.OptionsPage.SurveyNewsCheck = SurveyNewsPolicy.CheckOnceWeek; break;
+                case SurveyNewsOnceMonthIndex: PythonToolsPackage.Instance.OptionsPage.SurveyNewsCheck = SurveyNewsPolicy.CheckOnceMonth; break;
+            }
         }
     }
 }

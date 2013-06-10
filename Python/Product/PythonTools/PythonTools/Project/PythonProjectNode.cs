@@ -178,6 +178,8 @@ namespace Microsoft.PythonTools.Project {
 
             OnProjectPropertyChanged += PythonProjectNode_OnProjectPropertyChanged;
             base.Reload();
+
+            PythonToolsPackage.Instance.CheckSurveyNews(false);
         }
 
         protected internal override void ProcessReferences() {

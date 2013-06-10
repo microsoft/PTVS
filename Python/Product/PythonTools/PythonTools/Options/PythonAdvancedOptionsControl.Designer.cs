@@ -36,7 +36,9 @@
             this._debugStdLib = new System.Windows.Forms.CheckBox();
             this._miscOptions = new System.Windows.Forms.GroupBox();
             this.tableLayoutPanel3 = new System.Windows.Forms.TableLayoutPanel();
+            this._surveyNewsCheckLabel = new System.Windows.Forms.Label();
             this._updateSearchPathsForLinkedFiles = new System.Windows.Forms.CheckBox();
+            this._surveyNewsCheckCombo = new System.Windows.Forms.ComboBox();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this._debuggingGroupBox.SuspendLayout();
             this.tableLayoutPanel2.SuspendLayout();
@@ -214,7 +216,7 @@
             this._miscOptions.Location = new System.Drawing.Point(6, 166);
             this._miscOptions.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
             this._miscOptions.Name = "_miscOptions";
-            this._miscOptions.Size = new System.Drawing.Size(369, 92);
+            this._miscOptions.Size = new System.Drawing.Size(369, 119);
             this._miscOptions.TabIndex = 1;
             this._miscOptions.TabStop = false;
             this._miscOptions.Text = "Miscellaneous";
@@ -225,20 +227,35 @@
             this.tableLayoutPanel3.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.tableLayoutPanel3.ColumnCount = 2;
             this.tableLayoutPanel3.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
-            this.tableLayoutPanel3.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 70F));
+            this.tableLayoutPanel3.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanel3.Controls.Add(this._surveyNewsCheckLabel, 0, 3);
             this.tableLayoutPanel3.Controls.Add(this._autoAnalysis, 0, 0);
             this.tableLayoutPanel3.Controls.Add(this._updateSearchPathsForLinkedFiles, 0, 1);
             this.tableLayoutPanel3.Controls.Add(this._indentationInconsistentLabel, 0, 2);
             this.tableLayoutPanel3.Controls.Add(this._indentationInconsistentCombo, 1, 2);
+            this.tableLayoutPanel3.Controls.Add(this._surveyNewsCheckCombo, 1, 3);
             this.tableLayoutPanel3.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel3.Location = new System.Drawing.Point(3, 16);
             this.tableLayoutPanel3.Name = "tableLayoutPanel3";
-            this.tableLayoutPanel3.RowCount = 3;
+            this.tableLayoutPanel3.RowCount = 4;
             this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tableLayoutPanel3.Size = new System.Drawing.Size(363, 73);
+            this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle());
+            this.tableLayoutPanel3.Size = new System.Drawing.Size(363, 100);
             this.tableLayoutPanel3.TabIndex = 0;
+            // 
+            // _surveyNewsCheckLabel
+            // 
+            this._surveyNewsCheckLabel.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this._surveyNewsCheckLabel.AutoSize = true;
+            this._surveyNewsCheckLabel.Location = new System.Drawing.Point(6, 80);
+            this._surveyNewsCheckLabel.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
+            this._surveyNewsCheckLabel.Name = "_surveyNewsCheckLabel";
+            this._surveyNewsCheckLabel.Size = new System.Drawing.Size(117, 13);
+            this._surveyNewsCheckLabel.TabIndex = 4;
+            this._surveyNewsCheckLabel.Text = "&Check for survey/news";
+            this._surveyNewsCheckLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // _updateSearchPathsForLinkedFiles
             // 
@@ -254,6 +271,24 @@
             this._updateSearchPathsForLinkedFiles.UseVisualStyleBackColor = true;
             this._updateSearchPathsForLinkedFiles.CheckedChanged += new System.EventHandler(this._updateSearchPathsForLinkedFiles_CheckedChanged);
             // 
+            // _surveyNewsCheckCombo
+            // 
+            this._surveyNewsCheckCombo.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
+            this._surveyNewsCheckCombo.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this._surveyNewsCheckCombo.DropDownWidth = 172;
+            this._surveyNewsCheckCombo.FormattingEnabled = true;
+            this._surveyNewsCheckCombo.Items.AddRange(new object[] {
+            "Never",
+            "Once a day",
+            "Once a week",
+            "Once a month"});
+            this._surveyNewsCheckCombo.Location = new System.Drawing.Point(185, 76);
+            this._surveyNewsCheckCombo.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
+            this._surveyNewsCheckCombo.Name = "_surveyNewsCheckCombo";
+            this._surveyNewsCheckCombo.Size = new System.Drawing.Size(172, 21);
+            this._surveyNewsCheckCombo.TabIndex = 5;
+            this._surveyNewsCheckCombo.SelectedIndexChanged += new System.EventHandler(this._surveyNewsCheckCombo_SelectedIndexChanged);
+            // 
             // tableLayoutPanel1
             // 
             this.tableLayoutPanel1.ColumnCount = 1;
@@ -268,7 +303,7 @@
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(381, 276);
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(381, 290);
             this.tableLayoutPanel1.TabIndex = 0;
             // 
             // PythonAdvancedOptionsControl
@@ -278,7 +313,7 @@
             this.Controls.Add(this.tableLayoutPanel1);
             this.Margin = new System.Windows.Forms.Padding(6, 8, 6, 8);
             this.Name = "PythonAdvancedOptionsControl";
-            this.Size = new System.Drawing.Size(381, 276);
+            this.Size = new System.Drawing.Size(381, 290);
             this._debuggingGroupBox.ResumeLayout(false);
             this._debuggingGroupBox.PerformLayout();
             this.tableLayoutPanel2.ResumeLayout(false);
@@ -310,5 +345,7 @@
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel3;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel2;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
+        private System.Windows.Forms.Label _surveyNewsCheckLabel;
+        private System.Windows.Forms.ComboBox _surveyNewsCheckCombo;
     }
 }

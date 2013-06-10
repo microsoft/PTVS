@@ -21,9 +21,12 @@ using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
+using System.Web.Script.Serialization;
 using System.Windows.Forms;
 using System.Windows.Forms.Design;
 using Microsoft.PythonTools.Commands;
@@ -185,6 +188,8 @@ namespace Microsoft.PythonTools {
         internal const string PythonExpressionEvaluatorGuid = "{D67D5DB8-3D44-4105-B4B8-47AB1BA66180}";
         private UpdateSolutionEventsListener _solutionEventListener;
         internal static SolutionAdvisor _solutionAdvisor;
+        private string _surveyNewsUrl;
+        private object _surveyNewsUrlLock = new object();
 
         /// <summary>
         /// Default constructor of the package.
@@ -638,6 +643,7 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
                 new RemoveImportsCurrentScopeCommand(),
                 new OpenInterpreterListCommand(),
                 new ImportWizardCommand(),
+                new SurveyNewsCommand(),
 #if DEV11_OR_LATER
                 new ShowPythonViewCommand(),
                 new ShowCppViewCommand(),
@@ -653,6 +659,8 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
             interpService.DefaultInterpreterChanged += UpdateDefaultAnalyzer;
 
             _solutionEventListener = new UpdateSolutionEventsListener(PythonToolsPackage.Instance);
+
+            this.OnIdle += PythonToolsPackage_OnIdle;
         }
 
         internal SolutionAdvisor SolutionAdvisor {
@@ -994,6 +1002,117 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
                 typeof(PythonLanguageInfo).GUID,
                 fullId
             );
+        }
+
+        private void PythonToolsPackage_OnIdle(object sender, ComponentManagerEventArgs e) {
+            lock (_surveyNewsUrlLock) {
+                if (!string.IsNullOrEmpty(_surveyNewsUrl)) {
+                    OpenVsWebBrowser(_surveyNewsUrl);
+                    _surveyNewsUrl = null;
+                }
+            }
+        }
+
+        private void CheckSurveyNewsThread(Uri url, bool warnIfNoneAvailable) {
+            // We can't use a simple WebRequest, because that doesn't have access
+            // to the browser's session cookies.  Cookies are used to remember
+            // which survey/news item the user has submitted/accepted.  The server 
+            // checks the cookies and returns the survey/news urls that are 
+            // currently available (availability is determined via the survey/news 
+            // item start and end date).
+            var th = new Thread(() => {
+                var br = new WebBrowser();
+                br.Tag = warnIfNoneAvailable;
+                br.DocumentCompleted += OnSurveyNewsDocumentCompleted;
+                br.Navigate(url);
+                Application.Run();
+            });
+            th.SetApartmentState(ApartmentState.STA);
+            th.Start();
+        }
+
+        private void OnSurveyNewsDocumentCompleted(object sender, WebBrowserDocumentCompletedEventArgs e) {
+            var br = (WebBrowser)sender;
+            var warnIfNoneAvailable = (bool)br.Tag;
+            if (br.Url == e.Url) {
+                List<string> available = null;
+
+                string json = br.DocumentText;
+                if (!string.IsNullOrEmpty(json)) {
+                    int startIndex = json.IndexOf("<PRE>");
+                    if (startIndex > 0) {
+                        int endIndex = json.IndexOf("</PRE>", startIndex);
+                        if (endIndex > 0) {
+                            json = json.Substring(startIndex + 5, endIndex - startIndex - 5);
+
+                            try {
+                                // Example JSON data returned by the server:
+                                //{
+                                // "cannotvoteagain": [], 
+                                // "notvoted": [
+                                //  "http://ptvs.azurewebsites.net/news/141", 
+                                //  "http://ptvs.azurewebsites.net/news/41", 
+                                // ], 
+                                // "canvoteagain": [
+                                //  "http://ptvs.azurewebsites.net/news/51"
+                                // ]
+                                //}
+
+                                // Description of each list:
+                                // voted: cookie found
+                                // notvoted: cookie not found
+                                // canvoteagain: cookie found, but multiple votes are allowed
+                                JavaScriptSerializer serializer = new JavaScriptSerializer();
+                                var results = serializer.Deserialize<Dictionary<string, List<string>>>(json);
+                                available = results["notvoted"];
+                            } catch (ArgumentException){
+                            } catch (InvalidOperationException) {
+                            }
+                        }
+                    }
+                }
+
+                if (available != null && available.Count > 0) {
+                    lock (_surveyNewsUrlLock) {
+                        _surveyNewsUrl = available[0];
+                    }
+                } else if (warnIfNoneAvailable) {
+                    MessageBox.Show(Resources.NoSurveyNewsAvailable);
+                }
+
+                Application.ExitThread();
+            }
+        }
+
+        internal void CheckSurveyNews(bool forceCheckAndWarnIfNoneAvailable) {
+            bool shouldQueryServer = false;
+            if (forceCheckAndWarnIfNoneAvailable) {
+                shouldQueryServer = true;
+            } else {
+                var elapsedTime = DateTime.Now - OptionsPage.SurveyNewsLastCheck;
+                switch (OptionsPage.SurveyNewsCheck) {
+                    case SurveyNewsPolicy.Disabled:
+                        break;
+                    case SurveyNewsPolicy.CheckOnceDay:
+                        shouldQueryServer = elapsedTime.TotalDays >= 1;
+                        break;
+                    case SurveyNewsPolicy.CheckOnceWeek:
+                        shouldQueryServer = elapsedTime.TotalDays >= 7;
+                        break;
+                    case SurveyNewsPolicy.CheckOnceMonth:
+                        shouldQueryServer = elapsedTime.TotalDays >= 30;
+                        break;
+                    default:
+                        Debug.Assert(false, String.Format("Unexpected SurveyNewsPolicy: {0}.", OptionsPage.SurveyNewsCheck));
+                        break;
+                }
+            }
+
+            if (shouldQueryServer) {
+                OptionsPage.SurveyNewsLastCheck = DateTime.Now;
+                OptionsPage.SaveSettingsToStorage();
+                CheckSurveyNewsThread(new Uri(OptionsPage.SurveyNewsFeedUrl), forceCheckAndWarnIfNoneAvailable);
+            }
         }
 
         #region IVsComponentSelectorProvider Members
