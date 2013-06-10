@@ -14,10 +14,9 @@
 
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Microsoft.PythonTools.Parsing;
-using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.VisualStudio.Debugger;
+using Microsoft.VisualStudio.Debugger.Evaluation;
 
 namespace Microsoft.PythonTools.DkmDebugger.Proxies.Structs {
     internal class PyByteArrayObject : PyVarObject {
@@ -56,14 +55,21 @@ namespace Microsoft.PythonTools.DkmDebugger.Proxies.Structs {
             }
         }
 
-        protected override string Repr(System.Func<PyObject, string> repr) {
-            var pyrtInfo = Process.GetPythonRuntimeInfo();
-            var expr = new ConstantExpression(new AsciiString(ToBytes(), ToString()));
-            return "bytearray(" + expr.GetConstantRepr(pyrtInfo.LanguageVersion) + ")";
+        public override void Repr(ReprBuilder builder) {
+            builder.Append("bytearray(");
+            builder.AppendLiteral(new AsciiString(ToBytes(), ToString()));
+            builder.Append(")");
         }
 
-        public override IEnumerable<KeyValuePair<string, IValueStore>> GetDebugChildren() {
-            return ob_bytes.Read().Take((int)ob_size.Read()).Select((b, i) => new KeyValuePair<string, IValueStore>("[" + i + "]", b));
+        public override IEnumerable<PythonEvaluationResult> GetDebugChildren(ReprOptions reprOptions) {
+            long count = ob_size.Read();
+            yield return new PythonEvaluationResult(new ValueStore<long>(count), "len()") {
+                Category = DkmEvaluationResultCategory.Method
+            };
+
+            foreach (var b in ob_bytes.Read().Take((int)count)) {
+                yield return new PythonEvaluationResult(b);
+            }
         }
     }
 }

@@ -317,12 +317,19 @@
                 <File Id="fil7AED81D9701E48FA942D4591A0D81849" KeyPath="yes" Source="$(var.TargetDir)\PyDebugAttachX86.dll" />
             </Component>
 
+            <!-- Mixed-mode debugging files -->
             <?if "$(var.VSTargetVersion)" != "10.0" ?>
             <Component Id="cmpB9D19167C9944EB1880D0B3E2EE2CD78" Directory="INSTALLLOCATION" Guid="{B2E65062-DD6B-4501-B8E0-34CC6BF47491}">
                 <File Id="fil0CC20894AD324A70AB88CB9C47B5A9D6" KeyPath="yes" Source="$(var.TargetDir)\Microsoft.PythonTools.Debugger.Helper.x86.dll" />
             </Component>
+            <Component Id="cmp3BA19131386643639D5E28EFA8949946" Directory="INSTALLLOCATION" Guid="{A4215C7E-8037-4496-A29F-041243692FB4}">
+                <File Id="fil27E4523F00FF491DBC2229CD752C1556" KeyPath="yes" Source="$(var.TargetDir)\Microsoft.PythonTools.Debugger.Helper.x86.pdb" />
+            </Component>
             <Component Id="cmpDD248C92AAA0404C927319E04CAA4457" Directory="INSTALLLOCATION" Guid="{5A94B74A-37F1-488B-8061-2ED8EFA07339}">
                 <File Id="fil4E7C55F596E940E59BEC516EA59B8F7A" KeyPath="yes" Source="$(var.TargetDir)\Microsoft.PythonTools.Debugger.Helper.x64.dll" />
+            </Component>
+            <Component Id="cmp0B97447AC836430798DFAF51DF9DEBBA" Directory="INSTALLLOCATION" Guid="{F216883B-689D-4E67-B7D0-CC4741D41074}">
+                <File Id="fil96AAAB938E4B49D08529DB62B88373EB" KeyPath="yes" Source="$(var.TargetDir)\Microsoft.PythonTools.Debugger.Helper.x64.pdb" />
             </Component>
             <Component Id="cmp02208775F86A43038596F590A140CAD5" Directory="INSTALLLOCATION" Guid="{0BB25E59-E482-45A6-A150-06736B5BECD0}">
                 <File Id="fil4EE1C0828B9D4225BFA8255A4674BA8D" KeyPath="yes" Source="$(var.TargetDir)\DkmDebugger.vsdconfig" />

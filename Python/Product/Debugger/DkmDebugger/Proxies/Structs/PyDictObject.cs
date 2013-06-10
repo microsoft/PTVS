@@ -12,13 +12,13 @@
  *
  * ***************************************************************************/
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.Debugger;
 
 namespace Microsoft.PythonTools.DkmDebugger.Proxies.Structs {
+    using Microsoft.VisualStudio.Debugger.Evaluation;
     using PyDictEntry = Microsoft.PythonTools.DkmDebugger.Proxies.Structs.PyDictKeyEntry;
 
     internal abstract class PyDictObject : PyObject {
@@ -28,13 +28,32 @@ namespace Microsoft.PythonTools.DkmDebugger.Proxies.Structs {
 
         public abstract IEnumerable<KeyValuePair<PyObject, PointerProxy<PyObject>>> ReadElements();
 
-        protected override string Repr(Func<PyObject, string> repr) {
-            return "{" + string.Join(", ", ReadElements().Take(MaxDebugChildren).Select(entry => repr(entry.Key) + ": " + repr(entry.Value.Read()))) + "}";
+        public override void Repr(ReprBuilder builder) {
+            var count = ReadElements().Count();
+            if (count > ReprBuilder.MaxJoinedItems) {
+                builder.AppendFormat("<dict, len() = {0}>", count);
+                return;
+            }
+
+            builder.Append("{");
+            builder.AppendJoined(", ", ReadElements(), entry => {
+                builder.AppendRepr(entry.Key);
+                builder.Append(": ");
+                builder.AppendRepr(entry.Value.TryRead());
+            });
+            builder.Append("}");
         }
 
-        public override IEnumerable<KeyValuePair<string, IValueStore>> GetDebugChildren() {
+        public override IEnumerable<PythonEvaluationResult> GetDebugChildren(ReprOptions reprOptions) {
+            yield return new PythonEvaluationResult(new ValueStore<long>(ReadElements().Count()), "len()") {
+                Category = DkmEvaluationResultCategory.Method
+            };
+
+            var reprBuilder = new ReprBuilder(reprOptions);
             foreach (var entry in ReadElements()) {
-                yield return new KeyValuePair<string, IValueStore>("[" + entry.Key.Repr() + "]", entry.Value);
+                reprBuilder.Clear();
+                reprBuilder.AppendFormat("[{0}]", entry.Key);
+                yield return new PythonEvaluationResult(entry.Value, reprBuilder.ToString());
             }
         }
     }

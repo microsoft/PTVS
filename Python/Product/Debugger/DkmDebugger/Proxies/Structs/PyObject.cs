@@ -35,8 +35,6 @@ namespace Microsoft.PythonTools.DkmDebugger.Proxies.Structs {
 
     [PyType(VariableName = "PyBaseObject_Type")]
     internal class PyObject : StructProxy, IPyObject {
-        public const int MaxDebugChildren = 1000;
-
         private struct ProxyInfo {
             public readonly Type ProxyType;
             public readonly Func<DkmProcess, ulong, PyObject> ProxyFactory;
@@ -195,57 +193,48 @@ namespace Microsoft.PythonTools.DkmDebugger.Proxies.Structs {
         }
 
         public override string ToString() {
-            return Repr();
-        }
-
-        public string Repr() {
-            var visited = new HashSet<ulong>();
-
-            Func<PyObject, string> repr = null;
-            repr = (obj) => {
-                if (visited.Add(obj.Address)) {
-                    string result = obj.Repr(repr);
-                    visited.Remove(obj.Address);
-                    return result;
-                } else {
-                    return "...";
-                }
-            };
-
-            return repr(this);
+            var pyrtInfo = Process.GetPythonRuntimeInfo();
+            var reprBuilder = new ReprBuilder(new ReprOptions { LanguageVersion = pyrtInfo.LanguageVersion });
+            Repr(reprBuilder);
+            return reprBuilder.ToString();
         }
 
         /// <summary>
-        /// The underlying implementation of <see cref="Repr()"/> that is overridable in derived classes.
+        /// Appends a readable representation of the object to be shown in various debugger windows (Locals, Watch etc) of this object to <paramref name="builder"/>.
         /// </summary>
-        /// <param name="repr">
-        /// A repr function that implementations should use if they need to incorporate repr for another object as part of its own -
-        /// for example, for collections that display a list of reprs of their contained elements. Using this function instead of
-        /// calling <see cref="Repr()"/> directly ensures that any reference cycles are correctly handled.
-        /// </param>
-        protected virtual string Repr(Func<PyObject, string> repr) {
+        public virtual void Repr(ReprBuilder builder) {
             if (this == None(Process)) {
-                return "None";
+                builder.Append("None");
             } else {
-                return string.Format("<{0} object at 0x{1:X" + (Process.GetPointerSize() * 2) + "}>", ob_type.Read().tp_name.Read().Read(), Address);
+                builder.AppendFormat("<{0} object at 0x{1:X" + (Process.GetPointerSize() * 2) + "}>", ob_type.Read().tp_name.Read().Read(), Address);
             }
         }
 
         /// <summary>
-        /// Returns the sequence of nodes to display as children of this object in various debugger data views (Locals window etc).
+        /// Returns a readable representation of the object to be shown in various debugger windows (Locals, Watch etc).
+        /// </summary>
+        public string Repr(ReprOptions options) {
+            var builder = new ReprBuilder(options);
+            Repr(builder);
+            return builder.ToString();
+        }
+
+        /// <summary>
+        /// Returns the sequence of results to display as children of this object in various debugger data views (Locals window etc).
+        /// Unnamed results are displayed as [0], [1], ....
         /// </summary>
         /// <remarks>
         /// The default implementation enumerates object fields specified via either __dict__ or __slots__. Most derived classes
         /// will want to keep that as is, except for collections.
         /// </remarks>
-        public virtual IEnumerable<KeyValuePair<string, IValueStore>> GetDebugChildren() {
+        public virtual IEnumerable<PythonEvaluationResult> GetDebugChildren(ReprOptions reprOptions) {
             var children = GetDebugChildrenFromSlots();
 
             var maybeDictProxy = this.__dict__;
             if (maybeDictProxy != null) {
                 var dictProxy = maybeDictProxy.Value;
                 if (!dictProxy.IsNull) {
-                    yield return new KeyValuePair<string, IValueStore>("__dict__", dictProxy);
+                    yield return new PythonEvaluationResult(dictProxy, "__dict__");
                     var dict = dictProxy.TryRead() as PyDictObject;
                     if (dict != null) {
                         children = children.Concat(GetDebugChildrenFromDict(dict));
@@ -253,22 +242,22 @@ namespace Microsoft.PythonTools.DkmDebugger.Proxies.Structs {
                 }
             }
 
-            children = children.OrderBy(pair => pair.Key);
+            children = children.OrderBy(pair => pair.Name);
             foreach (var pair in children) {
                 yield return pair;
             }
         }
 
-        private IEnumerable<KeyValuePair<string, IValueStore>> GetDebugChildrenFromDict(PyDictObject dict) {
+        private IEnumerable<PythonEvaluationResult> GetDebugChildrenFromDict(PyDictObject dict) {
             foreach (var pair in dict.ReadElements()) {
                 var name = pair.Key as IPyBaseStringObject;
                 if (name != null && !pair.Value.IsNull) {
-                    yield return new KeyValuePair<string, IValueStore>(name.ToString(), pair.Value);
+                    yield return new PythonEvaluationResult(pair.Value, name.ToString());
                 }
             }
         }
 
-        private IEnumerable<KeyValuePair<string, IValueStore>> GetDebugChildrenFromSlots() {
+        private IEnumerable<PythonEvaluationResult> GetDebugChildrenFromSlots() {
             var tp_members = ob_type.Read().tp_members;
             if (tp_members.IsNull) {
                 yield break;
@@ -342,7 +331,7 @@ namespace Microsoft.PythonTools.DkmDebugger.Proxies.Structs {
                         continue;
                 }
 
-                yield return new KeyValuePair<string, IValueStore>(memberDef.name.Read().Read(), value);
+                yield return new PythonEvaluationResult(value, memberDef.name.Read().Read());
             }
         }
 

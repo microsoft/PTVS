@@ -15,10 +15,9 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Text;
 using Microsoft.PythonTools.Parsing;
-using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.VisualStudio.Debugger;
+using Microsoft.VisualStudio.Debugger.Evaluation;
 
 namespace Microsoft.PythonTools.DkmDebugger.Proxies.Structs {
     [StructProxy(MaxVersion = PythonLanguageVersion.V27, StructName = "PyStringObject")]
@@ -78,14 +77,19 @@ namespace Microsoft.PythonTools.DkmDebugger.Proxies.Structs {
             }
         }
 
-        protected override string Repr(System.Func<PyObject, string> repr) {
-            var pyrtInfo = Process.GetPythonRuntimeInfo();
-            var expr = new ConstantExpression(new AsciiString(ToBytes(), ToString()));
-            return expr.GetConstantRepr(pyrtInfo.LanguageVersion);
+        public override void Repr(ReprBuilder builder) {
+            builder.AppendLiteral(new AsciiString(ToBytes(), ToString()));
         }
 
-        public override IEnumerable<KeyValuePair<string, IValueStore>> GetDebugChildren() {
-            return ob_sval.Take((int)ob_size.Read()).Select((b, i) => new KeyValuePair<string, IValueStore>("[" + i + "]", b));
+        public override IEnumerable<PythonEvaluationResult> GetDebugChildren(ReprOptions reprOptions) {
+            long count = ob_size.Read();
+            yield return new PythonEvaluationResult(new ValueStore<long>(count), "len()") {
+                Category = DkmEvaluationResultCategory.Method
+            };
+
+            foreach (var b in ob_sval.Take((int)count)) {
+                yield return new PythonEvaluationResult(b);
+            }
         }
     }
 }

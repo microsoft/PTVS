@@ -12,10 +12,10 @@
  *
  * ***************************************************************************/
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.Debugger;
+using Microsoft.VisualStudio.Debugger.Evaluation;
 
 namespace Microsoft.PythonTools.DkmDebugger.Proxies.Structs {
     internal class PyListObject : PyVarObject {
@@ -39,15 +39,24 @@ namespace Microsoft.PythonTools.DkmDebugger.Proxies.Structs {
             return ob_item.Read().Take((int)ob_size.Read());
         }
 
-        protected override string Repr(Func<PyObject, string> repr) {
-            return "[" + string.Join(", ", ReadElements().Take(MaxDebugChildren).Select(obj => repr(obj.Read()))) + "]";
+        public override void Repr(ReprBuilder builder) {
+            var count = ob_size.Read();
+            if (count > ReprBuilder.MaxJoinedItems) {
+                builder.AppendFormat("<list, len() = {0}>", count);
+            } else {
+                builder.Append("[");
+                builder.AppendJoined(", ", ReadElements(), item => builder.AppendRepr(item.TryRead()));
+                builder.Append("]");
+            }
         }
 
-        public override IEnumerable<KeyValuePair<string, IValueStore>> GetDebugChildren() {
-            int i = 0;
+        public override IEnumerable<PythonEvaluationResult> GetDebugChildren(ReprOptions reprOptions) {
+            yield return new PythonEvaluationResult(new ValueStore<long>(ob_size.Read()), "len()") {
+                Category = DkmEvaluationResultCategory.Method
+            };
+
             foreach (var item in ReadElements()) {
-                yield return new KeyValuePair<string, IValueStore>("[" + i + "]", item);
-                ++i;
+                yield return new PythonEvaluationResult(item);
             }
         }
     }

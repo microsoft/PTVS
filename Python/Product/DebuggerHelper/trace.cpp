@@ -297,6 +297,7 @@ static void TraceLine(void* frame) {
     if (stepKind == STEP_INTO || (stepKind == STEP_OVER && steppingStackDepth == 0)) {
         if (stepThreadId == GetCurrentThreadId()) {
             OnStepComplete();
+			return;
         }
     }
 
@@ -341,21 +342,25 @@ static void TraceLine(void* frame) {
 
 
 static void TraceCall(void* frame) {
-    ++steppingStackDepth;
-    if (stepKind == STEP_INTO && stepThreadId == GetCurrentThreadId()) {
-        stepKind = STEP_NONE;
-        OnStepComplete();
-    }
+	if (stepThreadId == GetCurrentThreadId()) {
+		++steppingStackDepth;
+		if (stepKind == STEP_INTO) {
+			stepKind = STEP_NONE;
+			OnStepComplete();
+		}
+	}
 }
 
 
 static void TraceReturn(void* frame) {
-    --steppingStackDepth;
-    if (stepKind != STEP_NONE && stepThreadId == GetCurrentThreadId()) {
-        if (steppingStackDepth < 0) {
-            OnStepFallThrough();
-        }
-    }
+	if (stepThreadId == GetCurrentThreadId()) {
+		--steppingStackDepth;
+		if (stepKind != STEP_NONE) {
+			if (steppingStackDepth < 0) {
+				OnStepFallThrough();
+			}
+		}
+	}
 }
 
 

@@ -14,7 +14,6 @@
 
 using System;
 using System.Diagnostics;
-using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.VisualStudio.Debugger;
 
 namespace Microsoft.PythonTools.DkmDebugger.Proxies.Structs {
@@ -48,14 +47,8 @@ namespace Microsoft.PythonTools.DkmDebugger.Proxies.Structs {
             return ob_fval.Read();
         }
 
-        public override string ToString() {
-            return ToDouble().ToString();
-        }
-
-        protected override string Repr(Func<PyObject, string> repr) {
-            var pyrtInfo = Process.GetPythonRuntimeInfo();
-            var expr = new ConstantExpression(ToDouble());
-            return expr.GetConstantRepr(pyrtInfo.LanguageVersion);
+        public override void Repr(ReprBuilder builder) {
+            builder.AppendLiteral(ToDouble());
         }
     }
 }

@@ -12,8 +12,6 @@
  *
  * ***************************************************************************/
 
-using System.Diagnostics;
-
 namespace Microsoft.PythonTools.DkmDebugger {
 
     /// <summary>

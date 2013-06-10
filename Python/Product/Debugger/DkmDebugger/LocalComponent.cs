@@ -17,7 +17,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.Serialization;
-using System.Windows.Forms;
 using Microsoft.Dia;
 using Microsoft.PythonTools.Debugger;
 using Microsoft.PythonTools.Debugger.DebugEngine;
@@ -105,14 +104,11 @@ namespace Microsoft.PythonTools.DkmDebugger {
                         moduleInstance.TryLoadSymbols();
                     }
 
-                    var msg =
-                        "Python/native mixed-mode debugging requires symbol files for the Python interpreter that is being debugged. Please add " +
-                        "the folder containing those symbol files to your symbol search path (Tools -> Options -> Debugging -> Symbols), and " +
-                        "force a reload of symbols for " + moduleInstance.Name + ".";
-                    MessageBox.Show(msg, "Python symbols required", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-
+                    var warnMsg = DkmCustomMessage.Create(process.Connection, process, Guid.Empty, (int)VsPackageMessage.WarnAboutPythonSymbols, moduleInstance.Name, null);
+                    warnMsg.SendToVsService(Guids.CustomDebuggerEventHandlerGuid, IsBlocking: true);
                 } else if (PythonDLLs.DebuggerHelperNames.Contains(moduleInstance.Name)) {
                     pyrtInfo.DLLs.DebuggerHelper = moduleInstance;
+                    moduleInstance.TryLoadSymbols();
                     if (pyrtInfo.DLLs.Python != null && pyrtInfo.DLLs.Python.TryGetSymbols() != null) {
                         CreatePythonRuntimeInstance(process);
                     }
@@ -174,8 +170,6 @@ namespace Microsoft.PythonTools.DkmDebugger {
         DkmStackWalkFrame[] IDkmCallStackFilter.FilterNextFrame(DkmStackContext stackContext, DkmStackWalkFrame input) {
             if (input == null) {
                 return null;
-            } else if (input.InstructionAddress == null) {
-                return new[] { input };
             }
 
             var filter = input.Process.GetDataItem<CallStackFilter>();
@@ -266,7 +260,13 @@ namespace Microsoft.PythonTools.DkmDebugger {
         }
 
         string IDkmLanguageExpressionEvaluator.GetUnderlyingString(DkmEvaluationResult result) {
-            throw new NotImplementedException();
+            var ee = result.StackFrame.Process.GetDataItem<ExpressionEvaluator>();
+            if (ee == null) {
+                Debug.Fail("GetUnderlyingString called, but no instance of ExpressionEvaluator exists in this DkmProcess to handle it.");
+                throw new InvalidOperationException();
+            }
+
+            return ee.GetUnderlyingString(result);
         }
 
         void IDkmLanguageExpressionEvaluator.SetValueAsString(DkmEvaluationResult result, string value, int timeout, out string errorText) {

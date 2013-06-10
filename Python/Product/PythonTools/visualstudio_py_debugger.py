@@ -303,9 +303,6 @@ class ExceptionBreakInfo(object):
         return False
     
     def AddException(self, name, mode=BREAK_MODE_UNHANDLED):
-        if sys.version_info[0] >= 3 and name.startswith('exceptions.'):
-            name = 'builtins' + name[10:]
-        
         self.break_on[name] = mode
 
 BREAK_ON = ExceptionBreakInfo()

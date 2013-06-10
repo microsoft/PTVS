@@ -187,6 +187,8 @@
     <Compile Include="DkmDebugger\Proxies\Structs\PyUnicodeObject.cs" />
     <Compile Include="DkmDebugger\RemoteComponent.cs" />
     <Compile Include="DkmDebugger\SourceLocation.cs" />
+    <Compile Include="DkmDebugger\ReprBuilder.cs" />
+    <Compile Include="DkmDebugger\VsPackageMessage.cs" />
     <None Include="DkmDebugger\LocalStackWalkingComponent.vsdconfigxml">
       <SubType>Designer</SubType>
     </None>
@@ -211,7 +213,6 @@
   <ItemGroup>
     <Content Include="DkmDebugger\Microsoft.Dia.Interop.dll" />
   </ItemGroup>
-
   <!-- .vsdconfigxml -> .vsdconfig -->
   <ItemGroup Condition="'$(VSTarget)' != '10.0'">
     <VsdConfigXml Include="DkmDebugger\*.vsdconfigxml">
@@ -224,7 +225,6 @@
   <Target Name="GenerateVsdConfig" Inputs="@(VsdConfigXml)" Outputs="$(VsdConfigOutput)" Condition="'$(VSTarget)' != '10.0'">
     <Exec Command="&quot;$(VSSDKDir)VisualStudioIntegration\Tools\Bin\vsdconfigtool.exe&quot; @(VsdConfigXml, ' ') &quot;$(TargetPath)&quot; &quot;$(VsdConfigOutput)&quot;" />
   </Target>
-
   <Import Project="..\ProjectAfter.settings" />
   <Target Name="AfterBuild" DependsOnTargets="GenerateVsdConfig" Condition="'$(VSTarget)' != '10.0'" />
 </Project>

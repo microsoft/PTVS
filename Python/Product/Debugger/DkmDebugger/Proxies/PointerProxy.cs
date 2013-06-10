@@ -62,7 +62,7 @@ namespace Microsoft.PythonTools.DkmDebugger.Proxies {
         }
     }
 
-    [DebuggerDisplay("& {Read()}")]
+    [DebuggerDisplay("& {TryRead()}")]
     internal struct PointerProxy<TProxy> : IWritableDataProxy<TProxy>
         where TProxy : IDataProxy {
 

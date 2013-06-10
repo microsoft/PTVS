@@ -43,5 +43,8 @@ namespace Microsoft.PythonTools.DkmDebugger {
 
         public const string PythonTraceManagerSourceId = "5B0A4B66-C7A5-4D51-9581-9C89AF483691";
         public static readonly Guid PythonTraceManagerSourceGuid = new Guid(PythonTraceManagerSourceId);
+
+        public const string CustomDebuggerEventHandlerId = "996D22BD-D117-4611-88F2-2832CB7D9517";
+        public static readonly Guid CustomDebuggerEventHandlerGuid = new Guid(CustomDebuggerEventHandlerId);
     };
 }

@@ -242,6 +242,11 @@ namespace Microsoft.PythonTools.DkmDebugger {
                 return null;
             }
 
+            var pyEvalResult = new PythonEvaluationResult(objRef, "[Python view]") {
+                Category = DkmEvaluationResultCategory.Property,
+                AccessType = DkmEvaluationResultAccessType.Private
+            };
+
             var inspectionContext = visualizedExpression.InspectionContext;
             CppExpressionEvaluator cppEval;
             try {
@@ -255,7 +260,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
                 DkmLanguage.Create("Python", new DkmCompilerId(Guids.MicrosoftVendorGuid, Guids.PythonLanguageGuid)), null);
             DkmEvaluationResult pythonView;
             try {
-                pythonView = exprEval.CreateEvaluationResult(pythonContext, stackFrame, "[Python view]", objRef, cppEval, cppTypeName, isPythonView: true);
+                pythonView = exprEval.CreatePyObjectEvaluationResult(pythonContext, stackFrame, pyEvalResult, cppEval, cppTypeName, isPythonView: true);
             } catch {
                 return null;
             }

@@ -373,26 +373,28 @@ namespace Microsoft.PythonTools.DkmDebugger {
                 return;
             }
 
+            var reprOptions = new ReprOptions { LanguageVersion = _pyrtInfo.LanguageVersion };
+
             string typeName = "<unknown exception type>";
             string additionalInfo = "";
             try {
                 var typeObject = exc_type as PyTypeObject;
                 if (typeObject != null) {
-                    typeName = typeObject.tp_name.Read().Read();
+                    typeName = typeObject.__module__ + "." + typeObject.__name__;
                 }
 
                 var exc = exc_value as PyBaseExceptionObject;
                 if (exc != null) {
                     var args = exc.args.TryRead();
                     if (args != null) {
-                        additionalInfo = args.Repr();
+                        additionalInfo = args.Repr(reprOptions);
                     }
                 } else {
                     var str = exc_value as IPyBaseStringObject;
                     if (str != null) {
                         additionalInfo = str.ToString();
                     } else if (exc_value != null) {
-                        additionalInfo = exc_value.Repr();
+                        additionalInfo = exc_value.Repr(reprOptions);
                     }
                 }
             } catch {

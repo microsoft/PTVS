@@ -15,7 +15,6 @@
 using System;
 using System.Diagnostics;
 using Microsoft.PythonTools.Parsing;
-using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.VisualStudio.Debugger;
 
 namespace Microsoft.PythonTools.DkmDebugger.Proxies.Structs {
@@ -57,14 +56,8 @@ namespace Microsoft.PythonTools.DkmDebugger.Proxies.Structs {
             return ob_ival.Read();
         }
 
-        public override string ToString() {
-            return ToInt32().ToString();
-        }
-
-        protected override string Repr(Func<PyObject, string> repr) {
-            var pyrtInfo = Process.GetPythonRuntimeInfo();
-            var expr = new ConstantExpression(ToInt32());
-            return expr.GetConstantRepr(pyrtInfo.LanguageVersion);
+        public override void Repr(ReprBuilder builder) {
+            builder.Append(ToInt32());
         }
     }
 }

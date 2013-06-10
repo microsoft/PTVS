@@ -12,15 +12,13 @@
  *
  * ***************************************************************************/
 
-using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Diagnostics;
-using System.Linq;
 using System.Text;
 using Microsoft.PythonTools.Parsing;
-using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.VisualStudio.Debugger;
+using Microsoft.VisualStudio.Debugger.Evaluation;
 
 namespace Microsoft.PythonTools.DkmDebugger.Proxies.Structs {
     [StructProxy(MaxVersion = PythonLanguageVersion.V27, StructName = "PyUnicodeObject")]
@@ -73,10 +71,20 @@ namespace Microsoft.PythonTools.DkmDebugger.Proxies.Structs {
             }
         }
 
-        protected override string Repr(Func<PyObject, string> repr) {
-            var pyrtInfo = Process.GetPythonRuntimeInfo();
-            var expr = new ConstantExpression(ToString());
-            return expr.GetConstantRepr(pyrtInfo.LanguageVersion);
+        public override void Repr(ReprBuilder builder) {
+            builder.AppendLiteral(ToString());
+        }
+
+        public override IEnumerable<PythonEvaluationResult> GetDebugChildren(ReprOptions reprOptions) {
+            string s = ToString();
+
+            yield return new PythonEvaluationResult(new ValueStore<long>(s.Length), "len()") {
+                Category = DkmEvaluationResultCategory.Method
+            };
+
+            foreach (char c in s) {
+                yield return new PythonEvaluationResult(new ValueStore<string>("'" + c + "'"));
+            }
         }
 
         public static explicit operator string(PyUnicodeObject27 obj) {
@@ -256,15 +264,20 @@ namespace Microsoft.PythonTools.DkmDebugger.Proxies.Structs {
             return enc.GetString(buf, 0, buf.Length);
         }
 
-
-        protected override string Repr(Func<PyObject, string> repr) {
-            var pyrtInfo = Process.GetPythonRuntimeInfo();
-            var expr = new ConstantExpression(ToString());
-            return expr.GetConstantRepr(pyrtInfo.LanguageVersion);
+        public override void Repr(ReprBuilder builder) {
+            builder.AppendLiteral(ToString());
         }
 
-        public override IEnumerable<KeyValuePair<string, IValueStore>> GetDebugChildren() {
-            return ToString().Select((c, i) => new KeyValuePair<string, IValueStore>("[" + i + "]", new ValueStore<string>("'" + c + "'")));
+        public override IEnumerable<PythonEvaluationResult> GetDebugChildren(ReprOptions reprOptions) {
+            string s = ToString();
+
+            yield return new PythonEvaluationResult(new ValueStore<long>(s.Length), "len()") {
+                Category = DkmEvaluationResultCategory.Method
+            };
+
+            foreach (char c in s) {
+                yield return new PythonEvaluationResult(new ValueStore<string>("'" + c + "'"));
+            }
         }
 
         public static explicit operator string(PyUnicodeObject33 obj) {

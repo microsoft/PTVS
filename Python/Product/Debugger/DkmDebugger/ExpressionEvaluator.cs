@@ -38,6 +38,8 @@ namespace Microsoft.PythonTools.DkmDebugger {
             public ulong next;
         }
 
+        private const int MaxDebugChildren = 1000;
+
         private readonly DkmProcess _process;
         private readonly UInt64Proxy _objectsToRelease;
 
@@ -57,6 +59,10 @@ namespace Microsoft.PythonTools.DkmDebugger {
 
         private interface IPythonEvaluationResultAsync {
             void GetChildren(DkmEvaluationResult result, DkmWorkList workList, int initialRequestSize, DkmInspectionContext inspectionContext, DkmCompletionRoutine<DkmGetChildrenAsyncResult> completionRoutine);
+        }
+
+        private class RawEvaluationResult : DkmDataItem {
+            public object Value { get; set; }
         }
 
         /// <summary>
@@ -85,6 +91,8 @@ namespace Microsoft.PythonTools.DkmDebugger {
                 var cppEval = new CppExpressionEvaluator(inspectionContext, stackFrame);
                 var obj = ValueStore.Read();
                 var evalResults = new List<DkmEvaluationResult>();
+                var reprOptions = new ReprOptions { HexadecimalDisplay = (inspectionContext.Radix == 16) };
+                var reprBuilder = new ReprBuilder(reprOptions);
 
                 if (DebuggerOptions.ShowCppViewNodes && !IsPythonView) {
                     if (CppTypeName == null) {
@@ -127,23 +135,32 @@ namespace Microsoft.PythonTools.DkmDebugger {
                     }
                 }
 
-                foreach (var pair in obj.GetDebugChildren().Take(PyObject.MaxDebugChildren)) {
-                    DkmEvaluationResult evalResult;
-                    var objRef = pair.Value as IValueStore<PyObject>;
-                    if (objRef != null) {
-                        evalResult = exprEval.CreateEvaluationResult(inspectionContext, stackFrame, pair.Key, objRef, cppEval);
-                    } else {
-                        evalResult = DkmSuccessEvaluationResult.Create(
-                            inspectionContext, stackFrame, pair.Key, null,
-                            DkmEvaluationResultFlags.ReadOnly,
-                            "" + pair.Value.Read(),
-                            null, null,
-                            DkmEvaluationResultCategory.Data,
-                            DkmEvaluationResultAccessType.None,
-                            DkmEvaluationResultStorageType.None,
-                            DkmEvaluationResultTypeModifierFlags.None,
-                            null, null, null, null);
+                int i = 0;
+                foreach (var child in obj.GetDebugChildren(reprOptions).Take(MaxDebugChildren)) {
+                    if (child.Name == null) {
+                        reprBuilder.Clear();
+                        reprBuilder.AppendFormat("[{0:PY}]", i++);
+                        child.Name = reprBuilder.ToString();
                     }
+
+                    DkmEvaluationResult evalResult;
+                    if (child.ValueStore is IValueStore<PyObject>) {
+                        evalResult = exprEval.CreatePyObjectEvaluationResult(inspectionContext, stackFrame, child, cppEval);
+                    } else {
+                        var value = child.ValueStore.Read();
+                        reprBuilder.Clear();
+                        reprBuilder.AppendLiteral(value);
+
+                        var flags = DkmEvaluationResultFlags.ReadOnly;
+                        if (value is string) {
+                            flags |= DkmEvaluationResultFlags.RawString;
+                        }
+
+                        evalResult = DkmSuccessEvaluationResult.Create(inspectionContext, stackFrame, child.Name, null, flags, reprBuilder.ToString(),
+                            null, null, child.Category, child.AccessType, child.StorageType, child.TypeModifierFlags, null, null, null,
+                            new RawEvaluationResult { Value = value });
+                    }
+
                     evalResults.Add(evalResult);
                 }
 
@@ -168,7 +185,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
                         continue;
                     }
 
-                    var evalResult = exprEval.CreateEvaluationResult(inspectionContext, stackFrame, name.ToString(), pair.Value, cppEval);
+                    var evalResult = exprEval.CreatePyObjectEvaluationResult(inspectionContext, stackFrame, new PythonEvaluationResult(pair.Value, name.ToString()), cppEval);
                     evalResults.Add(evalResult);
                 }
 
@@ -221,33 +238,38 @@ namespace Microsoft.PythonTools.DkmDebugger {
         /// <summary>
         /// Create a DkmEvaluationResult representing a Python object.
         /// </summary>
-        /// <param name="name">Name of the evaluation result (e.g. name of local variable or object field).</param>
-        /// <param name="valueStore">A value store holding the result. If it is an <see cref="IDataProxy"/>, it will be editable.</param>
         /// <param name="cppEval">C++ evaluator to use to provide the [C++ view] node for this object.</param>
         /// <param name="cppTypeName">
         /// C++ struct name corresponding to this object type, for use by [C++ view] node. If not specified, it will be inferred from values of 
         /// various function pointers in <c>ob_type</c>, if possible. <c>PyObject</c> is the ultimate fallback.
         /// </param>
-        public DkmEvaluationResult CreateEvaluationResult(DkmInspectionContext inspectionContext, DkmStackWalkFrame stackFrame, string name, IValueStore<PyObject> valueStore, CppExpressionEvaluator cppEval, string cppTypeName = null, bool isPythonView = false) {
+        public DkmEvaluationResult CreatePyObjectEvaluationResult(DkmInspectionContext inspectionContext, DkmStackWalkFrame stackFrame, PythonEvaluationResult pyEvalResult, CppExpressionEvaluator cppEval, string cppTypeName = null, bool isPythonView = false) {
+            var name = pyEvalResult.Name;
+            var valueStore = pyEvalResult.ValueStore as IValueStore<PyObject>;
+            if (valueStore == null) {
+                Debug.Fail("Non-PyObject PythonEvaluationResult passed to CreateEvaluationResult.");
+                throw new ArgumentException();
+            }
+
             var valueObj = valueStore.Read();
-            string repr = valueObj.Repr();
             string typeName = valueObj.ob_type.Read().tp_name.Read().Read();
 
+            var reprOptions = new ReprOptions { HexadecimalDisplay = (inspectionContext.Radix == 16) };
+            string repr = valueObj.Repr(reprOptions);
+
             var flags = DkmEvaluationResultFlags.None;
-            if (DebuggerOptions.ShowCppViewNodes || valueObj.GetDebugChildren().Any()) {
+            if (DebuggerOptions.ShowCppViewNodes || valueObj.GetDebugChildren(reprOptions).Any()) {
                 flags |= DkmEvaluationResultFlags.Expandable;
             }
             if (!(valueStore is IWritableDataProxy)) {
                 flags |= DkmEvaluationResultFlags.ReadOnly;
             }
+            if (valueObj is IPyBaseStringObject) {
+                flags |= DkmEvaluationResultFlags.RawString;
+            }
 
-            return DkmSuccessEvaluationResult.Create(
-                inspectionContext, stackFrame, name, null, flags, repr, null, typeName,
-                isPythonView ? DkmEvaluationResultCategory.Property : DkmEvaluationResultCategory.Data,
-                isPythonView ? DkmEvaluationResultAccessType.Private : DkmEvaluationResultAccessType.None,
-                DkmEvaluationResultStorageType.None,
-                DkmEvaluationResultTypeModifierFlags.None,
-                null, null, null,
+            return DkmSuccessEvaluationResult.Create(inspectionContext, stackFrame, name, null, flags, repr, null, typeName, pyEvalResult.Category,
+                pyEvalResult.AccessType, pyEvalResult.StorageType, pyEvalResult.TypeModifierFlags, null, null, null,
                 new PyObjectEvaluationResult { ValueStore = valueStore, CppTypeName = cppTypeName, IsPythonView = isPythonView });
         }
 
@@ -260,6 +282,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
 
             var cppEval = new CppExpressionEvaluator(inspectionContext, stackFrame);
             var evalResults = new List<DkmEvaluationResult>();
+
             var f_code = pythonFrame.f_code.Read();
             var f_localsplus = pythonFrame.f_localsplus;
 
@@ -292,7 +315,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
                     continue;
                 }
 
-                var evalResult = CreateEvaluationResult(inspectionContext, stackFrame, name, localPtr, cppEval);
+                var evalResult = CreatePyObjectEvaluationResult(inspectionContext, stackFrame, new PythonEvaluationResult(localPtr, name), cppEval);
                 evalResults.Add(evalResult);
             }
 
@@ -315,12 +338,13 @@ namespace Microsoft.PythonTools.DkmDebugger {
                     continue;
                 }
 
-                var evalResult = CreateEvaluationResult(inspectionContext, stackFrame, name, varSlot, cppEval);
+                var evalResult = CreatePyObjectEvaluationResult(inspectionContext, stackFrame, new PythonEvaluationResult(varSlot, name), cppEval);
                 evalResults.Add(evalResult);
             }
 
             var globals = pythonFrame.f_globals.TryRead();
             if (globals != null) {
+                var globalsEvalResult = new GlobalsEvaluationResult { Globals = globals };
                 DkmEvaluationResult evalResult = DkmSuccessEvaluationResult.Create(
                     inspectionContext, stackFrame, "[Globals]", null,
                     DkmEvaluationResultFlags.ReadOnly | DkmEvaluationResultFlags.Expandable,
@@ -329,33 +353,38 @@ namespace Microsoft.PythonTools.DkmDebugger {
                     DkmEvaluationResultAccessType.None,
                     DkmEvaluationResultStorageType.None,
                     DkmEvaluationResultTypeModifierFlags.None,
-                    null, null, null,
-                    new GlobalsEvaluationResult { Globals = globals });
-                evalResults.Add(evalResult);
+                    null, null, null, globalsEvalResult);
 
-                // Include globals that are directly referenced by the function.
-                var globalVars = (from pair in globals.ReadElements()
-                                  let nameObj = pair.Key as IPyBaseStringObject
-                                  where nameObj != null
-                                  select new { Name = nameObj.ToString(), Value = pair.Value }
-                                 ).ToLookup(v => v.Name, v => v.Value);
+                // If it is a top-level module frame, show globals inline; otherwise, show them under the [Globals] node.
+                if (f_code.co_name.Read().ToStringOrNull() == "<module>") {
+                    evalResults.AddRange(globalsEvalResult.GetChildren(this, evalResult, inspectionContext));
+                } else {
+                    evalResults.Add(evalResult);
 
-                PyTupleObject co_names = f_code.co_names.Read();
-                foreach (var nameObj in co_names.ReadElements()) {
-                    var name = (nameObj.Read() as IPyBaseStringObject).ToStringOrNull();
-                    if (name == null) {
-                        continue;
-                    }
+                    // Show any globals that are directly referenced by the function inline even in local frames.
+                    var globalVars = (from pair in globals.ReadElements()
+                                      let nameObj = pair.Key as IPyBaseStringObject
+                                      where nameObj != null
+                                      select new { Name = nameObj.ToString(), Value = pair.Value }
+                                     ).ToLookup(v => v.Name, v => v.Value);
 
-                    // If this is a used name but it was not in varnames or freevars, it is a directly referenced global.
-                    if (!namesSeen.Add(name)) {
-                        continue;
-                    }
+                    PyTupleObject co_names = f_code.co_names.Read();
+                    foreach (var nameObj in co_names.ReadElements()) {
+                        var name = (nameObj.Read() as IPyBaseStringObject).ToStringOrNull();
+                        if (name == null) {
+                            continue;
+                        }
 
-                    var varSlot = globalVars[name].FirstOrDefault();
-                    if (varSlot.Process != null) {
-                        evalResult = CreateEvaluationResult(inspectionContext, stackFrame, name, varSlot, cppEval);
-                        evalResults.Add(evalResult);
+                        // If this is a used name but it was not in varnames or freevars, it is a directly referenced global.
+                        if (!namesSeen.Add(name)) {
+                            continue;
+                        }
+
+                        var varSlot = globalVars[name].FirstOrDefault();
+                        if (varSlot.Process != null) {
+                            evalResult = CreatePyObjectEvaluationResult(inspectionContext, stackFrame, new PythonEvaluationResult(varSlot, name), cppEval);
+                            evalResults.Add(evalResult);
+                        }
                     }
                 }
             }
@@ -372,11 +401,11 @@ namespace Microsoft.PythonTools.DkmDebugger {
                 return;
             }
 
-            var evalResult =
+            var pyEvalResult =
                 (IPythonEvaluationResult)result.GetDataItem<PyObjectEvaluationResult>() ??
                 (IPythonEvaluationResult)result.GetDataItem<GlobalsEvaluationResult>();
-            if (evalResult != null) {
-                var childResults = evalResult.GetChildren(this, result, inspectionContext);
+            if (pyEvalResult != null) {
+                var childResults = pyEvalResult.GetChildren(this, result, inspectionContext);
                 completionRoutine(
                     new DkmGetChildrenAsyncResult(
                         new DkmEvaluationResult[0],
@@ -401,6 +430,21 @@ namespace Microsoft.PythonTools.DkmDebugger {
 
             var result = evalResults.Results.Skip(startIndex).Take(count).ToArray();
             completionRoutine(new DkmEvaluationEnumAsyncResult(result));
+        }
+
+        public string GetUnderlyingString(DkmEvaluationResult result) {
+            var rawResult = result.GetDataItem<RawEvaluationResult>();
+            if (rawResult != null && rawResult.Value is string) {
+                return (string)rawResult.Value;
+            }
+
+            var objResult = result.GetDataItem<PyObjectEvaluationResult>();
+            if (objResult == null) {
+                return null;
+            }
+
+            var str = objResult.ValueStore.Read() as IPyBaseStringObject;
+            return str.ToStringOrNull();
         }
 
         private class StringErrorSink : ErrorSink {
@@ -570,6 +614,32 @@ namespace Microsoft.PythonTools.DkmDebugger {
 
             sign = 0;
             return expr;
+        }
+    }
+
+    internal class PythonEvaluationResult {
+        /// <summary>
+        /// A store containing the evaluated value.
+        /// </summary>
+        public IValueStore ValueStore { get; set; }
+
+        /// <summary>
+        /// For named results, name of the result. For unnamed results, <c>null</c>.
+        /// </summary>
+        public string Name { get; set; }
+
+        public DkmEvaluationResultCategory Category { get; set; }
+
+        public DkmEvaluationResultAccessType AccessType { get; set; }
+
+        public DkmEvaluationResultStorageType StorageType { get; set; }
+
+        public DkmEvaluationResultTypeModifierFlags TypeModifierFlags { get; set; }
+
+        public PythonEvaluationResult(IValueStore valueStore, string name = null) {
+            ValueStore = valueStore;
+            Name = name;
+            Category = DkmEvaluationResultCategory.Data;
         }
     }
 }

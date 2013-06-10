@@ -12,7 +12,6 @@
  *
  * ***************************************************************************/
 
-using System;
 using System.Diagnostics;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.Debugger;
@@ -50,12 +49,8 @@ namespace Microsoft.PythonTools.DkmDebugger.Proxies.Structs {
             return ToInt32() != 0;
         }
 
-        public override string ToString() {
-            return ToBoolean() ? "True" : "False";
-        }
-
-        protected override string Repr(Func<PyObject, string> repr) {
-            return ToString();
+        public override void Repr(ReprBuilder builder) {
+            builder.Append(ToBoolean() ? "True" : "False");
         }
     }
 
@@ -94,12 +89,8 @@ namespace Microsoft.PythonTools.DkmDebugger.Proxies.Structs {
             }
         }
 
-        public override string ToString() {
-            return ToBoolean() ? "True" : "False";
-        }
-
-        protected override string Repr(Func<PyObject, string> repr) {
-            return ToString();
+        public override void Repr(ReprBuilder builder) {
+            builder.Append(ToBoolean() ? "True" : "False");
         }
     }
 }

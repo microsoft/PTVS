@@ -213,7 +213,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             _threadIdMapping.Remove(vsTid);
         }
 
-        private static bool IsNativeDebuggingEnabled(IDebugProgram2 program) {
+        private static bool IsDebuggingPythonOnly(IDebugProgram2 program) {
 #if DEV11_OR_LATER
             IDebugProcess2 process;
             program.GetProcess(out process);
@@ -221,7 +221,6 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             IEnumDebugPrograms2 enumPrograms;
             process.EnumPrograms(out enumPrograms);
 
-            bool result = false;
             while (true) {
                 IDebugProgram2[] programs = new IDebugProgram2[1];
                 uint fetched = 0;
@@ -232,15 +231,13 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                 string engineName;
                 Guid engineGuid;
                 programs[0].GetEngineInfo(out engineName, out engineGuid);
-                if (engineGuid == DkmEngineId.NativeEng) {
-                    result = true;
+                if (engineGuid != AD7Engine.DebugEngineGuid) {
+                    return false;
                 }
             }
-
-            return result;
-#else
-            return false;
 #endif
+
+            return true;
         }
 
         #region IDebugEngine2 Members
@@ -273,8 +270,8 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                 // TODO: Where do we get the language version from?
                 _events = ad7Callback;
 
-                // Check whether we're debugging Python alongside native. If so, let Concord handle everything.
-                if (IsNativeDebuggingEnabled(program)) {
+                // Check whether we're debugging Python alongside something else. If so, let Concord handle everything.
+                if (!IsDebuggingPythonOnly(program)) {
                     _attached = true;
                     _mixedMode = true;
                     AD7EngineCreateEvent.Send(this);

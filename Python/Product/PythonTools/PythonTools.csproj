@@ -107,8 +107,16 @@
       <Link>Microsoft.PythonTools.Debugger.Helper.x86.dll</Link>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
+    <Content Include="$(OutputPath)Microsoft.PythonTools.Debugger.Helper.x86.pdb">
+      <Link>Microsoft.PythonTools.Debugger.Helper.x86.pdb</Link>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
     <Content Include="$(OutputPath)Microsoft.PythonTools.Debugger.Helper.x64.dll">
       <Link>Microsoft.PythonTools.Debugger.Helper.x64.dll</Link>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="$(OutputPath)Microsoft.PythonTools.Debugger.Helper.x64.pdb">
+      <Link>Microsoft.PythonTools.Debugger.Helper.x64.pdb</Link>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
     <ProjectReference Include="..\TestAdapter\TestAdapter.csproj" Condition="'$(VSTarget)' != '10.0'">
@@ -179,6 +187,7 @@
     <Reference Include="Microsoft.VisualStudio.CoreUtility, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.Debugger.Engine, Version=1.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" Condition="'$(VSTarget)' != '10.0'" />
     <Reference Include="Microsoft.VisualStudio.Debugger.Interop.10.0, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+    <Reference Include="Microsoft.VisualStudio.Debugger.Interop.11.0, Version=11.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" Condition="'$(VSTarget)' != '10.0'" />
     <Reference Include="Microsoft.VisualStudio.Debugger.InteropA, Version=9.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="Microsoft.VisualStudio.Designer.Interfaces, Version=1.0.5000.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <EmbedInteropTypes>False</EmbedInteropTypes>
@@ -639,6 +648,7 @@
     <Compile Include="PythonTools\Commands\DkmDebuggerCommand.cs" />
     <Compile Include="PythonTools\Commands\ShowCppViewCommand.cs" />
     <Compile Include="PythonTools\Commands\ShowPythonViewCommand.cs" />
+    <Compile Include="PythonTools\Debugger\CustomDebuggerEventHandler.cs" />
   </ItemGroup>
   <ItemDefinitionGroup>
     <ZipProject>
