@@ -1187,7 +1187,13 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
                         _surveyNewsUrl = available[0];
                     }
                 } else if (warnIfNoneAvailable) {
-                    MessageBox.Show(Resources.NoSurveyNewsAvailable);
+                    lock (_surveyNewsUrlLock) {
+                        if (available != null) {
+                            _surveyNewsUrl = OptionsPage.SurveyNewsIndexUrl;
+                        } else {
+                            _surveyNewsUrl = CommonUtils.GetAbsoluteFilePath(PythonToolsPackage.GetPythonToolsInstallPath(), "NoSurveyNewsFeed.html");
+                        }
+                    }
                 }
 
                 Application.ExitThread();

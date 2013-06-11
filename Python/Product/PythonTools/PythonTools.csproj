@@ -655,6 +655,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <!-- VSIX -->
+    <Content Include="NoSurveyNewsFeed.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
     <Content Include="NoInterpreters.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
