@@ -15,6 +15,7 @@
 using System;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio;
@@ -30,16 +31,30 @@ namespace Microsoft.PythonTools.Project {
     /// </summary>
     [ComVisible(true)]
     internal class InterpretersPackageNode : HierarchyNode {
+        private static readonly Regex PipFreezeRegex = new Regex(
+            "^(?<name>[^=]+)==(?<version>.+)$",
+            RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
+        
         protected PythonProjectNode _project;
-        private string _caption;
+        private readonly bool _canDelete;
+        private readonly string _caption;
+        private readonly string _packageName;
 
         public InterpretersPackageNode(PythonProjectNode project, string name)
             : base(project, new VirtualProjectElement(project)) {
-            _caption = name;
+            _packageName = name;
+            var match = PipFreezeRegex.Match(name);
+            if (match.Success) {
+                _caption = string.Format("{0} ({1})", match.Groups["name"], match.Groups["version"]);
+                _canDelete = true;
+            } else {
+                _caption = name;
+                _canDelete = false;
+            }
         }
 
         public override string Url {
-            get { return _caption; }
+            get { return _packageName; }
         }
 
         public override Guid ItemTypeGuid {
@@ -54,18 +69,21 @@ namespace Microsoft.PythonTools.Project {
             if (cmdGroup == GuidList.guidPythonToolsCmdSet) {
                 switch (cmd) {
                     case PythonConstants.UninstallPythonPackage:
-                        string message = string.Format("'{0}' will be uninstalled.", Caption);
-                        int res = VsShellUtilities.ShowMessageBox(
-                            ProjectMgr.Site, 
-                            string.Empty,
-                            message,
-                            OLEMSGICON.OLEMSGICON_WARNING,
-                            OLEMSGBUTTON.OLEMSGBUTTON_OKCANCEL,
-                            OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST);
-                        if (res == 1) {
-                            Remove(false);
+                        if (_canDelete) {
+                            string message = string.Format("'{0}' will be uninstalled.", Caption);
+                            int res = VsShellUtilities.ShowMessageBox(
+                                ProjectMgr.Site,
+                                string.Empty,
+                                message,
+                                OLEMSGICON.OLEMSGICON_WARNING,
+                                OLEMSGBUTTON.OLEMSGBUTTON_OKCANCEL,
+                                OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST);
+                            if (res == 1) {
+                                Remove(false);
+                            }
+                            return VSConstants.S_OK;
                         }
-                        return VSConstants.S_OK;
+                        break;
                 }
             }
             return base.ExecCommandOnNode(cmdGroup, cmd, nCmdexecopt, pvaIn, pvaOut);
@@ -170,8 +188,8 @@ namespace Microsoft.PythonTools.Project {
         }
 
         /// <summary>
-        /// Disable inline editing of Caption of a virtual env package node
-        /// </summary>        
+        /// Disable inline editing of Caption of a package node
+        /// </summary>
         public override string GetEditLabel() {
             return null;
         }
@@ -182,14 +200,14 @@ namespace Microsoft.PythonTools.Project {
             );
         }
         /// <summary>
-        /// Virtual env node cannot be dragged.
-        /// </summary>        
+        /// Package node cannot be dragged.
+        /// </summary>
         protected internal override string PrepareSelectedNodesForClipBoard() {
             return null;
         }
 
         /// <summary>
-        /// Virtual env Node cannot be excluded.
+        /// Package node cannot be excluded.
         /// </summary>
         internal override int ExcludeFromProject() {
             return (int)OleConstants.OLECMDERR_E_NOTSUPPORTED;
@@ -202,7 +220,10 @@ namespace Microsoft.PythonTools.Project {
             if (cmdGroup == GuidList.guidPythonToolsCmdSet) {
                 switch (cmd) {
                     case PythonConstants.UninstallPythonPackage:
-                        result |= QueryStatusResult.SUPPORTED | QueryStatusResult.ENABLED;
+                        result |= QueryStatusResult.SUPPORTED;
+                        if (_canDelete) {
+                            result |= QueryStatusResult.ENABLED;
+                        }
                         return VSConstants.S_OK;
                 }
             }

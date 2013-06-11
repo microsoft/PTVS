@@ -26,6 +26,16 @@ namespace Microsoft.PythonTools.Project {
         internal InterpretersPackageNodeProperties(HierarchyNode node)
             : base(node) { }
 
+        [SRCategoryAttribute(SR.Misc)]
+        [LocDisplayName(SR.PackageFullName)]
+        [SRDescriptionAttribute(SR.PackageFullNameDescription)]
+        [AutomationBrowsable(true)]
+        public string FullPath {
+            get {
+                return this.HierarchyNode.Url;
+            }
+        }
+
         public override string GetClassName() {
             return "Python Package Properties";
         }

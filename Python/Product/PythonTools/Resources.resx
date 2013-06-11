@@ -206,4 +206,10 @@ Continue?</value>
 
 Some files may need to be removed manually.</value>
   </data>
+  <data name="PackageFullName" xml:space="preserve">
+    <value>Full Name</value>
+  </data>
+  <data name="PackageFullNameDescription" xml:space="preserve">
+    <value>The full name of the package, including the version if known.</value>
+  </data>
 </root>

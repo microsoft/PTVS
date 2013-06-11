@@ -13,6 +13,10 @@ using IOleServiceProvider = Microsoft.VisualStudio.OLE.Interop.IServiceProvider;
 
 namespace Microsoft.PythonTools.Project {
     static class Pip {
+        private static readonly Regex PackageNameRegex = new Regex(
+            "^(?<name>[a-z0-9_]+)(-.+)?",
+            RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
+
         private static readonly KeyValuePair<string, string>[] UnbufferedEnv = new[] { 
             new KeyValuePair<string, string>("PYTHONUNBUFFERED", "1")
         };
@@ -55,7 +59,7 @@ namespace Microsoft.PythonTools.Project {
                     var packagesPath = Path.Combine(factory.Configuration.LibraryPath, "site-packages");
                     return new HashSet<string>(Directory.EnumerateDirectories(packagesPath)
                         .Select(name => Path.GetFileName(name))
-                        .Select(name => Regex.Match(name, "(?<name>[a-z0-9_]+)(-.+)?"))
+                        .Select(name => PackageNameRegex.Match(name))
                         .Where(m => m.Success)
                         .Select(m => m.Groups["name"].Value));
                 } catch (ArgumentException) {

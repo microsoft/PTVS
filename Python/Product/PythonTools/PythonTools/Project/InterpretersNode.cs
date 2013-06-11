@@ -116,7 +116,7 @@ namespace Microsoft.PythonTools.Project {
                     return;
                 }
 
-                var existing = AllChildren.ToDictionary(c => c.Caption);
+                var existing = AllChildren.ToDictionary(c => c.Url);
 
                 // remove the nodes which were uninstalled.
                 foreach (var keyValue in existing) {

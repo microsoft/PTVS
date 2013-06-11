@@ -38,6 +38,9 @@ namespace Microsoft.PythonTools.Project {
         public const string InterpreterDeleteConfirmation = "InterpreterDeleteConfirmation";
         public const string InterpreterDeleteError = "InterpreterDeleteError";
 
+        public const string PackageFullName = "PackageFullName";
+        public const string PackageFullNameDescription = "PackageFullNameDescription";
+
         public const string InterpreterIdDisplayName = "InterpreterIdDisplayName";
         public const string InterpreterIdDescription = "InterpreterIdDescription";
         public const string InterpreterVersionDisplayName = "InterpreterVersionDisplayName";
