@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
@@ -113,7 +114,9 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public bool IsAnalyzing {
             get {
-                return _isAnalyzing;
+                lock (_queueLock) {
+                    return _isAnalyzing || _analysisPending > 0;
+                }
             }
         }
 
@@ -159,8 +162,8 @@ namespace Microsoft.PythonTools.Intellisense {
                 AnalysisPriority pri;
                 lock (_queueLock) {
                     workItem = GetNextItem(out pri);
+                    _isAnalyzing = true;
                 }
-                _isAnalyzing = true;
                 if (workItem != null) {
                     var groupable = workItem as IGroupableAnalysisProjectEntry;
                     if (groupable != null) {
@@ -173,7 +176,6 @@ namespace Microsoft.PythonTools.Intellisense {
                     } else {
                         workItem.Analyze(_cancel.Token);
                     }
-                    _isAnalyzing = false;
                 } else {
                     _isAnalyzing = false;
                     WaitHandle.SignalAndWait(
@@ -182,6 +184,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     );
                 }   
             }
+            _isAnalyzing = false;
         }
 
         sealed class GroupAnalysis : IAnalyzable {

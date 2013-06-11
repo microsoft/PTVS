@@ -17,11 +17,10 @@ using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.Language.StandardClassification;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
-using Microsoft.VisualStudio.Text.Classification;
-using Microsoft.VisualStudio.Language.StandardClassification;
 
 namespace Microsoft.PythonTools.Refactoring {
     class VariableRenamer {
@@ -44,7 +43,7 @@ namespace Microsoft.PythonTools.Refactoring {
             Expression expr = null;
             if (analysis != ExpressionAnalysis.Empty) {
                 PythonAst ast = analysis.GetEvaluatedAst();
-                
+
                 expr = Statement.GetExpression(ast.Body);
 
                 NameExpression ne = expr as NameExpression;

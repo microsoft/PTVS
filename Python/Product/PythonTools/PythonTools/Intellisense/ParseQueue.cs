@@ -38,7 +38,7 @@ namespace Microsoft.PythonTools.Intellisense {
     /// </summary>
     internal class ParseQueue {
         internal readonly VsProjectAnalyzer _parser;
-        private int _analysisPending;
+        internal int _analysisPending;
 
         /// <summary>
         /// Creates a new parse queue which will parse using the provided parser.
@@ -63,7 +63,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 if (uiElement != null) {
                     dispatcher = uiElement.Dispatcher;
                 }
-                bufferParser = new BufferParser(dispatcher, projEntry, _parser, buffer);
+                bufferParser = new BufferParser(this, dispatcher, projEntry, _parser, buffer);
                 
                 var curSnapshot = buffer.CurrentSnapshot;
                 var severity = PythonToolsPackage.Instance != null ? PythonToolsPackage.Instance.OptionsPage.IndentationInconsistencySeverity : Severity.Ignore;
@@ -171,6 +171,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
     class BufferParser {
         internal VsProjectAnalyzer _parser;
+        private readonly ParseQueue _queue;
         private readonly Timer _timer;
         private readonly Dispatcher _dispatcher;
         private IList<ITextBuffer> _buffers;
@@ -179,7 +180,8 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private const int ReparseDelay = 1000;      // delay in MS before we re-parse a buffer w/ non-line changes.
 
-        public BufferParser(Dispatcher dispatcher, IProjectEntry initialProjectEntry, VsProjectAnalyzer parser, ITextBuffer buffer) {
+        public BufferParser(ParseQueue queue, Dispatcher dispatcher, IProjectEntry initialProjectEntry, VsProjectAnalyzer parser, ITextBuffer buffer) {
+            _queue = queue;
             _parser = parser;
             _timer = new Timer(ReparseTimer, null, Timeout.Infinite, Timeout.Infinite);
             _buffers = new[] { buffer };
@@ -252,8 +254,8 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private void InitBuffer(ITextBuffer buffer) {
             buffer.Properties.AddProperty(typeof(BufferParser), this);
-            buffer.ChangedHighPriority += BufferChangedLowPriority;
-            buffer.Properties.AddProperty(typeof(IProjectEntry), _currentProjEntry);            
+            buffer.ChangedLowPriority += BufferChangedLowPriority;
+            buffer.Properties.AddProperty(typeof(IProjectEntry), _currentProjEntry);
             ITextDocument doc;
             if (buffer.Properties.TryGetProperty<ITextDocument>(typeof(ITextDocument), out doc)) {
                 doc.EncodingChanged += EncodingChanged;
@@ -267,9 +269,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         internal void ReparseTimer(object unused) {
-            EnqueingEntry();
-
-            ReparseWorker(unused);
+            RequeueWorker();
         }
 
         internal void ReparseWorker(object unused) {
@@ -277,6 +277,7 @@ namespace Microsoft.PythonTools.Intellisense {
             lock (this) {
                 if (_parsing) {
                     NotReparsing();
+                    Interlocked.Decrement(ref _queue._analysisPending);
                     return;
                 }
 
@@ -289,12 +290,12 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             _parser.ParseBuffers(this, IndentationInconsistencySeverity, snapshots);
+            Interlocked.Decrement(ref _queue._analysisPending);
 
             lock (this) {
                 _parsing = false;
                 if (_requeue) {
-                    EnqueingEntry();
-                    ThreadPool.QueueUserWorkItem(ReparseWorker);
+                    RequeueWorker();
                 }
                 _requeue = false;
             }
@@ -357,9 +358,14 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         internal void Requeue() {
+            RequeueWorker();
+            _timer.Change(Timeout.Infinite, Timeout.Infinite);
+        }
+
+        private void RequeueWorker() {
+            Interlocked.Increment(ref _queue._analysisPending);
             EnqueingEntry();
             ThreadPool.QueueUserWorkItem(ReparseWorker);
-            _timer.Change(Timeout.Infinite, Timeout.Infinite);
         }
 
         /// <summary>

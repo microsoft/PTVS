@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Reflection;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Intellisense;
@@ -2373,6 +2374,7 @@ def g(a, b, c):
 
                     // test runs twice, one w/ original buffer, once w/ re-analyzed buffers.
                     if (loops == 1) {
+                        Debug.WriteLine("Running w/ re-anlyzed buffers");
                         // do it again w/ a changed buffer
                         foreach (var buffer in buffers) {
                             buffer.RaiseChangedLowPriority();
@@ -2394,6 +2396,7 @@ def g(a, b, c):
                         Assert.AreEqual(error, extractInput.Failure);
                         return;
                     }
+                    Assert.AreEqual(null, extractInput.Failure);
                     Assert.AreEqual(preview, previewChangesService.Previewed, preview ? "Changes were not previewed" : "Changes were previewed");
                     for (int i = 0; i < buffers.Length; i++) {
                         Assert.AreEqual(inputs[i].Output, buffers[i].CurrentSnapshot.GetText());

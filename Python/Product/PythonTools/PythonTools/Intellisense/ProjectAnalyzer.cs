@@ -515,8 +515,8 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         internal void WaitForCompleteAnalysis(Func<int, bool> itemsLeftUpdated) {
-            if (_queue.IsParsing || _analysisQueue.IsAnalyzing) {
-                while (_queue.IsParsing || _analysisQueue.IsAnalyzing) {
+            if (IsAnalyzing) {
+                while (IsAnalyzing) {
                     QueueActivityEvent.WaitOne(100);
 
                     int itemsLeft = _queue.ParsePending + _analysisQueue.AnalysisPending;

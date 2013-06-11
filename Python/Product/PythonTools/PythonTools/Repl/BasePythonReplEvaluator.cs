@@ -303,10 +303,11 @@ namespace Microsoft.PythonTools.Repl {
                 } catch (NullReferenceException) {
                 }
 
-                using (new SocketLock(this)) {
+                lock (this) {
                     if (_completion != null) {
                         bool success = _completion.TrySetCanceled();
                         Debug.Assert(success);
+                        _completion = null;
                     }
                 }
             }
@@ -570,8 +571,8 @@ namespace Microsoft.PythonTools.Repl {
             }
 
             private void HandleExecutionError() {
-                using (new SocketUnlock(this)) {
-                    // DONE command
+                // DONE command
+                lock (this) {
                     if (_completion != null) {
                         _completion.SetResult(ExecutionResult.Failure);
                         _completion = null;
@@ -580,8 +581,8 @@ namespace Microsoft.PythonTools.Repl {
             }
 
             private void HandleExecutionDone() {
-                using (new SocketUnlock(this)) {
-                    // DONE command
+                // DONE command
+                lock (this) {
                     if (_completion != null) {
                         _completion.SetResult(ExecutionResult.Success);
                         _completion = null;
@@ -844,9 +845,12 @@ namespace Microsoft.PythonTools.Repl {
                     }
                 }
 
-                if (_completion != null) {
-                    bool success = _completion.TrySetResult(ExecutionResult.Failure);
-                    Debug.Assert(success);
+                lock (this) {
+                    if (_completion != null) {
+                        bool success = _completion.TrySetResult(ExecutionResult.Failure);
+                        Debug.Assert(success);
+                        _completion = null;
+                    }
                 }
             }
 

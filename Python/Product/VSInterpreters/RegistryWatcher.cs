@@ -274,7 +274,7 @@ namespace Microsoft.PythonTools {
             }
         }
 
-        private class WatchEntry : IDisposable {
+        private class WatchEntry {
             /// <summary>
             /// Creates a WatchEntry that has an event but does not watch a
             /// registry key. All functions become no-ops, but
@@ -325,8 +325,10 @@ namespace Microsoft.PythonTools {
                 }
 
                 if (_registered) {
-                    _registered = false;
-                    _key.Close();
+                    lock (this) {
+                        _registered = false;
+                        _key.Close();
+                    }
                 }
             }
 
@@ -341,6 +343,7 @@ namespace Microsoft.PythonTools {
                     // the list.
                     return true;
                 }
+
                 if (!_registered) {
                     return false;
                 }
@@ -352,12 +355,13 @@ namespace Microsoft.PythonTools {
                     return false;
                 }
 
-                Register();
+                lock (this) {
+                    // only re-register if we haven't been closed
+                    if (_registered) {
+                        Register();
+                    }
+                }
                 return true;
-            }
-
-            public void Dispose() {
-                Unregister();
             }
         }
 

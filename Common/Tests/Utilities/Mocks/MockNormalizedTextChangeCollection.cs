@@ -25,7 +25,15 @@ namespace TestUtilities.Mocks {
         }
 
         public bool IncludesLineChanges {
-            get { throw new NotImplementedException(); }
+            get {
+                foreach (var change in _changes) {
+                    if (change.OldText.IndexOfAny(new[] { '\r', '\n' }) != -1 ||
+                        change.NewText.IndexOfAny(new[] { '\r', '\n' }) != -1) {
+                        return true;
+                    }
+                }
+                return false;
+            }
         }
 
         public int IndexOf(ITextChange item) {

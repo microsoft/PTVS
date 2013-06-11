@@ -16,6 +16,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Windows.Automation;
+using Microsoft.PythonTools;
 using Microsoft.PythonTools.Profiling;
 using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -30,6 +31,8 @@ namespace ProfilingUITests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
             TestData.Deploy();
+            PythonToolsPackage.Instance.OptionsPage.WaitOnNormalExit = false;
+            PythonToolsPackage.Instance.OptionsPage.WaitOnAbnormalExit = false;
         }
 
         [TestCleanup]

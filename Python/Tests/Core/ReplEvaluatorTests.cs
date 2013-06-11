@@ -65,11 +65,15 @@ namespace PythonToolsTests {
                 evaluator.Initialize(window);
 
                 TestOutput(window, evaluator, "while True: pass\n", false, (completed) => {
-                    Thread.Sleep(200);
-                    Assert.IsTrue(!completed);
+                        Thread.Sleep(200);
+                        Assert.IsTrue(!completed);
 
-                    evaluator.AbortCommand();
-                }, "Traceback (most recent call last):", "  File \"<stdin>\", line 1, in <module>", "KeyboardInterrupt");
+                        evaluator.AbortCommand();
+                    }, 
+                    false, 
+                    20000, 
+                    "KeyboardInterrupt"
+                );
             }
         }
 
@@ -102,7 +106,7 @@ namespace PythonToolsTests {
                 Assert.Inconclusive("Test requires Python 2.6 to be installed and in PATH or C:\\Python26\\");
             }
 
-            return new PythonReplEvaluator(new SimpleFactoryProvider(pythonExe, pythonWinExe).GetInterpreterFactories().First(), null);
+            return new PythonReplEvaluator(new SimpleFactoryProvider(pythonExe, pythonWinExe).GetInterpreterFactories().First(), null, new ReplTestReplOptions());
         }
 
         class SimpleFactoryProvider : IPythonInterpreterFactoryProvider {
@@ -133,34 +137,42 @@ namespace PythonToolsTests {
         }
 
         private static void TestOutput(MockReplWindow window, PythonReplEvaluator evaluator, string code, bool success, params string[] expectedOutput) {
-            TestOutput(window, evaluator, code, success, null, expectedOutput);
+            TestOutput(window, evaluator, code, success, null, true, 3000, expectedOutput);
         }
 
-        private static void TestOutput(MockReplWindow window, PythonReplEvaluator evaluator, string code, bool success, Action<bool> afterExecute, params string[] expectedOutput) {
+        private static void TestOutput(MockReplWindow window, PythonReplEvaluator evaluator, string code, bool success, Action<bool> afterExecute, bool equalOutput, int timeout = 3000, params string[] expectedOutput) {
             window.ClearScreen();
 
             bool completed = false;
             var task = evaluator.ExecuteText(code).ContinueWith(completedTask => {
                 Assert.AreEqual(completedTask.Result.IsSuccessful, success);
 
-                var output = window.Output;
-                if (output.Length == 0) {
-                    Assert.IsTrue(expectedOutput.Length == 0);
+                var output = success ? window.Output : window.Error;
+                if (equalOutput) {
+                    if (output.Length == 0) {
+                        Assert.IsTrue(expectedOutput.Length == 0);
+                    } else {
+                        // don't count ending \n as new empty line
+                        output = output.Replace("\r\n", "\n");
+                        if (output[output.Length - 1] == '\n') {
+                            output = output.Remove(output.Length - 1, 1);
+                        }
+
+                        var lines = output.Split('\n');
+                        if (lines.Length != expectedOutput.Length) {
+                            for (int i = 0; i < lines.Length; i++) {
+                                Console.WriteLine("{0}: {1}", i, lines[i].ToString());
+                            }
+                        }
+
+                        Assert.AreEqual(lines.Length, expectedOutput.Length);
+                        for (int i = 0; i < expectedOutput.Length; i++) {
+                            Assert.AreEqual(lines[i], expectedOutput[i]);
+                        }
+                    }
                 } else {
-                    // don't count ending \n as new empty line
-                    output = output.Replace("\r\n", "\n");
-                    if (output[output.Length - 1] == '\n') {
-                        output.Remove(output.Length - 1, 1);
-                    }
-
-                    var lines = output.Split('\n');
-                    if (lines.Length != expectedOutput.Length) {
-                        Console.WriteLine(output.ToString());
-                    }
-
-                    Assert.AreEqual(lines.Length, expectedOutput.Length);
-                    for (int i = 0; i < expectedOutput.Length; i++) {
-                        Assert.AreEqual(lines[i], expectedOutput[i]);
+                    foreach (var line in expectedOutput) {
+                        Assert.IsTrue(output.IndexOf(line) != -1);
                     }
                 }
 
@@ -171,7 +183,7 @@ namespace PythonToolsTests {
                 afterExecute(completed);
             }
 
-            task.Wait(3000);
+            task.Wait(timeout);
 
             if (!completed) {
                 Assert.Fail("command didn't complete in 3 seconds");

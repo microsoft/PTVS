@@ -1129,6 +1129,20 @@ namespace FastCgiTest {
                     return wfastcgiPath;
                 }
 
+                wfastcgiPath = Path.Combine(
+                    Environment.GetEnvironmentVariable("ProgramFiles(x86)"),
+                    "MSbuild",
+                    "Microsoft",
+                    "VisualStudio",
+                    "v" + AssemblyVersionInfo.VSVersion,
+                    "Python Tools",
+                    "wfastcgi.py"
+                );
+
+                if (File.Exists(wfastcgiPath)) {
+                    return wfastcgiPath;
+                }
+
                 throw new InvalidOperationException("Failed to find wfastcgi.py");
             }
         }

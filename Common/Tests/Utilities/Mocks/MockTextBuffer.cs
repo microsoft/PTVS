@@ -57,7 +57,13 @@ namespace TestUtilities.Mocks {
             var changed = ChangedLowPriority;
             if (changed != null) {
                 var oldSnapshot = _snapshot;
-                var newSnapshot = new MockTextSnapshot(this, _snapshot.GetText(), _snapshot);
+                var newSnapshot = new MockTextSnapshot(this, _snapshot.GetText(), _snapshot, 
+                    new MockTextChange(
+                        new SnapshotSpan(_snapshot, 0, _snapshot.Length),
+                        0,
+                        _snapshot.GetText()
+                    )
+                );
                 _snapshot = newSnapshot;
                 changed(this, new TextContentChangedEventArgs(oldSnapshot, newSnapshot, EditOptions.None, null));
             }
