@@ -47,6 +47,7 @@ def exec_file(file, global_variables):
     ``sys.path[0]`` will be changed to the value of `file` without the filename.
     Both values are restored when this function exits.
     '''
+    global_variables = dict(global_variables)
     mod_name = global_variables.setdefault('__name__', '<run_path>')
     mod = sys.modules[mod_name] = imp.new_module(mod_name)
     mod.__dict__.update(global_variables)
