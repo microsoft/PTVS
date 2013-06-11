@@ -21,35 +21,35 @@ using System.Threading.Tasks;
 
 namespace Microsoft.PythonTools.Interpreter.Default {
     class AnalysisOnlyInterpreterFactory : PythonInterpreterFactoryWithDatabase {
-        readonly string _actualDatabasePath;
+        readonly IEnumerable<string> _actualDatabasePaths;
         readonly PythonTypeDatabase _actualDatabase;
 
-        public AnalysisOnlyInterpreterFactory(Version version)
-            : base(Guid.NewGuid(), "Python Code Analysis", new InterpreterConfiguration("", "", "", "", ProcessorArchitecture.None, version), false) {
+        public AnalysisOnlyInterpreterFactory(Version version, string description = null)
+            : base(
+                Guid.NewGuid(),
+                description ?? string.Format("Python {0} Analyzer", version),
+                new InterpreterConfiguration(version),
+                false) {
         }
 
-        public AnalysisOnlyInterpreterFactory(Version version, string databasePath)
-            : this(version) {
-            _actualDatabasePath = databasePath;
+        public AnalysisOnlyInterpreterFactory(Version version, IEnumerable<string> databasePaths, string description = null)
+            : this(version, description) {
+            _actualDatabasePaths = databasePaths.ToList();
         }
 
-        public AnalysisOnlyInterpreterFactory(Version version, PythonTypeDatabase database)
-            : this(version) {
+        public AnalysisOnlyInterpreterFactory(Version version, PythonTypeDatabase database, string description = null)
+            : this(version, description) {
             _actualDatabase = database;
         }
 
-        protected override PythonTypeDatabase MakeTypeDatabase(string databasePath) {
+        public override PythonTypeDatabase MakeTypeDatabase(string databasePath) {
             if (_actualDatabase != null) {
                 return _actualDatabase;
-            } else if (_actualDatabasePath != null) {
-                return new PythonTypeDatabase(_actualDatabasePath, Configuration.Version);
+            } else if (_actualDatabasePaths != null) {
+                return new PythonTypeDatabase(this, _actualDatabasePaths);
             } else {
-                return PythonTypeDatabase.CreateDefaultTypeDatabase(Configuration.Version);
+                return PythonTypeDatabase.CreateDefaultTypeDatabase(this);
             }
-        }
-
-        protected override IPythonInterpreter MakeInterpreter(PythonTypeDatabase typeDb) {
-            return new CPythonInterpreter(this, typeDb);
         }
     }
 }

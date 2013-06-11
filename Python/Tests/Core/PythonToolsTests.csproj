@@ -96,6 +96,7 @@
     <ProjectReference Include="..\..\Product\PythonTools\PythonTools.csproj">
       <Project>{FA7BE5F5-E04F-4613-B7AC-70CE10D1BB68}</Project>
       <Name>PythonTools</Name>
+      <Aliases>global,pythontools</Aliases>
     </ProjectReference>
     <ProjectReference Include="..\..\..\Common\Product\ReplWindow\ReplWindow.csproj">
       <Project>{20bb6fac-44d2-4d76-abfe-0c1e163a1a4f}</Project>

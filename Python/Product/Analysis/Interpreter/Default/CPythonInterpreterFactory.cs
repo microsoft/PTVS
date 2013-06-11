@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System;
+using System.IO;
 using System.Reflection;
 
 namespace Microsoft.PythonTools.Interpreter.Default {
@@ -21,6 +22,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
             Version version,
             Guid id,
             string description,
+            string prefixPath,
             string pythonPath,
             string pythonwPath,
             string libPath,
@@ -31,6 +33,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
                 id,
                 description,
                 new InterpreterConfiguration(
+                    prefixPath,
                     pythonPath,
                     pythonwPath,
                     libPath,
@@ -39,8 +42,12 @@ namespace Microsoft.PythonTools.Interpreter.Default {
                     version),
                 watchForNewModules) { }
 
-        protected override IPythonInterpreter MakeInterpreter(PythonTypeDatabase typeDb) {
-            return new CPythonInterpreter(this, typeDb);
+        static string GetDirectoryName(string path) {
+            if (string.IsNullOrEmpty(path) ||
+                path.IndexOfAny(Path.GetInvalidPathChars()) >= 0) {
+                return string.Empty;
+            }
+            return Path.GetDirectoryName(path);
         }
     }
 }

@@ -5793,7 +5793,13 @@ If the files in the existing folder have the same names as files in the folder y
             {
                 SetupProjectGlobalPropertiesThatAllProjectSystemsMustSet();
             }
+            NewBuildProject(project);
         }
+
+        /// <summary>
+        /// Called when a new value for <see cref="BuildProject"/> is available.
+        /// </summary>
+        protected virtual void NewBuildProject(MSBuild.Project project) { }
 
         /// <summary>
         /// Setup the global properties for project instance.

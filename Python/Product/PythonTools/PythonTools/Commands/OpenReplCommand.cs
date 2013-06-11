@@ -69,7 +69,7 @@ namespace Microsoft.PythonTools.Commands {
 
         public string Description {
             get {
-                return _factory.GetInterpreterDisplay() + " Interactive";
+                return _factory.Description + " Interactive";
             }
         }
         

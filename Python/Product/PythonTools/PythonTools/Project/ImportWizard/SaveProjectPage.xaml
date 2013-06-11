@@ -5,6 +5,7 @@
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
       xmlns:l="clr-namespace:Microsoft.PythonTools.Project.ImportWizard"
+      xmlns:wpf="clr-namespace:Microsoft.PythonTools.Wpf"
       mc:Ignorable="d" 
       d:DesignHeight="300" d:DesignWidth="500"
       Title="Save Project"
@@ -20,7 +21,7 @@
             <RowDefinition />
         </Grid.RowDefinitions>
         
-        <l:LabelledControl Title="Select where to save your project file."
+        <wpf:LabelledControl Title="Select where to save your project file."
                            HelpText="We won't move any files, and you can use Save As to move the project file later."
                            Grid.Row="0">
             <Grid>
@@ -36,14 +37,14 @@
                         CommandParameter="Python Project Files (*.pyproj)|*.pyproj|All Files (*.*)|*.*"
                         CommandTarget="{Binding ElementName=ProjectPathTextBox}" />
             </Grid>
-        </l:LabelledControl>
+        </wpf:LabelledControl>
 
-        <l:LabelledControl Title="Select any other features for your project."
+        <wpf:LabelledControl Title="Select any other features for your project."
                            HelpText="These can not be changed later without creating a new project."
                            Grid.Row="1">
             <StackPanel Orientation="Vertical">
                 <CheckBox IsChecked="{Binding SupportDjango}">_Django</CheckBox>
             </StackPanel>
-        </l:LabelledControl>
+        </wpf:LabelledControl>
     </Grid>
 </Page>

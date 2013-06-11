@@ -13,11 +13,13 @@
  * ***************************************************************************/
 
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 
 namespace Microsoft.PythonTools.Interpreter {
     public sealed class InterpreterConfiguration {
+        readonly string _prefixPath;
         readonly string _interpreterPath;
         readonly string _windowsInterpreterPath;
         readonly string _libraryPath;
@@ -25,13 +27,33 @@ namespace Microsoft.PythonTools.Interpreter {
         readonly ProcessorArchitecture _architecture;
         readonly Version _version;
 
-        public InterpreterConfiguration(string path, string winPath, string libraryPath, string pathVar, ProcessorArchitecture arch, Version version) {
+        internal InterpreterConfiguration(Version version) {
+            _version = version;
+        }
+
+        public InterpreterConfiguration(string prefixPath,
+                                        string path,
+                                        string winPath,
+                                        string libraryPath,
+                                        string pathVar,
+                                        ProcessorArchitecture arch,
+                                        Version version) {
+            _prefixPath = prefixPath;
             _interpreterPath = path;
             _windowsInterpreterPath = winPath ?? path;
-            _libraryPath = libraryPath ?? Path.Combine(Path.GetDirectoryName(path), "Lib");
+            _libraryPath = libraryPath ?? Path.Combine(_prefixPath, "Lib");
             _pathEnvironmentVariable = pathVar;
             _architecture = arch;
             _version = version;
+            Debug.Assert(string.IsNullOrEmpty(_interpreterPath) || !string.IsNullOrEmpty(_prefixPath),
+                "Anyone providing an interpreter should also specify the prefix path");
+        }
+
+        /// <summary>
+        /// Returns the prefix path of the Python installation.
+        /// </summary>
+        public string PrefixPath {
+            get { return _prefixPath; }
         }
 
         /// <summary>
@@ -77,6 +99,33 @@ namespace Microsoft.PythonTools.Interpreter {
         /// </summary>
         public Version Version {
             get { return _version; }
+        }
+
+        public override bool Equals(object obj) {
+            var other = obj as InterpreterConfiguration;
+            if (other == null) {
+                return false;
+            }
+
+            var cmp = StringComparer.OrdinalIgnoreCase;
+            return cmp.Equals(PrefixPath, other.PrefixPath) &&
+                cmp.Equals(InterpreterPath, other.InterpreterPath) &&
+                cmp.Equals(WindowsInterpreterPath, other.WindowsInterpreterPath) &&
+                cmp.Equals(LibraryPath, other.LibraryPath) &&
+                cmp.Equals(PathEnvironmentVariable, other.PathEnvironmentVariable) &&
+                Architecture == other.Architecture &&
+                Version == other.Version;
+        }
+
+        public override int GetHashCode() {
+            var cmp = StringComparer.OrdinalIgnoreCase;
+            return cmp.GetHashCode(PrefixPath) ^
+                cmp.GetHashCode(InterpreterPath) ^
+                cmp.GetHashCode(WindowsInterpreterPath) ^
+                cmp.GetHashCode(LibraryPath) ^
+                cmp.GetHashCode(PathEnvironmentVariable) ^
+                Architecture.GetHashCode() ^
+                Version.GetHashCode();
         }
     }
 }

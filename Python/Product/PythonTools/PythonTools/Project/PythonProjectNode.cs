@@ -26,7 +26,9 @@ using System.Windows;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Interpreters;
 using Microsoft.PythonTools.Navigation;
+using Microsoft.PythonTools.Options;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -50,16 +52,52 @@ namespace Microsoft.PythonTools.Project {
         private VsProjectAnalyzer _analyzer;
         private readonly HashSet<string> _warningFiles = new HashSet<string>();
         private readonly HashSet<string> _errorFiles = new HashSet<string>();
-        private bool _defaultInterpreter;
         private PythonDebugPropertyPage _debugPropPage;
         private CommonSearchPathContainerNode _searchPathContainer;
-        private List<VirtualEnvRequestHandler> _virtualEnvCreationRequests;
+        private MSBuildProjectInterpreterFactoryProvider _interpreters;
 
         public PythonProjectNode(CommonProjectPackage package)
             : base(package, Utilities.GetImageList(typeof(PythonProjectNode).Assembly.GetManifestResourceStream(PythonConstants.ProjectImageList))) {
 
             Type projectNodePropsType = typeof(PythonProjectNodeProperties);
             AddCATIDMapping(projectNodePropsType, projectNodePropsType.GUID);
+        }
+
+        protected override void NewBuildProject(Build.Evaluation.Project project) {
+            base.NewBuildProject(project);
+
+            if (_interpreters != null) {
+                _interpreters.ActiveInterpreterChanged -= ActiveInterpreterChanged;
+                _interpreters.InterpreterFactoriesChanged -= InterpreterFactoriesChanged;
+                _interpreters = null;
+            }
+
+            if (project != null) {
+                var interpService = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
+                _interpreters = new MSBuildProjectInterpreterFactoryProvider(interpService, project);
+                _interpreters.ActiveInterpreterChanged += ActiveInterpreterChanged;
+                try {
+                    _interpreters.DiscoverInterpreters();
+                } catch (InvalidDataException ex) {
+                    OutputWindowRedirector.GetGeneral(Site).WriteErrorLine(ex.ToString());
+                }
+                _interpreters.InterpreterFactoriesChanged += InterpreterFactoriesChanged;
+            } else {
+                _interpreters = null;
+            }
+        }
+
+        private void InterpreterFactoriesChanged(object sender, EventArgs e) {
+            var node = GetInterpretersContainerNode();
+            if (node != null) {
+                node.OnInterpreterFactoriesChanged(_interpreters);
+            }
+        }
+
+        internal MSBuildProjectInterpreterFactoryProvider Interpreters {
+            get {
+                return _interpreters;
+            }
         }
 
         protected override Stream ProjectIconsImageStripStream {
@@ -185,14 +223,10 @@ namespace Microsoft.PythonTools.Project {
         protected internal override void ProcessReferences() {
             base.ProcessReferences();
 
-            var virtualEnv = GetVirtualEnvContainerNode();
-            if (virtualEnv == null) {
-                virtualEnv = new VirtualEnvContainerNode(this);
-                AddChild(virtualEnv);
-            }
-
-            foreach (var buildItem in BuildProject.GetItems(PythonConstants.VirtualEnvItemType)) {
-                virtualEnv.AddChild(new VirtualEnvNode(this, buildItem));
+            var interpreters = GetInterpretersContainerNode();
+            if (interpreters == null) {
+                interpreters = new InterpretersContainerNode(this);
+                AddChild(interpreters);
             }
         }
 
@@ -425,11 +459,6 @@ namespace Microsoft.PythonTools.Project {
             }
 
             DisposeInterpreter();
-
-            if (_defaultInterpreter) {
-                var interpService = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
-                interpService.DefaultInterpreterChanged -= DefaultInterpreterChanged;
-            }
         }
 
         private void DisposeInterpreter() {
@@ -513,57 +542,32 @@ namespace Microsoft.PythonTools.Project {
         }
 
         internal IPythonInterpreterFactory GetInterpreterFactory() {
-            var interpreterId = GetProjectProperty(PythonConstants.InterpreterId, false);
-            var interpreterVersion = GetProjectProperty(PythonConstants.InterpreterVersion, false);
-            Guid id;
-            Version version;
-
-            var interpService = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
-
-            IPythonInterpreterFactory fact = null;
-            if (Guid.TryParse(interpreterId, out id) && Version.TryParse(interpreterVersion, out version)) {
-                fact = interpService.FindInterpreter(id, version);
-            }
-
-            if (fact == null) {
-                fact = interpService.DefaultInterpreter;
-                if (!_defaultInterpreter) {
-                    // http://pytools.codeplex.com/workitem/643
-                    // Don't hook the event multiple times
-
-                    _defaultInterpreter = true;
-
-                    interpService.DefaultInterpreterChanged += DefaultInterpreterChanged;
-                }
-            } else {
-                if (_defaultInterpreter) {
-                    interpService.DefaultInterpreterChanged -= DefaultInterpreterChanged;
-                }
-                _defaultInterpreter = false;
-            }
+            var fact = _interpreters.ActiveInterpreter;
 
             PythonToolsPackage.EnsureCompletionDb(fact);
 
             return fact;
         }
 
-        private void DefaultInterpreterChanged(object sender, EventArgs e) {
-            ClearInterpreter();
-        }
-
         /// <summary>
-        /// Called when default interpreter is changed.  A new interpreter will be lazily created when needed.
+        /// Called when the active interpreter is changed.  A new interpreter
+        /// will be lazily created when needed.
         /// </summary>
-        internal void ClearInterpreter() {
+        private void ActiveInterpreterChanged(object sender, EventArgs e) {
             DisposeInterpreter();
 
             var analyzer = CreateAnalyzer();
 
             Reanalyze(this, analyzer);
-            analyzer.SwitchAnalyzers(_analyzer);
-            AnalyzeSearchPaths(ParseSearchPath());
+            if (_analyzer != null) {
+                analyzer.SwitchAnalyzers(_analyzer);
+            }
 
             _analyzer = analyzer;
+            var searchPath = ParseSearchPath();
+            if (searchPath != null && _analyzer != null) {
+                AnalyzeSearchPaths(searchPath);
+            }
 
             var analyzerChanged = ProjectAnalyzerChanged;
             if (analyzerChanged != null) {
@@ -740,237 +744,149 @@ namespace Microsoft.PythonTools.Project {
 
         #region Virtual Env support
 
-        internal int CreateVirtualEnv() {
-            var view = new CreateVirtualEnvironmentView(true);
-            if (view.AvailableInterpreters.Count == 0) {
-                MessageBox.Show("There are no configured interpreters available to create a virtual environment.\r\n\r\nPlease install a Python interpreter or register one in Tools->Options->Python Tools->Interpreters");
-                return VSConstants.S_OK;
+        internal void AddPythonInterpreter(IPythonInterpreterFactory selectedInterpreter) {
+            var interp = _interpreters.FindInterpreter(selectedInterpreter.Id, selectedInterpreter.Configuration.Version);
+            if (interp != null) {
+                return;
             }
 
-            const string baseName = "env";
-            view.Location = ProjectHome;
-            view.Name = baseName;
-            if (Directory.Exists(Path.Combine(view.Location, view.Name))) {
-                for (int i = 1; i < Int32.MaxValue; i++) {
-                    if (!Directory.Exists(Path.Combine(view.Location, baseName + i))) {
-                        view.Name = baseName + i;
-                        break;
-                    }
-                }
+            if (!QueryEditProjectFile(false)) {
+                throw Marshal.GetExceptionForHR(VSConstants.OLE_E_PROMPTSAVECANCELLED);
             }
 
-            SelectDefaultVirtualEnvInterpreter(view);
-
-            var createVirtualEnv = new CreateVirtualEnvironment(view);
-            var res = createVirtualEnv.ShowDialog();
-            if (res != null && res.Value) {
-                EnqueueVirtualEnvRequest(
-                    ProcessOutput.Run(
-                        view.Interpreter.Path,
-                        new[] { "-m", "virtualenv", view.Name },
-                        view.Location,
-                        new[] { new KeyValuePair<string, string>("PYTHONUNBUFFERED", "1") },
-                        false,
-                        OutputWindowRedirector.GetGeneral(Site)
-                    ),
-                    "Creating virtual environment...",
-                    "Virtual environment created successfully",
-                    "Error in creating virtual environment: {0}",
-                    () => AddVirtualEnvPath(Path.Combine(view.Location, view.Name), view.Interpreter.Version, view.Interpreter.Id)
-                );
-            }
-            return VSConstants.S_OK;
+            _interpreters.AddInterpreter(selectedInterpreter);
+            SetProjectFileDirty(true);
         }
 
-        private void SelectDefaultVirtualEnvInterpreter(CreateVirtualEnvironmentView view) {
-            var curInterpreter = GetInterpreterFactory();
-            foreach (var interpreter in view.AvailableInterpreters) {
-                if (interpreter.Id == curInterpreter.Id &&
-                    interpreter.Version == curInterpreter.Configuration.Version) {
-                    view.Interpreter = interpreter;
-                    break;
+        internal void ShowAddInterpreter() {
+            var service = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
+
+            var result = AddInterpreter.ShowDialog(this, service);
+            if (result == null) {
+                return;
+            }
+
+            var toRemove = new HashSet<IPythonInterpreterFactory>(_interpreters.GetInterpreterFactories());
+            var toAdd = new HashSet<IPythonInterpreterFactory>(result);
+            toRemove.ExceptWith(toAdd);
+            toAdd.ExceptWith(toRemove);
+
+            if (toAdd.Any() || toRemove.Any()) {
+                //Make sure we can edit the project file
+                if (!QueryEditProjectFile(false)) {
+                    throw Marshal.GetExceptionForHR(VSConstants.OLE_E_PROMPTSAVECANCELLED);
                 }
-            }
-        }
-
-        internal void EnqueueVirtualEnvRequest(ProcessOutput process, string initialMsg, string success, string error, Action onSuccess, Action onError = null) {
-            if (_virtualEnvCreationRequests == null) {
-                _virtualEnvCreationRequests = new List<VirtualEnvRequestHandler>();
-            }
-
-            var redirector = process.Redirector as OutputWindowRedirector;
-            if (redirector == null) {
-                redirector = OutputWindowRedirector.GetGeneral(Site);
-            }
-
-            var handler = new VirtualEnvRequestHandler(
-                redirector,
-                process,
-                this,
-                onSuccess,
-                onError,
-                TaskScheduler.FromCurrentSynchronizationContext(),
-                success,
-                error);
-
-            lock (_virtualEnvCreationRequests) {
-                // keep the Process object alive so we receive events even after GC
-                _virtualEnvCreationRequests.Add(handler);
-            }
-
-            var statusBar = (IVsStatusbar)CommonPackage.GetGlobalService(typeof(SVsStatusbar));
-            statusBar.SetText(initialMsg + SeeOutputWindowForMoreDetails);
-
-            redirector.Show();
-            redirector.WriteLine(initialMsg);
-        }
-
-        const string SeeOutputWindowForMoreDetails = " (See Output Window for more details)";
-
-        class VirtualEnvRequestHandler {
-            private readonly string _success, _error;
-            private readonly PythonProjectNode _node;
-            private readonly TaskScheduler _scheduler;
-            private readonly Action _onSuccess, _onError;
-            private readonly ProcessOutput _process;
-            private readonly OutputWindowRedirector _outPane;
-
-            public VirtualEnvRequestHandler(OutputWindowRedirector outPane, ProcessOutput process, PythonProjectNode node, Action onSuccess, Action onError, TaskScheduler scheduler, string success, string error) {
-                _outPane = outPane;
-                _process = process;
-                _process.Exited += VirtualEnvCreationExited;
-                _node = node;
-                _scheduler = scheduler;
-                _onSuccess = onSuccess;
-                _onError = onError;
-                _scheduler = scheduler;
-                _success = success;
-                _error = error;
-            }
-
-            private void VirtualEnvCreationExited(object sender, EventArgs e) {
-                lock (_node._virtualEnvCreationRequests) {
-                    // no longer keep the process object alive.
-                    _node._virtualEnvCreationRequests.Remove(this);
+                foreach (var factory in toAdd) {
+                    _interpreters.AddInterpreter(factory);
                 }
-
-                var proc = (ProcessOutput)sender;
-
-                var statusBar = (IVsStatusbar)CommonPackage.GetGlobalService(typeof(SVsStatusbar));
-
-                if (proc.ExitCode == 0) {
-                    statusBar.SetText(_success + SeeOutputWindowForMoreDetails);
-                    if (_outPane != null) {
-                        _outPane.WriteLine(_success);
-                    }
-                    _scheduler.StartNew(_onSuccess).Wait();
-                } else {
-                    var msg = String.Format(_error, proc.ExitCode);
-                    statusBar.SetText(msg + SeeOutputWindowForMoreDetails);
-                    if (_outPane != null) {
-                        _outPane.WriteErrorLine(msg);
-                    }
-                    if (_onError != null) {
-                        _scheduler.StartNew(_onError).Wait();
-                    }
+                foreach (var factory in toRemove) {
+                    _interpreters.RemoveInterpreterFactory(factory);
                 }
+                SetProjectFileDirty(true);
             }
         }
 
         /// <summary>
-        /// Executes Add Search Path menu command.
-        /// </summary>        
-        internal int AddVirtualEnv() {
-            var view = new CreateVirtualEnvironmentView(false);
-            if (view.AvailableInterpreters.Count == 0) {
-                MessageBox.Show("There are no configured base interpreters available to register a virtual environment.\r\n\r\nPlease install a Python interpreter or register one in Tools->Options->Python Tools->Interpreters");
-                return VSConstants.S_OK;
-            }
-
-            SelectDefaultVirtualEnvInterpreter(view);
-            view.Location = ProjectHome;
-
-            var createVirtualEnv = new CreateVirtualEnvironment(view);
-            var res = createVirtualEnv.ShowDialog();
-            if (res ?? false) {
-                AddVirtualEnvPath(view.Location, view.Interpreter.Version, view.Interpreter.Id);
-            }
-            return VSConstants.S_OK;
-        }
-
-        /// <summary>
-        /// Adds new search path to the SearchPath project property.
+        /// Executes Add Interpreter menu command.
         /// </summary>
-        internal void AddVirtualEnvPath(string newpath, Version version, Guid interpreterId) {
-            Utilities.ArgumentNotNull("newpath", newpath);
+        internal Task ShowAddVirtualEnvironment(bool browseForExisting) {
+            var service = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
+            var scheduler = TaskScheduler.FromCurrentSynchronizationContext();
 
-            var relativePath = CommonUtils.TrimEndSeparator(CommonUtils.GetRelativeDirectoryPath(ProjectHome, CommonUtils.GetAbsoluteDirectoryPath(ProjectHome, newpath)));
-            var items = BuildProject.GetItems(PythonConstants.VirtualEnvItemType);
-            foreach (var item in items) {
-                if (CommonUtils.IsSameDirectory(
-                    CommonUtils.GetAbsoluteDirectoryPath(ProjectHome, item.EvaluatedInclude),
-                    CommonUtils.GetAbsoluteDirectoryPath(ProjectHome, relativePath))) {
-                    // item already exists
-                    return;
-                }
+            var data = AddVirtualEnvironment.ShowDialog(this, service, browseForExisting);
+
+            if (data == null) {
+                var tcs = new TaskCompletionSource<object>();
+                tcs.SetCanceled();
+                return tcs.Task;
             }
+
+            var doCreate = data.WillCreateVirtualEnv;
+            var path = data.VirtualEnvPath;
+            var baseInterp = data.BaseInterpreter.Interpreter;
+
+            Task task;
+            if (data.WillCreateVirtualEnv) {
+                task = VirtualEnv.Create(baseInterp,
+                    Site,
+                    path,
+                    OutputWindowRedirector.GetGeneral(Site));
+            } else {
+                var tcs = new TaskCompletionSource<object>();
+                tcs.SetResult(null);
+                task = tcs.Task;
+            }
+            
+            return task.ContinueWith<InterpreterFactoryCreationOptions>(t => {
+                if (_interpreters.FindInterpreter(path) != null) {
+                    return null;
+                }
+
+                var options = VirtualEnv.FindInterpreterOptions(path, service, baseInterp);
+                if (options == null) {
+                    throw new InvalidOperationException("Unable to add virtual environment");
+                }
+                return options;
+            }, TaskContinuationOptions.OnlyOnRanToCompletion).ContinueWith(t => {
+                if (t.Result != null) {
+                    if (!QueryEditProjectFile(false)) {
+                        throw Marshal.GetExceptionForHR(VSConstants.OLE_E_PROMPTSAVECANCELLED);
+                    }
+
+                    _interpreters.CreateInterpreterFactory(t.Result);
+                    SetProjectFileDirty(true);
+                }
+            }, CancellationToken.None, TaskContinuationOptions.OnlyOnRanToCompletion, scheduler);
+        }
+
+
+        /// <summary>
+        /// Removes a reference to an interpreter from the project.
+        /// </summary>
+        internal void RemoveInterpreter(IPythonInterpreterFactory factory) {
+            Utilities.ArgumentNotNull("factory", factory);
 
             //Make sure we can edit the project file
             if (!QueryEditProjectFile(false)) {
                 throw Marshal.GetExceptionForHR(VSConstants.OLE_E_PROMPTSAVECANCELLED);
             }
-
-            var newItem = BuildProject.AddItem(PythonConstants.VirtualEnvItemType, relativePath).First();
-            newItem.SetMetadataValue(PythonConstants.VirtualEnvInterpreterId, interpreterId.ToString());
-            newItem.SetMetadataValue(PythonConstants.VirtualEnvInterpreterVersion, version.ToString());
-            GetVirtualEnvContainerNode().AddChild(new VirtualEnvNode(this, newItem));
+            _interpreters.RemoveInterpreterFactory(factory);
             SetProjectFileDirty(true);
         }
 
         /// <summary>
-        /// Removes a given path from the SearchPath property.
+        /// Removes a given interpreter from the project, optionally deleting
+        /// files from disk.
         /// </summary>
-        internal void RemoveVirtualEnvPath(string path) {
+        internal void RemoveInterpreter(string path, bool removeFromStorage) {
             Utilities.ArgumentNotNull("path", path);
 
-            var relativePath = CommonUtils.TrimEndSeparator(CommonUtils.GetRelativeDirectoryPath(ProjectHome, CommonUtils.GetAbsoluteDirectoryPath(ProjectHome, path)));
-            var items = BuildProject.GetItems(PythonConstants.VirtualEnvItemType);
-            foreach (var item in items) {
-                if (CommonUtils.IsSameDirectory(
-                    CommonUtils.GetAbsoluteDirectoryPath(ProjectHome, item.EvaluatedInclude),
-                    CommonUtils.GetAbsoluteDirectoryPath(ProjectHome, relativePath))) {
-                    //Make sure we can edit the project file
-                    if (!QueryEditProjectFile(false)) {
-                        throw Marshal.GetExceptionForHR(VSConstants.OLE_E_PROMPTSAVECANCELLED);
-                    }
-
-                    BuildProject.RemoveItem(item);
-                    SetProjectFileDirty(true);
-
-                    var venvContainer = GetVirtualEnvContainerNode();
-                    for (var curItem = venvContainer.FirstChild; curItem != null; curItem = curItem.NextSibling) {
-                        if (((MsBuildProjectElement)curItem.ItemNode).Item.UnevaluatedInclude == item.UnevaluatedInclude) {
-                            venvContainer.RemoveChild(curItem);
-                            OnInvalidateItems(venvContainer);
-                            break;
-                        }
-                    }
-
-                    return;
+            var fact = _interpreters.FindInterpreter(path);
+            if (fact != null) {
+                //Make sure we can edit the project file
+                if (!QueryEditProjectFile(false)) {
+                    throw Marshal.GetExceptionForHR(VSConstants.OLE_E_PROMPTSAVECANCELLED);
                 }
+                _interpreters.RemoveInterpreterFactory(fact);
+
+                if (removeFromStorage) {
+                    Task.Factory.StartNew((Action)(() => Directory.Delete(path, recursive: true))).ContinueWith(t => {
+                        MessageBox.Show(
+                            string.Format(SR.GetString(SR.InterpreterDeleteError), path),
+                            SR.GetString(SR.PythonToolsForVisualStudio)
+                        );
+                    }, CancellationToken.None, TaskContinuationOptions.OnlyOnFaulted, TaskScheduler.FromCurrentSynchronizationContext());
+                }
+
+                SetProjectFileDirty(true);
             }
         }
 
         /// <summary>
-        /// Returns the reference container node.
+        /// Returns the interpreters container node.
         /// </summary>
-        internal VirtualEnvContainerNode GetVirtualEnvContainerNode() {
-            for (var child = this.FirstChild; child != null; child = child.NextSibling) {
-                if (child is VirtualEnvContainerNode) {
-                    return (VirtualEnvContainerNode)child;
-                }
-            }
-            return null;
+        internal InterpretersContainerNode GetInterpretersContainerNode() {
+            return AllChildren.OfType<InterpretersContainerNode>().FirstOrDefault();
         }
 
         #endregion

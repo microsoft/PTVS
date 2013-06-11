@@ -99,7 +99,7 @@ namespace Microsoft.PythonTools.Intellisense {
             _interpreterFactory = factory;
             _project = project;
 
-            _pyAnalyzer = new PythonAnalyzer(interpreter, factory.GetLanguageVersion());
+            _pyAnalyzer = new PythonAnalyzer(factory, interpreter);
             interpreter.ModuleNamesChanged += OnModulesChanged;
             _projectFiles = new ConcurrentDictionary<string, IProjectEntry>(StringComparer.OrdinalIgnoreCase);
 

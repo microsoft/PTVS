@@ -50,7 +50,7 @@ namespace Microsoft.PythonTools.Options {
                 _showSettingsFor.Items.Clear();
                 _defaultInterpreter.Items.Clear();
 
-                foreach (var interpreter in OptionsPage._options.Keys.OrderBy(f => f.GetInterpreterDisplay())) {
+                foreach (var interpreter in OptionsPage._options.Keys.OrderBy(f => f.Description)) {
                     InterpreterOptions opts;
                     if (OptionsPage._options.TryGetValue(interpreter, out opts) && !opts.Removed) {
                         _showSettingsFor.Items.Add(interpreter);
@@ -314,7 +314,7 @@ namespace Microsoft.PythonTools.Options {
         private void Interpreter_Format(object sender, ListControlConvertEventArgs e) {
             var factory = e.ListItem as IPythonInterpreterFactory;
             if (factory != null) {
-                e.Value = factory.GetInterpreterDisplay();
+                e.Value = factory.Description;
             } else {
                 e.Value = e.ListItem.ToString();
             }

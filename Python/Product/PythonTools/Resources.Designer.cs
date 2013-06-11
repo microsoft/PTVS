@@ -61,6 +61,24 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The interpreter that was used to create this virtual environment..
+        /// </summary>
+        internal static string BaseInterpreterDescription {
+            get {
+                return ResourceManager.GetString("BaseInterpreterDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Base Interpreter.
+        /// </summary>
+        internal static string BaseInterpreterDisplayName {
+            get {
+                return ResourceManager.GetString("BaseInterpreterDisplayName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Can not create tool window..
         /// </summary>
         internal static string CanNotCreateWindow {
@@ -88,11 +106,127 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to To install your Python package, we will also install pip.
+        ///
+        ///Continue?.
+        /// </summary>
+        internal static string InstallPip {
+            get {
+                return ResourceManager.GetString("InstallPip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to To create your virtual environment, we will install the virtualenv package.
+        ///
+        ///Continue?.
+        /// </summary>
+        internal static string InstallVirtualEnv {
+            get {
+                return ResourceManager.GetString("InstallVirtualEnv", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to To create a virtual environment, we will install pip and the virtualenv package.
+        ///
+        ///Continue?.
+        /// </summary>
+        internal static string InstallVirtualEnvAndPip {
+            get {
+                return ResourceManager.GetString("InstallVirtualEnvAndPip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The interpreter &apos;{0}&apos; will be removed from the project and deleted from disk..
+        /// </summary>
+        internal static string InterpreterDeleteConfirmation {
+            get {
+                return ResourceManager.GetString("InterpreterDeleteConfirmation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to We weren&apos;t able to delete all the files at {0}.
+        ///
+        ///Some files may need to be removed manually..
+        /// </summary>
+        internal static string InterpreterDeleteError {
+            get {
+                return ResourceManager.GetString("InterpreterDeleteError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The identifier of the interpreter..
+        /// </summary>
+        internal static string InterpreterIdDescription {
+            get {
+                return ResourceManager.GetString("InterpreterIdDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Id.
+        /// </summary>
+        internal static string InterpreterIdDisplayName {
+            get {
+                return ResourceManager.GetString("InterpreterIdDisplayName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The interpreter &apos;{0}&apos; will be removed from the project. No files will be deleted from disk..
+        /// </summary>
+        internal static string InterpreterRemoveConfirmation {
+            get {
+                return ResourceManager.GetString("InterpreterRemoveConfirmation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Python Interpreters.
+        /// </summary>
+        internal static string Interpreters {
+            get {
+                return ResourceManager.GetString("Interpreters", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The Python language version supported by the interpreter..
+        /// </summary>
+        internal static string InterpreterVersionDescription {
+            get {
+                return ResourceManager.GetString("InterpreterVersionDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Version.
+        /// </summary>
+        internal static string InterpreterVersionDisplayName {
+            get {
+                return ResourceManager.GetString("InterpreterVersionDisplayName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to .
         /// </summary>
         internal static string MissingStartupScript {
             get {
                 return ResourceManager.GetString("MissingStartupScript", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Python Tools for Visual Studio.
+        /// </summary>
+        internal static string PythonToolsForVisualStudio {
+            get {
+                return ResourceManager.GetString("PythonToolsForVisualStudio", resourceCulture);
             }
         }
         
@@ -111,6 +245,33 @@ namespace Microsoft.PythonTools {
         internal static string ReferencesNodeName {
             get {
                 return ResourceManager.GetString("ReferencesNodeName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;{0}&apos; will be removed from the project&apos;s search path..
+        /// </summary>
+        internal static string SearchPathRemoveConfirmation {
+            get {
+                return ResourceManager.GetString("SearchPathRemoveConfirmation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Search Path.
+        /// </summary>
+        internal static string SearchPaths {
+            get {
+                return ResourceManager.GetString("SearchPaths", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The list of directories to search for modules and files..
+        /// </summary>
+        internal static string SearchPathsDescription {
+            get {
+                return ResourceManager.GetString("SearchPathsDescription", resourceCulture);
             }
         }
         

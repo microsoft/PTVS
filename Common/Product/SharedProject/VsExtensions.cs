@@ -13,12 +13,12 @@
  * ***************************************************************************/
 
 
-using Microsoft.VisualStudioTools.Project;
-using Microsoft.VisualStudioTools.Project.Automation;
-using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudio.Text.Editor;
+using Microsoft.VisualStudioTools.Project;
+using Microsoft.VisualStudioTools.Project.Automation;
 
 namespace Microsoft.VisualStudioTools {
     static class VsExtensions {
@@ -61,6 +61,12 @@ namespace Microsoft.VisualStudioTools {
                 }
             }
             return null;
+        }
+
+        public static string GetRootCanonicalName(this IVsHierarchy heirarchy) {
+            string path;
+            ErrorHandler.ThrowOnFailure(heirarchy.GetCanonicalName(VSConstants.VSITEMID_ROOT, out path));
+            return path;
         }
 
         internal static T[] Append<T>(this T[] list, T item) {

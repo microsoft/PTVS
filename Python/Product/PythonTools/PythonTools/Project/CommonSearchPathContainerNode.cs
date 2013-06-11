@@ -76,7 +76,7 @@ namespace Microsoft.PythonTools.Project {
         /// Gets the caption of the hierarchy node.        
         /// </summary>
         public override string Caption {
-            get { return DynamicProjectSR.GetString(DynamicProjectSR.SearchPaths); }
+            get { return SR.GetString(SR.SearchPaths); }
         }
 
         /// <summary>

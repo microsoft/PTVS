@@ -4,6 +4,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:ptvs="clr-namespace:Microsoft.PythonTools"
              xmlns:l="clr-namespace:Microsoft.PythonTools.InterpreterList"
              xmlns:wpf="clr-namespace:Microsoft.PythonTools.Wpf"
              xmlns:scm="clr-namespace:System.ComponentModel;assembly=WindowsBase"
@@ -66,7 +67,7 @@
                         </CollectionViewSource.SortDescriptions>
                     </CollectionViewSource>
 
-                    <DataTemplate x:Key="NameTemplate" DataType="{x:Type l:InterpreterView}">
+                    <DataTemplate x:Key="NameTemplate" DataType="{x:Type ptvs:InterpreterView}">
                         <Label Name="InterpreterName" Content="{Binding Name}" />
                         <DataTemplate.Triggers>
                             <DataTrigger Binding="{Binding IsDefault}" Value="True">
@@ -75,13 +76,13 @@
                         </DataTemplate.Triggers>
                     </DataTemplate>
 
-                    <DataTemplate x:Key="MakeDefaultTemplate" DataType="{x:Type l:InterpreterView}">
+                    <DataTemplate x:Key="MakeDefaultTemplate" DataType="{x:Type ptvs:InterpreterView}">
                         <Button Command="{x:Static l:InterpreterList.MakeDefaultCommand}" CommandParameter="{Binding}">
                             Make Default
                         </Button>
                     </DataTemplate>
 
-                    <DataTemplate x:Key="DatabaseTemplate" DataType="{x:Type l:InterpreterView}">
+                    <DataTemplate x:Key="DatabaseTemplate" DataType="{x:Type ptvs:InterpreterView}">
                         <Grid HorizontalAlignment="Stretch">
                             <Grid Name="Status" VerticalAlignment="Center" Margin="0 1">
                                 <Grid.ColumnDefinitions>
@@ -98,6 +99,7 @@
                                             Completion DB needs refresh
                                         </Label>
                                         <Expander Name="ShowContent"
+                                                  Style="{StaticResource PopupExpander}"
                                                   HorizontalAlignment="Left" VerticalAlignment="Center">
                                             <Expander.Header>
                                                 <Path Style="{StaticResource IconPath}"
@@ -140,12 +142,13 @@
                                    Width="auto"
                                    MaxWidth="640" MaxHeight="300"
                                    StaysOpen="False">
-                                <Border Style="{DynamicResource TooltipBorder}">
+                                <Border Style="{StaticResource TooltipBorder}">
                                     <ScrollViewer Background="Transparent"
                                                   HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
                                                   Padding="2">
                                         <StackPanel Orientation="Horizontal">
                                             <Label Content="{Binding IsCurrentReason}"
+                                                   Foreground="{Binding (TextElement.Foreground),RelativeSource={RelativeSource FindAncestor,AncestorType=Border}}"
                                                    VerticalAlignment="Center"/>
                                             <Button Command="{x:Static l:InterpreterList.CopyReasonCommand}"
                                                     CommandParameter="{Binding}"

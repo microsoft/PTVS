@@ -805,7 +805,7 @@ Either stop the current command, or reset the REPL window.");
                     "Django Management Console - " + projectName,
                     pyProj,
                     (projectDir ?? "").ToString(),
-                    Repl.PythonReplCreationOptions.DontPersist
+                    _innerVsHierarchy
                 );
 
                 IVsWindowFrame windowFrame = (IVsWindowFrame)((ToolWindowPane)replWindow).Frame;

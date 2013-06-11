@@ -26,7 +26,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
 
                 if (parameterTable.TryGetValue("type", out value)) {
                     _type = new List<IPythonType>();
-                    typeDb.LookupType(value, (type, fromInstanceDb) => _type.Add(type));
+                    typeDb.LookupType(value, type => _type.Add(type));
                 }
                 
                 if (parameterTable.TryGetValue("name", out value)) {

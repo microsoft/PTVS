@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System;
+using System.IO;
 using System.Reflection;
 using Microsoft.PythonTools.Interpreter.Default;
 
@@ -27,10 +28,18 @@ namespace Microsoft.PythonTools.Interpreter {
         /// interpreter always includes a cached completion database.
         /// </summary>
         public static IPythonInterpreterFactory CreateInterpreterFactory(InterpreterFactoryCreationOptions options) {
+            var ver = options.LanguageVersion ?? new Version(2, 7);
+            var description = options.Description ?? string.Format("Unknown Python {0}", ver);
+            var prefixPath = options.PrefixPath;
+            if (string.IsNullOrEmpty(prefixPath) && !string.IsNullOrEmpty(options.InterpreterPath)) {
+                prefixPath = Path.GetDirectoryName(options.InterpreterPath);
+            }
+
             return new CPythonInterpreterFactory(
-                options.LanguageVersion ?? new Version(2, 7),
+                ver,
                 (options.Id == default(Guid)) ? Guid.NewGuid() : options.Id,
-                options.Description ?? string.Empty,
+                description,
+                prefixPath ?? string.Empty,
                 options.InterpreterPath ?? string.Empty,
                 options.WindowInterpreterPath ?? string.Empty,
                 options.LibraryPath ?? string.Empty,
@@ -56,18 +65,19 @@ namespace Microsoft.PythonTools.Interpreter {
         /// </summary>
         public static IPythonInterpreterFactory CreateAnalysisInterpreterFactory(
             Version languageVersion,
-            string databasePath) {
-            return new AnalysisOnlyInterpreterFactory(languageVersion, databasePath);
+            string description,
+            params string[] databasePaths) {
+            return new AnalysisOnlyInterpreterFactory(languageVersion, databasePaths);
         }
 
         /// <summary>
         /// Creates a new interpreter factory with the default database. This
         /// factory is suitable for analysis, but not execution.
         /// </summary>
-        /// <param name="languageVersion"></param>
-        /// <returns></returns>
-        public static IPythonInterpreterFactory CreateAnalysisInterpreterFactory(Version languageVersion) {
-            return new AnalysisOnlyInterpreterFactory(languageVersion);
+        public static IPythonInterpreterFactory CreateAnalysisInterpreterFactory(
+            Version languageVersion,
+            string description = null) {
+            return new AnalysisOnlyInterpreterFactory(languageVersion, description);
         }
     }
 }

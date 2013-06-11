@@ -28,13 +28,9 @@ namespace Microsoft.PythonTools.Interpreter.Default {
                 _indexTypes = new List<IPythonType>();
 
                 foreach (var indexType in indexTypes) {
-                    typeDb.LookupType(indexType, StoreIndexType);
+                    typeDb.LookupType(indexType, type => _indexTypes.Add(type));
                 }
             }
-        }
-
-        private void StoreIndexType(IPythonType type, bool isInstance) {
-            _indexTypes.Add(type);
         }
 
         public IEnumerable<IPythonType> IndexTypes {

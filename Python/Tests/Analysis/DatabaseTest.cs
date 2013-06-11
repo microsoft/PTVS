@@ -58,7 +58,7 @@ namespace AnalysisTests {
                 Assert.IsNotNull(ptd.GetModule("__builtin__"));
 
                 var factory = new IronPythonInterpreterFactory();
-                var analyzer = new PythonAnalyzer(new IronPythonInterpreter(factory, ptd), PythonLanguageVersion.V27);
+                var analyzer = new PythonAnalyzer(factory, factory.MakeInterpreter(ptd));
 
                 // String type should have been loaded anyway
                 Assert.IsNotNull(analyzer.ClassInfos[BuiltinTypeId.Str]);
@@ -86,6 +86,67 @@ namespace AnalysisTests {
                 // because we replace the module name based on the version
                 // despite using the 2.7-based database.
                 Assert.AreEqual("builtins", analyzer.Types[BuiltinTypeId.Str].DeclaringModule.Name);
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public void LayeredDatabase() {
+            using (var db1 = MockCompletionDB.Create(PythonLanguageVersion.V27, "os"))
+            using (var db2 = MockCompletionDB.Create(PythonLanguageVersion.V27, "posixpath")) {
+                Assert.IsNotNull(db1.Database.GetModule("os"));
+                Assert.IsNull(db1.Database.GetModule("posixpath"));
+
+                var ptd1 = db1.Database;
+                var ptd2 = ptd1.Clone();
+                ptd2.LoadDatabase(db2.DBPath);
+
+                Assert.IsNull(ptd1.GetModule("posixpath"));
+                Assert.IsNotNull(ptd2.GetModule("os"));
+                Assert.IsNotNull(ptd2.GetModule("posixpath"));
+                Assert.AreSame(ptd1.GetModule("os"), db1.Database.GetModule("os"));
+                Assert.AreSame(ptd2.GetModule("os"), db1.Database.GetModule("os"));
+            }
+
+            var factory = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(new Version(2, 7));
+
+            using (var db1 = MockCompletionDB.Create(PythonLanguageVersion.V27, "os", "posixpath"))
+            using (var db2 = MockCompletionDB.Create(PythonLanguageVersion.V27, "posixpath")) {
+                var ptd1 = new PythonTypeDatabase(factory, new[] {
+                    db1.DBPath,
+                    db2.DBPath
+                });
+
+                Assert.IsNotNull(ptd1.GetModule("posixpath"));
+                Assert.AreNotSame(ptd1.GetModule("posixpath"), db1.Database.GetModule("posixpath"));
+                Assert.AreNotSame(ptd1.GetModule("posixpath"), db2.Database.GetModule("posixpath"));
+
+                var ptd2 = new PythonTypeDatabase(factory, new[] {
+                    db2.DBPath,
+                    db1.DBPath
+                });
+
+                Assert.IsNotNull(ptd2.GetModule("posixpath"));
+                Assert.AreNotSame(ptd2.GetModule("posixpath"), db1.Database.GetModule("posixpath"));
+                Assert.AreNotSame(ptd2.GetModule("posixpath"), db2.Database.GetModule("posixpath"));
+            }
+
+            using (var db1 = MockCompletionDB.Create(PythonLanguageVersion.V27, "os", "posixpath"))
+            using (var db2 = MockCompletionDB.Create(PythonLanguageVersion.V27, "posixpath"))
+            using (var db3 = MockCompletionDB.Create(PythonLanguageVersion.V27, "ntpath")) {
+                var ptd = db1.Database;
+                Assert.AreSame(ptd.GetModule("posixpath"), db1.Database.GetModule("posixpath"));
+                Assert.AreNotSame(ptd.GetModule("posixpath"), db2.Database.GetModule("posixpath"));
+
+                ptd = ptd.Clone();
+                ptd.LoadDatabase(db2.DBPath);
+
+                Assert.AreNotSame(ptd.GetModule("posixpath"), db1.Database.GetModule("posixpath"));
+
+                var ptd2 = ptd.Clone();
+                ptd2.LoadDatabase(db3.DBPath);
+
+                Assert.IsNotNull(ptd2.GetModule("ntpath"));
+                Assert.IsNull(ptd.GetModule("ntpath"));
             }
         }
     }

@@ -406,6 +406,13 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
             frame.Show();
         }
 
+        public static string InterpreterHelpUrl {
+            get {
+                return string.Format("http://go.microsoft.com/fwlink/?LinkId=299429&clcid=0x{0:X}",
+                    CultureInfo.CurrentCulture.LCID);
+            }
+        }
+
         protected override object GetAutomationObject(string name) {
             if (name == "VsPython") {
                 return _autoObject;
@@ -772,17 +779,27 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
                     var beforeQueryStatus = command.BeforeQueryStatus;
                     CommandID toolwndCommandID = new CommandID(GuidList.guidPythonToolsCmdSet, command.CommandId);
                     if (beforeQueryStatus == null) {
-                        MenuCommand menuToolWin = new MenuCommand(command.DoCommand, toolwndCommandID);                        
+                        MenuCommand menuToolWin = new MenuCommand(command.DoCommand, toolwndCommandID);
                         mcs.AddCommand(menuToolWin);
                         _commands[command] = menuToolWin;
                     } else {
-                        OleMenuCommand menuToolWin = new OleMenuCommand(command.DoCommand, toolwndCommandID);                        
+                        OleMenuCommand menuToolWin = new OleMenuCommand(command.DoCommand, toolwndCommandID);
                         menuToolWin.BeforeQueryStatus += beforeQueryStatus;
                         mcs.AddCommand(menuToolWin);
                         _commands[command] = menuToolWin;
                     }
                 }
             }
+        }
+
+        private void RefreshAddInterpreterCommands() {
+            var mcs = GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
+            var cmd = new OleMenuCommand(
+                (s, e) => { },
+                new CommandID(GuidList.guidPythonToolsCmdSet, 1),
+                "Abc");
+            
+            mcs.ParentTarget = (IOleCommandTarget)mcs.FindCommand(new CommandID(GuidList.guidPythonToolsCmdSet, PythonConstants.AddInterpreter));
         }
 
         private void RefreshReplCommands(object sender, EventArgs e) {
@@ -1069,21 +1086,24 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
         /// <param name="interpreter">The interpreter to be used.  This implies the language version and provides the path to the Python interpreter to be used.</param>
         /// <param name="startupFile">The file to be executed on the startup of the REPL.  Can be null, which will result in an interactive REPL.</param>
         /// <param name="workingDir">The working directory of the REPL process</param>
-        /// <param name="options">Specifies various options for creation of the REPL window</param>
-        public IReplWindow CreatePythonRepl(string id, string title, IPythonInterpreterFactory interpreter, string workingDir, PythonReplCreationOptions options) {
+        /// <param name="project">The IVsHierarchy representing the Python project.</param>
+        public IReplWindow CreatePythonRepl(string id, string title, IPythonInterpreterFactory interpreter, string workingDir, IVsHierarchy project = null) {
             Utilities.ArgumentNotNull("interpreter", interpreter);
             Utilities.ArgumentNotNull("id", id);
             Utilities.ArgumentNotNull("title", title);
 
             // Full ID as parsed by PythonReplEvaulatorProvider
-            string fullId = String.Format("{0}|{1}|{2}|{3}|{4}|{5}",
+            string fullId = String.Format("{0}|{1}|{2}|{3}|{4}",
                 PythonReplEvaluatorProvider._configurableGuid,
                 workingDir,
-                options.ToString(),
                 interpreter.Id,
                 interpreter.Configuration.Version,
                 id
             );
+
+            if (project != null) {
+                fullId += "|" + project.GetRootCanonicalName();
+            }
             var replProvider = ComponentModel.GetService<IReplWindowProvider>();
 
             return replProvider.FindReplWindow(fullId) ?? replProvider.CreateReplWindow(

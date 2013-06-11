@@ -171,12 +171,12 @@ namespace Microsoft.PythonTools.Pyvot {
 
             public override string Description {
                 get {
-                    return "Install Pyvot into " + Factory.GetInterpreterDisplay();
+                    return "Install Pyvot into " + Factory.Description;
                 }
             }
 
             public void Invoke(object sender, EventArgs args) {
-                var prompt = new InstallPrompt("Pyvot", Factory.GetInterpreterDisplay());
+                var prompt = new InstallPrompt("Pyvot", Factory.Description);
                 if (prompt.ShowDialog() == DialogResult.OK) {
                     InstallSample("Pyvot");
                 }

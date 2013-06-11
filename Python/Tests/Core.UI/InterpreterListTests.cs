@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
@@ -63,7 +64,7 @@ namespace PythonToolsUITests {
             var list = new VisualStudioApp(dte).FindByAutomationId("PythonTools.InterpreterList");
             Assert.IsNotNull(list);
 
-            var allNames = new HashSet<string>(service.Interpreters.Select(i => i.GetInterpreterDisplay()));
+            var allNames = new HashSet<string>(service.Interpreters.Select(i => i.Description));
             var names = list.FindAll(TreeScope.Descendants, new PropertyCondition(AutomationElement.AutomationIdProperty, "InterpreterName"));
             foreach (var obj in names.Cast<AutomationElement>()) {
                 var name = (string)obj.GetCurrentPropertyValue(AutomationElement.NameProperty);
@@ -210,7 +211,7 @@ namespace PythonToolsUITests {
 
                 var label = list.FindByAutomationId("InterpreterName");
                 var name = (string)label.GetCurrentPropertyValue(AutomationElement.NameProperty);
-                Assert.AreEqual(fact.GetInterpreterDisplay(), name);
+                Assert.AreEqual(fact.Description, name);
 
                 var button = list.FindButton("Regenerate");
                 Assert.IsNotNull(button);
@@ -284,7 +285,7 @@ namespace PythonToolsUITests {
                 // Not crashing is sufficient to ensure that
                 // https://pytools.codeplex.com/workitem/1199 is fixed.
                 var withDb = (IInterpreterWithCompletionDatabase)fake;
-                withDb.GenerateCompletionDatabase();
+                withDb.GenerateCompletionDatabase(GenerateDatabaseOptions.None);
             } finally {
                 configurable.RemoveInterpreter(fake.Id);
             }
@@ -295,11 +296,11 @@ namespace PythonToolsUITests {
         #region Tests not requiring VS
 
         private static InterpreterConfiguration MockInterpreterConfiguration(Version version) {
-            return new InterpreterConfiguration("", "", "", "", ProcessorArchitecture.None, version);
+            return new InterpreterConfiguration(version);
         }
 
         private static InterpreterConfiguration MockInterpreterConfiguration(string path) {
-            return new InterpreterConfiguration(path, "", "", "", ProcessorArchitecture.None, new Version(2, 7));
+            return new InterpreterConfiguration("", path, "", "", "", ProcessorArchitecture.None, new Version(2, 7));
         }
 
         [TestMethod, Priority(0), TestCategory("InterpreterListNonUI")]

@@ -12,12 +12,14 @@
  *
  * ***************************************************************************/
 
+extern alias pythontools;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.PythonTools;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudioTools;
+using CommonUtils = pythontools::Microsoft.VisualStudioTools.CommonUtils;
 
 namespace PythonToolsTests {
     [TestClass]

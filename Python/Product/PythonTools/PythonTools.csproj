@@ -145,18 +145,6 @@
           <SpecificVersion>False</SpecificVersion>
           <HintPath>$(DevEnvDir)PrivateAssemblies\Microsoft.Windows.Design.Host.dll</HintPath>
         </Reference>
-        <Reference Include="Microsoft.VisualStudio.TestPlatform.ObjectModel">
-          <HintPath>$(DevEnvDir)CommonExtensions\Microsoft\TestWindow\Microsoft.VisualStudio.TestPlatform.ObjectModel.dll</HintPath>
-          <Private>False</Private>
-        </Reference>
-        <Reference Include="Microsoft.VisualStudio.TestWindow.Interfaces">
-          <HintPath>$(DevEnvDir)CommonExtensions\Microsoft\TestWindow\Microsoft.VisualStudio.TestWindow.Interfaces.dll</HintPath>
-          <Private>False</Private>
-        </Reference>
-        <Reference Include="Microsoft.VisualStudio.TestWindow.Core">
-          <HintPath>$(DevEnvDir)CommonExtensions\Microsoft\TestWindow\Microsoft.VisualStudio.TestWindow.Core.dll</HintPath>
-          <Private>False</Private>
-        </Reference>
       </ItemGroup>
     </When>
   </Choose>
@@ -265,6 +253,7 @@
     <Compile Include="..\Analysis\Interpreter\PythonInterpreterFactoryExtensions.cs">
       <Link>PythonInterpreterFactoryExtensions.cs</Link>
     </Compile>
+    <Compile Include="PythonTools\Project\Attributes.cs" />
     <Compile Include="ProvideComponentPickerPropertyPageAttribute.cs" />
     <Compile Include="ProvideDiffSupportedContentTypeAttribute.cs" />
     <Compile Include="ProvideEditorExtension2Attribute.cs" />
@@ -273,7 +262,7 @@
     <Compile Include="PythonTools\Commands\OpenInterpreterListCommand.cs" />
     <Compile Include="PythonTools\Commands\SurveyNewsCommand.cs" />
     <Compile Include="PythonTools\InterpreterList\InterpreterListToolWindow.cs" />
-    <Compile Include="PythonTools\InterpreterList\InterpreterView.cs" />
+    <Compile Include="PythonTools\InterpreterView.cs" />
     <Compile Include="PythonTools\InterpreterList\InterpreterList.xaml.cs">
       <DependentUpon>InterpreterList.xaml</DependentUpon>
     </Compile>
@@ -289,7 +278,14 @@
     </Compile>
     <Compile Include="PythonTools\Options\SurveyNewsPolicy.cs" />
     <Compile Include="PythonTools\OutputWindowRedirector.cs" />
-    <Compile Include="PythonTools\Project\CreateVirtualEnvironmentView.cs" />
+    <Compile Include="PythonTools\Project\AddVirtualEnvironment.xaml.cs">
+      <DependentUpon>AddVirtualEnvironment.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="PythonTools\Project\AddVirtualEnvironmentView.cs" />
+    <Compile Include="PythonTools\Project\AddInterpreter.xaml.cs">
+      <DependentUpon>AddInterpreter.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="PythonTools\Project\AddInterpreterView.cs" />
     <Compile Include="PythonTools\Project\ImportWizard\SaveProjectPage.xaml.cs">
       <DependentUpon>SaveProjectPage.xaml</DependentUpon>
     </Compile>
@@ -304,18 +300,22 @@
       <DependentUpon>ImportWizard.xaml</DependentUpon>
     </Compile>
     <Compile Include="PythonTools\Commands\ImportWizardCommand.cs" />
-    <Compile Include="PythonTools\Project\ImportWizard\LabelledControl.cs" />
+    <Compile Include="PythonTools\Project\Pip.cs" />
+    <Compile Include="PythonTools\Project\VirtualEnv.cs" />
+    <Compile Include="Wpf\Commands.cs" />
+    <Compile Include="Wpf\LabelledButton.cs" />
+    <Compile Include="Wpf\LabelledControl.cs" />
     <Compile Include="PythonTools\Project\InstallPythonPackage.xaml.cs">
       <DependentUpon>InstallPythonPackage.xaml</DependentUpon>
     </Compile>
     <Compile Include="PythonTools\Project\InstallPythonPackageView.cs" />
     <Compile Include="PythonTools\Project\PythonInterpreterView.cs" />
-    <Compile Include="PythonTools\Project\VirtualEnvContainerNode.cs" />
-    <Compile Include="PythonTools\Project\VirtualEnvContainerNodeProperties.cs" />
-    <Compile Include="PythonTools\Project\VirtualEnvNode.cs" />
-    <Compile Include="PythonTools\Project\VirtualEnvNodeProperties.cs" />
-    <Compile Include="PythonTools\Project\VirtualEnvPackageNode.cs" />
-    <Compile Include="PythonTools\Project\VirtualEnvPackageNodeProperties.cs" />
+    <Compile Include="PythonTools\Project\InterpretersContainerNode.cs" />
+    <Compile Include="PythonTools\Project\InterpretersContainerNodeProperties.cs" />
+    <Compile Include="PythonTools\Project\InterpretersNode.cs" />
+    <Compile Include="PythonTools\Project\InterpretersNodeProperties.cs" />
+    <Compile Include="PythonTools\Project\InterpretersPackageNode.cs" />
+    <Compile Include="PythonTools\Project\InterpretersPackageNodeProperties.cs" />
     <Compile Include="PythonTools\Commands\Command.cs" />
     <Compile Include="PythonTools\Commands\OpenDebugReplCommand.cs" />
     <Compile Include="PythonTools\Commands\RemoveImportsCurrentScopeCommand.cs" />
@@ -336,9 +336,6 @@
     <Compile Include="PythonTools\Intellisense\AnalysisSynchronizationContext.cs" />
     <Compile Include="PythonTools\Intellisense\CompletionControl.xaml.cs">
       <DependentUpon>CompletionControl.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="PythonTools\Project\CreateVirtualEnvironment.xaml.cs">
-      <DependentUpon>CreateVirtualEnvironment.xaml</DependentUpon>
     </Compile>
     <Compile Include="PythonTools\Intellisense\CompletionOptions.cs" />
     <Compile Include="PythonTools\Intellisense\CompletionUIElementProvider.cs" />
@@ -430,7 +427,6 @@
     <Compile Include="PythonTools\Repl\IPythonReplIntellisense.cs" />
     <Compile Include="PythonTools\Repl\PythonDebugReplEvaluator.cs" />
     <Compile Include="PythonTools\Repl\PythonDebugReplEvaluatorProvider.cs" />
-    <Compile Include="PythonTools\Repl\PythonReplCreationOptions.cs" />
     <Compile Include="PythonTools\SnapshotSpanSourceCodeStream.cs" />
     <Compile Include="PythonTools\Editor\SmartIndentProvider.cs" />
     <Compile Include="PythonTools\Intellisense\DecoratorCompletionAnalysis.cs" />
@@ -482,7 +478,6 @@
     <Compile Include="PythonTools\Intellisense\AnalysisQueue.cs" />
     <Compile Include="PythonTools\Intellisense\MonitoredBufferResult.cs" />
     <Compile Include="PythonTools\Intellisense\ParseQueue.cs" />
-    <Compile Include="PythonTools\InterpreterExtensions.cs" />
     <Compile Include="PythonTools\ISnapshotTextReader.cs" />
     <Compile Include="PythonTools\Navigation\Resources.Designer.cs" />
     <Compile Include="PythonTools\PythonAutomation.cs" />
@@ -681,6 +676,10 @@
       <SubType>Designer</SubType>
     </ZipItem>
     <ZipItem Include="Templates\Files\UnitTestFile\test.py" />
+    <Content Include="pip_downloader.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
     <Content Include="visualstudio_py_debugger.py">
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -887,15 +886,17 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="PythonTools\Project\CreateVirtualEnvironment.xaml">
+    <Page Include="PythonTools\Project\AddVirtualEnvironment.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="PythonTools\Navigation\WaitForCompleteAnalysisDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="PythonTools\Navigation\WaitForCompleteAnalysisDialog.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
+    <Page Include="PythonTools\Project\AddInterpreter.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>

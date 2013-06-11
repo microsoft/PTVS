@@ -22,6 +22,7 @@ using System.Threading;
 using IronPython.Runtime;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Intellisense;
+using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.Scripting;
@@ -62,7 +63,7 @@ import System
             var text = File.ReadAllText(Path.Combine(merlin + @"\External.LCA_RESTRICTED\Languages\IronPython\27\Lib\decimal.py"));
 
             var sourceUnit = GetSourceUnit(text);
-            var projectState = new PythonAnalyzer(Interpreter, PythonLanguageVersion.V27);
+            var projectState = new PythonAnalyzer(InterpreterFactory, Interpreter);
             Stopwatch sw = new Stopwatch();
             var entry = projectState.AddModule("decimal", "decimal", null);
             Prepare(entry, sourceUnit);
@@ -222,7 +223,8 @@ import System
             long start0 = sw.ElapsedMilliseconds;
             // Explicitly specify the builtins name because we are using a 2.7
             // interpreter for all versions.
-            var projectState = new PythonAnalyzer(Interpreter, version, "__builtin__");
+            var fact = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(version.ToVersion());
+            var projectState = new PythonAnalyzer(fact, fact.CreateInterpreter(), "__builtin__");
 
             projectState.Limits = AnalysisLimits.GetStandardLibraryLimits();
 

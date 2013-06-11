@@ -63,7 +63,7 @@ namespace Microsoft.PythonTools.Options {
         public PythonInteractiveOptions GetOptions(IPythonInterpreterFactory interpreterFactory) {
             PythonInteractiveOptions options;
             if (!_options.TryGetValue(interpreterFactory, out options)) {
-                _options[interpreterFactory] = options = ReadOptions(interpreterFactory.GetInterpreterPath() + "\\");
+                _options[interpreterFactory] = options = ReadOptions(GetInterpreterPath(interpreterFactory) + "\\");
             }
             return options;
         }
@@ -91,7 +91,7 @@ namespace Microsoft.PythonTools.Options {
             var placeholders = _options.Where(kv => kv.Key is InterpreterPlaceholder).ToArray();
             _options.Clear();
             foreach (var interpreter in interpService.Interpreters) {
-                string interpreterId = interpreter.GetInterpreterPath() + "\\";
+                string interpreterId = GetInterpreterPath(interpreter) + "\\";
                 seenIds.Add(interpreter.Id);
                 _options[interpreter] = ReadOptions(interpreterId);
             }
@@ -139,9 +139,16 @@ namespace Microsoft.PythonTools.Options {
             }
         }
 
+        /// <summary>
+        /// Gets a path which is unique for this interpreter (based upon the Id and version).
+        /// </summary>
+        static string GetInterpreterPath(IPythonInterpreterFactory interpreterFactory) {
+            return interpreterFactory.Id.ToString("B") + "\\" + interpreterFactory.Configuration.Version;
+        }
+
         internal void SaveOptions(IPythonInterpreterFactory interpreter, PythonInteractiveOptions options) {
             var replProvider = PythonToolsPackage.ComponentModel.GetService<IReplWindowProvider>();
-            string interpreterId = interpreter.GetInterpreterPath() + "\\";
+            string interpreterId = GetInterpreterPath(interpreter) + "\\";
 
             SaveString(interpreterId + PrimaryPromptSetting, options.PrimaryPrompt ?? DefaultPrompt);
             SaveString(interpreterId + SecondaryPromptSetting, options.SecondaryPrompt ?? DefaultSecondaryPrompt);

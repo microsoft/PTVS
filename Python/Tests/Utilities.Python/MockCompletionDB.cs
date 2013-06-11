@@ -31,6 +31,7 @@ namespace TestUtilities.Mocks {
         public MockCompletionDB(string path, PythonLanguageVersion version) {
             DBPath = path;
             LanguageVersion = version;
+            _factory = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(version.ToVersion(), null, DBPath);
             Directory.CreateDirectory(DBPath);
         }
 
@@ -41,7 +42,7 @@ namespace TestUtilities.Mocks {
         public PythonTypeDatabase Database {
             get {
                 if (_database == null) {
-                    _database = new PythonTypeDatabase(DBPath, LanguageVersion.ToVersion());
+                    _database = new PythonTypeDatabase(_factory, DBPath);
                 }
                 return _database;
             }

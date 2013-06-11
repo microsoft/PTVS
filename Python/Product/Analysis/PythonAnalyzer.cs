@@ -51,18 +51,14 @@ namespace Microsoft.PythonTools.Analysis {
         private AnalysisLimits _limits = new AnalysisLimits();
         private static object _nullKey = new object();
 
-        public PythonAnalyzer(IPythonInterpreterFactory interpreterFactory)
-            : this(interpreterFactory.CreateInterpreter(), interpreterFactory.GetLanguageVersion()) {
+        public PythonAnalyzer(IPythonInterpreterFactory factory, IPythonInterpreter interpreter = null)
+            : this(factory, interpreter ?? factory.CreateInterpreter(), null) {
         }
 
-        public PythonAnalyzer(IPythonInterpreter pythonInterpreter, PythonLanguageVersion langVersion)
-            : this(pythonInterpreter, langVersion, langVersion.Is3x() ? SharedDatabaseState.BuiltinName3x : SharedDatabaseState.BuiltinName2x) {
-        }
-
-        internal PythonAnalyzer(IPythonInterpreter pythonInterpreter, PythonLanguageVersion langVersion, string builtinName) {
-            _langVersion = langVersion;
+        internal PythonAnalyzer(IPythonInterpreterFactory factory, IPythonInterpreter pythonInterpreter, string builtinName) {
+            _langVersion = factory.GetLanguageVersion();
             _interpreter = pythonInterpreter;
-            _builtinName = builtinName;
+            _builtinName = builtinName ?? (_langVersion.Is3x() ? SharedDatabaseState.BuiltinName3x : SharedDatabaseState.BuiltinName2x);
             _modules = new ModuleTable(this, _interpreter, _interpreter.GetModuleNames());
             _modulesByFilename = new ConcurrentDictionary<string, ModuleInfo>(StringComparer.OrdinalIgnoreCase);
             _itemCache = new Dictionary<object, AnalysisValue>();

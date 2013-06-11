@@ -27,9 +27,9 @@ namespace Microsoft.PythonTools.Interpreter {
     /// When 
     /// </summary>
     interface ITypeDatabaseReader {
-        void ReadMember(string memberName, Dictionary<string, object> memberValue, Action<string, IMember> assign, IMemberContainer container, PythonTypeDatabase instanceDb = null);
+        void ReadMember(string memberName, Dictionary<string, object> memberValue, Action<string, IMember> assign, IMemberContainer container);
         void RunFixups();
-        void LookupType(object type, Action<IPythonType, bool> assign, PythonTypeDatabase instanceDb = null);
+        void LookupType(object type, Action<IPythonType> assign);
         string GetBuiltinTypeName(BuiltinTypeId id);
         void OnDatabaseCorrupt();
     }

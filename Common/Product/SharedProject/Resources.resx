@@ -150,12 +150,6 @@
   <data name="ProjectFolderDescription" xml:space="preserve">
     <value>The absolute location of the project.</value>
   </data>
-  <data name="SearchPaths" xml:space="preserve">
-    <value>Search Path</value>
-  </data>
-  <data name="SearchPathsDescription" xml:space="preserve">
-    <value>The list of directories to search for modules and files.</value>
-  </data>
   <data name="InterpreterPath" xml:space="preserve">
     <value>Interpreter Path</value>
   </data>
@@ -167,9 +161,6 @@
   </data>
   <data name="SelectZipFileForSearchPath" xml:space="preserve">
     <value>Select a .zip file to add to the Search Path</value>
-  </data>
-  <data name="SearchPathRemoveConfirmation" xml:space="preserve">
-    <value>'{0}' will be removed from the project's search path.</value>
   </data>
   <data name="WorkingDirectory" xml:space="preserve">
     <value>Working Directory</value>
@@ -185,11 +176,5 @@
   </data>
   <data name="IsWindowsApplication" xml:space="preserve">
     <value>Is Windows Application</value>
-  </data>
-  <data name="VirtualEnvs" xml:space="preserve">
-    <value>Virtual Environments</value>
-  </data>
-  <data name="VirtualEnvRemoveConfirmation" xml:space="preserve">
-    <value>The virtual environment '{0}' will be removed from the project.</value>
   </data>
 </root>

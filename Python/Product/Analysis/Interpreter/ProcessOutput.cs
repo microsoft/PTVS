@@ -17,7 +17,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.Win32.SafeHandles;
 
 namespace Microsoft.PythonTools {
@@ -101,7 +103,8 @@ namespace Microsoft.PythonTools {
                                         bool visible,
                                         Redirector redirector) {
             var psi = new ProcessStartInfo(filename);
-            psi.Arguments = string.Join(" ", arguments.Select(QuoteSingleArgument));
+            psi.Arguments = string.Join(" ", 
+                arguments.Where(a => a != null).Select(QuoteSingleArgument));
             psi.WorkingDirectory = workingDirectory;
             psi.CreateNoWindow = !visible;
             psi.UseShellExecute = false;
@@ -143,6 +146,9 @@ namespace Microsoft.PythonTools {
         }
 
         internal static string QuoteSingleArgument(string arg) {
+            if (string.IsNullOrEmpty(arg)) {
+                return "\"\"";
+            }
             if (arg.IndexOfAny(_needToBeQuoted) < 0) {
                 return arg;
             }
@@ -254,6 +260,23 @@ namespace Microsoft.PythonTools {
                     return null;
                 }
                 return _process.ExitCode;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the priority class of the process.
+        /// </summary>
+        public ProcessPriorityClass PriorityClass {
+            get {
+                if (_process == null) {
+                    return ProcessPriorityClass.Normal;
+                }
+                return _process.PriorityClass;
+            }
+            set {
+                if (_process != null) {
+                    _process.PriorityClass = value;
+                }
             }
         }
 

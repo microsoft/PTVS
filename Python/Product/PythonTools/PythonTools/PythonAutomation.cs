@@ -46,7 +46,7 @@ namespace Microsoft.PythonTools {
         }
 
         private bool IsSameInterpreter(IPythonInterpreterFactory interpreter, string interpreterName) {
-            if (interpreter.GetInterpreterDisplay() == interpreterName) {
+            if (interpreter.Description == interpreterName) {
                 return true;
             }
 

@@ -351,6 +351,17 @@ namespace Microsoft.VisualStudioTools {
         }
 
         /// <summary>
+        /// Adds a directory separator character to the end of path if required.
+        /// </summary>
+        public static string EnsureEndSeparator(string path) {
+            if (!HasEndSeparator(path)) {
+                return path + Path.DirectorySeparatorChar;
+            } else {
+                return path;
+            }
+        }
+
+        /// <summary>
         /// Removes leading @"..\" segments from a path.
         /// </summary>
         private static string TrimUpPaths(string path) {

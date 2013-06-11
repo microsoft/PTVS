@@ -24,9 +24,9 @@
     </Window.Resources>
 
     <Window.CommandBindings>
-        <CommandBinding Command="{x:Static l:ImportWizard.BrowseFolderCommand}" CanExecute="Browse_CanExecute" Executed="BrowseFolder_Executed" />
-        <CommandBinding Command="{x:Static l:ImportWizard.BrowseOpenFileCommand}" CanExecute="Browse_CanExecute" Executed="BrowseOpenFile_Executed" />
-        <CommandBinding Command="{x:Static l:ImportWizard.BrowseSaveFileCommand}" CanExecute="Browse_CanExecute" Executed="BrowseSaveFile_Executed" />
+        <CommandBinding Command="{x:Static wpf:Commands.BrowseFolder}" CanExecute="Browse_CanExecute" Executed="Browse_Executed" />
+        <CommandBinding Command="{x:Static wpf:Commands.BrowseOpenFile}" CanExecute="Browse_CanExecute" Executed="Browse_Executed" />
+        <CommandBinding Command="{x:Static wpf:Commands.BrowseSaveFile}" CanExecute="Browse_CanExecute" Executed="Browse_Executed" />
         
         <CommandBinding Command="ApplicationCommands.Save" CanExecute="Finish_CanExecute" Executed="Finish_Executed" />
         <CommandBinding Command="ApplicationCommands.Close" CanExecute="Cancel_CanExecute" Executed="Cancel_Executed" />

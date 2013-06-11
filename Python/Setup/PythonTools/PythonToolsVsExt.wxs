@@ -130,6 +130,9 @@
             <Component Id="cmp3255C55CE4A84BA2AE18C067CCCB2F53" Directory="INSTALLLOCATION" Guid="{F849ADFC-0EE2-4F6C-B69E-D235B8E175D2}">
                 <File Id="fil289B66CC358944D79F3C68E1DDE7300F" KeyPath="yes" Source="$(var.TargetDir)\NoInterpreters.html" />
             </Component>
+            <Component Id="cmp61AEA596575C4206B1C8EBD03EF63A08" Directory="INSTALLLOCATION" Guid="{94675D13-506B-4824-8A47-819BE7CD3CFA}">
+                <File Id="filA175B8628A1947668D307A23A9A1473D" KeyPath="yes" Source="$(var.TargetDir)\pip_downloader.py" />
+            </Component>
             <Component Id="cmp281B78C80A994875BBA07772007F1561" Directory="Dir_PythonNewItem" Guid="{685CE9DE-781F-4209-AB21-106F29425E80}">
                 <File Id="fil77FBA41B51724C4A994E90DBE3B887AD" KeyPath="yes" Source="$(var.TargetDir)\Templates\NewItem\class.py" />
             </Component>

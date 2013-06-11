@@ -256,11 +256,17 @@ f([1, 2], 3)
         private SaveLoadResult SaveLoad(PythonLanguageVersion version, params AnalysisModule[] modules) {
             IPythonProjectEntry[] entries = new IPythonProjectEntry[modules.Length];
 
-            var state = new PythonAnalyzer(Interpreter, version);
+            var fact = InterpreterFactory;
+            var interp = Interpreter;
+            if (version != fact.GetLanguageVersion()) {
+                fact = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(version.ToVersion());
+                interp = fact.CreateInterpreter();
+            }
+
+            var state = new PythonAnalyzer(fact, interp, SharedDatabaseState.BuiltinName2x);
             for (int i = 0; i < modules.Length; i++) {
                 entries[i] = state.AddModule(modules[i].ModuleName, modules[i].Filename);
                 Prepare(entries[i], new StringReader(modules[i].Code), version);
-
             }
 
             for (int i = 0; i < modules.Length; i++) {
@@ -275,7 +281,7 @@ f([1, 2], 3)
             File.Copy(Path.Combine(PythonTypeDatabase.BaselineDatabasePath, "__builtin__.idb"), Path.Combine(tmpFolder, "__builtin__.idb"), true);
 
             return new SaveLoadResult(
-                new PythonAnalyzer(InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(version.ToVersion(), tmpFolder)),
+                new PythonAnalyzer(InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(version.ToVersion(), null, tmpFolder)),
                 tmpFolder
             );
         }

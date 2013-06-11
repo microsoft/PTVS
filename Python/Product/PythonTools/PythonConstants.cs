@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System;
+using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools {
@@ -37,7 +38,10 @@ namespace Microsoft.PythonTools {
         internal const string DebugPropertyPageGuid = "9A46BC86-34CB-4597-83E5-498E3BDBA20A";
         internal const string PublishPropertyPageGuid = "63DF0877-CF53-4975-B200-2B11D669AB00";
         internal const string EditorFactoryPromptForEncodingGuid = "CA887E0B-55C6-4AE9-B5CF-A2EEFBA90A3E";
-        internal const string VirtualEnvPropertiesGuid = "45D3DC23-F419-4744-B55B-B897FAC1F4A2";
+
+        internal const string InterpretersPropertiesGuid = "45D3DC23-F419-4744-B55B-B897FAC1F4A2";
+        internal const string InterpretersWithBaseInterpreterPropertiesGuid = "F86C3C5B-CF94-4184-91F8-29687D3B9227";
+        internal const string InterpretersPackagePropertiesGuid = "BBF56A45-B037-4CC2-B710-F2CE304CCF32";
         internal const string InterpreterListToolWindowGuid = "75504045-D02F-44E5-BF60-5F60DF380E8B";
 
         // Do not change below info without re-requesting PLK:
@@ -47,20 +51,15 @@ namespace Microsoft.PythonTools {
         internal const int IconIfForSplashScreen = 300;
         internal const int IconIdForAboutBox = 400;
 
-        internal const int AddVirtualEnv = 0x4006;
-        internal const int ActivateVirtualEnv = 0x4007;
-        internal const int DeactivateVirtualEnv = 0x4008;
-        internal const int InstallPythonPackage = 0x4009;
-        internal const int UninstallPythonPackage = 0x400A;
-        internal const int CreateVirtualEnv = 0x400B;
-
-        internal const string VirtualEnvItemType = "VirtualEnv";
-        internal const string VirtualEnvCurrentEnvironment = "VirtualEnvEnabled";
-        internal const string VirtualEnvInterpreterId = "InterpreterId";
-        internal const string VirtualEnvInterpreterVersion = "InterpreterVersion";
+        internal const int AddInterpreter = 0x4006;
+        internal const int AddVirtualEnv = 0x4007;
+        internal const int AddExistingVirtualEnv = 0x4008;
+        internal const int ActivateInterpreter = 0x4009;
+        internal const int InstallPythonPackage = 0x400A;
+        internal const int UninstallPythonPackage = 0x400B;
 
         // Shows up before references
-        internal const int VirtualEnvContainerNodeSortPriority = 200;
+        internal const int InterpretersContainerNodeSortPriority = 200;
 
         internal const string InterpreterId = "InterpreterId";
         internal const string InterpreterVersion = "InterpreterVersion";

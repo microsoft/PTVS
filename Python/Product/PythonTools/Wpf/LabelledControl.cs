@@ -15,8 +15,8 @@
 using System.Windows;
 using System.Windows.Controls;
 
-namespace Microsoft.PythonTools.Project.ImportWizard {
-    class LabelledControl : ContentControl {
+namespace Microsoft.PythonTools.Wpf {
+    sealed class LabelledControl : ContentControl {
         public string Title {
             get { return (string)GetValue(TitleProperty); }
             set { SetValue(TitleProperty, value); }

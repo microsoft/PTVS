@@ -177,18 +177,24 @@ namespace TestUtilities {
             Isx64 = (Interpreter == PythonPaths.CPython64Guid || Interpreter == PythonPaths.IronPython64Guid);
         }
 
+        public string PrefixPath {
+            get {
+                return System.IO.Path.GetDirectoryName(Path);
+            }
+        }
+
         public string LibPath {
             get {
-                return System.IO.Path.Combine(System.IO.Path.GetDirectoryName(Path), "Lib");
+                return System.IO.Path.Combine(PrefixPath, "Lib");
             }
         }
 
         public InterpreterConfiguration Configuration {
             get {
                 return new InterpreterConfiguration(
-                    Path, null, LibPath, "PYTHONPATH",
-                   Isx64 ? ProcessorArchitecture.Amd64 : ProcessorArchitecture.X86,
-                   Version.ToVersion()
+                    PrefixPath, Path, null, LibPath, "PYTHONPATH",
+                    Isx64 ? ProcessorArchitecture.Amd64 : ProcessorArchitecture.X86,
+                    Version.ToVersion()
                 );
             }
         }

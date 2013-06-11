@@ -68,6 +68,9 @@ namespace Microsoft.PythonTools.Options {
         }
 
         public override void LoadSettingsFromStorage() {
+            var configurable = _service.KnownProviders.OfType<ConfigurablePythonInterpreterFactoryProvider>().FirstOrDefault();
+            Debug.Assert(configurable != null);
+
             _defaultInterpreter = _service.DefaultInterpreter.Id;
             _defaultInterpreterVersion = _service.DefaultInterpreter.Configuration.Version;
 
@@ -75,14 +78,14 @@ namespace Microsoft.PythonTools.Options {
             _options.Clear();
             foreach (var interpreter in _service.InterpretersOrDefault) {
                 _options[interpreter] = new InterpreterOptions {
-                    Display = interpreter.GetInterpreterDisplay(),
+                    Display = interpreter.Description,
                     Id = interpreter.Id,
                     InterpreterPath = interpreter.Configuration.InterpreterPath,
                     WindowsInterpreterPath = interpreter.Configuration.WindowsInterpreterPath,
                     Version = interpreter.Configuration.Version.ToString(),
                     Architecture = FormatArchitecture(interpreter.Configuration.Architecture),
                     PathEnvironmentVariable = interpreter.Configuration.PathEnvironmentVariable,
-                    IsConfigurable = interpreter is ConfigurablePythonInterpreterFactory,
+                    IsConfigurable = configurable.IsConfigurable(interpreter),
                     SupportsCompletionDb = interpreter is IInterpreterWithCompletionDatabase,
                     Factory = interpreter
                 };

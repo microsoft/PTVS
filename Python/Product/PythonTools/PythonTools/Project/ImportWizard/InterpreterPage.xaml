@@ -6,6 +6,7 @@
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
       xmlns:pt="clr-namespace:Microsoft.PythonTools"
       xmlns:l="clr-namespace:Microsoft.PythonTools.Project.ImportWizard"
+      xmlns:wpf="clr-namespace:Microsoft.PythonTools.Wpf"
       mc:Ignorable="d" 
       d:DesignHeight="300" d:DesignWidth="500"
       Title="Interpreter Selection"
@@ -20,16 +21,16 @@
             <RowDefinition />
         </Grid.RowDefinitions>
 
-        <l:LabelledControl Title="Select the Python interpreter and version to use."
+        <wpf:LabelledControl Title="Select the Python interpreter and version to use."
                            HelpText="This setting can be changed later in Project Properties."
                            Grid.Row="0">
             <ComboBox Name="InterpretersComboBox"
                       ItemsSource="{Binding AvailableInterpreters}"
                       SelectedItem="{Binding SelectedInterpreter,Mode=TwoWay}"
                       DisplayMemberPath="Name" />
-        </l:LabelledControl>
+        </wpf:LabelledControl>
 
-        <l:LabelledControl Title="Choose which file to run when F5 is pressed."
+        <wpf:LabelledControl Title="Choose which file to run when F5 is pressed."
                            HelpText="If it is not in this list, you can right-click any file in your project and choose &quot;Set as startup file&quot;"
                            Grid.Row="1">
             <ListView Name="listView"
@@ -62,6 +63,6 @@
                     </DataTemplate>
                 </ListView.ItemTemplate>
             </ListView>
-        </l:LabelledControl>
+        </wpf:LabelledControl>
     </Grid>
 </Page>

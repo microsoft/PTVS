@@ -13,23 +13,22 @@
  * ***************************************************************************/
 
 using System;
+using System.Collections.Generic;
 
 namespace Microsoft.PythonTools.Interpreter {
     public sealed class PythonTypeDatabaseCreationRequest {
         public PythonTypeDatabaseCreationRequest() {
+            ExtraInputDatabases = new List<string>();
         }
 
         public IPythonInterpreterFactory Factory { get; set; }
 
+        public List<string> ExtraInputDatabases { get; private set; }
+
         public string OutputPath { get; set; }
 
-        public event EventHandler FailedToStart;
+        public bool SkipUnchanged { get; set; }
 
-        internal void OnFailedToStart() {
-            var evt = FailedToStart;
-            if (evt != null) {
-                evt(this, EventArgs.Empty);
-            }
-        }
+        public Action<int> OnExit { get; set; }
     }
 }

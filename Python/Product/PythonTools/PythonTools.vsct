@@ -79,10 +79,10 @@
         <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_EZDOCWINTAB"/>
       </Group>
 
-      <Group guid="guidPythonToolsCmdSet" id="VirtualEnvItemsGroup" priority="0x0600">
+      <Group guid="guidPythonToolsCmdSet" id="InterpretersItemsGroup" priority="0x0600">
         <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_ITEMNODE"/>
       </Group>
-
+      
       <Group guid="guidPythonToolsCmdSet" id="DebuggerPythonContextGroup" priority="0x0000">
         <Parent guid="guidPythonToolsCmdSet" id="DebuggerPythonContextMenu"/>
       </Group>
@@ -117,7 +117,7 @@
       <Menu guid="guidPythonToolsCmdSet" id="RefactoringCtxMenuIntShell" priority="0x0300" type="Context">
         <Parent guid="guidSHLMainMenu" id="IDG_VS_CODEWIN_LANGUAGE" />
         <Strings>
-          <ButtonText>Refactor</ButtonText>          
+          <ButtonText>Refactor</ButtonText>
           <CommandName>&amp;Refactor</CommandName>
         </Strings>
       </Menu>
@@ -511,9 +511,19 @@
       </Button>
 
       <!--================================================================================================================-->
-      <!--============================================= Virtual Env Commands =============================================-->
+      <!--======================================= Interpreter Management Commands ========================================-->
       <!--================================================================================================================-->
-      <Button guid="guidPythonToolsCmdSet" id="cmdidAddVirtualEnv" priority="0x0301" type="Button">
+      <Button guid="guidPythonToolsCmdSet" id="cmdidAddInterpreter" priority="0x0301" type="Button">
+        <Parent guid="guidSHLMainMenu" id="IDG_VS_CTXT_PROJECT_ADD"/>
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <CommandFlag>DefaultInvisible</CommandFlag>
+        <Strings>
+          <CommandName>AddPythonInterpreter</CommandName>
+          <ButtonText>Add/Remove Python &amp;Interpreters...</ButtonText>
+        </Strings>
+      </Button>
+
+      <Button guid="guidPythonToolsCmdSet" id="cmdidAddVirtualEnv" priority="0x0302" type="Button">
         <Parent guid="guidSHLMainMenu" id="IDG_VS_CTXT_PROJECT_ADD"/>
         <CommandFlag>DynamicVisibility</CommandFlag>
         <CommandFlag>DefaultInvisible</CommandFlag>
@@ -523,33 +533,23 @@
         </Strings>
       </Button>
 
-      <Button guid="guidPythonToolsCmdSet" id="cmdidCreateVirtualEnv" priority="0x0302" type="Button">
+      <Button guid="guidPythonToolsCmdSet" id="cmdidAddExistingVirtualEnv" priority="0x0303" type="Button">
         <Parent guid="guidSHLMainMenu" id="IDG_VS_CTXT_PROJECT_ADD"/>
         <CommandFlag>DynamicVisibility</CommandFlag>
         <CommandFlag>DefaultInvisible</CommandFlag>
         <Strings>
-          <CommandName>CreateVirtualEnv</CommandName>
-          <ButtonText>&amp;Create Virtual Environment...</ButtonText>
+          <CommandName>AddExistingVirtualEnv</CommandName>
+          <ButtonText>Add Existing &amp;Virtual Environment...</ButtonText>
         </Strings>
       </Button>
 
-      <Button guid="guidPythonToolsCmdSet" id="cmdidActivateVirtualEnv" priority="0x0301" type="Button">
+      <Button guid="guidPythonToolsCmdSet" id="cmdidActivateInterpreter" priority="0x0301" type="Button">
         <Parent guid="guidPythonToolsCmdSet" id="CodeFileGroup"/>
         <CommandFlag>DynamicVisibility</CommandFlag>
         <CommandFlag>DefaultInvisible</CommandFlag>
         <Strings>
-          <CommandName>ActivateVirtualEnv</CommandName>
-          <ButtonText>&amp;Activate Virtual Environment</ButtonText>
-        </Strings>
-      </Button>
-
-      <Button guid="guidPythonToolsCmdSet" id="cmdidDeactivateVirtualEnv" priority="0x0350" type="Button">
-        <Parent guid="guidPythonToolsCmdSet" id="CodeFileGroup"/>
-        <CommandFlag>DynamicVisibility</CommandFlag>
-        <CommandFlag>DefaultInvisible</CommandFlag>
-        <Strings>
-          <CommandName>DeactivateVirtualEnv</CommandName>
-          <ButtonText>&amp;Deactivate Virtual Environment</ButtonText>
+          <CommandName>ActivateInterpreter</CommandName>
+          <ButtonText>&amp;Activate Interpreter</ButtonText>
         </Strings>
       </Button>
 
@@ -599,7 +599,7 @@
           <ButtonText>&amp;Rename...</ButtonText>
         </Strings>
       </Button>
-
+    
       <!--================================================================================================================-->
       <!--========================================== Debugger context menu ===============================================-->
       <!--================================================================================================================-->
@@ -782,11 +782,15 @@
       <Parent guid="guidPythonToolsCmdSet" id="CodeFileGroup"/>
     </CommandPlacement>
 
-    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidAddVirtualEnv" priority="0x603">
+    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidAddInterpreter" priority="0x603">
       <Parent guid="guidPythonToolsCmdSet" id="CodeFileGroup"/>
     </CommandPlacement>
 
-    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidCreateVirtualEnv" priority="0x602">
+    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidAddVirtualEnv" priority="0x604">
+      <Parent guid="guidPythonToolsCmdSet" id="CodeFileGroup"/>
+    </CommandPlacement>
+    
+    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidAddExistingVirtualEnv" priority="0x605">
       <Parent guid="guidPythonToolsCmdSet" id="CodeFileGroup"/>
     </CommandPlacement>
   </CommandPlacements>
@@ -834,13 +838,13 @@
       <IDSymbol name="cmdIdAddSearchPathZip" value="0x4003" />
       <IDSymbol name="cmdidStartWithoutDebugging" value="0x4004" />
       <IDSymbol name="cmdidStartDebugging" value="0x4005" />
-      
-      <IDSymbol name="cmdidAddVirtualEnv" value="0x4006" />
-      <IDSymbol name="cmdidActivateVirtualEnv" value="0x4007" />
-      <IDSymbol name="cmdidDeactivateVirtualEnv" value="0x4008" />
-      <IDSymbol name="cmdidInstallPythonPackage" value="0x4009" />
-      <IDSymbol name="cmdidUninstallPythonPackage" value="0x400A" />
-      <IDSymbol name="cmdidCreateVirtualEnv" value="0x400B" />      
+
+      <IDSymbol name="cmdidAddInterpreter" value="0x4006" />
+      <IDSymbol name="cmdidAddVirtualEnv" value="0x4007" />
+      <IDSymbol name="cmdidAddExistingVirtualEnv" value="0x4008" />
+      <IDSymbol name="cmdidActivateInterpreter" value="0x4009" />
+      <IDSymbol name="cmdidInstallPythonPackage" value="0x400A" />
+      <IDSymbol name="cmdidUninstallPythonPackage" value="0x400B" />
 
       <IDSymbol name="cmdidShowCppView" value="0x400C" />
       <IDSymbol name="cmdidShowPythonView" value="0x400D" />
@@ -855,9 +859,9 @@
       <IDSymbol name="RemoveImportsGroup" value ="0x1054" />
       <IDSymbol name="RefactoringCommon" value="0x1055" />
       <IDSymbol name="DocWinTabGroup" value="0x1056" />
-      <IDSymbol name="VirtualEnvItemsGroup" value="0x1057" />
+      <IDSymbol name="InterpretersItemsGroup" value="0x1057" />
       <IDSymbol name="DebuggerPythonContextGroup" value="0x1058" />
-
+      
       <!-- Menus -->
       <IDSymbol name="ToolsMenu" value ="0x2001" />
       <IDSymbol name="RemoveImportsMenu" value ="0x2002" />

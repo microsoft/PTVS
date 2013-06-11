@@ -13,8 +13,14 @@
  * ***************************************************************************/
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Interpreters;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools.Project;
@@ -22,22 +28,53 @@ using OleConstants = Microsoft.VisualStudio.OLE.Interop.Constants;
 
 namespace Microsoft.PythonTools.Project {
     /// <summary>
-    /// Virtual environment container node.
+    /// Python Interpreters container node.
     /// </summary>
     [ComVisible(true)]
-    internal class VirtualEnvContainerNode : HierarchyNode {
-        internal const string VirtualEnvNodeVirtualName = "Virtual Environments";
+    internal class InterpretersContainerNode : HierarchyNode {
+        internal const string InterpretersNodeVirtualName = "Python Interpreters";
         private PythonProjectNode _projectNode;
-        private bool _boldedOnStartup;
 
-        public VirtualEnvContainerNode(PythonProjectNode project)
+        public InterpretersContainerNode(PythonProjectNode project)
             : base(project.ProjectMgr) {
             _projectNode = project;
             this.ExcludeNodeFromScc = true;
+
+            OnInterpreterFactoriesChanged(_projectNode.Interpreters);
+        }
+
+        internal void OnInterpreterFactoriesChanged(MSBuildProjectInterpreterFactoryProvider provider) {
+            var service = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
+            var remaining = AllChildren.OfType<InterpretersNode>().ToDictionary(n => n._factory);
+
+            foreach (var fact in provider.GetInterpreterFactories()) {
+                if (!remaining.Remove(fact)) {
+                    AddChild(new InterpretersNode(
+                        ProjectMgr,
+                        provider.GetProjectItem(fact),
+                        fact,
+                        isInterpreterReference: service != null && service.Interpreters.Contains(fact),
+                        canDelete: fact is DerivedInterpreterFactory));
+                }
+            }
+
+            foreach (var child in remaining.Values) {
+                RemoveChild(child);
+            }
+
+            bool wasExpanded = GetIsExpanded();
+            var expandAfter = AllChildren.Where(n => n.GetIsExpanded()).ToArray();
+            ProjectMgr.OnInvalidateItems(this);
+            if (wasExpanded) {
+                ExpandItem(EXPANDFLAGS.EXPF_ExpandFolder);
+            }
+            foreach (var child in expandAfter) {
+                child.ExpandItem(EXPANDFLAGS.EXPF_ExpandFolder);
+            }
         }
 
         protected override NodeProperties CreatePropertiesObject() {
-            return new VirtualEnvContainerNodeContainerNodeProperties(this);
+            return new InterpretersContainerNodeContainerNodeProperties(this);
         }
 
         /// <summary>
@@ -46,7 +83,7 @@ namespace Microsoft.PythonTools.Project {
         /// </summary>
         public override int SortPriority {
             get {
-                return PythonConstants.VirtualEnvContainerNodeSortPriority;
+                return PythonConstants.InterpretersContainerNodeSortPriority;
             }
         }
 
@@ -65,41 +102,41 @@ namespace Microsoft.PythonTools.Project {
         }
 
         /// <summary>
-        /// Gets the absolute path for this node.         
+        /// Gets the absolute path for this node.
         /// </summary>
         public override string Url {
             // TODO: This node is not real - should we return null for Url?
-            get { return VirtualEnvNodeVirtualName; }
+            get { return InterpretersNodeVirtualName; }
         }
 
         /// <summary>
-        /// Gets the caption of the hierarchy node.        
+        /// Gets the caption of the hierarchy node.
         /// </summary>
         public override string Caption {
-            get { return DynamicProjectSR.GetString(DynamicProjectSR.VirtualEnvs); }
+            get { return SR.GetString(SR.Interpreters); }
         }
 
         /// <summary>
-        /// Disable inline editing of Caption of a SearchPathContainer Node
-        /// </summary>        
+        /// Disable inline editing of Caption of this node
+        /// </summary>
         public override string GetEditLabel() {
             return null;
         }
 
         public override object GetIconHandle(bool open) {
             return this.ProjectMgr.ImageHandler.GetIconHandle(
-                CommonProjectNode.ImageOffset + (int)CommonImageName.VirtualEnvContainer);
+                CommonProjectNode.ImageOffset + (int)CommonImageName.InterpretersContainer);
         }
 
         /// <summary>
-        /// Search path node cannot be dragged.
-        /// </summary>        
+        /// Interpreter container node cannot be dragged.
+        /// </summary>
         protected internal override string PrepareSelectedNodesForClipBoard() {
             return null;
         }
 
         /// <summary>
-        /// SearchPathContainer Node cannot be excluded, it needs to be removed.
+        /// Interpreter container cannot be excluded.
         /// </summary>
         internal override int ExcludeFromProject() {
             return (int)OleConstants.OLECMDERR_E_NOTSUPPORTED;
@@ -108,8 +145,9 @@ namespace Microsoft.PythonTools.Project {
         internal override int QueryStatusOnNode(Guid cmdGroup, uint cmd, IntPtr pCmdText, ref QueryStatusResult result) {
             if (cmdGroup == GuidList.guidPythonToolsCmdSet) {
                 switch (cmd) {
+                    case PythonConstants.AddInterpreter:
                     case PythonConstants.AddVirtualEnv:
-                    case PythonConstants.CreateVirtualEnv:
+                    case PythonConstants.AddExistingVirtualEnv:
                         result |= QueryStatusResult.SUPPORTED | QueryStatusResult.ENABLED;
                         return VSConstants.S_OK;
                 }
@@ -120,19 +158,32 @@ namespace Microsoft.PythonTools.Project {
 
         internal override int ExecCommandOnNode(Guid cmdGroup, uint cmd, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut) {
             if (cmdGroup == GuidList.guidPythonToolsCmdSet) {
+                bool browseForExisting = false;
                 switch (cmd) {
+                    case PythonConstants.AddInterpreter:
+                        _projectNode.ShowAddInterpreter();
+                        return VSConstants.S_OK;
+                    case PythonConstants.AddExistingVirtualEnv:
+                        browseForExisting = true;
+                        goto case PythonConstants.AddVirtualEnv;
                     case PythonConstants.AddVirtualEnv:
-                        return _projectNode.AddVirtualEnv();
-                    case PythonConstants.CreateVirtualEnv:
-                        return _projectNode.CreateVirtualEnv();
+                        _projectNode.ShowAddVirtualEnvironment(browseForExisting).ContinueWith(t => {
+                                var statusBar = (IVsStatusbar)GetService(typeof(SVsStatusbar));
+                                statusBar.SetText(string.Format("Error adding virtual environment: {0}",
+                                    t.Exception.InnerException.Message));
+                            }, 
+                            CancellationToken.None,
+                            TaskContinuationOptions.OnlyOnFaulted,
+                            TaskScheduler.FromCurrentSynchronizationContext());
+                        return VSConstants.S_OK;
                 }
             }
             return base.ExecCommandOnNode(cmdGroup, cmd, nCmdexecopt, pvaIn, pvaOut);
         }
 
         /// <summary>
-        /// SearchPathContainer Node cannot be deleted.
-        /// </summary>        
+        /// Interpreter container node cannot be deleted.
+        /// </summary>
         internal override bool CanDeleteItem(__VSDELETEITEMOPERATION deleteOperation) {
             return false;
         }
@@ -148,22 +199,6 @@ namespace Microsoft.PythonTools.Project {
         public new PythonProjectNode ProjectMgr {
             get {
                 return ((PythonProjectNode)base.ProjectMgr);
-            }
-        }
-
-        internal void CheckStartupBold() {
-            // We can't bold the activate item while we're loading the project because the
-            // UI hierarchy isn't initialized yet.  So instead we wait until we get a request
-            // for an icon for the startup item's parent, and then we bold it.
-
-            if (!_boldedOnStartup) {
-                for (var child = this.FirstChild; child != null; child = child.NextSibling) {
-                    if (((VirtualEnvNode)child).IsVirtualEnvEnabled) {
-                        ProjectMgr.BoldItem(child, true);
-                        break;
-                    }
-                }
-                _boldedOnStartup = true;
             }
         }
     }

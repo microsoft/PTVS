@@ -104,17 +104,26 @@ namespace Microsoft.PythonTools.Analysis {
             LibraryPath = libraryPath;
         }
 
+        private static bool DirectoryExists(string path) {
+            return !string.IsNullOrEmpty(path) &&
+                path.IndexOfAny(Path.GetInvalidPathChars()) < 0 &&
+                Directory.Exists(path);
+        }
+
         private static readonly Regex PythonPackageRegex = new Regex(@"^(?!\d)(?<name>(\w|_)+)$", RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
         private static readonly Regex PythonEggRegex = new Regex(@"^(?!\d)(?<name>(\w|_)+)-.+\.egg$", RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
         private static readonly Regex PythonFileRegex = new Regex(@"^(?!\d)(?<name>(\w|_)+)\.pyw?$", RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
         private static readonly Regex PythonBinaryRegex = new Regex(@"^(?!\d)(?<name>(\w|_)+)\.pyd$", RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
 
-        private static IEnumerable<ModulePath> GetModuleNamesFromPathHelper(string libPath, string path, string baseModule, bool skipFiles) {
+        private static IEnumerable<ModulePath> GetModuleNamesFromPathHelper(string libPath,
+                                                                            string path,
+                                                                            string baseModule,
+                                                                            bool skipFiles,
+                                                                            bool recurse) {
+
             Debug.Assert(baseModule == "" || baseModule.EndsWith("."));
 
-            if (string.IsNullOrEmpty(path) ||
-                path.IndexOfAny(Path.GetInvalidPathChars()) >= 0 ||
-                !Directory.Exists(path)) {
+            if (!DirectoryExists(path)) {
                 yield break;
             }
 
@@ -131,16 +140,24 @@ namespace Microsoft.PythonTools.Analysis {
                 }
             }
 
-            foreach (var dir in Directory.EnumerateDirectories(path)) {
-                var dirname = Path.GetFileName(dir);
-                var match = PythonPackageRegex.Match(dirname);
-                if (match.Success && File.Exists(Path.Combine(dir, "__init__.py"))) {
-                    foreach (var entry in GetModuleNamesFromPathHelper(skipFiles ? dir : libPath, dir, baseModule + match.Groups["name"].Value + ".", false)) {
-                        yield return entry;
-                    }
-                } else if (PythonEggRegex.IsMatch(dirname)) {
-                    foreach (var entry in GetModuleNamesFromPathHelper(dir, dir, baseModule, false)) {
-                        yield return entry;
+            if (recurse) {
+                foreach (var dir in Directory.EnumerateDirectories(path)) {
+                    var dirname = Path.GetFileName(dir);
+                    var match = PythonPackageRegex.Match(dirname);
+                    if (match.Success && File.Exists(Path.Combine(dir, "__init__.py"))) {
+                        foreach (var entry in GetModuleNamesFromPathHelper(
+                            skipFiles ? dir : libPath,
+                            dir,
+                            baseModule + match.Groups["name"].Value + ".",
+                            false,
+                            true)
+                        ) {
+                            yield return entry;
+                        }
+                    } else if (PythonEggRegex.IsMatch(dirname)) {
+                        foreach (var entry in GetModuleNamesFromPathHelper(dir, dir, baseModule, false, true)) {
+                            yield return entry;
+                        }
                     }
                 }
             }
@@ -150,36 +167,24 @@ namespace Microsoft.PythonTools.Analysis {
         /// Returns a sequence of ModulePath items for all modules importable
         /// from the provided path, optionally excluding top level files.
         /// </summary>
-        public static IEnumerable<ModulePath> GetModulesInPath(string path, bool includeTopLevelFiles = true) {
-            return GetModuleNamesFromPathHelper(path, path, "", !includeTopLevelFiles);
+        public static IEnumerable<ModulePath> GetModulesInPath(string path,
+                                                               bool includeTopLevelFiles = true,
+                                                               bool recurse = true) {
+            return GetModuleNamesFromPathHelper(path, path, "", !includeTopLevelFiles, recurse);
         }
 
         /// <summary>
         /// Returns a sequence of ModulePath items for all modules importable
-        /// from the provided paths.
+        /// from the provided path, optionally excluding top level files.
         /// </summary>
-        /// <param name="pathIncludingRoot">
-        /// All files in these paths are considered.
-        /// </param>
-        /// <param name="pathExcludingRoot">
-        /// Only files in subdirectories of these paths are considered.
-        /// </param>
-        /// <param name="allModuleNames">
-        /// Contains all the importable module names. Any module in this set on
-        /// entry will be excluded from the results, and each name returned from
-        /// the enumeration will be added to the set.
-        /// 
-        /// This set should use StringComparer.Ordinal.
-        /// </param>
-        public static IEnumerable<ModulePath> GetModulesInLib(
-            IEnumerable<string> pathIncludingRoot,
-            IEnumerable<string> pathExcludingRoot,
-            HashSet<string> allModuleNames) {
-            return GetModulesInPathHelper(pathIncludingRoot, true, allModuleNames)
-                .Concat(GetModulesInPathHelper(pathExcludingRoot, false, allModuleNames));
+        public static IEnumerable<ModulePath> GetModulesInPath(IEnumerable<string> paths,
+                                                               bool includeTopLevelFiles = true,
+                                                               bool recurse = true) {
+            return paths.SelectMany(p => GetModuleNamesFromPathHelper(p, p, "", !includeTopLevelFiles, recurse));
         }
 
-        private static IEnumerable<ModulePath> GetModulesInPathHelper(IEnumerable<string> paths, bool includeTopLevelFiles, HashSet<string> allModuleNames) {
+        private static IEnumerable<ModulePath> GetModulesInPathHelper(IEnumerable<string> paths,
+                                                                      bool includeTopLevelFiles, HashSet<string> allModuleNames) {
             if (paths != null) {
                 foreach (var module in paths.SelectMany(path => GetModulesInPath(path, includeTopLevelFiles))) {
                     if (!string.IsNullOrEmpty(module.ModuleName) && 
@@ -232,22 +237,40 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         /// <summary>
-        /// Returns a sequence of name-path pairs for all modules importable by
-        /// the provided factory.
+        /// Returns a sequence of ModulePaths for all modules importable from
+        /// the specified library.
         /// </summary>
-        public static IEnumerable<ModulePath> GetModulesInLib(IPythonInterpreterFactory factory) {
-            string libDir, virtualEnvPackages;
-            PythonTypeDatabase.GetLibDirs(factory, out libDir, out virtualEnvPackages);
+        public static IEnumerable<ModulePath> GetModulesInLib(string libraryPath,
+                                                              HashSet<string> allModuleNames = null) {
+            if (!DirectoryExists(libraryPath)) {
+                return Enumerable.Empty<ModulePath>();
+            }
+            if (allModuleNames == null) {
+                allModuleNames = new HashSet<string>(StringComparer.Ordinal);
+            }
+            var siteDir = Path.Combine(libraryPath, "site-packages");
+            var pthDirs = ExpandPathFiles(siteDir);
 
-            var allModuleNames = new HashSet<string>(StringComparer.Ordinal);
-            var siteDirs = new[] { Path.Combine(libDir, "site-packages") }.AsEnumerable();
-            var libDirs = new[] { libDir };
-            var pthDirs = ExpandPathFiles(siteDirs);
+            // Get modules in stdlib
+            return GetModulesInPath(libraryPath, true, true)
+                // Get files in site-packages, but don't recurse
+                .Concat(GetModulesInPath(siteDir, true, false))
+                // Get directories in site-packages
+                .Concat(GetModulesInPath(siteDir, false, true))
+                // Get directories referenced by pth files
+                .Concat(GetModulesInPath(pthDirs, true, true))
+                // Ensure only the first module of each importable name is
+                // returned
+                .Where(mp => allModuleNames.Add(mp.ModuleName));
+        }
 
-            // Concat the contents of directories referenced by .pth files
-            // to ensure that they lose naming collisions.
-            return GetModulesInLib(libDirs, siteDirs, allModuleNames)
-                .Concat(GetModulesInLib(pthDirs, null, allModuleNames));
+        /// <summary>
+        /// Returns a sequence of ModulePaths for all modules importable by the
+        /// provided factory.
+        /// </summary>
+        public static IEnumerable<ModulePath> GetModulesInLib(IPythonInterpreterFactory factory,
+                                                              HashSet<string> allModuleNames = null) {
+            return GetModulesInLib(factory.Configuration.LibraryPath, allModuleNames);
         }
 
         /// <summary>

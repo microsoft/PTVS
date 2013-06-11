@@ -20,6 +20,7 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Interpreter.Default;
 
 namespace Microsoft.PythonTools.Interpreter {
     /// <summary>
@@ -45,7 +46,7 @@ namespace Microsoft.PythonTools.Interpreter {
             _refreshIsCurrentTrigger = new Timer(RefreshIsCurrentTimer_Elapsed);
             Task.Factory.StartNew(() => RefreshIsCurrent(false));
 
-            if (watchLibraryForChanges && !string.IsNullOrEmpty(_config.LibraryPath) && Directory.Exists(_config.LibraryPath)) {
+            if (watchLibraryForChanges && DirectoryExists(_config.LibraryPath)) {
                 try {
                     _libWatcher = new FileSystemWatcher {
                         IncludeSubdirectories = true,
@@ -63,13 +64,25 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
+        private static bool DirectoryExists(string path) {
+            return !string.IsNullOrEmpty(path) &&
+                path.IndexOfAny(Path.GetInvalidPathChars()) < 0 &&
+                Directory.Exists(path);
+        }
+
         public InterpreterConfiguration Configuration {
             get {
                 return _config;
             }
         }
 
-        public string Description {
+        public bool IsCurrentDatabaseInUse {
+            get {
+                return _typeDb.HasListeners;
+            }
+        }
+
+        public virtual string Description {
             get { return _description; }
         }
 
@@ -80,16 +93,23 @@ namespace Microsoft.PythonTools.Interpreter {
         /// <summary>
         /// Returns a new interpreter created with the specific database.
         /// </summary>
-        protected abstract IPythonInterpreter MakeInterpreter(PythonTypeDatabase typeDb);
+        public virtual IPythonInterpreter MakeInterpreter(PythonTypeDatabase typeDb) {
+            return new CPythonInterpreter(typeDb);
+        }
 
         public IPythonInterpreter CreateInterpreter() {
             if (_typeDb == null || _typeDb.DatabaseDirectory != DatabasePath) {
+                var oldDb = _typeDb;
                 if (_typeDb != null) {
                     _typeDb.DatabaseCorrupt -= OnDatabaseCorrupt;
                 }
                 _typeDb = MakeTypeDatabase(DatabasePath);
                 if (_typeDb != null) {
                     _typeDb.DatabaseCorrupt += OnDatabaseCorrupt;
+                }
+
+                if (oldDb != null) {
+                    oldDb.OnDatabaseReplaced(_typeDb);
                 }
             }
 
@@ -99,12 +119,16 @@ namespace Microsoft.PythonTools.Interpreter {
         /// <summary>
         /// Returns a new database loaded from the specified path.
         /// </summary>
-        protected virtual PythonTypeDatabase MakeTypeDatabase(string databasePath) {
+        public virtual PythonTypeDatabase MakeTypeDatabase(string databasePath) {
             if (ConfigurableDatabaseExists(databasePath, Configuration.Version)) {
-                return new PythonTypeDatabase(databasePath, Configuration.Version);
+                try {
+                    return new PythonTypeDatabase(this, databasePath);
+                } catch (IOException) {
+                } catch (UnauthorizedAccessException) {
+                }
             }
 
-            return PythonTypeDatabase.CreateDefaultTypeDatabase(_config.Version);
+            return PythonTypeDatabase.CreateDefaultTypeDatabase(this);
         }
 
         private static bool ConfigurableDatabaseExists(string databasePath, Version languageVersion) {
@@ -123,7 +147,7 @@ namespace Microsoft.PythonTools.Interpreter {
             return false;
         }
 
-        public void GenerateCompletionDatabase(Action failedToStart = null) {
+        public virtual void GenerateCompletionDatabase(GenerateDatabaseOptions options, Action<int> onExit = null) {
             if (_generating) {
                 return;
             }
@@ -131,13 +155,12 @@ namespace Microsoft.PythonTools.Interpreter {
                 _libWatcher.EnableRaisingEvents = false;
             }
             _generating = true;
-            var req = new PythonTypeDatabaseCreationRequest() { Factory = this, OutputPath = DatabasePath };
-            req.FailedToStart += (s, e) => {
-                NotifyGeneratingDatabase(false);
-                if (failedToStart != null) {
-                    failedToStart();
-                }
+            var req = new PythonTypeDatabaseCreationRequest {
+                Factory = this,
+                OutputPath = DatabasePath,
+                SkipUnchanged = options.HasFlag(GenerateDatabaseOptions.SkipUnchanged)
             };
+            req.OnExit = onExit;
             PythonTypeDatabase.Generate(req);
         }
 
@@ -148,10 +171,21 @@ namespace Microsoft.PythonTools.Interpreter {
             _generating = isGenerating;
         }
 
+        /// <summary>
+        /// Returns true if the database is currently being regenerated. This
+        /// state is managed automatically.
+        /// </summary>
+        protected bool IsGenerating {
+            get {
+                return _generating;
+            }
+        }
+
         public void NotifyNewDatabase() {
             if (_typeDb != null) {
                 _typeDb.DatabaseCorrupt -= OnDatabaseCorrupt;
             }
+            var oldDb = _typeDb;
             _typeDb = MakeTypeDatabase(DatabasePath);
             if (_typeDb != null) {
                 _typeDb.DatabaseCorrupt += OnDatabaseCorrupt;
@@ -166,32 +200,32 @@ namespace Microsoft.PythonTools.Interpreter {
                 RefreshIsCurrent(previousIsCurrent);
             }
 
-            var evt = NewDatabase;
-            if (evt != null) {
-                evt(this, new NewDatabaseEventArgs(_typeDb));
+            if (oldDb != null) {
+                oldDb.OnDatabaseReplaced(_typeDb);
             }
         }
 
         private void OnDatabaseCorrupt(object sender, EventArgs args) {
+            var oldDb = _typeDb;
             _typeDb = PythonTypeDatabase.CreateDefaultTypeDatabase(_config.Version);
-            var evt = NewDatabase;
-            if (evt != null) {
-                evt(this, new NewDatabaseEventArgs(_typeDb));
+            if (oldDb != null) {
+                oldDb.OnDatabaseReplaced(_typeDb);
             }
-            GenerateCompletionDatabase();
+            GenerateCompletionDatabase(GenerateDatabaseOptions.None);
         }
 
-        public event EventHandler<NewDatabaseEventArgs> NewDatabase;
-
-        void IInterpreterWithCompletionDatabase.AutoGenerateCompletionDatabase() {
-            if (!ConfigurableDatabaseExists(DatabasePath, Configuration.Version)) {
-                GenerateCompletionDatabase();
+        public virtual void AutoGenerateCompletionDatabase() {
+            RefreshIsCurrent();
+            if (!IsCurrent) {
+                GenerateCompletionDatabase(GenerateDatabaseOptions.None);
             }
         }
 
-        public bool IsCurrent {
+        public virtual bool IsCurrent {
             get {
-                return !_generating && Directory.Exists(DatabasePath) && _missingModules == null;
+                return !_generating &&
+                    ConfigurableDatabaseExists(DatabasePath, Configuration.Version) &&
+                    _missingModules == null;
             }
         }
 
@@ -201,9 +235,13 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
-        public string DatabasePath {
+        public virtual string DatabasePath {
             get {
-                return Path.Combine(PythonTypeDatabase.CompletionDatabasePath, String.Format("{0}\\{1}", Id, Configuration.Version));
+                return Path.Combine(
+                    PythonTypeDatabase.CompletionDatabasePath,
+                    Id.ToString(),
+                    Configuration.Version.ToString()
+                );
             }
         }
 
@@ -219,7 +257,7 @@ namespace Microsoft.PythonTools.Interpreter {
             return null;
         }
 
-        public void RefreshIsCurrent() {
+        public virtual void RefreshIsCurrent() {
             RefreshIsCurrent(IsCurrent);
         }
 
@@ -227,17 +265,21 @@ namespace Microsoft.PythonTools.Interpreter {
             bool reasonChanged = false;
 
             if (Directory.Exists(DatabasePath)) {
+                var existingDatabase = new HashSet<string>(
+                    Directory.EnumerateFiles(DatabasePath, "*.idb").Select(f => Path.GetFileNameWithoutExtension(f)),
+                    StringComparer.InvariantCultureIgnoreCase
+                );
                 var missingModules = ModulePath.GetModulesInLib(this)
-                    // TODO: Remove IsCompiled check when pyds referenced by pth files are properly analyzed
-                    //.Where(mp => !mp.IsCompiled)
                     .Select(mp => mp.ModuleName)
-                    .Except(Directory.EnumerateFiles(DatabasePath, "*.idb").Select(f => Path.GetFileNameWithoutExtension(f)), StringComparer.OrdinalIgnoreCase)
+                    .Where(name => !existingDatabase.Contains(name))
                     .OrderBy(name => name, StringComparer.InvariantCultureIgnoreCase)
                     .ToArray();
 
                 if (missingModules.Length > 0) {
                     var oldModules = _missingModules;
-                    if (oldModules == null || oldModules.Length != missingModules.Length || !oldModules.SequenceEqual(missingModules)) {
+                    if (oldModules == null ||
+                        oldModules.Length != missingModules.Length ||
+                        !oldModules.SequenceEqual(missingModules)) {
                         reasonChanged = true;
                     }
                     _missingModules = missingModules;
@@ -255,7 +297,13 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         private void RefreshIsCurrentTimer_Elapsed(object state) {
-            RefreshIsCurrent(false);
+            if (DirectoryExists(Configuration.LibraryPath)) {
+                RefreshIsCurrent(false);
+            } else {
+                _libWatcher.Dispose();
+                _libWatcher = null;
+                OnIsCurrentChanged();
+            }
         }
 
         private void OnRenamed(object sender, RenamedEventArgs e) {
@@ -268,7 +316,7 @@ namespace Microsoft.PythonTools.Interpreter {
 
         public event EventHandler IsCurrentChanged;
 
-        private void OnIsCurrentChanged() {
+        protected void OnIsCurrentChanged() {
             var evt = IsCurrentChanged;
             if (evt != null) {
                 evt(this, EventArgs.Empty);
@@ -277,7 +325,7 @@ namespace Microsoft.PythonTools.Interpreter {
 
         public event EventHandler IsCurrentReasonChanged;
 
-        private void OnIsCurrentReasonChanged() {
+        protected void OnIsCurrentReasonChanged() {
             var evt = IsCurrentReasonChanged;
             if (evt != null) {
                 evt(this, EventArgs.Empty);
@@ -289,12 +337,16 @@ namespace Microsoft.PythonTools.Interpreter {
             return (firstDot > 0) ? fullName.Remove(firstDot) : fullName;
         }
 
-        public string GetFriendlyIsCurrentReason(IFormatProvider culture) {
+        public virtual string GetFriendlyIsCurrentReason(IFormatProvider culture) {
             var missingModules = _missingModules;
             if (_generating) {
                 return "Currently regenerating";
+            } else if (_libWatcher == null) {
+                return "Interpreter has no library";
             } else if (!Directory.Exists(DatabasePath)) {
                 return "Database has never been generated";
+            } else if (!ConfigurableDatabaseExists(DatabasePath, Configuration.Version)) {
+                return "Database is corrupt or an old version";
             } else if (missingModules != null) {
                 if (missingModules.Length < 100) {
                     return string.Format(culture,
@@ -328,13 +380,17 @@ namespace Microsoft.PythonTools.Interpreter {
             return "Up to date";
         }
 
-        public string GetIsCurrentReason(IFormatProvider culture) {
+        public virtual string GetIsCurrentReason(IFormatProvider culture) {
             var missingModules = _missingModules;
             var reason = "Database at " + DatabasePath;
             if (_generating) {
                 return reason + " is regenerating";
+            } else if (_libWatcher == null) {
+                return "Interpreter has no library";
             } else if (!Directory.Exists(DatabasePath)) {
                 return reason + " does not exist";
+            } else if (!ConfigurableDatabaseExists(DatabasePath, Configuration.Version)) {
+                return reason + " is corrupt or an old version";
             } else if (missingModules != null) {
                 return reason + " does not contain the following modules:" + Environment.NewLine +
                     string.Join(Environment.NewLine, missingModules);

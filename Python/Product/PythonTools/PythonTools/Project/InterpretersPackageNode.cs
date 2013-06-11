@@ -15,21 +15,25 @@
 using System;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools.Project;
 using OleConstants = Microsoft.VisualStudio.OLE.Interop.Constants;
+using VsMenus = Microsoft.VisualStudioTools.Project.VsMenus;
 
 namespace Microsoft.PythonTools.Project {
     /// <summary>
     /// Represents a package installed in a virtual env as a node in the Solution Explorer.
     /// </summary>
     [ComVisible(true)]
-    internal class VirtualEnvPackageNode : HierarchyNode {
+    internal class InterpretersPackageNode : HierarchyNode {
         protected PythonProjectNode _project;
         private string _caption;
 
-        public VirtualEnvPackageNode(PythonProjectNode project, string name)
+        public InterpretersPackageNode(PythonProjectNode project, string name)
             : base(project, new VirtualProjectElement(project)) {
             _caption = name;
         }
@@ -50,16 +54,15 @@ namespace Microsoft.PythonTools.Project {
             if (cmdGroup == GuidList.guidPythonToolsCmdSet) {
                 switch (cmd) {
                     case PythonConstants.UninstallPythonPackage:
-                        string message = string.Format(
-                            "'{0}' will be uninstalled from the virtual environment",
-                            this.Caption);
-                        string title = string.Empty;
-                        OLEMSGICON icon = OLEMSGICON.OLEMSGICON_WARNING;
-                        OLEMSGBUTTON buttons = OLEMSGBUTTON.OLEMSGBUTTON_OK | OLEMSGBUTTON.OLEMSGBUTTON_OKCANCEL;
-                        OLEMSGDEFBUTTON defaultButton = OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST;
-                        int res = Microsoft.VisualStudio.Shell.VsShellUtilities.ShowMessageBox(this.ProjectMgr.Site, title, message, icon, buttons, defaultButton);
-                        bool shouldRemove = res == 1;
-                        if (shouldRemove) {
+                        string message = string.Format("'{0}' will be uninstalled.", Caption);
+                        int res = VsShellUtilities.ShowMessageBox(
+                            ProjectMgr.Site, 
+                            string.Empty,
+                            message,
+                            OLEMSGICON.OLEMSGICON_WARNING,
+                            OLEMSGBUTTON.OLEMSGBUTTON_OKCANCEL,
+                            OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST);
+                        if (res == 1) {
                             Remove(false);
                         }
                         return VSConstants.S_OK;
@@ -75,24 +78,73 @@ namespace Microsoft.PythonTools.Project {
         }
 
         /// <summary>
-        /// Virtual env package nodes are removed by "uninstalling" not deleting.  This is
-        /// mainly because we don't get all of the delete notifications from solution navigator,
-        /// so we can't show our improved prompt.
-        /// </summary>        
+        /// Package nodes are removed by "uninstalling" not deleting.  This is
+        /// mainly because we don't get all of the delete notifications from
+        /// solution navigator, so we can't show our improved prompt.
+        /// </summary>
         internal override bool CanDeleteItem(__VSDELETEITEMOPERATION deleteOperation) {
             return false;
         }
 
+        public static System.Threading.Tasks.Task InstallNewPackage(InterpretersNode parent) {
+            var view = InstallPythonPackage.ShowDialog();
+            if (view == null) {
+                var tcs = new TaskCompletionSource<object>();
+                tcs.SetCanceled();
+                return tcs.Task;
+            }
+
+            var name = view.Name;
+
+            // don't process events while we're installing, we'll
+            // rescan once we're done
+            parent.BeginPackageChange();
+
+            var redirector = OutputWindowRedirector.GetGeneral(parent.ProjectMgr.Site);
+            var statusBar = (IVsStatusbar)parent.ProjectMgr.Site.GetService(typeof(SVsStatusbar));
+            statusBar.SetText("Installing " + name + ". See Output Window for more details.");
+
+            return Pip.Install(parent._factory, name, parent.ProjectMgr.Site, redirector).ContinueWith(t => {
+                if (t.IsCompleted) {
+                    bool success = t.Result;
+
+                    var msg = string.Format(success ?
+                        "Successfully installed {0}" :
+                        "Failed to install {0}",
+                        name);
+                    statusBar.SetText(msg);
+                    redirector.WriteLine(msg);
+                }
+                parent.PackageChangeDone();
+            }, TaskScheduler.FromCurrentSynchronizationContext());
+        }
+
+        public static System.Threading.Tasks.Task UninstallPackage(InterpretersNode parent, string name) {
+            // don't process events while we're installing, we'll
+            // rescan once we're done
+            parent.BeginPackageChange();
+
+            var redirector = OutputWindowRedirector.GetGeneral(parent.ProjectMgr.Site);
+            var statusBar = (IVsStatusbar)parent.ProjectMgr.Site.GetService(typeof(SVsStatusbar));
+            statusBar.SetText("Uninstalling " + name + ". See Output Window for more details.");
+
+            return Pip.Uninstall(parent._factory, name, redirector).ContinueWith(t => {
+                if (t.IsCompleted) {
+                    bool success = t.Result;
+
+                    var msg = string.Format(success ?
+                        "Successfully uninstalled {0}" :
+                        "Failed to uninstall {0}",
+                        name);
+                    statusBar.SetText(msg);
+                    redirector.WriteLine(msg);
+                }
+                parent.PackageChangeDone();
+            }, TaskScheduler.FromCurrentSynchronizationContext());
+        }
+
         public override void Remove(bool removeFromStorage) {
-            Parent.BeginPackageChange();
-            ProjectMgr.EnqueueVirtualEnvRequest(
-                ((VirtualEnvNode)Parent).RunPip("uninstall", "-y", _caption),
-                "Uninstalling " + _caption,
-                "Successfully uninstalled " + _caption,
-                "Failed to uninstall " + _caption,
-                RemoveSelf,
-                Parent.PackageChangeDone
-            );
+            var task = UninstallPackage(Parent, Caption);
         }
 
         private void RemoveSelf() {
@@ -102,9 +154,9 @@ namespace Microsoft.PythonTools.Project {
             Parent.PackageChangeDone();
         }
 
-        public new VirtualEnvNode Parent {
+        public new InterpretersNode Parent {
             get {
-                return (VirtualEnvNode)base.Parent;
+                return (InterpretersNode)base.Parent;
             }
         }
 
@@ -126,7 +178,7 @@ namespace Microsoft.PythonTools.Project {
 
         public override object GetIconHandle(bool open) {
             return this.ProjectMgr.ImageHandler.GetIconHandle(
-                CommonProjectNode.ImageOffset + (int)CommonImageName.VirtualEnvPackage
+                CommonProjectNode.ImageOffset + (int)CommonImageName.InterpretersPackage
             );
         }
         /// <summary>
@@ -172,7 +224,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         protected override NodeProperties CreatePropertiesObject() {
-            return new VirtualEnvPackageNodeProperties(this);
+            return new InterpretersPackageNodeProperties(this);
         }
     }
 }

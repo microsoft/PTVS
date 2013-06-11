@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -65,6 +66,9 @@ namespace Microsoft.PythonTools.InterpreterList {
             _interpService.InterpretersChanged += InterpretersChanged;
             _interpService.DefaultInterpreterChanged += DefaultInterpreterChanged;
 
+            foreach (var interp in _interpreters) {
+                interp.PropertyChanged += View_PropertyChanged;
+            }
             Interpreters = new ObservableCollection<InterpreterView>(_interpreters);
             DataContext = this;
 
@@ -72,6 +76,10 @@ namespace Microsoft.PythonTools.InterpreterList {
             InitializeComponent();
 
             _refreshTimer.Start();
+        }
+
+        private void View_PropertyChanged(object sender, PropertyChangedEventArgs e) {
+            CommandManager.InvalidateRequerySuggested();
         }
 
         void InterpretersChanged(object sender, EventArgs e) {
@@ -97,10 +105,12 @@ namespace Microsoft.PythonTools.InterpreterList {
         }
 
         void DefaultInterpreterChanged(object sender, EventArgs e) {
+            InterpreterView[] interps;
             lock (_interpreters) {
-                foreach (var interp in _interpreters) {
-                    interp.DefaultInterpreterUpdate(_interpService.DefaultInterpreter);
-                }
+                interps = _interpreters.ToArray();
+            }
+            foreach (var interp in interps) {
+                interp.DefaultInterpreterUpdate(_interpService.DefaultInterpreter);
             }
         }
 
@@ -147,10 +157,12 @@ namespace Microsoft.PythonTools.InterpreterList {
         }
 
         internal void Update(Dictionary<string, AnalysisProgress> data) {
+            InterpreterView[] interps;
             lock (_interpreters) {
-                foreach (var interp in _interpreters) {
-                    interp.ProgressUpdate(data);
-                }
+                interps = _interpreters.ToArray();
+            }
+            foreach (var interp in interps) {
+                interp.ProgressUpdate(data);
             }
         }
 
@@ -240,9 +252,7 @@ namespace Microsoft.PythonTools.InterpreterList {
         }
 
         private void WebChooseInterpreter_Executed(object sender, ExecutedRoutedEventArgs e) {
-            PythonToolsPackage.OpenWebBrowser(
-                string.Format("http://go.microsoft.com/fwlink/?LinkId=299429&clcid=0x{0:X}",
-                              CultureInfo.CurrentCulture.LCID));
+            PythonToolsPackage.OpenWebBrowser(PythonToolsPackage.InterpreterHelpUrl);
         }
     }
 }

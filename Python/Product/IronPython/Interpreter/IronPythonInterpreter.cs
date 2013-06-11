@@ -34,7 +34,6 @@ namespace Microsoft.IronPythonTools.Interpreter {
         private readonly ConcurrentDictionary<string, IronPythonModule> _modules = new ConcurrentDictionary<string, IronPythonModule>();
         private readonly ConcurrentBag<string> _assemblyLoadSet = new ConcurrentBag<string>();
         private readonly HashSet<ProjectReference> _projectReferenceSet = new HashSet<ProjectReference>();
-        private readonly IronPythonInterpreterFactory _factory;
         private RemoteInterpreterProxy _remote;
         private DomainUnloader _unloader;
         private PythonAnalyzer _state;
@@ -44,18 +43,13 @@ namespace Microsoft.IronPythonTools.Interpreter {
         private static int _interpreterCount;
 #endif
 
-        public IronPythonInterpreter(IronPythonInterpreterFactory factory)
-            : this(factory, null) {
-        }
-
-        internal IronPythonInterpreter(IronPythonInterpreterFactory factory, PythonTypeDatabase typeDb) {
+        public IronPythonInterpreter(PythonTypeDatabase typeDb) {
 #if DEBUG
             _id = Interlocked.Increment(ref _interpreterCount);
             Debug.WriteLine(String.Format("IronPython Interpreter Created {0}", _id));
             Debug.WriteLine(new StackTrace(true).ToString());
 #endif
-            _factory = factory;
-            _factory.NewDatabase += Factory_NewDatabase;
+            typeDb.DatabaseReplaced += OnDatabaseReplaced;
 
             AppDomain.CurrentDomain.AssemblyResolve += AssemblyResolver.Instance.CurrentDomain_AssemblyResolve;
 
@@ -77,8 +71,8 @@ namespace Microsoft.IronPythonTools.Interpreter {
             }
         }
 
-        private void Factory_NewDatabase(object sender, NewDatabaseEventArgs e) {
-            _typeDb = e.Database;
+        private void OnDatabaseReplaced(object sender, DatabaseReplacedEventArgs e) {
+            _typeDb = e.NewDatabase;
             if (_typeDb != null) {
                 lock (this) {
                     _typeDb.BuiltinModule = (IronPythonBuiltinModule)_modules["__builtin__"];

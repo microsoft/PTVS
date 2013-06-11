@@ -27,7 +27,7 @@ namespace TestUtilities.Python {
 
         public MockInterpreterOptionsService() {
             _providers = new List<IPythonInterpreterFactoryProvider>();
-            _noInterpretersValue = new MockPythonInterpreterFactory(Guid.NewGuid(), "No Interpreters", new InterpreterConfiguration("", "", "", "", ProcessorArchitecture.None, new Version(2, 7)));
+            _noInterpretersValue = new MockPythonInterpreterFactory(Guid.NewGuid(), "No Interpreters", new InterpreterConfiguration(new Version(2, 7)));
         }
 
         public void AddProvider(IPythonInterpreterFactoryProvider provider) {

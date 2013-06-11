@@ -25,13 +25,13 @@
         private void InitializeComponent() {
             this._applicationGroup = new System.Windows.Forms.GroupBox();
             this.tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel();
-            this._startupFile = new System.Windows.Forms.TextBox();
             this._startupFileLabel = new System.Windows.Forms.Label();
-            this._windowsApplication = new System.Windows.Forms.CheckBox();
+            this._startupFile = new System.Windows.Forms.TextBox();
             this._workingDirLabel = new System.Windows.Forms.Label();
+            this._workingDirectory = new System.Windows.Forms.TextBox();
+            this._windowsApplication = new System.Windows.Forms.CheckBox();
             this._defaultInterpreterLabel = new System.Windows.Forms.Label();
             this._defaultInterpreter = new System.Windows.Forms.ComboBox();
-            this._workingDirectory = new System.Windows.Forms.TextBox();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this._applicationGroup.SuspendLayout();
             this.tableLayoutPanel2.SuspendLayout();
@@ -78,17 +78,6 @@
             this.tableLayoutPanel2.Size = new System.Drawing.Size(426, 102);
             this.tableLayoutPanel2.TabIndex = 0;
             // 
-            // _startupFile
-            // 
-            this._startupFile.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
-            this._startupFile.Location = new System.Drawing.Point(110, 3);
-            this._startupFile.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
-            this._startupFile.MinimumSize = new System.Drawing.Size(50, 4);
-            this._startupFile.Name = "_startupFile";
-            this._startupFile.Size = new System.Drawing.Size(310, 20);
-            this._startupFile.TabIndex = 1;
-            this._startupFile.TextChanged += new System.EventHandler(this.Changed);
-            // 
             // _startupFileLabel
             // 
             this._startupFileLabel.Anchor = System.Windows.Forms.AnchorStyles.Left;
@@ -101,6 +90,41 @@
             this._startupFileLabel.TabIndex = 0;
             this._startupFileLabel.Text = "Startup File";
             this._startupFileLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // _startupFile
+            // 
+            this._startupFile.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
+            this._startupFile.Location = new System.Drawing.Point(110, 3);
+            this._startupFile.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
+            this._startupFile.MinimumSize = new System.Drawing.Size(50, 4);
+            this._startupFile.Name = "_startupFile";
+            this._startupFile.Size = new System.Drawing.Size(310, 20);
+            this._startupFile.TabIndex = 1;
+            this._startupFile.TextChanged += new System.EventHandler(this.Changed);
+            // 
+            // _workingDirLabel
+            // 
+            this._workingDirLabel.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this._workingDirLabel.AutoEllipsis = true;
+            this._workingDirLabel.AutoSize = true;
+            this._workingDirLabel.Location = new System.Drawing.Point(6, 32);
+            this._workingDirLabel.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
+            this._workingDirLabel.Name = "_workingDirLabel";
+            this._workingDirLabel.Size = new System.Drawing.Size(92, 13);
+            this._workingDirLabel.TabIndex = 2;
+            this._workingDirLabel.Text = "Working Directory";
+            this._workingDirLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // _workingDirectory
+            // 
+            this._workingDirectory.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
+            this._workingDirectory.Location = new System.Drawing.Point(110, 29);
+            this._workingDirectory.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
+            this._workingDirectory.MinimumSize = new System.Drawing.Size(50, 4);
+            this._workingDirectory.Name = "_workingDirectory";
+            this._workingDirectory.Size = new System.Drawing.Size(310, 20);
+            this._workingDirectory.TabIndex = 3;
+            this._workingDirectory.TextChanged += new System.EventHandler(this.Changed);
             // 
             // _windowsApplication
             // 
@@ -115,19 +139,6 @@
             this._windowsApplication.Text = "Windows Application";
             this._windowsApplication.UseVisualStyleBackColor = true;
             this._windowsApplication.CheckedChanged += new System.EventHandler(this.Changed);
-            // 
-            // _workingDirLabel
-            // 
-            this._workingDirLabel.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this._workingDirLabel.AutoEllipsis = true;
-            this._workingDirLabel.AutoSize = true;
-            this._workingDirLabel.Location = new System.Drawing.Point(6, 32);
-            this._workingDirLabel.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
-            this._workingDirLabel.Name = "_workingDirLabel";
-            this._workingDirLabel.Size = new System.Drawing.Size(92, 13);
-            this._workingDirLabel.TabIndex = 2;
-            this._workingDirLabel.Text = "Working Directory";
-            this._workingDirLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // _defaultInterpreterLabel
             // 
@@ -154,17 +165,7 @@
             this._defaultInterpreter.Size = new System.Drawing.Size(310, 21);
             this._defaultInterpreter.TabIndex = 6;
             this._defaultInterpreter.SelectedIndexChanged += new System.EventHandler(this.Changed);
-            // 
-            // _workingDirectory
-            // 
-            this._workingDirectory.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
-            this._workingDirectory.Location = new System.Drawing.Point(110, 29);
-            this._workingDirectory.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
-            this._workingDirectory.MinimumSize = new System.Drawing.Size(50, 4);
-            this._workingDirectory.Name = "_workingDirectory";
-            this._workingDirectory.Size = new System.Drawing.Size(310, 20);
-            this._workingDirectory.TabIndex = 3;
-            this._workingDirectory.TextChanged += new System.EventHandler(this.Changed);
+            this._defaultInterpreter.Format += new System.Windows.Forms.ListControlConvertEventHandler(this.Interpreter_Format);
             // 
             // tableLayoutPanel1
             // 

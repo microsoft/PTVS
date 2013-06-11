@@ -290,6 +290,20 @@ namespace Microsoft.VisualStudioTools.Project
         }
 
         /// <summary>
+        /// Returns a sequence containing all of this node's children.
+        /// </summary>
+        public IEnumerable<HierarchyNode> AllChildren
+        {
+            get
+            {
+                for (HierarchyNode node = this.firstChild; node != null; node = node.nextSibling)
+                {
+                    yield return node;
+                }
+            }
+        }
+
+        /// <summary>
         /// Gets or sets whether the node is currently visible in the hierarchy.
         /// 
         /// Enables subsetting or supersetting the hierarchy view.
@@ -1643,6 +1657,16 @@ namespace Microsoft.VisualStudioTools.Project
             ErrorHandler.ThrowOnFailure(windows.ExpandItem(ProjectMgr.GetOuterInterface<IVsUIHierarchy>(), ID, flags));
         }
 
+        public bool GetIsExpanded() {
+            IVsUIHierarchyWindow2 windows = GetUIHierarchyWindow(
+                ProjectMgr.Site,
+                new Guid(ToolWindowGuids80.SolutionExplorer)) as IVsUIHierarchyWindow2;
+            
+            uint state;
+            ErrorHandler.ThrowOnFailure(windows.GetItemState(ProjectMgr.GetOuterInterface<IVsUIHierarchy>(), ID, (uint)__VSHIERARCHYITEMSTATE.HIS_Expanded, out state));
+            return state != 0;
+        }
+
         /// <summary>
         /// Same as VsShellUtilities.GetUIHierarchyWindow, but it doesn't contain a useless cast to IVsWindowPane
         /// which fails on Dev10 with the solution explorer window.
@@ -1734,7 +1758,7 @@ namespace Microsoft.VisualStudioTools.Project
         {
             Utilities.ArgumentNotNull("type", type);
 
-            if (this.projectMgr.Site == null) return null;
+            if (this.projectMgr == null || this.projectMgr.Site == null) return null;
             return this.projectMgr.Site.GetService(type);
         }
 

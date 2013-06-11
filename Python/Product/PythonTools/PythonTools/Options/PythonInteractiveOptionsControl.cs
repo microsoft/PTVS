@@ -52,7 +52,7 @@ namespace Microsoft.PythonTools.Options {
             try {
                 _showSettingsFor.Items.Clear();
 
-                foreach (var factory in OptionsPage._options.Keys.OrderBy(f => f.GetInterpreterDisplay())) {
+                foreach (var factory in OptionsPage._options.Keys.OrderBy(f => f.Description)) {
                     _showSettingsFor.Items.Add(factory);
                     if (factory == previousSelection) {
                         currentSelection = factory;
@@ -275,7 +275,7 @@ visualstudio_py_repl.BACKEND.attach()";
         private void Interpreter_Format(object sender, ListControlConvertEventArgs e) {
             var factory = e.ListItem as IPythonInterpreterFactory;
             if (factory != null) {
-                e.Value = factory.GetInterpreterDisplay();
+                e.Value = factory.Description;
             } else {
                 e.Value = e.ListItem.ToString();
             }

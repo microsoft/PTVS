@@ -16,22 +16,22 @@ using System;
 
 namespace Microsoft.PythonTools.Interpreter {
     /// <summary>
-    /// The data passed in the
-    /// <see cref="IInterpreterWithCompletionDatabase.NewDatabase"/> event.
+    /// The data passed in the <see cref="PythonTypeDatabase.DatabaseReplaced"/>
+    /// event.
     /// </summary>
-    public class NewDatabaseEventArgs : EventArgs {
-        readonly PythonTypeDatabase _database;
+    public class DatabaseReplacedEventArgs : EventArgs {
+        readonly PythonTypeDatabase _newDatabase;
 
-        public NewDatabaseEventArgs(PythonTypeDatabase database) {
-            _database = database;
+        public DatabaseReplacedEventArgs(PythonTypeDatabase newDatabase) {
+            _newDatabase = newDatabase;
         }
 
         /// <summary>
         /// The updated database.
         /// </summary>
-        public PythonTypeDatabase Database {
+        public PythonTypeDatabase NewDatabase {
             get {
-                return _database;
+                return _newDatabase;
             }
         }
     }

@@ -53,9 +53,8 @@ namespace Microsoft.PythonTools.TestAdapter {
             }
 
             foreach (var proj in buildEngine.LoadedProjects) {
-                var id = proj.GetPropertyValue("InterpreterId");
-                var version = proj.GetPropertyValue("InterpreterVersion");
-                var factory = _interpService.FindInterpreter(id, version) ?? _interpService.DefaultInterpreter;
+                var provider = new MSBuildProjectInterpreterFactoryProvider(_interpService, proj);
+                var factory = provider.ActiveInterpreter;
                 if (factory == null) {
                     continue;
                 }

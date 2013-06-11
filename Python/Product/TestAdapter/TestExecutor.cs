@@ -249,15 +249,11 @@ namespace Microsoft.PythonTools.TestAdapter {
         private PythonProjectSettings LoadProjectSettings(string projectFile) {
             var buildEngine = new MSBuild.ProjectCollection();
             var proj = buildEngine.LoadProject(projectFile);
+            var provider = new MSBuildProjectInterpreterFactoryProvider(_interpService, proj);
             var projectHome = Path.GetFullPath(Path.Combine(proj.DirectoryPath, proj.GetPropertyValue(PythonConstants.ProjectHomeSetting) ?? "."));
 
             var projSettings = new PythonProjectSettings();
-            var id = proj.GetPropertyValue("InterpreterId");
-            var version = proj.GetPropertyValue("InterpreterVersion");
-            projSettings.Factory = _interpService.FindInterpreter(id, version) ?? _interpService.DefaultInterpreter;
-            if (projSettings.Factory == null) {
-                return null;
-            }
+            projSettings.Factory = provider.ActiveInterpreter;
 
             bool isWindowsApplication;
             if (bool.TryParse(proj.GetPropertyValue(PythonConstants.IsWindowsApplicationSetting), out isWindowsApplication)) {

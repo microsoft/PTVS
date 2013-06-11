@@ -31,7 +31,7 @@
     </Style>
 
     <Style x:Key="IconPath" TargetType="{x:Type Path}">
-        <Setter Property="Fill" Value="{Binding Foreground,RelativeSource={RelativeSource AncestorType=Control}}" />
+        <Setter Property="Fill" Value="{DynamicResource {x:Static wpf:Controls.ForegroundKey}}" />
         <Setter Property="MaxWidth" Value="10" />
         <Setter Property="MaxHeight" Value="10" />
         <Setter Property="Margin" Value="3" />
@@ -116,10 +116,14 @@
             <Trigger Property="IsPressed" Value="True">
                 <Setter Property="BorderBrush" Value="{DynamicResource {x:Static wpf:Controls.ControlBorderSelectedKey}}" />
             </Trigger>
-            <Trigger Property="IsDefault" Value="True">
+            <MultiTrigger>
+                <MultiTrigger.Conditions>
+                    <Condition Property="IsDefault" Value="True" />
+                    <Condition Property="IsEnabled" Value="True" />
+                </MultiTrigger.Conditions>
                 <Setter Property="BorderBrush" Value="{DynamicResource {x:Static wpf:Controls.ControlBorderSelectedKey}}" />
                 <Setter Property="BorderThickness" Value="2" />
-            </Trigger>
+            </MultiTrigger>
         </Style.Triggers>
     </Style>
 
@@ -189,7 +193,7 @@
         </Style.Triggers>
     </Style>
 
-    <Style TargetType="{x:Type Expander}" BasedOn="{StaticResource {x:Type Control}}">
+    <Style x:Key="PopupExpander" TargetType="{x:Type Expander}" BasedOn="{StaticResource {x:Type Control}}">
         <Setter Property="Header">
             <Setter.Value>
                 <Path Style="{StaticResource IconPath}"
@@ -243,7 +247,7 @@
                                       Padding="{TemplateBinding Padding}"
                                       FocusVisualStyle="{TemplateBinding FocusVisualStyle}"
                                       IsChecked="{Binding IsExpanded,Mode=TwoWay,RelativeSource={RelativeSource TemplatedParent}}" />
-                        <ContentPresenter x:Name="Content" Grid.Row="1" ContentSource="Content" />
+                        <ContentPresenter x:Name="Content" Grid.Row="1" />
                     </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsExpanded" Value="True">
@@ -637,5 +641,114 @@
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
+    </Style>
+
+    <Style x:Key="HelpText" TargetType="{x:Type TextBlock}" BasedOn="{StaticResource {x:Type TextBlock}}">
+        <Setter Property="Foreground" Value="{DynamicResource {x:Static wpf:Controls.GrayTextKey}}" />
+        <Setter Property="Padding" Value="8 0 0 5" />
+    </Style>
+    
+    <Style TargetType="{x:Type wpf:LabelledControl}">
+        <Setter Property="Focusable" Value="False" />
+        <Setter Property="Margin" Value="0 0 0 8" />
+        <Setter Property="IsTabStop" Value="False" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate>
+                    <Grid DataContext="{Binding RelativeSource={RelativeSource AncestorType={x:Type wpf:LabelledControl}}}">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="auto" />
+                            <RowDefinition Height="auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <Label Grid.Row="0" Content="{Binding Title}" Target="{Binding ElementName=Content}" />
+                        <TextBlock Grid.Row="1" Text="{Binding HelpText}" Style="{StaticResource HelpText}" Name="HelpText" />
+                        <ContentPresenter Grid.Row="2" Content="{Binding Content}" Margin="3" Name="Content" />
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="wpf:LabelledControl.HasHelpText" Value="False">
+                            <Setter TargetName="HelpText" Property="Visibility" Value="Collapsed" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="0.5" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style TargetType="{x:Type wpf:LabelledButton}">
+        <Setter Property="Focusable" Value="False" />
+        <Setter Property="Margin" Value="0 0 0 8" />
+        <Setter Property="IsTabStop" Value="False" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate>
+                    <ControlTemplate.Resources>
+                        <Style x:Key="HelpText" TargetType="{x:Type TextBlock}" BasedOn="{StaticResource {x:Type TextBlock}}">
+                            <Setter Property="Foreground" Value="{DynamicResource {x:Static wpf:Controls.GrayTextKey}}" />
+                            <Setter Property="Padding" Value="8 0 0 5" />
+                        </Style>
+                    </ControlTemplate.Resources>
+                    <Grid DataContext="{Binding RelativeSource={RelativeSource AncestorType={x:Type wpf:LabelledButton}}}">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <Button Grid.Column="0" Grid.Row="0" Grid.RowSpan="2"
+                                Name="Content"
+                                Margin="3"
+                                HorizontalAlignment="Stretch"
+                                VerticalAlignment="Center"
+                                Content="{Binding Content}"
+                                Command="{Binding Command}"
+                                CommandParameter="{Binding CommandParameter}"
+                                CommandTarget="{Binding CommandTarget}" />
+                        <Label Grid.Column="1" Grid.Row="0"
+                               Content="{Binding Title}"
+                               Target="{Binding ElementName=Content}" />
+                        <TextBlock Grid.Column="1" Grid.Row="1"
+                                   Text="{Binding HelpText}"
+                                   Style="{StaticResource HelpText}"
+                                   Name="HelpText" />
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="wpf:LabelledButton.HasHelpText" Value="False">
+                            <Setter TargetName="HelpText" Property="Visibility" Value="Collapsed" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="0.5" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="BrowseButton" TargetType="{x:Type Button}" BasedOn="{StaticResource {x:Type Button}}">
+        <Setter Property="MinWidth" Value="{Binding RelativeSource={RelativeSource Self},Path=ActualHeight}" />
+        <Setter Property="Margin" Value="6 0 0 0" />
+        <Setter Property="Content" Value="..." />
+        <Setter Property="HorizontalAlignment" Value="Center" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
+    <Style x:Key="BrowseFolderButton" TargetType="{x:Type Button}" BasedOn="{StaticResource BrowseButton}">
+        <Setter Property="Command" Value="{x:Static wpf:Commands.BrowseFolder}" />
+    </Style>
+
+    <Style x:Key="BrowseOpenFileButton" TargetType="{x:Type Button}" BasedOn="{StaticResource BrowseButton}">
+        <Setter Property="Command" Value="{x:Static wpf:Commands.BrowseOpenFile}" />
+    </Style>
+
+    <Style x:Key="BrowseSaveFileButton" TargetType="{x:Type Button}" BasedOn="{StaticResource BrowseButton}">
+        <Setter Property="Command" Value="{x:Static wpf:Commands.BrowseSaveFile}" />
     </Style>
 </ResourceDictionary>

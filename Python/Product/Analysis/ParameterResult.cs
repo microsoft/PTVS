@@ -62,7 +62,7 @@ namespace Microsoft.PythonTools.Analysis {
 
         public override int GetHashCode() {
             return Name.GetHashCode() ^
-                Type.GetHashCode() ^
+                (Type ?? "").GetHashCode() ^
                 IsOptional.GetHashCode() ^
                 (DefaultValue ?? "").GetHashCode();
         }

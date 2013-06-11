@@ -43,9 +43,9 @@ namespace Microsoft.VisualStudioTools.Project {
         SearchPath,
         MissingSearchPath,
         StartupFile,
-        VirtualEnvContainer = SearchPathContainer,
-        VirtualEnv = SearchPath,
-        VirtualEnvPackage = SearchPath
+        InterpretersContainer = SearchPathContainer,
+        Interpreter = SearchPath,
+        InterpretersPackage = SearchPath
     }
 
     internal abstract class CommonProjectNode : ProjectNode, IVsProjectSpecificEditorMap2, IVsDeferredSaveProject {
@@ -1066,7 +1066,7 @@ namespace Microsoft.VisualStudioTools.Project {
 
         public bool BoldItem(HierarchyNode node, bool isBold) {
             IVsUIHierarchyWindow2 windows = GetUIHierarchyWindow(
-                ProjectMgr.Site as IServiceProvider,
+                Site as IServiceProvider,
                 new Guid(ToolWindowGuids80.SolutionExplorer)) as IVsUIHierarchyWindow2;
 
             if (ErrorHandler.Succeeded(windows.SetItemAttribute(
@@ -1211,7 +1211,7 @@ namespace Microsoft.VisualStudioTools.Project {
         /// Returns resolved value of the current working directory property.
         /// </summary>
         public string GetWorkingDirectory() {
-            string workDir = this.ProjectMgr.GetProjectProperty(CommonConstants.WorkingDirectory, true);
+            string workDir = GetProjectProperty(CommonConstants.WorkingDirectory, true);
 
             return CommonUtils.GetAbsoluteDirectoryPath(ProjectHome, workDir);
         }
@@ -1220,7 +1220,7 @@ namespace Microsoft.VisualStudioTools.Project {
         /// Returns resolved value of the startup file property.
         /// </summary>
         internal string GetStartupFile() {
-            string startupFile = ProjectMgr.GetProjectProperty(CommonConstants.StartupFile, true);
+            string startupFile = GetProjectProperty(CommonConstants.StartupFile, true);
 
             if (string.IsNullOrEmpty(startupFile)) {
                 //No startup file is assigned
@@ -1331,7 +1331,7 @@ namespace Microsoft.VisualStudioTools.Project {
         /// Parses SearchPath property into a list of distinct absolute paths, preserving the order.
         /// </summary>
         protected IList<string> ParseSearchPath() {
-            var searchPath = ProjectMgr.GetProjectProperty(CommonConstants.SearchPath, true);
+            var searchPath = GetProjectProperty(CommonConstants.SearchPath, true);
             return ParseSearchPath(searchPath);
         }
 
@@ -1369,7 +1369,7 @@ namespace Microsoft.VisualStudioTools.Project {
             }
                 return relPath;
             }));
-            this.ProjectMgr.SetProjectProperty(CommonConstants.SearchPath, valueStr);
+            SetProjectProperty(CommonConstants.SearchPath, valueStr);
         }
 
         /// <summary>

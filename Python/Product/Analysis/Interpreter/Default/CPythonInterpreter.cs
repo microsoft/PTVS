@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -21,21 +22,18 @@ using Microsoft.PythonTools.Analysis;
 
 namespace Microsoft.PythonTools.Interpreter.Default {
     class CPythonInterpreter : IPythonInterpreter {
+        readonly Version _langVersion;
         private PythonTypeDatabase _typeDb;
         private HashSet<ProjectReference> _references;
-        private readonly IPythonInterpreterFactory _factory;
 
-        public CPythonInterpreter(IPythonInterpreterFactory interpFactory, PythonTypeDatabase typeDb) {
+        public CPythonInterpreter(PythonTypeDatabase typeDb) {
             _typeDb = typeDb;
-            _factory = interpFactory;
-            var withDb = interpFactory as IInterpreterWithCompletionDatabase;
-            if (withDb != null) {
-                withDb.NewDatabase += Factory_NewDatabase;
-            }
+            _langVersion = _typeDb.LanguageVersion;
+            _typeDb.DatabaseReplaced += OnDatabaseReplaced;
         }
 
-        private void Factory_NewDatabase(object sender, NewDatabaseEventArgs e) {
-            _typeDb = e.Database;
+        private void OnDatabaseReplaced(object sender, DatabaseReplacedEventArgs e) {
+            _typeDb = e.NewDatabase;
             var modsChanged = ModuleNamesChanged;
             if (modsChanged != null) {
                 modsChanged(this, EventArgs.Empty);
@@ -50,24 +48,24 @@ namespace Microsoft.PythonTools.Interpreter.Default {
             }
             
             if (id == BuiltinTypeId.Str) {
-                if (_factory.Configuration.Version.Major == 3) {
+                if (_typeDb.LanguageVersion.Major == 3) {
                     id = BuiltinTypeId.Unicode;
                 } else {
                     id = BuiltinTypeId.Bytes;
                 }
             } else if (id == BuiltinTypeId.StrIterator) {
-                if (_factory.Configuration.Version.Major == 2) {
+                if (_typeDb.LanguageVersion.Major == 2) {
                     id = BuiltinTypeId.UnicodeIterator;
                 } else {
                     id = BuiltinTypeId.BytesIterator;
                 }
             } else if (id == BuiltinTypeId.Long) {
-                if (_factory.Configuration.Version.Major == 3) {
+                if (_typeDb.LanguageVersion.Major == 3) {
                     id = BuiltinTypeId.Int;
                 }
             }
 
-            var name = SharedDatabaseState.GetBuiltinTypeName(id, _factory.Configuration.Version);
+            var name = SharedDatabaseState.GetBuiltinTypeName(id, _typeDb.LanguageVersion);
             var res = _typeDb.BuiltinModule.GetAnyMember(name) as IPythonType;
             if (res == null) {
                 throw new KeyNotFoundException(string.Format("{0} ({1})", id, (int)id));
@@ -113,8 +111,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
                         return MakeExceptionTask(e);
                     }
 
-                    return _typeDb.LoadExtensionModuleAsync(_factory,
-                        filename,
+                    return _typeDb.LoadExtensionModuleAsync(filename,
                         reference.Name,
                         cancellationToken).ContinueWith(RaiseModulesChanged);
             }

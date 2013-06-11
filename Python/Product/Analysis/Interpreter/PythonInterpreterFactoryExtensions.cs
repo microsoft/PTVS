@@ -12,19 +12,36 @@
  *
  * ***************************************************************************/
 
+using System;
 using System.Globalization;
 using System.Linq;
 
 namespace Microsoft.PythonTools.Interpreter {
-    static class PythonInterpreterFactoryExtensions {
+    public static class PythonInterpreterFactoryExtensions {
         /// <summary>
         /// Executes the interpreter with the specified arguments. Any output is
         /// captured and returned via the <see cref="ProcessOutput"/> object.
         /// </summary>
-        public static ProcessOutput Run(
+        internal static ProcessOutput Run(
             this IPythonInterpreterFactory factory,
             params string[] arguments) {
             return ProcessOutput.RunHiddenAndCapture(factory.Configuration.InterpreterPath, arguments);
+        }
+
+        /// <summary>
+        /// Determines whether two interpreter factories are equivalent.
+        /// </summary>
+        public static bool IsEqual(this IPythonInterpreterFactory x, IPythonInterpreterFactory y) {
+            if (x == null || y == null) {
+                return x == null && y == null;
+            }
+            if (x.GetType() != y.GetType()) {
+                return false;
+            }
+
+            return x.Id == y.Id && 
+                x.Description == y.Description &&
+                x.Configuration.Equals(y.Configuration);
         }
     }
 }

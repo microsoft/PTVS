@@ -49,7 +49,7 @@ namespace TestUtilities {
                 }
             }
             foreach (var value in set) {
-                if (!values.Contains(value)) {
+                if (!values.Contains(value, set.Comparer)) {
                     return false;
                 }
             }

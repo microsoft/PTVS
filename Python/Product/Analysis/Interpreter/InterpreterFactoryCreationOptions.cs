@@ -95,6 +95,12 @@ namespace Microsoft.PythonTools.Interpreter {
         public string LibraryPath { get; set; }
 
         /// <summary>
+        /// Specifies the root path of this interpreter. Value must be a path to
+        /// a directory.
+        /// </summary>
+        public string PrefixPath { get; set; }
+
+        /// <summary>
         /// If true, a file system watcher is used to monitor the library path
         /// for changes. These may affect the IsCurrent property of the created
         /// interpreter.

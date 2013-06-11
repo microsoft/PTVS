@@ -1,0 +1,77 @@
+﻿<vstools:DialogWindowVersioningWorkaround
+    x:Class="Microsoft.PythonTools.Project.AddInterpreter"
+    x:ClassModifier="internal"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vstools="clr-namespace:Microsoft.VisualStudioTools"
+    xmlns:ptvs="clr-namespace:Microsoft.PythonTools"
+    xmlns:l="clr-namespace:Microsoft.PythonTools.Project"
+    xmlns:wpf="clr-namespace:Microsoft.PythonTools.Wpf"
+    Title="Add/Remove Python Interpreters"
+    MinWidth="300" Width="500"
+    MinHeight="200" Height="500"
+    ScrollViewer.VerticalScrollBarVisibility="Auto"
+    ResizeMode="CanResizeWithGrip"
+    TextOptions.TextFormattingMode="Display"
+    UseLayoutRounding="True"
+    WindowStartupLocation="CenterOwner"
+    Background="{DynamicResource {x:Static wpf:Controls.BackgroundKey}}"
+    TextElement.Foreground="{DynamicResource {x:Static wpf:Controls.ForegroundKey}}">
+    <vstools:DialogWindowVersioningWorkaround.CommandBindings>
+        <CommandBinding Command="ApplicationCommands.Save" CanExecute="Save_CanExecute" Executed="Save_Executed" />
+        <CommandBinding Command="ApplicationCommands.Close" CanExecute="Close_CanExecute" Executed="Close_Executed" />
+    </vstools:DialogWindowVersioningWorkaround.CommandBindings>
+    <vstools:DialogWindowVersioningWorkaround.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="pack://application:,,,/Microsoft.PythonTools;component/Wpf/Controls.xaml" />
+
+                <ResourceDictionary>
+                    <DataTemplate x:Key="NameTemplate" DataType="{x:Type ptvs:InterpreterView}">
+                        <Label Name="InterpreterName" Content="{Binding Name}" />
+                    </DataTemplate>
+                    
+                    <DataTemplate x:Key="ItemTemplate" DataType="{x:Type ptvs:InterpreterView}">
+                        <CheckBox IsChecked="{Binding IsSelected}"
+                                  Content="{Binding}"
+                                  ContentTemplate="{StaticResource NameTemplate}" />
+                    </DataTemplate>
+                </ResourceDictionary>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </vstools:DialogWindowVersioningWorkaround.Resources>
+    <Grid Margin="6">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="auto" />
+        </Grid.RowDefinitions>
+            
+        <wpf:LabelledControl Grid.Row="0"
+                                Title="Python interpreters associated with my project">
+            <wpf:LabelledControl.HelpText>
+                Select the interpreters to associate with this project. These
+                interpreters will be shown in Solution Explorer.
+            </wpf:LabelledControl.HelpText>
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <ItemsControl ItemsSource="{Binding Interpreters}"
+                              ItemTemplate="{StaticResource ItemTemplate}"
+                              Focusable="False" />
+            </ScrollViewer>
+        </wpf:LabelledControl>
+
+        <StackPanel Orientation="Horizontal" Grid.Row="1" HorizontalAlignment="Right" Margin="0 12 0 0">
+            <Button IsDefault="True"
+                    Command="ApplicationCommands.Save"
+                    MinWidth="86" MinHeight="24" Margin="0 0 9 0"
+                    AutomationProperties.AutomationId="Ok">
+                _OK
+            </Button>
+            <Button IsCancel="True"
+                    Command="ApplicationCommands.Close"
+                    MinWidth="86" MinHeight="24" Margin="0 0 9 0"
+                    AutomationProperties.AutomationId="Cancel">
+                _Cancel
+            </Button>
+        </StackPanel>
+    </Grid>
+</vstools:DialogWindowVersioningWorkaround>

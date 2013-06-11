@@ -96,7 +96,7 @@ namespace Microsoft.PythonTools.Repl {
 
         internal override string DisplayName {
             get {
-                return Interpreter != null ? Interpreter.GetInterpreterDisplay() : string.Empty;
+                return Interpreter != null ? Interpreter.Description : string.Empty;
             }
         }
 

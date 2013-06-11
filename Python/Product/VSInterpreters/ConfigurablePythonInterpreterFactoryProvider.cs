@@ -62,7 +62,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 var pathEnvVar = store.GetString(collection, PathEnvVarKey);
                 var description = store.GetString(collection, DescriptionKey);
 
-                return new ConfigurablePythonInterpreterFactory(InterpreterFactoryCreator.CreateInterpreterFactory(
+                return InterpreterFactoryCreator.CreateInterpreterFactory(
                     new InterpreterFactoryCreationOptions {
                         LanguageVersionString = version,
                         Id = id,
@@ -74,7 +74,7 @@ namespace Microsoft.PythonTools.Interpreter {
                         ArchitectureString = arch,
                         WatchLibraryForNewModules = true
                     }
-                ));
+                );
             }
             return null;
         }
@@ -86,6 +86,10 @@ namespace Microsoft.PythonTools.Interpreter {
             store.DeleteCollection(collection);
             _interpreters.Remove(id);
             OnInterpreterFactoriesChanged();
+        }
+
+        public bool IsConfigurable(IPythonInterpreterFactory factory) {
+            return _interpreters.ContainsValue(factory);
         }
 
         public IPythonInterpreterFactory SetOptions(InterpreterFactoryCreationOptions options) {

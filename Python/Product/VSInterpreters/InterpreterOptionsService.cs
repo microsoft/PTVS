@@ -170,23 +170,14 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         private void LoadDefaultInterpreter(bool suppressChangeEvent = false) {
-            string idStr, versionStr;
+            string id = null, version = null;
             var store = _settings.GetReadOnlySettingsStore(SettingsScope.UserSettings);
-            if (!store.CollectionExists(DefaultInterpreterOptionsCollection)) {
-                return;
+            if (store.CollectionExists(DefaultInterpreterOptionsCollection)) {
+                id = store.GetString(DefaultInterpreterOptionsCollection, DefaultInterpreterSetting);
+                version = store.GetString(DefaultInterpreterOptionsCollection, DefaultInterpreterVersionSetting);
             }
-            idStr = store.GetString(DefaultInterpreterOptionsCollection, DefaultInterpreterSetting);
-            versionStr = store.GetString(DefaultInterpreterOptionsCollection, DefaultInterpreterVersionSetting);
 
-            Guid id;
-            Version version;
-            IPythonInterpreterFactory newDefault;
-            if (string.IsNullOrEmpty(idStr) || !Guid.TryParse(idStr, out id) ||
-                string.IsNullOrEmpty(versionStr) || !Version.TryParse(versionStr, out version)) {
-                newDefault = Interpreters.LastOrDefault();
-            } else {
-                newDefault = FindInterpreter(id, version) ?? Interpreters.LastOrDefault();
-            }
+            var newDefault = FindInterpreter(id, version) ?? Interpreters.LastOrDefault();
 
             if (suppressChangeEvent) {
                 _defaultInterpreter = newDefault;

@@ -92,71 +92,6 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
             SetValue(IsFinishDefaultPropertyKey, PageSequence.CurrentPosition >= PageCount - 1);
         }
 
-        private void Browse_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
-            e.CanExecute = e.OriginalSource is TextBox;
-        }
-
-        private void BrowseFolder_Executed(object sender, ExecutedRoutedEventArgs e) {
-            var tb = (TextBox)e.OriginalSource;
-
-            if (!tb.AcceptsReturn) {
-                var path = tb.GetValue(TextBox.TextProperty) as string;
-                path = PythonToolsPackage.Instance.BrowseForDirectory(new System.Windows.Interop.WindowInteropHelper(this).Handle, path);
-                if (path != null) {
-                    tb.SetCurrentValue(TextBox.TextProperty, path);
-                    var binding = BindingOperations.GetBindingExpressionBase(tb, TextBox.TextProperty);
-                    if (binding != null) {
-                        binding.UpdateSource();
-                    }
-                }
-            } else {
-                var existing = tb.GetValue(TextBox.TextProperty) as string;
-                var path = e.Parameter as string;
-                path = PythonToolsPackage.Instance.BrowseForDirectory(new WindowInteropHelper(this).Handle, path);
-                if (path != null) {
-                    if (string.IsNullOrEmpty(existing)) {
-                        tb.SetCurrentValue(TextBox.TextProperty, path);
-                    } else {
-                        tb.SetCurrentValue(TextBox.TextProperty, existing.TrimEnd(new[] { '\r', '\n' }) + Environment.NewLine + path);
-                    }
-                    var binding = BindingOperations.GetBindingExpressionBase(tb, TextBox.TextProperty);
-                    if (binding != null) {
-                        binding.UpdateSource();
-                    }
-                }
-            }
-        }
-
-        private void BrowseOpenFile_Executed(object sender, ExecutedRoutedEventArgs e) {
-            var tb = (TextBox)e.OriginalSource;
-            var filter = (e.Parameter as string) ?? "All Files (*.*)|*.*";
-
-            var path = tb.GetValue(TextBox.TextProperty) as string;
-            path = PythonToolsPackage.Instance.BrowseForFileOpen(new WindowInteropHelper(this).Handle, filter, path);
-            if (path != null) {
-                tb.SetCurrentValue(TextBox.TextProperty, path);
-                var binding = BindingOperations.GetBindingExpressionBase(tb, TextBox.TextProperty);
-                if (binding != null) {
-                    binding.UpdateSource();
-                }
-            }
-        }
-
-        private void BrowseSaveFile_Executed(object sender, ExecutedRoutedEventArgs e) {
-            var tb = (TextBox)e.OriginalSource;
-            var filter = (e.Parameter as string) ?? "All Files (*.*)|*.*";
-
-            var path = tb.GetValue(TextBox.TextProperty) as string;
-            path = PythonToolsPackage.Instance.BrowseForFileSave(new WindowInteropHelper(this).Handle, filter, path);
-            if (path != null) {
-                tb.SetCurrentValue(TextBox.TextProperty, path);
-                var binding = BindingOperations.GetBindingExpressionBase(tb, TextBox.TextProperty);
-                if (binding != null) {
-                    binding.UpdateSource();
-                }
-            }
-        }
-
         private void Finish_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
             e.CanExecute = ImportSettings != null && ImportSettings.IsValid;
         }
@@ -189,6 +124,14 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
 
         private void Next_Executed(object sender, ExecutedRoutedEventArgs e) {
             PageSequence.MoveCurrentToNext();
+        }
+
+        private void Browse_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
+            Wpf.Commands.CanExecute(this, sender, e);
+        }
+
+        private void Browse_Executed(object sender, ExecutedRoutedEventArgs e) {
+            Wpf.Commands.Executed(this, sender, e);
         }
     }
 }

@@ -164,12 +164,12 @@ namespace Microsoft.Samples {
 
             public override string Description {
                 get {
-                    return "Install PyKinect into " + Factory.GetInterpreterDisplay();
+                    return "Install PyKinect into " + Factory.Description;
                 }
             }
 
             public void Invoke(object sender, EventArgs args) {
-                var prompt = new InstallPrompt("PyKinect", Factory.GetInterpreterDisplay());
+                var prompt = new InstallPrompt("PyKinect", Factory.Description);
                 if (prompt.ShowDialog() == DialogResult.OK) {
                     InstallSample("PyKinect");
                 }

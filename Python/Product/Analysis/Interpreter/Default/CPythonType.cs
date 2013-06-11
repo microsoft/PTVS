@@ -89,13 +89,13 @@ namespace Microsoft.PythonTools.Interpreter.Default {
             return parent as CPythonModule ?? (CPythonModule)((CPythonType)parent).DeclaringModule;
         }
 
-        private void StoreBase(IPythonType type, bool isInstance) {
+        private void StoreBase(IPythonType type) {
             if (type != null && _bases != null) {
                 _bases.Add(type);
             }
         }
 
-        private void StoreMro(IPythonType type, bool isInstance) {
+        private void StoreMro(IPythonType type) {
             var cpt = type as CPythonType;
             if (cpt != null && _mro != null) {
                 _mro.Add(cpt);

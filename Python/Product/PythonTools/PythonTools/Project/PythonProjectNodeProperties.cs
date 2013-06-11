@@ -71,14 +71,14 @@ namespace Microsoft.PythonTools.Project {
         [Browsable(false)]
         public string InterpreterId {
             get {
-                return ((PythonProjectNode)this.Node).GetInterpreterFactory().Id.ToString();
+                return ((PythonProjectNode)this.Node).Interpreters.ActiveInterpreter.Id.ToString();
             }
         }
 
         [Browsable(false)]
         public string InterpreterVersion {
             get {
-                return ((PythonProjectNode)this.Node).GetInterpreterFactory().Configuration.Version.ToString();
+                return ((PythonProjectNode)this.Node).Interpreters.ActiveInterpreter.Configuration.Version.ToString();
             }
         }
 

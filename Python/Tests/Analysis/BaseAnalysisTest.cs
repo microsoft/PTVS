@@ -31,8 +31,8 @@ namespace AnalysisTests {
     /// Base class w/ common infrastructure for analysis unit tests.
     /// </summary>
     public class BaseAnalysisTest : IDisposable {
+        public IPythonInterpreterFactory InterpreterFactory;
         public IPythonInterpreter Interpreter;
-        public IPythonType PyObjectType, IntType, LongType, BytesType, UnicodeType, FloatType, TypeType, ListType, TupleType, SetType, BoolType, FunctionType, ComplexType, GeneratorType, NoneType, ModuleType;
         public string[] _objectMembers, _functionMembers;
         public string[] _strMembers;
         public string[] _listMembers, _intMembers;
@@ -44,34 +44,28 @@ namespace AnalysisTests {
         }
 
         public BaseAnalysisTest()
-            : this(InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(new Version(2, 7)).CreateInterpreter()) {
+            : this(InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(new Version(2, 7))) {
         }
 
-        public BaseAnalysisTest(IPythonInterpreter interpreter) {
-            Interpreter = interpreter;
-            PyObjectType = Interpreter.GetBuiltinType(BuiltinTypeId.Object);
-            Assert.IsNotNull(PyObjectType);
-            IntType = Interpreter.GetBuiltinType(BuiltinTypeId.Int);
-            LongType = Interpreter.GetBuiltinType(BuiltinTypeId.Long);
-            ComplexType = Interpreter.GetBuiltinType(BuiltinTypeId.Complex);
-            BytesType = Interpreter.GetBuiltinType(BuiltinTypeId.Bytes);
-            UnicodeType = Interpreter.GetBuiltinType(BuiltinTypeId.Unicode);
-            FloatType = Interpreter.GetBuiltinType(BuiltinTypeId.Float);
-            TypeType = Interpreter.GetBuiltinType(BuiltinTypeId.Type);
-            ListType = Interpreter.GetBuiltinType(BuiltinTypeId.List);
-            TupleType = Interpreter.GetBuiltinType(BuiltinTypeId.Tuple);
-            SetType = Interpreter.GetBuiltinType(BuiltinTypeId.Set);
-            BoolType = Interpreter.GetBuiltinType(BuiltinTypeId.Bool);
-            FunctionType = Interpreter.GetBuiltinType(BuiltinTypeId.Function);
-            GeneratorType = Interpreter.GetBuiltinType(BuiltinTypeId.Generator);
-            NoneType = Interpreter.GetBuiltinType(BuiltinTypeId.NoneType);
-            ModuleType = Interpreter.GetBuiltinType(BuiltinTypeId.Module);
+        public BaseAnalysisTest(IPythonInterpreterFactory factory)
+            : this(factory, factory.CreateInterpreter()) {
+        }
 
-            _objectMembers = PyObjectType.GetMemberNames(IronPythonModuleContext.DontShowClrInstance).ToArray();
-            _strMembers = BytesType.GetMemberNames(IronPythonModuleContext.DontShowClrInstance).ToArray();
-            _listMembers = ListType.GetMemberNames(IronPythonModuleContext.DontShowClrInstance).ToArray();
-            _intMembers = IntType.GetMemberNames(IronPythonModuleContext.DontShowClrInstance).ToArray();
-            _functionMembers = FunctionType.GetMemberNames(IronPythonModuleContext.DontShowClrInstance).ToArray();
+        public BaseAnalysisTest(IPythonInterpreterFactory factory, IPythonInterpreter interpreter) {
+            InterpreterFactory = factory;
+            Interpreter = interpreter;
+            var objectType = Interpreter.GetBuiltinType(BuiltinTypeId.Object);
+            Assert.IsNotNull(objectType);
+            var intType = Interpreter.GetBuiltinType(BuiltinTypeId.Int);
+            var bytesType = Interpreter.GetBuiltinType(BuiltinTypeId.Bytes);
+            var listType = Interpreter.GetBuiltinType(BuiltinTypeId.List);
+            var functionType = Interpreter.GetBuiltinType(BuiltinTypeId.Function);
+
+            _objectMembers = objectType.GetMemberNames(IronPythonModuleContext.DontShowClrInstance).ToArray();
+            _strMembers = bytesType.GetMemberNames(IronPythonModuleContext.DontShowClrInstance).ToArray();
+            _listMembers = listType.GetMemberNames(IronPythonModuleContext.DontShowClrInstance).ToArray();
+            _intMembers = intType.GetMemberNames(IronPythonModuleContext.DontShowClrInstance).ToArray();
+            _functionMembers = functionType.GetMemberNames(IronPythonModuleContext.DontShowClrInstance).ToArray();
         }
 
         public static TextReader GetSourceUnit(string text, string name) {
@@ -90,7 +84,13 @@ namespace AnalysisTests {
             var sourceUnit = GetSourceUnit(text, "foo");
             // Explicitly provide the builtins name, since we aren't recreating
             // the interpreter for each version like we should be.
-            var state = new PythonAnalyzer(Interpreter, version, "__builtin__");
+            var fact = InterpreterFactory;
+            var interp = Interpreter;
+            if (version != fact.GetLanguageVersion()) {
+                fact = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(version.ToVersion());
+                interp = fact.CreateInterpreter();
+            }
+            var state = new PythonAnalyzer(fact, interp, "__builtin__");
 
             if (version.Is3x() || this is IronPythonAnalysisTest) {
                 var types = (KnownTypes)state.Types;

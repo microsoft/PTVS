@@ -16,16 +16,18 @@ using System;
 using System.ComponentModel;
 using System.IO;
 using System.Runtime.InteropServices;
+using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Project {
     [ComVisible(true)]
-    public class VirtualEnvContainerNodeContainerNodeProperties : NodeProperties {
-        internal VirtualEnvContainerNodeContainerNodeProperties(HierarchyNode node)
+    [Guid(PythonConstants.InterpretersPackagePropertiesGuid)]
+    public class InterpretersPackageNodeProperties : NodeProperties {
+        internal InterpretersPackageNodeProperties(HierarchyNode node)
             : base(node) { }
 
         public override string GetClassName() {
-            return VirtualEnvContainerNode.VirtualEnvNodeVirtualName;
+            return "Python Package Properties";
         }
     }
 }

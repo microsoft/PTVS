@@ -20,11 +20,6 @@
   <Target Name="CreateManifestResourceNames" Returns="" />
 
   <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" />
-  <!-- 
-  <ItemGroup>
-    <VirtualEnvEnabled Include="%(VirtualEnv)" 
-                       Condition="'%(Id)' == '$(InterpreterId)' and %(Version) == '$(InterpreterVersion)'"></VirtualEnvEnabled>  
-  </ItemGroup> -->
   <ItemGroup>
     <PythonAzureDeploymentFile Include="$(AzureDjangoSupportPath)Microsoft.PythonTools.AzureSetup.exe"></PythonAzureDeploymentFile>
     <PythonAzureDeploymentFile Include="$(AzureDjangoSupportPath)Microsoft.PythonTools.AzureSetup.exe.config"></PythonAzureDeploymentFile>
@@ -39,7 +34,7 @@
     <PythonAzureDeploymentFile Include="$(AzureDjangoSupportPath)Microsoft.PythonTools.WebRole.dll"></PythonAzureDeploymentFile>
   </ItemGroup>
 
-  <Target Name="ResolvePythonInterpreterPath" >
+  <Target Name="ResolvePythonInterpreterPath">
     <PropertyGroup Condition="$(IsWindowsApplication) == 'true'">
       <PythonInterpreterSuffix>w</PythonInterpreterSuffix>
     </PropertyGroup>
@@ -49,17 +44,26 @@
     </PropertyGroup>
 
     <PropertyGroup Condition="$(InterpreterId)==''">
-      <!-- X86 CPython Interpreter -->
       <InterpreterId>$([MSBuild]::GetRegistryValueFromView('$(PythonToolsOptionsRegPath)', 'DefaultInterpreter', '', RegistryView.Registry32))</InterpreterId>
     </PropertyGroup>
 
     <PropertyGroup Condition="$(InterpreterVersion)==''">
-      <!-- X86 CPython Interpreter -->
       <InterpreterVersion>$([MSBuild]::GetRegistryValueFromView('$(PythonToolsOptionsRegPath)', 'DefaultInterpreterVersion', '', RegistryView.Registry32))</InterpreterVersion>
     </PropertyGroup>
 
-    <Message Text="DefaultInterpreterId=$(InterpreterId)"/>
-    <Message Text="DefaultInterpreterVersion=$(InterpreterVersion)"/>
+    <ItemGroup>
+      <VirtualEnv Include="@(Interpreter)"
+                  Condition="'%(Id)' == '$(InterpreterId)' and '%(Version)' == '$(InterpreterVersion)'" />
+    </ItemGroup>
+
+    <PropertyGroup>
+      <VirtualEnvEnabled>true</VirtualEnvEnabled>
+      <VirtualEnvPrefixSubPath Condition="$(VirtualEnvPrefixSubPath) == ''">@(VirtualEnv->'%(Identity)')</VirtualEnvPrefixSubPath>
+      <VirtualEnvEnabled Condition="$(VirtualEnvPrefixSubPath) == ''">false</VirtualEnvEnabled>
+      <VirtualEnvPrefixPath Condition="$(VirtualEnvEnabled)">$(ProjectHome)\$(VirtualEnvPrefixSubPath)</VirtualEnvPrefixPath>
+      <VirtualEnvInterpreterPath Condition="$(VirtualEnvEnabled)">@(VirtualEnv->'$(VirtualEnvPrefixPath)\%(InterpreterPath)')</VirtualEnvInterpreterPath>
+      <VirtualEnvWindowsInterpreterPath Condition="$(VirtualEnvEnabled)">@(VirtualEnv->'$(VirtualEnvPrefixPath)\%(WindowsInterpreterPath)')</VirtualEnvWindowsInterpreterPath>
+    </PropertyGroup>
 
     <PropertyGroup Condition="$(InterpreterId)=='2af0f10d-7135-4994-9156-5d01c9c11b7e' or $(InterpreterId)=='{2af0f10d-7135-4994-9156-5d01c9c11b7e}'">
       <!-- X86 CPython Interpreter -->
@@ -77,33 +81,30 @@
       <!-- X64 IronPython Interpreter -->
       <PythonInterpreterPath>$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\SOFTWARE\IronPython\$(InterpreterVersion)\InstallPath', '', '', RegistryView.Registry64))ipy$(PythonInterpreterSuffix)64.exe</PythonInterpreterPath>
     </PropertyGroup>
-    <PropertyGroup Condition="$(InterpreterId)==''">
-      <!-- Registered to the default interpreter -->
-      <PythonInterpreterPath>C:\Python27\python.exe</PythonInterpreterPath>
-    </PropertyGroup>
-
-
     <PropertyGroup Condition="$(PythonInterpreterPath)==''">
       <!-- Custom interpreter, read from registry -->
       <PythonInterpreterPath>$([MSBuild]::GetRegistryValueFromView('HKEY_CURRENT_USER\SOFTWARE\Microsoft\VisualStudio\$(VisualStudioVersion)\PythonTools\Interpreters\{$(InterpreterId)}', 'InterpreterPath', null, RegistryView.Registry32))</PythonInterpreterPath>
+    </PropertyGroup>
+    <PropertyGroup Condition="$(VirtualEnvEnabled)">
+      <!-- Per-project Python interpreter -->
+      <PythonInterpreterPath Condition="$(PythonInterpreterSuffix)!='w'">$(VirtualEnvInterpreterPath)</PythonInterpreterPath>
+      <PythonInterpreterPath Condition="$(PythonInterpreterSuffix)=='w'">$(VirtualEnvWindowsInterpreterPath)</PythonInterpreterPath>
+    </PropertyGroup>
+    <PropertyGroup Condition="$(PythonInterpreterPath)==''">
+      <!-- No interpreter specifed and no default interpreter available -->
+      <PythonInterpreterPath>C:\Python27\python.exe</PythonInterpreterPath>
     </PropertyGroup>
 
     <PropertyGroup>
       <PythonVersionNoDot>$(InterpreterVersion.Replace(".", ""))</PythonVersionNoDot>
     </PropertyGroup>
 
-    <PropertyGroup Condition="'$(VirtualEnvEnabled)' != ''">
-      <VirtualEnvInterpreterPath>$(VirtualEnvEnabled)\Scripts\python.exe</VirtualEnvInterpreterPath>
-    </PropertyGroup>
-
     <PropertyGroup>
-      <TargetPythonInterpreterPath Condition="'$(VirtualEnvInterpreterPath)' != ''">$(VirtualEnvInterpreterPath)</TargetPythonInterpreterPath>
       <TargetPythonInterpreterPath Condition="'$(TargetPythonInterpreterPath)' == ''">$(PythonInterpreterPath)</TargetPythonInterpreterPath>
     </PropertyGroup>
 
     <Message Text="InterpreterVersion=$(InterpreterVersion)" Importance="low"/>
     <Message Text="PythonInterpreterPath=$(PythonInterpreterPath)" Importance="low"/>
-    <Message Text="VirtualEnvInterpreterPath=$(VirtualEnvInterpreterPath)" Importance="low"/>
     <Message Text="TargetPythonInterpreterPath=$(TargetPythonInterpreterPath)" Importance="low"/>
   </Target>
 
@@ -180,11 +181,10 @@
     </PropertyGroup>
   </Target>
 
-  <Target Name="ConfigureVirtualEnv" 
-          BeforeTargets="CreateWebConfig" 
-          DependsOnTargets="ResolveWsgiSettings" 
-          Condition="'$(VirtualEnvEnabled)' != ''">
-    <PropertyGroup>
+  <Target Name="ConfigureVirtualEnv"
+          BeforeTargets="CreateWebConfig"
+          DependsOnTargets="ResolveWsgiSettings;ResolvePythonInterpreterPath">
+    <PropertyGroup Condition="$(VirtualEnvEnabled)">
       <!-- Setup for when virtual env is enabled in a project.  We use a bootstrap
             wfastcgi handler which does activate_this on the deployed env. -->
       <VirtualEnvWsgiHandler>$(WsgiHandler)</VirtualEnvWsgiHandler>
@@ -193,16 +193,18 @@
       <WsgiAppSettings>
         <![CDATA[$(WsgiAppSettings)
     <add key="WSGI_ALT_VIRTUALENV_HANDLER" value="$(VirtualEnvWsgiHandler)"/>
-    <add key="WSGI_ALT_VIRTUALENV_ACTIVATE_THIS" value="$(VirtualEnvDeploymentPath)\$(VirtualEnvEnabled)\Scripts\activate_this.py"/>]]>
+    <add key="WSGI_ALT_VIRTUALENV_ACTIVATE_THIS" value="$(VirtualEnvDeploymentPath)\$(VirtualEnvPrefixSubPath)\Scripts\activate_this.py"/>]]>
       </WsgiAppSettings>
     </PropertyGroup>
   </Target>
 
-  <Target Name="CreateVirtualEnvProxy" BeforeTargets="Build" Condition="'$(VirtualEnvEnabled)' != ''">
+  <Target Name="CreateVirtualEnvProxy"
+          BeforeTargets="Build"
+          DependsOnTargets="ResolvePythonInterpreterPath">
     <!-- Contains code for a proxy handler which does virtual env's activate_this, and then gets
             the real FastCGI handler.  This enables running on systems where we need to execute using
             the main Python interpreter. -->
-    <PropertyGroup>
+    <PropertyGroup Condition="$(VirtualEnvEnabled)">
       <_CurrentVirtualEnvFastCgiProxy Condition="$([System.IO.File]::Exists('ptvs_virtualenv_proxy.py'))">$([System.IO.File]::ReadAllText('ptvs_virtualenv_proxy.py'))</_CurrentVirtualEnvFastCgiProxy>
       <_VirtualEnvFastCgiProxy>
         <![CDATA[
@@ -255,10 +257,11 @@ log('got handler ' + repr(handler))
 ]]>
       </_VirtualEnvFastCgiProxy>
     </PropertyGroup>
-    
-    <WriteLinesToFile File="ptvs_virtualenv_proxy.py" Condition="'$(VirtualEnvEnabled)' != '' and '$(_CurrentVirtualEnvFastCgiProxy)' != '$(_VirtualEnvFastCgiProxy)'" Lines="$(_VirtualEnvFastCgiProxy)" Overwrite="true"/>
-    <ItemGroup>
-      <Content Include="ptvs_virtualenv_proxy.py" Condition="'$(VirtualEnvEnabled)' != ''"/>
+
+    <WriteLinesToFile File="ptvs_virtualenv_proxy.py"
+                      Condition="$(VirtualEnvEnabled) and'$(_CurrentVirtualEnvFastCgiProxy)' != '$(_VirtualEnvFastCgiProxy)'" Lines="$(_VirtualEnvFastCgiProxy)" Overwrite="true"/>
+    <ItemGroup Condition="$(VirtualEnvEnabled)">
+      <Content Include="ptvs_virtualenv_proxy.py"/>
     </ItemGroup>
   </Target>
 
@@ -280,14 +283,14 @@ interpreter_path_emulated=$(TargetPythonInterpreterPath)
 
     <MakeDir Directories="bin"/>
     <WriteLinesToFile File="bin\AzureSetup.cfg"
-                      Lines="$(_CloudServiceAzureSetupConfig)" 
+                      Lines="$(_CloudServiceAzureSetupConfig)"
                       Overwrite="true"
                       Condition="'$(_PythonDeploymentMethod)' == 'CloudServiceDeploy'"/>
     <WriteLinesToFile File="bin\AzureSetup.cfg"
-                      Lines="@(WebPiReference->'webpi_install=%(Feed);%(ProductId)')" 
+                      Lines="@(WebPiReference->'webpi_install=%(Feed);%(ProductId)')"
                       Overwrite="false"
                       Condition="'$(_PythonDeploymentMethod)' == 'CloudServiceDeploy'"/>
-  
+
     <ItemGroup Condition="'$(_PythonDeploymentMethod)' == 'CloudServiceDeploy'">
       <Content Include="bin\AzureSetup.cfg"/>
     </ItemGroup>
@@ -408,7 +411,8 @@ interpreter_path_emulated=$(TargetPythonInterpreterPath)
     <!-- Target used for generating a package which can be uploaded to web server.  This isn't called when doing F5 to
          run in the emulator. -->
     <ItemGroup>
-      <ContentFiles Include="@(Compile)"></ContentFiles> <!-- Python compile files are actually content -->
+      <!-- Python compile files are actually content -->
+      <ContentFiles Include="@(Compile)"></ContentFiles>
       <ContentFiles Include="@(Content)"></ContentFiles>
       <ContentFiles Include="@(Include)"></ContentFiles>
 
@@ -489,24 +493,24 @@ interpreter_path_emulated=$(TargetPythonInterpreterPath)
     </CombinePath>
     <Message Text="QualifiedProjectHome: $(QualifiedProjectHome)"/>
   </Target>
-  
+
   <!-- Looks up the STATIC_URL setting in the Django project.  If this is a relative path then
        when we publish we will automatically make static files available at that path.
    -->
-  <Target Name="DetectStaticUrlPath" 
+  <Target Name="DetectStaticUrlPath"
           DependsOnTargets="ResolvePythonInterpreterPath;ResolveQualifiedProjectHome">
 
     <PropertyGroup Condition="'$(DjangoStaticUrlSetting)' == ''">
       <_TempStaticUrlFile>$([System.IO.Path]::GetTempFileName())</_TempStaticUrlFile>
     </PropertyGroup>
-    
-    <Exec Command="&quot;$(TargetPythonInterpreterPath)&quot; -c &quot;from $(MSBuildProjectName) import settings; print(settings.STATIC_URL)&quot; > &quot;$(_TempStaticUrlFile)&quot;"  
+
+    <Exec Command="&quot;$(TargetPythonInterpreterPath)&quot; -c &quot;from $(MSBuildProjectName) import settings; print(settings.STATIC_URL)&quot; > &quot;$(_TempStaticUrlFile)&quot;"
           WorkingDirectory="$(QualifiedProjectHome)" Condition="'$(_TempStaticUrlFile)' != ''"/>
-    
+
     <ReadLinesFromFile File="$(_TempStaticUrlFile)" Condition="'$(_TempStaticUrlFile)' != ''">
       <Output TaskParameter="Lines" PropertyName="DjangoStaticUrlSetting"/>
     </ReadLinesFromFile>
-    
+
     <Delete Files="$(_TempStaticUrlFile)" Condition="'$(_TempStaticUrlFile)' != ''"/>
 
     <Message Text="DjangoStaticUrlSetting=$(DjangoStaticUrlSetting)"/>
@@ -537,9 +541,9 @@ interpreter_path_emulated=$(TargetPythonInterpreterPath)
   <!-- Runs the django manage.py collectstatic command to gather the static files in the
       user's project if they're configured for serving project files.  Then adds the resulting
       collected files to -->
-  <Target Name="DjangoCollectStaticFiles" 
+  <Target Name="DjangoCollectStaticFiles"
           DependsOnTargets="DetectStaticRootPath;ResolvePythonInterpreterPath;ResolveQualifiedProjectHome"
-          BeforeTargets="CollectFilesFromContent;Build;PipelineTransformPhase" 
+          BeforeTargets="CollectFilesFromContent;Build;PipelineTransformPhase"
           Condition="'$(DisableStaticFiles)' != 'true'">
     <Exec Command="&quot;$(TargetPythonInterpreterPath)&quot; &quot;$(QualifiedProjectHome)\manage.py&quot; collectstatic --noinput"
           WorkingDirectory="$(QualifiedProjectHome)" Condition="'$(DjangoStaticRootSetting)' != ''"/>
@@ -550,7 +554,7 @@ interpreter_path_emulated=$(TargetPythonInterpreterPath)
     </ItemGroup>
   </Target>
 
-  <Target Name="CreateDjangoRewriteConditions" 
+  <Target Name="CreateDjangoRewriteConditions"
           DependsOnTargets="DetectStaticUrlPath"
           Outputs="DjangoRewriteConditions">
     <PropertyGroup Condition="'$(DjangoStaticUrlSetting)' != ''">
@@ -562,7 +566,7 @@ interpreter_path_emulated=$(TargetPythonInterpreterPath)
 
     <Message Text="DjangoRewriteConditions=$(DjangoRewriteConditions)"/>
   </Target>
-  
+
   <!-- ##################################################################################### -->
   <!-- Web Publishing support -->
   <!-- Web applications use this for publishing, but we don't have an intermediate assembly. -->
@@ -577,28 +581,29 @@ interpreter_path_emulated=$(TargetPythonInterpreterPath)
   </ItemGroup>
 
   <!-- Transforms a VirtualEnv entry into a directory of content which we include -->
-  <Target Name="TransformVirtualEnvToContent" BeforeTargets="CollectFilesFromContent;Build" Condition="'$(VirtualEnvEnabled)' != ''">
-    <PropertyGroup >
+  <Target Name="TransformVirtualEnvToContent"
+          BeforeTargets="CollectFilesFromContent;Build"
+          DependsOnTargets="ResolvePythonInterpreterPath">
+    <PropertyGroup Condition="$(VirtualEnvEnabled)">
       <OrigPrefixPath>$(IntermediateOutputPath)\bin\deployment-updated-orig-prefix.txt</OrigPrefixPath>
       <TargetPythonPrefix Condition="$(TargetPythonPrefix) == ''">D:\Python27</TargetPythonPrefix>
     </PropertyGroup>
-    <MakeDir Directories="$(IntermediateOutputPath)\bin"/>
-    <WriteLinesToFile Lines="$(TargetPythonPrefix)" File="$(OrigPrefixPath)" Overwrite="true"/>
+    <MakeDir Directories="$(IntermediateOutputPath)\bin" Condition="$(VirtualEnvEnabled)"/>
+    <WriteLinesToFile Lines="$(TargetPythonPrefix)" File="$(OrigPrefixPath)" Overwrite="true" Condition="$(VirtualEnvEnabled)"/>
 
-    <ItemGroup>
+    <ItemGroup Condition="$(VirtualEnvEnabled)">
       <!-- We take the virtual env as is, but we transform the orig-prefix.txt to 
       match the location of Python on the server -->
 
       <!-- Expand the virtual env, capturing the filename, this 2 step process ensures we handle fully qualified
            paths for virtual environments so that we don't overwrite files in the env directory when deploying -->
-      <Content Include="%(VirtualEnv.Identity)\**\*"
-               Condition="'%(VirtualEnv.Identity)' == '$(VirtualEnvEnabled)'"
-               Exclude="%(VirtualEnv.Identity)\Lib\orig-prefix.txt" >
+      <Content Include="$(VirtualEnvPrefixPath)\**\*"
+               Exclude="$(VirtualEnvPrefixPath)\Lib\orig-prefix.txt;$(VirtualEnvPrefixPath)\.ptvs\**\*">
       </Content>
 
       <!-- include the patched orig-prefix.txt file -->
-      <Content Include="$(OrigPrefixPath)" Condition="'%(VirtualEnv.Identity)' == '$(VirtualEnvEnabled)'">
-        <Link>%(VirtualEnv.Filename)\Lib\orig-prefix.txt</Link>
+      <Content Include="$(OrigPrefixPath)" Condition="$(VirtualEnvEnabled)">
+        <Link>$(VirtualEnvPrefixPath)\Lib\orig-prefix.txt</Link>
       </Content>
     </ItemGroup>
   </Target>

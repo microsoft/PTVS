@@ -55,6 +55,12 @@
     <Reference Include="envdte, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <EmbedInteropTypes>False</EmbedInteropTypes>
     </Reference>
+    <Reference Include="Microsoft.Build" />
+    <Reference Include="Microsoft.Build.Conversion.v4.0" />
+    <Reference Include="Microsoft.Build.Engine" />
+    <Reference Include="Microsoft.Build.Framework" />
+    <Reference Include="Microsoft.Build.Tasks.v4.0" />
+    <Reference Include="Microsoft.Build.Utilities.v4.0" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="Microsoft.VisualStudio.OLE.Interop, Version=7.1.40304.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="Microsoft.VisualStudio.Shell.$(VSTarget), Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
@@ -73,13 +79,20 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\..\..\Common\Product\SharedProject\CommonUtils.cs">
+      <Link>CommonUtils.cs</Link>
+    </Compile>
+    <Compile Include="..\Analysis\Interpreter\ProcessOutput.cs">
+      <Link>ProcessOutput.cs</Link>
+    </Compile>
     <Compile Include="AssemblyInfo.cs" />
-    <Compile Include="ConfigurablePythonInterpreterFactory.cs" />
     <Compile Include="ConfigurablePythonInterpreterFactoryProvider.cs" />
     <Compile Include="CPythonInterpreterFactoryConstants.cs" />
     <Compile Include="CPythonInterpreterFactoryProvider.cs" />
+    <Compile Include="DerivedInterpreterFactory.cs" />
     <Compile Include="IInterpreterOptionsService.cs" />
     <Compile Include="InterpreterOptionsService.cs" />
+    <Compile Include="MSBuildProjectInterpreterFactoryProvider.cs" />
     <Compile Include="NativeMethods.cs" />
     <Compile Include="RegistryWatcher.cs" />
     <Compile Include="SettingsManagerCreator.cs" />

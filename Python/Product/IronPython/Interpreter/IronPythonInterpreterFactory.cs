@@ -30,18 +30,24 @@ namespace Microsoft.IronPythonTools.Interpreter {
         public IronPythonInterpreterFactory(ProcessorArchitecture arch = ProcessorArchitecture.X86)
             : base(
                 arch == ProcessorArchitecture.Amd64 ? _ipy64InterpreterGuid : _ipyInterpreterGuid,
-                arch == ProcessorArchitecture.Amd64 ? "IronPython 64-bit" : "IronPython",
-                new InterpreterConfiguration(
-                    Path.Combine(IronPythonResolver.GetPythonInstallDir(), arch == ProcessorArchitecture.Amd64 ? "ipy64.exe" : "ipy.exe"),
-                    Path.Combine(IronPythonResolver.GetPythonInstallDir(), arch == ProcessorArchitecture.Amd64 ? "ipyw64.exe" : "ipyw.exe"),
-                    Path.Combine(IronPythonResolver.GetPythonInstallDir(), "Lib"),
-                    "IRONPYTHONPATH",
-                    arch,
-                    new Version(2, 7)),
+                arch == ProcessorArchitecture.Amd64 ? "IronPython 64-bit 2.7" : "IronPython 2.7",
+                GetConfiguration(arch),
                 true) { }
 
-        protected override IPythonInterpreter MakeInterpreter(PythonTypeDatabase typeDb) {
-            return new IronPythonInterpreter(this);
+        private static InterpreterConfiguration GetConfiguration(ProcessorArchitecture arch) {
+            var prefixPath = IronPythonResolver.GetPythonInstallDir();
+            return new InterpreterConfiguration(
+                prefixPath,
+                Path.Combine(prefixPath, arch == ProcessorArchitecture.Amd64 ? "ipy64.exe" : "ipy.exe"),
+                Path.Combine(prefixPath, arch == ProcessorArchitecture.Amd64 ? "ipyw64.exe" : "ipyw.exe"),
+                Path.Combine(prefixPath, "Lib"),
+                "IRONPYTHONPATH",
+                arch,
+                new Version(2, 7));
+        }
+
+        public override IPythonInterpreter MakeInterpreter(PythonTypeDatabase typeDb) {
+            return new IronPythonInterpreter(typeDb);
         }
     }
 }

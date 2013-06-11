@@ -191,6 +191,23 @@ namespace Microsoft.PythonTools {
             return null;
         }
 
+        public static IEnumerable<IVsProject> EnumerateLoadedProjects(this IVsSolution solution) {
+            var guid = new Guid(PythonConstants.ProjectFactoryGuid);
+            IEnumHierarchies hierarchies;
+            ErrorHandler.ThrowOnFailure((solution.GetProjectEnum(
+                (uint)(__VSENUMPROJFLAGS.EPF_MATCHTYPE | __VSENUMPROJFLAGS.EPF_LOADEDINSOLUTION),
+                ref guid,
+                out hierarchies)));
+            IVsHierarchy[] hierarchy = new IVsHierarchy[1];
+            uint fetched;
+            while (ErrorHandler.Succeeded(hierarchies.Next(1, hierarchy, out fetched)) && fetched == 1) {
+                var project = hierarchy[0] as IVsProject;
+                if (project != null) {
+                    yield return project;
+                }
+            }
+        }
+
         public static IModuleContext GetModuleContext(this ITextBuffer buffer) {
             if (buffer == null) {
                 return null;

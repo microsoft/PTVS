@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.Remoting;
 using System.Threading;
 using Microsoft.IronPythonTools.Interpreter;
@@ -33,23 +34,32 @@ namespace AnalysisTests {
     public class IronPythonAnalysisTest : AnalysisTest {
         private string[] _objectMembersClr, _strMembersClr;
 
-        public IronPythonAnalysisTest() : base(CreateInterpreter()) {
-            _objectMembersClr = PyObjectType.GetMemberNames(IronPythonModuleContext.ShowClrInstance).ToArray();
-            _strMembersClr = BytesType.GetMemberNames(IronPythonModuleContext.ShowClrInstance).ToArray();
+        public IronPythonAnalysisTest()
+            : base(new IronPythonInterpreterFactory(ProcessorArchitecture.X86), CreateInterpreter()) {
+            var objectType = Interpreter.GetBuiltinType(BuiltinTypeId.Object);
+            _objectMembersClr = objectType.GetMemberNames(IronPythonModuleContext.ShowClrInstance).ToArray();
+            var stringType = Interpreter.GetBuiltinType(BuiltinTypeId.Str);
+            _strMembersClr = stringType.GetMemberNames(IronPythonModuleContext.ShowClrInstance).ToArray();
 
             Assert.IsTrue(_objectMembers.Length < _objectMembersClr.Length);
             Assert.IsTrue(_strMembers.Length < _strMembersClr.Length);
         }
 
         private static IPythonInterpreter CreateInterpreter() {
-            var res = new IronPythonInterpreter(new IronPythonInterpreterFactory(), PythonTypeDatabase.CreateDefaultTypeDatabase(PythonLanguageVersion.V27.ToVersion()));
+            var res = new IronPythonInterpreter(PythonTypeDatabase.CreateDefaultTypeDatabase(PythonLanguageVersion.V27.ToVersion()));
             res.Remote.AddAssembly(new ObjectHandle(typeof(IronPythonAnalysisTest).Assembly));
             return res;
         }
 
-        public override string UnicodeStringType {
+        public override BuiltinTypeId BuiltinTypeId_Str {
             get {
-                return "str";
+                return BuiltinTypeId.Unicode;
+            }
+        }
+
+        public override BuiltinTypeId BuiltinTypeId_StrIterator {
+            get {
+                return BuiltinTypeId.UnicodeIterator;
             }
         }
 
@@ -408,7 +418,7 @@ from System.Windows.Media import Colors
         public void XamlEmptyXName() {
             // [Python Tools] Adding attribute through XAML in IronPython application crashes VS.
             // http://pytools.codeplex.com/workitem/743
-            PythonAnalyzer analyzer = new PythonAnalyzer(Interpreter, PythonLanguageVersion.V27);
+            PythonAnalyzer analyzer = new PythonAnalyzer(InterpreterFactory, Interpreter);
             string xamlPath = TestData.GetPath(@"TestData\Xaml\EmptyXName.xaml");
             string pyPath = TestData.GetPath(@"TestData\Xaml\EmptyXName.py");
             var xamlEntry = analyzer.AddXamlFile(xamlPath);

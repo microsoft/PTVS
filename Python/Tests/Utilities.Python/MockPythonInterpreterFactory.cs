@@ -64,7 +64,7 @@ namespace TestUtilities.Python {
             return new MockPythonInterpreter(this);
         }
 
-        public void GenerateCompletionDatabase(Action failedToStart = null) {
+        public void GenerateCompletionDatabase(GenerateDatabaseOptions options, Action<int> onExit = null) {
             IsCurrent = false;
             IsCurrentReason = GeneratingReason;
         }
@@ -146,7 +146,7 @@ namespace TestUtilities.Python {
                         IsCurrentReason = UpToDateReason;
                         var evt2 = NewDatabase;
                         if (evt2 != null) {
-                            evt2(this, new NewDatabaseEventArgs(null));
+                            evt2(this, new DatabaseReplacedEventArgs(null));
                         }
                     }
                 }
@@ -168,7 +168,7 @@ namespace TestUtilities.Python {
             }
         }
 
-        public event EventHandler<NewDatabaseEventArgs> NewDatabase;
+        public event EventHandler<DatabaseReplacedEventArgs> NewDatabase;
 
         public string GetAnalysisLogContent(IFormatProvider culture) {
             throw new NotImplementedException();

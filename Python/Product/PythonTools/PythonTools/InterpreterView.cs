@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Threading.Tasks;
@@ -23,10 +24,11 @@ using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.ComponentModelHost;
 
-namespace Microsoft.PythonTools.InterpreterList {
-    internal class InterpreterView : DependencyObject {
+namespace Microsoft.PythonTools {
+    internal class InterpreterView : DependencyObject, INotifyPropertyChanged {
         private readonly string _identifier;
         private bool _startedRunning;
+        private bool _isRunning;
 
         public static IEnumerable<InterpreterView> GetInterpreters(IInterpreterOptionsService interpService = null) {
             if (interpService == null) {
@@ -39,9 +41,21 @@ namespace Microsoft.PythonTools.InterpreterList {
             foreach (var interp in interpService.Interpreters) {
                 yield return new InterpreterView(
                     interp,
-                    interp.GetInterpreterDisplay(),
+                    interp.Description,
                     interp == interpService.DefaultInterpreter);
             }
+        }
+
+        private static bool FileExists(string path) {
+            return !string.IsNullOrEmpty(path) &&
+                path.IndexOfAny(Path.GetInvalidPathChars()) < 0 &&
+                File.Exists(path);
+        }
+
+        private static bool DirectoryExists(string path) {
+            return !string.IsNullOrEmpty(path) &&
+                path.IndexOfAny(Path.GetInvalidPathChars()) < 0 &&
+                Directory.Exists(path);
         }
 
         public InterpreterView(IPythonInterpreterFactory interpreter, string name, bool isDefault) {
@@ -51,7 +65,8 @@ namespace Microsoft.PythonTools.InterpreterList {
 
             var withDb = interpreter as IInterpreterWithCompletionDatabase;
             if (withDb != null) {
-                CanRefresh = File.Exists(interpreter.Configuration.InterpreterPath);
+                CanRefresh = FileExists(interpreter.Configuration.InterpreterPath) &&
+                    DirectoryExists(interpreter.Configuration.LibraryPath);
                 withDb.IsCurrentChanged += Interpreter_IsCurrentChanged;
                 withDb.IsCurrentReasonChanged += Interpreter_IsCurrentChanged;
                 IsCurrent = withDb.IsCurrent;
@@ -59,6 +74,10 @@ namespace Microsoft.PythonTools.InterpreterList {
             }
             IsRunning = false;
             IsDefault = isDefault;
+        }
+
+        public InterpreterView(string name) {
+            Name = name;
         }
 
         private void Interpreter_IsCurrentChanged(object sender, EventArgs e) {
@@ -120,11 +139,12 @@ namespace Microsoft.PythonTools.InterpreterList {
                 var withDb = Interpreter as IInterpreterWithCompletionDatabase;
                 if (withDb != null) {
                     IsRunning = _startedRunning = true;
-                    withDb.GenerateCompletionDatabase(() => {
-                        // Only called if the analyzer fails to start.
-                        _startedRunning = false; 
-                        withDb.RefreshIsCurrent();
-                        IsRunning = false;
+                    withDb.GenerateCompletionDatabase(GenerateDatabaseOptions.None, exitCode => {
+                        if (_startedRunning) {
+                            _startedRunning = false;
+                            withDb.RefreshIsCurrent();
+                            IsRunning = false;
+                        }
                     });
                 }
             } else {
@@ -163,7 +183,7 @@ namespace Microsoft.PythonTools.InterpreterList {
         }
 
         public bool IsRunning {
-            get { return (bool)SafeGetValue(IsRunningProperty); }
+            get { return _isRunning; }
             private set { SafeSetValue(IsRunningPropertyKey, value); }
         }
 
@@ -186,6 +206,12 @@ namespace Microsoft.PythonTools.InterpreterList {
             get { return (bool)GetValue(IsDefaultProperty); }
             private set { SetValue(IsDefaultPropertyKey, value); }
         }
+
+        public bool IsSelected {
+            get { return (bool)SafeGetValue(IsSelectedProperty); }
+            set { SetValue(IsSelectedProperty, value); }
+        }
+
 
         private object SafeGetValue(DependencyProperty property) {
             if (Dispatcher.CheckAccess()) {
@@ -221,11 +247,27 @@ namespace Microsoft.PythonTools.InterpreterList {
         public static readonly DependencyProperty IsDefaultProperty = IsDefaultPropertyKey.DependencyProperty;
         public static readonly DependencyProperty CanRefreshProperty = CanRefreshPropertyKey.DependencyProperty;
 
+        public static readonly DependencyProperty IsSelectedProperty = DependencyProperty.Register("IsSelected", typeof(bool), typeof(InterpreterView), new PropertyMetadata(false));
+
         private static void IsRunning_Changed(DependencyObject d, DependencyPropertyChangedEventArgs e) {
             if (!(e.NewValue as bool? ?? true)) {
                 d.SetValue(ProgressPropertyKey, 0);
                 d.SetValue(MaximumPropertyKey, 0);
             }
+            var iv = d as InterpreterView;
+            if (iv != null) {
+                iv._isRunning = (e.NewValue as bool?) ?? false;
+            }
         }
+
+        protected override void OnPropertyChanged(DependencyPropertyChangedEventArgs e) {
+            base.OnPropertyChanged(e);
+            var evt = PropertyChanged;
+            if (evt != null) {
+                evt(this, new PropertyChangedEventArgs(e.Property.Name));
+            }
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
     }
 }

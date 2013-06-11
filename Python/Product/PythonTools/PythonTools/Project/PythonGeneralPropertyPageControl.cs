@@ -16,13 +16,13 @@ using System;
 using System.Collections.Generic;
 using System.Windows.Forms;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Options;
 using Microsoft.VisualStudio.ComponentModelHost;
 
 namespace Microsoft.PythonTools.Project {
     public partial class PythonGeneralPropertyPageControl : UserControl {
         private IInterpreterOptionsService _service;
         private readonly PythonGeneralPropertyPage _propPage;
-        private readonly List<IPythonInterpreterFactory> _interpreters = new List<IPythonInterpreterFactory>();
 
         public PythonGeneralPropertyPageControl() {
             InitializeComponent();
@@ -33,34 +33,19 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private void InitializeInterpreters() {
-            _interpreters.AddRange(_service.InterpretersOrDefault);
-
-            foreach (var interpreter in _interpreters) {
-                _defaultInterpreter.Items.Add(interpreter.GetInterpreterDisplay());
-            }
-
-            if (_defaultInterpreter.Items.Count == 0) {
-                _defaultInterpreter.Enabled = false;
-                _defaultInterpreter.Items.Add("No Python Interpreters Installed");
-                _defaultInterpreter.SelectedIndexChanged -= this.Changed;
-                _defaultInterpreter.SelectedIndex = 0;
-                _defaultInterpreter.SelectedIndexChanged += this.Changed;
+            _defaultInterpreter.Items.Add(new InterpreterPlaceholder(Guid.Empty, "Use global default"));
+            foreach (var interpreter in _service.Interpreters) {
+                _defaultInterpreter.Items.Add(interpreter);
             }
         }
 
         private void InterpreterOptionsPage_InterpretersChanged(object sender, EventArgs e) {
             _defaultInterpreter.SelectedIndexChanged -= Changed;
 
-            _interpreters.Clear();
             _defaultInterpreter.Items.Clear();
             InitializeInterpreters();
 
-            Guid guid;
-            Version version;
-            if (Guid.TryParse(_propPage.Project.GetProjectProperty(PythonConstants.InterpreterId, false), out guid) &&
-                Version.TryParse(_propPage.Project.GetProjectProperty(PythonConstants.InterpreterVersion, false), out version)) {
-                SetDefaultInterpreter(guid, version);
-            }
+            SetDefaultInterpreter(_propPage.PythonProject.Interpreters.ActiveInterpreter);
 
             _defaultInterpreter.SelectedIndexChanged += Changed;
         }
@@ -92,25 +77,36 @@ namespace Microsoft.PythonTools.Project {
 
         public IPythonInterpreterFactory DefaultInterpreter {
             get {
-                if (_defaultInterpreter.SelectedIndex != -1) {
-                    return _interpreters[_defaultInterpreter.SelectedIndex];
+                if (_defaultInterpreter.SelectedIndex == 0) {
+                    return null;
                 }
-                return null;
+                return _defaultInterpreter.SelectedItem as IPythonInterpreterFactory;
             }
         }
 
-        public void SetDefaultInterpreter(Guid id, Version version) {
-            for (int i = 0; i < _interpreters.Count; i++) {
-                var interpreter = _interpreters[i];
-                if (interpreter.Id == id && interpreter.Configuration.Version == version) {
-                    _defaultInterpreter.SelectedIndex = i;
-                    break;
+        public void SetDefaultInterpreter(IPythonInterpreterFactory interpreter) {
+            if (interpreter == null) {
+                _defaultInterpreter.SelectedIndex = 0;
+            } else {
+                try {
+                    _defaultInterpreter.SelectedItem = interpreter;
+                } catch (IndexOutOfRangeException) {
+                    _defaultInterpreter.SelectedIndex = 0;
                 }
             }
         }
 
         private void Changed(object sender, EventArgs e) {
             _propPage.IsDirty = true;
+        }
+
+        private void Interpreter_Format(object sender, ListControlConvertEventArgs e) {
+            var factory = e.ListItem as IPythonInterpreterFactory;
+            if (factory != null) {
+                e.Value = factory.Description;
+            } else {
+                e.Value = e.ListItem.ToString();
+            }
         }
     }
 }

@@ -31,9 +31,9 @@ namespace Microsoft.PythonTools.Interpreter {
     /// Provides access to an on-disk store of cached intellisense information.
     /// </summary>
     public sealed class PythonTypeDatabase : ITypeDatabaseReader {
+        private readonly IPythonInterpreterFactory _factory;
         private readonly SharedDatabaseState _sharedState;
-        internal readonly Dictionary<string, IPythonModule> _modules;
-        internal readonly Dictionary<IPythonType, CPythonConstant> _constants;
+        private readonly bool _cloned;
 
         /// <summary>
         /// Gets the version of the analysis format that this class reads.
@@ -43,16 +43,35 @@ namespace Microsoft.PythonTools.Interpreter {
         private static string _completionDatabasePath;
         private static string _baselineDatabasePath;
 
-        public PythonTypeDatabase(string databaseDirectory, Version languageVersion, IBuiltinPythonModule builtinsModule = null) {
-            _sharedState = new SharedDatabaseState(databaseDirectory, languageVersion, builtinsModule);
+        public PythonTypeDatabase(IPythonInterpreterFactory factory, IEnumerable<string> databaseDirectories, IBuiltinPythonModule builtinsModule = null) {
+            _factory = factory;
+            _sharedState = new SharedDatabaseState(databaseDirectories.First(), _factory.Configuration.Version, builtinsModule);
+            _sharedState.ListenForCorruptDatabase(this);
+            foreach (var d in databaseDirectories.Skip(1)) {
+                LoadDatabase(d);
+            }
             _sharedState.ListenForCorruptDatabase(this);
         }
 
-        internal PythonTypeDatabase(SharedDatabaseState cloning) {
-            _sharedState = cloning;
+        public PythonTypeDatabase(IPythonInterpreterFactory factory, string databaseDirectory, IBuiltinPythonModule builtinsModule = null) {
+            _factory = factory;
+            _sharedState = new SharedDatabaseState(databaseDirectory, _factory.Configuration.Version, builtinsModule);
             _sharedState.ListenForCorruptDatabase(this);
-            _modules = new Dictionary<string, IPythonModule>();
-            _constants = new Dictionary<IPythonType, CPythonConstant>();
+        }
+
+        private PythonTypeDatabase(IPythonInterpreterFactory factory, string databaseDirectory, bool isDefaultDatabase) {
+            _factory = factory;
+            _sharedState = new SharedDatabaseState(databaseDirectory, factory.Configuration.Version, defaultDatabase: isDefaultDatabase);
+        }
+
+        internal PythonTypeDatabase(IPythonInterpreterFactory factory, SharedDatabaseState innerState, string databaseDirectory = null) {
+            _factory = factory;
+            if (_factory.Configuration.Version != innerState.LanguageVersion) {
+                throw new InvalidOperationException("Language versions do not match");
+            }
+            _sharedState = new SharedDatabaseState(innerState, databaseDirectory);
+            _cloned = true;
+            _sharedState.ListenForCorruptDatabase(this);
         }
 
         /// <summary>
@@ -62,41 +81,58 @@ namespace Microsoft.PythonTools.Interpreter {
         public event EventHandler DatabaseCorrupt;
 
         /// <summary>
-        /// Creates a light weight copy of this PythonTypeDatabase which supports adding 
+        /// Gets the Python version associated with this database.
         /// </summary>
-        /// <returns></returns>
-        public PythonTypeDatabase Clone() {
-            if (_modules != null) {
-                throw new InvalidOperationException("Cannot clone an already cloned type database");
+        public Version LanguageVersion {
+            get {
+                return _factory.Configuration.Version;
             }
-            return new PythonTypeDatabase(_sharedState);
         }
 
         /// <summary>
-        /// Asynchrousnly loads the specified extension module into the type database making the completions available.
+        /// Creates a lightweight copy of this PythonTypeDatabase which supports
+        /// overlaying extra modules.
+        /// </summary>
+        public PythonTypeDatabase Clone(IPythonInterpreterFactory factory = null) {
+            return new PythonTypeDatabase(factory ?? _factory, _sharedState);
+        }
+
+        /// <summary>
+        /// Loads modules from the specified path. Except for a builtins module,
+        /// these will override any currently loaded modules.
+        /// </summary>
+        public void LoadDatabase(string databasePath) {
+            _sharedState.LoadDatabase(databasePath);
+        }
+
+        /// <summary>
+        /// Asynchrously loads the specified extension module into the type
+        /// database making the completions available.
         /// 
-        /// If the module has not already been analyzed it will be analyzed and then loaded.
+        /// If the module has not already been analyzed it will be analyzed and
+        /// then loaded.
         /// 
-        /// If the specified module was already loaded it replaces the existing module.
+        /// If the specified module was already loaded it replaces the existing
+        /// module.
         /// 
-        /// Returns a new Task which can be blocked upon until the analysis of the new extension module is available.
+        /// Returns a new Task which can be blocked upon until the analysis of
+        /// the new extension module is available.
         /// 
         /// If the extension module cannot be analyzed an exception is reproted.
         /// </summary>
-        /// <param name="cancellationToken">A cancellation token which can be used to cancel the async loading of the module</param>
-        /// <param name="extensionModuleFilename">The filename of the extension module to be loaded</param>
-        /// <param name="interpreter">The Python interprefer which will be used to analyze the extension module.</param>
+        /// <param name="cancellationToken">A cancellation token which can be
+        /// used to cancel the async loading of the module</param>
+        /// <param name="extensionModuleFilename">The filename of the extension
+        /// module to be loaded</param>
+        /// <param name="interpreter">The Python interprefer which will be used
+        /// to analyze the extension module.</param>
         /// <param name="moduleName">The module name of the extension module.</param>
-        public Task LoadExtensionModuleAsync(IPythonInterpreterFactory interpreter, string moduleName, string extensionModuleFilename, CancellationToken cancellationToken = default(CancellationToken)) {
-            if (_modules == null) {
-                return MakeExceptionTask(new InvalidOperationException("Can only LoadModules into a cloned PythonTypeDatabase"));
-            }
-
+        public Task LoadExtensionModuleAsync(string moduleName, string extensionModuleFilename, CancellationToken cancellationToken = default(CancellationToken)) {
             return Task.Factory.StartNew(
                 new ExtensionModuleLoader(
                     TaskScheduler.FromCurrentSynchronizationContext(),
                     this,
-                    interpreter,
+                    _factory,
                     moduleName,
                     extensionModuleFilename,
                     cancellationToken
@@ -105,7 +141,7 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         public bool UnloadExtensionModule(string moduleName) {
-            return _modules.Remove(moduleName);
+            return _sharedState.Modules.Remove(moduleName);
         }
 
         private static Task MakeExceptionTask(Exception e) {
@@ -157,7 +193,7 @@ namespace Microsoft.PythonTools.Interpreter {
             }
 
             private void PublishModule(object state) {
-                _typeDb._modules[_moduleName] = new CPythonModule(_typeDb, _moduleName, (string)state, false);
+                _typeDb._sharedState.Modules[_moduleName] = new CPythonModule(_typeDb, _moduleName, (string)state, false);
             }
 
             private FileStream OpenProjectExtensionList() {
@@ -298,37 +334,29 @@ namespace Microsoft.PythonTools.Interpreter {
         /// </summary>
         public bool CanLoadModules {
             get {
-                return _modules != null;
+                return _cloned;
             }
         }
 
-        public static PythonTypeDatabase CreateDefaultTypeDatabase(Version pythonLanguageVersion) {
-            return new PythonTypeDatabase(BaselineDatabasePath, pythonLanguageVersion);
+        public static PythonTypeDatabase CreateDefaultTypeDatabase(IPythonInterpreterFactory factory) {
+            return new PythonTypeDatabase(factory, BaselineDatabasePath, isDefaultDatabase: true);
+        }
+
+        internal static PythonTypeDatabase CreateDefaultTypeDatabase(Version languageVersion) {
+            return new PythonTypeDatabase(InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(languageVersion),
+                BaselineDatabasePath, isDefaultDatabase: true);
         }
 
         public IEnumerable<string> GetModuleNames() {
-            foreach (var key in _sharedState.Modules.Keys) {
-                yield return key;
-            }
-
-            if (_modules != null) {
-                foreach (var key in _modules.Keys) {
+            for (var state = _sharedState; state != null; state = state._inner) {
+                foreach (var key in state.Modules.Keys) {
                     yield return key;
                 }
             }
         }
 
         public IPythonModule GetModule(string name) {
-            IPythonModule res;
-            if (_sharedState.Modules.TryGetValue(name, out res)) {
-                return res;
-            }
-
-            if (_modules != null && _modules.TryGetValue(name, out res)) {
-                return res;
-            }
-
-            return null;
+            return _sharedState.GetModule(name);
         }
 
         public string DatabaseDirectory {
@@ -351,6 +379,10 @@ namespace Microsoft.PythonTools.Interpreter {
         /// </summary>
         public static void Generate(PythonTypeDatabaseCreationRequest request) {
             var fact = request.Factory;
+            var withDb = fact as IInterpreterWithCompletionDatabase;
+            if (withDb == null) {
+                return;
+            }
             var outPath = request.OutputPath;
 
             ThreadPool.QueueUserWorkItem(x => {
@@ -358,68 +390,43 @@ namespace Microsoft.PythonTools.Interpreter {
 
                 Directory.CreateDirectory(CompletionDatabasePath);
 
+                var baseDb = BaselineDatabasePath;
+                if (request.ExtraInputDatabases.Any()) {
+                    baseDb = baseDb + ";" + string.Join(";", request.ExtraInputDatabases);
+                }
+
                 using (var output = ProcessOutput.RunHiddenAndCapture(path,
                     "/id", fact.Id.ToString("B"),
                     "/version", fact.Configuration.Version.ToString(),
                     "/python", fact.Configuration.InterpreterPath,
                     "/library", fact.Configuration.LibraryPath,
                     "/outdir", outPath,
-                    "/basedb", BaselineDatabasePath,
+                    "/basedb", baseDb,
+                    (request.SkipUnchanged ? null : "/all"),  // null will be filtered out; empty strings are quoted 
                     "/log", Path.Combine(outPath, "AnalysisLog.txt"),
                     "/glog", Path.Combine(CompletionDatabasePath, "AnalysisLog.txt"))) {
 
+                    output.PriorityClass = ProcessPriorityClass.BelowNormal;
                     output.Wait();
 
                     if (output.ExitCode.HasValue && output.ExitCode > -10 && output.ExitCode < 0) {
-                        File.AppendAllLines(Path.Combine(CompletionDatabasePath, "AnalysisLog.txt"), 
-                            new [] { "FAIL_STDLIB: " + output.Arguments }.Concat(output.StandardErrorLines));
-                        request.OnFailedToStart();
+                        File.AppendAllLines(Path.Combine(CompletionDatabasePath, "AnalysisLog.txt"),
+                            new[] { "FAIL_STDLIB: " + output.Arguments }.Concat(output.StandardErrorLines));
                     }
+
+                    var evt = request.OnExit;
+                    if (evt != null) {
+                        evt(output.ExitCode ?? -1);
+                    }
+
+                    if (output.ExitCode == 0) {
+                        withDb.NotifyNewDatabase();
+                    } else {
+                        withDb.NotifyGeneratingDatabase(false);
+                    }
+                    withDb.RefreshIsCurrent();
                 }
             });
-        }
-
-        private static void GetLibDirs(PythonTypeDatabaseCreationRequest request, out string libDir, out string virtualEnvPackages) {
-            GetLibDirs(request.Factory, out libDir, out virtualEnvPackages);
-        }
-
-        internal static void GetLibDirs(IPythonInterpreterFactory factory, out string libDir, out string virtualEnvPackages) {
-            libDir = Path.Combine(Path.GetDirectoryName(factory.Configuration.InterpreterPath), "Lib");
-            virtualEnvPackages = null;
-            if (!Directory.Exists(libDir)) {
-                string virtualEnvLibDir = Path.Combine(Path.GetDirectoryName(factory.Configuration.InterpreterPath), "..\\Lib");
-                string prefixFile = Path.Combine(virtualEnvLibDir, "orig-prefix.txt");
-                if (Directory.Exists(virtualEnvLibDir) && File.Exists(prefixFile)) {
-                    // virtual env is setup differently.  The EXE is in a Scripts directory with the Lib dir being at ..\Lib 
-                    // relative to the EXEs dir.  There is alos an orig-prefix.txt which points at the normal full Python
-                    // install.  Parse that file and include the normal Python install in the analysis.
-                    try {
-                        var lines = File.ReadAllLines(Path.Combine(prefixFile));
-                        if (lines.Length >= 1 && lines[0].IndexOfAny(Path.GetInvalidPathChars()) == -1) {
-
-                            string origLibDir = Path.Combine(lines[0], "Lib");
-                            if (Directory.Exists(origLibDir)) {
-                                // virtual env install
-                                libDir = origLibDir;
-
-                                virtualEnvPackages = Path.Combine(virtualEnvLibDir, "site-packages");
-                            }
-                        }
-                    } catch (IOException) {
-                    } catch (UnauthorizedAccessException) {
-                    } catch (System.Security.SecurityException) {
-                    }
-                } else {
-                    // try and find the lib dir based upon where site.py lives
-                    using (var output = factory.Run("-c", "import site; print(site.__file__)")) {
-                        output.Wait();
-                        libDir = output.StandardOutputLines
-                            .Where(line => !string.IsNullOrWhiteSpace(line) && line.IndexOfAny(Path.GetInvalidPathChars()) == -1)
-                            .Select(line => Path.GetDirectoryName(line))
-                            .FirstOrDefault(dir => Directory.Exists(dir));
-                    }
-                }
-            }
         }
 
         private static bool DatabaseExists(string path) {
@@ -467,10 +474,8 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
-        void ITypeDatabaseReader.LookupType(object type, Action<IPythonType, bool> assign, PythonTypeDatabase instanceDb) {
-            Debug.Assert(instanceDb == null);
-
-            _sharedState.LookupType(type, assign, this);
+        void ITypeDatabaseReader.LookupType(object type, Action<IPythonType> assign) {
+            _sharedState.LookupType(type, assign);
         }
 
         string ITypeDatabaseReader.GetBuiltinTypeName(BuiltinTypeId id) {
@@ -481,10 +486,8 @@ namespace Microsoft.PythonTools.Interpreter {
             _sharedState.RunFixups();
         }
 
-        void ITypeDatabaseReader.ReadMember(string memberName, Dictionary<string, object> memberValue, Action<string, IMember> assign, IMemberContainer container, PythonTypeDatabase instanceDb) {
-            Debug.Assert(instanceDb == null);
-
-            _sharedState.ReadMember(memberName, memberValue, assign, container, this);
+        void ITypeDatabaseReader.ReadMember(string memberName, Dictionary<string, object> memberValue, Action<string, IMember> assign, IMemberContainer container) {
+            _sharedState.ReadMember(memberName, memberValue, assign, container);
         }
 
         void ITypeDatabaseReader.OnDatabaseCorrupt() {
@@ -498,12 +501,23 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
-        internal CPythonConstant GetConstant(IPythonType type) {
-            CPythonConstant constant;
-            if (!_constants.TryGetValue(type, out constant)) {
-                _constants[type] = constant = new CPythonConstant(type);
+        public event EventHandler<DatabaseReplacedEventArgs> DatabaseReplaced;
+
+        public void OnDatabaseReplaced(PythonTypeDatabase newDatabase) {
+            var evt = DatabaseReplaced;
+            if (evt != null) {
+                evt(this, new DatabaseReplacedEventArgs(newDatabase));
             }
-            return constant;
+        }
+
+        internal bool HasListeners {
+            get {
+                return DatabaseReplaced != null;
+            }
+        }
+
+        internal CPythonConstant GetConstant(IPythonType type) {
+            return _sharedState.GetConstant(type);
         }
 
         // This is duplicated throughout different assemblies in PythonTools, so search for it if you update it.
@@ -547,22 +561,6 @@ namespace Microsoft.PythonTools.Interpreter {
                 }
             }
             return false;
-        }
-
-        internal IPythonModule GetInstancedModule(string name) {
-            IPythonModule res;
-            if (_modules.TryGetValue(name, out res)) {
-                return res;
-            }
-            return null;
-        }
-
-        class OutputDataReceiver {
-            public readonly StringBuilder Received = new StringBuilder();
-
-            public void OutputDataReceived(object sender, DataReceivedEventArgs e) {
-                Received.Append(e.Data);
-            }
         }
     }
 

@@ -62,7 +62,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
                 object retType;
                 if (argInfo.TryGetValue("ret_type", out retType)) {
                     _retType = new List<IPythonType>();
-                    typeDb.LookupType(retType, (value, isInstance) => _retType.Add(value));
+                    typeDb.LookupType(retType, value => _retType.Add(value));
                 }
 
             }

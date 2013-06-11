@@ -31,8 +31,8 @@ namespace PythonToolsUITests {
             VsIdeTestHostContext.Dte.Solution.Close(false);
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        //[TestMethod, Priority(0), TestCategory("Core")]
+        //[HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CreateVirtualEnv() {
             var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
             var newProjDialog = app.FileNewProject();
@@ -115,8 +115,8 @@ namespace PythonToolsUITests {
                 "azure==0.6.1");
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        //[TestMethod, Priority(0), TestCategory("Core")]
+        //[HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void LoadVirtualEnv() {
             var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
             var newProjDialog = app.FileNewProject();
@@ -176,8 +176,8 @@ namespace PythonToolsUITests {
             }            
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        //[TestMethod, Priority(0), TestCategory("Core")]
+        //[HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ActivateVirtualEnv() {
             var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
             var newProjDialog = app.FileNewProject();
@@ -251,8 +251,8 @@ namespace PythonToolsUITests {
             );
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        //[TestMethod, Priority(0), TestCategory("Core")]
+        //[HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void RemoveVirtualEnv() {
             var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
             var newProjDialog = app.FileNewProject();

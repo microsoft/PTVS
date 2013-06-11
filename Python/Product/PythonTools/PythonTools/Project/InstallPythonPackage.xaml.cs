@@ -12,6 +12,7 @@
  *
  * ***************************************************************************/
 
+using System.Threading.Tasks;
 using System.Windows;
 using Microsoft.VisualStudioTools;
 
@@ -21,13 +22,21 @@ namespace Microsoft.PythonTools.Project {
     /// </summary>
     partial class InstallPythonPackage : DialogWindowVersioningWorkaround {
         private readonly InstallPythonPackageView _view;
-        public InstallPythonPackage(InstallPythonPackageView view) {
-            _view = view;
+
+        public new static InstallPythonPackageView ShowDialog() {
+            var wnd = new InstallPythonPackage();
+            if (wnd.ShowModal() ?? false) {
+                return wnd._view;
+            } else {
+                return null;
+            }
+        }
+        
+        private InstallPythonPackage() {
+            _view = new InstallPythonPackageView();
+            DataContext = _view;
 
             InitializeComponent();
-            
-            DataContext = view;
-
             _textBox.Focus();
         }
 

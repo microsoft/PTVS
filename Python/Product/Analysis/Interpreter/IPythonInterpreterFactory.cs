@@ -45,9 +45,8 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         /// <summary>
-        /// Creates an interpreter and initializes it for the provided analyzer.
+        /// Creates an interpreter.
         /// </summary>
-        /// <param name="analyzer">The analyzer which will be using this interpreter.</param>
         IPythonInterpreter CreateInterpreter();
     }
 }

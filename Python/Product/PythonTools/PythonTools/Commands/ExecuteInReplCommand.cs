@@ -50,7 +50,7 @@ namespace Microsoft.PythonTools.Commands {
             if (window == null) {
                 window = provider.CreateReplWindow(
                     PythonToolsPackage.Instance.ContentType,
-                    factory.GetInterpreterDisplay() + " Interactive", 
+                    factory.Description + " Interactive", 
                     typeof(PythonLanguageInfo).GUID,
                     replId
                 );

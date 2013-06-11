@@ -22,9 +22,9 @@ namespace Microsoft.PythonTools.Interpreter {
     /// </summary>
     public interface IInterpreterWithCompletionDatabase {
         /// <summary>
-        /// Generates the completeion database.
+        /// Generates the completion database.
         /// </summary>
-        void GenerateCompletionDatabase(Action failedToStart = null);
+        void GenerateCompletionDatabase(GenerateDatabaseOptions options, Action<int> onExit = null);
 
         /// <summary>
         /// Generates the completion database if it has not already been
@@ -67,11 +67,6 @@ namespace Microsoft.PythonTools.Interpreter {
         /// </summary>
         /// <remarks>New in 2.0</remarks>
         void NotifyNewDatabase();
-
-        /// <summary>
-        /// Raised when a new database is available.
-        /// </summary>
-        event EventHandler<NewDatabaseEventArgs> NewDatabase;
 
         /// <summary>
         /// Returns logged information about the analysis of the interpreter's library.

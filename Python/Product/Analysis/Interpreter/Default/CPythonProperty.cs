@@ -37,7 +37,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
 
             _hasLocation = PythonTypeDatabase.TryGetLocation(valueDict, ref _line, ref _column);
 
-            typeDb.LookupType(type, (typeValue, fromInstanceDb) => _type = typeValue);
+            typeDb.LookupType(type, typeValue => _type = typeValue);
         }
 
         #region IBuiltinProperty Members

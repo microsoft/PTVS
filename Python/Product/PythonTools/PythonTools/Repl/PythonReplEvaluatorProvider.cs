@@ -18,7 +18,10 @@ using System.Diagnostics;
 using System.Linq;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.Repl;
+using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text.Adornments;
+using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Repl {
 #if INTERACTIVE_WINDOW
@@ -30,16 +33,21 @@ namespace Microsoft.PythonTools.Repl {
     class PythonReplEvaluatorProvider : IReplEvaluatorProvider {
         readonly IInterpreterOptionsService _interpService;
         readonly IErrorProviderFactory _errorProviderFactory;
+        readonly IServiceProvider _serviceProvider;
 
         private const string _replGuid = "FAEC7F47-85D8-4899-8D7B-0B855B732CC8";
         internal const string _configurableGuid = "3C4CB167-E213-4377-8909-437139C3C553";
 
         [ImportingConstructor]
-        public PythonReplEvaluatorProvider([Import] IInterpreterOptionsService interpService, [Import] IErrorProviderFactory errorProviderFactory) {
+        public PythonReplEvaluatorProvider(
+            [Import] IInterpreterOptionsService interpService,
+            [Import] IErrorProviderFactory errorProviderFactory,
+            [Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider) {
             Debug.Assert(interpService != null);
             Debug.Assert(errorProviderFactory != null);
             _interpService = interpService;
             _errorProviderFactory = errorProviderFactory;
+            _serviceProvider = serviceProvider;
         }
 
         #region IReplEvaluatorProvider Members
@@ -61,27 +69,42 @@ namespace Microsoft.PythonTools.Repl {
         /// </summary>
         private IReplEvaluator CreateConfigurableInterpreter(string replId) {
             string[] components = replId.Split(new[] { '|' }, 6);
-            if (components.Length == 6) {
+            if (components.Length == 5 || components.Length == 6) {
                 string workingDir = components[1];
-                string options = components[2];
-                string interpreter = components[3];
-                string interpreterVersion = components[4];
+                string interpreter = components[2];
+                string interpreterVersion = components[3];
                 // we don't care about the user identifier
 
                 var pyInterpreter = _interpService.FindInterpreter(interpreter, interpreterVersion);
-                // TODO: We'll need to look in virtual env's here too
+
+                if (pyInterpreter == null && components.Length == 6) {
+                    string projectName = components[5];
+                    var solution = _serviceProvider.GetService(typeof(SVsSolution)) as IVsSolution;
+                    if (solution != null) {
+                        foreach (var proj in solution.EnumerateLoadedProjects().OfType<IVsHierarchy>()) {
+                            if (!proj.GetRootCanonicalName().Equals(projectName, StringComparison.Ordinal)) {
+                                continue;
+                            }
+                            var envProj = proj.GetProject();
+                            if (envProj == null) {
+                                continue;
+                            }
+                            var pyProj = envProj.GetPythonProject();
+                            if (pyProj == null) {
+                                continue;
+                            }
+                            pyInterpreter = pyProj.Interpreters.FindInterpreter(interpreter, interpreterVersion);
+                            break;
+                        }
+                    }
+                }
+
                 if (pyInterpreter != null) {
-                    PythonReplCreationOptions optionsVal;
-                    Enum.TryParse<PythonReplCreationOptions>(options, out optionsVal);
                     var replOptions = new ConfigurablePythonReplOptions(
                         workingDir
                     );
 
-                    if (optionsVal.HasFlag(PythonReplCreationOptions.DontPersist)) {
-                        return new PythonReplEvaluatorDontPersist(pyInterpreter, _errorProviderFactory, replOptions, _interpService);
-                    } else {
-                        return new PythonReplEvaluator(pyInterpreter, _errorProviderFactory, replOptions, _interpService);
-                    }
+                    return new PythonReplEvaluatorDontPersist(pyInterpreter, _errorProviderFactory, replOptions, _interpService);
                 }
             }
             return null;

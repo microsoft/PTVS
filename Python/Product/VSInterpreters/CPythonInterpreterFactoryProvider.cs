@@ -112,7 +112,7 @@ namespace Microsoft.PythonTools.Interpreter {
                                 new InterpreterFactoryCreationOptions {
                                     LanguageVersion = version,
                                     Id = id,
-                                    Description = description,
+                                    Description = string.Format("{0} {1}", description, version),
                                     InterpreterPath = Path.Combine(basePath, CPythonInterpreterFactoryConstants.ConsoleExecutable),
                                     WindowInterpreterPath = Path.Combine(basePath, CPythonInterpreterFactoryConstants.WindowsExecutable),
                                     LibraryPath = Path.Combine(basePath, CPythonInterpreterFactoryConstants.LibrarySubPath),

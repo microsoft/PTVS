@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using Microsoft.VisualStudioTools;
@@ -47,6 +48,12 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
+        internal PythonProjectNode PythonProject {
+            get {
+                return (PythonProjectNode)Project;
+            }
+        }
+
         public override string Name {
             get { return "General"; }
         }
@@ -55,14 +62,12 @@ namespace Microsoft.PythonTools.Project {
             Project.SetProjectProperty(CommonConstants.StartupFile, _control.StartupFile);
             Project.SetProjectProperty(CommonConstants.WorkingDirectory, _control.WorkingDirectory);
             Project.SetProjectProperty(CommonConstants.IsWindowsApplication, _control.IsWindowsApplication.ToString());
-            if (_control.DefaultInterpreter != null) {
-                if (_control.DefaultInterpreter.Id.ToString() != Project.GetProjectProperty(PythonConstants.InterpreterId, false) ||
-                    _control.DefaultInterpreter.Configuration.Version.ToString() != Project.GetProjectProperty(PythonConstants.InterpreterVersion, false)) {
-                    Project.SetProjectProperty(PythonConstants.InterpreterId, _control.DefaultInterpreter.Id.ToString());
-                    Project.SetProjectProperty(PythonConstants.InterpreterVersion, _control.DefaultInterpreter.Configuration.Version.ToString());
-                    ((PythonProjectNode)Project).ClearInterpreter();
-                }
+            
+            var interp = _control.DefaultInterpreter;
+            if (interp != null && !PythonProject.Interpreters.GetInterpreterFactories().Contains(interp)) {
+                PythonProject.Interpreters.AddInterpreter(interp);
             }
+            PythonProject.Interpreters.ActiveInterpreter = _control.DefaultInterpreter;
             IsDirty = false;
         }
 
@@ -75,11 +80,14 @@ namespace Microsoft.PythonTools.Project {
                     _control.WorkingDirectory = ".";
                 }
                 _control.IsWindowsApplication = Convert.ToBoolean(this.Project.GetProjectProperty(CommonConstants.IsWindowsApplication, false));
-                Guid guid;
-                Version version;
-                if (Guid.TryParse(this.Project.GetProjectProperty(PythonConstants.InterpreterId, false), out guid) &&
-                    Version.TryParse(this.Project.GetProjectProperty(PythonConstants.InterpreterVersion, false), out version)) {
-                    _control.SetDefaultInterpreter(guid, version);
+                
+                if (PythonProject.Interpreters.IsActiveInterpreterGlobalDefault) {
+                    // ActiveInterpreter will never be null, so we need to check
+                    // the property to find out if it's following the global
+                    // default.
+                    _control.SetDefaultInterpreter(null);
+                } else {
+                    _control.SetDefaultInterpreter(PythonProject.Interpreters.ActiveInterpreter);
                 }
             } finally {
                 Loading = false;
