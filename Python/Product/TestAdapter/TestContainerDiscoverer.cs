@@ -33,6 +33,8 @@ namespace Microsoft.PythonTools.TestAdapter {
         private TestFilesUpdateWatcher _testFilesUpdateWatcher;
         private SolutionEventsListener _solutionListener;
         private readonly Dictionary<string, string> _fileRootMap;
+        private readonly HashSet<string> _knownProjects;
+        private bool _firstLoad;
 
         [ImportingConstructor]
         private TestContainerDiscoverer([Import(typeof(SVsServiceProvider))]IServiceProvider serviceProvider)
@@ -51,19 +53,20 @@ namespace Microsoft.PythonTools.TestAdapter {
             ValidateArg.NotNull(testFilesAddRemoveListener, "testFilesAddRemoveListener");
 
             _fileRootMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            _knownProjects = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
             _serviceProvider = serviceProvider;
 
             _testFilesAddRemoveListener = testFilesAddRemoveListener;
             _testFilesAddRemoveListener.TestFileChanged += OnProjectItemChanged;
-            _testFilesAddRemoveListener.StartListeningForTestFileChanges();
 
             _solutionListener = solutionListener;
             _solutionListener.SolutionChanged += OnSolutionChanged;
-            _solutionListener.StartListeningForChanges();
 
             _testFilesUpdateWatcher = testFilesUpdateWatcher;
             _testFilesUpdateWatcher.FileChangedEvent += OnProjectItemChanged;
+
+            _firstLoad = true;
         }
 
         public Uri ExecutorUri {
@@ -77,13 +80,19 @@ namespace Microsoft.PythonTools.TestAdapter {
                 // Get current solution
                 var solution = (IVsSolution)_serviceProvider.GetService(typeof(SVsSolution));
 
+                if (_firstLoad) {
+                    // The first time through, we don't know about any loaded
+                    // projects.
+                    _firstLoad = false;
+                    foreach (var project in EnumerateLoadedProjects(solution)) {
+                        OnSolutionChanged(null, new SolutionEventsListenerEventArgs(project, SolutionChangedReason.Load));
+                    }
+                    _testFilesAddRemoveListener.StartListeningForTestFileChanges();
+                    _solutionListener.StartListeningForChanges();
+                }
+
                 // Get all loaded projects
-                var loadedProjects = EnumerateLoadedProjects(solution);
-
-                var result = loadedProjects
-                    .SelectMany(p => GetTestContainers(p));
-
-                return result;
+                return EnumerateLoadedProjects(solution).SelectMany(p => GetTestContainers(p));
             }
         }
 
@@ -118,7 +127,7 @@ namespace Microsoft.PythonTools.TestAdapter {
             string path;
             project.GetMkDocument(VSConstants.VSITEMID_ROOT, out path);
 
-            if (!_fileRootMap.ContainsKey(path)) {
+            if (!_knownProjects.Contains(path)) {
                 // Don't return any containers for projects we don't know about.
                 yield break;
             }
@@ -177,12 +186,14 @@ namespace Microsoft.PythonTools.TestAdapter {
 
                 if (e.ChangedReason == SolutionChangedReason.Load) {
                     if (e.Project != null) {
-                        foreach (var p in e.Project.GetProjectItemPaths()) {
-                            if (!string.IsNullOrEmpty(root) && CommonUtils.IsSubpathOf(root, p)) {
-                                _testFilesUpdateWatcher.AddDirectoryWatch(root);
-                                _fileRootMap[p] = root;
-                            } else {
-                                _testFilesUpdateWatcher.AddWatch(p);
+                        if (_knownProjects.Add(e.Project.GetProjectPath())) {
+                            foreach (var p in e.Project.GetProjectItemPaths()) {
+                                if (!string.IsNullOrEmpty(root) && CommonUtils.IsSubpathOf(root, p)) {
+                                    _testFilesUpdateWatcher.AddDirectoryWatch(root);
+                                    _fileRootMap[p] = root;
+                                } else {
+                                    _testFilesUpdateWatcher.AddWatch(p);
+                                }
                             }
                         }
                     }
@@ -190,14 +201,16 @@ namespace Microsoft.PythonTools.TestAdapter {
                     OnTestContainersChanged();
                 } else if (e.ChangedReason == SolutionChangedReason.Unload) {
                     if (e.Project != null) {
-                        foreach (var p in e.Project.GetProjectItemPaths()) {
-                            if (string.IsNullOrEmpty(root) || !CommonUtils.IsSubpathOf(root, p)) {
-                                _testFilesUpdateWatcher.RemoveWatch(p);
+                        if (_knownProjects.Remove(e.Project.GetProjectPath())) {
+                            foreach (var p in e.Project.GetProjectItemPaths()) {
+                                if (string.IsNullOrEmpty(root) || !CommonUtils.IsSubpathOf(root, p)) {
+                                    _testFilesUpdateWatcher.RemoveWatch(p);
+                                }
+                                _fileRootMap.Remove(p);
                             }
-                            _fileRootMap.Remove(p);
-                        }
-                        if (!string.IsNullOrEmpty(root)) {
-                            _testFilesUpdateWatcher.RemoveWatch(root);
+                            if (!string.IsNullOrEmpty(root)) {
+                                _testFilesUpdateWatcher.RemoveWatch(root);
+                            }
                         }
                     }
 

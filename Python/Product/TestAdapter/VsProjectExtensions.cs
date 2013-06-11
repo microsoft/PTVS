@@ -34,6 +34,14 @@ namespace Microsoft.PythonTools.TestAdapter {
             return (string)projectName;
         }
 
+        public static string GetProjectPath(this IVsProject project) {
+            ValidateArg.NotNull(project, "project");
+
+            string projectPath;
+            ErrorHandler.ThrowOnFailure(project.GetMkDocument(VSConstants.VSITEMID_ROOT, out projectPath));
+            return projectPath;
+        }
+
         private static string GetAggregateProjectTypeGuids(this IVsProject project) {
             ValidateArg.NotNull(project, "project");
 
