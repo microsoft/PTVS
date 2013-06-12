@@ -58,7 +58,7 @@
     <?elseif "$(var.VSTargetVersion)" = "11.0" ?>
     <Condition Message="Visual Studio 2012 must be installed."> VSINSTALLPATH OR Installed </Condition>
     <?else?>
-    <Condition Message="Visual Studio 2013 must be installed.  The free integrated shell (and its dependent isolated shell) can be downloaded at TODO."> VSINSTALLPATH OR Installed </Condition>
+    <Condition Message="Visual Studio 2013 must be installed.  The free integrated shell (and its dependent isolated shell) can be downloaded at http://www.microsoft.com/visualstudio."> VSINSTALLPATH OR Installed </Condition>
     <?endif ?>
 
     <!-- Files/Components/MSMs to install -->
@@ -179,10 +179,8 @@
     <CustomAction Id="DevEnv_Setup" BinaryKey="WixCA" DllEntry="CAQuietExec" Execute="deferred" Return="check" Impersonate="no"/>
 
     <InstallExecuteSequence>
-      <?if "$(var.VSTargetVersion)" != "10.0" ?>
       <Custom Action="DevEnvSetup_Cmd" After="CostFinalize"/>
       <Custom Action="DevEnv_Setup" Before="InstallFinalize"/>
-      <?endif ?>
     </InstallExecuteSequence>
     <InstallUISequence>
       <Show Dialog="CustomAdvancedWelcomeEulaDlg" Before="FindRelatedProducts">NOT Installed</Show>
@@ -190,9 +188,7 @@
     </InstallUISequence>
 
     <UI>
-      <?if "$(var.VSTargetVersion)" != "10.0" ?>
       <ProgressText Action="DevEnv_Setup">Updating extension registration with Visual Studio...</ProgressText>
-      <?endif ?>
 
       <Dialog Id="CustomAdvancedWelcomeEulaDlg" Width="370" Height="270" Title="!(loc.AdvancedWelcomeEulaDlg_Title)">
         <Control Id="BannerBitmap" Type="Bitmap" X="0" Y="0" Width="370" Height="44" TabSkip="no" Text="!(loc.AdvancedWelcomeEulaDlgBannerBitmap)" />
