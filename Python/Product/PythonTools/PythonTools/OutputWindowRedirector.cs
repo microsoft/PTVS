@@ -19,6 +19,7 @@ using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools {
     class OutputWindowRedirector : Redirector {
+        private static readonly Guid OutputWindowGuid = new Guid("{34E76E81-EE4A-11D0-AE2E-00A0C90FFFC3}");
         static OutputWindowRedirector _generalPane;
 
         public static OutputWindowRedirector GetGeneral(IServiceProvider provider) {
@@ -41,7 +42,7 @@ namespace Microsoft.PythonTools {
             if (shell != null) {
                 // Ignore errors - we just won't support opening the window if
                 // we don't find it.
-                var windowGuid = VSConstants.StandardToolWindows.Output;
+                var windowGuid = OutputWindowGuid;
                 shell.FindToolWindow(0, ref windowGuid, out _window);
             }
             IVsOutputWindow outputWindow = provider.GetService(typeof(SVsOutputWindow)) as IVsOutputWindow;
