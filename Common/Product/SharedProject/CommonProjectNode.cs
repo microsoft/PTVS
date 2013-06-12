@@ -22,6 +22,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
 using System.Windows.Forms;
 using System.Windows.Threading;
 using Microsoft.VisualStudio;
@@ -55,7 +56,7 @@ namespace Microsoft.VisualStudioTools.Project {
         private static ImageList _imageList;
         private ProjectDocumentsListenerForStartupFileUpdates _projectDocListenerForStartupFileUpdates;
         private static int _imageOffset;
-        private FileSystemWatcher _watcher;
+        private FileSystemWatcher _watcher, _attributesWatcher;
         private int _suppressFileWatcherCount;
         private bool _isRefreshing;
         internal bool _boldedStartupItem;
@@ -64,14 +65,17 @@ namespace Microsoft.VisualStudioTools.Project {
         private CommonPropertyPage _propPage;
         private readonly Dictionary<string, FileSystemEventHandler> _fileChangedHandlers = new Dictionary<string, FileSystemEventHandler>();
         private List<FileSystemChange> _fileSystemChanges;
+        private object _fileSystemChangesLock = new object();
         private UIThreadSynchronizer _uiSync;
         private MSBuild.Project userBuildProject;
         private readonly Dictionary<string, FileSystemWatcher> _symlinkWatchers = new Dictionary<string, FileSystemWatcher>();
+        private readonly System.Threading.Timer _processFileChangesTimer;
 
         public CommonProjectNode(CommonProjectPackage/*!*/ package, ImageList/*!*/ imageList) {
             Contract.Assert(package != null);
             Contract.Assert(imageList != null);
 
+            _processFileChangesTimer = new System.Threading.Timer(ProcessFileChanges);
             _package = package;
             CanFileNodesHaveChilds = true;
             OleServiceProvider.AddService(typeof(VSLangProj.VSProject), new OleServiceProvider.ServiceCreatorCallback(CreateServices), false);
@@ -396,6 +400,7 @@ namespace Microsoft.VisualStudioTools.Project {
                 false;
 
             _watcher = CreateFileSystemWatcher(ProjectHome);
+            _attributesWatcher = CreateAttributesWatcher(ProjectHome);
 
             // add everything that's on disk that we don't have in the project
             MergeDiskNodes(this, ProjectHome);
@@ -403,7 +408,6 @@ namespace Microsoft.VisualStudioTools.Project {
 
         private FileSystemWatcher CreateFileSystemWatcher(string dir) {
             var watcher = new FileSystemWatcher(dir);
-            watcher.NotifyFilter |= NotifyFilters.Attributes;
             watcher.IncludeSubdirectories = true;
             watcher.Created += new FileSystemEventHandler(FileExistanceChanged);
             watcher.Deleted += new FileSystemEventHandler(FileExistanceChanged);
@@ -411,6 +415,17 @@ namespace Microsoft.VisualStudioTools.Project {
             watcher.Changed += FileContentsChanged;
             watcher.Error += WatcherError;
             watcher.EnableRaisingEvents = true;
+            watcher.InternalBufferSize = 1024 * 4;  // 4k is minimum buffer size
+            return watcher;
+        }
+
+        private FileSystemWatcher CreateAttributesWatcher(string dir) {
+            var watcher = new FileSystemWatcher(dir);
+            watcher.NotifyFilter = NotifyFilters.Attributes;
+            watcher.Changed += FileAttributesChanged;
+            watcher.Error += WatcherError;
+            watcher.EnableRaisingEvents = true;
+            watcher.InternalBufferSize = 1024 * 4;  // 4k is minimum buffer size
             return watcher;
         }
 
@@ -429,9 +444,11 @@ namespace Microsoft.VisualStudioTools.Project {
                 changes.Add(new FileSystemChange(this, WatcherChangeTypes.All, null));
             }
 
-            if (createdChanges) {
-                _uiSync.BeginInvoke(new Action(ProcessFileChanges), new object[0]);
-            }
+            QueueProcessingChanges();
+        }
+
+        private void QueueProcessingChanges() {
+            _processFileChangesTimer.Change(1000, Timeout.Infinite);
         }
 
         protected override void SaveMSBuildProjectFileAs(string newFileName) {
@@ -524,7 +541,20 @@ namespace Microsoft.VisualStudioTools.Project {
         /// display them if the user enables Show All Files.
         /// </summary>
         private void MergeDiskNodes(HierarchyNode curParent, string dir) {
-            foreach (var curDir in Directory.GetDirectories(dir)) {
+            IEnumerable<string> dirs;
+            try {
+                dirs = Directory.EnumerateDirectories(dir);
+            } catch  {
+                // directory was deleted, we don't have access, etc...
+                return;
+            }
+            
+            HashSet<HierarchyNode> missingChildren = new HashSet<HierarchyNode>(curParent.AllChildren);
+            foreach (var curDir in dirs) {
+                if (!Directory.Exists(dir)) {
+                    // directory went away
+                    break;
+                }
                 if (IsFileHidden(curDir)) {
                     continue;
                 }
@@ -538,18 +568,44 @@ namespace Microsoft.VisualStudioTools.Project {
                     // track symlinks, we won't get events on the directory
                     CreateSymLinkWatcher(curDir);
                 }
-
                 var existing = AddAllFilesFolder(curParent, curDir + Path.DirectorySeparatorChar);
-
+                missingChildren.Remove(existing);
                 MergeDiskNodes(existing, curDir);
             }
 
-            foreach (var file in Directory.GetFiles(dir)) {
+            IEnumerable<string> files;
+            try {
+                files = Directory.EnumerateFiles(dir);
+            } catch {
+                // directory was deleted, we don't have access, etc...
+                return;
+            }
+
+            foreach (var file in files) {
+                if (!Directory.Exists(dir)) {
+                    // file went away
+                    break;
+                }
                 if (IsFileHidden(file)) {
                     continue;
                 }
-                AddAllFilesFile(curParent, file);
+                missingChildren.Remove(AddAllFilesFile(curParent, file));
             }
+
+            // remove the excluded children which are no longer there
+            foreach (var child in missingChildren) {
+                if (child.ItemNode.IsExcluded) {
+                    RemoveSubTree(child);
+                }
+            }
+        }
+
+        private void RemoveSubTree(HierarchyNode node) {
+            foreach (var child in node.AllChildren) {
+                RemoveSubTree(child);
+            }
+            node.Parent.RemoveChild(node);
+            _diskNodes.Remove(node.Url);
         }
 
         private static string GetFinalPathName(string dir) {
@@ -640,12 +696,14 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <summary>
         /// Adds a file which is displayed when Show All Files is enabled
         /// </summary>
-        private void AddAllFilesFile(HierarchyNode curParent, string file) {
+        private HierarchyNode AddAllFilesFile(HierarchyNode curParent, string file) {
             var existing = FindNodeByFullPath(file);
             if (existing == null) {
                 var newFile = CreateFileNode(new AllFilesProjectElement(file, GetItemType(file), this));
                 AddAllFilesNode(curParent, newFile);
+                return newFile;
             }
+            return existing;
         }
 
         /// <summary>
@@ -682,19 +740,20 @@ namespace Microsoft.VisualStudioTools.Project {
             if (_fileChangedHandlers.TryGetValue(e.FullPath, out handler)) {
                 handler(sender, e);
             }
+        }
 
+        private void FileAttributesChanged(object sender, FileSystemEventArgs e) {
             bool createdChanges;
             lock (this) {
                 List<FileSystemChange> changes;
                 GetFileChangeList(out changes, out createdChanges);
 
-                changes.Add(new FileSystemChange(this, WatcherChangeTypes.Changed, e.FullPath));
-        }
-
-            if (createdChanges) {
-                _uiSync.BeginInvoke(new Action(ProcessFileChanges), new object[0]);
+                if (changes.Count == 0 || changes[0]._type != WatcherChangeTypes.All) {
+                    changes.Add(new FileSystemChange(this, WatcherChangeTypes.Changed, e.FullPath));
+                }
             }
 
+            QueueProcessingChanges();
         }
 
         internal void RegisterFileChangeNotification(FileNode node, FileSystemEventHandler handler) {
@@ -723,13 +782,13 @@ namespace Microsoft.VisualStudioTools.Project {
                 // either changing icons or updating the non-project elements, so we don't need to
                 // generate rename events or anything like that.  This saves us from having to 
                 // handle updating the hierarchy in a special way for renames.
-                changes.Add(new FileSystemChange(this, WatcherChangeTypes.Deleted, e.OldFullPath));
-                changes.Add(new FileSystemChange(this, WatcherChangeTypes.Created, e.FullPath));
+                if (changes.Count == 0 || changes[0]._type != WatcherChangeTypes.All) {
+                    changes.Add(new FileSystemChange(this, WatcherChangeTypes.Deleted, e.OldFullPath, true));
+                    changes.Add(new FileSystemChange(this, WatcherChangeTypes.Created, e.FullPath, true));
+                }
             }
 
-            if (createdChanges) {
-                _uiSync.BeginInvoke(new Action(ProcessFileChanges), new object[0]);
-            }
+            QueueProcessingChanges();
         }
 
         private void FileExistanceChanged(object sender, FileSystemEventArgs e) {
@@ -742,11 +801,11 @@ namespace Microsoft.VisualStudioTools.Project {
                 List<FileSystemChange> changes;
                 GetFileChangeList(out changes, out createdChanges);
 
-                changes.Add(new FileSystemChange(this, e.ChangeType, e.FullPath));
+                if (changes.Count == 0 || changes[0]._type != WatcherChangeTypes.All) {
+                    changes.Add(new FileSystemChange(this, e.ChangeType, e.FullPath));
+                }
             }
-            if (createdChanges) {
-                _uiSync.BeginInvoke(new Action(ProcessFileChanges), new object[0]);
-            }
+            QueueProcessingChanges();
         }
 
         /// <summary>
@@ -757,7 +816,7 @@ namespace Microsoft.VisualStudioTools.Project {
         /// </summary>
         private void GetFileChangeList(out List<FileSystemChange> changes, out bool createdChanges) {
             createdChanges = false;
-            lock (this) {
+            lock (_fileSystemChangesLock) {
                 if (_fileSystemChanges == null) {
                     _fileSystemChanges = new List<FileSystemChange>();
                     createdChanges = true;
@@ -784,31 +843,37 @@ namespace Microsoft.VisualStudioTools.Project {
             return false;
         }
 
+        private void ProcessFileChanges(object arg) {
+            _uiSync.BeginInvoke(new Action(ProcessFileChangesUIThread), new object[0]);
+        }
+
         /// <summary>
         /// Processes the current file system changes on the UI thread.
         /// </summary>
-        private void ProcessFileChanges() {
+        private void ProcessFileChangesUIThread() {
             List<FileSystemChange> changes;
-            lock (this) {
+            lock (_fileSystemChangesLock) {
                 changes = _fileSystemChanges;
                 _fileSystemChanges = null;
             }
 
-            foreach (var change in changes) {
-                if (IsClosed) {
-                    return;
-                }
+            using (new DebugTimer("ProcessFileChanges on UI Thread")) {
+                foreach (var change in changes) {
+                    if (IsClosed) {
+                        return;
+                    }
 
 #if DEBUG
-                try {
+                    try {
 #endif
-                    change.ProcessChange();
+                        change.ProcessChange();
 #if DEBUG
-                } catch (Exception e) {
-                    Debug.Fail("Unexpected exception while processing change: {0}", e.ToString());
-                    throw;
-                }
+                    } catch (Exception e) {
+                        Debug.Fail("Unexpected exception while processing change: {0}", e.ToString());
+                        throw;
+                    }
 #endif
+                }
             }
         }
 
@@ -818,13 +883,19 @@ namespace Microsoft.VisualStudioTools.Project {
         /// </summary>
         class FileSystemChange {
             private readonly CommonProjectNode _project;
-            private readonly WatcherChangeTypes _type;
+            internal readonly WatcherChangeTypes _type;
             private readonly string _path;
+            private readonly bool _isRename;
 
-            public FileSystemChange(CommonProjectNode node, WatcherChangeTypes changeType, string path) {
+            public FileSystemChange(CommonProjectNode node, WatcherChangeTypes changeType, string path, bool isRename = false) {
                 _project = node;
                 _type = changeType;
                 _path = path;
+                _isRename = isRename;
+            }
+
+            public override string ToString() {
+                return "FileSystemChange: " + _isRename + " " + _type + " " + _path;
             }
 
             private void RedrawIcon(HierarchyNode node) {
@@ -886,15 +957,30 @@ namespace Microsoft.VisualStudioTools.Project {
 
                 if (removed) {
                     _project.OnInvalidateItems(parent);
-            }
+                }
             }
 
             private void WatcherError() {
-                // remove all of the existing all files nodes
-                RemoveAllFilesChildren(_project);
-
                 // merge the current ones back in
-                _project.MergeDiskNodes(_project, _project.ProjectHome);
+                using (new DebugTimer("Merging on error")) {
+                    var waitDialog = (IVsThreadedWaitDialog)_project.GetService(typeof(SVsThreadedWaitDialog));
+                    int waitResult = waitDialog.StartWaitDialog(
+                        "Updating project system...",
+                        "Syncing project system with files on disk, this may take several seconds...",
+                        null,
+                        0,
+                        null,
+                        null
+                    );
+                    try {
+                        _project.MergeDiskNodes(_project, _project.ProjectHome);
+                    } finally {
+                        if (ErrorHandler.Succeeded(waitResult)) {
+                            int cancelled = 0;
+                            waitDialog.EndWaitDialog(ref cancelled);
+                        }
+                    }
+                }
             }
 
             private void ChildDeleted(HierarchyNode child) {
@@ -967,11 +1053,13 @@ namespace Microsoft.VisualStudioTools.Project {
                         // and drop in explorer), in which case we also need to process the items
                         // which are in the folder that we won't receive create notifications for.
 
-                        // First, make sure we don't have any children
-                        RemoveAllFilesChildren(folderNode);
+                        if (_isRename) {
+                            // First, make sure we don't have any children
+                            RemoveAllFilesChildren(folderNode);
 
-                        // then add the folder nodes
-                        _project.MergeDiskNodes(folderNode, _path);
+                            // then add the folder nodes
+                            _project.MergeDiskNodes(folderNode, _path);
+                        }
 
                         _project.OnInvalidateItems(folderNode);
                     } else {
@@ -1039,6 +1127,12 @@ namespace Microsoft.VisualStudioTools.Project {
             _watcher.EnableRaisingEvents = false;
             _watcher.Dispose();
             _watcher = null;
+
+            _attributesWatcher.EnableRaisingEvents = false;
+            _attributesWatcher.Dispose();
+            _attributesWatcher = null;
+
+            _processFileChangesTimer.Dispose();
 
             base.Close();
         }
@@ -1603,6 +1697,7 @@ namespace Microsoft.VisualStudioTools.Project {
             shell.RefreshPropertyBrowser(0);
 
             _watcher = CreateFileSystemWatcher(ProjectHome);
+            _attributesWatcher = CreateAttributesWatcher(ProjectHome);
 
             return VSConstants.S_OK;
         }

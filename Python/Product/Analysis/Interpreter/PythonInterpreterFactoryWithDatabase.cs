@@ -43,10 +43,10 @@ namespace Microsoft.PythonTools.Interpreter {
             _id = id;
             _config = config;
 
-            _refreshIsCurrentTrigger = new Timer(RefreshIsCurrentTimer_Elapsed);
             Task.Factory.StartNew(() => RefreshIsCurrent(false));
 
             if (watchLibraryForChanges && DirectoryExists(_config.LibraryPath)) {
+                _refreshIsCurrentTrigger = new Timer(RefreshIsCurrentTimer_Elapsed);
                 try {
                     _libWatcher = new FileSystemWatcher {
                         IncludeSubdirectories = true,

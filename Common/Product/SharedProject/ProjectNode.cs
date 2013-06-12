@@ -333,7 +333,7 @@ namespace Microsoft.VisualStudioTools.Project
         /// <summary>
         /// Mapping from item names to their hierarchy nodes for all disk-based nodes.
         /// </summary>
-        private readonly Dictionary<string, HierarchyNode> _diskNodes = new Dictionary<string, HierarchyNode>(StringComparer.OrdinalIgnoreCase);
+        protected readonly Dictionary<string, HierarchyNode> _diskNodes = new Dictionary<string, HierarchyNode>(StringComparer.OrdinalIgnoreCase);
 
         // Has the object been disposed.
         private bool isDisposed;

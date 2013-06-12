@@ -526,7 +526,7 @@ interpreter_path_emulated=$(TargetPythonInterpreterPath)
       <_TempStaticRootFile>$([System.IO.Path]::GetTempFileName())</_TempStaticRootFile>
     </PropertyGroup>
 
-    <Exec Command="&quot;$(TargetPythonInterpreterPath)&quot; -c &quot;from $(MSBuildProjectName) import settings; from os import path;  if settings.STATIC_ROOT: print(path.relpath(settings.STATIC_ROOT, r'$(QualifiedProjectHome)'))&quot; > &quot;$(_TempStaticRootFile)&quot;"
+    <Exec Command="&quot;$(TargetPythonInterpreterPath)&quot; -c &quot;from $(MSBuildProjectName) import settings; from os import path;  print(path.relpath(settings.STATIC_ROOT, r'$(QualifiedProjectHome)') if settings.STATIC_ROOT else '')&quot; > &quot;$(_TempStaticRootFile)&quot;"
           WorkingDirectory="$(QualifiedProjectHome)" Condition="'$(_TempStaticRootFile)' != ''"/>
 
     <ReadLinesFromFile File="$(_TempStaticRootFile)" Condition="'$(_TempStaticRootFile)' != ''">
