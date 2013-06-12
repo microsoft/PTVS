@@ -18,18 +18,12 @@
     Background="{DynamicResource {x:Static wpf:Controls.BackgroundKey}}"
     TextElement.Foreground="{DynamicResource {x:Static wpf:Controls.ForegroundKey}}">
     <vstools:DialogWindowVersioningWorkaround.Resources>
-        <ResourceDictionary>
-            <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="pack://application:,,,/Microsoft.PythonTools;component/Wpf/Controls.xaml" />
-
-                <ResourceDictionary>
-                </ResourceDictionary>
-            </ResourceDictionary.MergedDictionaries>
-        </ResourceDictionary>
+        <ResourceDictionary Source="pack://application:,,,/Microsoft.PythonTools;component/Wpf/Controls.xaml" />
     </vstools:DialogWindowVersioningWorkaround.Resources>
     
     <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="12">
         <Grid.RowDefinitions>
+            <RowDefinition Height="auto" />
             <RowDefinition Height="auto" />
             <RowDefinition Height="auto" />
         </Grid.RowDefinitions>
@@ -44,14 +38,20 @@
                      Name="_textBox"/>
         </wpf:LabelledControl>
         
-        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Bottom">
+        <Label Grid.Row="1">
+            To install a specific version, type "SomePackage==1.0.4".
+        </Label>
+        
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Bottom">
             <Button IsDefault="True" Click="OkClick" IsEnabled="{Binding IsValid}"
                     MinWidth="86" MinHeight="24" Margin="0 0 9 0"
-                    AutomationProperties.AutomationId="Ok">
+                    AutomationProperties.AutomationId="Ok"
+                    VerticalAlignment="Center">
                 _OK
             </Button>
             <Button IsCancel="True" Click="CancelClick" MinWidth="86" MinHeight="24"
-                    AutomationProperties.AutomationId="Cancel">
+                    AutomationProperties.AutomationId="Cancel"
+                    VerticalAlignment="Center">
                 _Cancel
             </Button>
         </StackPanel>

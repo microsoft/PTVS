@@ -806,7 +806,7 @@ namespace Microsoft.PythonTools.Project {
             var baseInterp = data.BaseInterpreter.Interpreter;
 
             Task task;
-            if (data.WillCreateVirtualEnv) {
+            if (doCreate) {
                 task = VirtualEnv.Create(baseInterp,
                     Site,
                     path,
@@ -825,6 +825,9 @@ namespace Microsoft.PythonTools.Project {
                 var options = VirtualEnv.FindInterpreterOptions(path, service, baseInterp);
                 if (options == null) {
                     throw new InvalidOperationException("Unable to add virtual environment");
+                }
+                if (doCreate) {
+                    options.Description = string.Format("{0} ({1})", options.Description, baseInterp.Description);
                 }
                 return options;
             }, TaskContinuationOptions.OnlyOnRanToCompletion).ContinueWith(t => {
@@ -872,7 +875,7 @@ namespace Microsoft.PythonTools.Project {
                 if (removeFromStorage) {
                     Task.Factory.StartNew((Action)(() => Directory.Delete(path, recursive: true))).ContinueWith(t => {
                         MessageBox.Show(
-                            string.Format(SR.GetString(SR.InterpreterDeleteError), path),
+                            SR.GetString(SR.InterpreterDeleteError, path),
                             SR.GetString(SR.PythonToolsForVisualStudio)
                         );
                     }, CancellationToken.None, TaskContinuationOptions.OnlyOnFaulted, TaskScheduler.FromCurrentSynchronizationContext());

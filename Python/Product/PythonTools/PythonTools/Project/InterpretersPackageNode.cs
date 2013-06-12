@@ -13,6 +13,8 @@
  * ***************************************************************************/
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -23,6 +25,7 @@ using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools.Project;
 using OleConstants = Microsoft.VisualStudio.OLE.Interop.Constants;
+using VsCommands = Microsoft.VisualStudio.VSConstants.VSStd97CmdID;
 using VsMenus = Microsoft.VisualStudioTools.Project.VsMenus;
 
 namespace Microsoft.PythonTools.Project {
@@ -34,74 +37,30 @@ namespace Microsoft.PythonTools.Project {
         private static readonly Regex PipFreezeRegex = new Regex(
             "^(?<name>[^=]+)==(?<version>.+)$",
             RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
-        
+
+        private static readonly IEnumerable<string> CannotUninstall = new[] { "pip", "distribute", "virtualenv" };
         protected PythonProjectNode _project;
-        private readonly bool _canDelete;
+        private readonly bool _canUninstall;
         private readonly string _caption;
         private readonly string _packageName;
 
         public InterpretersPackageNode(PythonProjectNode project, string name)
             : base(project, new VirtualProjectElement(project)) {
+            ExcludeNodeFromScc = true;
             _packageName = name;
             var match = PipFreezeRegex.Match(name);
             if (match.Success) {
-                _caption = string.Format("{0} ({1})", match.Groups["name"], match.Groups["version"]);
-                _canDelete = true;
+                var namePart = match.Groups["name"].Value;
+                _caption = string.Format("{0} ({1})", namePart, match.Groups["version"]);
+                _canUninstall = !CannotUninstall.Contains(namePart);
             } else {
                 _caption = name;
-                _canDelete = false;
+                _canUninstall = false;
             }
         }
 
         public override string Url {
             get { return _packageName; }
-        }
-
-        public override Guid ItemTypeGuid {
-            get { return VSConstants.GUID_ItemType_VirtualFolder; }
-        }
-
-        public override int MenuCommandId {
-            get { return VsMenus.IDM_VS_CTXT_ITEMNODE; }
-        }
-
-        internal override int ExecCommandOnNode(Guid cmdGroup, uint cmd, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut) {
-            if (cmdGroup == GuidList.guidPythonToolsCmdSet) {
-                switch (cmd) {
-                    case PythonConstants.UninstallPythonPackage:
-                        if (_canDelete) {
-                            string message = string.Format("'{0}' will be uninstalled.", Caption);
-                            int res = VsShellUtilities.ShowMessageBox(
-                                ProjectMgr.Site,
-                                string.Empty,
-                                message,
-                                OLEMSGICON.OLEMSGICON_WARNING,
-                                OLEMSGBUTTON.OLEMSGBUTTON_OKCANCEL,
-                                OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST);
-                            if (res == 1) {
-                                Remove(false);
-                            }
-                            return VSConstants.S_OK;
-                        }
-                        break;
-                }
-            }
-            return base.ExecCommandOnNode(cmdGroup, cmd, nCmdexecopt, pvaIn, pvaOut);
-        }
-
-        public new PythonProjectNode ProjectMgr {
-            get {
-                return (PythonProjectNode)base.ProjectMgr;
-            }
-        }
-
-        /// <summary>
-        /// Package nodes are removed by "uninstalling" not deleting.  This is
-        /// mainly because we don't get all of the delete notifications from
-        /// solution navigator, so we can't show our improved prompt.
-        /// </summary>
-        internal override bool CanDeleteItem(__VSDELETEITEMOPERATION deleteOperation) {
-            return false;
         }
 
         public static System.Threading.Tasks.Task InstallNewPackage(InterpretersNode parent) {
@@ -120,18 +79,15 @@ namespace Microsoft.PythonTools.Project {
 
             var redirector = OutputWindowRedirector.GetGeneral(parent.ProjectMgr.Site);
             var statusBar = (IVsStatusbar)parent.ProjectMgr.Site.GetService(typeof(SVsStatusbar));
-            statusBar.SetText("Installing " + name + ". See Output Window for more details.");
+            statusBar.SetText(SR.GetString(SR.PackageInstallingSeeOutputWindow, name));
 
             return Pip.Install(parent._factory, name, parent.ProjectMgr.Site, redirector).ContinueWith(t => {
                 if (t.IsCompleted) {
                     bool success = t.Result;
 
-                    var msg = string.Format(success ?
-                        "Successfully installed {0}" :
-                        "Failed to install {0}",
-                        name);
-                    statusBar.SetText(msg);
-                    redirector.WriteLine(msg);
+                    statusBar.SetText(SR.GetString(
+                        success ? SR.PackageInstallSucceeded : SR.PackageInstallFailed,
+                        name));
                 }
                 parent.PackageChangeDone();
             }, TaskScheduler.FromCurrentSynchronizationContext());
@@ -144,25 +100,56 @@ namespace Microsoft.PythonTools.Project {
 
             var redirector = OutputWindowRedirector.GetGeneral(parent.ProjectMgr.Site);
             var statusBar = (IVsStatusbar)parent.ProjectMgr.Site.GetService(typeof(SVsStatusbar));
-            statusBar.SetText("Uninstalling " + name + ". See Output Window for more details.");
+            statusBar.SetText(SR.GetString(SR.PackageUninstallingSeeOutputWindow, name));
 
             return Pip.Uninstall(parent._factory, name, redirector).ContinueWith(t => {
                 if (t.IsCompleted) {
                     bool success = t.Result;
 
-                    var msg = string.Format(success ?
-                        "Successfully uninstalled {0}" :
-                        "Failed to uninstall {0}",
-                        name);
-                    statusBar.SetText(msg);
-                    redirector.WriteLine(msg);
+                    statusBar.SetText(SR.GetString(
+                        success ? SR.PackageUninstallSucceeded : SR.PackageUninstallFailed,
+                        name));
                 }
                 parent.PackageChangeDone();
             }, TaskScheduler.FromCurrentSynchronizationContext());
         }
 
+        public override Guid ItemTypeGuid {
+            get { return PythonConstants.InterpretersPackageItemTypeGuid; }
+        }
+
+        public override int MenuCommandId {
+            get { return VsMenus.IDM_VS_CTXT_ITEMNODE; }
+        }
+
+        public new PythonProjectNode ProjectMgr {
+            get {
+                return (PythonProjectNode)base.ProjectMgr;
+            }
+        }
+
+        internal override bool CanDeleteItem(__VSDELETEITEMOPERATION deleteOperation) {
+            return _canUninstall && deleteOperation == __VSDELETEITEMOPERATION.DELITEMOP_RemoveFromProject;
+        }
+
         public override void Remove(bool removeFromStorage) {
-            var task = UninstallPackage(Parent, Caption);
+            if (_canUninstall && !Utilities.IsInAutomationFunction(ProjectMgr.Site)) {
+                string message = SR.GetString(SR.UninstallPackage,
+                    Caption,
+                    Parent._factory.Description,
+                    Parent._factory.Configuration.PrefixPath);
+                int res = VsShellUtilities.ShowMessageBox(
+                    ProjectMgr.Site,
+                    string.Empty,
+                    message,
+                    OLEMSGICON.OLEMSGICON_WARNING,
+                    OLEMSGBUTTON.OLEMSGBUTTON_OKCANCEL,
+                    OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST);
+                if (res != 1) {
+                    return;
+                }
+            }
+            var task = UninstallPackage(Parent, Url);
         }
 
         private void RemoveSelf() {
@@ -213,18 +200,18 @@ namespace Microsoft.PythonTools.Project {
             return (int)OleConstants.OLECMDERR_E_NOTSUPPORTED;
         }
 
-        /// <summary>
-        /// Disable Copy/Cut/Paste commands on Search Path node.
-        /// </summary>
         internal override int QueryStatusOnNode(Guid cmdGroup, uint cmd, IntPtr pCmdText, ref QueryStatusResult result) {
-            if (cmdGroup == GuidList.guidPythonToolsCmdSet) {
-                switch (cmd) {
-                    case PythonConstants.UninstallPythonPackage:
-                        result |= QueryStatusResult.SUPPORTED;
-                        if (_canDelete) {
-                            result |= QueryStatusResult.ENABLED;
+            if (cmdGroup == VsMenus.guidStandardCommandSet97) {
+                switch ((VsCommands)cmd) {
+                    case VsCommands.Delete:
+                        if (!_canUninstall) {
+                            // If we can't uninstall the package, still show the
+                            // item but disable it. Otherwise, let the default
+                            // query handle it, which will display "Remove".
+                            result |= QueryStatusResult.SUPPORTED;
+                            return VSConstants.S_OK;
                         }
-                        return VSConstants.S_OK;
+                        break;
                 }
             }
             return base.QueryStatusOnNode(cmdGroup, cmd, pCmdText, ref result);

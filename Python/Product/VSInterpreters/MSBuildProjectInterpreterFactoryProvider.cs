@@ -98,11 +98,6 @@ namespace Microsoft.PythonTools.Interpreter {
                     continue;
                 }
                 dir = CommonUtils.GetAbsoluteDirectoryPath(projectHome, dir);
-                //if (!Directory.Exists(dir)) {
-                //    errors.AppendLine(string.Format("Interpreter does not exist: {0}", dir));
-                //    anyError = true;
-                //    continue;
-                //}
 
                 var value = item.GetMetadataValue(IdKey);
                 if (string.IsNullOrEmpty(value) || !Guid.TryParse(value, out id)) {
@@ -140,11 +135,6 @@ namespace Microsoft.PythonTools.Interpreter {
                     continue;
                 }
                 path = CommonUtils.GetAbsoluteFilePath(dir, path);
-                //if (!File.Exists(path)) {
-                //    errors.AppendLine(string.Format("Cannot find interpreter at {0}", path));
-                //    anyError = true;
-                //    continue;
-                //}
 
                 var winPath = item.GetMetadataValue(WindowsPathKey);
                 if (string.IsNullOrEmpty(winPath) || winPath.IndexOfAny(Path.GetInvalidPathChars()) >= 0) {
@@ -153,9 +143,6 @@ namespace Microsoft.PythonTools.Interpreter {
                     continue;
                 }
                 winPath = CommonUtils.GetAbsoluteFilePath(dir, winPath);
-                //if (!File.Exists(winPath)) {
-                //    winPath = path;
-                //}
 
                 var libPath = item.GetMetadataValue(LibraryPathKey);
                 if (string.IsNullOrEmpty(libPath)) {
@@ -258,9 +245,6 @@ namespace Microsoft.PythonTools.Interpreter {
                 var fact = _service.FindInterpreter(id, ver);
                 if (fact == null) {
                     fact = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(ver, string.Format("Unknown Python {0}", ver));
-                    //errors.AppendLine(string.Format("Interpreter reference cannot be found: {0} {1}", id, ver));
-                    //anyError = true;
-                    //continue;
                 }
 
                 var existing = FindInterpreter(id, ver);
@@ -622,6 +606,7 @@ namespace Microsoft.PythonTools.Interpreter {
                     } else if (value == null || !_factories.ContainsKey(value)) {
                         // Choose a factory and make it our default.
                         _active = _factories.Keys
+                            .Where(f => !string.IsNullOrEmpty(f.Configuration.InterpreterPath))
                             .OrderBy(f => f.Description)
                             .ThenBy(f => f.Configuration.Version)
                             .LastOrDefault();

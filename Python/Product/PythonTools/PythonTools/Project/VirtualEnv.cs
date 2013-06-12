@@ -21,25 +21,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public static Task Create(IPythonInterpreterFactory factory, string path, Redirector output = null) {
-            path = CommonUtils.TrimEndSeparator(path);
-            var name = Path.GetFileName(path);
-            var dir = Path.GetDirectoryName(path);
-
-            return Task.Factory.StartNew((Action)(() => {
-                using (var proc = ProcessOutput.Run(factory.Configuration.InterpreterPath,
-                new[] { "-m", "virtualenv", name },
-                dir,
-                UnbufferedEnv,
-                false,
-                output)) {
-                    proc.Wait();
-
-                    if (proc.ExitCode != 0 || !Directory.Exists(path)) {
-                        throw new InvalidOperationException(string.Format(
-                            "Failed to create virtual environment at path \"{0}\"", path));
-                    }
-                }
-            }));
+            return Create(factory, null, path, output);
         }
 
         public static Task Create(
@@ -80,9 +62,7 @@ namespace Microsoft.PythonTools.Project {
                     }
                 }));
             } else {
-                var tcs = new TaskCompletionSource<object>();
-                tcs.SetResult(null);
-                task = tcs.Task;
+                task = Task.FromResult<object>(null);
             }
 
             return task.ContinueWith(t1 => {
@@ -91,19 +71,31 @@ namespace Microsoft.PythonTools.Project {
                 var dir = Path.GetDirectoryName(path);
                 int? exitCode = null;
 
+                if (output != null) {
+                    output.WriteLine(SR.GetString(SR.VirtualEnvCreating, path));
+                    output.Show();
+                }
                 using (var proc = ProcessOutput.Run(factory.Configuration.InterpreterPath,
-                    new[] { "-m", "virtualenv", name },
+                    new[] { "-m", "virtualenv", "--distribute", name },
                     dir,
                     new Dictionary<string, string> { { "PYTHONUNBUFFERED", "1" } },
                     false,
                     output)) {
                     proc.Wait();
                     exitCode = proc.ExitCode;
+
+                    if (output != null) {
+                        if (exitCode == 0) {
+                            output.WriteLine(SR.GetString(SR.VirtualEnvCreationSucceeded, path));
+                        } else {
+                            output.WriteLine(SR.GetString(SR.VirtualEnvCreationFailedExitCode, path, exitCode ?? -1));
+                        }
+                        output.Show();
+                    }
                 }
 
                 if (exitCode != 0 || !Directory.Exists(path)) {
-                    throw new InvalidOperationException(string.Format(
-                        "Failed to create virtual environment at path \"{0}\"", path));
+                    throw new InvalidOperationException(SR.GetString(SR.VirtualEnvCreationFailed, path));
                 }
             }, TaskContinuationOptions.OnlyOnRanToCompletion);
         }

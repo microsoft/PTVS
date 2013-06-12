@@ -151,6 +151,14 @@ namespace Microsoft.PythonTools.Interpreters {
                 return;
             }
 
+            // Create and mark the DB directory as hidden
+            try {
+                var dbDir = Directory.CreateDirectory(BaseDatabasePath);
+                dbDir.Attributes |= FileAttributes.Hidden;
+            } catch (IOException) {
+            } catch (UnauthorizedAccessException) {
+            }
+
             NotifyGeneratingDatabase(true);
             var req = new PythonTypeDatabaseCreationRequest {
                 Factory = this,
@@ -164,11 +172,19 @@ namespace Microsoft.PythonTools.Interpreters {
             PythonTypeDatabase.Generate(req);
         }
 
-        public override string DatabasePath {
+        private string BaseDatabasePath {
             get {
                 return Path.Combine(
                     Configuration.PrefixPath,
-                    ".ptvs",
+                    ".ptvs"
+                );
+            }
+        }
+
+        public override string DatabasePath {
+            get {
+                return Path.Combine(
+                    BaseDatabasePath,
                     Id.ToString(),
                     Configuration.Version.ToString()
                 );

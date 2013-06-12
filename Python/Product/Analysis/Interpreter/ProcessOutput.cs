@@ -42,6 +42,13 @@ namespace Microsoft.PythonTools {
         /// <param name="line">The line of text, not including the newline. This
         /// is never null.</param>
         public abstract void WriteErrorLine(string line);
+
+        /// <summary>
+        /// Called when output is written that should be brought to the user's
+        /// immediate attention. The default implementation does nothing.
+        /// </summary>
+        public virtual void Show() {
+        }
     }
 
     /// <summary>
@@ -101,10 +108,15 @@ namespace Microsoft.PythonTools {
                                         string workingDirectory,
                                         IEnumerable<KeyValuePair<string, string>> env,
                                         bool visible,
-                                        Redirector redirector) {
+                                        Redirector redirector,
+                                        bool quoteArgs = true) {
             var psi = new ProcessStartInfo(filename);
-            psi.Arguments = string.Join(" ", 
-                arguments.Where(a => a != null).Select(QuoteSingleArgument));
+            if (quoteArgs) {
+                psi.Arguments = string.Join(" ",
+                    arguments.Where(a => a != null).Select(QuoteSingleArgument));
+            } else {
+                psi.Arguments = string.Join(" ", arguments.Where(a => a != null));
+            }
             psi.WorkingDirectory = workingDirectory;
             psi.CreateNoWindow = !visible;
             psi.UseShellExecute = false;

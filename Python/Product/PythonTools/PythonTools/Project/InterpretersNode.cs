@@ -43,8 +43,7 @@ namespace Microsoft.PythonTools.Project {
         private readonly FileSystemWatcher _fileWatcher;
         private readonly Timer _timer;
         private readonly TaskScheduler _scheduler;
-        private bool _checkedItems, _disposed;
-        internal bool _needsBolding;
+        private bool _checkedItems, _checkingItems, _disposed;
 
         public InterpretersNode(PythonProjectNode project,
                                 ProjectItem item,
@@ -52,15 +51,13 @@ namespace Microsoft.PythonTools.Project {
                                 bool isInterpreterReference,
                                 bool canDelete)
             : base(project, ChooseElement(project, item)) {
+            ExcludeNodeFromScc = true;
+
             _interpreters = project.Interpreters;
             _interpreters.ActiveInterpreterChanged += Interpreters_ActiveInterpreterChanged;
             _factory = factory;
             _isReference = isInterpreterReference;
             _canDelete = canDelete;
-
-            if (_factory == _interpreters.ActiveInterpreter) {
-                _needsBolding = true;
-            }
 
             _scheduler = TaskScheduler.FromCurrentSynchronizationContext();
 
@@ -104,6 +101,9 @@ namespace Microsoft.PythonTools.Project {
 
         private void CheckPackages(object arg) {
             bool prevChecked = _checkedItems;
+            // Use _checkingItems to prevent the expanded state from
+            // disappearing too quickly.
+            _checkingItems = true;
             _checkedItems = true;
             if (!Directory.Exists(_factory.Configuration.LibraryPath)) {
                 return;
@@ -134,6 +134,7 @@ namespace Microsoft.PythonTools.Project {
                     AddChild(new InterpretersPackageNode(ProjectMgr, line));
                     anyChanges = true;
                 }
+                _checkingItems = false;
 
                 bool wasExpanded = prevChecked && GetIsExpanded();
                 ProjectMgr.OnInvalidateItems(this);
@@ -154,7 +155,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public override Guid ItemTypeGuid {
-            get { return VSConstants.GUID_ItemType_VirtualFolder; }
+            get { return PythonConstants.InterpreterItemTypeGuid; }
         }
 
         public override int MenuCommandId {
@@ -162,51 +163,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         internal override int ExecCommandOnNode(Guid cmdGroup, uint cmd, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut) {
-            if (cmdGroup == VsMenus.guidStandardCommandSet97) {
-                bool isDelete = false;
-                switch ((VsCommands)cmd) {
-                    case VsCommands.Delete:
-                        isDelete = _canDelete;
-                        goto case VsCommands.Remove;
-                    case VsCommands.Remove:
-                        // If _canDelete, the user clicked "Delete".
-                        // If not, the user clicked "Remove".
-                        string message = string.Format(
-                            SR.GetString(isDelete ?
-                                SR.InterpreterDeleteConfirmation :
-                                SR.InterpreterRemoveConfirmation),
-                            Caption);
-                        int res = VsShellUtilities.ShowMessageBox(
-                            ProjectMgr.Site,
-                            string.Empty,
-                            message,
-                            OLEMSGICON.OLEMSGICON_WARNING,
-                            OLEMSGBUTTON.OLEMSGBUTTON_OKCANCEL,
-                            OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST);
-                        if (res == 1) {
-                            Remove(isDelete);
-                        }
-                        return VSConstants.S_OK;
-                }
-            } else if (cmdGroup == VsMenus.guidStandardCommandSet2K) {
-                switch ((VsCommands2K)cmd) {
-                    case VsCommands2K.EXCLUDEFROMPROJECT:
-                        string message = string.Format(
-                            SR.GetString(SR.InterpreterRemoveConfirmation),
-                            Caption);
-                        int res = VsShellUtilities.ShowMessageBox(
-                            ProjectMgr.Site,
-                            string.Empty,
-                            message,
-                            OLEMSGICON.OLEMSGICON_WARNING,
-                            OLEMSGBUTTON.OLEMSGBUTTON_OKCANCEL,
-                            OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST);
-                        if (res == 1) {
-                            Remove(false);
-                        }
-                        return VSConstants.S_OK;
-                }
-            } else if (cmdGroup == GuidList.guidPythonToolsCmdSet) {
+            if (cmdGroup == GuidList.guidPythonToolsCmdSet) {
                 switch (cmd) {
                     case PythonConstants.ActivateInterpreter:
                         //Make sure we can edit the project file
@@ -226,7 +183,7 @@ namespace Microsoft.PythonTools.Project {
 
         internal void BeginPackageChange() {
             lock (this) {
-                if (!_disposed) {
+                if (!_disposed && _fileWatcher != null) {
                     _fileWatcher.EnableRaisingEvents = false;
                 }
             }
@@ -234,7 +191,7 @@ namespace Microsoft.PythonTools.Project {
 
         internal void PackageChangeDone() {
             lock (this) {
-                if (!_disposed) {
+                if (!_disposed && _fileWatcher != null) {
                     _fileWatcher.EnableRaisingEvents = true;
                     ThreadPool.QueueUserWorkItem(CheckPackages);
                 }
@@ -260,6 +217,29 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public override void Remove(bool removeFromStorage) {
+            // If _canDelete, a prompt has already been shown by VS.
+            Remove(removeFromStorage, !_canDelete);
+        }
+
+        private void Remove(bool removeFromStorage, bool showPrompt) {
+            if (showPrompt && !Utilities.IsInAutomationFunction(ProjectMgr.Site)) {
+                string message = SR.GetString(removeFromStorage ?
+                        SR.InterpreterDeleteConfirmation :
+                        SR.InterpreterRemoveConfirmation,
+                    Caption,
+                    _factory.Configuration.PrefixPath);
+                int res = VsShellUtilities.ShowMessageBox(
+                    ProjectMgr.Site,
+                    string.Empty,
+                    message,
+                    OLEMSGICON.OLEMSGICON_WARNING,
+                    OLEMSGBUTTON.OLEMSGBUTTON_OKCANCEL,
+                    OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST);
+                if (res != 1) {
+                    return;
+                }
+            }
+
             //Make sure we can edit the project file
             if (!ProjectMgr.QueryEditProjectFile(false)) {
                 throw Marshal.GetExceptionForHR(VSConstants.OLE_E_PROMPTSAVECANCELLED);
@@ -277,6 +257,9 @@ namespace Microsoft.PythonTools.Project {
         /// </summary>
         public override string Caption {
             get {
+                // Apply a very heavy hammer to ensure we bold items correctly
+                ProjectMgr.BoldItem(this, _interpreters.ActiveInterpreter == _factory);
+
                 return _factory.Description;
             }
         }
@@ -325,21 +308,8 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-        internal bool IsActive { get; private set; }
-
         void Interpreters_ActiveInterpreterChanged(object sender, EventArgs e) {
-            _needsBolding = false;
-            if (IsActive) {
-                if (_interpreters.ActiveInterpreter != _factory) {
-                    IsActive = false;
-                    ProjectMgr.BoldItem(this, false);
-                }
-            } else {
-                if (_interpreters.ActiveInterpreter == _factory) {
-                    IsActive = true;
-                    _needsBolding = !ProjectMgr.BoldItem(this, true);
-                }
-            }
+            ProjectMgr.BoldItem(this, _interpreters.ActiveInterpreter == _factory);
         }
 
         /// <summary>
@@ -350,40 +320,14 @@ namespace Microsoft.PythonTools.Project {
         }
 
         /// <summary>
-        /// Interpreter node can be excluded.
-        /// </summary>
-        internal override int ExcludeFromProject() {
-            Remove(false);
-            return VSConstants.S_OK;
-        }
-
-        /// <summary>
         /// Disable Copy/Cut/Paste commands on interpreter node.
         /// </summary>
         internal override int QueryStatusOnNode(Guid cmdGroup, uint cmd, IntPtr pCmdText, ref QueryStatusResult result) {
-            if (cmdGroup == VsMenus.guidStandardCommandSet97) {
-                switch ((VsCommands)cmd) {
-                    case VsCommands.Delete:
-                        if (_canDelete) {
-                            result |= QueryStatusResult.SUPPORTED | QueryStatusResult.ENABLED;
-                            return VSConstants.S_OK;
-                        }
-                        break;
-                }
-            } else if (cmdGroup == VsMenus.guidStandardCommandSet2K) {
-                switch ((VsCommands2K)cmd) {
-                    case VsCommands2K.EXCLUDEFROMPROJECT:
-                        if (_canDelete) {
-                            result |= QueryStatusResult.SUPPORTED | QueryStatusResult.ENABLED;
-                            return VSConstants.S_OK;
-                        }
-                        break;
-                }
-            } else if (cmdGroup == GuidList.guidPythonToolsCmdSet) {
+            if (cmdGroup == GuidList.guidPythonToolsCmdSet) {
                 switch (cmd) {
                     case PythonConstants.ActivateInterpreter:
                         result |= QueryStatusResult.SUPPORTED;
-                        if (!IsActive) {
+                        if (_interpreters.ActiveInterpreter != _factory) {
                             result |= QueryStatusResult.ENABLED;
                         }
                         return VSConstants.S_OK;
@@ -434,17 +378,16 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public override object GetProperty(int propId) {
-            if (propId == (int)__VSHPROPID.VSHPROPID_IconIndex || propId == (int)__VSHPROPID.VSHPROPID_OpenFolderIconIndex) {
-                if (_needsBolding) {
-                    _needsBolding = !ProjectMgr.BoldItem(this, true);
-                }
-            } else if (propId == (int)__VSHPROPID.VSHPROPID_Expandable) {
+            if (propId == (int)__VSHPROPID.VSHPROPID_Expandable) {
                 if (!_checkedItems) {
                     // We haven't checked if we have files on disk yet, report
                     // that we can expand until we do.
                     // We do this lazily so we don't need to spawn a process for
                     // each interpreter on project load.
                     ThreadPool.QueueUserWorkItem(CheckPackages);
+                    return true;
+                } else if (_checkingItems) {
+                    // Still checking, so keep reporting true.
                     return true;
                 }
             }

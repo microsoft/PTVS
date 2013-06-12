@@ -138,15 +138,35 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
+        private static bool IsValidVirtualEnvPath(string path) {
+            if (string.IsNullOrEmpty(path) ||
+                path.IndexOfAny(Path.GetInvalidPathChars()) >= 0) {
+                return false;
+            }
+
+            path = CommonUtils.TrimEndSeparator(path);
+            if (File.Exists(path)) {
+                return false;
+            }
+
+            var name = Path.GetFileName(path).Trim();
+
+            if (string.IsNullOrEmpty(name) ||
+                name.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0 ||
+                name.IndexOf('.') >= 0) {
+                return false;
+            }
+
+            return true;
+        }
+
         private void RefreshCanCreateVirtualEnv(string path) {
             if (!Dispatcher.CheckAccess()) {
                 Dispatcher.BeginInvoke((Action)(() => RefreshCanCreateVirtualEnv(path)));
                 return;
             }
 
-            if (string.IsNullOrEmpty(path) ||
-                path.IndexOfAny(Path.GetInvalidPathChars()) >= 0 ||
-                File.Exists(path)) {
+            if (!IsValidVirtualEnvPath(path)) {
                 WillCreateVirtualEnv = false;
                 WillAddVirtualEnv = false;
                 CannotCreateVirtualEnv = true;

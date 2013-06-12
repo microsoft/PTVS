@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Windows.Forms;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Options;
@@ -21,43 +22,60 @@ using Microsoft.VisualStudio.ComponentModelHost;
 
 namespace Microsoft.PythonTools.Project {
     public partial class PythonGeneralPropertyPageControl : UserControl {
-        private IInterpreterOptionsService _service;
+        static readonly IPythonInterpreterFactory Separator =
+            new InterpreterPlaceholder(Guid.Empty, " -- Other installed interpreters --");
+        static readonly IPythonInterpreterFactory GlobalDefault =
+            new InterpreterPlaceholder(Guid.Empty, "(Use global default)");
+
+        private readonly IInterpreterOptionsService _service;
         private readonly PythonGeneralPropertyPage _propPage;
 
-        public PythonGeneralPropertyPageControl() {
+        internal PythonGeneralPropertyPageControl(PythonGeneralPropertyPage newPythonGeneralPropertyPage) {
             InitializeComponent();
 
+            _propPage = newPythonGeneralPropertyPage;
             _service = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
-            InitializeInterpreters();
-            _service.InterpretersChanged += InterpreterOptionsPage_InterpretersChanged;
         }
 
         private void InitializeInterpreters() {
-            _defaultInterpreter.Items.Add(new InterpreterPlaceholder(Guid.Empty, "Use global default"));
-            foreach (var interpreter in _service.Interpreters) {
-                _defaultInterpreter.Items.Add(interpreter);
+            _defaultInterpreter.BeginUpdate();
+            
+            try {
+                _defaultInterpreter.Items.Clear();
+                var provider = _propPage.PythonProject != null ? _propPage.PythonProject.Interpreters : null;
+                var available = provider != null ? provider.GetInterpreterFactories().ToArray() : null;
+                if (available != null && available.Length > 0) {
+                    var others = _service.Interpreters.ToList();
+
+                    foreach (var interpreter in available) {
+                        _defaultInterpreter.Items.Add(interpreter);
+                        others.Remove(interpreter);
+                    }
+
+                    if (others.Count > 0) {
+                        _defaultInterpreter.Items.Add(Separator);
+                        foreach (var interpreter in others) {
+                            _defaultInterpreter.Items.Add(interpreter);
+                        }
+                    }
+                } else {
+                    _defaultInterpreter.Items.Add(GlobalDefault);
+
+                    foreach (var interpreter in _service.Interpreters) {
+                        _defaultInterpreter.Items.Add(interpreter);
+                    }
+                }
+            } finally {
+                _defaultInterpreter.EndUpdate();
             }
         }
 
-        private void InterpreterOptionsPage_InterpretersChanged(object sender, EventArgs e) {
+        internal void OnInterpretersChanged() {
             _defaultInterpreter.SelectedIndexChanged -= Changed;
 
-            _defaultInterpreter.Items.Clear();
             InitializeInterpreters();
 
-            SetDefaultInterpreter(_propPage.PythonProject.Interpreters.ActiveInterpreter);
-
             _defaultInterpreter.SelectedIndexChanged += Changed;
-        }
-
-        protected override void OnHandleDestroyed(EventArgs e) {
-            base.OnHandleDestroyed(e);
-            _service.InterpretersChanged -= InterpreterOptionsPage_InterpretersChanged;
-        }
-
-        internal PythonGeneralPropertyPageControl(PythonGeneralPropertyPage newPythonGeneralPropertyPage)
-            : this() {
-            _propPage = newPythonGeneralPropertyPage;
         }
 
         public string StartupFile {
@@ -77,7 +95,7 @@ namespace Microsoft.PythonTools.Project {
 
         public IPythonInterpreterFactory DefaultInterpreter {
             get {
-                if (_defaultInterpreter.SelectedIndex == 0) {
+                if (_defaultInterpreter.SelectedItem == GlobalDefault) {
                     return null;
                 }
                 return _defaultInterpreter.SelectedItem as IPythonInterpreterFactory;
@@ -97,6 +115,9 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private void Changed(object sender, EventArgs e) {
+            if (_defaultInterpreter.SelectedItem == Separator) {
+                _defaultInterpreter.SelectedItem = _propPage.PythonProject.Interpreters.ActiveInterpreter;
+            }
             _propPage.IsDirty = true;
         }
 

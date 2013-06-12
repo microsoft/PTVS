@@ -31,14 +31,15 @@ namespace Microsoft.PythonTools.Project {
             }
 
             if (!string.IsNullOrEmpty(pipPath)) {
-                return ProcessOutput.Run(pipPath, cmd, null, UnbufferedEnv, false, output);
+                return ProcessOutput.Run(pipPath, cmd, null, UnbufferedEnv, false, output, quoteArgs: false);
             } else {
                 return ProcessOutput.Run(factory.Configuration.InterpreterPath,
                     new[] { "-m", "pip" }.Concat(cmd),
-                    null,
+                    factory.Configuration.PrefixPath,
                     UnbufferedEnv,
                     false,
-                    output);
+                    output,
+                    quoteArgs: false);
             }
         }
 
@@ -48,16 +49,31 @@ namespace Microsoft.PythonTools.Project {
 
         public static Task<HashSet<string>> Freeze(IPythonInterpreterFactory factory) {
             return Task.Factory.StartNew<HashSet<string>>((Func<HashSet<string>>)(() => {
-                using (var proc = Run(factory, "freeze")) {
+                var lines = new HashSet<string>();
+                using (var proc = Run(factory, "--version")) {
                     proc.Wait();
                     if (proc.ExitCode == 0) {
-                        return new HashSet<string>(proc.StandardOutputLines);
+                        lines.UnionWith(proc.StandardOutputLines
+                            .Select(line => Regex.Match(line, "pip (?<version>[0-9.]+)"))
+                            .Where(match => match.Success && match.Groups["version"].Success)
+                            .Select(match => "pip==" + match.Groups["version"].Value));
                     }
                 }
 
+                using (var proc = Run(factory, "freeze")) {
+                    proc.Wait();
+                    if (proc.ExitCode == 0) {
+                        lines.UnionWith(proc.StandardOutputLines);
+                        return lines;
+                    }
+                }
+
+                // Pip failed, so clear out any entries that may have appeared
+                lines.Clear();
+
                 try {
                     var packagesPath = Path.Combine(factory.Configuration.LibraryPath, "site-packages");
-                    return new HashSet<string>(Directory.EnumerateDirectories(packagesPath)
+                    lines.UnionWith(Directory.EnumerateDirectories(packagesPath)
                         .Select(name => Path.GetFileName(name))
                         .Select(name => PackageNameRegex.Match(name))
                         .Where(m => m.Success)
@@ -66,7 +82,7 @@ namespace Microsoft.PythonTools.Project {
                 } catch (IOException) {
                 }
 
-                return new HashSet<string>();
+                return lines;
             }));
         }
 
@@ -92,8 +108,21 @@ namespace Microsoft.PythonTools.Project {
                 task = tcs.Task;
             }
             return task.ContinueWith(t => {
+                if (output != null) {
+                    output.WriteLine(SR.GetString(SR.PackageInstalling, package));
+                    output.Show();
+                }
                 using (var proc = Run(factory, output, "install", package)) {
                     proc.Wait();
+
+                    if (output != null) {
+                        if (proc.ExitCode == 0) {
+                            output.WriteLine(SR.GetString(SR.PackageInstallSucceeded, package));
+                        } else {
+                            output.WriteLine(SR.GetString(SR.PackageInstallFailedExitCode, package, proc.ExitCode ?? -1));
+                        }
+                        output.Show();
+                    }
                     return proc.ExitCode == 0;
                 }
             }, TaskContinuationOptions.OnlyOnRanToCompletion);
@@ -101,8 +130,21 @@ namespace Microsoft.PythonTools.Project {
 
         public static Task<bool> Uninstall(IPythonInterpreterFactory factory, string package, Redirector output = null) {
             return Task.Factory.StartNew((Func<bool>)(() => {
+                if (output != null) {
+                    output.WriteLine(SR.GetString(SR.PackageUninstalling, package));
+                    output.Show();
+                }
                 using (var proc = Run(factory, output, "uninstall", "-y", package)) {
                     proc.Wait();
+
+                    if (output != null) {
+                        if (proc.ExitCode == 0) {
+                            output.WriteLine(SR.GetString(SR.PackageUninstallSucceeded, package));
+                        } else {
+                            output.WriteLine(SR.GetString(SR.PackageUninstallFailedExitCode, package, proc.ExitCode ?? -1));
+                        }
+                        output.Show();
+                    }
                     return proc.ExitCode == 0;
                 }
             }));
@@ -111,8 +153,12 @@ namespace Microsoft.PythonTools.Project {
         public static Task InstallPip(IPythonInterpreterFactory factory, Redirector output = null) {
             var pipDownloaderPath = Path.Combine(PythonToolsPackage.GetPythonToolsInstallPath(), "pip_downloader.py");
 
-            // TODO: Handle elevation
             return Task.Factory.StartNew((Action)(() => {
+                if (output != null) {
+                    output.WriteLine(SR.GetString(SR.PipInstalling));
+                    output.Show();
+                }
+                // TODO: Handle elevation
                 using (var proc = ProcessOutput.Run(factory.Configuration.InterpreterPath,
                     new [] { pipDownloaderPath },
                     factory.Configuration.PrefixPath,
@@ -121,6 +167,14 @@ namespace Microsoft.PythonTools.Project {
                     output)
                 ) {
                     proc.Wait();
+                    if (output != null) {
+                        if (proc.ExitCode == 0) {
+                            output.WriteLine(SR.GetString(SR.PipInstallSucceeded));
+                        } else {
+                            output.WriteLine(SR.GetString(SR.PipInstallFailedExitCode, proc.ExitCode ?? -1));
+                        }
+                        output.Show();
+                    }
                 }
             }));
         }

@@ -39,6 +39,11 @@ namespace Microsoft.PythonTools {
         internal const string PublishPropertyPageGuid = "63DF0877-CF53-4975-B200-2B11D669AB00";
         internal const string EditorFactoryPromptForEncodingGuid = "CA887E0B-55C6-4AE9-B5CF-A2EEFBA90A3E";
 
+        internal const string InterpreterItemType = "32235F49-CF87-4F2C-A986-B38D229976A3";
+        internal const string InterpretersPackageItemType = "64D8C685-F085-4E04-B759-3DF715EBA3FA";
+        internal static readonly Guid InterpreterItemTypeGuid = new Guid(InterpreterItemType);
+        internal static readonly Guid InterpretersPackageItemTypeGuid = new Guid(InterpretersPackageItemType);
+
         internal const string InterpretersPropertiesGuid = "45D3DC23-F419-4744-B55B-B897FAC1F4A2";
         internal const string InterpretersWithBaseInterpreterPropertiesGuid = "F86C3C5B-CF94-4184-91F8-29687D3B9227";
         internal const string InterpretersPackagePropertiesGuid = "BBF56A45-B037-4CC2-B710-F2CE304CCF32";
@@ -56,7 +61,6 @@ namespace Microsoft.PythonTools {
         internal const int AddExistingVirtualEnv = 0x4008;
         internal const int ActivateInterpreter = 0x4009;
         internal const int InstallPythonPackage = 0x400A;
-        internal const int UninstallPythonPackage = 0x400B;
 
         // Shows up before references
         internal const int InterpretersContainerNodeSortPriority = 200;

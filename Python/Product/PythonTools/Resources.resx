@@ -117,6 +117,12 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="BaseInterpreterDescription" xml:space="preserve">
+    <value>The interpreter that was used to create this virtual environment.</value>
+  </data>
+  <data name="BaseInterpreterDisplayName" xml:space="preserve">
+    <value>Base Interpreter</value>
+  </data>
   <data name="CanNotCreateWindow" xml:space="preserve">
     <value>Can not create tool window.</value>
   </data>
@@ -126,8 +132,30 @@
   <data name="InitializingFromProject" xml:space="preserve">
     <value />
   </data>
+  <data name="InstallPip" xml:space="preserve">
+    <value>To install your Python package, we will install the pip package manager.
+
+Continue?</value>
+  </data>
+  <data name="InstallVirtualEnv" xml:space="preserve">
+    <value>To create your virtual environment, we will install the virtualenv package.
+
+Continue?</value>
+  </data>
+  <data name="InstallVirtualEnvAndPip" xml:space="preserve">
+    <value>To create a virtual environment, we will install the pip package manager and the virtualenv package.
+
+Continue?</value>
+  </data>
   <data name="InterpreterDeleteConfirmation" xml:space="preserve">
-    <value>The interpreter '{0}' will be removed from the project and deleted from disk.</value>
+    <value>'{0}' will be removed froh the project and the directory
+'{1}'
+and all its contents will be deleted from disk.</value>
+  </data>
+  <data name="InterpreterDeleteError" xml:space="preserve">
+    <value>We weren't able to delete all the files from {0}.
+
+Some files may need to be removed manually.</value>
   </data>
   <data name="InterpreterIdDescription" xml:space="preserve">
     <value>The identifier of the interpreter.</value>
@@ -136,7 +164,8 @@
     <value>Id</value>
   </data>
   <data name="InterpreterRemoveConfirmation" xml:space="preserve">
-    <value>The interpreter '{0}' will be removed from the project. No files will be deleted from disk.</value>
+    <value>'{0}' will be removed from the project.
+No files will be deleted from disk.</value>
   </data>
   <data name="Interpreters" xml:space="preserve">
     <value>Python Interpreters</value>
@@ -152,6 +181,57 @@
   </data>
   <data name="NoSurveyNewsAvailable" xml:space="preserve">
     <value>There are no surveys or news available at this time.  Please check again later.</value>
+  </data>
+  <data name="PackageFullName" xml:space="preserve">
+    <value>Full Name</value>
+  </data>
+  <data name="PackageFullNameDescription" xml:space="preserve">
+    <value>The full name of the package, including the version if known.</value>
+  </data>
+  <data name="PackageInstallFailed" xml:space="preserve">
+    <value>'{0}' failed to install.</value>
+  </data>
+  <data name="PackageInstallFailedExitCode" xml:space="preserve">
+    <value>'{0}' failed to install. Exit code: {1}</value>
+  </data>
+  <data name="PackageInstalling" xml:space="preserve">
+    <value>Installing '{0}'</value>
+  </data>
+  <data name="PackageInstallingSeeOutputWindow" xml:space="preserve">
+    <value>Installing '{0}'. See output window for more information.</value>
+  </data>
+  <data name="PackageInstallSucceeded" xml:space="preserve">
+    <value>'{0}' was installed successfully.</value>
+  </data>
+  <data name="PackageUninstallFailed" xml:space="preserve">
+    <value>'{0}' failed to uninstall.</value>
+  </data>
+  <data name="PackageUninstallFailedExitCode" xml:space="preserve">
+    <value>'{0}' failed to uninstall. Exit code: {1}</value>
+  </data>
+  <data name="PackageUninstalling" xml:space="preserve">
+    <value>Unnstalling '{0}'</value>
+  </data>
+  <data name="PackageUninstallingSeeOutputWindow" xml:space="preserve">
+    <value>Unnstalling '{0}'. See output window for more information.</value>
+  </data>
+  <data name="PackageUninstallSucceeded" xml:space="preserve">
+    <value>'{0}' was uninstalled successfully.</value>
+  </data>
+  <data name="PipInstallFailed" xml:space="preserve">
+    <value>'pip' failed to install.</value>
+  </data>
+  <data name="PipInstallFailedExitCode" xml:space="preserve">
+    <value>'pip' failed to install. Exit code: {0}</value>
+  </data>
+  <data name="PipInstalling" xml:space="preserve">
+    <value>Installing 'pip' package manager.</value>
+  </data>
+  <data name="PipInstallSucceeded" xml:space="preserve">
+    <value>'pip' was installed successfully.</value>
+  </data>
+  <data name="PythonToolsForVisualStudio" xml:space="preserve">
+    <value>Python Tools for Visual Studio</value>
   </data>
   <data name="ReferencesNodeName" xml:space="preserve">
     <value>References</value>
@@ -171,45 +251,25 @@
   <data name="ToolWindowTitle" xml:space="preserve">
     <value>Python Command Line</value>
   </data>
+  <data name="UninstallPackage" xml:space="preserve">
+    <value>'{0}' will be uninstalled from {1} ({2}).</value>
+  </data>
   <data name="UpdatingSearchPath" xml:space="preserve">
     <value />
   </data>
+  <data name="VirtualEnvCreating" xml:space="preserve">
+    <value>Virtual environment is being created at '{0}'</value>
+  </data>
+  <data name="VirtualEnvCreationFailed" xml:space="preserve">
+    <value>Virtual environment was not created at '{0}'</value>
+  </data>
+  <data name="VirtualEnvCreationFailedExitCode" xml:space="preserve">
+    <value>Virtual environment was not created at '{0}'. Exit code: {1}</value>
+  </data>
+  <data name="VirtualEnvCreationSucceeded" xml:space="preserve">
+    <value>Virtual environment was successfully created at '{0}'</value>
+  </data>
   <data name="WarningAnalysisNotCurrent" xml:space="preserve">
     <value>Warning: the intellisense database is currently not up to date and completions may be missing.</value>
-  </data>
-  <data name="BaseInterpreterDescription" xml:space="preserve">
-    <value>The interpreter that was used to create this virtual environment.</value>
-  </data>
-  <data name="BaseInterpreterDisplayName" xml:space="preserve">
-    <value>Base Interpreter</value>
-  </data>
-  <data name="InstallPip" xml:space="preserve">
-    <value>To install your Python package, we will also install pip.
-
-Continue?</value>
-  </data>
-  <data name="InstallVirtualEnv" xml:space="preserve">
-    <value>To create your virtual environment, we will install the virtualenv package.
-
-Continue?</value>
-  </data>
-  <data name="InstallVirtualEnvAndPip" xml:space="preserve">
-    <value>To create a virtual environment, we will install pip and the virtualenv package.
-
-Continue?</value>
-  </data>
-  <data name="PythonToolsForVisualStudio" xml:space="preserve">
-    <value>Python Tools for Visual Studio</value>
-  </data>
-  <data name="InterpreterDeleteError" xml:space="preserve">
-    <value>We weren't able to delete all the files at {0}.
-
-Some files may need to be removed manually.</value>
-  </data>
-  <data name="PackageFullName" xml:space="preserve">
-    <value>Full Name</value>
-  </data>
-  <data name="PackageFullNameDescription" xml:space="preserve">
-    <value>The full name of the package, including the version if known.</value>
   </data>
 </root>

@@ -52,17 +52,17 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <VirtualEnv Include="@(Interpreter)"
+      <_VirtualEnv Include="@(Interpreter)"
                   Condition="'%(Id)' == '$(InterpreterId)' and '%(Version)' == '$(InterpreterVersion)'" />
     </ItemGroup>
 
     <PropertyGroup>
       <VirtualEnvEnabled>true</VirtualEnvEnabled>
-      <VirtualEnvPrefixSubPath Condition="$(VirtualEnvPrefixSubPath) == ''">@(VirtualEnv->'%(Identity)')</VirtualEnvPrefixSubPath>
+      <VirtualEnvPrefixSubPath Condition="$(VirtualEnvPrefixSubPath) == ''">@(_VirtualEnv->'%(Identity)')</VirtualEnvPrefixSubPath>
       <VirtualEnvEnabled Condition="$(VirtualEnvPrefixSubPath) == ''">false</VirtualEnvEnabled>
       <VirtualEnvPrefixPath Condition="$(VirtualEnvEnabled)">$(ProjectHome)\$(VirtualEnvPrefixSubPath)</VirtualEnvPrefixPath>
-      <VirtualEnvInterpreterPath Condition="$(VirtualEnvEnabled)">@(VirtualEnv->'$(VirtualEnvPrefixPath)\%(InterpreterPath)')</VirtualEnvInterpreterPath>
-      <VirtualEnvWindowsInterpreterPath Condition="$(VirtualEnvEnabled)">@(VirtualEnv->'$(VirtualEnvPrefixPath)\%(WindowsInterpreterPath)')</VirtualEnvWindowsInterpreterPath>
+      <VirtualEnvInterpreterPath Condition="$(VirtualEnvEnabled)">@(_VirtualEnv->'$(VirtualEnvPrefixPath)\%(InterpreterPath)')</VirtualEnvInterpreterPath>
+      <VirtualEnvWindowsInterpreterPath Condition="$(VirtualEnvEnabled)">@(_VirtualEnv->'$(VirtualEnvPrefixPath)\%(WindowsInterpreterPath)')</VirtualEnvWindowsInterpreterPath>
     </PropertyGroup>
 
     <PropertyGroup Condition="$(InterpreterId)=='2af0f10d-7135-4994-9156-5d01c9c11b7e' or $(InterpreterId)=='{2af0f10d-7135-4994-9156-5d01c9c11b7e}'">

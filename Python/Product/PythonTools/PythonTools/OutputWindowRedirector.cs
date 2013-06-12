@@ -15,6 +15,7 @@
 using System;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools {
     class OutputWindowRedirector : Redirector {
@@ -29,25 +30,42 @@ namespace Microsoft.PythonTools {
             }
             return _generalPane;
         }
-        
+
+        readonly IVsWindowFrame _window;
         readonly IVsOutputWindowPane _pane;
 
         public IVsOutputWindowPane Pane { get { return _pane; } }
 
         public OutputWindowRedirector(IServiceProvider provider, Guid paneGuid) {
+            var shell = provider.GetService(typeof(SVsUIShell)) as IVsUIShell;
+            if (shell != null) {
+                // Ignore errors - we just won't support opening the window if
+                // we don't find it.
+                var windowGuid = VSConstants.StandardToolWindows.Output;
+                shell.FindToolWindow(0, ref windowGuid, out _window);
+            }
             IVsOutputWindow outputWindow = provider.GetService(typeof(SVsOutputWindow)) as IVsOutputWindow;
             ErrorHandler.ThrowOnFailure(outputWindow.GetPane(paneGuid, out _pane));
         }
 
-        public OutputWindowRedirector(IVsOutputWindowPane pane) {
+        public OutputWindowRedirector(IVsWindowFrame window, IVsOutputWindowPane pane) {
+            _window = window;
             if (pane == null) {
                 throw new ArgumentNullException("pane");
             }
             _pane = pane;
         }
 
-        public void Show() {
-            ErrorHandler.ThrowOnFailure(_pane.Activate());
+        public override void Show() {
+            if (UIThread.Instance.IsUIThread) {
+                ErrorHandler.ThrowOnFailure(_pane.Activate());
+                if (_window != null) {
+                    // TODO: Make showing window optional
+                    ErrorHandler.ThrowOnFailure(_window.ShowNoActivate());
+                }
+            } else {
+                UIThread.Instance.Run(Show);
+            }
         }
 
         public override void WriteLine(string line) {

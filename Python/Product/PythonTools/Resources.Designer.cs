@@ -106,7 +106,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to To install your Python package, we will also install pip.
+        ///   Looks up a localized string similar to To install your Python package, we will install the pip package manager.
         ///
         ///Continue?.
         /// </summary>
@@ -128,7 +128,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to To create a virtual environment, we will install pip and the virtualenv package.
+        ///   Looks up a localized string similar to To create a virtual environment, we will install the pip package manager and the virtualenv package.
         ///
         ///Continue?.
         /// </summary>
@@ -139,7 +139,9 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The interpreter &apos;{0}&apos; will be removed from the project and deleted from disk..
+        ///   Looks up a localized string similar to &apos;{0}&apos; will be removed froh the project and the directory
+        ///&apos;{1}&apos;
+        ///and all its contents will be deleted from disk..
         /// </summary>
         internal static string InterpreterDeleteConfirmation {
             get {
@@ -148,7 +150,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to We weren&apos;t able to delete all the files at {0}.
+        ///   Looks up a localized string similar to We weren&apos;t able to delete all the files from {0}.
         ///
         ///Some files may need to be removed manually..
         /// </summary>
@@ -177,7 +179,8 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The interpreter &apos;{0}&apos; will be removed from the project. No files will be deleted from disk..
+        ///   Looks up a localized string similar to &apos;{0}&apos; will be removed from the project.
+        ///No files will be deleted from disk..
         /// </summary>
         internal static string InterpreterRemoveConfirmation {
             get {
@@ -249,6 +252,132 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to &apos;{0}&apos; failed to install..
+        /// </summary>
+        internal static string PackageInstallFailed {
+            get {
+                return ResourceManager.GetString("PackageInstallFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;{0}&apos; failed to install. Exit code: {1}.
+        /// </summary>
+        internal static string PackageInstallFailedExitCode {
+            get {
+                return ResourceManager.GetString("PackageInstallFailedExitCode", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Installing &apos;{0}&apos;.
+        /// </summary>
+        internal static string PackageInstalling {
+            get {
+                return ResourceManager.GetString("PackageInstalling", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Installing &apos;{0}&apos;. See output window for more information..
+        /// </summary>
+        internal static string PackageInstallingSeeOutputWindow {
+            get {
+                return ResourceManager.GetString("PackageInstallingSeeOutputWindow", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;{0}&apos; was installed successfully..
+        /// </summary>
+        internal static string PackageInstallSucceeded {
+            get {
+                return ResourceManager.GetString("PackageInstallSucceeded", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;{0}&apos; failed to uninstall..
+        /// </summary>
+        internal static string PackageUninstallFailed {
+            get {
+                return ResourceManager.GetString("PackageUninstallFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;{0}&apos; failed to uninstall. Exit code: {1}.
+        /// </summary>
+        internal static string PackageUninstallFailedExitCode {
+            get {
+                return ResourceManager.GetString("PackageUninstallFailedExitCode", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unnstalling &apos;{0}&apos;.
+        /// </summary>
+        internal static string PackageUninstalling {
+            get {
+                return ResourceManager.GetString("PackageUninstalling", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unnstalling &apos;{0}&apos;. See output window for more information..
+        /// </summary>
+        internal static string PackageUninstallingSeeOutputWindow {
+            get {
+                return ResourceManager.GetString("PackageUninstallingSeeOutputWindow", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;{0}&apos; was uninstalled successfully..
+        /// </summary>
+        internal static string PackageUninstallSucceeded {
+            get {
+                return ResourceManager.GetString("PackageUninstallSucceeded", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;pip&apos; failed to install..
+        /// </summary>
+        internal static string PipInstallFailed {
+            get {
+                return ResourceManager.GetString("PipInstallFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;pip&apos; failed to install. Exit code: {0}.
+        /// </summary>
+        internal static string PipInstallFailedExitCode {
+            get {
+                return ResourceManager.GetString("PipInstallFailedExitCode", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Installing &apos;pip&apos; package manager..
+        /// </summary>
+        internal static string PipInstalling {
+            get {
+                return ResourceManager.GetString("PipInstalling", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;pip&apos; was installed successfully..
+        /// </summary>
+        internal static string PipInstallSucceeded {
+            get {
+                return ResourceManager.GetString("PipInstallSucceeded", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Python Tools for Visual Studio.
         /// </summary>
         internal static string PythonToolsForVisualStudio {
@@ -312,11 +441,56 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to &apos;{0}&apos; will be uninstalled from {1} ({2})..
+        /// </summary>
+        internal static string UninstallPackage {
+            get {
+                return ResourceManager.GetString("UninstallPackage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to .
         /// </summary>
         internal static string UpdatingSearchPath {
             get {
                 return ResourceManager.GetString("UpdatingSearchPath", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Virtual environment is being created at &apos;{0}&apos;.
+        /// </summary>
+        internal static string VirtualEnvCreating {
+            get {
+                return ResourceManager.GetString("VirtualEnvCreating", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Virtual environment was not created at &apos;{0}&apos;.
+        /// </summary>
+        internal static string VirtualEnvCreationFailed {
+            get {
+                return ResourceManager.GetString("VirtualEnvCreationFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Virtual environment was not created at &apos;{0}&apos;. Exit code: {1}.
+        /// </summary>
+        internal static string VirtualEnvCreationFailedExitCode {
+            get {
+                return ResourceManager.GetString("VirtualEnvCreationFailedExitCode", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Virtual environment was successfully created at &apos;{0}&apos;.
+        /// </summary>
+        internal static string VirtualEnvCreationSucceeded {
+            get {
+                return ResourceManager.GetString("VirtualEnvCreationSucceeded", resourceCulture);
             }
         }
         

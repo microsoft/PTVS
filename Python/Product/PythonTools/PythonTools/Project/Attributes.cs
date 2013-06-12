@@ -51,7 +51,30 @@ namespace Microsoft.PythonTools.Project {
         public const string InstallVirtualEnvAndPip = "InstallVirtualEnvAndPip";
         public const string InstallVirtualEnv = "InstallVirtualEnv";
         public const string InstallPip = "InstallPip";
+        public const string UninstallPackage = "UninstallPackage";
         public const string PythonToolsForVisualStudio = "PythonToolsForVisualStudio";
+
+        public const string PackageInstalling = "PackageInstalling";
+        public const string PackageInstallingSeeOutputWindow = "PackageInstallingSeeOutputWindow";
+        public const string PackageInstallSucceeded = "PackageInstallSucceeded";
+        public const string PackageInstallFailed = "PackageInstallFailed";
+        public const string PackageInstallFailedExitCode = "PackageInstallFailedExitCode";
+
+        public const string PackageUninstalling = "PackageUninstalling";
+        public const string PackageUninstallingSeeOutputWindow = "PackageUninstallingSeeOutputWindow";
+        public const string PackageUninstallSucceeded = "PackageUninstallSucceeded";
+        public const string PackageUninstallFailed = "PackageUninstallFailed";
+        public const string PackageUninstallFailedExitCode = "PackageUninstallFailedExitCode";
+
+        public const string PipInstalling = "PipInstalling";
+        public const string PipInstallSucceeded = "PipInstallSucceeded";
+        public const string PipInstallFailed = "PipInstallFailed";
+        public const string PipInstallFailedExitCode = "PipInstallFailedExitCode";
+
+        public const string VirtualEnvCreating = "VirtualEnvCreating";
+        public const string VirtualEnvCreationSucceeded = "VirtualEnvCreationSucceeded";
+        public const string VirtualEnvCreationFailed = "VirtualEnvCreationFailed";
+        public const string VirtualEnvCreationFailedExitCode = "VirtualEnvCreationFailedExitCode";
 
         internal static new string GetString(string value) {
             string result = Microsoft.PythonTools.Resources.ResourceManager.GetString(value, CultureInfo.CurrentUICulture) ?? CommonSR.GetString(value);
@@ -60,6 +83,15 @@ namespace Microsoft.PythonTools.Project {
                 result = value;
             }
             return result;
+        }
+
+        internal static new string GetString(string value, params object[] args) {
+            string result = Microsoft.PythonTools.Resources.ResourceManager.GetString(value, CultureInfo.CurrentUICulture) ?? CommonSR.GetString(value);
+            if (result == null) {
+                Debug.Assert(false, "String resource '" + value + "' is missing");
+                result = value;
+            }
+            return string.Format(CultureInfo.CurrentUICulture, result, args);
         }
     }
 

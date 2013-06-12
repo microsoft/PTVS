@@ -69,6 +69,7 @@ namespace Microsoft.PythonTools.Project {
             }
             PythonProject.Interpreters.ActiveInterpreter = _control.DefaultInterpreter;
             IsDirty = false;
+            LoadSettings();
         }
 
         public override void LoadSettings() {
@@ -80,7 +81,8 @@ namespace Microsoft.PythonTools.Project {
                     _control.WorkingDirectory = ".";
                 }
                 _control.IsWindowsApplication = Convert.ToBoolean(this.Project.GetProjectProperty(CommonConstants.IsWindowsApplication, false));
-                
+                _control.OnInterpretersChanged();
+
                 if (PythonProject.Interpreters.IsActiveInterpreterGlobalDefault) {
                     // ActiveInterpreter will never be null, so we need to check
                     // the property to find out if it's following the global

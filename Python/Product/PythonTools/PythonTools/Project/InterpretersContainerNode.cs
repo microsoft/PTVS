@@ -38,7 +38,7 @@ namespace Microsoft.PythonTools.Project {
         public InterpretersContainerNode(PythonProjectNode project)
             : base(project.ProjectMgr) {
             _projectNode = project;
-            this.ExcludeNodeFromScc = true;
+            ExcludeNodeFromScc = true;
 
             OnInterpreterFactoriesChanged(_projectNode.Interpreters);
         }
