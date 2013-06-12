@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -193,12 +194,14 @@ namespace DebuggerTests {
 
                 if (waitForExit) {
                     WaitForExit(process);
-                } else {
-                    process.Terminate();
                 }
             } finally {
                 if (!process.HasExited) {
-                    process.Terminate();
+                    try {
+                        process.Terminate();
+                    } catch (Win32Exception wex) {
+                        Debug.WriteLine("Failed to kill process: {0}", wex);
+                    }
                 }
             }
         }

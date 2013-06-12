@@ -371,6 +371,7 @@ try {
             Copy-Item -force -recurse $bindir\*.dll $destdir\Binaries\
             Copy-Item -force -recurse $bindir\*.exe $destdir\Binaries\
             Copy-Item -force -recurse $bindir\*.pkgdef $destdir\Binaries\
+            Copy-Item -force -recurse $bindir\*.py $destdir\Binaries\
             
             mkdir $destdir\Binaries\ReplWindow -EA 0 | Out-Null
             Copy-Item -force -recurse Common\Product\ReplWindow\obj\Dev$($targetVs.number)\$config\extension.vsixmanifest $destdir\Binaries\ReplWindow
