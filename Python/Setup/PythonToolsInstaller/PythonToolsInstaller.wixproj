@@ -18,9 +18,9 @@
       VSTargetVersion=$(VSTarget);
     </DefineConstants>
   </PropertyGroup>
-  <PropertyGroup>
-    <LinkerAdditionalOptions>-ext WixUIExtension -ext WixUtilExtension</LinkerAdditionalOptions>
-  </PropertyGroup>
+  <ItemGroup>
+    <WixExtension Include="WixUIExtension;WixUtilExtension" />
+  </ItemGroup>
   <ItemGroup>
     <Compile Include="PythonToolsInstaller.wxs" />
     <Compile Include="UpgradeCodes.wxs" />

@@ -91,6 +91,8 @@
         </File>
         <RegistryValue Root='HKCU' Key='SOFTWARE\Microsoft\PythonTools\$(var.VSTargetVersion)' Type='string' Value='Readme' KeyPath='yes' />
         <RemoveFolder Id='DeleteApplicationProgramsFolder' Directory='ApplicationProgramsFolder' On='uninstall'/>
+        
+        <util:RestartResource Path="[DEVENV_PATH]\devenv.exe" />
       </Component>
 
       <!-- Edit with Visual Studio context menu -->
