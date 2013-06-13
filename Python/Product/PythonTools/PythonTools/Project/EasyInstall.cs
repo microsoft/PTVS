@@ -16,10 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.PythonTools.Project {
@@ -28,19 +25,35 @@ namespace Microsoft.PythonTools.Project {
             new KeyValuePair<string, string>("PYTHONUNBUFFERED", "1")
         };
 
-        private static string GetEasyInstallPath(IPythonInterpreterFactory factory) {
-            string easyInstallPath = Path.Combine(factory.Configuration.PrefixPath, "Scripts", "easy_install.exe");
-            if (!File.Exists(easyInstallPath)) {
-                easyInstallPath = Path.Combine(factory.Configuration.PrefixPath, "easy_install.exe");
+        // The relative path from PrefixPath, and true if it is a Python script
+        // that needs to be run with the interpreter.
+        private static readonly KeyValuePair<string, bool>[] EasyInstallLocations = new[] {
+            new KeyValuePair<string, bool>(Path.Combine("Scripts", "easy_install-script.py"), true),
+            new KeyValuePair<string, bool>("easy_install-script.py", true),
+            new KeyValuePair<string, bool>(Path.Combine("Scripts", "easy_install.exe"), false),
+            new KeyValuePair<string, bool>("easy_install.exe", false)
+        };
+
+        private static string GetEasyInstallPath(IPythonInterpreterFactory factory, out bool isScript) {
+            foreach (var path in EasyInstallLocations) {
+                string easyInstallPath = Path.Combine(factory.Configuration.PrefixPath, path.Key);
+                isScript = path.Value;
+                if (File.Exists(easyInstallPath)) {
+                    return easyInstallPath;
+                }
             }
-            if (!File.Exists(easyInstallPath)) {
-                return null;
-            }
-            return easyInstallPath;
+            isScript = false;
+            return null;
         }
 
         private static Task<int> Run(IPythonInterpreterFactory factory, Redirector output, params string[] cmd) {
-            var easyInstallPath = GetEasyInstallPath(factory);
+            bool isScript;
+            var easyInstallPath = GetEasyInstallPath(factory, out isScript);
+            if (easyInstallPath == null) {
+                var tcs = new TaskCompletionSource<int>();
+                tcs.SetException(new FileNotFoundException("Cannot find distribute ('easy_install.exe')"));
+                return tcs.Task;
+            }
 
             var outFile = Path.GetTempFileName();
             var errFile = Path.GetTempFileName();
@@ -51,8 +64,16 @@ namespace Microsoft.PythonTools.Project {
             psi.Verb = "runas";
             psi.WorkingDirectory = factory.Configuration.PrefixPath;
 
-            psi.Arguments = "/c " + ProcessOutput.QuoteSingleArgument(easyInstallPath) + " " + string.Join(" ", cmd) +
-                " > " + ProcessOutput.QuoteSingleArgument(outFile) + " 2> " + ProcessOutput.QuoteSingleArgument(errFile);
+            easyInstallPath = ProcessOutput.QuoteSingleArgument(easyInstallPath);
+            if (isScript) {
+                easyInstallPath = ProcessOutput.QuoteSingleArgument(factory.Configuration.InterpreterPath) + " " + easyInstallPath;
+            }
+            psi.Arguments = "/S /C \"" +
+                easyInstallPath + " " +
+                string.Join(" ", cmd) + 
+                " > " + ProcessOutput.QuoteSingleArgument(outFile) +
+                " 2> " + ProcessOutput.QuoteSingleArgument(errFile) +
+                "\"";
 
             return Task.Factory.StartNew<int>((Func<int>)(() => {
                 try {
@@ -97,7 +118,8 @@ namespace Microsoft.PythonTools.Project {
             Redirector output = null) {
 
             Task task;
-            if (site != null && GetEasyInstallPath(factory) == null) {
+            bool isScript;
+            if (site != null && GetEasyInstallPath(factory, out isScript) == null) {
                 task = Pip.QueryInstallPip(factory, site, SR.GetString(SR.InstallEasyInstall), output);
             } else {
                 var tcs = new TaskCompletionSource<object>();

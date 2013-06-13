@@ -32,26 +32,44 @@ namespace Microsoft.PythonTools.Project {
             new KeyValuePair<string, string>("PYTHONUNBUFFERED", "1")
         };
 
+        // The relative path from PrefixPath, and true if it is a Python script
+        // that needs to be run with the interpreter.
+        private static readonly KeyValuePair<string, bool>[] PipLocations = new[] {
+            new KeyValuePair<string, bool>(Path.Combine("Scripts", "pip-script.py"), true),
+            new KeyValuePair<string, bool>("pip-script.py", true),
+            new KeyValuePair<string, bool>(Path.Combine("Scripts", "pip.exe"), false),
+            new KeyValuePair<string, bool>("pip.exe", false)
+        };
+
         private static ProcessOutput Run(IPythonInterpreterFactory factory, Redirector output, params string[] cmd) {
-            string pipPath = Path.Combine(factory.Configuration.PrefixPath, "Scripts", "pip.exe");
-            if (!File.Exists(pipPath)) {
-                pipPath = Path.Combine(factory.Configuration.PrefixPath, "pip.exe");
-                if (!File.Exists(pipPath)) {
-                    pipPath = null;
+            var args = cmd.AsEnumerable();
+            bool isScript = false;
+            string pipPath = null;
+            foreach (var path in PipLocations) {
+                pipPath = Path.Combine(factory.Configuration.PrefixPath, path.Key);
+                isScript = path.Value;
+                if (File.Exists(pipPath)) {
+                    break;
                 }
+                pipPath = null;
             }
 
-            if (!string.IsNullOrEmpty(pipPath)) {
-                return ProcessOutput.Run(pipPath, cmd, null, UnbufferedEnv, false, output, quoteArgs: false);
-            } else {
-                return ProcessOutput.Run(factory.Configuration.InterpreterPath,
-                    new[] { "-m", "pip" }.Concat(cmd),
-                    factory.Configuration.PrefixPath,
-                    UnbufferedEnv,
-                    false,
-                    output,
-                    quoteArgs: false);
+
+            if (string.IsNullOrEmpty(pipPath)) {
+                args = new[] { "-m", "pip" }.Concat(args);
+                isScript = true;
+            } else if (isScript) {
+                args = new[] { ProcessOutput.QuoteSingleArgument(pipPath) }.Concat(args);
+                pipPath = factory.Configuration.InterpreterPath;
             }
+
+            return ProcessOutput.Run(pipPath,
+                args,
+                factory.Configuration.PrefixPath,
+                UnbufferedEnv,
+                false,
+                output,
+                quoteArgs: false);
         }
 
         private static ProcessOutput Run(IPythonInterpreterFactory factory, params string[] cmd) {
@@ -89,8 +107,8 @@ namespace Microsoft.PythonTools.Project {
                         .Select(name => PackageNameRegex.Match(name))
                         .Where(m => m.Success)
                         .Select(m => m.Groups["name"].Value));
-                } catch (ArgumentException) {
-                } catch (IOException) {
+                } catch {
+                    lines.Clear();
                 }
 
                 return lines;
