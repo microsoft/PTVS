@@ -22,6 +22,8 @@
     <ProjectFile Include="PyKinectInstaller\PyKinectInstaller.wixproj"/>
     <ProjectFile Include="PyVotInstaller\PyVotInstaller.wixproj"/>
     <ProjectFile Include="FastCgiInstaller\FastCgi.wixproj"/>
+    <!--  PyExpress sku is only supported on VS 2013 so don't include it for other projects -->
+    <ProjectFile Condition="$(VSTarget)=='12.0'" Include="PyExpress\PyExpress.wixproj"/>
   </ItemGroup>
 
   <Import Project="$(TargetsPath)\Common.Build.Traversal.targets" />
