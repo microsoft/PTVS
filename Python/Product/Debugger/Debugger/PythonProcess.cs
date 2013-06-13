@@ -301,7 +301,7 @@ namespace Microsoft.PythonTools.Debugger {
             }
         }
 
-        public void SetExceptionInfo(int defaultBreakOnMode, ICollection<KeyValuePair<string, int>> breakOn) {
+        public void SetExceptionInfo(int defaultBreakOnMode, IEnumerable<KeyValuePair<string, int>> breakOn) {
             lock (this) {
                 if (_stream != null) {
                     SendExceptionInfo(defaultBreakOnMode, breakOn);
@@ -312,11 +312,11 @@ namespace Microsoft.PythonTools.Debugger {
             }
         }
 
-        private void SendExceptionInfo(int defaultBreakOnMode, ICollection<KeyValuePair<string, int>> breakOn) {
+        private void SendExceptionInfo(int defaultBreakOnMode, IEnumerable<KeyValuePair<string, int>> breakOn) {
             lock (_socketLock) {
                 _stream.Write(SetExceptionInfoCommandBytes);
                 _stream.WriteInt32(defaultBreakOnMode);
-                _stream.WriteInt32(breakOn.Count);
+                _stream.WriteInt32(breakOn.Count());
                 foreach (var item in breakOn) {
                     _stream.WriteInt32(item.Value);
                     _stream.WriteString(item.Key);
@@ -395,6 +395,7 @@ namespace Microsoft.PythonTools.Debugger {
                         case "OUTP": HandleDebuggerOutput(stream); break;
                         case "REQH": HandleRequestHandlers(stream); break;
                         case "DETC": _process_Exited(this, EventArgs.Empty); break; // detach, report process exit
+                        case "LAST": HandleLast(); break;
                     }
                 }
             } catch (IOException ioExc) {
@@ -795,6 +796,13 @@ namespace Microsoft.PythonTools.Debugger {
             return new string(new char[] { (char)cmd_buffer[0], (char)cmd_buffer[1], (char)cmd_buffer[2], (char)cmd_buffer[3] });
         }
 
+        private void HandleLast() {
+            DebugWriteCommand("LAST ack");
+            lock (_socketLock) {
+                _stream.Write(LastAckCommandBytes);
+            }
+        }
+
         internal void SendStepOut(long threadId) {
             DebugWriteCommand("StepOut");
             lock (_socketLock) {
@@ -829,7 +837,7 @@ namespace Microsoft.PythonTools.Debugger {
             }
         }
 
-        public void SendClearStepping(long threadId) {
+    public void SendClearStepping(long threadId) {
             DebugWriteCommand("ClearStepping");
             lock (_socketLock) {
                 // race w/ removing the breakpoint, let the thread continue
@@ -1048,6 +1056,7 @@ namespace Microsoft.PythonTools.Debugger {
         private static byte[] AddDjangoBreakPointCommandBytes = MakeCommand("bkda");
         private static byte[] ConnectReplCommandBytes = MakeCommand("crep");
         private static byte[] DisconnectReplCommandBytes = MakeCommand("drep");
+        private static byte[] LastAckCommandBytes = MakeCommand("lack");
 
         private static byte[] MakeCommand(string command) {
             return new byte[] { (byte)command[0], (byte)command[1], (byte)command[2], (byte)command[3] };

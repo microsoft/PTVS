@@ -114,6 +114,7 @@ namespace Microsoft.IronPythonTools.Debugger {
 
             //In order to update environment variables we have to set UseShellExecute to false
             startInfo.UseShellExecute = false;
+            SetupEnvironment(startInfo.EnvironmentVariables);
             return startInfo;
         }
 

@@ -79,6 +79,11 @@ namespace Microsoft.PythonTools.Project {
                         CommonProjectPackage package = (CommonProjectPackage)ProjectMgr.Package;
                         IProjectLauncher starter = ((CommonProjectNode)ProjectMgr).GetLauncher();
                         if (starter != null) {
+                            if (!Utilities.SaveDirtyFiles()) {
+                                // Abort
+                                return VSConstants.E_ABORT;
+                            }
+
                             starter.LaunchFile(this.Url, cmd == CommonConstants.StartDebuggingCmdId);
                         }
                         return VSConstants.S_OK;

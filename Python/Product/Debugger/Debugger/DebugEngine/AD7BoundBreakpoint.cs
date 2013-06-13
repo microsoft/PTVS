@@ -30,12 +30,12 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         private bool _enabled;
         private bool _deleted;
 
-        public AD7BoundBreakpoint(AD7Engine engine, PythonBreakpoint address, AD7PendingBreakpoint pendingBreakpoint, AD7BreakpointResolution breakpointResolution) {
+        public AD7BoundBreakpoint(AD7Engine engine, PythonBreakpoint address, AD7PendingBreakpoint pendingBreakpoint, AD7BreakpointResolution breakpointResolution, bool enabled) {
             _engine = engine;
             _breakpoint = address;
             _pendingBreakpoint = pendingBreakpoint;
             _breakpointResolution = breakpointResolution;
-            _enabled = true;
+            _enabled = enabled;
             _deleted = false;
         }
 

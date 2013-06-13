@@ -117,7 +117,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                         );
 
                         AD7BreakpointResolution breakpointResolution = new AD7BreakpointResolution(_engine, bp, GetDocumentContext(bp));
-                        AD7BoundBreakpoint boundBreakpoint = new AD7BoundBreakpoint(_engine, bp, this, breakpointResolution);
+                        AD7BoundBreakpoint boundBreakpoint = new AD7BoundBreakpoint(_engine, bp, this, breakpointResolution, _enabled);
                         _boundBreakpoints.Add(boundBreakpoint);
                         _bpManager.AddBoundBreakpoint(bp, boundBreakpoint);
 
@@ -135,7 +135,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                         );
 
                         AD7BreakpointResolution breakpointResolution = new AD7BreakpointResolution(_engine, bp, GetDocumentContext(bp));
-                        AD7BoundBreakpoint boundBreakpoint = new AD7BoundBreakpoint(_engine, bp, this, breakpointResolution);
+                        AD7BoundBreakpoint boundBreakpoint = new AD7BoundBreakpoint(_engine, bp, this, breakpointResolution, _enabled);
                         _boundBreakpoints.Add(boundBreakpoint);
                         _bpManager.AddBoundBreakpoint(bp, boundBreakpoint);
 

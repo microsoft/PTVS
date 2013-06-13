@@ -13,11 +13,12 @@
  * ***************************************************************************/
 
 using System;
+using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
-using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudioTools;
+using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Commands {
     /// <summary>
@@ -25,10 +26,14 @@ namespace Microsoft.PythonTools.Commands {
     /// </summary>
     class DebugAsScriptCommand : Command {
         public override void DoCommand(object sender, EventArgs args) {
-            var file = CommonPackage.GetActiveTextView().GetFilePath();
+            if (!Utilities.SaveDirtyFiles()) {
+                // Abort
+                return;
+            }
 
             // Launch with project context if there is one and it contains the active document
             // Fallback to using default python project
+            var file = CommonPackage.GetActiveTextView().GetFilePath();
             var pythonProjectNode = CommonPackage.GetStartupProject() as PythonProjectNode;
             if ((pythonProjectNode != null) && (pythonProjectNode.FindNodeByFullPath(file) == null)) {
                 pythonProjectNode = null;

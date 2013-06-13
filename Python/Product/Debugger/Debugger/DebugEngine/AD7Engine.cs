@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows.Forms;
@@ -55,12 +56,14 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         private Dictionary<PythonModule, AD7Module> _modules = new Dictionary<PythonModule, AD7Module>();
         private Dictionary<string, int> _breakOnException = new Dictionary<string, int>();
         private int _defaultBreakOnExceptionMode;
+        private bool _justMyCodeEnabled = true;
         private AutoResetEvent _loadComplete = new AutoResetEvent(false);
         private bool _programCreated;
         private object _syncLock = new object();
         private AD7Thread _processLoadedThread, _startThread;
         private AD7Module _startModule;
         private bool _attached, _pseudoAttach;
+        bool _handleEntryPointHit = true;
         private BreakpointManager _breakpointManager;
         private Guid _ad7ProgramId;             // A unique identifier for the program being debugged.
         private static HashSet<WeakReference> _engines = new HashSet<WeakReference>();
@@ -320,9 +323,8 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
 
         private void SendLoadComplete(AD7Thread thread) {
             Debug.WriteLine("Sending load complete" + GetHashCode());
-            AD7ProgramCreateEvent.Send(this);
 
-            Send(new AD7LoadCompleteEvent(), AD7LoadCompleteEvent.IID, thread);
+            AD7ProgramCreateEvent.Send(this);
 
             if (_startModule != null) {
                 SendModuleLoaded(_startModule);
@@ -332,6 +334,9 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                 SendThreadStart(_startThread);
                 _startThread = null;
             }
+
+            Send(new AD7LoadCompleteEvent(), AD7LoadCompleteEvent.IID, thread);
+
             _processLoadedThread = null;
             _loadComplete.Set();
 
@@ -446,7 +451,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             _breakOnException.Clear();
             _defaultBreakOnExceptionMode = (int)enum_EXCEPTION_STATE.EXCEPTION_STOP_USER_UNCAUGHT;
 
-            _process.SetExceptionInfo(_defaultBreakOnExceptionMode, _breakOnException);
+            SetExceptionInfo(_defaultBreakOnExceptionMode, _breakOnException);
             return VSConstants.S_OK;
         }
 
@@ -468,7 +473,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             }
 
             if (sendUpdate) {
-                _process.SetExceptionInfo(_defaultBreakOnExceptionMode, _breakOnException);
+                SetExceptionInfo(_defaultBreakOnExceptionMode, _breakOnException);
             }
             return VSConstants.S_OK;
         }
@@ -493,7 +498,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             }
 
             if (sendUpdate) {
-                _process.SetExceptionInfo(_defaultBreakOnExceptionMode, _breakOnException);
+                SetExceptionInfo(_defaultBreakOnExceptionMode, _breakOnException);
             }
             return VSConstants.S_OK;
         }
@@ -508,7 +513,28 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         // A metric is a registry value used to change a debug engine's behavior or to advertise supported functionality. 
         // This method can forward the call to the appropriate form of the Debugging SDK Helpers function, SetMetric.
         int IDebugEngine2.SetMetric(string pszMetric, object varValue) {
+            // Handle JustMyCode enabling changes
+            if (string.Compare(pszMetric, "JustMyCodeStepping") == 0) {
+                var enabledUint = varValue as uint?;
+                if (enabledUint.HasValue) {
+                    var enabled = enabledUint.Value != 0;
+                    if (_justMyCodeEnabled != enabled) {
+                        _justMyCodeEnabled = enabled;
+                        SetExceptionInfo(_defaultBreakOnExceptionMode, _breakOnException);
+                    }
+                }
+            }
             return VSConstants.S_OK;
+        }
+
+        private void SetExceptionInfo(int defaultBreakOnMode, IEnumerable<KeyValuePair<string, int>> breakOn) {
+            if (!_justMyCodeEnabled) {
+                // Mask out just my code related flag not masked out by VS SDM
+                var mask = ~(int)enum_EXCEPTION_STATE.EXCEPTION_STOP_USER_UNCAUGHT;
+                defaultBreakOnMode &= mask;
+                breakOn = breakOn.Select(kvp => new KeyValuePair<string, int>(kvp.Key, kvp.Value & mask));
+            }
+            _process.SetExceptionInfo(defaultBreakOnMode, breakOn);
         }
 
         // Sets the registry root currently in use by the DE. Different installations of Visual Studio can change where their registry information is stored
@@ -804,6 +830,8 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         // Continue is called from the SDM when it wants execution to continue in the debugee
         // but have stepping state remain. An example is when a tracepoint is executed, 
         // and the debugger does not want to actually enter break mode.
+        // It is also called to continue after load complete and autoresume after
+        // entry point hit (when starting debugging with F5).
         public int Continue(IDebugThread2 pThread) {
             if (_mixedMode) {
                 return VSConstants.E_NOTIMPL;
@@ -813,10 +841,16 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
 
             AD7Thread thread = (AD7Thread)pThread;
 
+            if (_handleEntryPointHit) {
+                _handleEntryPointHit = false;
+                Send(new AD7EntryPointEvent(), AD7EntryPointEvent.IID, thread);
+                return VSConstants.S_OK;
+            }
+
             Debug.WriteLine("PythonEngine Continue " + thread.GetDebuggedThread().Id);
 
-            // TODO: How does this differ from ExecuteOnThread?
-            thread.GetDebuggedThread().Resume();
+            // Resume process, but leave stepping state intact, allowing stepping accross tracepoints
+            ResumeProcess();
 
             return VSConstants.S_OK;
         }
@@ -1020,9 +1054,16 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             AD7Thread thread = (AD7Thread)pThread;
             thread.GetDebuggedThread().ClearSteppingState();
 
-            _process.Resume();
+            ResumeProcess();
 
             return VSConstants.S_OK;
+        }
+
+        private void ResumeProcess() {
+            // Resume must be from entry point or past
+            _handleEntryPointHit = false;
+
+            _process.Resume();
         }
 
         #endregion

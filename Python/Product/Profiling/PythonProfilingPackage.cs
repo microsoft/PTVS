@@ -27,6 +27,7 @@ using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudioTools.Project;
 using System.Windows.Interop;
 
 namespace Microsoft.PythonTools.Profiling {
@@ -158,6 +159,11 @@ namespace Microsoft.PythonTools.Profiling {
         }
 
         internal void StartProfiling(ProfilingTarget target, SessionNode session, bool openReport = true) {
+            if (!Utilities.SaveDirtyFiles()) {
+                // Abort
+                return;
+            }
+
             if (target.ProjectTarget != null) {
                 ProfileProjectTarget(session, target.ProjectTarget, openReport);
             } else if (target.StandaloneTarget != null) {

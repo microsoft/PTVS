@@ -232,6 +232,11 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         #endregion
     }
 
+    // This interface is sent when the entry point has been hit.
+    sealed class AD7EntryPointEvent : AD7StoppingEvent, IDebugEntryPointEvent2 {
+        public const string IID = "e8414a3e-1642-48ec-829e-5f4040e16da9";
+    }
+
     // This Event is sent when a breakpoint is hit in the debuggee
     sealed class AD7BreakpointEvent : AD7StoppingEvent, IDebugBreakpointEvent2 {
         public const string IID = "501C1E21-C557-48B8-BA30-A1EAB0BC4A74";

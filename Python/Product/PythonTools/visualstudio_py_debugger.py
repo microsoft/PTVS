@@ -170,6 +170,7 @@ EXCR = to_bytes('EXCR')
 CHLD = to_bytes('CHLD')
 OUTP = to_bytes('OUTP')
 REQH = to_bytes('REQH')
+LAST = to_bytes('LAST')
 
 def get_thread_from_id(id):
     THREADS_LOCK.acquire()
@@ -664,7 +665,7 @@ class Thread(object):
                                 probe_stack()
                                 update_all_thread_stacks(self)
                                 self.block(lambda: (report_breakpoint_hit(bp_id, self.id), mark_all_threads_for_break()))
-                            break
+                                break
 
         # forward call to previous trace function, if any, updating trace function appropriately
         old_trace_func = self.prev_trace_func
@@ -690,12 +691,12 @@ class Thread(object):
                         self.push_frame(ModuleExitFrame(frame))
                         self.stepping = STEPPING_NONE
                         update_all_thread_stacks(self)
-                        self.block(lambda: report_step_finished(self.id))
+                        self.block(lambda: (report_step_finished(self.id), mark_all_threads_for_break()))
                         self.pop_frame()
                     else:
                         self.stepping = STEPPING_NONE
                         update_all_thread_stacks(self)
-                        self.block(lambda: report_step_finished(self.id))
+                        self.block(lambda: (report_step_finished(self.id), mark_all_threads_for_break()))
 
         # forward call to previous trace function, if any
         old_trace_func = self.prev_trace_func
@@ -752,7 +753,8 @@ class Thread(object):
         def block_cond():
             if will_block_now:
                 if stepping == STEPPING_OVER or stepping == STEPPING_INTO:
-                    return report_step_finished(self.id)
+                    report_step_finished(self.id)
+                    return mark_all_threads_for_break()
                 else:
                     if not DETACHED:
                         if stepping == STEPPING_ATTACH_BREAK:
@@ -1213,6 +1215,7 @@ class DebuggerLoop(object):
             to_bytes('bkda') : self.command_add_django_breakpoint,
             to_bytes('crep') : self.command_connect_repl,
             to_bytes('drep') : self.command_disconnect_repl,
+            to_bytes('lack') : self.command_last_ack,
         }
 
     def loop(self):
@@ -1370,7 +1373,7 @@ class DebuggerLoop(object):
             self.command_resume_all()
         else:
             thread.unblock()
-    
+
     def command_set_exception_info(self):
         BREAK_ON.Clear()
         BREAK_ON.default_mode = read_int(self.conn)
@@ -1495,6 +1498,8 @@ class DebuggerLoop(object):
         
         raise DebuggerExitException()
 
+    def command_last_ack(self):
+        last_ack_event.set()
 
 DETACH_CALLBACKS = []
 
@@ -1974,6 +1979,17 @@ def debug(file, port_num, debug_id, globals_obj, locals_obj, wait_on_exception, 
             del THREADS[cur_thread.id]
             THREADS_LOCK.release()
             report_thread_exit(cur_thread)
+
+            # Give VS debugger a chance to process commands
+            # by waiting for ack of "last" command
+            global threading
+            if threading is None:
+                import threading
+            global last_ack_event
+            last_ack_event = threading.Event()
+            with _SendLockCtx:
+                write_bytes(conn, LAST)
+            last_ack_event.wait(5)
 
         if wait_on_exit:
             do_wait()
