@@ -1663,8 +1663,13 @@ namespace Microsoft.VisualStudioTools.Project
                 new Guid(ToolWindowGuids80.SolutionExplorer)) as IVsUIHierarchyWindow2;
             
             uint state;
-            ErrorHandler.ThrowOnFailure(windows.GetItemState(ProjectMgr.GetOuterInterface<IVsUIHierarchy>(), ID, (uint)__VSHIERARCHYITEMSTATE.HIS_Expanded, out state));
-            return state != 0;
+            if (ErrorHandler.Succeeded(windows.GetItemState(ProjectMgr.GetOuterInterface<IVsUIHierarchy>(),
+                ID,
+                (uint)__VSHIERARCHYITEMSTATE.HIS_Expanded,
+                out state))) {
+                return state != 0;
+            }
+            return false;
         }
 
         /// <summary>
