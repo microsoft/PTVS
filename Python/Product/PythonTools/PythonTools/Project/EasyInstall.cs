@@ -70,6 +70,7 @@ namespace Microsoft.PythonTools.Project {
             }
             psi.Arguments = "/S /C \"" +
                 easyInstallPath + " " +
+                "--always-unzip --always-copy " +
                 string.Join(" ", cmd) + 
                 " > " + ProcessOutput.QuoteSingleArgument(outFile) +
                 " 2> " + ProcessOutput.QuoteSingleArgument(errFile) +
