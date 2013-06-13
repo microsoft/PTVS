@@ -268,24 +268,10 @@ namespace Microsoft.PythonTools.Project {
         }
 
         /// <summary>
-        /// Allow editing the description
+        /// Prevent editing the description
         /// </summary>
         public override string GetEditLabel() {
-            if (!_isReference) {
-                return _factory.Description;
-            }
             return null;
-        }
-
-        public override int SetEditLabel(string label) {
-            var derived = _factory as DerivedInterpreterFactory;
-            if (derived != null) {
-                ItemNode.SetMetadata(MSBuildProjectInterpreterFactoryProvider.DescriptionKey, label);
-                derived.SetDescription(label);
-                ProjectMgr.ReDrawNode(this, UIHierarchyElement.Caption);
-                return VSConstants.S_OK;
-            }
-            return base.SetEditLabel(label);
         }
 
         public override object GetIconHandle(bool open) {
