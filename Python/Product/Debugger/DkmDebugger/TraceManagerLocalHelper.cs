@@ -74,14 +74,14 @@ namespace Microsoft.PythonTools.DkmDebugger {
         // Layout of this struct must always remain in sync with DebuggerHelper/trace.cpp.
         [StructLayout(LayoutKind.Sequential, Pack = 8)]
         private struct PyFrameObject_FieldOffsets {
-            public readonly long f_code, f_locals, f_lineno, f_localsplus;
+            public readonly long f_code, f_globals, f_locals, f_lineno;
 
             public PyFrameObject_FieldOffsets(DkmProcess process) {
                 var fields = StructProxy.GetStructFields<PyFrameObject, PyFrameObject.Fields>(process);
                 f_code = fields.f_code.Offset;
+                f_globals = fields.f_globals.Offset;
                 f_locals = fields.f_locals.Offset;
                 f_lineno = fields.f_lineno.Offset;
-                f_localsplus = fields.f_localsplus.Offset;
             }
         }
 
@@ -142,22 +142,57 @@ namespace Microsoft.PythonTools.DkmDebugger {
             public PyUnicodeObject27_FieldOffsets PyUnicodeObject27;
             public PyUnicodeObject33_FieldOffsets PyUnicodeObject33;
 
-            public FieldOffsets(DkmProcess process)
-                : this() {
-
-                var langVer = process.GetPythonRuntimeInfo().LanguageVersion;
-
+            public FieldOffsets(DkmProcess process, PythonRuntimeInfo pyrtInfo) {
                 PyObject = new PyObject_FieldOffsets(process);
                 PyVarObject = new PyVarObject_FieldOffsets(process);
                 PyFrameObject = new PyFrameObject_FieldOffsets(process);
                 PyCodeObject = new PyCodeObject_FieldOffsets(process);
                 PyBytesObject = new PyBytesObject_FieldOffsets(process);
 
-                if (langVer <= PythonLanguageVersion.V27) {
+                if (pyrtInfo.LanguageVersion <= PythonLanguageVersion.V27) {
                     PyUnicodeObject27 = new PyUnicodeObject27_FieldOffsets(process);
+                    PyUnicodeObject33 = new PyUnicodeObject33_FieldOffsets();
                 } else {
+                    PyUnicodeObject27 = new PyUnicodeObject27_FieldOffsets();
                     PyUnicodeObject33 = new PyUnicodeObject33_FieldOffsets(process);
                 }
+            }
+        }
+
+        // Layout of this struct must always remain in sync with DebuggerHelper/trace.cpp.
+        [StructLayout(LayoutKind.Sequential, Pack = 8)]
+        private struct Types {
+            public ulong PyBytes_Type;
+            public ulong PyUnicode_Type;
+
+            public Types(DkmProcess process, PythonRuntimeInfo pyrtInfo) {
+                PyBytes_Type = PyObject.GetPyType<PyBytesObject>(process).Address;
+
+                if (pyrtInfo.LanguageVersion <= PythonLanguageVersion.V27) { 
+                    PyUnicode_Type = PyObject.GetPyType<PyUnicodeObject27>(process).Address;
+                } else {
+                    PyUnicode_Type = PyObject.GetPyType<PyUnicodeObject33>(process).Address;
+                }
+            }
+        }
+
+        // Layout of this struct must always remain in sync with DebuggerHelper/trace.cpp.
+        [StructLayout(LayoutKind.Sequential, Pack = 8)]
+        private struct FunctionPointers {
+	        public ulong Py_DecRef;
+	        public ulong PyFrame_FastToLocals;
+	        public ulong PyRun_StringFlags;
+	        public ulong PyErr_Fetch;
+	        public ulong PyErr_Restore;
+            public ulong PyErr_Occurred;
+
+            public FunctionPointers(DkmProcess process, PythonRuntimeInfo pyrtInfo) {
+                Py_DecRef = pyrtInfo.DLLs.Python.GetFunctionAddress("Py_DecRef");
+                PyFrame_FastToLocals = pyrtInfo.DLLs.Python.GetFunctionAddress("PyFrame_FastToLocals");
+                PyRun_StringFlags = pyrtInfo.DLLs.Python.GetFunctionAddress("PyRun_StringFlags");
+                PyErr_Fetch = pyrtInfo.DLLs.Python.GetFunctionAddress("PyErr_Fetch");
+                PyErr_Restore = pyrtInfo.DLLs.Python.GetFunctionAddress("PyErr_Restore");
+                PyErr_Occurred = pyrtInfo.DLLs.Python.GetFunctionAddress("PyErr_Occurred");
             }
         }
 
@@ -187,18 +222,18 @@ namespace Microsoft.PythonTools.DkmDebugger {
 
             if (kind == Kind.StepIn) {
                 var fieldOffsets = _pyrtInfo.DLLs.DebuggerHelper.GetExportedStaticVariable<CliStructProxy<FieldOffsets>>("fieldOffsets");
-                fieldOffsets.Write(new FieldOffsets(process));
+                fieldOffsets.Write(new FieldOffsets(process, _pyrtInfo));
 
-                var pyBytes_Type = _pyrtInfo.DLLs.DebuggerHelper.GetExportedStaticVariable<PointerProxy<PyTypeObject>>("PyBytes_Type");
-                pyBytes_Type.Write(PyObject.GetPyType<PyBytesObject>(process));
+                var types = _pyrtInfo.DLLs.DebuggerHelper.GetExportedStaticVariable<CliStructProxy<Types>>("types");
+                types.Write(new Types(process, _pyrtInfo));
 
-                var pyUnicode_Type = _pyrtInfo.DLLs.DebuggerHelper.GetExportedStaticVariable<PointerProxy<PyTypeObject>>("PyUnicode_Type");
+                var functionPointers = _pyrtInfo.DLLs.DebuggerHelper.GetExportedStaticVariable<CliStructProxy<FunctionPointers>>("functionPointers");
+                functionPointers.Write(new FunctionPointers(process, _pyrtInfo));
+
                 var stringEquals = _pyrtInfo.DLLs.DebuggerHelper.GetExportedStaticVariable<PointerProxy>("stringEquals");
                 if (_pyrtInfo.LanguageVersion <= PythonLanguageVersion.V27) {
-                    pyUnicode_Type.Write(PyObject.GetPyType<PyUnicodeObject27>(process));
                     stringEquals.Write(_pyrtInfo.DLLs.DebuggerHelper.GetExportedFunctionAddress("StringEquals27").GetPointer());
                 } else {
-                    pyUnicode_Type.Write(PyObject.GetPyType<PyUnicodeObject33>(process));
                     stringEquals.Write(_pyrtInfo.DLLs.DebuggerHelper.GetExportedFunctionAddress("StringEquals33").GetPointer());
                 }
 
@@ -373,7 +408,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
                 return;
             }
 
-            var reprOptions = new ReprOptions { LanguageVersion = _pyrtInfo.LanguageVersion };
+            var reprOptions = new ReprOptions(process);
 
             string typeName = "<unknown exception type>";
             string additionalInfo = "";

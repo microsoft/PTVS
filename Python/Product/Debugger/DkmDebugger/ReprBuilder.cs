@@ -20,12 +20,18 @@ using System.Text;
 using Microsoft.PythonTools.DkmDebugger.Proxies.Structs;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
+using Microsoft.VisualStudio.Debugger;
+using Microsoft.VisualStudio.Debugger.Evaluation;
 
 namespace Microsoft.PythonTools.DkmDebugger {
     internal class ReprOptions {
         private int _maxLength = 1000;
 
         public PythonLanguageVersion LanguageVersion { get; set; }
+
+        public bool Is64Bit { get; set; }
+
+        public bool HexadecimalDisplay { get; set; }
 
         public int MaxLength {
             get { return _maxLength;  }
@@ -37,7 +43,15 @@ namespace Microsoft.PythonTools.DkmDebugger {
             }
         }
 
-        public bool HexadecimalDisplay { get; set; }
+        public ReprOptions(DkmProcess process) {
+            Is64Bit = process.Is64Bit();
+            LanguageVersion = process.GetPythonRuntimeInfo().LanguageVersion;
+        }
+
+        public ReprOptions(DkmInspectionContext inspectionContext)
+            : this(inspectionContext.Thread.Process) {
+            HexadecimalDisplay = (inspectionContext.Radix == 16);
+        }
     }
 
     /// <summary>
@@ -151,6 +165,20 @@ namespace Microsoft.PythonTools.DkmDebugger {
             return this;
         }
 
+        public ReprBuilder AppendFormat(string format, object arg0, object arg1, object arg2) {
+            if (CheckLength()) {
+                _sb.AppendFormat(this, format, arg0, arg1, arg2);
+            }
+            return this;
+        }
+
+        public ReprBuilder AppendFormat(string format, object arg0, object arg1, object arg2, object arg3) {
+            if (CheckLength()) {
+                _sb.AppendFormat(this, format, arg0, arg1, arg2, arg3);
+            }
+            return this;
+        }
+
         /// <summary>
         /// Appends <paramref name="value"/> represented as a Python literal.
         /// </summary>
@@ -252,6 +280,12 @@ namespace Microsoft.PythonTools.DkmDebugger {
                 var builder = new ReprBuilder(Options);
                 builder.AppendLiteral(arg);
                 return builder.ToString();
+            } else if (format == "PTR") {
+                if (Options.Is64Bit) {
+                    return string.Format("0x{0:x16}", arg);
+                } else {
+                    return string.Format("0x{0:x8}", arg);
+                }
             } else {
                 var formattable = arg as IFormattable;
                 if (formattable != null) {

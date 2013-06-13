@@ -15,6 +15,9 @@
 #include "stdafx.h"
 
 
+// Opaque data type; we only use field offsets and function pointers provided to us by debugger to work with values of this type.
+struct PyObject {};
+
 template<class T>
 T ReadField(const void* p, int64_t offset) {
     return *reinterpret_cast<const T*>(reinterpret_cast<const char*>(p) + offset);
@@ -22,6 +25,9 @@ T ReadField(const void* p, int64_t offset) {
 
 
 extern "C" {
+
+void EvalLoop(void (*bp)());
+
 
 // The following struct definitions should be kept in perfect sync with the corresponding ones in C# in Debugger.
 // To ensure matching layout, only types which are the same size on all platforms should be used. This means
@@ -41,7 +47,7 @@ struct {
         int64_t ob_size;
     } PyVarObject;
     struct {
-        int64_t f_code, f_locals, f_lineno, f_localsplus;
+        int64_t f_code, f_globals, f_locals, f_lineno;
     } PyFrameObject;
     struct {
         int64_t co_varnames, co_filename, co_name;
@@ -58,14 +64,53 @@ struct {
     } PyUnicodeObject33;
 } fieldOffsets;
 
+// Addresses of various Py..._Type globals.
+__declspec(dllexport)
+struct {
+    uint64_t PyBytes_Type;
+    uint64_t PyUnicode_Type;
+} types;
+
+// Python API functions
+__declspec(dllexport)
+struct {
+    uint64_t Py_DecRef;
+    uint64_t PyFrame_FastToLocals;
+    uint64_t PyRun_StringFlags;
+    uint64_t PyErr_Fetch;
+    uint64_t PyErr_Restore;
+    uint64_t PyErr_Occurred;
+} functionPointers;
+
+void Py_DecRef(PyObject* a1) {
+    return reinterpret_cast<decltype(&Py_DecRef)>(functionPointers.Py_DecRef)(a1);
+}
+
+void PyFrame_FastToLocals(PyObject* a1) {
+    return reinterpret_cast<decltype(&PyFrame_FastToLocals)>(functionPointers.PyFrame_FastToLocals)(a1);
+}
+
+PyObject* PyRun_StringFlags(const char* a1, int a2, PyObject* a3, PyObject* a4, void* a5) {
+    return reinterpret_cast<decltype(&PyRun_StringFlags)>(functionPointers.PyRun_StringFlags)(a1, a2, a3, a4, a5);
+}
+
+void PyErr_Fetch(PyObject** a1, PyObject** a2, PyObject** a3) {
+    return reinterpret_cast<decltype(&PyErr_Fetch)>(functionPointers.PyErr_Fetch)(a1, a2, a3);
+}
+
+void PyErr_Restore(PyObject* a1, PyObject* a2, PyObject* a3) {
+    return reinterpret_cast<decltype(&PyErr_Restore)>(functionPointers.PyErr_Restore)(a1, a2, a3);
+}
+
+PyObject* PyErr_Occurred() {
+    return reinterpret_cast<decltype(&PyErr_Occurred)>(functionPointers.PyErr_Occurred)();
+}
+
+
 // A function to compare DebuggerString to a Python string object. This is set to either StringEquals27 or
 // to StringEquals33 by debugger, depending on the language version.
 __declspec(dllexport)
 bool (*stringEquals)(const struct DebuggerString* debuggerString, const void* pyString);
-
-// Pointers to the corresponding Python type objects.
-__declspec(dllexport)
-const void *PyBytes_Type, *PyUnicode_Type;
 
 // A string provided by the debugger (e.g. for file names). This is actually a variable-length struct,
 // with _countof(data) == length + 1 - the extra wchar_t is the null terminator.
@@ -158,19 +203,39 @@ __declspec(dllexport)
 volatile int64_t objectsToRelease;
 
 __declspec(dllexport)
-volatile void (*Py_DecRef)(void*);
+volatile uint64_t evalLoopThreadId; // 0 if no thread is running EvalLoop
+
+__declspec(dllexport)
+volatile uint64_t evalLoopFrame; // pointer to PyFrameObject that should be the context
+
+const int EXPRESSION_EVALUATION_BUFFER_SIZE = 0x1000;
+
+__declspec(dllexport)
+volatile char evalLoopInput[EXPRESSION_EVALUATION_BUFFER_SIZE]; // text of the expression, encoded in UTF-8
+
+__declspec(dllexport)
+volatile uint64_t evalLoopResult; // pointer to object that was the result of evaluation
+
+__declspec(dllexport)
+volatile uint64_t evalLoopExcType; // pointer to exc_type fetched after evaluation
+
+__declspec(dllexport)
+volatile uint64_t evalLoopExcValue; // pointer to exc_value fetched after evaluation
+
+__declspec(dllexport)
+volatile uint32_t evalLoopSEHCode; // if a structured exception occured during eval, the return value of GetExceptionCode
 
 #pragma pack(pop)
 
 
-extern "C" __declspec(dllexport)
+__declspec(dllexport)
 bool StringEquals27(const DebuggerString* debuggerString, const void* pyString) {
     int32_t my_length = debuggerString->length;
     const wchar_t* my_data = debuggerString->data;
 
     // In 2.7, we have to be able to compare against either ASCII or Unicode strings, so check type and branch.
     auto ob_type = ReadField<const void*>(pyString, fieldOffsets.PyObject.ob_type);
-    if (ob_type == PyBytes_Type) {
+    if (reinterpret_cast<uint64_t>(ob_type) == types.PyBytes_Type) {
         auto ob_size = ReadField<SSIZE_T>(pyString, fieldOffsets.PyVarObject.ob_size);
         if (ob_size != my_length) {
             return false;
@@ -183,7 +248,7 @@ bool StringEquals27(const DebuggerString* debuggerString, const void* pyString) 
             }
         }
         return true;
-    } else if (ob_type == PyUnicode_Type) {
+    } else if (reinterpret_cast<uint64_t>(ob_type) == types.PyUnicode_Type) {
         auto length = ReadField<SSIZE_T>(pyString, fieldOffsets.PyUnicodeObject27.length);
         if (length != my_length) {
             return false;
@@ -196,11 +261,12 @@ bool StringEquals27(const DebuggerString* debuggerString, const void* pyString) 
     }
 }
 
-extern "C" __declspec(dllexport)
+
+__declspec(dllexport)
 bool StringEquals33(const DebuggerString* debuggerString, const void* pyString) {
     // In 3.x, we only need to support Unicode strings - bytes is no longer a string type.
     void* ob_type = ReadField<void*>(pyString, fieldOffsets.PyObject.ob_type);
-    if (ob_type != PyUnicode_Type) {
+    if (reinterpret_cast<uint64_t>(ob_type) != types.PyUnicode_Type) {
         return false;
     }
 
@@ -291,24 +357,84 @@ void OnStepFallThrough() {
     volatile char dummy = 0;
 }
 
+// EvalLoop completed evaluation of input; evalLoopResult points at the resulting object if any, and evalLoopException points at exception if any.
+__declspec(dllexport) __declspec(noinline)
+void OnEvalComplete() {
+    volatile char dummy = 0;
+}
+
+
+void EvalLoop(void (*bp)()) {
+    evalLoopThreadId = GetCurrentThreadId();
+    bp();
+    __try {
+        while (*evalLoopInput) {
+            // Prevent re-entrant eval
+            evalLoopThreadId = 0;
+
+            __try {
+                auto frame = reinterpret_cast<PyObject*>(evalLoopFrame);
+                PyFrame_FastToLocals(frame);
+
+                auto f_globals = ReadField<PyObject*>(frame, fieldOffsets.PyFrameObject.f_globals);
+                auto f_locals = ReadField<PyObject*>(frame, fieldOffsets.PyFrameObject.f_locals);
+
+                PyObject *orig_exc_type, *orig_exc_value, *orig_exc_tb;
+                PyErr_Fetch(&orig_exc_type, &orig_exc_value, &orig_exc_tb);
+                PyErr_Restore(nullptr, nullptr, nullptr);
+
+                evalLoopResult = 0;
+                evalLoopExcType = 0;
+                evalLoopExcValue = 0;
+                evalLoopSEHCode = 0;
+                PyObject* result = PyRun_StringFlags((char*)evalLoopInput, /*Py_eval_input*/ 258, f_globals, f_locals, nullptr);
+				*evalLoopInput = '\0';
+
+                PyObject *exc_type, *exc_value, *exc_tb;
+                PyErr_Fetch(&exc_type, &exc_value, &exc_tb);
+
+                evalLoopResult = reinterpret_cast<uint64_t>(result);
+                evalLoopExcType = reinterpret_cast<uint64_t>(exc_type);
+                evalLoopExcValue = reinterpret_cast<uint64_t>(exc_value);
+                evalLoopThreadId = GetCurrentThreadId();
+                OnEvalComplete();
+
+                Py_DecRef(result);
+                Py_DecRef(exc_type);
+                Py_DecRef(exc_value);
+                Py_DecRef(exc_tb);
+
+                PyErr_Restore(orig_exc_type, orig_exc_value, orig_exc_tb);
+            } __except (EXCEPTION_EXECUTE_HANDLER) {
+                evalLoopResult = 0;
+                evalLoopSEHCode = GetExceptionCode();
+                evalLoopThreadId = GetCurrentThreadId();
+                OnEvalComplete();
+            }
+        }
+    } __finally {
+        evalLoopThreadId = 0;
+    }
+}
+
 
 static void TraceLine(void* frame) {
-	// Let's check for stepping first.
+    // Let's check for stepping first.
     if (stepKind == STEP_INTO || (stepKind == STEP_OVER && steppingStackDepth == 0)) {
         if (stepThreadId == GetCurrentThreadId()) {
-            OnStepComplete();
-			return;
+            EvalLoop(OnStepComplete);
+            return;
         }
     }
 
     // See the large comment at the declaration of breakpointData for details of how the below synchronization scheme works.
-	unsigned iData;
-	do {
-		iData = currentBreakpointData;
-		// BreakpointManager.WriteBreakpoints may run at this point and change currentBreakpointData ...
-		breakpointDataInUseByTraceFunc = iData; // (locks breakpointData[iData] from any modification by debugger)
-		// ... so check it again to ensure that it's still the same, and retry if it's not.
-	} while (iData != currentBreakpointData);
+    unsigned iData;
+    do {
+        iData = currentBreakpointData;
+        // BreakpointManager.WriteBreakpoints may run at this point and change currentBreakpointData ...
+        breakpointDataInUseByTraceFunc = iData; // (locks breakpointData[iData] from any modification by debugger)
+        // ... so check it again to ensure that it's still the same, and retry if it's not.
+    } while (iData != currentBreakpointData);
     // We can now safely use breakpointData[iData]
     const auto& bpData = breakpointData[iData];
 
@@ -333,8 +459,8 @@ static void TraceLine(void* frame) {
         const DebuggerString* fileName = reinterpret_cast<const DebuggerString*>(strings + *pFileNameOffset);
         if (fileName->Equals(co_filename)) {
             currentSourceLocation.lineNumber = f_lineno;
-            currentSourceLocation.fileName = (uint64_t)fileName;
-            OnBreakpointHit();
+            currentSourceLocation.fileName = reinterpret_cast<uint64_t>(fileName);
+            EvalLoop(OnBreakpointHit);
             return;
         }
     }
@@ -342,25 +468,25 @@ static void TraceLine(void* frame) {
 
 
 static void TraceCall(void* frame) {
-	if (stepThreadId == GetCurrentThreadId()) {
-		++steppingStackDepth;
-		if (stepKind == STEP_INTO) {
-			stepKind = STEP_NONE;
-			OnStepComplete();
-		}
-	}
+    if (stepThreadId == GetCurrentThreadId()) {
+        ++steppingStackDepth;
+        if (stepKind == STEP_INTO) {
+            stepKind = STEP_NONE;
+            EvalLoop(OnStepComplete);
+        }
+    }
 }
 
 
 static void TraceReturn(void* frame) {
-	if (stepThreadId == GetCurrentThreadId()) {
-		--steppingStackDepth;
-		if (stepKind != STEP_NONE) {
-			if (steppingStackDepth < 0) {
-				OnStepFallThrough();
-			}
-		}
-	}
+    if (stepThreadId == GetCurrentThreadId()) {
+        --steppingStackDepth;
+        if (stepKind != STEP_NONE) {
+            if (steppingStackDepth < 0) {
+                EvalLoop(OnStepFallThrough);
+            }
+        }
+    }
 }
 
 
@@ -373,7 +499,7 @@ static void ReleasePendingObjects() {
             auto obj = otr->pyObject;
             if (obj != 0) {
                 otr->pyObject = 0;
-                Py_DecRef(reinterpret_cast<void*>(obj));
+                Py_DecRef(reinterpret_cast<PyObject*>(obj));
             }
 
             auto next = reinterpret_cast<ObjectToRelease*>(otr->next);

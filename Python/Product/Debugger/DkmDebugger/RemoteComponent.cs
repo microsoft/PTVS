@@ -38,7 +38,8 @@ namespace Microsoft.PythonTools.DkmDebugger {
         IDkmRuntimeBreakpointReceived,
         IDkmRuntimeStepper,
         IDkmExceptionController,
-        IDkmExceptionFormatter {
+        IDkmExceptionFormatter,
+        IDkmAsyncBreakCompleteReceived {
 
         public RemoteComponent()
             : base(Guids.RemoteComponentGuid) {
@@ -125,11 +126,6 @@ namespace Microsoft.PythonTools.DkmDebugger {
         }
 
         void IDkmRuntimeBreakpointReceived.OnRuntimeBreakpointReceived(DkmRuntimeBreakpoint runtimeBreakpoint, DkmThread thread, bool hasException, DkmEventDescriptorS eventDescriptor) {
-            var traceManager = runtimeBreakpoint.Process.GetDataItem<TraceManager>();
-            if (traceManager == null) {
-                return;
-            }
-
             if (runtimeBreakpoint.SourceId == Guids.LocalComponentGuid) {
                 ulong retAddr, frameBase, vframe;
                 thread.GetCurrentFrameInfo(out retAddr, out frameBase, out vframe);
@@ -140,7 +136,10 @@ namespace Microsoft.PythonTools.DkmDebugger {
                     VFrame = vframe
                 }.SendHigher(thread.Process);
             } else if (runtimeBreakpoint.SourceId == Guids.PythonTraceManagerSourceGuid || runtimeBreakpoint.SourceId == Guids.PythonStepTargetSourceGuid) {
-                traceManager.OnNativeBreakpointHit(runtimeBreakpoint, thread);
+                var traceManager = runtimeBreakpoint.Process.GetDataItem<TraceManager>();
+                if (traceManager != null) {
+                    traceManager.OnNativeBreakpointHit(runtimeBreakpoint, thread);
+                }
             } else {
                 Debug.Fail("RemoteComponent received a notification for a breakpoint that it does not know how to handle.");
                 throw new ArgumentException();
@@ -240,7 +239,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
 
                 string moduleName;
                 if (ModuleId == Guids.UnknownPythonModuleGuid) {
-                    moduleName = "<unknown Python module>";
+                    moduleName = "<unknown>";
                 } else {
                     try {
                         moduleName = Path.GetFileName(FileName);
@@ -298,6 +297,30 @@ namespace Microsoft.PythonTools.DkmDebugger {
 
         string IDkmExceptionFormatter.GetDescription(DkmExceptionInformation exception) {
             return exception.Name;
+        }
+
+        [DataContract]
+        [MessageTo(Guids.RemoteComponentId)]
+        internal class EndFuncEvalExecutionRequest : MessageBase<EndFuncEvalExecutionRequest> {
+            [DataMember]
+            public Guid ThreadId { get; set; }
+
+            public override void Handle(DkmProcess process) {
+                var thread = process.GetThreads().Single(t => t.UniqueId == ThreadId);
+                thread.EndFuncEvalExecution(DkmFuncEvalFlags.None);
+            }
+        }
+
+        [DataContract]
+        [MessageTo(Guids.RemoteComponentId)]
+        internal class AbortingEvalExecutionRequest : MessageBase<AbortingEvalExecutionRequest> {
+            public override void Handle(DkmProcess process) {
+                process.AbortingFuncEvalExecution(DkmFuncEvalFlags.None);
+            }
+        }
+
+        void IDkmAsyncBreakCompleteReceived.OnAsyncBreakCompleteReceived(DkmProcess process, DkmAsyncBreakStatus status, DkmThread thread, DkmEventDescriptorS eventDescriptor) {
+            new LocalComponent.AsyncBreakReceivedNotification { ThreadId = thread.UniqueId }.SendHigher(process);
         }
     }
 }

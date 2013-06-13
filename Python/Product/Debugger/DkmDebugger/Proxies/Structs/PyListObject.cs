@@ -36,6 +36,10 @@ namespace Microsoft.PythonTools.DkmDebugger.Proxies.Structs {
         }
 
         public IEnumerable<PointerProxy<PyObject>> ReadElements() {
+            if (ob_item.IsNull) {
+                return Enumerable.Empty<PointerProxy<PyObject>>();
+            }
+
             return ob_item.Read().Take((int)ob_size.Read());
         }
 

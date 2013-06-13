@@ -94,6 +94,10 @@ namespace Microsoft.PythonTools.DkmDebugger.Proxies.Structs {
         }
 
         public override IEnumerable<KeyValuePair<PyObject, PointerProxy<PyObject>>> ReadElements() {
+            if (ma_table.IsNull) {
+                return Enumerable.Empty<KeyValuePair<PyObject, PointerProxy<PyObject>>>();
+            }
+
             var count = ma_mask.Read() + 1;
             var entries = ma_table.Read().Take((int)count);
             var items = from entry in entries
@@ -131,6 +135,10 @@ namespace Microsoft.PythonTools.DkmDebugger.Proxies.Structs {
         }
 
         public override IEnumerable<KeyValuePair<PyObject, PointerProxy<PyObject>>> ReadElements() {
+            if (ma_keys.IsNull) {
+                yield break;
+            }
+
             var keys = this.ma_keys.Read();
             var entries = keys.dk_entries.Take((int)keys.dk_size.Read());
 

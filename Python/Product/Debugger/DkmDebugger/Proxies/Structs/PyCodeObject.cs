@@ -24,6 +24,7 @@ namespace Microsoft.PythonTools.DkmDebugger.Proxies.Structs {
             public StructField<PointerProxy<PyTupleObject>> co_cellvars;
             public StructField<PointerProxy<IPyBaseStringObject>> co_filename;
             public StructField<PointerProxy<IPyBaseStringObject>> co_name;
+            public StructField<Int32Proxy> co_firstlineno;
         }
 
         private readonly Fields _fields;
@@ -60,6 +61,28 @@ namespace Microsoft.PythonTools.DkmDebugger.Proxies.Structs {
 
         public PointerProxy<IPyBaseStringObject> co_name {
             get { return GetFieldProxy(_fields.co_name); }
+        }
+
+        public Int32Proxy co_firstlineno {
+            get { return GetFieldProxy(_fields.co_firstlineno); }
+        }
+
+        public override void Repr(ReprBuilder builder) {
+            string name = co_name.TryRead().ToStringOrNull() ?? "???";
+
+            string filename = co_filename.TryRead().ToStringOrNull();
+            if (filename == null) {
+                filename = "???";
+            } else {
+                filename = '"' + filename + '"';
+            }
+
+            int lineno = co_firstlineno.Read();
+            if (lineno == 0) {
+                lineno = -1;
+            }
+
+            builder.AppendFormat("<code object {0} at {1:PTR}, file {2}, line {3}>", name, Address, filename, lineno);
         }
     }
 }

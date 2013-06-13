@@ -69,6 +69,10 @@ namespace Microsoft.PythonTools.DkmDebugger.Proxies.Structs {
         }
 
         public IEnumerable<PyObject> ReadElements() {
+            if (table.IsNull) {
+                return Enumerable.Empty<PyObject>();
+            }
+
             var count = mask.Read() + 1;
             var entries = table.Read().Take((int)count);
             var items = from entry in entries

@@ -40,6 +40,9 @@ namespace Microsoft.PythonTools.DkmDebugger.Proxies.Structs {
             var process = frame.Process;
             var PyEval_EvalFrameEx = process.CreateNativeInstructionAddress(process.GetPythonRuntimeInfo().DLLs.Python.GetFunctionAddress("PyEval_EvalFrameEx"));
 
+            if (frame.InstructionAddress == null) {
+                return null;
+            } 
             if (frame.RuntimeInstance.Id.RuntimeType != Guids.PythonRuntimeTypeGuid && !frame.InstructionAddress.IsInSameFunction(PyEval_EvalFrameEx)) {
                 return null;
             }

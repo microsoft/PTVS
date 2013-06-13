@@ -20,6 +20,7 @@ using System.Runtime.Serialization;
 using Microsoft.Dia;
 using Microsoft.PythonTools.Debugger;
 using Microsoft.PythonTools.Debugger.DebugEngine;
+using Microsoft.PythonTools.DkmDebugger.Proxies;
 using Microsoft.VisualStudio.Debugger;
 using Microsoft.VisualStudio.Debugger.Breakpoints;
 using Microsoft.VisualStudio.Debugger.CallStack;
@@ -107,10 +108,30 @@ namespace Microsoft.PythonTools.DkmDebugger {
                     var warnMsg = DkmCustomMessage.Create(process.Connection, process, Guid.Empty, (int)VsPackageMessage.WarnAboutPythonSymbols, moduleInstance.Name, null);
                     warnMsg.SendToVsService(Guids.CustomDebuggerEventHandlerGuid, IsBlocking: true);
                 } else if (PythonDLLs.DebuggerHelperNames.Contains(moduleInstance.Name)) {
-                    pyrtInfo.DLLs.DebuggerHelper = moduleInstance;
                     moduleInstance.TryLoadSymbols();
-                    if (pyrtInfo.DLLs.Python != null && pyrtInfo.DLLs.Python.TryGetSymbols() != null) {
-                        CreatePythonRuntimeInstance(process);
+
+                    // When the module is reported is loaded, it is not necessarily fully initialized yet - it is possible to get into a state
+                    // where its import table is not processed yet. If we register TraceFunc and it gets called by Python when in that state,
+                    // we'll get a crash as soon as any imported WinAPI function is called. So check whether DllMain has already run - if it
+                    // is, we're good to go, and if not, set a breakpoint on a hook that will be called once it is run, and defer runtime
+                    // creation until that breakpoint is hit.
+
+                    bool isInitialized = moduleInstance.GetExportedStaticVariable<ByteProxy>("isInitialized").Read() != 0;
+                    if (isInitialized) {
+                        pyrtInfo.DLLs.DebuggerHelper = moduleInstance;
+                        if (pyrtInfo.DLLs.Python != null && pyrtInfo.DLLs.Python.TryGetSymbols() != null) {
+                            CreatePythonRuntimeInstance(process);
+                        }
+                    } else {
+                        DkmRuntimeBreakpoint initBP = null;
+                        initBP = CreateRuntimeDllExportedFunctionBreakpoint(moduleInstance, "OnInitialized", (thread, frameBase, vFrame) => {
+                            initBP.Close();
+                            pyrtInfo.DLLs.DebuggerHelper = moduleInstance;
+                            if (pyrtInfo.DLLs.Python != null && pyrtInfo.DLLs.Python.TryGetSymbols() != null) {
+                                CreatePythonRuntimeInstance(process);
+                            }
+                        });
+                        initBP.Enable();
                     }
                 } else if (PythonDLLs.CTypesNames.Contains(moduleInstance.Name)) {
                     moduleInstance.TryLoadSymbols();
@@ -213,11 +234,18 @@ namespace Microsoft.PythonTools.DkmDebugger {
         }
 
         void IDkmLanguageExpressionEvaluator.EvaluateExpression(DkmInspectionContext inspectionContext, DkmWorkList workList, DkmLanguageExpression expression, DkmStackWalkFrame stackFrame, DkmCompletionRoutine<DkmEvaluateExpressionAsyncResult> completionRoutine) {
-            completionRoutine(new DkmEvaluateExpressionAsyncResult(DkmFailedEvaluationResult.Create(
-                inspectionContext, stackFrame, expression.Text, expression.Text,
-                "Evaluation of arbitrary Python expressions is not supported when native debugging is enabled.",
-                DkmEvaluationResultFlags.Invalid,
-                null)));
+            if (stackFrame.RuntimeInstance.Id.RuntimeType != Guids.PythonRuntimeTypeGuid) {
+                Debug.Fail("EvaluateExpression called on a non-Python frame.");
+                throw new NotSupportedException();
+            }
+
+            var ee = stackFrame.Process.GetDataItem<ExpressionEvaluator>();
+            if (ee == null) {
+                Debug.Fail("EvaluateExpression called, but no instance of ExpressionEvaluator exists in this DkmProcess to handle it.");
+                throw new InvalidOperationException();
+            }
+
+            ee.EvaluateExpression(inspectionContext, workList, expression, stackFrame, completionRoutine);
         }
 
         void IDkmLanguageExpressionEvaluator.GetFrameLocals(DkmInspectionContext inspectionContext, DkmWorkList workList, DkmStackWalkFrame stackFrame, DkmCompletionRoutine<DkmGetFrameLocalsAsyncResult> completionRoutine) {
@@ -277,6 +305,21 @@ namespace Microsoft.PythonTools.DkmDebugger {
             }
 
             ee.SetValueAsString(result, value, timeout, out errorText);
+        }
+
+        [DataContract]
+        [MessageTo(Guids.LocalComponentId)]
+        internal class AsyncBreakReceivedNotification : MessageBase<AsyncBreakReceivedNotification> {
+            [DataMember]
+            public Guid ThreadId { get; set; }
+
+            public override void Handle(DkmProcess process) {
+                var ee = process.GetDataItem<ExpressionEvaluator>();
+                if (ee != null) {
+                    var thread = process.GetThreads().Single(t => t.UniqueId == ThreadId);
+                    ee.OnAsyncBreakComplete(thread);
+                }
+            }
         }
 
         void IDkmCustomVisualizer.EvaluateVisualizedExpression(DkmVisualizedExpression visualizedExpression, out DkmEvaluationResult resultObject) {
@@ -379,6 +422,19 @@ namespace Microsoft.PythonTools.DkmDebugger {
 
             var addr = moduleInstance.GetFunctionAddress(funcName, debugStart);
             var bp = process.CreateBreakpoint(Guids.LocalComponentGuid, addr);
+            if (enable) {
+                bp.Enable();
+            }
+            runtimeBreakpoints.Handlers.Add(bp.UniqueId, handler);
+            return bp;
+        }
+
+        public static DkmRuntimeBreakpoint CreateRuntimeDllExportedFunctionBreakpoint(DkmNativeModuleInstance moduleInstance, string funcName, RuntimeDllBreakpointHandler handler, bool enable = false) {
+            var process = moduleInstance.Process;
+            var runtimeBreakpoints = process.GetOrCreateDataItem(() => new RuntimeDllBreakpoints());
+
+            var addr = moduleInstance.GetExportedFunctionAddress(funcName);
+            var bp = DkmRuntimeInstructionBreakpoint.Create(Guids.LocalComponentGuid, null, addr, false, null);
             if (enable) {
                 bp.Enable();
             }

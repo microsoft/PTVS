@@ -21,6 +21,7 @@ using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using Microsoft.PythonTools.DkmDebugger.Proxies;
 using Microsoft.PythonTools.DkmDebugger.Proxies.Structs;
 using Microsoft.PythonTools.Parsing;
@@ -38,19 +39,32 @@ namespace Microsoft.PythonTools.DkmDebugger {
             public ulong next;
         }
 
+        // Value of this constant must always remain in sync with DebuggerHelper/trace.cpp.
+        private const int ExpressionEvaluationBufferSize = 0x1000;
+
         private const int MaxDebugChildren = 1000;
+        private const int ExpressionEvaluationTimeout = 3000; // ms
 
         private readonly DkmProcess _process;
         private readonly UInt64Proxy _objectsToRelease;
+        private readonly UInt64Proxy _evalLoopThreadId, _evalLoopFrame, _evalLoopResult, _evalLoopExcType, _evalLoopExcValue;
+        private readonly UInt32Proxy _evalLoopSEHCode;
+        private readonly CStringProxy _evalLoopInput;
 
         public ExpressionEvaluator(DkmProcess process) {
             _process = process;
             var pyrtInfo = process.GetPythonRuntimeInfo();
 
-            var py_DecRef = pyrtInfo.DLLs.DebuggerHelper.GetExportedStaticVariable<PointerProxy>("Py_DecRef");
-            py_DecRef.Write(pyrtInfo.DLLs.Python.GetFunctionAddress("Py_DecRef"));
-
             _objectsToRelease = pyrtInfo.DLLs.DebuggerHelper.GetExportedStaticVariable<UInt64Proxy>("objectsToRelease");
+            _evalLoopThreadId = pyrtInfo.DLLs.DebuggerHelper.GetExportedStaticVariable<UInt64Proxy>("evalLoopThreadId");
+            _evalLoopFrame = pyrtInfo.DLLs.DebuggerHelper.GetExportedStaticVariable<UInt64Proxy>("evalLoopFrame");
+            _evalLoopResult = pyrtInfo.DLLs.DebuggerHelper.GetExportedStaticVariable<UInt64Proxy>("evalLoopResult");
+            _evalLoopExcType = pyrtInfo.DLLs.DebuggerHelper.GetExportedStaticVariable<UInt64Proxy>("evalLoopExcType");
+            _evalLoopExcValue = pyrtInfo.DLLs.DebuggerHelper.GetExportedStaticVariable<UInt64Proxy>("evalLoopExcValue");
+            _evalLoopSEHCode = pyrtInfo.DLLs.DebuggerHelper.GetExportedStaticVariable<UInt32Proxy>("evalLoopSEHCode");
+            _evalLoopInput = pyrtInfo.DLLs.DebuggerHelper.GetExportedStaticVariable<CStringProxy>("evalLoopInput");
+
+            LocalComponent.CreateRuntimeDllExportedFunctionBreakpoint(pyrtInfo.DLLs.DebuggerHelper, "OnEvalComplete", OnEvalComplete, enable: true);
         }
 
         private interface IPythonEvaluationResult {
@@ -69,6 +83,8 @@ namespace Microsoft.PythonTools.DkmDebugger {
         /// Data item attached to a <see cref="DkmEvaluationResult"/> that represents a Python object (a variable, field of another object, collection item etc).
         /// </summary>
         private class PyObjectEvaluationResult : DkmDataItem, IPythonEvaluationResult {
+            public string FullName { get; set; }
+
             public IValueStore<PyObject> ValueStore { get; set; }
 
             /// <summary>
@@ -91,7 +107,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
                 var cppEval = new CppExpressionEvaluator(inspectionContext, stackFrame);
                 var obj = ValueStore.Read();
                 var evalResults = new List<DkmEvaluationResult>();
-                var reprOptions = new ReprOptions { HexadecimalDisplay = (inspectionContext.Radix == 16) };
+                var reprOptions = new ReprOptions(inspectionContext);
                 var reprBuilder = new ReprBuilder(reprOptions);
 
                 if (DebuggerOptions.ShowCppViewNodes && !IsPythonView) {
@@ -145,7 +161,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
 
                     DkmEvaluationResult evalResult;
                     if (child.ValueStore is IValueStore<PyObject>) {
-                        evalResult = exprEval.CreatePyObjectEvaluationResult(inspectionContext, stackFrame, child, cppEval);
+                        evalResult = exprEval.CreatePyObjectEvaluationResult(inspectionContext, stackFrame, FullName, child, cppEval);
                     } else {
                         var value = child.ValueStore.Read();
                         reprBuilder.Clear();
@@ -156,8 +172,21 @@ namespace Microsoft.PythonTools.DkmDebugger {
                             flags |= DkmEvaluationResultFlags.RawString;
                         }
 
-                        evalResult = DkmSuccessEvaluationResult.Create(inspectionContext, stackFrame, child.Name, null, flags, reprBuilder.ToString(),
-                            null, null, child.Category, child.AccessType, child.StorageType, child.TypeModifierFlags, null, null, null,
+                        string childFullName = child.Name;
+                        if (FullName != null) {
+                            if (childFullName.EndsWith("()")) { // len()
+                                childFullName = childFullName.Substring(0, childFullName.Length - 2) + "(" + FullName + ")";
+                            } else {
+                                if (!childFullName.StartsWith("[")) { // [0], ['foo'] etc
+                                    childFullName = "." + childFullName;
+                                }
+                                childFullName = FullName + childFullName;
+                            }
+                        }
+
+                        evalResult = DkmSuccessEvaluationResult.Create(
+                            inspectionContext, stackFrame, child.Name, childFullName, flags, reprBuilder.ToString(), null, null,
+                            child.Category, child.AccessType, child.StorageType, child.TypeModifierFlags, null, null, null,
                             new RawEvaluationResult { Value = value });
                     }
 
@@ -185,7 +214,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
                         continue;
                     }
 
-                    var evalResult = exprEval.CreatePyObjectEvaluationResult(inspectionContext, stackFrame, new PythonEvaluationResult(pair.Value, name.ToString()), cppEval);
+                    var evalResult = exprEval.CreatePyObjectEvaluationResult(inspectionContext, stackFrame, null, new PythonEvaluationResult(pair.Value, name.ToString()), cppEval);
                     evalResults.Add(evalResult);
                 }
 
@@ -243,7 +272,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
         /// C++ struct name corresponding to this object type, for use by [C++ view] node. If not specified, it will be inferred from values of 
         /// various function pointers in <c>ob_type</c>, if possible. <c>PyObject</c> is the ultimate fallback.
         /// </param>
-        public DkmEvaluationResult CreatePyObjectEvaluationResult(DkmInspectionContext inspectionContext, DkmStackWalkFrame stackFrame, PythonEvaluationResult pyEvalResult, CppExpressionEvaluator cppEval, string cppTypeName = null, bool isPythonView = false) {
+        public DkmEvaluationResult CreatePyObjectEvaluationResult(DkmInspectionContext inspectionContext, DkmStackWalkFrame stackFrame, string parentName, PythonEvaluationResult pyEvalResult, CppExpressionEvaluator cppEval, string cppTypeName = null, bool isPythonView = false) {
             var name = pyEvalResult.Name;
             var valueStore = pyEvalResult.ValueStore as IValueStore<PyObject>;
             if (valueStore == null) {
@@ -254,10 +283,10 @@ namespace Microsoft.PythonTools.DkmDebugger {
             var valueObj = valueStore.Read();
             string typeName = valueObj.ob_type.Read().tp_name.Read().Read();
 
-            var reprOptions = new ReprOptions { HexadecimalDisplay = (inspectionContext.Radix == 16) };
+            var reprOptions = new ReprOptions(inspectionContext);
             string repr = valueObj.Repr(reprOptions);
 
-            var flags = DkmEvaluationResultFlags.None;
+            var flags = pyEvalResult.Flags;
             if (DebuggerOptions.ShowCppViewNodes || valueObj.GetDebugChildren(reprOptions).Any()) {
                 flags |= DkmEvaluationResultFlags.Expandable;
             }
@@ -268,9 +297,32 @@ namespace Microsoft.PythonTools.DkmDebugger {
                 flags |= DkmEvaluationResultFlags.RawString;
             }
 
-            return DkmSuccessEvaluationResult.Create(inspectionContext, stackFrame, name, null, flags, repr, null, typeName, pyEvalResult.Category,
+            var boolObj = valueObj as IPyBoolObject;
+            if (boolObj != null) {
+                flags |= DkmEvaluationResultFlags.Boolean;
+                if (boolObj.ToBoolean()) {
+                    flags |= DkmEvaluationResultFlags.BooleanTrue;
+                }
+            }
+
+            string fullName = name;
+            if (parentName != null) {
+                if (!fullName.StartsWith("[")) {
+                    fullName = "." + fullName;
+                }
+                fullName = parentName + fullName;
+            }
+
+            var pyObjEvalResult = new PyObjectEvaluationResult {
+                FullName = fullName,
+                ValueStore = valueStore,
+                CppTypeName = cppTypeName,
+                IsPythonView = isPythonView
+            };
+            return DkmSuccessEvaluationResult.Create(
+                inspectionContext, stackFrame, name, fullName, flags, repr, null, typeName, pyEvalResult.Category,
                 pyEvalResult.AccessType, pyEvalResult.StorageType, pyEvalResult.TypeModifierFlags, null, null, null,
-                new PyObjectEvaluationResult { ValueStore = valueStore, CppTypeName = cppTypeName, IsPythonView = isPythonView });
+                pyObjEvalResult);
         }
 
         public void GetFrameLocals(DkmInspectionContext inspectionContext, DkmWorkList workList, DkmStackWalkFrame stackFrame, DkmCompletionRoutine<DkmGetFrameLocalsAsyncResult> completionRoutine) {
@@ -315,7 +367,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
                     continue;
                 }
 
-                var evalResult = CreatePyObjectEvaluationResult(inspectionContext, stackFrame, new PythonEvaluationResult(localPtr, name), cppEval);
+                var evalResult = CreatePyObjectEvaluationResult(inspectionContext, stackFrame, null, new PythonEvaluationResult(localPtr, name), cppEval);
                 evalResults.Add(evalResult);
             }
 
@@ -338,7 +390,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
                     continue;
                 }
 
-                var evalResult = CreatePyObjectEvaluationResult(inspectionContext, stackFrame, new PythonEvaluationResult(varSlot, name), cppEval);
+                var evalResult = CreatePyObjectEvaluationResult(inspectionContext, stackFrame, null, new PythonEvaluationResult(varSlot, name), cppEval);
                 evalResults.Add(evalResult);
             }
 
@@ -382,7 +434,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
 
                         var varSlot = globalVars[name].FirstOrDefault();
                         if (varSlot.Process != null) {
-                            evalResult = CreatePyObjectEvaluationResult(inspectionContext, stackFrame, new PythonEvaluationResult(varSlot, name), cppEval);
+                            evalResult = CreatePyObjectEvaluationResult(inspectionContext, stackFrame, null, new PythonEvaluationResult(varSlot, name), cppEval);
                             evalResults.Add(evalResult);
                         }
                     }
@@ -430,6 +482,273 @@ namespace Microsoft.PythonTools.DkmDebugger {
 
             var result = evalResults.Results.Skip(startIndex).Take(count).ToArray();
             completionRoutine(new DkmEvaluationEnumAsyncResult(result));
+        }
+
+        public void EvaluateExpression(DkmInspectionContext inspectionContext, DkmWorkList workList, DkmLanguageExpression expression, DkmStackWalkFrame stackFrame, DkmCompletionRoutine<DkmEvaluateExpressionAsyncResult> completionRoutine) {
+            var name = expression.Text;
+            GetFrameLocals(inspectionContext, workList, stackFrame, getFrameLocalsResult => {
+                getFrameLocalsResult.EnumContext.GetItems(workList, 0, int.MaxValue, localGetItemsResult => {
+                    var vars = localGetItemsResult.Items.OfType<DkmSuccessEvaluationResult>();
+                    var globals = vars.FirstOrDefault(er => er.Name == "[Globals]");
+                    if (globals == null) {
+                        if (!EvaluateExpressionByWalkingObjects(vars, inspectionContext, workList, expression, stackFrame, completionRoutine)) {
+                            EvaluateExpressionViaInterpreter(inspectionContext, workList, expression, stackFrame, completionRoutine);
+                        }
+                    } else {
+                        globals.GetChildren(workList, 0, inspectionContext, globalsGetChildrenResult => {
+                            globalsGetChildrenResult.EnumContext.GetItems(workList, 0, int.MaxValue, globalsGetItemsResult => {
+                                vars = vars.Concat(globalsGetItemsResult.Items.OfType<DkmSuccessEvaluationResult>());
+                                if (!EvaluateExpressionByWalkingObjects(vars, inspectionContext, workList, expression, stackFrame, completionRoutine)) {
+                                    EvaluateExpressionViaInterpreter(inspectionContext, workList, expression, stackFrame, completionRoutine);
+                                }
+                            });
+                        });
+                    }
+                });
+            });
+        }
+
+        /// <summary>
+        /// Tries to evaluate the given expression by treating it as a chain of member access and indexing operations (e.g. <c>foo[0].bar.baz['abc'].blah</c>),
+        /// and looking up the corresponding members in data model provided by <see cref="GetFrameLocals"/>.
+        /// </summary>
+        /// <param name="vars">List of variables, in the context of which the expression is evaluated.</param>
+        /// <returns>
+        /// <c>true</c> if evaluation was successful, or if it failed and no fallback is possible (e.g. expression is invalid).
+        /// <c>false</c> if evaluation was not successful due to the limitations of this evaluator, and it may be possible to evaluate it correctly by other means.
+        /// </returns>
+        private bool EvaluateExpressionByWalkingObjects(IEnumerable<DkmSuccessEvaluationResult> vars, DkmInspectionContext inspectionContext, DkmWorkList workList, DkmLanguageExpression expression, DkmStackWalkFrame stackFrame, DkmCompletionRoutine<DkmEvaluateExpressionAsyncResult> completionRoutine) {
+            var pyrtInfo = stackFrame.Thread.Process.GetPythonRuntimeInfo();
+
+            var parserOptions = new ParserOptions { ErrorSink = new StringErrorSink() };
+            var parser = Parser.CreateParser(new StringReader(expression.Text), pyrtInfo.LanguageVersion, parserOptions);
+
+            var expr = ((ReturnStatement)parser.ParseTopExpression().Body).Expression;
+            string errorText = parserOptions.ErrorSink.ToString();
+            if (!string.IsNullOrEmpty(errorText)) {
+                completionRoutine(new DkmEvaluateExpressionAsyncResult(DkmFailedEvaluationResult.Create(
+                    inspectionContext, stackFrame, expression.Text, expression.Text,
+                    errorText, DkmEvaluationResultFlags.Invalid, null)));
+                return true;
+            }
+
+            // Unroll the AST into a sequence of member access and indexing operations, if possible.
+            var path = new Stack<string>();
+            var reprBuilder = new ReprBuilder(new ReprOptions(stackFrame.Thread.Process));
+            while (true) {
+                var memberExpr = expr as MemberExpression;
+                if (memberExpr != null) {
+                    path.Push(memberExpr.Name);
+                    expr = memberExpr.Target;
+                    continue;
+                }
+
+                var indexingExpr = expr as IndexExpression;
+                if (indexingExpr != null) {
+                    var indexExpr = indexingExpr.Index as ConstantExpression;
+                    if (indexExpr != null) {
+                        reprBuilder.Clear();
+                        reprBuilder.AppendFormat("[{0:PY}]", indexExpr.Value);
+                        path.Push(reprBuilder.ToString());
+                        expr = indexingExpr.Target;
+                        continue;
+                    }
+                }
+
+                break;
+            }
+
+            var varExpr = expr as NameExpression;
+            if (varExpr == null) {
+                return false;
+            }
+            path.Push(varExpr.Name);
+
+            // Walk the path through Locals
+            while (true) {
+                var name = path.Pop();
+
+                var evalResult = vars.FirstOrDefault(er => er.Name == name);
+                if (evalResult == null) {
+                    return false;
+                }
+
+                if (path.Count == 0) {
+                    // Clone the evaluation result, but use expression text as its name.
+                    DkmDataItem dataItem =
+                        (DkmDataItem)evalResult.GetDataItem<PyObjectEvaluationResult>() ??
+                        (DkmDataItem)evalResult.GetDataItem<GlobalsEvaluationResult>() ??
+                        (DkmDataItem)evalResult.GetDataItem<CppViewEvaluationResult>() ??
+                        (DkmDataItem)evalResult.GetDataItem<RawEvaluationResult>();
+                    evalResult = DkmSuccessEvaluationResult.Create(
+                        evalResult.InspectionContext,
+                        evalResult.StackFrame,
+                        expression.Text,
+                        expression.Text,
+                        evalResult.Flags,
+                        evalResult.Value,
+                        evalResult.EditableValue,
+                        evalResult.Type,
+                        evalResult.Category,
+                        evalResult.Access,
+                        evalResult.StorageType,
+                        evalResult.TypeModifierFlags,
+                        evalResult.Address,
+                        evalResult.CustomUIVisualizers,
+                        evalResult.ExternalModules,
+                        dataItem);
+
+                    completionRoutine(new DkmEvaluateExpressionAsyncResult(evalResult));
+                    return true;
+                }
+
+                var childWorkList = DkmWorkList.Create(null);
+                evalResult.GetChildren(childWorkList, 0, inspectionContext, getChildrenResult =>
+                    getChildrenResult.EnumContext.GetItems(childWorkList, 0, int.MaxValue, getItemsResult =>
+                        vars = getItemsResult.Items.OfType<DkmSuccessEvaluationResult>()));
+                childWorkList.Execute();
+            }
+        }
+
+        private AutoResetEvent _evalCompleteEvent, _evalAbortedEvent;
+
+        private void EvaluateExpressionViaInterpreter(DkmInspectionContext inspectionContext, DkmWorkList workList, DkmLanguageExpression expression, DkmStackWalkFrame stackFrame, DkmCompletionRoutine<DkmEvaluateExpressionAsyncResult> completionRoutine) {
+            var thread = stackFrame.Thread;
+            var process = thread.Process;
+
+            if (_evalLoopThreadId.Read() != (ulong)thread.SystemPart.Id) {
+                completionRoutine(new DkmEvaluateExpressionAsyncResult(DkmFailedEvaluationResult.Create(
+                    inspectionContext, stackFrame, expression.Text, expression.Text,
+                    "Arbitrary Python expressions can only be evaluated on a thread which is stopped in Python code at a breakpoint or " +
+                    "after a step-in or a step-over operation. Only expressions involving global and local variables, object field access, " +
+                    "and indexing of built-in collection types with literals can be evaluated in the current context.",
+                    DkmEvaluationResultFlags.Invalid, null)));
+                return;
+            }
+
+            var pythonFrame = PyFrameObject.TryCreate(stackFrame);
+            if (pythonFrame == null) {
+                completionRoutine(new DkmEvaluateExpressionAsyncResult(DkmFailedEvaluationResult.Create(
+                    inspectionContext, stackFrame, expression.Text, expression.Text, "Could not obtain a Python frame object for the current frame.",
+                    DkmEvaluationResultFlags.Invalid, null)));
+                return;
+            }
+
+            byte[] input = Encoding.UTF8.GetBytes(expression.Text + "\0");
+            if (input.Length > ExpressionEvaluationBufferSize) {
+                completionRoutine(new DkmEvaluateExpressionAsyncResult(DkmFailedEvaluationResult.Create(
+                    inspectionContext, stackFrame, expression.Text, expression.Text, "Expression is too long.",
+                    DkmEvaluationResultFlags.Invalid, null)));
+                return;
+            }
+
+            _evalLoopFrame.Write(pythonFrame.Address);
+            process.WriteMemory(_evalLoopInput.Address, input);
+
+            bool timedOut;
+            using (_evalCompleteEvent = new AutoResetEvent(false)) {
+                thread.BeginFuncEvalExecution(DkmFuncEvalFlags.None);
+                timedOut = !_evalCompleteEvent.WaitOne(ExpressionEvaluationTimeout);
+                _evalCompleteEvent = null;
+            }
+
+            if (timedOut) {
+                new RemoteComponent.AbortingEvalExecutionRequest().SendLower(process);
+
+                // We need to stop the process before we can report end of func eval completion
+                using (_evalAbortedEvent = new AutoResetEvent(false)) {
+                    process.AsyncBreak(false);
+
+                    if (!_evalAbortedEvent.WaitOne(20000)) {
+                        // This is a catastrophic error, since we can't report func eval completion unless we can stop the process,
+                        // and VS will hang until we do report completion. At this point we can only kill the debuggee so that the
+                        // VS at least gets back to a reasonable state.
+                        _evalAbortedEvent = null;
+                        process.Terminate(1);
+
+                        completionRoutine(DkmEvaluateExpressionAsyncResult.CreateErrorResult(new Exception("Couldn't abort a failed expression evaluation.")));
+                        return;
+                    }
+
+                    _evalAbortedEvent = null;
+                }
+
+                completionRoutine(new DkmEvaluateExpressionAsyncResult(DkmFailedEvaluationResult.Create(
+                    inspectionContext, stackFrame, expression.Text, expression.Text, "Evaluation timed out.",
+                    DkmEvaluationResultFlags.Invalid, null)));
+                return;
+            }
+
+            ulong objPtr = _evalLoopResult.Read();
+            var obj = PyObject.FromAddress(process, objPtr);
+            var exc_type = PyObject.FromAddress(process, _evalLoopExcType.Read());
+            var exc_value = PyObject.FromAddress(process, _evalLoopExcValue.Read());
+            var sehCode = _evalLoopSEHCode.Read();
+
+            if (obj != null) {
+                var cppEval = new CppExpressionEvaluator(inspectionContext, stackFrame);
+                var pyEvalResult =  new PythonEvaluationResult(obj, expression.Text) { Flags = DkmEvaluationResultFlags.SideEffect };
+                var evalResult = CreatePyObjectEvaluationResult(inspectionContext, stackFrame, null, pyEvalResult, cppEval);
+                completionRoutine(new DkmEvaluateExpressionAsyncResult(evalResult));
+            } else if (sehCode != 0) {
+                string errorText = string.Format("Structured exception {0:x08} ", sehCode);
+                if (Enum.IsDefined(typeof(EXCEPTION_CODE), sehCode)) {
+                    errorText += "(" + (EXCEPTION_CODE)sehCode + ") ";
+                }
+                errorText += "raised while evaluating expression";
+                completionRoutine(new DkmEvaluateExpressionAsyncResult(DkmFailedEvaluationResult.Create(
+                    inspectionContext, stackFrame, expression.Text, expression.Text, errorText,
+                    DkmEvaluationResultFlags.Invalid, null)));
+            } else if (exc_type != null) {
+                string typeName;
+                var typeObject = exc_type as PyTypeObject;
+                if (typeObject != null) {
+                    typeName = typeObject.tp_name.Read().Read();
+                } else {
+                    typeName = "<unknown exception type>";
+                }
+
+                var exc = exc_value as PyBaseExceptionObject;
+                var reprOptions = new ReprOptions(process);
+                string additionalInfo = "";
+                if (exc != null) {
+                    var args = exc.args.TryRead();
+                    if (args != null) {
+                        additionalInfo = args.Repr(reprOptions);
+                    }
+                } else {
+                    var str = exc_value as IPyBaseStringObject;
+                    if (str != null) {
+                        additionalInfo = str.ToString();
+                    } else if (exc_value != null) {
+                        additionalInfo = exc_value.Repr(reprOptions);
+                    }
+                }
+
+                completionRoutine(new DkmEvaluateExpressionAsyncResult(DkmFailedEvaluationResult.Create(
+                    inspectionContext, stackFrame, expression.Text, expression.Text, typeName + " raised while evaluating expression: " + additionalInfo,
+                    DkmEvaluationResultFlags.Invalid, null)));
+            } else {
+                completionRoutine(new DkmEvaluateExpressionAsyncResult(DkmFailedEvaluationResult.Create(
+                    inspectionContext, stackFrame, expression.Text, expression.Text, "Unknown error occurred while evaluating expression.",
+                    DkmEvaluationResultFlags.Invalid, null)));
+            }
+        }
+
+        private void OnEvalComplete(DkmThread thread, ulong frameBase, ulong vframe) {
+            var e = _evalCompleteEvent;
+            if (e != null) {
+                new RemoteComponent.EndFuncEvalExecutionRequest { ThreadId = thread.UniqueId }.SendLower(thread.Process);
+                e.Set();
+            }
+        }
+
+        public void OnAsyncBreakComplete(DkmThread thread) {
+            var e = _evalAbortedEvent;
+            if (e != null) {
+                new RemoteComponent.EndFuncEvalExecutionRequest { ThreadId = thread.UniqueId }.SendLower(thread.Process);
+                e.Set();
+            }
         }
 
         public string GetUnderlyingString(DkmEvaluationResult result) {
@@ -635,6 +954,8 @@ namespace Microsoft.PythonTools.DkmDebugger {
         public DkmEvaluationResultStorageType StorageType { get; set; }
 
         public DkmEvaluationResultTypeModifierFlags TypeModifierFlags { get; set; }
+
+        public DkmEvaluationResultFlags Flags { get; set; }
 
         public PythonEvaluationResult(IValueStore valueStore, string name = null) {
             ValueStore = valueStore;

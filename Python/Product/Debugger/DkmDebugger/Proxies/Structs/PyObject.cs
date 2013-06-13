@@ -194,7 +194,7 @@ namespace Microsoft.PythonTools.DkmDebugger.Proxies.Structs {
 
         public override string ToString() {
             var pyrtInfo = Process.GetPythonRuntimeInfo();
-            var reprBuilder = new ReprBuilder(new ReprOptions { LanguageVersion = pyrtInfo.LanguageVersion });
+            var reprBuilder = new ReprBuilder(new ReprOptions(Process));
             Repr(reprBuilder);
             return reprBuilder.ToString();
         }
@@ -206,7 +206,7 @@ namespace Microsoft.PythonTools.DkmDebugger.Proxies.Structs {
             if (this == None(Process)) {
                 builder.Append("None");
             } else {
-                builder.AppendFormat("<{0} object at 0x{1:X" + (Process.GetPointerSize() * 2) + "}>", ob_type.Read().tp_name.Read().Read(), Address);
+                builder.AppendFormat("<{0} object at {1:PTR}>", ob_type.Read().tp_name.Read().Read(), Address);
             }
         }
 
