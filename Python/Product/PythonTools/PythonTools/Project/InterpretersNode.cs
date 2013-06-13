@@ -136,12 +136,9 @@ namespace Microsoft.PythonTools.Project {
                 }
                 _checkingItems = false;
 
-                bool wasExpanded = prevChecked && GetIsExpanded();
                 ProjectMgr.OnInvalidateItems(this);
-                if (wasExpanded) {
-                    ExpandItem(EXPANDFLAGS.EXPF_ExpandFolder);
-                }
                 if (!prevChecked && IsExpanded) {
+                    ExpandItem(EXPANDFLAGS.EXPF_ExpandFolder);
                     ProjectMgr.OnPropertyChanged(this, (int)__VSHPROPID.VSHPROPID_Expandable, 0);
                 }
 

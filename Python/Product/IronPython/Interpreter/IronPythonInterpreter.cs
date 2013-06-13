@@ -72,8 +72,10 @@ namespace Microsoft.IronPythonTools.Interpreter {
         }
 
         private void OnDatabaseReplaced(object sender, DatabaseReplacedEventArgs e) {
+            _typeDb.DatabaseReplaced -= OnDatabaseReplaced;
             _typeDb = e.NewDatabase;
             if (_typeDb != null) {
+                _typeDb.DatabaseReplaced += OnDatabaseReplaced;
                 lock (this) {
                     _typeDb.BuiltinModule = (IronPythonBuiltinModule)_modules["__builtin__"];
                 }

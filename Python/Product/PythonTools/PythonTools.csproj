@@ -286,6 +286,7 @@
       <DependentUpon>AddInterpreter.xaml</DependentUpon>
     </Compile>
     <Compile Include="PythonTools\Project\AddInterpreterView.cs" />
+    <Compile Include="PythonTools\Project\EasyInstall.cs" />
     <Compile Include="PythonTools\Project\ImportWizard\SaveProjectPage.xaml.cs">
       <DependentUpon>SaveProjectPage.xaml</DependentUpon>
     </Compile>

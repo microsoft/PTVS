@@ -51,6 +51,7 @@ namespace Microsoft.PythonTools.Project {
         public const string InstallVirtualEnvAndPip = "InstallVirtualEnvAndPip";
         public const string InstallVirtualEnv = "InstallVirtualEnv";
         public const string InstallPip = "InstallPip";
+        public const string InstallEasyInstall = "InstallEasyInstall";
         public const string UninstallPackage = "UninstallPackage";
         public const string PythonToolsForVisualStudio = "PythonToolsForVisualStudio";
 

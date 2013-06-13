@@ -106,6 +106,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to To install your Python package, we will install the distribute and pip package managers..
+        /// </summary>
+        internal static string InstallEasyInstall {
+            get {
+                return ResourceManager.GetString("InstallEasyInstall", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to To install your Python package, we will install the pip package manager.
         ///
         ///Continue?.
@@ -189,7 +198,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Python Interpreters.
+        ///   Looks up a localized string similar to Python Environments.
         /// </summary>
         internal static string Interpreters {
             get {

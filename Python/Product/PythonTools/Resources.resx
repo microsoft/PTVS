@@ -168,7 +168,7 @@ Some files may need to be removed manually.</value>
 No files will be deleted from disk.</value>
   </data>
   <data name="Interpreters" xml:space="preserve">
-    <value>Python Interpreters</value>
+    <value>Python Environments</value>
   </data>
   <data name="InterpreterVersionDescription" xml:space="preserve">
     <value>The Python language version supported by the interpreter.</value>
@@ -271,5 +271,8 @@ No files will be deleted from disk.</value>
   </data>
   <data name="WarningAnalysisNotCurrent" xml:space="preserve">
     <value>Warning: the intellisense database is currently not up to date and completions may be missing.</value>
+  </data>
+  <data name="InstallEasyInstall" xml:space="preserve">
+    <value>To install your Python package, we will install the distribute and pip package managers.</value>
   </data>
 </root>

@@ -106,7 +106,7 @@ namespace Microsoft.PythonTools.Project {
         #endregion
 
         public override string GetClassName() {
-            return "Interpreter Properties";
+            return "Environment Properties";
         }
     }
 

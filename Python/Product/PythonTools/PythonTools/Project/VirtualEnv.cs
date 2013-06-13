@@ -62,7 +62,9 @@ namespace Microsoft.PythonTools.Project {
                     }
                 }));
             } else {
-                task = Task.FromResult<object>(null);
+                var tcs = new TaskCompletionSource<object>();
+                tcs.SetResult(null);
+                task = tcs.Task;
             }
 
             return task.ContinueWith(t1 => {

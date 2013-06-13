@@ -26,23 +26,48 @@
             <RowDefinition Height="auto" />
             <RowDefinition Height="auto" />
             <RowDefinition Height="auto" />
+            <RowDefinition Height="auto" />
         </Grid.RowDefinitions>
+        
+        <Grid.Resources>
+            <BooleanToVisibilityConverter x:Key="BoolToVisible" />
+        </Grid.Resources>
         
         <wpf:LabelledControl Grid.Row="0"
                              Title="Type the name of the package to install">
-            <wpf:LabelledControl.HelpText>
-                We will use pip to download it from the Python Package Index.
-            </wpf:LabelledControl.HelpText>
-            <TextBox Text="{Binding Name,UpdateSourceTrigger=PropertyChanged}"
-                     AutomationProperties.AutomationId="Name" 
-                     Name="_textBox"/>
+            <StackPanel Orientation="Vertical">
+                <Grid Margin="0 0 0 6">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Label Grid.Column="0">
+                        We will download it from the Python Package Index using
+                    </Label>
+                    <ComboBox Grid.Column="1"
+                              IsEditable="False"
+                              ItemsSource="{Binding InstallUsingOptions}"
+                              SelectedItem="{Binding InstallUsing}" />
+                </Grid>
+                <TextBox Text="{Binding Name,UpdateSourceTrigger=PropertyChanged}"
+                         AutomationProperties.AutomationId="Name" 
+                         Name="_textBox"/>
+            </StackPanel>
         </wpf:LabelledControl>
         
         <Label Grid.Row="1">
             To install a specific version, type "SomePackage==1.0.4".
         </Label>
         
-        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Bottom">
+        <Label Grid.Row="2"
+               Visibility="{Binding InstallUsingEasyInstall,Converter={StaticResource BoolToVisible}}">
+            <TextBlock>
+                Packages installed with easy_install may not be displayed in
+                Solution Explorer and may not be uninstallable.
+            </TextBlock>
+        </Label>
+        
+        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Bottom">
             <Button IsDefault="True" Click="OkClick" IsEnabled="{Binding IsValid}"
                     MinWidth="86" MinHeight="24" Margin="0 0 9 0"
                     AutomationProperties.AutomationId="Ok"

@@ -7,7 +7,7 @@
     xmlns:ptvs="clr-namespace:Microsoft.PythonTools"
     xmlns:l="clr-namespace:Microsoft.PythonTools.Project"
     xmlns:wpf="clr-namespace:Microsoft.PythonTools.Wpf"
-    Title="Add/Remove Python Interpreters"
+    Title="Add/Remove Python Environments"
     MinWidth="300" Width="500"
     MinHeight="200" Height="500"
     ScrollViewer.VerticalScrollBarVisibility="Auto"
@@ -47,10 +47,10 @@
         </Grid.RowDefinitions>
             
         <wpf:LabelledControl Grid.Row="0"
-                                Title="Python interpreters associated with my project">
+                                Title="Python environments associated with my project">
             <wpf:LabelledControl.HelpText>
-                Select the interpreters to associate with this project. These
-                interpreters will be shown in Solution Explorer.
+                Select the environments to associate with this project. These
+                environments will be shown in Solution Explorer.
             </wpf:LabelledControl.HelpText>
             <ScrollViewer VerticalScrollBarVisibility="Auto">
                 <ItemsControl ItemsSource="{Binding Interpreters}"

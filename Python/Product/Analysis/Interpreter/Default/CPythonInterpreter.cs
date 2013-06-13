@@ -33,7 +33,11 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         }
 
         private void OnDatabaseReplaced(object sender, DatabaseReplacedEventArgs e) {
+            _typeDb.DatabaseReplaced -= OnDatabaseReplaced;
             _typeDb = e.NewDatabase;
+            if (_typeDb != null) {
+                _typeDb.DatabaseReplaced += OnDatabaseReplaced;
+            }
             var modsChanged = ModuleNamesChanged;
             if (modsChanged != null) {
                 modsChanged(this, EventArgs.Empty);

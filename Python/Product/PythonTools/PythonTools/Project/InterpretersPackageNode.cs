@@ -81,7 +81,11 @@ namespace Microsoft.PythonTools.Project {
             var statusBar = (IVsStatusbar)parent.ProjectMgr.Site.GetService(typeof(SVsStatusbar));
             statusBar.SetText(SR.GetString(SR.PackageInstallingSeeOutputWindow, name));
 
-            return Pip.Install(parent._factory, name, parent.ProjectMgr.Site, redirector).ContinueWith(t => {
+            var task = view.InstallUsingPip ?
+                Pip.Install(parent._factory, name, parent.ProjectMgr.Site, redirector) :
+                EasyInstall.Install(parent._factory, name, parent.ProjectMgr.Site, redirector);
+
+            return task.ContinueWith(t => {
                 if (t.IsCompleted) {
                     bool success = t.Result;
 

@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 
@@ -22,12 +23,17 @@ namespace Microsoft.PythonTools.Project {
     /// </summary>
     sealed class InstallPythonPackageView : INotifyPropertyChanged {
         private string _name;
+        private string _installUsing;
+        private bool _installUsingPip, _installUsingEasyInstall;
         private bool _isValid;
+
+        private static readonly string[] _installUsingOptions = new[] { "pip", "easy_install" };
 
         /// <summary>
         /// Create a InstallPythonPackageView with default values.
         /// </summary>
         public InstallPythonPackageView() {
+            InstallUsing = _installUsingOptions[0];
             PropertyChanged += new PropertyChangedEventHandler(OnPropertyChanged);
         }
 
@@ -42,6 +48,62 @@ namespace Microsoft.PythonTools.Project {
                 if (_name != value) {
                     _name = value;
                     OnPropertyChanged("Name");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gets the possible values for InstallUsing.
+        /// </summary>
+        public IEnumerable<string> InstallUsingOptions {
+            get {
+                return _installUsingOptions;
+            }
+        }
+
+        /// <summary>
+        /// Gets the current selected tool to install the package with.
+        /// </summary>
+        public string InstallUsing {
+            get {
+                return _installUsing;
+            }
+            set {
+                if (_installUsing != value) {
+                    _installUsing = value;
+                    OnPropertyChanged("InstallUsing");
+                    InstallUsingPip = _installUsing == "pip";
+                    InstallUsingEasyInstall = _installUsing == "easy_install";
+                }
+            }
+        }
+
+        /// <summary>
+        /// True if InstallUsing is set to pip.
+        /// </summary>
+        public bool InstallUsingPip {
+            get {
+                return _installUsingPip;
+            }
+            private set {
+                if (_installUsingPip != value) {
+                    _installUsingPip = value;
+                    OnPropertyChanged("InstallUsingPip");
+                }
+            }
+        }
+
+        /// <summary>
+        /// True if InstallUsing is set to easy_install.
+        /// </summary>
+        public bool InstallUsingEasyInstall {
+            get {
+                return _installUsingEasyInstall;
+            }
+            private set {
+                if (_installUsingEasyInstall != value) {
+                    _installUsingEasyInstall = value;
+                    OnPropertyChanged("InstallUsingEasyInstall");
                 }
             }
         }

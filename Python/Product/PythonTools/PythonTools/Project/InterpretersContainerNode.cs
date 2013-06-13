@@ -32,7 +32,7 @@ namespace Microsoft.PythonTools.Project {
     /// </summary>
     [ComVisible(true)]
     internal class InterpretersContainerNode : HierarchyNode {
-        internal const string InterpretersNodeVirtualName = "Python Interpreters";
+        internal const string InterpretersNodeVirtualName = "Python Environments";
         private PythonProjectNode _projectNode;
 
         public InterpretersContainerNode(PythonProjectNode project)
