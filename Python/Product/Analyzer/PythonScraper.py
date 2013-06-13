@@ -1786,7 +1786,3 @@ if __name__ == "__main__":
                 write_module(mod_name, outpath, res)
             except ValueError:
                 pass
-
-    f = open(os.path.join(outpath, 'database.ver'), 'w')
-    f.write(CURRENT_DATABASE_VERSION)
-    f.close()

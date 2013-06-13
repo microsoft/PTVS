@@ -71,7 +71,7 @@ namespace Microsoft.PythonTools.Interpreter {
         /// One or more interpreters failed to load. The error message should be
         /// presented to the user, but can otherwise be ignored.
         /// </exception>
-        internal void DiscoverInterpreters() {
+        public void DiscoverInterpreters() {
             // <Interpreter Include="InterpreterDirectory">
             //   <Id>guid</Id>
             //   <BaseInterpreter>guid</BaseInterpreter>
@@ -580,7 +580,10 @@ namespace Microsoft.PythonTools.Interpreter {
             lock (this) {
                 var newActive = _active;
                 if (newActive == null || _factories == null || !_factories.ContainsKey(newActive)) {
-                    newActive = null;
+                    newActive = FindInterpreter(
+                        _project.GetPropertyValue(InterpreterIdProperty),
+                        _project.GetPropertyValue(InterpreterVersionProperty)
+                    );
                 }
                 ActiveInterpreter = newActive;
             }

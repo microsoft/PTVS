@@ -129,6 +129,7 @@ namespace Microsoft.PythonTools.Analysis {
                     inst.Prepare();
                     inst.Scrape();
                     inst.Analyze();
+                    inst.Epilogue();
                     inst.Clean();
                 } else {
 #endif
@@ -136,6 +137,7 @@ namespace Microsoft.PythonTools.Analysis {
                         inst.Prepare();
                         inst.Scrape();
                         inst.Analyze();
+                        inst.Epilogue();
                         inst.Clean();
                     } catch (Exception e) {
                         Console.WriteLine("Error while saving analysis: {0}{1}", Environment.NewLine, e.ToString());
@@ -618,6 +620,10 @@ namespace Microsoft.PythonTools.Analysis {
                 progressOffset += files.Count;
                 AnalysisLog.Flush();
             }
+        }
+
+        private void Epilogue() {
+            File.WriteAllText(Path.Combine(_outDir, "database.ver"), PythonTypeDatabase.CurrentVersion.ToString());
         }
 
         private void Clean() {

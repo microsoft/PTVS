@@ -304,6 +304,12 @@
             <Component Id="cmp5884E5C4D820B3CB12CB2BFE9F9EE477" Directory="dir1B4805CEC92CD8586B8C95875EA0F7DF" Guid="{B5A48884-E64F-42AE-A462-D3486F6A0893}">
                 <File Id="fil67B40CC4D17AFE39AF1443156E2D8709" KeyPath="yes" Source="$(var.TargetDir)\CompletionDB\_subprocess.idb" />
             </Component>
+            <Component Id="cmp68A970CCECC348358BAB6A97EB8CB68E" Directory="dir1B4805CEC92CD8586B8C95875EA0F7DF" Guid="{A886E4F1-36F1-4299-8250-9BA10EF35567}">
+                <File Id="fil7CADD92B5AAD4284AD149E7942C6A001" KeyPath="yes" Source="$(var.TargetDir)\CompletionDB\unittest.idb" />
+            </Component>
+            <Component Id="cmp70E12031B86F440BB9EC92716BECA62D" Directory="dir1B4805CEC92CD8586B8C95875EA0F7DF" Guid="{10FE2C0C-022D-4F1B-ABC9-EF4ADC018939}">
+                <File Id="fil4DCA1A37437E4EDCA258D46C2C3C69CA" KeyPath="yes" Source="$(var.TargetDir)\CompletionDB\unittest.case.idb" />
+            </Component>
             <Component Id="cmp24D3393FB28C0DAB4FFC9C292AEE2A6E" Directory="dir1B4805CEC92CD8586B8C95875EA0F7DF" Guid="{B6C56832-6D09-4EBD-BE0E-E57846BC1B85}">
                 <File Id="filC6FE24D950EB063B99B2458157B1C47B" KeyPath="yes" Source="$(var.TargetDir)\CompletionDB\_warnings.idb" />
             </Component>

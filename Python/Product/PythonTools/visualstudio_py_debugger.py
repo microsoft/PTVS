@@ -179,7 +179,9 @@ def get_thread_from_id(id):
         THREADS_LOCK.release()
 
 def should_send_frame(frame):
-    return frame is not None and frame.f_code not in (get_code(debug), get_code(exec_file), get_code(new_thread_wrapper))
+    return (frame is not None and 
+            frame.f_code not in (get_code(debug), get_code(exec_file), get_code(new_thread_wrapper)) and
+            frame.f_code.co_filename not in DONT_DEBUG)
 
 def lookup_builtin(name, frame):
     try:
