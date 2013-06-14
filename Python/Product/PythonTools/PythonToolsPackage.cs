@@ -1205,6 +1205,14 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
             if (forceCheckAndWarnIfNoneAvailable) {
                 shouldQueryServer = true;
             } else {
+                // Ensure that we don't prompt the user on their very first project creation.
+                // Delay by 3 days by pretending we checked 4 days ago (the default of check
+                // once a week ensures we'll check again in 3 days).
+                if (OptionsPage.SurveyNewsLastCheck == DateTime.MinValue) {
+                    OptionsPage.SurveyNewsLastCheck = DateTime.Now - TimeSpan.FromDays(4);
+                    OptionsPage.SaveSettingsToStorage();
+                }
+
                 var elapsedTime = DateTime.Now - OptionsPage.SurveyNewsLastCheck;
                 switch (OptionsPage.SurveyNewsCheck) {
                     case SurveyNewsPolicy.Disabled:
