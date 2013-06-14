@@ -5788,12 +5788,16 @@ If the files in the existing folder have the same names as files in the folder y
         /// <param name="project">The new build project instance</param>
         private void SetBuildProject(MSBuild.Project project)
         {
+            bool isNewBuildProject = (this.buildProject != project);
             this.buildProject = project;
             if (this.buildProject != null)
             {
                 SetupProjectGlobalPropertiesThatAllProjectSystemsMustSet();
             }
-            NewBuildProject(project);
+            if (isNewBuildProject)
+            {
+                NewBuildProject(project);
+            }
         }
 
         /// <summary>

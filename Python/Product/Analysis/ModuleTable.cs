@@ -32,7 +32,7 @@ namespace Microsoft.PythonTools.Analysis {
         private readonly IPythonInterpreter _interpreter;
         private readonly PythonAnalyzer _analyzer;
         private readonly ConcurrentDictionary<IPythonModule, BuiltinModule> _builtinModuleTable = new ConcurrentDictionary<IPythonModule, BuiltinModule>();
-        private ConcurrentDictionary<string, ModuleReference> _modules = new ConcurrentDictionary<string, ModuleReference>(StringComparer.Ordinal);
+        private readonly ConcurrentDictionary<string, ModuleReference> _modules = new ConcurrentDictionary<string, ModuleReference>(StringComparer.Ordinal);
         private string[] _builtinNames;
 #if DEBUG
         internal static Stopwatch _timer = new Stopwatch();
@@ -207,33 +207,26 @@ namespace Microsoft.PythonTools.Analysis {
         /// </summary>
         public void ReInit() {
             var newNames = new HashSet<string>(_interpreter.GetModuleNames());
-            ConcurrentDictionary<string, ModuleReference> newModules = new ConcurrentDictionary<string, ModuleReference>();
-            List<string> removed = null;
+
             foreach (var keyValue in _modules) {
                 var name = keyValue.Key;
                 var moduleRef = keyValue.Value;
 
-                if (moduleRef.Module is BuiltinModule &&
-                    (!newNames.Contains(name) || moduleRef.Module != _interpreter.ImportModule(name))) {
-                    // this module was unloaded or replaced with a new module
-                    if (removed == null) {
-                        removed = new List<string>();
+                if (moduleRef.Module is BuiltinModule) {
+                    if (!newNames.Contains(name)) {
+                        // this module was unloaded
+                        ModuleReference dummy;
+                        _modules.TryRemove(name, out dummy);
+
+                        BuiltinModule removedModule;
+                        _builtinModuleTable.TryRemove(((BuiltinModule)moduleRef.Module).InterpreterModule, out removedModule);
+                    } else {
+                        // this module was replaced with a new module
+                        moduleRef.Module = GetBuiltinModule(_interpreter.ImportModule(name));
                     }
-                    removed.Add(name);
-
-                    BuiltinModule removedModule;
-                    _builtinModuleTable.TryRemove(((BuiltinModule)moduleRef.Module).InterpreterModule, out removedModule);
                 }
             }
 
-            if (removed != null) {
-                foreach (var name in removed) {
-                    ModuleReference dummy;
-                    _modules.TryRemove(name, out dummy);
-                }
-            }
-
-            _modules = newModules;
             SaveNames(newNames);
         }
 
