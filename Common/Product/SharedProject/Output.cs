@@ -98,7 +98,7 @@ namespace Microsoft.VisualStudioTools.Project
                 switch (szProperty)
                 {
                     case "FinalOutputPath":
-                        pvar = GetType().Assembly.CodeBase;
+                        pvar = typeof(Microsoft.PythonTools.Analysis.PythonAnalyzer).Assembly.CodeBase;
                         return VSConstants.S_OK;
                 }
                 pvar = null;
