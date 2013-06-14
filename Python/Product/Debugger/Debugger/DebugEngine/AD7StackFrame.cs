@@ -83,14 +83,13 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                     frameInfo.m_dwValidFields |= enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_MODULE;
                 }
 
+                frameInfo.m_bstrFuncName = funcName;
+                frameInfo.m_dwValidFields |= enum_FRAMEINFO_FLAGS.FIF_FUNCNAME;
 
                 if ((dwFieldSpec & enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_LINES) != 0) {
                     frameInfo.m_bstrFuncName = funcName + " line " + _stackFrame.LineNo;
                     frameInfo.m_dwValidFields |= enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_LINES;
                 }
-
-                frameInfo.m_bstrFuncName = funcName;
-                frameInfo.m_dwValidFields |= enum_FRAMEINFO_FLAGS.FIF_FUNCNAME;
             }
 
             
