@@ -154,7 +154,7 @@ namespace Microsoft.PythonTools.Options {
                 if (defaultInterpreter != null) {
                     Version ver;
                     if (defaultInterpreter is InterpreterPlaceholder) {
-                        ver = Version.Parse(_options[defaultInterpreter].Version);
+                        ver = Version.Parse(_options[defaultInterpreter].Version ?? "2.7");
                     } else {
                         ver = defaultInterpreter.Configuration.Version;
                     }
