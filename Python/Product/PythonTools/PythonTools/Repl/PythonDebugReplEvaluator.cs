@@ -36,6 +36,7 @@ namespace Microsoft.PythonTools.Repl {
     using IReplEvaluator = IInteractiveEngine;
 #endif
 
+    [ReplRole("Debug")]
     internal class PythonDebugReplEvaluator : IReplEvaluator, IMultipleScopeEvaluator, IPythonReplIntellisense {
         private IReplWindow _window;
         private PythonDebugProcessReplEvaluator _activeEvaluator;

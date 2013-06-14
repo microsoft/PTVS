@@ -120,13 +120,6 @@ namespace Microsoft.PythonTools.Django.Project {
                     dynamic webAppExtender = proj.get_Extender("WebApplication");
                     if (webAppExtender != null) {
                         webAppExtender.StartWebServerOnDebug = false;
-                        
-                        // https://pytools.codeplex.com/workitem/1044
-                        // Venus wants to reconfigure the project on startup if it's 
-                        // set to use the development server.  That's going to fail, so
-                        // let's prevent it from doing anything here.
-                        webAppExtender.UseIIS = true;
-                        webAppExtender.IISUrl = "";
                     }
                 } catch (COMException) {
                     // extender doesn't exist...

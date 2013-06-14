@@ -25,7 +25,6 @@ namespace Microsoft.PythonTools.Repl {
 #endif
     
     [Export(typeof(IReplEvaluatorProvider))]
-    [ReplRole("Debug")]
     class PythonDebugReplEvaluatorProvider : IReplEvaluatorProvider {
         private const string _debugReplGuid = "BA417560-5A78-46F1-B065-638D27E1CDD0";
 
