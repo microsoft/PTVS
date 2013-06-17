@@ -22,7 +22,7 @@ extern "C" {
     __declspec(dllexport)
     volatile char isInitialized;
 
-    __declspec(dllexport)
+    __declspec(dllexport) __declspec(noinline)
     void OnInitialized() {
         volatile char dummy = 0;
     }
