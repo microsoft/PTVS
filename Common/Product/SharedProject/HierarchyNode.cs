@@ -1649,24 +1649,46 @@ namespace Microsoft.VisualStudioTools.Project
             nodeProperties = null;
         }
 
-        public void ExpandItem(EXPANDFLAGS flags) {
+        public void ExpandItem(EXPANDFLAGS flags)
+        {
+            if (ProjectMgr == null || ProjectMgr.Site == null)
+            {
+                return;
+            }
+
             IVsUIHierarchyWindow2 windows = GetUIHierarchyWindow(
                 ProjectMgr.Site,
                 new Guid(ToolWindowGuids80.SolutionExplorer)) as IVsUIHierarchyWindow2;
+
+            if (windows == null)
+            {
+                return;
+            }
 
             ErrorHandler.ThrowOnFailure(windows.ExpandItem(ProjectMgr.GetOuterInterface<IVsUIHierarchy>(), ID, flags));
         }
 
         public bool GetIsExpanded() {
+            if (ProjectMgr == null || ProjectMgr.Site == null)
+            {
+                return false;
+            }
+
             IVsUIHierarchyWindow2 windows = GetUIHierarchyWindow(
                 ProjectMgr.Site,
                 new Guid(ToolWindowGuids80.SolutionExplorer)) as IVsUIHierarchyWindow2;
-            
+
+            if (windows == null)
+            {
+                return false;
+            }
+
             uint state;
             if (ErrorHandler.Succeeded(windows.GetItemState(ProjectMgr.GetOuterInterface<IVsUIHierarchy>(),
                 ID,
                 (uint)__VSHIERARCHYITEMSTATE.HIS_Expanded,
-                out state))) {
+                out state)))
+            {
                 return state != 0;
             }
             return false;
@@ -1676,35 +1698,25 @@ namespace Microsoft.VisualStudioTools.Project
         /// Same as VsShellUtilities.GetUIHierarchyWindow, but it doesn't contain a useless cast to IVsWindowPane
         /// which fails on Dev10 with the solution explorer window.
         /// </summary>
-        private static IVsUIHierarchyWindow GetUIHierarchyWindow(System.IServiceProvider serviceProvider, Guid guidPersistenceSlot) {
+        private static IVsUIHierarchyWindow GetUIHierarchyWindow(System.IServiceProvider serviceProvider, Guid guidPersistenceSlot)
+        {
             Utilities.ArgumentNotNull("serviceProvider", serviceProvider);
 
             IVsUIShell service = serviceProvider.GetService(typeof(SVsUIShell)) as IVsUIShell;
-            if (service == null) 
+            if (service == null)
             {
                 throw new InvalidOperationException();
             }
 
             object pvar = null;
             IVsWindowFrame ppWindowFrame = null;
-            IVsUIHierarchyWindow window = null;
-            try 
+            if (ErrorHandler.Succeeded(service.FindToolWindow(0, ref guidPersistenceSlot, out ppWindowFrame)) &&
+                ppWindowFrame != null &&
+                ErrorHandler.Succeeded(ppWindowFrame.GetProperty(-3001, out pvar)))
             {
-                ErrorHandler.ThrowOnFailure(service.FindToolWindow(0, ref guidPersistenceSlot, out ppWindowFrame));
-                ErrorHandler.ThrowOnFailure(ppWindowFrame.GetProperty(-3001, out pvar));
-            } 
-            catch (COMException exception) 
-            {
-                Trace.WriteLine("Exception :" + exception.Message);
-            } 
-            finally 
-            {
-                if (pvar != null) 
-                {
-                    window = (IVsUIHierarchyWindow)pvar;
-                }
+                return (IVsUIHierarchyWindow)pvar;
             }
-            return window;
+            return null;
         }
 
         /// <summary>
