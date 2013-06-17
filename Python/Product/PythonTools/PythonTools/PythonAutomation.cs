@@ -166,7 +166,7 @@ namespace Microsoft.PythonTools {
                 if (replCommand != null && replCommand.Description == description) {
                     var dte = (EnvDTE.DTE)PythonToolsPackage.GetGlobalService(typeof(EnvDTE.DTE));
                     object inObj = null, outObj = null;
-                    dte.Commands.Raise(GuidList.guidPythonToolsCmdSetString, replCommand.CommandId, ref inObj, ref outObj);
+                    dte.Commands.Raise(GuidList.guidPythonToolsCmdSet.ToString("B"), replCommand.CommandId, ref inObj, ref outObj);
                     return;
                 }
             }

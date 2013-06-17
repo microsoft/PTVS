@@ -36,7 +36,7 @@ namespace Microsoft.PythonTools.Commands {
                         var path = t.Result;
                         if (!string.IsNullOrEmpty(path) && File.Exists(path)) {
                             object outRef = null, pathRef = path;
-                            PythonToolsPackage.Instance.DTE.Commands.Raise(VSConstants.GUID_VSStandardCommandSet97.ToString(), (int)VSConstants.VSStd97CmdID.OpenProject, ref pathRef, ref outRef);
+                            PythonToolsPackage.Instance.DTE.Commands.Raise(VSConstants.GUID_VSStandardCommandSet97.ToString("B"), (int)VSConstants.VSStd97CmdID.OpenProject, ref pathRef, ref outRef);
                         }
                         statusBar.SetText("");
                     }, System.Threading.Tasks.TaskScheduler.FromCurrentSynchronizationContext());

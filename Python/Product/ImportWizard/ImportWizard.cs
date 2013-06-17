@@ -46,7 +46,7 @@ namespace Microsoft.PythonTools.ImportWizard {
             } else {
                 System.Threading.Tasks.Task.Factory.StartNew(() => {
                     object inObj = null, outObj = null;
-                    dte.Commands.Raise(GuidList.guidPythonToolsCmdSetString, (int)PkgCmdIDList.cmdidImportWizard, ref inObj, ref outObj);
+                    dte.Commands.Raise(GuidList.guidPythonToolsCmdSet.ToString("B"), (int)PkgCmdIDList.cmdidImportWizard, ref inObj, ref outObj);
                 });
             }
             throw new WizardCancelledException();
