@@ -75,12 +75,12 @@ namespace Microsoft.PythonTools.Project {
             if (project != null) {
                 var interpService = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
                 _interpreters = new MSBuildProjectInterpreterFactoryProvider(interpService, project);
-                _interpreters.ActiveInterpreterChanged += ActiveInterpreterChanged;
                 try {
                     _interpreters.DiscoverInterpreters();
                 } catch (InvalidDataException ex) {
                     OutputWindowRedirector.GetGeneral(Site).WriteErrorLine(ex.ToString());
                 }
+                _interpreters.ActiveInterpreterChanged += ActiveInterpreterChanged;
                 _interpreters.InterpreterFactoriesChanged += InterpreterFactoriesChanged;
             } else {
                 _interpreters = null;
@@ -551,9 +551,14 @@ namespace Microsoft.PythonTools.Project {
 
         /// <summary>
         /// Called when the active interpreter is changed.  A new interpreter
-        /// will be lazily created when needed.
+        /// will be created immediately unless another project in the solution
+        /// can provide a matching analyzer.
         /// </summary>
         private void ActiveInterpreterChanged(object sender, EventArgs e) {
+            if (_uiSync.InvokeRequired) {
+                _uiSync.Invoke((EventHandler)ActiveInterpreterChanged, new object[] { sender, e });
+                return;
+            }
             DisposeInterpreter();
 
             var analyzer = CreateAnalyzer();

@@ -66,7 +66,7 @@ namespace Microsoft.VisualStudioTools.Project {
         private readonly Dictionary<string, FileSystemEventHandler> _fileChangedHandlers = new Dictionary<string, FileSystemEventHandler>();
         private List<FileSystemChange> _fileSystemChanges;
         private object _fileSystemChangesLock = new object();
-        private UIThreadSynchronizer _uiSync;
+        internal UIThreadSynchronizer _uiSync;
         private MSBuild.Project userBuildProject;
         private readonly Dictionary<string, FileSystemWatcher> _symlinkWatchers = new Dictionary<string, FileSystemWatcher>();
         private readonly System.Threading.Timer _processFileChangesTimer;
@@ -1445,9 +1445,9 @@ namespace Microsoft.VisualStudioTools.Project {
                     var absPath = CommonUtils.GetAbsoluteFilePath(ProjectHome, path);
                     if (seen.Add(absPath)) {
                         result.Add(absPath);
+                    }
                 }
             }
-        }
 
             return result;
         }

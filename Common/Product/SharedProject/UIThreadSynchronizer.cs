@@ -14,6 +14,7 @@
 
 using System;
 using System.ComponentModel;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Microsoft.VisualStudioTools.Project {
@@ -25,17 +26,19 @@ namespace Microsoft.VisualStudioTools.Project {
     /// </summary>
     class UIThreadSynchronizer : ISynchronizeInvoke {
         private readonly TaskScheduler _scheduler;
+        private readonly Thread _thread;
 
         /// <summary>
         /// Creates a new UIThreadSynchronizer which will invoke callbacks within the 
         /// current synchronization context.
         /// </summary>
         public UIThreadSynchronizer()
-            : this(TaskScheduler.FromCurrentSynchronizationContext()) {
+            : this(TaskScheduler.FromCurrentSynchronizationContext(), Thread.CurrentThread) {
         }
 
-        public UIThreadSynchronizer(TaskScheduler scheduler) {
+        public UIThreadSynchronizer(TaskScheduler scheduler, Thread target) {
             _scheduler = scheduler;
+            _thread = target;
         }
 
         #region ISynchronizeInvoke Members
@@ -55,7 +58,7 @@ namespace Microsoft.VisualStudioTools.Project {
         }
 
         public bool InvokeRequired {
-            get { return true; }
+            get { return Thread.CurrentThread != _thread; }
         }
 
         #endregion

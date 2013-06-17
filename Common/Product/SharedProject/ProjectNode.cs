@@ -708,7 +708,7 @@ namespace Microsoft.VisualStudioTools.Project
                 {
                     projectHome = CommonUtils.GetAbsoluteDirectoryPath(
                         this.ProjectFolder,
-                        this.ProjectMgr.GetProjectProperty(CommonConstants.ProjectHome, true));
+                        this.GetProjectProperty(CommonConstants.ProjectHome, true));
                 }
 
                 Debug.Assert(projectHome != null, "ProjectHome should not be null");
@@ -1727,7 +1727,7 @@ namespace Microsoft.VisualStudioTools.Project
 
                         ErrorHandler.ThrowOnFailure(this.Save(this.filename, 1, 0));
 
-                        string unresolvedProjectHome = this.ProjectMgr.GetProjectProperty(CommonConstants.ProjectHome);
+                        string unresolvedProjectHome = this.GetProjectProperty(CommonConstants.ProjectHome);
                         string basePath = CommonUtils.GetAbsoluteDirectoryPath(Path.GetDirectoryName(fileName), unresolvedProjectHome);
                         string baseLocation = CommonUtils.GetAbsoluteDirectoryPath(location, unresolvedProjectHome);
 
@@ -1939,7 +1939,7 @@ namespace Microsoft.VisualStudioTools.Project
             if (String.Compare(oldValue, propertyValue, StringComparison.Ordinal) != 0)
             {
                 // Check out the project file.
-                if (!this.ProjectMgr.QueryEditProjectFile(false))
+                if (!this.QueryEditProjectFile(false))
                 {
                     throw Marshal.GetExceptionForHR(VSConstants.OLE_E_PROMPTSAVECANCELLED);
                 }
@@ -4297,7 +4297,7 @@ namespace Microsoft.VisualStudioTools.Project
                 return VSConstants.E_FAIL;
             }
 
-            if (!this.ProjectMgr.QueryEditProjectFile(false))
+            if (!this.QueryEditProjectFile(false))
             {
                 throw Marshal.GetExceptionForHR(VSConstants.OLE_E_PROMPTSAVECANCELLED);
             }
@@ -4609,7 +4609,7 @@ namespace Microsoft.VisualStudioTools.Project
                 {
                     return hr;
                 }
-                ProjectMgr.OnItemAdded(targetFolder.Parent, targetFolder);
+                OnItemAdded(targetFolder.Parent, targetFolder);
                 return hr;
             } 
             else if (promptOverwrite == null) 
@@ -4928,7 +4928,7 @@ If the files in the existing folder have the same names as files in the folder y
         public virtual int TransferItem(string oldMkDoc, string newMkDoc, IVsWindowFrame frame)
         {
             // Fail if hierarchy already closed
-            if (this.ProjectMgr == null || this.ProjectMgr.IsClosed)
+            if (this.ProjectMgr == null || this.IsClosed)
             {
                 return VSConstants.E_FAIL;
             }
@@ -5432,7 +5432,7 @@ If the files in the existing folder have the same names as files in the folder y
                 throw new ArgumentException("Invalid item id", "item");
 
             if (node.ItemNode != null) {
-            attributeValue = node.ItemNode.GetMetadata(attributeName);
+                attributeValue = node.ItemNode.GetMetadata(attributeName);
             } else if(node == node.ProjectMgr) {
                 attributeName = node.ProjectMgr.GetProjectProperty(attributeName);
             }
@@ -6484,7 +6484,7 @@ If the files in the existing folder have the same names as files in the folder y
                 return VSConstants.E_INVALIDARG;
             }
 
-            HierarchyNode node = this.ProjectMgr.NodeFromItemId(itemid);
+            HierarchyNode node = this.NodeFromItemId(itemid);
             if (node == null) {
                 return VSConstants.E_FAIL;
             }
@@ -6596,7 +6596,7 @@ If the files in the existing folder have the same names as files in the folder y
         /// <param name="ignoreFlag">Flag indicating whether or not to ignore changes (1 to ignore, 0 to stop ignoring).</param>
         /// <returns>If the method succeeds, it returns S_OK. If it fails, it returns an error code.</returns>
         public virtual int IgnoreItemFileChanges(uint itemId, int ignoreFlag) {
-            HierarchyNode n = this.ProjectMgr.NodeFromItemId(itemId);
+            HierarchyNode n = this.NodeFromItemId(itemId);
             if (n != null) {
                 n.IgnoreItemFileChanges(ignoreFlag == 0 ? false : true);
             }
@@ -6614,7 +6614,7 @@ If the files in the existing folder have the same names as files in the folder y
         public virtual int IsItemReloadable(uint itemId, out int isReloadable) {
             isReloadable = 0;
 
-            HierarchyNode n = this.ProjectMgr.NodeFromItemId(itemId);
+            HierarchyNode n = this.NodeFromItemId(itemId);
             if (n != null) {
                 isReloadable = (n.IsItemReloadable()) ? 1 : 0;
             }
@@ -6629,7 +6629,7 @@ If the files in the existing folder have the same names as files in the folder y
         /// <param name="reserved">Reserved.</param>
         /// <returns>If the method succeeds, it returns S_OK. If it fails, it returns an error code. </returns>
         public virtual int ReloadItem(uint itemId, uint reserved) {
-            HierarchyNode n = this.ProjectMgr.NodeFromItemId(itemId);
+            HierarchyNode n = this.NodeFromItemId(itemId);
             if (n != null) {
                 n.ReloadItem(reserved);
             }

@@ -1419,23 +1419,23 @@ folder you are copying, do you want to replace the existing files?", Path.GetFil
         internal void AddExistingDirectories(HierarchyNode node, string[] filesDropped) {
             List<KeyValuePair<HierarchyNode, HierarchyNode>> addedItems = new List<KeyValuePair<HierarchyNode, HierarchyNode>>();
 
-            var oldTriggerFlag = this.ProjectMgr.EventTriggeringFlag;
-            ProjectMgr.EventTriggeringFlag |= ProjectNode.EventTriggering.DoNotTriggerHierarchyEvents;
+            var oldTriggerFlag = this.EventTriggeringFlag;
+            EventTriggeringFlag |= ProjectNode.EventTriggering.DoNotTriggerHierarchyEvents;
             try {
 
                 foreach (var dir in filesDropped) {
                     AddExistingDirectory(GetOrAddDirectory(node, addedItems, dir), dir, addedItems);
                 }
             } finally {
-                ProjectMgr.EventTriggeringFlag = oldTriggerFlag;
+                EventTriggeringFlag = oldTriggerFlag;
             }
 
             if (addedItems.Count > 0) {
                 foreach (var item in addedItems) {
-                    ProjectMgr.OnItemAdded(item.Key, item.Value);
+                    OnItemAdded(item.Key, item.Value);
                     this.tracker.OnItemAdded(item.Value.Url, VSADDFILEFLAGS.VSADDFILEFLAGS_NoFlags);
                 }
-                ProjectMgr.OnInvalidateItems(node);
+                OnInvalidateItems(node);
                 SetProjectFileDirty(true);
             }
         }
@@ -1450,7 +1450,7 @@ folder you are copying, do you want to replace the existing files?", Path.GetFil
             foreach (var file in Directory.GetFiles(path)) {
                 var existingFile = node.FindImmediateChildByName(Path.GetFileName(file));
                 if (existingFile == null) {
-                    existingFile = ProjectMgr.CreateFileNode(file);
+                    existingFile = CreateFileNode(file);
                     addedItems.Add(new KeyValuePair<HierarchyNode, HierarchyNode>(node, existingFile));
                     node.AddChild(existingFile);
                 }
@@ -1460,7 +1460,7 @@ folder you are copying, do you want to replace the existing files?", Path.GetFil
         private HierarchyNode GetOrAddDirectory(HierarchyNode node, List<KeyValuePair<HierarchyNode, HierarchyNode>> addedItems, string dir) {
             var existingDir = node.FindImmediateChildByName(Path.GetFileName(dir));
             if (existingDir == null) {
-                existingDir = ProjectMgr.CreateFolderNode(dir);
+                existingDir = CreateFolderNode(dir);
                 addedItems.Add(new KeyValuePair<HierarchyNode, HierarchyNode>(node, existingDir));
                 node.AddChild(existingDir);
             }

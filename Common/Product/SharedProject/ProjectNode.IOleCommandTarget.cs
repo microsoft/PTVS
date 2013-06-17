@@ -127,11 +127,11 @@ namespace Microsoft.VisualStudioTools.Project
                 {
                     case VsCommands.Copy:
                         handled = true;
-                        return this.ProjectMgr.CopyToClipboard();
+                        return this.CopyToClipboard();
 
                     case VsCommands.Cut:
                         handled = true;
-                        return this.ProjectMgr.CutToClipboard();
+                        return this.CutToClipboard();
 
                     case VsCommands.SolutionCfg:
                         handled = true;
@@ -277,7 +277,7 @@ namespace Microsoft.VisualStudioTools.Project
                 {
                     case VsCommands2K.ADDREFERENCE:
                         handled = true;
-                        if (ProjectMgr.GetReferenceContainer() != null) {
+                        if (GetReferenceContainer() != null) {
                             return QueryStatusResult.SUPPORTED | QueryStatusResult.ENABLED;
                         } else {
                             return QueryStatusResult.SUPPORTED | QueryStatusResult.INVISIBLE;
@@ -359,9 +359,9 @@ namespace Microsoft.VisualStudioTools.Project
             // Don't ask if it is not these commandgroups.
             if (commandGroup == VsMenus.guidStandardCommandSet97 || 
                 commandGroup == VsMenus.guidStandardCommandSet2K ||
-                commandGroup == ProjectMgr.SharedCommandGuid)
+                commandGroup == SharedCommandGuid)
             {
-                if (this.ProjectMgr.IsCurrentStateASuppressCommandsMode())
+                if (this.IsCurrentStateASuppressCommandsMode())
                 {
                     if (commandGroup == VsMenus.guidStandardCommandSet97)
                     {
@@ -396,7 +396,7 @@ namespace Microsoft.VisualStudioTools.Project
                             case VsCommands2K.SETASSTARTPAGE:
                                 return true;
                         }
-                    } else if (commandGroup == ProjectMgr.SharedCommandGuid) {
+                    } else if (commandGroup == SharedCommandGuid) {
                         switch ((SharedCommands)command) {
                             case SharedCommands.AddExistingFolder:
                                 return true;
@@ -404,7 +404,7 @@ namespace Microsoft.VisualStudioTools.Project
                     }
                 }
                 // If we are not in a cut or copy mode then disable the paste command
-                else if (!this.ProjectMgr.AllowPasteCommand())
+                else if (!this.AllowPasteCommand())
                 {
                     if (commandGroup == VsMenus.guidStandardCommandSet97 && (VsCommands)command == VsCommands.Paste)
                     {
