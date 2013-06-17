@@ -17,8 +17,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Microsoft.PythonTools.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -52,7 +50,7 @@ namespace TestAdapterTests {
             Assert.AreEqual(expectedTests.Length, sink.Tests.Count);
 
             foreach (var expectedTest in expectedTests) {
-                var expectedFullyQualifiedName = TestDiscoverer.MakeFullyQualifiedTestName(expectedTest.ClassFilePath, expectedTest.ClassName, expectedTest.MethodName);
+                var expectedFullyQualifiedName = TestDiscoverer.MakeFullyQualifiedTestName(expectedTest.ModuleName, expectedTest.ClassName, expectedTest.MethodName);
                 var actualTestCase = sink.Tests.SingleOrDefault(tc => tc.FullyQualifiedName == expectedFullyQualifiedName);
                 Assert.IsNotNull(actualTestCase, expectedFullyQualifiedName);
                 Assert.AreEqual(expectedTest.MethodName, actualTestCase.DisplayName, expectedFullyQualifiedName);
@@ -78,25 +76,13 @@ namespace TestAdapterTests {
 
         private static void PrintTestCases(IEnumerable<TestCase> testCases) {
             foreach (var tst in testCases) {
-                Debug.WriteLine("Test: " + tst.FullyQualifiedName);
-                Debug.WriteLine("Source: " + tst.Source);
-                Debug.WriteLine("Display: " + tst.DisplayName);
-                Debug.WriteLine("Location: " + tst.CodeFilePath);
-                Debug.WriteLine("Location: " + tst.LineNumber.ToString());
-                Debug.WriteLine("");
+                Console.WriteLine("Test: " + tst.FullyQualifiedName);
+                Console.WriteLine("Source: " + tst.Source);
+                Console.WriteLine("Display: " + tst.DisplayName);
+                Console.WriteLine("Location: " + tst.CodeFilePath);
+                Console.WriteLine("Location: " + tst.LineNumber.ToString());
+                Console.WriteLine("");
             }
-        }
-
-        internal static TestCase CreateExpectedTestCase(string className, string methodName, string relativeSourcePath, string relativeCodeFilePath, int codeLineNumber, string relativeClassFilePath = null) {
-            if (String.IsNullOrEmpty(relativeClassFilePath)) {
-                relativeClassFilePath = relativeCodeFilePath;
-            }
-            var fullyQualifiedName = TestDiscoverer.MakeFullyQualifiedTestName(TestData.GetPath(relativeClassFilePath), className, methodName);
-            var test = new TestCase(fullyQualifiedName, new Uri(TestExecutor.ExecutorUriString), TestData.GetPath(relativeSourcePath));
-            test.CodeFilePath = TestData.GetPath(relativeCodeFilePath);
-            test.LineNumber = codeLineNumber;
-            test.DisplayName = methodName;
-            return test;
         }
     }
 }

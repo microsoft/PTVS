@@ -29,6 +29,10 @@
     <Compile Include="NotATest.py" />
     <Compile Include="RenameImportTest.py" />
     <Compile Include="TimeoutTest.py" />
+    <Compile Include="tests\TestsInPackage.py" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="tests\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" />
 </Project>

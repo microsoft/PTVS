@@ -64,8 +64,8 @@ namespace TestAdapterTests {
             foreach (var expectedResult in expectedTests) {
                 var actualResult = recorder.Results.SingleOrDefault(tr => tr.TestCase.FullyQualifiedName == expectedResult.TestCase.FullyQualifiedName);
 
-                Assert.IsNotNull(actualResult);
-                Assert.AreEqual(expectedResult.Outcome, actualResult.Outcome);
+                Assert.IsNotNull(actualResult, expectedResult.TestCase.FullyQualifiedName + " not found in results");
+                Assert.AreEqual(expectedResult.Outcome, actualResult.Outcome, expectedResult.TestCase.FullyQualifiedName + " had incorrect result");
             }
         }
 
@@ -105,9 +105,13 @@ namespace TestAdapterTests {
 
         private static void PrintTestResults(IEnumerable<TestResult> results) {
             foreach (var result in results) {
-                Debug.WriteLine("Test: " + result.TestCase.FullyQualifiedName);
-                Debug.WriteLine("Result: " + result.Outcome);
-                Debug.WriteLine("");
+                Console.WriteLine("Test: " + result.TestCase.FullyQualifiedName);
+                Console.WriteLine("Result: " + result.Outcome);
+                foreach(var msg in result.Messages) {
+                    Console.WriteLine("Message " + msg.Category + ":");
+                    Console.WriteLine(msg.Text);
+                }
+                Console.WriteLine("");
             }
         }
     }

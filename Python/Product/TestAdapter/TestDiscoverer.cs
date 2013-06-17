@@ -104,30 +104,29 @@ namespace Microsoft.PythonTools.TestAdapter {
 
                 // Third pass, get the results of the analysis
                 foreach (var entry in entries) {
-                    foreach (var classDef in GetClasses(entry).Where(c => IsTestCaseClass(entry, c))) {
+                    foreach (var classValue in GetTestCaseClasses(entry)) {
                         // Check the name of all functions on the class using the analyzer
                         // This will return functions defined on this class and base classes
-                        var members = entry.Analysis.GetMembersByIndex(classDef.Name, 0);
+                        var members = classValue.GetAllMembers(entry.Analysis.InterpreterContext)
+                            .Values
+                            .SelectMany(v => v)
+                            .Where(v => v.MemberType == PythonMemberType.Function || v.MemberType == PythonMemberType.Method)
+                            .Where(v => v.Name.StartsWith("test"));
                         foreach (var member in members) {
-                            if (member.MemberType == PythonMemberType.Function ||
-                                member.MemberType == PythonMemberType.Method) {
-                                if (member.Name.StartsWith("test")) {
-                                    SendTestCase(discoverySink,
-                                        ((MSBuild.Project)proj).FullPath,
-                                        classDef.Name,
-                                        member.Name,
-                                        entry.FilePath,
-                                        member.Locations.FirstOrDefault());
-                                }
-                            }
+                            SendTestCase(discoverySink,
+                                ((MSBuild.Project)proj).FullPath,
+                                classValue.DeclaringModule.ModuleName,
+                                classValue.Name,
+                                member.Name,
+                                member.Locations.FirstOrDefault());
                         }
                     }
                 }
             }
         }
 
-        private static void SendTestCase(ITestCaseDiscoverySink discoverySink, string containerFilePath, string className, string methodName, string classFilePath, LocationInfo sourceLocation) {
-            var fullyQualifiedName = MakeFullyQualifiedTestName(classFilePath, className, methodName);
+        private static void SendTestCase(ITestCaseDiscoverySink discoverySink, string containerFilePath, string moduleName, string className, string methodName, LocationInfo sourceLocation) {
+            var fullyQualifiedName = MakeFullyQualifiedTestName(moduleName, className, methodName);
             TestCase testCase = new TestCase(fullyQualifiedName, TestExecutor.ExecutorUri, containerFilePath);
             testCase.DisplayName = methodName;
             testCase.LineNumber = sourceLocation != null ? sourceLocation.Line : 0;
@@ -135,12 +134,12 @@ namespace Microsoft.PythonTools.TestAdapter {
             discoverySink.SendTestCase(testCase);
         }
 
-        internal static string MakeFullyQualifiedTestName(string classFilePath, string className, string methodName) {
-            return Path.GetFileNameWithoutExtension(classFilePath) + "::" + className + "::" + methodName;
+        internal static string MakeFullyQualifiedTestName(string moduleName, string className, string methodName) {
+            return moduleName + "::" + className + "::" + methodName;
         }
 
         internal static void ParseFullyQualifiedTestName(string fullyQualifiedName, out string moduleName, out string className, out string methodName) {
-            string[] parts = fullyQualifiedName.Split(new string[] { "::" } , StringSplitOptions.None);
+            string[] parts = fullyQualifiedName.Split(new string[] { "::" }, StringSplitOptions.None);
             Debug.Assert(parts.Length == 3);
             moduleName = parts[0];
             className = parts[1];
@@ -168,14 +167,6 @@ namespace Microsoft.PythonTools.TestAdapter {
 
 
 
-        private static ClassDefinition[] GetClasses(IPythonProjectEntry entry) {
-            var walker = new FindClassesWalker();
-            if (entry != null && entry.Tree != null) {
-                entry.Tree.Walk(walker);
-            }
-            return walker.GetClasses();
-        }
-
         private static bool IsTestCaseClass(AnalysisValue cls) {
             if (cls == null ||
                 cls.DeclaringModule != null ||
@@ -187,38 +178,14 @@ namespace Microsoft.PythonTools.TestAdapter {
             return (mod == "unittest" || mod.StartsWith("unittest.")) && cls.Name == "TestCase";
         }
 
-        private static bool IsTestCaseClass(IPythonProjectEntry entry, ClassDefinition classNode) {
+        private static IEnumerable<AnalysisValue> GetTestCaseClasses(IPythonProjectEntry entry) {
             if (entry.IsAnalyzed) {
-                foreach (var value in entry.Analysis.GetValuesByIndex(classNode.Name, classNode.StartIndex)) {
-                    if (value.MemberType != PythonMemberType.Class) {
-                        continue;
-                    }
-
-                    foreach (var mroClass in value.Mro) {
-                        if (mroClass.Any(IsTestCaseClass)) {
-                            return true;
-                        }
-                    }
-                }
-            }
-
-            return false;
-        }
-
-        class FindClassesWalker : PythonWalker {
-            readonly List<ClassDefinition> _classes = new List<ClassDefinition>();
-
-            public ClassDefinition[] GetClasses() {
-                return _classes.ToArray();
-            }
-
-            public override bool Walk(ClassDefinition node) {
-                _classes.Add(node);
-                return false;
-            }
-
-            public override bool Walk(FunctionDefinition node) {
-                return false;
+                return entry.Analysis.GetAllAvailableMembersByIndex(0)
+                    .SelectMany(m => entry.Analysis.GetValuesByIndex(m.Name, 0))
+                    .Where(v => v.MemberType == PythonMemberType.Class)
+                    .Where(v => v.Mro.SelectMany(v2 => v2).Any(IsTestCaseClass));
+            } else {
+                return Enumerable.Empty<AnalysisValue>();
             }
         }
     }
