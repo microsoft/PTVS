@@ -20,7 +20,7 @@ using Microsoft.VisualStudio.Debugger;
 namespace Microsoft.PythonTools.DkmDebugger.Proxies.Structs {
     internal class PyLongObject : PyVarObject {
         private class Fields {
-            public StructField<UInt32Proxy> ob_digit;
+            public StructField<ByteProxy> ob_digit; // this is actually either uint16 or uint32, depending on Python bitness
         }
 
         private readonly Fields _fields;
@@ -41,10 +41,17 @@ namespace Microsoft.PythonTools.DkmDebugger.Proxies.Structs {
             var allocator = process.GetDataItem<PyObjectAllocator>();
             Debug.Assert(allocator != null);
 
-            var absValue = BigInteger.Abs(value);
+            var bitsInDigit = process.Is64Bit() ? 30 : 15;
+            var bytesInDigit = process.Is64Bit() ? 4 : 2;
 
-            long numDigits = (long)(absValue / (1 << 30)) + 1;
-            var result = allocator.Allocate<PyLongObject>((numDigits - 1) * sizeof(uint));
+            var absValue = BigInteger.Abs(value);
+            long numDigits = 0;
+            for (var t = absValue; t != 0; ) {
+                ++numDigits;
+                t >>= bitsInDigit;
+            }
+
+            var result = allocator.Allocate<PyLongObject>(numDigits * bytesInDigit);
 
             if (value == 0) {
                 result.ob_size.Write(0);
@@ -54,19 +61,28 @@ namespace Microsoft.PythonTools.DkmDebugger.Proxies.Structs {
                 result.ob_size.Write(-numDigits);
             }
 
-            for (var digitPtr = result.ob_digit; absValue != 0; digitPtr = digitPtr.GetAdjacentProxy(1)) {
-                digitPtr.Write((uint)(absValue % (1 << 30)));
-                absValue >>= 30;
+            if (bitsInDigit == 15) {
+                for (var digitPtr = new UInt16Proxy(process, result.ob_digit.Address); absValue != 0; digitPtr = digitPtr.GetAdjacentProxy(1)) {
+                    digitPtr.Write((ushort)(absValue % (1 << bitsInDigit)));
+                    absValue >>= bitsInDigit;
+                }
+            } else {
+                for (var digitPtr = new UInt32Proxy(process, result.ob_digit.Address); absValue != 0; digitPtr = digitPtr.GetAdjacentProxy(1)) {
+                    digitPtr.Write((ushort)(absValue % (1 << bitsInDigit)));
+                    absValue >>= bitsInDigit;
+                }
             }
 
             return result;
         }
 
-        private UInt32Proxy ob_digit {
+        private ByteProxy ob_digit {
             get { return GetFieldProxy(_fields.ob_digit); }
         }
 
         public BigInteger ToBigInteger() {
+            var bitsInDigit = Process.Is64Bit() ? 30 : 15;
+
             long ob_size = this.ob_size.Read();
             if (ob_size == 0) {
                 return 0;
@@ -74,12 +90,21 @@ namespace Microsoft.PythonTools.DkmDebugger.Proxies.Structs {
             long count = Math.Abs(ob_size);
 
             // Read and parse digits in reverse, starting from the most significant ones.
-            var digitPtr = GetFieldProxy(_fields.ob_digit).GetAdjacentProxy(count);
             var result = new BigInteger(0);
-            for (long i = 0; i != count; ++i) {
-                digitPtr = digitPtr.GetAdjacentProxy(-1);
-                result <<= 30;
-                result += digitPtr.Read();
+            if (bitsInDigit == 15) {
+                var digitPtr = new UInt16Proxy(Process, ob_digit.Address).GetAdjacentProxy(count);
+                for (long i = 0; i != count; ++i) {
+                    digitPtr = digitPtr.GetAdjacentProxy(-1);
+                    result <<= bitsInDigit;
+                    result += digitPtr.Read();
+                }
+            } else {
+                var digitPtr = new UInt32Proxy(Process, ob_digit.Address).GetAdjacentProxy(count);
+                for (long i = 0; i != count; ++i) {
+                    digitPtr = digitPtr.GetAdjacentProxy(-1);
+                    result <<= bitsInDigit;
+                    result += digitPtr.Read();
+                }
             }
 
             return ob_size > 0 ? result : -result;
