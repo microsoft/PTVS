@@ -51,21 +51,6 @@ namespace Microsoft.PythonTools.Intellisense {
                 SetValue(WarningVisibilityPropertyKey, Visibility.Collapsed);
             } else {
                 SetValue(WarningVisibilityPropertyKey, fact.IsCurrent ? Visibility.Collapsed : Visibility.Visible);
-                fact.IsCurrentChanged += Interpreter_IsCurrentChanged;
-            }
-        }
-
-        private void Interpreter_IsCurrentChanged(object sender, EventArgs e) {
-            if (Dispatcher.CheckAccess()) {
-                var fact = sender as IInterpreterWithCompletionDatabase;
-                if (fact == null) {
-                    SetValue(WarningVisibilityPropertyKey, Visibility.Collapsed);
-                } else {
-                    SetValue(WarningVisibilityPropertyKey, fact.IsCurrent ? Visibility.Collapsed : Visibility.Visible);
-                    fact.IsCurrentChanged += Interpreter_IsCurrentChanged;
-                }
-            } else {
-                Dispatcher.Invoke((Action)(() => Interpreter_IsCurrentChanged(sender, e)));
             }
         }
 
