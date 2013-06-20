@@ -1258,7 +1258,7 @@ namespace Microsoft.VisualStudioTools.Project
                 {
                     this.buildProject.ProjectCollection.UnloadProject(this.buildProject);
                     this.buildProject.ProjectCollection.UnloadProject(this.buildProject.Xml);
-                    this.buildProject = null;
+                    this.SetBuildProject(null);
                 }
 
                 if (null != imageHandler)
