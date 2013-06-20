@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
@@ -277,14 +278,26 @@ namespace Microsoft.PythonTools {
         /// </summary>
         public ProcessPriorityClass PriorityClass {
             get {
-                if (_process == null) {
-                    return ProcessPriorityClass.Normal;
+                if (_process != null && !_process.HasExited) {
+                    try {
+                        return _process.PriorityClass;
+                    } catch (Win32Exception) {
+                    } catch (InvalidOperationException) {
+                        // Return Normal if we've raced with the process
+                        // exiting.
+                    }
                 }
-                return _process.PriorityClass;
+                return ProcessPriorityClass.Normal;
             }
             set {
-                if (_process != null) {
-                    _process.PriorityClass = value;
+                if (_process != null && !_process.HasExited) {
+                    try {
+                        _process.PriorityClass = value;
+                    } catch (Win32Exception) {
+                    } catch (InvalidOperationException) {
+                        // Silently fail if we've raced with the process
+                        // exiting.
+                    }
                 }
             }
         }

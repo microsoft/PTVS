@@ -380,7 +380,7 @@ namespace Microsoft.PythonTools.Interpreter {
         public static void Generate(PythonTypeDatabaseCreationRequest request) {
             var fact = request.Factory;
             var withDb = fact as IInterpreterWithCompletionDatabase;
-            if (withDb == null) {
+            if (withDb == null || string.IsNullOrEmpty(fact.Configuration.LibraryPath)) {
                 return;
             }
             var outPath = request.OutputPath;
