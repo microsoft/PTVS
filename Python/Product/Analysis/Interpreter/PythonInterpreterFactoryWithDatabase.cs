@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Security;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
@@ -140,9 +141,10 @@ namespace Microsoft.PythonTools.Interpreter {
                         int version;
                         return Int32.TryParse(allLines, out version) && version == PythonTypeDatabase.CurrentVersion;
                     } catch (IOException) {
+                    } catch (UnauthorizedAccessException) {
+                    } catch (SecurityException) {
                     }
                 }
-                return false;
             }
             return false;
         }
@@ -264,28 +266,35 @@ namespace Microsoft.PythonTools.Interpreter {
         private void RefreshIsCurrent(bool initialValue) {
             bool reasonChanged = false;
 
-            if (Directory.Exists(DatabasePath)) {
-                var existingDatabase = new HashSet<string>(
-                    Directory.EnumerateFiles(DatabasePath, "*.idb").Select(f => Path.GetFileNameWithoutExtension(f)),
-                    StringComparer.InvariantCultureIgnoreCase
-                );
-                var missingModules = ModulePath.GetModulesInLib(this)
-                    .Select(mp => mp.ModuleName)
-                    .Where(name => !existingDatabase.Contains(name))
-                    .OrderBy(name => name, StringComparer.InvariantCultureIgnoreCase)
-                    .ToArray();
+            try {
+                if (Directory.Exists(DatabasePath)) {
+                    var existingDatabase = new HashSet<string>(
+                        Directory.EnumerateFiles(DatabasePath, "*.idb").Select(f => Path.GetFileNameWithoutExtension(f)),
+                        StringComparer.InvariantCultureIgnoreCase
+                    );
+                    var missingModules = ModulePath.GetModulesInLib(this)
+                        .Select(mp => mp.ModuleName)
+                        .Where(name => !existingDatabase.Contains(name))
+                        .OrderBy(name => name, StringComparer.InvariantCultureIgnoreCase)
+                        .ToArray();
 
-                if (missingModules.Length > 0) {
-                    var oldModules = _missingModules;
-                    if (oldModules == null ||
-                        oldModules.Length != missingModules.Length ||
-                        !oldModules.SequenceEqual(missingModules)) {
-                        reasonChanged = true;
+                    if (missingModules.Length > 0) {
+                        var oldModules = _missingModules;
+                        if (oldModules == null ||
+                            oldModules.Length != missingModules.Length ||
+                            !oldModules.SequenceEqual(missingModules)) {
+                            reasonChanged = true;
+                        }
+                        _missingModules = missingModules;
+                    } else {
+                        _missingModules = null;
                     }
-                    _missingModules = missingModules;
-                } else {
-                    _missingModules = null;
                 }
+            } catch (IOException) {                 // We want to avoid crashing
+            } catch (UnauthorizedAccessException) { // here, and IsCurrent
+            } catch (SecurityException) {           // should be false if any of
+            } catch (NotSupportedException) {       // these are non-transient
+            } catch (ArgumentException) {           // faults.
             }
 
             if (IsCurrent != initialValue) {
