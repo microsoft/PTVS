@@ -67,11 +67,10 @@ namespace Microsoft.VisualStudioTools {
                 incompatKey.SetValue("guidNativeOnlyEng", "{3B476D35-A401-11D2-AAD4-00C04F990171}");
 #endif
             }
-            /*
+            
             using (var autoSelectIncompatKey = engineKey.CreateSubkey("AutoSelectIncompatibleList")) {
                 autoSelectIncompatKey.SetValue("guidNativeOnlyEng", "{3B476D35-A401-11D2-AAD4-00C04F990171}");
             }
-             */
 
             var clsidKey = context.CreateKey("CLSID");
             var clsidGuidKey = clsidKey.CreateSubkey(_debugEngine.GUID.ToString("B"));
