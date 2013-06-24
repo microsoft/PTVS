@@ -195,6 +195,13 @@ namespace TestUtilities.UI {
         }
 
         /// <summary>
+        /// Selects the selectable item.  The item must support the Selection item pattern.
+        /// </summary>
+        public void Select() {
+            Select(Element);
+        }
+
+        /// <summary>
         /// Expands the selected item.  The item must support the expand/collapse pattern.
         /// </summary>
         /// <param name="node"></param>

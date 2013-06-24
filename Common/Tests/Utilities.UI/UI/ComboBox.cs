@@ -12,12 +12,14 @@
  *
  * ***************************************************************************/
 
+using System.Collections.Generic;
+using System.Linq;
 using System.Windows.Automation;
 
 namespace TestUtilities.UI {
     public class ComboBox : AutomationWrapper {
         public ComboBox(AutomationElement element)
-            : base(element) {            
+            : base(element) {
         }
 
         public void SelectItem(string name) {
@@ -38,7 +40,7 @@ namespace TestUtilities.UI {
             ExpandCollapsePattern pat = (ExpandCollapsePattern)Element.GetCurrentPattern(ExpandCollapsePattern.Pattern);
             pat.Expand();
             try {
-                var items = Element.FindAll(TreeScope.Descendants, 
+                var items = Element.FindAll(TreeScope.Descendants,
                     new OrCondition(
                         new PropertyCondition(AutomationElement.ClassNameProperty, "ListBoxItem"),
                         new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.ListItem)
@@ -48,6 +50,28 @@ namespace TestUtilities.UI {
                 foreach (AutomationElement item in items) {
                     if (((SelectionItemPattern)item.GetCurrentPattern(SelectionItemPattern.Pattern)).Current.IsSelected) {
                         return item.Current.Name;
+                    }
+                }
+                return null;
+            } finally {
+                pat.Collapse();
+            }
+        }
+
+        public string GetSelectedItemText() {
+            ExpandCollapsePattern pat = (ExpandCollapsePattern)Element.GetCurrentPattern(ExpandCollapsePattern.Pattern);
+            pat.Expand();
+            try {
+                var items = Element.FindAll(TreeScope.Descendants,
+                    new OrCondition(
+                        new PropertyCondition(AutomationElement.ClassNameProperty, "ListBoxItem"),
+                        new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.ListItem)
+                    )
+                );
+
+                foreach (AutomationElement item in items) {
+                    if (((SelectionItemPattern)item.GetCurrentPattern(SelectionItemPattern.Pattern)).Current.IsSelected) {
+                        return new AutomationWrapper(item).FindFirstByControlType(ControlType.Text).Current.Name;
                     }
                 }
                 return null;

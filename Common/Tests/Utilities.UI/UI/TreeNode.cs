@@ -22,7 +22,7 @@ namespace TestUtilities.UI
             : base(element) {
         }
         
-        public void Select()
+        public new void Select()
         {
             Mouse.MoveTo(new System.Drawing.Point(0, 0));
             System.Threading.Thread.Sleep(100);

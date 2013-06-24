@@ -38,9 +38,5 @@ namespace TestUtilities.UI {
                 return this[_parent.Header[columnName]];
             }
         }
-
-        public void Select() {
-            ((SelectionItemPattern)Element.GetCurrentPattern(SelectionItemPattern.Pattern)).Select();
-        }
     }
 }

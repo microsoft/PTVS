@@ -212,17 +212,23 @@ namespace Microsoft.PythonTools.Analysis {
                 var name = keyValue.Key;
                 var moduleRef = keyValue.Value;
 
-                if (moduleRef.Module is BuiltinModule) {
+                var builtinModule = moduleRef.Module as BuiltinModule;
+                if (builtinModule != null) {
                     if (!newNames.Contains(name)) {
                         // this module was unloaded
                         ModuleReference dummy;
                         _modules.TryRemove(name, out dummy);
 
                         BuiltinModule removedModule;
-                        _builtinModuleTable.TryRemove(((BuiltinModule)moduleRef.Module).InterpreterModule, out removedModule);
+                        _builtinModuleTable.TryRemove(builtinModule.InterpreterModule, out removedModule);
                     } else {
                         // this module was replaced with a new module
-                        moduleRef.Module = GetBuiltinModule(_interpreter.ImportModule(name));
+                        var newModule = _interpreter.ImportModule(name);
+                        if (builtinModule.InterpreterModule != newModule) {
+                            BuiltinModule removedModule;
+                            _builtinModuleTable.TryRemove(builtinModule.InterpreterModule, out removedModule);
+                            moduleRef.Module = GetBuiltinModule(newModule);
+                        }
                     }
                 }
             }
