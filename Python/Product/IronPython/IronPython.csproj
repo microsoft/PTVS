@@ -146,6 +146,10 @@
       <Project>{012293b1-168a-4c48-a678-db8361b50ba7}</Project>
       <Name>IronPython.Interpreter</Name>
     </ProjectReference>
+    <ProjectReference Include="..\IronPythonResolver\IronPythonResolver.csproj">
+      <Project>{31F224B1-68DA-4524-9A1C-95F22492775B}</Project>
+      <Name>IronPythonResolver</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Content Include="..\Icons\Dev$(VSTarget)\PythonProject.ico">

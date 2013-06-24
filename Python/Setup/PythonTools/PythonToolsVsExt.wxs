@@ -29,6 +29,7 @@
                 <RegistryKey Root='HKCU' Key='Software\Microsoft\VisualStudio\$(var.VSTargetVersion)\ExtensionManager\ExtensionTypes'>
                     <RegistryValue Type='string' Name='96492FC7-7BC6-46F7-8559-66BB4E09FD1E,2.0' Value='Tool'/>
                 </RegistryKey>
+                <File Id='fil5003493FFDDE4A9A8E3449D980C4C5C3' Source='$(var.TargetDir)\VSTemplateStore.pkgdef' />
             </Component>
             
             <!-- All user components -->

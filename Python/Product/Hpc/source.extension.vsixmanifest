@@ -10,17 +10,16 @@
     <Icon>PythonProject.ico</Icon>
     <PreviewImage>PythonProjectBig.ico</PreviewImage>
     <SupportedProducts>
+      <!-- The Edition specifications are minimums; any SKU equal or 'higher'
+           will accept them. -->
       <VisualStudio Version="10.0">
-        <Edition>IntegratedShell</Edition>
-        <Edition>Premium</Edition>
-        <Edition>Ultimate</Edition>
         <Edition>Pro</Edition>
       </VisualStudio>
       <VisualStudio Version="11.0">
-        <Edition>IntegratedShell</Edition>
-        <Edition>Premium</Edition>
-        <Edition>Ultimate</Edition>
         <Edition>Pro</Edition>
+      </VisualStudio>
+      <VisualStudio Version="12.0">
+        <Edition>IntegratedShell</Edition>
       </VisualStudio>
     </SupportedProducts>
     <SupportedFrameworkRuntimeEdition MinVersion="4.0" />

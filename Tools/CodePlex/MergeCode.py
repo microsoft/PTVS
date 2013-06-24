@@ -17,30 +17,32 @@ tfs.Authenticate()
 vcs = tfs.GetService(VersionControlServer)
 assert isinstance(vcs, VersionControlServer)
 
-base_dir = os.path.dirname(os.path.abspath(__file__))
-while not os.path.exists(os.path.join(base_dir, 'build.root')):
-  base_dir = os.path.dirname(base_dir)
-  
-  
-print 'root enlistment dir is', base_dir
+mc = vcs.GetMergeCandidates('$/TCWCS/Python/Main/Open_Source/Incubation/Django/Release', '$/TCWCS/Python/Main/Open_Source/Release', RecursionType.Full)
+hg_root = r'C:\Source\hgtest\pytools'
+workspace_root = r'F:\Product\TCP0\Open_Source'
+ws = vcs.TryGetWorkspace(workspace_root)
 
-hg_root = r'C:\Source\pytools'
-ws = vcs.TryGetWorkspace(base_dir)
+merge_from = ItemSpec('$/TCWCS/Python/Main/Open_Source/Incubation/Django/Release', RecursionType.Full)
+merge_to = '$/TCWCS/Python/Main/Open_Source/Release'
+cur_version = 28501
 
-merge_from = ItemSpec(base_dir, RecursionType.Full)
-cur_version = 32505
-
-powershell = os.path.join(os.environ['WinDir'], r'System32\WindowsPowerShell\v1.0\powershell.exe')
+path = os.path.join(os.environ['WinDir'], r'System32\WindowsPowerShell\v1.0\powershell.exe')
 
 
-for x in reversed(list(vcs.QueryHistory('$/TCWCS/Python/Open_Source/Feature/Python_2.0', VersionSpec.Latest, 0, RecursionType.Full, None, None, None, int.MaxValue, False, False))): 
+for x in reversed(list(vcs.QueryHistory('$/TCWCS/Python/Main/Open_Source/Incubation/Django/Release', VersionSpec.Latest, 0, RecursionType.Full, None, None, None, int.MaxValue, False, False))): 
     if cur_version >= x.ChangesetId:
         continue
 
     assert isinstance(x, Changeset)
     print '####################################################################################'
     print 'CHeckin: ' + str(x.ChangesetId)
-    status = ws.Get(GetRequest(merge_from, VersionSpec.Parse('C' + str(x.ChangesetId), None)[0]), GetOptions.Overwrite|GetOptions.GetAll)
+    status = ws.Merge(
+             merge_from, 
+             merge_to, 
+             VersionSpec.Parse('C' + str(cur_version), None)[0], 
+             VersionSpec.Parse('C' + str(x.ChangesetId), None)[0], 
+             LockLevel.None, 
+             MergeOptionsEx.None)
 
     if status.GetFailures():
         print 'failed'
@@ -53,7 +55,7 @@ for x in reversed(list(vcs.QueryHistory('$/TCWCS/Python/Open_Source/Feature/Pyth
         continue
     print 'Warnings', status.HaveResolvableWarnings
     print 'Conflicts', status.NumConflicts
-    for conflict in ws.QueryConflicts((base_dir, ), True):
+    for conflict in ws.QueryConflicts(('$/TCWCS/Python/Main/Open_Source/', ), True):
         assert isinstance(conflict, Conflict)
         print 'Can Merge', conflict.CanMergeContent
         conflict.Resolution = Resolution.AcceptMerge
@@ -70,22 +72,12 @@ for x in reversed(list(vcs.QueryHistory('$/TCWCS/Python/Open_Source/Feature/Pyth
                 print 'Failed to resolve conflict', dir(conflict)
                 sys.exit(1)
 
-    #ws.CheckIn(ws.GetPendingChanges(), x.Comment)    
+    ws.CheckIn(ws.GetPendingChanges(), x.Comment)    
     comment = x.Comment.Replace("'", "''").Replace(unichr(8217), "''")
-    if 'node' in comment.lower():
-        f = file('tmp.txt', 'w')
-        f.write(comment)
-        f.close()
-        os.system('notepad tmp.txt')
-        f = file('tmp.txt', 'r')
-        comment = ''.join(f.readlines())
-        f.close()
-    
-    psi = ProcessStartInfo(powershell, 
-                           r'"' + base_dir + "\Tools\CodePlex\Sync.ps1\" push '" + 
-                           hg_root + "' '" + comment + 
-                           "' -suppress_push True -commit_date '" + x.CreationDate.ToString("yyyy-MM-dd HH:mm:ss") + "'" +
-                           " -user_name '" + x.Committer + "'")
+    psi = ProcessStartInfo(path, 
+                           r'"' + workspace_root + "\Tools\CodePlex\Sync.ps1\" push '" + 
+                           hg_root + "' '" + workspace_root +"' '" + comment + 
+                           "' -suppress_push True -commit_date '" + x.CreationDate.ToString() + "'")
     print psi.Arguments
     psi.UseShellExecute = False
     p = Process.Start(psi)

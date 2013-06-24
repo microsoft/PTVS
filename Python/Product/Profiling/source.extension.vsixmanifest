@@ -10,11 +10,16 @@
     <Icon>PythonProject.ico</Icon>
     <PreviewImage>PythonProjectBig.ico</PreviewImage>
     <SupportedProducts>
+      <!-- The Edition specifications are minimums; any SKU equal or 'higher'
+           will accept them. -->
       <VisualStudio Version="10.0">
-        <Edition>Ultimate</Edition>
+        <Edition>Premium</Edition>
       </VisualStudio>
       <VisualStudio Version="11.0">
-        <Edition>Ultimate</Edition>
+        <Edition>Premium</Edition>
+      </VisualStudio>
+      <VisualStudio Version="12.0">
+        <Edition>Premium</Edition>
       </VisualStudio>
     </SupportedProducts>
     <SupportedFrameworkRuntimeEdition MinVersion="4.0" />

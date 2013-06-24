@@ -8,7 +8,9 @@
     <Icon>PythonProject.ico</Icon>
     <PreviewImage>PythonProjectBig.ico</PreviewImage>
   </Metadata>
-  <!-- Version="11.0" specifies the minimum (not the maximum) version. -->
+  <!-- Version="11.0" specifies the minimum (not the maximum) version, and the
+       Id specifications are minimums; any SKU equal or 'higher' will accept
+       them. -->
   <Installation InstalledByMsi="true">
     <InstallationTarget Id="Microsoft.VisualStudio.Pro" Version="11.0" />
     <InstallationTarget Id="Microsoft.VisualStudio.IntegratedShell" Version="12.0" />
