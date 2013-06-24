@@ -120,8 +120,18 @@
                 <MultiTrigger.Conditions>
                     <Condition Property="IsDefault" Value="True" />
                     <Condition Property="IsEnabled" Value="True" />
+                    <Condition Property="IsMouseOver" Value="False" />
                 </MultiTrigger.Conditions>
                 <Setter Property="BorderBrush" Value="{DynamicResource {x:Static wpf:Controls.ControlBorderSelectedKey}}" />
+                <Setter Property="BorderThickness" Value="2" />
+            </MultiTrigger>
+            <MultiTrigger>
+                <MultiTrigger.Conditions>
+                    <Condition Property="IsDefault" Value="True" />
+                    <Condition Property="IsEnabled" Value="True" />
+                    <Condition Property="IsMouseOver" Value="True" />
+                </MultiTrigger.Conditions>
+                <Setter Property="BorderBrush" Value="{DynamicResource {x:Static wpf:Controls.ControlBorderHoverKey}}" />
                 <Setter Property="BorderThickness" Value="2" />
             </MultiTrigger>
         </Style.Triggers>
