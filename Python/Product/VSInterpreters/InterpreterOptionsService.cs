@@ -274,7 +274,7 @@ namespace Microsoft.PythonTools.Interpreter {
                         _noInterpretersValue = InterpreterFactoryCreator.CreateInterpreterFactory(
                             new InterpreterFactoryCreationOptions {
                                 Id = NoInterpretersFactoryGuid,
-                                Description = "No Interpreters - Python",
+                                Description = "No Interpreters",
                                 LanguageVersion = new Version(2, 7)
                             }
                         );
