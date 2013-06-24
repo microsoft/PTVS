@@ -179,6 +179,7 @@
                             <DataTrigger Binding="{Binding IsRunning,Mode=OneWay}" Value="true">
                                 <Setter TargetName="Status" Property="Visibility" Value="Hidden" />
                                 <Setter TargetName="Refreshing" Property="Visibility" Value="Visible" />
+                                <Setter TargetName="NoDatabase" Property="Visibility" Value="Collapsed" />
                             </DataTrigger>
                             <DataTrigger Binding="{Binding Maximum,Mode=OneWay}" Value="0">
                                 <Setter TargetName="Progress" Property="IsIndeterminate" Value="true" />

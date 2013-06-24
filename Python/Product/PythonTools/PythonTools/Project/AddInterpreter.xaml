@@ -6,10 +6,11 @@
     xmlns:vstools="clr-namespace:Microsoft.VisualStudioTools"
     xmlns:ptvs="clr-namespace:Microsoft.PythonTools"
     xmlns:l="clr-namespace:Microsoft.PythonTools.Project"
+    xmlns:l2="clr-namespace:Microsoft.PythonTools.InterpreterList"
     xmlns:wpf="clr-namespace:Microsoft.PythonTools.Wpf"
     Title="Add/Remove Python Environments"
     MinWidth="300" Width="500"
-    MinHeight="200" Height="500"
+    MinHeight="200" Height="400"
     ScrollViewer.VerticalScrollBarVisibility="Auto"
     ResizeMode="CanResizeWithGrip"
     TextOptions.TextFormattingMode="Display"
@@ -20,6 +21,7 @@
     <vstools:DialogWindowVersioningWorkaround.CommandBindings>
         <CommandBinding Command="ApplicationCommands.Save" CanExecute="Save_CanExecute" Executed="Save_Executed" />
         <CommandBinding Command="ApplicationCommands.Close" CanExecute="Close_CanExecute" Executed="Close_Executed" />
+        <CommandBinding Command="{x:Static l2:InterpreterList.WebChooseInterpreterCommand}" CanExecute="WebChooseInterpreter_CanExecute" Executed="WebChooseInterpreter_Executed" />
     </vstools:DialogWindowVersioningWorkaround.CommandBindings>
     <vstools:DialogWindowVersioningWorkaround.Resources>
         <ResourceDictionary>
@@ -44,10 +46,11 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="*" />
             <RowDefinition Height="auto" />
+            <RowDefinition Height="auto" />
         </Grid.RowDefinitions>
-            
+
         <wpf:LabelledControl Grid.Row="0"
-                                Title="Python environments associated with my project">
+                             Title="Python environments associated with my project">
             <wpf:LabelledControl.HelpText>
                 Select the environments to associate with this project. These
                 environments will be shown in Solution Explorer.
@@ -59,7 +62,15 @@
             </ScrollViewer>
         </wpf:LabelledControl>
 
-        <StackPanel Orientation="Horizontal" Grid.Row="1" HorizontalAlignment="Right" Margin="0 12 0 0">
+        <Button Grid.Row="1"
+                Style="{StaticResource NavigationButton}"
+                HorizontalAlignment="Center"
+                Margin="6"
+                Command="{x:Static l2:InterpreterList.WebChooseInterpreterCommand}">
+            Go online and help me find another one
+        </Button>
+
+        <StackPanel Orientation="Horizontal" Grid.Row="2" HorizontalAlignment="Right" Margin="0 12 0 0">
             <Button IsDefault="True"
                     Command="ApplicationCommands.Save"
                     MinWidth="86" MinHeight="24" Margin="0 0 9 0"
