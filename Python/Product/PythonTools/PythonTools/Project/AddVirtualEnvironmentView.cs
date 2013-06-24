@@ -166,10 +166,19 @@ namespace Microsoft.PythonTools.Project {
                 return;
             }
 
-            if (!IsValidVirtualEnvPath(path)) {
+            if (Interpreters.Count == 0) {
+                WillCreateVirtualEnv = false;
+                WillAddVirtualEnv = false;
+                CannotCreateVirtualEnv = false;
+                NoInterpretersInstalled = true;
+                return;
+            }
+
+            if (!IsValidVirtualEnvPath(path) || BaseInterpreter == null) {
                 WillCreateVirtualEnv = false;
                 WillAddVirtualEnv = false;
                 CannotCreateVirtualEnv = true;
+                NoInterpretersInstalled = false;
                 return;
             }
 
@@ -188,10 +197,12 @@ namespace Microsoft.PythonTools.Project {
                     WillAddVirtualEnv = false;
                 }
                 CannotCreateVirtualEnv = !WillAddVirtualEnv;
+                NoInterpretersInstalled = false;
             } else {
                 WillCreateVirtualEnv = true;
                 WillAddVirtualEnv = false;
                 CannotCreateVirtualEnv = false;
+                NoInterpretersInstalled = false;
             }
         }
 
@@ -236,6 +247,20 @@ namespace Microsoft.PythonTools.Project {
             CannotCreateVirtualEnvPropertyKey.DependencyProperty;
 
 
+        public bool NoInterpretersInstalled {
+            get { return (bool)GetValue(NoInterpretersInstalledProperty); }
+            set { SetValue(NoInterpretersInstalledPropertyKey, value); }
+        }
+
+        private static readonly DependencyPropertyKey NoInterpretersInstalledPropertyKey =
+            DependencyProperty.RegisterReadOnly("NoInterpretersInstalled",
+                typeof(bool),
+                typeof(AddInterpreterView),
+                new PropertyMetadata(false));
+        public static readonly DependencyProperty NoInterpretersInstalledProperty =
+            NoInterpretersInstalledPropertyKey.DependencyProperty;
+
+
 
 
 
@@ -248,7 +273,7 @@ namespace Microsoft.PythonTools.Project {
             DependencyProperty.Register("BaseInterpreter",
                 typeof(InterpreterView),
                 typeof(AddVirtualEnvironmentView),
-                new PropertyMetadata(null, BaseInterpreter_Changed, BaseInterpreter_Coerce));
+                new PropertyMetadata(null, BaseInterpreter_Changed));
 
         private static void BaseInterpreter_Changed(DependencyObject d, DependencyPropertyChangedEventArgs e) {
             var aiv = d as AddVirtualEnvironmentView;
@@ -257,14 +282,6 @@ namespace Microsoft.PythonTools.Project {
             }
 
             aiv.UpdateInterpreter(e.NewValue as InterpreterView);
-        }
-
-        private static object BaseInterpreter_Coerce(DependencyObject d, object baseValue) {
-            AddVirtualEnvironmentView aiv;
-            if (baseValue == null && (aiv = d as AddVirtualEnvironmentView) != null) {
-                return aiv.Interpreters.Last();
-            }
-            return baseValue;
         }
 
         private void UpdateInterpreter(InterpreterView view) {

@@ -6,6 +6,7 @@
     xmlns:vstools="clr-namespace:Microsoft.VisualStudioTools"
     xmlns:ptvs="clr-namespace:Microsoft.PythonTools"
     xmlns:l="clr-namespace:Microsoft.PythonTools.Project"
+    xmlns:il="clr-namespace:Microsoft.PythonTools.InterpreterList"
     xmlns:wpf="clr-namespace:Microsoft.PythonTools.Wpf"
     Title="Add Virtual Environment"
     SizeToContent="Height"
@@ -22,6 +23,7 @@
         <CommandBinding Command="ApplicationCommands.Save" CanExecute="Save_CanExecute" Executed="Save_Executed" />
         <CommandBinding Command="ApplicationCommands.Close" CanExecute="Close_CanExecute" Executed="Close_Executed" />
         <CommandBinding Command="{x:Static wpf:Commands.BrowseFolder}" CanExecute="Browse_CanExecute" Executed="Browse_Executed" />
+        <CommandBinding Command="{x:Static il:InterpreterList.WebChooseInterpreterCommand}" CanExecute="WebChooseInterpreter_CanExecute" Executed="WebChooseInterpreter_Executed" />
     </vstools:DialogWindowVersioningWorkaround.CommandBindings>
     <vstools:DialogWindowVersioningWorkaround.Resources>
         <ResourceDictionary>
@@ -72,7 +74,7 @@
                 Specify the name or location of the virtual environment. If one
                 already exists, we will detect the base interpreter for you.
             </wpf:LabelledControl.HelpText>
-            <Grid>
+            <Grid Margin="3">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="auto" />
@@ -128,6 +130,21 @@
                 Choose a folder that does not exist, is empty, or contains an
                 existing virtual environment.
             </wpf:LabelledControl.HelpText>
+        </wpf:LabelledControl>
+
+        <wpf:LabelledControl Grid.Row="2"
+                             Visibility="{Binding NoInterpretersInstalled,Converter={StaticResource BoolToVisible}}"
+                             Title="We cannot create a virtual environment.">
+            <wpf:LabelledControl.HelpText>
+                You will need to install a Python interpreter before creating a
+                virtual environment.
+            </wpf:LabelledControl.HelpText>
+            <Button Style="{StaticResource NavigationButton}"
+                    Margin="3"
+                    VerticalAlignment="Top"
+                    Command="{x:Static il:InterpreterList.WebChooseInterpreterCommand}">
+                Go online and help me find a Python interpreter
+            </Button>
         </wpf:LabelledControl>
 
         <Label Grid.Row="3">

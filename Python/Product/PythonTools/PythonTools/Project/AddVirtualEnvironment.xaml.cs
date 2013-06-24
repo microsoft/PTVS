@@ -105,6 +105,16 @@ namespace Microsoft.PythonTools.Project {
             Close();
         }
 
+        private void WebChooseInterpreter_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
+            e.CanExecute = true;
+        }
+
+        private void WebChooseInterpreter_Executed(object sender, ExecutedRoutedEventArgs e) {
+            PythonToolsPackage.OpenWebBrowser(PythonToolsPackage.InterpreterHelpUrl);
+            DialogResult = false;
+            Close();
+        }
+
     }
 
     [ValueConversion(typeof(bool), typeof(Visibility))]
