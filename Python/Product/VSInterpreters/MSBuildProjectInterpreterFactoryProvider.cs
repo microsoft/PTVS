@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.PythonTools.Interpreters;
@@ -253,10 +254,7 @@ namespace Microsoft.PythonTools.Interpreter {
                     continue;
                 }
 
-                var fact = _service.FindInterpreter(id, ver);
-                if (fact == null) {
-                    fact = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(ver, string.Format("Unknown Python {0}", ver));
-                }
+                var fact = _service.FindInterpreter(id, ver) ?? new NotFoundInterpreterFactory(id, ver);
 
                 var existing = FindInterpreter(id, ver);
                 if (existing != null) {
@@ -420,7 +418,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 // The interpreter exists globally, so add a reference.
                 item = _project.AddItem(InterpreterReferenceItem,
                     string.Format("{0:B}\\{1}", factory.Id, factory.Configuration.Version)
-                    ).FirstOrDefault();
+                ).FirstOrDefault();
             } else {
                 // Can't find the interpreter anywhere else, so add its
                 // configuration to the project file.
@@ -660,5 +658,20 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         public event EventHandler ActiveInterpreterChanged;
+
+        class NotFoundInterpreterFactory : PythonInterpreterFactoryWithDatabase {
+            public NotFoundInterpreterFactory(Guid id, Version version)
+                : base(
+                    id,
+                    string.Format("Unknown Python {0}", version),
+                    new InterpreterConfiguration(null, null, null, null, null, ProcessorArchitecture.None, version),
+                    false) {
+            }
+
+            public override PythonTypeDatabase MakeTypeDatabase(string databasePath) {
+                return PythonTypeDatabase.CreateDefaultTypeDatabase(this);
+            }
+        }
+
     }
 }

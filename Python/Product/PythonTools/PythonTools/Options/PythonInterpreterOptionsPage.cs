@@ -76,7 +76,7 @@ namespace Microsoft.PythonTools.Options {
 
             var placeholders = _options.Where(kv => kv.Key is InterpreterPlaceholder).ToArray();
             _options.Clear();
-            foreach (var interpreter in _service.InterpretersOrDefault) {
+            foreach (var interpreter in _service.Interpreters) {
                 _options[interpreter] = new InterpreterOptions {
                     Display = interpreter.Description,
                     Id = interpreter.Id,

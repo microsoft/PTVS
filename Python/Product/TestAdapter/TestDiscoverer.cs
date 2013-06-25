@@ -75,9 +75,17 @@ namespace Microsoft.PythonTools.TestAdapter {
                 // First pass, prepare each file for analysis
                 foreach (var item in ((MSBuild.Project)proj).GetItems("Compile")) {
                     string fileAbsolutePath = GetItemAbsolutePath(projectHome, item);
+                    string fullName;
 
                     try {
-                        var entry = analyzer.AddModule(ModulePath.FromFullPath(fileAbsolutePath).FullName, fileAbsolutePath);
+                        fullName = ModulePath.FromFullPath(fileAbsolutePath).FullName;
+                    } catch (ArgumentException) {
+                        logger.SendMessage(TestMessageLevel.Warning, "File has an invalid module name: " + fileAbsolutePath);
+                        continue;
+                    }
+
+                    try {
+                        var entry = analyzer.AddModule(fullName, fileAbsolutePath);
 
                         using (var reader = new StreamReader(fileAbsolutePath))
                         using (var parser = Parser.CreateParser(reader, factory.GetLanguageVersion(), new ParserOptions() { BindReferences = true })) {

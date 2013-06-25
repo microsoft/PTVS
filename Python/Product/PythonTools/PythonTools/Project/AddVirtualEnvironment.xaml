@@ -148,7 +148,7 @@
         </wpf:LabelledControl>
 
         <Label Grid.Row="3">
-            Actions to be performed:
+            Actions we will perform:
         </Label>
             
         <StackPanel Grid.Row="4" Margin="12 3" Orientation="Vertical">
@@ -172,10 +172,6 @@
                     </Setter>
                 </Style>
             </StackPanel.Resources>
-            <Label Visibility="{Binding MayNotSupportVirtualEnv,Converter={StaticResource BoolToVisibleOrCollapsed}}">
-                Warning - the selected interpreter may not support virtual
-                environments.
-            </Label>
             <Label Visibility="{Binding WillInstallPipAndVirtualEnv,Converter={StaticResource BoolToVisibleOrCollapsed}}">
                 Install pip and virtualenv packages
             </Label>
@@ -190,6 +186,10 @@
             </Label>
             <Label Visibility="{Binding CannotCreateVirtualEnv,Converter={StaticResource BoolToVisibleOrCollapsed}}">
                 No action will be taken.
+            </Label>
+            <Label Visibility="{Binding MayNotSupportVirtualEnv,Converter={StaticResource BoolToVisibleOrCollapsed}}">
+                Warning - the selected interpreter may not support virtual
+                environments.
             </Label>
         </StackPanel>
 

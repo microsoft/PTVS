@@ -121,7 +121,7 @@ namespace Microsoft.PythonTools.Interpreter {
         /// Returns a new database loaded from the specified path.
         /// </summary>
         public virtual PythonTypeDatabase MakeTypeDatabase(string databasePath) {
-            if (ConfigurableDatabaseExists(databasePath, Configuration.Version)) {
+            if (!_generating && ConfigurableDatabaseExists(databasePath, Configuration.Version)) {
                 try {
                     return new PythonTypeDatabase(this, databasePath);
                 } catch (IOException) {

@@ -212,7 +212,7 @@
         <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1"/>
         <Strings>
           <CommandName>InterpreterList</CommandName>
-          <ButtonText>Python Interpreters</ButtonText>
+          <ButtonText>Python Environments</ButtonText>
         </Strings>
       </Button>
       
@@ -511,15 +511,15 @@
       </Button>
 
       <!--================================================================================================================-->
-      <!--======================================= Interpreter Management Commands ========================================-->
+      <!--======================================= Environment Management Commands ========================================-->
       <!--================================================================================================================-->
-      <Button guid="guidPythonToolsCmdSet" id="cmdidAddInterpreter" priority="0x0301" type="Button">
+      <Button guid="guidPythonToolsCmdSet" id="cmdidAddEnvironment" priority="0x0301" type="Button">
         <Parent guid="guidSHLMainMenu" id="IDG_VS_CTXT_PROJECT_ADD"/>
         <CommandFlag>DynamicVisibility</CommandFlag>
         <CommandFlag>DefaultInvisible</CommandFlag>
         <Strings>
-          <CommandName>AddPythonInterpreter</CommandName>
-          <ButtonText>Add/Remove Python &amp;Interpreters...</ButtonText>
+          <CommandName>AddPythonEnvironment</CommandName>
+          <ButtonText>Add/Remove Python &amp;Environments...</ButtonText>
         </Strings>
       </Button>
 
@@ -543,13 +543,13 @@
         </Strings>
       </Button>
 
-      <Button guid="guidPythonToolsCmdSet" id="cmdidActivateInterpreter" priority="0x0301" type="Button">
+      <Button guid="guidPythonToolsCmdSet" id="cmdidActivateEnvironment" priority="0x0301" type="Button">
         <Parent guid="guidPythonToolsCmdSet" id="CodeFileGroup"/>
         <CommandFlag>DynamicVisibility</CommandFlag>
         <CommandFlag>DefaultInvisible</CommandFlag>
         <Strings>
-          <CommandName>ActivateInterpreter</CommandName>
-          <ButtonText>&amp;Activate Interpreter</ButtonText>
+          <CommandName>ActivateEnvironment</CommandName>
+          <ButtonText>&amp;Activate Environment</ButtonText>
         </Strings>
       </Button>
 
@@ -772,7 +772,7 @@
       <Parent guid="guidPythonToolsCmdSet" id="CodeFileGroup"/>
     </CommandPlacement>
 
-    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidAddInterpreter" priority="0x603">
+    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidAddEnvironment" priority="0x603">
       <Parent guid="guidPythonToolsCmdSet" id="CodeFileGroup"/>
     </CommandPlacement>
 
@@ -829,10 +829,10 @@
       <IDSymbol name="cmdidStartWithoutDebugging" value="0x4004" />
       <IDSymbol name="cmdidStartDebugging" value="0x4005" />
 
-      <IDSymbol name="cmdidAddInterpreter" value="0x4006" />
+      <IDSymbol name="cmdidAddEnvironment" value="0x4006" />
       <IDSymbol name="cmdidAddVirtualEnv" value="0x4007" />
       <IDSymbol name="cmdidAddExistingVirtualEnv" value="0x4008" />
-      <IDSymbol name="cmdidActivateInterpreter" value="0x4009" />
+      <IDSymbol name="cmdidActivateEnvironment" value="0x4009" />
       <IDSymbol name="cmdidInstallPythonPackage" value="0x400A" />
 
       <IDSymbol name="cmdidShowCppView" value="0x400C" />

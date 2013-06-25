@@ -162,7 +162,7 @@ namespace Microsoft.PythonTools.Project {
         internal override int ExecCommandOnNode(Guid cmdGroup, uint cmd, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut) {
             if (cmdGroup == GuidList.guidPythonToolsCmdSet) {
                 switch (cmd) {
-                    case PythonConstants.ActivateInterpreter:
+                    case PythonConstants.ActivateEnvironment:
                         //Make sure we can edit the project file
                         if (!ProjectMgr.QueryEditProjectFile(false)) {
                             return VSConstants.OLE_E_PROMPTSAVECANCELLED;
@@ -302,13 +302,15 @@ namespace Microsoft.PythonTools.Project {
             return null;
         }
 
+        
+        
         /// <summary>
         /// Disable Copy/Cut/Paste commands on interpreter node.
         /// </summary>
         internal override int QueryStatusOnNode(Guid cmdGroup, uint cmd, IntPtr pCmdText, ref QueryStatusResult result) {
             if (cmdGroup == GuidList.guidPythonToolsCmdSet) {
                 switch (cmd) {
-                    case PythonConstants.ActivateInterpreter:
+                    case PythonConstants.ActivateEnvironment:
                         result |= QueryStatusResult.SUPPORTED;
                         if (_interpreters.ActiveInterpreter != _factory) {
                             result |= QueryStatusResult.ENABLED;

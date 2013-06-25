@@ -15,7 +15,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -26,11 +25,8 @@ using System.Windows;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Interpreters;
 using Microsoft.PythonTools.Navigation;
-using Microsoft.PythonTools.Options;
 using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text.Adornments;
 using Microsoft.VisualStudioTools;
@@ -78,7 +74,7 @@ namespace Microsoft.PythonTools.Project {
                 try {
                     _interpreters.DiscoverInterpreters();
                 } catch (InvalidDataException ex) {
-                    OutputWindowRedirector.GetGeneral(Site).WriteErrorLine(ex.ToString());
+                    OutputWindowRedirector.GetGeneral(Site).WriteErrorLine(ex.Message);
                 }
                 _interpreters.ActiveInterpreterChanged += ActiveInterpreterChanged;
                 _interpreters.InterpreterFactoriesChanged += InterpreterFactoriesChanged;
@@ -675,6 +671,28 @@ namespace Microsoft.PythonTools.Project {
                 }
             }
             return base.QueryStatusOnNode(cmdGroup, cmd, pCmdText, ref result);
+        }
+
+        protected override bool DisableCmdInCurrentMode(Guid cmdGroup, uint cmd) {
+            if (cmdGroup == GuidList.guidPythonToolsCmdSet) {
+                if (IsCurrentStateASuppressCommandsMode()) {
+                    switch((int)cmd) {
+                        case CommonConstants.AddSearchPathCommandId:
+                        case CommonConstants.AddSearchPathZipCommandId:
+                        case CommonConstants.StartDebuggingCmdId:
+                        case CommonConstants.StartWithoutDebuggingCmdId:
+                            return true;
+                        case PythonConstants.ActivateEnvironment:
+                        case PythonConstants.AddEnvironment:
+                        case PythonConstants.AddExistingVirtualEnv:
+                        case PythonConstants.AddVirtualEnv:
+                        case PythonConstants.InstallPythonPackage:
+                            return true;
+                    }
+                }
+            }
+
+            return base.DisableCmdInCurrentMode(cmdGroup, cmd);
         }
 
         #region IPythonProject Members

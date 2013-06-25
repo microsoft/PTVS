@@ -56,10 +56,10 @@ namespace Microsoft.PythonTools {
         internal const int IconIfForSplashScreen = 300;
         internal const int IconIdForAboutBox = 400;
 
-        internal const int AddInterpreter = 0x4006;
+        internal const int AddEnvironment = 0x4006;
         internal const int AddVirtualEnv = 0x4007;
         internal const int AddExistingVirtualEnv = 0x4008;
-        internal const int ActivateInterpreter = 0x4009;
+        internal const int ActivateEnvironment = 0x4009;
         internal const int InstallPythonPackage = 0x400A;
 
         // Shows up before references

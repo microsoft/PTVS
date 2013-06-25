@@ -49,6 +49,8 @@ namespace Microsoft.PythonTools.Commands {
                 res.AppendLine("WARNING: IpyTools is installed on this machine.  Having both IpyTools and Python Tools for Visual Studio installed will break Python editing.");
             }
 
+            var interpService = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
+
             var dte = (EnvDTE.DTE)PythonToolsPackage.GetGlobalService(typeof(EnvDTE.DTE));
             res.AppendLine("Projects: ");
 
@@ -75,6 +77,21 @@ namespace Microsoft.PythonTools.Commands {
                                 res.AppendLine("        " + prop + ": " + propValue);
                             }
                         }
+
+                        foreach (var factory in pyProj.Interpreters.GetInterpreterFactories()) {
+                            res.AppendLine();
+                            res.AppendLine("        Interpreter: " + factory.Description);
+                            res.AppendLine("            Id: " + factory.Id);
+                            res.AppendLine("            Version: " + factory.Configuration.Version);
+                            if (interpService.FindInterpreter(factory.Id, factory.Configuration.Version) == null) {
+                                res.AppendLine("            Arch: " + factory.Configuration.Architecture);
+                                res.AppendLine("            Prefix Path: " + factory.Configuration.PrefixPath ?? "(null)");
+                                res.AppendLine("            Path: " + factory.Configuration.InterpreterPath ?? "(null)");
+                                res.AppendLine("            Windows Path: " + factory.Configuration.WindowsInterpreterPath ?? "(null)");
+                                res.AppendLine("            Lib Path: " + factory.Configuration.LibraryPath ?? "(null)");
+                                res.AppendLine("            Path Env: " + factory.Configuration.PathEnvironmentVariable ?? "(null)");
+                            }
+                        }
                     }
                 } else {
                     res.AppendLine("        Kind: " + project.Kind);
@@ -84,7 +101,6 @@ namespace Microsoft.PythonTools.Commands {
             }
 
             res.AppendLine("Interpreters: ");
-            var interpService = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
             foreach (var provider in interpService.KnownProviders) {
                 res.AppendLine("    " + provider.GetType().FullName);
                 foreach (var factory in provider.GetInterpreterFactories()) {
@@ -92,9 +108,11 @@ namespace Microsoft.PythonTools.Commands {
                     res.AppendLine("        Factory: " + factory.Description);
                     res.AppendLine("        Version: " + factory.Configuration.Version);
                     res.AppendLine("        Arch: " + factory.Configuration.Architecture);
-                    res.AppendLine("        Path: " + factory.Configuration.InterpreterPath);
-                    res.AppendLine("        Windows Path: " + factory.Configuration.WindowsInterpreterPath);
-                    res.AppendLine("        Path Env: " + factory.Configuration.PathEnvironmentVariable);
+                    res.AppendLine("        Prefix Path: " + factory.Configuration.PrefixPath ?? "(null)");
+                    res.AppendLine("        Path: " + factory.Configuration.InterpreterPath ?? "(null)");
+                    res.AppendLine("        Windows Path: " + factory.Configuration.WindowsInterpreterPath ?? "(null)");
+                    res.AppendLine("        Lib Path: " + factory.Configuration.LibraryPath ?? "(null)");
+                    res.AppendLine("        Path Env: " + factory.Configuration.PathEnvironmentVariable ?? "(null)");
                     res.AppendLine();
 
                     var withDb = factory as IInterpreterWithCompletionDatabase;

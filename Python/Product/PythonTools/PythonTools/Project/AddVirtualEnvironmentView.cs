@@ -321,7 +321,7 @@ namespace Microsoft.PythonTools.Project {
                     }
                 })).ContinueWith((Action<Task>)(t => {
                     WillInstallPipAndVirtualEnv = !hasPip;
-                    WillInstallVirtualEnv = !hasVirtualEnv;
+                    WillInstallVirtualEnv = hasPip && !hasVirtualEnv;
                 }), TaskScheduler.FromCurrentSynchronizationContext());
             }
         }

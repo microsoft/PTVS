@@ -170,7 +170,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The identifier of the interpreter..
+        ///   Looks up a localized string similar to The identifier of the environment..
         /// </summary>
         internal static string InterpreterIdDescription {
             get {
@@ -207,7 +207,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The Python language version supported by the interpreter..
+        ///   Looks up a localized string similar to The Python language version supported by the environment..
         /// </summary>
         internal static string InterpreterVersionDescription {
             get {
@@ -504,7 +504,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Warning: the intellisense database is currently not up to date and completions may be missing..
+        ///   Looks up a localized string similar to Warning: the IntelliSense database is currently not up to date and completions may be missing..
         /// </summary>
         internal static string WarningAnalysisNotCurrent {
             get {

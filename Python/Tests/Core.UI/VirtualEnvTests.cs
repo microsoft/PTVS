@@ -211,14 +211,14 @@ namespace PythonToolsUITests {
             env1.Select();
             System.Threading.Thread.Sleep(1000);
             try {
-                app.Dte.ExecuteCommand("Project.ActivateInterpreter");
+                app.Dte.ExecuteCommand("Project.ActivateEnvironment");
                 Assert.Fail("First env should already be active");
             } catch (COMException) {
             }
 
             env2.Select();
             System.Threading.Thread.Sleep(1000);
-            app.Dte.ExecuteCommand("Project.ActivateInterpreter");
+            app.Dte.ExecuteCommand("Project.ActivateEnvironment");
 
             var id2 = Guid.Parse((string)project.Properties.Item("InterpreterId").Value);
             Assert.AreNotEqual(id0, id2);
@@ -238,7 +238,7 @@ namespace PythonToolsUITests {
                 envName1));
             env1.Select();
             System.Threading.Thread.Sleep(1000);
-            app.Dte.ExecuteCommand("Project.ActivateInterpreter");
+            app.Dte.ExecuteCommand("Project.ActivateEnvironment");
 
             var id1b = Guid.Parse((string)project.Properties.Item("InterpreterId").Value);
             Assert.AreEqual(id1, id1b);

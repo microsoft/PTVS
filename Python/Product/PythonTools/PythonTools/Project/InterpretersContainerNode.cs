@@ -145,7 +145,7 @@ namespace Microsoft.PythonTools.Project {
         internal override int QueryStatusOnNode(Guid cmdGroup, uint cmd, IntPtr pCmdText, ref QueryStatusResult result) {
             if (cmdGroup == GuidList.guidPythonToolsCmdSet) {
                 switch (cmd) {
-                    case PythonConstants.AddInterpreter:
+                    case PythonConstants.AddEnvironment:
                     case PythonConstants.AddVirtualEnv:
                     case PythonConstants.AddExistingVirtualEnv:
                         result |= QueryStatusResult.SUPPORTED | QueryStatusResult.ENABLED;
@@ -160,7 +160,7 @@ namespace Microsoft.PythonTools.Project {
             if (cmdGroup == GuidList.guidPythonToolsCmdSet) {
                 bool browseForExisting = false;
                 switch (cmd) {
-                    case PythonConstants.AddInterpreter:
+                    case PythonConstants.AddEnvironment:
                         _projectNode.ShowAddInterpreter();
                         return VSConstants.S_OK;
                     case PythonConstants.AddExistingVirtualEnv:

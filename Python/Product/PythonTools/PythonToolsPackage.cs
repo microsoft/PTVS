@@ -792,16 +792,6 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
             }
         }
 
-        private void RefreshAddInterpreterCommands() {
-            var mcs = GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
-            var cmd = new OleMenuCommand(
-                (s, e) => { },
-                new CommandID(GuidList.guidPythonToolsCmdSet, 1),
-                "Abc");
-            
-            mcs.ParentTarget = (IOleCommandTarget)mcs.FindCommand(new CommandID(GuidList.guidPythonToolsCmdSet, PythonConstants.AddInterpreter));
-        }
-
         private void RefreshReplCommands(object sender, EventArgs e) {
             OleMenuCommandService mcs = GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
             List<OpenReplCommand> replCommands = new List<OpenReplCommand>();
