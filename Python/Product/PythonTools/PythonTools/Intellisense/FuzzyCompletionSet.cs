@@ -267,6 +267,7 @@ namespace Microsoft.PythonTools.Intellisense {
             Completion bestMatch = _previousSelection;
             int bestValue = 0;
             bool isUnique = true;
+            bool allowSelect = true;
 
             // Using the Completions property to only search through visible
             // completions.
@@ -281,9 +282,14 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
             }
 
+            if (Moniker == "PythonOverrides") {
+                allowSelect = false;
+                isUnique = false;
+            }
+
             if (((DynamicallyVisibleCompletion)bestMatch).Visible) {
                 SelectionStatus = new CompletionSelectionStatus(bestMatch,
-                    isSelected: bestValue > 0,
+                    isSelected: allowSelect && bestValue > 0,
                     isUnique: isUnique);
             } else {
                 SelectionStatus = new CompletionSelectionStatus(null,
