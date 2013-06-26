@@ -54,13 +54,13 @@ namespace Microsoft.PythonTools.Interpreter {
             Guid id;
             string collection;
             if (Guid.TryParse(guid, out id) && store.CollectionExists((collection = PythonInterpreterKey + "\\" + id.ToString("B")))) {
-                var path = store.GetString(collection, PathKey);
-                var winPath = store.GetString(collection, WindowsPathKey);
+                var path = store.GetString(collection, PathKey, string.Empty);
+                var winPath = store.GetString(collection, WindowsPathKey, string.Empty);
                 var libPath = store.GetString(collection, LibraryPathKey, string.Empty);
-                var arch = store.GetString(collection, ArchitectureKey);
-                var version = store.GetString(collection, VersionKey);
-                var pathEnvVar = store.GetString(collection, PathEnvVarKey);
-                var description = store.GetString(collection, DescriptionKey);
+                var arch = store.GetString(collection, ArchitectureKey, string.Empty);
+                var version = store.GetString(collection, VersionKey, string.Empty);
+                var pathEnvVar = store.GetString(collection, PathEnvVarKey, string.Empty);
+                var description = store.GetString(collection, DescriptionKey, string.Empty);
 
                 return InterpreterFactoryCreator.CreateInterpreterFactory(
                     new InterpreterFactoryCreationOptions {
