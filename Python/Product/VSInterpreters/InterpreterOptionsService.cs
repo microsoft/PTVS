@@ -173,8 +173,8 @@ namespace Microsoft.PythonTools.Interpreter {
             string id = null, version = null;
             var store = _settings.GetReadOnlySettingsStore(SettingsScope.UserSettings);
             if (store.CollectionExists(DefaultInterpreterOptionsCollection)) {
-                id = store.GetString(DefaultInterpreterOptionsCollection, DefaultInterpreterSetting);
-                version = store.GetString(DefaultInterpreterOptionsCollection, DefaultInterpreterVersionSetting);
+                id = store.GetString(DefaultInterpreterOptionsCollection, DefaultInterpreterSetting, null);
+                version = store.GetString(DefaultInterpreterOptionsCollection, DefaultInterpreterVersionSetting, null);
             }
 
             var newDefault = FindInterpreter(id, version) ?? Interpreters.LastOrDefault();
