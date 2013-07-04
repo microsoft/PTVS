@@ -64,7 +64,6 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         }
 
         internal override bool RemoveVariable(string name) {
-            
             return OuterScope.RemoveVariable(name);
         }
 
@@ -91,6 +90,8 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                     res.AddReference(node, unit);
                 }
                 PropagateIsInstanceTypes(node, unit, types, immediateOuter);
+
+                OuterScope.GetLinkedVariables(name).Add(res);
             }
             return res;
         }

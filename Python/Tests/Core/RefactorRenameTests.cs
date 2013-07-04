@@ -1951,6 +1951,27 @@ exec('abc = 1', foo, foo)
         }
 
         [TestMethod, Priority(0)]
+        public void IsInstanceScope() {
+            RefactorTest("abc", "foo", version: new Version(3, 2),
+            inputs: new[] { 
+                    new FileInput(
+@"
+foo = 1
+assert isinstance(foo, str)
+print(foo.upper())
+",
+@"
+abc = 1
+assert isinstance(abc, str)
+print(abc.upper())
+"                    )
+                }
+            );
+
+        }
+
+
+        [TestMethod, Priority(0)]
         public void WithStatement() {
             RefactorTest("abc", "foo", version: new Version(3, 2),
             inputs: new[] { 
