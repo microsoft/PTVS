@@ -68,7 +68,9 @@
                     </CollectionViewSource>
 
                     <DataTemplate x:Key="NameTemplate" DataType="{x:Type ptvs:InterpreterView}">
-                        <Label Name="InterpreterName" Content="{Binding Name}" />
+                        <Label Name="InterpreterName"
+                               Content="{Binding Name}"
+                               VerticalAlignment="Center" />
                         <DataTemplate.Triggers>
                             <DataTrigger Binding="{Binding IsDefault}" Value="True">
                                 <Setter TargetName="InterpreterName" Property="FontWeight" Value="Bold" />
@@ -77,7 +79,8 @@
                     </DataTemplate>
 
                     <DataTemplate x:Key="MakeDefaultTemplate" DataType="{x:Type ptvs:InterpreterView}">
-                        <Button Command="{x:Static l:InterpreterList.MakeDefaultCommand}" CommandParameter="{Binding}">
+                        <Button Command="{x:Static l:InterpreterList.MakeDefaultCommand}" CommandParameter="{Binding}"
+                                VerticalAlignment="Center">
                             Make Default
                         </Button>
                     </DataTemplate>
@@ -114,7 +117,10 @@
                                     Refresh DB
                                 </Button>
                             </Grid>
-                            <Grid Name="Refreshing" Visibility="Collapsed" Margin="6 1">
+                            <Grid Name="Refreshing"
+                                  Visibility="Collapsed"
+                                  Margin="6 1"
+                                  VerticalAlignment="Center">
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="auto" />
                                     <RowDefinition />
@@ -130,8 +136,11 @@
                                              Margin="0 1"
                                              HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
                             </Grid>
-                            <Grid Name="NoDatabase" Visibility="Collapsed" Margin="6 1">
-                                <Label VerticalAlignment="Center" AutomationProperties.AutomationId="NoDatabase">
+                            <Grid Name="NoDatabase"
+                                  Visibility="Collapsed"
+                                  Margin="6 1"
+                                  VerticalAlignment="Center">
+                                <Label AutomationProperties.AutomationId="NoDatabase">
                                     Does not use a completion DB
                                 </Label>
                             </Grid>
@@ -193,13 +202,14 @@
 
                     <DataTemplate x:Key="OpenReplTemplate">
                         <Button Command="{x:Static l:InterpreterList.OpenReplCommand}" CommandParameter="{Binding}"
-                                Style="{StaticResource NavigationButtonInList}">
+                                Style="{StaticResource NavigationButtonInList}"
+                                VerticalAlignment="Center">
                             Interactive Window
                         </Button>
                     </DataTemplate>
 
                     <DataTemplate x:Key="OpenOptionsTemplate">
-                        <StackPanel Orientation="Vertical">
+                        <StackPanel Orientation="Vertical" VerticalAlignment="Center">
                             <Button Command="{x:Static l:InterpreterList.OpenOptionsCommand}" CommandParameter="{Binding}"
                                     Margin="4 4 4 2"
                                     Style="{StaticResource NavigationButtonInList}">
@@ -215,7 +225,8 @@
 
                     <DataTemplate x:Key="OpenPathTemplate">
                         <Button Command="{x:Static l:InterpreterList.OpenPathCommand}" CommandParameter="{Binding}"
-                                Style="{StaticResource NavigationButtonInList}">
+                                Style="{StaticResource NavigationButtonInList}"
+                                VerticalAlignment="Center">
                             View in File Explorer
                         </Button>
                     </DataTemplate>
