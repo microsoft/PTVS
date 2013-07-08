@@ -47,7 +47,7 @@ namespace TestAdapterTests {
                 var actualResult = recorder.Results.SingleOrDefault(tr => tr.TestCase.FullyQualifiedName == expectedResult.TestCase.FullyQualifiedName);
 
                 Assert.IsNotNull(actualResult);
-                Assert.AreEqual(expectedResult.Outcome, actualResult.Outcome);
+                Assert.AreEqual(expectedResult.Outcome, actualResult.Outcome, expectedResult.TestCase.FullyQualifiedName + " had incorrect result");
             }
         }
 

@@ -6,7 +6,7 @@
     <ProjectGuid>d0c7948a-de98-4d88-a6eb-3a73bd1cc06f</ProjectGuid>
     <ProjectHome>.</ProjectHome>
     <StartupFile>BarTest.py</StartupFile>
-    <SearchPath>..\</SearchPath>
+    <SearchPath>..\;..\TestAdapterTestB\</SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
     <Name>UnitTestProjectA</Name>
@@ -25,6 +25,9 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="BarTest.py" />
+    <Compile Include="..\TestAdapterTestB\LinkedTest.py">
+      <Link>LinkedTest.py</Link>
+    </Compile>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" />
 </Project>

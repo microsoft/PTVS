@@ -25,6 +25,7 @@ using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
+using Microsoft.VisualStudioTools;
 using MSBuild = Microsoft.Build.Evaluation;
 
 namespace Microsoft.PythonTools.TestAdapter {
@@ -74,7 +75,7 @@ namespace Microsoft.PythonTools.TestAdapter {
 
                 // First pass, prepare each file for analysis
                 foreach (var item in ((MSBuild.Project)proj).GetItems("Compile")) {
-                    string fileAbsolutePath = GetItemAbsolutePath(projectHome, item);
+                    string fileAbsolutePath = CommonUtils.GetAbsoluteFilePath(projectHome, item.EvaluatedInclude);
                     string fullName;
 
                     try {
@@ -123,6 +124,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                         foreach (var member in members) {
                             SendTestCase(discoverySink,
                                 ((MSBuild.Project)proj).FullPath,
+                                projectHome,
                                 classValue.DeclaringModule.ModuleName,
                                 classValue.Name,
                                 member.Name,
@@ -133,13 +135,20 @@ namespace Microsoft.PythonTools.TestAdapter {
             }
         }
 
-        private static void SendTestCase(ITestCaseDiscoverySink discoverySink, string containerFilePath, string moduleName, string className, string methodName, LocationInfo sourceLocation) {
+        private static void SendTestCase(ITestCaseDiscoverySink discoverySink, string containerFilePath, string codeFileBasePath, string moduleName, string className, string methodName, LocationInfo sourceLocation) {
             var fullyQualifiedName = MakeFullyQualifiedTestName(moduleName, className, methodName);
             TestCase testCase = new TestCase(fullyQualifiedName, TestExecutor.ExecutorUri, containerFilePath);
             testCase.DisplayName = methodName;
             testCase.LineNumber = sourceLocation != null ? sourceLocation.Line : 0;
-            testCase.CodeFilePath = sourceLocation != null ? sourceLocation.FilePath : String.Empty;
+            testCase.CodeFilePath = GetCodeFilePath(sourceLocation, codeFileBasePath);
             discoverySink.SendTestCase(testCase);
+        }
+
+        private static string GetCodeFilePath(LocationInfo info, string basePath) {
+            if (info == null || string.IsNullOrEmpty(info.FilePath)) {
+                return string.Empty;
+            }
+            return CommonUtils.GetAbsoluteFilePath(basePath, info.FilePath);
         }
 
         internal static string MakeFullyQualifiedTestName(string moduleName, string className, string methodName) {
@@ -162,17 +171,6 @@ namespace Microsoft.PythonTools.TestAdapter {
             }
             return buildEngine.LoadProject(fullProjectPath);
         }
-
-        private static string GetItemAbsolutePath(string baseFolder, MSBuild.ProjectItem item) {
-            string filePath = item.EvaluatedInclude;
-            string fileAbsolutePath = filePath;
-            if (!Path.IsPathRooted(fileAbsolutePath)) {
-                fileAbsolutePath = Path.Combine(baseFolder, fileAbsolutePath);
-            }
-
-            return fileAbsolutePath;
-        }
-
 
 
         private static bool IsTestCaseClass(AnalysisValue cls) {
