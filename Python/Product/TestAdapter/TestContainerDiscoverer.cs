@@ -135,8 +135,14 @@ namespace Microsoft.PythonTools.TestAdapter {
             var latestWrite = project.GetProjectItemPaths().Aggregate(
                 DateTime.MinValue,
                 (latest, filePath) => {
-                    var ft = File.GetLastWriteTimeUtc(filePath);
-                    return (ft > latest) ? ft : latest;
+                    try {
+                        var ft = File.GetLastWriteTimeUtc(filePath);
+                        return (ft > latest) ? ft : latest;
+                    } catch (UnauthorizedAccessException) {
+                    } catch (ArgumentException) {
+                    } catch (IOException) {
+                    }
+                    return latest;
                 });
 
             var architecture = Architecture.X86;
