@@ -250,6 +250,11 @@ namespace Microsoft.PythonTools.TestAdapter {
             var buildEngine = new MSBuild.ProjectCollection();
             var proj = buildEngine.LoadProject(projectFile);
             var provider = new MSBuildProjectInterpreterFactoryProvider(_interpService, proj);
+
+            if (provider.ActiveInterpreter == _interpService.NoInterpretersValue) {
+                return null;
+            }
+            
             var projectHome = Path.GetFullPath(Path.Combine(proj.DirectoryPath, proj.GetPropertyValue(PythonConstants.ProjectHomeSetting) ?? "."));
 
             var projSettings = new PythonProjectSettings();

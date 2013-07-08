@@ -61,7 +61,8 @@ namespace Microsoft.PythonTools.TestAdapter {
                     // This exception can be safely ignored here.
                 }
                 var factory = provider.ActiveInterpreter;
-                if (factory == null) {
+                if (factory == _interpService.NoInterpretersValue) {
+                    logger.SendMessage(TestMessageLevel.Warning, "No interpreters available for project " + proj.FullPath);
                     continue;
                 }
 
