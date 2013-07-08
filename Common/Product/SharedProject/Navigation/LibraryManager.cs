@@ -319,7 +319,7 @@ namespace Microsoft.VisualStudioTools.Navigation {
         /// Checks whether this hierarchy item is a project member (on disk items from show all
         /// files aren't considered project members).
         /// </summary>
-        private bool IsNonMemberItem(IVsHierarchy hierarchy, uint itemId) {
+        protected bool IsNonMemberItem(IVsHierarchy hierarchy, uint itemId) {
             object val;
             int hr = hierarchy.GetProperty(itemId, (int)__VSHPROPID.VSHPROPID_IsNonMemberItem, out val);
             return ErrorHandler.Succeeded(hr) && (bool)val;

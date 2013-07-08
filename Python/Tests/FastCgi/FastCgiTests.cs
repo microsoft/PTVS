@@ -807,6 +807,21 @@ namespace FastCgiTest {
             );
         }
 
+        /// <summary>
+        /// Tests expand path
+        /// </summary>
+        [TestMethod, Priority(0), TestCategory("Core")]
+        public void TestExpandPathEnvironmentVariables() {
+            IisExpressTest(
+                psi => {
+                    psi.EnvironmentVariables["SITELOCATION"] = TestData.GetPath("TestData\\WFastCgi\\ExpandPathEnvironmentVariables");
+                    psi.EnvironmentVariables["OTHERLOCATION"] = TestData.GetPath("TestData\\WFastCgi\\ExpandPathEnvironmentVariablesOtherDir");
+                },
+                "TestData\\WFastCgi\\ExpandPathEnvironmentVariables",
+                new GetAndValidateUrl(GetLocalUrl(), ValidateHelloWorld)
+            );
+        }
+
         #endregion
 
         #region Test Case Validators/Actions
@@ -964,8 +979,8 @@ namespace FastCgiTest {
             }
         }
 
-        private Action CollectStaticFiles(string location) {
-            return () => {
+        private Action<ProcessStartInfo> CollectStaticFiles(string location) {
+            return (startInfo) => {
                 var psi = new ProcessStartInfo(
                     PythonPaths.Python27.Path,
                     String.Format("{0} collectstatic --noinput", Path.Combine(location, "manage.py"))
@@ -1023,7 +1038,7 @@ namespace FastCgiTest {
             IisExpressTest(null, location, actions);
         }
 
-        private void IisExpressTest(Action initialization, string location, params Action[] actions) {
+        private void IisExpressTest(Action<ProcessStartInfo> initialization, string location, params Action[] actions) {
             Console.WriteLine(Environment.CurrentDirectory);
             var appConfig = GenerateApplicationHostConfig(location);
             var webConfigLoc = Path.Combine(location, "web.config");
@@ -1035,17 +1050,17 @@ namespace FastCgiTest {
                                 .Replace("[SITEPATH]", Path.GetFullPath(location))
             );
 
-            if (initialization != null) {
-                Console.WriteLine("Initializing");
-                initialization();
-            }
-
             var psi = new ProcessStartInfo(IisExpressPath, String.Format("/config:\"{0}\" /site:WebSite1 /systray:false", appConfig));
             Console.WriteLine("Starting IIS Express: \"{0}\" {1}", psi.FileName, psi.Arguments);
             psi.UseShellExecute = false;
             psi.RedirectStandardError = true;
             psi.RedirectStandardOutput = true;
             psi.CreateNoWindow = true;
+
+            if (initialization != null) {
+                Console.WriteLine("Initializing");
+                initialization(psi);
+            }
 
             using (var proc = Process.Start(psi)) {
                 proc.OutputDataReceived += IisOutputDataReceived;

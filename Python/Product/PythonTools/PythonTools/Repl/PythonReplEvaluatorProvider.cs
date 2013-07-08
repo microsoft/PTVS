@@ -68,17 +68,18 @@ namespace Microsoft.PythonTools.Repl {
         /// Creates an interpreter which was created programmatically by some plugin
         /// </summary>
         private IReplEvaluator CreateConfigurableInterpreter(string replId) {
-            string[] components = replId.Split(new[] { '|' }, 6);
-            if (components.Length == 5 || components.Length == 6) {
+            string[] components = replId.Split(new[] { '|' }, 7);
+            if (components.Length == 6 || components.Length == 7) {
                 string workingDir = components[1];
                 string interpreter = components[2];
                 string interpreterVersion = components[3];
+                string envVars = components[5];
                 // we don't care about the user identifier
 
                 var pyInterpreter = _interpService.FindInterpreter(interpreter, interpreterVersion);
 
                 if (pyInterpreter == null && components.Length == 6) {
-                    string projectName = components[5];
+                    string projectName = components[6];
                     var solution = _serviceProvider.GetService(typeof(SVsSolution)) as IVsSolution;
                     if (solution != null) {
                         foreach (var proj in solution.EnumerateLoadedProjects().OfType<IVsHierarchy>()) {
@@ -104,7 +105,7 @@ namespace Microsoft.PythonTools.Repl {
                         workingDir
                     );
 
-                    return new PythonReplEvaluatorDontPersist(pyInterpreter, _errorProviderFactory, replOptions, _interpService);
+                    return new PythonReplEvaluatorDontPersist(pyInterpreter, _errorProviderFactory, replOptions, envVars, _interpService);
                 }
             }
             return null;

@@ -12,6 +12,7 @@
  *
  * ***************************************************************************/
 
+using System.Threading.Tasks;
 using Microsoft.VisualStudio.Repl;
 
 namespace Microsoft.PythonTools.Repl {
@@ -29,7 +30,7 @@ namespace Microsoft.PythonTools.Repl {
         /// 
         /// Does not reset the process, and the process will remain after the file is executed.
         /// </summary>
-        void ExecuteFile(string filename, string extraArgs);
+        Task<ExecutionResult> ExecuteFile(string filename, string extraArgs);
 
         /// <summary>
         /// Returns true if the REPL window process has exited.

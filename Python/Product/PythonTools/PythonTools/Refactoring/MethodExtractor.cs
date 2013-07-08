@@ -90,11 +90,12 @@ namespace Microsoft.PythonTools.Refactoring {
             // then on our extracted code
             var parent = walker.Target.Parents[walker.Target.Parents.Length - 1];
             HashSet<PythonVariable> readBeforeInit;
+            FlowChecker extractedChecker = null;
             if (parent.ScopeVariables != null) {
-                var flowChecker = new FlowChecker(parent);
+                extractedChecker = new FlowChecker(parent);
 
-                walker.Target.Walk(flowChecker);
-                readBeforeInit = flowChecker.ReadBeforeInitializedVariables;
+                walker.Target.Walk(extractedChecker);
+                readBeforeInit = extractedChecker.ReadBeforeInitializedVariables;
             } else {
                 readBeforeInit = new HashSet<PythonVariable>();
             }
@@ -103,6 +104,7 @@ namespace Microsoft.PythonTools.Refactoring {
             var afterStmts = walker.Target.GetStatementsAfter(_ast);
             HashSet<PythonVariable> readByFollowingCodeBeforeInit = null;
             var parentNode = walker.Target.Parents[walker.Target.Parents.Length - 1];
+            var outputVars = new HashSet<PythonVariable>();
             if (parentNode.ScopeVariables != null) {
                 var checker = new FlowChecker(parentNode);
 
@@ -111,10 +113,42 @@ namespace Microsoft.PythonTools.Refactoring {
                 }
 
                 readByFollowingCodeBeforeInit = checker.ReadBeforeInitializedVariables;
+
+                foreach (var variable in varCollector._allWrittenVariables) {
+                    if (variable != null && variable.Scope is PythonAst) {
+                        // global variable assigned to in outer scope, and left with
+                        // a valid value (not deleted) from the extracted code.  We
+                        // need to pass the value back out and assign to it in the
+                        // global scope.
+                        if (!checker.IsInitialized(variable) &&
+                            extractedChecker.IsAssigned(variable)) {
+                            outputVars.Add(variable);
+                        }
+                    }
+                }
             }
 
+            // collect any nested scopes, and see if they read any free variables
+            var scopeCollector = new ScopeCollector();
+            foreach (var afterStmt in afterStmts) {
+                afterStmt.Walk(scopeCollector);
+            }
+
+            foreach (var scope in scopeCollector._scopes) {
+                if (scope.FreeVariables != null) {
+                    foreach (var freeVar in scope.FreeVariables) {
+                        if (varCollector._allWrittenVariables.Contains(freeVar)) {
+                            // we've assigned to a variable accessed from an inner
+                            // scope, we need to get the value of the variable back out.
+                            outputVars.Add(freeVar);
+                        }
+                    }
+                }
+            }
+
+
             // discover any variables which are consumed and need to be available as outputs...
-            var outputCollector = new OuterVariableWalker(_ast, walker.Target, varCollector, readBeforeInit, readByFollowingCodeBeforeInit);
+            var outputCollector = new OuterVariableWalker(_ast, walker.Target, varCollector, readBeforeInit, readByFollowingCodeBeforeInit, outputVars);
             _ast.Walk(outputCollector);
 
             if (outputCollector._outputVars.Count > 0 &&
@@ -418,17 +452,18 @@ namespace Microsoft.PythonTools.Refactoring {
             private readonly InnerVariableWalker _inputCollector;
             private readonly DefineWalker _define;
             private readonly SelectionTarget _target;
-            internal readonly HashSet<PythonVariable> _outputVars = new HashSet<PythonVariable>();
+            internal readonly HashSet<PythonVariable> _outputVars;
             internal readonly HashSet<PythonVariable> _inputVars = new HashSet<PythonVariable>();
             private readonly HashSet<PythonVariable> _readBeforeInitialized, _readByFollowingCodeBeforeInit;
             private bool _inLoop = false;
 
-            public OuterVariableWalker(PythonAst root, SelectionTarget target, InnerVariableWalker inputCollector, HashSet<PythonVariable> readBeforeInitialized, HashSet<PythonVariable> readByFollowingCodeBeforeInit) {
+            public OuterVariableWalker(PythonAst root, SelectionTarget target, InnerVariableWalker inputCollector, HashSet<PythonVariable> readBeforeInitialized, HashSet<PythonVariable> readByFollowingCodeBeforeInit, HashSet<PythonVariable> outputVars) {
                 _root = root;
                 _target = target;
                 _inputCollector = inputCollector;
                 _readBeforeInitialized = readBeforeInitialized;
                 _readByFollowingCodeBeforeInit = readByFollowingCodeBeforeInit;
+                _outputVars = outputVars;
                 _define = new DefineWalker(this);
             }
 
@@ -539,7 +574,7 @@ namespace Microsoft.PythonTools.Refactoring {
 
                 public override bool Walk(NameExpression node) {
                     var reference = node.GetVariableReference(_collector._root);
-
+                    
                     return WalkName(node, reference);
                 }
 
@@ -567,6 +602,20 @@ namespace Microsoft.PythonTools.Refactoring {
 
                     return false;
                 }
+            }
+        }
+
+        class ScopeCollector : PythonWalker {
+            internal readonly List<ScopeStatement> _scopes = new List<ScopeStatement>();
+
+            public override void PostWalk(ClassDefinition node) {
+                _scopes.Add(node);
+                base.PostWalk(node);
+            }
+
+            public override void PostWalk(FunctionDefinition node) {
+                _scopes.Add(node);
+                base.PostWalk(node);
             }
         }
 

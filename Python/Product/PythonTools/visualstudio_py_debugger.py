@@ -386,7 +386,7 @@ class DjangoBreakpointInfo(object):
         if self._line_locations is None:
             # we need to calculate our line number offset information
             try:
-                contents = file(self.filename, 'r')
+                contents = file(self.filename, 'rb')
                 line_info = []
                 file_len = 0
                 for line in contents:

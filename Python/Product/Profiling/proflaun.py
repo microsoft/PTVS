@@ -25,4 +25,28 @@ __file__ = sys.argv[0]
 del sys, os
 
 # and start profiling
-vspyprof.profile(__file__, globals(), locals(), profdll)
+try:
+    vspyprof.profile(__file__, globals(), locals(), profdll)
+except SystemExit:
+    import sys, msvcrt, os
+    if sys.exc_info()[1].code:
+        env_var = 'VSPYPROF_WAIT_ON_ABNORMAL_EXIT'
+    else:
+        env_var = 'VSPYPROF_WAIT_ON_NORMAL_EXIT'
+    if env_var in os.environ:
+        sys.stdout.write('Press any key to continue . . .')
+        sys.stdout.flush()
+        msvcrt.getch()
+except:
+    import sys, msvcrt, os, traceback
+    if 'VSPYPROF_WAIT_ON_ABNORMAL_EXIT' in os.environ:
+        traceback.print_exc()
+        sys.stdout.write('Press any key to continue . . .')
+        sys.stdout.flush()
+        msvcrt.getch()
+else:
+    import sys, msvcrt, os
+    if 'VSPYPROF_WAIT_ON_NORMAL_EXIT' in os.environ:
+        sys.stdout.write('Press any key to continue . . .')
+        sys.stdout.flush()
+        msvcrt.getch()

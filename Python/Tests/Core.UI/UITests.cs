@@ -22,6 +22,7 @@ using System.Threading;
 using System.Windows.Automation;
 using System.Windows.Input;
 using EnvDTE;
+using EnvDTE80;
 using Microsoft.TC.TestHostAdapters;
 using Microsoft.TestSccPackage;
 using Microsoft.VisualStudio;
@@ -950,6 +951,32 @@ namespace PythonToolsUITests {
         }
 
         /// <summary>
+        /// Verify non-member items don't get reported as source control files
+        /// 
+        /// https://pytools.codeplex.com/workitem/1417
+        /// </summary>
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void SourceControlExcludedFilesNotPresent() {
+            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+
+            // close any projects before switching source control...
+            VsIdeTestHostContext.Dte.Solution.Close();
+
+            app.SelectSourceControlProvider("Test Source Provider");
+
+            var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\SourceControl.sln");
+
+            Assert.AreEqual(1, TestSccProvider.LoadedProjects.Count);
+            var sccProject = TestSccProvider.LoadedProjects.First();
+            foreach (var curFile in sccProject.Files) {
+                Assert.IsFalse(curFile.Key.EndsWith("ExcludedFile.py"), "found excluded file");
+            }
+
+            app.SelectSourceControlProvider("None");
+        }
+
+        /// <summary>
         /// Verify the glyph change APIs update the glyphs appropriately
         /// </summary>
         [TestMethod, Priority(0), TestCategory("Core")]
@@ -1173,5 +1200,26 @@ namespace PythonToolsUITests {
             System.Threading.Thread.Sleep(1000);
             Assert.IsNull(doc.IntellisenseSessionStack.TopSession);
         }
+
+        /// <summary>
+        /// Verifies non-member items don't show in in find all files
+        /// 
+        /// https://pytools.codeplex.com/workitem/1277
+        /// </summary>
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void TestSearchExcludedFiles() {
+            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\FindInAllFiles.sln");
+            Assert.IsNotNull(project);
+
+            var find = app.Dte.Find;
+
+            find.Target = vsFindTarget.vsFindTargetSolution;
+            find.FindWhat = "THIS_TEXT_IS_NOT_ANYWHERE_ELSE";
+            var results = find.Execute();
+            Assert.AreEqual(results, vsFindResult.vsFindResultNotFound);
+        }
+
     }
 }

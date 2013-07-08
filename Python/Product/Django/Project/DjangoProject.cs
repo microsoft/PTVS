@@ -742,7 +742,7 @@ namespace Microsoft.PythonTools.Django.Project {
                     (int)__VSHPROPID.VSHPROPID_ProjectDir,
                     out projectDir)
                 );
-
+                
                 var pyProject = _innerVsHierarchy.GetProject().GetPythonProject();
                 var managePyPath = (pyProject != null) ? pyProject.GetStartupFile() : null;
                 if (string.IsNullOrEmpty(managePyPath)) {
@@ -798,6 +798,9 @@ Either stop the current command, or reset the REPL window.");
                     "Django Management Console - " + projectName,
                     pyProj,
                     (projectDir ?? "").ToString(),
+                    new Dictionary<string, string>() {
+                        { "DJANGO_SETTINGS_MODULE", projectName + ".settings" }
+                    },
                     _innerVsHierarchy
                 );
 
@@ -819,6 +822,10 @@ Either stop the current command, or reset the REPL window.");
             evaluator.ExecuteFile(
                 managePyPath,
                 arguments
+            ).ContinueWith(
+                task => {
+                    evaluator.Reset().Wait();
+                }
             );
         }
 

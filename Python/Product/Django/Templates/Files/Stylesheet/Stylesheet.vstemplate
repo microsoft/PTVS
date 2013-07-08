@@ -1,0 +1,13 @@
+<VSTemplate Version="2.0.0" Type="Item" xmlns="http://schemas.microsoft.com/developer/vstemplate/2005">
+  <TemplateData>
+    <Name>Style Sheet</Name>
+    <Description>A cascading style sheet used for rich HTML style definitions</Description>
+    <Icon Package="{A2FE74E1-B743-11d0-AE1A-00A0C90FFFC3}" ID="4536" />
+    <ProjectType>Python</ProjectType>
+    <DefaultName>Stylesheet.css</DefaultName>
+    <SortOrder>100</SortOrder>
+  </TemplateData>
+  <TemplateContent>
+    <ProjectItem TargetFileName="$fileinputname$.$fileinputextension$">Stylesheet.css</ProjectItem>
+  </TemplateContent>
+</VSTemplate>

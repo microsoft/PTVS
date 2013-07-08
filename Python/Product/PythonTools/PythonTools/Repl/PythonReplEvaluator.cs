@@ -39,6 +39,7 @@ namespace Microsoft.PythonTools.Repl {
     [ReplRole("Reset")]
     internal class PythonReplEvaluator : BasePythonReplEvaluator {
         private readonly IErrorProviderFactory _errorProviderFactory;
+        private readonly string _envVars;
         private IPythonInterpreterFactory _interpreter;
         private readonly IInterpreterOptionsService _interpreterService;
         private VsProjectAnalyzer _replAnalyzer;
@@ -48,11 +49,16 @@ namespace Microsoft.PythonTools.Repl {
             : this(interpreter, errorProviderFactory, new DefaultPythonReplEvaluatorOptions(PythonToolsPackage.Instance.InteractiveOptionsPage.GetOptions(interpreter)), interpreterService) {
         }
 
-        public PythonReplEvaluator(IPythonInterpreterFactory interpreter, IErrorProviderFactory errorProviderFactory, PythonReplEvaluatorOptions options, IInterpreterOptionsService interpreterService = null)
+        public PythonReplEvaluator(IPythonInterpreterFactory interpreter, IErrorProviderFactory errorProviderFactory, PythonReplEvaluatorOptions options, IInterpreterOptionsService interpreterService = null) :
+            this(interpreter, errorProviderFactory, options, "", interpreterService) {
+        }
+
+        public PythonReplEvaluator(IPythonInterpreterFactory interpreter, IErrorProviderFactory errorProviderFactory, PythonReplEvaluatorOptions options, string envVars, IInterpreterOptionsService interpreterService = null)
             : base(options) {
             _interpreter = interpreter;
             _errorProviderFactory = errorProviderFactory;
             _interpreterService = interpreterService;
+            _envVars = envVars;
             if (_interpreterService != null) {
                 _interpreterService.InterpretersChanged += InterpretersChanged;
             }
@@ -150,6 +156,15 @@ namespace Microsoft.PythonTools.Repl {
             int portNum;
             CreateConnection(out conn, out portNum);
 
+            if (!String.IsNullOrWhiteSpace(_envVars)) {
+                foreach (var envVar in _envVars.Split(new[] { ';' })) {
+                    var nameAndValue = envVar.Split(new[] { '=' }, 2);
+                    if (nameAndValue.Length == 2) {
+                        processInfo.EnvironmentVariables[nameAndValue[0]] = nameAndValue[1];
+                    }
+                }
+            }
+
             List<string> args = new List<string>();
 
             if (!String.IsNullOrWhiteSpace(CurrentOptions.InterpreterOptions)) {
@@ -246,8 +261,8 @@ namespace Microsoft.PythonTools.Repl {
 
     [ReplRole("DontPersist")]
     class PythonReplEvaluatorDontPersist : PythonReplEvaluator {
-        public PythonReplEvaluatorDontPersist(IPythonInterpreterFactory interpreter, IErrorProviderFactory errorProviderFactory, PythonReplEvaluatorOptions options, IInterpreterOptionsService interpreterService) :
-            base(interpreter, errorProviderFactory, options, interpreterService) {
+        public PythonReplEvaluatorDontPersist(IPythonInterpreterFactory interpreter, IErrorProviderFactory errorProviderFactory, PythonReplEvaluatorOptions options, string envVars, IInterpreterOptionsService interpreterService) :
+            base(interpreter, errorProviderFactory, options, envVars, interpreterService) {
         }
     }
 

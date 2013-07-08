@@ -455,6 +455,8 @@ namespace Microsoft.PythonTools.Project {
             }
 
             DisposeInterpreter();
+
+            _interpreters.Dispose();
         }
 
         private void DisposeInterpreter() {
@@ -579,6 +581,9 @@ namespace Microsoft.PythonTools.Project {
         private void Reanalyze(HierarchyNode node, VsProjectAnalyzer newAnalyzer) {
             if (node != null) {
                 for (var child = node.FirstChild; child != null; child = child.NextSibling) {
+                    if (child.IsNonMemberItem) {
+                        continue;
+                    }
                     if (child is FileNode) {
                         newAnalyzer.AnalyzeFile(child.Url);
                     }
@@ -766,20 +771,6 @@ namespace Microsoft.PythonTools.Project {
         }
 
         #region Virtual Env support
-
-        internal void AddPythonInterpreter(IPythonInterpreterFactory selectedInterpreter) {
-            var interp = _interpreters.FindInterpreter(selectedInterpreter.Id, selectedInterpreter.Configuration.Version);
-            if (interp != null) {
-                return;
-            }
-
-            if (!QueryEditProjectFile(false)) {
-                throw Marshal.GetExceptionForHR(VSConstants.OLE_E_PROMPTSAVECANCELLED);
-            }
-
-            _interpreters.AddInterpreter(selectedInterpreter);
-            SetProjectFileDirty(true);
-        }
 
         internal void ShowAddInterpreter() {
             var service = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();

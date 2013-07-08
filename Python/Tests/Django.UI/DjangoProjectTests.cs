@@ -46,7 +46,7 @@ namespace DjangoUITests {
             var newProjDialog = app.FileNewProject();
 
             newProjDialog.FocusLanguageNode();
-            var djangoApp = newProjDialog.ProjectTypes.FindItem("Django Application");
+            var djangoApp = newProjDialog.ProjectTypes.FindItem("Django Project");
             djangoApp.Select();
 
             newProjDialog.ClickOK();
@@ -72,7 +72,7 @@ namespace DjangoUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void DjangoCommandsNonDjangoApp() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte);
             var newProjDialog = app.FileNewProject();
 
             newProjDialog.FocusLanguageNode();
@@ -110,7 +110,7 @@ namespace DjangoUITests {
 
             newProjDialog.FocusLanguageNode();
 
-            var djangoApp = newProjDialog.ProjectTypes.FindItem("Django Application");
+            var djangoApp = newProjDialog.ProjectTypes.FindItem("Django Project");
             djangoApp.Select();
 
             newProjDialog.ClickOK();
@@ -169,7 +169,7 @@ namespace DjangoUITests {
 
             var console = app.GetInteractiveWindow("Django Management Console - " + app.Dte.Solution.Projects.Item(1).Name);
             Assert.IsNotNull(console);
-            console.WaitForTextEnd("Executing manage.py validate", "0 errors found", ">>> ");
+            console.WaitForTextEnd("Executing manage.py validate", "0 errors found", "The Python REPL process has exited", ">>> ");
             
             projItem = app.SolutionExplorerTreeView.FindItem(
                 "Solution '" + app.Dte.Solution.Projects.Item(1).Name + "' (1 project)",
@@ -205,7 +205,7 @@ namespace DjangoUITests {
 
             newProjDialog.FocusLanguageNode();
 
-            var djangoApp = newProjDialog.ProjectTypes.FindItem("Django Application");
+            var djangoApp = newProjDialog.ProjectTypes.FindItem("Django Project");
             djangoApp.Select();
 
             newProjDialog.ClickOK();
@@ -275,7 +275,7 @@ namespace DjangoUITests {
 
             newProjDialog.FocusLanguageNode();
 
-            var djangoApp = newProjDialog.ProjectTypes.FindItem("Django Application");
+            var djangoApp = newProjDialog.ProjectTypes.FindItem("Django Project");
             djangoApp.Select();
 
             newProjDialog.ClickOK();
@@ -321,7 +321,7 @@ namespace DjangoUITests {
 
             newProjDialog.FocusLanguageNode();
 
-            var djangoApp = newProjDialog.ProjectTypes.FindItem("Django Application");
+            var djangoApp = newProjDialog.ProjectTypes.FindItem("Django Project");
             djangoApp.Select();
 
             newProjDialog.ClickOK();

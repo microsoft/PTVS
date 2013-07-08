@@ -111,6 +111,24 @@ namespace DjangoTests {
                 new ExpectedStep(StepKind.Resume, 3)     // step over {{ color }}
             );
 
+            // https://pytools.codeplex.com/workitem/1316
+            StepTest(
+                Path.Combine(Environment.CurrentDirectory, DebuggerTestPath, "manage.py"),
+                Path.Combine(Environment.CurrentDirectory, DebuggerTestPath, "Templates\\polls\\loop2.html"),
+                "runserver --noreload",
+                new[] { 3 }, // break on line 3,
+                new Action<PythonProcess>[] { x => { } },
+                new WebPageRequester("http://127.0.0.1:8000/loop2/").DoRequest,
+                PythonDebugOptions.DjangoDebugging,
+                false,
+                new ExpectedStep(StepKind.Resume, 2),     // first line in manage.py
+                new ExpectedStep(StepKind.Over, 3),     // step over for
+                new ExpectedStep(StepKind.Over, 4),     // step over {{ color }}
+                new ExpectedStep(StepKind.Over, 4),     // step over {{ color }}
+                new ExpectedStep(StepKind.Resume, 4)     // step over {{ endfor }}
+            );
+
+
             StepTest(
                 Path.Combine(Environment.CurrentDirectory, DebuggerTestPath, "manage.py"),
                 Path.Combine(Environment.CurrentDirectory, DebuggerTestPath, "Templates\\polls\\loop_nobom.html"),

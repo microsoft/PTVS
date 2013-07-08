@@ -27,7 +27,7 @@ namespace Microsoft.PythonTools.Interpreter {
         /// Creates a new interpreter factory with the specified options. This
         /// interpreter always includes a cached completion database.
         /// </summary>
-        public static IPythonInterpreterFactory CreateInterpreterFactory(InterpreterFactoryCreationOptions options) {
+        public static PythonInterpreterFactoryWithDatabase CreateInterpreterFactory(InterpreterFactoryCreationOptions options) {
             var ver = options.LanguageVersion ?? new Version(2, 7);
             var description = options.Description ?? string.Format("Unknown Python {0}", ver);
             var prefixPath = options.PrefixPath;
@@ -53,7 +53,7 @@ namespace Microsoft.PythonTools.Interpreter {
         /// Creates a new interpreter factory with the specified database. This
         /// factory is suitable for analysis, but not execution.
         /// </summary>
-        public static IPythonInterpreterFactory CreateAnalysisInterpreterFactory(
+        public static PythonInterpreterFactoryWithDatabase CreateAnalysisInterpreterFactory(
             Version languageVersion,
             PythonTypeDatabase database) {
             return new AnalysisOnlyInterpreterFactory(languageVersion, database);
@@ -63,7 +63,7 @@ namespace Microsoft.PythonTools.Interpreter {
         /// Creates a new interpreter factory with the specified database path.
         /// This factory is suitable for analysis, but not execution.
         /// </summary>
-        public static IPythonInterpreterFactory CreateAnalysisInterpreterFactory(
+        public static PythonInterpreterFactoryWithDatabase CreateAnalysisInterpreterFactory(
             Version languageVersion,
             string description,
             params string[] databasePaths) {
@@ -74,7 +74,7 @@ namespace Microsoft.PythonTools.Interpreter {
         /// Creates a new interpreter factory with the default database. This
         /// factory is suitable for analysis, but not execution.
         /// </summary>
-        public static IPythonInterpreterFactory CreateAnalysisInterpreterFactory(
+        public static PythonInterpreterFactoryWithDatabase CreateAnalysisInterpreterFactory(
             Version languageVersion,
             string description = null) {
             return new AnalysisOnlyInterpreterFactory(languageVersion, description);

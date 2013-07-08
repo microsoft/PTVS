@@ -668,6 +668,7 @@ namespace Microsoft.VisualStudioTools.Project
                     break;
 
                 case __VSHPROPID.VSHPROPID_IsHiddenItem:
+                case __VSHPROPID.VSHPROPID_IsNonSearchable:
                     result = !IsVisible;
                     break;
 
@@ -1569,7 +1570,7 @@ namespace Microsoft.VisualStudioTools.Project
         [SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "Scc")]
         protected internal virtual void GetSccFiles(IList<string> files, IList<tagVsSccFilesFlags> flags)
         {
-            if (this.ExcludeNodeFromScc)
+            if (this.ExcludeNodeFromScc || this.IsNonMemberItem)
             {
                 return;
             }

@@ -34,7 +34,7 @@
     <PythonAzureDeploymentFile Include="$(AzureDjangoSupportPath)Microsoft.PythonTools.WebRole.dll"></PythonAzureDeploymentFile>
   </ItemGroup>
 
-  <Target Name="ResolvePythonInterpreterPath">
+  <Target Name="ResolvePythonInterpreterPath" DependsOnTargets="ResolveQualifiedProjectHome">
     <PropertyGroup Condition="$(IsWindowsApplication) == 'true'">
       <PythonInterpreterSuffix>w</PythonInterpreterSuffix>
     </PropertyGroup>
@@ -99,9 +99,9 @@
       <PythonVersionNoDot>$(InterpreterVersion.Replace(".", ""))</PythonVersionNoDot>
     </PropertyGroup>
 
-    <PropertyGroup>
-      <TargetPythonInterpreterPath Condition="'$(TargetPythonInterpreterPath)' == ''">$(PythonInterpreterPath)</TargetPythonInterpreterPath>
-    </PropertyGroup>
+    <CombinePath BasePath="$(QualifiedProjectHome)" Paths="$(PythonInterpreterPath)" Condition="'$(TargetPythonInterpreterPath)' == ''">
+      <Output TaskParameter="CombinedPaths" PropertyName="TargetPythonInterpreterPath"/>
+    </CombinePath>
 
     <Message Text="InterpreterVersion=$(InterpreterVersion)" Importance="low"/>
     <Message Text="PythonInterpreterPath=$(PythonInterpreterPath)" Importance="low"/>

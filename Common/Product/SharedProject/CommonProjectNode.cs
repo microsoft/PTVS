@@ -666,6 +666,8 @@ namespace Microsoft.VisualStudioTools.Project {
         private static bool IsFileSymLink(string path) {
             try {
                 return (File.GetAttributes(path) & FileAttributes.ReparsePoint) != 0;
+            } catch (UnauthorizedAccessException) {
+                return false;
             } catch (DirectoryNotFoundException) {
                 return false;
             } catch (FileNotFoundException) {
@@ -686,6 +688,8 @@ namespace Microsoft.VisualStudioTools.Project {
 
             try {
                 return (File.GetAttributes(path) & (FileAttributes.Hidden | FileAttributes.System)) != 0;
+            } catch (UnauthorizedAccessException) {
+                return false;
             } catch (DirectoryNotFoundException) {
                 return false;
             } catch (FileNotFoundException) {

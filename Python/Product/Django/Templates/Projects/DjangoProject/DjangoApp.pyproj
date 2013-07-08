@@ -36,6 +36,11 @@
       <ProductId>Django</ProductId>
       <FriendlyName>Django 1.4</FriendlyName>
     </WebPiReference>
+    <WebPiReference Include="https://www.microsoft.com/web/webpi/3.0/toolsproductlist.xml%3fPython27">
+      <Feed>https://www.microsoft.com/web/webpi/3.0/toolsproductlist.xml</Feed>
+      <ProductId>Python27</ProductId>
+      <FriendlyName>Python 2.7</FriendlyName>
+    </WebPiReference>
 
   </ItemGroup>
   <Import Project="$(VSToolsPath)\Python Tools\Microsoft.PythonTools.Django.targets" />

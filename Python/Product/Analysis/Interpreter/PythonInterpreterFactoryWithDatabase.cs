@@ -29,17 +29,17 @@ namespace Microsoft.PythonTools.Interpreter {
     /// following CPython command-line conventions, a standard library that is
     /// stored on disk as .py files, and a cached completion database.
     /// </summary>
-    public abstract class PythonInterpreterFactoryWithDatabase : IPythonInterpreterFactory, IInterpreterWithCompletionDatabase {
+    public class PythonInterpreterFactoryWithDatabase : IPythonInterpreterFactory, IInterpreterWithCompletionDatabase, IDisposable {
         private readonly string _description;
         private readonly Guid _id;
         private readonly InterpreterConfiguration _config;
         private PythonTypeDatabase _typeDb;
-        private bool _generating;
+        private bool _generating, _disposed;
         private string[] _missingModules;
         private readonly Timer _refreshIsCurrentTrigger;
         private FileSystemWatcher _libWatcher;
 
-        protected PythonInterpreterFactoryWithDatabase(Guid id, string description, InterpreterConfiguration config, bool watchLibraryForChanges) {
+        public PythonInterpreterFactoryWithDatabase(Guid id, string description, InterpreterConfiguration config, bool watchLibraryForChanges) {
             _description = description;
             _id = id;
             _config = config;
@@ -408,5 +408,22 @@ namespace Microsoft.PythonTools.Interpreter {
             return reason + " is up to date";
         }
 
+
+        #region IDisposable Members
+
+        public void Dispose() {
+            if (!_disposed) {
+                if (_refreshIsCurrentTrigger != null) {
+                    _refreshIsCurrentTrigger.Dispose();
+                }
+                if (_libWatcher != null) {
+                    _libWatcher.EnableRaisingEvents = false;
+                    _libWatcher.Dispose();
+                }
+                _disposed = true;
+            }
+        }
+
+        #endregion
     }
 }

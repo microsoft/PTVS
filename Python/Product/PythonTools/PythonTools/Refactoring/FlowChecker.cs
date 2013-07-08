@@ -164,11 +164,11 @@ namespace Microsoft.PythonTools.Refactoring {
             _bits.Set(_variableIndices[variable] * 2 + 1, value);
         }
 
-        private bool IsAssigned(PythonVariable/*!*/ variable) {
+        internal bool IsAssigned(PythonVariable/*!*/ variable) {
             return _bits.Get(_variableIndices[variable] * 2);
         }
 
-        private bool IsInitialized(PythonVariable/*!*/ variable) {
+        internal bool IsInitialized(PythonVariable/*!*/ variable) {
             return _bits.Get(_variableIndices[variable] * 2 + 1);
         }
 
@@ -321,12 +321,13 @@ namespace Microsoft.PythonTools.Refactoring {
                 node.List.Walk(this);
             }
 
+            node.Left.Walk(_fdef);
+
             BitArray opte = new BitArray(_bits);
             BitArray exit = new BitArray(_bits.Length, true);
             PushLoop(exit);
 
             // Define the lhs
-            node.Left.Walk(_fdef);
             if (node.Body != null) {
                 // Walk the body
                 node.Body.Walk(this);

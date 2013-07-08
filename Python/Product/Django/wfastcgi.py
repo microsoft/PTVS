@@ -466,7 +466,14 @@ def read_wsgi_handler(physical_path):
     os.environ.update(env)
     for env_name in env:
         if env_name.lower() == 'pythonpath':
-            for path_location in env[env_name].split(';'):
+            # expand any environment variables in the path...
+            path = env[env_name]
+            for var in os.environ:
+                pat = re.compile(re.escape('%' + var + '%'), re.IGNORECASE)
+                path = pat.sub(lambda _:os.environ[var], path)
+            
+
+            for path_location in path.split(';'):
                 sys.path.append(path_location)
             break
     

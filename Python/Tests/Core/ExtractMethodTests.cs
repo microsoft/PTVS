@@ -13,6 +13,8 @@
  * ***************************************************************************/
 
 using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using AnalysisTests;
 using Microsoft.PythonTools.Intellisense;
@@ -40,6 +42,58 @@ namespace PythonToolsTests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
             TestData.Deploy();
+        }
+
+        [TestMethod, Priority(0)]
+        public void TestGlobalNonLocalVars() {
+            SuccessTest("ABC = 42",
+@"def f():
+    ABC = 42
+    def f():
+        nonlocal ABC
+        ABC = 200
+        print(ABC)
+    return f",
+@"def g():
+    ABC = 42
+    return ABC
+
+def f():
+    ABC = g()
+    def f():
+        nonlocal ABC
+        ABC = 200
+        print(ABC)
+    return f");
+
+            SuccessTest("ABC = 42",
+@"def f():
+    ABC = 42
+    def f():
+        print(ABC)
+    return f",
+@"def g():
+    ABC = 42
+    return ABC
+
+def f():
+    ABC = g()
+    def f():
+        print(ABC)
+    return f");
+
+            SuccessTest("ABC = 42",
+@"def f():
+    global ABC
+    ABC = 42",
+@"def g():
+    ABC = 42
+    return ABC
+
+def f():
+    global ABC
+    ABC = g()");
+
         }
 
         [TestMethod, Priority(0)]
@@ -96,8 +150,9 @@ def f(): pass",
 @"def g():
     @property
     def f(): pass
+    return f
 
-g()");
+f = g()");
         }
 
         [TestMethod, Priority(0)]
@@ -108,8 +163,9 @@ x = 41",
 @"# foo
 def g():
     x = 41
+    return x
 
-g()");
+x = g()");
         }
 
         [TestMethod, Priority(0)]
@@ -347,18 +403,93 @@ def f():
                 foreach (var prefix in prefixes) {
                     foreach (var stmtTest in allStmts) {
                         var text = prefix + stmtTest.Text + suffix;
-                        string expected = String.Format(
-                            "{1}def g():\r\n{0}\r\n\r\ng(){2}",
-                            TestExpressions.IndentCode(stmtTest.Text, "    "),
-                            prefix,
-                            suffix
-                        );
+                        var assignments = GetAssignments(text, stmtTest.Version);
+                        string expected;
+                        if (assignments.Length > 0 && stmtTest.Text != "del x") {
+                            expected = String.Format(
+                                "{1}def g():\r\n{0}\r\n    return {3}\r\n\r\n{3} = g(){2}",
+                                TestExpressions.IndentCode(stmtTest.Text, "    "),
+                                prefix,
+                                suffix,
+                                String.Join(", ", assignments)
+                            );
+                        } else {
+                            expected = String.Format(
+                                "{1}def g():\r\n{0}\r\n\r\ng(){2}",
+                                TestExpressions.IndentCode(stmtTest.Text, "    "),
+                                prefix,
+                                suffix
+                            );
+                        }
+
                         SuccessTest(new Span(prefix.Length, stmtTest.Text.Length), text, expected, null, stmtTest.Version.ToVersion());
                     }
                 }
             }
         }
 
+        private string[] GetAssignments(string testCase, PythonLanguageVersion version) {
+            var ast = Parser.CreateParser(new StringReader(testCase), version).ParseFile();
+            var walker = new TestAssignmentWalker();
+            ast.Walk(walker);
+            return walker._names.ToArray();
+        }
+
+        class TestAssignmentWalker : AssignmentWalker {
+            private readonly NameWalker _walker;
+            internal readonly List<string> _names = new List<string>();
+
+            public TestAssignmentWalker() {
+                _walker = new NameWalker(this);
+            }
+            
+            public override AssignedNameWalker Define {
+                get { return _walker; }
+            }
+            
+            class NameWalker : AssignedNameWalker {
+                private readonly TestAssignmentWalker _outer;
+                public NameWalker(TestAssignmentWalker outer) {
+                    _outer = outer;
+                }
+
+                public override bool Walk(NameExpression node) {
+                    _outer._names.Add(node.Name);
+                    return true;
+                }
+            }
+
+            public override bool Walk(FunctionDefinition node) {
+                _names.Add(node.Name);
+                return base.Walk(node);
+            }
+
+            public override bool Walk(ClassDefinition node) {
+                _names.Add(node.Name);
+                return base.Walk(node);
+            }
+
+            public override bool Walk(ImportStatement node) {
+                var vars = node.Variables;
+                for (int i = 0; i < vars.Length; i++) {
+                    if (vars[i] != null) {
+                        _names.Add(vars[i].Name);
+                    }
+                }
+                return base.Walk(node);
+            }
+
+            public override bool Walk(FromImportStatement node) {
+                var vars = node.Variables;
+                for (int i = 0; i < vars.Length; i++) {
+                    if (vars[i] != null) {
+                        _names.Add(vars[i].Name);
+                    }
+                }
+
+                return base.Walk(node);
+            }
+        }
 
         [TestMethod, Priority(0)]
         public void TestExtractDefiniteAssignmentAfterStmtListMultipleAssign() {
@@ -600,8 +731,9 @@ x = 2",
 
 def g():
     class C: pass
+    return C
 
-g()
+C = g()
 
 x = 2");
 
@@ -645,8 +777,9 @@ x = 2",
 
 def g():
     def f(): pass
+    return f
 
-g()
+f = g()
 
 x = 2");
 
@@ -663,8 +796,9 @@ x = 2",
 def g():
     for i in xrange(100):
         pass
+    return i
 
-g()
+i = g()
 
 x = 2");
 
@@ -737,8 +871,9 @@ x = 2",
 
 def g():
     import sys
+    return sys
 
-g()
+sys = g()
 
 x = 2");
 

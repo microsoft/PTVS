@@ -53,10 +53,13 @@ namespace Microsoft.PythonTools.Navigation {
         }
 
         protected override void OnNewFile(LibraryTask task) {
+            if (IsNonMemberItem(task.ModuleID.Hierarchy, task.ModuleID.ItemID)) {
+                return;
+            }
             IProjectEntry item;
             if (task.TextBuffer != null) {
                 item = task.TextBuffer.GetAnalysis();
-            } else {
+            } else {                
                 item = task.ModuleID.Hierarchy.GetProject().GetPythonProject().GetAnalyzer().AnalyzeFile(task.FileName);
             }
 

@@ -22,7 +22,7 @@ using Microsoft.VisualStudio.Shell;
 namespace Microsoft.PythonTools.Interpreter {
     [Export(typeof(IPythonInterpreterFactoryProvider))]
     class ConfigurablePythonInterpreterFactoryProvider : IPythonInterpreterFactoryProvider {
-        private readonly Dictionary<Guid, IPythonInterpreterFactory> _interpreters = new Dictionary<Guid, IPythonInterpreterFactory>();
+        private readonly Dictionary<Guid, PythonInterpreterFactoryWithDatabase> _interpreters = new Dictionary<Guid, PythonInterpreterFactoryWithDatabase>();
         private readonly SettingsManager _settings;
 
         // keys used for storing information about user defined interpreters
@@ -41,7 +41,7 @@ namespace Microsoft.PythonTools.Interpreter {
             DiscoverInterpreterFactories();
         }
 
-        private IPythonInterpreterFactory LoadUserDefinedInterpreter(SettingsStore store, string guid) {
+        private PythonInterpreterFactoryWithDatabase LoadUserDefinedInterpreter(SettingsStore store, string guid) {
             // PythonInterpreters\
             //      Id\
             //          Description
@@ -80,16 +80,25 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         public void RemoveInterpreter(Guid id) {
-            var collection = PythonInterpreterKey + "\\" + id.ToString("B");
-            var store = _settings.GetWritableSettingsStore(SettingsScope.UserSettings);
+            PythonInterpreterFactoryWithDatabase fact;
+            if (_interpreters.TryGetValue(id, out fact)) {
+                var collection = PythonInterpreterKey + "\\" + id.ToString("B");
+                var store = _settings.GetWritableSettingsStore(SettingsScope.UserSettings);
 
-            store.DeleteCollection(collection);
-            _interpreters.Remove(id);
-            OnInterpreterFactoriesChanged();
+                store.DeleteCollection(collection);
+
+                _interpreters.Remove(id);
+                OnInterpreterFactoriesChanged();
+                fact.Dispose();
+            }
         }
 
         public bool IsConfigurable(IPythonInterpreterFactory factory) {
-            return _interpreters.ContainsValue(factory);
+            PythonInterpreterFactoryWithDatabase fact = factory as PythonInterpreterFactoryWithDatabase;
+            if (fact == null) {
+                return false;
+            }
+            return _interpreters.ContainsValue(fact);
         }
 
         public IPythonInterpreterFactory SetOptions(InterpreterFactoryCreationOptions options) {
@@ -107,6 +116,10 @@ namespace Microsoft.PythonTools.Interpreter {
             var newInterp = LoadUserDefinedInterpreter(store, options.IdString);
             Debug.Assert(newInterp != null);
 
+            PythonInterpreterFactoryWithDatabase existing;
+            if (_interpreters.TryGetValue(newInterp.Id, out existing)) {
+                existing.Dispose();
+            }
             _interpreters[newInterp.Id] = newInterp;
             OnInterpreterFactoriesChanged();
             return newInterp;
@@ -139,7 +152,9 @@ namespace Microsoft.PythonTools.Interpreter {
             }
 
             foreach (var id in notFound) {
+                var existing = _interpreters[id];
                 _interpreters.Remove(id);
+                existing.Dispose();
             }
 
             if (anyChange) {

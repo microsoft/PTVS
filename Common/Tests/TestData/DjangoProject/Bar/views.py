@@ -29,3 +29,11 @@ def loop_nobom(request):
         'colors': ['red', 'blue', 'green']
     })
     return HttpResponse(t.render(c))
+
+def loop2(request):
+    t = loader.get_template('polls/loop2.html')
+    c = Context({
+        'colors': ['red', 'blue', 'green']
+    })
+    return HttpResponse(t.render(c))
+

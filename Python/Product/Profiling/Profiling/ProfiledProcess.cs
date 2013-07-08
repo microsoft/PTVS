@@ -49,27 +49,14 @@ namespace Microsoft.PythonTools.Profiling {
                 "\"" + dir + "\" " +
                 _args;
 
-            if (PythonToolsPackage.Instance.OptionsPage.WaitOnNormalExit ||
-                PythonToolsPackage.Instance.OptionsPage.WaitOnAbnormalExit) {
-                string command = "/c \"\"" + _exe + "\" " + arguments;
-
-                if (PythonToolsPackage.Instance.OptionsPage.WaitOnNormalExit &&
-                    PythonToolsPackage.Instance.OptionsPage.WaitOnAbnormalExit) {
-                    command += " & pause";
-                } else if (PythonToolsPackage.Instance.OptionsPage.WaitOnNormalExit) {
-                    command += " & if not errorlevel 1 pause";
-                } else if (PythonToolsPackage.Instance.OptionsPage.WaitOnAbnormalExit) {
-                    command += " & if errorlevel 1 pause";
-                }
-                command += "\"";
-                processInfo = new ProcessStartInfo(
-                    Path.Combine(Environment.SystemDirectory, "cmd.exe"), 
-                    command
-                );
-            } else {
-                processInfo = new ProcessStartInfo(_exe, arguments);
+            processInfo = new ProcessStartInfo(_exe, arguments);
+            if (PythonToolsPackage.Instance.OptionsPage.WaitOnNormalExit) {
+                processInfo.EnvironmentVariables["VSPYPROF_WAIT_ON_NORMAL_EXIT"] = "1";
             }
-
+            if (PythonToolsPackage.Instance.OptionsPage.WaitOnAbnormalExit) {
+                processInfo.EnvironmentVariables["VSPYPROF_WAIT_ON_ABNORMAL_EXIT"] = "1";
+            }
+            
             processInfo.CreateNoWindow = false;
             processInfo.UseShellExecute = false;
             processInfo.RedirectStandardOutput = false;
@@ -169,7 +156,6 @@ namespace Microsoft.PythonTools.Profiling {
 
         internal void StopProfiling() {
             _process.Kill();
-            StopPerfMon();
         }
 
         // This is duplicated throughout different assemblies in PythonTools, so search for it if you update it.

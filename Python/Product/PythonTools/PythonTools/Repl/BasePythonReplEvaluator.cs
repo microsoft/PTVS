@@ -656,19 +656,22 @@ namespace Microsoft.PythonTools.Repl {
                 }
             }
 
-            public void ExecuteFile(string filename, string extraArgs) {
+            public Task<ExecutionResult> ExecuteFile(string filename, string extraArgs) {
                 using (new SocketLock(this)) {
                     if (!_connected) {
                         // delay executing the text until we're connected
                         _executionFile = filename;
                         _executionExtraArgs = extraArgs;
-                        return;
+                        _completion = new TaskCompletionSource<ExecutionResult>();
+                        return _completion.Task;
                     } else if (!Socket.Connected) {
                         _eval._window.WriteError(_noReplProcess);
-                        return;
+                        return ExecutionResult.Failed;
                     }
 
                     SendExecuteFile(filename, extraArgs);
+                    _completion = new TaskCompletionSource<ExecutionResult>();
+                    return _completion.Task;
                 }
             }
 
@@ -787,14 +790,17 @@ namespace Microsoft.PythonTools.Repl {
 
             public IEnumerable<string> GetAvailableUserScopes() {
                 if (_connected) {   // if startup's taking a long time we won't be connected yet
-                    using (new SocketLock(this)) {
-                        Stream.Write(GetModulesListCommandBytes);
-                    }
+                    try {
+                        using (new SocketLock(this)) {
+                            Stream.Write(GetModulesListCommandBytes);
+                        }
 
-                    _completionResultEvent.WaitOne(1000);
+                        _completionResultEvent.WaitOne(1000);
 
-                    if (_fileToModuleName != null) {
-                        return _fileToModuleName.Values;
+                        if (_fileToModuleName != null) {
+                            return _fileToModuleName.Values;
+                        }
+                    } catch (DisconnectedException) {
                     }
                 }
                 return new string[0];
@@ -1071,13 +1077,14 @@ namespace Microsoft.PythonTools.Repl {
             }
         }
 
-        public void ExecuteFile(string filename, string extraArgs) {
+        public Task<ExecutionResult> ExecuteFile(string filename, string extraArgs) {
             EnsureConnected();
 
             if (_curListener != null) {
-                _curListener.ExecuteFile(filename, extraArgs);
+                return _curListener.ExecuteFile(filename, extraArgs);
             } else {
                 _window.WriteError("Current interactive window is disconnected." + Environment.NewLine);
+                return ExecutionResult.Failed;
             }
         }
 

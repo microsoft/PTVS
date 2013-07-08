@@ -24,11 +24,11 @@ using Microsoft.VisualStudioTools;
 using MSBuild = Microsoft.Build.Evaluation;
 
 namespace Microsoft.PythonTools.Interpreter {
-    public class MSBuildProjectInterpreterFactoryProvider : IPythonInterpreterFactoryProvider {
+    public class MSBuildProjectInterpreterFactoryProvider : IPythonInterpreterFactoryProvider, IDisposable {
         readonly IInterpreterOptionsService _service;
         readonly MSBuild.Project _project;
         readonly Dictionary<Guid, string> _rootPaths;
-        Dictionary<IPythonInterpreterFactory, MSBuild.ProjectItem> _factories;
+        Dictionary<IPythonInterpreterFactory, FactoryInfo> _factories;
 
         IPythonInterpreterFactory _active;
 
@@ -100,7 +100,7 @@ namespace Microsoft.PythonTools.Interpreter {
             bool anyChange = false, anyError = false;
 
             var projectHome = CommonUtils.GetAbsoluteDirectoryPath(_project.DirectoryPath, _project.GetPropertyValue("ProjectHome"));
-            var factories = new Dictionary<IPythonInterpreterFactory, MSBuild.ProjectItem>();
+            var factories = new Dictionary<IPythonInterpreterFactory, FactoryInfo>();
             foreach (var item in _project.GetItems(InterpreterItem)) {
                 Guid id, baseId;
                 var dir = item.EvaluatedInclude;
@@ -189,7 +189,7 @@ namespace Microsoft.PythonTools.Interpreter {
                     description = CommonUtils.CreateFriendlyDirectoryPath(projectHome, dir);
                 }
 
-                IPythonInterpreterFactory fact;
+                PythonInterpreterFactoryWithDatabase fact;
                 if (baseInterp != null) {
                     fact = new DerivedInterpreterFactory(
                         baseInterp,
@@ -222,10 +222,11 @@ namespace Microsoft.PythonTools.Interpreter {
                 }
                 var existing = FindInterpreter(id, ver);
                 if (existing != null && existing.IsEqual(fact)) {
-                    factories[existing] = item;
+                    factories[existing] = new FactoryInfo(item, factories[existing].Owned);
+                    fact.Dispose();
                 } else {
                     _rootPaths[id] = dir;
-                    factories[fact] = item;
+                    factories[fact] = new FactoryInfo(item, true);
                     anyChange = true;
                 }
 
@@ -254,13 +255,21 @@ namespace Microsoft.PythonTools.Interpreter {
                     continue;
                 }
 
-                var fact = _service.FindInterpreter(id, ver) ?? new NotFoundInterpreterFactory(id, ver);
+                bool owned = false;
+                var fact = _service.FindInterpreter(id, ver);
+                if (fact == null) {
+                    owned = true;
+                    fact = new NotFoundInterpreterFactory(id, ver);
+                }
 
                 var existing = FindInterpreter(id, ver);
                 if (existing != null) {
-                    factories[existing] = item;
+                    factories[existing] = new FactoryInfo(item, factories[existing].Owned);
+                    if (owned) {
+                        ((PythonInterpreterFactoryWithDatabase)fact).Dispose();
+                    }
                 } else {
-                    factories[fact] = item;
+                    factories[fact] = new FactoryInfo(item, owned);
                     anyChange = true;
                 }
             }
@@ -372,7 +381,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 );
             }
 
-            AddInterpreter(fact);
+            AddInterpreter(fact, true);
 
             return id;
         }
@@ -385,7 +394,7 @@ namespace Microsoft.PythonTools.Interpreter {
         /// ID and version.
         /// </summary>
         /// <param name="factory">The factory to add.</param>
-        public void AddInterpreter(IPythonInterpreterFactory factory) {
+        public void AddInterpreter(IPythonInterpreterFactory factory, bool disposeInterpreter = false) {
             if (factory == null) {
                 throw new ArgumentNullException("factory");
             }
@@ -418,7 +427,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 // The interpreter exists globally, so add a reference.
                 item = _project.AddItem(InterpreterReferenceItem,
                     string.Format("{0:B}\\{1}", factory.Id, factory.Configuration.Version)
-                ).FirstOrDefault();
+                    ).FirstOrDefault();
             } else {
                 // Can't find the interpreter anywhere else, so add its
                 // configuration to the project file.
@@ -440,7 +449,7 @@ namespace Microsoft.PythonTools.Interpreter {
             }
 
             lock (this) {
-                _factories[factory] = item;
+                _factories[factory] = new FactoryInfo(item, disposeInterpreter);
             }
             OnInterpreterFactoriesChanged();
             UpdateActiveInterpreter();
@@ -491,8 +500,16 @@ namespace Microsoft.PythonTools.Interpreter {
             }
 
             bool raiseEvent;
+            FactoryInfo factInfo = null;
             lock (this) {
-                raiseEvent = _factories.Remove(factory);
+                if (raiseEvent = _factories.Remove(factory)) {
+                    factInfo = _factories[factory];
+                }
+            }
+            if (factInfo != null && 
+                factInfo.Owned && 
+                factory is IDisposable) {
+                ((IDisposable)factory).Dispose();
             }
             UpdateActiveInterpreter();
             if (raiseEvent) {
@@ -516,9 +533,9 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         public MSBuild.ProjectItem GetProjectItem(IPythonInterpreterFactory factory) {
-            MSBuild.ProjectItem item;
-            if (_factories.TryGetValue(factory, out item)) {
-                return item;
+            FactoryInfo info;
+            if (_factories.TryGetValue(factory, out info)) {
+                return info.ProjectItem;
             }
             return null;
         }
@@ -673,5 +690,32 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
+
+        class FactoryInfo {
+            public readonly MSBuild.ProjectItem ProjectItem;
+            public readonly bool Owned;
+
+            public FactoryInfo(MSBuild.ProjectItem projectItem, bool owned) {
+                ProjectItem = projectItem;
+                Owned = owned;
+            }
+        }
+
+        #region IDisposable Members
+
+        public void Dispose() {
+            if (_factories != null) {
+                foreach (var keyValue in _factories) {
+                    if (keyValue.Value.Owned) {
+                        IDisposable disp = keyValue.Key as IDisposable;
+                        if (disp != null) {
+                            disp.Dispose();
+                        }
+                    }
+                }
+            }
+        }
+
+        #endregion
     }
 }

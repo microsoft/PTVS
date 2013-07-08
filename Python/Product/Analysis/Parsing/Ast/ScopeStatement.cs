@@ -196,7 +196,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         /// <summary>
         /// Variables that are bound in an outer scope - but not a global scope
         /// </summary>
-        internal IList<PythonVariable> FreeVariables {
+        public IList<PythonVariable> FreeVariables {
             get {
                 return _freeVars;
             }
@@ -205,7 +205,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         /// <summary>
         /// Variables that are bound to the global scope
         /// </summary>
-        internal IList<string> GlobalVariables {
+        public IList<string> GlobalVariables {
             get {
                 return _globalVars;
             }
@@ -223,18 +223,9 @@ namespace Microsoft.PythonTools.Parsing.Ast {
 
         internal abstract bool ExposesLocalVariable(PythonVariable variable);
 
-        private bool TryGetAnyVariable(string name, out PythonVariable variable) {
+        public bool TryGetVariable(string name, out PythonVariable variable) {
             if (_variables != null && name != null) {
                 return _variables.TryGetValue(name, out variable);
-            } else {
-                variable = null;
-                return false;
-            }
-        }
-
-        internal bool TryGetVariable(string name, out PythonVariable variable) {
-            if (TryGetAnyVariable(name, out variable)) {
-                return true;
             } else {
                 variable = null;
                 return false;

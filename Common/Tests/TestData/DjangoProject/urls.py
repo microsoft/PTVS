@@ -18,4 +18,5 @@ urlpatterns = patterns('',
     url(r'^/$', 'Bar.views.main'),
     url(r'^loop_nobom/$', 'Bar.views.loop_nobom'),
     url(r'^loop/$', 'Bar.views.loop'),
+    url(r'^loop2/$', 'Bar.views.loop2'),
 )

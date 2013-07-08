@@ -1077,18 +1077,22 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
         /// <param name="startupFile">The file to be executed on the startup of the REPL.  Can be null, which will result in an interactive REPL.</param>
         /// <param name="workingDir">The working directory of the REPL process</param>
         /// <param name="project">The IVsHierarchy representing the Python project.</param>
-        public IReplWindow CreatePythonRepl(string id, string title, IPythonInterpreterFactory interpreter, string workingDir, IVsHierarchy project = null) {
+        public IReplWindow CreatePythonRepl(string id, string title, IPythonInterpreterFactory interpreter, string workingDir, Dictionary<string, string> envVars = null, IVsHierarchy project = null) {
             Utilities.ArgumentNotNull("interpreter", interpreter);
             Utilities.ArgumentNotNull("id", id);
             Utilities.ArgumentNotNull("title", title);
 
             // Full ID as parsed by PythonReplEvaulatorProvider
-            string fullId = String.Format("{0}|{1}|{2}|{3}|{4}",
+            
+            string fullId = String.Format("{0}|{1}|{2}|{3}|{4}|{5}",
                 PythonReplEvaluatorProvider._configurableGuid,
                 workingDir,
                 interpreter.Id,
                 interpreter.Configuration.Version,
-                id
+                id,
+                envVars == null ? 
+                    "" : 
+                    string.Join(";", envVars.Select(kvp => kvp.Key + "=" + kvp.Value))
             );
 
             if (project != null) {

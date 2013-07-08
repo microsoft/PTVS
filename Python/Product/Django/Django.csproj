@@ -68,7 +68,7 @@
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.Shell.Interop" />
-    <Reference Include="Microsoft.VisualStudio.Shell.Interop.11.0, Version=11.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" Condition="'$(VSTarget)' != '10.0'"/>
+    <Reference Include="Microsoft.VisualStudio.Shell.Interop.11.0, Version=11.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" Condition="'$(VSTarget)' != '10.0'" />
     <Reference Include="Microsoft.VisualStudio.Shell.Interop.8.0" />
     <Reference Include="Microsoft.VisualStudio.Shell.Interop.9.0" />
     <Reference Include="Microsoft.VisualStudio.Shell.Interop.10.0" />
@@ -264,6 +264,14 @@
       <SubType>Designer</SubType>
     </ZipItem>
     <ZipItem Include="Templates\Files\DjangoNewAppFiles14\DjangoTemplate.html" />
+    <ZipItem Include="Templates\Files\Stylesheet\Stylesheet.vstemplate">
+      <SubType>Designer</SubType>
+    </ZipItem>
+    <ZipItem Include="Templates\Files\JavaScript\JavaScript.js" />
+    <ZipItem Include="Templates\Files\JavaScript\JavaScript.vstemplate">
+      <SubType>Designer</SubType>
+    </ZipItem>
+    <ZipItem Include="Templates\Files\Stylesheet\Stylesheet.css" />
     <Content Include="wfastcgi.py">
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
