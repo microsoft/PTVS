@@ -515,10 +515,12 @@ namespace Microsoft.PythonTools.Analysis {
                 _baseDb.Skip(1).Concat(Enumerable.Repeat(_outDir, 1)).ToArray()
             );
 
-            foreach (var files in _fileGroups) {
+            foreach (var fileGroup in _fileGroups) {
                 if (_cancel.IsCancellationRequested) {
                     break;
                 }
+
+                var files = fileGroup.Where(file => !file.IsCompiled).ToList();
 
                 bool needAnalyze = false;
                 foreach (var file in files) {

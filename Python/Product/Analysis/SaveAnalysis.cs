@@ -88,11 +88,19 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         private List<object> GenerateChildModules(ModuleInfo moduleInfo) {
-            List<object> res = new List<object>();
-            foreach (var keyValue in moduleInfo.GetChildrenPackages(null)) {
-                res.Add(keyValue.Key);
-            }
-            return res;
+            var res = new HashSet<object>(moduleInfo.GetChildrenPackages(null).Select(kv => kv.Key));
+
+            // Add any child built-in modules as well. This will include the modules that are part of the package,
+            // but which do not participate in analysis (e.g. native modules).
+            res.UnionWith(
+                from moduleName in moduleInfo.ProjectEntry.ProjectState.Interpreter.GetModuleNames()
+                let lastDot = moduleName.LastIndexOf('.')
+                where lastDot >= 0
+                let packageName = moduleName.Substring(0, lastDot)
+                where packageName == moduleInfo.Name
+                select moduleName.Substring(lastDot + 1));
+
+            return res.ToList();
         }
 
         private Dictionary<string, object> GenerateMembers(ModuleInfo moduleInfo) {

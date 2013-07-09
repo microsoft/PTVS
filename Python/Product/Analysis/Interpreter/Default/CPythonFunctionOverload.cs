@@ -23,26 +23,29 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         private static readonly CPythonParameterInfo[] EmptyParameters = new CPythonParameterInfo[0];
 
         internal CPythonFunctionOverload(CPythonParameterInfo[] parameters, IEnumerable<IPythonType> returnType, bool isMethod) {
-            if (isMethod && parameters != null) {
-                if (parameters.Length > 1) {
-                    _parameters = parameters.Skip(1).ToArray();
+            _parameters = EmptyParameters;
+
+            if (parameters != null) {
+                if (isMethod) {
+                    if (parameters.Length > 1) {
+                        _parameters = parameters.Skip(1).ToArray();
+                    }
                 } else {
-                    _parameters = EmptyParameters;
+                    _parameters = parameters;
                 }
-            } else {
-                _parameters = parameters ?? EmptyParameters;
             }
+
             _retType = returnType.ToList();
         }
         
         public CPythonFunctionOverload(ITypeDatabaseReader typeDb, Dictionary<string, object> argInfo, bool isMethod) {
+            _parameters = EmptyParameters;
+
             if (argInfo != null) {
                 object args;
                 object[] argList;
                 if (argInfo.TryGetValue("args", out args) && (argList = args as object[]) != null) {
-                    if (argList.Length == 0 || (isMethod && argList.Length <= 1)) {
-                        _parameters = EmptyParameters;
-                    } else {
+                    if ((isMethod && argList.Length > 1) || (!isMethod && argList.Length > 0)) {
                         _parameters = argList.Skip(isMethod ? 1 : 0)
                             .OfType<Dictionary<string, object>>()
                             .Select(arg => new CPythonParameterInfo(typeDb, arg))
@@ -64,7 +67,6 @@ namespace Microsoft.PythonTools.Interpreter.Default {
                     _retType = new List<IPythonType>();
                     typeDb.LookupType(retType, value => _retType.Add(value));
                 }
-
             }
         }
         
