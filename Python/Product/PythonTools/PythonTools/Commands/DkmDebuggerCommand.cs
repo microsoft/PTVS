@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System;
+using System.Linq;
 using Microsoft.PythonTools.Debugger.DebugEngine;
 using Microsoft.PythonTools.DkmDebugger;
 using Microsoft.VisualStudio.Debugger;
@@ -44,26 +45,14 @@ namespace Microsoft.PythonTools.Commands {
                         }
                     }
 
-                    var debugger = PythonToolsPackage.GetGlobalService(typeof(SVsShellDebugger)) as IVsDebugger2;
-                    if (debugger == null) {
+                    var engineSettings = DkmEngineSettings.FindSettings(DkmEngineId.NativeEng);
+                    if (engineSettings == null) {
+                        // Native debugger is not loaded at all, so this is either pure Python debugging or something else entirely.
                         return;
                     }
 
-                    IVsEnumGUID enumEngines;
-                    debugger.EnumDebugEngines(out enumEngines);
-
-                    bool isDebuggingPython = false, isDebuggingNative = false;
-                    var engineGuid = new Guid[1];
-                    uint fetched;
-                    while (enumEngines.Next(1, engineGuid, out fetched) >= 0 && fetched != 0) {
-                        if (engineGuid[0] == AD7Engine.DebugEngineGuid) {
-                            isDebuggingPython = true;
-                        } else if (engineGuid[0] == DkmEngineId.NativeEng) {
-                            isDebuggingNative = true;
-                        }
-                    }
-
-                    cmd.Visible = isDebuggingPython && isDebuggingNative;
+                    // Check if any processes being debugged as native also have the Python engine loaded, and enable command if so.
+                    cmd.Visible = engineSettings.GetProcesses().Any(process => process.DebugLaunchSettings.EngineFilter.Contains(AD7Engine.DebugEngineGuid));
                 };
             }
         }
