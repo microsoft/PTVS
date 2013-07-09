@@ -85,7 +85,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private static char[] _invalidPathChars = Path.GetInvalidPathChars();
 
-        private object objectLock = new object();
+        private object _contentsLock = new object();
 
         internal VsProjectAnalyzer(IPythonInterpreterFactory factory, IPythonInterpreterFactory[] allFactories, IErrorProviderFactory errorProvider)
             : this(factory.CreateInterpreter(), factory, allFactories, errorProvider) {
@@ -132,7 +132,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private void OnModulesChanged(object sender, EventArgs e) {
-            lock (objectLock) {
+            lock (_contentsLock) {
                 _pyAnalyzer.ReloadModules();
 
                 // re-analyze all of the modules when we get a new set of modules loaded...
@@ -239,7 +239,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private void QueueDirectoryAnalysis(string path) {
-            ThreadPool.QueueUserWorkItem(x => { lock (objectLock) { AnalyzeDirectory(CommonUtils.NormalizeDirectoryPath(Path.GetDirectoryName(path))); } });
+            ThreadPool.QueueUserWorkItem(x => { lock (_contentsLock) { AnalyzeDirectory(CommonUtils.NormalizeDirectoryPath(Path.GetDirectoryName(path))); } });
         }
 
         private bool ShouldAnalyzePath(string path) {
@@ -1045,7 +1045,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
             
             if (addDir) {
-                lock (objectLock){
+                lock (_contentsLock){
                     _pyAnalyzer.AddAnalysisDirectory(dir);
                 }
             }
@@ -1133,7 +1133,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
 
         private void AnalyzeZipArchiveWorker(string zipFileName, Action<IProjectEntry> onFileAnalyzed, CancellationToken cancel) {
-            lock (objectLock){
+            lock (_contentsLock){
                 _pyAnalyzer.AddAnalysisDirectory(zipFileName);
             }
 
@@ -1240,7 +1240,7 @@ namespace Microsoft.PythonTools.Intellisense {
 #endif
 
         internal void StopAnalyzingDirectory(string directory) {
-            lock (objectLock){
+            lock (_contentsLock){
                 _pyAnalyzer.RemoveAnalysisDirectory(directory);
             }
         }
@@ -1668,7 +1668,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 _taskProvider.Value.UpdateTasks();
             }
             _analysisQueue.Stop();
-            lock (objectLock){
+            lock (_contentsLock){
                 ((IDisposable)_pyAnalyzer).Dispose();
             }
         }
@@ -1676,7 +1676,7 @@ namespace Microsoft.PythonTools.Intellisense {
         #endregion
 
         internal void RemoveReference(ProjectAssemblyReference reference) {
-            lock (objectLock){
+            lock (_contentsLock){
                 var interp = Interpreter;
                 if (interp != null) {
                     interp.RemoveReference(reference);
