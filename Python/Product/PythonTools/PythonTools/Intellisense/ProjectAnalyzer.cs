@@ -1273,7 +1273,7 @@ namespace Microsoft.PythonTools.Intellisense {
             private readonly Dictionary<string, List<ErrorResult>> _errors = new Dictionary<string, List<ErrorResult>>();
             private readonly uint _cookie;
             private readonly IVsTaskList _errorList;
-            private readonly object objectLock = new object();
+            private readonly object _contentsLock = new object();
 
             private class WorkerMessage {
                 public enum MessageType { Clear, Warnings, Errors, Update }
@@ -1305,13 +1305,13 @@ namespace Microsoft.PythonTools.Intellisense {
                     while (_workerQueue.TryTake(out msg, 1000)) {
                         switch (msg.Type) {
                             case WorkerMessage.MessageType.Clear:
-                                lock (objectLock){
+                                lock (_contentsLock){
                                     changed = _errors.Remove(msg.Filename) || changed;
                                     changed = _warnings.Remove(msg.Filename) || changed;
                                 }
                                 break;
                             case WorkerMessage.MessageType.Warnings:
-                                lock (objectLock){
+                                lock (_contentsLock){
                                     if (_warnings.TryGetValue(msg.Filename, out existing)) {
                                         existing.AddRange(msg.Errors);
                                     } else {
@@ -1321,7 +1321,7 @@ namespace Microsoft.PythonTools.Intellisense {
                                 changed = true;
                                 break;
                             case WorkerMessage.MessageType.Errors:
-                                lock (objectLock){
+                                lock (_contentsLock){
                                     if (_errors.TryGetValue(msg.Filename, out existing)) {
                                         existing.AddRange(msg.Errors);
                                     } else {
@@ -1385,7 +1385,7 @@ namespace Microsoft.PythonTools.Intellisense {
             #region IVsTaskProvider Members
 
             public int EnumTaskItems(out IVsEnumTaskItems ppenum) {
-                lock (objectLock){
+                lock (_contentsLock){
                     ppenum = new TaskEnum(CopyErrorList(_warnings), CopyErrorList(_errors));
                 }
                 return VSConstants.S_OK;
