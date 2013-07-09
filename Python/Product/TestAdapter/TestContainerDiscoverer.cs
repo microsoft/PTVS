@@ -235,39 +235,61 @@ namespace Microsoft.PythonTools.TestAdapter {
         private void OnProjectItemChanged(object sender, TestFileChangedEventArgs e) {
             if (e != null && ShouldDiscover(e.File)) {
                 string root = null;
-                if (e.ChangedReason == TestFileChangedReason.Added) {
-                    if (e.Project != null) {
-                        try {
-                            root = e.Project.GetProjectHome();
-                        } catch (Exception ex) {
-                            if (EqtTrace.IsVerboseEnabled) {
-                                EqtTrace.Warning("TestContainerDiscoverer: Failed to get project home {0}", ex);
+                switch (e.ChangedReason) {
+                    case TestFileChangedReason.Added:
+                        if (e.Project != null) {
+                            try {
+                                root = e.Project.GetProjectHome();
+                            } catch (Exception ex) {
+                                if (EqtTrace.IsVerboseEnabled) {
+                                    EqtTrace.Warning("TestContainerDiscoverer: Failed to get project home {0}", ex);
+                                }
+                                // If we fail to get ProjectHome, we still want to track the
+                                // project. We just won't get the benefits of merging
+                                // watchers into a single recursive watcher.
                             }
-                            // If we fail to get ProjectHome, we still want to track the
-                            // project. We just won't get the benefits of merging
-                            // watchers into a single recursive watcher.
                         }
-                    }
 
-                    if (!string.IsNullOrEmpty(root) && CommonUtils.IsSubpathOf(root, e.File)) {
-                        _testFilesUpdateWatcher.AddDirectoryWatch(root);
-                        _fileRootMap[e.File] = root;
-                    } else {
-                        _testFilesUpdateWatcher.AddWatch(e.File);
-                    }
-
-                } else if (e.ChangedReason == TestFileChangedReason.Removed) {
-                    if (_fileRootMap.TryGetValue(e.File, out root)) {
-                        _fileRootMap.Remove(e.File);
-                        if (!_fileRootMap.Values.Contains(root)) {
-                            _testFilesUpdateWatcher.RemoveWatch(root);
+                        if (!string.IsNullOrEmpty(root) && CommonUtils.IsSubpathOf(root, e.File)) {
+                            _testFilesUpdateWatcher.AddDirectoryWatch(root);
+                            _fileRootMap[e.File] = root;
+                        } else {
+                            _testFilesUpdateWatcher.AddWatch(e.File);
                         }
-                    } else {
-                        _testFilesUpdateWatcher.RemoveWatch(e.File);
-                    }
+
+                        OnTestContainersChanged();
+                        break;
+                    case TestFileChangedReason.Removed:
+                        if (_fileRootMap.TryGetValue(e.File, out root)) {
+                            _fileRootMap.Remove(e.File);
+                            if (!_fileRootMap.Values.Contains(root)) {
+                                _testFilesUpdateWatcher.RemoveWatch(root);
+                            }
+                        } else {
+                            _testFilesUpdateWatcher.RemoveWatch(e.File);
+                        }
+                        OnTestContainersChanged();
+                        break;
+#if DEV12_OR_LATER
+                    // Dev12 renames files instead of overwriting them when
+                    // saving, so we need to listen for renames where the new
+                    // path is part of the project.
+                    case TestFileChangedReason.Renamed:
+                        var solution = _serviceProvider.GetService<IVsSolution>(typeof(SVsSolution));
+                        if (solution != null) {
+                            if (EnumerateLoadedProjects(solution)
+                                .SelectMany(proj => proj.GetProjectItemPaths())
+                                .Contains(e.File, StringComparer.OrdinalIgnoreCase)) {
+                                OnTestContainersChanged();
+                            }
+                        }
+                        break;
+#endif
+                    case TestFileChangedReason.Changed:
+                        OnTestContainersChanged();
+                        break;
                 }
 
-                OnTestContainersChanged();
             }
         }
 

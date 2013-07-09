@@ -57,6 +57,7 @@ namespace Microsoft.PythonTools.TestAdapter {
 
                     watcher.IncludeSubdirectories = true;
                     watcher.Changed += OnChanged;
+                    watcher.Renamed += OnRenamed;
                     watcher.EnableRaisingEvents = true;
                     return true;
                 }
@@ -85,6 +86,13 @@ namespace Microsoft.PythonTools.TestAdapter {
             var evt = FileChangedEvent;
             if (evt != null) {
                 evt(sender, new TestFileChangedEventArgs(null, e.FullPath, TestFileChangedReason.Changed));
+            }
+        }
+
+        private void OnRenamed(object sender, RenamedEventArgs e) {
+            var evt = FileChangedEvent;
+            if (evt != null) {
+                evt(sender, new TestFileChangedEventArgs(null, e.FullPath, TestFileChangedReason.Renamed));
             }
         }
 

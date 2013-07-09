@@ -25,6 +25,7 @@ namespace Microsoft.PythonTools.TestAdapter {
         Added,
         Removed,
         Changed,
+        Renamed
     }
 
     class TestFileChangedEventArgs : EventArgs {
