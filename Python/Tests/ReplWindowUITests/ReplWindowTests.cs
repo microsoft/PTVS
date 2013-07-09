@@ -2729,6 +2729,23 @@ def g(): pass
             TestData.Deploy();
         }
 
+        /// <summary>
+        /// https://pytools.codeplex.com/workitem/869
+        /// REPL adds extra new lines
+        /// </summary>
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void NewLinesOverTime() {
+            var interactive = Prepare();
+
+            Assert.AreNotEqual(null, interactive);
+
+            const string code = "def f():\rprint 42,\rimport time\rtime.sleep(1)\rprint 100,\r\rf()\r";
+            Keyboard.Type(code);
+
+            interactive.WaitForTextEnd("42 100", ReplPrompt);
+        }
+
         protected override string InterpreterDescription {
             get {
                 return "Python 2.7 Interactive";

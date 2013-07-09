@@ -152,6 +152,7 @@ namespace Microsoft.VisualStudio.Repl {
         //
         private readonly OutputBuffer _buffer;
         private readonly List<ColoredSpan> _outputColors = new List<ColoredSpan>();
+        private bool _addedLineBreakOnLastOutput;
 
         private string _commandPrefix = "%";
         private string _prompt = "» ";        // prompt for primary input
@@ -589,7 +590,7 @@ namespace Microsoft.VisualStudio.Repl {
                 edit.Delete(0, _outputBuffer.CurrentSnapshot.Length);
                 edit.Apply();
             }
-
+            _addedLineBreakOnLastOutput = false;
             using (var edit = _stdInputBuffer.CreateEdit(EditOptions.None, null, SuppressPromptInjectionTag)) {
                 edit.Delete(0, _stdInputBuffer.CurrentSnapshot.Length);
                 edit.Apply();
@@ -2101,11 +2102,23 @@ namespace Microsoft.VisualStudio.Repl {
             // append the text to output buffer and make sure it ends with a line break:
             int newOutputLength = text.Length;
             using (var edit = _outputBuffer.CreateEdit()) {
+                if (_addedLineBreakOnLastOutput) {
+                    // appending additional output, remove the line break we previously injected
+                    var lineBreak = GetLineBreak();
+                    var deleteSpan = new Span(_outputBuffer.CurrentSnapshot.Length - lineBreak.Length, lineBreak.Length);
+                    Debug.Assert(_outputBuffer.CurrentSnapshot.GetText(deleteSpan) == lineBreak);
+                    edit.Delete(deleteSpan);
+                    oldBufferLength -= lineBreak.Length;
+                }
+
                 edit.Insert(oldBufferLength, text);
                 if (lastOutput && !_readingStdIn && !EndsWithLineBreak(text)) {
                     var lineBreak = GetLineBreak();
                     edit.Insert(oldBufferLength, lineBreak);
                     newOutputLength += lineBreak.Length;
+                    _addedLineBreakOnLastOutput = true;
+                } else {
+                    _addedLineBreakOnLastOutput = false;
                 }
                 
                 edit.Apply();

@@ -44,19 +44,6 @@ namespace Microsoft.VisualStudio.Repl {
             _isResizing = false;
             UpdateSize();
 
-            PreviewMouseLeftButtonDown += (s, e) => {
-                if (MyContent.IsFocused) {
-                    Keyboard.Focus(MyParent);
-                    e.Handled = true;
-                }
-            };
-
-            MouseRightButtonDown += (s, e) => {
-                // The editor doesn't support context menus, so even for an
-                // adornment we have to open it explicitly
-                ContextMenu.IsOpen = true;
-            };
-
             GotFocus += OnGotFocus;
             LostFocus += OnLostFocus;
 
@@ -69,6 +56,13 @@ namespace Microsoft.VisualStudio.Repl {
             var style = new Style();
             style.Triggers.Add(trigger);
             MyContent.Style = style;
+        }
+
+        protected override void OnPreviewMouseLeftButtonDown(MouseButtonEventArgs e) {
+            base.OnPreviewMouseLeftButtonDown(e);
+
+            ((Border)Content).Focus();
+            e.Handled = true;
         }
 
         private ContextMenu MakeContextMenu() {
@@ -95,47 +89,39 @@ namespace Microsoft.VisualStudio.Repl {
             get { return Content as Border; }
         }
 
-        private IInputElement MyParent {
-            get { return _parent as IInputElement; }
-        }
-
         private void OnGotFocus(object sender, RoutedEventArgs args) {
-            MyParent.PreviewMouseLeftButtonDown += OnPreviewParentMouseDown;
-            PreviewKeyDown += OnPreviewKeyDown;
             _adorner = new ResizingAdorner(MyContent);
             _adorner.ResizeStarted += OnResizeStarted;
             _adorner.ResizeCompleted += OnResizeCompleted;
 
             var adornerLayer = AdornerLayer.GetAdornerLayer(MyContent);
-            adornerLayer.Add(_adorner);
+            if (adornerLayer != null) {
+                adornerLayer.Add(_adorner);
+            }
         }
 
         private void OnLostFocus(object sender, RoutedEventArgs args) {
-            MyParent.PreviewMouseLeftButtonDown -= OnPreviewParentMouseDown;
-            PreviewKeyDown -= OnPreviewKeyDown;
             _adorner.ResizeStarted -= OnResizeStarted;
             _adorner.ResizeCompleted -= OnResizeCompleted;
 
             var adornerLayer = AdornerLayer.GetAdornerLayer(MyContent);
-            adornerLayer.Remove(_adorner);
-            _adorner = null;
+            if (adornerLayer != null) {
+                adornerLayer.Remove(_adorner);
+                _adorner = null;
+            }
         }
 
-        private void OnPreviewKeyDown(object sender, KeyEventArgs args) {
+        protected override void OnPreviewKeyDown(KeyEventArgs args) {
             var modifiers = args.KeyboardDevice.Modifiers & ModifierKeys.Control;
-            if (modifiers == ModifierKeys.Control && args.Key == Key.OemPlus) {
+            if (modifiers == ModifierKeys.Control && (args.Key == Key.OemPlus || args.Key == Key.Add)) {
                 OnZoomIn();
                 args.Handled = true;
-            } else if (modifiers == ModifierKeys.Control && args.Key == Key.OemMinus) {
+            } else if (modifiers == ModifierKeys.Control && (args.Key == Key.OemMinus || args.Key == Key.Subtract)) {
                 OnZoomOut();
                 args.Handled = true;
             }
-        }
 
-        private void OnPreviewParentMouseDown(object sender, RoutedEventArgs args) {
-            if (MyContent.IsFocused) {
-                Keyboard.Focus(MyParent);
-            }
+            base.OnPreviewKeyDown(args);
         }
 
         private void OnResizeStarted(object sender, RoutedEventArgs args) {
@@ -144,7 +130,7 @@ namespace Microsoft.VisualStudio.Repl {
 
         private void OnResizeCompleted(object sender, RoutedEventArgs args) {
             _isResizing = false;
-            UpdateSize();
+            _zoom = MyContent.DesiredSize.Width / (_parent.ViewportWidth * _widthRatio);
         }
 
         internal void Zoom(double zoomFactor) {

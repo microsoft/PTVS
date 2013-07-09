@@ -13,13 +13,18 @@
  * ***************************************************************************/
 
 using System;
+using System.Runtime.InteropServices;
 using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell.Interop;
 
 namespace Microsoft.VisualStudioTools.Project {
     //[DefaultRegistryRoot("Software\\Microsoft\\VisualStudio\\9.0Exp")]
     //[PackageRegistration(UseManagedResourcesOnly = true)]
-    public abstract class CommonProjectPackage : ProjectPackage, IVsInstalledProduct {
+    public abstract class CommonProjectPackage : ProjectPackage, IVsInstalledProduct, IOleComponent {
+        private IOleComponentManager _compMgr;
+        private uint _componentID;
+
         public abstract ProjectFactory CreateProjectFactory();
         public abstract CommonEditorFactory CreateEditorFactory();
         public virtual CommonEditorFactory CreateEditorFactoryPromptForEncoding() {
@@ -63,6 +68,27 @@ namespace Microsoft.VisualStudioTools.Project {
             var encodingEditorFactory = CreateEditorFactoryPromptForEncoding();
             if (encodingEditorFactory != null) {
                 RegisterEditorFactory(encodingEditorFactory);
+            }
+            var componentManager = _compMgr = (IOleComponentManager)GetService(typeof(SOleComponentManager));
+            OLECRINFO[] crinfo = new OLECRINFO[1];
+            crinfo[0].cbSize = (uint)Marshal.SizeOf(typeof(OLECRINFO));
+            crinfo[0].grfcrf = (uint)_OLECRF.olecrfNeedIdleTime;
+            crinfo[0].grfcadvf = (uint)_OLECADVF.olecadvfModal | (uint)_OLECADVF.olecadvfRedrawOff | (uint)_OLECADVF.olecadvfWarningsOff;
+            crinfo[0].uIdleTimeInterval = 0;
+            ErrorHandler.ThrowOnFailure(componentManager.FRegisterComponent(this, crinfo, out _componentID));
+        }
+
+        protected override void Dispose(bool disposing) {
+            try {
+                if (_componentID != 0) {
+                    IOleComponentManager mgr = GetService(typeof(SOleComponentManager)) as IOleComponentManager;
+                    if (mgr != null) {
+                        mgr.FRevokeComponent(_componentID);
+                    }
+                    _componentID = 0;
+                }
+            } finally {
+                base.Dispose(disposing);
             }
         }
 
@@ -138,6 +164,56 @@ namespace Microsoft.VisualStudioTools.Project {
         public int ProductID(out string pbstrPID) {
             pbstrPID = GetProductVersion();
             return VSConstants.S_OK;
+        }
+
+        #endregion
+
+        #region IOleComponent Members
+
+        public int FContinueMessageLoop(uint uReason, IntPtr pvLoopData, MSG[] pMsgPeeked) {
+            return 1;
+        }
+
+        public int FDoIdle(uint grfidlef) {
+            var onIdle = OnIdle;
+            if (onIdle != null) {
+                onIdle(this, new ComponentManagerEventArgs(_compMgr));
+            }
+
+            return 0;
+        }
+
+        internal event EventHandler<ComponentManagerEventArgs> OnIdle;
+
+        public int FPreTranslateMessage(MSG[] pMsg) {
+            return 0;
+        }
+
+        public int FQueryTerminate(int fPromptUser) {
+            return 1;
+        }
+
+        public int FReserved1(uint dwReserved, uint message, IntPtr wParam, IntPtr lParam) {
+            return 1;
+        }
+
+        public IntPtr HwndGetWindow(uint dwWhich, uint dwReserved) {
+            return IntPtr.Zero;
+        }
+
+        public void OnActivationChange(IOleComponent pic, int fSameComponent, OLECRINFO[] pcrinfo, int fHostIsActivating, OLECHOSTINFO[] pchostinfo, uint dwReserved) {
+        }
+
+        public void OnAppActivate(int fActive, uint dwOtherThreadID) {
+        }
+
+        public void OnEnterState(uint uStateID, int fEnter) {
+        }
+
+        public void OnLoseActivation() {
+        }
+
+        public void Terminate() {
         }
 
         #endregion

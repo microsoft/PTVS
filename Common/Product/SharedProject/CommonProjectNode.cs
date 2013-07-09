@@ -23,6 +23,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows.Threading;
 using Microsoft.VisualStudio;
@@ -64,18 +65,18 @@ namespace Microsoft.VisualStudioTools.Project {
         private object _automationObject;
         private CommonPropertyPage _propPage;
         private readonly Dictionary<string, FileSystemEventHandler> _fileChangedHandlers = new Dictionary<string, FileSystemEventHandler>();
-        private List<FileSystemChange> _fileSystemChanges;
+        private Queue<FileSystemChange> _fileSystemChanges = new Queue<FileSystemChange>();
         private object _fileSystemChangesLock = new object();
         internal UIThreadSynchronizer _uiSync;
         private MSBuild.Project userBuildProject;
         private readonly Dictionary<string, FileSystemWatcher> _symlinkWatchers = new Dictionary<string, FileSystemWatcher>();
-        private readonly System.Threading.Timer _processFileChangesTimer;
+        private DiskMerger _currentMerger;
+        private int _idleTriggered;
 
         public CommonProjectNode(CommonProjectPackage/*!*/ package, ImageList/*!*/ imageList) {
             Contract.Assert(package != null);
             Contract.Assert(imageList != null);
 
-            _processFileChangesTimer = new System.Threading.Timer(ProcessFileChanges);
             _package = package;
             CanFileNodesHaveChilds = true;
             OleServiceProvider.AddService(typeof(VSLangProj.VSProject), new OleServiceProvider.ServiceCreatorCallback(CreateServices), false);
@@ -91,6 +92,7 @@ namespace Microsoft.VisualStudioTools.Project {
             InitializeCATIDs();
 
             _uiSync = new UIThreadSynchronizer();
+            package.OnIdle += OnIdle;
         }
 
         #region abstract methods
@@ -434,21 +436,12 @@ namespace Microsoft.VisualStudioTools.Project {
         /// directory for changes.
         /// </summary>
         private void WatcherError(object sender, ErrorEventArgs e) {
-            bool createdChanges;
-            lock (this) {
-                List<FileSystemChange> changes;
-                GetFileChangeList(out changes, out createdChanges);
-                
-                
-                changes.Clear(); // none of the other changes matter now, we'll rescan the world
-                changes.Add(new FileSystemChange(this, WatcherChangeTypes.All, null));
+            lock (_fileSystemChanges) {
+                _fileSystemChanges.Clear(); // none of the other changes matter now, we'll rescan the world
+                _currentMerger = null;  // abort any current merge now that we have a new one
+                _fileSystemChanges.Enqueue(new FileSystemChange(this, WatcherChangeTypes.All, null));
+                TriggerIdle();
             }
-
-            QueueProcessingChanges();
-        }
-
-        private void QueueProcessingChanges() {
-            _processFileChangesTimer.Change(1000, Timeout.Infinite);
         }
 
         protected override void SaveMSBuildProjectFileAs(string newFileName) {
@@ -472,6 +465,7 @@ namespace Microsoft.VisualStudioTools.Project {
             if (this.userBuildProject != null) {
                 userBuildProject.ProjectCollection.UnloadProject(userBuildProject);
             }
+            _package.OnIdle -= OnIdle;
         }
 
         protected internal override int ShowAllFiles() {
@@ -536,67 +530,117 @@ namespace Microsoft.VisualStudioTools.Project {
         }
 
         /// <summary>
-        /// Walks the project home directory and creates nodes for all of the files
-        /// which are on disk but aren't part of the project.  We add these files and
-        /// display them if the user enables Show All Files.
+        /// Performs merging of the file system state with the current project hierarchy, bringing them
+        /// back into sync.
+        /// 
+        /// The class can be created, and ContinueMerge should be called until it returns false, at which
+        /// point the file system has been merged.  
+        /// 
+        /// You can wait between calls to ContinueMerge to enable not blocking the UI.
+        /// 
+        /// If there were changes which came in while the DiskMerger was processing then those changes will still need
+        /// to be processed after the DiskMerger completes.
         /// </summary>
-        private void MergeDiskNodes(HierarchyNode curParent, string dir) {
-            IEnumerable<string> dirs;
-            try {
-                dirs = Directory.EnumerateDirectories(dir);
-            } catch  {
-                // directory was deleted, we don't have access, etc...
-                return;
+        class DiskMerger {
+            private readonly string _initialDir;
+            private readonly Stack<DirState> _remainingDirs = new Stack<DirState>();
+            private readonly CommonProjectNode _project;
+
+            public DiskMerger(CommonProjectNode project, HierarchyNode parent, string dir) {
+                _project = project;
+                _initialDir = dir;
+                _remainingDirs.Push(new DirState(dir, parent));
             }
-            
-            HashSet<HierarchyNode> missingChildren = new HashSet<HierarchyNode>(curParent.AllChildren);
-            foreach (var curDir in dirs) {
-                if (!Directory.Exists(dir)) {
-                    // directory went away
-                    break;
-                }
-                if (IsFileHidden(curDir)) {
-                    continue;
+
+            /// <summary>
+            /// Continues processing the merge request, performing a portion of the full merge possibly
+            /// returning before the merge has completed.
+            /// 
+            /// Returns true if the merge needs to continue, or false if the merge has completed.
+            /// </summary>
+            public bool ContinueMerge() {
+                if (_remainingDirs.Count == 0 ||        // all done
+                    !Directory.Exists(_initialDir)) {   // directory went away
+                    return false;
                 }
 
-                if (IsFileSymLink(curDir)) {
-                    if (IsRecursiveSymLink(dir, curDir)) {
-                        // don't add recursive sym links
+                var dir = _remainingDirs.Pop();
+                Debug.WriteLine(dir.Name);
+                if (!Directory.Exists(dir.Name)) {
+                    return true;
+                }
+
+                HashSet<HierarchyNode> missingChildren = new HashSet<HierarchyNode>(dir.Parent.AllChildren);
+                IEnumerable<string> dirs;
+                try {
+                    dirs = Directory.EnumerateDirectories(dir.Name);
+                } catch {
+                    // directory was deleted, we don't have access, etc...
+                    return true;
+                }
+
+                foreach (var curDir in dirs) {
+                    if (_project.IsFileHidden(curDir)) {
                         continue;
                     }
+                    if (IsFileSymLink(curDir)) {
+                        if (IsRecursiveSymLink(_initialDir, curDir)) {
+                            // don't add recursive sym links
+                            continue;
+                        }
 
-                    // track symlinks, we won't get events on the directory
-                    CreateSymLinkWatcher(curDir);
+                        // track symlinks, we won't get events on the directory
+                        _project.CreateSymLinkWatcher(curDir);
+                    }
+
+                    var existing = _project.AddAllFilesFolder(dir.Parent, curDir + Path.DirectorySeparatorChar);
+                    missingChildren.Remove(existing);
+                    _remainingDirs.Push(new DirState(curDir, existing));
                 }
-                var existing = AddAllFilesFolder(curParent, curDir + Path.DirectorySeparatorChar);
-                missingChildren.Remove(existing);
-                MergeDiskNodes(existing, curDir);
+
+                IEnumerable<string> files;
+                try {
+                    files = Directory.EnumerateFiles(dir.Name);
+                } catch {
+                    // directory was deleted, we don't have access, etc...
+                    return true;
+                }
+
+                foreach (var file in files) {
+                    if (!Directory.Exists(dir.Name)) {
+                        // file went away
+                        break;
+                    }
+                    if (_project.IsFileHidden(file)) {
+                        continue;
+                    }
+                    missingChildren.Remove(_project.AddAllFilesFile(dir.Parent, file));
+                }
+
+                // remove the excluded children which are no longer there
+                foreach (var child in missingChildren) {
+                    if (child.ItemNode.IsExcluded) {
+                        _project.RemoveSubTree(child);
+                    }
+                }
+
+                return true;
             }
 
-            IEnumerable<string> files;
-            try {
-                files = Directory.EnumerateFiles(dir);
-            } catch {
-                // directory was deleted, we don't have access, etc...
-                return;
-            }
+            class DirState {
+                public readonly string Name;
+                public readonly HierarchyNode Parent;
 
-            foreach (var file in files) {
-                if (!Directory.Exists(dir)) {
-                    // file went away
-                    break;
+                public DirState(string name, HierarchyNode parent) {
+                    Name = name;
+                    Parent = parent;
                 }
-                if (IsFileHidden(file)) {
-                    continue;
-                }
-                missingChildren.Remove(AddAllFilesFile(curParent, file));
             }
+        }
 
-            // remove the excluded children which are no longer there
-            foreach (var child in missingChildren) {
-                if (child.ItemNode.IsExcluded) {
-                    RemoveSubTree(child);
-                }
+        private void MergeDiskNodes(HierarchyNode curParent, string dir) {
+            var merger = new DiskMerger(this, curParent, dir);
+            while (merger.ContinueMerge()) {
             }
         }
 
@@ -747,17 +791,16 @@ namespace Microsoft.VisualStudioTools.Project {
         }
 
         private void FileAttributesChanged(object sender, FileSystemEventArgs e) {
-            bool createdChanges;
-            lock (this) {
-                List<FileSystemChange> changes;
-                GetFileChangeList(out changes, out createdChanges);
-
-                if (changes.Count == 0 || changes[0]._type != WatcherChangeTypes.All) {
-                    changes.Add(new FileSystemChange(this, WatcherChangeTypes.Changed, e.FullPath));
+            lock (_fileSystemChanges) {
+                if (NoPendingFileSystemRescan()) {
+                    _fileSystemChanges.Enqueue(new FileSystemChange(this, WatcherChangeTypes.Changed, e.FullPath));
+                    TriggerIdle();
                 }
             }
+        }
 
-            QueueProcessingChanges();
+        private bool NoPendingFileSystemRescan() {
+            return _fileSystemChanges.Count == 0 || _fileSystemChanges.Peek()._type != WatcherChangeTypes.All;
         }
 
         internal void RegisterFileChangeNotification(FileNode node, FileSystemEventHandler handler) {
@@ -777,57 +820,43 @@ namespace Microsoft.VisualStudioTools.Project {
                 return;
             }
 
-            bool createdChanges;
-            lock (this) {
-                List<FileSystemChange> changes;
-                GetFileChangeList(out changes, out createdChanges);
-
+            lock (_fileSystemChanges) {
                 // we just generate a delete and creation here - we're just updating the hierarchy
                 // either changing icons or updating the non-project elements, so we don't need to
                 // generate rename events or anything like that.  This saves us from having to 
                 // handle updating the hierarchy in a special way for renames.
-                if (changes.Count == 0 || changes[0]._type != WatcherChangeTypes.All) {
-                    changes.Add(new FileSystemChange(this, WatcherChangeTypes.Deleted, e.OldFullPath, true));
-                    changes.Add(new FileSystemChange(this, WatcherChangeTypes.Created, e.FullPath, true));
+                if (NoPendingFileSystemRescan()) {
+                    _fileSystemChanges.Enqueue(new FileSystemChange(this, WatcherChangeTypes.Deleted, e.OldFullPath, true));
+                    _fileSystemChanges.Enqueue(new FileSystemChange(this, WatcherChangeTypes.Created, e.FullPath, true));
+                    TriggerIdle();
                 }
             }
-
-            QueueProcessingChanges();
         }
 
         private void FileExistanceChanged(object sender, FileSystemEventArgs e) {
             if (IsClosed) {
                 return;
             }
-            bool createdChanges;
-            
-            lock (this) {
-                List<FileSystemChange> changes;
-                GetFileChangeList(out changes, out createdChanges);
 
-                if (changes.Count == 0 || changes[0]._type != WatcherChangeTypes.All) {
-                    changes.Add(new FileSystemChange(this, e.ChangeType, e.FullPath));
+            lock (_fileSystemChanges) {
+                if (NoPendingFileSystemRescan()) {
+                    _fileSystemChanges.Enqueue(new FileSystemChange(this, e.ChangeType, e.FullPath));
+                    TriggerIdle();
                 }
             }
-            QueueProcessingChanges();
         }
 
         /// <summary>
-        /// Gets or creates the current list of file change events to be processed.  We update the
-        /// current list until the UI thread pulls it and starts processing it.  This keeps the
-        /// response to the event fast even if we can't immediately make it back to the UI thread and
-        /// keeps the # of posts low when the UI thread is busy.
+        /// If VS is already idle, we won't keep getting idle events, so we need to post a
+        /// new event to the queue to flip away from idle and back again.
         /// </summary>
-        private void GetFileChangeList(out List<FileSystemChange> changes, out bool createdChanges) {
-            createdChanges = false;
-            lock (_fileSystemChangesLock) {
-                if (_fileSystemChanges == null) {
-                    _fileSystemChanges = new List<FileSystemChange>();
-                    createdChanges = true;
-                }
-                changes = _fileSystemChanges;
+        private void TriggerIdle() {
+            if (Interlocked.CompareExchange(ref _idleTriggered, 1, 0) == 0) {
+                _uiSync.BeginInvoke(Nop, Type.EmptyTypes);
             }
         }
+
+        private static readonly Action Nop = () => { };
 
         internal void CreateSymLinkWatcher(string curDir) {
             if (!CommonUtils.HasEndSeparator(curDir)) {
@@ -847,38 +876,52 @@ namespace Microsoft.VisualStudioTools.Project {
             return false;
         }
 
-        private void ProcessFileChanges(object arg) {
-            _uiSync.BeginInvoke(new Action(ProcessFileChangesUIThread), new object[0]);
-        }
-
-        /// <summary>
-        /// Processes the current file system changes on the UI thread.
-        /// </summary>
-        private void ProcessFileChangesUIThread() {
-            List<FileSystemChange> changes;
-            lock (_fileSystemChangesLock) {
-                changes = _fileSystemChanges;
-                _fileSystemChanges = null;
-            }
-
-            using (new DebugTimer("ProcessFileChanges on UI Thread")) {
-                foreach (var change in changes) {
+        private void OnIdle(object sender, ComponentManagerEventArgs e) {
+            Interlocked.Exchange(ref _idleTriggered, 0);
+            do {
+                using (new DebugTimer("ProcessFileChanges while Idle", 100)) {
                     if (IsClosed) {
                         return;
                     }
 
+                    DiskMerger merger;
+                    FileSystemChange change = null;
+                    lock (_fileSystemChanges) {
+                        merger = _currentMerger;
+                        if (merger == null) {
+                            if (_fileSystemChanges.Count == 0) {
+                                break;
+                            }
+
+                            change = _fileSystemChanges.Dequeue();
+                        }
+                    }
+
+                    if (merger != null) {
+                        // we have more file merges to process, do this
+                        // before reflecting any other pending updates...
+                        if (!merger.ContinueMerge()) {
+                            _currentMerger = null;
+                        }
+                        continue;
+                    }
 #if DEBUG
                     try {
 #endif
-                        change.ProcessChange();
+                        if (change._type == WatcherChangeTypes.All) {
+                            _currentMerger = new DiskMerger(this, this, ProjectHome);
+                            continue;
+                        } else {
+                            change.ProcessChange();
+                        }
 #if DEBUG
-                    } catch (Exception e) {
-                        Debug.Fail("Unexpected exception while processing change: {0}", e.ToString());
+                    } catch (Exception ex) {
+                        Debug.Fail("Unexpected exception while processing change: {0}", ex.ToString());
                         throw;
                     }
 #endif
                 }
-            }
+            } while (e.ComponentManager.FContinueIdle() != 0);
         }
 
         /// <summary>
@@ -911,11 +954,6 @@ namespace Microsoft.VisualStudioTools.Project {
             }
 
             public void ProcessChange() {
-                if (_type == WatcherChangeTypes.All) {
-                    WatcherError();
-                    return;
-                }
-
                 var child = _project.FindNodeByFullPath(_path);
                 if ((_type == WatcherChangeTypes.Deleted || _type == WatcherChangeTypes.Changed) && child == null) {
                     child = _project.FindNodeByFullPath(_path + Path.DirectorySeparatorChar);
@@ -961,29 +999,6 @@ namespace Microsoft.VisualStudioTools.Project {
 
                 if (removed) {
                     _project.OnInvalidateItems(parent);
-                }
-            }
-
-            private void WatcherError() {
-                // merge the current ones back in
-                using (new DebugTimer("Merging on error")) {
-                    var waitDialog = (IVsThreadedWaitDialog)_project.GetService(typeof(SVsThreadedWaitDialog));
-                    int waitResult = waitDialog.StartWaitDialog(
-                        "Updating project system...",
-                        "Syncing project system with files on disk, this may take several seconds...",
-                        null,
-                        0,
-                        null,
-                        null
-                    );
-                    try {
-                        _project.MergeDiskNodes(_project, _project.ProjectHome);
-                    } finally {
-                        if (ErrorHandler.Succeeded(waitResult)) {
-                            int cancelled = 0;
-                            waitDialog.EndWaitDialog(ref cancelled);
-                        }
-                    }
                 }
             }
 
@@ -1135,8 +1150,6 @@ namespace Microsoft.VisualStudioTools.Project {
             _attributesWatcher.EnableRaisingEvents = false;
             _attributesWatcher.Dispose();
             _attributesWatcher = null;
-
-            _processFileChangesTimer.Dispose();
 
             base.Close();
         }
