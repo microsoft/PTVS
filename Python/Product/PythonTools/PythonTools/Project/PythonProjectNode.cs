@@ -668,8 +668,6 @@ namespace Microsoft.PythonTools.Project {
         internal override int QueryStatusOnNode(Guid cmdGroup, uint cmd, IntPtr pCmdText, ref QueryStatusResult result) {
             if (cmdGroup == GuidList.guidPythonToolsCmdSet) {
                 switch ((int)cmd) {
-                    case CommonConstants.AddSearchPathCommandId:
-                    case CommonConstants.AddSearchPathZipCommandId:
                     case CommonConstants.StartWithoutDebuggingCmdId:
                         result |= QueryStatusResult.SUPPORTED | QueryStatusResult.ENABLED;
                         return VSConstants.S_OK;
