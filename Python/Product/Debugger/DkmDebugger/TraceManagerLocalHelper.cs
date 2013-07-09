@@ -185,6 +185,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
 	        public ulong PyErr_Fetch;
 	        public ulong PyErr_Restore;
             public ulong PyErr_Occurred;
+            public ulong PyObject_Str;
 
             public FunctionPointers(DkmProcess process, PythonRuntimeInfo pyrtInfo) {
                 Py_DecRef = pyrtInfo.DLLs.Python.GetFunctionAddress("Py_DecRef");
@@ -193,6 +194,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
                 PyErr_Fetch = pyrtInfo.DLLs.Python.GetFunctionAddress("PyErr_Fetch");
                 PyErr_Restore = pyrtInfo.DLLs.Python.GetFunctionAddress("PyErr_Restore");
                 PyErr_Occurred = pyrtInfo.DLLs.Python.GetFunctionAddress("PyErr_Occurred");
+                PyObject_Str = pyrtInfo.DLLs.Python.GetFunctionAddress("PyObject_Str");
             }
         }
 

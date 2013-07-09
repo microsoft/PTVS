@@ -80,6 +80,7 @@ struct {
     uint64_t PyErr_Fetch;
     uint64_t PyErr_Restore;
     uint64_t PyErr_Occurred;
+	uint64_t PyObject_Str;
 } functionPointers;
 
 void Py_DecRef(PyObject* a1) {
@@ -106,6 +107,9 @@ PyObject* PyErr_Occurred() {
     return reinterpret_cast<decltype(&PyErr_Occurred)>(functionPointers.PyErr_Occurred)();
 }
 
+PyObject* PyObject_Str(PyObject* o) {
+	return reinterpret_cast<decltype(&PyObject_Str)>(functionPointers.PyObject_Str)(o);
+}
 
 // A function to compare DebuggerString to a Python string object. This is set to either StringEquals27 or
 // to StringEquals33 by debugger, depending on the language version.
@@ -221,6 +225,9 @@ volatile uint64_t evalLoopExcType; // pointer to exc_type fetched after evaluati
 
 __declspec(dllexport)
 volatile uint64_t evalLoopExcValue; // pointer to exc_value fetched after evaluation
+
+__declspec(dllexport)
+volatile uint64_t evalLoopExcStr; // pointer to str(exc_value) 
 
 __declspec(dllexport)
 volatile uint32_t evalLoopSEHCode; // if a structured exception occured during eval, the return value of GetExceptionCode
@@ -386,16 +393,19 @@ void EvalLoop(void (*bp)()) {
                 evalLoopResult = 0;
                 evalLoopExcType = 0;
                 evalLoopExcValue = 0;
+				evalLoopExcStr = 0;
                 evalLoopSEHCode = 0;
                 PyObject* result = PyRun_StringFlags((char*)evalLoopInput, /*Py_eval_input*/ 258, f_globals, f_locals, nullptr);
 				*evalLoopInput = '\0';
 
-                PyObject *exc_type, *exc_value, *exc_tb;
+                PyObject *exc_type, *exc_value, *exc_tb, *exc_str;
                 PyErr_Fetch(&exc_type, &exc_value, &exc_tb);
+				exc_str = exc_value ? PyObject_Str(exc_value) : nullptr;
 
                 evalLoopResult = reinterpret_cast<uint64_t>(result);
                 evalLoopExcType = reinterpret_cast<uint64_t>(exc_type);
                 evalLoopExcValue = reinterpret_cast<uint64_t>(exc_value);
+				evalLoopExcStr = reinterpret_cast<uint64_t>(exc_str);
                 evalLoopThreadId = GetCurrentThreadId();
                 OnEvalComplete();
 
@@ -403,6 +413,7 @@ void EvalLoop(void (*bp)()) {
                 Py_DecRef(exc_type);
                 Py_DecRef(exc_value);
                 Py_DecRef(exc_tb);
+				Py_DecRef(exc_str);
 
                 PyErr_Restore(orig_exc_type, orig_exc_value, orig_exc_tb);
             } __except (EXCEPTION_EXECUTE_HANDLER) {

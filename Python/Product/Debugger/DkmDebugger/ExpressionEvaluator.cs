@@ -47,7 +47,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
 
         private readonly DkmProcess _process;
         private readonly UInt64Proxy _objectsToRelease;
-        private readonly UInt64Proxy _evalLoopThreadId, _evalLoopFrame, _evalLoopResult, _evalLoopExcType, _evalLoopExcValue;
+        private readonly UInt64Proxy _evalLoopThreadId, _evalLoopFrame, _evalLoopResult, _evalLoopExcType, _evalLoopExcValue, _evalLoopExcStr;
         private readonly UInt32Proxy _evalLoopSEHCode;
         private readonly CStringProxy _evalLoopInput;
 
@@ -61,6 +61,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
             _evalLoopResult = pyrtInfo.DLLs.DebuggerHelper.GetExportedStaticVariable<UInt64Proxy>("evalLoopResult");
             _evalLoopExcType = pyrtInfo.DLLs.DebuggerHelper.GetExportedStaticVariable<UInt64Proxy>("evalLoopExcType");
             _evalLoopExcValue = pyrtInfo.DLLs.DebuggerHelper.GetExportedStaticVariable<UInt64Proxy>("evalLoopExcValue");
+            _evalLoopExcStr = pyrtInfo.DLLs.DebuggerHelper.GetExportedStaticVariable<UInt64Proxy>("evalLoopExcStr");
             _evalLoopSEHCode = pyrtInfo.DLLs.DebuggerHelper.GetExportedStaticVariable<UInt32Proxy>("evalLoopSEHCode");
             _evalLoopInput = pyrtInfo.DLLs.DebuggerHelper.GetExportedStaticVariable<CStringProxy>("evalLoopInput");
 
@@ -683,6 +684,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
             var obj = PyObject.FromAddress(process, objPtr);
             var exc_type = PyObject.FromAddress(process, _evalLoopExcType.Read());
             var exc_value = PyObject.FromAddress(process, _evalLoopExcValue.Read());
+            var exc_str = (PyObject.FromAddress(process, _evalLoopExcStr.Read()) as IPyBaseStringObject).ToStringOrNull();
             var sehCode = _evalLoopSEHCode.Read();
 
             if (obj != null) {
@@ -708,25 +710,8 @@ namespace Microsoft.PythonTools.DkmDebugger {
                     typeName = "<unknown exception type>";
                 }
 
-                var exc = exc_value as PyBaseExceptionObject;
-                var reprOptions = new ReprOptions(process);
-                string additionalInfo = "";
-                if (exc != null) {
-                    var args = exc.args.TryRead();
-                    if (args != null) {
-                        additionalInfo = args.Repr(reprOptions);
-                    }
-                } else {
-                    var str = exc_value as IPyBaseStringObject;
-                    if (str != null) {
-                        additionalInfo = str.ToString();
-                    } else if (exc_value != null) {
-                        additionalInfo = exc_value.Repr(reprOptions);
-                    }
-                }
-
                 completionRoutine(new DkmEvaluateExpressionAsyncResult(DkmFailedEvaluationResult.Create(
-                    inspectionContext, stackFrame, expression.Text, expression.Text, typeName + " raised while evaluating expression: " + additionalInfo,
+                    inspectionContext, stackFrame, expression.Text, expression.Text, typeName + " raised while evaluating expression: " + exc_str,
                     DkmEvaluationResultFlags.Invalid, null)));
             } else {
                 completionRoutine(new DkmEvaluateExpressionAsyncResult(DkmFailedEvaluationResult.Create(
