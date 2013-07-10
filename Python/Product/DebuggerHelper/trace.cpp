@@ -27,7 +27,7 @@ T ReadField(const void* p, int64_t offset) {
 extern "C" {
 
 void EvalLoop(void (*bp)());
-
+void ReleasePendingObjects();
 
 // The following struct definitions should be kept in perfect sync with the corresponding ones in C# in Debugger.
 // To ensure matching layout, only types which are the same size on all platforms should be used. This means
@@ -409,6 +409,7 @@ void EvalLoop(void (*bp)()) {
                 evalLoopThreadId = GetCurrentThreadId();
                 OnEvalComplete();
 
+                result = reinterpret_cast<PyObject*>(evalLoopResult);
                 Py_DecRef(result);
                 Py_DecRef(exc_type);
                 Py_DecRef(exc_value);
@@ -422,6 +423,8 @@ void EvalLoop(void (*bp)()) {
                 evalLoopThreadId = GetCurrentThreadId();
                 OnEvalComplete();
             }
+
+            ReleasePendingObjects();
         }
     } __finally {
         evalLoopThreadId = 0;

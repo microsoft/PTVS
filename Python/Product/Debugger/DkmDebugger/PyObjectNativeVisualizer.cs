@@ -260,7 +260,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
                 DkmLanguage.Create("Python", new DkmCompilerId(Guids.MicrosoftVendorGuid, Guids.PythonLanguageGuid)), null);
             DkmEvaluationResult pythonView;
             try {
-                pythonView = exprEval.CreatePyObjectEvaluationResult(pythonContext, stackFrame, null, pyEvalResult, cppEval, cppTypeName, isPythonView: true);
+                pythonView = exprEval.CreatePyObjectEvaluationResult(pythonContext, stackFrame, null, pyEvalResult, cppEval, cppTypeName, hasCppView: true);
             } catch {
                 return null;
             }

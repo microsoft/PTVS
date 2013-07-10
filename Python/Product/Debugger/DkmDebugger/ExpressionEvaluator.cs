@@ -32,13 +32,6 @@ using Microsoft.VisualStudio.Debugger.Evaluation;
 
 namespace Microsoft.PythonTools.DkmDebugger {
     internal class ExpressionEvaluator : DkmDataItem {
-        // Layout of this struct must always remain in sync with DebuggerHelper/trace.cpp.
-        [StructLayout(LayoutKind.Sequential, Pack = 8)]
-        private struct ObjectToRelease {
-            public ulong pyObject;
-            public ulong next;
-        }
-
         // Value of this constant must always remain in sync with DebuggerHelper/trace.cpp.
         private const int ExpressionEvaluationBufferSize = 0x1000;
 
@@ -46,7 +39,6 @@ namespace Microsoft.PythonTools.DkmDebugger {
         private const int ExpressionEvaluationTimeout = 3000; // ms
 
         private readonly DkmProcess _process;
-        private readonly UInt64Proxy _objectsToRelease;
         private readonly UInt64Proxy _evalLoopThreadId, _evalLoopFrame, _evalLoopResult, _evalLoopExcType, _evalLoopExcValue, _evalLoopExcStr;
         private readonly UInt32Proxy _evalLoopSEHCode;
         private readonly CStringProxy _evalLoopInput;
@@ -55,7 +47,6 @@ namespace Microsoft.PythonTools.DkmDebugger {
             _process = process;
             var pyrtInfo = process.GetPythonRuntimeInfo();
 
-            _objectsToRelease = pyrtInfo.DLLs.DebuggerHelper.GetExportedStaticVariable<UInt64Proxy>("objectsToRelease");
             _evalLoopThreadId = pyrtInfo.DLLs.DebuggerHelper.GetExportedStaticVariable<UInt64Proxy>("evalLoopThreadId");
             _evalLoopFrame = pyrtInfo.DLLs.DebuggerHelper.GetExportedStaticVariable<UInt64Proxy>("evalLoopFrame");
             _evalLoopResult = pyrtInfo.DLLs.DebuggerHelper.GetExportedStaticVariable<UInt64Proxy>("evalLoopResult");
@@ -84,24 +75,48 @@ namespace Microsoft.PythonTools.DkmDebugger {
         /// Data item attached to a <see cref="DkmEvaluationResult"/> that represents a Python object (a variable, field of another object, collection item etc).
         /// </summary>
         private class PyObjectEvaluationResult : DkmDataItem, IPythonEvaluationResult {
-            public string FullName { get; set; }
+            public PyObjectEvaluationResult(DkmProcess process, string fullName, IValueStore<PyObject> valueStore, string cppTypeName, bool hasCppView, bool isOwned) {
+                Process = process;
+                FullName = fullName;
+                ValueStore = valueStore;
+                CppTypeName = cppTypeName;
+                HasCppView = hasCppView;
+                IsOwned = isOwned;
+            }
 
-            public IValueStore<PyObject> ValueStore { get; set; }
+            public DkmProcess Process { get; private set; }
+
+            public string FullName { get; private set; }
+
+            public IValueStore<PyObject> ValueStore { get; private set; }
 
             /// <summary>
-            /// Does this object represent a [Python view] node?
+            /// Should this object show a child [C++ view] node?
             /// </summary>
-            public bool IsPythonView { get; set; }
+            public bool HasCppView { get; private set; }
 
             /// <summary>
             /// Name of the C++ struct type corresponding to this object value.
             /// </summary>
-            public string CppTypeName { get; set; }
+            public string CppTypeName { get; private set; }
 
             /// <summary>
             /// Name of the native module containing <see cref="CppTypeName"/>.
             /// </summary>
-            public string CppTypeModuleName { get; set; }
+            public string CppTypeModuleName { get; private set; }
+
+            /// <summary>
+            /// Whether this object needs to be decref'd once the evaluation result goes away. 
+            /// </summary>
+            public bool IsOwned { get; private set; } 
+
+            protected override void OnClose() {
+                base.OnClose();
+                if (IsOwned) {
+                    var obj = ValueStore.Read();
+                    Process.GetDataItem<PyObjectAllocator>().QueueForDecRef(obj);
+                }
+            }
 
             public List<DkmEvaluationResult> GetChildren(ExpressionEvaluator exprEval, DkmEvaluationResult result, DkmInspectionContext inspectionContext) {
                 var stackFrame = result.StackFrame;
@@ -111,7 +126,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
                 var reprOptions = new ReprOptions(inspectionContext);
                 var reprBuilder = new ReprBuilder(reprOptions);
 
-                if (DebuggerOptions.ShowCppViewNodes && !IsPythonView) {
+                if (DebuggerOptions.ShowCppViewNodes && !HasCppView) {
                     if (CppTypeName == null) {
                         // Try to guess the object's C++ type by looking at function pointers in its PyTypeObject. If they are pointing
                         // into a module for which symbols are available, C++ EE should be able to resolve them into something like
@@ -273,7 +288,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
         /// C++ struct name corresponding to this object type, for use by [C++ view] node. If not specified, it will be inferred from values of 
         /// various function pointers in <c>ob_type</c>, if possible. <c>PyObject</c> is the ultimate fallback.
         /// </param>
-        public DkmEvaluationResult CreatePyObjectEvaluationResult(DkmInspectionContext inspectionContext, DkmStackWalkFrame stackFrame, string parentName, PythonEvaluationResult pyEvalResult, CppExpressionEvaluator cppEval, string cppTypeName = null, bool isPythonView = false) {
+        public DkmEvaluationResult CreatePyObjectEvaluationResult(DkmInspectionContext inspectionContext, DkmStackWalkFrame stackFrame, string parentName, PythonEvaluationResult pyEvalResult, CppExpressionEvaluator cppEval, string cppTypeName = null, bool hasCppView = false, bool isOwned = false) {
             var name = pyEvalResult.Name;
             var valueStore = pyEvalResult.ValueStore as IValueStore<PyObject>;
             if (valueStore == null) {
@@ -314,12 +329,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
                 fullName = parentName + fullName;
             }
 
-            var pyObjEvalResult = new PyObjectEvaluationResult {
-                FullName = fullName,
-                ValueStore = valueStore,
-                CppTypeName = cppTypeName,
-                IsPythonView = isPythonView
-            };
+            var pyObjEvalResult = new PyObjectEvaluationResult(stackFrame.Process, fullName, valueStore, cppTypeName, hasCppView, isOwned);
             return DkmSuccessEvaluationResult.Create(
                 inspectionContext, stackFrame, name, fullName, flags, repr, null, typeName, pyEvalResult.Category,
                 pyEvalResult.AccessType, pyEvalResult.StorageType, pyEvalResult.TypeModifierFlags, null, null, null,
@@ -690,7 +700,8 @@ namespace Microsoft.PythonTools.DkmDebugger {
             if (obj != null) {
                 var cppEval = new CppExpressionEvaluator(inspectionContext, stackFrame);
                 var pyEvalResult =  new PythonEvaluationResult(obj, expression.Text) { Flags = DkmEvaluationResultFlags.SideEffect };
-                var evalResult = CreatePyObjectEvaluationResult(inspectionContext, stackFrame, null, pyEvalResult, cppEval);
+                var evalResult = CreatePyObjectEvaluationResult(inspectionContext, stackFrame, null, pyEvalResult, cppEval, null, hasCppView: true, isOwned: true);
+                _evalLoopResult.Write(0); // don't let the eval loop decref the object - we will do it ourselves later, when eval result is closed
                 completionRoutine(new DkmEvaluateExpressionAsyncResult(evalResult));
             } else if (sehCode != 0) {
                 string errorText = string.Format("Structured exception {0:x08} ", sehCode);
@@ -877,17 +888,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
                     // We can't free the original value without running some code in the process, and it may be holding heap locks.
                     // So don't decrement refcount now, but instead add it to the list of objects for TraceFunc to GC when it gets
                     // a chance to run next time.
-
-                    byte[] buf = new byte[sizeof(ObjectToRelease)];
-                    fixed (byte* p = buf) {
-                        var otr = (ObjectToRelease*)p;
-                        otr->pyObject = oldObj.Address;
-                        otr->next = _objectsToRelease.Read();
-                    }
-
-                    ulong otrPtr = _process.AllocateVirtualMemory(0, sizeof(ObjectToRelease), NativeMethods.MEM_COMMIT | NativeMethods.MEM_RESERVE, NativeMethods.PAGE_READWRITE);
-                    _process.WriteMemory(otrPtr, buf);
-                    _objectsToRelease.Write(otrPtr);
+                    _process.GetDataItem<PyObjectAllocator>().QueueForDecRef(oldObj);
                 }
 
                 newObj.ob_refcnt.Increment();

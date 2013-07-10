@@ -12,23 +12,30 @@
  *
  * ***************************************************************************/
 
-using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Runtime.InteropServices;
 using Microsoft.PythonTools.DkmDebugger.Proxies;
 using Microsoft.PythonTools.DkmDebugger.Proxies.Structs;
 using Microsoft.VisualStudio.Debugger;
 
 namespace Microsoft.PythonTools.DkmDebugger {
     internal class PyObjectAllocator : DkmDataItem {
+        // Layout of this struct must always remain in sync with DebuggerHelper/trace.cpp.
+        [StructLayout(LayoutKind.Sequential, Pack = 8)]
+        private struct ObjectToRelease {
+            public ulong pyObject;
+            public ulong next;
+        }
+
         private readonly DkmProcess _process;
         private readonly List<ulong> _blocks = new List<ulong>();
+        private readonly UInt64Proxy _objectsToRelease;
 
         public PyObjectAllocator(DkmProcess process) {
             _process = process;
+            var pyrtInfo = process.GetPythonRuntimeInfo();
+
+            _objectsToRelease = pyrtInfo.DLLs.DebuggerHelper.GetExportedStaticVariable<UInt64Proxy>("objectsToRelease");
         }
 
         private ulong Allocate(long size) {
@@ -48,6 +55,19 @@ namespace Microsoft.PythonTools.DkmDebugger {
             obj.ob_type.Write(pyType);
 
             return obj;
+        }
+
+        public unsafe void QueueForDecRef(PyObject obj) {
+            byte[] buf = new byte[sizeof(ObjectToRelease)];
+            fixed (byte* p = buf) {
+                var otr = (ObjectToRelease*)p;
+                otr->pyObject = obj.Address;
+                otr->next = _objectsToRelease.Read();
+            }
+
+            ulong otrPtr = _process.AllocateVirtualMemory(0, sizeof(ObjectToRelease), NativeMethods.MEM_COMMIT | NativeMethods.MEM_RESERVE, NativeMethods.PAGE_READWRITE);
+            _process.WriteMemory(otrPtr, buf);
+            _objectsToRelease.Write(otrPtr);
         }
 
         private void GC() {
