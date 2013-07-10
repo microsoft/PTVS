@@ -88,7 +88,7 @@ namespace Microsoft.PythonTools.Debugger.Remote {
         public int GetDescription(enum_PORT_SUPPLIER_DESCRIPTION_FLAGS[] pdwFlags, out string pbstrText) {
             pbstrText =
                 "Allows debugging a Python process on a remote machine running any OS, if it can be connected to via TCP, " +
-                "and the process has enabled remote debugging by importing 'ptvsd' module and invoking 'ptvsd.enable_attach()'. " +
+                "and remote debugging has been enabled by using the 'ptvsd' module. " +
                 "Specify the secret, hostname and port to connect to in the 'Qualifier' textbox, e.g. 'secret@localhost:5678'. ";
             if (!_useSsl) {
                 pbstrText += "This transport is not secure, and should not be used on a network that might have hostile traffic.";
