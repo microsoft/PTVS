@@ -276,12 +276,12 @@ sub_package";
         }
 
         private static void AddSmartTagTest(string filename, int line, int column, string[] expectedActions, int invokeAction = -1, string expectedText = null) {
-            var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\AddImport.sln");
+            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            var project = app.OpenAndFindProject(@"TestData\AddImport.sln");
             var item = project.ProjectItems.Item(filename);
             var window = item.Open();
             window.Activate();
 
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
             var doc = app.GetDocument(item.Document.FullName);
 
             doc.Invoke(() => {

@@ -758,10 +758,10 @@ namespace DebuggerTests {
             var debugger = new PythonDebugger();
             string fn = Path.Combine(cwd, "StepBreakBreak.py");
             var process = DebugProcess(debugger, fn, (newproc, newthread) => {
-                PythonBreakpoint breakPoint = AddBreakPoint(newproc, 2, fn);
+                PythonBreakpoint breakPoint = newproc.AddBreakPointByFileExtension(2, fn);
                 breakPoint.Add();
 
-                breakPoint = AddBreakPoint(newproc, 3, fn);
+                breakPoint = newproc.AddBreakPointByFileExtension(3, fn);
                 breakPoint.Add();
             }, cwd: cwd);
 

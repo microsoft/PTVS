@@ -47,6 +47,7 @@
   <ItemGroup>
     <Compile Include="BaseDebuggerTests.cs" />
     <Compile Include="DebuggerTests.cs" />
+    <Compile Include="DebugExtensions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

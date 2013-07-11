@@ -2308,7 +2308,8 @@ $cls
             try {
                 interactive = Prepare();
                 using (new DefaultInterpreterSetter(interactive.TextView.GetAnalyzer().InterpreterFactory)) {
-                    var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\InteractiveFile.sln");
+                    var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+                    var project = app.OpenAndFindProject(@"TestData\InteractiveFile.sln");
 
                     VsIdeTestHostContext.Dte.ExecuteCommand("Debug.ExecuteFileinPythonInteractive");
                     Assert.AreNotEqual(null, interactive);
@@ -2326,7 +2327,8 @@ $cls
         public void ExecuteInReplSysArgv() {
             var interactive = Prepare();
             using (new DefaultInterpreterSetter(interactive.TextView.GetAnalyzer().InterpreterFactory)) {
-                var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\SysArgvRepl.sln");
+                var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+                var project = app.OpenAndFindProject(@"TestData\SysArgvRepl.sln");
 
                 VsIdeTestHostContext.Dte.ExecuteCommand("Debug.ExecuteFileinPythonInteractive");
                 Assert.AreNotEqual(null, interactive);
@@ -2340,7 +2342,8 @@ $cls
         public void ExecuteInReplSysArgvScriptArgs() {
             var interactive = Prepare();
             using (new DefaultInterpreterSetter(interactive.TextView.GetAnalyzer().InterpreterFactory)) {
-                var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\SysArgvScriptArgsRepl.sln");
+                var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+                var project = app.OpenAndFindProject(@"TestData\SysArgvScriptArgsRepl.sln");
 
                 VsIdeTestHostContext.Dte.ExecuteCommand("Debug.ExecuteFileinPythonInteractive");
                 Assert.AreNotEqual(null, interactive);
@@ -2362,7 +2365,8 @@ $cls
             try {
                 interactive = Prepare();
                 using (new DefaultInterpreterSetter(interactive.TextView.GetAnalyzer().InterpreterFactory)) {
-                    var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\SysArgvRepl.sln");
+                    var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+                    var project = app.OpenAndFindProject(@"TestData\SysArgvRepl.sln");
 
                     VsIdeTestHostContext.Dte.ExecuteCommand("Debug.ExecuteFileinPythonInteractive");
                     Assert.AreNotEqual(null, interactive);
@@ -2388,7 +2392,8 @@ $cls
             try {
                 interactive = Prepare();
                 using (new DefaultInterpreterSetter(interactive.TextView.GetAnalyzer().InterpreterFactory)) {
-                    var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\SysArgvScriptArgsRepl.sln");
+                    var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+                    var project = app.OpenAndFindProject(@"TestData\SysArgvScriptArgsRepl.sln");
 
                     VsIdeTestHostContext.Dte.ExecuteCommand("Debug.ExecuteFileinPythonInteractive");
                     Assert.AreNotEqual(null, interactive);
@@ -2406,7 +2411,8 @@ $cls
         public void ExecuteInReplUnicodeFilename() {
             var interactive = Prepare();
             using (new DefaultInterpreterSetter(interactive.TextView.GetAnalyzer().InterpreterFactory)) {
-                var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\UnicodePathä.sln");
+                var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+                var project = app.OpenAndFindProject(@"TestData\UnicodePathä.sln");
 
                 VsIdeTestHostContext.Dte.ExecuteCommand("Debug.ExecuteFileinPythonInteractive");
                 Assert.AreNotEqual(null, interactive);
@@ -2419,7 +2425,7 @@ $cls
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void AttachReplTest() {
             var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte);
-            var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\DebuggerProject.sln");
+            var project = app.OpenAndFindProject(@"TestData\DebuggerProject.sln");
             PythonToolsPackage.Instance.AdvancedEditorOptionsPage.AddNewLineAtEndOfFullyTypedWord = true;
             GetInteractiveOptions().EnableAttach = true;
             try {
@@ -2857,7 +2863,8 @@ def g(): pass
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ExecuteProjectUnicodeFile() {
             var interactive = Prepare();
-            var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\UnicodeRepl.sln");
+            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            var project = app.OpenAndFindProject(@"TestData\UnicodeRepl.sln");
 
             VsIdeTestHostContext.Dte.ExecuteCommand("Debug.ExecuteFileinPythonInteractive");
             Assert.AreNotEqual(null, interactive);

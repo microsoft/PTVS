@@ -1799,7 +1799,8 @@ namespace DjangoUITests {
         }
 
         private static EditorWindow OpenDjangoProjectItem(string startItem, out Window window, string projectName = @"TestData\DjangoEditProject.sln", bool wait = false) {
-            var project = DebuggerUITests.DebugProject.OpenProject(projectName, startItem);
+            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            var project = app.OpenAndFindProject(projectName, startItem);
             var pyProj = project.GetPythonProject();
 
             EnvDTE.ProjectItem item = null;
@@ -1816,7 +1817,6 @@ namespace DjangoUITests {
 
             Assert.IsNotNull(item);
 
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
             window = item.Open();
             window.Activate();
             var doc = app.GetDocument(item.Document.FullName);

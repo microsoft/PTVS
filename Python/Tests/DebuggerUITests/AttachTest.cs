@@ -23,6 +23,8 @@ using Microsoft.PythonTools.Interpreter;
 using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
+using TestUtilities.UI;
+using TestUtilities.UI.Python;
 using Path = System.IO.Path;
 using SD = System.Diagnostics;
 
@@ -254,7 +256,8 @@ namespace DebuggerUITests {
 
         #region Helper methods
         private static SD.Process OpenSolutionAndLaunchFile(string debugSolution, string startFile, string interpreterArgs, string programArgs) {
-            var project = DebugProject.OpenProject(debugSolution, startFile);
+            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            var project = app.OpenAndFindProject(debugSolution, startFile);
             return LaunchFileFromProject(project, startFile, interpreterArgs, programArgs);
         }
 

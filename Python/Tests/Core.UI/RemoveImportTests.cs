@@ -332,12 +332,12 @@ def f():
         }
 
         private static void RemoveSmartTagTest(string filename, int line, int column, bool allScopes, string expectedText) {
-            var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\RemoveImport.sln");
+            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            var project = app.OpenAndFindProject(@"TestData\RemoveImport.sln");
             var item = project.ProjectItems.Item(filename);
             var window = item.Open();
             window.Activate();
 
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
             var doc = app.GetDocument(item.Document.FullName);
 
             doc.Invoke(() => {

@@ -72,7 +72,7 @@ namespace DebuggerTests {
                             breakPoint = newproc.AddBreakPoint(finalBreakFilename, line, conditions[i]);
                         }
                     } else {
-                        breakPoint = AddBreakPoint(newproc, line, finalBreakFilename);
+                        breakPoint = newproc.AddBreakPointByFileExtension(line, finalBreakFilename);
                     }
 
                     breakPoint.Add();
@@ -138,44 +138,8 @@ namespace DebuggerTests {
             }
         }
 
-        internal static PythonBreakpoint AddBreakPoint(PythonProcess newproc, int line, string finalBreakFilename) {
-            PythonBreakpoint breakPoint;
-            var ext = Path.GetExtension(finalBreakFilename);
-
-            if (String.Equals(ext, ".html", StringComparison.OrdinalIgnoreCase) ||
-                String.Equals(ext, ".htm", StringComparison.OrdinalIgnoreCase) ||
-                String.Equals(ext, ".djt", StringComparison.OrdinalIgnoreCase)) {
-                breakPoint = newproc.AddDjangoBreakPoint(finalBreakFilename, line);
-            } else {
-                breakPoint = newproc.AddBreakPoint(finalBreakFilename, line);
-            }
-            return breakPoint;
-        }
-
         internal PythonProcess DebugProcess(PythonDebugger debugger, string filename, Action<PythonProcess, PythonThread> onLoaded = null, string interpreterOptions = null, PythonDebugOptions debugOptions = PythonDebugOptions.RedirectOutput, string cwd = null, string arguments = "") {
-            return DebugProcess(debugger, Version, filename, onLoaded, interpreterOptions, debugOptions, cwd, arguments);
-        }
-
-        internal static PythonProcess DebugProcess(PythonDebugger debugger, PythonVersion version, string filename, Action<PythonProcess, PythonThread> onLoaded = null, string interpreterOptions = null, PythonDebugOptions debugOptions = PythonDebugOptions.RedirectOutput, string cwd = null, string arguments = "") {
-            string fullPath = Path.GetFullPath(filename);
-            string dir = cwd ?? Path.GetFullPath(Path.GetDirectoryName(filename));
-            if (!String.IsNullOrEmpty(arguments)) {
-                arguments = "\"" + fullPath + "\" " + arguments;
-            } else {
-                arguments = "\"" + fullPath + "\"";
-            }
-            var process = debugger.CreateProcess(version.Version, version.Path, arguments, dir, "", interpreterOptions, debugOptions);
-            process.DebuggerOutput += (sender, args) => {
-                Console.WriteLine("{0}: {1}", args.Thread.Id, args.Output);
-            };
-            process.ProcessLoaded += (sender, args) => {
-                if (onLoaded != null) {
-                    onLoaded(process, args.Thread);
-                }
-                process.Resume();
-            };
-
-            return process;
+            return debugger.DebugProcess(Version, filename, onLoaded, interpreterOptions, debugOptions, cwd, arguments);
         }
 
         internal void LocalsTest(string filename, int lineNo, string[] paramNames, string[] localsNames, string breakFilename = null, string arguments = "", Action processLoaded = null, PythonDebugOptions debugOptions = PythonDebugOptions.RedirectOutput, bool waitForExit = true) {
@@ -212,7 +176,7 @@ namespace DebuggerTests {
             var debugger = new PythonDebugger();
             thread = null;
             PythonProcess process = DebugProcess(debugger, DebuggerTestPath + filename, (newproc, newthread) => {
-                var breakPoint = AddBreakPoint(newproc, lineNo, breakFilename ?? filename);
+                var breakPoint = newproc.AddBreakPointByFileExtension(lineNo, breakFilename ?? filename);
                 breakPoint.Add();
                 thread = newthread;
                 if (processLoaded != null) {
@@ -291,7 +255,7 @@ namespace DebuggerTests {
             bool processLoad = false, stepComplete = false;
             process.ProcessLoaded += (sender, args) => {
                 foreach (var breakLine in breakLines) {
-                    var bp = AddBreakPoint(process, breakLine, breakFile);
+                    var bp = process.AddBreakPointByFileExtension(breakLine, breakFile);
                     bp.Add();
                 }
 

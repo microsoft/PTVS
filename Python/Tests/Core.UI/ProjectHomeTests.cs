@@ -222,7 +222,8 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void SaveProjectAs() {
             try {
-                var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\HelloWorld.sln");
+                var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+                var project = app.OpenAndFindProject(@"TestData\HelloWorld.sln");
 
                 project.SaveAs(TestData.GetPath(@"TestData\ProjectHomeProjects\TempFile.pyproj"));
 
@@ -236,7 +237,8 @@ namespace PythonToolsUITests {
                 GC.WaitForPendingFinalizers();
             }
             try {
-                var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\HelloWorldRelocated.sln");
+                var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+                var project = app.OpenAndFindProject(@"TestData\HelloWorldRelocated.sln");
 
                 Assert.AreEqual("TempFile.pyproj", project.FileName);
 
@@ -252,9 +254,9 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void DragDropTest() {
-            DebuggerUITests.DebugProject.OpenProject(@"TestData\DragDropRelocatedTest.sln");
-
             var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            app.OpenAndFindProject(@"TestData\DragDropRelocatedTest.sln");
+
             app.OpenSolutionExplorer();
             var window = app.SolutionExplorerTreeView;
 
@@ -273,7 +275,7 @@ namespace PythonToolsUITests {
             app.Dte.Solution.Close(true);
             try {
                 // Ensure file was moved and the path was updated correctly.
-                var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\DragDropRelocatedTest.sln");
+                var project = app.OpenAndFindProject(@"TestData\DragDropRelocatedTest.sln");
                 foreach (var item in project.ProjectItems.OfType<OAFileItem>()) {
                     Assert.IsTrue(File.Exists((string)item.Properties.Item("FullPath").Value), (string)item.Properties.Item("FullPath").Value);
                 }
@@ -287,9 +289,9 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CutPasteTest() {
-            DebuggerUITests.DebugProject.OpenProject(@"TestData\CutPasteRelocatedTest.sln");
-
             var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            app.OpenAndFindProject(@"TestData\CutPasteRelocatedTest.sln");
+
             app.OpenSolutionExplorer();
             var window = app.SolutionExplorerTreeView;
 
@@ -306,7 +308,7 @@ namespace PythonToolsUITests {
             app.Dte.Solution.Close(true);
             try {
                 // Ensure file was moved and the path was updated correctly.
-                var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\CutPasteRelocatedTest.sln");
+                var project = app.OpenAndFindProject(@"TestData\CutPasteRelocatedTest.sln");
                 foreach (var item in project.ProjectItems.OfType<OAFileItem>()) {
                     Assert.IsTrue(File.Exists((string)item.Properties.Item("FullPath").Value), (string)item.Properties.Item("FullPath").Value);
                 }

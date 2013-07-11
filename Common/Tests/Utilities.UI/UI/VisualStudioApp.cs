@@ -506,5 +506,55 @@ namespace TestUtilities.UI {
             Assert.AreEqual(VsIdeTestHostContext.Dte.Debugger.CurrentMode, mode);
         }
 
+        public Project OpenAndFindProject(string projName, string startItem = null, int expectedProjects = 1, string projectName = null, bool setStartupItem = true) {
+            string fullPath = TestData.GetPath(projName);
+            Assert.IsTrue(File.Exists(fullPath), "Cannot find " + fullPath);
+            Dte.Solution.Open(fullPath);
+
+            Assert.IsTrue(Dte.Solution.IsOpen, "The solution is not open");
+
+            int count = Dte.Solution.Projects.Count;
+            if (expectedProjects != count) {
+                // if we have other files open we can end up with a bonus project...
+                int i = 0;
+                foreach (EnvDTE.Project proj in Dte.Solution.Projects) {
+                    if (proj.Name != "Miscellaneous Files") {
+                        i++;
+                    }
+                }
+
+                Assert.IsTrue(i == expectedProjects, String.Format("Loading project resulted in wrong number of loaded projects, expected 1, received {0}", Dte.Solution.Projects.Count));
+            }
+
+            var iter = Dte.Solution.Projects.GetEnumerator();
+            iter.MoveNext();
+
+            Project project = (Project)iter.Current;
+            if (projectName != null) {
+                while (project.Name != projectName) {
+                    if (!iter.MoveNext()) {
+                        Assert.Fail("Failed to find project named " + projectName);
+                    }
+                    project = (Project)iter.Current;
+                }
+            }
+
+            if (startItem != null && setStartupItem) {
+                project.SetStartupFile(startItem);
+            }
+
+            DeleteAllBreakPoints();
+
+            return project;
+        }
+
+        public void DeleteAllBreakPoints() {
+            var debug3 = (EnvDTE90.Debugger3)Dte.Debugger;
+            if (debug3.Breakpoints != null) {
+                foreach (var bp in debug3.Breakpoints) {
+                    ((EnvDTE90a.Breakpoint3)bp).Delete();
+                }
+            }
+        }
     }
 }

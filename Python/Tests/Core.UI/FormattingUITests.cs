@@ -119,12 +119,12 @@ z=3", new Span[0]);
         /// <param name="expectedText">The expected source code after the formatting</param>
         /// <param name="changedSpans">The spans which should be marked as changed in the buffer after formatting</param>
         private static void FormattingTest(string filename, Span? selection, string expectedText, Span[] changedSpans) {
-            var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\FormattingTests\FormattingTests.sln");
+            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            var project = app.OpenAndFindProject(@"TestData\FormattingTests\FormattingTests.sln");
             var item = project.ProjectItems.Item(filename);
             var window = item.Open();
             window.Activate();
             try {
-                var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
                 var doc = app.GetDocument(item.Document.FullName);
 
                 var aggFact = app.ComponentModel.GetService<IViewTagAggregatorFactoryService>();

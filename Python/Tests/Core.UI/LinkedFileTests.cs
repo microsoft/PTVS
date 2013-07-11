@@ -42,9 +42,9 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void RenameLinkedNode() {
-            var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\LinkedFiles.sln");
-
             var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            var project = app.OpenAndFindProject(@"TestData\LinkedFiles.sln");
+
             app.OpenSolutionExplorer();
             var window = app.SolutionExplorerTreeView;
 
@@ -93,9 +93,9 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void MoveLinkedNode() {
-            var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\LinkedFiles.sln");
-
             var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            var project = app.OpenAndFindProject(@"TestData\LinkedFiles.sln");
+
             app.OpenSolutionExplorer();
             var window = app.SolutionExplorerTreeView;
 
@@ -145,9 +145,9 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void MoveLinkedNodeOpen() {
-            var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\LinkedFiles.sln");
-
             var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            var project = app.OpenAndFindProject(@"TestData\LinkedFiles.sln");
+
             app.OpenSolutionExplorer();
             var window = app.SolutionExplorerTreeView;
 
@@ -179,9 +179,9 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void MoveLinkedNodeOpenEdited() {
-            var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\LinkedFiles.sln");
-
             var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            var project = app.OpenAndFindProject(@"TestData\LinkedFiles.sln");
+
             app.OpenSolutionExplorer();
             var window = app.SolutionExplorerTreeView;
 
@@ -222,9 +222,9 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void MoveLinkedNodeFileExistsButNotInProject() {
-            var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\LinkedFiles.sln");
-
             var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            var project = app.OpenAndFindProject(@"TestData\LinkedFiles.sln");
+
             app.OpenSolutionExplorer();
             var window = app.SolutionExplorerTreeView;
 
@@ -251,9 +251,9 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void DeleteLinkedNode() {
-            var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\LinkedFiles.sln");
-
             var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            var project = app.OpenAndFindProject(@"TestData\LinkedFiles.sln");
+
             app.OpenSolutionExplorer();
             var window = app.SolutionExplorerTreeView;
 
@@ -271,9 +271,9 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void LinkedFileInProjectIgnored() {
-            var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\LinkedFiles.sln");
-
             var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            var project = app.OpenAndFindProject(@"TestData\LinkedFiles.sln");
+
             app.OpenSolutionExplorer();
             var window = app.SolutionExplorerTreeView;
 
@@ -285,9 +285,9 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void SaveAsCreateLink() {
-            var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\LinkedFiles.sln");
-
             var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            var project = app.OpenAndFindProject(@"TestData\LinkedFiles.sln");
+
             app.OpenSolutionExplorer();
 
             var autoItem = project.ProjectItems.Item("SaveAsCreateLink.py");
@@ -307,9 +307,9 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void SaveAsCreateFile() {
-            var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\LinkedFiles.sln");
-
             var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            var project = app.OpenAndFindProject(@"TestData\LinkedFiles.sln");
+
             app.OpenSolutionExplorer();
 
             var autoItem = project.ProjectItems.Item("SaveAsCreateFile.py");
@@ -328,9 +328,9 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void SaveAsCreateFileNewDirectory() {
-            var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\LinkedFiles.sln");
-
             var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            var project = app.OpenAndFindProject(@"TestData\LinkedFiles.sln");
+
             app.OpenSolutionExplorer();
 
             var autoItem = project.ProjectItems.Item("SaveAsCreateFileNewDirectory.py");
@@ -354,9 +354,9 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void AddExistingItem() {
-            var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\LinkedFiles.sln");
-
             var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            var project = app.OpenAndFindProject(@"TestData\LinkedFiles.sln");
+
             app.OpenSolutionExplorer();
             var window = app.SolutionExplorerTreeView;
 
@@ -384,9 +384,9 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void AddExistingItemAndItemIsAlreadyLinked() {
-            var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\LinkedFiles.sln");
-
             var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            var project = app.OpenAndFindProject(@"TestData\LinkedFiles.sln");
+
             app.OpenSolutionExplorer();
             var window = app.SolutionExplorerTreeView;
 
@@ -416,9 +416,9 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void AddExistingItemAndLinkAlreadyExists() {
-            var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\LinkedFiles.sln");
-
             var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            var project = app.OpenAndFindProject(@"TestData\LinkedFiles.sln");
+
             app.OpenSolutionExplorer();
             var window = app.SolutionExplorerTreeView;
 
@@ -443,9 +443,9 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void AddExistingItemAndFileByNameExistsOnDiskButNotInProject() {
-            var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\LinkedFiles.sln");
-
             var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            var project = app.OpenAndFindProject(@"TestData\LinkedFiles.sln");
+
             app.OpenSolutionExplorer();
             var window = app.SolutionExplorerTreeView;
 
@@ -471,9 +471,9 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void AddExistingItemAndFileByNameExistsOnDiskAndInProject() {
-            var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\LinkedFiles.sln");
-
             var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            var project = app.OpenAndFindProject(@"TestData\LinkedFiles.sln");
+
             app.OpenSolutionExplorer();
             var window = app.SolutionExplorerTreeView;
 
@@ -499,9 +499,9 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void AddExistingItemAndFileByNameExistsInProjectButNotOnDisk() {
-            var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\LinkedFiles.sln");
-
             var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            var project = app.OpenAndFindProject(@"TestData\LinkedFiles.sln");
+
             app.OpenSolutionExplorer();
             var window = app.SolutionExplorerTreeView;
 
@@ -528,9 +528,9 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void AddExistingItemAsLinkButFileExistsInProjectDirectory() {
-            var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\LinkedFiles.sln");
-
             var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            var project = app.OpenAndFindProject(@"TestData\LinkedFiles.sln");
+
             app.OpenSolutionExplorer();
             var window = app.SolutionExplorerTreeView;
 
@@ -555,9 +555,9 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void RenamedLinkedFile() {
-            var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\LinkedFiles.sln");
-
             var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            var project = app.OpenAndFindProject(@"TestData\LinkedFiles.sln");
+
             app.OpenSolutionExplorer();
             var window = app.SolutionExplorerTreeView;
 
@@ -574,9 +574,9 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void BadLinkPath() {
-            var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\LinkedFiles.sln");
-
             var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            var project = app.OpenAndFindProject(@"TestData\LinkedFiles.sln");
+
             app.OpenSolutionExplorer();
             var window = app.SolutionExplorerTreeView;
 
@@ -593,9 +593,9 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void RootedLinkIgnored() {
-            var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\LinkedFiles.sln");
-
             var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            var project = app.OpenAndFindProject(@"TestData\LinkedFiles.sln");
+
             app.OpenSolutionExplorer();
             var window = app.SolutionExplorerTreeView;
 
@@ -609,9 +609,9 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void RootedIncludeIgnored() {
-            var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\LinkedFiles.sln");
-
             var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            var project = app.OpenAndFindProject(@"TestData\LinkedFiles.sln");
+
             app.OpenSolutionExplorer();
             var window = app.SolutionExplorerTreeView;
 

@@ -89,7 +89,7 @@ namespace PythonToolsTests {
         [TestMethod, Priority(0)]
         public void ErrorInInput() {
             Attach("DebugReplTest2.py", 13);
-            
+
             Assert.AreEqual("", ExecuteText("print(does_not_exist)", false));
             Assert.AreEqual(@"Traceback (most recent call last):
   File ""<debug input>"", line 1, in <module>
@@ -190,7 +190,7 @@ NameError: name 'does_not_exist' is not defined
         public void ChangeProcess() {
             Attach("DebugReplTest4A.py", 3);
             Attach("DebugReplTest4B.py", 3);
-            
+
             PythonProcess proc1 = _processes[0];
             PythonProcess proc2 = _processes[1];
 
@@ -226,15 +226,14 @@ NameError: name 'does_not_exist' is not defined
         }
 
         [TestMethod, Priority(0)]
-        public void StepInto()
-        {
+        public void StepInto() {
             // Make sure that we don't step into the internal repl code
             // http://pytools.codeplex.com/workitem/777
             Attach("DebugReplTest6.py", 1);
 
             var thread = _processes[0].GetThreads()[0];
             thread.StepInto();
-            
+
             // Result of step into is not immediate
             Thread.Sleep(1000);
 
@@ -243,8 +242,7 @@ NameError: name 'does_not_exist' is not defined
             Assert.AreEqual("<module>", thread.Frames[0].FunctionName);
         }
 
-        private string ExecuteCommand(IReplCommand cmd, string args)
-        {
+        private string ExecuteCommand(IReplCommand cmd, string args) {
             _window.ClearScreen();
             var execute = cmd.Execute(_window, args);
             execute.Wait();
@@ -266,8 +264,8 @@ NameError: name 'does_not_exist' is not defined
 
         private void Attach(string filename, int lineNo) {
             var debugger = new PythonDebugger();
-            PythonProcess process = BaseDebuggerTests.DebugProcess(debugger, Version, DebuggerTestPath + filename, (newproc, newthread) => {
-                var breakPoint = BaseDebuggerTests.AddBreakPoint(newproc, lineNo, filename);
+            PythonProcess process = debugger.DebugProcess(Version, DebuggerTestPath + filename, (newproc, newthread) => {
+                var breakPoint = newproc.AddBreakPointByFileExtension(lineNo, filename);
                 breakPoint.Add();
                 _evaluator.AttachProcess(newproc);
             },
@@ -289,7 +287,7 @@ NameError: name 'does_not_exist' is not defined
                     Assert.Inconclusive("Required Python interpreter is not installed");
                 } else
 #endif
-                {
+ {
                     Assert.Fail("Process start failed:\r\n" + ex.ToString());
                 }
             }
@@ -322,7 +320,7 @@ NameError: name 'does_not_exist' is not defined
         public static new void DoDeployment(TestContext context) {
             TestData.Deploy();
         }
-        
+
         internal override PythonVersion Version {
             get {
                 return PythonPaths.Python31;
@@ -336,7 +334,7 @@ NameError: name 'does_not_exist' is not defined
         public static new void DoDeployment(TestContext context) {
             TestData.Deploy();
         }
-        
+
         internal override PythonVersion Version {
             get {
                 return PythonPaths.Python32;
@@ -350,7 +348,7 @@ NameError: name 'does_not_exist' is not defined
         public static new void DoDeployment(TestContext context) {
             TestData.Deploy();
         }
-        
+
         internal override PythonVersion Version {
             get {
                 return PythonPaths.Python27;
@@ -364,7 +362,7 @@ NameError: name 'does_not_exist' is not defined
         public static new void DoDeployment(TestContext context) {
             TestData.Deploy();
         }
-        
+
         internal override PythonVersion Version {
             get {
                 return PythonPaths.Python25;
@@ -378,7 +376,7 @@ NameError: name 'does_not_exist' is not defined
         public static new void DoDeployment(TestContext context) {
             TestData.Deploy();
         }
-        
+
         internal override PythonVersion Version {
             get {
                 return PythonPaths.IronPython27;

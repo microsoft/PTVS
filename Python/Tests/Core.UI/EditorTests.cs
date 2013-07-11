@@ -28,6 +28,7 @@ using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Text.Tagging;
 using TestUtilities;
 using TestUtilities.UI;
+using TestUtilities.UI.Python;
 
 namespace PythonToolsUITests {
     [TestClass]
@@ -47,13 +48,13 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void UnregisteredFileExtensionEditor() {
-            var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\UnregisteredFileExtension.sln");
+            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            var project = app.OpenAndFindProject(@"TestData\UnregisteredFileExtension.sln");
 
             var item = project.ProjectItems.Item("Foo.unregfileext");
             var window = item.Open();
             window.Activate();
 
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
             var doc = app.GetDocument(item.Document.FullName);
             var snapshot = doc.TextView.TextBuffer.CurrentSnapshot;
 
@@ -97,13 +98,13 @@ namespace PythonToolsUITests {
         }
 
         private void OutlineTest(string filename, params ExpectedTag[] expected) {
-            var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\Outlining.sln");
+            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            var project = app.OpenAndFindProject(@"TestData\Outlining.sln");
 
             var item = project.ProjectItems.Item(filename);
             var window = item.Open();
             window.Activate();
 
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
             var doc = app.GetDocument(item.Document.FullName);
 
             var snapshot = doc.TextView.TextBuffer.CurrentSnapshot;
@@ -168,13 +169,13 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void SignaturesTest() {
-            var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\Signatures.sln");
+            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            var project = app.OpenAndFindProject(@"TestData\Signatures.sln");
 
             var item = project.ProjectItems.Item("sigs.py");
             var window = item.Open();
             window.Activate();
             
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
             var doc = app.GetDocument(item.Document.FullName);
 
 
@@ -206,13 +207,13 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void MultiLineSignaturesTest() {
-            var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\Signatures.sln");
+            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            var project = app.OpenAndFindProject(@"TestData\Signatures.sln");
 
             var item = project.ProjectItems.Item("multilinesigs.py");
             var window = item.Open();
             window.Activate();
 
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
             var doc = app.GetDocument(item.Document.FullName);
 
             ((UIElement)doc.TextView).Dispatcher.Invoke((Action)(() => {
@@ -258,7 +259,8 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CompletionsCaseSensitive() {
             // http://pytools.codeplex.com/workitem/457
-            var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\Completions.sln");
+            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            var project = app.OpenAndFindProject(@"TestData\Completions.sln");
 
             var item = project.ProjectItems.Item("bar.py");
             var window = item.Open();
@@ -266,7 +268,6 @@ namespace PythonToolsUITests {
 
             Keyboard.Type("from foo import ba\r");
 
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
             var doc = app.GetDocument(item.Document.FullName);
 
             doc.WaitForText("from foo import baz");
@@ -279,7 +280,8 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void AutoIndent() {
-            var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\AutoIndent.sln");            
+            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            var project = app.OpenAndFindProject(@"TestData\AutoIndent.sln");            
 
 
             // http://pytools.codeplex.com/workitem/116
@@ -432,7 +434,8 @@ pass");
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void AutoIndentExisting() {
-            var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\AutoIndent.sln");
+            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            var project = app.OpenAndFindProject(@"TestData\AutoIndent.sln");
 
             // http://pytools.codeplex.com/workitem/138
             AutoIndentExistingTest(project, "Decorator.py", 4, 4, @"class C:
@@ -513,7 +516,8 @@ pass");
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TypingTest() {
-            var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\EditorTests.sln");
+            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            var project = app.OpenAndFindProject(@"TestData\EditorTests.sln");
 
             // http://pytools.codeplex.com/workitem/139
             TypingTest(project, "DecoratorOnFunction.py", 0, 0, @"@classmethod
@@ -548,7 +552,8 @@ def f(): pass
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CompletionTests() {
-            var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\EditorTests.sln");
+            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            var project = app.OpenAndFindProject(@"TestData\EditorTests.sln");
 
             TypingTest(project, "BackslashCompletion.py", 2, 0, @"x = 42
 x\
@@ -599,12 +604,12 @@ x\
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void OpenInvalidUnicodeFile() {
-            var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\ErrorProjectUnicode.sln");
+            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            var project = app.OpenAndFindProject(@"TestData\ErrorProjectUnicode.sln");
             var item = project.ProjectItems.Item("Program.py");
             EnvDTE.Window window = null;
             ThreadPool.QueueUserWorkItem(x => { window = item.Open(); });
 
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
             var dialog = app.WaitForDialog();
 
             VisualStudioApp.CheckMessageBox(TestUtilities.UI.MessageBoxButton.Ok, "File Load", "Program.py", "ascii encoding");
@@ -658,14 +663,13 @@ x\
         }
 
         private static IList<ClassificationSpan> GetClassifications(string filename) {
-            var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\Classification.sln");
+            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            var project = app.OpenAndFindProject(@"TestData\Classification.sln");
 
             var item = project.ProjectItems.Item(filename);
             var window = item.Open();
             window.Activate();
 
-
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
             var doc = app.GetDocument(item.Document.FullName);
 
             var snapshot = doc.TextView.TextBuffer.CurrentSnapshot;

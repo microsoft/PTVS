@@ -150,7 +150,7 @@ namespace ProfilingUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void NewProfilingSessionOpenSolution() {
             var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte);
-            var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\ProfileTest.sln");
+            var project = app.OpenAndFindProject(@"TestData\ProfileTest.sln");
 
             app.OpenPythonPerformance();
             app.PythonPerformanceExplorerToolBar.NewPerfSession();
@@ -201,7 +201,7 @@ namespace ProfilingUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void LaunchPythonProfilingWizard() {
             var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte);
-            var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\ProfileTest.sln");
+            var project = app.OpenAndFindProject(@"TestData\ProfileTest.sln");
 
             app.LaunchPythonProfiling();
 
@@ -250,7 +250,8 @@ namespace ProfilingUITests {
             // no sessions yet
             Assert.AreEqual(profiling.GetSession(1), null);
 
-            var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\ProfileTest.sln");
+            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            var project = app.OpenAndFindProject(@"TestData\ProfileTest.sln");
 
             var session = profiling.LaunchProject(project, false);
             try {
@@ -280,7 +281,8 @@ namespace ProfilingUITests {
             // no sessions yet
             Assert.AreEqual(profiling.GetSession(1), null);
 
-            var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\ProfileTest.sln");
+            var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte);
+            var project = app.OpenAndFindProject(@"TestData\ProfileTest.sln");
 
             var session = profiling.LaunchProject(project, false);
             try {
@@ -292,7 +294,6 @@ namespace ProfilingUITests {
                 var filename = report.Filename;
                 Assert.IsTrue(filename.Contains("HelloWorld"));
 
-                var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte);
                 app.OpenPythonPerformance();
                 var pyPerf = app.PythonPerformanceExplorerTreeView;
                 Assert.AreNotEqual(null, pyPerf);
@@ -323,11 +324,11 @@ namespace ProfilingUITests {
             // no sessions yet
             Assert.AreEqual(profiling.GetSession(1), null);
 
-            var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\ProfileTest.sln");
+            var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte);
+            var project = app.OpenAndFindProject(@"TestData\ProfileTest.sln");
 
             var session = profiling.LaunchProject(project, false);
             try {
-                PythonVisualStudioApp app;
                 string reportFilename;
                 WaitForReport(profiling, session, out app, out reportFilename);
 
@@ -349,7 +350,8 @@ namespace ProfilingUITests {
             // no sessions yet
             Assert.AreEqual(profiling.GetSession(1), null);
 
-            var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\ProfileTest.sln");
+            var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte);
+            var project = app.OpenAndFindProject(@"TestData\ProfileTest.sln");
 
             var session = profiling.LaunchProject(project, false);
             try {
@@ -362,7 +364,6 @@ namespace ProfilingUITests {
                     System.Threading.Thread.Sleep(100);
                 }
 
-                var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte);
                 var pyPerf = app.PythonPerformanceExplorerTreeView;
                 var item = pyPerf.FindItem("HelloWorld *", "Reports");
                 var child = item.FindFirst(System.Windows.Automation.TreeScope.Descendants, Condition.TrueCondition);
@@ -422,11 +423,11 @@ namespace ProfilingUITests {
             // no sessions yet
             Assert.AreEqual(profiling.GetSession(1), null);
 
-            var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\ProfileTest.sln");
+            var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte);
+            var project = app.OpenAndFindProject(@"TestData\ProfileTest.sln");
 
             var session = profiling.LaunchProject(project, false);
             try {
-                PythonVisualStudioApp app;
                 string reportFilename;
                 WaitForReport(profiling, session, out app, out reportFilename);
 
@@ -448,12 +449,12 @@ namespace ProfilingUITests {
             // no sessions yet
             Assert.AreEqual(profiling.GetSession(1), null);
 
-            var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\ProfileTest.sln");
+            var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte);
+            var project = app.OpenAndFindProject(@"TestData\ProfileTest.sln");
 
             var session = profiling.LaunchProject(project, false);
             try {
                 IPythonPerformanceReport report;
-                PythonVisualStudioApp app;
                 AutomationElement child;
                 WaitForReport(profiling, session, out report, out app, out child);
 
@@ -500,12 +501,12 @@ namespace ProfilingUITests {
             // no sessions yet
             Assert.AreEqual(profiling.GetSession(1), null);
 
-            var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\ProfileTest.sln");
+            var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte);
+            var project = app.OpenAndFindProject(@"TestData\ProfileTest.sln");
 
             var session = profiling.LaunchProject(project, false);
             try {
                 IPythonPerformanceReport report;
-                PythonVisualStudioApp app;
                 AutomationElement child;
                 WaitForReport(profiling, session, out report, out app, out child);
 
@@ -528,7 +529,8 @@ namespace ProfilingUITests {
             // no sessions yet
             Assert.AreEqual(profiling.GetSession(1), null);
 
-            var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\ProfileTest.sln");
+            var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte);
+            var project = app.OpenAndFindProject(@"TestData\ProfileTest.sln");
 
             var session = profiling.LaunchProject(project, false);
             try {
@@ -536,7 +538,6 @@ namespace ProfilingUITests {
                     System.Threading.Thread.Sleep(100);
                 }
 
-                var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte);
                 app.OpenPythonPerformance();
                 var pyPerf = app.PythonPerformanceExplorerTreeView;
 
@@ -714,7 +715,8 @@ namespace ProfilingUITests {
             // no sessions yet
             Assert.AreEqual(profiling.GetSession(1), null);
 
-            var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\ProfileTest.sln");
+            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            var project = app.OpenAndFindProject(@"TestData\ProfileTest.sln");
 
             var session = profiling.LaunchProject(project, false);
             IPythonProfileSession session2 = null;
@@ -774,7 +776,8 @@ namespace ProfilingUITests {
             // no sessions yet
             Assert.AreEqual(profiling.GetSession(1), null);
 
-            var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\ProfileTest2.sln");
+            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            var project = app.OpenAndFindProject(@"TestData\ProfileTest2.sln");
 
             var session = profiling.LaunchProject(project, false);
             IPythonProfileSession session2 = null;
@@ -834,7 +837,8 @@ namespace ProfilingUITests {
             // no sessions yet
             Assert.AreEqual(profiling.GetSession(1), null);
 
-            var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\ProfileTest.sln");
+            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            var project = app.OpenAndFindProject(@"TestData\ProfileTest.sln");
 
             var session = profiling.LaunchProject(project, false);
             try {

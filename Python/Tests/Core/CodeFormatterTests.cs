@@ -14,7 +14,6 @@
 
 using System;
 using System.Linq;
-using AnalysisTests;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Interpreter.Default;

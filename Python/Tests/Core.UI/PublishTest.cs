@@ -69,12 +69,12 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestPublishFiles() {
-            var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\HelloWorld.sln");
+            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            var project = app.OpenAndFindProject(@"TestData\HelloWorld.sln");
             try {
                 string subDir = Guid.NewGuid().ToString();
                 project.Properties.Item("PublishUrl").Value = Path.Combine(TestSharePublic, subDir);
                 string dir = Path.Combine(TestSharePublic, subDir);
-                var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
 
                 app.OpenSolutionExplorer();
                 var window = app.SolutionExplorerTreeView;
@@ -99,12 +99,12 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestPublishFilesControlled() {
-            var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\PublishTest.sln");
+            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            var project = app.OpenAndFindProject(@"TestData\PublishTest.sln");
             try {
                 string subDir = Guid.NewGuid().ToString();
                 project.Properties.Item("PublishUrl").Value = Path.Combine(TestSharePublic, subDir);
                 string dir = Path.Combine(TestSharePublic, subDir);
-                var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
 
                 app.OpenSolutionExplorer();
                 var window = app.SolutionExplorerTreeView;
@@ -133,13 +133,12 @@ namespace PythonToolsUITests {
         public void TestPublishFilesImpersonate() {
             ClearShares();
 
-            var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\HelloWorld.sln");
+            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            var project = app.OpenAndFindProject(@"TestData\HelloWorld.sln");
             try {
                 string subDir = Guid.NewGuid().ToString();
                 project.Properties.Item("PublishUrl").Value = Path.Combine(TestSharePrivate, subDir);
                 
-                var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-
                 app.OpenSolutionExplorer();
                 var window = app.SolutionExplorerTreeView;
 
@@ -218,14 +217,13 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestPublishFilesImpersonateNoMachineName() {
-            var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\HelloWorld.sln");
+            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            var project = app.OpenAndFindProject(@"TestData\HelloWorld.sln");
             try {
                 ClearShares();
 
                 string subDir = Guid.NewGuid().ToString();
                 project.Properties.Item("PublishUrl").Value = Path.Combine(TestSharePrivate, subDir);
-                
-                var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
 
                 app.OpenSolutionExplorer();
                 var window = app.SolutionExplorerTreeView;
@@ -298,13 +296,13 @@ namespace PythonToolsUITests {
         public void TestPublishFilesImpersonateWrongCredentials() {
             ClearShares();
 
-            var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\HelloWorld.sln");
+            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            var project = app.OpenAndFindProject(@"TestData\HelloWorld.sln");
             try {
                 string subDir = Guid.NewGuid().ToString();
                 project.Properties.Item("PublishUrl").Value = Path.Combine(TestSharePrivate, subDir);
                 string dir = Path.Combine(TestSharePrivate, subDir);
-                var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-
+                
                 app.OpenSolutionExplorer();
                 var window = app.SolutionExplorerTreeView;
 
@@ -343,12 +341,12 @@ namespace PythonToolsUITests {
         public void TestPublishFilesImpersonateCancelCredentials() {
             ClearShares();
 
-            var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\HelloWorld.sln");
+            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            var project = app.OpenAndFindProject(@"TestData\HelloWorld.sln");
             try {
                 string subDir = Guid.NewGuid().ToString();
                 project.Properties.Item("PublishUrl").Value = Path.Combine(TestSharePrivate, subDir);
                 string dir = Path.Combine(TestSharePrivate, subDir);
-                var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
 
                 app.OpenSolutionExplorer();
                 var window = app.SolutionExplorerTreeView;
@@ -387,14 +385,14 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestPublishFtp() {
-            var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\HelloWorld.sln");
+            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            var project = app.OpenAndFindProject(@"TestData\HelloWorld.sln");
             try {
                 string subDir = Guid.NewGuid().ToString();
                 string url = TestFtpUrl + "/" + subDir;
                 project.Properties.Item("PublishUrl").Value = url;
                 string dir = Path.Combine(FtpValidateDir, subDir);
                 Debug.WriteLine(dir);
-                var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
 
                 app.OpenSolutionExplorer();
                 var window = app.SolutionExplorerTreeView;
