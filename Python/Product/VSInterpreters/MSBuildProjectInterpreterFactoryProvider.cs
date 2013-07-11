@@ -28,6 +28,8 @@ namespace Microsoft.PythonTools.Interpreter {
         readonly IInterpreterOptionsService _service;
         readonly MSBuild.Project _project;
         readonly Dictionary<Guid, string> _rootPaths;
+
+        readonly object _factoriesLock = new object();
         Dictionary<IPythonInterpreterFactory, FactoryInfo> _factories;
 
         IPythonInterpreterFactory _active;
@@ -277,7 +279,7 @@ namespace Microsoft.PythonTools.Interpreter {
             if (anyChange || _factories == null || factories.Count != _factories.Count) {
                 // Lock here mainly to ensure that any searches complete before
                 // we trigger the changed event.
-                lock (this) {
+                lock (_factoriesLock) {
                     _factories = factories;
                 }
                 OnInterpreterFactoriesChanged();
@@ -408,8 +410,8 @@ namespace Microsoft.PythonTools.Interpreter {
             var derived = factory as DerivedInterpreterFactory;
             if (derived != null) {
                 var projectHome = CommonUtils.GetAbsoluteDirectoryPath(_project.DirectoryPath, _project.GetPropertyValue("ProjectHome"));
-                var rootPath = CommonUtils.EnsureEndSeparator(derived.RootPath);
-                _rootPaths[derived.Id] = rootPath;
+                var rootPath = CommonUtils.EnsureEndSeparator(factory.Configuration.PrefixPath);
+                _rootPaths[factory.Id] = rootPath;
 
                 item = _project.AddItem(InterpreterItem,
                     CommonUtils.GetRelativeDirectoryPath(projectHome, rootPath),
@@ -448,7 +450,7 @@ namespace Microsoft.PythonTools.Interpreter {
                     }).FirstOrDefault();
             }
 
-            lock (this) {
+            lock (_factoriesLock) {
                 _factories[factory] = new FactoryInfo(item, disposeInterpreter);
             }
             OnInterpreterFactoriesChanged();
@@ -500,11 +502,9 @@ namespace Microsoft.PythonTools.Interpreter {
             }
 
             bool raiseEvent;
-            FactoryInfo factInfo = null;
-            lock (this) {
-                if (raiseEvent = _factories.Remove(factory)) {
-                    factInfo = _factories[factory];
-                }
+            FactoryInfo factInfo;
+            lock (_factoriesLock) {
+                raiseEvent = _factories.TryGetValue(factory, out factInfo) && _factories.Remove(factory);
             }
             if (factInfo != null && 
                 factInfo.Owned && 
@@ -524,7 +524,7 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         private IEnumerable<IPythonInterpreterFactory> GetInterpreterFactoriesEnumerable() {
-            lock (this) {
+            lock (_factoriesLock) {
                 if (_factories != null) {
                     return _factories.Keys.ToArray();
                 }
@@ -556,7 +556,7 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         public IPythonInterpreterFactory FindInterpreter(Guid id, Version version) {
-            lock (this) {
+            lock (_factoriesLock) {
                 if (_factories != null) {
                     foreach (var fact in _factories.Keys) {
                         if (fact.Id == id && (version.Major == 0 || fact.Configuration.Version == version)) {
@@ -603,7 +603,7 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         private void UpdateActiveInterpreter() {
-            lock (this) {
+            lock (_factoriesLock) {
                 var newActive = _active;
                 if (newActive == null || _factories == null || !_factories.ContainsKey(newActive)) {
                     newActive = FindInterpreter(
@@ -628,7 +628,7 @@ namespace Microsoft.PythonTools.Interpreter {
             set {
                 var oldActive = _active;
 
-                lock (this) {
+                lock (_factoriesLock) {
                     if (_factories == null || !_factories.Any()) {
                         // No factories, so we must use the global default.
                         _active = null;

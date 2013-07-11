@@ -47,7 +47,7 @@ namespace Microsoft.PythonTools.Analysis {
 
         private readonly AnalyzerStatusUpdater _updater;
         private CancellationToken _cancel;
-        private TextWriterTraceListener _listener;
+        private TextWriter _listener;
         private List<List<ModulePath>> _fileGroups;
         private HashSet<string> _existingDatabase;
 
@@ -142,7 +142,7 @@ namespace Microsoft.PythonTools.Analysis {
                     } catch (Exception e) {
                         Console.WriteLine("Error while saving analysis: {0}{1}", Environment.NewLine, e.ToString());
                         inst.LogToGlobal("FAIL_STDLIB" + Environment.NewLine + e.ToString());
-                        Trace.TraceError("ANALYSIS FAIL:{0}{1}", Environment.NewLine, e.ToString());
+                        inst.TraceError("Analysis failed{0}{1}", Environment.NewLine, e.ToString());
                         return -10;
                     }
 #if DEBUG
@@ -331,9 +331,9 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             Directory.CreateDirectory(Path.GetDirectoryName(_logPrivate));
-            _listener = new TextWriterTraceListenerWithDateTime(new FileStream(_logPrivate, FileMode.Create, FileAccess.Write, FileShare.Read));
-            Trace.Listeners.Add(_listener);
-            Trace.AutoFlush = true;
+            _listener = new StreamWriter(new FileStream(_logPrivate, FileMode.Append, FileAccess.Write, FileShare.ReadWrite));
+            _listener.WriteLine();
+            TraceInformation("Start analysis");
         }
 
         private void Prepare() {
@@ -414,14 +414,17 @@ namespace Microsoft.PythonTools.Analysis {
                 if (output.ExitCode != 0) {
                     // Don't delete anything if we don't get the right names.
                     _existingDatabase.Clear();
-                    Trace.TraceInformation("SCRAPE BEGIN: {0}", output.Arguments);
+                    TraceInformation("Getting builtin names");
+                    TraceInformation("Command {0}", output.Arguments);
                     if (output.StandardErrorLines.Any()) {
-                        Trace.TraceWarning("SCRAPE ERRORS: {0}{1}", Environment.NewLine, string.Join(Environment.NewLine, output.StandardErrorLines));
+                        TraceError("Errors{0}{1}", Environment.NewLine, string.Join(Environment.NewLine, output.StandardErrorLines));
                     }
                 } else {
                     builtinNames = new HashSet<string>(output.StandardOutputLines);
                 }
             }
+            TraceVerbose("Builtin names are: {0}", string.Join(", ", builtinNames.OrderBy(s => s, StringComparer.OrdinalIgnoreCase)));
+
             var builtinModulePaths = builtinNames
                 .Where(n => !string.IsNullOrEmpty(n) && n.IndexOfAny(Path.GetInvalidPathChars()) < 0)
                 .Select(n => Path.Combine(_outDir, n + ".idb"))
@@ -431,25 +434,26 @@ namespace Microsoft.PythonTools.Analysis {
                 _all = true;
                 // Scape builtin Python types
                 using (var output = ProcessOutput.RunHiddenAndCapture(_interpreter, PythonScraperPath, _outDir, _baseDb.First())) {
-                    Trace.TraceInformation("SCRAPE BEGIN: {0}", output.Arguments);
+                    TraceInformation("Scraping builtin modules");
+                    TraceInformation("Command: {0}", output.Arguments);
                     output.Wait();
 
                     if (output.StandardOutputLines.Any()) {
-                        Trace.TraceInformation("SCRAPE OUTPUT: {0}{1}", Environment.NewLine, string.Join(Environment.NewLine, output.StandardOutputLines));
+                        TraceInformation("Output{0}{1}", Environment.NewLine, string.Join(Environment.NewLine, output.StandardOutputLines));
                     }
                     if (output.StandardErrorLines.Any()) {
-                        Trace.TraceWarning("SCRAPE ERRORS: {0}{1}", Environment.NewLine, string.Join(Environment.NewLine, output.StandardErrorLines));
+                        TraceWarning("Errors{0}{1}", Environment.NewLine, string.Join(Environment.NewLine, output.StandardErrorLines));
                     }
 
                     if (output.ExitCode != 0) {
                         if (output.ExitCode.HasValue) {
-                            Trace.TraceError("SCRAPE FAIL: ({0})", output.ExitCode);
+                            TraceError("Failed to scrape builtin modules (Exit Code: {0})", output.ExitCode);
                         } else {
-                            Trace.TraceError("SCRAPE FAIL: (~)");
+                            TraceError("Failed to scrape builtin modules");
                         }
                         return;
                     } else {
-                        Trace.TraceInformation("SCRAPE COMPLETE: 0");
+                        TraceInformation("Scraped builtin modules");
                     }
                 }
             }
@@ -457,7 +461,7 @@ namespace Microsoft.PythonTools.Analysis {
 
             var scrapeFiles = _fileGroups.SelectMany(l => l)
                 .Where(mp => mp.IsCompiled)
-                .ToList();
+                .ToArray();
 
             foreach (var file in scrapeFiles) {
                 var destFile = Path.Combine(_outDir, file.ModuleName);
@@ -465,27 +469,31 @@ namespace Microsoft.PythonTools.Analysis {
                 if (ShouldAnalyze(file)) {
                     _needsRefresh.Add(file.LibraryPath);
                     using (var output = ProcessOutput.RunHiddenAndCapture(_interpreter, ExtensionScraperPath, "scrape", file.ModuleName, "-", destFile)) {
-                        Trace.TraceInformation("SCRAPE BEGIN: {0}", output.Arguments);
+                        TraceInformation("Scraping {0}", file.ModuleName);
+                        TraceInformation("Command: {0}", output.Arguments);
                         output.Wait();
 
                         if (output.StandardOutputLines.Any()) {
-                            Trace.TraceInformation("SCRAPE OUTPUT: {0}{1}", Environment.NewLine, string.Join(Environment.NewLine, output.StandardOutputLines));
+                            TraceInformation("Output{0}{1}", Environment.NewLine, string.Join(Environment.NewLine, output.StandardOutputLines));
                         }
                         if (output.StandardErrorLines.Any()) {
-                            Trace.TraceWarning("SCRAPE ERRORS: {0}{1}", Environment.NewLine, string.Join(Environment.NewLine, output.StandardErrorLines));
+                            TraceWarning("Errors{0}{1}", Environment.NewLine, string.Join(Environment.NewLine, output.StandardErrorLines));
                         }
 
                         if (output.ExitCode != 0) {
                             if (output.ExitCode.HasValue) {
-                                Trace.TraceError("SCRAPE FAIL: ({0}) {1}", output.ExitCode, file.ModuleName);
+                                TraceError("Failed to scrape {1} (Exit code: {0})", output.ExitCode, file.ModuleName);
                             } else {
-                                Trace.TraceError("SCRAPE FAIL: (~) {0}", file.ModuleName);
+                                TraceError("Failed to scrape {0}", file.ModuleName);
                             }
                         } else {
-                            Trace.TraceInformation("SCRAPE COMPLETE: (0) {0}", file.ModuleName);
+                            TraceVerbose("Scraped {0}", file.ModuleName);
                         }
                     }
                 }
+            }
+            if (scrapeFiles.Any()) {
+                TraceInformation("Scraped {0} files", scrapeFiles.Length);
             }
         }
 
@@ -505,7 +513,7 @@ namespace Microsoft.PythonTools.Analysis {
                     AnalysisLog.Output = new StreamWriter(new FileStream(_logDiagnostic, FileMode.Create, FileAccess.Write, FileShare.Read), Encoding.UTF8);
                     AnalysisLog.AsCSV = _logDiagnostic.EndsWith(".csv", StringComparison.InvariantCultureIgnoreCase);
                 } catch (Exception ex) {
-                    Trace.TraceWarning("Failed to open {0} for logging: {1}", _logDiagnostic, string.Join("--", ex.ToString().Split('\r', '\n').Where(s => !string.IsNullOrWhiteSpace(s))));
+                    TraceWarning("Failed to open \"{0}\" for logging{1}{2}", _logDiagnostic, Environment.NewLine, ex.ToString());
                 }
             }
 
@@ -521,6 +529,9 @@ namespace Microsoft.PythonTools.Analysis {
                 }
 
                 var files = fileGroup.Where(file => !file.IsCompiled).ToList();
+                if (files.Count == 0) {
+                    continue;
+                }
 
                 bool needAnalyze = false;
                 foreach (var file in files) {
@@ -534,7 +545,7 @@ namespace Microsoft.PythonTools.Analysis {
                 }
 
                 if (!needAnalyze) {
-                    Trace.TraceInformation("GROUP SKIPPED \"{0}\"", files[0].LibraryPath);
+                    TraceInformation("Skipped group \"{0}\"", files[0].LibraryPath);
                     progressOffset += files.Count;
                     if (_updater != null) {
                         _updater.UpdateStatus(AnalysisStatus.Analyzing, progressOffset, progressTotal);
@@ -542,7 +553,7 @@ namespace Microsoft.PythonTools.Analysis {
                     continue;
                 }
 
-                Trace.TraceInformation("GROUP START \"{0}\"", files[0].LibraryPath);
+                TraceInformation("Start group \"{0}\" with {1} files", files[0].LibraryPath, files.Count);
                 AnalysisLog.StartFileGroup(files[0].LibraryPath, files.Count);
                 Console.WriteLine("Now analyzing: {0}", files[0].LibraryPath);
 
@@ -579,15 +590,22 @@ namespace Microsoft.PythonTools.Analysis {
                     PythonAst ast = null;
                     try {
                         var sourceUnit = new FileStream(files[i].SourceFile, FileMode.Open, FileAccess.Read, FileShare.Read);
+                        var errors = new CollectingErrorSink();
+                        var opts = new ParserOptions() { BindReferences = true, ErrorSink = errors };
 
-                        Trace.TraceInformation("PARSE START: \"{0}\" (\"{1}\")", modules[i].ModuleName, modules[i].FilePath);
-                        ast = Parser.CreateParser(sourceUnit, _version.ToLanguageVersion(), new ParserOptions() { BindReferences = true }).ParseFile();
-                        Trace.TraceInformation("PARSE END: \"{0}\" (\"{1}\")", modules[i].ModuleName, modules[i].FilePath);
+                        TraceInformation("Parsing \"{0}\" (\"{1}\")", modules[i].ModuleName, modules[i].FilePath);
+                        ast = Parser.CreateParser(sourceUnit, _version.ToLanguageVersion(), opts).ParseFile();
+                        if (errors.Errors.Any() || errors.Warnings.Any()) {
+                            TraceWarning("File \"{0}\" contained parse errors", modules[i].FilePath);
+                            TraceInformation(string.Join(Environment.NewLine, errors.Errors.Concat(errors.Warnings)
+                                .Select(er => string.Format("{0} {1}", er.Span, er.Message))));
+                        }
                     } catch (Exception ex) {
-                        Trace.TraceError("PARSE ERROR: \"{0}\" \"{1}\"{2}{3}", modules[i].ModuleName, modules[i].FilePath, Environment.NewLine, ex.ToString());
+                        TraceError("Error parsing \"{0}\" \"{1}\"{2}{3}", modules[i].ModuleName, modules[i].FilePath, Environment.NewLine, ex.ToString());
                     }
                     nodes.Add(ast);
                 }
+                TraceInformation("Parsing complete");
 
                 for (int i = 0; i < modules.Count && !_cancel.IsCancellationRequested; i++) {
                     var ast = nodes[i];
@@ -598,25 +616,31 @@ namespace Microsoft.PythonTools.Analysis {
                 }
 
                 for (int i = 0; i < modules.Count && !_cancel.IsCancellationRequested; i++) {
-                    var ast = nodes[i];
-                    if (ast != null) {
-                        Trace.TraceInformation("ANALYSIS START: \"{0}\"", modules[i].FilePath);
-                        modules[i].Analyze(_cancel, true);
-                        Trace.TraceInformation("ANALYSIS END: \"{0}\"", modules[i].FilePath);
+                    try {
+                        var ast = nodes[i];
+                        if (ast != null) {
+                            TraceInformation("Analyzing \"{0}\"", modules[i].ModuleName);
+                            modules[i].Analyze(_cancel, true);
+                            TraceVerbose("Analyzed \"{0}\"", modules[i].FilePath);
+                        }
+                    } catch (Exception ex) {
+                        TraceError("Error analyzing \"{0}\" \"{1}\"{2}{3}", modules[i].ModuleName, modules[i].FilePath, Environment.NewLine, ex.ToString());
                     }
                 }
 
                 if (modules.Count > 0 && !_cancel.IsCancellationRequested) {
+                    TraceInformation("Starting analysis of {0} modules", modules.Count);
                     modules[0].AnalysisGroup.AnalyzeQueuedEntries(_cancel);
+                    TraceInformation("Analysis complete");
                 }
 
                 if (_cancel.IsCancellationRequested) {
                     break;
                 }
 
-                Trace.TraceInformation("SAVING GROUP: \"{0}\"", files[0].LibraryPath);
+                TraceInformation("Saving group \"{0}\"", files[0].LibraryPath);
                 new SaveAnalysis().Save(projectState, _outDir);
-                Trace.TraceInformation("GROUP END \"{0}\"", files[0].LibraryPath);
+                TraceInformation("End of group \"{0}\"", files[0].LibraryPath);
                 AnalysisLog.EndFileGroup();
 
                 progressOffset += files.Count;
@@ -629,28 +653,36 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         private void Clean() {
+            TraceInformation("Deleting {0} files", _existingDatabase.Count);
             foreach (var file in _existingDatabase) {
                 try {
-                    Trace.TraceInformation("DELETING FILE: \"{0}\"", file);
+                    TraceVerbose("Deleting \"{0}\"", file);
                     File.Delete(file);
                     File.Delete(file + ".$memlist");
                 } catch {
                 }
             }
         }
-    }
 
-    class TextWriterTraceListenerWithDateTime : TextWriterTraceListener {
-        public TextWriterTraceListenerWithDateTime(Stream stream) : base(stream) {
-#if DEBUG
-            this.Filter = new EventTypeFilter(SourceLevels.Information);
-#else
-            this.Filter = new EventTypeFilter(SourceLevels.Warning);
-#endif
+        private void TraceInformation(string message, params object[] args) {
+            _listener.WriteLine(DateTime.Now.ToString("s") + ": " + string.Format(message, args));
+            _listener.Flush();
         }
 
-        public override void WriteLine(string message) {
-            Writer.WriteLine(DateTime.Now.ToString("s") + ": " + message);
+        private void TraceWarning(string message, params object[] args) {
+            _listener.WriteLine(DateTime.Now.ToString("s") + ": [WARNING] " + string.Format(message, args));
+            _listener.Flush();
+        }
+
+        private void TraceError(string message, params object[] args) {
+            _listener.WriteLine(DateTime.Now.ToString("s") + ": [ERROR] " + string.Format(message, args));
+            _listener.Flush();
+        }
+
+        [Conditional("DEBUG")]
+        private void TraceVerbose(string message, params object[] args) {
+            _listener.WriteLine(DateTime.Now.ToString("s") + ": [VERBOSE] " + string.Format(message, args));
+            _listener.Flush();
         }
     }
 }

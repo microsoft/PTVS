@@ -819,8 +819,7 @@ namespace Microsoft.PythonTools.Project {
 
             Task task;
             if (doCreate) {
-                task = VirtualEnv.Create(baseInterp,
-                    Site,
+                task = VirtualEnv.CreateAndInstallDependencies(baseInterp,
                     path,
                     OutputWindowRedirector.GetGeneral(Site));
             } else {
@@ -838,7 +837,10 @@ namespace Microsoft.PythonTools.Project {
                 if (options == null) {
                     throw new InvalidOperationException("Unable to add virtual environment");
                 }
-                if (doCreate) {
+                if (!doCreate) {
+                    baseInterp = service.FindInterpreter(options.Id, options.LanguageVersion);
+                }
+                if (baseInterp != null) {
                     options.Description = string.Format("{0} ({1})", options.Description, baseInterp.Description);
                 }
                 return options;

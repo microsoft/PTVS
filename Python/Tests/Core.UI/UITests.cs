@@ -965,7 +965,7 @@ namespace PythonToolsUITests {
 
             app.SelectSourceControlProvider("Test Source Provider");
 
-            var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\SourceControl.sln");
+            var project = app.OpenAndFindProject(@"TestData\SourceControl.sln");
 
             Assert.AreEqual(1, TestSccProvider.LoadedProjects.Count);
             var sccProject = TestSccProvider.LoadedProjects.First();
@@ -1209,7 +1209,7 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestSearchExcludedFiles() {
             var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            var project = DebuggerUITests.DebugProject.OpenProject(@"TestData\FindInAllFiles.sln");
+            var project = app.OpenAndFindProject(@"TestData\FindInAllFiles.sln");
             Assert.IsNotNull(project);
 
             var find = app.Dte.Find;

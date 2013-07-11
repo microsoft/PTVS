@@ -16,10 +16,13 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools;
+using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Project {
     static class VirtualEnv {
@@ -27,58 +30,16 @@ namespace Microsoft.PythonTools.Project {
             new KeyValuePair<string, string>("PYTHONUNBUFFERED", "1")
         };
 
+        /// <summary>
+        /// Installs virtualenv. If pip is not installed, the returned task will
+        /// succeed but error text will be passed to the redirector.
+        /// </summary>
         public static Task Install(IPythonInterpreterFactory factory, Redirector output = null) {
-            return Pip.Install(factory, "virtualenv", output);
+            return Pip.Install(factory, "virtualenv==1.9.1", output);
         }
 
-        public static Task Create(IPythonInterpreterFactory factory, string path, Redirector output = null) {
-            return Create(factory, null, path, output);
-        }
-
-        public static Task Create(
-            IPythonInterpreterFactory factory,
-            IServiceProvider site,
-            string path,
-            Redirector output = null) {
-
-            Task task;
-            if (site != null) {
-                task = Task.Factory.StartNew((Action)(() => {
-                    bool hasPip = false, hasVirtualEnv = false;
-                    foreach (var mp in ModulePath.GetModulesInLib(factory)) {
-                        if (!hasPip && mp.ModuleName == "pip") {
-                            hasPip = true;
-                        }
-                        if (!hasVirtualEnv && mp.ModuleName == "virtualenv") {
-                            hasVirtualEnv = true;
-                        }
-                        if (hasPip && hasVirtualEnv) {
-                            break;
-                        }
-                    }
-
-                    if (!hasVirtualEnv) {
-                        if (!hasPip) {
-                            Pip.QueryInstallPip(factory,
-                                site,
-                                SR.GetString(SR.InstallVirtualEnvAndPip),
-                                output).Wait();
-                            Pip.Install(factory, "virtualenv", output).Wait();
-                        } else {
-                            Pip.QueryInstall(factory, "virtualenv",
-                                site,
-                                SR.GetString(SR.InstallVirtualEnv),
-                                output).Wait();
-                        }
-                    }
-                }));
-            } else {
-                var tcs = new TaskCompletionSource<object>();
-                tcs.SetResult(null);
-                task = tcs.Task;
-            }
-
-            return task.ContinueWith(t1 => {
+        private static Task ContinueCreate(Task task, IPythonInterpreterFactory factory, string path, Redirector output) {
+            return task.ContinueWith(t => {
                 path = CommonUtils.TrimEndSeparator(path);
                 var name = Path.GetFileName(path);
                 var dir = Path.GetDirectoryName(path);
@@ -91,7 +52,7 @@ namespace Microsoft.PythonTools.Project {
                 using (var proc = ProcessOutput.Run(factory.Configuration.InterpreterPath,
                     new[] { "-m", "virtualenv", "--distribute", name },
                     dir,
-                    new Dictionary<string, string> { { "PYTHONUNBUFFERED", "1" } },
+                    UnbufferedEnv,
                     false,
                     output)) {
                     proc.Wait();
@@ -111,6 +72,117 @@ namespace Microsoft.PythonTools.Project {
                     throw new InvalidOperationException(SR.GetString(SR.VirtualEnvCreationFailed, path));
                 }
             }, TaskContinuationOptions.OnlyOnRanToCompletion);
+        }
+
+        /// <summary>
+        /// Creates a virtual environment. If virtualenv is not installed, the
+        /// task will succeed but error text will be passed to the redirector.
+        /// </summary>
+        public static Task Create(IPythonInterpreterFactory factory, string path, Redirector output = null) {
+            var tcs = new TaskCompletionSource<object>();
+            tcs.SetResult(null);
+            return ContinueCreate(tcs.Task, factory, path, output);
+        }
+
+        private static Task<Tuple<bool, bool>> FindPipAndVirtualEnv(IPythonInterpreterFactory factory) {
+            return Task.Factory.StartNew((Func<Tuple<bool, bool>>)(() => {
+                bool hasPip = false, hasVirtualEnv = false;
+                foreach (var mp in ModulePath.GetModulesInLib(factory)) {
+                    if (!hasPip && mp.ModuleName == "pip") {
+                        hasPip = true;
+                    }
+                    if (!hasVirtualEnv && mp.ModuleName == "virtualenv") {
+                        hasVirtualEnv = true;
+                    }
+                    if (hasPip && hasVirtualEnv) {
+                        break;
+                    }
+                }
+                return Tuple.Create(hasPip, hasVirtualEnv);
+            }));
+        }
+
+        /// <summary>
+        /// Creates a virtual environment. If virtualenv or pip are not
+        /// installed then they are downloaded and installed automatically.
+        /// </summary>
+        public static Task CreateAndInstallDependencies(
+            IPythonInterpreterFactory factory,
+            string path, Redirector output = null) {
+            Utilities.ArgumentNotNull("factory", factory);
+
+            var task = FindPipAndVirtualEnv(factory).ContinueWith((Action<Task<Tuple<bool, bool>>>)(t => {
+                bool hasPip = t.Result.Item1;
+                bool hasVirtualEnv = t.Result.Item2;
+
+                if (!hasVirtualEnv) {
+                    if (!hasPip) {
+                        Pip.InstallPip(factory, output).Wait();
+                    }
+                    Install(factory, output).Wait();
+                }
+            }));
+
+            return ContinueCreate(task, factory, path, output);
+        }
+
+        /// <summary>
+        /// Creates a virtual environment. If virtualenv or pip are not
+        /// installed then the user is asked whether to install them. If the
+        /// user refuses, the returned task will be cancelled.
+        /// </summary>
+        public static Task QueryCreateAndInstallDependencies(
+            IPythonInterpreterFactory factory,
+            IServiceProvider site,
+            string path,
+            Redirector output = null) {
+
+            Utilities.ArgumentNotNull("factory", factory);
+            Utilities.ArgumentNotNull("site", site);
+
+            var cts = new CancellationTokenSource();
+
+            var task = FindPipAndVirtualEnv(factory).ContinueWith((Func<Task<Tuple<bool, bool>>, Tuple<bool, bool>>)(t => {
+                bool hasPip = t.Result.Item1;
+                bool hasVirtualEnv = t.Result.Item2;
+
+                string message;
+                if (!hasVirtualEnv) {
+                    if (!hasPip) {
+                        message = SR.GetString(SR.InstallVirtualEnvAndPip);
+                    } else {
+                        message = SR.GetString(SR.InstallVirtualEnv);
+                    }
+                    if (Microsoft.VisualStudio.Shell.VsShellUtilities.ShowMessageBox(site,
+                        message,
+                        null,
+                        OLEMSGICON.OLEMSGICON_QUERY,
+                        OLEMSGBUTTON.OLEMSGBUTTON_OKCANCEL,
+                        OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST) == 2) {
+                        cts.Cancel();
+                    }
+                }
+                return t.Result;
+            }), cts.Token,
+                TaskContinuationOptions.OnlyOnRanToCompletion,
+                TaskScheduler.FromCurrentSynchronizationContext()
+            ).ContinueWith((Action<Task<Tuple<bool, bool>>>)(t => {
+                if (t.IsCanceled) {
+                    return;
+                }
+                
+                bool hasPip = t.Result.Item1;
+                bool hasVirtualEnv = t.Result.Item2;
+
+                if (!hasVirtualEnv) {
+                    if (!hasPip) {
+                        Pip.InstallPip(factory, output).Wait();
+                    }
+                    Install(factory, output).Wait();
+                }
+            }));
+
+            return ContinueCreate(task, factory, path, output);
         }
 
         private static IPythonInterpreterFactory FindBaseInterpreterFromVirtualEnv(

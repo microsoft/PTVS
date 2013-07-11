@@ -21,7 +21,6 @@ namespace Microsoft.PythonTools.Interpreters {
         readonly PythonInterpreterFactoryWithDatabase _base;
 
         string _description;
-        string _rootPath;
 
         PythonTypeDatabase _baseDb;
         bool _baseHasRefreshed;
@@ -48,18 +47,11 @@ namespace Microsoft.PythonTools.Interpreters {
             _base.IsCurrentReasonChanged += OnIsCurrentReasonChanged;
 
             _description = options.Description;
-            _rootPath = options.PrefixPath;
         }
 
         public IPythonInterpreterFactory BaseInterpreter {
             get {
                 return _base;
-            }
-        }
-
-        public string RootPath {
-            get {
-                return _rootPath;
             }
         }
 

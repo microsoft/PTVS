@@ -24,40 +24,64 @@ except ImportError:
     from urllib import urlretrieve
 
 DISTRIBUTE_SOURCE = 'https://go.microsoft.com/fwlink/?LinkID=306663'
-PIP_SOURCE = 'https://go.microsoft.com/fwlink/?LinkID=306664'
+PIP_SOURCE = 'https://go.microsoft.com/fwlink/?LinkId=313647'
 
-temp_dir = tempfile.mkdtemp('-pip_downloader', 'ptvs-')
+distribute_temp_dir = tempfile.mkdtemp('-distribute', 'ptvs-')
+pip_temp_dir = tempfile.mkdtemp('-pip', 'ptvs-')
 cwd = os.getcwd()
-os.chdir(temp_dir)
 
 try:
+    os.chdir(distribute_temp_dir)
     print('Downloading distribute from ' + DISTRIBUTE_SOURCE)
+    sys.stdout.flush()
     distribute_package, _ = urlretrieve(DISTRIBUTE_SOURCE, 'distribute.tar.gz')
 
     package = tarfile.open(distribute_package)
     try:
         safe_members = [m for m in package.getmembers() if not m.name.startswith(('..', '\\'))]
-        package.extractall(temp_dir, members=safe_members)
+        package.extractall(distribute_temp_dir, members=safe_members)
     finally:
         package.close()
 
-    extracted_dir = os.listdir(temp_dir)[0]
+    extracted_dirs = [d for d in os.listdir(distribute_temp_dir) if os.path.exists(os.path.join(d, 'setup.py'))]
+    if not extracted_dirs:
+        raise OSError("Failed to find distribute's setup.py")
+    extracted_dir = extracted_dirs[0]
+
     print('\nInstalling from ' + extracted_dir)
+    sys.stdout.flush()
     os.chdir(extracted_dir)
     subprocess.check_call([sys.executable, 'setup.py', 'install'])
-    os.chdir(temp_dir)
 
-    print('\nDownloading get-pip.py from ' + PIP_SOURCE)
-    get_pip_path, _ = urlretrieve(PIP_SOURCE, 'get_pip.py')
+    os.chdir(pip_temp_dir)
+    print('Downloading pip from ' + PIP_SOURCE)
+    sys.stdout.flush()
+    pip_package, _ = urlretrieve(PIP_SOURCE, 'pip.tar.gz')
 
-    print('\nInstalling from ' + get_pip_path)
-    subprocess.check_call([sys.executable, get_pip_path])
+    package = tarfile.open(pip_package)
+    try:
+        safe_members = [m for m in package.getmembers() if not m.name.startswith(('..', '\\'))]
+        package.extractall(pip_temp_dir, members=safe_members)
+    finally:
+        package.close()
+
+    extracted_dirs = [d for d in os.listdir(pip_temp_dir) if os.path.exists(os.path.join(d, 'setup.py'))]
+    if not extracted_dirs:
+        raise OSError("Failed to find pip's setup.py")
+    extracted_dir = extracted_dirs[0]
+
+    print('\nInstalling from ' + extracted_dir)
+    sys.stdout.flush()
+    os.chdir(extracted_dir)
+    subprocess.check_call([sys.executable, 'setup.py', 'install'])
 
     print('\nInstallation Complete')
+    sys.stdout.flush()
 finally:
     try:
         os.chdir(cwd)
-        shutil.rmtree(temp_dir)
+        shutil.rmtree(distribute_temp_dir)
+        shutil.rmtree(pip_temp_dir)
     except:
         # Don't report errors deleting temporary files
         pass

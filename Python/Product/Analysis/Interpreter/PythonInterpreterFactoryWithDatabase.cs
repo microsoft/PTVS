@@ -413,12 +413,12 @@ namespace Microsoft.PythonTools.Interpreter {
 
         public void Dispose() {
             if (!_disposed) {
-                if (_refreshIsCurrentTrigger != null) {
-                    _refreshIsCurrentTrigger.Dispose();
-                }
                 if (_libWatcher != null) {
                     _libWatcher.EnableRaisingEvents = false;
                     _libWatcher.Dispose();
+                }
+                if (_refreshIsCurrentTrigger != null) {
+                    _refreshIsCurrentTrigger.Dispose();
                 }
                 _disposed = true;
             }

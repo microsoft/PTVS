@@ -326,17 +326,12 @@ namespace Microsoft.PythonTools.Project {
 
         public override string Url {
             get {
-                var derived = _factory as DerivedInterpreterFactory;
-                if (derived != null) {
-                    return derived.RootPath;
-                }
-
-                if (string.IsNullOrEmpty(_factory.Configuration.InterpreterPath) ||
-                    _factory.Configuration.InterpreterPath.IndexOfAny(Path.GetInvalidPathChars()) >= 0) {
+                if (string.IsNullOrEmpty(_factory.Configuration.PrefixPath) ||
+                    _factory.Configuration.PrefixPath.IndexOfAny(Path.GetInvalidPathChars()) >= 0) {
                     return string.Format("UnknownInterpreter\\{0}\\{1}", _factory.Id, _factory.Configuration.Version);
                 }
 
-                return Path.GetDirectoryName(_factory.Configuration.InterpreterPath);
+                return _factory.Configuration.PrefixPath;
             }
         }
 
