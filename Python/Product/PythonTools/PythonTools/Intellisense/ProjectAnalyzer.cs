@@ -1599,9 +1599,12 @@ namespace Microsoft.PythonTools.Intellisense {
                             // Let's walk the path and see if it is indeed the case.
                             string path = _path;
                             while (path != null) {
-                                if (File.Exists(path) && Path.GetExtension(path) == ".zip") {
-                                    MessageBox.Show("Opening source files contained in .zip archives is not supported", "Cannot open file", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                                    return VSConstants.S_FALSE;
+                                if (File.Exists(path)) {
+                                    var ext = Path.GetExtension(path);
+                                    if (string.Equals(ext, ".zip", StringComparison.OrdinalIgnoreCase) || string.Equals(ext, ".egg", StringComparison.OrdinalIgnoreCase)) {
+                                        MessageBox.Show("Opening source files contained in .zip archives is not supported", "Cannot open file", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                                        return VSConstants.S_FALSE;
+                                    }
                                 }
                                 path = Path.GetDirectoryName(path);
                             }

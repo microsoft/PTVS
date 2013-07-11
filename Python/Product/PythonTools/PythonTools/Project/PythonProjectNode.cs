@@ -752,7 +752,7 @@ namespace Microsoft.PythonTools.Project {
                     nMaxFileName = NativeMethods.MAX_PATH,
                     pwzFileName = (IntPtr)fileNameBuf,
                     pwzInitialDir = ProjectHome,
-                    pwzFilter = "Zip Archives\0*.zip\0All Files\0*.*\0"
+                    pwzFilter = "Zip Archives (*.zip, *.egg)\0*.zip;*.egg\0All Files\0*.*\0"
                 }
             };
             uiShell.GetDialogOwnerHwnd(out ofn[0].hwndOwner);
