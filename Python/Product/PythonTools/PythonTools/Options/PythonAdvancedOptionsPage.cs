@@ -46,21 +46,36 @@ namespace Microsoft.PythonTools.Options {
 
         #region Editor Options
 
+        /// <summary>
+        /// True to ask the user whether to run when their code contains errors.
+        /// Default is false.
+        /// </summary>
         public bool PromptBeforeRunningWithBuildError {
             get { return _promptBeforeRunningWithBuildError; }
             set { _promptBeforeRunningWithBuildError = value; }
         }
 
+        /// <summary>
+        /// True to start analyzing an environment when it is used and has no
+        /// database. Default is true.
+        /// </summary>
         public bool AutoAnalyzeStandardLibrary {
             get { return _autoAnalysis; }
             set { _autoAnalysis = value; }
         }
 
+        /// <summary>
+        /// True to copy standard output from a Python process into the Output
+        /// window. Default is true.
+        /// </summary>
         public bool TeeStandardOutput {
             get { return _teeStdOut; }
             set { _teeStdOut = value; }
         }
 
+        /// <summary>
+        /// The severity to apply to inconsistent indentation. Default is warn.
+        /// </summary>
         public Severity IndentationInconsistencySeverity {
             get { return _indentationInconsistencySeverity; }
             set {
@@ -72,68 +87,93 @@ namespace Microsoft.PythonTools.Options {
             }
         }
 
+        /// <summary>
+        /// True to pause at the end of execution when an error occurs. Default
+        /// is true.
+        /// </summary>
         public bool WaitOnAbnormalExit {
             get { return _waitOnAbnormalExit; }
             set { _waitOnAbnormalExit = value; }
         }
 
+        /// <summary>
+        /// True to pause at the end of execution when completing successfully.
+        /// Default is true.
+        /// </summary>
         public bool WaitOnNormalExit {
             get { return _waitOnNormalExit; }
             set { _waitOnNormalExit = value; }
         }
 
+        /// <summary>
+        /// Maximum number of calls between modules to analyze. Default is 1300.
+        /// </summary>
         public int? CrossModuleAnalysisLimit {
             get { return _crossModuleAnalysisLimit; }
             set { _crossModuleAnalysisLimit = value; }
         }
 
         /// <summary>
-        /// Gets or sets whether or not the debugger will break on a SystemExit exception with
-        /// an exit code is zero.  This is only used if we would otherwise break on a SystemExit
-        /// exception as configured by the Debug->Exceptions window.
-        /// 
-        /// New in 1.1.
+        /// True to break on a SystemExit exception even when its exit code is
+        /// zero. This applies only when the debugger would normally break on
+        /// a SystemExit exception. Default is false.
         /// </summary>
+        /// <remarks>New in 1.1</remarks>
         public bool BreakOnSystemExitZero {
             get { return _breakOnSystemExitZero; }
             set { _breakOnSystemExitZero = value; }
         }
 
         /// <summary>
-        /// Gets or sets whether search paths are updated when adding linked files.
-        /// 
-        /// New in v1.1.
+        /// True to update search paths when adding linked files. Default is
+        /// true.
         /// </summary>
+        /// <remarks>New in 1.1</remarks>
         public bool UpdateSearchPathsWhenAddingLinkedFiles {
             get{ return _updateSearchPathsWhenAddingLinkedFiles;}
             set { _updateSearchPathsWhenAddingLinkedFiles = value; }
         }
 
         /// <summary>
-        /// Gets or sets whether the standard launcher should enable debugging of the standard library.
-        /// 
-        /// New in v1.1.
+        /// True if the standard launcher should allow debugging of the standard
+        /// library. Default is false.
         /// </summary>
+        /// <remarks>New in 1.1</remarks>
         public bool DebugStdLib {
             get { return _debugStdLib; }
             set { _debugStdLib = value; }
         }
 
+        /// <summary>
+        /// The frequency at which to check for updated news. Default is once
+        /// per week.
+        /// </summary>
+        /// <remarks>New in 2.0</remarks>
         public SurveyNewsPolicy SurveyNewsCheck {
             get { return _surveyNewsCheck; }
             set { _surveyNewsCheck = value; }
         }
 
+        /// <summary>
+        /// The date/time when the last check for news occurred.
+        /// </summary>
+        /// <remarks>New in 2.0</remarks>
         public DateTime SurveyNewsLastCheck {
             get { return _surveyNewsLastCheck; }
             set { _surveyNewsLastCheck = value; }
         }
 
+        /// <summary>
+        /// The url of the news feed.
+        /// </summary>
         public string SurveyNewsFeedUrl {
             get { return _surveyNewsFeedUrl; }
             set { _surveyNewsFeedUrl = value; }
         }
         
+        /// <summary>
+        /// The url of the news index page.
+        /// </summary>
         public string SurveyNewsIndexUrl {
             get { return _surveyNewsIndexUrl; }
             set { _surveyNewsIndexUrl = value; }
@@ -143,11 +183,16 @@ namespace Microsoft.PythonTools.Options {
 
         #endregion
 
+        /// <summary>
+        /// Resets settings back to their defaults. This should be followed by
+        /// a call to <see cref="SaveSettingsToStorage"/> to commit the new
+        /// values.
+        /// </summary>
         public override void ResetSettings() {
             _promptBeforeRunningWithBuildError = false;
             _waitOnAbnormalExit = true;
             _indentationInconsistencySeverity = Severity.Warning;
-            _waitOnNormalExit = false;
+            _waitOnNormalExit = true;
             _autoAnalysis = true;
             _teeStdOut = true;
             _breakOnSystemExitZero = false;
@@ -180,7 +225,7 @@ namespace Microsoft.PythonTools.Options {
         public override void LoadSettingsFromStorage() {
             _promptBeforeRunningWithBuildError = !(LoadBool(DontPromptBeforeRunningWithBuildErrorSetting) ?? false);
             _waitOnAbnormalExit = LoadBool(WaitOnAbnormalExitSetting) ?? true;
-            _waitOnNormalExit = LoadBool(WaitOnNormalExitSetting) ?? false;
+            _waitOnNormalExit = LoadBool(WaitOnNormalExitSetting) ?? true;
             _autoAnalysis = LoadBool(AutoAnalysisSetting) ?? true;
             _teeStdOut = LoadBool(TeeStandardOutSetting) ?? true;
             _breakOnSystemExitZero = LoadBool(BreakOnSystemExitZeroSetting) ?? false;

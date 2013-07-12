@@ -43,8 +43,19 @@ namespace DebuggerUITests {
             TestData.Deploy();
         }
 
+        bool PrevWaitOnNormalExit;
+
+        [TestInitialize]
+        public void MyTestInit() {
+            var options = GetOptions();
+            PrevWaitOnNormalExit = options.WaitOnNormalExit;
+            options.WaitOnNormalExit = false;
+        }
+
         [TestCleanup]
         public void MyTestCleanup() {
+            GetOptions().WaitOnNormalExit = PrevWaitOnNormalExit;
+
             VsIdeTestHostContext.Dte.Solution.Close(false);
         }
 
@@ -59,7 +70,7 @@ namespace DebuggerUITests {
             StartHelloWorldAndBreak();
 
             VsIdeTestHostContext.Dte.Debugger.Go(WaitForBreakOrEnd: true);
-            Assert.AreEqual(VsIdeTestHostContext.Dte.Debugger.CurrentMode, dbgDebugMode.dbgDesignMode);
+            Assert.AreEqual(dbgDebugMode.dbgDesignMode, VsIdeTestHostContext.Dte.Debugger.CurrentMode);
         }
 
         /// <summary>
@@ -103,7 +114,7 @@ namespace DebuggerUITests {
             try {
                 OpenProjectAndBreak(TestData.GetPath(@"TestData\RelativeInterpreterPath.sln"), "Program.py", 1);
                 VsIdeTestHostContext.Dte.Debugger.Go(WaitForBreakOrEnd: true);
-                Assert.AreEqual(VsIdeTestHostContext.Dte.Debugger.CurrentMode, dbgDebugMode.dbgDesignMode);
+                Assert.AreEqual(dbgDebugMode.dbgDesignMode, VsIdeTestHostContext.Dte.Debugger.CurrentMode);
             } finally {
                 File.Delete(TestData.GetPath(@"TestData\Interpreter.exe"));
             }
@@ -243,8 +254,8 @@ namespace DebuggerUITests {
         public void TestTerminateProcess() {
             StartHelloWorldAndBreak();
 
-            Assert.AreEqual(VsIdeTestHostContext.Dte.Debugger.CurrentMode, dbgDebugMode.dbgBreakMode);
-            Assert.AreEqual(VsIdeTestHostContext.Dte.Debugger.BreakpointLastHit.FileLine, 1);
+            Assert.AreEqual(dbgDebugMode.dbgBreakMode, VsIdeTestHostContext.Dte.Debugger.CurrentMode);
+            Assert.AreEqual(1, VsIdeTestHostContext.Dte.Debugger.BreakpointLastHit.FileLine);
 
             VsIdeTestHostContext.Dte.Debugger.TerminateAll();
 
@@ -260,12 +271,12 @@ namespace DebuggerUITests {
             StartHelloWorldAndBreak();
 
             var modules = ((Process3)VsIdeTestHostContext.Dte.Debugger.CurrentProcess).Modules;
-            Assert.AreEqual(modules.Count, 1);
+            Assert.AreEqual(1, modules.Count);
             var module = modules.Item(1);
             var modulePath = module.Path;
             Assert.IsTrue(modulePath.EndsWith("Program.py"));
             Assert.AreEqual("Program", module.Name);
-            Assert.AreNotEqual(module.Order, (uint)0);
+            Assert.AreNotEqual((uint)0, module.Order);
 
             VsIdeTestHostContext.Dte.Debugger.TerminateAll();
             WaitForMode(dbgDebugMode.dbgDesignMode);
@@ -298,13 +309,13 @@ namespace DebuggerUITests {
 
             WaitForMode(dbgDebugMode.dbgBreakMode);
 
-            Assert.AreEqual(VsIdeTestHostContext.Dte.Debugger.BreakpointLastHit.FileLine, 14);
+            Assert.AreEqual(14, VsIdeTestHostContext.Dte.Debugger.BreakpointLastHit.FileLine);
 
-            Assert.AreEqual(VsIdeTestHostContext.Dte.Debugger.GetExpression("i").Name, "i");
-            Assert.AreEqual(VsIdeTestHostContext.Dte.Debugger.GetExpression("i").Value, "42");
-            Assert.AreEqual(VsIdeTestHostContext.Dte.Debugger.GetExpression("i").Type, "int");
-            Assert.AreEqual(VsIdeTestHostContext.Dte.Debugger.GetExpression("i").IsValidValue, true);
-            Assert.AreEqual(VsIdeTestHostContext.Dte.Debugger.GetExpression("i").DataMembers.Count, 0);
+            Assert.AreEqual("i", VsIdeTestHostContext.Dte.Debugger.GetExpression("i").Name);
+            Assert.AreEqual("42", VsIdeTestHostContext.Dte.Debugger.GetExpression("i").Value);
+            Assert.AreEqual("int", VsIdeTestHostContext.Dte.Debugger.GetExpression("i").Type);
+            Assert.IsTrue(VsIdeTestHostContext.Dte.Debugger.GetExpression("i").IsValidValue);
+            Assert.AreEqual(0, VsIdeTestHostContext.Dte.Debugger.GetExpression("i").DataMembers.Count);
 
             var curFrame = VsIdeTestHostContext.Dte.Debugger.CurrentStackFrame;
                         
@@ -315,8 +326,8 @@ namespace DebuggerUITests {
             Assert.AreEqual((uint)14, ((StackFrame2)curFrame).LineNumber);
             Assert.AreEqual("Program", ((StackFrame2)curFrame).Module);
 
-            Assert.AreEqual(curFrame.Locals.Item("l").DataMembers.Count, 3);
-            Assert.AreEqual(curFrame.Locals.Item("l").DataMembers.Item(1).Name, "[0]");
+            Assert.AreEqual(3, curFrame.Locals.Item("l").DataMembers.Count);
+            Assert.AreEqual("[0]", curFrame.Locals.Item("l").DataMembers.Item(1).Name);
 
             Assert.AreEqual(3, ((StackFrame2)curFrame).Arguments.Count);
             Assert.AreEqual("a", ((StackFrame2)curFrame).Arguments.Item(1).Name);
@@ -327,12 +338,12 @@ namespace DebuggerUITests {
             Assert.AreEqual("5", expr.Value);
 
             expr = ((Debugger3)VsIdeTestHostContext.Dte.Debugger).GetExpression("invalid expression");
-            Assert.AreEqual(expr.IsValidValue, false);
+            Assert.IsFalse(expr.IsValidValue);
 
             VsIdeTestHostContext.Dte.Debugger.ExecuteStatement("x = 2");
 
             VsIdeTestHostContext.Dte.Debugger.Go(WaitForBreakOrEnd: true);
-            Assert.AreEqual(VsIdeTestHostContext.Dte.Debugger.CurrentMode, dbgDebugMode.dbgDesignMode);
+            Assert.AreEqual(dbgDebugMode.dbgDesignMode, VsIdeTestHostContext.Dte.Debugger.CurrentMode);
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
@@ -377,12 +388,12 @@ namespace DebuggerUITests {
             var excepDialog = app.WaitForException();
             AutomationWrapper.DumpElement(excepDialog.Element);
 
-            Assert.AreEqual(excepDialog.Description, expectedDescription);
-            Assert.AreEqual(excepDialog.Title, expectedTitle);
+            Assert.AreEqual(expectedDescription, excepDialog.Description);
+            Assert.AreEqual(expectedTitle, excepDialog.Title);
 
             excepDialog.Cancel();
 
-            Assert.AreEqual(((StackFrame2)debug3.CurrentThread.StackFrames.Item(1)).LineNumber, (uint)expectedLine);
+            Assert.AreEqual((uint)expectedLine, ((StackFrame2)debug3.CurrentThread.StackFrames.Item(1)).LineNumber);
 
             VsIdeTestHostContext.Dte.Debugger.Go(WaitForBreakOrEnd: true);
 
@@ -394,10 +405,10 @@ namespace DebuggerUITests {
         public void TestBreakpoints() {
             OpenDebuggerProjectAndBreak("BreakpointTest2.py", 3);
             var debug3 = (Debugger3)VsIdeTestHostContext.Dte.Debugger;
-            Assert.AreEqual(((StackFrame2)debug3.CurrentThread.StackFrames.Item(1)).LineNumber, (uint)3);
+            Assert.AreEqual((uint)3, ((StackFrame2)debug3.CurrentThread.StackFrames.Item(1)).LineNumber);
             debug3.Go(true);
-            Assert.AreEqual(((StackFrame2)debug3.CurrentThread.StackFrames.Item(1)).LineNumber, (uint)3);
-            Assert.AreEqual(true, debug3.Breakpoints.Item(1).Enabled);            
+            Assert.AreEqual((uint)3, ((StackFrame2)debug3.CurrentThread.StackFrames.Item(1)).LineNumber);
+            Assert.IsTrue(debug3.Breakpoints.Item(1).Enabled);            
             debug3.Breakpoints.Item(1).Delete();
             debug3.Go(true);
 
@@ -409,10 +420,10 @@ namespace DebuggerUITests {
         public void TestBreakpointsDisable() {
             OpenDebuggerProjectAndBreak("BreakpointTest4.py", 2);
             var debug3 = (Debugger3)VsIdeTestHostContext.Dte.Debugger;
-            Assert.AreEqual(((StackFrame2)debug3.CurrentThread.StackFrames.Item(1)).LineNumber, (uint)2);
+            Assert.AreEqual((uint)2, ((StackFrame2)debug3.CurrentThread.StackFrames.Item(1)).LineNumber);
             debug3.Go(true);
-            Assert.AreEqual(((StackFrame2)debug3.CurrentThread.StackFrames.Item(1)).LineNumber, (uint)2);
-            Assert.AreEqual(true, debug3.Breakpoints.Item(1).Enabled);
+            Assert.AreEqual((uint)2, ((StackFrame2)debug3.CurrentThread.StackFrames.Item(1)).LineNumber);
+            Assert.IsTrue(debug3.Breakpoints.Item(1).Enabled);
             debug3.Breakpoints.Item(1).Enabled = false;            
             debug3.Go(true);
 
@@ -425,13 +436,13 @@ namespace DebuggerUITests {
             var debug3 = (Debugger3)VsIdeTestHostContext.Dte.Debugger;
 
             OpenDebuggerProjectAndBreak("BreakpointTest4.py", 2);
-            Assert.AreEqual(((StackFrame2)debug3.CurrentThread.StackFrames.Item(1)).LineNumber, (uint)2);
+            Assert.AreEqual((uint)2, ((StackFrame2)debug3.CurrentThread.StackFrames.Item(1)).LineNumber);
             debug3.Go(true);
-            Assert.AreEqual(((StackFrame2)debug3.CurrentThread.StackFrames.Item(1)).LineNumber, (uint)2);
+            Assert.AreEqual((uint)2, ((StackFrame2)debug3.CurrentThread.StackFrames.Item(1)).LineNumber);
             int bpCount = debug3.Breakpoints.Count;
             
             Assert.AreEqual(1, bpCount);
-            Assert.AreEqual(true, debug3.Breakpoints.Item(1).Enabled);
+            Assert.IsTrue(debug3.Breakpoints.Item(1).Enabled);
             Assert.AreEqual(2, debug3.Breakpoints.Item(1).FileLine);
             debug3.Breakpoints.Item(1).Enabled = false;
 
@@ -443,22 +454,22 @@ namespace DebuggerUITests {
             // line 4
             debug3.Go(true);
             WaitForMode(dbgDebugMode.dbgBreakMode);
-            Assert.AreEqual(((StackFrame2)debug3.CurrentThread.StackFrames.Item(1)).LineNumber, (uint)4);
+            Assert.AreEqual((uint)4, ((StackFrame2)debug3.CurrentThread.StackFrames.Item(1)).LineNumber);
 
             // line 5
             debug3.Go(true);
             WaitForMode(dbgDebugMode.dbgBreakMode);
-            Assert.AreEqual(((StackFrame2)debug3.CurrentThread.StackFrames.Item(1)).LineNumber, (uint)5);
+            Assert.AreEqual((uint)5, ((StackFrame2)debug3.CurrentThread.StackFrames.Item(1)).LineNumber);
             debug3.Breakpoints.Item(3).Enabled = false;
 
             // back to line 4
             debug3.Go(true);
             WaitForMode(dbgDebugMode.dbgBreakMode);
-            Assert.AreEqual(((StackFrame2)debug3.CurrentThread.StackFrames.Item(1)).LineNumber, (uint)4);
+            Assert.AreEqual((uint)4, ((StackFrame2)debug3.CurrentThread.StackFrames.Item(1)).LineNumber);
 
             debug3.Go(true);
             WaitForMode(dbgDebugMode.dbgBreakMode);
-            Assert.AreEqual(((StackFrame2)debug3.CurrentThread.StackFrames.Item(1)).LineNumber, (uint)4);
+            Assert.AreEqual((uint)4, ((StackFrame2)debug3.CurrentThread.StackFrames.Item(1)).LineNumber);
             
             debug3.Breakpoints.Item(2).Enabled = false;
             debug3.Breakpoints.Item(3).Enabled = true;
@@ -466,7 +477,7 @@ namespace DebuggerUITests {
             // back to line 5
             debug3.Go(true);
             WaitForMode(dbgDebugMode.dbgBreakMode);
-            Assert.AreEqual(((StackFrame2)debug3.CurrentThread.StackFrames.Item(1)).LineNumber, (uint)5);
+            Assert.AreEqual((uint)5, ((StackFrame2)debug3.CurrentThread.StackFrames.Item(1)).LineNumber);
             debug3.Breakpoints.Item(3).Enabled = false;
 
             // all disabled, run to completion
@@ -490,7 +501,7 @@ namespace DebuggerUITests {
 
             // make sure we don't go into debug mode
             for (int i = 0; i < 10; i++) {
-                Assert.AreEqual(VsIdeTestHostContext.Dte.Debugger.CurrentMode, dbgDebugMode.dbgDesignMode);
+                Assert.AreEqual(dbgDebugMode.dbgDesignMode, VsIdeTestHostContext.Dte.Debugger.CurrentMode);
                 System.Threading.Thread.Sleep(100);
             }
 
@@ -516,7 +527,7 @@ namespace DebuggerUITests {
 
             // make sure we don't go into debug mode
             for (int i = 0; i < 10; i++) {
-                Assert.AreEqual(VsIdeTestHostContext.Dte.Debugger.CurrentMode, dbgDebugMode.dbgDesignMode);
+                Assert.AreEqual(dbgDebugMode.dbgDesignMode, VsIdeTestHostContext.Dte.Debugger.CurrentMode);
                 System.Threading.Thread.Sleep(100);
             }
 
@@ -685,10 +696,10 @@ namespace DebuggerUITests {
             VsIdeTestHostContext.Dte.Debugger.Breakpoints.Add(File: scriptFilePath, Line: 1);
             VsIdeTestHostContext.Dte.ExecuteCommand("EditorContextMenus.CodeWindow.DebugasScript");
             WaitForMode(dbgDebugMode.dbgBreakMode);
-            Assert.AreEqual(VsIdeTestHostContext.Dte.Debugger.CurrentMode, dbgDebugMode.dbgBreakMode);
-            Assert.AreEqual(VsIdeTestHostContext.Dte.Debugger.BreakpointLastHit.Name, "Program.py, line 1");
+            Assert.AreEqual(dbgDebugMode.dbgBreakMode, VsIdeTestHostContext.Dte.Debugger.CurrentMode);
+            Assert.AreEqual("Program.py, line 1", VsIdeTestHostContext.Dte.Debugger.BreakpointLastHit.Name);
             VsIdeTestHostContext.Dte.Debugger.Go(WaitForBreakOrEnd: true);
-            Assert.AreEqual(VsIdeTestHostContext.Dte.Debugger.CurrentMode, dbgDebugMode.dbgDesignMode);
+            Assert.AreEqual(dbgDebugMode.dbgDesignMode, VsIdeTestHostContext.Dte.Debugger.CurrentMode);
         }
 
         /// <summary>
@@ -705,10 +716,10 @@ namespace DebuggerUITests {
             VsIdeTestHostContext.Dte.Debugger.Breakpoints.Add(File: scriptFilePath, Line: 1);
             VsIdeTestHostContext.Dte.ExecuteCommand("EditorContextMenus.CodeWindow.DebugasScript");
             WaitForMode(dbgDebugMode.dbgBreakMode);
-            Assert.AreEqual(VsIdeTestHostContext.Dte.Debugger.CurrentMode, dbgDebugMode.dbgBreakMode);
-            Assert.AreEqual(VsIdeTestHostContext.Dte.Debugger.BreakpointLastHit.Name, "Program.py, line 1");
+            Assert.AreEqual(dbgDebugMode.dbgBreakMode, VsIdeTestHostContext.Dte.Debugger.CurrentMode);
+            Assert.AreEqual("Program.py, line 1", VsIdeTestHostContext.Dte.Debugger.BreakpointLastHit.Name);
             VsIdeTestHostContext.Dte.Debugger.Go(WaitForBreakOrEnd: true);
-            Assert.AreEqual(VsIdeTestHostContext.Dte.Debugger.CurrentMode, dbgDebugMode.dbgDesignMode);
+            Assert.AreEqual(dbgDebugMode.dbgDesignMode, VsIdeTestHostContext.Dte.Debugger.CurrentMode);
         }
 
         /// <summary>
@@ -725,10 +736,10 @@ namespace DebuggerUITests {
             VsIdeTestHostContext.Dte.Debugger.Breakpoints.Add(File: scriptFilePath, Line: 1);
             VsIdeTestHostContext.Dte.ExecuteCommand("EditorContextMenus.CodeWindow.DebugasScript");
             WaitForMode(dbgDebugMode.dbgBreakMode);
-            Assert.AreEqual(VsIdeTestHostContext.Dte.Debugger.CurrentMode, dbgDebugMode.dbgBreakMode);
-            Assert.AreEqual(VsIdeTestHostContext.Dte.Debugger.BreakpointLastHit.Name, "Program.py, line 1");
+            Assert.AreEqual(dbgDebugMode.dbgBreakMode, VsIdeTestHostContext.Dte.Debugger.CurrentMode);
+            Assert.AreEqual("Program.py, line 1", VsIdeTestHostContext.Dte.Debugger.BreakpointLastHit.Name);
             VsIdeTestHostContext.Dte.Debugger.Go(WaitForBreakOrEnd: true);
-            Assert.AreEqual(VsIdeTestHostContext.Dte.Debugger.CurrentMode, dbgDebugMode.dbgDesignMode);
+            Assert.AreEqual(dbgDebugMode.dbgDesignMode, VsIdeTestHostContext.Dte.Debugger.CurrentMode);
         }
 
         /// <summary>
@@ -817,7 +828,7 @@ namespace DebuggerUITests {
 
             WaitForMode(dbgDebugMode.dbgBreakMode);
 
-            Assert.AreEqual(VsIdeTestHostContext.Dte.Debugger.BreakpointLastHit.FileLine, lineNo);
+            Assert.AreEqual(lineNo, VsIdeTestHostContext.Dte.Debugger.BreakpointLastHit.FileLine);
             return project;
         }
 
@@ -827,7 +838,7 @@ namespace DebuggerUITests {
                 Thread.Sleep(100);
             }
 
-            Assert.AreEqual(VsIdeTestHostContext.Dte.Debugger.CurrentMode, mode);
+            Assert.AreEqual(mode, VsIdeTestHostContext.Dte.Debugger.CurrentMode);
         }
         
         #endregion
