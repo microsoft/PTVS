@@ -18,3 +18,7 @@ def f():
         nonlocal foo
         foo = 1
     foo = 2
+
+class X:
+    def f(x):
+        nonlocal __class__

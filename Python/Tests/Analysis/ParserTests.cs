@@ -70,6 +70,13 @@ namespace AnalysisTests {
 
         [TestMethod, Priority(0)]
         public void Errors() {
+            foreach (var version in V30_V32Versions) {
+                ParseErrors("Errors3x.py",
+                    version,
+                    new ErrorInfo("no binding for nonlocal '__class__' found", 23, 2, 14, 32, 2, 23)
+                );
+            }
+
             ParseErrors("AllErrors.py",
                 PythonLanguageVersion.V24,
                 new ErrorInfo("future statement does not support import *", 0, 1, 1, 24, 1, 25),
@@ -1319,7 +1326,7 @@ namespace AnalysisTests {
                                 CheckAssignment(Foo, One)
                             )
                         ),
-                        CheckFuncDef("f", NoParameters,                            
+                        CheckFuncDef("f", NoParameters,
                             CheckSuite(
                                 CheckClassDef("C", 
                                     CheckSuite(
@@ -1328,6 +1335,15 @@ namespace AnalysisTests {
                                     )
                                 ),
                                 CheckAssignment(Foo, Two)
+                            )
+                        ),
+                        CheckClassDef("X",
+                            CheckSuite(
+                                CheckFuncDef("f", new[] { CheckParameter("x") },
+                                    CheckSuite(
+                                        CheckNonlocal("__class__")
+                                    )
+                                )
                             )
                         )
                     )
@@ -1349,7 +1365,11 @@ namespace AnalysisTests {
                     new ErrorInfo("unexpected token '1'", 228, 19, 15, 229, 19, 16),
                     new ErrorInfo("unexpected token '<newline>'", 229, 19, 16, 235, 20, 5),
                     new ErrorInfo("unexpected token '<dedent>'", 229, 19, 16, 235, 20, 5),
-                    new ErrorInfo("unexpected end of file", 244, 21, 1, 244, 21, 1)
+                    new ErrorInfo("unexpected token '__class__'", 288, 24, 18, 297, 24, 27),
+                    new ErrorInfo("unexpected token '<newline>'", 297, 24, 27, 299, 25, 1),
+                    new ErrorInfo("unexpected token '<dedent>'", 297, 24, 27, 299, 25, 1),
+                    new ErrorInfo("unexpected end of file", 299, 25, 1, 299, 25, 1),
+                    new ErrorInfo("unexpected end of file", 299, 25, 1, 299, 25, 1)
                 );
             }
         }

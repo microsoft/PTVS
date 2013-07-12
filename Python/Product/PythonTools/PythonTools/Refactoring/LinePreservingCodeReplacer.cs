@@ -108,18 +108,37 @@ namespace Microsoft.PythonTools.Refactoring {
         }
 
         private void ReplaceLines(ITextEdit edit, int startOldLine, int endOldLine, int startNewLine, int endNewLine) {
-            edit.Replace(
-                Span.FromBounds(
-                    _snapshot.GetLineFromLineNumber(_startingReplacementLine + startOldLine).Start.Position,
-                    _snapshot.GetLineFromLineNumber(_startingReplacementLine + endOldLine - 1).End.Position
-                ),
-                string.Join(
-                    _view.Options.GetNewLineCharacter(),
-                    _newLines,
-                    startNewLine,
-                    endNewLine - startNewLine
-                )
-            );
+            int oldLineCount = endOldLine - startOldLine;
+            int newLineCount = endNewLine - startNewLine;
+
+            // replace one line at a time instead of all of the lines at once so that we preserve breakpoints
+            for (int i = startOldLine; i < endOldLine && i < (endNewLine - startNewLine + startOldLine); i++) {
+                edit.Replace(
+                    _snapshot.GetLineFromLineNumber(_startingReplacementLine + i).Extent,
+                    _newLines[startNewLine + i - startOldLine]
+                );
+            }
+
+            if (oldLineCount > newLineCount) {
+                // we end up w/ less lines, we need to delete some text
+                edit.Delete(
+                    Span.FromBounds(
+                        _snapshot.GetLineFromLineNumber(_startingReplacementLine + endOldLine - (oldLineCount - newLineCount)).Start.Position,
+                        _snapshot.GetLineFromLineNumber(_startingReplacementLine + endOldLine - 1).EndIncludingLineBreak.Position
+                    )
+                );
+            } else if (oldLineCount < newLineCount) {
+                // we end up w/ more lines, we need to insert some text
+                edit.Insert(
+                    _snapshot.GetLineFromLineNumber(_startingReplacementLine + endOldLine - 1).EndIncludingLineBreak,
+                    string.Join(
+                        _view.Options.GetNewLineCharacter(),
+                        _newLines,
+                        startNewLine + (newLineCount - oldLineCount + 1),
+                        endNewLine - startNewLine - (newLineCount - oldLineCount + 1)
+                    ) + _view.Options.GetNewLineCharacter()
+                );
+            }
         }
     }
 

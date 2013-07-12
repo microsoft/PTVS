@@ -57,31 +57,25 @@ namespace Microsoft.PythonTools.Intellisense {
             // only attach one parser to each buffer, we can get multiple enqueue's
             // for example if a document is already open when loading a project.
             BufferParser bufferParser;
-            if (!buffer.Properties.TryGetProperty<BufferParser>(typeof(BufferParser), out bufferParser)) {                
+            if (!buffer.Properties.TryGetProperty<BufferParser>(typeof(BufferParser), out bufferParser)) {
                 Dispatcher dispatcher = null;
                 var uiElement = textView as UIElement;
                 if (uiElement != null) {
                     dispatcher = uiElement.Dispatcher;
                 }
                 bufferParser = new BufferParser(this, dispatcher, projEntry, _parser, buffer);
-                
+
                 var curSnapshot = buffer.CurrentSnapshot;
                 var severity = PythonToolsPackage.Instance != null ? PythonToolsPackage.Instance.OptionsPage.IndentationInconsistencySeverity : Severity.Ignore;
                 bufferParser.EnqueingEntry();
                 EnqueWorker(() => {
                     _parser.ParseBuffers(bufferParser, severity, curSnapshot);
                 });
+            } else {
+                bufferParser.AttachedViews++;
             }
             
             return bufferParser;
-        }
-
-        public void UnEnqueueBuffer(ITextBuffer buffer) {
-            BufferParser parser;
-            if (buffer.Properties.TryGetProperty<BufferParser>(typeof(BufferParser), out parser)) {
-                buffer.ChangedLowPriority -= parser.BufferChangedLowPriority;
-                buffer.Properties.RemoveProperty(typeof(BufferParser));                
-            }
         }
 
         /// <summary>
@@ -177,6 +171,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private IList<ITextBuffer> _buffers;
         private bool _parsing, _requeue, _textChange;
         internal IProjectEntry _currentProjEntry;
+        public int AttachedViews;
 
         private const int ReparseDelay = 1000;      // delay in MS before we re-parse a buffer w/ non-line changes.
 
@@ -187,6 +182,7 @@ namespace Microsoft.PythonTools.Intellisense {
             _buffers = new[] { buffer };
             _currentProjEntry = initialProjectEntry;
             _dispatcher = dispatcher;
+            AttachedViews = 1;
             
             InitBuffer(buffer);
         }

@@ -28,6 +28,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         private PythonVariable _modVariable;        // Variable for the the __module__ (module name)
         private PythonVariable _docVariable;        // Variable for the __doc__ attribute
         private PythonVariable _modNameVariable;    // Variable for the module's __name__
+        private PythonVariable _classVariable;      // Variable for the classes __class__ cell var on 3.x
 
         public ClassDefinition(NameExpression/*!*/ name, Arg[] bases, Statement body) {           
             _name = name;
@@ -80,6 +81,11 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             return GetVariableReference(this, ast);
         }
 
+        internal PythonVariable ClassVariable {
+            get { return _classVariable; }
+            set { _classVariable = value; }
+        }
+
         internal PythonVariable ModVariable {
             get { return _modVariable; }
             set { _modVariable = value; }
@@ -112,6 +118,16 @@ namespace Microsoft.PythonTools.Parsing.Ast {
 
         internal override bool ExposesLocalVariable(PythonVariable variable) {
             return true;
+        }
+
+        internal override bool TryBindOuter(ScopeStatement from, string name, bool allowGlobals, out PythonVariable variable) {
+            if (name == "__class__" && _classVariable != null) {
+                // 3.x has a cell var called __class__ which can be bound by inner scopes
+                variable = _classVariable;
+                return true;
+            }
+
+            return base.TryBindOuter(from, name, allowGlobals, out variable);
         }
 
         internal override PythonVariable BindReference(PythonNameBinder binder, string name) {

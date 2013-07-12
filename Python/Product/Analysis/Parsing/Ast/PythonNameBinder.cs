@@ -264,6 +264,9 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 node.DocVariable = DefineName("__doc__");
             }
             node.ModVariable = DefineName("__module__");
+            if (_langVersion.Is3x()) {
+                node.ClassVariable = DefineName("__class__");
+            }
 
             // Walk the body
             node.Body.Walk(this);

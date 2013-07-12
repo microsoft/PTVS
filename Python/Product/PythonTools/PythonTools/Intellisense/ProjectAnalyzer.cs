@@ -155,7 +155,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
                     var classifier = buffer.GetPythonClassifier();
                     if (classifier != null) {
-                        ((PythonClassifier)classifier).NewVersion();
+                        classifier.NewVersion();
                     }
                 }
 

@@ -482,6 +482,10 @@ namespace Microsoft.PythonTools.Parsing {
                             break;
 
                         } else {
+                            if (Peek() == -1) {
+                                _endContinues = true;
+                                return Tokens.EndOfFileToken;
+                            }
                             BufferBack();
                             goto default;
                         }

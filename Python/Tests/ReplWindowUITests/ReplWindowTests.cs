@@ -53,6 +53,19 @@ namespace ReplWindowUITests {
     public class ReplWindowTests {
         internal static readonly CPythonInterpreterFactoryProvider InterpFactory = new CPythonInterpreterFactoryProvider();
 
+        [TestMethod, Priority(0)]
+        public void CanExecuteText() {
+            // http://pytools.codeplex.com/workitem/606
+            var eval = new PythonReplEvaluator(
+                InterpFactory.GetInterpreterFactories().First(fact => fact.Id == new Guid("{2AF0F10D-7135-4994-9156-5D01C9C11B7E}") && fact.Configuration.Version == new Version(2, 7)),
+                null,
+                new ReplTestReplOptions()
+            );
+
+            Assert.AreEqual(eval.CanExecuteText("x = \\"), false);
+            Assert.AreEqual(eval.CanExecuteText("x = \\\r\n42\r\n\r\n"), true);
+        }
+
         /// <summary>
         /// Directed unit tests for the repl evaluator's spliting code into individual statements...
         /// </summary>

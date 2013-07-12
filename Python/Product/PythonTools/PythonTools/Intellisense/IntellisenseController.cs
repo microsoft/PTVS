@@ -97,7 +97,8 @@ namespace Microsoft.PythonTools.Intellisense {
         public void DisconnectSubjectBuffer(ITextBuffer subjectBuffer) {
             // only disconnect if we own the buffer parser
             BufferParser parser;
-            if (subjectBuffer.Properties.TryGetProperty<BufferParser>(typeof(BufferParser), out parser) && parser == _bufferParser) {
+            if (subjectBuffer.Properties.TryGetProperty<BufferParser>(typeof(BufferParser), out parser) && 
+                --parser.AttachedViews == 0) {
                 _bufferParser.RemoveBuffer(subjectBuffer);
             }
         }
