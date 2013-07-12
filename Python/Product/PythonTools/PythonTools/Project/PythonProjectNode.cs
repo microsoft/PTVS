@@ -25,6 +25,7 @@ using System.Windows;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Interpreters;
 using Microsoft.PythonTools.Navigation;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -84,10 +85,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private void InterpreterFactoriesChanged(object sender, EventArgs e) {
-            var node = GetInterpretersContainerNode();
-            if (node != null) {
-                node.OnInterpreterFactoriesChanged(_interpreters);
-            }
+            RefreshInterpreters();
         }
 
         internal MSBuildProjectInterpreterFactoryProvider Interpreters {
@@ -209,21 +207,12 @@ namespace Microsoft.PythonTools.Project {
             this.AddChild(_searchPathContainer);
             RefreshCurrentWorkingDirectory();
             RefreshSearchPaths();
+            RefreshInterpreters();
 
             OnProjectPropertyChanged += PythonProjectNode_OnProjectPropertyChanged;
             base.Reload();
 
             PythonToolsPackage.Instance.CheckSurveyNews(false);
-        }
-
-        protected internal override void ProcessReferences() {
-            base.ProcessReferences();
-
-            var interpreters = GetInterpretersContainerNode();
-            if (interpreters == null) {
-                interpreters = new InterpretersContainerNode(this);
-                AddChild(interpreters);
-            }
         }
 
         private void RefreshCurrentWorkingDirectory() {
@@ -299,6 +288,45 @@ namespace Microsoft.PythonTools.Project {
                 }
             } finally {
                 IsRefreshing = false;
+            }
+        }
+
+        private void RefreshInterpreters() {
+            if (_uiSync.InvokeRequired) {
+                _uiSync.BeginInvoke((Action)RefreshInterpreters, null);
+                return;
+            }
+
+            var node = GetInterpretersContainerNode();
+            var service = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
+            var remaining = node.AllChildren.OfType<InterpretersNode>().ToDictionary(n => n._factory);
+
+            foreach (var fact in Interpreters.GetInterpreterFactories()) {
+                if (!remaining.Remove(fact)) {
+                    node.AddChild(new InterpretersNode(
+                        this,
+                        Interpreters.GetProjectItem(fact),
+                        fact,
+                        isInterpreterReference: service != null && service.Interpreters.Contains(fact),
+                        canDelete: fact is DerivedInterpreterFactory));
+                }
+            }
+
+            foreach (var child in remaining.Values) {
+                node.RemoveChild(child);
+            }
+
+            bool wasExpanded = node.GetIsExpanded();
+            var expandAfter = node.AllChildren.Where(n => n.GetIsExpanded()).ToArray();
+            OnInvalidateItems(node);
+            if (wasExpanded) {
+                node.ExpandItem(EXPANDFLAGS.EXPF_ExpandFolder);
+            }
+            foreach (var child in expandAfter) {
+                child.ExpandItem(EXPANDFLAGS.EXPF_ExpandFolder);
+            }
+            foreach (var child in node.AllChildren.OfType<InterpretersNode>()) {
+                BoldItem(child, child._factory == Interpreters.ActiveInterpreter);
             }
         }
 
@@ -554,10 +582,11 @@ namespace Microsoft.PythonTools.Project {
         /// </summary>
         private void ActiveInterpreterChanged(object sender, EventArgs e) {
             if (_uiSync.InvokeRequired) {
-                _uiSync.Invoke((EventHandler)ActiveInterpreterChanged, new object[] { sender, e });
+                _uiSync.Invoke((EventHandler)ActiveInterpreterChanged, sender, e);
                 return;
             }
             DisposeInterpreter();
+            RefreshInterpreters();
 
             var analyzer = CreateAnalyzer();
 
@@ -902,8 +931,13 @@ namespace Microsoft.PythonTools.Project {
         /// <summary>
         /// Returns the interpreters container node.
         /// </summary>
-        internal InterpretersContainerNode GetInterpretersContainerNode() {
-            return AllChildren.OfType<InterpretersContainerNode>().FirstOrDefault();
+        internal InterpretersContainerNode GetInterpretersContainerNode(bool create = true) {
+            var interpreters = AllChildren.OfType<InterpretersContainerNode>().FirstOrDefault();
+            if (interpreters == null && create) {
+                interpreters = new InterpretersContainerNode(this);
+                AddChild(interpreters);
+            }
+            return interpreters;
         }
 
         #endregion

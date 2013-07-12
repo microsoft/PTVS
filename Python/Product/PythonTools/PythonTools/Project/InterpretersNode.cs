@@ -54,7 +54,6 @@ namespace Microsoft.PythonTools.Project {
             ExcludeNodeFromScc = true;
 
             _interpreters = project.Interpreters;
-            _interpreters.ActiveInterpreterChanged += Interpreters_ActiveInterpreterChanged;
             _factory = factory;
             _isReference = isInterpreterReference;
             _canDelete = canDelete;
@@ -71,6 +70,10 @@ namespace Microsoft.PythonTools.Project {
                 _timer = new Timer(CheckPackages);
             }
             IsExpanded = false;
+
+            if (_interpreters.ActiveInterpreter == _factory) {
+                ProjectMgr.BoldItem(this, true);
+            }
         }
 
         private static ProjectElement ChooseElement(PythonProjectNode project, ProjectItem item) {
@@ -254,9 +257,6 @@ namespace Microsoft.PythonTools.Project {
         /// </summary>
         public override string Caption {
             get {
-                // Apply a very heavy hammer to ensure we bold items correctly
-                ProjectMgr.BoldItem(this, _interpreters.ActiveInterpreter == _factory);
-
                 return _factory.Description;
             }
         }
@@ -289,10 +289,6 @@ namespace Microsoft.PythonTools.Project {
                 }
                 return base.OverlayIconIndex;
             }
-        }
-
-        void Interpreters_ActiveInterpreterChanged(object sender, EventArgs e) {
-            ProjectMgr.BoldItem(this, _interpreters.ActiveInterpreter == _factory);
         }
 
         /// <summary>

@@ -60,7 +60,6 @@ namespace Microsoft.VisualStudioTools.Project {
         private FileSystemWatcher _watcher, _attributesWatcher;
         private int _suppressFileWatcherCount;
         private bool _isRefreshing;
-        internal bool _boldedStartupItem;
         private bool _showingAllFiles;
         private object _automationObject;
         private CommonPropertyPage _propPage;
@@ -71,6 +70,7 @@ namespace Microsoft.VisualStudioTools.Project {
         private MSBuild.Project userBuildProject;
         private readonly Dictionary<string, FileSystemWatcher> _symlinkWatchers = new Dictionary<string, FileSystemWatcher>();
         private DiskMerger _currentMerger;
+        private readonly HashSet<HierarchyNode> _needBolding = new HashSet<HierarchyNode>();
         private int _idleTriggered;
 
         public CommonProjectNode(CommonProjectPackage/*!*/ package, ImageList/*!*/ imageList) {
@@ -378,6 +378,14 @@ namespace Microsoft.VisualStudioTools.Project {
         /// </summary>
         protected override void Reload() {
             base.Reload();
+
+            var startupPath = GetStartupFile();
+            if (!string.IsNullOrEmpty(startupPath)) {
+                var startup = FindNodeByFullPath(startupPath);
+                if (startup != null) {
+                    BoldItem(startup, true);
+                }
+            }
 
             OnProjectPropertyChanged += CommonProjectNode_OnProjectPropertyChanged;
 
@@ -852,7 +860,7 @@ namespace Microsoft.VisualStudioTools.Project {
         /// </summary>
         private void TriggerIdle() {
             if (Interlocked.CompareExchange(ref _idleTriggered, 1, 0) == 0) {
-                _uiSync.BeginInvoke(Nop, Type.EmptyTypes);
+                _uiSync.BeginInvoke(Nop);
             }
         }
 
@@ -879,6 +887,8 @@ namespace Microsoft.VisualStudioTools.Project {
         private void OnIdle(object sender, ComponentManagerEventArgs e) {
             Interlocked.Exchange(ref _idleTriggered, 0);
             do {
+                BoldDeferredItems();
+
                 using (new DebugTimer("ProcessFileChanges while Idle", 100)) {
                     if (IsClosed) {
                         return;
@@ -1167,28 +1177,105 @@ namespace Microsoft.VisualStudioTools.Project {
             this.OleServiceProvider.AddService(typeof(DesignerContext), new OleServiceProvider.ServiceCreatorCallback(this.CreateServices), false);
         }
 
-        internal void BoldStartupItem(HierarchyNode startupItem) {
-            if (!_boldedStartupItem) {
-                if (BoldItem(startupItem, true)) {
-                    _boldedStartupItem = true;
-                }
-            }
-        }
-
         public bool BoldItem(HierarchyNode node, bool isBold) {
             IVsUIHierarchyWindow2 windows = GetUIHierarchyWindow(
                 Site as IServiceProvider,
                 new Guid(ToolWindowGuids80.SolutionExplorer)) as IVsUIHierarchyWindow2;
 
-            if (ErrorHandler.Succeeded(windows.SetItemAttribute(
+#if DEV10
+            // GetItemState will fail if the item has not yet been added to the
+            // hierarchy. If it succeeds, we can make the item bold.
+            uint state;
+            if (ErrorHandler.Failed(windows.GetItemState(
+                this.GetOuterInterface<IVsUIHierarchy>(),
+                node.ID,
+                (uint)__VSHIERARCHYITEMSTATE.HIS_Bold,
+                out state))) {
+
+                if (isBold) {
+                    _needBolding.Add(node);
+                }
+                return false;
+            }
+#endif
+
+            if (ErrorHandler.Failed(windows.SetItemAttribute(
                 this.GetOuterInterface<IVsUIHierarchy>(),
                 node.ID,
                 (uint)__VSHIERITEMATTRIBUTE.VSHIERITEMATTRIBUTE_Bold,
                 isBold
             ))) {
-                return true;
+                return false;
             }
-            return false;
+
+#if DEV11_OR_LATER
+            // GetItemState will return 0 for HIS_Bold if the setting did not
+            // stick.
+            uint state;
+            if (ErrorHandler.Failed(windows.GetItemState(
+                this.GetOuterInterface<IVsUIHierarchy>(),
+                node.ID,
+                (uint)__VSHIERARCHYITEMSTATE.HIS_Bold,
+                out state)) ||
+                state == 0) {
+
+                if (isBold) {
+                    _needBolding.Add(node);
+                }
+                return false;
+            }
+#endif
+            return true;
+        }
+
+        private void BoldDeferredItems() {
+            if (_needBolding.Count == 0) {
+                return;
+            }
+            var items = _needBolding.ToArray();
+            _needBolding.Clear();
+
+            IVsUIHierarchyWindow2 windows = GetUIHierarchyWindow(
+                Site as IServiceProvider,
+                new Guid(ToolWindowGuids80.SolutionExplorer)) as IVsUIHierarchyWindow2;
+
+            foreach (var node in items) {
+#if DEV10
+                // GetItemState will fail if the item has not yet been added to the
+                // hierarchy. If it succeeds, we can make the item bold.
+                uint state;
+                if (ErrorHandler.Failed(windows.GetItemState(
+                    this.GetOuterInterface<IVsUIHierarchy>(),
+                    node.ID,
+                    (uint)__VSHIERARCHYITEMSTATE.HIS_Bold,
+                    out state))) {
+                    _needBolding.Add(node);
+                    continue;
+                }
+#endif
+
+                windows.SetItemAttribute(
+                    this.GetOuterInterface<IVsUIHierarchy>(),
+                    node.ID,
+                    (uint)__VSHIERITEMATTRIBUTE.VSHIERITEMATTRIBUTE_Bold,
+                    true
+                );
+
+#if DEV11_OR_LATER
+            // GetItemState will return 0 for HIS_Bold if the setting did not
+            // stick.
+                uint state;
+                if (ErrorHandler.Failed(windows.GetItemState(
+                    this.GetOuterInterface<IVsUIHierarchy>(),
+                    node.HierarchyId,
+                    (uint)__VSHIERARCHYITEMSTATE.HIS_Bold,
+                    out state)) ||
+                    state == 0) {
+                    _needBolding.Add(node);
+                    continue;
+                }
+#endif
+            }
         }
 
         /// <summary>
@@ -1756,19 +1843,5 @@ namespace Microsoft.VisualStudioTools.Project {
                 _watcher.EnableRaisingEvents = true;
             }
         }
-
-#if DEV11_OR_LATER
-        public override object GetProperty(int propId) {            
-            CommonFolderNode.BoldStartupOnIcon(propId, this);
-
-            return base.GetProperty(propId);
-        }
-#else
-        public override int SetProperty(int propid, object value) {
-            CommonFolderNode.BoldStartupOnExpand(propid, this);
-
-            return base.SetProperty(propid, value);
-        }
-#endif
     }
 }

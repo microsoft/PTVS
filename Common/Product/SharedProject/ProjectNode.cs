@@ -148,38 +148,6 @@ namespace Microsoft.VisualStudioTools.Project
             DoNotTriggerTrackerQueryEvents = 4
         }
 
-        private class HierarchyEventsSink : IVsHierarchyEvents {
-            private readonly ProjectNode projectNode;
-
-            public HierarchyEventsSink(ProjectNode projectNode) {
-                this.projectNode = projectNode;
-            }
-
-            public int OnInvalidateIcon(IntPtr hicon) {
-                return VSConstants.S_OK;
-            }
-
-            public int OnInvalidateItems(uint itemidParent) {
-                return VSConstants.S_OK;
-            }
-
-            public int OnItemAdded(uint itemidParent, uint itemidSiblingPrev, uint itemidAdded) {
-                return VSConstants.S_OK;
-            }
-
-            public int OnItemDeleted(uint itemid) {
-                return VSConstants.S_OK;
-            }
-
-            public int OnItemsAppended(uint itemidParent) {
-                return VSConstants.S_OK;
-            }
-
-            public int OnPropertyChanged(uint itemid, int propid, uint flags) {
-                return VSConstants.S_OK;
-            }
-        }
-
         #endregion
 
         #region constants
@@ -5537,9 +5505,6 @@ If the files in the existing folder have the same names as files in the folder y
         {
             this.ID = VSConstants.VSITEMID_ROOT;
             this.tracker = new TrackDocumentsHelper(this);
-
-            uint cookie;
-            this.AdviseHierarchyEvents(new HierarchyEventsSink(this), out cookie);
         }
 
         /// <summary>

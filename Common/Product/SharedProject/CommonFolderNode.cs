@@ -195,53 +195,6 @@ namespace Microsoft.VisualStudioTools.Project {
             return deleteOperation == __VSDELETEITEMOPERATION.DELITEMOP_DeleteFromStorage;
         }
         
-#if DEV11_OR_LATER
-        public override object GetProperty(int propId) {
-            CommonFolderNode.BoldStartupOnIcon(propId, this);
-
-            return base.GetProperty(propId);
-        }
-#else
-        public override int SetProperty(int propid, object value) {
-            BoldStartupOnExpand(propid, this);
-
-            return base.SetProperty(propid, value);
-        }
-
-        internal static void BoldStartupOnExpand(int propId, HierarchyNode parent) {
-            // We can't bold the startup item while we're loading the project because the
-            // UI hierarchy isn't initialized yet.  So instead we wait until we get a request
-            // for an icon for the startup item's parent, and then we bold it.
-
-            if (propId == (int)__VSHPROPID.VSHPROPID_Expanded) {
-                SetBoldStartup(parent);
-            }
-        }
-#endif
-
-        internal static void BoldStartupOnIcon(int propId, HierarchyNode parent) {
-            // We can't bold the startup item while we're loading the project because the
-            // UI hierarchy isn't initialized yet.  So instead we wait until we get a request
-            // for an icon for the startup item's parent, and then we bold it.
-
-            if (propId == (int)__VSHPROPID.VSHPROPID_IconIndex || propId == (int)__VSHPROPID.VSHPROPID_OpenFolderIconIndex) {
-                SetBoldStartup(parent);
-            }
-        }
-
-        private static void SetBoldStartup(HierarchyNode parent) {
-            string startupFile;
-            CommonProjectNode comProj = (CommonProjectNode)parent.ProjectMgr;
-            HierarchyNode startupItem;
-            if (!comProj._boldedStartupItem &&
-                (startupFile = comProj.GetStartupFile()) != null &&
-                (startupItem = parent.ProjectMgr.FindNodeByFullPath(CommonUtils.GetAbsoluteFilePath(comProj.ProjectFolder, startupFile))) != null) {
-
-                // we're expanding the parent of the 
-                comProj.BoldStartupItem(startupItem);
-            }
-        }
-
         public new CommonProjectNode ProjectMgr {
             get {
                 return (CommonProjectNode)base.ProjectMgr;

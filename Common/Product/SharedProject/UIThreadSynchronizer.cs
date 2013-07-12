@@ -43,7 +43,7 @@ namespace Microsoft.VisualStudioTools.Project {
 
         #region ISynchronizeInvoke Members
 
-        public IAsyncResult BeginInvoke(Delegate method, object[] args) {
+        public IAsyncResult BeginInvoke(Delegate method, params object[] args) {
             return Task.Factory.StartNew(() => method.DynamicInvoke(args), default(System.Threading.CancellationToken), TaskCreationOptions.None, _scheduler);
         }
 
@@ -51,7 +51,7 @@ namespace Microsoft.VisualStudioTools.Project {
             return ((Task<object>)result).Result;
         }
 
-        public object Invoke(Delegate method, object[] args) {
+        public object Invoke(Delegate method, params object[] args) {
             var task = Task.Factory.StartNew(() => method.DynamicInvoke(args), default(System.Threading.CancellationToken), TaskCreationOptions.None, _scheduler);
             task.Wait();
             return task.Result;

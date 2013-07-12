@@ -39,38 +39,6 @@ namespace Microsoft.PythonTools.Project {
             : base(project.ProjectMgr) {
             _projectNode = project;
             ExcludeNodeFromScc = true;
-
-            OnInterpreterFactoriesChanged(_projectNode.Interpreters);
-        }
-
-        internal void OnInterpreterFactoriesChanged(MSBuildProjectInterpreterFactoryProvider provider) {
-            var service = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
-            var remaining = AllChildren.OfType<InterpretersNode>().ToDictionary(n => n._factory);
-
-            foreach (var fact in provider.GetInterpreterFactories()) {
-                if (!remaining.Remove(fact)) {
-                    AddChild(new InterpretersNode(
-                        ProjectMgr,
-                        provider.GetProjectItem(fact),
-                        fact,
-                        isInterpreterReference: service != null && service.Interpreters.Contains(fact),
-                        canDelete: fact is DerivedInterpreterFactory));
-                }
-            }
-
-            foreach (var child in remaining.Values) {
-                RemoveChild(child);
-            }
-
-            bool wasExpanded = GetIsExpanded();
-            var expandAfter = AllChildren.Where(n => n.GetIsExpanded()).ToArray();
-            ProjectMgr.OnInvalidateItems(this);
-            if (wasExpanded) {
-                ExpandItem(EXPANDFLAGS.EXPF_ExpandFolder);
-            }
-            foreach (var child in expandAfter) {
-                child.ExpandItem(EXPANDFLAGS.EXPF_ExpandFolder);
-            }
         }
 
         protected override NodeProperties CreatePropertiesObject() {
