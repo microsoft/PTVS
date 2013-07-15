@@ -81,6 +81,7 @@
                 </Grid.ColumnDefinitions>
                     <TextBox Grid.Column="0"
                              Name="VirtualEnvPathTextBox"
+                             AutomationProperties.AutomationId="VirtualEnvPath"
                              Style="{StaticResource MonoTextBox}"
                              Text="{Binding VirtualEnvName,UpdateSourceTrigger=PropertyChanged}" />
                     <Button Grid.Column="1"
@@ -100,6 +101,7 @@
             </wpf:LabelledControl.HelpText>
             <ComboBox Grid.Row="3"
                       Margin="3"
+                      AutomationProperties.AutomationId="BaseInterpreter"
                       VerticalAlignment="Bottom"
                       ItemsSource="{Binding Interpreters}"
                       ItemTemplate="{StaticResource NameTemplate}"

@@ -42,7 +42,7 @@ namespace Microsoft.PythonTools.Interpreter {
             _interpreterPath = path;
             _windowsInterpreterPath = winPath ?? path;
             _libraryPath = libraryPath;
-            if (string.IsNullOrEmpty(_libraryPath)) {
+            if (string.IsNullOrEmpty(_libraryPath) && !string.IsNullOrEmpty(_prefixPath)) {
                 _libraryPath = Path.Combine(_prefixPath, "Lib");
             }
             _pathEnvironmentVariable = pathVar;

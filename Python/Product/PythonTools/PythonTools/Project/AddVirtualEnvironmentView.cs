@@ -42,14 +42,22 @@ namespace Microsoft.PythonTools.Project {
         };
 
 
-        public AddVirtualEnvironmentView(string projectHome, IInterpreterOptionsService interpService) {
+        public AddVirtualEnvironmentView(
+            string projectHome,
+            IInterpreterOptionsService interpService,
+            IPythonInterpreterFactory selectInterpreter) {
+            
             _service = interpService;
             _projectHome = projectHome;
             VirtualEnvBasePath = _projectHome;
             _busy = new HashSet<InterpreterView>();
             Interpreters = new ObservableCollection<InterpreterView>(InterpreterView.GetInterpreters(interpService));
-            var def = interpService.DefaultInterpreter;
-            BaseInterpreter = Interpreters.FirstOrDefault(v => v.Interpreter == def) ?? Interpreters.LastOrDefault();
+            var selection = Interpreters.FirstOrDefault(v => v.Interpreter == selectInterpreter);
+            if (selection == null) {
+                selection = Interpreters.FirstOrDefault(v => v.Interpreter == interpService.DefaultInterpreter)
+                    ?? Interpreters.LastOrDefault();
+            }
+            BaseInterpreter = selection;
 
             _service.InterpretersChanged += OnInterpretersChanged;
 

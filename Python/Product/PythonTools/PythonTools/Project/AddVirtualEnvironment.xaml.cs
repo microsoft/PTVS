@@ -35,12 +35,10 @@ namespace Microsoft.PythonTools.Project {
     /// Interaction logic for AddInterpreter.xaml
     /// </summary>
     partial class AddVirtualEnvironment : DialogWindowVersioningWorkaround {
-        const double OutputTextBoxWidth = 350.0;
-
         readonly AddVirtualEnvironmentView _view;
 
         private AddVirtualEnvironment(PythonProjectNode project, IInterpreterOptionsService service) {
-            _view = new AddVirtualEnvironmentView(project.ProjectHome, service);
+            _view = new AddVirtualEnvironmentView(project.ProjectHome, service, project.Interpreters.ActiveInterpreter);
             _view.PropertyChanged += View_PropertyChanged;
             DataContext = _view;
 
