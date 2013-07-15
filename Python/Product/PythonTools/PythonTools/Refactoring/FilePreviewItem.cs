@@ -42,7 +42,7 @@ namespace Microsoft.PythonTools.Refactoring {
         private IVsTextLines _buffer;
         private bool _toggling;
 
-        private static readonly ImageList _imageList = Utilities.GetImageList(typeof(PythonProjectNode).Assembly.GetManifestResourceStream(PythonConstants.ProjectImageList));
+        internal static readonly ImageList _imageList = Utilities.GetImageList(typeof(PythonProjectNode).Assembly.GetManifestResourceStream(PythonConstants.ProjectImageList));
 
         public FilePreviewItem(PreviewChangesEngine engine, string file) {
             Filename = file;

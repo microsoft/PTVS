@@ -102,12 +102,13 @@ namespace Microsoft.VisualStudioTools.Navigation {
                         int colonIndex;
                         if ((colonIndex = srchText.LastIndexOf(':')) != -1) {
                             string filename = srchText.Substring(0, srchText.LastIndexOf(':'));
-
-                            foreach (var item in _root.Children) {
-                                if (item.FullName == filename) {
-                                    ppIVsSimpleObjectList2 = item.DoSearch(pobSrch[0]);
-                                    if (ppIVsSimpleObjectList2 != null) {
-                                        return VSConstants.S_OK;
+                            foreach (ProjectLibraryNode project in _root.Children) {
+                                foreach (var item in project.Children) {
+                                    if (item.FullName == filename) {
+                                        ppIVsSimpleObjectList2 = item.DoSearch(pobSrch[0]);
+                                        if (ppIVsSimpleObjectList2 != null) {
+                                            return VSConstants.S_OK;
+                                        }
                                     }
                                 }
                             }
@@ -177,6 +178,10 @@ namespace Microsoft.VisualStudioTools.Navigation {
             return VSConstants.S_OK;
         }
 
+        public void Update() {
+            _updateCount++;
+            _root.Update();
+        }
         #endregion
     }
 }

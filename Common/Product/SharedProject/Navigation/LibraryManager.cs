@@ -36,7 +36,7 @@ namespace Microsoft.VisualStudioTools.Navigation {
     internal abstract partial class LibraryManager : IDisposable, IVsRunningDocTableEvents {
         private readonly CommonPackage/*!*/ _package;
         private readonly Dictionary<uint, TextLineEventListener> _documents;
-        private readonly Dictionary<IVsHierarchy, HierarchyListener> _hierarchies;
+        private readonly Dictionary<IVsHierarchy, HierarchyInfo> _hierarchies = new Dictionary<IVsHierarchy,HierarchyInfo>();
         private readonly Dictionary<ModuleId, LibraryNode> _files;
         private readonly Library _library;
         private readonly IVsEditorAdaptersFactoryService _adapterFactory;
@@ -47,7 +47,6 @@ namespace Microsoft.VisualStudioTools.Navigation {
             Contract.Assert(package != null);
             _package = package;
             _documents = new Dictionary<uint, TextLineEventListener>();
-            _hierarchies = new Dictionary<IVsHierarchy, HierarchyListener>();
             _library = new Library(new Guid(CommonConstants.LibraryGuid));
             _library.LibraryCapabilities = (_LIB_FLAGS2)_LIB_FLAGS.LF_PROJECT;
             _files = new Dictionary<ModuleId, LibraryNode>();
@@ -104,10 +103,14 @@ namespace Microsoft.VisualStudioTools.Navigation {
             }
             
             RegisterLibrary();
-        
+            var commonProject = hierarchy.GetProject().GetCommonProject();
             HierarchyListener listener = new HierarchyListener(hierarchy, this);
+            var node = _hierarchies[hierarchy] = new HierarchyInfo(
+                listener,
+                new ProjectLibraryNode(commonProject)
+            );
+            _library.AddNode(node.ProjectLibraryNode);
             listener.StartListening(true);
-            _hierarchies.Add(hierarchy, listener);
             RegisterForRDTEvents();
         }
 
@@ -126,11 +129,12 @@ namespace Microsoft.VisualStudioTools.Navigation {
             if ((null == hierarchy) || !_hierarchies.ContainsKey(hierarchy)) {
                 return;
             }
-            HierarchyListener listener = _hierarchies[hierarchy];
-            if (null != listener) {
-                listener.Dispose();
+            HierarchyInfo info = _hierarchies[hierarchy];
+            if (null != info) {
+                info.Listener.Dispose();
             }
             _hierarchies.Remove(hierarchy);
+            _library.RemoveNode(info.ProjectLibraryNode);
             if (0 == _hierarchies.Count) {
                 UnregisterRDTEvents();
             }
@@ -198,7 +202,7 @@ namespace Microsoft.VisualStudioTools.Navigation {
                     fileNode,
                     System.IO.Path.GetFileName(task.FileName),
                     task.FileName,
-                    LibraryNodeType.PhysicalContainer
+                    LibraryNodeType.Classes
                 );
 
                 // TODO: Creating the module tree should be done lazily as needed
@@ -207,18 +211,19 @@ namespace Microsoft.VisualStudioTools.Navigation {
                 // finer grained and only update the changed nodes.  But then we
                 // need to make sure we're not mutating lists which are handed out.
 
-                CreateModuleTree(module, module, scope, task.FileName + ":", task.ModuleID);
-
+                CreateModuleTree(module, scope, task.FileName + ":", task.ModuleID);
+                var parent = _hierarchies[task.ModuleID.Hierarchy].ProjectLibraryNode;
                 if (null != task.ModuleID) {
                     LibraryNode previousItem = null;
                     lock (_files) {
                         if (_files.TryGetValue(task.ModuleID, out previousItem)) {
                             _files.Remove(task.ModuleID);
+                            parent.RemoveNode(previousItem);
                         }
                     }
-                    _library.RemoveNode(previousItem);
                 }
-                _library.AddNode(module);
+                parent.AddNode(module);
+                _library.Update();
                 if (null != task.ModuleID) {
                     lock (_files) {
                         _files.Add(task.ModuleID, module);
@@ -229,27 +234,21 @@ namespace Microsoft.VisualStudioTools.Navigation {
             }
         }
 
-        private void CreateModuleTree(LibraryNode root, LibraryNode current, IScopeNode scope, string namePrefix, ModuleId moduleId) {
-            if ((null == root) || (null == scope) || (null == scope.NestedScopes)) {
+        private void CreateModuleTree(LibraryNode current, IScopeNode scope, string namePrefix, ModuleId moduleId) {
+            if ((null == scope) || (null == scope.NestedScopes)) {
                 return;
             }
             foreach (IScopeNode subItem in scope.NestedScopes) {                
                 LibraryNode newNode = CreateLibraryNode(subItem, namePrefix, moduleId.Hierarchy, moduleId.ItemID);
                 string newNamePrefix = namePrefix;
 
-                // The classes are always added to the root node, the functions to the
-                // current node.
-                
+                current.AddNode(newNode);
                 if ((newNode.NodeType & LibraryNodeType.Classes) != LibraryNodeType.None) {
-                    // Classes are always added to the root.
-                    root.AddNode(newNode);
                     newNamePrefix = namePrefix + newNode.Name + ".";
-                } else {
-                    current.AddNode(newNode);
                 }
 
                 // Now use recursion to get the other types.
-                CreateModuleTree(root, newNode, subItem, newNamePrefix, moduleId);
+                CreateModuleTree(newNode, subItem, newNamePrefix, moduleId);
             }
         }
         #endregion
@@ -457,8 +456,8 @@ namespace Microsoft.VisualStudioTools.Navigation {
 
         public void Dispose() {
             // Dispose all the listeners.
-            foreach (HierarchyListener listener in _hierarchies.Values) {
-                listener.Dispose();
+            foreach (var info in _hierarchies.Values) {
+                info.Listener.Dispose();
             }
             _hierarchies.Clear();
 
@@ -481,5 +480,15 @@ namespace Microsoft.VisualStudioTools.Navigation {
         }
 
         #endregion
+
+        class HierarchyInfo {
+            public readonly HierarchyListener Listener;
+            public readonly ProjectLibraryNode ProjectLibraryNode;
+
+            public HierarchyInfo(HierarchyListener listener, ProjectLibraryNode projectLibNode) {
+                Listener = listener;
+                ProjectLibraryNode = projectLibNode;
+            }
+        }
     }
 }

@@ -448,7 +448,7 @@ namespace TestUtilities.UI {
                 return _objectBrowser;
             }
         }
-        
+
         /// <summary>
         /// Produces a name which is compatible with x:Name requirements (starts with a letter/underscore, contains
         /// only letter, numbers, or underscores).

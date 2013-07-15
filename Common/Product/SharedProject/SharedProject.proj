@@ -58,6 +58,10 @@
       <Link>SharedProject\CommonLibraryNode.cs</Link>
       <Visible>true</Visible>
     </Compile>
+    <Compile Include="..\..\..\Common\Product\SharedProject\Navigation\ProjectLibraryNode.cs">
+      <Link>SharedProject\Navigation\ProjectLibraryNode.cs</Link>
+      <Visible>true</Visible>
+    </Compile>
     <Compile Include="$(_ProjectSystemFilesLocation)\Navigation\HierarchyListener.cs">
       <Link>SharedProject\Navigation\HierarchyListener.cs</Link>
       <Visible>true</Visible>

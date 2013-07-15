@@ -29,6 +29,15 @@ namespace Microsoft.PythonTools.Navigation {
                 _hierarchy = hierarchy;
         }
 
+        public override VSTREEDISPLAYDATA DisplayData {
+            get {
+                var res = new VSTREEDISPLAYDATA();
+                res.hImageList = _hierarchy.ProjectMgr.ImageHandler.ImageList.Handle;
+                res.Image = res.SelectedImage = (ushort)_hierarchy.ImageIndex;
+                return res;
+            }
+        }
+
         public override string Name {
             get {
                 if (DuplicatedByName) {
@@ -43,6 +52,14 @@ namespace Microsoft.PythonTools.Navigation {
                 }
                 return base.Name;
             }
+        }
+
+        public override uint CategoryField(LIB_CATEGORY category) {
+            switch (category) {
+                case LIB_CATEGORY.LC_NODETYPE:
+                    return (uint)_LIBCAT_NODETYPE.LCNT_HIERARCHY;
+            }
+            return base.CategoryField(category);
         }
 
         public override IVsSimpleObjectList2 DoSearch(VSOBSEARCHCRITERIA2 criteria) {

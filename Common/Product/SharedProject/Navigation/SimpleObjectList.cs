@@ -42,7 +42,7 @@ namespace Microsoft.VisualStudioTools.Navigation {
             }
         }
 
-        public void Update() {
+        public virtual void Update() {
             _updateCount++;
         }
 

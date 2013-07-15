@@ -165,7 +165,7 @@ namespace Microsoft.VisualStudioTools.Navigation {
                     fieldValue = (uint)_LIBCAT_PHYSICALCONTAINERTYPE.LCPT_PROJECT;
                     break;
                 case LIB_CATEGORY.LC_NODETYPE:
-                    fieldValue = (uint)_LIBCAT_NODETYPE.LCNT_HIERARCHY;
+                    fieldValue = (uint)_LIBCAT_NODETYPE.LCNT_SYMBOL;
                     break;
                 case LIB_CATEGORY.LC_LISTTYPE: {
                         LibraryNodeType subTypes = LibraryNodeType.None;
@@ -177,6 +177,15 @@ namespace Microsoft.VisualStudioTools.Navigation {
                     break;
                 case (LIB_CATEGORY)_LIB_CATEGORY2.LC_HIERARCHYTYPE:
                     fieldValue = (uint)_LIBCAT_HIERARCHYTYPE.LCHT_UNKNOWN;
+                    break;
+                case LIB_CATEGORY.LC_VISIBILITY:
+                    fieldValue = (uint)_LIBCAT_VISIBILITY.LCV_VISIBLE;
+                    break;
+                case LIB_CATEGORY.LC_MEMBERTYPE:
+                    fieldValue = (uint)_LIBCAT_MEMBERTYPE.LCMT_METHOD;
+                    break;
+                case LIB_CATEGORY.LC_MEMBERACCESS:
+                    fieldValue = (uint)_LIBCAT_MEMBERACCESS.LCMA_PUBLIC;
                     break;
                 default:
                     throw new NotImplementedException();
@@ -287,7 +296,7 @@ namespace Microsoft.VisualStudioTools.Navigation {
             }
         }
 
-        public VSTREEDISPLAYDATA DisplayData {
+        public virtual VSTREEDISPLAYDATA DisplayData {
             get {
                 var res = new VSTREEDISPLAYDATA();
                 res.Image = res.SelectedImage = (ushort)GlyphType;
@@ -297,6 +306,11 @@ namespace Microsoft.VisualStudioTools.Navigation {
 
         public virtual IVsSimpleObjectList2 DoSearch(VSOBSEARCHCRITERIA2 criteria) {
             return null;
+        }
+
+        public override void Update() {
+            base.Update();
+            _filteredView.Clear();
         }
 
         /// <summary>

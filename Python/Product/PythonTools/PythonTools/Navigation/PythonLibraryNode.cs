@@ -16,12 +16,14 @@ using System;
 using System.Text;
 using Microsoft.PythonTools.Navigation;
 using Microsoft.PythonTools.Parsing.Ast;
+using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Navigation;
 
 namespace Microsoft.PythonTools.Navigation {
-    internal class PythonLibraryNode : CommonLibraryNode {
+    internal class PythonLibraryNode : CommonLibraryNode, IVsNavInfo {
         
         public PythonLibraryNode(IScopeNode scope, string namePrefix, IVsHierarchy hierarchy, uint itemId)
             : base(scope, namePrefix, hierarchy, itemId) { }
@@ -172,5 +174,29 @@ namespace Microsoft.PythonTools.Navigation {
             }
             addDescription(")\n", VSOBDESCRIPTIONSECTION.OBDS_MISC, null);
         }
+
+        #region IVsNavInfo Members
+
+        public int EnumCanonicalNodes(out IVsEnumNavInfoNodes ppEnum) {
+            ppEnum = null;
+            return VSConstants.E_NOTIMPL;
+        }
+
+        public int EnumPresentationNodes(uint dwFlags, out IVsEnumNavInfoNodes ppEnum) {
+            ppEnum = null;
+            return VSConstants.E_NOTIMPL;
+        }
+
+        public int GetLibGuid(out Guid pGuid) {
+            pGuid = new Guid(CommonConstants.LibraryGuid);
+            return VSConstants.S_OK;
+        }
+
+        public int GetSymbolType(out uint pdwType) {
+            pdwType = (uint)NodeType;
+            return VSConstants.S_OK;
+        }
+
+        #endregion
     }
 }
