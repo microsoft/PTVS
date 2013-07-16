@@ -206,9 +206,8 @@ namespace Microsoft.PythonTools.Interpreters {
                 return "Base interpreter has been refreshed";
             } else if (!_base.IsCurrent) {
                 return string.Format(culture,
-                    "Base interpreter {0} {1} is out of date{2}{2}{3}",
+                    "Base interpreter {0} is out of date{1}{1}{2}",
                     _base.Description,
-                    _base.Configuration.Version,
                     Environment.NewLine,
                     _base.GetFriendlyIsCurrentReason(culture));
             }
@@ -220,9 +219,8 @@ namespace Microsoft.PythonTools.Interpreters {
                 return "Base interpreter has been refreshed";
             } else if (!_base.IsCurrent) {
                 return string.Format(culture,
-                    "Base interpreter {0} {1} is out of date{2}{2}{3}",
+                    "Base interpreter {0} is out of date{1}{1}{2}",
                     _base.Description,
-                    _base.Configuration.Version,
                     Environment.NewLine,
                     _base.GetIsCurrentReason(culture));
             }
