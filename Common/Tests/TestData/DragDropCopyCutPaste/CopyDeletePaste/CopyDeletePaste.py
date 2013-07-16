@@ -1,0 +1,1 @@
+﻿#CopyDeletePaste.py

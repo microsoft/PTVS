@@ -1,0 +1,88 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">11.0</VisualStudioVersion>
+    <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
+    <Name>DragDropCopyCutPaste</Name>
+    <RootNamespace>DragDropCopyCutPaste</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>c4ab46b7-511c-4847-8af7-233d7846a08a</ProjectGuid>
+    <ProjectHome>.</ProjectHome>
+    <StartupFile>server.py</StartupFile>
+    <SearchPath>
+    </SearchPath>
+    <WorkingDirectory>.</WorkingDirectory>
+    <OutputPath>.</OutputPath>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <DebugSymbols>true</DebugSymbols>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <DebugSymbols>true</DebugSymbols>
+  </PropertyGroup>
+  <ItemGroup>
+    <Content Include="server.py" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="CopyDuplicateFolderNameTarget\CopyDuplicateFolderName\" />
+    <Folder Include="CutDeletePaste\" />
+    <Folder Include="CutFolderAndFile\CutFolder\" />
+    <Folder Include="CutRenamePaste\CutRenamePasteFolder\" />
+    <Folder Include="DragDuringCopyDestination\" />
+    <Folder Include="CutFolderPasteOnSelf\" />
+    <Folder Include="DuplicateFolderNameTarget\DuplicateFolderName\" />
+    <Folder Include="DragFolderAndFileOntoSelf" />
+    <Folder Include="DragFolderAndFileToSameFolder\" />
+    <Folder Include="DropFolder\" />
+    <Folder Include="FolderWithItems\" />
+    <Folder Include="FolderWithItemsNotInProject\" />
+    <Folder Include="DuplicateFolderName\" />
+    <Folder Include="DuplicateFolderNameTarget\" />
+    <Folder Include="CopyDuplicateFolderName\" />
+    <Folder Include="CopyDuplicateFolderNameTarget\" />
+    <Folder Include="CopyFolderMissingItem" />
+    <Folder Include="DragFolderOntoSelf" />
+    <Folder Include="MoveDupFilename\" />
+    <Folder Include="MoveDupFilename\Foo\" />
+    <Folder Include="CutFolderAndFile\" />
+    <Folder Include="CopyDeletePaste\" />
+    <Folder Include="CutRenamePaste\" />
+    <Folder Include="!Source\" />
+    <Folder Include="ParentFolder\" />
+    <Folder Include="ParentFolder\ChildFolder\" />
+    <Folder Include="PasteFolder\" />
+    <Folder Include="FolderCollision\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="!Source\DraggedToOtherProject.py" />
+    <Compile Include="CopiedBeforeDragPastedAfterDrop.py" />
+    <Compile Include="CutDeletePaste\CutDeletePaste.py" />
+    <Compile Include="CopyDeletePaste\CopyDeletePaste.py" />
+    <Compile Include="CopyDuplicateFolderName\Python1.py" />
+    <Compile Include="CopyFolderMissingItem\Python1.py" />
+    <Compile Include="PasteFolder\FolderCollision" />
+    <Compile Include="CrossHierarchyCut.py" />
+    <Compile Include="CrossHierarchyDragDropAfterCut.py" />
+    <Compile Include="CrossHierarchyCopy.py" />
+    <Compile Include="CutFolderAndFile\CutFolder\CutFolderAndFile.py" />
+    <Compile Include="CutPastePasteItem.py" />
+    <Compile Include="CutFilePasteSameLocation.py" />
+    <Compile Include="CutRenamePaste\CutRenamePaste.py" />
+    <Compile Include="DragAndDroppedDuringCopy.py" />
+    <Compile Include="DragFolderAndFileToSameFolder\Python1.py" />
+    <Compile Include="DragFolderOntoSelf\File.py" />
+    <Compile Include="DragFolderAndFileOntoSelf\File.py" />
+    <Compile Include="FolderWithItems\Python1.py" />
+    <Compile Include="FolderWithItems\Python2.py" />
+    <Compile Include="!Source\DoubleCrossHierarchy.py" />
+    <Compile Include="Python1.py" />
+    <Compile Include="MissingFile.py" />
+    <Compile Include="MoveDupFilename\Foo\Python1.py" />
+    <Compile Include="MoveDupFilename\Python1.py" />
+  </ItemGroup>
+</Project>

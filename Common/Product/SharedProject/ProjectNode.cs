@@ -310,7 +310,6 @@ namespace Microsoft.VisualStudioTools.Project
         private int parentHierarchyItemId;
 
         private List<HierarchyNode> itemsDraggedOrCutOrCopied;
-        private CopyPasteDragSource sourceDraggedOrCutOrCopied;
         /// <summary>
         /// Folder node in the process of being created.  First the hierarchy node
         /// is added, then the label is edited, and when that completes/cancels
@@ -427,22 +426,6 @@ namespace Microsoft.VisualStudioTools.Project
             }
             set {
                 _folderBeingCreated = value;
-            }
-        }
-
-        enum CopyPasteDragSource {
-            None,
-            Dragged,
-            Cut,
-            Copied
-        }
-
-        private CopyPasteDragSource SourceDraggedOrCutOrCopied {
-            get {
-                return this.sourceDraggedOrCutOrCopied;
-            }
-            set {
-                this.sourceDraggedOrCutOrCopied = value;
             }
         }
 

@@ -83,6 +83,7 @@
   <ItemGroup>
     <Compile Include="AddImportTests.cs" />
     <Compile Include="BasicProjectTests.cs" />
+    <Compile Include="DragDropCopyCutPaste.cs" />
     <Compile Include="EditorTests.cs" />
     <Compile Include="FormattingUITests.cs" />
     <Compile Include="InterpreterListTests.cs" />
