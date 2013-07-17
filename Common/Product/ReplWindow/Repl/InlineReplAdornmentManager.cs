@@ -43,7 +43,14 @@ namespace Microsoft.VisualStudio.Repl {
                 }
                 
                 var span = new SnapshotSpan(_textView.TextSnapshot, _tags[i].Item1, 0);
-                if (!spans.IntersectsWith(span)) {
+                bool intersects = false;
+                foreach (var applicableSpan in spans) {
+                    if (applicableSpan.IntersectsWith(span)) {
+                        intersects = true;
+                        break;
+                    }
+                }
+                if (!intersects) {
                     continue;
                 }
                 var tag = new IntraTextAdornmentTag(_tags[i].Item2, null);
