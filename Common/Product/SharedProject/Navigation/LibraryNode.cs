@@ -27,8 +27,9 @@ namespace Microsoft.VisualStudioTools.Navigation {
     /// <summary>
     /// Single node inside the tree of the libraries in the object browser or class view.
     /// </summary>
-    class LibraryNode : SimpleObjectList<LibraryNode>, IVsNavInfoNode, ISimpleObject {
+    class LibraryNode : SimpleObjectList<LibraryNode>, IVsNavInfo, IVsNavInfoNode, ISimpleObject {
         private string _name, _fullname;
+        private readonly LibraryNode _parent;
         private LibraryNodeCapabilities _capabilities;
         private readonly LibraryNodeType _type;
         private readonly CommandID _contextMenuID;
@@ -36,12 +37,14 @@ namespace Microsoft.VisualStudioTools.Navigation {
         private readonly Dictionary<LibraryNodeType, LibraryNode> _filteredView;
         private readonly Dictionary<string, LibraryNode[]> _childrenByName;
         private bool _duplicatedByName;
-        
-        public LibraryNode(string name, string fullname, LibraryNodeType type)
-            : this(name, fullname, type, LibraryNodeCapabilities.None, null) { }
 
-        public LibraryNode(string name, string fullname, LibraryNodeType type, LibraryNodeCapabilities capabilities, CommandID contextMenuID) {
+        public LibraryNode(LibraryNode parent, string name, string fullname, LibraryNodeType type)
+            : this(parent, name, fullname, type, LibraryNodeCapabilities.None, null) { }
+
+        public LibraryNode(LibraryNode parent, string name, string fullname, LibraryNodeType type, LibraryNodeCapabilities capabilities, CommandID contextMenuID) {
             Debug.Assert(name != null);
+
+            _parent = parent;
             _capabilities = capabilities;
             _contextMenuID = contextMenuID;
             _name = name;
@@ -57,6 +60,7 @@ namespace Microsoft.VisualStudioTools.Navigation {
         }
 
         protected LibraryNode(LibraryNode node, string newFullName) {
+            _parent = node._parent;
             _capabilities = node._capabilities;
             _contextMenuID = node._contextMenuID;
             _name = node._name;
@@ -74,6 +78,10 @@ namespace Microsoft.VisualStudioTools.Navigation {
             } else {
                 _capabilities &= ~flag;
             }
+        }
+
+        public LibraryNode Parent {
+            get { return _parent; }
         }
 
         /// <summary>
@@ -371,6 +379,70 @@ namespace Microsoft.VisualStudioTools.Navigation {
         }
 
         public bool DuplicatedByName { get { return _duplicatedByName; } private set { _duplicatedByName = value; } }
+
+        #region IVsNavInfo
+
+        private class VsEnumNavInfoNodes : IVsEnumNavInfoNodes {
+            private readonly IEnumerator<IVsNavInfoNode> _nodeEnum;
+
+            public VsEnumNavInfoNodes(IEnumerator<IVsNavInfoNode> nodeEnum) {
+                _nodeEnum = nodeEnum;
+            }
+
+            public int Clone(out IVsEnumNavInfoNodes ppEnum) {
+                ppEnum = new VsEnumNavInfoNodes(_nodeEnum);
+                return VSConstants.S_OK;
+            }
+
+            public int Next(uint celt, IVsNavInfoNode[] rgelt, out uint pceltFetched) {
+                for (pceltFetched = 0; pceltFetched < celt; ++pceltFetched) {
+                    if (!_nodeEnum.MoveNext()) {
+                        return VSConstants.S_FALSE;
+                    }
+                    rgelt[pceltFetched] = _nodeEnum.Current;
+                }
+                return VSConstants.S_OK;
+            }
+
+            public int Reset() {
+                throw new NotImplementedException();
+            }
+
+            public int Skip(uint celt) {
+                while (celt-- > 0) {
+                    if (!_nodeEnum.MoveNext()) {
+                        return VSConstants.S_FALSE;
+                    }
+                }
+                return VSConstants.S_OK;
+            }
+        }
+
+        public virtual int GetLibGuid(out Guid pGuid) {
+            pGuid = Guid.Empty;
+            return VSConstants.E_NOTIMPL;
+        }
+
+        public int EnumCanonicalNodes(out IVsEnumNavInfoNodes ppEnum) {
+            return EnumPresentationNodes(0, out ppEnum);
+        }
+
+        public int EnumPresentationNodes(uint dwFlags, out IVsEnumNavInfoNodes ppEnum) {
+            var path = new Stack<LibraryNode>();
+            for (LibraryNode node = this; node != null; node = node.Parent) {
+                path.Push(node);
+            }
+
+            ppEnum = new VsEnumNavInfoNodes(path.GetEnumerator());
+            return VSConstants.S_OK;
+        }
+
+        public int GetSymbolType(out uint pdwType) {
+            pdwType = (uint)_type;
+            return VSConstants.S_OK;
+        }
+
+        #endregion
     }
 
     /// <summary>

@@ -44,12 +44,12 @@ namespace Microsoft.PythonTools.Navigation {
             _package = package;
         }
 
-        protected override LibraryNode CreateLibraryNode(IScopeNode subItem, string namePrefix, IVsHierarchy hierarchy, uint itemid) {
-            return new PythonLibraryNode(subItem, namePrefix, hierarchy, itemid);            
+        protected override LibraryNode CreateLibraryNode(LibraryNode parent, IScopeNode subItem, string namePrefix, IVsHierarchy hierarchy, uint itemid) {
+            return new PythonLibraryNode(parent, subItem, namePrefix, hierarchy, itemid);            
         }
 
-        public override LibraryNode CreateFileLibraryNode(HierarchyNode hierarchy, string name, string filename, LibraryNodeType libraryNodeType) {
-            return new PythonFileLibraryNode(hierarchy, hierarchy.Caption, filename, libraryNodeType);
+        public override LibraryNode CreateFileLibraryNode(LibraryNode parent, HierarchyNode hierarchy, string name, string filename, LibraryNodeType libraryNodeType) {
+            return new PythonFileLibraryNode(parent, hierarchy, hierarchy.Caption, filename, libraryNodeType);
         }
 
         protected override void OnNewFile(LibraryTask task) {

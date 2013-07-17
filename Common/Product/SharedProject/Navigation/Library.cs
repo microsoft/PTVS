@@ -13,7 +13,6 @@
  * ***************************************************************************/
 
 using System;
-using System.Collections.Generic;
 using System.Threading;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -32,7 +31,7 @@ namespace Microsoft.VisualStudioTools.Navigation {
 
         public Library(Guid libraryGuid) {
             _guid = libraryGuid;
-            _root = new LibraryNode(String.Empty, String.Empty, LibraryNodeType.Package);
+            _root = new LibraryNode(null, String.Empty, String.Empty, LibraryNodeType.Package);
         }
 
         public _LIB_FLAGS2 LibraryCapabilities {
@@ -117,7 +116,7 @@ namespace Microsoft.VisualStudioTools.Navigation {
                         ppIVsSimpleObjectList2 = null;
                         return VSConstants.E_FAIL;
                     } else if (pobSrch[0].eSrchType == VSOBSEARCHTYPE.SO_SUBSTRING && ListType == (uint)_LIB_LISTTYPE.LLT_NAMESPACES) {
-                        var lib = new LibraryNode("Search results " + pobSrch[0].szName, "Search results " + pobSrch[0].szName, LibraryNodeType.Package);
+                        var lib = new LibraryNode(null, "Search results " + pobSrch[0].szName, "Search results " + pobSrch[0].szName, LibraryNodeType.Package);
                         foreach (var item in SearchNodes(pobSrch[0], new SimpleObjectList<LibraryNode>(), _root).Children) {
                             lib.Children.Add(item);
                         }

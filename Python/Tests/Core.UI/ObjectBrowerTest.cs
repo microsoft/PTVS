@@ -12,17 +12,63 @@
  *
  * ***************************************************************************/
 
+using System.Collections.ObjectModel;
 using System.Windows.Automation;
 using EnvDTE;
 using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 using TestUtilities.UI;
-using TestUtilities.UI.Python;
 
 namespace PythonToolsUITests {
     [TestClass]
     public class ObjectBrowerTest {
+
+        private class NodeInfo {
+            public NodeInfo(string name, string description, string[] members = null) {
+                Name = name;
+                Description = description;
+                Members = (members != null) ? new Collection<string>(members) : new Collection<string>();
+            }
+
+            public string Name { get; private set; }
+
+            public string Description { get; private set; }
+
+            public Collection<string> Members { get; private set; }
+        }
+
+        private static void AssertNodes(ObjectBrowser objectBrowser, params NodeInfo[] expectedNodes) {
+            int nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
+            Assert.AreEqual(expectedNodes.Length, nodeCount, "Node count: " + nodeCount.ToString());
+
+            for (int i = 0; i < expectedNodes.Length; ++i) {
+                // Check node name
+                string str = objectBrowser.TypeBrowserPane.Nodes[i].Value.Trim();
+                Assert.AreEqual(expectedNodes[i].Name, str, "");
+
+                objectBrowser.TypeBrowserPane.Nodes[i].Select();
+                System.Threading.Thread.Sleep(1000);
+
+                // Check detailed node description.
+                str = objectBrowser.DetailPane.Value.Trim();
+                Assert.AreEqual(expectedNodes[i].Description, str, "");
+
+                // Check dependent nodes in member pane
+                nodeCount = objectBrowser.TypeNavigatorPane.Nodes.Count;
+                var expectedMembers = expectedNodes[i].Members;
+                if (expectedMembers == null) {
+                    Assert.AreEqual(0, nodeCount, "Node Count: " + nodeCount.ToString());
+                } else {
+                    Assert.AreEqual(expectedMembers.Count, nodeCount, "Node Count: " + nodeCount.ToString());
+                    for (int j = 0; j < expectedMembers.Count; ++j) {
+                        str = objectBrowser.TypeNavigatorPane.Nodes[j].Value.Trim();
+                        Assert.AreEqual(expectedMembers[j], str, "");
+                    }
+                }
+            }
+        }
+
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
             TestData.Deploy();
@@ -61,20 +107,11 @@ namespace PythonToolsUITests {
             nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
             Assert.AreEqual(4, nodeCount, "Node count: " + nodeCount.ToString());
 
-            string str = objectBrowser.TypeBrowserPane.Nodes[3].Value;
-            Assert.AreEqual("Program.py", str, "");
-
-            objectBrowser.TypeBrowserPane.Nodes[3].Select();
-            System.Threading.Thread.Sleep(1000);
-
-            nodeCount = objectBrowser.TypeNavigatorPane.Nodes.Count;
-            Assert.AreEqual(1, nodeCount, "Node Count: " + nodeCount.ToString());
-
-            str = objectBrowser.TypeNavigatorPane.Nodes[0].Value;
-            Assert.AreEqual("f()", str.Trim(), "");
-
-            str = objectBrowser.DetailPane.Value;
-            Assert.AreEqual("Program.py", str.Trim(), "");
+            AssertNodes(objectBrowser,
+                new NodeInfo("Outlining", "Outlining"),
+                new NodeInfo("BadForStatement.py", "BadForStatement.py"),
+                new NodeInfo("NestedFuncDef.py", "NestedFuncDef.py", new[] { "f()" }),
+                new NodeInfo("Program.py", "Program.py", new[] { "f()" }));
 
             VsIdeTestHostContext.Dte.Solution.Close(false);
 
@@ -87,12 +124,14 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ObjectBrowserSearchTextTest() {
             var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            var project = app.OpenAndFindProject(@"TestData\Outlining.sln");
+            var project = app.OpenAndFindProject(@"TestData\ObjectBrowser.sln");
             System.Threading.Thread.Sleep(1000);
 
             app.OpenObjectBrowser();
             var objectBrowser = app.ObjectBrowser;
             objectBrowser.EnsureLoaded();
+
+            // Initially, we should have only the top-level collapsed node for the project
 
             int nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
             Assert.AreEqual(1, nodeCount, "Node count: " + nodeCount.ToString());
@@ -100,46 +139,46 @@ namespace PythonToolsUITests {
             objectBrowser.TypeBrowserPane.Nodes[0].ExpandCollapse();
             System.Threading.Thread.Sleep(1000);
 
+            // Now that it is expanded, we should also get a node for Program.py
+
             nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
-            Assert.AreEqual(4, nodeCount, "Node count: " + nodeCount.ToString());
+            Assert.AreEqual(2, nodeCount, "Node count: " + nodeCount.ToString());
 
-            string str = objectBrowser.TypeBrowserPane.Nodes[3].Value;
-            Assert.AreEqual("Program.py", str, "");
+            objectBrowser.TypeBrowserPane.Nodes[1].ExpandCollapse();
+            System.Threading.Thread.Sleep(1000);
 
-            objectBrowser.SearchText.SetValue("f");
+            // Sanity-check the starting view with all nodes expanded.
+
+            var expectedNodesBeforeSearch = new[] {
+                new NodeInfo("ObjectBrowser", "ObjectBrowser"),
+                new NodeInfo("Program.py", "Program.py", new[] { "frob()" }),
+                new NodeInfo("Bar", "class Bar", new[] { "bar(self)" }),
+                new NodeInfo("Foo", "class Foo"),
+                new NodeInfo("FooBarBaz", "class FooBarBaz", new[] { "frob(self)" }),
+            };
+            AssertNodes(objectBrowser, expectedNodesBeforeSearch);
+
+            // Do the search and check results
+
+            objectBrowser.SearchText.SetValue("bar");
             System.Threading.Thread.Sleep(1000);
 
             objectBrowser.SearchButton.Click();
             System.Threading.Thread.Sleep(1000);
 
-            nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
-            Assert.IsTrue(nodeCount >= 1, "Node count: " + nodeCount.ToString());
-            if (objectBrowser.TypeBrowserPane.Nodes[0].Value.ToLower().Contains("namespace")) {
-                objectBrowser.TypeBrowserPane.Nodes[0].ExpandCollapse();
-                System.Threading.Thread.Sleep(1000);
-                Assert.AreEqual("f", objectBrowser.TypeBrowserPane.Nodes[1].Value.Trim(), "");
-                objectBrowser.TypeBrowserPane.Nodes[1].Select();
-                System.Threading.Thread.Sleep(1000);
-            } else {
-                Assert.AreEqual("f", objectBrowser.TypeBrowserPane.Nodes[0].Value.Trim(), "");
-            }
+            var expectedNodesAfterSearch = new[] {
+                new NodeInfo("bar", "def bar(self)"),
+                new NodeInfo("Bar", "class Bar", new[] { "bar(self)" }),
+                new NodeInfo("FooBarBaz", "class FooBarBaz", new[] { "frob(self)" }),
+            };
+            AssertNodes(objectBrowser, expectedNodesAfterSearch);
 
-            str = objectBrowser.DetailPane.Value;
-            Assert.AreEqual("def f()", str.Trim(), "");
+            // Clear the search and check that we get back to the starting view.
 
             objectBrowser.ClearSearchButton.Click();
             System.Threading.Thread.Sleep(1000);
 
-            nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
-            Assert.AreEqual(4, nodeCount, "Node count: " + nodeCount.ToString());
-
-            str = objectBrowser.TypeBrowserPane.Nodes[3].Value;
-            Assert.AreEqual("Program.py", str, "");
-            objectBrowser.TypeBrowserPane.Nodes[3].Select();
-            System.Threading.Thread.Sleep(1000);
-
-            nodeCount = objectBrowser.TypeNavigatorPane.Nodes.Count;
-            Assert.AreEqual(1, nodeCount, "Node Count: " + nodeCount.ToString());
+            AssertNodes(objectBrowser, expectedNodesBeforeSearch);
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]

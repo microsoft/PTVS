@@ -21,7 +21,7 @@ namespace Microsoft.VisualStudioTools.Navigation {
         private readonly CommonProjectNode _project;
 
         public ProjectLibraryNode(CommonProjectNode project)
-            : base(project.Caption, project.Caption, LibraryNodeType.PhysicalContainer) {
+            : base(null, project.Caption, project.Caption, LibraryNodeType.PhysicalContainer) {
                 _project = project;
         }
 

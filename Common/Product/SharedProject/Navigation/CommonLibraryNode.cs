@@ -36,8 +36,8 @@ namespace Microsoft.VisualStudioTools.Navigation {
         private readonly IScopeNode _scope;
         private string _fileMoniker;
 
-        protected CommonLibraryNode(IScopeNode scope, string namePrefix, IVsHierarchy hierarchy, uint itemId) :
-            base(GetLibraryNodeName(scope, namePrefix), namePrefix + scope.Name, scope.NodeType) {
+        protected CommonLibraryNode(LibraryNode parent, IScopeNode scope, string namePrefix, IVsHierarchy hierarchy, uint itemId) :
+            base(parent, GetLibraryNodeName(scope, namePrefix), namePrefix + scope.Name, scope.NodeType) {
             _ownerHierarchy = hierarchy;
             _fileId = itemId;
 

@@ -24,8 +24,8 @@ using Microsoft.VisualStudioTools.Project;
 namespace Microsoft.PythonTools.Navigation {
     class PythonFileLibraryNode : LibraryNode {
         private readonly HierarchyNode _hierarchy;
-        public PythonFileLibraryNode(HierarchyNode hierarchy, string name, string filename, LibraryNodeType libraryNodeType)
-            : base(name, filename, libraryNodeType) {
+        public PythonFileLibraryNode(LibraryNode parent, HierarchyNode hierarchy, string name, string filename, LibraryNodeType libraryNodeType)
+            : base(parent, name, filename, libraryNodeType) {
                 _hierarchy = hierarchy;
         }
 

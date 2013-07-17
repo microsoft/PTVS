@@ -62,11 +62,11 @@ namespace Microsoft.VisualStudioTools.Navigation {
             get { return _library; }
         }
 
-        protected abstract LibraryNode CreateLibraryNode(IScopeNode subItem, string namePrefix, IVsHierarchy hierarchy, uint itemid);
-        public virtual LibraryNode CreateFileLibraryNode(HierarchyNode hierarchy, string name, string filename, LibraryNodeType libraryNodeType) {
-            return new LibraryNode(name, filename, libraryNodeType);
+        protected abstract LibraryNode CreateLibraryNode(LibraryNode parent, IScopeNode subItem, string namePrefix, IVsHierarchy hierarchy, uint itemid);
+
+        public virtual LibraryNode CreateFileLibraryNode(LibraryNode parent, HierarchyNode hierarchy, string name, string filename, LibraryNodeType libraryNodeType) {
+            return new LibraryNode(null, name, filename, libraryNodeType);
         }
-       
 
         private object GetPackageService(Type/*!*/ type) {
             return ((System.IServiceProvider)_package).GetService(type);
@@ -198,7 +198,10 @@ namespace Microsoft.VisualStudioTools.Navigation {
                     return;
                 }
 
+                var parent = _hierarchies[task.ModuleID.Hierarchy].ProjectLibraryNode;
+
                 LibraryNode module = CreateFileLibraryNode(
+                    parent,
                     fileNode,
                     System.IO.Path.GetFileName(task.FileName),
                     task.FileName,
@@ -212,7 +215,6 @@ namespace Microsoft.VisualStudioTools.Navigation {
                 // need to make sure we're not mutating lists which are handed out.
 
                 CreateModuleTree(module, scope, task.FileName + ":", task.ModuleID);
-                var parent = _hierarchies[task.ModuleID.Hierarchy].ProjectLibraryNode;
                 if (null != task.ModuleID) {
                     LibraryNode previousItem = null;
                     lock (_files) {
@@ -238,8 +240,9 @@ namespace Microsoft.VisualStudioTools.Navigation {
             if ((null == scope) || (null == scope.NestedScopes)) {
                 return;
             }
+
             foreach (IScopeNode subItem in scope.NestedScopes) {                
-                LibraryNode newNode = CreateLibraryNode(subItem, namePrefix, moduleId.Hierarchy, moduleId.ItemID);
+                LibraryNode newNode = CreateLibraryNode(current, subItem, namePrefix, moduleId.Hierarchy, moduleId.ItemID);
                 string newNamePrefix = namePrefix;
 
                 current.AddNode(newNode);
