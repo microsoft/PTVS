@@ -212,6 +212,11 @@ namespace Microsoft.PythonTools.Analysis {
             if (_updater != null) {
                 _updater.Dispose();
             }
+            if (_listener != null) {
+                _listener.Flush();
+                _listener.Close();
+                _listener = null;
+            }
         }
 
         private static PyLibAnalyzer MakeFromArguments(IEnumerable<string> args) {
@@ -325,18 +330,18 @@ namespace Microsoft.PythonTools.Analysis {
                 rescanAll);
         }
 
-        private void StartTraceListener() {
+        internal void StartTraceListener() {
             if (string.IsNullOrEmpty(_logPrivate) || _logPrivate.IndexOfAny(Path.GetInvalidPathChars()) >= 0) {
                 return;
             }
 
             Directory.CreateDirectory(Path.GetDirectoryName(_logPrivate));
-            _listener = new StreamWriter(new FileStream(_logPrivate, FileMode.Append, FileAccess.Write, FileShare.ReadWrite));
+            _listener = new StreamWriter(new FileStream(_logPrivate, FileMode.Append, FileAccess.Write, FileShare.ReadWrite), Encoding.UTF8);
             _listener.WriteLine();
             TraceInformation("Start analysis");
         }
 
-        private void Prepare() {
+        internal void Prepare() {
             if (_updater != null) {
                 _updater.UpdateStatus(AnalysisStatus.Preparing, 0, 0);
             }
@@ -354,7 +359,7 @@ namespace Microsoft.PythonTools.Analysis {
             _existingDatabase = new HashSet<string>(Directory.EnumerateFiles(_outDir, "*.idb"), StringComparer.OrdinalIgnoreCase);
         }
 
-        private string PythonScraperPath {
+        internal string PythonScraperPath {
             get {
                 var dir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
                 var file = Path.Combine(dir, "PythonScraper.py");
@@ -362,7 +367,7 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
-        private string ExtensionScraperPath {
+        internal string ExtensionScraperPath {
             get {
                 var dir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
                 var file = Path.Combine(dir, "ExtensionScraper.py");
@@ -380,7 +385,7 @@ namespace Microsoft.PythonTools.Analysis {
             if (destPath == null) {
                 destPath = Path.Combine(_outDir, path.ModuleName + ".idb");
             }
-            
+
             if (!File.Exists(destPath) ||
                 File.GetLastWriteTimeUtc(destPath) < File.GetLastWriteTimeUtc(path.SourceFile)) {
                 if (path.LibraryPath.Equals(_library, StringComparison.OrdinalIgnoreCase)) {
@@ -393,7 +398,7 @@ namespace Microsoft.PythonTools.Analysis {
             return false;
         }
 
-        private void Scrape() {
+        internal void Scrape() {
             if (!Directory.Exists(_outDir)) {
                 Directory.CreateDirectory(_outDir);
             }
@@ -497,7 +502,7 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
-        private void Analyze() {
+        internal void Analyze() {
             if (_updater != null) {
                 _updater.UpdateStatus(AnalysisStatus.Analyzing, 0, 1);
             }
@@ -537,7 +542,7 @@ namespace Microsoft.PythonTools.Analysis {
                 foreach (var file in files) {
                     var destName = Path.Combine(_outDir, file.ModuleName + ".idb");
                     _existingDatabase.Remove(destName);
-                    
+
                     // Deliberately short-circuit the check once we know we'll
                     // need to analyze this group. We don't break because we
                     // still have to remove the files from _existingDatabase.
@@ -648,11 +653,11 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
-        private void Epilogue() {
+        internal void Epilogue() {
             File.WriteAllText(Path.Combine(_outDir, "database.ver"), PythonTypeDatabase.CurrentVersion.ToString());
         }
 
-        private void Clean() {
+        internal void Clean() {
             TraceInformation("Deleting {0} files", _existingDatabase.Count);
             foreach (var file in _existingDatabase) {
                 try {
@@ -664,23 +669,23 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
-        private void TraceInformation(string message, params object[] args) {
+        internal void TraceInformation(string message, params object[] args) {
             _listener.WriteLine(DateTime.Now.ToString("s") + ": " + string.Format(message, args));
             _listener.Flush();
         }
 
-        private void TraceWarning(string message, params object[] args) {
+        internal void TraceWarning(string message, params object[] args) {
             _listener.WriteLine(DateTime.Now.ToString("s") + ": [WARNING] " + string.Format(message, args));
             _listener.Flush();
         }
 
-        private void TraceError(string message, params object[] args) {
+        internal void TraceError(string message, params object[] args) {
             _listener.WriteLine(DateTime.Now.ToString("s") + ": [ERROR] " + string.Format(message, args));
             _listener.Flush();
         }
 
         [Conditional("DEBUG")]
-        private void TraceVerbose(string message, params object[] args) {
+        internal void TraceVerbose(string message, params object[] args) {
             _listener.WriteLine(DateTime.Now.ToString("s") + ": [VERBOSE] " + string.Format(message, args));
             _listener.Flush();
         }
