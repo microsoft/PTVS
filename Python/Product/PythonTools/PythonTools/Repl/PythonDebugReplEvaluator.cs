@@ -550,7 +550,9 @@ namespace Microsoft.PythonTools.Repl {
 
         private static PythonReplEvaluatorOptions GetOptions() {
             if(PythonToolsPackage.Instance != null) {
-                return new DefaultPythonReplEvaluatorOptions(PythonToolsPackage.Instance.InteractiveDebugOptionsPage.Options);
+                return new DefaultPythonReplEvaluatorOptions(
+                    () => PythonToolsPackage.Instance.InteractiveDebugOptionsPage.Options
+                );
             }
 
             // running in a test, just use a simple set of options

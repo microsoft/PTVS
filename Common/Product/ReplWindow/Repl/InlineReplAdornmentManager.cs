@@ -34,8 +34,11 @@ namespace Microsoft.VisualStudio.Repl {
         public IEnumerable<ITagSpan<IntraTextAdornmentTag>> GetTags(NormalizedSnapshotSpanCollection spans) {
             var result = new List<TagSpan<IntraTextAdornmentTag>>();
             foreach (var t in _tags) {
+                
                 var span = new SnapshotSpan(_textView.TextSnapshot, t.Item1, 0);
-                t.Item2.UpdateSize();
+                if (!spans.Contains(span)) {
+                    continue;
+                }
                 var tag = new IntraTextAdornmentTag(t.Item2, null);
                 result.Add(new TagSpan<IntraTextAdornmentTag>(span, tag));
             }

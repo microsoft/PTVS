@@ -2206,6 +2206,7 @@ namespace Microsoft.VisualStudio.Repl {
         }
 
         private void OnAdornmentLoaded(object source, EventArgs e) {
+            ((ZoomableInlineAdornment)source).Loaded -= OnAdornmentLoaded;
             // Make sure the caret line is rendered
             DoEvents();
             Caret.EnsureVisible();

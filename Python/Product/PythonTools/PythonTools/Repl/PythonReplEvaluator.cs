@@ -46,7 +46,7 @@ namespace Microsoft.PythonTools.Repl {
         private bool _ownsAnalyzer, _enableAttach;
 
         public PythonReplEvaluator(IPythonInterpreterFactory interpreter, IErrorProviderFactory errorProviderFactory, IInterpreterOptionsService interpreterService = null) 
-            : this(interpreter, errorProviderFactory, new DefaultPythonReplEvaluatorOptions(PythonToolsPackage.Instance.InteractiveOptionsPage.GetOptions(interpreter)), interpreterService) {
+            : this(interpreter, errorProviderFactory, new DefaultPythonReplEvaluatorOptions(() => PythonToolsPackage.Instance.InteractiveOptionsPage.GetOptions(interpreter)), interpreterService) {
         }
 
         public PythonReplEvaluator(IPythonInterpreterFactory interpreter, IErrorProviderFactory errorProviderFactory, PythonReplEvaluatorOptions options, IInterpreterOptionsService interpreterService = null) :
@@ -397,33 +397,33 @@ namespace Microsoft.PythonTools.Repl {
     /// Provides REPL options based upon options stored in our UI.
     /// </summary>
     class DefaultPythonReplEvaluatorOptions : PythonReplEvaluatorOptions {
-        private readonly PythonInteractiveCommonOptions _options;
+        private readonly Func<PythonInteractiveCommonOptions> _options;
 
-        public DefaultPythonReplEvaluatorOptions(PythonInteractiveCommonOptions options) {
+        public DefaultPythonReplEvaluatorOptions(Func<PythonInteractiveCommonOptions> options) {
             _options = options;
         }
 
         public override string InterpreterOptions {
             get {
-                return ((PythonInteractiveOptions)_options).InterpreterOptions;
+                return ((PythonInteractiveOptions)_options()).InterpreterOptions;
             }
         }
 
         public override bool EnableAttach {
             get {
-                return ((PythonInteractiveOptions)_options).EnableAttach;
+                return ((PythonInteractiveOptions)_options()).EnableAttach;
             }
         }
 
         public override string StartupScript {
             get {
-                return ((PythonInteractiveOptions)_options).StartupScript;
+                return ((PythonInteractiveOptions)_options()).StartupScript;
             }
         }
 
         public override string ExecutionMode {
             get {
-                return ((PythonInteractiveOptions)_options).ExecutionMode;
+                return ((PythonInteractiveOptions)_options()).ExecutionMode;
             }
         }
 
@@ -475,27 +475,27 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         public override bool UseInterpreterPrompts {
-            get { return _options.UseInterpreterPrompts; }
+            get { return _options().UseInterpreterPrompts; }
         }
 
         public override bool InlinePrompts {
-            get { return _options.InlinePrompts;  }
+            get { return _options().InlinePrompts;  }
         }
 
         public override bool ReplSmartHistory {
-            get { return _options.ReplSmartHistory; }
+            get { return _options().ReplSmartHistory; }
         }
 
         public override bool LiveCompletionsOnly {
-            get { return _options.LiveCompletionsOnly; }
+            get { return _options().LiveCompletionsOnly; }
         }
 
         public override string PrimaryPrompt {
-            get { return _options.PrimaryPrompt; }
+            get { return _options().PrimaryPrompt; }
         }
 
         public override string SecondaryPrompt {
-            get { return _options.SecondaryPrompt;  }
+            get { return _options().SecondaryPrompt;  }
         }
     }
 }

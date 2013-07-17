@@ -47,8 +47,9 @@ namespace Microsoft.VisualStudio.Repl {
             var manager = GetManager(view);
             if (manager != null) {
                 var adornment = new ZoomableInlineAdornment(uiElement, view);
-                // Original Python code unhooked this event after load was complete
-                // I don't think this should be needed... we'll see.
+                // Event is unhooked in ReplWindow.  If we don't we'll receive the event multiple
+                // times leading to very jerky / hang like behavior where we've setup a new event
+                // loop in the repl window.
                 adornment.Loaded += onLoaded;
                 manager.AddAdornment(adornment);
             }
