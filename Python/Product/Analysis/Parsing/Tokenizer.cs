@@ -484,7 +484,7 @@ namespace Microsoft.PythonTools.Parsing {
                         } else {
                             if (Peek() == -1) {
                                 _endContinues = true;
-                                return Tokens.EndOfFileToken;
+                                return new VerbatimToken(TokenKind.EndOfFile, "\\", "<eof>");
                             }
                             BufferBack();
                             goto default;

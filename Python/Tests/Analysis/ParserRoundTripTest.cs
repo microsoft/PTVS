@@ -394,6 +394,25 @@ namespace AnalysisTests {
             }
         }
 
+         /// <summary>
+        /// Verify trailing \ at the end a file round trips
+        /// </summary>
+        [TestMethod, Priority(0)]
+        public void TestBackslashThenEof() {
+            var code = @"x = 100
+\";
+
+            var parser = Parser.CreateParser(
+                new StringReader(code),
+                PythonLanguageVersion.V27,
+                new ParserOptions() { Verbatim = true }
+            );
+
+            var ast = parser.ParseFile();
+            var newCode = ast.ToCodeString(ast);
+            Assert.AreEqual(code, newCode);
+        }
+
         /// <summary>
         /// Verify trailing \ doesn't mess up comments
         /// </summary>

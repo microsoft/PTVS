@@ -200,7 +200,7 @@ namespace Microsoft.PythonTools.Parsing {
                 ast.SetLoc(0, GetEnd());
             }
             if (_verbatim) {
-                AddExtraVerbatimText(ast, _lookaheadWhiteSpace);
+                AddExtraVerbatimText(ast, _lookaheadWhiteSpace + _lookahead.Token.VerbatimImage);
             }
             foreach (var keyValue in _attributes) {
                 foreach (var nodeAttr in keyValue.Value) {

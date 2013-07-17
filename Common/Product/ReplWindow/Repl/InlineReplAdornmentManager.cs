@@ -22,46 +22,52 @@ using Microsoft.VisualStudio.Text.Tagging;
 namespace Microsoft.VisualStudio.Repl {
     class InlineReplAdornmentManager : ITagger<IntraTextAdornmentTag> {
         private readonly ITextView _textView;
-        private readonly List<Tuple<int, ZoomableInlineAdornment>> _tags;
+        private readonly List<Tuple<SnapshotPoint, ZoomableInlineAdornment>> _tags;
         private readonly Dispatcher _dispatcher;
 
         internal InlineReplAdornmentManager(ITextView textView) {
             _textView = textView;
-            _tags = new List<Tuple<int, ZoomableInlineAdornment>>();
+            _tags = new List<Tuple<SnapshotPoint, ZoomableInlineAdornment>>();
             _dispatcher = Dispatcher.CurrentDispatcher;
         }
 
         public IEnumerable<ITagSpan<IntraTextAdornmentTag>> GetTags(NormalizedSnapshotSpanCollection spans) {
             var result = new List<TagSpan<IntraTextAdornmentTag>>();
-            foreach (var t in _tags) {
+            for (int i = 0; i < _tags.Count; i++) {
+                if (_tags[i].Item1.Snapshot != _textView.TextSnapshot) {
+                    // update to the latest snapshot
+                    _tags[i] = new Tuple<SnapshotPoint, ZoomableInlineAdornment>(
+                        _tags[i].Item1.TranslateTo(_textView.TextSnapshot, PointTrackingMode.Negative),
+                        _tags[i].Item2
+                    );
+                }
                 
-                var span = new SnapshotSpan(_textView.TextSnapshot, t.Item1, 0);
-                if (!spans.Contains(span)) {
+                var span = new SnapshotSpan(_textView.TextSnapshot, _tags[i].Item1, 0);
+                if (!spans.IntersectsWith(span)) {
                     continue;
                 }
-                var tag = new IntraTextAdornmentTag(t.Item2, null);
+                var tag = new IntraTextAdornmentTag(_tags[i].Item2, null);
                 result.Add(new TagSpan<IntraTextAdornmentTag>(span, tag));
             }
             return result;
         }
 
-        public void AddAdornment(ZoomableInlineAdornment uiElement) {
+        public void AddAdornment(ZoomableInlineAdornment uiElement, SnapshotPoint targetLoc) {
             if (Dispatcher.CurrentDispatcher != _dispatcher) {
-                _dispatcher.BeginInvoke(new Action(() => AddAdornment(uiElement)));
+                _dispatcher.BeginInvoke(new Action(() => AddAdornment(uiElement, targetLoc)));
                 return;
             }
-            var caretPos = _textView.Caret.Position.BufferPosition;
-            var caretLine = caretPos.GetContainingLine();
-            _tags.Add(new Tuple<int, ZoomableInlineAdornment>(caretPos.Position, uiElement));
+            var targetLine = targetLoc.GetContainingLine();
+            _tags.Add(new Tuple<SnapshotPoint, ZoomableInlineAdornment>(targetLoc, uiElement));
             var handler = TagsChanged;
             if (handler != null) {
-                var span = new SnapshotSpan(_textView.TextSnapshot, caretLine.Start, caretLine.Length);
+                var span = new SnapshotSpan(_textView.TextSnapshot, targetLine.Start, targetLine.LengthIncludingLineBreak);
                 var args = new SnapshotSpanEventArgs(span);
                 handler(this, args);
             }
         }
 
-        public IList<Tuple<int, ZoomableInlineAdornment>> Adornments {
+        public IList<Tuple<SnapshotPoint, ZoomableInlineAdornment>> Adornments {
             get { return _tags; }
         }
 

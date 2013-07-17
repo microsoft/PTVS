@@ -43,7 +43,7 @@ namespace Microsoft.VisualStudio.Repl {
             return result;
         }
 
-        public static void AddInlineAdornment(ITextView view, UIElement uiElement, RoutedEventHandler onLoaded) {
+        public static void AddInlineAdornment(ITextView view, UIElement uiElement, RoutedEventHandler onLoaded, SnapshotPoint targetLoc) {
             var manager = GetManager(view);
             if (manager != null) {
                 var adornment = new ZoomableInlineAdornment(uiElement, view);
@@ -51,7 +51,7 @@ namespace Microsoft.VisualStudio.Repl {
                 // times leading to very jerky / hang like behavior where we've setup a new event
                 // loop in the repl window.
                 adornment.Loaded += onLoaded;
-                manager.AddAdornment(adornment);
+                manager.AddAdornment(adornment, targetLoc);
             }
         }
 

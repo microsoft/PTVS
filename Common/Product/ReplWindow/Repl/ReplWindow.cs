@@ -2195,7 +2195,35 @@ namespace Microsoft.VisualStudio.Repl {
             UIElement element = obj as UIElement;
             if (element != null) {
                 _buffer.Flush();
-                InlineReplAdornmentProvider.AddInlineAdornment(TextView, element, OnAdornmentLoaded);
+
+                // figure out where we're inserting the image
+                SnapshotPoint targetPoint = new SnapshotPoint(
+                    TextView.TextBuffer.CurrentSnapshot,
+                    TextView.TextBuffer.CurrentSnapshot.Length
+                );
+
+                for (int i = _projectionSpans.Count - 1; i >= 0; i--) {
+                    if (_projectionSpans[i].Kind == ReplSpanKind.Output ||
+                        (_projectionSpans[i].Kind == ReplSpanKind.Language && _isRunning)) {
+                        // we've had some output during the execution and we hit that buffer.
+                        // OR we hit a language input buffer, and we're running, and no output
+                        // has been produced yet.
+
+                        // In either case, this is where the image goes.
+                        break;
+                    }
+
+                    // adjust where we're going to insert based upon the length of the span
+                    targetPoint -= _projectionSpans[i].Length;
+
+                    if (_projectionSpans[i].Kind == ReplSpanKind.Prompt) {
+                        // we just walked past the primary input prompt, we want to put the
+                        // image right before it.
+                        break;
+                    }
+                }
+
+                InlineReplAdornmentProvider.AddInlineAdornment(TextView, element, OnAdornmentLoaded, targetPoint);
                 OnInlineAdornmentAdded();
                 WriteLine(String.Empty);
                 WriteLine(String.Empty);
