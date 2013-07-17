@@ -60,20 +60,33 @@
                         </Style.Triggers>
                     </Style>
 
-
-                    <CollectionViewSource x:Key="SortedInterpreters" Source="{Binding Interpreters}">
-                        <CollectionViewSource.SortDescriptions>
-                            <scm:SortDescription PropertyName="Name" />
-                        </CollectionViewSource.SortDescriptions>
-                    </CollectionViewSource>
+                    <Style x:Key="SubNameStyle" TargetType="Label" BasedOn="{StaticResource {x:Type Label}}">
+                        <Setter Property="Margin" Value="6 1 1 1" />
+                        <Setter Property="Foreground" Value="{DynamicResource {x:Static wpf:Controls.GrayTextKey}}" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsSelected,RelativeSource={RelativeSource AncestorType=ListViewItem}}"
+                                         Value="True">
+                                <Setter Property="Foreground" Value="{DynamicResource {x:Static wpf:Controls.BackgroundKey}}" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
 
                     <DataTemplate x:Key="NameTemplate" DataType="{x:Type ptvs:InterpreterView}">
-                        <Label Name="InterpreterName"
-                               Content="{Binding Name}"
-                               VerticalAlignment="Center" />
+                        <StackPanel Orientation="Vertical" VerticalAlignment="Center">
+                            <Label Name="InterpreterName"
+                                   Padding="0"
+                                   Content="{Binding Name}" />
+                            <Label Name="InterpreterSubName"
+                                   Padding="0"
+                                   Style="{StaticResource SubNameStyle}"
+                                   Content="{Binding SubName}" />
+                        </StackPanel>
                         <DataTemplate.Triggers>
                             <DataTrigger Binding="{Binding IsDefault}" Value="True">
                                 <Setter TargetName="InterpreterName" Property="FontWeight" Value="Bold" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding SubName}" Value="">
+                                <Setter TargetName="InterpreterSubName" Property="Visibility" Value="Collapsed" />
                             </DataTrigger>
                         </DataTemplate.Triggers>
                     </DataTemplate>
@@ -244,7 +257,7 @@
                   AutomationProperties.AutomationId="PythonTools.InterpreterList"
                   HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
                   ItemContainerStyle="{StaticResource InterpreterItemStyle}"
-                  ItemsSource="{Binding Source={StaticResource SortedInterpreters}}"
+                  ItemsSource="{Binding Interpreters}"
                   Visibility="{Binding HasItems,RelativeSource={RelativeSource Self},Converter={StaticResource BVConverter}}">
             <ListView.Template>
                 <ControlTemplate>

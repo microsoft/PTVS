@@ -210,8 +210,6 @@
       <EmbedInteropTypes>False</EmbedInteropTypes>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.WizardFramework, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
-    <Reference Include="Microsoft.VisualStudio.Settings, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=x86" Condition="'$(VSTarget)' == '10.0'" />
-    <Reference Include="Microsoft.VisualStudio.Settings.$(VSTarget), Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=x86" Condition="'$(VSTarget)' != '10.0'" />
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.Core" />
@@ -246,6 +244,18 @@
     <Reference Include="System.Xaml" />
     <Reference Include="WindowsFormsIntegration" />
   </ItemGroup>
+  <Choose>
+    <When Condition="'$(VSTarget)' == '10.0'">
+      <ItemGroup>
+        <Reference Include="Microsoft.VisualStudio.Settings, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=x86" />
+      </ItemGroup>
+    </When>
+    <Otherwise>
+      <ItemGroup>
+        <Reference Include="Microsoft.VisualStudio.Settings.$(VSTarget), Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=x86" />
+      </ItemGroup>
+    </Otherwise>
+  </Choose>
   <ItemGroup>
     <Compile Include="..\Analysis\Interpreter\ProcessOutput.cs">
       <Link>ProcessOutput.cs</Link>
@@ -613,7 +623,6 @@
     <Compile Include="PythonTools\Repl\ReplIntellisenseMode.cs" />
     <Compile Include="PythonTools\Repl\SwitchModuleCommand.cs" />
     <Compile Include="PythonTools\SnapshotSpanSourceCodeReader.cs" />
-    <Compile Include="PythonTools\SolutionAdvisor.cs" />
     <Compile Include="PythonTools\Intellisense\IntellisenseController.cs" />
     <Compile Include="PythonTools\Intellisense\IntellisenseControllerProvider.cs" />
     <Compile Include="PythonTools\Navigation\CodeWindowManager.cs" />

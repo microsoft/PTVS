@@ -12,18 +12,20 @@
  *
  * ***************************************************************************/
 
+extern alias ta;
 using System;
 using System.IO;
 using Microsoft.PythonTools.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+using ta::Microsoft.VisualStudioTools;
 using TestUtilities;
 
 namespace TestAdapterTests {
     class TestInfo {
-        public string ModuleName { get; private set; }
         public string ClassName { get; private set; }
         public string MethodName { get; private set; }
         public string ClassFilePath { get; private set; }
+        public string RelativeClassFilePath { get; private set; }
         public string ProjectFilePath { get; private set; }
         public string SourceCodeFilePath { get; private set; }
         public int SourceCodeLineNumber { get; private set; }
@@ -32,18 +34,17 @@ namespace TestAdapterTests {
         private TestInfo() {
         }
 
-        public static TestInfo FromRelativePaths(string className, string methodName, string projectFilePath, string sourceCodeFilePath, int sourceCodeLineNumber, TestOutcome outcome, string classFilePath = null, string moduleName = null) {
+        public static TestInfo FromRelativePaths(string className, string methodName, string projectFilePath, string sourceCodeFilePath, int sourceCodeLineNumber, TestOutcome outcome, string classFilePath = null) {
             return FromAbsolutePaths(className,
                 methodName,
                 TestData.GetPath(projectFilePath),
                 TestData.GetPath(sourceCodeFilePath),
                 sourceCodeLineNumber,
                 outcome,
-                classFilePath != null ? TestData.GetPath(classFilePath) : null,
-                moduleName);
+                classFilePath != null ? TestData.GetPath(classFilePath) : null);
         }
 
-        public static TestInfo FromAbsolutePaths(string className, string methodName, string projectFilePath, string sourceCodeFilePath, int sourceCodeLineNumber, TestOutcome outcome, string classFilePath = null, string moduleName = null) {
+        public static TestInfo FromAbsolutePaths(string className, string methodName, string projectFilePath, string sourceCodeFilePath, int sourceCodeLineNumber, TestOutcome outcome, string classFilePath = null) {
             TestInfo ti = new TestInfo();
             ti.ClassName = className;
             ti.MethodName = methodName;
@@ -52,16 +53,16 @@ namespace TestAdapterTests {
             ti.SourceCodeLineNumber = sourceCodeLineNumber;
             ti.Outcome = outcome;
             ti.ClassFilePath = classFilePath ?? sourceCodeFilePath;
-            ti.ModuleName = moduleName ?? Path.GetFileNameWithoutExtension(ti.ClassFilePath);
+            ti.RelativeClassFilePath = CommonUtils.GetRelativeFilePath(Path.GetDirectoryName(ti.ProjectFilePath), ti.ClassFilePath);
             return ti;
         }
 
         public TestCase TestCase {
             get {
-                var expectedFullyQualifiedName = TestDiscoverer.MakeFullyQualifiedTestName(ModuleName, ClassName, MethodName);
+                var expectedFullyQualifiedName = TestDiscoverer.MakeFullyQualifiedTestName(RelativeClassFilePath, ClassName, MethodName);
                 var tc = new TestCase(expectedFullyQualifiedName, new Uri(TestExecutor.ExecutorUriString), this.ProjectFilePath);
-                tc.CodeFilePath = this.SourceCodeFilePath;
-                tc.LineNumber = this.SourceCodeLineNumber;
+                tc.CodeFilePath = SourceCodeFilePath;
+                tc.LineNumber = SourceCodeLineNumber;
                 return tc;
             }
         }
@@ -77,8 +78,8 @@ namespace TestAdapterTests {
         private static TestInfo RenamedImportSuccess = TestInfo.FromRelativePaths("RenamedImportTests", "test_renamed_import_pass", @"TestData\TestAdapterTestB\TestAdapterTestB.pyproj", @"TestData\TestAdapterTestB\RenameImportTest.py", 5, TestOutcome.Passed);
         private static TestInfo RenamedImportFailure = TestInfo.FromRelativePaths("RenamedImportTests", "test_renamed_import_fail", @"TestData\TestAdapterTestB\TestAdapterTestB.pyproj", @"TestData\TestAdapterTestB\RenameImportTest.py", 8, TestOutcome.Failed);
         private static TestInfo TimeoutSuccess = TestInfo.FromRelativePaths("TimeoutTest", "test_wait_10_secs", @"TestData\TestAdapterTestB\TestAdapterTestB.pyproj", @"TestData\TestAdapterTestB\TimeoutTest.py", 5, TestOutcome.Passed);
-        private static TestInfo TestInPackageSuccess = TestInfo.FromRelativePaths("TestsInPackage", "test_in_package_pass", @"TestData\TestAdapterTestB\TestAdapterTestB.pyproj", @"TestData\TestAdapterTestB\tests\TestsInPackage.py", 4, TestOutcome.Passed, moduleName: "tests.TestsInPackage");
-        private static TestInfo TestInPackageFailure = TestInfo.FromRelativePaths("TestsInPackage", "test_in_package_fail", @"TestData\TestAdapterTestB\TestAdapterTestB.pyproj", @"TestData\TestAdapterTestB\tests\TestsInPackage.py", 7, TestOutcome.Failed, moduleName: "tests.TestsInPackage");
+        private static TestInfo TestInPackageSuccess = TestInfo.FromRelativePaths("TestsInPackage", "test_in_package_pass", @"TestData\TestAdapterTestB\TestAdapterTestB.pyproj", @"TestData\TestAdapterTestB\tests\TestsInPackage.py", 4, TestOutcome.Passed);
+        private static TestInfo TestInPackageFailure = TestInfo.FromRelativePaths("TestsInPackage", "test_in_package_fail", @"TestData\TestAdapterTestB\TestAdapterTestB.pyproj", @"TestData\TestAdapterTestB\tests\TestsInPackage.py", 7, TestOutcome.Failed);
         private static TestInfo LinkedSuccess = TestInfo.FromRelativePaths("LinkedTests", "test_linked_pass", @"TestData\TestAdapterTestA\TestAdapterTestA.pyproj", @"TestData\TestAdapterTestB\LinkedTest.py", 4, TestOutcome.Passed);
         private static TestInfo LinkedFailure = TestInfo.FromRelativePaths("LinkedTests", "test_linked_fail", @"TestData\TestAdapterTestA\TestAdapterTestA.pyproj", @"TestData\TestAdapterTestB\LinkedTest.py", 7, TestOutcome.Failed);
 

@@ -126,7 +126,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                             SendTestCase(discoverySink,
                                 ((MSBuild.Project)proj).FullPath,
                                 projectHome,
-                                classValue.DeclaringModule.ModuleName,
+                                classValue.DeclaringModule.FilePath,
                                 classValue.Name,
                                 member.Name,
                                 member.Locations.FirstOrDefault());
@@ -136,7 +136,8 @@ namespace Microsoft.PythonTools.TestAdapter {
             }
         }
 
-        private static void SendTestCase(ITestCaseDiscoverySink discoverySink, string containerFilePath, string codeFileBasePath, string moduleName, string className, string methodName, LocationInfo sourceLocation) {
+        private static void SendTestCase(ITestCaseDiscoverySink discoverySink, string containerFilePath, string codeFileBasePath, string codeFilePath, string className, string methodName, LocationInfo sourceLocation) {
+            var moduleName = CommonUtils.CreateFriendlyFilePath(codeFileBasePath, codeFilePath);
             var fullyQualifiedName = MakeFullyQualifiedTestName(moduleName, className, methodName);
             TestCase testCase = new TestCase(fullyQualifiedName, TestExecutor.ExecutorUri, containerFilePath);
             testCase.DisplayName = methodName;
@@ -152,14 +153,14 @@ namespace Microsoft.PythonTools.TestAdapter {
             return CommonUtils.GetAbsoluteFilePath(basePath, info.FilePath);
         }
 
-        internal static string MakeFullyQualifiedTestName(string moduleName, string className, string methodName) {
-            return moduleName + "::" + className + "::" + methodName;
+        internal static string MakeFullyQualifiedTestName(string modulePath, string className, string methodName) {
+            return modulePath + "::" + className + "::" + methodName;
         }
 
-        internal static void ParseFullyQualifiedTestName(string fullyQualifiedName, out string moduleName, out string className, out string methodName) {
+        internal static void ParseFullyQualifiedTestName(string fullyQualifiedName, out string modulePath, out string className, out string methodName) {
             string[] parts = fullyQualifiedName.Split(new string[] { "::" }, StringSplitOptions.None);
             Debug.Assert(parts.Length == 3);
-            moduleName = parts[0];
+            modulePath = parts[0];
             className = parts[1];
             methodName = parts[2];
         }

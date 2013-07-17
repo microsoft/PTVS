@@ -51,6 +51,7 @@ namespace Microsoft.PythonTools.Project {
         private readonly HashSet<string> _errorFiles = new HashSet<string>();
         private PythonDebugPropertyPage _debugPropPage;
         private CommonSearchPathContainerNode _searchPathContainer;
+        private InterpretersContainerNode _interpretersContainer;
         private MSBuildProjectInterpreterFactoryProvider _interpreters;
 
         public PythonProjectNode(CommonProjectPackage package)
@@ -202,11 +203,21 @@ namespace Microsoft.PythonTools.Project {
             return new PythonFolderNode(this, element);
         }
 
+        protected override bool FilterItemTypeToBeAddedToHierarchy(string itemType) {
+            if (MSBuildProjectInterpreterFactoryProvider.InterpreterReferenceItem.Equals(itemType, StringComparison.Ordinal) ||
+                MSBuildProjectInterpreterFactoryProvider.InterpreterItem.Equals(itemType, StringComparison.Ordinal)) {
+                return true;
+            }
+            return base.FilterItemTypeToBeAddedToHierarchy(itemType);
+        }
+
         protected override void Reload() {
             _searchPathContainer = new CommonSearchPathContainerNode(this);
             this.AddChild(_searchPathContainer);
             RefreshCurrentWorkingDirectory();
             RefreshSearchPaths();
+            _interpretersContainer = new InterpretersContainerNode(this);
+            this.AddChild(_interpretersContainer);
             RefreshInterpreters();
 
             OnProjectPropertyChanged += PythonProjectNode_OnProjectPropertyChanged;
@@ -297,7 +308,11 @@ namespace Microsoft.PythonTools.Project {
                 return;
             }
 
-            var node = GetInterpretersContainerNode();
+            var node = _interpretersContainer;
+            if (node == null) {
+                return;
+            }
+
             var service = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
             var remaining = node.AllChildren.OfType<InterpretersNode>().ToDictionary(n => n._factory);
 
@@ -469,6 +484,8 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public override void BeforeClose() {
+            base.BeforeClose();
+
             if (_analyzer != null) {
                 _analyzer.Cancel();
 
@@ -483,8 +500,8 @@ namespace Microsoft.PythonTools.Project {
             }
 
             DisposeInterpreter();
-
             _interpreters.Dispose();
+            _interpreters = null;
         }
 
         private void DisposeInterpreter() {
@@ -926,18 +943,6 @@ namespace Microsoft.PythonTools.Project {
 
                 SetProjectFileDirty(true);
             }
-        }
-
-        /// <summary>
-        /// Returns the interpreters container node.
-        /// </summary>
-        internal InterpretersContainerNode GetInterpretersContainerNode(bool create = true) {
-            var interpreters = AllChildren.OfType<InterpretersContainerNode>().FirstOrDefault();
-            if (interpreters == null && create) {
-                interpreters = new InterpretersContainerNode(this);
-                AddChild(interpreters);
-            }
-            return interpreters;
         }
 
         #endregion

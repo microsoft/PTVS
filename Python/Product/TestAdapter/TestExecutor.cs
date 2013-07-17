@@ -27,6 +27,7 @@ using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
+using Microsoft.VisualStudioTools;
 using MSBuild = Microsoft.Build.Evaluation;
 
 namespace Microsoft.PythonTools.TestAdapter {
@@ -132,11 +133,22 @@ namespace Microsoft.PythonTools.TestAdapter {
             ).First();
         }
 
-        private static IEnumerable<string> GetInterpreterArgs(TestCase test) {
-            string moduleName;
+        private static string GetWorkingDirectory(TestCase test, PythonProjectSettings settings) {
+            string testFile;
             string testClass;
             string testMethod;
-            TestDiscoverer.ParseFullyQualifiedTestName(test.FullyQualifiedName, out moduleName, out testClass, out testMethod);
+            TestDiscoverer.ParseFullyQualifiedTestName(test.FullyQualifiedName, out testFile, out testClass, out testMethod);
+
+            return Path.GetDirectoryName(CommonUtils.GetAbsoluteFilePath(settings.WorkingDir, testFile));
+        }
+
+        private static IEnumerable<string> GetInterpreterArgs(TestCase test) {
+            string testFile;
+            string testClass;
+            string testMethod;
+            TestDiscoverer.ParseFullyQualifiedTestName(test.FullyQualifiedName, out testFile, out testClass, out testMethod);
+
+            var moduleName = Path.GetFileNameWithoutExtension(testFile);
 
             return new[] {
                 TestLauncherPath,
@@ -181,8 +193,17 @@ namespace Microsoft.PythonTools.TestAdapter {
                 return;
             }
 
+            var workingDir = GetWorkingDirectory(test, settings);
             var args = GetInterpreterArgs(test);
             var searchPath = settings.SearchPath;
+
+            if (!CommonUtils.IsSameDirectory(workingDir, settings.WorkingDir)) {
+                if (string.IsNullOrEmpty(searchPath)) {
+                    searchPath = settings.WorkingDir;
+                } else {
+                    searchPath = settings.WorkingDir + ";" + searchPath;
+                }
+            }
 
             string secret = null;
             int port = 0;
@@ -200,13 +221,15 @@ namespace Microsoft.PythonTools.TestAdapter {
                     settings.Factory.Configuration.InterpreterPath :
                     settings.Factory.Configuration.WindowsInterpreterPath,
                 args,
-                settings.WorkingDir,
+                workingDir,
                 env,
                 false,
                 null)) {
                 bool killed = false;
 
 #if DEBUG
+                frameworkHandle.SendMessage(TestMessageLevel.Informational, "cd " + workingDir);
+                frameworkHandle.SendMessage(TestMessageLevel.Informational, "set PYTHONPATH=" + searchPath);
                 frameworkHandle.SendMessage(TestMessageLevel.Informational, proc.Arguments);
 #endif
 
@@ -271,8 +294,8 @@ namespace Microsoft.PythonTools.TestAdapter {
             projSettings.SearchPath = string.Join(";", 
                 (proj.GetPropertyValue(PythonConstants.SearchPathSetting) ?? "")
                     .Split(';')
-                    .Select(path => Path.GetFullPath(Path.Combine(projectHome, path)))
-                .Concat(Enumerable.Repeat(projSettings.WorkingDir, 1)));
+                    .Where(path => !string.IsNullOrEmpty(path))
+                    .Select(path => Path.GetFullPath(Path.Combine(projectHome, path))));
             
             return projSettings;
         }

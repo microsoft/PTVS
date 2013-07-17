@@ -230,6 +230,10 @@ namespace Microsoft.PythonTools {
             return entry.AnalysisContext;
         }
 
+        internal static PythonProjectNode GetPythonProject(this IVsProject project) {
+            return ((IVsHierarchy)project).GetProject().GetCommonProject() as PythonProjectNode;
+        }
+
         internal static PythonProjectNode GetPythonProject(this EnvDTE.Project project) {
             return project.GetCommonProject() as PythonProjectNode;
         }

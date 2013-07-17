@@ -31,6 +31,16 @@ namespace Microsoft.PythonTools.Interpreter {
             _version = version;
         }
 
+        /// <summary>
+        /// <para>Constructs a new interpreter configuration based on the
+        /// provided values.</para>
+        /// <para>No validation is performed on the parameters.</para>
+        /// <para>If winPath is null or empty,
+        /// <see cref="WindowsInterpreterPath"/> will be set to path.</para>
+        /// <para>If libraryPath is null or empty and prefixPath is a valid
+        /// file system path, <see cref="LibraryPath"/> will be set to
+        /// prefixPath plus "Lib".</para>
+        /// </summary>
         public InterpreterConfiguration(string prefixPath,
                                         string path,
                                         string winPath,
@@ -40,10 +50,13 @@ namespace Microsoft.PythonTools.Interpreter {
                                         Version version) {
             _prefixPath = prefixPath;
             _interpreterPath = path;
-            _windowsInterpreterPath = winPath ?? path;
+            _windowsInterpreterPath = string.IsNullOrEmpty(winPath) ? path : winPath;
             _libraryPath = libraryPath;
             if (string.IsNullOrEmpty(_libraryPath) && !string.IsNullOrEmpty(_prefixPath)) {
+                try {
                 _libraryPath = Path.Combine(_prefixPath, "Lib");
+                } catch (ArgumentException) {
+                }
             }
             _pathEnvironmentVariable = pathVar;
             _architecture = arch;

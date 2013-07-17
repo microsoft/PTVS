@@ -260,8 +260,7 @@ namespace Microsoft.PythonTools {
         private IContentType _contentType;
         private PackageContainer _packageContainer;
         internal const string PythonExpressionEvaluatorGuid = "{D67D5DB8-3D44-4105-B4B8-47AB1BA66180}";
-        private UpdateSolutionEventsListener _solutionEventListener;
-        internal static SolutionAdvisor _solutionAdvisor;
+        private SolutionEventsListener _solutionEventListener;
         private string _surveyNewsUrl;
         private object _surveyNewsUrlLock = new object();
 
@@ -696,8 +695,7 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
             var langService = new PythonLanguageInfo(this);
             ((IServiceContainer)this).AddService(langService.GetType(), langService, true);
 
-            var solution = (IVsSolution)Package.GetGlobalService(typeof(SVsSolution));
-            _solutionAdvisor = new SolutionAdvisor(solution);
+            _solutionEventListener = new SolutionEventsListener(this);
 
             IVsTextManager textMgr = (IVsTextManager)Instance.GetService(typeof(SVsTextManager));
             var langPrefs = new LANGPREFERENCES[1];
@@ -745,18 +743,10 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
             interpService.InterpretersChanged += RefreshReplCommands;
             interpService.DefaultInterpreterChanged += UpdateDefaultAnalyzer;
 
-            _solutionEventListener = new UpdateSolutionEventsListener(PythonToolsPackage.Instance);
-
             this.OnIdle += PythonToolsPackage_OnIdle;
         }
 
-        internal SolutionAdvisor SolutionAdvisor {
-            get {
-                return _solutionAdvisor;
-            }
-        }
-
-        internal UpdateSolutionEventsListener EventListener {
+        internal SolutionEventsListener SolutionEvents {
             get {
                 return _solutionEventListener;
             }

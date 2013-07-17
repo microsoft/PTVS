@@ -50,7 +50,7 @@ namespace TestAdapterTests {
             Assert.AreEqual(expectedTests.Length, sink.Tests.Count);
 
             foreach (var expectedTest in expectedTests) {
-                var expectedFullyQualifiedName = TestDiscoverer.MakeFullyQualifiedTestName(expectedTest.ModuleName, expectedTest.ClassName, expectedTest.MethodName);
+                var expectedFullyQualifiedName = TestDiscoverer.MakeFullyQualifiedTestName(expectedTest.RelativeClassFilePath, expectedTest.ClassName, expectedTest.MethodName);
                 var actualTestCase = sink.Tests.SingleOrDefault(tc => tc.FullyQualifiedName == expectedFullyQualifiedName);
                 Assert.IsNotNull(actualTestCase, expectedFullyQualifiedName);
                 Assert.AreEqual(expectedTest.MethodName, actualTestCase.DisplayName, expectedFullyQualifiedName);

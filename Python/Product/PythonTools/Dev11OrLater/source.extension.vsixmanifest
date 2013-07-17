@@ -18,6 +18,7 @@
   <Dependencies>
     <Dependency Id="Microsoft.Framework.NDP" DisplayName="Microsoft .NET Framework" Version="4.5" />
     <Dependency Id="TestWindow.Microsoft.0771d463-d74d-4e95-aac2-39d3c7ec1f97" IsRequired="false" DisplayName="Test Explorer" Version="11.0" />
+    <Dependency Id="ce8d8e55-ad29-423e-aca2-810d0b16cdc4" IsRequired="true" DisplayName="Microsoft.VisualStudio.InteractiveWindow" Version="2.0"/>
   </Dependencies>
   <Assets>
     <Asset Type="Microsoft.VisualStudio.Package" Path="|%CurrentProject%;PkgdefProjectOutputGroup|" />

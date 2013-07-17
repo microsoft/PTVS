@@ -17,6 +17,7 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Project {
@@ -40,14 +41,14 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private void Initialize() {
-            PythonToolsPackage.Instance.EventListener.AfterActiveSolutionConfigurationChange += EventListener_AfterActiveSolutionConfigurationChange;
+            PythonToolsPackage.Instance.SolutionEvents.ActiveSolutionConfigurationChanged += EventListener_AfterActiveSolutionConfigurationChange;
             _fileChangeListener.FileChangedOnDisk += FileChangedOnDisk;
-            PythonToolsPackage.Instance.SolutionAdvisor.AfterLoadProject += PythonProjectReferenceNode_AfterProjectFileOpened;
+            PythonToolsPackage.Instance.SolutionEvents.ProjectLoaded += PythonProjectReferenceNode_ProjectLoaded;
             InitializeFileChangeListener();
             AddAnalyzedAssembly(((PythonProjectNode)ProjectMgr).GetInterpreter());
         }
 
-        private void PythonProjectReferenceNode_AfterProjectFileOpened(object sender, EventArgs e) {
+        private void PythonProjectReferenceNode_ProjectLoaded(object sender, ProjectEventArgs e) {
             InitializeFileChangeListener();
             AddAnalyzedAssembly(((PythonProjectNode)ProjectMgr).GetInterpreter());
         }
@@ -139,8 +140,8 @@ namespace Microsoft.PythonTools.Project {
         protected override void Dispose(bool disposing) {
             base.Dispose(disposing);
 
-            PythonToolsPackage.Instance.EventListener.AfterActiveSolutionConfigurationChange -= EventListener_AfterActiveSolutionConfigurationChange;
-            PythonToolsPackage.Instance.SolutionAdvisor.AfterLoadProject -= PythonProjectReferenceNode_AfterProjectFileOpened;
+            PythonToolsPackage.Instance.SolutionEvents.ActiveSolutionConfigurationChanged -= EventListener_AfterActiveSolutionConfigurationChange;
+            PythonToolsPackage.Instance.SolutionEvents.ProjectLoaded -= PythonProjectReferenceNode_ProjectLoaded;
 
             _fileChangeListener.FileChangedOnDisk -= FileChangedOnDisk;
             _fileChangeListener.Dispose();

@@ -532,12 +532,32 @@ namespace Microsoft.PythonTools.Interpreter {
             return Enumerable.Empty<IPythonInterpreterFactory>();
         }
 
+        /// <summary>
+        /// Returns the MSBuild project item that specified the provided
+        /// interpreter.
+        /// </summary>
         public MSBuild.ProjectItem GetProjectItem(IPythonInterpreterFactory factory) {
-            FactoryInfo info;
-            if (_factories.TryGetValue(factory, out info)) {
-                return info.ProjectItem;
+            lock (_factoriesLock) {
+                FactoryInfo info;
+                if (_factories.TryGetValue(factory, out info)) {
+                    return info.ProjectItem;
+                }
             }
             return null;
+        }
+
+        /// <summary>
+        /// Returns true if the provided interpreter was specified as a
+        /// reference in this project.
+        /// </summary>
+        public bool IsInterpreterReference(IPythonInterpreterFactory factory) {
+            lock (_factoriesLock) {
+                FactoryInfo info;
+                if (_factories.TryGetValue(factory, out info)) {
+                    return info.ProjectItem.ItemType.Equals(InterpreterReferenceItem);
+                }
+            }
+            return false;
         }
 
         public IPythonInterpreterFactory FindInterpreter(string rootPath) {

@@ -80,6 +80,7 @@
     <ProjectReference Include="..\..\Product\TestAdapter\TestAdapter.csproj">
       <Project>{5085df35-3a32-4894-835e-e5a3956d4f57}</Project>
       <Name>TestAdapter</Name>
+      <Aliases>global,ta</Aliases>
     </ProjectReference>
     <ProjectReference Include="..\..\..\Common\Tests\Utilities\TestUtilities.csproj">
       <Project>{d092d54e-ff29-4d32-9aee-4ef704c92f67}</Project>

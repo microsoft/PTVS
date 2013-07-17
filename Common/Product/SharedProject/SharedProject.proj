@@ -552,6 +552,10 @@
       <Link>SharedProject\VsExtensions.cs</Link>
       <Visible>true</Visible>
     </Compile>
+    <Compile Include="$(_ProjectSystemFilesLocation)\SolutionEventsListener.cs">
+      <Link>SharedProject\SolutionEventsListener.cs</Link>
+      <Visible>true</Visible>
+    </Compile>
     <Compile Include="Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>

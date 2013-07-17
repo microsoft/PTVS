@@ -1153,13 +1153,19 @@ namespace Microsoft.VisualStudioTools.Project {
             if (null != libraryManager) {
                 libraryManager.UnregisterHierarchy(InteropSafeHierarchy);
             }
-            _watcher.EnableRaisingEvents = false;
-            _watcher.Dispose();
-            _watcher = null;
+            if (_watcher != null) {
+                _watcher.EnableRaisingEvents = false;
+                _watcher.Dispose();
+                _watcher = null;
+            }
 
-            _attributesWatcher.EnableRaisingEvents = false;
-            _attributesWatcher.Dispose();
-            _attributesWatcher = null;
+            if (_attributesWatcher != null) {
+                _attributesWatcher.EnableRaisingEvents = false;
+                _attributesWatcher.Dispose();
+                _attributesWatcher = null;
+            }
+
+            _needBolding.Clear();
 
             base.Close();
         }
@@ -1230,6 +1236,10 @@ namespace Microsoft.VisualStudioTools.Project {
 
         private void BoldDeferredItems() {
             if (_needBolding.Count == 0) {
+                return;
+            }
+            if (IsClosed) {
+                _needBolding.Clear();
                 return;
             }
             var items = _needBolding.ToArray();

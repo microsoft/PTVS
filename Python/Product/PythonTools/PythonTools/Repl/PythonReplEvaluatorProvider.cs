@@ -78,19 +78,15 @@ namespace Microsoft.PythonTools.Repl {
 
                 var pyInterpreter = _interpService.FindInterpreter(interpreter, interpreterVersion);
 
-                if (pyInterpreter == null && components.Length == 6) {
+                if (pyInterpreter == null && components.Length == 7) {
                     string projectName = components[6];
                     var solution = _serviceProvider.GetService(typeof(SVsSolution)) as IVsSolution;
                     if (solution != null) {
-                        foreach (var proj in solution.EnumerateLoadedProjects().OfType<IVsHierarchy>()) {
+                        foreach (var proj in solution.EnumerateLoadedProjects()) {
                             if (!proj.GetRootCanonicalName().Equals(projectName, StringComparison.Ordinal)) {
                                 continue;
                             }
-                            var envProj = proj.GetProject();
-                            if (envProj == null) {
-                                continue;
-                            }
-                            var pyProj = envProj.GetPythonProject();
+                            var pyProj = proj.GetPythonProject();
                             if (pyProj == null) {
                                 continue;
                             }

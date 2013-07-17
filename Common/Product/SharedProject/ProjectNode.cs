@@ -1603,6 +1603,7 @@ namespace Microsoft.VisualStudioTools.Project
         {
             using (new DebugTimer("ProjectLoad"))
             {
+                bool successful = false;
                 try
                 {
                     this.disableQueryEdit = true;
@@ -1721,10 +1722,15 @@ namespace Microsoft.VisualStudioTools.Project
 
                     // now reload to fix up references
                     this.Reload();
+                    successful = true;
                 }
                 finally
                 {
                     this.disableQueryEdit = false;
+                    if (!successful)
+                    {
+                        this.Close();
+                    }
                 }
             }
         }

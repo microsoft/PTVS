@@ -40,12 +40,12 @@ namespace PythonToolsUITests {
             VsIdeTestHostContext.Dte.Solution.Close(false);
         }
 
-        private static AutomationWrapper CreateVirtualEnvironment(VisualStudioApp app, out string envName) {
+        internal static AutomationWrapper CreateVirtualEnvironment(VisualStudioApp app, out string envName) {
             string dummy;
             return CreateVirtualEnvironment(app, out envName, out dummy);
         }
 
-        private static AutomationWrapper CreateVirtualEnvironment(VisualStudioApp app, out string envName, out string envPath) {
+        internal static AutomationWrapper CreateVirtualEnvironment(VisualStudioApp app, out string envName, out string envPath) {
             app.OpenSolutionExplorer();
             var virtualEnv = app.SolutionExplorerTreeView.FindItem(
                 "Solution '" + app.Dte.Solution.Projects.Item(1).Name + "' (1 project)",

@@ -12,6 +12,7 @@
  #
  # ###########################################################################
 
+import os
 import sys
 import unittest
 from optparse import OptionParser
@@ -31,6 +32,8 @@ parser.add_option('-t', '--test', type='str', dest = 'tests', action = 'append',
 parser.add_option('-m', '--module', type='str', help = 'name of the module to import the tests from')
 
 (opts, _) = parser.parse_args()
+
+sys.path[0] = os.getcwd()
 
 __import__(opts.module)
 module = sys.modules[opts.module]

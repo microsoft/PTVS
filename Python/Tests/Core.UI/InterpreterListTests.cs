@@ -40,6 +40,11 @@ using TestUtilities.UI;
 namespace PythonToolsUITests {
     [TestClass]
     public class InterpreterListTests {
+        [ClassInitialize]
+        public static void DoDeployment(TestContext context) {
+            TestData.Deploy();
+        }
+
         #region Tests requiring VS
 
         [TestMethod, Priority(0), TestCategory("InterpreterList")]
@@ -60,7 +65,7 @@ namespace PythonToolsUITests {
             var service = model.GetService<IInterpreterOptionsService>();
             Assert.IsNotNull(service);
 
-            dte.ExecuteCommand("View.PythonInterpreters");
+            dte.ExecuteCommand("View.PythonEnvironments");
             var list = new VisualStudioApp(dte).FindByAutomationId("PythonTools.InterpreterList");
             Assert.IsNotNull(list);
 
@@ -75,6 +80,138 @@ namespace PythonToolsUITests {
 
         [TestMethod, Priority(0), TestCategory("InterpreterList")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void CreateRemoveVirtualEnvInInterpreterListInVS() {
+            var dte = VsIdeTestHostContext.Dte;
+            var app = new VisualStudioApp(dte);
+            var newProjDialog = app.FileNewProject();
+            newProjDialog.Location = Path.GetTempPath();
+
+            newProjDialog.FocusLanguageNode();
+
+            var consoleApp = newProjDialog.ProjectTypes.FindItem("Python Application");
+            consoleApp.Select();
+
+            newProjDialog.ClickOK();
+
+            // wait for new solution to load...
+            for (int i = 0; i < 100 && app.Dte.Solution.Projects.Count == 0; i++) {
+                System.Threading.Thread.Sleep(1000);
+            }
+
+            Assert.AreEqual(1, app.Dte.Solution.Projects.Count);
+
+            Assert.AreNotEqual(null, app.Dte.Solution.Projects.Item(1).ProjectItems.Item(Path.GetFileNameWithoutExtension(app.Dte.Solution.FullName) + ".py"));
+
+            // Check that only global environments are in the list
+            var model = (IComponentModel)VsIdeTestHostContext.ServiceProvider.GetService(typeof(SComponentModel));
+            var service = model.GetService<IInterpreterOptionsService>();
+            Assert.IsNotNull(service);
+
+            dte.ExecuteCommand("View.PythonEnvironments");
+            var list = app.FindByAutomationId("PythonTools.InterpreterList");
+            Assert.IsNotNull(list);
+
+            var allNames = new HashSet<string>(service.Interpreters.Select(i => i.Description));
+
+            var names = list.FindAll(TreeScope.Descendants, new PropertyCondition(AutomationElement.AutomationIdProperty, "InterpreterName"));
+            foreach (var obj in names.Cast<AutomationElement>()) {
+                var name = (string)obj.GetCurrentPropertyValue(AutomationElement.NameProperty);
+                Assert.IsTrue(allNames.Remove(name), name + " should not have been in UI");
+            }
+            Assert.AreEqual(0, allNames.Count);
+
+
+            // Create a virtual environment
+            string envName;
+            var env = VirtualEnvTests.CreateVirtualEnvironment(app, out envName);
+            env.Select();
+
+            dte.ExecuteCommand("View.PythonEnvironments");
+            list = app.FindByAutomationId("PythonTools.InterpreterList");
+            Assert.IsNotNull(list);
+
+            // Check that it has been added to the list
+            allNames = new HashSet<string>(service.Interpreters.Select(i => i.Description));
+            allNames.Add(envName);
+
+            names = list.FindAll(TreeScope.Descendants, new PropertyCondition(AutomationElement.AutomationIdProperty, "InterpreterName"));
+            foreach (var obj in names.Cast<AutomationElement>()) {
+                var name = (string)obj.GetCurrentPropertyValue(AutomationElement.NameProperty);
+                Assert.IsTrue(allNames.Remove(name), name + " should not have been in UI");
+            }
+            Assert.AreEqual(0, allNames.Count);
+
+            // Remove the virtual environment
+            env.SetFocus();
+
+            var removeDeleteDlg = new AutomationWrapper(AutomationElement.FromHandle(
+                app.OpenDialogWithDteExecuteCommand("Edit.Delete")));
+            removeDeleteDlg.ClickButtonByName("Remove");
+            app.WaitForDialogDismissed();
+
+            app.SolutionExplorerTreeView.WaitForItemRemoved(
+                "Solution '" + app.Dte.Solution.Projects.Item(1).Name + "' (1 project)",
+                app.Dte.Solution.Projects.Item(1).Name,
+                "Python Environments",
+                envName);
+
+            // Check that only global environments are in the list
+            allNames = new HashSet<string>(service.Interpreters.Select(i => i.Description));
+
+            dte.ExecuteCommand("View.PythonEnvironments");
+            list = app.FindByAutomationId("PythonTools.InterpreterList");
+            Assert.IsNotNull(list);
+            names = list.FindAll(TreeScope.Descendants, new PropertyCondition(AutomationElement.AutomationIdProperty, "InterpreterName"));
+            foreach (var obj in names.Cast<AutomationElement>()) {
+                var name = (string)obj.GetCurrentPropertyValue(AutomationElement.NameProperty);
+                Assert.IsTrue(allNames.Remove(name), name + " should not have been in UI");
+            }
+            Assert.AreEqual(0, allNames.Count);
+
+            dte.Solution.Close(SaveFirst: false);
+        }
+
+        [TestMethod, Priority(0), TestCategory("InterpreterList")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void LoadUnloadVirtualEnvInInterpreterListInVS() {
+            var dte = VsIdeTestHostContext.Dte;
+            var app = new VisualStudioApp(dte);
+            var proj = app.OpenAndFindProject(@"TestData\VirtualEnv.sln");
+
+            var model = (IComponentModel)VsIdeTestHostContext.ServiceProvider.GetService(typeof(SComponentModel));
+            var service = model.GetService<IInterpreterOptionsService>();
+            Assert.IsNotNull(service);
+
+            dte.ExecuteCommand("View.PythonEnvironments");
+            var list = new VisualStudioApp(dte).FindByAutomationId("PythonTools.InterpreterList");
+            Assert.IsNotNull(list);
+
+            var allNames = new HashSet<string>(service.Interpreters.Select(i => i.Description));
+            allNames.Add("env (Python 2.7)");
+
+            var names = list.FindAll(TreeScope.Descendants, new PropertyCondition(AutomationElement.AutomationIdProperty, "InterpreterName"));
+            foreach (var obj in names.Cast<AutomationElement>()) {
+                var name = (string)obj.GetCurrentPropertyValue(AutomationElement.NameProperty);
+                Assert.IsTrue(allNames.Remove(name), name + " should not have been in UI");
+            }
+            Assert.AreEqual(0, allNames.Count);
+
+            proj.Delete();
+
+            allNames = new HashSet<string>(service.Interpreters.Select(i => i.Description));
+
+            names = list.FindAll(TreeScope.Descendants, new PropertyCondition(AutomationElement.AutomationIdProperty, "InterpreterName"));
+            foreach (var obj in names.Cast<AutomationElement>()) {
+                var name = (string)obj.GetCurrentPropertyValue(AutomationElement.NameProperty);
+                Assert.IsTrue(allNames.Remove(name), name + " should not have been in UI");
+            }
+            Assert.AreEqual(0, allNames.Count);
+
+            dte.Solution.Close(SaveFirst: false);
+        }
+
+        [TestMethod, Priority(0), TestCategory("InterpreterList")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ChangeDefaultInVS() {
             var dte = VsIdeTestHostContext.Dte;
             var model = (IComponentModel)VsIdeTestHostContext.ServiceProvider.GetService(typeof(SComponentModel));
@@ -83,7 +220,7 @@ namespace PythonToolsUITests {
 
             var originalDefault = service.DefaultInterpreter;
 
-            dte.ExecuteCommand("View.PythonInterpreters");
+            dte.ExecuteCommand("View.PythonEnvironments");
             var list = new VisualStudioApp(dte).FindByAutomationId("PythonTools.InterpreterList");
             Assert.IsNotNull(list);
 
@@ -139,7 +276,7 @@ namespace PythonToolsUITests {
             });
 
             var dte = VsIdeTestHostContext.Dte;
-            dte.ExecuteCommand("View.PythonInterpreters");
+            dte.ExecuteCommand("View.PythonEnvironments");
             var list = new VisualStudioApp(dte).FindByAutomationId("PythonTools.InterpreterList");
 
             bool testFailed = true;
@@ -199,7 +336,7 @@ namespace PythonToolsUITests {
             try {
                 Assert.AreEqual(1, service.Interpreters.Count());
 
-                dte.ExecuteCommand("View.PythonInterpreters");
+                dte.ExecuteCommand("View.PythonEnvironments");
                 var list = new TestUtilities.UI.AutomationWrapper(new VisualStudioApp(dte).FindByAutomationId("PythonTools.InterpreterList"));
                 Assert.IsNotNull(list);
 
@@ -300,7 +437,7 @@ namespace PythonToolsUITests {
         }
 
         private static InterpreterConfiguration MockInterpreterConfiguration(string path) {
-            return new InterpreterConfiguration("", path, "", "", "", ProcessorArchitecture.None, new Version(2, 7));
+            return new InterpreterConfiguration(Path.GetDirectoryName(path), path, "", "", "", ProcessorArchitecture.None, new Version(2, 7));
         }
 
         [TestMethod, Priority(0), TestCategory("InterpreterListNonUI")]
@@ -378,7 +515,7 @@ namespace PythonToolsUITests {
                 "NOT A REAL PATH", 
                 string.Join("\\", System.IO.Path.GetInvalidPathChars().Select(c => c.ToString()))
             }) {
-                var fact = new MockPythonInterpreterFactory(Guid.NewGuid(), "Test Factory", MockInterpreterConfiguration(invalidPath));
+                var fact = new MockPythonInterpreterFactory(Guid.NewGuid(), "Test Factory", new InterpreterConfiguration(invalidPath, invalidPath, "", "", "", ProcessorArchitecture.None, new Version(2, 7)));
                 var view = new InterpreterView(fact, fact.Description, false);
                 Assert.IsFalse(view.CanRefresh);
             }

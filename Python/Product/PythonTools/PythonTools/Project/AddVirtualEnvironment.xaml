@@ -96,8 +96,8 @@
                              VerticalAlignment="Stretch"
                              Title="Select an interpreter to create the virtual environment from.">
             <wpf:LabelledControl.HelpText>
-                All your packages in this interpreter will also be available in
-                the virtual environment.
+                Packages in your base interpreter will not be available in the
+                virtual environment until you install them.
             </wpf:LabelledControl.HelpText>
             <ComboBox Grid.Row="3"
                       Margin="3"

@@ -22,6 +22,7 @@ using System.Windows;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio.ComponentModelHost;
 
 namespace Microsoft.PythonTools {
@@ -58,9 +59,19 @@ namespace Microsoft.PythonTools {
                 Directory.Exists(path);
         }
 
+        public InterpreterView(IPythonInterpreterFactory interpreter, string name, PythonProjectNode project)
+            : this(interpreter, name, false) {
+            Project = project;
+            if (Project != null) {
+                CanBeDefault = false;
+                SubName = project.Caption;
+            }
+        }
+
         public InterpreterView(IPythonInterpreterFactory interpreter, string name, bool isDefault) {
             Interpreter = interpreter;
             Name = name;
+            SubName = string.Empty;
             Identifier = _identifier = AnalyzerStatusListener.GetIdentifier(interpreter);
 
             var withDb = interpreter as IInterpreterWithCompletionDatabase;
@@ -166,10 +177,19 @@ namespace Microsoft.PythonTools {
             private set;
         }
 
+        public PythonProjectNode Project {
+            get;
+            private set;
+        }
 
         public string Name {
             get { return (string)GetValue(NameProperty); }
             private set { SafeSetValue(NamePropertyKey, value); }
+        }
+
+        public string SubName {
+            get { return (string)GetValue(SubNameProperty); }
+            private set { SafeSetValue(SubNamePropertyKey, value); }
         }
 
         public bool CanRefresh {
@@ -207,6 +227,11 @@ namespace Microsoft.PythonTools {
             private set { SetValue(IsDefaultPropertyKey, value); }
         }
 
+        public bool CanBeDefault {
+            get { return (bool)GetValue(CanBeDefaultProperty); }
+            private set { SetValue(CanBeDefaultPropertyKey, value); }
+        }
+
         public bool IsSelected {
             get { return (bool)SafeGetValue(IsSelectedProperty); }
             set { SetValue(IsSelectedProperty, value); }
@@ -230,21 +255,25 @@ namespace Microsoft.PythonTools {
         }
 
         private static readonly DependencyPropertyKey NamePropertyKey = DependencyProperty.RegisterReadOnly("Name", typeof(string), typeof(InterpreterView), new PropertyMetadata());
+        private static readonly DependencyPropertyKey SubNamePropertyKey = DependencyProperty.RegisterReadOnly("SubName", typeof(string), typeof(InterpreterView), new PropertyMetadata());
         private static readonly DependencyPropertyKey IsCurrentReasonPropertyKey = DependencyProperty.RegisterReadOnly("IsCurrentReason", typeof(string), typeof(InterpreterView), new PropertyMetadata());
         private static readonly DependencyPropertyKey IsCurrentPropertyKey = DependencyProperty.RegisterReadOnly("IsCurrent", typeof(bool), typeof(InterpreterView), new PropertyMetadata(true));
         private static readonly DependencyPropertyKey IsRunningPropertyKey = DependencyProperty.RegisterReadOnly("IsRunning", typeof(bool), typeof(InterpreterView), new PropertyMetadata(false, IsRunning_Changed));
         private static readonly DependencyPropertyKey ProgressPropertyKey = DependencyProperty.RegisterReadOnly("Progress", typeof(int), typeof(InterpreterView), new PropertyMetadata(0));
         private static readonly DependencyPropertyKey MaximumPropertyKey = DependencyProperty.RegisterReadOnly("Maximum", typeof(int), typeof(InterpreterView), new PropertyMetadata(0));
         private static readonly DependencyPropertyKey IsDefaultPropertyKey = DependencyProperty.RegisterReadOnly("IsDefault", typeof(bool), typeof(InterpreterView), new PropertyMetadata(false));
+        private static readonly DependencyPropertyKey CanBeDefaultPropertyKey = DependencyProperty.RegisterReadOnly("CanBeDefault", typeof(bool), typeof(InterpreterView), new PropertyMetadata(true));
         private static readonly DependencyPropertyKey CanRefreshPropertyKey = DependencyProperty.RegisterReadOnly("CanRefresh", typeof(bool), typeof(InterpreterView), new PropertyMetadata(false));
 
         public static readonly DependencyProperty NameProperty = NamePropertyKey.DependencyProperty;
+        public static readonly DependencyProperty SubNameProperty = SubNamePropertyKey.DependencyProperty;
         public static readonly DependencyProperty IsCurrentReasonProperty = IsCurrentReasonPropertyKey.DependencyProperty;
         public static readonly DependencyProperty IsCurrentProperty = IsCurrentPropertyKey.DependencyProperty;
         public static readonly DependencyProperty IsRunningProperty = IsRunningPropertyKey.DependencyProperty;
         public static readonly DependencyProperty ProgressProperty = ProgressPropertyKey.DependencyProperty;
         public static readonly DependencyProperty MaximumProperty = MaximumPropertyKey.DependencyProperty;
         public static readonly DependencyProperty IsDefaultProperty = IsDefaultPropertyKey.DependencyProperty;
+        public static readonly DependencyProperty CanBeDefaultProperty = CanBeDefaultPropertyKey.DependencyProperty;
         public static readonly DependencyProperty CanRefreshProperty = CanRefreshPropertyKey.DependencyProperty;
 
         public static readonly DependencyProperty IsSelectedProperty = DependencyProperty.Register("IsSelected", typeof(bool), typeof(InterpreterView), new PropertyMetadata(false));

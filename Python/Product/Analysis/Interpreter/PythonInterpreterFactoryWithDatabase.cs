@@ -38,13 +38,12 @@ namespace Microsoft.PythonTools.Interpreter {
         private string[] _missingModules;
         private readonly Timer _refreshIsCurrentTrigger;
         private FileSystemWatcher _libWatcher;
+        private readonly object _libWatcherLock = new object();
 
         public PythonInterpreterFactoryWithDatabase(Guid id, string description, InterpreterConfiguration config, bool watchLibraryForChanges) {
             _description = description;
             _id = id;
             _config = config;
-
-            Task.Factory.StartNew(() => RefreshIsCurrent(false));
 
             if (watchLibraryForChanges && DirectoryExists(_config.LibraryPath)) {
                 _refreshIsCurrentTrigger = new Timer(RefreshIsCurrentTimer_Elapsed);
@@ -63,6 +62,8 @@ namespace Microsoft.PythonTools.Interpreter {
                     Console.WriteLine("Error starting FileSystemWatcher:\r\n{0}", ex);
                 }
             }
+
+            Task.Factory.StartNew(() => RefreshIsCurrent(false));
         }
 
         private static bool DirectoryExists(string path) {
@@ -149,13 +150,41 @@ namespace Microsoft.PythonTools.Interpreter {
             return false;
         }
 
+        private bool WatchingLibrary {
+            get {
+                if (_libWatcher != null) {
+                    lock (_libWatcherLock) {
+                        return _libWatcher != null && _libWatcher.EnableRaisingEvents;
+                    }
+                }
+                return false;
+            }
+            set {
+                if (_libWatcher != null) {
+                    lock (_libWatcherLock) {
+                        if (_libWatcher == null) {
+                            return;
+                        }
+                        try {
+                            _libWatcher.EnableRaisingEvents = value;
+                        } catch (IOException) {
+                            // May occur if the library has been deleted while the
+                            // watcher was disabled.
+                            _libWatcher.Dispose();
+                            _libWatcher = null;
+                        } catch (ObjectDisposedException) {
+                            _libWatcher = null;
+                        }
+                    }
+                }
+            }
+        }
+
         public virtual void GenerateCompletionDatabase(GenerateDatabaseOptions options, Action<int> onExit = null) {
             if (_generating) {
                 return;
             }
-            if (_libWatcher != null) {
-                _libWatcher.EnableRaisingEvents = false;
-            }
+            WatchingLibrary = false;
             _generating = true;
             var req = new PythonTypeDatabaseCreationRequest {
                 Factory = this,
@@ -167,9 +196,7 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         public void NotifyGeneratingDatabase(bool isGenerating) {
-            if (_libWatcher != null) {
-                _libWatcher.EnableRaisingEvents = !isGenerating;
-            }
+            WatchingLibrary = !isGenerating;
             _generating = isGenerating;
         }
 
@@ -193,9 +220,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 _typeDb.DatabaseCorrupt += OnDatabaseCorrupt;
             }
 
-            if (_libWatcher != null) {
-                _libWatcher.EnableRaisingEvents = true;
-            }
+            WatchingLibrary = true;
             if (_generating) {
                 var previousIsCurrent = IsCurrent;
                 _generating = false;
@@ -309,8 +334,10 @@ namespace Microsoft.PythonTools.Interpreter {
             if (DirectoryExists(Configuration.LibraryPath)) {
                 RefreshIsCurrent(false);
             } else {
-                _libWatcher.Dispose();
-                _libWatcher = null;
+                lock (_libWatcherLock) {
+                    _libWatcher.Dispose();
+                    _libWatcher = null;
+                }
                 OnIsCurrentChanged();
             }
         }
@@ -414,8 +441,13 @@ namespace Microsoft.PythonTools.Interpreter {
         public void Dispose() {
             if (!_disposed) {
                 if (_libWatcher != null) {
-                    _libWatcher.EnableRaisingEvents = false;
-                    _libWatcher.Dispose();
+                    lock (_libWatcherLock) {
+                        if (_libWatcher != null) {
+                            _libWatcher.EnableRaisingEvents = false;
+                            _libWatcher.Dispose();
+                            _libWatcher = null;
+                        }
+                    }
                 }
                 if (_refreshIsCurrentTrigger != null) {
                     _refreshIsCurrentTrigger.Dispose();

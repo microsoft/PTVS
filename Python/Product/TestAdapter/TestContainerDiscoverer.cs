@@ -27,14 +27,14 @@ using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.TestAdapter {
     [Export(typeof(ITestContainerDiscoverer))]
-    class TestContainerDiscoverer : ITestContainerDiscoverer {
-        private IServiceProvider _serviceProvider;
-        private TestFileAddRemoveListener _testFilesAddRemoveListener;
-        private TestFilesUpdateWatcher _testFilesUpdateWatcher;
-        private SolutionEventsListener _solutionListener;
+    class TestContainerDiscoverer : ITestContainerDiscoverer, IDisposable {
+        private readonly IServiceProvider _serviceProvider;
+        private readonly TestFileAddRemoveListener _testFilesAddRemoveListener;
+        private readonly TestFilesUpdateWatcher _testFilesUpdateWatcher;
+        private readonly SolutionEventsListener _solutionListener;
         private readonly Dictionary<string, string> _fileRootMap;
-        private readonly HashSet<string> _knownProjects;
-        private bool _firstLoad;
+        private readonly Dictionary<string, IVsProject> _knownProjects;
+        private bool _firstLoad, _isDisposed;
 
         [ImportingConstructor]
         private TestContainerDiscoverer([Import(typeof(SVsServiceProvider))]IServiceProvider serviceProvider)
@@ -53,7 +53,7 @@ namespace Microsoft.PythonTools.TestAdapter {
             ValidateArg.NotNull(testFilesAddRemoveListener, "testFilesAddRemoveListener");
 
             _fileRootMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-            _knownProjects = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            _knownProjects = new Dictionary<string, IVsProject>(StringComparer.OrdinalIgnoreCase);
 
             _serviceProvider = serviceProvider;
 
@@ -61,12 +61,24 @@ namespace Microsoft.PythonTools.TestAdapter {
             _testFilesAddRemoveListener.TestFileChanged += OnProjectItemChanged;
 
             _solutionListener = solutionListener;
-            _solutionListener.SolutionChanged += OnSolutionChanged;
+            _solutionListener.ProjectLoaded += OnProjectLoaded;
+            _solutionListener.ProjectUnloading += OnProjectUnloaded;
+            _solutionListener.ProjectRenamed += OnProjectRenamed;
+            _solutionListener.SolutionClosed += OnSolutionClosed;
 
             _testFilesUpdateWatcher = testFilesUpdateWatcher;
             _testFilesUpdateWatcher.FileChangedEvent += OnProjectItemChanged;
 
             _firstLoad = true;
+        }
+
+        void IDisposable.Dispose() {
+            if (!_isDisposed) {
+                _isDisposed = true;
+                _testFilesAddRemoveListener.Dispose();
+                _testFilesUpdateWatcher.Dispose();
+                _solutionListener.Dispose();
+            }
         }
 
         public Uri ExecutorUri {
@@ -85,7 +97,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                     // projects.
                     _firstLoad = false;
                     foreach (var project in EnumerateLoadedProjects(solution)) {
-                        OnSolutionChanged(null, new SolutionEventsListenerEventArgs(project, SolutionChangedReason.Load));
+                        OnProjectLoaded(null, new ProjectEventArgs(project));
                     }
                     _testFilesAddRemoveListener.StartListeningForTestFileChanges();
                     _solutionListener.StartListeningForChanges();
@@ -127,7 +139,7 @@ namespace Microsoft.PythonTools.TestAdapter {
             string path;
             project.GetMkDocument(VSConstants.VSITEMID_ROOT, out path);
 
-            if (!_knownProjects.Contains(path)) {
+            if (!_knownProjects.ContainsKey(path)) {
                 // Don't return any containers for projects we don't know about.
                 yield break;
             }
@@ -147,7 +159,7 @@ namespace Microsoft.PythonTools.TestAdapter {
 
             var architecture = Architecture.X86;
             // TODO: Read the architecture from the project
-            
+
             yield return new TestContainer(this, path, latestWrite, architecture);
         }
 
@@ -171,62 +183,84 @@ namespace Microsoft.PythonTools.TestAdapter {
             return false;
         }
 
-        /// <summary>
-        /// Handler to react to project load/unload events.
-        /// </summary>
-        private void OnSolutionChanged(object sender, SolutionEventsListenerEventArgs e) {
-            if (e != null) {
+        private void OnProjectLoaded(object sender, ProjectEventArgs e) {
+            if (e.Project != null) {
                 string root = null;
-                if (e.Project != null) {
-                    try {
-                        root = e.Project.GetProjectHome();
-                    } catch (Exception ex) {
-                        if (EqtTrace.IsVerboseEnabled) {
-                            EqtTrace.Warning("TestContainerDiscoverer: Failed to get project home {0}", ex);
-                        }
-                        // If we fail to get ProjectHome, we still want to track the
-                        // project. We just won't get the benefits of merging
-                        // watchers into a single recursive watcher.
+                try {
+                    root = e.Project.GetProjectHome();
+                } catch (Exception ex) {
+                    if (EqtTrace.IsVerboseEnabled) {
+                        EqtTrace.Warning("TestContainerDiscoverer: Failed to get project home {0}", ex);
                     }
+                    // If we fail to get ProjectHome, we still want to track the
+                    // project. We just won't get the benefits of merging
+                    // watchers into a single recursive watcher.
                 }
 
-                if (e.ChangedReason == SolutionChangedReason.Load) {
-                    if (e.Project != null) {
-                        if (_knownProjects.Add(e.Project.GetProjectPath())) {
-                            foreach (var p in e.Project.GetProjectItemPaths()) {
-                                if (!string.IsNullOrEmpty(root) && CommonUtils.IsSubpathOf(root, p)) {
-                                    _testFilesUpdateWatcher.AddDirectoryWatch(root);
-                                    _fileRootMap[p] = root;
-                                } else {
-                                    _testFilesUpdateWatcher.AddWatch(p);
-                                }
-                            }
+                var path = e.Project.GetProjectPath();
+                if (!_knownProjects.ContainsKey(path)) {
+                    _knownProjects.Add(path, e.Project);
+                    foreach (var p in e.Project.GetProjectItemPaths()) {
+                        if (!string.IsNullOrEmpty(root) && CommonUtils.IsSubpathOf(root, p)) {
+                            _testFilesUpdateWatcher.AddDirectoryWatch(root);
+                            _fileRootMap[p] = root;
+                        } else {
+                            _testFilesUpdateWatcher.AddWatch(p);
                         }
                     }
-
-                    OnTestContainersChanged();
-                } else if (e.ChangedReason == SolutionChangedReason.Unload) {
-                    if (e.Project != null) {
-                        if (_knownProjects.Remove(e.Project.GetProjectPath())) {
-                            foreach (var p in e.Project.GetProjectItemPaths()) {
-                                if (string.IsNullOrEmpty(root) || !CommonUtils.IsSubpathOf(root, p)) {
-                                    _testFilesUpdateWatcher.RemoveWatch(p);
-                                }
-                                _fileRootMap.Remove(p);
-                            }
-                            if (!string.IsNullOrEmpty(root)) {
-                                _testFilesUpdateWatcher.RemoveWatch(root);
-                            }
-                        }
-                    }
-
-                    OnTestContainersChanged();
                 }
             }
 
-            // Do not fire OnTestContainersChanged here.
-            // This will cause us to fire this event too early before the UTE is ready to process containers and will result in an exception.
-            // The UTE will query all the TestContainerDiscoverers once the solution is loaded.
+            OnTestContainersChanged();
+        }
+
+        private void OnProjectUnloaded(object sender, ProjectEventArgs e) {
+            if (e.Project != null) {
+                string root = null;
+                try {
+                    root = e.Project.GetProjectHome();
+                } catch (Exception ex) {
+                    if (EqtTrace.IsVerboseEnabled) {
+                        EqtTrace.Warning("TestContainerDiscoverer: Failed to get project home {0}", ex);
+                    }
+                    // If we fail to get ProjectHome, we still want to track the
+                    // project. We just won't get the benefits of merging
+                    // watchers into a single recursive watcher.
+                }
+
+                if (_knownProjects.Remove(e.Project.GetProjectPath())) {
+                    foreach (var p in e.Project.GetProjectItemPaths()) {
+                        if (string.IsNullOrEmpty(root) || !CommonUtils.IsSubpathOf(root, p)) {
+                            _testFilesUpdateWatcher.RemoveWatch(p);
+                        }
+                        _fileRootMap.Remove(p);
+                    }
+                    if (!string.IsNullOrEmpty(root)) {
+                        _testFilesUpdateWatcher.RemoveWatch(root);
+                    }
+                }
+            }
+
+            OnTestContainersChanged();
+        }
+
+        private void OnProjectRenamed(object sender, ProjectEventArgs e) {
+            var oldKey = _knownProjects.FirstOrDefault(kv => kv.Value == e.Project).Key;
+
+            if (oldKey == null) {
+                // If we don't recognize the project, treat it as if it has just
+                // been loaded.
+                OnProjectLoaded(sender, e);
+            } else {
+                _knownProjects.Remove(oldKey);
+                _knownProjects[e.Project.GetProjectPath()] = e.Project;
+
+                OnTestContainersChanged();
+            }
+        }
+
+        private void OnSolutionClosed(object sender, EventArgs e) {
+            OnTestContainersChanged();
         }
 
         /// <summary>

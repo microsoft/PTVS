@@ -63,6 +63,10 @@ namespace Microsoft.VisualStudioTools {
             return null;
         }
 
+        public static string GetRootCanonicalName(this IVsProject project) {
+            return ((IVsHierarchy)project).GetRootCanonicalName();
+        }
+
         public static string GetRootCanonicalName(this IVsHierarchy heirarchy) {
             string path;
             ErrorHandler.ThrowOnFailure(heirarchy.GetCanonicalName(VSConstants.VSITEMID_ROOT, out path));

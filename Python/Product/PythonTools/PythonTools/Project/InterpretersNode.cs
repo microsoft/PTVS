@@ -70,10 +70,6 @@ namespace Microsoft.PythonTools.Project {
                 _timer = new Timer(CheckPackages);
             }
             IsExpanded = false;
-
-            if (_interpreters.ActiveInterpreter == _factory) {
-                ProjectMgr.BoldItem(this, true);
-            }
         }
 
         private static ProjectElement ChooseElement(PythonProjectNode project, ProjectItem item) {

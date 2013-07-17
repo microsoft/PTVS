@@ -24,26 +24,35 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Threading;
+using Microsoft.PythonTools;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.Commands;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Navigation;
 using Microsoft.PythonTools.Options;
+using Microsoft.PythonTools.Project;
+using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Repl;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.InterpreterList {
 #if INTERACTIVE_WINDOW
     using IReplWindow = IInteractiveWindow;
     using IReplEvaluator = IInteractiveEngine;
 #endif
-    internal partial class InterpreterList : UserControl {
+    internal partial class InterpreterList : UserControl, IDisposable {
         readonly AnalyzerStatusListener _listener;
         readonly List<InterpreterView> _interpreters;
         readonly DispatcherTimer _refreshTimer;
         readonly IInterpreterOptionsService _interpService;
+        readonly IVsSolution _solutionService;
+        readonly SolutionEventsListener _solutionEvents;
+        readonly HashSet<PythonProjectNode> _hookedProjects;
 
         public static readonly RoutedCommand RefreshCommand = new RoutedUICommand("_Refresh", "Refresh", typeof(InterpreterList));
         public static readonly RoutedCommand RegenerateCommand = new RoutedUICommand("Refresh", "Regenerate", typeof(InterpreterList));
@@ -56,26 +65,92 @@ namespace Microsoft.PythonTools.InterpreterList {
         public static readonly RoutedCommand CopyReasonCommand = new RoutedUICommand("Copy", "CopyReason", typeof(InterpreterList));
         public static readonly RoutedCommand WebChooseInterpreterCommand = new RoutedUICommand("Help me choose an interpreter", "WebChooseInterpreter", typeof(InterpreterList));
 
-        public InterpreterList(IInterpreterOptionsService service) {
+        internal InterpreterList(IInterpreterOptionsService service)
+            : this(service, null, true) { }
+
+        public InterpreterList(IInterpreterOptionsService service, IServiceProvider provider)
+            : this(service, provider, false) { }
+
+        private InterpreterList(IInterpreterOptionsService service, IServiceProvider provider, bool ignoreProvider) {
             _refreshTimer = new DispatcherTimer();
             _refreshTimer.Interval = TimeSpan.FromMilliseconds(500.0);
             _refreshTimer.Tick += AutoRefresh_Elapsed;
             _interpService = service;
 
-            _interpreters = InterpreterView.GetInterpreters(_interpService).ToList();
+            if (!ignoreProvider) {
+                _solutionService = provider.GetService(typeof(SVsSolution)) as IVsSolution;
+                if (_solutionService != null) {
+                    _hookedProjects = new HashSet<PythonProjectNode>();
+                }
+            }
+
+            _interpreters = new List<InterpreterView>();
+            Interpreters = new BulkObservableCollection<InterpreterView>();
+
+            InterpretersChanged(this, EventArgs.Empty);
+
             _interpService.InterpretersChanged += InterpretersChanged;
             _interpService.DefaultInterpreterChanged += DefaultInterpreterChanged;
 
-            foreach (var interp in _interpreters) {
-                interp.PropertyChanged += View_PropertyChanged;
+            if (_solutionService != null) {
+                _solutionEvents = new SolutionEventsListener(PythonToolsPackage.Instance);
+                _solutionEvents.ProjectLoaded += ProjectInterpretersAdded;
+                _solutionEvents.ProjectUnloading += ProjectInterpretersRemoved;
             }
-            Interpreters = new ObservableCollection<InterpreterView>(_interpreters);
+
             DataContext = this;
 
             _listener = new AnalyzerStatusListener(Update);
             InitializeComponent();
 
             _refreshTimer.Start();
+
+            if (_solutionEvents != null) {
+                _solutionEvents.StartListeningForChanges();
+            }
+        }
+
+        private void ProjectInterpretersRemoved(object sender, ProjectEventArgs e) {
+            if (!Dispatcher.CheckAccess()) {
+                Dispatcher.BeginInvoke((Action)(() => ProjectInterpretersRemoved(sender, e)));
+                return;
+            }
+
+            lock (_interpreters) {
+                var project = e.Project.GetPythonProject();
+                for (int i = 0; i < Interpreters.Count; ) {
+                    if (_interpreters[i].Project == project) {
+                        _interpreters[i].PropertyChanged -= View_PropertyChanged;
+                        _interpreters.RemoveAt(i);
+                        Interpreters.RemoveAt(i);
+                    } else {
+                        i += 1;
+                    }
+                }
+
+                project.Interpreters.InterpreterFactoriesChanged -= InterpretersChanged;
+                _hookedProjects.Remove(project);
+            }
+            // The column only resizes when the value changes. Since it's
+            // currently set to NaN, we need to set it to something else
+            // first. Setting it to ActualWidth results in no visible
+            // effects to the user, since the column is already ActualWidth
+            // wide.
+            if (nameColumn != null) {
+                nameColumn.Width = nameColumn.ActualWidth;
+                nameColumn.Width = double.NaN;
+            }
+        }
+
+        private void ProjectInterpretersAdded(object sender, ProjectEventArgs e) {
+            InterpretersChanged(sender, EventArgs.Empty);
+        }
+
+        void IDisposable.Dispose() {
+            if (_solutionEvents != null) {
+                _solutionEvents.Dispose();
+            }
+            _listener.Dispose();
         }
 
         private void View_PropertyChanged(object sender, PropertyChangedEventArgs e) {
@@ -83,24 +158,56 @@ namespace Microsoft.PythonTools.InterpreterList {
         }
 
         void InterpretersChanged(object sender, EventArgs e) {
-            if (Dispatcher.CheckAccess()) {
-                lock (_interpreters) {
-                    _interpreters.Clear();
-                    Interpreters.Clear();
-                    foreach (var interp in InterpreterView.GetInterpreters(_interpService)) {
-                        _interpreters.Add(interp);
-                        Interpreters.Add(interp);
+            if (!Dispatcher.CheckAccess()) {
+                Dispatcher.BeginInvoke((Action)(() => InterpretersChanged(sender, e)));
+                return;
+            }
+
+            lock (_interpreters) {
+                foreach (var interp in _interpreters) {
+                    interp.PropertyChanged -= View_PropertyChanged;
+                }
+                if (_hookedProjects != null) {
+                    foreach (var project in _hookedProjects) {
+                        project.Interpreters.ActiveInterpreterChanged -= InterpretersChanged;
+                    }
+                    _hookedProjects.Clear();
+                }
+
+                _interpreters.Clear();
+
+                _interpreters.AddRange(InterpreterView.GetInterpreters(_interpService));
+                if (_hookedProjects != null) {
+                    foreach (var project in _solutionService.EnumerateLoadedProjects()
+                        .Select(p => p.GetPythonProject())
+                        .Where(p => p != null)) {
+
+                        if (_hookedProjects.Add(project)) {
+                            project.Interpreters.InterpreterFactoriesChanged += InterpretersChanged;
+                        }
+                        _interpreters.AddRange(
+                            from f in project.Interpreters.GetInterpreterFactories()
+                            // Interpreter references are already included
+                            where !project.Interpreters.IsInterpreterReference(f)
+                            select new InterpreterView(f, f.Description, project)
+                        );
                     }
                 }
-                // The column only resizes when the value changes. Since it's
-                // currently set to NaN, we need to set it to something else
-                // first. Setting it to ActualWidth results in no visible
-                // effects to the user, since the column is already ActualWidth
-                // wide.
+
+                foreach (var interp in _interpreters) {
+                    interp.PropertyChanged += View_PropertyChanged;
+                }
+                Interpreters.Clear();
+                ((BulkObservableCollection<InterpreterView>)Interpreters).AddRange(_interpreters);
+            }
+            // The column only resizes when the value changes. Since it's
+            // currently set to NaN, we need to set it to something else
+            // first. Setting it to ActualWidth results in no visible
+            // effects to the user, since the column is already ActualWidth
+            // wide.
+            if (nameColumn != null) {
                 nameColumn.Width = nameColumn.ActualWidth;
                 nameColumn.Width = double.NaN;
-            } else {
-                Dispatcher.BeginInvoke((Action)(() => InterpretersChanged(sender, e)));
             }
         }
 
@@ -184,19 +291,36 @@ namespace Microsoft.PythonTools.InterpreterList {
         }
 
         private void OpenRepl_Executed(object sender, ExecutedRoutedEventArgs e) {
-            var interp = ((InterpreterView)e.Parameter).Interpreter;
-            var window = ExecuteInReplCommand.EnsureReplWindow(interp) as ToolWindowPane;
+            var view = (InterpreterView)e.Parameter;
+            var interp = view.Interpreter;
+            IReplWindow window;
+
+            if (view.Project == null) {
+                window = ExecuteInReplCommand.EnsureReplWindow(interp);
+            } else {
+                window = PythonToolsPackage.Instance.CreatePythonRepl(
+                    string.Format("{0};{1}", view.Project.ProjectIDGuid, interp.Id),
+                    string.Format("{0} ({1}) Interactive", view.Name, view.SubName),
+                    interp,
+                    view.Project.GetWorkingDirectory(),
+                    null,
+                    view.Project
+                );
+            }
+
             if (window != null) {
-                IVsWindowFrame windowFrame = (IVsWindowFrame)window.Frame;
-                ErrorHandler.ThrowOnFailure(windowFrame.Show());
-                ((IReplWindow)window).Focus();
+                var pane = window as ToolWindowPane;
+                if (pane != null) {
+                    ErrorHandler.ThrowOnFailure(((IVsWindowFrame)pane.Frame).Show());
+                }
+                window.Focus();
             }
         }
 
 
         private void OpenWindow_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
             var view = e.Parameter as InterpreterView;
-            e.CanExecute = e.Parameter == null || (view != null && view.Interpreter != null);
+            e.CanExecute = e.Parameter == null || (view != null && view.Interpreter != null && view.Project == null);
         }
 
         private void OpenWindow_Executed(object sender, ExecutedRoutedEventArgs e) {
@@ -214,7 +338,7 @@ namespace Microsoft.PythonTools.InterpreterList {
 
         private void MakeDefault_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
             var view = e.Parameter as InterpreterView;
-            e.CanExecute = view != null && view.Interpreter != null && !view.IsDefault;
+            e.CanExecute = view != null && view.Interpreter != null && !view.IsDefault && view.CanBeDefault;
         }
 
         private void MakeDefault_Executed(object sender, ExecutedRoutedEventArgs e) {
