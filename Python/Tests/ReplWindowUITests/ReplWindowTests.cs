@@ -954,10 +954,6 @@ g()",
             interactive.WaitForText(ReplPrompt + code1, ReplPrompt + code2, ReplPrompt + code3, ReplPrompt + code2);
         }
 
-        /// <summary>
-        /// Define function “def f():\r\n    print ‘hi’”, scroll back up to history, add print “hello” to 2nd line, enter, 
-        /// scroll back through both function definitions
-        /// </summary>
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void RegressionImportSysBackspace() {
@@ -982,6 +978,26 @@ g()",
             Keyboard.Type(Key.Back);
 
             interactive.WaitForText(ReplPrompt + importCode, ReplPrompt);
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void RegressionImportMultipleModules() {
+            var item = (IPythonOptions)VsIdeTestHostContext.Dte.GetObject("VsPython");
+            item.Intellisense.AddNewLineAtEndOfFullyTypedWord = true;
+
+            var interactive = Prepare();
+
+            Keyboard.Type("import ");
+
+            var session = interactive.WaitForSession<ICompletionSession>();
+
+            var names = session.SelectedCompletionSet.Completions.Select(c => c.DisplayText).ToList();
+            var nameset = new HashSet<string>(names);
+
+            Assert.AreEqual(names.Count, nameset.Count, "Module names were duplicated");
+
+            session.Dismiss();
         }
 
         /// <summary>

@@ -137,79 +137,11 @@ namespace Microsoft.PythonTools.Intellisense {
             if (replScopes != null) {
                 modules = replScopes
                     .Select(scope => new MemberResult(scope.Key, scope.Value ? PythonMemberType.Module : PythonMemberType.Namespace))
-                    .Union(modules);
+                    .Concat(modules)
+                    .Distinct(CompletionComparer.MemberEquality);
             }
 
             return modules;
-        }
-
-        public DynamicallyVisibleCompletion[] GetModules(IGlyphService glyphService, string text, bool includeMembers = false) {
-            var analysis = GetAnalysisEntry();
-            var path = text.Split('.');
-            if (path.Length > 0) {
-                // path = path[:-1]
-                var newPath = new string[path.Length - 1];
-                Array.Copy(path, newPath, path.Length - 1);
-                path = newPath;
-            }
-
-            IPythonReplIntellisense pyReplEval = null;
-            IReplEvaluator eval;
-            if (TextBuffer.Properties.TryGetProperty<IReplEvaluator>(typeof(IReplEvaluator), out eval)) {
-                pyReplEval = eval as IPythonReplIntellisense;
-            }
-            IEnumerable<KeyValuePair<string, bool>> replScopes = null;
-            if (pyReplEval != null) {
-                replScopes = pyReplEval.GetAvailableScopesAndKind();
-            }
-
-            MemberResult[] modules = new MemberResult[0];
-            if (path.Length == 0) {
-                if (analysis != null && (pyReplEval == null || !pyReplEval.LiveCompletionsOnly)) {
-                    modules = analysis.GetModules(true);
-                }
-                if (replScopes != null) {
-                    HashSet<MemberResult> allModules = new HashSet<MemberResult>(CompletionComparer.UnderscoresLast);
-                    allModules.UnionWith(modules);
-                    foreach (var scope in replScopes) {
-                        // remove an existing scope, add the new one (we take precedence)
-                        var newMod = new MemberResult(scope.Key, scope.Value ? PythonMemberType.Module : PythonMemberType.Namespace);
-                        allModules.Remove(newMod);
-                        allModules.Add(newMod);
-                    }
-                    modules = allModules.ToArray();
-                }
-            } else {
-                if (analysis != null && (pyReplEval == null || !pyReplEval.LiveCompletionsOnly)) {
-                    modules = analysis.GetModuleMembers(path, includeMembers);
-                }
-
-                if (replScopes != null) {
-                    HashSet<MemberResult> allModules = new HashSet<MemberResult>(CompletionComparer.UnderscoresLast);
-                    allModules.UnionWith(modules);
-                    foreach (var scopeAndKind in replScopes) {
-                        var scope = scopeAndKind.Key;
-                        var isModule = scopeAndKind.Value;
-
-                        if (scope.StartsWith(text, StringComparison.OrdinalIgnoreCase)) {
-                            var split = scope.Split('.');
-                            var subPath = new string[split.Length - path.Length];
-                            for(int i = 0; i<subPath.Length; i++) {
-                                subPath[i] = split[i + path.Length];
-                            }
-                            
-                            // remove an existing scope, add the new one (we take precedence)
-                            var newMod = new MemberResult(String.Join(".", subPath), isModule ? PythonMemberType.Module : PythonMemberType.Namespace);
-                            allModules.Remove(newMod);
-                            allModules.Add(newMod);
-                        }
-                    }
-                    modules = allModules.ToArray();
-                }
-            }
-
-            Array.Sort(modules, CompletionComparer.UnderscoresLast);
-            return modules.Select(m => PythonCompletion(glyphService, m)).ToArray();
         }
 
         public override string ToString() {
