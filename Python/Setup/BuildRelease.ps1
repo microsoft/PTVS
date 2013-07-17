@@ -324,6 +324,10 @@ try {
     Set-ItemProperty $asmverfile -Name IsReadOnly -Value $false
     (Get-Content $asmverfile) | %{ $_ -replace ' = "4100.00"', (' = "' + $buildnumber + '"') } | Set-Content $asmverfile
 
+	$customBuildIdentifier = ""
+	if($name) {
+		$customBuildIdentifier = "/p:" + '"' + "CustomBuildIdentifier=" + $($name) +'"'		
+	}
 
     foreach ($targetVs in $targetVersions) {
         foreach ($config in $targetConfigs)
@@ -333,13 +337,14 @@ try {
             mkdir $destdir -EA 0 | Out-Null
             
             if (-not $skiptests)
-            {
+            {				
                 msbuild /m /v:m /fl /flp:"Verbosity=n;LogFile=BuildRelease.$config.$($targetVs.number).tests.log" `
                     /t:$target `
                     /p:Configuration=$config `
                     /p:WixVersion=$version `
                     /p:VSTarget=$($targetVs.number) `
                     /p:VisualStudioVersion=$($targetVs.number) `
+					$($customBuildIdentifier) `
                     Python\Tests\dirs.proj
                 if ($LASTEXITCODE -gt 0) {
                     Write-Error -EA:Continue "Test build failed: $config"
@@ -354,6 +359,7 @@ try {
                 /p:WixVersion=$version `
                 /p:VSTarget=$($targetVs.number) `
                 /p:VisualStudioVersion=$($targetVs.number) `
+				$($customBuildIdentifier) `
                 Python\Setup\dirs.proj
             if ($LASTEXITCODE -gt 0) {
                 Write-Error -EA:Continue "Build failed: $config"

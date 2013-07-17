@@ -15,7 +15,11 @@
     <DefineConstants>
       PyToolsDir=$(BuildRoot)\Python\Product\PythonTools;
       MsiVersion=$(WixVersion);
-      VSTargetVersion=$(VSTarget);
+      VSTargetVersion=$(VSTarget);      
+    </DefineConstants>
+    <DefineConstants Condition="'$(CustomBuildIdentifier)' != ''">
+      $(DefineConstants);
+      CustomBuildIdentifier=$(CustomBuildIdentifier)
     </DefineConstants>
   </PropertyGroup>
   <ItemGroup>
