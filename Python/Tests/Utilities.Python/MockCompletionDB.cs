@@ -42,7 +42,7 @@ namespace TestUtilities.Mocks {
         public PythonTypeDatabase Database {
             get {
                 if (_database == null) {
-                    _database = new PythonTypeDatabase(_factory, DBPath);
+                    _database = new PythonTypeDatabase(_factory, new[] { DBPath });
                 }
                 return _database;
             }

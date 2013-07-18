@@ -56,6 +56,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\..\..\Common\Product\SharedProject\CommonUtils.cs">
+      <Link>CommonUtils.cs</Link>
+    </Compile>
     <Compile Include="AssemblyInfo.cs" />
     <Compile Include="PyLibAnalyzer.cs" />
   </ItemGroup>

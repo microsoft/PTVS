@@ -38,7 +38,7 @@ namespace Microsoft.PythonTools.Interpreter {
         /// <summary>
         /// Gets the version of the analysis format that this class reads.
         /// </summary>
-        public static readonly int CurrentVersion = 21;
+        public static readonly int CurrentVersion = 22;
 
         private static string _completionDatabasePath;
         private static string _baselineDatabasePath;
@@ -50,12 +50,6 @@ namespace Microsoft.PythonTools.Interpreter {
             foreach (var d in databaseDirectories.Skip(1)) {
                 LoadDatabase(d);
             }
-            _sharedState.ListenForCorruptDatabase(this);
-        }
-
-        public PythonTypeDatabase(IPythonInterpreterFactory factory, string databaseDirectory, IBuiltinPythonModule builtinsModule = null) {
-            _factory = factory;
-            _sharedState = new SharedDatabaseState(databaseDirectory, _factory.Configuration.Version, builtinsModule);
             _sharedState.ListenForCorruptDatabase(this);
         }
 

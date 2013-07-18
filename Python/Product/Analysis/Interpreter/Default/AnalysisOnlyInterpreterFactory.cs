@@ -42,7 +42,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
             _actualDatabase = database;
         }
 
-        public override PythonTypeDatabase MakeTypeDatabase(string databasePath) {
+        public override PythonTypeDatabase MakeTypeDatabase(string databasePath, bool includeSitePackages = true) {
             if (_actualDatabase != null) {
                 return _actualDatabase;
             } else if (_actualDatabasePaths != null) {

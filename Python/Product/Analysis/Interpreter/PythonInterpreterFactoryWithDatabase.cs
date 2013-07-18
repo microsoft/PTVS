@@ -121,10 +121,16 @@ namespace Microsoft.PythonTools.Interpreter {
         /// <summary>
         /// Returns a new database loaded from the specified path.
         /// </summary>
-        public virtual PythonTypeDatabase MakeTypeDatabase(string databasePath) {
+        public virtual PythonTypeDatabase MakeTypeDatabase(string databasePath, bool includeSitePackages = true) {
             if (!_generating && ConfigurableDatabaseExists(databasePath, Configuration.Version)) {
+                var paths = new List<string>();
+                paths.Add(databasePath);
+                if (includeSitePackages) {
+                    paths.AddRange(Directory.EnumerateDirectories(databasePath));
+                }
+
                 try {
-                    return new PythonTypeDatabase(this, databasePath);
+                    return new PythonTypeDatabase(this, paths);
                 } catch (IOException) {
                 } catch (UnauthorizedAccessException) {
                 }
@@ -294,7 +300,8 @@ namespace Microsoft.PythonTools.Interpreter {
             try {
                 if (Directory.Exists(DatabasePath)) {
                     var existingDatabase = new HashSet<string>(
-                        Directory.EnumerateFiles(DatabasePath, "*.idb").Select(f => Path.GetFileNameWithoutExtension(f)),
+                        Directory.EnumerateFiles(DatabasePath, "*.idb", SearchOption.AllDirectories)
+                            .Select(f => Path.GetFileNameWithoutExtension(f)),
                         StringComparer.InvariantCultureIgnoreCase
                     );
                     var missingModules = ModulePath.GetModulesInLib(this)

@@ -115,11 +115,11 @@ namespace Microsoft.PythonTools.Interpreters {
             return _base.MakeInterpreter(typeDb);
         }
 
-        public override PythonTypeDatabase MakeTypeDatabase(string databasePath) {
+        public override PythonTypeDatabase MakeTypeDatabase(string databasePath, bool includeSitePackages = true) {
             if (_baseDb == null) {
                 // Calling CreateInterpreter should get us a new database
                 // notification.
-                _baseDb = _base.MakeTypeDatabase(_base.DatabasePath);
+                _baseDb = _base.MakeTypeDatabase(_base.DatabasePath, includeSitePackages: false);
                 _baseDb.DatabaseCorrupt += Base_DatabaseCorrupt;
                 _baseDb.DatabaseReplaced += Base_DatabaseReplaced;
             }
@@ -127,6 +127,11 @@ namespace Microsoft.PythonTools.Interpreters {
             var db = _baseDb.Clone(this);
             try {
                 db.LoadDatabase(databasePath);
+                if (includeSitePackages) {
+                    foreach (var dir in Directory.EnumerateDirectories(databasePath)) {
+                        db.LoadDatabase(dir);
+                    }
+                }
             } catch (IOException) {
             } catch (UnauthorizedAccessException) {
             }

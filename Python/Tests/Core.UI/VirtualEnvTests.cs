@@ -20,6 +20,8 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows.Automation;
 using System.Windows.Input;
+using Microsoft.PythonTools;
+using Microsoft.PythonTools.Interpreters;
 using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
@@ -405,6 +407,51 @@ namespace PythonToolsUITests {
 
             Assert.AreEqual("Python 3.3", baseInterp);
             createVenv.ClickButtonByAutomationId("Cancel");
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void NoGlobalSitePackages() {
+            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            var newProjDialog = app.FileNewProject();
+            newProjDialog.Location = Path.GetTempPath();
+
+            newProjDialog.FocusLanguageNode();
+
+            var consoleApp = newProjDialog.ProjectTypes.FindItem("Python Application");
+            consoleApp.Select();
+
+            newProjDialog.ClickOK();
+
+            // wait for new solution to load...
+            for (int i = 0; i < 100 && app.Dte.Solution.Projects.Count == 0; i++) {
+                System.Threading.Thread.Sleep(1000);
+            }
+
+            Assert.AreEqual(1, app.Dte.Solution.Projects.Count);
+
+            Assert.AreNotEqual(null, app.Dte.Solution.Projects.Item(1).ProjectItems.Item(Path.GetFileNameWithoutExtension(app.Dte.Solution.FullName) + ".py"));
+
+            string envName, envPath;
+            var env = CreateVirtualEnvironment(app, out envName, out envPath);
+
+            env.Select();
+
+            // Need to wait for analysis to complete before deleting - otherwise
+            // it will always fail.
+            for (int retries = 120;
+                Process.GetProcessesByName("Microsoft.PythonTools.Analyzer").Any() && retries > 0;
+                --retries) {
+                Thread.Sleep(1000);
+            }
+            // Need to wait some more for the database to be loaded.
+            Thread.Sleep(5000);
+
+            // Ensure virtualenv is NOT available in the virtual environment.
+            var pyProj = app.Dte.Solution.Projects.Item(1).GetPythonProject();
+            var interp = pyProj.GetInterpreter();
+            
+            Assert.IsNull(interp.ImportModule("virtualenv"));
         }
     }
 }

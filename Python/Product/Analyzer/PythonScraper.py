@@ -118,11 +118,11 @@ import types
 #  \Release\Product\Python\Analysis\Interpreter\PythonTypeDatabase.cs
 #
 # To update the baseline DB:
-#  1. Check out all files in Product\Python\PythonTools\CompletionDB
+#  1. Check out all files in Python\Product\PythonTools\CompletionDB
 #  2. Run ipy.exe PythonScraper.py ...\CompletionDB
 #  3. Undo unnecessary edits (tfpt uu) and delete new files (tfpt treeclean ...\CompletionDB)
 #
-CURRENT_DATABASE_VERSION = '21'
+CURRENT_DATABASE_VERSION = '22'
 
 if sys.version_info[0] == 2:
     builtin_name = '__builtin__'

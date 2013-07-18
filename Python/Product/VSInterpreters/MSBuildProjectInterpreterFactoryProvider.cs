@@ -705,7 +705,7 @@ namespace Microsoft.PythonTools.Interpreter {
                     false) {
             }
 
-            public override PythonTypeDatabase MakeTypeDatabase(string databasePath) {
+            public override PythonTypeDatabase MakeTypeDatabase(string databasePath, bool includeSitePackages = true) {
                 return PythonTypeDatabase.CreateDefaultTypeDatabase(this);
             }
         }

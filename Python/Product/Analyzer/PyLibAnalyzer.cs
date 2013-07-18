@@ -22,17 +22,21 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Interpreter.Default;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
+using Microsoft.VisualStudioTools;
 using Microsoft.Win32;
 
 namespace Microsoft.PythonTools.Analysis {
     internal class PyLibAnalyzer : IDisposable {
-        private const string AnalysisLimitsKey = "Software\\Microsoft\\VisualStudio\\" + AssemblyVersionInfo.VSVersion + "\\PythonTools\\Analysis\\StandardLibrary";
+        private const string AnalysisLimitsKey = "Software\\Microsoft\\VisualStudio\\" +
+            AssemblyVersionInfo.VSVersion +
+            "\\PythonTools\\Analysis\\StandardLibrary";
 
         private readonly Guid _id;
         private readonly Version _version;
@@ -55,14 +59,17 @@ namespace Microsoft.PythonTools.Analysis {
         private const string BuiltinName3x = "builtins.idb";
 
         private static void Help() {
-            Console.WriteLine("Python Library Analyzer {0} ({1})", AssemblyVersionInfo.StableVersion, AssemblyVersionInfo.Version);
+            Console.WriteLine("Python Library Analyzer {0} ({1})",
+                AssemblyVersionInfo.StableVersion,
+                AssemblyVersionInfo.Version);
             Console.WriteLine("Generates a cached analysis database for a Python interpreter.");
             Console.WriteLine();
             Console.WriteLine(" /id         [GUID]             - specify GUID of the interpreter being used");
             Console.WriteLine(" /v[ersion]  [version]          - specify language version to be used (x.y format)");
             Console.WriteLine(" /py[thon]   [filename]         - full path to the Python interpreter to use");
             Console.WriteLine(" /lib[rary]  [directory]        - full path to the Python library to analyze");
-            Console.WriteLine(" /outdir     [output dir]       - specify output directory for analysis (default is current dir)");
+            Console.WriteLine(" /outdir     [output dir]       - specify output directory for analysis (default " +
+                              "is current dir)");
             Console.WriteLine(" /all                           - don't skip file groups that look up to date");
 
             Console.WriteLine(" /basedb     [input dir]        - specify directory for baseline analysis.");
@@ -195,7 +202,14 @@ namespace Microsoft.PythonTools.Analysis {
             if (!string.IsNullOrEmpty(_logGlobal)) {
                 for (int retries = 10; retries > 0; --retries) {
                     try {
-                        File.AppendAllText(_logGlobal, string.Format("{0:s} {1} {2}{3}", DateTime.Now, message, Environment.CommandLine, Environment.NewLine));
+                        File.AppendAllText(_logGlobal,
+                            string.Format("{0:s} {1} {2}{3}",
+                                DateTime.Now,
+                                message,
+                                Environment.CommandLine,
+                                Environment.NewLine
+                            )
+                        );
                         break;
                     } catch (DirectoryNotFoundException) {
                         // Create the directory and try again
@@ -220,7 +234,8 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         private static PyLibAnalyzer MakeFromArguments(IEnumerable<string> args) {
-            var options = ParseArguments(args).ToDictionary(kv => kv.Key, kv => kv.Value, StringComparer.InvariantCultureIgnoreCase);
+            var options = ParseArguments(args)
+                .ToDictionary(kv => kv.Key, kv => kv.Value, StringComparer.InvariantCultureIgnoreCase);
 
             string value;
 
@@ -336,7 +351,9 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             Directory.CreateDirectory(Path.GetDirectoryName(_logPrivate));
-            _listener = new StreamWriter(new FileStream(_logPrivate, FileMode.Append, FileAccess.Write, FileShare.ReadWrite), Encoding.UTF8);
+            _listener = new StreamWriter(
+                new FileStream(_logPrivate, FileMode.Append, FileAccess.Write, FileShare.ReadWrite),
+                Encoding.UTF8);
             _listener.WriteLine();
             TraceInformation("Start analysis");
         }
@@ -356,7 +373,11 @@ namespace Microsoft.PythonTools.Analysis {
                 .Select(group => group.ToList())
                 .ToList();
 
-            _existingDatabase = new HashSet<string>(Directory.EnumerateFiles(_outDir, "*.idb"), StringComparer.OrdinalIgnoreCase);
+            Directory.CreateDirectory(_outDir);
+
+            _existingDatabase = new HashSet<string>(
+                Directory.EnumerateFiles(_outDir, "*.idb", SearchOption.AllDirectories),
+                StringComparer.OrdinalIgnoreCase);
         }
 
         internal string PythonScraperPath {
@@ -382,9 +403,7 @@ namespace Microsoft.PythonTools.Analysis {
             if (_needsRefresh.Contains(path.LibraryPath)) {
                 return true;
             }
-            if (destPath == null) {
-                destPath = Path.Combine(_outDir, path.ModuleName + ".idb");
-            }
+            destPath = destPath ?? GetOutputFile(path);
 
             if (!File.Exists(destPath) ||
                 File.GetLastWriteTimeUtc(destPath) < File.GetLastWriteTimeUtc(path.SourceFile)) {
@@ -414,7 +433,9 @@ namespace Microsoft.PythonTools.Analysis {
             // they are case-sensitive module names.
             var builtinNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             builtinNames.Add(_version.Major == 3 ? BuiltinName3x : BuiltinName2x);
-            using (var output = ProcessOutput.RunHiddenAndCapture(_interpreter, "-c", "import sys; print('\\n'.join(sys.builtin_module_names))")) {
+            using (var output = ProcessOutput.RunHiddenAndCapture(_interpreter,
+                "-c",
+                "import sys; print('\\n'.join(sys.builtin_module_names))")) {
                 output.Wait();
                 if (output.ExitCode != 0) {
                     // Don't delete anything if we don't get the right names.
@@ -432,7 +453,7 @@ namespace Microsoft.PythonTools.Analysis {
 
             var builtinModulePaths = builtinNames
                 .Where(n => !string.IsNullOrEmpty(n) && n.IndexOfAny(Path.GetInvalidPathChars()) < 0)
-                .Select(n => Path.Combine(_outDir, n + ".idb"))
+                .Select(n => GetOutputFile(n))
                 .ToArray();
 
             if (_all || builtinModulePaths.Any(p => !File.Exists(p)) || !File.Exists(Path.Combine(_outDir, "database.ver"))) {
@@ -469,10 +490,13 @@ namespace Microsoft.PythonTools.Analysis {
                 .ToArray();
 
             foreach (var file in scrapeFiles) {
-                var destFile = Path.Combine(_outDir, file.ModuleName);
+                var destFile = Path.ChangeExtension(GetOutputFile(file), null);
                 _existingDatabase.Remove(destFile + ".idb");
                 if (ShouldAnalyze(file)) {
                     _needsRefresh.Add(file.LibraryPath);
+
+                    Directory.CreateDirectory(Path.GetDirectoryName(destFile));
+
                     using (var output = ProcessOutput.RunHiddenAndCapture(_interpreter, ExtensionScraperPath, "scrape", file.ModuleName, "-", destFile)) {
                         TraceInformation("Scraping {0}", file.ModuleName);
                         TraceInformation("Command: {0}", output.Arguments);
@@ -540,7 +564,7 @@ namespace Microsoft.PythonTools.Analysis {
 
                 bool needAnalyze = false;
                 foreach (var file in files) {
-                    var destName = Path.Combine(_outDir, file.ModuleName + ".idb");
+                    var destName = GetOutputFile(file); 
                     _existingDatabase.Remove(destName);
 
                     // Deliberately short-circuit the check once we know we'll
@@ -644,7 +668,9 @@ namespace Microsoft.PythonTools.Analysis {
                 }
 
                 TraceInformation("Saving group \"{0}\"", files[0].LibraryPath);
-                new SaveAnalysis().Save(projectState, _outDir);
+                var outDir = GetOutputDir(files[0]);
+                Directory.CreateDirectory(outDir);
+                new SaveAnalysis().Save(projectState, outDir);
                 TraceInformation("End of group \"{0}\"", files[0].LibraryPath);
                 AnalysisLog.EndFileGroup();
 
@@ -667,6 +693,24 @@ namespace Microsoft.PythonTools.Analysis {
                 } catch {
                 }
             }
+        }
+
+        private string GetOutputDir(ModulePath file) {
+            if (file.LibraryPath == _library) {
+                return _outDir;
+            } else {
+                return Path.Combine(_outDir,
+                    Regex.Replace(CommonUtils.GetRelativeFilePath(_library, file.LibraryPath), @"[.\\/]", "_")
+                );
+            }
+        }
+
+        private string GetOutputFile(string builtinName) {
+            return Path.Combine(_outDir, builtinName + ".idb");
+        }
+        
+        private string GetOutputFile(ModulePath file) {
+            return Path.Combine(GetOutputDir(file), file.ModuleName + ".idb");
         }
 
         internal void TraceInformation(string message, params object[] args) {
