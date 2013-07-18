@@ -18,12 +18,15 @@ using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
+using System.Web;
 using System.Windows.Forms;
 using Microsoft.PythonTools.Debugger.Remote;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Debugger;
 using Microsoft.VisualStudio.Debugger.Interop;
+using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Shell.Interop;
 
 namespace Microsoft.PythonTools.Debugger.DebugEngine {
     // AD7Engine is the primary entrypoint object for the debugging engine. 
@@ -67,6 +70,9 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         private BreakpointManager _breakpointManager;
         private Guid _ad7ProgramId;             // A unique identifier for the program being debugged.
         private static HashSet<WeakReference> _engines = new HashSet<WeakReference>();
+
+        private string _webBrowserUrl;
+        private int? _webBrowserPort;
 
         // Python thread IDs can be 64-bit (e.g. when remotely debugging a 64-bit Linux system), but VS debugger APIs only work
         // with 32-bit identifiers, so we need to set up a mapping system. If the thread ID is small enough to fit into 32 bits,
@@ -122,6 +128,16 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         public const string InterpreterOptions = "INTERPRETER_OPTIONS";
 
         public const string AttachRunning = "ATTACH_RUNNING";
+
+        /// <summary>
+        /// Specifies port to which to open web browser on debug connect.
+        /// </summary>
+        public const string WebBrowserPort = "WEB_BROWSER_PORT";
+
+        /// <summary>
+        /// Specifies URL to which to open web browser on debug connect.
+        /// </summary>
+        public const string WebBrowserUrl = "WEB_BROWSER_URL";
 
         /// <summary>
         /// True if Django debugging is enabled.
@@ -344,8 +360,42 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             if (attached != null) {
                 attached(this, new AD7EngineEventArgs(this));
             }
+
+            StartWebBrowser();
         }
 
+        private void StartWebBrowser() {
+            if (_webBrowserUrl != null) {
+                Debug.Assert(_webBrowserPort != null);
+                OnPortOpenedHandler.CreateHandler(
+                    _webBrowserPort.Value,
+                    shortCircuitPredicate: () => _process.HasExited,
+                    action: () => {
+                        var vsDebugger = (IVsDebugger2)ServiceProvider.GlobalProvider.GetService(typeof(SVsShellDebugger)); ;
+
+                        VsDebugTargetInfo2 info = new VsDebugTargetInfo2();
+                        var infoSize = Marshal.SizeOf(info);
+                        info.cbSize = (uint)infoSize;
+                        info.bstrExe = _webBrowserUrl;
+                        if (_webBrowserPort != null) {
+                            info.bstrExe += ":" + _webBrowserPort;
+                        }
+                        info.dlo = (uint)_DEBUG_LAUNCH_OPERATION3.DLO_LaunchBrowser;
+                        info.guidLaunchDebugEngine = DebugEngineGuid;
+                        IntPtr infoPtr = Marshal.AllocCoTaskMem(infoSize);
+                        Marshal.StructureToPtr(info, infoPtr, false);
+
+                        try {
+                            vsDebugger.LaunchDebugTargets2(1, infoPtr);
+                        } finally {
+                            if (infoPtr != IntPtr.Zero) {
+                                Marshal.FreeCoTaskMem(infoPtr);
+                            }
+                        }
+                    }
+                );
+            }
+        }
         private void SendThreadStart(AD7Thread ad7Thread) {
             Send(new AD7ThreadCreateEvent(), AD7ThreadCreateEvent.IID, ad7Thread);
         }
@@ -647,6 +697,12 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                             case AttachRunning:
                                 attachRunning = Convert.ToBoolean(setting[1]);
                                 break;
+                            case WebBrowserPort:
+                                _webBrowserPort = int.Parse(setting[1]);
+                                break;
+                            case WebBrowserUrl:
+                                _webBrowserUrl = HttpUtility.UrlDecode(setting[1]);
+                                break; 
                             case EnableDjangoDebugging:
                                 if (Boolean.TryParse(setting[1], out value) && value) {
                                     debugOptions |= PythonDebugOptions.DjangoDebugging;

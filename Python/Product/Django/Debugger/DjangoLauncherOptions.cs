@@ -31,6 +31,8 @@ namespace Microsoft.PythonTools.Django.Debugger {
             const string interpArgsHelp = "Specifies arguments which alter how the interpreter is started (for example, -O to generate optimized byte code).";
             const string interpPathHelp = "Overrides the interpreter executable which is used for launching the project.";
             const string settingsModuleHelp = "The Python path to a settings module, e.g. \"myproject.settings.main\". If this isn't provided, the DJANGO_SETTINGS_MODULE environment variable will be used.";
+            const string portNumberHelp = "The port to launch when using the Django development server.  When not specified a random free port will be used.";
+            const string launchUrlHelp = "The URL to launch when using the Django development server.  When not specified http://localhost will be launched.";
 
             _toolTip.SetToolTip(_searchPathLabel, searchPathHelp);
             _toolTip.SetToolTip(_searchPaths, searchPathHelp);
@@ -46,9 +48,16 @@ namespace Microsoft.PythonTools.Django.Debugger {
 
             _toolTip.SetToolTip(_settingsModule, settingsModuleHelp);
             _toolTip.SetToolTip(_settingsModuleLabel, settingsModuleHelp);
+
+            _toolTip.SetToolTip(_launchUrl, launchUrlHelp);
+            _toolTip.SetToolTip(_launchUrlLabel, launchUrlHelp);
+
+            _toolTip.SetToolTip(_portNumber, portNumberHelp);
+            _toolTip.SetToolTip(_portNumberLabel, portNumberHelp);
         }
 
-        public DjangoLauncherOptions(IPythonProject properties) : this() {
+        public DjangoLauncherOptions(IPythonProject properties)
+            : this() {
             _properties = properties;
         }
 
@@ -60,6 +69,8 @@ namespace Microsoft.PythonTools.Django.Debugger {
             _properties.SetProperty(PythonConstants.InterpreterPathSetting, InterpreterPath);
             _properties.SetProperty(PythonConstants.InterpreterArgumentsSetting, _interpArgs.Text);
             _properties.SetProperty(SettingModulesSetting, _settingsModule.Text);
+            _properties.SetProperty(PythonConstants.WebBrowserUrlSetting, _launchUrl.Text);
+            _properties.SetProperty(PythonConstants.WebBrowserPortSetting, _portNumber.Text);
             RaiseIsSaved();
         }
 
@@ -70,6 +81,8 @@ namespace Microsoft.PythonTools.Django.Debugger {
             Arguments = _properties.GetUnevaluatedProperty(PythonConstants.CommandLineArgumentsSetting);
             SettingsModule = _properties.GetUnevaluatedProperty(SettingModulesSetting);
             _interpArgs.Text = _properties.GetUnevaluatedProperty(PythonConstants.InterpreterArgumentsSetting);
+            _launchUrl.Text = _properties.GetUnevaluatedProperty(PythonConstants.WebBrowserUrlSetting);
+            _portNumber.Text = _properties.GetUnevaluatedProperty(PythonConstants.WebBrowserPortSetting);
             _loadingSettings = false;
         }
 
@@ -149,6 +162,14 @@ namespace Microsoft.PythonTools.Django.Debugger {
         }
 
         private void SettingsModuleTextChanged(object sender, EventArgs e) {
+            RaiseIsDirty();
+        }
+
+        private void PortNumberTextChanged(object sender, EventArgs e) {
+            RaiseIsDirty();
+        }
+
+        private void LaunchUrlTextChanged(object sender, EventArgs e) {
             RaiseIsDirty();
         }
     }

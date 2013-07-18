@@ -24,6 +24,8 @@ using System.Threading;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools.Project;
 using Microsoft.Win32;
 
@@ -55,6 +57,14 @@ namespace Microsoft.PythonTools.Django.Debugger {
             public DjangoPythonProject(DjangoLauncher launcher, IPythonProject realProject) {
                 _launcher = launcher;
                 _realProject = realProject;
+
+                var portNumber = _realProject.GetProperty(PythonConstants.WebBrowserPortSetting);
+                int portNum;
+                if (Int32.TryParse(portNumber, out portNum)) {
+                    _launcher._testServerPort = portNum;
+                } else {
+                    _launcher._testServerPort = GetFreePort();
+                }
             }
 
             #region IPythonProject Members
@@ -64,8 +74,7 @@ namespace Microsoft.PythonTools.Django.Debugger {
                     case PythonConstants.CommandLineArgumentsSetting:
                         var userArgs = _realProject.GetProperty(PythonConstants.CommandLineArgumentsSetting);
                         if (String.Equals(Path.GetFileName(_realProject.GetStartupFile()), "manage.py", StringComparison.OrdinalIgnoreCase)) {
-                            _launcher._testServerPort = GetFreePort();
-
+                            
                             string commandLine = "runserver";
                             if (_debugLaunch) {
                                 commandLine += " --noreload";
@@ -84,6 +93,14 @@ namespace Microsoft.PythonTools.Django.Debugger {
                         }
 
                         return userArgs;
+                    case PythonConstants.WebBrowserUrlSetting:
+                        var res = _realProject.GetProperty(PythonConstants.WebBrowserUrlSetting);
+                        if (String.IsNullOrWhiteSpace(res)) {
+                            return "http://localhost";
+                        }
+                        return res;
+                    case PythonConstants.WebBrowserPortSetting:
+                        return _launcher._testServerPort.ToString();
                     case "DjangoDebugging":
                         return "True";
                 }
@@ -148,75 +165,16 @@ namespace Microsoft.PythonTools.Django.Debugger {
 
         public int LaunchProject(bool debug) {
             _debugLaunch = debug;
-            int res = _defaultLauncher.LaunchProject(debug);
-            if (ErrorHandler.Succeeded(res)) {
-                ThreadPool.QueueUserWorkItem(StartBrowser, null);
-            }
-            return res;
-        }
-
-        private void StartBrowser(object dummy) {
-            var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            socket.Blocking = true;
-            for (int i = 0; i < 20; i++) {
-                try {
-                    socket.Connect(IPAddress.Loopback, _testServerPort);
-                    break;
-                } catch {
-                }
-            }
-            socket.Close();
-            StartInBrowser("http://localhost:" + _testServerPort);
+            return _defaultLauncher.LaunchProject(debug);
         }
 
         public int LaunchFile(string file, bool debug) {
             _debugLaunch = debug;
-            int res = _defaultLauncher.LaunchFile(file, debug);
-            if (ErrorHandler.Succeeded(res)) {
-                StartInBrowser("http://localhost:" + _testServerPort);
-            }
-            return res;
+            return _defaultLauncher.LaunchFile(file, debug);
         }
 
 
         #endregion
-
-        public void StartInBrowser(string url) {
-            // run the users default browser
-            var handler = GetBrowserHandlerProgId();
-            var browserCmd = (string)Registry.ClassesRoot.OpenSubKey(handler).OpenSubKey("shell").OpenSubKey("open").OpenSubKey("command").GetValue("");
-
-            if (browserCmd.IndexOf("%1") != -1) {
-                browserCmd = browserCmd.Replace("%1", url);
-            } else {
-                browserCmd = browserCmd + " " + url;
-            }
-            bool inQuote = false;
-            string cmdLine = null;
-            for (int i = 0; i < browserCmd.Length; i++) {
-                if (browserCmd[i] == '"') {
-                    inQuote = !inQuote;
-                }
-
-                if (browserCmd[i] == ' ' && !inQuote) {
-                    cmdLine = browserCmd.Substring(0, i);
-                    break;
-                }
-            }
-            if (cmdLine == null) {
-                cmdLine = browserCmd;
-            }
-
-            Process.Start(cmdLine, browserCmd.Substring(cmdLine.Length));
-        }
-
-        private static string GetBrowserHandlerProgId() {
-            try {
-                return (string)Registry.CurrentUser.OpenSubKey("Software").OpenSubKey("Microsoft").OpenSubKey("Windows").OpenSubKey("CurrentVersion").OpenSubKey("Explorer").OpenSubKey("FileExts").OpenSubKey(".html").OpenSubKey("UserChoice").GetValue("Progid");
-            } catch {
-                return (string)Registry.ClassesRoot.OpenSubKey(".html").GetValue("");
-            }
-        }
 
         private static int GetFreePort() {
             return Enumerable.Range(new Random().Next(1200, 2000), 60000).Except(

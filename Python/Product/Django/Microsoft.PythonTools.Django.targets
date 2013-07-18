@@ -11,6 +11,7 @@
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <AzureDjangoSupportPath>$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\</AzureDjangoSupportPath>
     <PTVSSupportPath>$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\</PTVSSupportPath>
+    <DjangoSettingsModule Condition="'$(DjangoSettingsModule)' == ''">$(MSBuildProjectName).settings</DjangoSettingsModule>
   </PropertyGroup>
 
   <Target Name="GetTargetFrameworkVersion" Returns="$(TargetFrameworkVersion)" />
@@ -330,7 +331,7 @@ interpreter_path_emulated=$(TargetPythonInterpreterPath)
   <appSettings>$(WsgiAppSettings)
     <add key="WSGI_HANDLER" value="$(WsgiHandler)"/>
     <add key="PYTHONPATH" value="$(DeployedSiteRoot)"/>
-    <add key="DJANGO_SETTINGS_MODULE" value="$(MSBuildProjectName).settings" />
+    <add key="DJANGO_SETTINGS_MODULE" value="$(DjangoSettingsModule)" />
   </appSettings>
 
   <system.web>

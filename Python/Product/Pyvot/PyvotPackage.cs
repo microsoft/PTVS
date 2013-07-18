@@ -111,7 +111,7 @@ namespace Microsoft.PythonTools.Pyvot {
         private void RefreshPerInterpreterCommands(object sender, EventArgs args) {
             OleMenuCommandService mcs = GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
 
-            foreach(var command in _interpCommands) {
+            foreach (var command in _interpCommands) {
                 mcs.RemoveCommand(command);
             }
 
@@ -150,10 +150,12 @@ namespace Microsoft.PythonTools.Pyvot {
             protected void InstallSample(string sampleName) {
                 ProcessStartInfo startInfo = new ProcessStartInfo();
                 startInfo.UseShellExecute = true;
-                startInfo.WorkingDirectory = Path.Combine(GetPythonToolsInstallPath(), sampleName);
-                startInfo.FileName = Factory.Configuration.InterpreterPath;
+                startInfo.FileName = "cmd.exe";
+                startInfo.Arguments = String.Format("/c \"cd \"{2}\" & \"{0}\" \"{1}\" --no-downloads install\" & pause",
+                    Factory.Configuration.InterpreterPath,
+                    Path.Combine(GetPythonToolsInstallPath(), sampleName, "setup.py"),
+                    Path.Combine(GetPythonToolsInstallPath(), sampleName));
 
-                startInfo.Arguments = String.Format("\"{0}\" --no-downloads install", Path.Combine(GetPythonToolsInstallPath(), sampleName, "setup.py"));
                 startInfo.Verb = "runas";
 
                 try {

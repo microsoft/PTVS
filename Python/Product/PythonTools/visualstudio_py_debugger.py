@@ -320,11 +320,18 @@ def probe_stack(depth = 10):
 
 # specifies list of files not to debug, can be added to externally (the REPL does this
 # for $attach support and not stepping into the REPL)
- 
+
 DONT_DEBUG = [__file__, _vspu.__file__]
+PREFIXES = [sys.prefix]
+if hasattr(sys, 'real_prefix'):
+    # we're running in a virtual env, DEBUG_STDLIB should respect this too.
+    PREFIXES.append(sys.real_prefix)
+
 def should_debug_code(code):
-    if not DEBUG_STDLIB and code.co_filename.startswith(sys.prefix):
-        return False
+    if not DEBUG_STDLIB:
+        for prefix in PREFIXES:
+            if code.co_filename.startswith(prefix):
+                return False
 
     filename = code.co_filename
     for dont_debug_file in DONT_DEBUG:
@@ -595,13 +602,13 @@ class Thread(object):
                 PENDING_BREAKPOINTS -= bound
 
         stepping = self.stepping
-        if stepping is not STEPPING_NONE:
+        if stepping is not STEPPING_NONE and should_debug_code(frame.f_code):
             if stepping == STEPPING_INTO:
                 # block when we hit the 1st line, not when we're on the function def
                 self.stepping = STEPPING_OVER
                 # empty stopped_on_line so that we will break even if it is
                 # the same line
-                self.stopped_on_line = None            
+                self.stopped_on_line = None
             elif stepping >= STEPPING_OVER:
                 self.stepping += 1
             elif stepping <= STEPPING_OUT:
@@ -623,6 +630,21 @@ class Thread(object):
 
         return self.trace_func
         
+    def should_block_on_frame(self, frame):
+        if not should_debug_code(frame.f_code):
+            return False
+        
+        # walk up our frames and make sure no debugger code is on the stack
+        while frame is not None:
+            if is_same_py_file(frame.f_code.co_filename, __file__):
+                if frame.f_code.co_name == 'debug' or frame.f_code.co_name == 'thread_creator':
+                    # our top-level functions
+                    break
+                # something like our stdout writer, don't block below here
+                return False
+            frame = frame.f_back
+        return True
+
     def handle_line(self, frame, arg):
         if not DETACHED:
             stepping = self.stepping
@@ -635,11 +657,10 @@ class Thread(object):
                 if (((stepping == STEPPING_OVER or stepping == STEPPING_INTO) and frame.f_lineno != self.stopped_on_line) 
                     or stepping == STEPPING_LAUNCH_BREAK 
                     or stepping == STEPPING_ATTACH_BREAK):
-                    if ((stepping == STEPPING_LAUNCH_BREAK and not MODULES) or                        
-                        not should_debug_code(frame.f_code)):  # don't break into our own debugger / non-user code
+                    if ((stepping == STEPPING_LAUNCH_BREAK and not MODULES) or
+                        not self.should_block_on_frame(frame)):  # don't break into our own debugger / non-user code
                         # don't break into inital Python code needed to set things up
                         return self.trace_func
-                    
                     blocked_for_stepping = stepping != STEPPING_LAUNCH_BREAK and stepping != STEPPING_ATTACH_BREAK
                     self.block_maybe_attach()
 
@@ -648,7 +669,7 @@ class Thread(object):
                 if bp is not None:
                     for (filename, bp_id), (condition, bound) in bp.items():
                         if filename == frame.f_code.co_filename or (not bound and filename_is_same(filename, frame.f_code.co_filename)):   
-                            if condition:                            
+                            if condition:
                                 try:
                                     res = eval(condition.condition, frame.f_globals, frame.f_locals)
                                     if condition.break_when_changed:
@@ -680,20 +701,25 @@ class Thread(object):
 
         if not DETACHED:
             stepping = self.stepping
-            if stepping is not STEPPING_NONE:
+            # only update stepping state when this frame is debuggable (matching handle_call)
+            if stepping is not STEPPING_NONE and should_debug_code(frame.f_code):
                 if stepping > STEPPING_OVER:
                     self.stepping -= 1
                 elif stepping < STEPPING_OUT:
                     self.stepping += 1
-                elif stepping in USER_STEPPING and should_debug_code(frame.f_code):
+                elif stepping in USER_STEPPING:
                     if self.cur_frame is None or frame.f_code.co_name == "<module>" :
-                        # restore back the module frame for the step out of a module
-                        self.push_frame(ModuleExitFrame(frame))
-                        self.stepping = STEPPING_NONE
-                        update_all_thread_stacks(self)
-                        self.block(lambda: (report_step_finished(self.id), mark_all_threads_for_break()))
-                        self.pop_frame()
-                    else:
+                        # only return to user code modules
+                        if self.should_block_on_frame(frame):
+                            # restore back the module frame for the step out of a module
+                            self.push_frame(ModuleExitFrame(frame))
+                            self.stepping = STEPPING_NONE
+                            update_all_thread_stacks(self)
+                            self.block(lambda: (report_step_finished(self.id), mark_all_threads_for_break()))
+                            self.pop_frame()
+                    elif self.should_block_on_frame(self.cur_frame):
+                        # if we're returning into non-user code then don't block in the
+                        # non-user code, wait until we hit user code again
                         self.stepping = STEPPING_NONE
                         update_all_thread_stacks(self)
                         self.block(lambda: (report_step_finished(self.id), mark_all_threads_for_break()))

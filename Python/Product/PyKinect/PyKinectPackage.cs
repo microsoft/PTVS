@@ -143,10 +143,11 @@ namespace Microsoft.Samples {
             protected void InstallSample(string sampleName) {
                 ProcessStartInfo startInfo = new ProcessStartInfo();
                 startInfo.UseShellExecute = true;
-                startInfo.WorkingDirectory = Path.Combine(GetPythonToolsInstallPath(), sampleName);
-                startInfo.FileName = Factory.Configuration.InterpreterPath;
-
-                startInfo.Arguments = String.Format("\"{0}\" install", Path.Combine(GetPythonToolsInstallPath(), sampleName, "setup.py"));
+                startInfo.FileName = Path.Combine(Environment.SystemDirectory, "cmd.exe");
+                startInfo.Arguments = String.Format("/c \"cd \"{2}\" & \"{0}\" \"{1}\" install\" & pause",
+                    Factory.Configuration.InterpreterPath,
+                    Path.Combine(GetPythonToolsInstallPath(), sampleName, "setup.py"),
+                    Path.Combine(GetPythonToolsInstallPath(), sampleName));
                 startInfo.Verb = "runas";
 
                 try {

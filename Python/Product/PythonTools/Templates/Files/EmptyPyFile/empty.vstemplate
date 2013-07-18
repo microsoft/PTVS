@@ -5,6 +5,7 @@
     <Icon Package="{6dbd7c1e-1f1b-496d-ac7c-c55dae66c783}" ID="404" />
     <ProjectType>Python</ProjectType>
     <DefaultName>module.py</DefaultName>
+    <SortOrder>10</SortOrder>
   </TemplateData>
   <TemplateContent>
     <References/>

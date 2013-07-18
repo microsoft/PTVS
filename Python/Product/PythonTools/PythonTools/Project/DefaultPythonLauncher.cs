@@ -20,6 +20,7 @@ using System.Diagnostics.Contracts;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Web;
 using System.Windows.Forms;
 using Microsoft.PythonTools.Debugger.DebugEngine;
 using Microsoft.PythonTools.Interpreter;
@@ -54,8 +55,25 @@ namespace Microsoft.PythonTools.Project {
             if (debug) {
                 StartWithDebugger(file);
             } else {
-                StartWithoutDebugger(file);
+                var process = StartWithoutDebugger(file);
+                var url = _project.GetProperty(PythonConstants.WebBrowserUrlSetting);
+                if (process != null && !String.IsNullOrWhiteSpace(url)) {
+                    var port = _project.GetProperty(PythonConstants.WebBrowserPortSetting);
+                    int portNum;
+                    if (Int32.TryParse(port, out portNum)) {
+                        url = url + ":" + portNum;
+                    }
+
+                    OnPortOpenedHandler.CreateHandler(
+                        portNum,
+                        shortCircuitPredicate: () => process.HasExited,
+                        action: () => {
+                            VsShellUtilities.OpenBrowser(url, (uint)__VSOSPFLAGS.OSP_LaunchNewBrowser);
+                        }
+                    );
+                }
             }
+
             return VSConstants.S_OK;
         }
 
@@ -112,12 +130,12 @@ namespace Microsoft.PythonTools.Project {
         /// <summary>
         /// Default implementation of the "Start without Debugging" command.
         /// </summary>
-        private void StartWithoutDebugger(string startupFile) {
+        private Process StartWithoutDebugger(string startupFile) {
             var psi = CreateProcessStartInfoNoDebug(startupFile);
             if (psi == null) {
-                return;
+                return null;
             }
-            Process.Start(psi);
+            return Process.Start(psi);
         }
 
         /// <summary>
@@ -198,6 +216,16 @@ namespace Microsoft.PythonTools.Project {
                 }
                 if (!String.IsNullOrWhiteSpace(interpArgs)) {
                     dbgInfo.bstrOptions += ";" + AD7Engine.InterpreterOptions + "=" + interpArgs.Replace(";", ";;");
+                }
+
+                var url = _project.GetProperty(PythonConstants.WebBrowserUrlSetting);
+                if (!String.IsNullOrWhiteSpace(url)) {
+                    dbgInfo.bstrOptions += ";" + AD7Engine.WebBrowserUrl + "=" + HttpUtility.UrlEncode(url);
+                }
+
+                var port = _project.GetProperty(PythonConstants.WebBrowserPortSetting);
+                if (!String.IsNullOrWhiteSpace(port)) {
+                    dbgInfo.bstrOptions += ";" + AD7Engine.WebBrowserPort + "=" + port;
                 }
 
                 var djangoDebugging = _project.GetProperty("DjangoDebugging");

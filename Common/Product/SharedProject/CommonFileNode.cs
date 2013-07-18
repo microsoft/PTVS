@@ -280,7 +280,10 @@ namespace Microsoft.VisualStudioTools.Project {
             }
 
             ResetNodeProperties();
-            ItemNode = ProjectMgr.AddFileToMsBuild(Url);
+            ItemNode = ProjectMgr.CreateMsBuildFileItem(
+                CommonUtils.GetRelativeFilePath(ProjectMgr.ProjectHome, Url),
+                ProjectFileConstants.Compile
+            );
             IsVisible = true;
             ProjectMgr.OnInvalidateItems(Parent);
             ProjectMgr.ReDrawNode(this, UIHierarchyElement.Icon);

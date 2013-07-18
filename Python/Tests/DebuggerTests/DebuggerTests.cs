@@ -535,6 +535,18 @@ namespace DebuggerTests {
 
         [TestMethod, Priority(0)]
         public void StepTest() {
+            // Bug 1315: https://pytools.codeplex.com/workitem/1315
+            StepTest(DebuggerTestPath + @"StepIntoThroughStdLib.py",
+                    new ExpectedStep(StepKind.Over, 1),     // step over import os
+                    new ExpectedStep(StepKind.Over, 2),     // step over code =  ...
+                    new ExpectedStep(StepKind.Over, 3),     // step over d = {}
+                    new ExpectedStep(StepKind.Over, 4),     // step over exec(code, d, d)
+                    new ExpectedStep(StepKind.Over, 6),     // step over def myfunc():
+                    new ExpectedStep(StepKind.Into, 9),     // step d['f'](myfunc)
+                    new ExpectedStep(StepKind.Over, 7),     // step over print('abc')
+                    new ExpectedStep(StepKind.Resume, 10)     // wait for exit
+                );
+            
             // Bug 507: http://pytools.codeplex.com/workitem/507
             StepTest(DebuggerTestPath + @"SteppingTestBug507.py",
                     new ExpectedStep(StepKind.Over, 1),     // step over def add_two_numbers(x, y):

@@ -79,6 +79,16 @@ namespace Microsoft.PythonTools {
         public const string StartupFileSetting = "StartupFile";
         public const string IsWindowsApplicationSetting = "IsWindowsApplication";
 
+        /// <summary>
+        /// Specifies port to which to open web browser on launch.
+        /// </summary>
+        public const string WebBrowserPortSetting = "WebBrowserPort";
+
+        /// <summary>
+        /// Specifies URL to which to open web browser on launch.
+        /// </summary>
+        public const string WebBrowserUrlSetting = "WebBrowserUrl";
+
         //Mixed-mode debugging project property
         public const string EnableNativeCodeDebugging = "EnableNativeCodeDebugging";
 
