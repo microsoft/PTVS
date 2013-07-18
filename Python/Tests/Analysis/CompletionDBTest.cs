@@ -138,7 +138,9 @@ namespace PythonToolsTests {
             File.Copy(TestData.GetPath(@"CompletionDB\__builtin__.idb"), Path.Combine(outputPath, "__builtin__.idb"));
 
             var fact = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(new Version(2, 7));
-            var typeDb = new PythonTypeDatabase(fact, outputPath);
+            var paths = new List<string> { outputPath };
+            paths.AddRange(Directory.EnumerateDirectories(outputPath));
+            var typeDb = new PythonTypeDatabase(fact, paths);
             var module = typeDb.GetModule("SomeLib");
             Assert.AreNotEqual(null, module);
             var fooMod = module.GetMember(null, "foo");
