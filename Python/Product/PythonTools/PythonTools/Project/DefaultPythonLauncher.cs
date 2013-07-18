@@ -68,7 +68,19 @@ namespace Microsoft.PythonTools.Project {
                         portNum,
                         shortCircuitPredicate: () => process.HasExited,
                         action: () => {
-                            VsShellUtilities.OpenBrowser(url, (uint)__VSOSPFLAGS.OSP_LaunchNewBrowser);
+                            var web = PythonToolsPackage.GetGlobalService(typeof(SVsWebBrowsingService)) as IVsWebBrowsingService;
+                            if (web == null) {
+                                PythonToolsPackage.OpenWebBrowser(url);
+                                return;
+                            }
+
+                            ErrorHandler.ThrowOnFailure(
+                                web.CreateExternalWebBrowser(
+                                    (uint)__VSCREATEWEBBROWSER.VSCWB_ForceNew,
+                                    VSPREVIEWRESOLUTION.PR_Default,
+                                    url
+                                )
+                            );
                         }
                     );
                 }
