@@ -12,9 +12,14 @@
  *
  * ***************************************************************************/
 
+using System;
+using System.Drawing;
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
+using System.Windows.Interop;
+using System.Windows.Media.Imaging;
 using Microsoft.VisualStudio.Shell;
 
 namespace Microsoft.PythonTools.Wpf {
@@ -60,6 +65,30 @@ namespace Microsoft.PythonTools.Wpf {
         public static readonly object ScrollBarArrowBackgroundHoverKey = VsBrushes.ScrollBarArrowMouseOverBackgroundKey;
         public static readonly object ScrollBarArrowBackgroundPressedKey = VsBrushes.ScrollBarArrowPressedBackgroundKey;
         public static readonly object ScrollBarArrowBackgroundDisabledKey = VsBrushes.ScrollBarArrowDisabledBackgroundKey;
+
+        public static readonly BitmapSource UacShield = CreateUacShield();
+
+        private static BitmapSource CreateUacShield() {
+            if (Environment.OSVersion.Version.Major >= 6) {
+                var sii = new NativeMethods.SHSTOCKICONINFO();
+                sii.cbSize = (UInt32)Marshal.SizeOf(typeof(NativeMethods.SHSTOCKICONINFO));
+
+                Marshal.ThrowExceptionForHR(NativeMethods.SHGetStockIconInfo(77, 0x0101, ref sii));
+                try {
+                    return Imaging.CreateBitmapSourceFromHIcon(
+                        sii.hIcon,
+                        Int32Rect.Empty,
+                        BitmapSizeOptions.FromEmptyOptions());
+                } finally {
+                    NativeMethods.DestroyIcon(sii.hIcon);
+                }
+            } else {
+                return Imaging.CreateBitmapSourceFromHIcon(
+                    SystemIcons.Shield.Handle,
+                    Int32Rect.Empty,
+                    BitmapSizeOptions.FromEmptyOptions());
+            }
+        }
     }
 
     [ValueConversion(typeof(bool), typeof(Visibility))]

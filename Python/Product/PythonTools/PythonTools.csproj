@@ -647,6 +647,7 @@
     <Compile Include="PkgCmdID.cs" />
     <Compile Include="VsCredentials.cs" />
     <Compile Include="Wpf\Controls.cs" />
+    <Compile Include="Wpf\NativeMethods.cs" />
   </ItemGroup>
   <ItemGroup Condition="'$(VSTarget)' != '10.0'">
     <Compile Include="PythonTools\Commands\UsePythonStepping.cs" />
