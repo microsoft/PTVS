@@ -57,7 +57,6 @@
             this._debugGroup.Margin = new System.Windows.Forms.Padding(6, 8, 6, 8);
             this._debugGroup.Name = "_debugGroup";
             this._debugGroup.Padding = new System.Windows.Forms.Padding(6, 8, 6, 8);
-            this._debugGroup.Size = new System.Drawing.Size(438, 159);
             this._debugGroup.Size = new System.Drawing.Size(438, 211);
             this._debugGroup.TabIndex = 0;
             this._debugGroup.TabStop = false;
@@ -87,14 +86,12 @@
             this.tableLayoutPanel2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel2.Location = new System.Drawing.Point(6, 21);
             this.tableLayoutPanel2.Name = "tableLayoutPanel2";
-            this.tableLayoutPanel2.RowCount = 5;
             this.tableLayoutPanel2.RowCount = 7;
             this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tableLayoutPanel2.Size = new System.Drawing.Size(426, 130);
             this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle());
@@ -110,7 +107,6 @@
             this._settingsModuleLabel.Name = "_settingsModuleLabel";
             this._settingsModuleLabel.Size = new System.Drawing.Size(86, 13);
             this._settingsModuleLabel.TabIndex = 8;
-            this._settingsModuleLabel.Text = "&Settings Module:";
             this._settingsModuleLabel.Text = "Settings &Module:";
             this._settingsModuleLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
@@ -167,7 +163,6 @@
             this._interpreterPathLabel.Name = "_interpreterPathLabel";
             this._interpreterPathLabel.Size = new System.Drawing.Size(83, 13);
             this._interpreterPathLabel.TabIndex = 6;
-            this._interpreterPathLabel.Text = "Interpreter &Path:";
             this._interpreterPathLabel.Text = "&Interpreter Path:";
             this._interpreterPathLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
@@ -180,7 +175,6 @@
             this._interpArgsLabel.Name = "_interpArgsLabel";
             this._interpArgsLabel.Size = new System.Drawing.Size(111, 13);
             this._interpArgsLabel.TabIndex = 4;
-            this._interpArgsLabel.Text = "Interpreter A&rguments:";
             this._interpArgsLabel.Text = "Interpreter Ar&guments:";
             this._interpArgsLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
@@ -276,17 +270,18 @@
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(450, 214);
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(450, 227);
             this.tableLayoutPanel1.TabIndex = 0;
             // 
             // DjangoLauncherOptions
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.AutoSize = true;
             this.Controls.Add(this.tableLayoutPanel1);
             this.Margin = new System.Windows.Forms.Padding(6, 8, 6, 8);
             this.Name = "DjangoLauncherOptions";
-            this.Size = new System.Drawing.Size(450, 214);
+            this.Size = new System.Drawing.Size(450, 227);
             this._debugGroup.ResumeLayout(false);
             this._debugGroup.PerformLayout();
             this.tableLayoutPanel2.ResumeLayout(false);
