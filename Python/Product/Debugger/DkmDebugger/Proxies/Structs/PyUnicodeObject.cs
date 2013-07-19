@@ -83,7 +83,7 @@ namespace Microsoft.PythonTools.DkmDebugger.Proxies.Structs {
             };
 
             foreach (char c in s) {
-                yield return new PythonEvaluationResult(new ValueStore<string>("'" + c + "'"));
+                yield return new PythonEvaluationResult(new ValueStore<string>(c.ToString()));
             }
         }
 
@@ -276,7 +276,7 @@ namespace Microsoft.PythonTools.DkmDebugger.Proxies.Structs {
             };
 
             foreach (char c in s) {
-                yield return new PythonEvaluationResult(new ValueStore<string>("'" + c + "'"));
+                yield return new PythonEvaluationResult(new ValueStore<string>(c.ToString()));
             }
         }
 
