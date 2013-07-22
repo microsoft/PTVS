@@ -4640,66 +4640,78 @@ namespace Microsoft.PythonTools.Parsing {
             // A BOM or encoding comment can override the default
             Encoding encoding = defaultEncoding;
 
-            byte[] bomBuffer = new byte[3];
-            int bomRead = stream.Read(bomBuffer, 0, 3);
-            int bytesRead = 0;
-            bool isUtf8 = false;
             List<byte> readBytes = new List<byte>();
-            if (bomRead == 3 && (bomBuffer[0] == 0xef && bomBuffer[1] == 0xbb && bomBuffer[2] == 0xbf)) {
-                isUtf8 = true;
-                bytesRead = 3;
-                readBytes.AddRange(bomBuffer);
-            } else {
-                for (int i = 0; i < bomRead; i++) {
-                    readBytes.Add(bomBuffer[i]);
+            try {
+                byte[] bomBuffer = new byte[3];
+                int bomRead = stream.Read(bomBuffer, 0, 3);
+                int bytesRead = 0;
+                bool isUtf8 = false;
+                if (bomRead == 3 && (bomBuffer[0] == 0xef && bomBuffer[1] == 0xbb && bomBuffer[2] == 0xbf)) {
+                    isUtf8 = true;
+                    bytesRead = 3;
+                    readBytes.AddRange(bomBuffer);
+                } else {
+                    for (int i = 0; i < bomRead; i++) {
+                        readBytes.Add(bomBuffer[i]);
+                    }
                 }
-            }
 
-            int lineLength;
-            string line = ReadOneLine(readBytes, ref bytesRead, stream, out lineLength);
+                int lineLength;
+                string line = ReadOneLine(readBytes, ref bytesRead, stream, out lineLength);
 
-            bool? gotEncoding = false;
-            string encodingName = null;
-            // magic encoding must be on line 1 or 2
-            int lineNo = 1;
-            int encodingIndex = 0;
-            if ((gotEncoding = TryGetEncoding(defaultEncoding, line, ref encoding, out encodingName, out encodingIndex)) == false) {
-                var prevLineLength = lineLength;
-                line = ReadOneLine(readBytes, ref bytesRead, stream, out lineLength);
-                lineNo = 2;
-                gotEncoding = TryGetEncoding(defaultEncoding, line, ref encoding, out encodingName, out encodingIndex);
-                encodingIndex += prevLineLength;
-            }
+                bool? gotEncoding = false;
+                string encodingName = null;
+                // magic encoding must be on line 1 or 2
+                int lineNo = 1;
+                int encodingIndex = 0;
+                if ((gotEncoding = TryGetEncoding(defaultEncoding, line, ref encoding, out encodingName, out encodingIndex)) == false) {
+                    var prevLineLength = lineLength;
+                    line = ReadOneLine(readBytes, ref bytesRead, stream, out lineLength);
+                    lineNo = 2;
+                    gotEncoding = TryGetEncoding(defaultEncoding, line, ref encoding, out encodingName, out encodingIndex);
+                    encodingIndex += prevLineLength;
+                }
 
-            if ((gotEncoding == null || gotEncoding == true) && isUtf8 && encodingName != "utf-8") {
-                // we have both a BOM & an encoding type, throw an error
-                errors.Add("file has both Unicode marker and PEP-263 file encoding.  You must use \"utf-8\" as the encoding name when a BOM is present.", 
-                    GetEncodingLineNumbers(readBytes), 
-                    encodingIndex,
-                    encodingIndex + encodingName.Length, 
-                    ErrorCodes.SyntaxError, 
+                if ((gotEncoding == null || gotEncoding == true) && isUtf8 && encodingName != "utf-8") {
+                    // we have both a BOM & an encoding type, throw an error
+                    errors.Add("file has both Unicode marker and PEP-263 file encoding.  You must use \"utf-8\" as the encoding name when a BOM is present.",
+                        GetEncodingLineNumbers(readBytes),
+                        encodingIndex,
+                        encodingIndex + encodingName.Length,
+                        ErrorCodes.SyntaxError,
+                        Severity.FatalError
+                    );
+                    encoding = Encoding.UTF8;
+                } else if (isUtf8) {
+                    return new StreamReader(new PartiallyReadStream(readBytes, stream), UTF8Throwing);
+                } else if (encoding == null) {
+                    if (gotEncoding == null) {
+                        // get line number information for the bytes we've read...
+                        errors.Add(
+                            String.Format("encoding problem: unknown encoding (line {0})", lineNo),
+                            GetEncodingLineNumbers(readBytes),
+                            encodingIndex,
+                            encodingIndex + encodingName.Length,
+                            ErrorCodes.SyntaxError,
+                            Severity.Error
+                        );
+                    }
+                    return new StreamReader(new PartiallyReadStream(readBytes, stream), defaultEncoding);
+                }
+
+                // re-read w/ the correct encoding type...
+                return new StreamReader(new PartiallyReadStream(readBytes, stream), encoding);
+            } catch (EncoderFallbackException ex) {
+                errors.Add(
+                    ex.Message,
+                    new int[0],
+                    ex.Index,
+                    ex.Index + 1,
+                    ErrorCodes.SyntaxError,
                     Severity.FatalError
                 );
-                encoding = Encoding.UTF8;
-            } else if (isUtf8) {
-                return new StreamReader(new PartiallyReadStream(readBytes, stream), UTF8Throwing);
-            } else if (encoding == null) {
-                if (gotEncoding == null) {
-                    // get line number information for the bytes we've read...
-                    errors.Add(
-                        String.Format("encoding problem: unknown encoding (line {0})", lineNo), 
-                        GetEncodingLineNumbers(readBytes), 
-                        encodingIndex, 
-                        encodingIndex + encodingName.Length, 
-                        ErrorCodes.SyntaxError, 
-                        Severity.Error
-                    );
-                }
-                return new StreamReader(new PartiallyReadStream(readBytes, stream), defaultEncoding);                
+                return new StreamReader(new PartiallyReadStream(readBytes, stream), encoding);
             }
-
-            // re-read w/ the correct encoding type...
-            return new StreamReader(new PartiallyReadStream(readBytes, stream), encoding);
         }
 
         private static int[] GetEncodingLineNumbers(IList<byte> readBytes) {
