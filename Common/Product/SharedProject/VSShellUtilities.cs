@@ -42,24 +42,16 @@ namespace Microsoft.VisualStudioTools.Project
             Debug.Assert(shell != null, "Could not get the ui shell from the project");
             Utilities.CheckNotNull(shell);
 
-            object pvar = null;
-            IVsWindowFrame frame = null;
-            IVsUIHierarchyWindow uiHierarchyWindow = null;
+            object pvar;
+            IVsWindowFrame frame;
 
-            try
+            if (ErrorHandler.Succeeded(shell.FindToolWindow(0, ref persistenceSlot, out frame)) &&
+                ErrorHandler.Succeeded(frame.GetProperty((int)__VSFPROPID.VSFPROPID_DocView, out pvar)))
             {
-                ErrorHandler.ThrowOnFailure(shell.FindToolWindow(0, ref persistenceSlot, out frame));
-                ErrorHandler.ThrowOnFailure(frame.GetProperty((int)__VSFPROPID.VSFPROPID_DocView, out pvar));
-            }
-            finally
-            {
-                if (pvar != null)
-                {
-                    uiHierarchyWindow = (IVsUIHierarchyWindow)pvar;
-                }
+                return pvar as IVsUIHierarchyWindow;
             }
 
-            return uiHierarchyWindow;
+            return null;
         }
     }
 }

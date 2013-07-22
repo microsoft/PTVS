@@ -1058,13 +1058,7 @@ namespace Microsoft.VisualStudioTools.Project {
                         return;
                     }
 
-                    IVsUIHierarchyWindow uiHierarchy = UIHierarchyUtilities.GetUIHierarchyWindow(_project.Site, HierarchyNode.SolutionExplorer);
-                    uint curState;
-                    uiHierarchy.GetItemState(_project.GetOuterInterface<IVsUIHierarchy>(),
-                        parent.ID,
-                        (uint)__VSHIERARCHYITEMSTATE.HIS_Expanded,
-                        out curState
-                    );
+                    bool wasExpanded = parent.GetIsExpanded();
 
                     if (Directory.Exists(_path)) {
                         if (IsFileSymLink(_path)) {
@@ -1095,7 +1089,7 @@ namespace Microsoft.VisualStudioTools.Project {
                         _project.AddAllFilesFile(parent, _path);
                     }
 
-                    if ((curState & (uint)__VSHIERARCHYITEMSTATE.HIS_Expanded) == 0) {
+                    if (!wasExpanded) {
                         // Solution Explorer will expand the parent when an item is
                         // added, which we don't want, so we check it's state before
                         // adding, and then collapse the folder if it was expanded.
@@ -1184,7 +1178,7 @@ namespace Microsoft.VisualStudioTools.Project {
         }
 
         public bool BoldItem(HierarchyNode node, bool isBold) {
-            IVsUIHierarchyWindow2 windows = GetUIHierarchyWindow(
+            IVsUIHierarchyWindow2 windows = UIHierarchyUtilities.GetUIHierarchyWindow(
                 Site as IServiceProvider,
                 new Guid(ToolWindowGuids80.SolutionExplorer)) as IVsUIHierarchyWindow2;
 
@@ -1245,7 +1239,7 @@ namespace Microsoft.VisualStudioTools.Project {
             var items = _needBolding.ToArray();
             _needBolding.Clear();
 
-            IVsUIHierarchyWindow2 windows = GetUIHierarchyWindow(
+            IVsUIHierarchyWindow2 windows = UIHierarchyUtilities.GetUIHierarchyWindow(
                 Site as IServiceProvider,
                 new Guid(ToolWindowGuids80.SolutionExplorer)) as IVsUIHierarchyWindow2;
 
@@ -1452,38 +1446,10 @@ namespace Microsoft.VisualStudioTools.Project {
         }
 
         /// <summary>
-        /// Same as VsShellUtilities.GetUIHierarchyWindow, but it doesn't contain a useless cast to IVsWindowPane
-        /// which fails on Dev10 with the solution explorer window.
-        /// </summary>
-        private static IVsUIHierarchyWindow GetUIHierarchyWindow(IServiceProvider serviceProvider, Guid guidPersistenceSlot) {
-            if (serviceProvider == null) {
-                throw new ArgumentException("serviceProvider");
-            }
-            IVsUIShell service = serviceProvider.GetService(typeof(SVsUIShell)) as IVsUIShell;
-            if (service == null) {
-                throw new InvalidOperationException();
-            }
-            object pvar = null;
-            IVsWindowFrame ppWindowFrame = null;
-            IVsUIHierarchyWindow window = null;
-            try {
-                ErrorHandler.ThrowOnFailure(service.FindToolWindow(0, ref guidPersistenceSlot, out ppWindowFrame));
-                ErrorHandler.ThrowOnFailure(ppWindowFrame.GetProperty(-3001, out pvar));
-            } catch (COMException exception) {
-                Trace.WriteLine("Exception :" + exception.Message);
-            } finally {
-                if (pvar != null) {
-                    window = (IVsUIHierarchyWindow)pvar;
-                }
-            }
-            return window;
-        }
-
-        /// <summary>
         /// Returns first immediate child node (non-recursive) of a given type.
         /// </summary>
         private void RefreshStartupFile(HierarchyNode parent, string oldFile, string newFile) {
-            IVsUIHierarchyWindow2 windows = GetUIHierarchyWindow(
+            IVsUIHierarchyWindow2 windows = UIHierarchyUtilities.GetUIHierarchyWindow(
                 Site,
                 new Guid(ToolWindowGuids80.SolutionExplorer)) as IVsUIHierarchyWindow2;
 

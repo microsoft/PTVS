@@ -1657,7 +1657,7 @@ namespace Microsoft.VisualStudioTools.Project
                 return;
             }
 
-            IVsUIHierarchyWindow2 windows = GetUIHierarchyWindow(
+            IVsUIHierarchyWindow2 windows = UIHierarchyUtilities.GetUIHierarchyWindow(
                 ProjectMgr.Site,
                 new Guid(ToolWindowGuids80.SolutionExplorer)) as IVsUIHierarchyWindow2;
 
@@ -1675,7 +1675,7 @@ namespace Microsoft.VisualStudioTools.Project
                 return false;
             }
 
-            IVsUIHierarchyWindow2 windows = GetUIHierarchyWindow(
+            IVsUIHierarchyWindow2 windows = UIHierarchyUtilities.GetUIHierarchyWindow(
                 ProjectMgr.Site,
                 new Guid(ToolWindowGuids80.SolutionExplorer)) as IVsUIHierarchyWindow2;
 
@@ -1693,31 +1693,6 @@ namespace Microsoft.VisualStudioTools.Project
                 return state != 0;
             }
             return false;
-        }
-
-        /// <summary>
-        /// Same as VsShellUtilities.GetUIHierarchyWindow, but it doesn't contain a useless cast to IVsWindowPane
-        /// which fails on Dev10 with the solution explorer window.
-        /// </summary>
-        private static IVsUIHierarchyWindow GetUIHierarchyWindow(System.IServiceProvider serviceProvider, Guid guidPersistenceSlot)
-        {
-            Utilities.ArgumentNotNull("serviceProvider", serviceProvider);
-
-            IVsUIShell service = serviceProvider.GetService(typeof(SVsUIShell)) as IVsUIShell;
-            if (service == null)
-            {
-                throw new InvalidOperationException();
-            }
-
-            object pvar = null;
-            IVsWindowFrame ppWindowFrame = null;
-            if (ErrorHandler.Succeeded(service.FindToolWindow(0, ref guidPersistenceSlot, out ppWindowFrame)) &&
-                ppWindowFrame != null &&
-                ErrorHandler.Succeeded(ppWindowFrame.GetProperty(-3001, out pvar)))
-            {
-                return (IVsUIHierarchyWindow)pvar;
-            }
-            return null;
         }
 
         /// <summary>
