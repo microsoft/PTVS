@@ -37,6 +37,7 @@ namespace DjangoTests {
 
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
+            AssertListener.Initialize();
             TestData.Deploy();
             
             var dbFile = Path.Combine(Environment.GetEnvironmentVariable("LOCALAPPDATA"), "DjangoProjectDatabase.db");

@@ -36,6 +36,7 @@ namespace PythonToolsTests {
     public class ReplEvaluatorTests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
+            AssertListener.Initialize();
             TestData.Deploy();
         }
 

@@ -13,60 +13,72 @@
  * ***************************************************************************/
 
 using System.Diagnostics;
+using System.IO;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace TestUtilities
-{
-    public class AssertListener : TraceListener
-    {
-        private bool _assertLogged = false;
-
-        public override string Name
-        {
+namespace TestUtilities {
+    public class AssertListener : TraceListener {
+        public override string Name {
             get { return "AssertListener"; }
             set { }
         }
 
-        public static void Startup()
-        {
-            if (null == Debug.Listeners["AssertListener"])
-            {
+        public static void Initialize() {
+            if (null == Debug.Listeners["AssertListener"]) {
                 Debug.Listeners.Add(new AssertListener());
+                Debug.Listeners.Remove("Default");
             }
         }
 
-        public static void ReportAsserts()
-        {
-            AssertListener currentListener = (AssertListener)Debug.Listeners["AssertListener"];
-            if (currentListener != null && currentListener._assertLogged == true)
-            {
-                Assert.Fail("Test failed due to assertion. See Debug Trace for assertion callstack.");
-                currentListener._assertLogged = false;
-            }
-        }
-
-        public override void Fail(string message)
-        {
+        public override void Fail(string message) {
             Fail(message, null);
         }
 
-        public override void Fail(string message, string detailMessage)
-        {
-            Trace.WriteLine("Assertion info:\n");
-            Trace.WriteLine(message);
-            Trace.WriteLine(detailMessage);
-            StackTrace trace = new StackTrace(true);
-            Trace.WriteLine(trace);
+        public override void Fail(string message, string detailMessage) {
+            Trace.WriteLine("Debug.Assert failed");
+            if (!string.IsNullOrEmpty(message)) {
+                Trace.WriteLine(message);
+            } else {
+                Trace.WriteLine("(No message provided)");
+            }
+            if (!string.IsNullOrEmpty(detailMessage)) {
+                Trace.WriteLine(detailMessage);
+            }
+            var trace = new StackTrace(true);
+            bool seenDebugAssert = false;
+            foreach (var frame in trace.GetFrames()) {
+                var mi = frame.GetMethod();
+                if (!seenDebugAssert) {
+                    seenDebugAssert = (mi.DeclaringType == typeof(Debug) && mi.Name == "Assert");
+                } else if (mi.DeclaringType == typeof(System.RuntimeMethodHandle)) {
+                    break;
+                } else {
+                    Trace.WriteLine(string.Format(
+                        " at {0}.{1}({2}) in {3}:line {4}",
+                        mi.DeclaringType.FullName,
+                        mi.Name,
+                        string.Join(", ", mi.GetParameters().Select(p => p.ToString())),
+                        frame.GetFileName(),
+                        frame.GetFileLineNumber()
+                    ));
+                    try {
+                        Trace.WriteLine(
+                            "    " +
+                            File.ReadLines(frame.GetFileName()).ElementAt(frame.GetFileLineNumber() - 1).Trim()
+                        );
+                    } catch {
+                    }
+                }
+            }
 
-            _assertLogged = true;
+            Assert.Fail(string.IsNullOrEmpty(message) ? "Debug.Assert failed" : message);
         }
 
-        public override void WriteLine(string message)
-        {
+        public override void WriteLine(string message) {
         }
 
-        public override void Write(string message)
-        {
+        public override void Write(string message) {
         }
     }
 }

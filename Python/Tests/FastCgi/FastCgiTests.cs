@@ -30,6 +30,7 @@ namespace FastCgiTest {
     public class FastCgiTests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
+            AssertListener.Initialize();
             TestData.Deploy();
         }
 

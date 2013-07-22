@@ -40,6 +40,7 @@ namespace PythonToolsTests {
 
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
+            AssertListener.Initialize();
             TestData.Deploy();
         }
 
@@ -304,6 +305,7 @@ NameError: name 'does_not_exist' is not defined
     public class DebugReplEvaluatorTests30 : DebugReplEvaluatorTests {
         [ClassInitialize]
         public static new void DoDeployment(TestContext context) {
+            AssertListener.Initialize();
             TestData.Deploy();
         }
 
@@ -318,6 +320,7 @@ NameError: name 'does_not_exist' is not defined
     public class DebugReplEvaluatorTests31 : DebugReplEvaluatorTests {
         [ClassInitialize]
         public static new void DoDeployment(TestContext context) {
+            AssertListener.Initialize();
             TestData.Deploy();
         }
 
@@ -332,6 +335,7 @@ NameError: name 'does_not_exist' is not defined
     public class DebugReplEvaluatorTests32 : DebugReplEvaluatorTests {
         [ClassInitialize]
         public static new void DoDeployment(TestContext context) {
+            AssertListener.Initialize();
             TestData.Deploy();
         }
 
@@ -346,6 +350,7 @@ NameError: name 'does_not_exist' is not defined
     public class DebugReplEvaluatorTests27 : DebugReplEvaluatorTests {
         [ClassInitialize]
         public static new void DoDeployment(TestContext context) {
+            AssertListener.Initialize();
             TestData.Deploy();
         }
 
@@ -360,6 +365,7 @@ NameError: name 'does_not_exist' is not defined
     public class DebugReplEvaluatorTests25 : DebugReplEvaluatorTests {
         [ClassInitialize]
         public static new void DoDeployment(TestContext context) {
+            AssertListener.Initialize();
             TestData.Deploy();
         }
 
@@ -374,6 +380,7 @@ NameError: name 'does_not_exist' is not defined
     public class DebugReplEvaluatorTestsIPy : DebugReplEvaluatorTests {
         [ClassInitialize]
         public static new void DoDeployment(TestContext context) {
+            AssertListener.Initialize();
             TestData.Deploy();
         }
 

@@ -29,6 +29,7 @@ namespace TestAdapterTests {
     public class TestExecutorTests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
+            AssertListener.Initialize();
             TestData.Deploy();
         }
 

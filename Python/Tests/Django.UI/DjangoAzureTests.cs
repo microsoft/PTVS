@@ -25,6 +25,7 @@ namespace DjangoUITests {
     public class DjangoAzureProjectTests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
+            AssertListener.Initialize();
             TestData.Deploy();
         }
 

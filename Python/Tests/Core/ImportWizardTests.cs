@@ -28,6 +28,7 @@ namespace PythonToolsTests {
     public class ImportWizardTests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
+            AssertListener.Initialize();
             TestData.Deploy();
         }
 

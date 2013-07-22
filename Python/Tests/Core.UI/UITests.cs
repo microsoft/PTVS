@@ -40,6 +40,7 @@ namespace PythonToolsUITests {
     public class UITests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
+            AssertListener.Initialize();
             TestData.Deploy();
         }
 

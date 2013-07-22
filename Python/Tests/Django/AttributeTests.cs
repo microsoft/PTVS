@@ -31,6 +31,7 @@ namespace DjangoTests {
     public class DjangoAttributeTests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
+            AssertListener.Initialize();
             TestData.Deploy();
         }
 

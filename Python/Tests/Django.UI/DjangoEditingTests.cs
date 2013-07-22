@@ -34,6 +34,7 @@ namespace DjangoUITests {
     public class DjangoEditingTests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
+            AssertListener.Initialize();
             TestData.Deploy();
         }
 

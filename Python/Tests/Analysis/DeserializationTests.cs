@@ -24,6 +24,7 @@ namespace AnalysisTests {
     public class DeserializationTests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
+            AssertListener.Initialize();
             TestData.Deploy();
         }
 

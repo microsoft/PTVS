@@ -40,6 +40,7 @@ namespace AnalysisTests {
         static BaseAnalysisTest() {
             AnalysisLog.Reset();
             AnalysisLog.ResetTime();
+            AssertListener.Initialize();
             TestData.Deploy(includeTestData: false);
         }
 

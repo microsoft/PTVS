@@ -34,6 +34,7 @@ namespace PythonToolsUITests {
     public class VirtualEnvTests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
+            AssertListener.Initialize();
             TestData.Deploy();
         }
 

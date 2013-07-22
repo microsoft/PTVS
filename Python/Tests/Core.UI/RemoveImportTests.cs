@@ -24,6 +24,7 @@ namespace PythonToolsUITests {
     public class RemoveImportTests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
+            AssertListener.Initialize();
             TestData.Deploy();
         }
 

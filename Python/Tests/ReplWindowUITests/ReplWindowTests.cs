@@ -133,6 +133,7 @@ g()",
     public class Python26ReplWindowTests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
+            AssertListener.Initialize();
             TestData.Deploy();
         }
 
@@ -2761,6 +2762,7 @@ def g(): pass
     public class Python27ReplWindowTests : Python26ReplWindowTests {
         [ClassInitialize]
         public static new void DoDeployment(TestContext context) {
+            AssertListener.Initialize();
             TestData.Deploy();
         }
 
@@ -2853,6 +2855,7 @@ def g(): pass
     public class Python30ReplWindowTests : Python3kReplWindowTests {
         [ClassInitialize]
         public static new void DoDeployment(TestContext context) {
+            AssertListener.Initialize();
             TestData.Deploy();
         }
 
@@ -2873,6 +2876,7 @@ def g(): pass
     public class Python31ReplWindowTests : Python3kReplWindowTests {
         [ClassInitialize]
         public static new void DoDeployment(TestContext context) {
+            AssertListener.Initialize();
             TestData.Deploy();
         }
 
@@ -2910,6 +2914,7 @@ def g(): pass
     public class Python32ReplWindowTests : Python3kReplWindowTests {
         [ClassInitialize]
         public static new void DoDeployment(TestContext context) {
+            AssertListener.Initialize();
             TestData.Deploy();
         }
 
@@ -2924,6 +2929,7 @@ def g(): pass
     public class Python33ReplWindowTests : Python3kReplWindowTests {
         [ClassInitialize]
         public static new void DoDeployment(TestContext context) {
+            AssertListener.Initialize();
             TestData.Deploy();
         }
 
@@ -2943,6 +2949,7 @@ def g(): pass
     public class IronPythonReplTests : Python27ReplWindowTests {
         [ClassInitialize]
         public static new void DoDeployment(TestContext context) {
+            AssertListener.Initialize();
             TestData.Deploy();
         }
 
@@ -3180,6 +3187,7 @@ def g(): pass
     public class Python26x64ReplWindowTests : Python26ReplWindowTests {
         [ClassInitialize]
         public static new void DoDeployment(TestContext context) {
+            AssertListener.Initialize();
             TestData.Deploy();
         }
 
@@ -3194,6 +3202,7 @@ def g(): pass
     public class Python27x64ReplWindowTests : Python27ReplWindowTests {
         [ClassInitialize]
         public static new void DoDeployment(TestContext context) {
+            AssertListener.Initialize();
             TestData.Deploy();
         }
 
@@ -3208,6 +3217,7 @@ def g(): pass
     public class Python30x64ReplWindowTests : Python30ReplWindowTests {
         [ClassInitialize]
         public static new void DoDeployment(TestContext context) {
+            AssertListener.Initialize();
             TestData.Deploy();
         }
 
@@ -3222,6 +3232,7 @@ def g(): pass
     public class Python31x64ReplWindowTests : Python31ReplWindowTests {
         [ClassInitialize]
         public static new void DoDeployment(TestContext context) {
+            AssertListener.Initialize();
             TestData.Deploy();
         }
 
@@ -3236,6 +3247,7 @@ def g(): pass
     public class Python32x64ReplWindowTests : Python32ReplWindowTests {
         [ClassInitialize]
         public static new void DoDeployment(TestContext context) {
+            AssertListener.Initialize();
             TestData.Deploy();
         }
 
@@ -3250,6 +3262,7 @@ def g(): pass
     public class Python33x64ReplWindowTests : Python33ReplWindowTests {
         [ClassInitialize]
         public static new void DoDeployment(TestContext context) {
+            AssertListener.Initialize();
             TestData.Deploy();
         }
 
@@ -3264,6 +3277,7 @@ def g(): pass
     public class IronPythonx64ReplTests : IronPythonReplTests {
         [ClassInitialize]
         public static new void DoDeployment(TestContext context) {
+            AssertListener.Initialize();
             TestData.Deploy();
         }
 
@@ -3278,6 +3292,7 @@ def g(): pass
     public class PrimaryPromptOnlyPython27ReplWindowTests : Python27ReplWindowTests {
         [ClassInitialize]
         public static new void DoDeployment(TestContext context) {
+            AssertListener.Initialize();
             TestData.Deploy();
         }
 
@@ -3306,6 +3321,7 @@ def g(): pass
     public class GlyphPromptPython27ReplWindowTests : Python27ReplWindowTests {
         [ClassInitialize]
         public static new void DoDeployment(TestContext context) {
+            AssertListener.Initialize();
             TestData.Deploy();
         }
 
@@ -3340,6 +3356,7 @@ def g(): pass
     public class PrimaryPromptOnlyPython33ReplWindowTests : Python33ReplWindowTests {
         [ClassInitialize]
         public static new void DoDeployment(TestContext context) {
+            AssertListener.Initialize();
             TestData.Deploy();
         }
 
@@ -3368,6 +3385,7 @@ def g(): pass
     public class GlyphPromptPython33ReplWindowTests : Python33ReplWindowTests {
         [ClassInitialize]
         public static new void DoDeployment(TestContext context) {
+            AssertListener.Initialize();
             TestData.Deploy();
         }
 

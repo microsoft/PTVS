@@ -40,6 +40,7 @@ namespace DebuggerUITests {
     public class DebugProject {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
+            AssertListener.Initialize();
             TestData.Deploy();
         }
 

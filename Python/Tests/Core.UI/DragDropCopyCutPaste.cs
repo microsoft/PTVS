@@ -29,6 +29,7 @@ namespace PythonToolsUITests {
     public class DragDropCopyCutPaste {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
+            AssertListener.Initialize();
             TestData.Deploy();
         }
 

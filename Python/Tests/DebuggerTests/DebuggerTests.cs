@@ -32,6 +32,7 @@ namespace DebuggerTests {
     public class DebuggerTests : BaseDebuggerTests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
+            AssertListener.Initialize();
             TestData.Deploy();
         }
 
@@ -2204,6 +2205,7 @@ int main(int argc, char* argv[]) {
     public class DebuggerTests30 : DebuggerTests3x {
         [ClassInitialize]
         public static new void DoDeployment(TestContext context) {
+            AssertListener.Initialize();
             TestData.Deploy();
         }
 
@@ -2218,6 +2220,7 @@ int main(int argc, char* argv[]) {
     public class DebuggerTests31 : DebuggerTests3x {
         [ClassInitialize]
         public static new void DoDeployment(TestContext context) {
+            AssertListener.Initialize();
             TestData.Deploy();
         }
 
@@ -2232,6 +2235,7 @@ int main(int argc, char* argv[]) {
     public class DebuggerTests32 : DebuggerTests3x {
         [ClassInitialize]
         public static new void DoDeployment(TestContext context) {
+            AssertListener.Initialize();
             TestData.Deploy();
         }
 
@@ -2246,6 +2250,7 @@ int main(int argc, char* argv[]) {
     public class DebuggerTests27 : DebuggerTests {
         [ClassInitialize]
         public static new void DoDeployment(TestContext context) {
+            AssertListener.Initialize();
             TestData.Deploy();
         }
 
@@ -2260,6 +2265,7 @@ int main(int argc, char* argv[]) {
     public class DebuggerTests25 : DebuggerTests {
         [ClassInitialize]
         public static new void DoDeployment(TestContext context) {
+            AssertListener.Initialize();
             TestData.Deploy();
         }
 
@@ -2274,6 +2280,7 @@ int main(int argc, char* argv[]) {
     public class DebuggerTestsIpy : DebuggerTests {
         [ClassInitialize]
         public static new void DoDeployment(TestContext context) {
+            AssertListener.Initialize();
             TestData.Deploy();
         }
 
