@@ -13,10 +13,7 @@
  * ***************************************************************************/
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Xml.Linq;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Project.ImportWizard;
@@ -121,6 +118,10 @@ namespace PythonToolsTests {
 
             Assert.AreEqual(interpreter.Id, Guid.Parse(proj.Descendant("InterpreterId").Value));
             Assert.AreEqual(interpreter.Version, Version.Parse(proj.Descendant("InterpreterVersion").Value));
+
+            var interp = proj.Descendant("InterpreterReference");
+            Assert.AreEqual(string.Format("{0:B}\\{1}", interpreter.Id, interpreter.Version),
+                interp.Attribute("Include"));
         }
 
         [TestMethod, Priority(0)]

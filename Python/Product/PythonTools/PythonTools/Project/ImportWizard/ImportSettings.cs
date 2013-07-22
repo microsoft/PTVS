@@ -350,6 +350,16 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
             }
             writer.WriteEndElement();
 
+            if (selectedInterpreter != null && selectedInterpreter.Id != Guid.Empty) {
+                writer.WriteStartElement("ItemGroup");
+
+                writer.WriteStartElement(MSBuildProjectInterpreterFactoryProvider.InterpreterReferenceItem);
+                writer.WriteAttributeString("Include", string.Format("{0:B}\\{1}", selectedInterpreter.Id, selectedInterpreter.Version));
+                writer.WriteEndElement();
+
+                writer.WriteEndElement();
+            }
+
             if (supportDjango) {
                 writer.WriteStartElement("ItemGroup");
 
