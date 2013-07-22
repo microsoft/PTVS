@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -44,6 +45,7 @@ namespace Microsoft.PythonTools.Project {
         private readonly Timer _timer;
         private readonly TaskScheduler _scheduler;
         private bool _checkedItems, _checkingItems, _disposed;
+        private bool _installingPackage;
 
         public InterpretersNode(PythonProjectNode project,
                                 ProjectItem item,
@@ -179,6 +181,8 @@ namespace Microsoft.PythonTools.Project {
 
         internal void BeginPackageChange() {
             lock (this) {
+                Debug.Assert(!_installingPackage);
+                _installingPackage = true;
                 if (!_disposed && _fileWatcher != null) {
                     _fileWatcher.EnableRaisingEvents = false;
                 }
@@ -187,6 +191,8 @@ namespace Microsoft.PythonTools.Project {
 
         internal void PackageChangeDone() {
             lock (this) {
+                Debug.Assert(_installingPackage);
+                _installingPackage = false;
                 if (!_disposed && _fileWatcher != null) {
                     _fileWatcher.EnableRaisingEvents = true;
                     ThreadPool.QueueUserWorkItem(CheckPackages);
@@ -201,6 +207,10 @@ namespace Microsoft.PythonTools.Project {
         }
 
         internal override bool CanDeleteItem(__VSDELETEITEMOPERATION deleteOperation) {
+            if (_installingPackage) {
+                return false;
+            }
+
             if (deleteOperation == __VSDELETEITEMOPERATION.DELITEMOP_RemoveFromProject) {
                 // Interpreter and InterpreterReference can both be removed from
                 // the project.
@@ -218,6 +228,13 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private void Remove(bool removeFromStorage, bool showPrompt) {
+            if (!_installingPackage) {
+                // Prevent the environment from being deleting while installing.
+                // This situation should not occur through the UI, but might be
+                // invocable through DTE.
+                return;
+            }
+
             if (showPrompt && !Utilities.IsInAutomationFunction(ProjectMgr.Site)) {
                 string message = SR.GetString(removeFromStorage ?
                         SR.InterpreterDeleteConfirmation :
@@ -309,7 +326,10 @@ namespace Microsoft.PythonTools.Project {
                         }
                         return VSConstants.S_OK;
                     case PythonConstants.InstallPythonPackage:
-                        result |= QueryStatusResult.SUPPORTED | QueryStatusResult.ENABLED;
+                        result |= QueryStatusResult.SUPPORTED;
+                        if (!_installingPackage) {
+                            result |= QueryStatusResult.ENABLED;
+                        }
                         return VSConstants.S_OK;
                 }
             }
