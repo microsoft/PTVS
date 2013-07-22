@@ -381,6 +381,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                             info.bstrExe += ":" + _webBrowserPort;
                         }
                         info.dlo = (uint)_DEBUG_LAUNCH_OPERATION3.DLO_LaunchBrowser;
+                        info.LaunchFlags = (uint)__VSDBGLAUNCHFLAGS4.DBGLAUNCH_UseDefaultBrowser;
                         info.guidLaunchDebugEngine = DebugEngineGuid;
                         IntPtr infoPtr = Marshal.AllocCoTaskMem(infoSize);
                         Marshal.StructureToPtr(info, infoPtr, false);

@@ -39,58 +39,108 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public override IAnalysisSet Call(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
+            if (_original == null) {
+                return base.Call(node, unit, args, keywordArgNames);
+            }
+
             return _original.Call(node, unit, args, keywordArgNames);
         }
 
         internal override void AddReference(Node node, AnalysisUnit analysisUnit) {
+            if (_original == null) {
+                return base.AddReference(node, analysisUnit);
+                return;
+            }
+
             _original.AddReference(node, analysisUnit);
         }
 
         public override void AugmentAssign(AugmentedAssignStatement node, AnalysisUnit unit, IAnalysisSet value) {
+            if (_original == null) {
+                base.AugmentAssign(node, unit, value);
+                return;
+            }
+
             _original.AugmentAssign(node, unit, value);
         }
 
         public override IAnalysisSet BinaryOperation(Node node, AnalysisUnit unit, Parsing.PythonOperator operation, IAnalysisSet rhs) {
+            if (_original == null) {
+                return base.BinaryOperation(node, unit, operation, rhs);
+            }
+
             return _original.BinaryOperation(node, unit, operation, rhs);
         }
 
         public override IPythonProjectEntry DeclaringModule {
             get {
+                if (_original == null) {
+                    return base.DeclaringModule;
+                }
+
                 return _original.DeclaringModule;
             }
         }
 
         public override int DeclaringVersion {
             get {
+                if (_original == null) {
+                    return base.DeclaringVersion;
+                }
+
                 return _original.DeclaringVersion;
             }
         }
 
         public override void DeleteMember(Node node, AnalysisUnit unit, string name) {
+            if (_original == null) {
+                base.DeleteMember(node, unit, name);
+                return;
+            }
+
             _original.DeleteMember(node, unit, name);
         }
 
         public override string Description {
             get {
+                if (_original == null) {
+                    return base.Description;
+                }
+
                 return _original.Description;
             }
         }
 
         public override string Documentation {
             get {
+                if (_original == null) {
+                    return base.Documentation;
+                }
+
                 return _original.Documentation;
             }
         }
 
         public override IDictionary<string, IAnalysisSet> GetAllMembers(IModuleContext moduleContext) {
+            if (_original == null) {
+                return base.GetAllMembers(moduleContext);
+            }
             return _original.GetAllMembers(moduleContext);
         }
 
         public override object GetConstantValue() {
+            if (_original == null) {
+                return base.GetConstantValue();
+            }
+
             return _original.GetConstantValue();
         }
 
         public override IAnalysisSet GetDescriptor(Node node, AnalysisValue instance, AnalysisValue context, AnalysisUnit unit) {
+            if (_original == null) {
+                return base.GetDescriptor(node, instance, context, unit);
+            }
+
             if (_descriptor == null) {
                 var res = _original.GetDescriptor(node, instance, context, unit);
                 // TODO: This kinda sucks...
@@ -110,84 +160,143 @@ namespace Microsoft.PythonTools.Analysis.Values {
         protected abstract SpecializedNamespace Clone(AnalysisValue original, AnalysisValue instance);
 
         public override IAnalysisSet GetEnumeratorTypes(Node node, AnalysisUnit unit) {
+            if (_original == null) {
+                return base.GetEnumeratorTypes(node, unit);
+            }
+
             return _original.GetEnumeratorTypes(node, unit);
         }
 
         public override IAnalysisSet GetIndex(Node node, AnalysisUnit unit, IAnalysisSet index) {
+            if (_original == null) {
+                return base.GetIndex(node, unit, index);
+            }
+
             return _original.GetIndex(node, unit, index);
         }
 
         public override int? GetLength() {
+            if (_original == null) {
+                return base.GetLength();
+            }
+
             return _original.GetLength();
         }
 
         public override IAnalysisSet GetMember(Node node, AnalysisUnit unit, string name) {
+            if (_original == null) {
+                return AnalysisSet.Empty;
+            }
+
             return _original.GetMember(node, unit, name);
         }
 
         public override IAnalysisSet GetStaticDescriptor(AnalysisUnit unit) {
-            return _original.GetStaticDescriptor(unit);
+            if (_original == null) {
+                return this;
+            }
+
+            var res = _original.GetStaticDescriptor(unit);
+            if (res == _original) {
+                return this;
+            }
+            // TODO: We should support wrapping these up and producing another SpecializedNamespace
+            return res;
         }
 
         internal override bool IsOfType(IAnalysisSet klass) {
+            if (_original == null) {
+                return false;
+            }
             return _original.IsOfType(klass);
         }
 
         public override IEnumerable<LocationInfo> Locations {
             get {
+                if (_original == null) {
+                    return new LocationInfo[0];
+                }
                 return _original.Locations;
             }
         }
 
         public override IEnumerable<OverloadResult> Overloads {
             get {
+                if (_original == null) {
+                    return new OverloadResult[0];
+                }
                 return _original.Overloads;
             }
         }
 
         public override IPythonType PythonType {
             get {
+                if (_original == null) {
+                    return null;
+                }
                 return _original.PythonType;
             }
         }
 
         internal override IEnumerable<LocationInfo> References {
             get {
+                if (_original == null) {
+                    return new LocationInfo[0];
+                }
                 return _original.References;
             }
         }
 
         public override PythonMemberType MemberType {
             get {
+                if (_original == null) {
+                    return PythonMemberType.Unknown;
+                }
                 return _original.MemberType;
             }
         }
 
         public override IAnalysisSet ReverseBinaryOperation(Node node, AnalysisUnit unit, Parsing.PythonOperator operation, IAnalysisSet rhs) {
+            if (_original == null) {
+                return AnalysisSet.Empty;
+            }
             return _original.ReverseBinaryOperation(node, unit, operation, rhs);
         }
 
         public override void SetIndex(Node node, AnalysisUnit unit, IAnalysisSet index, IAnalysisSet value) {
-            _original.SetIndex(node, unit, index, value);
+            if (_original != null) {
+                _original.SetIndex(node, unit, index, value);
+            }
         }
 
         public override void SetMember(Node node, AnalysisUnit unit, string name, IAnalysisSet value) {
-            _original.SetMember(node, unit, name, value);
+            if (_original != null) {
+                _original.SetMember(node, unit, name, value);
+            }
         }
 
         public override string ShortDescription {
             get {
+                if (_original == null) {
+                    return string.Empty;
+                }
                 return _original.ShortDescription;
             }
         }
 
         internal override BuiltinTypeId TypeId {
             get {
+                if (_original == null) {
+                    return BuiltinTypeId.Unknown;
+                }
                 return _original.TypeId;
             }
         }
 
         public override IAnalysisSet UnaryOperation(Node node, AnalysisUnit unit, Parsing.PythonOperator operation) {
+            if (_original == null) {
+                return AnalysisSet.Empty;
+            }
             return _original.UnaryOperation(node, unit, operation);
         }
     }

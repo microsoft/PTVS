@@ -19,7 +19,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace Microsoft.PythonTools.Django.Project {
-    partial class DjangoProject {
+    partial class DjangoAnalyzer {
         #region Known Tags / Filters
 
         private static Dictionary<string, string> MakeKnownFiltersTable() {

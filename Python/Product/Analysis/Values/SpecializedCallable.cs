@@ -32,10 +32,10 @@ namespace Microsoft.PythonTools.Analysis.Values {
             _mergeOriginalAnalysis = mergeOriginalAnalysis;
         }
 
-        public SpecializedCallable(AnalysisValue original, AnalysisValue inst, CallDelegate callable, bool suppressNormalAnalysis)
+        public SpecializedCallable(AnalysisValue original, AnalysisValue inst, CallDelegate callable, bool mergeNormalAnalysis)
             : base(original, inst) {
             _callable = callable;
-            _mergeOriginalAnalysis = suppressNormalAnalysis;
+            _mergeOriginalAnalysis = mergeNormalAnalysis;
         }
 
         public override IAnalysisSet Call(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
@@ -45,7 +45,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
 
             var res = _callable(node, unit, args, keywordArgNames);
-            if (_mergeOriginalAnalysis) {
+            if (_mergeOriginalAnalysis && _original != null) {
                 return res.Union(_original.Call(node, unit, args, keywordArgNames));
             }
 

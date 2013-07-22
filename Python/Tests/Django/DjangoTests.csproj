@@ -54,6 +54,7 @@
       <Link>ProcessOutput.cs</Link>
     </Compile>
     <Compile Include="AttributeTests.cs" />
+    <Compile Include="DjangoAnalyzerTests.cs" />
     <Compile Include="DjangoDebuggerTests.cs" />
     <Compile Include="DjangoTemplateParserTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

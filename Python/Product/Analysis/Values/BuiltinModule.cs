@@ -112,14 +112,29 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public void SpecializeFunction(string name, CallDelegate callable, bool mergeOriginalAnalysis) {
-            try {
-                foreach (var v in this[name]) {
+            int lastIndex;
+            IAnalysisSet def;
+            if (TryGetMember(name, out def)) {
+                foreach (var v in def) {
                     if (!(v is SpecializedNamespace)) {
                         this[name] = new SpecializedCallable(v, callable, mergeOriginalAnalysis).SelfSet;
                         break;
                     }
                 }
-            } catch (KeyNotFoundException) {
+            } else if ((lastIndex = name.LastIndexOf('.')) != -1 &&
+                TryGetMember(name.Substring(0, lastIndex), out def)) {
+                var methodName = name.Substring(lastIndex + 1, name.Length - (lastIndex + 1));
+                foreach (var v in def) {
+                    BuiltinClassInfo ci = v as BuiltinClassInfo;
+                    if (ci != null) {
+                        var existing = ci._type.GetMember(ProjectState._defaultContext, methodName);
+                        if (existing != null) {
+                            ci[methodName] = new SpecializedCallable(v, callable, mergeOriginalAnalysis).SelfSet;
+                        } else {
+                            ci[methodName] = new SpecializedCallable(null, callable, mergeOriginalAnalysis).SelfSet;
+                        }
+                    }
+                }
             }
         }
 

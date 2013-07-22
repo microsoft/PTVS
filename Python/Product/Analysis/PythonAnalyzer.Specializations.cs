@@ -68,7 +68,6 @@ namespace Microsoft.PythonTools.Analysis {
             string realModName = null;
             if (Modules.TryGetValue(moduleName, out module)) {
                 IModule mod = module.Module as IModule;
-                Debug.Assert(mod != null);
                 if (mod != null) {
                     mod.SpecializeFunction(name, callable, mergeOriginalAnalysis);
                 }
@@ -76,7 +75,6 @@ namespace Microsoft.PythonTools.Analysis {
                 Modules.TryGetValue(realModName = moduleName.Substring(0, lastDot), out module)) {
 
                 IModule mod = module.Module as IModule;
-                Debug.Assert(mod != null);
                 if (mod != null) {
                     mod.SpecializeFunction(moduleName.Substring(lastDot + 1, moduleName.Length - (lastDot + 1)) + "." + name, callable, mergeOriginalAnalysis);
                 }

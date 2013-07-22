@@ -72,7 +72,7 @@ namespace Microsoft.PythonTools.Refactoring {
         }
 
         private void PostWalkWorker(SuiteStatement node) {
-            if (_targetNode == null && node.StartIndex <= _selectedSpan.Start && node.EndIndex > _selectedSpan.End) {
+            if (_targetNode == null && node.StartIndex <= _selectedSpan.Start && node.EndIndex >= _selectedSpan.End) {
                 // figure out the range of statements we cover...
                 int startIndex = 0, endIndex = node.Statements.Count - 1;
                 for (int i = 0; i < node.Statements.Count; i++) {
@@ -124,7 +124,7 @@ namespace Microsoft.PythonTools.Refactoring {
             }
             if (_targetNode == null &&
                 node.StartIndex <= _selectedSpan.Start &&
-                node.EndIndex > _selectedSpan.End &&
+                node.EndIndex >= _selectedSpan.End &&
                 node is Expression) {
                 _targetNode = new NodeTarget(_insertLocations, _parents.ToArray(), node);
             }

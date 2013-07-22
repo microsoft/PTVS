@@ -17,7 +17,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using Microsoft.PythonTools;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Django.Project;
 using Microsoft.PythonTools.Django.TemplateParsing;
@@ -28,7 +27,8 @@ using Microsoft.VisualStudio.Text;
 
 namespace Microsoft.PythonTools.Django.Intellisense {
     class DjangoCompletionSource : ICompletionSource {
-        private readonly DjangoCompletionSourceProvider _provider;
+        private readonly IGlyphService _glyphService;
+        private readonly DjangoAnalyzer _analyzer;
         private readonly ITextBuffer _buffer;
 
         internal static readonly Dictionary<string, string> _nestedTags = new Dictionary<string, string>() {
@@ -49,22 +49,15 @@ namespace Microsoft.PythonTools.Django.Intellisense {
         internal static readonly HashSet<string> _nestedEndTags = MakeNestedEndTags();
         private static readonly HashSet<string> _nestedStartTags = MakeNestedStartTags();
 
-        public DjangoCompletionSource(DjangoCompletionSourceProvider djangoCompletionSourceProvider, ITextBuffer textBuffer) {
-            _provider = djangoCompletionSourceProvider;
+        public DjangoCompletionSource(IGlyphService glyphService, DjangoAnalyzer analyzer, ITextBuffer textBuffer) {
+            _glyphService = glyphService;
+            _analyzer = analyzer;
             _buffer = textBuffer;
         }
 
         #region ICompletionSource Members
 
         public void AugmentCompletionSession(ICompletionSession session, IList<CompletionSet> completionSets) {
-            string filename = _buffer.GetFilePath();
-            if (filename == null) {
-                return;
-            }
-            var project = DjangoPackage.GetProject(filename);
-            if (project == null) {
-                return;
-            }
             var nullableTriggerPoint = session.GetTriggerPoint(_buffer.CurrentSnapshot);
             if (!nullableTriggerPoint.HasValue) {
                 return;
@@ -87,7 +80,7 @@ namespace Microsoft.PythonTools.Django.Intellisense {
                 ITrackingSpan applicableSpan;
                 
                 var completions = GetCompletions(
-                    project,
+                    _analyzer,
                     kind,
                     templateText,
                     templateStart,
@@ -108,13 +101,13 @@ namespace Microsoft.PythonTools.Django.Intellisense {
         }
 
         class ProjectBlockCompletionContext : IDjangoCompletionContext {
-            private readonly DjangoProject _project;
+            private readonly DjangoAnalyzer _analyzer;
             private readonly string _filename;
             private readonly IModuleContext _module;
             private readonly HashSet<string> _loopVars;
 
-            public ProjectBlockCompletionContext(DjangoProject project, ITextBuffer buffer) {
-                _project = project;
+            public ProjectBlockCompletionContext(DjangoAnalyzer analyzer, ITextBuffer buffer) {
+                _analyzer = analyzer;
                 _module = buffer.GetModuleContext();
                 _filename = buffer.GetFilePath();
                 TemplateProjectionBuffer projBuffer;
@@ -134,7 +127,7 @@ namespace Microsoft.PythonTools.Django.Intellisense {
 
             public Dictionary<string, HashSet<AnalysisValue>> Variables {
                 get {
-                    var res = GetVariablesForTemplateFile(_project, _filename);
+                    var res = _analyzer.GetVariablesForTemplateFile(_filename);
                     if (_loopVars != null) {
                         if (res == null) {
                             res = new Dictionary<string, HashSet<AnalysisValue>>();
@@ -154,11 +147,9 @@ namespace Microsoft.PythonTools.Django.Intellisense {
 
             public Dictionary<string, TagInfo> Filters {
                 get {
-                    return _project._filters;
+                    return _analyzer._filters;
                 }
             }
-
-
 
             public IModuleContext ModuleContext {
                 get {
@@ -176,7 +167,7 @@ namespace Microsoft.PythonTools.Django.Intellisense {
         /// <param name="templateStart">The offset in the buffer where the template starts</param>
         /// <param name="triggerPoint">The point in the buffer where the completion was triggered</param>
         /// <returns></returns>
-        private IEnumerable<DynamicallyVisibleCompletion> GetCompletions(DjangoProject project, TemplateTokenKind kind, string templateText, int templateStart, SnapshotPoint triggerPoint, out ITrackingSpan applicableSpan) {
+        internal IEnumerable<DynamicallyVisibleCompletion> GetCompletions(DjangoAnalyzer analyzer, TemplateTokenKind kind, string templateText, int templateStart, SnapshotPoint triggerPoint, out ITrackingSpan applicableSpan) {
             int position = triggerPoint.Position - templateStart;
             IEnumerable<CompletionInfo> tags;
             IDjangoCompletionContext context;
@@ -190,20 +181,20 @@ namespace Microsoft.PythonTools.Django.Intellisense {
                         if (position <= block.ParseInfo.Start + block.ParseInfo.Command.Length) {
                             // we are completing before the command
                             // TODO: Return a new set of tags?  Do nothing?  Do this based upon ctrl-space?
-                            tags = FilterBlocks(CompletionInfo.ToCompletionInfo(project._tags, StandardGlyphGroup.GlyphKeyword), triggerPoint);
+                            tags = FilterBlocks(CompletionInfo.ToCompletionInfo(analyzer._tags, StandardGlyphGroup.GlyphKeyword), triggerPoint);
                         } else {
                             // we are in the arguments, let the block handle the completions
-                            context = new ProjectBlockCompletionContext(project, _buffer);
+                            context = new ProjectBlockCompletionContext(analyzer, _buffer);
                             tags = block.GetCompletions(context, position);
                         }
                     } else {
                         // no tag entered yet, provide the known list of tags.
-                        tags = FilterBlocks(CompletionInfo.ToCompletionInfo(project._tags, StandardGlyphGroup.GlyphKeyword), triggerPoint);
+                        tags = FilterBlocks(CompletionInfo.ToCompletionInfo(analyzer._tags, StandardGlyphGroup.GlyphKeyword), triggerPoint);
                     }
                     break;
                 case TemplateTokenKind.Variable:
                     var variable = DjangoVariable.Parse(templateText);
-                    context = new ProjectBlockCompletionContext(project, _buffer);
+                    context = new ProjectBlockCompletionContext(analyzer, _buffer);
                     if (variable != null) {
                         tags = variable.GetCompletions(context, position);
                     } else {
@@ -222,7 +213,7 @@ namespace Microsoft.PythonTools.Django.Intellisense {
                                     tag.DisplayText,
                                     tag.InsertionText,
                                     StripDocumentation(tag.Documentation),
-                                    _provider._glyphService.GetGlyph(tag.Glyph, StandardGlyphItem.GlyphItemPublic),
+                                    _glyphService.GetGlyph(tag.Glyph, StandardGlyphItem.GlyphItemPublic),
                                     "tag"));
         }
 
@@ -310,28 +301,6 @@ namespace Microsoft.PythonTools.Django.Intellisense {
                     yield return value;
                 }
             }
-        }
-
-        private static Dictionary<string, HashSet<AnalysisValue>> GetVariablesForTemplateFile(DjangoProject project, string filename) {
-            string curLevel = filename;                     // is C:\Foo\Bar\Baz\foo.html
-            string curPath = filename = Path.GetFileName(filename);    // is foo.html
-
-            for (; ; ) {
-                string curFilename = filename.Replace('\\', '/');
-                TemplateVariables res;
-                if (project._templateFiles.TryGetValue(curFilename, out res)) {
-                    return res.GetAllValues();
-                }
-                curLevel = Path.GetDirectoryName(curLevel);  // C:\Foo\Bar\Baz\foo.html gets us C:\Foo\Bar\Baz
-                var fn2 = Path.GetFileName(curLevel);            // Gets us Baz
-                if (String.IsNullOrEmpty(fn2)) {
-                    break;
-                }
-                curPath = Path.Combine(fn2, curPath);       // Get us Baz\foo.html       
-                filename = curPath;
-            }
-
-            return null;
         }
 
         #endregion
