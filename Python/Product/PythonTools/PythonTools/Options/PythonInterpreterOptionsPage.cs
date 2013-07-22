@@ -85,7 +85,7 @@ namespace Microsoft.PythonTools.Options {
                     Version = interpreter.Configuration.Version.ToString(),
                     Architecture = FormatArchitecture(interpreter.Configuration.Architecture),
                     PathEnvironmentVariable = interpreter.Configuration.PathEnvironmentVariable,
-                    IsConfigurable = configurable.IsConfigurable(interpreter),
+                    IsConfigurable = configurable != null && configurable.IsConfigurable(interpreter),
                     SupportsCompletionDb = interpreter is IInterpreterWithCompletionDatabase,
                     Factory = interpreter
                 };

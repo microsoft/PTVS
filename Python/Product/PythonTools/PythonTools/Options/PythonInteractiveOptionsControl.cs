@@ -69,22 +69,12 @@ namespace Microsoft.PythonTools.Options {
             }
 
             if (_showSettingsFor.Items.Count > 0) {
-                _showSettingsFor.Enabled = true;
-                _startupScript.Enabled = true;
-                _executionMode.Enabled = true;
-                _completionModeGroup.Enabled = true;
-                _liveCompletionsOnly.Enabled = true;
-                EnableOrDisableOptions(true);
+                Enabled = true;
                 RefreshOptions();
             } else {
-                _showSettingsFor.Enabled = false;
                 _showSettingsFor.Items.Add("No Python Interpreters Installed");
                 _showSettingsFor.SelectedIndex = 0;
-                _startupScript.Enabled = false;
-                _executionMode.Enabled = false;
-                _completionModeGroup.Enabled = false;
-                _liveCompletionsOnly.Enabled = false;
-                EnableOrDisableOptions(false);
+                Enabled = false;
             }
         }
 
@@ -98,10 +88,6 @@ namespace Microsoft.PythonTools.Options {
 
                 _showSettingsFor.SelectedItem = selectInterpreter;
             }
-        }
-
-        private void EnableOrDisableOptions(bool enable) {
-            _priPrompt.Enabled = _priPromptLabel.Enabled = _secPrompt.Enabled = _secPromptLabel.Enabled = _useUserDefinedPrompts.Enabled = _enableAttach.Enabled = _smartReplHistory.Enabled = _inlinePrompts.Enabled = enable;
         }
 
         private void AddToolTips() {
