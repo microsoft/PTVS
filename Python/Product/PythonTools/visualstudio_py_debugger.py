@@ -835,6 +835,9 @@ class Thread(object):
             self.unblock_work()
             self.unblock_work = None
             self._is_working = False
+
+            # send thread frames again in case something (e.g. locals) changes
+            self.enum_thread_frames_locally()
                 
         self._block_starting_lock.acquire()
         assert self._is_blocked
