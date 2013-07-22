@@ -83,6 +83,11 @@ namespace Microsoft.VisualStudioTools.Navigation {
         }
 
         public int GetList2(uint ListType, uint flags, VSOBSEARCHCRITERIA2[] pobSrch, out IVsSimpleObjectList2 ppIVsSimpleObjectList2) {
+            if ((flags & (uint)_LIB_LISTFLAGS.LLF_RESOURCEVIEW) != 0) {
+                ppIVsSimpleObjectList2 = null;
+                return VSConstants.E_NOTIMPL;
+            }
+
             ICustomSearchListProvider listProvider;
             if(pobSrch != null && 
                 pobSrch.Length > 0) {

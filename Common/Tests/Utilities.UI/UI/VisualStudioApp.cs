@@ -33,7 +33,7 @@ namespace TestUtilities.UI {
     /// </summary>
     public class VisualStudioApp : AutomationWrapper {
         private SolutionExplorerTree _solutionExplorerTreeView;
-        private ObjectBrowser _objectBrowser;
+        private ObjectBrowser _objectBrowser, _resourceView;
         private readonly DTE _dte;
 
         public VisualStudioApp(DTE dte)
@@ -71,6 +71,13 @@ namespace TestUtilities.UI {
         public void OpenObjectBrowser()
         {
             Dte.ExecuteCommand("View.ObjectBrowser");
+        }
+
+        /// <summary>
+        /// Opens and activates the Resource View window.
+        /// </summary>
+        public void OpenResourceView() {
+            Dte.ExecuteCommand("View.ResourceView");
         }
 
         public IntPtr OpenDialogWithDteExecuteCommand(string commandName, string commandArgs = "") {
@@ -446,6 +453,36 @@ namespace TestUtilities.UI {
                     _objectBrowser = new ObjectBrowser(element);
                 }
                 return _objectBrowser;
+            }
+        }
+
+        /// <summary>
+        /// Provides access to Visual Studio's resource view.
+        /// </summary>
+        public ObjectBrowser ResourceView {
+            get {
+                if (_resourceView == null) {
+                    AutomationElement element = null;
+                    for (int i = 0; i < 10 && element == null; i++) {
+                        element = Element.FindFirst(TreeScope.Descendants,
+                            new AndCondition(
+                                new PropertyCondition(
+                                    AutomationElement.ClassNameProperty,
+                                    "ViewPresenter"
+                                ),
+                                new PropertyCondition(
+                                    AutomationElement.NameProperty,
+                                    "Resource View"
+                                )
+                            )
+                        );
+                        if (element == null) {
+                            System.Threading.Thread.Sleep(500);
+                        }
+                    }
+                    _resourceView = new ObjectBrowser(element);
+                }
+                return _resourceView;
             }
         }
 

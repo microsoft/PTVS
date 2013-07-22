@@ -771,5 +771,20 @@ namespace PythonToolsUITests {
             Assert.AreEqual(8, dialog.WaitForNumberOfResults(8));
             dialog.Close();
         }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void ResourceViewIsDisabledTest() {
+            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            var project = app.OpenAndFindProject(@"TestData\Outlining.sln");
+            System.Threading.Thread.Sleep(1000);
+
+            app.OpenResourceView();
+            var resourceView = app.ResourceView;
+            Assert.IsNotNull(resourceView);
+            System.Threading.Thread.Sleep(1000);
+
+            Assert.IsNull(resourceView.TypeBrowserPane);
+        }
     }
 }
