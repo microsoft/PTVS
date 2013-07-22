@@ -48,7 +48,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         internal override void AddReference(Node node, AnalysisUnit analysisUnit) {
             if (_original == null) {
-                return base.AddReference(node, analysisUnit);
+                base.AddReference(node, analysisUnit);
                 return;
             }
 
