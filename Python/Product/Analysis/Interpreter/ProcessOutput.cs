@@ -405,6 +405,9 @@ namespace Microsoft.PythonTools {
                 if (disp != null) {
                     disp.Dispose();
                 }
+                if (_waitHandle != null) {
+                    _waitHandle.Dispose();
+                }
             }
         }
     }

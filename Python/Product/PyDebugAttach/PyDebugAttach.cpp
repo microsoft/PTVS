@@ -1,11 +1,11 @@
 /* ****************************************************************************
 *
-* Copyright (c) Microsoft Corporation. 
+* Copyright (c) Microsoft Corporation.
 *
-* This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
-* copy of the license can be found in the License.html file at the root of this distribution. If 
-* you cannot locate the Apache License, Version 2.0, please send an email to 
-* vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
+* This source code is subject to terms and conditions of the Apache License, Version 2.0. A
+* copy of the license can be found in the License.html file at the root of this distribution. If
+* you cannot locate the Apache License, Version 2.0, please send an email to
+* vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound
 * by the terms of the Apache License, Version 2.0.
 *
 * You must not remove this notice, or any other, from this software.
@@ -31,9 +31,9 @@
 
 using namespace std;
 
-typedef int (Py_IsInitialized) ();
-typedef void (PyEval_Lock) (); // Acquire/Release lock
-typedef void (PyThreadState_API) (PyThreadState *); // Acquire/Release lock
+typedef int (Py_IsInitialized)();
+typedef void (PyEval_Lock)(); // Acquire/Release lock
+typedef void (PyThreadState_API)(PyThreadState *); // Acquire/Release lock
 typedef PyInterpreterState* (PyInterpreterState_Head)();
 typedef PyThreadState* (PyInterpreterState_ThreadHead)(PyInterpreterState* interp);
 typedef PyThreadState* (PyThreadState_Next)(PyThreadState *tstate);
@@ -61,8 +61,8 @@ typedef PyObject* (PyImport_ImportModule)(const char *name);
 typedef PyObject* (PyObject_GetAttrString)(PyObject *o, const char *attr_name);
 typedef PyObject* (PyObject_SetAttrString)(PyObject *o, const char *attr_name, PyObject* value);
 typedef PyObject* (PyBool_FromLong)(long v);
-typedef enum {PyGILState_LOCKED, PyGILState_UNLOCKED} PyGILState_STATE;
-typedef PyGILState_STATE (PyGILState_Ensure)();
+typedef enum { PyGILState_LOCKED, PyGILState_UNLOCKED } PyGILState_STATE;
+typedef PyGILState_STATE(PyGILState_Ensure)();
 typedef void (PyGILState_Release)(PyGILState_STATE);
 typedef unsigned long (_PyEval_GetSwitchInterval)(void);
 typedef void (_PyEval_SetSwitchInterval)(unsigned long microseconds);
@@ -101,7 +101,7 @@ public:
     PyObjectHolder(bool isDebug, PyObject *object, bool addRef) {
         _object = object;
         _isDebug = isDebug;
-        if(_object != nullptr && addRef) {
+        if (_object != nullptr && addRef) {
             GetPyObjectPointerNoDebugInfo(_isDebug, _object)->ob_refcnt++;
         }
     };
@@ -114,7 +114,7 @@ public:
         DecRef(_object, _isDebug);
     }
 
-    PyObject* operator* () { 
+    PyObject* operator* () {
         return GetPyObjectPointerNoDebugInfo(_isDebug, _object);
     }
 };
@@ -135,14 +135,14 @@ public:
     }
 
     ~InterpreterInfo() {
-        if(NewThreadFunction != nullptr) {
+        if (NewThreadFunction != nullptr) {
             delete NewThreadFunction;
         }
     }
 
     PyObjectHolder* NewThreadFunction;
     PyThreadState** CurrentThread;
-    
+
     HMODULE Interpreter;
     PyGILState_EnsureFunc* PyGILState_Ensure;
     PyEval_SetTrace* SetTrace;
@@ -150,14 +150,14 @@ public:
     PyThreadState_Swap* ThreadState_Swap;
 
     PythonVersion GetVersion() {
-        if(Version == PythonVersion_Unknown) {
+        if (Version == PythonVersion_Unknown) {
             Version = ::GetPythonVersion(Interpreter);
         }
         return Version;
     }
 
     PyObject_CallFunctionObjArgs* GetCall() {
-        if(Call == nullptr) {
+        if (Call == nullptr) {
             Call = (PyObject_CallFunctionObjArgs*)GetProcAddress(Interpreter, "PyObject_CallFunctionObjArgs");
         }
 
@@ -165,7 +165,7 @@ public:
     }
 
     bool EnsureSetTrace() {
-        if(SetTrace == nullptr) {
+        if (SetTrace == nullptr) {
             auto setTrace = (PyEval_SetTrace*)(void*)GetProcAddress(Interpreter, "PyEval_SetTrace");
             SetTrace = setTrace;
         }
@@ -173,7 +173,7 @@ public:
     }
 
     bool EnsureThreadStateSwap() {
-        if(ThreadState_Swap == nullptr) {
+        if (ThreadState_Swap == nullptr) {
             auto swap = (PyThreadState_Swap*)(void*)GetProcAddress(Interpreter, "PyThreadState_Swap");
             ThreadState_Swap = swap;
         }
@@ -181,12 +181,12 @@ public:
     }
 
     bool EnsureCurrentThread() {
-        if(CurrentThread == nullptr) {
+        if (CurrentThread == nullptr) {
             auto curPythonThread = (PyThreadState**)(void*)GetProcAddress(
                 Interpreter, "_PyThreadState_Current");
             CurrentThread = curPythonThread;
-        }        
-        
+        }
+
         return CurrentThread != nullptr;
     }
 
@@ -200,33 +200,33 @@ DWORD _interpreterCount = 0;
 InterpreterInfo* _interpreterInfo[MAX_INTERPRETERS];
 
 void PatchIAT(PIMAGE_DOS_HEADER dosHeader, PVOID replacingFunc, LPSTR exportingDll, LPVOID newFunction) {
-    if(dosHeader->e_magic != IMAGE_DOS_SIGNATURE) {
+    if (dosHeader->e_magic != IMAGE_DOS_SIGNATURE) {
         return;
     }
 
     auto ntHeader = (IMAGE_NT_HEADERS*)(((BYTE*)dosHeader) + dosHeader->e_lfanew);
-    if(ntHeader->Signature != IMAGE_NT_SIGNATURE) {
+    if (ntHeader->Signature != IMAGE_NT_SIGNATURE) {
         return;
     }
 
     auto importAddr = ntHeader->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress;
-    if(importAddr == 0) {
+    if (importAddr == 0) {
         return;
     }
-            
+
     auto import = (PIMAGE_IMPORT_DESCRIPTOR)(importAddr + ((BYTE*)dosHeader));
-            
-    while(import->Name) {
+
+    while (import->Name) {
         char* name = (char*)(import->Name + ((BYTE*)dosHeader));
-        if(_stricmp(name, exportingDll) == 0) {
+        if (_stricmp(name, exportingDll) == 0) {
             auto thunkData = (PIMAGE_THUNK_DATA)((import->FirstThunk) + ((BYTE*)dosHeader));
 
-            while(thunkData->u1.Function) {
+            while (thunkData->u1.Function) {
                 PVOID funcAddr = (char*)(thunkData->u1.Function);
-                        
-                if(funcAddr == replacingFunc) {
+
+                if (funcAddr == replacingFunc) {
                     DWORD flOldProtect;
-                    if(VirtualProtect(&thunkData->u1, sizeof(SIZE_T), PAGE_READWRITE, &flOldProtect)) {
+                    if (VirtualProtect(&thunkData->u1, sizeof(SIZE_T), PAGE_READWRITE, &flOldProtect)) {
                         thunkData->u1.Function = (SIZE_T)newFunction;
                         VirtualProtect(&thunkData->u1, sizeof(SIZE_T), flOldProtect, &flOldProtect);
                     }
@@ -240,19 +240,19 @@ void PatchIAT(PIMAGE_DOS_HEADER dosHeader, PVOID replacingFunc, LPSTR exportingD
 }
 
 typedef BOOL WINAPI EnumProcessModulesFunc(
-  __in   HANDLE hProcess,
-  __out  HMODULE *lphModule,
-  __in   DWORD cb,
-  __out  LPDWORD lpcbNeeded
-);
+    __in   HANDLE hProcess,
+    __out  HMODULE *lphModule,
+    __in   DWORD cb,
+    __out  LPDWORD lpcbNeeded
+    );
 
-typedef __kernel_entry NTSTATUS NTAPI 
-    NtQueryInformationProcessFunc (
-        IN HANDLE ProcessHandle,
-        IN PROCESSINFOCLASS ProcessInformationClass,
-        OUT PVOID ProcessInformation,
-        IN ULONG ProcessInformationLength,
-        OUT PULONG ReturnLength OPTIONAL
+typedef __kernel_entry NTSTATUS NTAPI
+    NtQueryInformationProcessFunc(
+    IN HANDLE ProcessHandle,
+    IN PROCESSINFOCLASS ProcessInformationClass,
+    OUT PVOID ProcessInformation,
+    IN ULONG ProcessInformationLength,
+    OUT PULONG ReturnLength OPTIONAL
     );
 
 
@@ -262,69 +262,69 @@ typedef __kernel_entry NTSTATUS NTAPI
 // LDR_DATA_TABLE_ENTRY data structures http://msdn.microsoft.com/en-us/library/windows/desktop/aa813708(v=vs.85).aspx
 // which have changed in Windows 7, and may change more in the future, so we can't use them there.
 BOOL EnumProcessModulesHelper(
-  __in   HANDLE hProcess,
-  __out  HMODULE *lphModule,
-  __in   DWORD cb,
-  __out  LPDWORD lpcbNeeded
-) {
-    auto kernel32 = GetModuleHandle(L"kernel32.dll");
-    if(kernel32 == nullptr) {
-        return FALSE;
-    }
-
-    auto enumProc = (EnumProcessModulesFunc*)GetProcAddress(kernel32, "K32EnumProcessModules");
-    if(enumProc == nullptr) {
-        // Fallback to pre-Win7 method
-        PROCESS_BASIC_INFORMATION basicInfo;
-        auto ntdll = GetModuleHandle(L"ntdll.dll");
-        if(ntdll == nullptr) {
+    __in   HANDLE hProcess,
+    __out  HMODULE *lphModule,
+    __in   DWORD cb,
+    __out  LPDWORD lpcbNeeded
+    ) {
+        auto kernel32 = GetModuleHandle(L"kernel32.dll");
+        if (kernel32 == nullptr) {
             return FALSE;
         }
 
-        // http://msdn.microsoft.com/en-us/library/windows/desktop/ms684280(v=vs.85).aspx
-        NtQueryInformationProcessFunc* queryInfo = (NtQueryInformationProcessFunc*)GetProcAddress(ntdll, "NtQueryInformationProcess");
-        if(queryInfo == nullptr) {
-            return FALSE;
-        }
-
-        auto result = queryInfo(
-            GetCurrentProcess(),
-            ProcessBasicInformation,
-            &basicInfo,
-            sizeof(PROCESS_BASIC_INFORMATION),
-            NULL
-            );
-
-        if(FAILED(result)) {
-            return FALSE;
-        }
-
-        // http://msdn.microsoft.com/en-us/library/windows/desktop/aa813708(v=vs.85).aspx
-        PEB* peb = basicInfo.PebBaseAddress;
-        auto start = (LDR_DATA_TABLE_ENTRY*)(peb->Ldr->InMemoryOrderModuleList.Flink);
-
-        auto cur = start;
-        *lpcbNeeded = 0;
-        
-        do {
-            if((*lpcbNeeded + sizeof(SIZE_T)) <= cb) {
-                PVOID *curLink = (PVOID*)cur;
-                curLink-=2;
-                LDR_DATA_TABLE_ENTRY* curTable = (LDR_DATA_TABLE_ENTRY*)curLink;
-                if(curTable->DllBase == nullptr) {
-                    break;
-                }
-                lphModule[(*lpcbNeeded) / sizeof(SIZE_T)] = (HMODULE)curTable->DllBase;
+        auto enumProc = (EnumProcessModulesFunc*)GetProcAddress(kernel32, "K32EnumProcessModules");
+        if (enumProc == nullptr) {
+            // Fallback to pre-Win7 method
+            PROCESS_BASIC_INFORMATION basicInfo;
+            auto ntdll = GetModuleHandle(L"ntdll.dll");
+            if (ntdll == nullptr) {
+                return FALSE;
             }
 
-            (*lpcbNeeded) += sizeof(SIZE_T);
-            cur = (LDR_DATA_TABLE_ENTRY*)((LIST_ENTRY*)cur)->Flink;        
-        }while(cur != start && cur != 0);
+            // http://msdn.microsoft.com/en-us/library/windows/desktop/ms684280(v=vs.85).aspx
+            NtQueryInformationProcessFunc* queryInfo = (NtQueryInformationProcessFunc*)GetProcAddress(ntdll, "NtQueryInformationProcess");
+            if (queryInfo == nullptr) {
+                return FALSE;
+            }
 
-        return *lpcbNeeded <= cb;
-    }
+            auto result = queryInfo(
+                GetCurrentProcess(),
+                ProcessBasicInformation,
+                &basicInfo,
+                sizeof(PROCESS_BASIC_INFORMATION),
+                NULL
+                );
 
-    return enumProc(hProcess, lphModule, cb, lpcbNeeded);
+            if (FAILED(result)) {
+                return FALSE;
+            }
+
+            // http://msdn.microsoft.com/en-us/library/windows/desktop/aa813708(v=vs.85).aspx
+            PEB* peb = basicInfo.PebBaseAddress;
+            auto start = (LDR_DATA_TABLE_ENTRY*)(peb->Ldr->InMemoryOrderModuleList.Flink);
+
+            auto cur = start;
+            *lpcbNeeded = 0;
+
+            do {
+                if ((*lpcbNeeded + sizeof(SIZE_T)) <= cb) {
+                    PVOID *curLink = (PVOID*)cur;
+                    curLink -= 2;
+                    LDR_DATA_TABLE_ENTRY* curTable = (LDR_DATA_TABLE_ENTRY*)curLink;
+                    if (curTable->DllBase == nullptr) {
+                        break;
+                    }
+                    lphModule[(*lpcbNeeded) / sizeof(SIZE_T)] = (HMODULE)curTable->DllBase;
+                }
+
+                (*lpcbNeeded) += sizeof(SIZE_T);
+                cur = (LDR_DATA_TABLE_ENTRY*)((LIST_ENTRY*)cur)->Flink;
+            } while (cur != start && cur != 0);
+
+            return *lpcbNeeded <= cb;
+        }
+
+        return enumProc(hProcess, lphModule, cb, lpcbNeeded);
 }
 
 // This function will work with Win7 and later versions of the OS and is safe to call under
@@ -339,31 +339,29 @@ BOOL PatchFunction(LPSTR exportingDll, PVOID replacingFunc, LPVOID newFunction) 
         return FALSE;
     }
 
-    while(!EnumProcessModulesHelper(hProcess, hMods, modSize, &modsNeeded)) {               
+    while (!EnumProcessModulesHelper(hProcess, hMods, modSize, &modsNeeded)) {
         // try again w/ more space...
         _freea(hMods);
         hMods = (HMODULE*)_malloca(modsNeeded);
-        if(hMods == nullptr) {
+        if (hMods == nullptr) {
             modsNeeded = 0;
             break;
         }
         modSize = modsNeeded;
     }
 
-    for(DWORD tmp = 0; tmp<modsNeeded/sizeof(HMODULE); tmp++) {
+    for (DWORD tmp = 0; tmp < modsNeeded / sizeof(HMODULE); tmp++) {
         PIMAGE_DOS_HEADER dosHeader = (PIMAGE_DOS_HEADER)hMods[tmp];
-            
+
         PatchIAT(dosHeader, replacingFunc, exportingDll, newFunction);
     }
 
     return TRUE;
 }
 
-wstring GetCurrentModuleFilename()
-{ 
+wstring GetCurrentModuleFilename() {
     HMODULE hModule = NULL;
-    if(GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS|GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,(LPCTSTR)GetCurrentModuleFilename, &hModule)!=0)
-    {
+    if (GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT, (LPCTSTR)GetCurrentModuleFilename, &hModule) != 0) {
         wchar_t filename[MAX_PATH];
         GetModuleFileName(hModule, filename, MAX_PATH);
         return filename;
@@ -389,14 +387,14 @@ int AttachCallback(void *initThreads) {
 char* ReadCodeFromFile(wchar_t* filePath) {
     ifstream filestr;
     filestr.open(filePath, ios::binary);
-    if(filestr.fail()) {
+    if (filestr.fail()) {
         return nullptr;
     }
 
     // get length of file:
-    filestr.seekg (0, ios::end);
+    filestr.seekg(0, ios::end);
     auto length = filestr.tellg();
-    filestr.seekg (0, ios::beg);
+    filestr.seekg(0, ios::beg);
 
     int len = (int)length;
     char* buffer = new char[len + 1];
@@ -404,10 +402,10 @@ char* ReadCodeFromFile(wchar_t* filePath) {
     buffer[len] = 0;
 
     // remove carriage returns, copy zero byte
-    for(int read = 0, write=0; read<=len; read++) {
-        if(buffer[read] == '\r') {
+    for (int read = 0, write = 0; read <= len; read++) {
+        if (buffer[read] == '\r') {
             continue;
-        }else if (write != read) {
+        } else if (write != read) {
             buffer[write] = buffer[read];
         }
         write++;
@@ -430,8 +428,10 @@ public:
     typedef T&        reference;
     typedef const T&  const_reference;
     typedef T         value_type;
-    template <class U> struct rebind { typedef PrivateHeapAllocator<U>
-    other; };
+    template <class U> struct rebind {
+        typedef PrivateHeapAllocator<U>
+            other;
+    };
 
     inline explicit PrivateHeapAllocator() {}
     inline ~PrivateHeapAllocator() {}
@@ -440,7 +440,7 @@ public:
     inline  PrivateHeapAllocator(PrivateHeapAllocator<U> const&) {}
 
     pointer allocate(size_type size, allocator<void>::const_pointer hint = 0) {
-        if(g_heap == nullptr) {
+        if (g_heap == nullptr) {
             g_heap = HeapCreate(0, 0, 0);
         }
         auto mem = HeapAlloc(g_heap, 0, size * sizeof(T));
@@ -452,18 +452,18 @@ public:
     }
 
     //    size
-    #undef max
-    inline size_type max_size() const { 
+#undef max
+    inline size_type max_size() const {
         return std::numeric_limits<size_type>::max() / sizeof(T);
     }
-    inline void construct(pointer p, const T& t) { new(p) T(t); }
+    inline void construct(pointer p, const T& t) { new(p)T(t); }
     inline void destroy(pointer p) { p->~T(); }
 };
 
 typedef hash_map<DWORD, HANDLE, stdext::hash_compare<DWORD, std::less<DWORD> >, PrivateHeapAllocator<pair<DWORD, HANDLE> > > MyHashMap;
 
 void ResumeThreads(MyHashMap &suspendedThreads) {
-    for(auto start = suspendedThreads.begin();  start != suspendedThreads.end(); start++) {
+    for (auto start = suspendedThreads.begin();  start != suspendedThreads.end(); start++) {
         ResumeThread((*start).second);
         CloseHandle((*start).second);
     }
@@ -486,12 +486,12 @@ void SuspendThreads(MyHashMap &suspendedThreads, Py_AddPendingCall* addPendingCa
             te.dwSize = sizeof(te);
             if (Thread32First(h, &te)) {
                 do {
-                    if (te.dwSize >= FIELD_OFFSET(THREADENTRY32, th32OwnerProcessID) + sizeof(te.th32OwnerProcessID) && te.th32OwnerProcessID == curProcess) {                        
+                    if (te.dwSize >= FIELD_OFFSET(THREADENTRY32, th32OwnerProcessID) + sizeof(te.th32OwnerProcessID) && te.th32OwnerProcessID == curProcess) {
 
 
-                        if(te.th32ThreadID != curThreadId && suspendedThreads.find(te.th32ThreadID) == suspendedThreads.end()) {
+                        if (te.th32ThreadID != curThreadId && suspendedThreads.find(te.th32ThreadID) == suspendedThreads.end()) {
                             auto hThread = OpenThread(THREAD_ALL_ACCESS, FALSE, te.th32ThreadID);
-                            if(hThread != nullptr) {
+                            if (hThread != nullptr) {
                                 SuspendThread(hThread);
 
                                 bool addingPendingCall = false;
@@ -504,7 +504,7 @@ void SuspendThreads(MyHashMap &suspendedThreads, Py_AddPendingCall* addPendingCa
 #elif defined(_AMD64_)
                                 CONTEXT context;
                                 GetThreadContext(hThread, &context);
-                                if(context.Rip >= *((DWORD64*)addPendingCall) && context.Rip <= *((DWORD64*)addPendingCall + 0x100)) {
+                                if (context.Rip >= *((DWORD64*)addPendingCall) && context.Rip <= *((DWORD64*)addPendingCall + 0x100)) {
                                     addingPendingCall = true;
                                 }
 #endif
@@ -527,21 +527,21 @@ void SuspendThreads(MyHashMap &suspendedThreads, Py_AddPendingCall* addPendingCa
             }
             CloseHandle(h);
         }
-    } while(suspended && !threadsInited());
+    } while (suspended && !threadsInited());
 }
 
 PyObject* GetPyObjectPointerNoDebugInfo(bool isDebug, PyObject* object) {
-    if(object != nullptr && isDebug) {
+    if (object != nullptr && isDebug) {
         // debug builds have 2 extra pointers at the front that we don't care about
-        return (PyObject*)((size_t*)object+2);
+        return (PyObject*)((size_t*)object + 2);
     }
     return object;
 }
 
 void DecRef(PyObject* object, bool isDebug) {
-    auto noDebug = GetPyObjectPointerNoDebugInfo(isDebug, object);  
+    auto noDebug = GetPyObjectPointerNoDebugInfo(isDebug, object);
 
-    if(noDebug != nullptr && --noDebug->ob_refcnt == 0) {
+    if (noDebug != nullptr && --noDebug->ob_refcnt == 0) {
         ((PyTypeObject*)GetPyObjectPointerNoDebugInfo(isDebug, noDebug->ob_type))->tp_dealloc(object);
     }
 }
@@ -566,11 +566,11 @@ public:
     MemoryBuffer *Buffer;
     bool Succeeded;
 
-    ConnectionInfo() : Succeeded(false) {        
+    ConnectionInfo() : Succeeded(false) {
     }
 
-    ConnectionInfo(MemoryBuffer *memoryBuffer, HANDLE fileMapping) : 
-    Succeeded(true), Buffer(memoryBuffer), FileMapping(fileMapping) {
+    ConnectionInfo(MemoryBuffer *memoryBuffer, HANDLE fileMapping) :
+        Succeeded(true), Buffer(memoryBuffer), FileMapping(fileMapping) {
     }
 
     // Reports an error while we're initially setting up the attach.  These errors can all be 
@@ -588,17 +588,17 @@ public:
     // error logged in the output window which they might miss.
     void ReportErrorAfterAttachDone(DWORD errorNum) {
         WSADATA data;
-        if(!WSAStartup(MAKEWORD(2,0), &data)) {
+        if (!WSAStartup(MAKEWORD(2, 0), &data)) {
             auto sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
-            if(sock != INVALID_SOCKET) {
-                sockaddr_in serveraddr = { 0 };
+            if (sock != INVALID_SOCKET) {
+                sockaddr_in serveraddr = {0};
 
                 serveraddr.sin_family = AF_INET;
                 serveraddr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
                 serveraddr.sin_port = htons(Buffer->PortNumber);
 
                 // connect to our DebugConnectionListener and report the error.
-                if(connect(sock, (sockaddr*)&serveraddr, sizeof(sockaddr_in)) == 0) {
+                if (connect(sock, (sockaddr*)&serveraddr, sizeof(sockaddr_in)) == 0) {
                     // send our debug ID as an ASCII string.  
                     send(sock, "A", 1, 0);
                     int len = (int)strlen(Buffer->DebugId);
@@ -619,7 +619,7 @@ public:
     }
 
     ~ConnectionInfo() {
-        if(Succeeded) {
+        if (Succeeded) {
             CloseHandle(Buffer->AttachStartingEvent);
 
             auto attachDoneEvent = Buffer->AttachDoneEvent;
@@ -638,24 +638,24 @@ ConnectionInfo GetConnectionInfo() {
     char* pBuf;
 
     wchar_t fullMappingName[1024];
-    _snwprintf_s(fullMappingName, _countof(fullMappingName), L"PythonDebuggerMemory%d", GetCurrentProcessId());   
+    _snwprintf_s(fullMappingName, _countof(fullMappingName), L"PythonDebuggerMemory%d", GetCurrentProcessId());
 
     hMapFile = OpenFileMapping(
         FILE_MAP_ALL_ACCESS,   // read/write access
         FALSE,                 // do not inherit the name
         fullMappingName);            // name of mapping object 
 
-    if (hMapFile == NULL) { 
+    if (hMapFile == NULL) {
         return ConnectionInfo();
-    } 
+    }
 
-    pBuf = (char*) MapViewOfFile(hMapFile, // handle to map object
+    pBuf = (char*)MapViewOfFile(hMapFile, // handle to map object
         FILE_MAP_ALL_ACCESS,  // read/write permission
-        0,                    
-        0,                       
-        1024);                   
+        0,
+        0,
+        1024);
 
-    if (pBuf == NULL)  { 
+    if (pBuf == NULL) {
         CloseHandle(hMapFile);
         return ConnectionInfo();
     }
@@ -695,9 +695,9 @@ public:
 
 long GetPythonThreadId(PythonVersion version, PyThreadState* curThread) {
     long threadId;
-    if(version >= PythonVersion_30) {
+    if (version >= PythonVersion_30) {
         threadId = curThread->_30_31.thread_id;
-    }else{
+    } else {
         threadId = curThread->_25_27.thread_id;
     }
     return threadId;
@@ -719,49 +719,49 @@ public:
 };
 
 bool LoadAndEvaluateCode(wchar_t* filePath, const char* fileName, ConnectionInfo& connInfo, bool isDebug, PyObject* globalsDict,
-                         Py_CompileString* pyCompileString, PyDict_SetItemString* dictSetItem,
-                         PyEval_EvalCode* pyEvalCode, PyString_FromString* strFromString, PyEval_GetBuiltins* getBuiltins) {
-    auto debuggerCode = ReadCodeFromFile(filePath);
-    if(debuggerCode == nullptr) {
-        connInfo.ReportErrorAfterAttachDone(ConnError_LoadDebuggerFailed);
-        return false;
-    }
+    Py_CompileString* pyCompileString, PyDict_SetItemString* dictSetItem,
+    PyEval_EvalCode* pyEvalCode, PyString_FromString* strFromString, PyEval_GetBuiltins* getBuiltins) {
+        auto debuggerCode = ReadCodeFromFile(filePath);
+        if (debuggerCode == nullptr) {
+            connInfo.ReportErrorAfterAttachDone(ConnError_LoadDebuggerFailed);
+            return false;
+        }
 
-    auto code = PyObjectHolder(isDebug, pyCompileString(debuggerCode, fileName, 257 /*Py_file_input*/));
-    delete [] debuggerCode;
+        auto code = PyObjectHolder(isDebug, pyCompileString(debuggerCode, fileName, 257 /*Py_file_input*/));
+        delete[] debuggerCode;
 
-    if(*code == nullptr) {
-        connInfo.ReportErrorAfterAttachDone(ConnError_LoadDebuggerFailed);
-        return false;
-    }
+        if (*code == nullptr) {
+            connInfo.ReportErrorAfterAttachDone(ConnError_LoadDebuggerFailed);
+            return false;
+        }
 
-    dictSetItem(globalsDict, "__builtins__", getBuiltins());
-    auto size = WideCharToMultiByte(CP_UTF8, 0, filePath, (DWORD)wcslen(filePath), NULL, 0, NULL, NULL);
-    char* filenameBuffer = new char[size];
-    if(WideCharToMultiByte(CP_UTF8, 0, filePath, (DWORD)wcslen(filePath), filenameBuffer, size, NULL, NULL) != 0) {
-        filenameBuffer[size] = 0;
-        dictSetItem (globalsDict, "__file__", strFromString(filenameBuffer));
-    }
-    auto evalResult = PyObjectHolder(isDebug, pyEvalCode(code.ToPython(), globalsDict, globalsDict));
+        dictSetItem(globalsDict, "__builtins__", getBuiltins());
+        auto size = WideCharToMultiByte(CP_UTF8, 0, filePath, (DWORD)wcslen(filePath), NULL, 0, NULL, NULL);
+        char* filenameBuffer = new char[size];
+        if (WideCharToMultiByte(CP_UTF8, 0, filePath, (DWORD)wcslen(filePath), filenameBuffer, size, NULL, NULL) != 0) {
+            filenameBuffer[size] = 0;
+            dictSetItem(globalsDict, "__file__", strFromString(filenameBuffer));
+        }
+        auto evalResult = PyObjectHolder(isDebug, pyEvalCode(code.ToPython(), globalsDict, globalsDict));
 
-    return true;
+        return true;
 }
 
 bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
     // Python DLL?
     auto isInit = (Py_IsInitialized*)GetProcAddress(module, "Py_IsInitialized");
 
-    if(isInit != nullptr && isInit()) {
+    if (isInit != nullptr && isInit()) {
         DWORD interpreterId = INFINITE;
-        for(DWORD curInterp = 0; curInterp < MAX_INTERPRETERS; curInterp++) {
-            if(_interpreterInfo[curInterp] != nullptr &&
+        for (DWORD curInterp = 0; curInterp < MAX_INTERPRETERS; curInterp++) {
+            if (_interpreterInfo[curInterp] != nullptr &&
                 _interpreterInfo[curInterp]->Interpreter == module) {
-                interpreterId = curInterp;
-                break;
+                    interpreterId = curInterp;
+                    break;
             }
         }
-        
-        if(interpreterId == INFINITE) {
+
+        if (interpreterId == INFINITE) {
             connInfo.ReportError(ConnError_UnknownVersion);
             return FALSE;
         }
@@ -793,15 +793,15 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
         PyInt_FromLong* intFromLong;
         PyString_FromString* strFromString;
         PyInt_FromSize_t* intFromSizeT;
-        if(version >= PythonVersion_30) {
+        if (version >= PythonVersion_30) {
             intFromLong = (PyInt_FromLong*)GetProcAddress(module, "PyLong_FromLong");
             intFromSizeT = (PyInt_FromSize_t*)GetProcAddress(module, "PyLong_FromSize_t");
-            if(version >= PythonVersion_33) {
+            if (version >= PythonVersion_33) {
                 strFromString = (PyString_FromString*)GetProcAddress(module, "PyUnicode_FromString");
             } else {
                 strFromString = (PyString_FromString*)GetProcAddress(module, "PyUnicodeUCS2_FromString");
             }
-        }else{
+        } else {
             intFromLong = (PyInt_FromLong*)GetProcAddress(module, "PyInt_FromLong");
             strFromString = (PyString_FromString*)GetProcAddress(module, "PyString_FromString");
             intFromSizeT = (PyInt_FromSize_t*)GetProcAddress(module, "PyInt_FromSize_t");
@@ -824,9 +824,9 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
         auto pyGilStateRelease = (PyGILState_ReleaseFunc*)GetProcAddress(module, "PyGILState_Release");
         auto PyCFrame_Type = (PyTypeObject*)GetProcAddress(module, "PyCFrame_Type");
 
-        if (addPendingCall== nullptr || curPythonThread == nullptr || interpHeap == nullptr || gilEnsure == nullptr || gilRelease== nullptr || threadHead==nullptr ||
-            initThreads==nullptr || releaseLock== nullptr || threadsInited== nullptr || threadNext==nullptr || threadSwap==nullptr ||
-            pyDictNew==nullptr || pyCompileString == nullptr || pyEvalCode == nullptr || getDictItem == nullptr || call == nullptr ||
+        if (addPendingCall == nullptr || curPythonThread == nullptr || interpHeap == nullptr || gilEnsure == nullptr || gilRelease == nullptr || threadHead == nullptr ||
+            initThreads == nullptr || releaseLock == nullptr || threadsInited == nullptr || threadNext == nullptr || threadSwap == nullptr ||
+            pyDictNew == nullptr || pyCompileString == nullptr || pyEvalCode == nullptr || getDictItem == nullptr || call == nullptr ||
             getBuiltins == nullptr || dictSetItem == nullptr || intFromLong == nullptr || pyErrRestore == nullptr || pyErrFetch == nullptr ||
             errOccurred == nullptr || pyImportMod == nullptr || pyGetAttr == nullptr || pyNone == nullptr || pySetAttr == nullptr || boolFromLong == nullptr ||
             getThreadTls == nullptr || setThreadTls == nullptr || delThreadTls == nullptr || releaseLock == nullptr ||
@@ -837,11 +837,11 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
         }
 
         auto head = interpHeap();
-        if(head == nullptr) {
+        if (head == nullptr) {
             // this interpreter is loaded butt not initialized.
             connInfo.ReportError(ConnError_InterpreterNotInitialized);
             return false;
-        }        
+        }
 
         bool threadSafeAddPendingCall = false;
 
@@ -849,7 +849,7 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
         if (version == PythonVersion_Unknown) {
             connInfo.ReportError(ConnError_UnknownVersion);
             return false;
-        } else if(version >= PythonVersion_27 && version != PythonVersion_30) {
+        } else if (version >= PythonVersion_27 && version != PythonVersion_30) {
             threadSafeAddPendingCall = true;
         }
         connInfo.SetVersion(version);
@@ -858,13 +858,14 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
         connInfo.ReportError(ConnError_None);
         SetEvent(connInfo.Buffer->AttachStartingEvent);
 
-        if(!threadsInited()) {
+        if (!threadsInited()) {
             int saveIntervalCheck;
             unsigned long saveLongIntervalCheck;
-            if (intervalCheck != nullptr) { // not available on 3.2
+            if (intervalCheck != nullptr) {
+                // not available on 3.2
                 saveIntervalCheck = *intervalCheck;
                 *intervalCheck = -1;    // lower the interval check so pending calls are processed faster
-            } else if(getSwitchInterval != nullptr && setSwitchInterval != nullptr) {
+            } else if (getSwitchInterval != nullptr && setSwitchInterval != nullptr) {
                 saveLongIntervalCheck = getSwitchInterval();
                 setSwitchInterval(0);
             }
@@ -895,14 +896,14 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
             // threading becomes initialized (due to our pending call or the Python code creating a new thread)  then we're done 
             // and we just resume all of the presently suspended threads.
 
-            MyHashMap suspendedThreads;            
+            MyHashMap suspendedThreads;
 
             bool addedPendingCall = false;
 
             g_initedEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
             HandleHolder holder(g_initedEvent);
 
-            if(addPendingCall != nullptr && threadSafeAddPendingCall) {
+            if (addPendingCall != nullptr && threadSafeAddPendingCall) {
                 // we're on a thread safe Python version, go ahead and pend our call to initialize threading.
                 addPendingCall(&AttachCallback, initThreads);
                 addedPendingCall = true;
@@ -915,11 +916,11 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
             do {
                 SuspendThreads(suspendedThreads, addPendingCall, threadsInited);
 
-                if (!threadsInited()) { 
-                    if(*curPythonThread == nullptr) {
+                if (!threadsInited()) {
+                    if (*curPythonThread == nullptr) {
                         // no threads are currently running, it is safe to initialize multi threading.
                         PyGILState_STATE gilState;
-                        if(version >= PythonVersion_32) {
+                        if (version >= PythonVersion_32) {
                             // in 3.2 due to the new GIL and later we can't call Py_InitThreads 
                             // without a thread being initialized.  
                             // So we use PyGilState_Ensure here to first
@@ -930,49 +931,49 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
                             gilState = pyGilStateEnsure();
                         }
                         initThreads();
-                        
-                        if(version >= PythonVersion_32) {
+
+                        if (version >= PythonVersion_32) {
                             // we will release the GIL here
                             pyGilStateRelease(gilState);
                         } else {
                             releaseLock();
                         }
-                    }else if(!addedPendingCall) {
+                    } else if (!addedPendingCall) {
                         // someone holds the GIL but no one is actively adding any pending calls.  We can pend our call
                         // and initialize threads.
                         addPendingCall(&AttachCallback, initThreads);
                         addedPendingCall = true;
                     }
                 }
-                ResumeThreads(suspendedThreads);               
-            }while(!threadsInited() && 
+                ResumeThreads(suspendedThreads);
+            } while (!threadsInited() &&
                 (TICKS_DIFF(startTickCount, GetTickCount())) < (ticksPerSecond * 20) &&
-                !addedPendingCall); 
+                !addedPendingCall);
 
-            if(!threadsInited()) {
-                if(addedPendingCall) {
+            if (!threadsInited()) {
+                if (addedPendingCall) {
                     // we've added our call to initialize multi-threading, we can now wait
                     // until Python code actually starts running.
                     SetEvent(connInfo.Buffer->AttachDoneEvent);
                     ::WaitForSingleObject(g_initedEvent, INFINITE);
-                }else{
+                } else {
                     connInfo.ReportError(ConnError_TimeOut);
                     return false;
                 }
-            }else{
+            } else {
                 SetEvent(connInfo.Buffer->AttachDoneEvent);
             }
 
             if (intervalCheck != nullptr) {
                 *intervalCheck = saveIntervalCheck;
-            } else if(setSwitchInterval != nullptr) {
+            } else if (setSwitchInterval != nullptr) {
                 setSwitchInterval(saveLongIntervalCheck);
             }
-        }else{
+        } else {
             SetEvent(connInfo.Buffer->AttachDoneEvent);
         }
 
-        if(g_heap != nullptr) {
+        if (g_heap != nullptr) {
             HeapDestroy(g_heap);
             g_heap = nullptr;
         }
@@ -982,7 +983,7 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
         GilHolder gilLock(gilEnsure, gilRelease);   // acquire and hold the GIL until done...
 
         auto filename = GetCurrentModuleFilename();
-        if(filename.length() == 0) {
+        if (filename.length() == 0) {
             return nullptr;
         }
 
@@ -1003,29 +1004,29 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
 
         auto utilModule = PyObjectHolder(isDebug, pyModuleNew("visualstudio_py_util"));
         auto utilModuleDict = pyModuleGetDict(utilModule.ToPython());
-        LoadAndEvaluateCode(utilModuleFilePath, "visualstudio_py_util.py", connInfo, isDebug, utilModuleDict, 
-                            pyCompileString, dictSetItem, pyEvalCode, strFromString, getBuiltins);
+        LoadAndEvaluateCode(utilModuleFilePath, "visualstudio_py_util.py", connInfo, isDebug, utilModuleDict,
+            pyCompileString, dictSetItem, pyEvalCode, strFromString, getBuiltins);
 
         auto replModule = PyObjectHolder(isDebug, pyModuleNew("visualstudio_py_repl"));
         auto replModuleDict = pyModuleGetDict(replModule.ToPython());
         dictSetItem(replModuleDict, "visualstudio_py_util", utilModule.ToPython());
-        LoadAndEvaluateCode(replModuleFilePath, "visualstudio_py_repl.py", connInfo, isDebug, replModuleDict, 
-                            pyCompileString, dictSetItem, pyEvalCode, strFromString, getBuiltins);
+        LoadAndEvaluateCode(replModuleFilePath, "visualstudio_py_repl.py", connInfo, isDebug, replModuleDict,
+            pyCompileString, dictSetItem, pyEvalCode, strFromString, getBuiltins);
 
         auto globalsDict = PyObjectHolder(isDebug, pyDictNew());
         dictSetItem(globalsDict.ToPython(), "visualstudio_py_util", utilModule.ToPython());
         dictSetItem(globalsDict.ToPython(), "visualstudio_py_repl", replModule.ToPython());
-        LoadAndEvaluateCode(debuggerModuleFilePath, "visualstudio_py_debugger.py", connInfo, isDebug, globalsDict.ToPython(), 
-                            pyCompileString, dictSetItem, pyEvalCode, strFromString, getBuiltins);
+        LoadAndEvaluateCode(debuggerModuleFilePath, "visualstudio_py_debugger.py", connInfo, isDebug, globalsDict.ToPython(),
+            pyCompileString, dictSetItem, pyEvalCode, strFromString, getBuiltins);
 
         // now initialize debugger process wide state
         auto attach_process = PyObjectHolder(isDebug, getDictItem(globalsDict.ToPython(), "attach_process"), true);
         auto new_thread = PyObjectHolder(isDebug, getDictItem(globalsDict.ToPython(), "new_thread"), true);
 
         _interpreterInfo[interpreterId]->NewThreadFunction = new PyObjectHolder(
-            isDebug, 
-            getDictItem(globalsDict.ToPython(), 
-            "new_external_thread"), 
+            isDebug,
+            getDictItem(globalsDict.ToPython(),
+            "new_external_thread"),
             true);
 
         if (*attach_process == nullptr || *new_thread == nullptr) {
@@ -1037,17 +1038,17 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
 
         auto debugId = PyObjectHolder(isDebug, strFromString(connInfo.Buffer->DebugId));
 
-        DecRef(call(attach_process.ToPython(), pyPortNum.ToPython(), debugId.ToPython(), NULL), isDebug);       
+        DecRef(call(attach_process.ToPython(), pyPortNum.ToPython(), debugId.ToPython(), NULL), isDebug);
 
         auto sysMod = PyObjectHolder(isDebug, pyImportMod("sys"));
-        if(*sysMod == nullptr) {
+        if (*sysMod == nullptr) {
             connInfo.ReportErrorAfterAttachDone(ConnError_SysNotFound);
             return false;
         }
 
         auto settrace = PyObjectHolder(isDebug, pyGetAttr(sysMod.ToPython(), "settrace"));
-        if(*settrace == nullptr) {
-            connInfo.ReportErrorAfterAttachDone(ConnError_SysSetTraceNotFound); 
+        if (*settrace == nullptr) {
+            connInfo.ReportErrorAfterAttachDone(ConnError_SysSetTraceNotFound);
             return false;
         }
 
@@ -1059,7 +1060,7 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
         // will handle those.  So we collect the initial set of threads first here so that we don't keep iterating
         // if the program is spawning large numbers of threads.
         hash_set<PyThreadState*> initialThreads;
-        for(auto curThread = threadHead(head); curThread != nullptr; curThread = threadNext(curThread)) {
+        for (auto curThread = threadHead(head); curThread != nullptr; curThread = threadNext(curThread)) {
             initialThreads.insert(curThread);
         }
 
@@ -1070,17 +1071,17 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
             // Python 3.2's GIL has changed and we need it to be less aggressive in the face of heavy contention
             // so that we can successfully attach.  So we prevent it from switching us out here.
             unsigned long saveLongIntervalCheck;
-            if(getSwitchInterval != nullptr && setSwitchInterval != nullptr) {
+            if (getSwitchInterval != nullptr && setSwitchInterval != nullptr) {
                 saveLongIntervalCheck = getSwitchInterval();
                 setSwitchInterval(INFINITE);
             }
 
             // find what index is holding onto the thread state...
-            auto curThread = *curPythonThread;
+            auto curPyThread = *curPythonThread;
             int threadStateIndex = -1;
-            for(int i = 0; i < 100000; i++) {
+            for (int i = 0; i < 100000; i++) {
                 void* value = getThreadTls(i);
-                if(value == curThread) {
+                if (value == curPyThread) {
                     threadStateIndex = i;
                     break;
                 }
@@ -1090,8 +1091,8 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
             int processedThreads = 0;
             do {
                 foundThread = false;
-                for(auto curThread = threadHead(head); curThread != nullptr; curThread = threadNext(curThread)) {
-                    if(initialThreads.find(curThread) == initialThreads.end() ||
+                for (auto curThread = threadHead(head); curThread != nullptr; curThread = threadNext(curThread)) {
+                    if (initialThreads.find(curThread) == initialThreads.end() ||
                         seenThreads.insert(curThread).second == false) {
                             continue;
                     }
@@ -1100,19 +1101,19 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
 
                     long threadId = GetPythonThreadId(version, curThread);
                     // skip this thread - it doesn't really have any Python code on it...
-                    if(threadId != GetCurrentThreadId()) {
+                    if (threadId != GetCurrentThreadId()) {
                         // create new debugger Thread object on our injected thread
-                        auto pyThreadId = PyObjectHolder(isDebug, intFromLong(threadId));           
+                        auto pyThreadId = PyObjectHolder(isDebug, intFromLong(threadId));
                         PyFrameObject* frame;
                         // update all of the frames so they have our trace func
-                        if(version >= PythonVersion_30) {
+                        if (version >= PythonVersion_30) {
                             frame = curThread->_30_31.frame;
-                        }else{                            
+                        } else {
                             frame = curThread->_25_27.frame;
                         }
 
                         auto threadObj = PyObjectHolder(isDebug, call(new_thread.ToPython(), pyThreadId.ToPython(), pyTrue, frame, NULL));
-                        if(threadObj.ToPython() == pyNone || *threadObj == nullptr) {
+                        if (threadObj.ToPython() == pyNone || *threadObj == nullptr) {
                             break;
                         }
 
@@ -1128,15 +1129,15 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
                         // save and restore the error in case something funky happens...
                         auto errOccured = errOccurred();
                         PyObject *type, *value, *traceback;
-                        if(errOccured) {
+                        if (errOccured) {
                             pyErrFetch(&type, &value, &traceback);
                         }
 
                         auto traceFunc = PyObjectHolder(isDebug, pyGetAttr(threadObj.ToPython(), "trace_func"));
 
-                        if(*gettrace == NULL) {
+                        if (*gettrace == NULL) {
                             DecRef(call(settrace.ToPython(), traceFunc.ToPython(), NULL), isDebug);
-                        }else{
+                        } else {
                             auto existingTraceFunc = PyObjectHolder(isDebug, call(gettrace.ToPython(), NULL));
 
                             DecRef(call(settrace.ToPython(), traceFunc.ToPython(), NULL), isDebug);
@@ -1146,18 +1147,17 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
                             }
                         }
 
-                        if(errOccured) {
+                        if (errOccured) {
                             pyErrRestore(type, value, traceback);
                         }
 
                         // update all of the frames so they have our trace func
                         auto curFrame = (PyFrameObject*)GetPyObjectPointerNoDebugInfo(isDebug, frame);
-                        while(curFrame != nullptr) {
+                        while (curFrame != nullptr) {
                             // Special case for CFrame objects
                             // Stackless CFrame does not have a trace function
                             // This will just prevent a crash on attach.
-                            if(((PyObject*) curFrame)->ob_type != PyCFrame_Type)
-                            {
+                            if (((PyObject*)curFrame)->ob_type != PyCFrame_Type) {
                                 DecRef(curFrame->f_trace, isDebug);
                                 IncRef(*traceFunc);
                                 curFrame->f_trace = traceFunc.ToPython();
@@ -1171,20 +1171,20 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
                     }
                     break;
                 }
-            }while(foundThread);
+            } while (foundThread);
 
-            if(getSwitchInterval != nullptr && setSwitchInterval != nullptr) {
+            if (getSwitchInterval != nullptr && setSwitchInterval != nullptr) {
                 setSwitchInterval(saveLongIntervalCheck);
             }
         }
 
         HMODULE hModule = NULL;
-        if(GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS|GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,(LPCTSTR)GetCurrentModuleFilename, &hModule)!=0) {
+        if (GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT, (LPCTSTR)GetCurrentModuleFilename, &hModule) != 0) {
             // set our handle so we can be unloaded on detach...
-            dictSetItem(globalsDict.ToPython(), 
+            dictSetItem(globalsDict.ToPython(),
                 "debugger_dll_handle",
                 intFromSizeT((size_t)hModule)
-            );
+                );
         }
 
         return true;
@@ -1198,10 +1198,9 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
 bool IsPythonModule(HMODULE module, bool &isDebug) {
     wchar_t mod_name[MAX_PATH];
     isDebug = false;
-    if(GetModuleBaseName(GetCurrentProcess(), module, mod_name, MAX_PATH)) {         
-        if(_wcsnicmp(mod_name, L"python", 6) == 0) {
-            bool isDebug = false;
-            if(wcslen(mod_name) >= 10 && _wcsnicmp(mod_name + 8, L"_d", 2) == 0) {
+    if (GetModuleBaseName(GetCurrentProcess(), module, mod_name, MAX_PATH)) {
+        if (_wcsnicmp(mod_name, L"python", 6) == 0) {
+            if (wcslen(mod_name) >= 10 && _wcsnicmp(mod_name + 8, L"_d", 2) == 0) {
                 isDebug = true;
             }
             return true;
@@ -1214,16 +1213,16 @@ DWORD __stdcall AttachWorker(LPVOID arg) {
     HANDLE hProcess = GetCurrentProcess();
     DWORD modSize = sizeof(HMODULE) * 1024;
     HMODULE* hMods = (HMODULE*)_malloca(modSize);
-    if(hMods == nullptr) {
+    if (hMods == nullptr) {
         return 0;
     }
 
     DWORD modsNeeded;
-    while(!EnumProcessModules(hProcess, hMods, modSize, &modsNeeded)) {               
+    while (!EnumProcessModules(hProcess, hMods, modSize, &modsNeeded)) {
         // try again w/ more space...
         _freea(hMods);
         hMods = (HMODULE*)_malloca(modsNeeded);
-        if(hMods == nullptr) {
+        if (hMods == nullptr) {
             return 0;
         }
         modSize = modsNeeded;
@@ -1233,12 +1232,12 @@ DWORD __stdcall AttachWorker(LPVOID arg) {
         // scoped to clean connection info before we unload
         auto connInfo = GetConnectionInfo();
         bool pythonFound = false;
-        if(connInfo.Succeeded) {
-            for(size_t i = 0; i<modsNeeded/sizeof(HMODULE); i++) {
+        if (connInfo.Succeeded) {
+            for (size_t i = 0; i < modsNeeded / sizeof(HMODULE); i++) {
                 bool isDebug;
-                if(IsPythonModule(hMods[i], isDebug)) {
+                if (IsPythonModule(hMods[i], isDebug)) {
                     pythonFound = true;
-                    if(DoAttach(hMods[i], connInfo, isDebug)) {
+                    if (DoAttach(hMods[i], connInfo, isDebug)) {
                         // we've successfully attached the debugger
                         attached = true;
                         break;
@@ -1248,24 +1247,24 @@ DWORD __stdcall AttachWorker(LPVOID arg) {
             }
         }
 
-        if(!attached) {
-            if(connInfo.Buffer->ErrorNumber == 0) {
-                if(!pythonFound) {
+        if (!attached) {
+            if (connInfo.Buffer->ErrorNumber == 0) {
+                if (!pythonFound) {
                     connInfo.ReportError(ConnError_PythonNotFound);
-                }else{
+                } else {
                     connInfo.ReportError(ConnError_InterpreterNotInitialized);
                 }
             }
-            SetEvent(connInfo.Buffer->AttachStartingEvent);   
+            SetEvent(connInfo.Buffer->AttachStartingEvent);
         }
     }
 
 
     HMODULE hModule = NULL;
-    if(!attached && 
-        GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS|GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,(LPCTSTR)GetCurrentModuleFilename, &hModule)!=0) {
-        // unload ourselves and exit if we failed to attach...
-        FreeLibraryAndExitThread(hModule, 0);
+    if (!attached &&
+        GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT, (LPCTSTR)GetCurrentModuleFilename, &hModule) != 0) {
+            // unload ourselves and exit if we failed to attach...
+            FreeLibraryAndExitThread(hModule, 0);
     }
     return 0;
 }
@@ -1276,43 +1275,43 @@ DWORD __stdcall AttachWorker(LPVOID arg) {
 // to it so that it gets the 1st call event.
 int TraceGeneral(int interpreterId, PyObject *obj, PyFrameObject *frame, int what, PyObject *arg) {
     auto curInterpreter = _interpreterInfo[interpreterId];
-    
+
     auto new_thread = curInterpreter->NewThreadFunction;
-    if(new_thread == nullptr) {
+    if (new_thread == nullptr) {
         // attach isn't complete yet, we're racing with other threads...
         return 0;
     }
 
     auto call = curInterpreter->GetCall();
-    if(call != nullptr && curInterpreter->EnsureCurrentThread()) {
+    if (call != nullptr && curInterpreter->EnsureCurrentThread()) {
         auto curThread = *curInterpreter->CurrentThread;
 
         bool isDebug = new_thread->_isDebug;
-                
+
         _ASSERTE(curInterpreter->SetTrace != nullptr);
         curInterpreter->SetTrace(nullptr, nullptr);
-        
+
         DecRef(
             call(
-                new_thread->ToPython(), 
-                NULL
+            new_thread->ToPython(),
+            NULL
             ),
             isDebug
-        );
+            );
 
         // now deliver the event we received to our trace object which just got installed.
-        switch(curInterpreter->GetVersion()) {
-            case PythonVersion_25:
-            case PythonVersion_26:
-            case PythonVersion_27:
-                curThread->_25_27.c_tracefunc(curThread->_25_27.c_traceobj, frame, what, arg);
-                break;
-            case PythonVersion_30:
-            case PythonVersion_31:
-            case PythonVersion_32:
-            case PythonVersion_33:
-                curThread->_30_31.c_tracefunc(curThread->_30_31.c_traceobj, frame, what, arg);
-                break;
+        switch (curInterpreter->GetVersion()) {
+        case PythonVersion_25:
+        case PythonVersion_26:
+        case PythonVersion_27:
+            curThread->_25_27.c_tracefunc(curThread->_25_27.c_traceobj, frame, what, arg);
+            break;
+        case PythonVersion_30:
+        case PythonVersion_31:
+        case PythonVersion_32:
+        case PythonVersion_33:
+            curThread->_30_31.c_tracefunc(curThread->_30_31.c_traceobj, frame, what, arg);
+            break;
         }
     }
     return 0;
@@ -1320,43 +1319,43 @@ int TraceGeneral(int interpreterId, PyObject *obj, PyFrameObject *frame, int wha
 
 #define TRACE_FUNC(n) \
     int Trace ## n(PyObject *obj, PyFrameObject *frame, int what, PyObject *arg) { \
-        return TraceGeneral(n, obj, frame, what, arg);                             \
-    }   
+    return TraceGeneral(n, obj, frame, what, arg);                                 \
+}
 
-TRACE_FUNC(0)
-TRACE_FUNC(1)
-TRACE_FUNC(2)
-TRACE_FUNC(3)
-TRACE_FUNC(4)
-TRACE_FUNC(5)
-TRACE_FUNC(6)
-TRACE_FUNC(7)
-TRACE_FUNC(8)
-TRACE_FUNC(9)
+    TRACE_FUNC(0)
+    TRACE_FUNC(1)
+    TRACE_FUNC(2)
+    TRACE_FUNC(3)
+    TRACE_FUNC(4)
+    TRACE_FUNC(5)
+    TRACE_FUNC(6)
+    TRACE_FUNC(7)
+    TRACE_FUNC(8)
+    TRACE_FUNC(9)
 
-Py_tracefunc traceFuncs[MAX_INTERPRETERS] = {
-    Trace0,
-    Trace1,
-    Trace2,
-    Trace3,
-    Trace4,
-    Trace5,
-    Trace6,
-    Trace7,
-    Trace8,
-    Trace9
+    Py_tracefunc traceFuncs[MAX_INTERPRETERS] = {
+        Trace0,
+        Trace1,
+        Trace2,
+        Trace3,
+        Trace4,
+        Trace5,
+        Trace6,
+        Trace7,
+        Trace8,
+        Trace9
 };
 
 void SetInitialTraceFunc(DWORD interpreterId, PyThreadState *thread) {
     auto curInterpreter = _interpreterInfo[interpreterId];
 
-    if(curInterpreter->GetVersion() <= PythonVersion_27) {
-        if(thread->_25_27.gilstate_counter == 1) {
+    if (curInterpreter->GetVersion() <= PythonVersion_27) {
+        if (thread->_25_27.gilstate_counter == 1) {
             // this was a newly created thread
             curInterpreter->SetTrace(traceFuncs[interpreterId], nullptr);
         }
-    }else{
-        if(thread->_30_31.gilstate_counter == 1) {
+    } else {
+        if (thread->_30_31.gilstate_counter == 1) {
             // this was a newly created thread
             curInterpreter->SetTrace(traceFuncs[interpreterId], nullptr);
         }
@@ -1369,50 +1368,50 @@ PyThreadState *PyThreadState_NewGeneral(DWORD interpreterId, PyInterpreterState 
     _ASSERTE(curInterpreter->PyThreadState_New != nullptr);
 
     auto res = curInterpreter->PyThreadState_New(interp);
-    if(res != nullptr && 
+    if (res != nullptr &&
         curInterpreter->EnsureSetTrace() &&
         curInterpreter->EnsureThreadStateSwap()) {
-        // we hold the GIL, but we could not have a valid thread yet, or
-        // we could currently be on the wrong thread, so swap in the
-        // new thread, set our trace func, and then swap it back out.
+            // we hold the GIL, but we could not have a valid thread yet, or
+            // we could currently be on the wrong thread, so swap in the
+            // new thread, set our trace func, and then swap it back out.
 
-        PyThreadState* oldTs = curInterpreter->ThreadState_Swap(res);
-        
-        SetInitialTraceFunc(interpreterId, res);
-        
-        curInterpreter->ThreadState_Swap(oldTs);
+            PyThreadState* oldTs = curInterpreter->ThreadState_Swap(res);
+
+            SetInitialTraceFunc(interpreterId, res);
+
+            curInterpreter->ThreadState_Swap(oldTs);
     }
 
     return res;
 }
 
 #define PYTHREADSTATE_NEW(n)   \
-    PyThreadState* PyThreadStateNew ## n(PyInterpreterState *interp) {   \
-        return PyThreadState_NewGeneral(n, interp);       \
-    }
+    PyThreadState* PyThreadStateNew ## n(PyInterpreterState *interp) { \
+    return PyThreadState_NewGeneral(n, interp);                        \
+}
 
 PYTHREADSTATE_NEW(0)
-PYTHREADSTATE_NEW(1)
-PYTHREADSTATE_NEW(2)
-PYTHREADSTATE_NEW(3)
-PYTHREADSTATE_NEW(4)
-PYTHREADSTATE_NEW(5)
-PYTHREADSTATE_NEW(6)
-PYTHREADSTATE_NEW(7)
-PYTHREADSTATE_NEW(8)
-PYTHREADSTATE_NEW(9)
+    PYTHREADSTATE_NEW(1)
+    PYTHREADSTATE_NEW(2)
+    PYTHREADSTATE_NEW(3)
+    PYTHREADSTATE_NEW(4)
+    PYTHREADSTATE_NEW(5)
+    PYTHREADSTATE_NEW(6)
+    PYTHREADSTATE_NEW(7)
+    PYTHREADSTATE_NEW(8)
+    PYTHREADSTATE_NEW(9)
 
-PyThreadState_NewFunc* newThreadStateFuncs[MAX_INTERPRETERS] = {
-    PyThreadStateNew0,
-    PyThreadStateNew1,
-    PyThreadStateNew2,
-    PyThreadStateNew3,
-    PyThreadStateNew4,
-    PyThreadStateNew5,
-    PyThreadStateNew6,
-    PyThreadStateNew7,
-    PyThreadStateNew8,
-    PyThreadStateNew9
+    PyThreadState_NewFunc* newThreadStateFuncs[MAX_INTERPRETERS] = {
+        PyThreadStateNew0,
+        PyThreadStateNew1,
+        PyThreadStateNew2,
+        PyThreadStateNew3,
+        PyThreadStateNew4,
+        PyThreadStateNew5,
+        PyThreadStateNew6,
+        PyThreadStateNew7,
+        PyThreadStateNew8,
+        PyThreadStateNew9
 };
 
 
@@ -1424,11 +1423,11 @@ PyGILState_STATE MyGilEnsureGeneral(DWORD interpreterId) {
     auto res = curInterpreter->PyGILState_Ensure();
     // we now hold the global interpreter lock
 
-    if(res == PyGILState_UNLOCKED) {
-        if(curInterpreter->EnsureCurrentThread()) {
+    if (res == PyGILState_UNLOCKED) {
+        if (curInterpreter->EnsureCurrentThread()) {
             auto thread = *curInterpreter->CurrentThread;
 
-            if(thread != nullptr && curInterpreter->EnsureSetTrace()) {
+            if (thread != nullptr && curInterpreter->EnsureSetTrace()) {
                 SetInitialTraceFunc(interpreterId, thread);
             }
         }
@@ -1437,10 +1436,10 @@ PyGILState_STATE MyGilEnsureGeneral(DWORD interpreterId) {
     return res;
 }
 
-#define GIL_ENSURE(n)   \
-    PyGILState_STATE GilEnsure ## n() {   \
-        return MyGilEnsureGeneral(n);       \
-    }
+#define GIL_ENSURE(n)                   \
+    PyGILState_STATE GilEnsure ## n() { \
+    return MyGilEnsureGeneral(n);       \
+}
 
 GIL_ENSURE(0)
 GIL_ENSURE(1)
@@ -1489,45 +1488,45 @@ typedef union _LDR_DLL_NOTIFICATION_DATA {
 } LDR_DLL_NOTIFICATION_DATA, *PLDR_DLL_NOTIFICATION_DATA;
 
 typedef VOID CALLBACK LDR_DLL_NOTIFICATION_FUNCTION(
-  __in      ULONG NotificationReason,
-  __in     _LDR_DLL_NOTIFICATION_DATA* NotificationData,
-  __in_opt  PVOID Context
-);
+    __in      ULONG NotificationReason,
+    __in     _LDR_DLL_NOTIFICATION_DATA* NotificationData,
+    __in_opt  PVOID Context
+    );
 
 typedef NTSTATUS NTAPI LdrRegisterDllNotificationFunction(
-  __in      ULONG Flags,
-  __in      LDR_DLL_NOTIFICATION_FUNCTION* NotificationFunction,
-  __in_opt  PVOID Context,
-  __out     PVOID *Cookie
-);
+    __in      ULONG Flags,
+    __in      LDR_DLL_NOTIFICATION_FUNCTION* NotificationFunction,
+    __in_opt  PVOID Context,
+    __out     PVOID *Cookie
+    );
 
 typedef NTSTATUS NTAPI LdrUnregisterDllNotification(
-  __in  PVOID Cookie
-);
+    __in  PVOID Cookie
+    );
 
 #define LDR_DLL_NOTIFICATION_REASON_LOADED 1
 #define LDR_DLL_NOTIFICATION_REASON_UNLOADED 2
 
 void CALLBACK DllLoadNotify(ULONG NotificationReason, _LDR_DLL_NOTIFICATION_DATA* NotificationData, PVOID Context) {
-    if(NotificationReason == LDR_DLL_NOTIFICATION_REASON_LOADED) {
+    if (NotificationReason == LDR_DLL_NOTIFICATION_REASON_LOADED) {
         // patch any Python functions the newly loaded DLL is calling.
-        for(DWORD i = 0;i<_interpreterCount; i++) {
+        for (DWORD i = 0; i < _interpreterCount; i++) {
             PIMAGE_DOS_HEADER dosHeader = (PIMAGE_DOS_HEADER)NotificationData->Loaded.DllBase;
             InterpreterInfo* curInterpreter = _interpreterInfo[i];
 
             char mod_name[MAX_PATH];
-            if(GetModuleBaseNameA(GetCurrentProcess(), curInterpreter->Interpreter, mod_name, MAX_PATH)) {
-                if(curInterpreter->PyGILState_Ensure != nullptr) {
-                    PatchIAT(dosHeader, 
-                        curInterpreter->PyGILState_Ensure, 
-                        mod_name, 
+            if (GetModuleBaseNameA(GetCurrentProcess(), curInterpreter->Interpreter, mod_name, MAX_PATH)) {
+                if (curInterpreter->PyGILState_Ensure != nullptr) {
+                    PatchIAT(dosHeader,
+                        curInterpreter->PyGILState_Ensure,
+                        mod_name,
                         gilEnsureFuncs[i]);
                 }
 
-                if(curInterpreter->PyThreadState_New != nullptr) {
-                    PatchIAT(dosHeader, 
-                        curInterpreter->PyThreadState_New, 
-                        mod_name, 
+                if (curInterpreter->PyThreadState_New != nullptr) {
+                    PatchIAT(dosHeader,
+                        curInterpreter->PyThreadState_New,
+                        mod_name,
                         newThreadStateFuncs[i]);
                 }
             }
@@ -1537,7 +1536,7 @@ void CALLBACK DllLoadNotify(ULONG NotificationReason, _LDR_DLL_NOTIFICATION_DATA
 
 PVOID _LoaderCookie = nullptr;
 
-void Attach() {   
+void Attach() {
     HANDLE hProcess = GetCurrentProcess();
     DWORD modSize = sizeof(HMODULE) * 1024;
     HMODULE* hMods = (HMODULE*)_malloca(modSize);
@@ -1546,59 +1545,59 @@ void Attach() {
         modsNeeded = 0;
         return;
     } else {
-        while(!EnumProcessModulesHelper(hProcess, hMods, modSize, &modsNeeded)) {               
+        while (!EnumProcessModulesHelper(hProcess, hMods, modSize, &modsNeeded)) {
             // try again w/ more space...
             _freea(hMods);
             hMods = (HMODULE*)_malloca(modsNeeded);
-            if(hMods == nullptr) {
+            if (hMods == nullptr) {
                 modsNeeded = 0;
                 break;
             }
             modSize = modsNeeded;
         }
 
-        for(size_t i = 0; i<modsNeeded/sizeof(HMODULE); i++) {            
+        for (size_t i = 0; i < modsNeeded / sizeof(HMODULE); i++) {
             bool isDebug;
-            if(IsPythonModule(hMods[i], isDebug)) {
-                if(_interpreterCount >= MAX_INTERPRETERS) {
+            if (IsPythonModule(hMods[i], isDebug)) {
+                if (_interpreterCount >= MAX_INTERPRETERS) {
                     break;
                 }
 
                 InterpreterInfo* curInterpreter = _interpreterInfo[_interpreterCount] = new InterpreterInfo(hMods[i], isDebug);
 
                 char mod_name[MAX_PATH];
-                if(GetModuleBaseNameA(GetCurrentProcess(), hMods[i], mod_name, MAX_PATH)) {
+                if (GetModuleBaseNameA(GetCurrentProcess(), hMods[i], mod_name, MAX_PATH)) {
                     auto gilEnsure = GetProcAddress(hMods[i], "PyGILState_Ensure");
-                    if(gilEnsure != nullptr) {
+                    if (gilEnsure != nullptr) {
                         curInterpreter->PyGILState_Ensure = (PyGILState_EnsureFunc*)gilEnsure;
 
                         PatchFunction(mod_name, gilEnsure, gilEnsureFuncs[_interpreterCount]);
-                    }                    
+                    }
 
                     auto newTs = GetProcAddress(hMods[i], "PyThreadState_New");
-                    if(newTs != nullptr) {
+                    if (newTs != nullptr) {
                         curInterpreter->PyThreadState_New = (PyThreadState_NewFunc*)newTs;
 
                         PatchFunction(mod_name, newTs, newThreadStateFuncs[_interpreterCount]);
                     }
                 }
-                
+
                 _interpreterCount++;
             }
         }
     }
 
     HMODULE kernelMod = GetModuleHandle(L"kernel32.dll");
-    if(kernelMod != nullptr) {
+    if (kernelMod != nullptr) {
         // not available on Windows XP, not much we can do in that case...
         auto ldrRegisterNotify = (LdrRegisterDllNotificationFunction*)GetProcAddress(kernelMod, "LdrRegisterDllNotification");
-        if(ldrRegisterNotify != nullptr) {
+        if (ldrRegisterNotify != nullptr) {
             ldrRegisterNotify(
                 0,
                 &DllLoadNotify,
                 NULL,
                 &_LoaderCookie
-            );
+                );
         }
     }
 
@@ -1612,12 +1611,12 @@ void Attach() {
 
 
 void Detach() {
-    if(_LoaderCookie != nullptr) {
+    if (_LoaderCookie != nullptr) {
         HMODULE kernelMod = GetModuleHandle(L"kernel32.dll");
-        if(kernelMod != nullptr) {
+        if (kernelMod != nullptr) {
             // not available on Windows XP, not much we can do in that case...
             auto ldrUnreg = (LdrUnregisterDllNotification*)GetProcAddress(kernelMod, "LdrUnregisterDllNotification");
-            if(ldrUnreg!= nullptr) {
+            if (ldrUnreg != nullptr) {
                 ldrUnreg(_LoaderCookie);
             }
         }
@@ -1632,26 +1631,26 @@ void Detach() {
         return;
     }
 
-    while(!EnumProcessModulesHelper(hProcess, hMods, modSize, &modsNeeded)) {               
+    while (!EnumProcessModulesHelper(hProcess, hMods, modSize, &modsNeeded)) {
         // try again w/ more space...
         _freea(hMods);
         hMods = (HMODULE*)_malloca(modsNeeded);
-        if(hMods == nullptr) {
+        if (hMods == nullptr) {
             modsNeeded = 0;
             break;
         }
         modSize = modsNeeded;
     }
-    
-    for(size_t i = 0; i<modsNeeded/sizeof(HMODULE); i++) {
+
+    for (size_t i = 0; i < modsNeeded / sizeof(HMODULE); i++) {
         bool isDebug;
-        if(IsPythonModule(hMods[i], isDebug)) {
-            for(DWORD j = 0; j<_interpreterCount; j++) {
+        if (IsPythonModule(hMods[i], isDebug)) {
+            for (DWORD j = 0; j < _interpreterCount; j++) {
                 InterpreterInfo* curInterpreter = _interpreterInfo[j];
 
-                if(curInterpreter->Interpreter == hMods[i]) {
+                if (curInterpreter->Interpreter == hMods[i]) {
                     char mod_name[MAX_PATH];
-                    if(GetModuleBaseNameA(GetCurrentProcess(), hMods[i], mod_name, MAX_PATH)) {
+                    if (GetModuleBaseNameA(GetCurrentProcess(), hMods[i], mod_name, MAX_PATH)) {
                         PatchFunction(mod_name, gilEnsureFuncs[j], curInterpreter->PyGILState_Ensure);
                         PatchFunction(mod_name, newThreadStateFuncs[j], curInterpreter->PyThreadState_New);
                     }
