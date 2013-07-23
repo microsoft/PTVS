@@ -11,7 +11,7 @@
     Title="Add Virtual Environment"
     SizeToContent="Height"
     MinWidth="300" Width="500"
-    MinHeight="100"
+    MinHeight="330"
     ScrollViewer.VerticalScrollBarVisibility="Auto"
     ResizeMode="CanResizeWithGrip"
     TextOptions.TextFormattingMode="Display"

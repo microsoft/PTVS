@@ -5,6 +5,7 @@
     xmlns:ui="clr-namespace:Microsoft.PythonTools.Profiling"
     Title="Profiling Settings" 
     MinHeight="440" Width="700" 
+    MinWidth="400"
     SizeToContent="Height"
     x:Name="LaunchProfilingWindow" 
     xmlns:my="clr-namespace:Microsoft.PythonTools.Profiling" 

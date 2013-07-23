@@ -10,7 +10,7 @@
     xmlns:wpf="clr-namespace:Microsoft.PythonTools.Wpf"
     Title="Add/Remove Python Environments"
     MinWidth="300" Width="500"
-    MinHeight="200" Height="400"
+    MinHeight="250" Height="400"
     ScrollViewer.VerticalScrollBarVisibility="Auto"
     ResizeMode="CanResizeWithGrip"
     TextOptions.TextFormattingMode="Display"

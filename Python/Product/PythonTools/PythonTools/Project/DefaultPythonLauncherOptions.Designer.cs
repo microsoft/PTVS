@@ -52,7 +52,7 @@
             this._debugGroup.Margin = new System.Windows.Forms.Padding(6, 8, 6, 8);
             this._debugGroup.Name = "_debugGroup";
             this._debugGroup.Padding = new System.Windows.Forms.Padding(6, 8, 6, 8);
-            this._debugGroup.Size = new System.Drawing.Size(438, 170);
+            this._debugGroup.Size = new System.Drawing.Size(438, 156);
             this._debugGroup.TabIndex = 17;
             this._debugGroup.TabStop = false;
             this._debugGroup.Text = "Debug";
@@ -72,19 +72,17 @@
             this.tableLayoutPanel2.Controls.Add(this._interpArgs, 1, 2);
             this.tableLayoutPanel2.Controls.Add(this._interpreterPathLabel, 0, 3);
             this.tableLayoutPanel2.Controls.Add(this._interpreterPath, 1, 3);
-            this.tableLayoutPanel2.Controls.Add(this._mixedMode, 0, 5);
+            this.tableLayoutPanel2.Controls.Add(this._mixedMode, 0, 4);
             this.tableLayoutPanel2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel2.Location = new System.Drawing.Point(6, 21);
             this.tableLayoutPanel2.Name = "tableLayoutPanel2";
-            this.tableLayoutPanel2.RowCount = 6;
+            this.tableLayoutPanel2.RowCount = 5;
             this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
             this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
-            this.tableLayoutPanel2.Size = new System.Drawing.Size(426, 141);
+            this.tableLayoutPanel2.Size = new System.Drawing.Size(426, 127);
             this.tableLayoutPanel2.TabIndex = 24;
             // 
             // _searchPathLabel
@@ -181,12 +179,13 @@
             // 
             // _mixedMode
             // 
+            this._mixedMode.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
             this._mixedMode.AutoSize = true;
             this.tableLayoutPanel2.SetColumnSpan(this._mixedMode, 2);
-            this._mixedMode.Location = new System.Drawing.Point(6, 124);
-            this._mixedMode.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
+            this._mixedMode.Location = new System.Drawing.Point(6, 107);
+            this._mixedMode.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
             this._mixedMode.Name = "_mixedMode";
-            this._mixedMode.Size = new System.Drawing.Size(171, 17);
+            this._mixedMode.Size = new System.Drawing.Size(414, 17);
             this._mixedMode.TabIndex = 24;
             this._mixedMode.Text = "Enable na&tive code debugging";
             this._mixedMode.UseVisualStyleBackColor = true;
@@ -196,6 +195,7 @@
             // tableLayoutPanel1
             // 
             this.tableLayoutPanel1.AutoSize = true;
+            this.tableLayoutPanel1.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.tableLayoutPanel1.ColumnCount = 1;
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel1.Controls.Add(this._debugGroup, 0, 0);
@@ -205,18 +205,20 @@
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
             this.tableLayoutPanel1.RowCount = 2;
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(450, 217);
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(450, 192);
             this.tableLayoutPanel1.TabIndex = 18;
             // 
             // DefaultPythonLauncherOptions
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.AutoSize = true;
+            this.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.Controls.Add(this.tableLayoutPanel1);
             this.Margin = new System.Windows.Forms.Padding(6, 8, 6, 8);
             this.Name = "DefaultPythonLauncherOptions";
-            this.Size = new System.Drawing.Size(450, 217);
+            this.Size = new System.Drawing.Size(450, 192);
             this._debugGroup.ResumeLayout(false);
             this._debugGroup.PerformLayout();
             this.tableLayoutPanel2.ResumeLayout(false);

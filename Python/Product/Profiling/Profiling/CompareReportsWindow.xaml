@@ -4,11 +4,12 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:ui="clr-namespace:Microsoft.PythonTools.Profiling"
     Title="Select analysis files for comparison"
+    MinWidth="300" MinHeight="190"
     Width="380" Height="auto" SizeToContent="Height"
     WindowStartupLocation="CenterOwner"
     Background="{x:Static SystemColors.ControlBrush}"
     TextOptions.TextFormattingMode="Display"
-    ResizeMode="NoResize">
+    ResizeMode="CanResizeWithGrip">
     <Window.Resources>
         <Style x:Key="BrowseButtonStyle" TargetType="{x:Type Button}">
             <Setter Property="Content" Value="Browse..." />

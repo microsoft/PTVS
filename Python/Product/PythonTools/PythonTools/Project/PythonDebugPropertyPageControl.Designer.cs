@@ -51,24 +51,26 @@
             this._launchModeCombo.Margin = new System.Windows.Forms.Padding(6, 8, 6, 8);
             this._launchModeCombo.MinimumSize = new System.Drawing.Size(50, 0);
             this._launchModeCombo.Name = "_launchModeCombo";
-            this._launchModeCombo.Size = new System.Drawing.Size(347, 21);
+            this._launchModeCombo.Size = new System.Drawing.Size(351, 21);
             this._launchModeCombo.TabIndex = 1;
             this._launchModeCombo.SelectedIndexChanged += new System.EventHandler(this.LaunchModeComboSelectedIndexChanged);
             // 
             // tableLayout
             // 
+            this.tableLayout.AutoScroll = true;
             this.tableLayout.ColumnCount = 2;
             this.tableLayout.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
             this.tableLayout.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayout.Controls.Add(this._launchModeLabel, 0, 0);
             this.tableLayout.Controls.Add(this._launchModeCombo, 1, 0);
+            this.tableLayout.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayout.Location = new System.Drawing.Point(0, 0);
             this.tableLayout.MinimumSize = new System.Drawing.Size(450, 0);
             this.tableLayout.Name = "tableLayout";
             this.tableLayout.RowCount = 2;
             this.tableLayout.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tableLayout.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayout.Size = new System.Drawing.Size(450, 400);
+            this.tableLayout.RowStyles.Add(new System.Windows.Forms.RowStyle());
+            this.tableLayout.Size = new System.Drawing.Size(454, 171);
             this.tableLayout.TabIndex = 0;
             // 
             // PythonDebugPropertyPageControl
@@ -80,7 +82,7 @@
             this.Font = new System.Drawing.Font("Segoe UI", 8.25F);
             this.Margin = new System.Windows.Forms.Padding(6, 8, 6, 8);
             this.Name = "PythonDebugPropertyPageControl";
-            this.Size = new System.Drawing.Size(454, 412);
+            this.Size = new System.Drawing.Size(454, 171);
             this.tableLayout.ResumeLayout(false);
             this.tableLayout.PerformLayout();
             this.ResumeLayout(false);
