@@ -51,21 +51,55 @@ namespace Microsoft.PythonTools.Project {
             return LaunchFile(startupFile, debug);
         }
 
+        internal static string GetFullUrl(string url, string port) {
+            if (!String.IsNullOrWhiteSpace(url)) {
+                if (url.StartsWith("/")) {
+                    url = "http://localhost" + url;
+                }
+
+                Uri uri;
+                
+                if (Uri.TryCreate(url, UriKind.Absolute, out uri)) {
+                    if (String.IsNullOrEmpty(uri.GetComponents(UriComponents.Port, UriFormat.Unescaped))) {
+                        int portNum;
+                        if (Int32.TryParse(port, out portNum)) {
+                            var builder = new UriBuilder(uri);
+                            builder.Port = portNum;
+                            url = builder.ToString();
+                        }
+                    }
+
+                }
+                return url;
+            }
+            return null;
+        }
+
+        private string GetFullUrl() {
+            var url = GetFullUrl(
+                _project.GetProperty(PythonConstants.WebBrowserUrlSetting), 
+                _project.GetProperty(PythonConstants.WebBrowserPortSetting)
+            );
+            Uri uri;
+            if (!String.IsNullOrWhiteSpace(url) &&
+                !Uri.TryCreate(url, UriKind.RelativeOrAbsolute, out uri)) {
+                MessageBox.Show(String.Format("Project is configured to launch to invalid URL: \"{0}\"\r\n\r\nYour web browser will not be opened.", url));
+            }
+            return url;
+        }
+
         public int LaunchFile(string/*!*/ file, bool debug) {
             if (debug) {
                 StartWithDebugger(file);
             } else {
                 var process = StartWithoutDebugger(file);
-                var url = _project.GetProperty(PythonConstants.WebBrowserUrlSetting);
-                if (process != null && !String.IsNullOrWhiteSpace(url)) {
-                    var port = _project.GetProperty(PythonConstants.WebBrowserPortSetting);
-                    int portNum;
-                    if (Int32.TryParse(port, out portNum)) {
-                        url = url + ":" + portNum;
-                    }
-
+                var url = GetFullUrl();
+                Uri uri;
+                if (process != null && 
+                    !String.IsNullOrWhiteSpace(url) && 
+                    Uri.TryCreate(url, UriKind.RelativeOrAbsolute, out uri)) {
                     OnPortOpenedHandler.CreateHandler(
-                        portNum,
+                        uri.Port,
                         shortCircuitPredicate: () => process.HasExited,
                         action: () => {
                             var web = PythonToolsPackage.GetGlobalService(typeof(SVsWebBrowsingService)) as IVsWebBrowsingService;
@@ -230,14 +264,9 @@ namespace Microsoft.PythonTools.Project {
                     dbgInfo.bstrOptions += ";" + AD7Engine.InterpreterOptions + "=" + interpArgs.Replace(";", ";;");
                 }
 
-                var url = _project.GetProperty(PythonConstants.WebBrowserUrlSetting);
+                var url = GetFullUrl();
                 if (!String.IsNullOrWhiteSpace(url)) {
                     dbgInfo.bstrOptions += ";" + AD7Engine.WebBrowserUrl + "=" + HttpUtility.UrlEncode(url);
-                }
-
-                var port = _project.GetProperty(PythonConstants.WebBrowserPortSetting);
-                if (!String.IsNullOrWhiteSpace(port)) {
-                    dbgInfo.bstrOptions += ";" + AD7Engine.WebBrowserPort + "=" + port;
                 }
 
                 var djangoDebugging = _project.GetProperty("DjangoDebugging");

@@ -877,6 +877,10 @@
       <IDSymbol name="imgRemoveUsing" value="1" />
       <IDSymbol name="imgSortUsings" value="2" />
     </GuidSymbol>
+   
   </Symbols>
 
+  <UsedCommands>
+    <UsedCommand guid="guidVSStd2K" id="ECMD_SHOWALLFILES"/>
+  </UsedCommands>
 </CommandTable>

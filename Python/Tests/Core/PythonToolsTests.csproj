@@ -80,6 +80,7 @@
     <Compile Include="ExtractMethodTests.cs" />
     <Compile Include="FuzzyStringMatcherTests.cs" />
     <Compile Include="ImportWizardTests.cs" />
+    <Compile Include="LauncherTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RefactorRenameTests.cs" />
     <Compile Include="RegistryWatcherTest.cs" />
