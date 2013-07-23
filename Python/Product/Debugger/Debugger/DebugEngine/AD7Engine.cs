@@ -358,12 +358,20 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             StartWebBrowser();
         }
 
+        private bool ProcessExited() {
+            var process = _process;
+            if (process != null) {
+                return process.HasExited;
+            }
+            return true;
+        }
+
         private void StartWebBrowser() {
             Uri uri;
             if (_webBrowserUrl != null && Uri.TryCreate(_webBrowserUrl, UriKind.RelativeOrAbsolute, out uri)) {
                 OnPortOpenedHandler.CreateHandler(
                     uri.Port,
-                    shortCircuitPredicate: () => _process.HasExited,
+                    shortCircuitPredicate: ProcessExited,
                     action: LaunchBrowserDebugger
                 );
             }
