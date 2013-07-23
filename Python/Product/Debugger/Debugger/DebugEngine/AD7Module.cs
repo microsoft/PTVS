@@ -48,7 +48,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                 info.dwValidFields |= enum_MODULE_INFO_FIELDS.MIF_LOADORDER;
             }
 
-            infoArray[0] = info;            
+            infoArray[0] = info;
 
             return VSConstants.S_OK;
         }

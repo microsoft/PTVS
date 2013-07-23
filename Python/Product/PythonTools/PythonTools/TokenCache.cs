@@ -23,6 +23,7 @@ using System;
 using System.Text;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Parsing;
+using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools {
     [DebuggerDisplay("{GetDebugView(),nq}")]
@@ -63,8 +64,10 @@ namespace Microsoft.PythonTools {
         /// Returns the line we have a tokenization for or minLine - 1 if there is none.
         /// </summary>
         internal int IndexOfPreviousTokenization(int line, int minLine, out LineTokenization tokenization) {
-            Debug.Assert(line >= 0);
-            Debug.Assert(_map != null);
+            if (line < 0) {
+                throw new ArgumentOutOfRangeException("line", "Must be 0 or greater");
+            }
+            Utilities.CheckNotNull(_map);
 
             line--;
             while (line >= minLine) {
@@ -79,8 +82,10 @@ namespace Microsoft.PythonTools {
         }
 
         internal bool TryGetTokenization(int line, out LineTokenization tokenization) {
-            Debug.Assert(line >= 0);
-            Debug.Assert(_map != null);
+            if (line < 0) {
+                throw new ArgumentOutOfRangeException("line", "Must be 0 or greater");
+            }
+            Utilities.CheckNotNull(_map);
 
             if (_map[line].Tokens != null) {
                 tokenization = _map[line];
@@ -113,8 +118,10 @@ namespace Microsoft.PythonTools {
         }
 
         internal void DeleteLines(int index, int count) {
-            Debug.Assert(_map != null);
-            Debug.Assert(index <= _map.Length - count);
+            if (index > _map.Length - count) {
+                throw new ArgumentOutOfRangeException("line", "Must be 'count' less than the size of the cache");
+            }
+            Utilities.CheckNotNull(_map);
             
             Array.Copy(_map, index + count, _map, index, _map.Length - index - count);
             for (int i = 0; i < count; i++) {
@@ -123,7 +130,7 @@ namespace Microsoft.PythonTools {
         }
 
         internal void InsertLines(int index, int count) {
-            Debug.Assert(_map != null);
+            Utilities.CheckNotNull(_map);
 
             Array.Copy(_map, index, _map, index + count, _map.Length - index - count);
             for (int i = 0; i < count; i++) {

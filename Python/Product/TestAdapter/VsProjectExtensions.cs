@@ -116,7 +116,9 @@ namespace Microsoft.PythonTools.TestAdapter {
         /// Get the items present in the project
         /// </summary>
         public static IEnumerable<string> GetProjectItems(this IVsProject project) {
-            Debug.Assert(project != null, "Project is not null");
+            if (project == null) {
+                throw new ArgumentNullException("project");
+            }
 
             // Each item in VS OM is IVSHierarchy. 
             IVsHierarchy hierarchy = (IVsHierarchy)project;

@@ -599,7 +599,7 @@ interpreter_path_emulated=$(TargetPythonInterpreterPath)
       <!-- Expand the virtual env, capturing the filename, this 2 step process ensures we handle fully qualified
            paths for virtual environments so that we don't overwrite files in the env directory when deploying -->
       <Content Include="$(VirtualEnvPrefixPath)\**\*"
-               Exclude="$(VirtualEnvPrefixPath)\Lib\orig-prefix.txt;$(VirtualEnvPrefixPath)\.ptvs\**\*">
+               Exclude="$(VirtualEnvPrefixPath)\Lib\orig-prefix.txt;$(VirtualEnvPrefixPath)\.ptvs\**\*;$(VirtualEnvPrefixPath)\**\*.pyc;$(VirtualEnvPrefixPath)\**\*.pyo">
       </Content>
 
       <!-- include the patched orig-prefix.txt file -->

@@ -968,7 +968,9 @@ namespace Microsoft.VisualStudio.Repl {
                     PositionAffinity.Successor, 
                     _projectionBuffer
                 );
-                Debug.Assert(projectionPoint != null);
+                if (projectionPoint == null) {
+                    throw new InvalidOperationException("Could not map langLine to buffer");
+                }
 
                 //
                 // If the caret is already at the first non-whitespace character or
@@ -1025,7 +1027,9 @@ namespace Microsoft.VisualStudio.Repl {
                     PositionAffinity.Successor,
                     _projectionBuffer
                 );
-                Debug.Assert(projectionPoint != null);
+                if (projectionPoint == null) {
+                    throw new InvalidOperationException("Could not map langLine to buffer");
+                }
 
                 var moveTo = projectionPoint.Value;
 

@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Globalization;
@@ -132,11 +133,11 @@ namespace Microsoft.VisualStudioTools.Project
             return guids.ToArray();
         }
 
-        internal static void CheckNotNull(object value)
+        internal static void CheckNotNull(object value, string message = null)
         {
             if (value == null)
             {
-                throw new InvalidOperationException();
+                throw new InvalidOperationException(message);
             }
         }
 

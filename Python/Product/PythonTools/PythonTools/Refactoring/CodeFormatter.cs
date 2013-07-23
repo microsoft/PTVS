@@ -34,7 +34,8 @@ namespace Microsoft.PythonTools.Refactoring {
             var walker = new EnclosingNodeWalker(ast, span.Start, span.End);
             ast.Walk(walker);
 
-            if (!walker.Target.IsValidSelection || 
+            if (walker.Target == null ||
+                !walker.Target.IsValidSelection || 
                 (walker.Target is SuiteTarget && _view.Selection.IsEmpty && selectResult)) {
                 return;
             }

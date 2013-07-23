@@ -247,6 +247,11 @@ namespace Microsoft.VisualStudioTools.Project
         {
             ReferenceContainerNode referencesFolder = this.ProjectMgr.GetReferenceContainer() as ReferenceContainerNode;
             Debug.Assert(referencesFolder != null, "Could not find the References node");
+            if (referencesFolder == null) {
+                // Return true so that our caller does not try and add us.
+                return true;
+            }
+            
             bool shouldCheckPath = !string.IsNullOrEmpty(this.Url);
 
             for (HierarchyNode n = referencesFolder.FirstChild; n != null; n = n.NextSibling)
@@ -444,6 +449,9 @@ namespace Microsoft.VisualStudioTools.Project
         protected virtual void OnAssemblyReferenceChangedOnDisk(object sender, FileChangedOnDiskEventArgs e)
         {
             Debug.Assert(e != null, "No event args specified for the FileChangedOnDisk event");
+            if (e == null) {
+                return;
+            }
 
             // We only care about file deletes, so check for one before enumerating references.			
             if ((e.FileChangeFlag & _VSFILECHANGEFLAGS.VSFILECHG_Del) == 0)

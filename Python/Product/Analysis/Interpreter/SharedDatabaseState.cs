@@ -318,7 +318,10 @@ namespace Microsoft.PythonTools.Interpreter {
         /// should be available.
         /// </summary>
         private void AddFixup(Action action) {
-            _fixups.Add(action);
+            Debug.Assert(action != null);
+            if (action != null) {
+                _fixups.Add(action);
+            }
         }
 
         /// <summary>
@@ -329,7 +332,11 @@ namespace Microsoft.PythonTools.Interpreter {
             // running fixups, in which case we want to keep processing
             // the additional fixups.
             for (int i = 0; i < _fixups.Count; i++) {
-                _fixups[i]();
+                var fixup = _fixups[i];
+                Debug.Assert(fixup != null);
+                if (fixup != null) {
+                    fixup();
+                }
             }
 
             _fixups.Clear();

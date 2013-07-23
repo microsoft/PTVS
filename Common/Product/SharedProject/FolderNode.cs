@@ -164,7 +164,7 @@ namespace Microsoft.VisualStudioTools.Project
 
                 //Refresh the properties in the properties window
                 IVsUIShell shell = this.ProjectMgr.GetService(typeof(SVsUIShell)) as IVsUIShell;
-                Debug.Assert(shell != null, "Could not get the ui shell from the project");
+                Utilities.CheckNotNull(shell, "Could not get the UI shell from the project");
                 ErrorHandler.ThrowOnFailure(shell.RefreshPropertyBrowser(0));
 
                 // Notify the listeners that the name of this folder is changed. This will

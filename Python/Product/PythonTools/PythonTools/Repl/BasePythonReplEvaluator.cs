@@ -41,6 +41,7 @@ using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor.OptionsExtensionMethods;
 using Microsoft.VisualStudio.Text.Projection;
 using Microsoft.VisualStudioTools;
+using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Repl {
 #if INTERACTIVE_WINDOW
@@ -185,7 +186,7 @@ namespace Microsoft.PythonTools.Repl {
                 outputThread.Start();
 
                 if (redirectOutput) {
-                    Debug.Assert(process != null);
+                    Utilities.CheckNotNull(_process);
                     _process.OutputDataReceived += new DataReceivedEventHandler(StdOutReceived);
                     _process.ErrorDataReceived += new DataReceivedEventHandler(StdErrReceived);
                     _process.EnableRaisingEvents = true;

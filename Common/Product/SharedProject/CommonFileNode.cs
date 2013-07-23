@@ -119,7 +119,7 @@ namespace Microsoft.VisualStudioTools.Project {
         /// </summary>
         protected override void DoDefaultAction() {
             FileDocumentManager manager = this.GetDocumentManager() as FileDocumentManager;
-            Debug.Assert(manager != null, "Could not get the FileDocumentManager");
+            Utilities.CheckNotNull(manager, "Could not get the FileDocumentManager");
 
             Guid viewGuid =
                 (IsFormSubType ? VSConstants.LOGVIEWID_Designer : VSConstants.LOGVIEWID_Code);

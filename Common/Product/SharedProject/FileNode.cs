@@ -306,8 +306,7 @@ namespace Microsoft.VisualStudioTools.Project
                 string message = String.Format(CultureInfo.CurrentCulture, SR.GetString(SR.ConfirmExtensionChange, CultureInfo.CurrentUICulture), label);
                 IVsUIShell shell = this.ProjectMgr.Site.GetService(typeof(SVsUIShell)) as IVsUIShell;
 
-                Debug.Assert(shell != null, "Could not get the ui shell from the project");
-                Utilities.CheckNotNull(shell);
+                Utilities.CheckNotNull(shell, "Could not get the UI shell from the project");
 
                 if (!VsShellUtilities.PromptYesNo(message, null, OLEMSGICON.OLEMSGICON_INFO, shell))
                 {
@@ -524,7 +523,7 @@ namespace Microsoft.VisualStudioTools.Project
         protected override void DoDefaultAction()
         {
             FileDocumentManager manager = this.GetDocumentManager() as FileDocumentManager;
-            Debug.Assert(manager != null, "Could not get the FileDocumentManager");
+            Utilities.CheckNotNull(manager, "Could not get the FileDocumentManager");
             manager.Open(false, false, WindowFrameShowAction.Show);
         }
 
@@ -583,7 +582,7 @@ namespace Microsoft.VisualStudioTools.Project
                 string relativeUri = CommonUtils.GetRelativeDirectoryPath(this.ProjectMgr.ProjectHome, newDirectoryName);
                 targetContainer = this.ProjectMgr.CreateFolderNodes(relativeUri);
             }
-            Debug.Assert(targetContainer != null, "We should have found a target node by now");
+            Utilities.CheckNotNull(targetContainer, "Could not find a target container");
 
             //Suspend file changes while we rename the document
             string oldrelPath = this.ItemNode.GetMetadata(ProjectFileConstants.Include);
@@ -971,8 +970,7 @@ namespace Microsoft.VisualStudioTools.Project
 
             // Refresh the property browser.
             IVsUIShell shell = this.ProjectMgr.Site.GetService(typeof(SVsUIShell)) as IVsUIShell;
-            Debug.Assert(shell != null, "Could not get the ui shell from the project");
-            Utilities.CheckNotNull(shell);
+            Utilities.CheckNotNull(shell, "Could not get the UI shell from the project");
 
             ErrorHandler.ThrowOnFailure(shell.RefreshPropertyBrowser(0));
 

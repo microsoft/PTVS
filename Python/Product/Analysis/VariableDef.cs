@@ -128,7 +128,19 @@ namespace Microsoft.PythonTools.Analysis {
     /// </summary>
     class VariableDef : DependentData<TypedDependencyInfo<AnalysisValue>>, IReferenceable {
         internal static VariableDef[] EmptyArray = new VariableDef[0];
-        
+
+        /// <summary>
+        /// Returns an infinite sequence of VariableDef instances. This can be
+        /// used with .Take(x).ToArray() to create an array of x instances.
+        /// </summary>
+        internal static IEnumerable<VariableDef> Generator {
+            get {
+                while (true) {
+                    yield return new VariableDef();
+                }
+            }
+        }
+
         /// <summary>
         /// This limit is used to prevent analysis from continuing forever due
         /// to bugs or unanalyzable code. It is tested in Types and

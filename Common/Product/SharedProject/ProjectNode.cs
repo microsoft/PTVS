@@ -2430,8 +2430,7 @@ namespace Microsoft.VisualStudioTools.Project
         protected virtual void RenameProjectFile(string newFile)
         {
             IVsUIShell shell = this.Site.GetService(typeof(SVsUIShell)) as IVsUIShell;
-            Debug.Assert(shell != null, "Could not get the ui shell from the project");
-            Utilities.CheckNotNull(shell);
+            Utilities.CheckNotNull(shell, "Could not get the UI shell from the project");
 
             // Figure out what the new full name is
             string oldFile = this.Url;
@@ -2772,8 +2771,7 @@ namespace Microsoft.VisualStudioTools.Project
             string oldName = this.filename;
 
             IVsSolution solution = this.Site.GetService(typeof(IVsSolution)) as IVsSolution;
-            Debug.Assert(solution != null, "Could not retrieve the solution form the service provider");
-            Utilities.CheckNotNull(solution);
+            Utilities.CheckNotNull(solution, "Could not retrieve the solution form the service provider");
 
             int canRenameContinue = 0;
             ErrorHandler.ThrowOnFailure(solution.QueryRenameProject(this.GetOuterInterface<IVsProject>(), this.filename, newFileName, 0, out canRenameContinue));
@@ -2800,8 +2798,7 @@ namespace Microsoft.VisualStudioTools.Project
                 ErrorHandler.ThrowOnFailure(solution.OnAfterRenameProject(this, oldName, this.filename, 0));
 
                 IVsUIShell shell = this.Site.GetService(typeof(SVsUIShell)) as IVsUIShell;
-                Debug.Assert(shell != null, "Could not get the ui shell from the project");
-                Utilities.CheckNotNull(shell);
+                Utilities.CheckNotNull(shell, "Could not get the UI shell from the project");
 
                 ErrorHandler.ThrowOnFailure(shell.RefreshPropertyBrowser(0));
             }
@@ -3290,7 +3287,6 @@ namespace Microsoft.VisualStudioTools.Project
         /// </summary>
         protected internal virtual int CompareNodes(HierarchyNode node1, HierarchyNode node2)
         {
-            Debug.Assert(node1 != null && node2 != null);
             Utilities.ArgumentNotNull("node1", node1);
             Utilities.ArgumentNotNull("node2", node2);
 

@@ -144,13 +144,6 @@ namespace Microsoft.PythonTools.Interpreter {
             return res.Task;
         }
 
-        internal class ProcessWaitHandle : WaitHandle {
-            public ProcessWaitHandle(Process process) {
-                Debug.Assert(process != null);
-                SafeWaitHandle = new SafeWaitHandle(process.Handle, false); // Process owns the handle
-            }
-        }
-
         class ExtensionModuleLoader {
             private readonly PythonTypeDatabase _typeDb;
             private readonly IPythonInterpreterFactory _factory;

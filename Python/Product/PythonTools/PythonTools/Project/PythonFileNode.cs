@@ -63,8 +63,8 @@ namespace Microsoft.PythonTools.Project {
 
         internal override int ExecCommandOnNode(Guid guidCmdGroup, uint cmd, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut) {
             Debug.Assert(this.ProjectMgr != null, "The Dynamic FileNode has no project manager");
-
             Utilities.CheckNotNull(this.ProjectMgr);
+
             if (guidCmdGroup == GuidList.guidPythonToolsCmdSet) {
                 switch (cmd) {
                     case CommonConstants.SetAsStartupFileCmdId:

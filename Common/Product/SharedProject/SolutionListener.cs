@@ -40,12 +40,18 @@ namespace Microsoft.VisualStudioTools.Project
         #region ctors
         protected SolutionListener(IServiceProvider serviceProviderParameter)
         {
-            Debug.Assert(serviceProviderParameter != null);
+            if (serviceProviderParameter == null)
+            {
+                throw new ArgumentNullException("serviceProviderParameter");
+            }
 
             this.serviceProvider = serviceProviderParameter;
             this.solution = this.serviceProvider.GetService(typeof(SVsSolution)) as IVsSolution;
 
-            Debug.Assert(this.solution != null, "Could not get the IVsSolution object from the services exposed by this project");
+            if (this.solution == null)
+            {
+                throw new InvalidOperationException("Could not get the IVsSolution object from the services exposed by this project");
+            }
         }
         #endregion
 

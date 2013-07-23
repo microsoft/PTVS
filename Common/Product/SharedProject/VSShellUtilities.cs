@@ -39,8 +39,7 @@ namespace Microsoft.VisualStudioTools.Project
 
             IVsUIShell shell = serviceProvider.GetService(typeof(SVsUIShell)) as IVsUIShell;
 
-            Debug.Assert(shell != null, "Could not get the ui shell from the project");
-            Utilities.CheckNotNull(shell);
+            Utilities.CheckNotNull(shell, "Could not get the UI shell from the project");
 
             object pvar;
             IVsWindowFrame frame;

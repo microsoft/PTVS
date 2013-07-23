@@ -340,7 +340,9 @@ namespace Microsoft.PythonTools.Profiling {
                             var res = dialog.ShowModal() ?? false;
                             if (res && compareView.IsValid) {
                                 IVsUIShellOpenDocument sod = PythonProfilingPackage.GetGlobalService(typeof(SVsUIShellOpenDocument)) as IVsUIShellOpenDocument;
-                                Debug.Assert(sod != null);
+                                if (sod == null) {
+                                    return VSConstants.E_FAIL;
+                                }
                                 Microsoft.VisualStudio.Shell.Interop.IVsWindowFrame frame = null;
                                 Guid guid = new Guid("{9C710F59-984F-4B83-B781-B6356C363B96}"); // performance diff guid
                                 Guid guidNull = Guid.Empty;

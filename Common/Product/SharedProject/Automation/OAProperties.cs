@@ -33,7 +33,7 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors")]
         public OAProperties(NodeProperties target) {
-            System.Diagnostics.Debug.Assert(target != null);
+            Utilities.ArgumentNotNull("target", target);
 
             this.target = target;
             this.AddPropertiesFromType(target.GetType());
@@ -135,7 +135,7 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
         /// </summary>
         /// <param name="targetType">The type of NodeProperties the we should filter on</param>
         private void AddPropertiesFromType(Type targetType) {
-            Debug.Assert(targetType != null);
+            Utilities.ArgumentNotNull("targetType", targetType);
 
             // If the type is not COM visible, we do not expose any of the properties
             if (!IsComVisible(targetType)) {

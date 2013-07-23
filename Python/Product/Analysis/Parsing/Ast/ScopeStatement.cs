@@ -291,9 +291,6 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 closureVariables = new List<ClosureInfo>();
 
                 foreach (var variable in FreeVariables) {
-                    var parentClosure = Parent._closureVariables;
-                    Debug.Assert(parentClosure != null);
-
                     closureVariables.Add(new ClosureInfo(variable, !(this is ClassDefinition)));
                 }
             }

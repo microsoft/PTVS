@@ -44,8 +44,7 @@ namespace Microsoft.VisualStudioTools.Project
             this.serviceProvider = serviceProviderParameter;
             this.projectDocTracker = this.serviceProvider.GetService(typeof(SVsTrackProjectDocuments)) as IVsTrackProjectDocuments2;
 
-            Debug.Assert(this.projectDocTracker != null, "Could not get the IVsTrackProjectDocuments2 object from the services exposed by this project");
-            Utilities.CheckNotNull(this.projectDocTracker);
+            Utilities.CheckNotNull(this.projectDocTracker, "Could not get the IVsTrackProjectDocuments2 object from the services exposed by this project");
         }
         #endregion
 

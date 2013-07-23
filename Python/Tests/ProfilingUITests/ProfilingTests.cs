@@ -62,7 +62,7 @@ namespace ProfilingUITests {
 
             app.OpenPythonPerformance();
             var perf = app.PythonPerformanceExplorerTreeView.WaitForItem("Performance *");
-            Debug.Assert(perf != null);
+            Assert.IsNotNull(perf);
             var session = profiling.GetSession(1);
             Assert.AreNotEqual(session, null);
 

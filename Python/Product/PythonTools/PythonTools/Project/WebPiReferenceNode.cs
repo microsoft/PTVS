@@ -36,6 +36,7 @@ namespace Microsoft.PythonTools.Project {
 
         internal WebPiReferenceNode(ProjectNode root, ProjectElement element, string filename, string productId, string friendlyName)
             : base(root, element) {
+            Utilities.ArgumentNotNullOrEmpty("filename", filename);
             _feed = filename;
             _productId = productId;
             _friendlyName = friendlyName;
@@ -95,7 +96,7 @@ namespace Microsoft.PythonTools.Project {
         /// Links a reference node to the project and hierarchy.
         /// </summary>
         protected override void BindReferenceData() {
-            Debug.Assert(_feed != null, "The _filename field has not been initialized");
+            Debug.Assert(_feed != null, "The _feed field has not been initialized");
 
             // If the item has not been set correctly like in case of a new reference added it now.
             // The constructor for the AssemblyReference node will create a default project item. In that case the Item is null.
@@ -134,6 +135,10 @@ namespace Microsoft.PythonTools.Project {
         protected override bool IsAlreadyAdded() {
             ReferenceContainerNode referencesFolder = ProjectMgr.GetReferenceContainer() as ReferenceContainerNode;
             Debug.Assert(referencesFolder != null, "Could not find the References node");
+            if (referencesFolder == null) {
+                // Return true so that our caller does not try and add us.
+                return true;
+            }
 
             for (HierarchyNode n = referencesFolder.FirstChild; n != null; n = n.NextSibling) {
                 var extensionRefNode = n as WebPiReferenceNode;

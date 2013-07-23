@@ -67,7 +67,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         private AD7Module _startModule;
         private bool _attached, _pseudoAttach;
         bool _handleEntryPointHit = true;
-        private BreakpointManager _breakpointManager;
+        private readonly BreakpointManager _breakpointManager;
         private Guid _ad7ProgramId;             // A unique identifier for the program being debugged.
         private static HashSet<WeakReference> _engines = new HashSet<WeakReference>();
 
@@ -789,7 +789,6 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                 return VSConstants.E_FAIL;
             }
 
-            Debug.Assert(_events != null);
             Debug.Assert(_process != null);
             Debug.Assert(_process != null);
             Debug.Assert(_ad7ProgramId == Guid.Empty);

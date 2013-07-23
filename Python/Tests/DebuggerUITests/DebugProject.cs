@@ -588,11 +588,11 @@ namespace DebuggerUITests {
             Assert.AreEqual(expectedItems, allItems.Count);
 
             IVsSolution solutionService = VsIdeTestHostContext.ServiceProvider.GetService(typeof(SVsSolution)) as IVsSolution;
-            Debug.Assert(solutionService != null);
+            Assert.IsNotNull(solutionService);
 
             IVsHierarchy selectedHierarchy;
             ErrorHandler.ThrowOnFailure(solutionService.GetProjectOfUniqueName(project.UniqueName, out selectedHierarchy));
-            Debug.Assert(selectedHierarchy != null);
+            Assert.IsNotNull(selectedHierarchy);
 
             ErrorHandler.ThrowOnFailure(solutionService.CloseSolutionElement((uint)__VSSLNCLOSEOPTIONS.SLNCLOSEOPT_UnloadProject, selectedHierarchy, 0));
 

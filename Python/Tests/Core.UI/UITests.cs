@@ -678,11 +678,11 @@ namespace PythonToolsUITests {
             AutomationWrapper.Select(projectNode);
 
             IVsSolution solutionService = VsIdeTestHostContext.ServiceProvider.GetService(typeof(SVsSolution)) as IVsSolution;
-            Debug.Assert(solutionService != null);
+            Assert.IsNotNull(solutionService);
 
             IVsHierarchy selectedHierarchy;
             ErrorHandler.ThrowOnFailure(solutionService.GetProjectOfUniqueName(project.UniqueName, out selectedHierarchy));
-            Debug.Assert(selectedHierarchy != null);
+            Assert.IsNotNull(selectedHierarchy);
             HierarchyEvents events = new HierarchyEvents();
             uint cookie;
             selectedHierarchy.AdviseHierarchyEvents(events, out cookie);

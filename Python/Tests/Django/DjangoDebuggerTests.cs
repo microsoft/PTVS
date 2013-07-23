@@ -52,11 +52,12 @@ namespace DjangoTests {
         /// </summary>
         private void Init(DbState requiredState) {
             if (_dbstate != requiredState) {
+                Version.AssertInstalled();
                 switch (requiredState) {
                     case DbState.BarApp:
                         using (var output = ProcessOutput.Run(Version.Path,
                             new [] {"manage.py", "syncdb", "--noinput"},
-                            Path.Combine(Environment.CurrentDirectory, DebuggerTestPath),
+                            DebuggerTestPath,
                             null, false, null)) {
                             output.Wait();
                             Console.WriteLine(" ** stdout **");
@@ -68,7 +69,7 @@ namespace DjangoTests {
 
                         using (var output = ProcessOutput.Run(Version.Path,
                             new [] {"manage.py", "loaddata", "data.json"},
-                            Path.Combine(Environment.CurrentDirectory, DebuggerTestPath),
+                            DebuggerTestPath,
                             null, false, null)) {
                             output.Wait();
                             Console.WriteLine(" ** stdout **");

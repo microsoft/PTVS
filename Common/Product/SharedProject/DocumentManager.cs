@@ -31,7 +31,7 @@ namespace Microsoft.VisualStudioTools.Project
     internal abstract class DocumentManager
     {
         #region fields
-        private HierarchyNode node = null;
+        private readonly HierarchyNode node = null;
         #endregion
 
         #region properties
@@ -47,6 +47,7 @@ namespace Microsoft.VisualStudioTools.Project
         #region ctors
         protected DocumentManager(HierarchyNode node)
         {
+            Utilities.ArgumentNotNull("node", node);
             this.node = node;
         }
         #endregion
@@ -234,8 +235,6 @@ namespace Microsoft.VisualStudioTools.Project
         protected string GetFullPathForDocument()
         {
             string fullPath = String.Empty;
-
-            Debug.Assert(this.node != null, "No node has been initialized for the document manager");
 
             // Get the URL representing the item
             fullPath = this.node.GetMkDocument();

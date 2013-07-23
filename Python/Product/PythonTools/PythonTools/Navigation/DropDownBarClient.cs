@@ -28,6 +28,7 @@ using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.TextManager.Interop;
+using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Navigation {
     /// <summary>
@@ -68,9 +69,9 @@ namespace Microsoft.PythonTools.Navigation {
         private const int NestedComboBoxId = 1;
 
         public DropDownBarClient(IWpfTextView textView, IPythonProjectEntry pythonProjectEntry) {
-            Debug.Assert(textView != null);
-            Debug.Assert(pythonProjectEntry != null);
-                
+            Utilities.ArgumentNotNull("textView", textView);
+            Utilities.ArgumentNotNull("pythonProjectEntry", pythonProjectEntry);
+
             _projectEntry = pythonProjectEntry;
             _projectEntry.OnNewParseTree += ParserOnNewParseTree;
             _textView = textView;

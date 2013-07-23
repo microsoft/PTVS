@@ -1185,6 +1185,10 @@ namespace Microsoft.VisualStudioTools.Project
         {
             Debug.Assert(this.ProjectMgr != null, " No project mananager available for this node " + ToString());
             Debug.Assert(this.ProjectMgr.ItemsDraggedOrCutOrCopied != null, " The itemsdragged list should have been initialized prior calling this method");
+            if (this.ProjectMgr == null || this.ProjectMgr.ItemsDraggedOrCutOrCopied == null)
+            {
+                return null;
+            }
 
             if (this.hierarchyId == VSConstants.VSITEMID_ROOT)
             {
@@ -1300,7 +1304,7 @@ namespace Microsoft.VisualStudioTools.Project
         {
             IVsUIShell shell = this.projectMgr.Site.GetService(typeof(SVsUIShell)) as IVsUIShell;
 
-            Debug.Assert(shell != null, "Could not get the ui shell from the project");
+            Debug.Assert(shell != null, "Could not get the UI shell from the project");
             if (shell == null)
             {
                 return VSConstants.E_FAIL;

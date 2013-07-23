@@ -114,7 +114,9 @@ namespace Microsoft.PythonTools.Interpreter {
             store.SetString(collection, DescriptionKey, options.Description ?? string.Empty);
 
             var newInterp = LoadUserDefinedInterpreter(store, options.IdString);
-            Debug.Assert(newInterp != null);
+            if (newInterp == null) {
+                throw new InvalidOperationException("Unable to load user defined interpreter");
+            }
 
             PythonInterpreterFactoryWithDatabase existing;
             if (_interpreters.TryGetValue(newInterp.Id, out existing)) {

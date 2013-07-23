@@ -593,7 +593,7 @@ namespace Microsoft.VisualStudioTools.Project
         /// <devremark>The platforms array is never null. It is assured by the callers.</devremark>
         private static int GetPlatforms(uint celt, string[] names, uint[] actual, string[] platforms)
         {
-            Debug.Assert(platforms != null, "The plaforms array should never be null");
+            Utilities.ArgumentNotNull("platforms", platforms);
             if (names == null)
             {
                 if (actual == null || actual.Length == 0)

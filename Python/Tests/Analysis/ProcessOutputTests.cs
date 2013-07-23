@@ -79,7 +79,7 @@ namespace InterpretersTests {
             get {
                 var interp = PythonPaths.Versions.Last(p => File.Exists(p.Path));
                 return new MockPythonInterpreterFactory(Guid.NewGuid(), "Test Interpreter",
-                    new InterpreterConfiguration("", interp.Path, "", "", "",
+                    new InterpreterConfiguration(Path.GetDirectoryName(interp.Path), interp.Path, "", "", "",
                         interp.Isx64 ? ProcessorArchitecture.Amd64 : ProcessorArchitecture.X86,
                         interp.Version.ToVersion()
                     )

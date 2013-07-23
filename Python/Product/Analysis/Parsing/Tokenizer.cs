@@ -1837,13 +1837,13 @@ namespace Microsoft.PythonTools.Parsing {
                             if (spaces < _state.Indent[_state.IndentLevel]) {
                                 if (_kind == SourceCodeKind.InteractiveCode ||
                                     _kind == SourceCodeKind.Statements) {
-										SetIndent(spaces, sb, noAllocWhiteSpace, indentStart);
+                                        SetIndent(spaces, sb, noAllocWhiteSpace, indentStart);
                                 } else {
                                     DoDedent(spaces, _state.Indent[_state.IndentLevel]);
                                 }
                             }
                         } else if (ch != '\n' && ch != '\r') {
-							SetIndent(spaces, sb, noAllocWhiteSpace, indentStart);
+                            SetIndent(spaces, sb, noAllocWhiteSpace, indentStart);
                         }
 
                         return true;

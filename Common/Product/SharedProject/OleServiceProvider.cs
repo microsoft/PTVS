@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Microsoft.VisualStudio;
 using IOleServiceProvider = Microsoft.VisualStudio.OLE.Interop.IServiceProvider;
@@ -55,8 +56,8 @@ namespace Microsoft.VisualStudioTools.Project
                 {
                     if (null == instance)
                     {
+                        Debug.Assert(serviceType != null);
                         instance = creator(serviceType);
-                        System.Diagnostics.Debug.Assert(serviceType != null);
                     }
                     return instance;
                 }

@@ -399,7 +399,6 @@ namespace Microsoft.PythonTools.Intellisense {
                 return new SignatureAnalysis("", 0, new ISignature[0]);
             }
 
-            Debug.Assert(sigStart != null);
             var text = new SnapshotSpan(exprRange.Value.Snapshot, new Span(exprRange.Value.Start, sigStart.Value.Position - exprRange.Value.Start)).GetText();
             var applicableSpan = parser.Snapshot.CreateTrackingSpan(exprRange.Value.Span, SpanTrackingMode.EdgeInclusive);
 

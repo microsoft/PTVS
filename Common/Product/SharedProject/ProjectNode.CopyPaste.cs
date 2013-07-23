@@ -443,7 +443,8 @@ namespace Microsoft.VisualStudioTools.Project {
 
             public ProjectReferenceFileAdder(ProjectNode project, HierarchyNode targetNode, string[] projectReferences, bool mouseDropping, DropEffect dropEffect) {
                 Utilities.ArgumentNotNull("targetNode", targetNode);
-                Debug.Assert(project != null);
+                Utilities.ArgumentNotNull("project", project);
+                Utilities.ArgumentNotNull("projectReferences", projectReferences);
 
                 TargetNode = targetNode;
                 Project = project;
@@ -648,7 +649,7 @@ folder you are copying, do you want to replace the existing files?", Path.GetFil
             /// <param name="targetNode">Node to start adding to</param>
             /// <param name="addSibblings">Typically false on first call and true after that</param>
             private bool WalkSourceProjectAndAdd(IVsHierarchy sourceHierarchy, uint itemId, string targetPath, bool addSiblings, List<Addition> additions, string name = null) {
-                Debug.Assert(sourceHierarchy != null);
+                Utilities.ArgumentNotNull("sourceHierarchy", sourceHierarchy);
 
                 if (itemId != VSConstants.VSITEMID_NIL) {
                     // Before we start the walk, add the current node
@@ -1337,7 +1338,7 @@ folder you are copying, do you want to replace the existing files?", Path.GetFil
         /// </summary>
         /// <remarks>The targetNode is set if the method is called from a drop operation, otherwise it is null</remarks>
         internal DropDataType ProcessSelectionDataObject(IOleDataObject dataObject, HierarchyNode targetNode, bool drop, DropEffect dropEffect) {
-            Debug.Assert(targetNode != null);
+            Utilities.ArgumentNotNull("targetNode", targetNode);
 
             DropDataType dropDataType = DropDataType.None;
             bool isWindowsFormat = false;

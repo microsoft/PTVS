@@ -243,8 +243,7 @@ namespace Microsoft.VisualStudioTools.Project
         public object ExtenderNames()
         {
             EnvDTE.ObjectExtenders extenderService = (EnvDTE.ObjectExtenders)this.HierarchyNode.GetService(typeof(EnvDTE.ObjectExtenders));
-            Debug.Assert(extenderService != null, "Could not get the ObjectExtenders object from the services exposed by this property object");
-            Utilities.CheckNotNull(extenderService);
+            Utilities.CheckNotNull(extenderService, "Could not get the ObjectExtenders object from the services exposed by this property object");
 
             return extenderService.GetExtenderNames(this.ExtenderCATID, this);
         }
@@ -252,8 +251,7 @@ namespace Microsoft.VisualStudioTools.Project
         public object Extender(string extenderName)
         {
             EnvDTE.ObjectExtenders extenderService = (EnvDTE.ObjectExtenders)this.HierarchyNode.GetService(typeof(EnvDTE.ObjectExtenders));
-            Debug.Assert(extenderService != null, "Could not get the ObjectExtenders object from the services exposed by this property object");
-            Utilities.CheckNotNull(extenderService);
+            Utilities.CheckNotNull(extenderService, "Could not get the ObjectExtenders object from the services exposed by this property object");
             return extenderService.GetExtender(this.ExtenderCATID, extenderName, this);
         }
 

@@ -601,7 +601,7 @@ Either stop the current command, or reset the REPL window.");
         internal int ShowContextMenu(int menuId, Guid menuGroup, POINTS points) {
             IVsUIShell shell = _package.GetService(typeof(SVsUIShell)) as IVsUIShell;
 
-            Debug.Assert(shell != null, "Could not get the ui shell from the project");
+            Debug.Assert(shell != null, "Could not get the UI shell from the project");
             if (shell == null) {
                 return VSConstants.E_FAIL;
             }

@@ -530,7 +530,7 @@ namespace Microsoft.VisualStudioTools.Project
             {
                 IReferenceContainer referenceContainer = provider.GetReferenceContainer();
 
-                Debug.Assert(referenceContainer != null, "Could not found the References virtual node");
+                Utilities.CheckNotNull(referenceContainer, "Could not found the References virtual node");
 
                 foreach (ReferenceNode refNode in referenceContainer.EnumReferences())
                 {

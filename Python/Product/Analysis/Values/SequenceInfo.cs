@@ -31,10 +31,89 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return IndexTypes.Length;
         }
 
+        public override void AugmentAssign(AugmentedAssignStatement node, AnalysisUnit unit, IAnalysisSet value) {
+            switch (node.Operator) {
+                case PythonOperator.Add:
+                    // BinaryOperation uses a NodeVariable to avoid recreating
+                    // the result sequence. We use that and then copy the result
+                    // into this to avoid infinite concatentation.
+                    var added = BinaryOperation(node, unit, PythonOperator.Add, value);
+                    foreach (var type in added.OfType<SequenceInfo>()) {
+                        if (IndexTypes.Length < type.IndexTypes.Length) {
+                            IndexTypes = IndexTypes
+                                .Select(v => {
+                                    var newV = new VariableDef();
+                                    v.CopyTo(newV);
+                                    return v;
+                                })
+                                .Concat(VariableDef.Generator)
+                                .Take(type.IndexTypes.Length)
+                                .ToArray();
+                        }
+                        for (int i = 0; i < IndexTypes.Length && i < type.IndexTypes.Length; ++i) {
+                            type.IndexTypes[i].CopyTo(IndexTypes[i]);
+                        }
+                    }
+                    break;
+                default:
+                    base.AugmentAssign(node, unit, value);
+                    break;
+            }
+        }
+
         public override IAnalysisSet BinaryOperation(Node node, AnalysisUnit unit, PythonOperator operation, IAnalysisSet rhs) {
+            var res = AnalysisSet.Empty;
             switch (operation) {
+                case PythonOperator.Add:
+                    foreach (var type in rhs) {
+                        var rhsSeq = type as SequenceInfo;
+
+                        if (rhsSeq != null && TypeId == rhsSeq.TypeId) {
+                            var seq = unit.Scope.GetOrMakeNodeValue(node, n => {
+                                VariableDef[] types;
+                                if (TypeId == BuiltinTypeId.Tuple) {
+                                    types = VariableDef.Generator
+                                        .Take(IndexTypes.Length + rhsSeq.IndexTypes.Length)
+                                        .ToArray();
+                                } else {
+                                    types = new[] { new VariableDef() };
+                                }
+                                return new SequenceInfo(types, ClassInfo, node);
+                            }) as SequenceInfo;
+
+                            if (seq != null && seq != this && seq != rhsSeq) {
+                                if (TypeId == BuiltinTypeId.Tuple) {
+                                    for (int i = 0; i < seq.IndexTypes.Length; ++i) {
+                                        if (i < IndexTypes.Length) {
+                                            IndexTypes[i].CopyTo(seq.IndexTypes[i]);
+                                        } else if (i >= IndexTypes.Length &&
+                                            i - IndexTypes.Length < rhsSeq.IndexTypes.Length) {
+                                            rhsSeq.IndexTypes[i - IndexTypes.Length].CopyTo(seq.IndexTypes[i]);
+                                        }
+                                    }
+                                } else {
+                                    if (seq.IndexTypes.Length == 0) {
+                                        seq.IndexTypes = new[] { new VariableDef() };
+                                    }
+                                    foreach (var vars in IndexTypes.Concat(rhsSeq.IndexTypes)) {
+                                        vars.CopyTo(seq.IndexTypes[0]);
+                                    }
+                                }
+
+                                res = res.Add(seq);
+                            } else {
+                                res = res.Add(this);
+                            }
+                        } else {
+                            var partialRes = type.ReverseBinaryOperation(node, unit, operation, SelfSet);
+                            if (partialRes != null) {
+                                res = res.Union(partialRes);
+                            }
+                        }
+
+                    }
+                    break;
                 case PythonOperator.Multiply:
-                    IAnalysisSet res = AnalysisSet.Empty;
                     foreach (var type in rhs) {
                         var typeId = type.TypeId;
 
@@ -48,9 +127,12 @@ namespace Microsoft.PythonTools.Analysis.Values {
                         }
 
                     }
-                    return res;
+                    break;
+                default:
+                    res = base.BinaryOperation(node, unit, operation, rhs);
+                    break;
             }
-            return base.BinaryOperation(node, unit, operation, rhs);
+            return res;
         }
 
         public override IAnalysisSet GetIndex(Node node, AnalysisUnit unit, IAnalysisSet index) {

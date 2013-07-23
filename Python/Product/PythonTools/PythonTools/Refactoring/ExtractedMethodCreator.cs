@@ -52,24 +52,25 @@ namespace Microsoft.PythonTools.Refactoring {
             if (info.TargetScope is ClassDefinition) {
                 var fromScope = _scopes[_scopes.Length - 1] as FunctionDefinition;
                 Debug.Assert(fromScope != null);  // we don't allow extracting from classes, so we have to be coming from a function
-
-                if (fromScope.Decorators != null) {
-                    foreach (var decorator in fromScope.Decorators.Decorators) {
-                        NameExpression name = decorator as NameExpression;
-                        if (name != null) {
-                            if (name.Name == "staticmethod") {
-                                isStaticMethod = true;
-                            } else if (name.Name == "classmethod") {
-                                isClassMethod = true;
+                if (fromScope != null) {
+                    if (fromScope.Decorators != null) {
+                        foreach (var decorator in fromScope.Decorators.Decorators) {
+                            NameExpression name = decorator as NameExpression;
+                            if (name != null) {
+                                if (name.Name == "staticmethod") {
+                                    isStaticMethod = true;
+                                } else if (name.Name == "classmethod") {
+                                    isClassMethod = true;
+                                }
                             }
                         }
                     }
-                }
 
-                if (!isStaticMethod) {
-                    if (fromScope.Parameters.Count > 0) {
-                        selfParam = fromScope.Parameters[0].Name;
-                        parameters.Add(new Parameter(selfParam, ParameterKind.Normal));
+                    if (!isStaticMethod) {
+                        if (fromScope.Parameters.Count > 0) {
+                            selfParam = fromScope.Parameters[0].Name;
+                            parameters.Add(new Parameter(selfParam, ParameterKind.Normal));
+                        }
                     }
                 }
             }
@@ -224,7 +225,7 @@ namespace Microsoft.PythonTools.Refactoring {
                 if (isStaticMethod) {
                     newCall.Append(info.TargetScope.Name);
                     newCall.Append('.');
-                } else if (fromScope.Parameters.Count > 0) {
+                } else if (fromScope != null && fromScope.Parameters.Count > 0) {
                     newCall.Append(fromScope.Parameters[0].Name);
                     newCall.Append('.');
                 }

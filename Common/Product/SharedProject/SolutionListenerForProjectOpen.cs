@@ -35,6 +35,10 @@ namespace Microsoft.VisualStudioTools.Project
             {
                 IVsUIHierarchy uiHierarchy = hierarchy as IVsUIHierarchy;
                 Debug.Assert(uiHierarchy != null, "The ProjectNode should implement IVsUIHierarchy");
+                if (uiHierarchy == null)
+                {
+                    return VSConstants.E_FAIL;
+                }
                 // Expand and select project node
                 IVsUIHierarchyWindow uiWindow = UIHierarchyUtilities.GetUIHierarchyWindow(this.ServiceProvider, HierarchyNode.SolutionExplorer);
                 if (uiWindow != null)

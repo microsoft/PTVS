@@ -273,6 +273,11 @@ namespace Microsoft.PythonTools.TestAdapter {
             var buildEngine = new MSBuild.ProjectCollection();
             var proj = buildEngine.LoadProject(projectFile);
             var provider = new MSBuildProjectInterpreterFactoryProvider(_interpService, proj);
+            try {
+                provider.DiscoverInterpreters();
+            } catch (InvalidDataException) {
+                // Can safely ignore this exception here.
+            }
 
             if (provider.ActiveInterpreter == _interpService.NoInterpretersValue) {
                 return null;

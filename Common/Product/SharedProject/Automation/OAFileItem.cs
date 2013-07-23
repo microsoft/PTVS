@@ -146,13 +146,14 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
                         IVsHierarchy ivsHierarchy;
                         uint docCookie;
                         IVsRunningDocumentTable rdt = this.Node.ProjectMgr.Site.GetService(typeof(SVsRunningDocumentTable)) as IVsRunningDocumentTable;
-                        Debug.Assert(rdt != null, " Could not get running document table from the services exposed by this project");
-                        Utilities.CheckNotNull(rdt);
+                        if (rdt == null) {
+                            throw new InvalidOperationException("Could not get running document table from the services exposed by this project");
+                        }
 
                         ErrorHandler.ThrowOnFailure(rdt.FindAndLockDocument((uint)_VSRDTFLAGS.RDT_NoLock, this.Node.Url, out ivsHierarchy, out itemid, out docData, out docCookie));
 
                         // Open the file using the IVsProject interface
-                        // We get the outer hierarchy so that projects can customize opening.                    
+                        // We get the outer hierarchy so that projects can customize opening.
                         var project = Node.ProjectMgr.GetOuterInterface<IVsProject>();
                         ErrorHandler.ThrowOnFailure(project.OpenItem(Node.ID, ref logicalViewGuid, docData, out windowFrame));
                     } finally {
@@ -268,8 +269,9 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
 
                     try {
                         IVsRunningDocumentTable rdt = this.Node.ProjectMgr.Site.GetService(typeof(SVsRunningDocumentTable)) as IVsRunningDocumentTable;
-                        Debug.Assert(rdt != null, " Could not get running document table from the services exposed by this project");
-                        Utilities.CheckNotNull(rdt);
+                        if (rdt == null) {
+                            throw new InvalidOperationException("Could not get running document table from the services exposed by this project");
+                        }
 
                         // First we see if someone else has opened the requested view of the file.
                         uint itemid;

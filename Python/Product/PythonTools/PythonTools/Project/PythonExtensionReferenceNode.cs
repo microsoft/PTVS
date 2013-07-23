@@ -38,6 +38,7 @@ namespace Microsoft.PythonTools.Project {
 
         internal PythonExtensionReferenceNode(PythonProjectNode root, ProjectElement element, string filename)
             : base(root, element) {
+            Utilities.ArgumentNotNullOrEmpty("filename", filename);
             _filename = filename;
 
             AnalyzeReference(root.GetInterpreter());
@@ -115,8 +116,6 @@ namespace Microsoft.PythonTools.Project {
         /// Links a reference node to the project and hierarchy.
         /// </summary>
         protected override void BindReferenceData() {
-            Debug.Assert(_filename != null, "The _filename field has not been initialized");
-
             // If the item has not been set correctly like in case of a new reference added it now.
             // The constructor for the AssemblyReference node will create a default project item. In that case the Item is null.
             // We need to specify here the correct project element. 
@@ -154,6 +153,11 @@ namespace Microsoft.PythonTools.Project {
         protected override bool IsAlreadyAdded() {
             ReferenceContainerNode referencesFolder = ProjectMgr.GetReferenceContainer() as ReferenceContainerNode;
             Debug.Assert(referencesFolder != null, "Could not find the References node");
+
+            if (referencesFolder == null) {
+                // Return true so that the caller does not try and add us.
+                return true;
+            }
 
             for (HierarchyNode n = referencesFolder.FirstChild; n != null; n = n.NextSibling) {
                 var extensionRefNode = n as PythonExtensionReferenceNode;
@@ -204,7 +208,9 @@ namespace Microsoft.PythonTools.Project {
         /// <param name="e">Event args containing the file name that was updated.</param>
         private void OnExtensionChangedOnDisk(object sender, FileChangedOnDiskEventArgs e) {
             Debug.Assert(e != null, "No event args specified for the FileChangedOnDisk event");
-
+            if (e == null) {
+                return;
+            }
 
             var interp = ((PythonProjectNode)ProjectMgr).GetInterpreter();
             if (interp != null && CommonUtils.IsSamePath(e.FileName, _filename)) {

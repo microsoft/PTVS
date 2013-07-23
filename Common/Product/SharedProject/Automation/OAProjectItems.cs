@@ -235,7 +235,7 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
                             item = new OAFileItem(this.Project, nodeAdded as FileNode);
                         } else {
                             item = new OAProjectItem(this.Project, nodeAdded);
-                    }
+                        }
 
                         return item;
                     }

@@ -508,8 +508,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// </summary>
         internal ModuleInfo GlobalScope {
             get {
-                var result = (Scope as ModuleScope);
-                Debug.Assert(result != null);
+                var result = (ModuleScope)Scope;
                 return result.Module;
             }
         }

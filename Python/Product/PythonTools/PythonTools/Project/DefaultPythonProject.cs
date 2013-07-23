@@ -24,7 +24,7 @@ namespace Microsoft.PythonTools.Project {
         private readonly string _filePath;
 
         public DefaultPythonProject(string filePath) {
-            Debug.Assert((filePath != null), "Unexpected null filePath passed to DefaultPythonProject.DefaultPythonProject()");
+            Utilities.ArgumentNotNullOrEmpty("filePath", filePath);
             _filePath = filePath;
         }
 

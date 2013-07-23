@@ -29,7 +29,9 @@ namespace Microsoft.PythonTools.Parsing {
         }
 
         public static string ParseString(char[] text, int start, int length, bool isRaw, bool isUni, bool normalizeLineEndings) {
-            Debug.Assert(text != null);
+            if (text == null) {
+                throw new ArgumentNullException("text");
+            }
 
             if (isRaw && !isUni && !normalizeLineEndings) return new String(text, start, length);
 

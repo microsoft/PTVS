@@ -183,14 +183,14 @@ namespace Microsoft.VisualStudioTools.Project
         private int Open(bool newFile, bool openWith, uint editorFlags, ref Guid editorType, string physicalView, ref Guid logicalView, IntPtr docDataExisting, out IVsWindowFrame windowFrame, WindowFrameShowAction windowFrameAction, bool reopen = false)
         {
             windowFrame = null;
+            Debug.Assert(this.Node != null, "No node has been initialized for the document manager");
+            Debug.Assert(this.Node.ProjectMgr != null, "No project manager has been initialized for the document manager");
+            Debug.Assert(this.Node is FileNode, "Node is not FileNode object");
+
             if (this.Node == null || this.Node.ProjectMgr == null || this.Node.ProjectMgr.IsClosed)
             {
                 return VSConstants.E_FAIL;
             }
-
-            Debug.Assert(this.Node != null, "No node has been initialized for the document manager");
-            Debug.Assert(this.Node.ProjectMgr != null, "No project manager has been initialized for the document manager");
-            Debug.Assert(this.Node is FileNode, "Node is not FileNode object");
 
             int returnValue = VSConstants.S_OK;
             string caption = this.GetOwnerCaption();

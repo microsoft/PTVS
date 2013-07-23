@@ -189,7 +189,7 @@ namespace Microsoft.VisualStudioTools.Project
         public virtual void AddReference()
         {
             ReferenceContainerNode referencesFolder = this.ProjectMgr.GetReferenceContainer() as ReferenceContainerNode;
-            Debug.Assert(referencesFolder != null, "Could not find the References node");
+            Utilities.CheckNotNull(referencesFolder, "Could not find the References node");
 
             CannotAddReferenceErrorMessage referenceErrorMessageHandler = null;
 
@@ -255,7 +255,7 @@ namespace Microsoft.VisualStudioTools.Project
         protected virtual bool IsAlreadyAdded()
         {
             ReferenceContainerNode referencesFolder = this.ProjectMgr.GetReferenceContainer() as ReferenceContainerNode;
-            Debug.Assert(referencesFolder != null, "Could not find the References node");
+            Utilities.CheckNotNull(referencesFolder, "Could not find the References node");
 
             for (HierarchyNode n = referencesFolder.FirstChild; n != null; n = n.NextSibling)
             {
