@@ -53,8 +53,9 @@ namespace Microsoft.PythonTools.Project {
 
         internal static string GetFullUrl(string url, string port) {
             if (!String.IsNullOrWhiteSpace(url)) {
-                if (url.StartsWith("/")) {
-                    url = "http://localhost" + url;
+                Uri relativeUri;
+                if (Uri.TryCreate(url, UriKind.Relative, out relativeUri)) {
+                    url = new Uri(new Uri("http://localhost"), url).ToString();
                 }
 
                 Uri uri;

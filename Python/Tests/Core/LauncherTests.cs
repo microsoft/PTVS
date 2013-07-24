@@ -29,6 +29,7 @@ namespace PythonToolsTests {
                 new { Url = "/foo", Port = "", Expected = "http://localhost/foo" },
                 new { Url = "http://localhost:9999/foo", Port = "9999", Expected = "http://localhost:9999/foo" },
                 new { Url = "http://localhost/foo", Port = "9999", Expected = "http://localhost:9999/foo" },
+                new { Url = "foo", Port = "9999", Expected = "http://localhost:9999/foo" },
             };
 
             foreach(var testCase in testCases) {
