@@ -585,7 +585,9 @@ def f():
 """"""
 
 while True:
-    pass";
+    pass
+
+lambda larg1, larg2: None";
 
 
             // we get the appropriate subexpression
@@ -603,6 +605,12 @@ while True:
 
             // keywords don't show up in quick info
             TestQuickInfo(code, code.IndexOf("while True:"), code.IndexOf("while True:") + 5);
+
+            // 'lambda' keyword doesn't show up in quick info
+            TestQuickInfo(code, code.IndexOf("lambda"), code.IndexOf("lambda") + 6);
+            // but its arguments do
+            TestQuickInfo(code, code.IndexOf("larg1"), code.IndexOf("larg1") + 5, "larg1: <unknown type>");
+            TestQuickInfo(code, code.IndexOf("larg2"), code.IndexOf("larg2") + 5, "larg2: <unknown type>");
 
             // multiline function, hover at the close paren
             TestQuickInfo(code, code.IndexOf("e)") + 1, code.IndexOf("e)") + 2, @"f(a,

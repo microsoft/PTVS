@@ -47,7 +47,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             var loc = span.GetSpan(snapshot);
             var line = _curLine = snapshot.GetLineFromPosition(loc.Start);
-            
+
             var targetSpan = new Span(line.Start.Position, span.GetEndPoint(snapshot).Position - line.Start.Position);
             _tokens = Classifier.GetClassificationSpans(new SnapshotSpan(snapshot, targetSpan));
         }
@@ -58,7 +58,7 @@ namespace Microsoft.PythonTools.Intellisense {
             string lastKeywordArg;
             bool isParameterName;
             return GetExpressionRange(0, out dummy, out dummyPoint, out lastKeywordArg, out isParameterName, forCompletion);
-        }        
+        }
 
         internal static IEnumerator<ClassificationSpan> ReverseClassificationSpanEnumerator(PythonClassifier classifier, SnapshotPoint startPoint) {
             var startLine = startPoint.GetContainingLine();
@@ -123,7 +123,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     }
                 } else if (enumerator.Current.IsCloseGrouping()) {
                     groupingLevel++;
-                } 
+                }
             }
 
             return false;
@@ -247,6 +247,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     } else if (token.ClassificationType == Classifier.Provider.Keyword ||
                                token.ClassificationType == Classifier.Provider.Operator) {
                         lastTokenWasKeywordArgAssignment = false;
+
                         if (token.ClassificationType == Classifier.Provider.Keyword && text == "lambda") {
                             if (currentParamAtLastColon != -1) {
                                 paramIndex = currentParamAtLastColon;
@@ -256,74 +257,71 @@ namespace Microsoft.PythonTools.Intellisense {
                                 // We have to be the 1st param.
                                 paramIndex = 0;
                             }
-
-                            if (nesting == 0 && otherNesting == 0) {
-                                break;
-                            }
-                        } else {
-                            if (text == ":") {
-                                startAtLastToken = start;
-                                currentParamAtLastColon = paramIndex;
-                            }
-                            if (nesting == 0 && otherNesting == 0) {
-                                if (start == null) {
-                                    // http://pytools.codeplex.com/workitem/560
-                                    // yield_value = 42
-                                    // def f():
-                                    //     yield<ctrl-space>
-                                    //     yield <ctrl-space>
-                                    // 
-                                    // If we're next to the keyword, just return the keyword.
-                                    // If we're after the keyword, return the span of the text proceeding
-                                    //  the keyword so we can complete after it.
-                                    // 
-                                    // Also repros with "return <ctrl-space>" or "print <ctrl-space>" both
-                                    // of which we weren't reporting completions for before
-                                    if (forCompletion) {
-                                        if (token.Span.IntersectsWith(_span.GetSpan(_snapshot))) {
-                                            return token.Span;
-                                        } else {
-                                            return _span.GetSpan(_snapshot);
-                                        }
-                                    }
-
-                                    // hovering directly over a keyword, don't provide a tooltip
-                                    return null;
-                                } else if ((nestingChanged || forCompletion) && token.ClassificationType == Classifier.Provider.Keyword && text == "def") {
-                                    return null;
-                                }
-                                if (text == "*" || text == "**") {
-                                    if (enumerator.MoveNext()) {
-                                        if (enumerator.Current.ClassificationType == _classifier.Provider.CommaClassification) {
-                                            isParameterName = IsParameterNameComma(enumerator);
-                                        } else if (enumerator.Current.IsOpenGrouping() && enumerator.Current.Span.GetText() == "(") {
-                                            isParameterName = IsParameterNameOpenParen(enumerator);
-                                        }
-                                    }
-                                }
-                                break;
-                            } else if ((token.ClassificationType == Classifier.Provider.Keyword && IsStmtKeyword(text)) ||
-                                (token.ClassificationType == Classifier.Provider.Operator && IsAssignmentOperator(text))) {
-                                if (isSigHelp && text == "=") {
-                                    // keyword argument allowed in signatures
-                                    lastTokenWasKeywordArgAssignment = lastTokenWasCommaOrOperator = true;
-                                } else if (start == null || (nestingChanged && nesting != 0)) {
-                                    return null;
-                                } else {
-                                    break;
-                                }
-                            } else if (token.ClassificationType == Classifier.Provider.Keyword && (text == "if" || text == "else")) {
-                                // if and else can be used in an expression context or a statement context
-                                if (currentParamAtLastColon != -1) {
-                                    start = startAtLastToken;
-                                    if (start == null) {
-                                        return null;
-                                    }
-                                    break;
-                                }
-                            }
-                            lastTokenWasCommaOrOperator = true;
                         }
+
+                        if (text == ":") {
+                            startAtLastToken = start;
+                            currentParamAtLastColon = paramIndex;
+                        }
+
+                        if (nesting == 0 && otherNesting == 0) {
+                            if (start == null) {
+                                // http://pytools.codeplex.com/workitem/560
+                                // yield_value = 42
+                                // def f():
+                                //     yield<ctrl-space>
+                                //     yield <ctrl-space>
+                                // 
+                                // If we're next to the keyword, just return the keyword.
+                                // If we're after the keyword, return the span of the text proceeding
+                                //  the keyword so we can complete after it.
+                                // 
+                                // Also repros with "return <ctrl-space>" or "print <ctrl-space>" both
+                                // of which we weren't reporting completions for before
+                                if (forCompletion) {
+                                    if (token.Span.IntersectsWith(_span.GetSpan(_snapshot))) {
+                                        return token.Span;
+                                    } else {
+                                        return _span.GetSpan(_snapshot);
+                                    }
+                                }
+
+                                // hovering directly over a keyword, don't provide a tooltip
+                                return null;
+                            } else if ((nestingChanged || forCompletion) && token.ClassificationType == Classifier.Provider.Keyword && text == "def") {
+                                return null;
+                            }
+                            if (text == "*" || text == "**") {
+                                if (enumerator.MoveNext()) {
+                                    if (enumerator.Current.ClassificationType == _classifier.Provider.CommaClassification) {
+                                        isParameterName = IsParameterNameComma(enumerator);
+                                    } else if (enumerator.Current.IsOpenGrouping() && enumerator.Current.Span.GetText() == "(") {
+                                        isParameterName = IsParameterNameOpenParen(enumerator);
+                                    }
+                                }
+                            }
+                            break;
+                        } else if ((token.ClassificationType == Classifier.Provider.Keyword && IsStmtKeyword(text)) ||
+                            (token.ClassificationType == Classifier.Provider.Operator && IsAssignmentOperator(text))) {
+                            if (isSigHelp && text == "=") {
+                                // keyword argument allowed in signatures
+                                lastTokenWasKeywordArgAssignment = lastTokenWasCommaOrOperator = true;
+                            } else if (start == null || (nestingChanged && nesting != 0)) {
+                                return null;
+                            } else {
+                                break;
+                            }
+                        } else if (token.ClassificationType == Classifier.Provider.Keyword && (text == "if" || text == "else")) {
+                            // if and else can be used in an expression context or a statement context
+                            if (currentParamAtLastColon != -1) {
+                                start = startAtLastToken;
+                                if (start == null) {
+                                    return null;
+                                }
+                                break;
+                            }
+                        }
+                        lastTokenWasCommaOrOperator = true;
                     } else if (token.ClassificationType == Classifier.Provider.DotClassification) {
                         lastTokenWasCommaOrOperator = true;
                         lastTokenWasKeywordArgAssignment = false;
@@ -344,19 +342,19 @@ namespace Microsoft.PythonTools.Intellisense {
                     } else if (!lastTokenWasCommaOrOperator) {
                         break;
                     } else {
-                        if (lastTokenWasKeywordArgAssignment && 
-                            token.ClassificationType.IsOfType(PredefinedClassificationTypeNames.Identifier) && 
+                        if (lastTokenWasKeywordArgAssignment &&
+                            token.ClassificationType.IsOfType(PredefinedClassificationTypeNames.Identifier) &&
                             lastKeywordArg == null) {
-                                if (paramIndex == 0) {
-                                    lastKeywordArg = text;
-                                } else {
-                                    lastKeywordArg = "";
-                                }
+                            if (paramIndex == 0) {
+                                lastKeywordArg = text;
+                            } else {
+                                lastKeywordArg = "";
+                            }
                         }
                         lastTokenWasCommaOrOperator = false;
                     }
-                    
-                    start = token.Span;                    
+
+                    start = token.Span;
                 } while (enumerator.MoveNext());
             }
 
@@ -429,13 +427,11 @@ namespace Microsoft.PythonTools.Intellisense {
             set { _curLine = value; }
         }
 
-        public IEnumerator<ClassificationSpan> GetEnumerator()
-        {
+        public IEnumerator<ClassificationSpan> GetEnumerator() {
             return ReverseClassificationSpanEnumerator(_classifier, _span.GetSpan(_snapshot).End);
         }
 
-        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
-        {
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() {
             return ReverseClassificationSpanEnumerator(_classifier, _span.GetSpan(_snapshot).End);
         }
 
