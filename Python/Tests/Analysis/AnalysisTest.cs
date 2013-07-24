@@ -1840,57 +1840,6 @@ l = 42j {1} C()
         }
 
         [TestMethod, Priority(0)]
-        public void SequenceAdd() {
-            var text = @"
-x = ()
-y = x + (2,3)
-
-x1 = (1,2,3)
-y1 = x1 + (3.14,6.28)
-
-foo = [1,2,3]
-bar = foo + ['a', 'b', 'c']
-
-foo2 = ['a']
-bar2 = foo2 + [1]";
-
-            var entry = ProcessText(text);
-            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("y[0]", text.IndexOf("y =")), BuiltinTypeId.Int);
-            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("y1[0]", text.IndexOf("y1 =")), BuiltinTypeId.Int);
-            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("y1[4]", text.IndexOf("y1 =")), BuiltinTypeId.Float);
-            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("foo[0]", text.IndexOf("bar =")), BuiltinTypeId.Int);
-            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("bar[0]", text.IndexOf("bar =")), BuiltinTypeId.Int, BuiltinTypeId_Str);
-            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("foo2[0]", text.IndexOf("bar2 =")), BuiltinTypeId_Str);
-            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("bar2[0]", text.IndexOf("bar2 =")), BuiltinTypeId.Int, BuiltinTypeId_Str);
-
-            text = @"
-y = ()
-y += (2,3)
-
-y1 = (1,2,3)
-y1 += (3.14,6.28)
-
-bar = [1,2,3]
-bar += ['a', 'b', 'c']
-
-bar2 = ['a']
-bar2 += [1]";
-
-            entry = ProcessText(text);
-            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("y[0]", text.IndexOf("y +=")), BuiltinTypeId.Int);
-            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("y1[0]", text.IndexOf("y1 +=")), BuiltinTypeId.Int);
-            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("y1[4]", text.IndexOf("y1 +=")), BuiltinTypeId.Float);
-            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("bar[0]", text.IndexOf("bar +=")), BuiltinTypeId.Int, BuiltinTypeId_Str);
-            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("bar2[0]", text.IndexOf("bar2 +=")), BuiltinTypeId.Int, BuiltinTypeId_Str);
-
-            Assert.AreEqual(2, entry.GetValuesByIndex("y", text.IndexOf("y +=")).Single().GetItems().Count());
-            Assert.AreEqual(5, entry.GetValuesByIndex("y1", text.IndexOf("y1 +=")).Single().GetItems().Count());
-            // List literal has 3 values, but the += appends only to the first
-            Assert.AreEqual(3, entry.GetValuesByIndex("bar", text.IndexOf("bar +=")).Single().GetItems().Count());
-            Assert.AreEqual(1, entry.GetValuesByIndex("bar2", text.IndexOf("bar2 +=")).Single().GetItems().Count());
-        }
-
-        [TestMethod, Priority(0)]
         public void SequenceMultiply() {
             var text = @"
 x = ()
