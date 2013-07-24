@@ -683,11 +683,11 @@ namespace DebuggerUITests {
         }
 
         /// <summary>
-        /// Debug as script when no project
+        /// Start with debugging, with script but no project.
         /// </summary>
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
-        public void DebugAsScriptNoProject() {
+        public void StartWithDebuggingNoProject() {
             string scriptFilePath = TestData.GetPath(@"TestData\HelloWorld\Program.py");
 
             var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
@@ -695,7 +695,7 @@ namespace DebuggerUITests {
 
             VsIdeTestHostContext.Dte.ItemOperations.OpenFile(scriptFilePath);
             VsIdeTestHostContext.Dte.Debugger.Breakpoints.Add(File: scriptFilePath, Line: 1);
-            VsIdeTestHostContext.Dte.ExecuteCommand("EditorContextMenus.CodeWindow.DebugasScript");
+            VsIdeTestHostContext.Dte.ExecuteCommand("Project.StartwithDebugging");
             WaitForMode(dbgDebugMode.dbgBreakMode);
             Assert.AreEqual(dbgDebugMode.dbgBreakMode, VsIdeTestHostContext.Dte.Debugger.CurrentMode);
             Assert.AreEqual("Program.py, line 1", VsIdeTestHostContext.Dte.Debugger.BreakpointLastHit.Name);
@@ -704,18 +704,36 @@ namespace DebuggerUITests {
         }
 
         /// <summary>
-        /// Debug as script not in project
+        /// Start without debugging, with script but no project.
         /// </summary>
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
-        public void DebugAsScriptNotInProject() {
+        public void StartWithoutDebuggingNoProject() {
+            string scriptFilePath = TestData.GetPath(@"TestData\CreateFile1.py");
+
+            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            app.DeleteAllBreakPoints();
+
+            VsIdeTestHostContext.Dte.ItemOperations.OpenFile(scriptFilePath);
+            VsIdeTestHostContext.Dte.Debugger.Breakpoints.Add(File: scriptFilePath, Line: 1);
+            VsIdeTestHostContext.Dte.ExecuteCommand("Project.StartwithoutDebugging");
+            Assert.AreEqual(dbgDebugMode.dbgDesignMode, VsIdeTestHostContext.Dte.Debugger.CurrentMode);
+            WaitForFileCreatedByScript(TestData.GetPath(@"TestData\File1.txt"));
+        }
+
+        /// <summary>
+        /// Start with debugging, with script not in project.
+        /// </summary>
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void StartWithDebuggingNotInProject() {
             string scriptFilePath = TestData.GetPath(@"TestData\HelloWorld\Program.py");
 
             OpenDebuggerProject();
 
             VsIdeTestHostContext.Dte.ItemOperations.OpenFile(scriptFilePath);
             VsIdeTestHostContext.Dte.Debugger.Breakpoints.Add(File: scriptFilePath, Line: 1);
-            VsIdeTestHostContext.Dte.ExecuteCommand("EditorContextMenus.CodeWindow.DebugasScript");
+            VsIdeTestHostContext.Dte.ExecuteCommand("Project.StartwithDebugging");
             WaitForMode(dbgDebugMode.dbgBreakMode);
             Assert.AreEqual(dbgDebugMode.dbgBreakMode, VsIdeTestHostContext.Dte.Debugger.CurrentMode);
             Assert.AreEqual("Program.py, line 1", VsIdeTestHostContext.Dte.Debugger.BreakpointLastHit.Name);
@@ -724,18 +742,35 @@ namespace DebuggerUITests {
         }
 
         /// <summary>
-        /// Debug as script in project
+        /// Start without debugging, with script not in project.
         /// </summary>
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
-        public void DebugAsScriptInProject() {
+        public void StartWithoutDebuggingNotInProject() {
+            string scriptFilePath = TestData.GetPath(@"TestData\CreateFile2.py");
+
+            OpenDebuggerProject();
+
+            VsIdeTestHostContext.Dte.ItemOperations.OpenFile(scriptFilePath);
+            VsIdeTestHostContext.Dte.Debugger.Breakpoints.Add(File: scriptFilePath, Line: 1);
+            VsIdeTestHostContext.Dte.ExecuteCommand("Project.StartwithoutDebugging");
+            Assert.AreEqual(dbgDebugMode.dbgDesignMode, VsIdeTestHostContext.Dte.Debugger.CurrentMode);
+            WaitForFileCreatedByScript(TestData.GetPath(@"TestData\File2.txt"));
+        }
+
+        /// <summary>
+        /// Start with debuggging, with script in project.
+        /// </summary>
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void StartWithDebuggingInProject() {
             string scriptFilePath = TestData.GetPath(@"TestData\DebuggerProject\Program.py");
 
             OpenDebuggerProject();
 
             VsIdeTestHostContext.Dte.ItemOperations.OpenFile(scriptFilePath);
             VsIdeTestHostContext.Dte.Debugger.Breakpoints.Add(File: scriptFilePath, Line: 1);
-            VsIdeTestHostContext.Dte.ExecuteCommand("EditorContextMenus.CodeWindow.DebugasScript");
+            VsIdeTestHostContext.Dte.ExecuteCommand("Project.StartwithDebugging");
             WaitForMode(dbgDebugMode.dbgBreakMode);
             Assert.AreEqual(dbgDebugMode.dbgBreakMode, VsIdeTestHostContext.Dte.Debugger.CurrentMode);
             Assert.AreEqual("Program.py, line 1", VsIdeTestHostContext.Dte.Debugger.BreakpointLastHit.Name);
@@ -744,18 +779,62 @@ namespace DebuggerUITests {
         }
 
         /// <summary>
-        /// Debug as script no script
+        /// Start without debuggging, with script in project.
         /// </summary>
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
-        public void DebugAsScriptNoScript() {
+        public void StartWithoutDebuggingInProject() {
+            string scriptFilePath = TestData.GetPath(@"TestData\DebuggerProject\CreateFile3.py");
+
+            OpenDebuggerProject();
+
+            VsIdeTestHostContext.Dte.ItemOperations.OpenFile(scriptFilePath);
+            VsIdeTestHostContext.Dte.Debugger.Breakpoints.Add(File: scriptFilePath, Line: 1);
+            VsIdeTestHostContext.Dte.ExecuteCommand("Project.StartwithoutDebugging");
+            Assert.AreEqual(dbgDebugMode.dbgDesignMode, VsIdeTestHostContext.Dte.Debugger.CurrentMode);
+            WaitForFileCreatedByScript(TestData.GetPath(@"TestData\DebuggerProject\File3.txt"));
+        }
+
+        /// <summary>
+        /// Start with debugging, no script.
+        /// </summary>
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void StartWithDebuggingNoScript() {
             try {
-                VsIdeTestHostContext.Dte.ExecuteCommand("EditorContextMenus.CodeWindow.DebugasScript");
+                VsIdeTestHostContext.Dte.ExecuteCommand("Project.StartwithDebugging");
             }
             catch (COMException e) {
                 // Requires an opened python file with focus
                 Assert.IsTrue(e.ToString().Contains("is not available"));
             }
+        }
+
+        /// <summary>
+        /// Start without debugging, no script.
+        /// </summary>
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void StartWithoutDebuggingNoScript() {
+            try {
+                VsIdeTestHostContext.Dte.ExecuteCommand("Project.StartwithoutDebugging");
+            } catch (COMException e) {
+                // Requires an opened python file with focus
+                Assert.IsTrue(e.ToString().Contains("is not available"));
+            }
+        }
+
+        private static void WaitForFileCreatedByScript(string createdFilePath) {
+            bool exists = false;
+            for (int i = 0; i < 10; i++) {
+                exists = File.Exists(createdFilePath);
+                if (exists) {
+                    break;
+                }
+                System.Threading.Thread.Sleep(250);
+            }
+
+            Assert.IsTrue(exists, "Python script was expected to create file '{0}'.", createdFilePath);
         }
 
         private static List<IVsTaskItem> GetErrorListItems(IVsErrorList errorList, int expectedItems) {

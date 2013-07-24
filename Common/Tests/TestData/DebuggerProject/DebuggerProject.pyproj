@@ -29,6 +29,7 @@
     <None Include="BreakpointTest3.py" />
     <None Include="BreakpointTest4.py" />
     <None Include="ComplexExceptions.py" />
+    <None Include="CreateFile3.py" />
     <None Include="EnumChildTest.py" />
     <None Include="ExceptionalExit.py" />
     <None Include="imports_other.py" />

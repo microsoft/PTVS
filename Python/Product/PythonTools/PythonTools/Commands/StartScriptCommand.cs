@@ -22,9 +22,9 @@ using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Commands {
     /// <summary>
-    /// Provides the command to debug script from a document tab.
+    /// Provides the command to start script from a document tab or document window.
     /// </summary>
-    class DebugAsScriptCommand : Command {
+    abstract class StartScriptCommand : Command {
         public override void DoCommand(object sender, EventArgs args) {
             if (!Utilities.SaveDirtyFiles()) {
                 // Abort
@@ -41,7 +41,7 @@ namespace Microsoft.PythonTools.Commands {
             IPythonProject pythonProject = pythonProjectNode as IPythonProject ?? new DefaultPythonProject(file);
 
             var launcher = PythonToolsPackage.GetLauncher(pythonProject);
-            launcher.LaunchFile(file, true);
+            launcher.LaunchFile(file, CommandId == CommonConstants.StartDebuggingCmdId);
         }
 
         public override int? EditFilterQueryStatus(ref VisualStudio.OLE.Interop.OLECMD cmd, IntPtr pCmdText) {
@@ -63,9 +63,17 @@ namespace Microsoft.PythonTools.Commands {
                 };
             }
         }
+    }
 
+    class StartWithoutDebuggingCommand : StartScriptCommand {
         public override int CommandId {
-            get { return (int)PkgCmdIDList.cmdidDebugAsScript; }
+            get { return (int)CommonConstants.StartWithoutDebuggingCmdId; }
+        }
+    }
+
+    class StartDebuggingCommand : StartScriptCommand {
+        public override int CommandId {
+            get { return (int)CommonConstants.StartDebuggingCmdId; }
         }
     }
 }
