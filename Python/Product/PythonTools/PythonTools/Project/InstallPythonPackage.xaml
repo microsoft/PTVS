@@ -74,8 +74,11 @@
                     VerticalAlignment="Center">
                 <StackPanel Orientation="Horizontal">
                     <Image Source="{x:Static wpf:Controls.UacShield}"
+                           Width="16" Height="16"
+                           VerticalAlignment="Center"
                            Visibility="{Binding InstallUsingEasyInstall,Converter={StaticResource BoolToVisible}}"/>
-                    <AccessText Text="_OK" />
+                    <AccessText Text="_OK"
+                                VerticalAlignment="Center" />
                 </StackPanel>
             </Button>
             <Button IsCancel="True" Click="CancelClick" MinWidth="86" MinHeight="24"
