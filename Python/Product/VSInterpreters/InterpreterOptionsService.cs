@@ -68,20 +68,20 @@ namespace Microsoft.PythonTools.Interpreter {
                 RegistryHive hive;
                 RegistryView view;
                 string keyName;
-                RegistryWatcher.GetRegistryKeyLocation(userSettingsKey, out hive, out view, out keyName);
- 
-                try {
-                    RegistryWatcher.Instance.Add(hive, view, keyName + "\\" + DefaultInterpreterOptionsCollection,
-                        DefaultInterpreterRegistry_Changed,
-                        recursive: false, notifyValueChange: true, notifyKeyChange: false);
-                } catch (ArgumentException) {
-                    // DefaultInterpreterOptions subkey does not exist yet, so
-                    // create it and then start the watcher.
-                    SaveDefaultInterpreter();
+                if (RegistryWatcher.GetRegistryKeyLocation(userSettingsKey, out hive, out view, out keyName)) {
+                    try {
+                        RegistryWatcher.Instance.Add(hive, view, keyName + "\\" + DefaultInterpreterOptionsCollection,
+                            DefaultInterpreterRegistry_Changed,
+                            recursive: false, notifyValueChange: true, notifyKeyChange: false);
+                    } catch (ArgumentException) {
+                        // DefaultInterpreterOptions subkey does not exist yet, so
+                        // create it and then start the watcher.
+                        SaveDefaultInterpreter();
 
-                    RegistryWatcher.Instance.Add(hive, view, keyName + "\\" + DefaultInterpreterOptionsCollection,
-                        DefaultInterpreterRegistry_Changed,
-                        recursive: false, notifyValueChange: true, notifyKeyChange: false);
+                        RegistryWatcher.Instance.Add(hive, view, keyName + "\\" + DefaultInterpreterOptionsCollection,
+                            DefaultInterpreterRegistry_Changed,
+                            recursive: false, notifyValueChange: true, notifyKeyChange: false);
+                    }
                 }
             }
         }
