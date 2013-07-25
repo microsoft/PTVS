@@ -35,7 +35,7 @@ namespace Microsoft.PythonTools.Intellisense {
     /// This control forwards calls from IIntellisenseCommandTarget and IMouseProcessor onto the inner
     /// control.
     /// </summary>
-    public partial class CompletionControl : ContentControl, IIntellisenseCommandTarget, IMouseProcessor {
+    public partial class CompletionControl : ContentControl, IIntellisenseCommandTarget, IMouseProcessor, IDisposable {
         public static readonly object HotTrackBrushKey = VsBrushes.ToolWindowTabMouseOverTextKey;
         private static readonly DependencyPropertyKey WarningVisibilityPropertyKey = DependencyProperty.RegisterReadOnly("WarningVisibility", typeof(Visibility), typeof(CompletionControl), new PropertyMetadata(Visibility.Visible));
         public static readonly DependencyProperty WarningVisibilityProperty = WarningVisibilityPropertyKey.DependencyProperty;
@@ -318,5 +318,9 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         #endregion
+
+        public void Dispose() {
+            Content = null;
+        }
     }
 }
