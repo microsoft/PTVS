@@ -37,6 +37,7 @@ namespace Microsoft.VisualStudioTools {
         public event EventHandler SolutionClosed;
         public event EventHandler<ProjectEventArgs> ProjectLoaded;
         public event EventHandler<ProjectEventArgs> ProjectUnloading;
+        public event EventHandler<ProjectEventArgs> ProjectClosing;
         public event EventHandler<ProjectEventArgs> ProjectRenamed;
         public event EventHandler ActiveSolutionConfigurationChanged;
 
@@ -191,7 +192,14 @@ namespace Microsoft.VisualStudioTools {
         }
 
         public int OnBeforeCloseProject(IVsHierarchy pHierarchy, int fRemoved) {
-            return VSConstants.E_NOTIMPL;
+            var project = pHierarchy as IVsProject;
+            if (project != null) {
+                var evt = ProjectClosing;
+                if (evt != null) {
+                    evt(this, new ProjectEventArgs(project));
+                }
+            }
+            return VSConstants.S_OK;
         }
 
         public int OnBeforeCloseSolution(object pUnkReserved) {
@@ -207,11 +215,7 @@ namespace Microsoft.VisualStudioTools {
         }
 
         public int OnBeforeUnloadProject(IVsHierarchy pRealHierarchy, IVsHierarchy pStubHierarchy) {
-            return VSConstants.E_NOTIMPL;
-        }
-
-        public int OnQueryCloseProject(IVsHierarchy pHierarchy, int fRemoving, ref int pfCancel) {
-            var project = pHierarchy as IVsProject;
+            var project = pRealHierarchy as IVsProject;
             if (project != null) {
                 var evt = ProjectUnloading;
                 if (evt != null) {
@@ -219,6 +223,10 @@ namespace Microsoft.VisualStudioTools {
                 }
             }
             return VSConstants.S_OK;
+        }
+
+        public int OnQueryCloseProject(IVsHierarchy pHierarchy, int fRemoving, ref int pfCancel) {
+            return VSConstants.E_NOTIMPL;
         }
 
         public int OnQueryCloseSolution(object pUnkReserved, ref int pfCancel) {

@@ -228,7 +228,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private void Remove(bool removeFromStorage, bool showPrompt) {
-            if (!_installingPackage) {
+            if (_installingPackage) {
                 // Prevent the environment from being deleting while installing.
                 // This situation should not occur through the UI, but might be
                 // invocable through DTE.

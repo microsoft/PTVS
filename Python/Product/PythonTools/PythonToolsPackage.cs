@@ -696,6 +696,7 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
             ((IServiceContainer)this).AddService(langService.GetType(), langService, true);
 
             _solutionEventListener = new SolutionEventsListener(this);
+            _solutionEventListener.StartListeningForChanges();
 
             IVsTextManager textMgr = (IVsTextManager)Instance.GetService(typeof(SVsTextManager));
             var langPrefs = new LANGPREFERENCES[1];
