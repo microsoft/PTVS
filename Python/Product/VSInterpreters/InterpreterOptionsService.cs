@@ -21,6 +21,8 @@ using System.Linq;
 using System.Reflection;
 using Microsoft.VisualStudio.Settings;
 using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.Win32;
 
 namespace Microsoft.PythonTools.Interpreter {
     [Export(typeof(IInterpreterOptionsService))]
@@ -51,6 +53,37 @@ namespace Microsoft.PythonTools.Interpreter {
         public InterpreterOptionsService([Import(typeof(SVsServiceProvider), AllowDefault = true)] IServiceProvider provider) {
             _settings = SettingsManagerCreator.GetSettingsManager(provider);
             Initialize();
+
+            InitializeDefaultInterpreterWatcher(provider);
+        }
+
+        private void InitializeDefaultInterpreterWatcher(IServiceProvider provider) {
+            RegistryKey userSettingsKey;
+            if (provider != null) {
+                userSettingsKey = VSRegistry.RegistryRoot(provider, __VsLocalRegistryType.RegType_UserSettings, false);
+            } else {
+                userSettingsKey = VSRegistry.RegistryRoot(__VsLocalRegistryType.RegType_UserSettings, false);
+            }
+            using (userSettingsKey) {
+                RegistryHive hive;
+                RegistryView view;
+                string keyName;
+                RegistryWatcher.GetRegistryKeyLocation(userSettingsKey, out hive, out view, out keyName);
+ 
+                try {
+                    RegistryWatcher.Instance.Add(hive, view, keyName + "\\" + DefaultInterpreterOptionsCollection,
+                        DefaultInterpreterRegistry_Changed,
+                        recursive: false, notifyValueChange: true, notifyKeyChange: false);
+                } catch (ArgumentException) {
+                    // DefaultInterpreterOptions subkey does not exist yet, so
+                    // create it and then start the watcher.
+                    SaveDefaultInterpreter();
+
+                    RegistryWatcher.Instance.Add(hive, view, keyName + "\\" + DefaultInterpreterOptionsCollection,
+                        DefaultInterpreterRegistry_Changed,
+                        recursive: false, notifyValueChange: true, notifyKeyChange: false);
+                }
+            }
         }
 
         private void Initialize() {

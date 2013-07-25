@@ -391,5 +391,43 @@ namespace Microsoft.PythonTools {
                 throw new Win32Exception(error);
             }
         }
+
+        private static RegistryHive ParseRegistryKey(string key, out string subkey) {
+            int firstPart = key.IndexOf('\\');
+            if (firstPart < 0 || !key.StartsWith("HKEY", StringComparison.InvariantCultureIgnoreCase)) {
+                throw new ArgumentException("Invalid registry key: " + key, "key");
+            }
+            var hive = key.Remove(firstPart);
+            subkey = key.Substring(firstPart + 1);
+            if (hive.Equals("HKEY_CURRENT_USER", StringComparison.InvariantCultureIgnoreCase)) {
+                return RegistryHive.CurrentUser;
+            } else if (hive.Equals("HKEY_LOCAL_MACHINE", StringComparison.InvariantCultureIgnoreCase)) {
+                return RegistryHive.LocalMachine;
+            } else if (hive.Equals("HKEY_CLASSES_ROOT", StringComparison.InvariantCultureIgnoreCase)) {
+                return RegistryHive.ClassesRoot;
+            } else if (hive.Equals("HKEY_USERS", StringComparison.InvariantCultureIgnoreCase)) {
+                return RegistryHive.Users;
+            } else if (hive.Equals("HKEY_CURRENT_CONFIG", StringComparison.InvariantCultureIgnoreCase)) {
+                return RegistryHive.CurrentConfig;
+            } else if (hive.Equals("HKEY_PERFORMANCE_DATA", StringComparison.InvariantCultureIgnoreCase)) {
+                return RegistryHive.PerformanceData;
+            } else if (hive.Equals("HKEY_DYN_DATA", StringComparison.InvariantCultureIgnoreCase)) {
+                return RegistryHive.DynData;
+            }
+            throw new ArgumentException("Invalid registry key: " + key, "key");
+        }
+
+        internal static bool GetRegistryKeyLocation(RegistryKey key, out RegistryHive hive, out RegistryView view, out string subkey) {
+            if (key != null) {
+                hive = ParseRegistryKey(key.Name, out subkey);
+                view = key.View;
+                return true;
+            } else {
+                hive = RegistryHive.CurrentUser;
+                view = RegistryView.Default;
+                subkey = null;
+                return false;
+            }
+        }
     }
 }
