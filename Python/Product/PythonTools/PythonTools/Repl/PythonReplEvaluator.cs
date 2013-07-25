@@ -43,7 +43,7 @@ namespace Microsoft.PythonTools.Repl {
         private IPythonInterpreterFactory _interpreter;
         private readonly IInterpreterOptionsService _interpreterService;
         private VsProjectAnalyzer _replAnalyzer;
-        private bool _ownsAnalyzer, _enableAttach;
+        private bool _ownsAnalyzer, _enableAttach, _supportsMultipleCompleteStatementInputs;
 
         public PythonReplEvaluator(IPythonInterpreterFactory interpreter, IErrorProviderFactory errorProviderFactory, IInterpreterOptionsService interpreterService = null) 
             : this(interpreter, errorProviderFactory, new DefaultPythonReplEvaluatorOptions(() => PythonToolsPackage.Instance.InteractiveOptionsPage.GetOptions(interpreter)), interpreterService) {
@@ -124,6 +124,12 @@ namespace Microsoft.PythonTools.Repl {
             base.Close();
             if (_interpreterService != null) {
                 _interpreterService.InterpretersChanged -= InterpretersChanged;
+            }
+        }
+
+        public override bool SupportsMultipleCompleteStatementInputs {
+            get {
+                return _supportsMultipleCompleteStatementInputs;
             }
         }
 
@@ -221,6 +227,7 @@ namespace Microsoft.PythonTools.Repl {
                     if (mode.Id == CurrentOptions.ExecutionMode) {
                         modeValue = mode.Type;
                         multipleScopes = mode.SupportsMultipleScopes;
+                        _supportsMultipleCompleteStatementInputs = mode.SupportsMultipleCompleteStatementInputs;
                         break;
                     }
                 }

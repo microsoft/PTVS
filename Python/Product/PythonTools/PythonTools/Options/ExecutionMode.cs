@@ -20,14 +20,15 @@ namespace Microsoft.PythonTools.Options {
         public readonly string Id;
         public readonly string Type;
         public readonly string FriendlyName;
-        public readonly bool SupportsMultipleScopes;
+        public readonly bool SupportsMultipleScopes, SupportsMultipleCompleteStatementInputs;
         public const string StandardModeId = "{B542C3C6-ED9B-4C10-91C8-6EBAD6907BA0}";
 
-        public ExecutionMode(string modeID, string type, string friendlyName, bool multipleScopes) {
+        public ExecutionMode(string modeID, string type, string friendlyName, bool supportsMultipleScopes, bool supportsMultipleCompleteStatementInputs) {
             Id = modeID;
             Type = type;
             FriendlyName = friendlyName;
-            SupportsMultipleScopes = multipleScopes;
+            SupportsMultipleScopes = supportsMultipleScopes;
+            SupportsMultipleCompleteStatementInputs = supportsMultipleCompleteStatementInputs;
         }
 
         public static ExecutionMode[] GetRegisteredModes() {
@@ -40,6 +41,7 @@ namespace Microsoft.PythonTools.Options {
             //              Type
             //              FriendlyName
             //              SupportsMultipleScopes
+            //              SupportsMultipleCompleteStatementInputs
             //  
             var key = PythonToolsPackage.ApplicationRegistryRoot.OpenSubKey(PythonInteractiveOptionsControl.PythonExecutionModeKey);
             if (key != null) {
@@ -51,12 +53,18 @@ namespace Microsoft.PythonTools.Options {
                         multipleScopes = true;
                     }
 
+                    bool supportsMultipleCompleteStatementInputs;
+                    if (!Boolean.TryParse(modeKey.GetValue("SupportsMultipleCompleteStatementInputs", "False").ToString(), out supportsMultipleCompleteStatementInputs)) {
+                        supportsMultipleCompleteStatementInputs = false;
+                    }
+
                     res.Add(
                         new ExecutionMode(
                             modeID,
                             modeKey.GetValue("Type").ToString(),
                             modeKey.GetValue("FriendlyName").ToString(),
-                            multipleScopes
+                            multipleScopes,
+                            supportsMultipleCompleteStatementInputs
                         )
                     );
                 }

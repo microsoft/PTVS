@@ -1004,6 +1004,12 @@ namespace Microsoft.PythonTools.Repl {
             return cmd_buffer[0] == command[0] && cmd_buffer[1] == command[1] && cmd_buffer[2] == command[2] && cmd_buffer[3] == command[3];
         }
 
+        public virtual bool SupportsMultipleCompleteStatementInputs {
+            get {
+                return false;
+            }
+        }
+
         public bool CanExecuteText(string text) {
             int newLines = 0;
             for (int i = text.Length - 1; i >= 0; i--) {
@@ -1345,61 +1351,65 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         internal IEnumerable<string> SplitCode(string code) {
-            var lines = code.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.None);
-            StringBuilder temp = new StringBuilder();
-            string prevText = null;
-            ParseResult? prevParseResult = null;
-            for (int i = 0; i < lines.Length; i++) {
-                var line = lines[i];
+            if (SupportsMultipleCompleteStatementInputs) {
+                yield return code;
+            } else {
+                var lines = code.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.None);
+                StringBuilder temp = new StringBuilder();
+                string prevText = null;
+                ParseResult? prevParseResult = null;
+                for (int i = 0; i < lines.Length; i++) {
+                    var line = lines[i];
 
-                if (i == lines.Length - 1) {
-                    temp.Append(line);
-                } else {
-                    temp.AppendLine(line);
-                }
-                string newCode = temp.ToString();
+                    if (i == lines.Length - 1) {
+                        temp.Append(line);
+                    } else {
+                        temp.AppendLine(line);
+                    }
+                    string newCode = temp.ToString();
 
-                var parser = Parser.CreateParser(new StringReader(newCode), LanguageVersion);
-                ParseResult result;
-                parser.ParseInteractiveCode(out result);
+                    var parser = Parser.CreateParser(new StringReader(newCode), LanguageVersion);
+                    ParseResult result;
+                    parser.ParseInteractiveCode(out result);
 
-                // if this parse is invalid then we need more text to be valid.
-                // But if this text is invalid and the previous parse was incomplete
-                // then appending more text won't fix things - the code in invalid, the user
-                // needs to fix it, so let's not break it up which would prevent that from happening.
-                if (result == ParseResult.Empty) {
-                    if (!String.IsNullOrWhiteSpace(newCode)) {
-                        // comment line, include w/ following code.
+                    // if this parse is invalid then we need more text to be valid.
+                    // But if this text is invalid and the previous parse was incomplete
+                    // then appending more text won't fix things - the code in invalid, the user
+                    // needs to fix it, so let's not break it up which would prevent that from happening.
+                    if (result == ParseResult.Empty) {
+                        if (!String.IsNullOrWhiteSpace(newCode)) {
+                            // comment line, include w/ following code.
+                            prevText = newCode;
+                            prevParseResult = result;
+                        } else {
+                            temp.Clear();
+                        }
+                    } else if (result == ParseResult.Complete) {
+                        yield return FixEndingNewLine(newCode);
+                        temp.Clear();
+
+                        prevParseResult = null;
+                        prevText = null;
+                    } else if (ShouldAppendCode(prevParseResult, result)) {
                         prevText = newCode;
                         prevParseResult = result;
-                    } else {
+                    } else if (prevText != null) {
+                        // we have a complete input
+                        yield return FixEndingNewLine(prevText);
                         temp.Clear();
+
+                        // reparse this line so our state remains consistent as if we just started out.
+                        i--;
+                        prevParseResult = null;
+                        prevText = null;
+                    } else {
+                        prevParseResult = result;
                     }
-                } else if (result == ParseResult.Complete) {
-                    yield return FixEndingNewLine(newCode);
-                    temp.Clear();
-
-                    prevParseResult = null;
-                    prevText = null;
-                } else if (ShouldAppendCode(prevParseResult, result)) {
-                    prevText = newCode;
-                    prevParseResult = result;
-                } else if (prevText != null) {
-                    // we have a complete input
-                    yield return FixEndingNewLine(prevText);
-                    temp.Clear();
-
-                    // reparse this line so our state remains consistent as if we just started out.
-                    i--;
-                    prevParseResult = null;
-                    prevText = null;
-                } else {
-                    prevParseResult = result;
                 }
-            }
 
-            if (temp.Length > 0) {
-                yield return FixEndingNewLine(temp.ToString());
+                if (temp.Length > 0) {
+                    yield return FixEndingNewLine(temp.ToString());
+                }
             }
         }
 
