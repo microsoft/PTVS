@@ -42,6 +42,7 @@ namespace Microsoft.PythonTools.Analysis {
         private readonly Version _version;
         private readonly string _interpreter;
         private readonly string _library;
+        private readonly HashSet<string> _builtinSourceLibraries;
         private readonly string _outDir;
         private readonly List<string> _baseDb;
         private readonly string _logPrivate, _logGlobal, _logDiagnostic;
@@ -186,6 +187,8 @@ namespace Microsoft.PythonTools.Analysis {
             _logDiagnostic = logDiagnostic;
             _all = rescanAll;
             _needsRefresh = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            _builtinSourceLibraries = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            _builtinSourceLibraries.Add(_library);
 
             if (_id != Guid.Empty) {
                 var identifier = AnalyzerStatusUpdater.GetIdentifier(_id, _version);
@@ -372,6 +375,14 @@ namespace Microsoft.PythonTools.Analysis {
                 .GroupBy(mp => mp.LibraryPath, StringComparer.OrdinalIgnoreCase)
                 .Select(group => group.ToList())
                 .ToList();
+
+            if (!string.IsNullOrEmpty(_interpreter)) {
+                var dllPath = Path.Combine(Path.GetDirectoryName(_interpreter), "DLLs");
+                if (Directory.Exists(dllPath)) {
+                    _builtinSourceLibraries.Add(dllPath);
+                    _fileGroups.Add(ModulePath.GetModulesInPath(dllPath, recurse: false).ToList());
+                }
+            }
 
             Directory.CreateDirectory(_outDir);
 
@@ -696,7 +707,7 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         private string GetOutputDir(ModulePath file) {
-            if (file.LibraryPath == _library) {
+            if (_builtinSourceLibraries.Contains(file.LibraryPath)) {
                 return _outDir;
             } else {
                 return Path.Combine(_outDir,

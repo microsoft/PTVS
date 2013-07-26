@@ -109,6 +109,12 @@ class DoubleInheritance(SingleInheritance):
 
 class MultipleInheritance(WithInstanceMembers, WithMemberFunctions):
     pass
+
+class MultiplyDefinedClass(object): pass
+class MultiplyDefinedClass(object): pass
+
+def ReturningMultiplyDefinedClass():
+    return MultiplyDefinedClass()
 ";
 
             using (var newPs = SaveLoad(PythonLanguageVersion.V27, new AnalysisModule("test", "test.py", code))) {
@@ -138,6 +144,8 @@ WithMemberFunctions = test.WithMemberFunctions
 SingleInheritance = test.SingleInheritance
 DoubleInheritance = test.DoubleInheritance
 MultipleInheritance = test.MultipleInheritance
+MultiplyDefinedClass = test.MultiplyDefinedClass
+ReturningMultiplyDefinedClass = test.ReturningMultiplyDefinedClass
 ";
                 var newMod = newPs.NewModule("baz", codeText);
                 int pos = codeText.LastIndexOf('\n');
@@ -186,6 +194,12 @@ MultipleInheritance = test.MultipleInheritance
                 AssertUtil.ContainsAtLeast(newMod.Analysis.GetMemberNamesByIndex("SingleInheritance", pos), "bar", "baz");
                 AssertUtil.ContainsAtLeast(newMod.Analysis.GetMemberNamesByIndex("DoubleInheritance", pos), "bar", "baz");
                 AssertUtil.ContainsAtLeast(newMod.Analysis.GetMemberNamesByIndex("MultipleInheritance", pos), "foo", "bar");
+
+                var mdc = newMod.Analysis.GetValuesByIndex("MultiplyDefinedClass", pos).ToList();
+                Assert.AreEqual(2, mdc.Count);
+
+                var rmdc = newMod.Analysis.GetValuesByIndex("ReturningMultiplyDefinedClass", pos).OfType<BuiltinFunctionInfo>().Single();
+                AssertUtil.ContainsExactly(rmdc.Function.Overloads.Single().ReturnType, mdc.Select(p => p.PythonType));
             }
         }
 

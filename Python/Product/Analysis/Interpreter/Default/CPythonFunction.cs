@@ -42,7 +42,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         
         public CPythonFunction(ITypeDatabaseReader typeDb, string name, Dictionary<string, object> functionTable, IMemberContainer declaringType, bool isMethod = false) {
             _name = name;
-
+            
             object doc;
             if (functionTable.TryGetValue("doc", out doc)) {
                 _doc = doc as string;
@@ -80,11 +80,6 @@ namespace Microsoft.PythonTools.Interpreter.Default {
                     .ToList<IPythonFunctionOverload>();
             }
             return EmptyOverloads;
-        }
-
-        internal void AddOverload(IPythonFunctionOverload overload) {
-            Debug.Assert(!object.ReferenceEquals(_overloads, EmptyOverloads));
-            _overloads.Add(overload);
         }
 
         #region IBuiltinFunction Members

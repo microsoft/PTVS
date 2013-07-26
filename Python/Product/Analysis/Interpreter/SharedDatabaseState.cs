@@ -214,12 +214,12 @@ namespace Microsoft.PythonTools.Interpreter {
                                 // Fixup 1: Module was not found.
                                 var mod2 = GetModule(modName);
                                 if (mod2 != null) {
-                                    AssignMemberFromModule(mod2, typeName, indexTypes, assign, true);
+                                    AssignMemberFromModule(mod2, typeName, null, indexTypes, assign, true);
                                 }
                             });
                             return;
                         }
-                        AssignMemberFromModule(module, typeName, indexTypes, assign, true);
+                        AssignMemberFromModule(module, typeName, null, indexTypes, assign, true);
                     }
                 }
                 return;
@@ -233,30 +233,38 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
-        private void AssignMemberFromModule(IPythonModule module, string typeName, List<object> indexTypes, Action<IPythonType> assign, bool addFixups) {
-            IPythonType res;
-            IBuiltinPythonModule builtin;
-            if ((builtin = module as IBuiltinPythonModule) != null) {
-                res = builtin.GetAnyMember(typeName) as IPythonType;
-            } else {
-                res = module.GetMember(null, typeName) as IPythonType;
+        private void AssignMemberFromModule(IPythonModule module, string typeName, IMember memb, List<object> indexTypes, Action<IPythonType> assign, bool addFixups) {
+            if (memb == null) {
+                IBuiltinPythonModule builtin;
+                if ((builtin = module as IBuiltinPythonModule) != null) {
+                    memb = builtin.GetAnyMember(typeName);
+                } else {
+                    memb = module.GetMember(null, typeName);
+                }
             }
-            if (indexTypes != null && res != null) {
-                res = new CPythonSequenceType(res, this, indexTypes);
-            }
-            if (res == null) {
+
+            IPythonType type;
+            CPythonMultipleMembers mm;
+            if (memb == null) {
                 if (addFixups) {
                     AddFixup(() => {
-                        // Fixup 2: Type was not found in module, and we're on our second attempt
-                        AssignMemberFromModule(module, typeName, indexTypes, assign, false);
+                        // Fixup 2: Type was not found in module
+                        AssignMemberFromModule(module, typeName, null, indexTypes, assign, false);
                     });
                     return;
                 } else {
                     // TODO: Maybe skip this to reduce noise in loaded database
                     AddObjectTypeFixup(assign);
+                    return;
                 }
-            } else {
-                assign(res);
+            } else if ((type = memb as IPythonType) != null) {
+                if (indexTypes != null) {
+                    assign(new CPythonSequenceType(type, this, indexTypes));
+                } else {
+                    assign(type);
+                }
+            } else if ((mm = memb as CPythonMultipleMembers) != null) {
+                mm.AssignTypes(this, assign);
             }
         }
 
@@ -419,8 +427,7 @@ namespace Microsoft.PythonTools.Interpreter {
                         object members;
                         object[] memsArray;
                         if (valueDict.TryGetValue("members", out members) && (memsArray = members as object[]) != null) {
-                            IMember[] finalMembers = GetMultipleMembers(memberName, container, memsArray);
-                            assign(memberName, new CPythonMultipleMembers(finalMembers));
+                            assign(memberName, new CPythonMultipleMembers(container, this, memberName, memsArray));
                         }
                         break;
                     case "typeref":
@@ -539,18 +546,6 @@ namespace Microsoft.PythonTools.Interpreter {
                 }
             }
             return false;
-        }
-
-        private IMember[] GetMultipleMembers(string memberName, IMemberContainer container, object[] memsArray) {
-            IMember[] finalMembers = new IMember[memsArray.Length];
-            for (int i = 0; i < finalMembers.Length; i++) {
-                var curMember = memsArray[i] as Dictionary<string, object>;
-                var tmp = i;    // close over the current value of i, not the last one...
-                if (curMember != null) {
-                    ReadMember(memberName, curMember, (name, newMemberValue) => finalMembers[tmp] = newMemberValue, container);
-                }
-            }
-            return finalMembers;
         }
 
         private CPythonType MakeType(string typeName, Dictionary<string, object> valueDict, IMemberContainer container) {

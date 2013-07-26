@@ -338,8 +338,12 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                     break;
                 }
 
-                if (!_globalLock.WaitOne(LOCK_TIMEOUT)) {
-                    continue;
+                try {
+                    if (!_globalLock.WaitOne(LOCK_TIMEOUT)) {
+                        continue;
+                    }
+                } catch (AbandonedMutexException) {
+                    break;
                 }
 
                 try {
@@ -518,8 +522,11 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         }
 
         static void Uninitialize(string identifier, Mutex mutex, MemoryMappedFile file, long offset) {
-            if (!mutex.WaitOne(LOCK_TIMEOUT)) {
-                throw new InvalidOperationException("Unable to uninitialize inter-process communication");
+            try {
+                if (!mutex.WaitOne(LOCK_TIMEOUT)) {
+                    throw new InvalidOperationException("Unable to uninitialize inter-process communication");
+                }
+            } catch (AbandonedMutexException) {
             }
             try {
                 Data me;
