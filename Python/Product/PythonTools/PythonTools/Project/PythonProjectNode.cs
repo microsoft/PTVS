@@ -45,7 +45,6 @@ namespace Microsoft.PythonTools.Project {
         private static readonly object _searchPathEntryKey = new { Name = "SearchPathEntry" };
 
         private DesignerContext _designerContext;
-        private IPythonInterpreter _interpreter;
         private VsProjectAnalyzer _analyzer;
         private readonly HashSet<string> _warningFiles = new HashSet<string>();
         private readonly HashSet<string> _errorFiles = new HashSet<string>();
@@ -483,40 +482,30 @@ namespace Microsoft.PythonTools.Project {
             return PythonToolsPackage.GetLauncher(this);
         }
 
-        public override void BeforeClose() {
-            base.BeforeClose();
-
-            if (_analyzer != null) {
-                _analyzer.Cancel();
-
-                if (this.WarningFiles.Count > 0 || this.ErrorFiles.Count > 0) {
-                    foreach (var node in EnumNodesOfType<PythonFileNode>()) {
-                        _analyzer.UnloadFile(node.GetAnalysis(), suppressUpdate: true);
+        protected override void Dispose(bool disposing) {
+            if (disposing) {
+                if (_analyzer != null && _analyzer.RemoveUser()) {
+                    if (this.WarningFiles.Count > 0 || this.ErrorFiles.Count > 0) {
+                        foreach (var node in EnumNodesOfType<PythonFileNode>()) {
+                            _analyzer.UnloadFile(node.GetAnalysis(), suppressUpdate: true);
+                        }
                     }
+
+                    _analyzer.Dispose();
+                    _analyzer = null;
                 }
 
-                _analyzer.Dispose();
-                _analyzer = null;
+                if (_interpreters != null) {
+                    _interpreters.Dispose();
+                    _interpreters = null;
+                }
             }
 
-            DisposeInterpreter();
-            _interpreters.Dispose();
-            _interpreters = null;
-        }
-
-        private void DisposeInterpreter() {
-            var dispInterp = _interpreter as IDisposable;
-            if (dispInterp != null) {
-                dispInterp.Dispose();
-            }
-            _interpreter = null;
+            base.Dispose(disposing);
         }
 
         public IPythonInterpreter GetInterpreter() {
-            if (_interpreter == null) {
-                CreateInterpreter();
-            }
-            return _interpreter;
+            return GetAnalyzer().Interpreter;
         }
 
         public VsProjectAnalyzer GetAnalyzer() {
@@ -545,6 +534,7 @@ namespace Microsoft.PythonTools.Project {
                         pyProj._analyzer != null &&
                         pyProj._analyzer.InterpreterFactory == curFactory) {
                         // we have the same interpreter, we'll share analysis engines across projects.
+                        pyProj._analyzer.AddUser();
                         return pyProj._analyzer;
                     }
                 }
@@ -552,18 +542,13 @@ namespace Microsoft.PythonTools.Project {
 
             var model = PythonToolsPackage.ComponentModel;
             var interpService = model.GetService<IInterpreterOptionsService>();
+            var factory = GetInterpreterFactory();
             return new VsProjectAnalyzer(
-                GetInterpreter(),
-                GetInterpreterFactory(),
+                factory.CreateInterpreter(),
+                factory,
                 interpService.Interpreters.ToArray(),
                 model.GetService<IErrorProviderFactory>(),
                 this);
-        }
-
-        private void CreateInterpreter() {
-            var fact = GetInterpreterFactory();
-
-            _interpreter = fact.CreateInterpreter();
         }
 
         /// <summary>
@@ -602,7 +587,6 @@ namespace Microsoft.PythonTools.Project {
                 _uiSync.Invoke((EventHandler)ActiveInterpreterChanged, sender, e);
                 return;
             }
-            DisposeInterpreter();
             RefreshInterpreters();
 
             var analyzer = CreateAnalyzer();
@@ -610,6 +594,9 @@ namespace Microsoft.PythonTools.Project {
             Reanalyze(this, analyzer);
             if (_analyzer != null) {
                 analyzer.SwitchAnalyzers(_analyzer);
+                if (_analyzer.RemoveUser()) {
+                    _analyzer.Dispose();
+                }
             }
 
             _analyzer = analyzer;

@@ -25,9 +25,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
             if (_indexTypes.Count > 0) {
                 var vals = new[] { new VariableDef() };
                 vals[0].AddTypes(entry, _indexTypes, false);
-                return new ListInfo(vals, this, node);
+                return new ListInfo(vals, this, node, entry);
             } else {
-                return new ListInfo(VariableDef.EmptyArray, this, node);
+                return new ListInfo(VariableDef.EmptyArray, this, node, entry);
             }
         }
     }

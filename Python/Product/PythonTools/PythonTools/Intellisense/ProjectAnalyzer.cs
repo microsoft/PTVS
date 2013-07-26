@@ -78,6 +78,8 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly AutoResetEvent _queueActivityEvent = new AutoResetEvent(false);
         private readonly IPythonInterpreterFactory[] _allFactories;
 
+        private int _userCount;
+
         private static readonly Lazy<TaskProvider> _taskProvider = new Lazy<TaskProvider>(() => {
             var _errorList = PythonToolsPackage.GetGlobalService(typeof(SVsErrorList)) as IVsTaskList;
             return new TaskProvider(_errorList);
@@ -107,6 +109,20 @@ namespace Microsoft.PythonTools.Intellisense {
                 _pyAnalyzer.Limits.CrossModule = PythonToolsPackage.Instance.OptionsPage.CrossModuleAnalysisLimit;
                 // TODO: Load other limits from options
             }
+
+            _userCount = 1;
+        }
+
+        public void AddUser() {
+            Interlocked.Increment(ref _userCount);
+        }
+
+        /// <summary>
+        /// Reduces the number of known users by one and returns true if the
+        /// analyzer should be disposed.
+        /// </summary>
+        public bool RemoveUser() {
+            return Interlocked.Decrement(ref _userCount) == 0;
         }
 
         internal static string GetZipFileName(IProjectEntry entry) {
@@ -1667,8 +1683,10 @@ namespace Microsoft.PythonTools.Intellisense {
             if (_taskProvider.IsValueCreated) {
                 _taskProvider.Value.UpdateTasks();
             }
+
             _analysisQueue.Stop();
             lock (this) {
+                _pyAnalyzer.Interpreter.ModuleNamesChanged -= OnModulesChanged;
                 ((IDisposable)_pyAnalyzer).Dispose();
             }
         }

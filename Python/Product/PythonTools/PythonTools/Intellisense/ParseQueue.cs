@@ -171,6 +171,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private IList<ITextBuffer> _buffers;
         private bool _parsing, _requeue, _textChange;
         internal IProjectEntry _currentProjEntry;
+        private ITextDocument _document;
         public int AttachedViews;
 
         private const int ReparseDelay = 1000;      // delay in MS before we re-parse a buffer w/ non-line changes.
@@ -183,7 +184,7 @@ namespace Microsoft.PythonTools.Intellisense {
             _currentProjEntry = initialProjectEntry;
             _dispatcher = dispatcher;
             AttachedViews = 1;
-            
+
             InitBuffer(buffer);
         }
 
@@ -200,10 +201,10 @@ namespace Microsoft.PythonTools.Intellisense {
             foreach (var buffer in _buffers) {
                 buffer.ChangedLowPriority -= BufferChangedLowPriority;
                 buffer.Properties.RemoveProperty(typeof(BufferParser));
-                ITextDocument doc;
-                if (buffer.Properties.TryGetProperty<ITextDocument>(typeof(ITextDocument), out doc)) {
-                    doc.EncodingChanged -= EncodingChanged;
-                }                
+                if (_document != null) {
+                    _document.EncodingChanged -= EncodingChanged;
+                    _document = null;
+                }
             }
             _timer.Dispose();
         }
@@ -225,7 +226,7 @@ namespace Microsoft.PythonTools.Intellisense {
         internal void AddBuffer(ITextBuffer textBuffer) {
             lock (this) {
                 EnsureMutableBuffers();
- 
+
                 _buffers.Add(textBuffer);
 
                 InitBuffer(textBuffer);
@@ -243,6 +244,10 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private void UninitBuffer(ITextBuffer subjectBuffer) {
+            if (_document != null) {
+                _document.EncodingChanged -= EncodingChanged;
+                _document = null;
+            }
             subjectBuffer.Properties.RemoveProperty(typeof(IProjectEntry));
             subjectBuffer.Properties.RemoveProperty(typeof(BufferParser));
             subjectBuffer.ChangedLowPriority -= BufferChangedLowPriority;
@@ -252,9 +257,13 @@ namespace Microsoft.PythonTools.Intellisense {
             buffer.Properties.AddProperty(typeof(BufferParser), this);
             buffer.ChangedLowPriority += BufferChangedLowPriority;
             buffer.Properties.AddProperty(typeof(IProjectEntry), _currentProjEntry);
-            ITextDocument doc;
-            if (buffer.Properties.TryGetProperty<ITextDocument>(typeof(ITextDocument), out doc)) {
-                doc.EncodingChanged += EncodingChanged;
+            
+            if (_document != null) {
+                _document.EncodingChanged -= EncodingChanged;
+                _document = null;
+            }
+            if (buffer.Properties.TryGetProperty<ITextDocument>(typeof(ITextDocument), out _document) && _document != null) {
+                _document.EncodingChanged += EncodingChanged;
             }
         }
 
@@ -336,8 +345,8 @@ namespace Microsoft.PythonTools.Intellisense {
 
         internal void BufferChangedLowPriority(object sender, TextContentChangedEventArgs e) {
             lock (this) {
-                // only immediately re-parse on line changes after we've seen a text change.                   
-                
+                // only immediately re-parse on line changes after we've seen a text change.
+
                 if (_parsing) {
                     // we are currently parsing, just reque when we complete
                     _requeue = true;

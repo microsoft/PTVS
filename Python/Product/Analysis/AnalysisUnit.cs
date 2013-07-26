@@ -532,7 +532,7 @@ namespace Microsoft.PythonTools.Analysis {
     class SetComprehensionAnalysisUnit : ComprehensionAnalysisUnit {
         public SetComprehensionAnalysisUnit(Comprehension node, PythonAst parent, AnalysisUnit outerUnit, InterpreterScope outerScope)
             : base(node, parent,
-            new ComprehensionScope(new SetInfo(outerUnit.ProjectState, node), node, outerScope),
+            new ComprehensionScope(new SetInfo(outerUnit.ProjectState, node, outerUnit.ProjectEntry), node, outerScope),
             outerUnit) { }
 
         internal override void AnalyzeWorker(DDG ddg, CancellationToken cancel) {
@@ -565,7 +565,13 @@ namespace Microsoft.PythonTools.Analysis {
     class ListComprehensionAnalysisUnit : ComprehensionAnalysisUnit {
         public ListComprehensionAnalysisUnit(Comprehension node, PythonAst parent, AnalysisUnit outerUnit, InterpreterScope outerScope)
             : base(node, parent,
-            new ComprehensionScope(new ListInfo(VariableDef.EmptyArray, outerUnit.ProjectState.ClassInfos[BuiltinTypeId.List], node), node, outerScope),
+            new ComprehensionScope(
+                new ListInfo(
+                    VariableDef.EmptyArray,
+                    outerUnit.ProjectState.ClassInfos[BuiltinTypeId.List],
+                    node,
+                    outerUnit.ProjectEntry
+                ), node, outerScope),
             outerUnit) { }
 
         internal override void AnalyzeWorker(DDG ddg, CancellationToken cancel) {

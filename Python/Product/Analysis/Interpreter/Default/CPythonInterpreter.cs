@@ -21,7 +21,7 @@ using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
 
 namespace Microsoft.PythonTools.Interpreter.Default {
-    class CPythonInterpreter : IPythonInterpreter {
+    class CPythonInterpreter : IPythonInterpreter, IDisposable {
         readonly Version _langVersion;
         private PythonTypeDatabase _typeDb;
         private HashSet<ProjectReference> _references;
@@ -161,5 +161,12 @@ namespace Microsoft.PythonTools.Interpreter.Default {
 
         #endregion
 
+
+        public void Dispose() {
+            if (_typeDb != null) {
+                _typeDb.DatabaseReplaced -= OnDatabaseReplaced;
+                _typeDb = null;
+            }
+        }
     }
 }

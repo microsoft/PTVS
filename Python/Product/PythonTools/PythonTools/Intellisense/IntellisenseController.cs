@@ -24,6 +24,7 @@ using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.IncrementalSearch;
 using Microsoft.VisualStudio.Text.Operations;
+using Microsoft.VisualStudioTools.Project;
 using VSConstants = Microsoft.VisualStudio.VSConstants;
 
 namespace Microsoft.PythonTools.Intellisense {
@@ -52,6 +53,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         internal void SetBufferParser(BufferParser bufferParser) {
+            Utilities.CheckNotNull(bufferParser, "Cannot set buffer parser multiple times");
             _bufferParser = bufferParser;
         }
 
@@ -78,12 +80,13 @@ namespace Microsoft.PythonTools.Intellisense {
         public void ConnectSubjectBuffer(ITextBuffer subjectBuffer) {
             PropagateAnalyzer(subjectBuffer);
 
-            BufferParser parser;
-            if (!subjectBuffer.Properties.TryGetProperty(typeof(BufferParser), out parser)) {
+            Debug.Assert(_bufferParser != null, "SetBufferParser has not been called");
+            BufferParser existingParser;
+            if (!subjectBuffer.Properties.TryGetProperty(typeof(BufferParser), out existingParser)) {
                 _bufferParser.AddBuffer(subjectBuffer);
             } else {
                 // already connected to a buffer parser, we should have the same project entry
-                Debug.Assert(_bufferParser._currentProjEntry == parser._currentProjEntry);
+                Debug.Assert(_bufferParser._currentProjEntry == existingParser._currentProjEntry);
             }
         }
 
@@ -96,9 +99,10 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public void DisconnectSubjectBuffer(ITextBuffer subjectBuffer) {
             // only disconnect if we own the buffer parser
-            BufferParser parser;
-            if (subjectBuffer.Properties.TryGetProperty<BufferParser>(typeof(BufferParser), out parser) && 
-                --parser.AttachedViews == 0) {
+            Debug.Assert(_bufferParser != null, "SetBufferParser has not been called");
+            BufferParser existingParser;
+            if (subjectBuffer.Properties.TryGetProperty<BufferParser>(typeof(BufferParser), out existingParser) &&
+                --existingParser.AttachedViews == 0) {
                 _bufferParser.RemoveBuffer(subjectBuffer);
             }
         }
@@ -114,6 +118,9 @@ namespace Microsoft.PythonTools.Intellisense {
             if (textView != _textView) {
                 throw new ArgumentException("Not attached to specified text view", "textView");
             }
+
+            _textView.MouseHover -= TextViewMouseHover;
+            _textView.Properties.RemoveProperty(typeof(IntellisenseController));
 
             DetachKeyboardFilter();
         }

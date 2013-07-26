@@ -25,8 +25,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
         private ListInsertBoundBuiltinMethodInfo _insertMethod;
         private ListExtendBoundBuiltinMethodInfo _extendMethod;
 
-        public ListInfo(VariableDef[] indexTypes, BuiltinClassInfo seqType, Node node)
-            : base(indexTypes, seqType, node) {
+        public ListInfo(VariableDef[] indexTypes, BuiltinClassInfo seqType, Node node, ProjectEntry entry)
+            : base(indexTypes, seqType, node, entry) {
             EnsureAppend();
         }
 

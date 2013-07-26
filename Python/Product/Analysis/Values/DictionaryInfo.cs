@@ -282,7 +282,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     _keyValueTuple = new SequenceInfo(
                         new[] { keysDef, valuesDef },
                         ProjectState.ClassInfos[BuiltinTypeId.Tuple],
-                        _node
+                        _node,
+                        _declaringModule
                     );
                     _keysAndValues.AddDependency(new UpdateItemsAnalysisUnit(this));
                 }
@@ -328,7 +329,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     _list = new ListInfo(
                         new[] { _myDict.KeyValueTupleVariable },
                         unit.ProjectState.ClassInfos[BuiltinTypeId.List],
-                        node
+                        node,
+                        unit.ProjectEntry
                     );
                 }
 
@@ -367,7 +369,12 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 if (_list == null) {
                     var listVar = new VariableDef();
                     _myDict._keysAndValues.CopyKeysTo(listVar);
-                    _list = new ListInfo(new[] { listVar }, unit.ProjectState.ClassInfos[BuiltinTypeId.List], node);
+                    _list = new ListInfo(
+                        new[] { listVar },
+                        unit.ProjectState.ClassInfos[BuiltinTypeId.List],
+                        node,
+                        unit.ProjectEntry
+                    );
                 }
                 return _list;
             }
@@ -393,7 +400,12 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 if (_list == null) {
                     var valuesVar = new VariableDef();
                     _myDict._keysAndValues.CopyValuesTo(valuesVar);
-                    _list = new ListInfo(new[] { valuesVar }, unit.ProjectState.ClassInfos[BuiltinTypeId.List], node);
+                    _list = new ListInfo(
+                        new[] { valuesVar },
+                        unit.ProjectState.ClassInfos[BuiltinTypeId.List],
+                        node,
+                        unit.ProjectEntry
+                    );
                 }
                 return _list;
             }

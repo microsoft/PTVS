@@ -523,6 +523,10 @@ namespace Microsoft.IronPythonTools.Interpreter {
         #region IDisposable Members
 
         public void Dispose() {
+            if (_typeDb != null) {
+                _typeDb.DatabaseReplaced -= OnDatabaseReplaced;
+                _typeDb = null;
+            }
             AppDomain.CurrentDomain.AssemblyResolve -= AssemblyResolver.Instance.CurrentDomain_AssemblyResolve;
             _unloader.Dispose();
         }

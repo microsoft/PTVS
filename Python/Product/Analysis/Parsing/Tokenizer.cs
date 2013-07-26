@@ -195,6 +195,7 @@ namespace Microsoft.PythonTools.Parsing {
                 _state = new State(_options);
             }
 
+            Debug.Assert(_reader == null, "Must uninitialize tokenizer before reinitializing");
             _reader = reader;
             
             if (_buffer == null || _buffer.Length < bufferCapacity) {
@@ -209,6 +210,15 @@ namespace Microsoft.PythonTools.Parsing {
             _tokenEndIndex = -1;
             _tokenStartIndex = 0;
 
+            _start = _end = 0;
+            _position = 0;
+        }
+
+        public void Uninitialize() {
+            if (_reader != null) {
+                _reader.Dispose();
+                _reader = null;
+            }
             _start = _end = 0;
             _position = 0;
         }

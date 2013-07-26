@@ -42,11 +42,18 @@ namespace Microsoft.PythonTools.Editor {
             // so we track both changes and position changed.
             view.Caret.PositionChanged += matcher.CaretPositionChanged;
             view.TextBuffer.Changed += matcher.TextBufferChanged;
+            view.Closed += matcher.TextViewClosed;
         }
 
         public BraceMatcher(ITextView view, IComponentModel componentModel) {
             _textView = view;
             _compModel = componentModel;
+        }
+
+        private void TextViewClosed(object sender, EventArgs e) {
+            _textView.Caret.PositionChanged -= CaretPositionChanged;
+            _textView.TextBuffer.Changed -= TextBufferChanged;
+            _textView.Closed -= TextViewClosed;
         }
 
         private void CaretPositionChanged(object sender, CaretPositionChangedEventArgs e) {

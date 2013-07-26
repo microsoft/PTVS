@@ -17,8 +17,8 @@ using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Values {
     internal class SetInfo : SequenceInfo {
-        public SetInfo(PythonAnalyzer projectState, Node node)
-            : base(VariableDef.EmptyArray, projectState.ClassInfos[BuiltinTypeId.Set], node) { }
+        public SetInfo(PythonAnalyzer projectState, Node node, ProjectEntry entry)
+            : base(VariableDef.EmptyArray, projectState.ClassInfos[BuiltinTypeId.Set], node, entry) { }
 
         public void AddTypes(AnalysisUnit unit, IAnalysisSet types) {
             base.AddTypes(unit, new[] { types });

@@ -315,8 +315,12 @@ namespace Microsoft.PythonTools {
             var tcp = new SnapshotSpanSourceCodeReader(lineSpan);
 
             tokenizer.Initialize(previousLineState, tcp, new SourceLocation(line.Start.Position, lineNo + 1, 1));
-            var tokens = tokenizer.ReadTokens(lineSpan.Length).ToArray();
-            return new LineTokenization(tokens, tokenizer.CurrentState);
+            try {
+                var tokens = tokenizer.ReadTokens(lineSpan.Length).ToArray();
+                return new LineTokenization(tokens, tokenizer.CurrentState);
+            } finally {
+                tokenizer.Uninitialize();
+            }
         }
 
         private ClassificationSpan ClassifyToken(SnapshotSpan span, TokenInfo token, int lineNumber) {

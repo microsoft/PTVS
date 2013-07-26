@@ -214,7 +214,11 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         private static IAnalysisSet EvaluateSet(ExpressionEvaluator ee, Node node) {
             var n = (SetExpression)node;
 
-            var setInfo = (SetInfo)ee.Scope.GetOrMakeNodeValue(node, x => new SetInfo(ee.ProjectState, x));
+            var setInfo = (SetInfo)ee.Scope.GetOrMakeNodeValue(node, x => new SetInfo(
+                ee.ProjectState,
+                x,
+                ee._unit.ProjectEntry
+            ));
             foreach (var x in n.Items) {
                 setInfo.AddTypes(ee._unit, ee.Evaluate(x));
             }
@@ -354,7 +358,12 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
 
                 var listInfo = (ListInfo)ee.Scope.GetOrMakeNodeValue(
                     node,
-                    (x) => new ListInfo(VariableDef.EmptyArray, ee._unit.ProjectState.ClassInfos[BuiltinTypeId.List], node).SelfSet);
+                    (x) => new ListInfo(
+                        VariableDef.EmptyArray,
+                        ee._unit.ProjectState.ClassInfos[BuiltinTypeId.List],
+                        node,
+                        ee._unit.ProjectEntry
+                    ).SelfSet);
 
                 listInfo.AddTypes(ee._unit, new[] { ee.Evaluate(listComp.Item) });
 
@@ -482,10 +491,20 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         private IAnalysisSet MakeSequence(ExpressionEvaluator ee, Node node) {
             var sequence = (SequenceInfo)ee.Scope.GetOrMakeNodeValue(node, x => {
                 if (node is ListExpression) {
-                    return new ListInfo(VariableDef.EmptyArray, _unit.ProjectState.ClassInfos[BuiltinTypeId.List], node).SelfSet;
+                    return new ListInfo(
+                        VariableDef.EmptyArray,
+                        _unit.ProjectState.ClassInfos[BuiltinTypeId.List],
+                        node,
+                        _unit.ProjectEntry
+                    ).SelfSet;
                 } else {
                     Debug.Assert(node is TupleExpression);
-                    return new SequenceInfo(VariableDef.EmptyArray, _unit.ProjectState.ClassInfos[BuiltinTypeId.Tuple], node).SelfSet;
+                    return new SequenceInfo(
+                        VariableDef.EmptyArray,
+                        _unit.ProjectState.ClassInfos[BuiltinTypeId.Tuple],
+                        node,
+                        _unit.ProjectEntry
+                    ).SelfSet;
                 }
             });
             var seqItems = ((SequenceExpression)node).Items;

@@ -23,8 +23,23 @@ namespace Microsoft.PythonTools.Analysis.Values {
     /// Specialized built-in instance for sequences (lists, tuples)
     /// </summary>
     internal class SequenceInfo : IterableInfo {
-        public SequenceInfo(VariableDef[] indexTypes, BuiltinClassInfo seqType, Node node)
+        private readonly ProjectEntry _declaringModule;
+        
+        public SequenceInfo(VariableDef[] indexTypes, BuiltinClassInfo seqType, Node node, ProjectEntry entry)
             : base(indexTypes, seqType, node) {
+            _declaringModule = entry;
+        }
+
+        public override IPythonProjectEntry DeclaringModule {
+            get {
+                return _declaringModule;
+            }
+        }
+
+        public override int DeclaringVersion {
+            get {
+                return DeclaringModule.AnalysisVersion;
+            }
         }
 
         public override int? GetLength() {
@@ -135,8 +150,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
     }
 
     internal class StarArgsSequenceInfo : SequenceInfo {
-        public StarArgsSequenceInfo(VariableDef[] variableDef, BuiltinClassInfo builtinClassInfo, Node node)
-            : base(variableDef, builtinClassInfo, node) {
+        public StarArgsSequenceInfo(VariableDef[] variableDef, BuiltinClassInfo builtinClassInfo, Node node, ProjectEntry entry)
+            : base(variableDef, builtinClassInfo, node, entry) {
         }
 
         internal void SetIndex(AnalysisUnit unit, int index, IAnalysisSet value) {
@@ -215,13 +230,23 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public ListParameterVariableDef(AnalysisUnit unit, Node location)
             : base(unit.DeclaringModule.ProjectEntry, location) {
-            List = new StarArgsSequenceInfo(VariableDef.EmptyArray, unit.ProjectState.ClassInfos[BuiltinTypeId.Tuple], location);
+            List = new StarArgsSequenceInfo(
+                VariableDef.EmptyArray,
+                unit.ProjectState.ClassInfos[BuiltinTypeId.Tuple],
+                location,
+                unit.ProjectEntry
+            );
             base.AddTypes(unit, List);
         }
 
         public ListParameterVariableDef(AnalysisUnit unit, Node location, VariableDef copy)
             : base(unit.DeclaringModule.ProjectEntry, location, copy) {
-            List = new StarArgsSequenceInfo(VariableDef.EmptyArray, unit.ProjectState.ClassInfos[BuiltinTypeId.Tuple], location);
+            List = new StarArgsSequenceInfo(
+                VariableDef.EmptyArray,
+                unit.ProjectState.ClassInfos[BuiltinTypeId.Tuple],
+                location,
+                unit.ProjectEntry
+            );
             base.AddTypes(unit, List);
         }
     }

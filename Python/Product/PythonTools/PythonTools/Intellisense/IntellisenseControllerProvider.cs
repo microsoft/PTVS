@@ -12,6 +12,7 @@
  *
  * ***************************************************************************/
 
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Linq;
@@ -41,6 +42,9 @@ namespace Microsoft.PythonTools.Intellisense {
         [Import]
         internal IIncrementalSearchFactoryService _IncrementalSearch = null; // Set via MEF
 
+        readonly Dictionary<ITextView, Tuple<BufferParser, VsProjectAnalyzer>> _hookedCloseEvents =
+            new Dictionary<ITextView, Tuple<BufferParser, VsProjectAnalyzer>>();
+
         public IIntellisenseController TryCreateIntellisenseController(ITextView textView, IList<ITextBuffer> subjectBuffers) {
             IntellisenseController controller;
             if (!textView.Properties.TryGetProperty<IntellisenseController>(typeof(IntellisenseController), out controller)) {
@@ -52,16 +56,12 @@ namespace Microsoft.PythonTools.Intellisense {
                 var buffer = subjectBuffers[0];
 
                 foreach (var subjBuf in subjectBuffers) {
-                    // TODO: Check whether `buffer` should be `subjBuf`
-                    controller.PropagateAnalyzer(buffer);
+                    controller.PropagateAnalyzer(subjBuf);
                 }
 
                 var entry = analyzer.MonitorTextBuffer(textView, buffer);
-                textView.Closed += (sender, args) => {
-                    if (entry.BufferParser.AttachedViews == 0) {
-                        analyzer.StopMonitoringTextBuffer(entry.BufferParser);
-                    }
-                };
+                _hookedCloseEvents[textView] = Tuple.Create(entry.BufferParser, analyzer);
+                textView.Closed += TextView_Closed;
 
                 for (int i = 1; i < subjectBuffers.Count; i++) {
                     entry.BufferParser.AddBuffer(subjectBuffers[i]);
@@ -69,6 +69,21 @@ namespace Microsoft.PythonTools.Intellisense {
                 controller.SetBufferParser(entry.BufferParser);
             }
             return controller;
+        }
+
+        private void TextView_Closed(object sender, EventArgs e) {
+            var textView = sender as ITextView;
+            Tuple<BufferParser, VsProjectAnalyzer> tuple;
+            if (textView == null || !_hookedCloseEvents.TryGetValue(textView, out tuple)) {
+                return;
+            }
+
+            textView.Closed -= TextView_Closed;
+            _hookedCloseEvents.Remove(textView);
+
+            if (tuple.Item1.AttachedViews == 0) {
+                tuple.Item2.StopMonitoringTextBuffer(tuple.Item1);
+            }
         }
 
         internal static IntellisenseController GetOrCreateController(IComponentModel model, ITextView textView) {

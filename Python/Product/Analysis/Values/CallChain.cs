@@ -92,17 +92,85 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public override int GetHashCode() {
-            return this.Aggregate(13187, (hc, n) => hc ^ n.GetHashCode());
+            if (_chain != null) {
+                return ((_chain as Node) ?? ((Node[])_chain)[0]).GetHashCode() ^ 13187;
+            }
+            return 13187;
         }
 
         public bool Equals(CallChain other) {
-            for (int x = 0, y = 0; x < Count && y < other.Count; ++x, ++y) {
-                if (!this[x].Equals(other[y])) {
+            for (int i = 0; i < Count && i < other.Count; ++i) {
+                if (!this[i].Equals(other[i])) {
                     return false;
                 }
             }
             // Unequal length is okay as long as the prefix matches.
             return true;
+        }
+    }
+
+    internal class CallChainSet<T> {
+        Dictionary<IPythonProjectEntry, Tuple<int, Dictionary<CallChain, T>>> _data;
+
+        public bool TryGetValue(IPythonProjectEntry entry, CallChain chain, out T value) {
+            value = default(T);
+
+            if (_data == null) {
+                return false;
+            }
+
+            Tuple<int, Dictionary<CallChain, T>> entryData;
+            if (!_data.TryGetValue(entry, out entryData)) {
+                return false;
+            }
+            if (entryData.Item1 != entry.AnalysisVersion) {
+                _data.Remove(entry);
+                return false;
+            }
+            return entryData.Item2.TryGetValue(chain, out value);
+        }
+
+        public void Clear() {
+            _data = null;
+        }
+
+        public bool Any() {
+            return _data != null;
+        }
+
+        public int Count {
+            get {
+                if (_data == null) {
+                    return 0;
+                }
+                return _data.Values.Sum(v => v.Item2.Values.Count);
+            }
+        }
+
+        public void Add(IPythonProjectEntry entry, CallChain chain, T value) {
+            if (_data == null) {
+                _data = new Dictionary<IPythonProjectEntry, Tuple<int, Dictionary<CallChain, T>>>();
+            }
+            
+            Tuple<int, Dictionary<CallChain, T>> entryData;
+            if (!_data.TryGetValue(entry, out entryData) || entryData.Item1 != entry.AnalysisVersion) {
+                _data[entry] = entryData = new Tuple<int, Dictionary<CallChain, T>>(
+                    entry.AnalysisVersion,
+                    new Dictionary<CallChain, T>()
+                );
+            }
+
+            entryData.Item2[chain] = value;
+        }
+
+        public IEnumerable<T> Values {
+            get {
+                if (_data == null) {
+                    return Enumerable.Empty<T>();
+                }
+
+                return _data.Values.SelectMany(v => v.Item2.Values);
+            }
         }
     }
 }

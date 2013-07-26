@@ -37,7 +37,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         private int _callsSinceLimitChange;
 
         static readonly CallChain _arglessCall = new CallChain(new CallExpression(null, null));
-        internal Dictionary<CallChain, FunctionAnalysisUnit> _allCalls;
+        internal CallChainSet<FunctionAnalysisUnit> _allCalls;
 
         internal FunctionInfo(FunctionDefinition node, AnalysisUnit declUnit, InterpreterScope declScope) {
             _projectEntry = declUnit.ProjectEntry;
@@ -85,18 +85,18 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public override IAnalysisSet Call(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
             var callArgs = ArgumentSet.FromArgs(FunctionDefinition, unit, args, keywordArgNames);
 
-            if (_allCalls == null) {
-                _allCalls = new Dictionary<CallChain, FunctionAnalysisUnit>();
-            }
-
             FunctionAnalysisUnit calledUnit;
             bool updateArguments = true;
 
             if (callArgs.Count == 0 || (ProjectState.Limits.UnifyCallsToNew && Name == "__new__")) {
                 calledUnit = (FunctionAnalysisUnit)AnalysisUnit;
             } else {
+                if (_allCalls == null) {
+                    _allCalls = new CallChainSet<FunctionAnalysisUnit>();
+                }
+
                 var chain = new CallChain(node, unit, _callDepthLimit);
-                if (!_allCalls.TryGetValue(chain, out calledUnit)) {
+                if (!_allCalls.TryGetValue(unit.ProjectEntry, chain, out calledUnit)) {
                     if (unit.ForEval) {
                         // Call expressions that weren't analyzed get the union result
                         // of all calls to this function.
@@ -106,7 +106,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
                         }
                         return res;
                     } else {
-                        _allCalls[chain] = calledUnit = new FunctionAnalysisUnit((FunctionAnalysisUnit)AnalysisUnit, chain, callArgs);
+                        calledUnit = new FunctionAnalysisUnit((FunctionAnalysisUnit)AnalysisUnit, chain, callArgs);
+                        _allCalls.Add(unit.ProjectEntry, chain, calledUnit);
                         updateArguments = false;
                         _callsSinceLimitChange += 1;
                         if (_callsSinceLimitChange >= ProjectState.Limits.DecreaseCallDepth && _callDepthLimit > 1) {
@@ -515,7 +516,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             var scopeSet = new HashSet<InterpreterScope>();
             scopeSet.Add(AnalysisUnit.Scope);
             if (_allCalls != null) {
-                scopeSet.UnionWith(_allCalls.Select(au => au.Value.Scope));
+                scopeSet.UnionWith(_allCalls.Values.Select(au => au.Scope));
             }
 
             int index = 0;

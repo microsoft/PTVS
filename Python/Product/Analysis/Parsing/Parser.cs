@@ -4288,6 +4288,9 @@ namespace Microsoft.PythonTools.Parsing {
             if (_sourceReader != null) {
                 _sourceReader.Close();
             }
+            if (_tokenizer != null) {
+                _tokenizer.Uninitialize();
+            }
         }
 
         #endregion
