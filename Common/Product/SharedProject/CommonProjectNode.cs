@@ -1177,7 +1177,7 @@ namespace Microsoft.VisualStudioTools.Project {
             this.OleServiceProvider.AddService(typeof(DesignerContext), new OleServiceProvider.ServiceCreatorCallback(this.CreateServices), false);
         }
 
-        public bool BoldItem(HierarchyNode node, bool isBold) {
+        public void BoldItem(HierarchyNode node, bool isBold) {
             IVsUIHierarchyWindow2 windows = UIHierarchyUtilities.GetUIHierarchyWindow(
                 Site as IServiceProvider,
                 new Guid(ToolWindowGuids80.SolutionExplorer)) as IVsUIHierarchyWindow2;
@@ -1195,7 +1195,7 @@ namespace Microsoft.VisualStudioTools.Project {
                 if (isBold) {
                     _needBolding.Add(node);
                 }
-                return false;
+                return;
             }
 #endif
 
@@ -1205,7 +1205,10 @@ namespace Microsoft.VisualStudioTools.Project {
                 (uint)__VSHIERITEMATTRIBUTE.VSHIERITEMATTRIBUTE_Bold,
                 isBold
             ))) {
-                return false;
+                if (isBold) {
+                    _needBolding.Add(node);
+                }
+                return;
             }
 
 #if DEV11_OR_LATER
@@ -1222,10 +1225,8 @@ namespace Microsoft.VisualStudioTools.Project {
                 if (isBold) {
                     _needBolding.Add(node);
                 }
-                return false;
             }
 #endif
-            return true;
         }
 
         private void BoldDeferredItems() {
