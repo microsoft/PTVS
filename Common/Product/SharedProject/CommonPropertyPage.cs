@@ -86,6 +86,7 @@ namespace Microsoft.VisualStudioTools.Project {
         }
 
         void IPropertyPage.Deactivate() {
+            Project = null;
             Control.Dispose();
         }
 

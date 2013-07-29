@@ -39,12 +39,25 @@ namespace Microsoft.PythonTools.Project {
                 return base.Project;
             }
             set {
+                if (base.Project != null) {
+                    PythonProject.Interpreters.InterpreterFactoriesChanged -= OnInterpretersChanged;
+                    PythonProject.Interpreters.ActiveInterpreterChanged -= OnInterpretersChanged;
+                    base.Project.PropertyPage = null;
+                }
                 base.Project = value;
                 if (value != null) {
+                    PythonProject.Interpreters.InterpreterFactoriesChanged += OnInterpretersChanged;
+                    PythonProject.Interpreters.ActiveInterpreterChanged += OnInterpretersChanged;
                     value.PropertyPage = this;
-                } else {
-                    value.PropertyPage = null;
                 }
+            }
+        }
+
+        private void OnInterpretersChanged(object sender, EventArgs e) {
+            if (_control.InvokeRequired) {
+                _control.BeginInvoke((Action)_control.OnInterpretersChanged);
+            } else {
+                _control.OnInterpretersChanged();
             }
         }
 

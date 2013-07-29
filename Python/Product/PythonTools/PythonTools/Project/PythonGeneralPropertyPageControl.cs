@@ -41,6 +41,7 @@ namespace Microsoft.PythonTools.Project {
             _defaultInterpreter.BeginUpdate();
             
             try {
+                var selection = _defaultInterpreter.SelectedItem;
                 _defaultInterpreter.Items.Clear();
                 var provider = _propPage.PythonProject != null ? _propPage.PythonProject.Interpreters : null;
                 var available = provider != null ? provider.GetInterpreterFactories().ToArray() : null;
@@ -65,6 +66,15 @@ namespace Microsoft.PythonTools.Project {
                         _defaultInterpreter.Items.Add(interpreter);
                     }
                 }
+
+                if (provider == null || provider.IsActiveInterpreterGlobalDefault) {
+                    // ActiveInterpreter will never be null, so we need to check
+                    // the property to find out if it's following the global
+                    // default.
+                    SetDefaultInterpreter(null);
+                } else {
+                    SetDefaultInterpreter(provider.ActiveInterpreter);
+                }
             } finally {
                 _defaultInterpreter.EndUpdate();
             }
@@ -72,7 +82,7 @@ namespace Microsoft.PythonTools.Project {
 
         internal void OnInterpretersChanged() {
             _defaultInterpreter.SelectedIndexChanged -= Changed;
-
+            
             InitializeInterpreters();
 
             _defaultInterpreter.SelectedIndexChanged += Changed;
