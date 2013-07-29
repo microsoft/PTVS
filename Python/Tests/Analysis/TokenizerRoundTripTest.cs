@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using Microsoft.PythonTools.Parsing;
@@ -70,6 +71,55 @@ namespace AnalysisTests {
             }
         }
 
+        struct ExpectedToken {
+            public readonly TokenKind Kind;
+            public readonly IndexSpan Span;
+            public readonly string Image;
+
+            public ExpectedToken(TokenKind kind, IndexSpan span, string image) {
+                Kind = kind;
+                Span = span;
+                Image = image;
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public void TrailingBackSlash() {
+            var tokens = TestOneString(
+                PythonLanguageVersion.V27, 
+                TokenizerOptions.Verbatim | TokenizerOptions.VerbatimCommentsAndLineJoins,
+                "foo\r\n\\"
+            );
+            AssertEqualTokens(
+                tokens, 
+                new[] { 
+                    new ExpectedToken(TokenKind.Name, new IndexSpan(0, 3), "foo"), 
+                    new ExpectedToken(TokenKind.NewLine, new IndexSpan(3, 2), "\r\n"), 
+                    new ExpectedToken(TokenKind.EndOfFile, new IndexSpan(5, 1), "\\"),
+                }
+            );
+        }
+
+        private static void AssertEqualTokens(List<TokenWithSpan> tokens, ExpectedToken[] expectedTokens) {
+            try {
+                Assert.AreEqual(expectedTokens.Length, tokens.Count);
+                for (int i = 0; i < tokens.Count; i++) {
+                    Assert.AreEqual(expectedTokens[i].Kind, tokens[i].Token.Kind);
+                    Assert.AreEqual(expectedTokens[i].Span, tokens[i].Span);
+                    Assert.AreEqual(expectedTokens[i].Image, tokens[i].Token.VerbatimImage);
+                }
+            } finally {
+                foreach (var token in tokens) {
+                    Console.WriteLine("new ExpectedToken(TokenKind.{0}, new IndexSpan({1}, {2}), \"{3}\"), ",
+                        token.Token.Kind,
+                        token.Span.Start,
+                        token.Span.Length,
+                        token.Token.VerbatimImage
+                    );
+                }
+            }
+        }
+
         [TestMethod, Priority(0)]
         public void BinaryTest() {
             var filename = Path.Combine(System.Environment.GetFolderPath(Environment.SpecialFolder.System), "kernel32.dll");
@@ -91,7 +141,7 @@ namespace AnalysisTests {
             TestOneString(version, optionSet, originalText);
         }
 
-        private static void TestOneString(PythonLanguageVersion version, TokenizerOptions optionSet, string originalText) {
+        private static List<TokenWithSpan> TestOneString(PythonLanguageVersion version, TokenizerOptions optionSet, string originalText) {
             StringBuilder output = new StringBuilder();
 
             var tokenizer = new Tokenizer(version, options: optionSet);
@@ -99,7 +149,10 @@ namespace AnalysisTests {
             Token token;
             int prevOffset = 0;
 
+            List<TokenWithSpan> tokens = new List<TokenWithSpan>();
             while ((token = tokenizer.GetNextToken()) != Tokens.EndOfFileToken) {
+                tokens.Add(new TokenWithSpan(token, tokenizer.TokenSpan));
+
                 output.Append(tokenizer.PreceedingWhiteSpace);
                 output.Append(token.VerbatimImage);
 
@@ -135,8 +188,8 @@ namespace AnalysisTests {
             output.Append(tokenizer.PreceedingWhiteSpace);
 
             Assert.AreEqual(originalText.Length, output.Length);
+            return tokens;
         }
-            
     }
 
     static class StringBuilderExtensions {
