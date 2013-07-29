@@ -41,7 +41,7 @@ namespace Microsoft.PythonTools.Project {
             new KeyValuePair<string, bool>("pip.exe", false)
         };
 
-        private static ProcessOutput Run(IPythonInterpreterFactory factory, Redirector output, params string[] cmd) {
+        private static ProcessOutput Run(IPythonInterpreterFactory factory, Redirector output, bool elevate, params string[] cmd) {
             var args = cmd.AsEnumerable();
             bool isScript = false;
             string pipPath = null;
@@ -69,17 +69,14 @@ namespace Microsoft.PythonTools.Project {
                 UnbufferedEnv,
                 false,
                 output,
-                quoteArgs: false);
-        }
-
-        private static ProcessOutput Run(IPythonInterpreterFactory factory, params string[] cmd) {
-            return Run(factory, null, cmd);
+                quoteArgs: false,
+                elevate: elevate);
         }
 
         public static Task<HashSet<string>> Freeze(IPythonInterpreterFactory factory) {
             return Task.Factory.StartNew<HashSet<string>>((Func<HashSet<string>>)(() => {
                 var lines = new HashSet<string>();
-                using (var proc = Run(factory, "--version")) {
+                using (var proc = Run(factory, null, false, "--version")) {
                     proc.Wait();
                     if (proc.ExitCode == 0) {
                         lines.UnionWith(proc.StandardOutputLines
@@ -89,7 +86,7 @@ namespace Microsoft.PythonTools.Project {
                     }
                 }
 
-                using (var proc = Run(factory, "freeze")) {
+                using (var proc = Run(factory, null, false, "freeze")) {
                     proc.Wait();
                     if (proc.ExitCode == 0) {
                         lines.UnionWith(proc.StandardOutputLines);
@@ -115,9 +112,12 @@ namespace Microsoft.PythonTools.Project {
             }));
         }
 
-        public static Task Install(IPythonInterpreterFactory factory, string package, Redirector output = null) {
+        public static Task Install(IPythonInterpreterFactory factory,
+            string package,
+            bool elevate,
+            Redirector output = null) {
             return Task.Factory.StartNew((Action)(() => {
-                using (var proc = Run(factory, output, "install", package)) {
+                using (var proc = Run(factory, output, elevate, "install", package)) {
                     proc.Wait();
                 }
             }));
@@ -126,11 +126,12 @@ namespace Microsoft.PythonTools.Project {
         public static Task<bool> Install(IPythonInterpreterFactory factory,
             string package,
             IServiceProvider site,
+            bool elevate,
             Redirector output = null) {
 
             Task task;
             if (site != null && !ModulePath.GetModulesInLib(factory).Any(mp => mp.ModuleName == "pip")) {
-                task = QueryInstallPip(factory, site, SR.GetString(SR.InstallPip), output);
+                task = QueryInstallPip(factory, site, SR.GetString(SR.InstallPip), elevate, output);
             } else {
                 var tcs = new TaskCompletionSource<object>();
                 tcs.SetResult(null);
@@ -139,9 +140,13 @@ namespace Microsoft.PythonTools.Project {
             return task.ContinueWith(t => {
                 if (output != null) {
                     output.WriteLine(SR.GetString(SR.PackageInstalling, package));
-                    output.Show();
+                    if (PythonToolsPackage.Instance != null && PythonToolsPackage.Instance.GeneralOptionsPage.ShowOutputWindowForPackageInstallation) {
+                        output.ShowAndActivate();
+                    } else {
+                        output.Show();
+                    }
                 }
-                using (var proc = Run(factory, output, "install", package)) {
+                using (var proc = Run(factory, output, elevate, "install", package)) {
                     proc.Wait();
 
                     if (output != null) {
@@ -150,20 +155,28 @@ namespace Microsoft.PythonTools.Project {
                         } else {
                             output.WriteLine(SR.GetString(SR.PackageInstallFailedExitCode, package, proc.ExitCode ?? -1));
                         }
-                        output.Show();
+                        if (PythonToolsPackage.Instance != null && PythonToolsPackage.Instance.GeneralOptionsPage.ShowOutputWindowForPackageInstallation) {
+                            output.ShowAndActivate();
+                        } else {
+                            output.Show();
+                        }
                     }
                     return proc.ExitCode == 0;
                 }
             }, TaskContinuationOptions.OnlyOnRanToCompletion);
         }
 
-        public static Task<bool> Uninstall(IPythonInterpreterFactory factory, string package, Redirector output = null) {
+        public static Task<bool> Uninstall(IPythonInterpreterFactory factory, string package, bool elevate, Redirector output = null) {
             return Task.Factory.StartNew((Func<bool>)(() => {
                 if (output != null) {
                     output.WriteLine(SR.GetString(SR.PackageUninstalling, package));
-                    output.Show();
+                    if (PythonToolsPackage.Instance != null && PythonToolsPackage.Instance.GeneralOptionsPage.ShowOutputWindowForPackageInstallation) {
+                        output.ShowAndActivate();
+                    } else {
+                        output.Show();
+                    }
                 }
-                using (var proc = Run(factory, output, "uninstall", "-y", package)) {
+                using (var proc = Run(factory, output, elevate, "uninstall", "-y", package)) {
                     proc.Wait();
 
                     if (output != null) {
@@ -172,28 +185,36 @@ namespace Microsoft.PythonTools.Project {
                         } else {
                             output.WriteLine(SR.GetString(SR.PackageUninstallFailedExitCode, package, proc.ExitCode ?? -1));
                         }
-                        output.Show();
+                        if (PythonToolsPackage.Instance != null && PythonToolsPackage.Instance.GeneralOptionsPage.ShowOutputWindowForPackageInstallation) {
+                            output.ShowAndActivate();
+                        } else {
+                            output.Show();
+                        }
                     }
                     return proc.ExitCode == 0;
                 }
             }));
         }
 
-        public static Task InstallPip(IPythonInterpreterFactory factory, Redirector output = null) {
+        public static Task InstallPip(IPythonInterpreterFactory factory, bool elevate, Redirector output = null) {
             var pipDownloaderPath = Path.Combine(PythonToolsPackage.GetPythonToolsInstallPath(), "pip_downloader.py");
 
             return Task.Factory.StartNew((Action)(() => {
                 if (output != null) {
                     output.WriteLine(SR.GetString(SR.PipInstalling));
-                    output.Show();
+                    if (PythonToolsPackage.Instance != null && PythonToolsPackage.Instance.GeneralOptionsPage.ShowOutputWindowForPackageInstallation) {
+                        output.ShowAndActivate();
+                    } else {
+                        output.Show();
+                    }
                 }
-                // TODO: Handle elevation
                 using (var proc = ProcessOutput.Run(factory.Configuration.InterpreterPath,
                     new [] { pipDownloaderPath },
                     factory.Configuration.PrefixPath,
                     null,
                     false,
-                    output)
+                    output,
+                    elevate: PythonToolsPackage.Instance != null && PythonToolsPackage.Instance.GeneralOptionsPage.ElevatePip)
                 ) {
                     proc.Wait();
                     if (output != null) {
@@ -202,7 +223,11 @@ namespace Microsoft.PythonTools.Project {
                         } else {
                             output.WriteLine(SR.GetString(SR.PipInstallFailedExitCode, proc.ExitCode ?? -1));
                         }
-                        output.Show();
+                        if (PythonToolsPackage.Instance != null && PythonToolsPackage.Instance.GeneralOptionsPage.ShowOutputWindowForPackageInstallation) {
+                            output.ShowAndActivate();
+                        } else {
+                            output.Show();
+                        }
                     }
                 }
             }));
@@ -212,6 +237,7 @@ namespace Microsoft.PythonTools.Project {
             string package,
             IServiceProvider site,
             string message,
+            bool elevate,
             Redirector output = null) {
             if (Microsoft.VisualStudio.Shell.VsShellUtilities.ShowMessageBox(site,
                 message,
@@ -224,12 +250,13 @@ namespace Microsoft.PythonTools.Project {
                 return tcs.Task;
             }
 
-            return Install(factory, package, output);
+            return Install(factory, package, elevate, output);
         }
 
         public static Task QueryInstallPip(IPythonInterpreterFactory factory,
             IServiceProvider site,
             string message,
+            bool elevate,
             Redirector output = null) {
             if (Microsoft.VisualStudio.Shell.VsShellUtilities.ShowMessageBox(site,
                 message,
@@ -242,7 +269,7 @@ namespace Microsoft.PythonTools.Project {
                 return tcs.Task;
             }
 
-            return InstallPip(factory, output);
+            return InstallPip(factory, elevate, output);
         }
     }
 }

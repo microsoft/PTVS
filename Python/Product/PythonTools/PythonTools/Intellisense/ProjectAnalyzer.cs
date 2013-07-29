@@ -85,8 +85,6 @@ namespace Microsoft.PythonTools.Intellisense {
             return new TaskProvider(_errorList);
         }, LazyThreadSafetyMode.ExecutionAndPublication);
 
-        private static char[] _invalidPathChars = Path.GetInvalidPathChars();
-
         internal VsProjectAnalyzer(IPythonInterpreterFactory factory, IPythonInterpreterFactory[] allFactories, IErrorProviderFactory errorProvider)
             : this(factory.CreateInterpreter(), factory, allFactories, errorProvider) {
         }
@@ -106,7 +104,7 @@ namespace Microsoft.PythonTools.Intellisense {
             _projectFiles = new ConcurrentDictionary<string, IProjectEntry>(StringComparer.OrdinalIgnoreCase);
 
             if (PythonToolsPackage.Instance != null) {
-                _pyAnalyzer.Limits.CrossModule = PythonToolsPackage.Instance.OptionsPage.CrossModuleAnalysisLimit;
+                _pyAnalyzer.Limits.CrossModule = PythonToolsPackage.Instance.DebuggingOptionsPage.CrossModuleAnalysisLimit;
                 // TODO: Load other limits from options
             }
 
@@ -258,9 +256,8 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private bool ShouldAnalyzePath(string path) {
             foreach (var fact in _allFactories) {
-                if (!String.IsNullOrWhiteSpace(fact.Configuration.InterpreterPath) &&
-                       fact.Configuration.InterpreterPath.IndexOfAny(_invalidPathChars) == -1 &&
-                       CommonUtils.IsSubpathOf(Path.GetDirectoryName(fact.Configuration.InterpreterPath), path)) {
+                if (CommonUtils.IsValidPath(fact.Configuration.InterpreterPath) &&
+                    CommonUtils.IsSubpathOf(Path.GetDirectoryName(fact.Configuration.InterpreterPath), path)) {
                     return false;
                 }
             }

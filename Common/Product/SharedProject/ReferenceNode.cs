@@ -280,7 +280,7 @@ namespace Microsoft.VisualStudioTools.Project
         /// <returns></returns>
         protected virtual int ShowObjectBrowser()
         {
-            if (String.IsNullOrEmpty(this.Url) || !File.Exists(this.Url))
+            if (!File.Exists(this.Url))
             {
                 return (int)OleConstants.OLECMDERR_E_NOTSUPPORTED;
             }

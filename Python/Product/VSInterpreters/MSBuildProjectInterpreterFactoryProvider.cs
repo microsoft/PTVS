@@ -106,7 +106,7 @@ namespace Microsoft.PythonTools.Interpreter {
             foreach (var item in _project.GetItems(InterpreterItem)) {
                 Guid id, baseId;
                 var dir = item.EvaluatedInclude;
-                if (string.IsNullOrEmpty(dir) || dir.IndexOfAny(Path.GetInvalidPathChars()) >= 0) {
+                if (!CommonUtils.IsValidPath(dir)) {
                     errors.AppendLine(string.Format("Interpreter has invalid path: {0}", dir ?? "(null)"));
                     anyError = true;
                     continue;
@@ -143,7 +143,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 }
 
                 var path = item.GetMetadataValue(InterpreterPathKey);
-                if (string.IsNullOrEmpty(path) || path.IndexOfAny(Path.GetInvalidPathChars()) >= 0) {
+                if (!CommonUtils.IsValidPath(path)) {
                     errors.AppendLine(string.Format("Interpreter {0} has invalid value for '{1}': {2}", dir, InterpreterPathKey, path));
                     anyError = true;
                     continue;
@@ -151,7 +151,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 path = CommonUtils.GetAbsoluteFilePath(dir, path);
 
                 var winPath = item.GetMetadataValue(WindowsPathKey);
-                if (string.IsNullOrEmpty(winPath) || winPath.IndexOfAny(Path.GetInvalidPathChars()) >= 0) {
+                if (!CommonUtils.IsValidPath(winPath)) {
                     errors.AppendLine(string.Format("Interpreter {0} has invalid value for '{1}': {2}", dir, WindowsPathKey, winPath));
                     anyError = true;
                     continue;
@@ -162,7 +162,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 if (string.IsNullOrEmpty(libPath)) {
                     libPath = "lib";
                 }
-                if (string.IsNullOrEmpty(libPath) || libPath.IndexOfAny(Path.GetInvalidPathChars()) >= 0) {
+                if (!CommonUtils.IsValidPath(libPath)) {
                     errors.AppendLine(string.Format("Interpreter {0} has invalid value for '{1}': {2}", dir, LibraryPathKey, libPath));
                     anyError = true;
                     continue;
@@ -476,6 +476,7 @@ namespace Microsoft.PythonTools.Interpreter {
 
             string rootPath;
             if (_rootPaths.TryGetValue(factory.Id, out rootPath)) {
+                _rootPaths.Remove(factory.Id);
                 foreach (var item in _project.GetItems(InterpreterItem)) {
                     Guid itemId;
                     if (Guid.TryParse(item.GetMetadataValue(IdKey), out itemId) && factory.Id == itemId) {

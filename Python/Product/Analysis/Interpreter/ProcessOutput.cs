@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using Microsoft.Win32.SafeHandles;
@@ -43,9 +44,16 @@ namespace Microsoft.PythonTools {
 
         /// <summary>
         /// Called when output is written that should be brought to the user's
-        /// immediate attention. The default implementation does nothing.
+        /// attention. The default implementation does nothing.
         /// </summary>
         public virtual void Show() {
+        }
+
+        /// <summary>
+        /// Called when output is written that should be brought to the user's
+        /// immediate attention. The default implementation does nothing.
+        /// </summary>
+        public virtual void ShowAndActivate() {
         }
     }
 
@@ -100,6 +108,13 @@ namespace Microsoft.PythonTools {
         /// <param name="redirector">
         /// An object to receive redirected output.
         /// </param>
+        /// <param name="quoteArgs">
+        /// True to ensure each argument is correctly quoted.
+        /// </param>
+        /// <param name="elevate">
+        /// True to run the process as an administrator. See
+        /// <see cref="RunElevated"/>.
+        /// </param>
         /// <returns>A <see cref="ProcessOutput"/> object.</returns>
         public static ProcessOutput Run(string filename,
                                         IEnumerable<string> arguments,
@@ -107,7 +122,12 @@ namespace Microsoft.PythonTools {
                                         IEnumerable<KeyValuePair<string, string>> env,
                                         bool visible,
                                         Redirector redirector,
-                                        bool quoteArgs = true) {
+                                        bool quoteArgs = true,
+                                        bool elevate = false) {
+            if (elevate) {
+                return RunElevated(filename, arguments, workingDirectory, redirector, quoteArgs);
+            }
+            
             var psi = new ProcessStartInfo(filename);
             if (quoteArgs) {
                 psi.Arguments = string.Join(" ",
@@ -131,6 +151,81 @@ namespace Microsoft.PythonTools {
             return new ProcessOutput(process, redirector);
         }
 
+        /// <summary>
+        /// Runs the file with the provided settings as a user with
+        /// administrative permissions. The window is always hidden and output
+        /// is provided to the redirector when the process terminates.
+        /// </summary>
+        /// <param name="filename">Executable file to run.</param>
+        /// <param name="arguments">Arguments to pass.</param>
+        /// <param name="workingDirectory">Starting directory.</param>
+        /// <param name="redirector">
+        /// An object to receive redirected output.
+        /// </param>
+        /// <returns>A <see cref="ProcessOutput"/> object.</returns>
+        public static ProcessOutput RunElevated(string filename,
+                                                IEnumerable<string> arguments,
+                                                string workingDirectory,
+                                                Redirector redirector,
+                                                bool quoteArgs = true) {
+            var outFile = Path.GetTempFileName();
+            var errFile = Path.GetTempFileName();
+            var psi = new ProcessStartInfo("cmd.exe");
+            psi.CreateNoWindow = true;
+            psi.WindowStyle = ProcessWindowStyle.Hidden;
+            psi.UseShellExecute = true;
+            psi.Verb = "runas";
+            
+            string args;
+            if (quoteArgs) {
+                args = string.Join(" ", arguments.Where(a => a != null).Select(QuoteSingleArgument));
+            } else {
+                args = string.Join(" ", arguments.Where(a => a != null));
+            }
+            psi.Arguments = string.Format("/S /C \"{0} {1} >>{2} 2>>{3}\"", 
+                QuoteSingleArgument(filename),
+                args,
+                QuoteSingleArgument(outFile),
+                QuoteSingleArgument(errFile)
+            );
+            psi.WorkingDirectory = workingDirectory;
+            psi.CreateNoWindow = true;
+            psi.UseShellExecute = true;
+
+            var process = new Process();
+            process.StartInfo = psi;
+            var result = new ProcessOutput(process, redirector);
+            if (redirector != null) {
+                result.Exited += (s, e) => {
+                    try {
+                        try {
+                            var lines = File.ReadAllLines(outFile);
+                            foreach (var line in lines) {
+                                redirector.WriteLine(line);
+                            }
+                        } catch (Exception) {
+                            redirector.WriteErrorLine("Failed to obtain standard output from elevated process.");
+                        }
+                        try {
+                            var lines = File.ReadAllLines(errFile);
+                            foreach (var line in lines) {
+                                redirector.WriteErrorLine(line);
+                            }
+                        } catch (Exception) {
+                            redirector.WriteErrorLine("Failed to obtain standard error from elevated process.");
+                        }
+                    } finally {
+                        try {
+                            File.Delete(outFile);
+                        } catch { }
+                        try {
+                            File.Delete(errFile);
+                        } catch { }
+                    }
+                };
+            }
+            return result;
+        }
 
         internal static IEnumerable<string> SplitLines(string source) {
             int start = 0;

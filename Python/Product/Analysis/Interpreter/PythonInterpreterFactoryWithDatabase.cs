@@ -45,7 +45,7 @@ namespace Microsoft.PythonTools.Interpreter {
             _id = id;
             _config = config;
 
-            if (watchLibraryForChanges && DirectoryExists(_config.LibraryPath)) {
+            if (watchLibraryForChanges && Directory.Exists(_config.LibraryPath)) {
                 _refreshIsCurrentTrigger = new Timer(RefreshIsCurrentTimer_Elapsed);
                 try {
                     _libWatcher = new FileSystemWatcher {
@@ -64,12 +64,6 @@ namespace Microsoft.PythonTools.Interpreter {
             }
 
             Task.Factory.StartNew(() => RefreshIsCurrent(false));
-        }
-
-        private static bool DirectoryExists(string path) {
-            return !string.IsNullOrEmpty(path) &&
-                path.IndexOfAny(Path.GetInvalidPathChars()) < 0 &&
-                Directory.Exists(path);
         }
 
         public InterpreterConfiguration Configuration {
@@ -338,7 +332,7 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         private void RefreshIsCurrentTimer_Elapsed(object state) {
-            if (DirectoryExists(Configuration.LibraryPath)) {
+            if (Directory.Exists(Configuration.LibraryPath)) {
                 RefreshIsCurrent(false);
             } else {
                 lock (_libWatcherLock) {

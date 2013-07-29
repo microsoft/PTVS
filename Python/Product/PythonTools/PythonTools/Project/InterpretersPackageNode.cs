@@ -82,8 +82,8 @@ namespace Microsoft.PythonTools.Project {
             statusBar.SetText(SR.GetString(SR.PackageInstallingSeeOutputWindow, name));
 
             var task = view.InstallUsingPip ?
-                Pip.Install(parent._factory, name, parent.ProjectMgr.Site, redirector) :
-                EasyInstall.Install(parent._factory, name, parent.ProjectMgr.Site, redirector);
+                Pip.Install(parent._factory, name, parent.ProjectMgr.Site, view.InstallElevated, redirector) :
+                EasyInstall.Install(parent._factory, name, parent.ProjectMgr.Site, view.InstallElevated, redirector);
 
             return task.ContinueWith(t => {
                 if (t.IsCompleted) {
@@ -106,7 +106,9 @@ namespace Microsoft.PythonTools.Project {
             var statusBar = (IVsStatusbar)parent.ProjectMgr.Site.GetService(typeof(SVsStatusbar));
             statusBar.SetText(SR.GetString(SR.PackageUninstallingSeeOutputWindow, name));
 
-            return Pip.Uninstall(parent._factory, name, redirector).ContinueWith(t => {
+            bool elevate = PythonToolsPackage.Instance != null && PythonToolsPackage.Instance.GeneralOptionsPage.ElevatePip;
+
+            return Pip.Uninstall(parent._factory, name, elevate, redirector).ContinueWith(t => {
                 if (t.IsCompleted) {
                     bool success = t.Result;
 

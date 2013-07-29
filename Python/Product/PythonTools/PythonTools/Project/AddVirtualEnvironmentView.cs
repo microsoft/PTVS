@@ -147,8 +147,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private static bool IsValidVirtualEnvPath(string path) {
-            if (string.IsNullOrEmpty(path) ||
-                path.IndexOfAny(Path.GetInvalidPathChars()) >= 0) {
+            if (!CommonUtils.IsValidPath(path)) {
                 return false;
             }
 
@@ -300,6 +299,7 @@ namespace Microsoft.PythonTools.Project {
 
             WillInstallPipAndVirtualEnv = false;
             WillInstallVirtualEnv = false;
+            WillInstallElevated = false;
             MayNotSupportVirtualEnv = false;
 
             var interp = view.Interpreter;
@@ -312,7 +312,7 @@ namespace Microsoft.PythonTools.Project {
             RefreshCanCreateVirtualEnv(VirtualEnvPath);
 
             var libPath = interp.Configuration.LibraryPath;
-            if (!string.IsNullOrEmpty(libPath) && Directory.Exists(libPath)) {
+            if (Directory.Exists(libPath)) {
                 bool hasPip = false;
                 bool hasVirtualEnv = false;
                 Task.Factory.StartNew((Action)(() => {
@@ -330,6 +330,9 @@ namespace Microsoft.PythonTools.Project {
                 })).ContinueWith((Action<Task>)(t => {
                     WillInstallPipAndVirtualEnv = !hasPip;
                     WillInstallVirtualEnv = hasPip && !hasVirtualEnv;
+                    WillInstallElevated = !hasVirtualEnv &&
+                        PythonToolsPackage.Instance != null &&
+                        PythonToolsPackage.Instance.GeneralOptionsPage.ElevatePip;
                 }), TaskScheduler.FromCurrentSynchronizationContext());
             }
         }
@@ -373,6 +376,19 @@ namespace Microsoft.PythonTools.Project {
                 new PropertyMetadata(false));
         public static readonly DependencyProperty WillInstallVirtualEnvProperty =
             WillInstallVirtualEnvPropertyKey.DependencyProperty;
+
+        public bool WillInstallElevated {
+            get { return (bool)GetValue(WillInstallElevatedProperty); }
+            private set { SafeSetValue(WillInstallElevatedPropertyKey, value); }
+        }
+
+        private static readonly DependencyPropertyKey WillInstallElevatedPropertyKey =
+            DependencyProperty.RegisterReadOnly("WillInstallElevated",
+                typeof(bool),
+                typeof(AddVirtualEnvironmentView),
+                new PropertyMetadata(false));
+        public static readonly DependencyProperty WillInstallElevatedProperty =
+            WillInstallElevatedPropertyKey.DependencyProperty;
 
 
         public ObservableCollection<InterpreterView> Interpreters {

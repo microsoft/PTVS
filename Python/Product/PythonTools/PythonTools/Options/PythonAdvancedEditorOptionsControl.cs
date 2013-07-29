@@ -16,7 +16,7 @@ using System;
 using System.Windows.Forms;
 
 namespace Microsoft.PythonTools.Options {
-    public partial class PythonAdvancedEditorOptionsControl : UserControl {        
+    public partial class PythonAdvancedEditorOptionsControl : UserControl {
         public PythonAdvancedEditorOptionsControl() {
             InitializeComponent();
             _enterCommits.Checked = PythonToolsPackage.Instance.AdvancedEditorOptionsPage.EnterCommitsIntellisense;

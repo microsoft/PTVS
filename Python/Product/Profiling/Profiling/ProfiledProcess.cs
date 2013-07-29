@@ -50,10 +50,10 @@ namespace Microsoft.PythonTools.Profiling {
                 _args;
 
             processInfo = new ProcessStartInfo(_exe, arguments);
-            if (PythonToolsPackage.Instance.OptionsPage.WaitOnNormalExit) {
+            if (PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnNormalExit) {
                 processInfo.EnvironmentVariables["VSPYPROF_WAIT_ON_NORMAL_EXIT"] = "1";
             }
-            if (PythonToolsPackage.Instance.OptionsPage.WaitOnAbnormalExit) {
+            if (PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnAbnormalExit) {
                 processInfo.EnvironmentVariables["VSPYPROF_WAIT_ON_ABNORMAL_EXIT"] = "1";
             }
             

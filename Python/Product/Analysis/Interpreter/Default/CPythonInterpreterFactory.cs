@@ -15,6 +15,7 @@
 using System;
 using System.IO;
 using System.Reflection;
+using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Interpreter.Default {
     class CPythonInterpreterFactory : PythonInterpreterFactoryWithDatabase {
@@ -43,11 +44,10 @@ namespace Microsoft.PythonTools.Interpreter.Default {
                 watchForNewModules) { }
 
         static string GetDirectoryName(string path) {
-            if (string.IsNullOrEmpty(path) ||
-                path.IndexOfAny(Path.GetInvalidPathChars()) >= 0) {
-                return string.Empty;
+            if (CommonUtils.IsValidPath(path)) {
+                return Path.GetDirectoryName(path);
             }
-            return Path.GetDirectoryName(path);
+            return string.Empty;
         }
     }
 }

@@ -20,6 +20,7 @@ using System.Linq;
 using System.Reflection;
 using System.Windows.Forms;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Options {
@@ -28,6 +29,7 @@ namespace Microsoft.PythonTools.Options {
         private bool _loadingOptions;
         private ToolTip _invalidPathToolTip = new ToolTip();
         private ToolTip _invalidWindowsPathToolTip = new ToolTip();
+        private ToolTip _invalidLibraryPathToolTip = new ToolTip();
 
         public PythonInterpreterOptionsControl() {
             InitializeComponent();
@@ -103,12 +105,7 @@ namespace Microsoft.PythonTools.Options {
             if (curOptions != null) {
                 _defaultInterpreter.Enabled = true;
                 _showSettingsFor.Enabled = true;
-
-                if (curOptions.IsConfigurable) {
-                    _removeInterpreter.Enabled = _path.Enabled = _browsePath.Enabled = _version.Enabled = _arch.Enabled = _windowsPath.Enabled = _browseWindowsPath.Enabled = _pathEnvVar.Enabled = true;
-                } else {
-                    _removeInterpreter.Enabled = _path.Enabled = _browsePath.Enabled = _version.Enabled = _arch.Enabled = _windowsPath.Enabled = _browseWindowsPath.Enabled = _pathEnvVar.Enabled = false;
-                }
+                _interpreterSettingsGroup.Enabled = curOptions.IsConfigurable;
 
                 _loadingOptions = true;
                 try {
@@ -134,14 +131,12 @@ namespace Microsoft.PythonTools.Options {
 
         private void InitializeWithNoInterpreters() {
             _loadingOptions = true;
-            _removeInterpreter.Enabled = _path.Enabled = _browsePath.Enabled = _version.Enabled = _arch.Enabled = _windowsPath.Enabled = _browseWindowsPath.Enabled = _pathEnvVar.Enabled = false;
             _showSettingsFor.Items.Add("No Python Interpreters Installed");
             _defaultInterpreter.Items.Add("No Python Interpreters Installed");
             _showSettingsFor.SelectedIndex = _defaultInterpreter.SelectedIndex = 0;
             _defaultInterpreter.Enabled = false;
             _showSettingsFor.Enabled = false;
-            _browsePath.Enabled = false;
-            _browseWindowsPath.Enabled = false;
+            _interpreterSettingsGroup.Enabled = false;
 
             _path.Text = "";
             _windowsPath.Text = "";
@@ -169,7 +164,10 @@ namespace Microsoft.PythonTools.Options {
 
         private void PathTextChanged(object sender, EventArgs e) {
             if (!_loadingOptions) {
-                if (_path.Text.IndexOfAny(Path.GetInvalidPathChars()) != -1) {
+                if (string.IsNullOrEmpty(_path.Text)) {
+                    CurrentOptions.InterpreterPath = string.Empty;
+                    HideErrorBalloon(_invalidPathToolTip, _pathLabel);
+                } else if (!CommonUtils.IsValidPath(_path.Text)) {
                     ShowErrorBalloon(_invalidPathToolTip, _pathLabel, _path, "The path contains invalid characters.");
                 } else {
                     CurrentOptions.InterpreterPath = _path.Text;
@@ -215,11 +213,22 @@ namespace Microsoft.PythonTools.Options {
 
         private void WindowsPathTextChanged(object sender, EventArgs e) {
             if (!_loadingOptions) {
-                if (_windowsPath.Text.IndexOfAny(Path.GetInvalidPathChars()) != -1) {
+                if (!string.IsNullOrEmpty(_windowsPath.Text) && !CommonUtils.IsValidPath(_windowsPath.Text)) {
                     ShowErrorBalloon(_invalidWindowsPathToolTip, _windowsPathLabel, _windowsPath, "The path contains invalid characters.");
                 } else {
                     CurrentOptions.WindowsInterpreterPath = _windowsPath.Text;
                     HideErrorBalloon(_invalidWindowsPathToolTip, _windowsPathLabel);
+                }
+            }
+        }
+
+        private void LibraryPathTextChanged(object sender, EventArgs e) {
+            if (!_loadingOptions) {
+                if (!string.IsNullOrEmpty(_libraryPath.Text) && !CommonUtils.IsValidPath(_libraryPath.Text)) {
+                    ShowErrorBalloon(_invalidLibraryPathToolTip, _libraryPathLabel, _libraryPath, "The path contains invalid characters.");
+                } else {
+                    CurrentOptions.LibraryPath = _libraryPath.Text;
+                    HideErrorBalloon(_invalidLibraryPathToolTip, _libraryPathLabel);
                 }
             }
         }
@@ -308,6 +317,19 @@ namespace Microsoft.PythonTools.Options {
             dialog.Filter = "Executable Files (*.exe)|*.exe|All Files (*.*)|*.*";
             if (dialog.ShowDialog() == DialogResult.OK) {
                 _windowsPath.Text = dialog.FileName;
+            }
+        }
+
+        private void BrowseLibraryPathClick(object sender, EventArgs e) {
+            string dir = _libraryPath.Text;
+            if (string.IsNullOrEmpty(dir)) {
+                if (File.Exists(_path.Text)) {
+                    dir = Path.GetDirectoryName(_path.Text);
+                }
+            }
+            var libPath = PythonToolsPackage.Instance.BrowseForDirectory(Handle, dir);
+            if (!string.IsNullOrEmpty(libPath)) {
+                _libraryPath.Text = libPath;
             }
         }
 

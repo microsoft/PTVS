@@ -110,11 +110,6 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
             private set { SetValue(IsValidPropertyKey, value); }
         }
 
-        private static bool IsSafePath(string name) {
-            return !string.IsNullOrEmpty(name) &&
-                name.IndexOfAny(Path.GetInvalidPathChars()) == -1;
-        }
-
         private static void RecalculateIsValid(DependencyObject d, DependencyPropertyChangedEventArgs e) {
             if (!d.Dispatcher.CheckAccess()) {
                 d.Dispatcher.Invoke((Action)(() => RecalculateIsValid(d, e)));
@@ -127,8 +122,8 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
                 return;
             }
             d.SetValue(IsValidPropertyKey,
-                IsSafePath(s.SourcePath) &&
-                IsSafePath(s.ProjectPath) &&
+                CommonUtils.IsValidPath(s.SourcePath) &&
+                CommonUtils.IsValidPath(s.ProjectPath) &&
                 Directory.Exists(s.SourcePath) &&
                 s.SelectedInterpreter != null &&
                 s.AvailableInterpreters.Contains(s.SelectedInterpreter)
@@ -163,7 +158,7 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
             }
 
             var sourcePath = s.SourcePath;
-            if (IsSafePath(sourcePath) && Directory.Exists(sourcePath)) {
+            if (Directory.Exists(sourcePath)) {
                 var filters = s.Filters;
                 var dispatcher = s.Dispatcher;
                 
@@ -285,7 +280,7 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
             writer.WriteElementString("SchemaVersion", "2.0");
             writer.WriteElementString("ProjectGuid", Guid.NewGuid().ToString("B"));
             writer.WriteElementString("ProjectHome", projectHome);
-            if (IsSafePath(startupFile)) {
+            if (CommonUtils.IsValidPath(startupFile)) {
                 writer.WriteElementString("StartupFile", startupFile);
             } else if (supportDjango) {
                 writer.WriteElementString("StartupFile", "manage.py");

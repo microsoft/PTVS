@@ -26,6 +26,7 @@ using Microsoft.PythonTools.Interpreters;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 using VsCommands = Microsoft.VisualStudio.VSConstants.VSStd97CmdID;
 using VsCommands2K = Microsoft.VisualStudio.VSConstants.VSStd2KCmdID;
@@ -338,8 +339,7 @@ namespace Microsoft.PythonTools.Project {
 
         public override string Url {
             get {
-                if (string.IsNullOrEmpty(_factory.Configuration.PrefixPath) ||
-                    _factory.Configuration.PrefixPath.IndexOfAny(Path.GetInvalidPathChars()) >= 0) {
+                if (!CommonUtils.IsValidPath(_factory.Configuration.PrefixPath)) {
                     return string.Format("UnknownInterpreter\\{0}\\{1}", _factory.Id, _factory.Configuration.Version);
                 }
 

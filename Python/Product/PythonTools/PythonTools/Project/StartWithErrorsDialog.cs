@@ -26,14 +26,14 @@ namespace Microsoft.PythonTools.Project {
 
         public static bool ShouldShow {
             get {
-                return PythonToolsPackage.Instance.OptionsPage.PromptBeforeRunningWithBuildError;
+                return PythonToolsPackage.Instance.DebuggingOptionsPage.PromptBeforeRunningWithBuildError;
             }
         }
 
         protected override void OnClosing(CancelEventArgs e) {
             if (_dontShowAgainCheckbox.Checked) {
-                PythonToolsPackage.Instance.OptionsPage.PromptBeforeRunningWithBuildError = false;
-                PythonToolsPackage.Instance.OptionsPage.SaveSettingsToStorage();
+                PythonToolsPackage.Instance.DebuggingOptionsPage.PromptBeforeRunningWithBuildError = false;
+                PythonToolsPackage.Instance.DebuggingOptionsPage.SaveSettingsToStorage();
             }
         }
 

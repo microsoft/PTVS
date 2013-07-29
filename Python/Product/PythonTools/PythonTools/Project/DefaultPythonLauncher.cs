@@ -245,20 +245,20 @@ namespace Microsoft.PythonTools.Project {
                 string interpArgs = _project.GetProperty(CommonConstants.InterpreterArguments);
                 dbgInfo.bstrOptions = AD7Engine.VersionSetting + "=" + _project.GetInterpreterFactory().GetLanguageVersion().ToString();
                 if (!isWindows) {
-                    if (PythonToolsPackage.Instance.OptionsPage.WaitOnAbnormalExit) {
+                    if (PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnAbnormalExit) {
                         dbgInfo.bstrOptions += ";" + AD7Engine.WaitOnAbnormalExitSetting + "=True";
                     }
-                    if (PythonToolsPackage.Instance.OptionsPage.WaitOnNormalExit) {
+                    if (PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnNormalExit) {
                         dbgInfo.bstrOptions += ";" + AD7Engine.WaitOnNormalExitSetting + "=True";
                     }
                 }
-                if (PythonToolsPackage.Instance.OptionsPage.TeeStandardOutput) {
+                if (PythonToolsPackage.Instance.DebuggingOptionsPage.TeeStandardOutput) {
                     dbgInfo.bstrOptions += ";" + AD7Engine.RedirectOutputSetting + "=True";
                 }
-                if (PythonToolsPackage.Instance.OptionsPage.BreakOnSystemExitZero) {
+                if (PythonToolsPackage.Instance.DebuggingOptionsPage.BreakOnSystemExitZero) {
                     dbgInfo.bstrOptions += ";" + AD7Engine.BreakSystemExitZero + "=True";
                 }
-                if (PythonToolsPackage.Instance.OptionsPage.DebugStdLib) {
+                if (PythonToolsPackage.Instance.DebuggingOptionsPage.DebugStdLib) {
                     dbgInfo.bstrOptions += ";" + AD7Engine.DebugStdLib + "=True";
                 }
                 if (!String.IsNullOrWhiteSpace(interpArgs)) {
@@ -337,15 +337,15 @@ namespace Microsoft.PythonTools.Project {
                 return null;
             }
             ProcessStartInfo startInfo;
-            if (!isWindows && (PythonToolsPackage.Instance.OptionsPage.WaitOnAbnormalExit || PythonToolsPackage.Instance.OptionsPage.WaitOnNormalExit)) {
+            if (!isWindows && (PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnAbnormalExit || PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnNormalExit)) {
                 command = "/c \"\"" + interpreter + "\" " + command;
 
-                if (PythonToolsPackage.Instance.OptionsPage.WaitOnNormalExit &&
-                    PythonToolsPackage.Instance.OptionsPage.WaitOnAbnormalExit) {
+                if (PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnNormalExit &&
+                    PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnAbnormalExit) {
                     command += " & pause";
-                } else if (PythonToolsPackage.Instance.OptionsPage.WaitOnNormalExit) {
+                } else if (PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnNormalExit) {
                     command += " & if not errorlevel 1 pause";
-                } else if (PythonToolsPackage.Instance.OptionsPage.WaitOnAbnormalExit) {
+                } else if (PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnAbnormalExit) {
                     command += " & if errorlevel 1 pause";
                 }
 

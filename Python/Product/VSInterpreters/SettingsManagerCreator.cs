@@ -22,12 +22,6 @@ using Microsoft.VisualStudio.Shell.Settings;
 
 namespace Microsoft {
     static class SettingsManagerCreator {
-        private static bool IsValidPath(string path) {
-            return !string.IsNullOrEmpty(path) &&
-                path.IndexOfAny(Path.GetInvalidPathChars()) < 0 &&
-                File.Exists(path);
-        }
-
         public static SettingsManager GetSettingsManager(IServiceProvider provider) {
             SettingsManager settings = null;
             string devenvPath = null;
@@ -47,7 +41,7 @@ namespace Microsoft {
             }
 
             if (settings == null) {
-                if (!IsValidPath(devenvPath)) {
+                if (!File.Exists(devenvPath)) {
                     using (var root = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32))
                     using (var key = root.OpenSubKey(string.Format(@"Software\Microsoft\VisualStudio\{0}\Setup\VS", AssemblyVersionInfo.VSVersion))) {
                         if (key == null) {
@@ -56,7 +50,7 @@ namespace Microsoft {
                         devenvPath = key.GetValue("EnvironmentPath") as string;
                     }
                 }
-                if (!IsValidPath(devenvPath)) {
+                if (!File.Exists(devenvPath)) {
                     throw new InvalidOperationException("Cannot find settings store for Visual Studio " + AssemblyVersionInfo.VSVersion);
                 }
 #if DEBUG

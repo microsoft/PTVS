@@ -653,16 +653,16 @@ namespace Microsoft.PythonTools.Hpc {
         private string GetDebugOptions(ClusterEnvironment clusterEnv) {
             string options = "";
 
-            if (PythonToolsPackage.Instance.OptionsPage.TeeStandardOutput) {
+            if (PythonToolsPackage.Instance.DebuggingOptionsPage.TeeStandardOutput) {
                 options = RedirectOutputSetting + "=True";
             }
-            if (PythonToolsPackage.Instance.OptionsPage.BreakOnSystemExitZero) {
+            if (PythonToolsPackage.Instance.DebuggingOptionsPage.BreakOnSystemExitZero) {
                 if (!String.IsNullOrEmpty(options)) {
                     options += ";";
                 }
                 options += BreakSystemExitZero + "=True";
             }
-            if (PythonToolsPackage.Instance.OptionsPage.DebugStdLib) {
+            if (PythonToolsPackage.Instance.DebuggingOptionsPage.DebugStdLib) {
                 if (!String.IsNullOrEmpty(options)) {
                     options += ";";
                 }
@@ -670,13 +670,13 @@ namespace Microsoft.PythonTools.Hpc {
             }
 
             if (clusterEnv.HeadNode == "localhost") { // don't wait on the cluster, there's no one to press enter.
-                if (PythonToolsPackage.Instance.OptionsPage.WaitOnAbnormalExit) {
+                if (PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnAbnormalExit) {
                     if (!String.IsNullOrEmpty(options)) {
                         options += ";";
                     }
                     options += WaitOnAbnormalExitSetting + "=True";
                 }
-                if (PythonToolsPackage.Instance.OptionsPage.WaitOnNormalExit) {
+                if (PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnNormalExit) {
                     if (!String.IsNullOrEmpty(options)) {
                         options += ";";
                     }

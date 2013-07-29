@@ -1631,7 +1631,7 @@ namespace Microsoft.VisualStudioTools.Project
                     // we also need to copy all the associated files with it.					
                     if ((flags & (uint)__VSCREATEPROJFLAGS.CPF_CLONEFILE) == (uint)__VSCREATEPROJFLAGS.CPF_CLONEFILE)
                     {
-                        Debug.Assert(!String.IsNullOrEmpty(fileName) && File.Exists(fileName), "Invalid filename passed to load the project. A valid filename is expected");
+                        Debug.Assert(File.Exists(fileName), "Invalid filename passed to load the project. A valid filename is expected");
 
                         // This should be a very fast operation if the build project is already initialized by the Factory.
                         SetBuildProject(Utilities.ReinitializeMsBuildProject(this.buildEngine, fileName, this.buildProject));

@@ -32,8 +32,8 @@ namespace ProfilingUITests {
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
             TestData.Deploy();
-            PythonToolsPackage.Instance.OptionsPage.WaitOnNormalExit = false;
-            PythonToolsPackage.Instance.OptionsPage.WaitOnAbnormalExit = false;
+            PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnNormalExit = false;
+            PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnAbnormalExit = false;
         }
 
         [TestCleanup]

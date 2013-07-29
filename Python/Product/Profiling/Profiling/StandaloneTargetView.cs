@@ -223,7 +223,7 @@ namespace Microsoft.PythonTools.Profiling {
 
             if (e.PropertyName != "IsValid") {
                 IsValid = File.Exists(ScriptPath) &&
-                    (string.IsNullOrEmpty(WorkingDirectory) || Directory.Exists(WorkingDirectory)) &&
+                    Directory.Exists(WorkingDirectory) &&
                     (CanSpecifyInterpreterPath == false || File.Exists(InterpreterPath));
             }
         }

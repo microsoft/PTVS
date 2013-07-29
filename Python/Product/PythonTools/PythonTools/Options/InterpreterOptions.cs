@@ -25,6 +25,7 @@ namespace Microsoft.PythonTools.Options {
         public Guid Id;
         public string InterpreterPath;
         public string WindowsInterpreterPath;
+        public string LibraryPath;
         public string Architecture;
         public string Version;
         public string PathEnvironmentVariable;

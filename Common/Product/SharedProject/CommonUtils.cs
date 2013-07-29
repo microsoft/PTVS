@@ -15,9 +15,16 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 
 namespace Microsoft.VisualStudioTools {
     internal static class CommonUtils {
+        private static char[] InvalidPathChars = GetInvalidPathChars();
+
+        private static char[] GetInvalidPathChars() {
+            return Path.GetInvalidPathChars().Concat(new[] { '*', '?' }).ToArray();
+        }
+
         internal static bool TryMakeUri(string path, bool isDirectory, UriKind kind, out Uri uri) {
             if (isDirectory && !string.IsNullOrEmpty(path) && !HasEndSeparator(path)) {
                 path += Path.DirectorySeparatorChar;
@@ -376,6 +383,15 @@ namespace Microsoft.VisualStudioTools {
             }
 
             return (actualStart > 0) ? path.Substring(actualStart) : path;
+        }
+
+        /// <summary>
+        /// Returns true if the path is a valid path, regardless of whether the
+        /// file exists or not.
+        /// </summary>
+        public static bool IsValidPath(string path) {
+            return !string.IsNullOrEmpty(path) &&
+                path.IndexOfAny(InvalidPathChars) < 0;
         }
     }
 }

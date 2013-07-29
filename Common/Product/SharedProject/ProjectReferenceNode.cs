@@ -476,7 +476,7 @@ namespace Microsoft.VisualStudioTools.Project
                 return false;
             }
 
-            return (!String.IsNullOrEmpty(this.referencedProjectFullPath) && File.Exists(this.referencedProjectFullPath));
+            return File.Exists(this.referencedProjectFullPath);
         }
 
         /// <summary>

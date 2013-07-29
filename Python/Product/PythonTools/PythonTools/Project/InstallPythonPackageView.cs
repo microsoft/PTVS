@@ -25,6 +25,7 @@ namespace Microsoft.PythonTools.Project {
         private string _name;
         private string _installUsing;
         private bool _installUsingPip, _installUsingEasyInstall;
+        private bool _installElevated;
         private bool _isValid;
 
         private static readonly string[] _installUsingOptions = new[] { "pip", "easy_install" };
@@ -74,6 +75,18 @@ namespace Microsoft.PythonTools.Project {
                     OnPropertyChanged("InstallUsing");
                     InstallUsingPip = _installUsing == "pip";
                     InstallUsingEasyInstall = _installUsing == "easy_install";
+                    if (PythonToolsPackage.Instance != null) {
+                        if (InstallUsingPip) {
+                            InstallElevated = PythonToolsPackage.Instance.GeneralOptionsPage.ElevatePip;
+                        } else if (InstallUsingEasyInstall) {
+                            InstallElevated = PythonToolsPackage.Instance.GeneralOptionsPage.ElevateEasyInstall;
+                        } else {
+                            InstallElevated = false;
+                            IsValid = false;
+                        }
+                    } else {
+                        InstallElevated = false;
+                    }
                 }
             }
         }
@@ -108,6 +121,18 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
+
+        public bool InstallElevated {
+            get {
+                return _installElevated;
+            }
+            private set {
+                if (_installElevated != value) {
+                    _installElevated = value;
+                    OnPropertyChanged("InstallElevated");
+                }
+            }
+        }
 
         /// <summary>
         /// Receives our own property change events to update IsValid.

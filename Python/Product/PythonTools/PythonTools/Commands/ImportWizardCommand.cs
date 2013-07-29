@@ -34,7 +34,7 @@ namespace Microsoft.PythonTools.Commands {
                 settings.CreateRequestedProjectAsync()
                     .ContinueWith(t => {
                         var path = t.Result;
-                        if (!string.IsNullOrEmpty(path) && File.Exists(path)) {
+                        if (File.Exists(path)) {
                             object outRef = null, pathRef = ProcessOutput.QuoteSingleArgument(path);
                             PythonToolsPackage.Instance.DTE.Commands.Raise(VSConstants.GUID_VSStandardCommandSet97.ToString("B"), (int)VSConstants.VSStd97CmdID.OpenProject, ref pathRef, ref outRef);
                         }

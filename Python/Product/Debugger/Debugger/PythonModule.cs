@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System.IO;
+using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Debugger {
     class PythonModule {
@@ -33,7 +34,7 @@ namespace Microsoft.PythonTools.Debugger {
         public string Name {
             get {
                 
-                if (_filename.IndexOfAny(Path.GetInvalidPathChars()) == -1) {
+                if (CommonUtils.IsValidPath(_filename)) {
                     return Path.GetFileNameWithoutExtension(_filename);
                 }
                 return _filename;

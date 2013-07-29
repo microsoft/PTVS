@@ -59,7 +59,7 @@ namespace Microsoft.PythonTools.Profiling {
             target.StandaloneTarget.Script = script;
             target.StandaloneTarget.Arguments = arguments;
 
-            if (interpreter.IndexOfAny(Path.GetInvalidPathChars()) == -1 && File.Exists(interpreter)) {
+            if (File.Exists(interpreter)) {
                 target.StandaloneTarget.InterpreterPath = interpreter;
             } else {
                 string[] interpreterInfo = interpreter.Split(new[] { ';' }, 2);

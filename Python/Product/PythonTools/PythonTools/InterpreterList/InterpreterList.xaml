@@ -226,7 +226,7 @@
                             <Button Command="{x:Static l:InterpreterList.OpenOptionsCommand}" CommandParameter="{Binding}"
                                     Margin="4 4 4 2"
                                     Style="{StaticResource NavigationButtonInList}">
-                                Interpreter Options
+                                Environment Options
                             </Button>
                             <Button Command="{x:Static l:InterpreterList.OpenReplOptionsCommand}" CommandParameter="{Binding}"
                                     Margin="4 2 4 4"
@@ -267,7 +267,7 @@
                             <Grid Margin="6 12">
                                 <Button Style="{StaticResource NavigationButton}"
                                         Command="{x:Static l:InterpreterList.WebChooseInterpreterCommand}">
-                                    Go online and help me find another interpreter
+                                    Go online and help me find another environment
                                 </Button>
                             </Grid>
                         </StackPanel>
@@ -291,7 +291,7 @@
                     Visibility="{Binding HasItems,ElementName=interpreterList,Converter={StaticResource BCConverter}}">
             <TextBlock HorizontalAlignment="Center"
                        Margin="6">
-                We didn't find any Python interpreters
+                We didn't find any Python environments
             </TextBlock>
             <Button Style="{StaticResource NavigationButton}"
                     HorizontalAlignment="Center"
@@ -303,7 +303,7 @@
                     HorizontalAlignment="Center"
                     Margin="6"
                     Command="{x:Static l:InterpreterList.OpenOptionsCommand}">
-                Open Interpreter Options and add one
+                Open Environment Options and add one
             </Button>
         </StackPanel>
     </Grid>

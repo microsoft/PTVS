@@ -35,7 +35,8 @@ namespace Microsoft.PythonTools.Project {
         /// succeed but error text will be passed to the redirector.
         /// </summary>
         public static Task Install(IPythonInterpreterFactory factory, Redirector output = null) {
-            return Pip.Install(factory, "virtualenv==1.9.1", output);
+            bool elevate = PythonToolsPackage.Instance != null && PythonToolsPackage.Instance.GeneralOptionsPage.ElevatePip;
+            return Pip.Install(factory, "virtualenv==1.9.1", elevate, output);
         }
 
         private static Task ContinueCreate(Task task, IPythonInterpreterFactory factory, string path, Redirector output) {
@@ -47,7 +48,11 @@ namespace Microsoft.PythonTools.Project {
 
                 if (output != null) {
                     output.WriteLine(SR.GetString(SR.VirtualEnvCreating, path));
-                    output.Show();
+                    if (PythonToolsPackage.Instance != null && PythonToolsPackage.Instance.GeneralOptionsPage.ShowOutputWindowForVirtualEnvCreate) {
+                        output.ShowAndActivate();
+                    } else {
+                        output.Show();
+                    }
                 }
                 using (var proc = ProcessOutput.Run(factory.Configuration.InterpreterPath,
                     new[] { "-m", "virtualenv", "--distribute", name },
@@ -64,7 +69,11 @@ namespace Microsoft.PythonTools.Project {
                         } else {
                             output.WriteLine(SR.GetString(SR.VirtualEnvCreationFailedExitCode, path, exitCode ?? -1));
                         }
-                        output.Show();
+                        if (PythonToolsPackage.Instance != null && PythonToolsPackage.Instance.GeneralOptionsPage.ShowOutputWindowForVirtualEnvCreate) {
+                            output.ShowAndActivate();
+                        } else {
+                            output.Show();
+                        }
                     }
                 }
 
@@ -117,7 +126,8 @@ namespace Microsoft.PythonTools.Project {
 
                 if (!hasVirtualEnv) {
                     if (!hasPip) {
-                        Pip.InstallPip(factory, output).Wait();
+                        bool elevate = PythonToolsPackage.Instance != null && PythonToolsPackage.Instance.GeneralOptionsPage.ElevatePip;
+                        Pip.InstallPip(factory, elevate, output).Wait();
                     }
                     Install(factory, output).Wait();
                 }
@@ -176,7 +186,8 @@ namespace Microsoft.PythonTools.Project {
 
                 if (!hasVirtualEnv) {
                     if (!hasPip) {
-                        Pip.InstallPip(factory, output).Wait();
+                        bool elevate = PythonToolsPackage.Instance != null && PythonToolsPackage.Instance.GeneralOptionsPage.ElevatePip;
+                        Pip.InstallPip(factory, elevate, output).Wait();
                     }
                     Install(factory, output).Wait();
                 }
@@ -192,7 +203,7 @@ namespace Microsoft.PythonTools.Project {
             if (File.Exists(prefixFile)) {
                 try {
                     var lines = File.ReadAllLines(prefixFile);
-                    if (lines.Length >= 1 && lines[0].IndexOfAny(Path.GetInvalidPathChars()) == -1) {
+                    if (lines.Length >= 1 && CommonUtils.IsValidPath(lines[0])) {
                         return service.Interpreters.FirstOrDefault(interp =>
                             CommonUtils.IsSamePath(interp.Configuration.PrefixPath, lines[0])
                         );
@@ -289,7 +300,7 @@ namespace Microsoft.PythonTools.Project {
         //    using (var output = ProcessOutput.RunHiddenAndCapture(interpreterPath, "-c", "import site; print(site.__file__)")) {
         //        output.Wait();
         //        return output.StandardOutputLines
-        //            .Where(line => !string.IsNullOrWhiteSpace(line) && line.IndexOfAny(Path.GetInvalidPathChars()) == -1)
+        //            .Where(CommonUtils.IsValidPath)
         //            .Select(line => Path.GetDirectoryName(line))
         //            .LastOrDefault(dir => Directory.Exists(dir));
         //    }

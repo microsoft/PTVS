@@ -55,61 +55,61 @@ namespace Microsoft.PythonTools {
 
         bool IPythonOptions.PromptBeforeRunningWithBuildErrorSetting {
             get {
-                return PythonToolsPackage.Instance.OptionsPage.PromptBeforeRunningWithBuildError;
+                return PythonToolsPackage.Instance.DebuggingOptionsPage.PromptBeforeRunningWithBuildError;
             }
             set {
-                PythonToolsPackage.Instance.OptionsPage.PromptBeforeRunningWithBuildError = value;
-                PythonToolsPackage.Instance.OptionsPage.SaveSettingsToStorage();
+                PythonToolsPackage.Instance.DebuggingOptionsPage.PromptBeforeRunningWithBuildError = value;
+                PythonToolsPackage.Instance.DebuggingOptionsPage.SaveSettingsToStorage();
             }
         }
 
         Severity IPythonOptions.IndentationInconsistencySeverity {
             get {
-                return PythonToolsPackage.Instance.OptionsPage.IndentationInconsistencySeverity;
+                return PythonToolsPackage.Instance.DebuggingOptionsPage.IndentationInconsistencySeverity;
             }
             set {
-                PythonToolsPackage.Instance.OptionsPage.IndentationInconsistencySeverity = value;
-                PythonToolsPackage.Instance.OptionsPage.SaveSettingsToStorage();
+                PythonToolsPackage.Instance.DebuggingOptionsPage.IndentationInconsistencySeverity = value;
+                PythonToolsPackage.Instance.DebuggingOptionsPage.SaveSettingsToStorage();
             }
         }
 
         bool IPythonOptions.AutoAnalyzeStandardLibrary {
             get {
-                return PythonToolsPackage.Instance.OptionsPage.AutoAnalyzeStandardLibrary;
+                return PythonToolsPackage.Instance.DebuggingOptionsPage.AutoAnalyzeStandardLibrary;
             }
             set {
-                PythonToolsPackage.Instance.OptionsPage.AutoAnalyzeStandardLibrary = value;
-                PythonToolsPackage.Instance.OptionsPage.SaveSettingsToStorage();
+                PythonToolsPackage.Instance.DebuggingOptionsPage.AutoAnalyzeStandardLibrary = value;
+                PythonToolsPackage.Instance.DebuggingOptionsPage.SaveSettingsToStorage();
             }
         }
 
         bool IPythonOptions.TeeStandardOutput {
             get {
-                return PythonToolsPackage.Instance.OptionsPage.TeeStandardOutput;
+                return PythonToolsPackage.Instance.DebuggingOptionsPage.TeeStandardOutput;
             }
             set {
-                PythonToolsPackage.Instance.OptionsPage.TeeStandardOutput = value;
-                PythonToolsPackage.Instance.OptionsPage.SaveSettingsToStorage();
+                PythonToolsPackage.Instance.DebuggingOptionsPage.TeeStandardOutput = value;
+                PythonToolsPackage.Instance.DebuggingOptionsPage.SaveSettingsToStorage();
             }
         }
 
         bool IPythonOptions.WaitOnAbnormalExit {
             get {
-                return PythonToolsPackage.Instance.OptionsPage.WaitOnAbnormalExit;
+                return PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnAbnormalExit;
             }
             set {
-                PythonToolsPackage.Instance.OptionsPage.WaitOnAbnormalExit = value;
-                PythonToolsPackage.Instance.OptionsPage.SaveSettingsToStorage();
+                PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnAbnormalExit = value;
+                PythonToolsPackage.Instance.DebuggingOptionsPage.SaveSettingsToStorage();
             }
         }
 
         bool IPythonOptions.WaitOnNormalExit {
             get {
-                return PythonToolsPackage.Instance.OptionsPage.WaitOnNormalExit;
+                return PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnNormalExit;
             }
             set {
-                PythonToolsPackage.Instance.OptionsPage.WaitOnNormalExit = value;
-                PythonToolsPackage.Instance.OptionsPage.SaveSettingsToStorage();
+                PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnNormalExit = value;
+                PythonToolsPackage.Instance.DebuggingOptionsPage.SaveSettingsToStorage();
             }
         }
 

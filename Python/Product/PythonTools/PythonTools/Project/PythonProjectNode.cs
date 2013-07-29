@@ -123,7 +123,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         protected override void LinkFileAdded(string filename) {
-            if (PythonToolsPackage.Instance.OptionsPage.UpdateSearchPathsWhenAddingLinkedFiles) {
+            if (PythonToolsPackage.Instance.DebuggingOptionsPage.UpdateSearchPathsWhenAddingLinkedFiles) {
                 // update our search paths.
                 string dirToAdd = Path.GetDirectoryName(filename);
                 while (!String.IsNullOrEmpty(dirToAdd) && File.Exists(Path.Combine(dirToAdd, "__init__.py"))) {

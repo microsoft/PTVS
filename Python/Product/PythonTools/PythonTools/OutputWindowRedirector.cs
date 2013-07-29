@@ -60,12 +60,19 @@ namespace Microsoft.PythonTools {
         public override void Show() {
             if (UIThread.Instance.IsUIThread) {
                 ErrorHandler.ThrowOnFailure(_pane.Activate());
+            } else {
+                UIThread.Instance.Run(Show);
+            }
+        }
+
+        public override void ShowAndActivate() {
+            if (UIThread.Instance.IsUIThread) {
+                ErrorHandler.ThrowOnFailure(_pane.Activate());
                 if (_window != null) {
-                    // TODO: Make showing window optional
                     ErrorHandler.ThrowOnFailure(_window.ShowNoActivate());
                 }
             } else {
-                UIThread.Instance.Run(Show);
+                UIThread.Instance.Run(ShowAndActivate);
             }
         }
 

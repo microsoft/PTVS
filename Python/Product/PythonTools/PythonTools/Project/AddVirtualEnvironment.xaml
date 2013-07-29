@@ -152,7 +152,7 @@
         <Label Grid.Row="3">
             Actions we will perform:
         </Label>
-            
+
         <StackPanel Grid.Row="4" Margin="12 3" Orientation="Vertical">
             <StackPanel.Resources>
                 <Style TargetType="{x:Type Label}" BasedOn="{StaticResource {x:Type Label}}">
@@ -160,15 +160,26 @@
                     <Setter Property="ContentTemplate">
                         <Setter.Value>
                             <DataTemplate>
-                                <StackPanel Orientation="Horizontal">
-                                    <Ellipse Width="{Binding ActualHeight,RelativeSource={RelativeSource Self}}"
-                                             MinHeight="4"
-                                             HorizontalAlignment="Center"
-                                             VerticalAlignment="Stretch"
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    
+                                    <Ellipse Grid.Column="0"
+                                             Height="{Binding ActualWidth,RelativeSource={RelativeSource Self}}"
+                                             MinWidth="4"
+                                             HorizontalAlignment="Stretch"
+                                             VerticalAlignment="Center"
                                              Margin="5"
                                              Fill="{Binding Foreground,RelativeSource={RelativeSource FindAncestor,AncestorType=Label}}" />
-                                    <TextBlock TextWrapping="Wrap" Text="{Binding}" />
-                                </StackPanel>
+                                    <!-- Em-space for sizing the bullet point -->
+                                    <TextBlock Grid.Column="0" Visibility="Hidden" Text="M" />
+                                    
+                                    <TextBlock Grid.Column="1"
+                                               TextWrapping="Wrap"
+                                               Text="{Binding}" />
+                                </Grid>
                             </DataTemplate>
                         </Setter.Value>
                     </Setter>
@@ -211,7 +222,14 @@
                     Command="ApplicationCommands.Save"
                     MinWidth="86" MinHeight="24" Margin="0 0 9 0"
                     AutomationProperties.AutomationId="Create">
-                C_reate
+                    <StackPanel Orientation="Horizontal">
+                        <Image Source="{x:Static wpf:Controls.UacShield}"
+                               Width="16" Height="16"
+                               VerticalAlignment="Center"
+                               Visibility="{Binding WillInstallElevated,Converter={StaticResource BoolToVisibleOrCollapsed}}"/>
+                        <AccessText Text="C_reate"
+                                    VerticalAlignment="Center" />
+                    </StackPanel>
             </Button>
             <Button IsCancel="True"
                     Command="ApplicationCommands.Close"

@@ -27,6 +27,7 @@ using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
+using Microsoft.VisualStudioTools;
 
 namespace Microsoft.IronPythonTools.Interpreter {
     class IronPythonInterpreter : IPythonInterpreter, IDotNetPythonInterpreter, IDisposable {
@@ -285,10 +286,8 @@ namespace Microsoft.IronPythonTools.Interpreter {
                         }
 
                         if (asm == null && _state != null) {
-                            var invalidPathChars = Path.GetInvalidPathChars();
                             foreach (var dir in _state.AnalysisDirectories) {
-                                if (dir.IndexOfAny(invalidPathChars) == -1 && asmName.IndexOfAny(invalidPathChars) == -1) {
-
+                                if (!CommonUtils.IsValidPath(dir) && !CommonUtils.IsValidPath(asmName)) {
                                     string path = Path.Combine(dir, asmName);
                                     if (File.Exists(path)) {
                                         asm = Remote.LoadAssemblyFrom(path);

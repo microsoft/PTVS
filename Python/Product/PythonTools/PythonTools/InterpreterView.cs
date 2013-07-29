@@ -47,18 +47,6 @@ namespace Microsoft.PythonTools {
             }
         }
 
-        private static bool FileExists(string path) {
-            return !string.IsNullOrEmpty(path) &&
-                path.IndexOfAny(Path.GetInvalidPathChars()) < 0 &&
-                File.Exists(path);
-        }
-
-        private static bool DirectoryExists(string path) {
-            return !string.IsNullOrEmpty(path) &&
-                path.IndexOfAny(Path.GetInvalidPathChars()) < 0 &&
-                Directory.Exists(path);
-        }
-
         public InterpreterView(IPythonInterpreterFactory interpreter, string name, PythonProjectNode project)
             : this(interpreter, name, false) {
             Project = project;
@@ -76,8 +64,8 @@ namespace Microsoft.PythonTools {
 
             var withDb = interpreter as IInterpreterWithCompletionDatabase;
             if (withDb != null) {
-                CanRefresh = FileExists(interpreter.Configuration.InterpreterPath) &&
-                    DirectoryExists(interpreter.Configuration.LibraryPath);
+                CanRefresh = File.Exists(interpreter.Configuration.InterpreterPath) &&
+                    Directory.Exists(interpreter.Configuration.LibraryPath);
                 withDb.IsCurrentChanged += Interpreter_IsCurrentChanged;
                 withDb.IsCurrentReasonChanged += Interpreter_IsCurrentChanged;
                 IsCurrent = withDb.IsCurrent;

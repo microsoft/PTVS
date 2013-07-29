@@ -271,7 +271,7 @@ namespace Microsoft.PythonTools.Analysis {
             if (!options.TryGetValue("python", out value) && !options.TryGetValue("py", out value)) {
                 value = null;
             }
-            if (!string.IsNullOrEmpty(value) && value.IndexOfAny(Path.GetInvalidPathChars()) >= 0) {
+            if (CommonUtils.IsValidPath(value)) {
                 throw new ArgumentException(value, "python");
             }
             interpreter = value;
@@ -279,7 +279,7 @@ namespace Microsoft.PythonTools.Analysis {
             if (!options.TryGetValue("library", out value) && !options.TryGetValue("lib", out value)) {
                 throw new ArgumentNullException("library");
             }
-            if (string.IsNullOrEmpty(value) || value.IndexOfAny(Path.GetInvalidPathChars()) >= 0) {
+            if (CommonUtils.IsValidPath(value)) {
                 throw new ArgumentException(value, "library");
             }
             library = value;
@@ -287,7 +287,7 @@ namespace Microsoft.PythonTools.Analysis {
             if (!options.TryGetValue("outdir", out value)) {
                 value = Environment.CurrentDirectory;
             }
-            if (string.IsNullOrEmpty(value) || value.IndexOfAny(Path.GetInvalidPathChars()) >= 0) {
+            if (CommonUtils.IsValidPath(value)) {
                 throw new ArgumentException(value, "outdir");
             }
             outDir = value;
@@ -295,7 +295,7 @@ namespace Microsoft.PythonTools.Analysis {
             if (!options.TryGetValue("basedb", out value)) {
                 value = Environment.CurrentDirectory;
             }
-            if (string.IsNullOrEmpty(value) || value.IndexOfAny(Path.GetInvalidPathChars()) >= 0) {
+            if (CommonUtils.IsValidPath(value)) {
                 throw new ArgumentException(value, "basedb");
             }
             baseDb = value.Split(';').ToList();
@@ -304,7 +304,7 @@ namespace Microsoft.PythonTools.Analysis {
             if (!options.TryGetValue("log", out value)) {
                 value = Path.Combine(Environment.CurrentDirectory, "Analysislog.txt");
             }
-            if (string.IsNullOrEmpty(value) || value.IndexOfAny(Path.GetInvalidPathChars()) >= 0) {
+            if (CommonUtils.IsValidPath(value)) {
                 throw new ArgumentException(value, "log");
             }
             if (!Path.IsPathRooted(value)) {
@@ -316,7 +316,7 @@ namespace Microsoft.PythonTools.Analysis {
             if (!options.TryGetValue("glog", out value)) {
                 value = null;
             }
-            if (!string.IsNullOrEmpty(value) && value.IndexOfAny(Path.GetInvalidPathChars()) >= 0) {
+            if (!string.IsNullOrEmpty(value) && !CommonUtils.IsValidPath(value)) {
                 throw new ArgumentException(value, "glog");
             }
             if (!string.IsNullOrEmpty(value) && !Path.IsPathRooted(value)) {
@@ -332,7 +332,7 @@ namespace Microsoft.PythonTools.Analysis {
                     }
                 }
             }
-            if (!string.IsNullOrEmpty(value) && value.IndexOfAny(Path.GetInvalidPathChars()) >= 0) {
+            if (!string.IsNullOrEmpty(value) && !CommonUtils.IsValidPath(value)) {
                 throw new ArgumentException(value, "diag");
             }
             if (!string.IsNullOrEmpty(value) && !Path.IsPathRooted(value)) {
@@ -356,7 +356,7 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         internal void StartTraceListener() {
-            if (string.IsNullOrEmpty(_logPrivate) || _logPrivate.IndexOfAny(Path.GetInvalidPathChars()) >= 0) {
+            if (!CommonUtils.IsValidPath(_logPrivate)) {
                 return;
             }
 
@@ -470,7 +470,7 @@ namespace Microsoft.PythonTools.Analysis {
             TraceVerbose("Builtin names are: {0}", string.Join(", ", builtinNames.OrderBy(s => s, StringComparer.OrdinalIgnoreCase)));
 
             var builtinModulePaths = builtinNames
-                .Where(n => !string.IsNullOrEmpty(n) && n.IndexOfAny(Path.GetInvalidPathChars()) < 0)
+                .Where(CommonUtils.IsValidPath)
                 .Select(n => GetOutputFile(n))
                 .ToArray();
 

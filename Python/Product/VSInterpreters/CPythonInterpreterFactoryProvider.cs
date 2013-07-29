@@ -19,6 +19,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.VisualStudioTools;
 using Microsoft.Win32;
 
 namespace Microsoft.PythonTools.Interpreter {
@@ -86,7 +87,7 @@ namespace Microsoft.PythonTools.Interpreter {
                             continue;
                         }
                         string basePath = basePathObj.ToString();
-                        if (basePath.IndexOfAny(Path.GetInvalidPathChars()) != -1) {
+                        if (!CommonUtils.IsValidPath(basePath)) {
                             // Invalid path in registry
                             continue;
                         }

@@ -66,7 +66,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 bufferParser = new BufferParser(this, dispatcher, projEntry, _parser, buffer);
 
                 var curSnapshot = buffer.CurrentSnapshot;
-                var severity = PythonToolsPackage.Instance != null ? PythonToolsPackage.Instance.OptionsPage.IndentationInconsistencySeverity : Severity.Ignore;
+                var severity = PythonToolsPackage.Instance != null ? PythonToolsPackage.Instance.DebuggingOptionsPage.IndentationInconsistencySeverity : Severity.Ignore;
                 bufferParser.EnqueingEntry();
                 EnqueWorker(() => {
                     _parser.ParseBuffers(bufferParser, severity, curSnapshot);
@@ -83,7 +83,7 @@ namespace Microsoft.PythonTools.Intellisense {
         /// </summary>
         /// <param name="filename"></param>
         public void EnqueueFile(IProjectEntry projEntry, string filename) {
-            var severity = PythonToolsPackage.Instance != null ? PythonToolsPackage.Instance.OptionsPage.IndentationInconsistencySeverity : Severity.Ignore;
+            var severity = PythonToolsPackage.Instance != null ? PythonToolsPackage.Instance.DebuggingOptionsPage.IndentationInconsistencySeverity : Severity.Ignore;
             EnqueWorker(() => {
                 for (int i = 0; i < 10; i++) {
                     try {
@@ -112,7 +112,7 @@ namespace Microsoft.PythonTools.Intellisense {
         public void EnqueueZipArchiveEntry(IProjectEntry projEntry, string zipFileName, ZipArchiveEntry entry, Action onComplete) {
             var pathInArchive = entry.FullName.Replace('/', '\\');
             var fileName = Path.Combine(zipFileName, pathInArchive);
-            var severity = PythonToolsPackage.Instance != null ? PythonToolsPackage.Instance.OptionsPage.IndentationInconsistencySeverity : Severity.Ignore;
+            var severity = PythonToolsPackage.Instance != null ? PythonToolsPackage.Instance.DebuggingOptionsPage.IndentationInconsistencySeverity : Severity.Ignore;
             EnqueWorker(() => {
                 try {
                     using (var stream = entry.Open()) {
@@ -191,7 +191,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private Severity IndentationInconsistencySeverity {
             get {
                 if (PythonToolsPackage.Instance != null) {
-                    return PythonToolsPackage.Instance.OptionsPage.IndentationInconsistencySeverity;
+                    return PythonToolsPackage.Instance.DebuggingOptionsPage.IndentationInconsistencySeverity;
                 }
                 return Severity.Ignore;
             }

@@ -67,25 +67,38 @@
             </TextBlock>
         </Label>
         
-        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Bottom">
-            <Button IsDefault="True" Click="OkClick" IsEnabled="{Binding IsValid}"
-                    MinWidth="86" MinHeight="24" Margin="0 0 9 0"
-                    AutomationProperties.AutomationId="Ok"
-                    VerticalAlignment="Center">
-                <StackPanel Orientation="Horizontal">
-                    <Image Source="{x:Static wpf:Controls.UacShield}"
-                           Width="16" Height="16"
-                           VerticalAlignment="Center"
-                           Visibility="{Binding InstallUsingEasyInstall,Converter={StaticResource BoolToVisible}}"/>
-                    <AccessText Text="_OK"
-                                VerticalAlignment="Center" />
-                </StackPanel>
-            </Button>
-            <Button IsCancel="True" Click="CancelClick" MinWidth="86" MinHeight="24"
-                    AutomationProperties.AutomationId="Cancel"
-                    VerticalAlignment="Center">
-                _Cancel
-            </Button>
-        </StackPanel>
+        <Grid Grid.Row="3" VerticalAlignment="Bottom">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            
+            <CheckBox Grid.Column="0"
+                      VerticalAlignment="Center"
+                      IsChecked="{Binding InstallElevated}">
+                Run as _Administrator
+            </CheckBox>
+            
+            <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button IsDefault="True" Click="OkClick" IsEnabled="{Binding IsValid}"
+                        MinWidth="86" MinHeight="24" Margin="0 0 9 0"
+                        AutomationProperties.AutomationId="Ok"
+                        VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal">
+                        <Image Source="{x:Static wpf:Controls.UacShield}"
+                               Width="16" Height="16"
+                               VerticalAlignment="Center"
+                               Visibility="{Binding InstallElevated,Converter={StaticResource BoolToVisible}}"/>
+                        <AccessText Text="_OK"
+                                    VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+                <Button IsCancel="True" Click="CancelClick" MinWidth="86" MinHeight="24"
+                        AutomationProperties.AutomationId="Cancel"
+                        VerticalAlignment="Center">
+                    _Cancel
+                </Button>
+            </StackPanel>
+        </Grid>
     </Grid>
 </vstools:DialogWindowVersioningWorkaround>

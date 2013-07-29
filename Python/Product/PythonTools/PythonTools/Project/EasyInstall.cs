@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Interpreter;
 
@@ -46,7 +47,7 @@ namespace Microsoft.PythonTools.Project {
             return null;
         }
 
-        private static Task<int> Run(IPythonInterpreterFactory factory, Redirector output, params string[] cmd) {
+        private static Task<int> Run(IPythonInterpreterFactory factory, Redirector output, bool elevate, params string[] cmd) {
             bool isScript;
             var easyInstallPath = GetEasyInstallPath(factory, out isScript);
             if (easyInstallPath == null) {
@@ -55,59 +56,32 @@ namespace Microsoft.PythonTools.Project {
                 return tcs.Task;
             }
 
-            var outFile = Path.GetTempFileName();
-            var errFile = Path.GetTempFileName();
-            var psi = new ProcessStartInfo("cmd.exe");
-            psi.CreateNoWindow = true;
-            psi.WindowStyle = ProcessWindowStyle.Hidden;
-            psi.UseShellExecute = true;
-            psi.Verb = "runas";
-            psi.WorkingDirectory = factory.Configuration.PrefixPath;
-
-            easyInstallPath = ProcessOutput.QuoteSingleArgument(easyInstallPath);
-            if (isScript) {
-                easyInstallPath = ProcessOutput.QuoteSingleArgument(factory.Configuration.InterpreterPath) + " " + easyInstallPath;
-            }
-            psi.Arguments = "/S /C \"" +
-                easyInstallPath + " " +
-                "--always-unzip --always-copy " +
-                string.Join(" ", cmd) + 
-                " > " + ProcessOutput.QuoteSingleArgument(outFile) +
-                " 2> " + ProcessOutput.QuoteSingleArgument(errFile) +
-                "\"";
-
             return Task.Factory.StartNew<int>((Func<int>)(() => {
-                try {
-                    int exitCode;
-                    using (var proc = Process.Start(psi)) {
-                        proc.WaitForExit();
-                        exitCode = proc.ExitCode;
-                    }
-                    if (output != null) {
-                        var lines = File.ReadAllLines(outFile);
-                        foreach (var line in lines) {
-                            output.WriteLine(line);
-                        }
-                        lines = File.ReadAllLines(errFile);
-                        foreach (var line in lines) {
-                            output.WriteErrorLine(line);
-                        }
-                    }
-                    return exitCode;
-                } finally {
-                    try {
-                        File.Delete(outFile);
-                    } catch { }
-                    try {
-                        File.Delete(errFile);
-                    } catch { }
+                var args = cmd.ToList();
+                args.Insert(0, "--always-copy");
+                args.Insert(0, "--always-unzip");
+                if (isScript) {
+                    args.Insert(0, easyInstallPath);
+                    easyInstallPath = factory.Configuration.InterpreterPath;
+                }
+                using (var proc = ProcessOutput.Run(
+                    easyInstallPath,
+                    args,
+                    factory.Configuration.PrefixPath,
+                    UnbufferedEnv,
+                    false,
+                    output,
+                    false,
+                    elevate)) {
+                    proc.Wait();
+                    return proc.ExitCode ?? -1;
                 }
             }));
         }
 
-        public static Task Install(IPythonInterpreterFactory factory, string package, Redirector output = null) {
+        public static Task Install(IPythonInterpreterFactory factory, string package, bool elevate, Redirector output = null) {
             return Task.Factory.StartNew((Action)(() => {
-                using (var proc = Run(factory, output, "install", package)) {
+                using (var proc = Run(factory, output, elevate, "install", package)) {
                     proc.Wait();
                 }
             }));
@@ -116,12 +90,13 @@ namespace Microsoft.PythonTools.Project {
         public static Task<bool> Install(IPythonInterpreterFactory factory,
             string package,
             IServiceProvider site,
+            bool elevate,
             Redirector output = null) {
 
             Task task;
             bool isScript;
             if (site != null && GetEasyInstallPath(factory, out isScript) == null) {
-                task = Pip.QueryInstallPip(factory, site, SR.GetString(SR.InstallEasyInstall), output);
+                task = Pip.QueryInstallPip(factory, site, SR.GetString(SR.InstallEasyInstall), elevate, output);
             } else {
                 var tcs = new TaskCompletionSource<object>();
                 tcs.SetResult(null);
@@ -130,9 +105,13 @@ namespace Microsoft.PythonTools.Project {
 
             if (output != null) {
                 output.WriteLine(SR.GetString(SR.PackageInstalling, package));
-                output.Show();
+                if (PythonToolsPackage.Instance != null && PythonToolsPackage.Instance.GeneralOptionsPage.ShowOutputWindowForPackageInstallation) {
+                    output.ShowAndActivate();
+                } else {
+                    output.Show();
+                }
             }
-            return Run(factory, output, package).ContinueWith(t => {
+            return Run(factory, output, elevate, package).ContinueWith(t => {
                 var exitCode = t.Result;
 
                 if (output != null) {
@@ -141,7 +120,11 @@ namespace Microsoft.PythonTools.Project {
                     } else {
                         output.WriteLine(SR.GetString(SR.PackageInstallFailedExitCode, package, exitCode));
                     }
-                    output.Show();
+                    if (PythonToolsPackage.Instance != null && PythonToolsPackage.Instance.GeneralOptionsPage.ShowOutputWindowForPackageInstallation) {
+                        output.ShowAndActivate();
+                    } else {
+                        output.Show();
+                    }
                 }
                 return exitCode == 0;
             }, TaskContinuationOptions.OnlyOnRanToCompletion);

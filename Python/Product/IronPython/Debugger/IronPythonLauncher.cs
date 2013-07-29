@@ -92,15 +92,15 @@ namespace Microsoft.IronPythonTools.Debugger {
             bool isWindows;
             string interpreter = GetInterpreterExecutableInternal(out isWindows);
             ProcessStartInfo startInfo;
-            if (!isWindows && (PythonToolsPackage.Instance.OptionsPage.WaitOnNormalExit || PythonToolsPackage.Instance.OptionsPage.WaitOnAbnormalExit)) {
+            if (!isWindows && (PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnNormalExit || PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnAbnormalExit)) {
                 command = "/c \"\"" + interpreter + "\" " + command;
                     
-                if (PythonToolsPackage.Instance.OptionsPage.WaitOnNormalExit &&
-                    PythonToolsPackage.Instance.OptionsPage.WaitOnAbnormalExit) {
+                if (PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnNormalExit &&
+                    PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnAbnormalExit) {
                     command += " & pause";
-                } else if (PythonToolsPackage.Instance.OptionsPage.WaitOnNormalExit) {
+                } else if (PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnNormalExit) {
                     command += " & if not errorlevel 1 pause";
-                } else if (PythonToolsPackage.Instance.OptionsPage.WaitOnAbnormalExit) {
+                } else if (PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnAbnormalExit) {
                     command += " & if errorlevel 1 pause";
                 }
 

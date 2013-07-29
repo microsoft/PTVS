@@ -148,7 +148,7 @@
     <value>Python Tools</value>
   </data>
   <data name="116" xml:space="preserve">
-    <value>Interpreter Options</value>
+    <value>Environment Options</value>
   </data>
   <data name="117" xml:space="preserve">
     <value>Interactive Windows</value>
@@ -234,5 +234,8 @@
   </data>
   <data name="124" xml:space="preserve">
     <value>Wrapping</value>
+  </data>
+  <data name="125" xml:space="preserve">
+    <value>Debugging</value>
   </data>
 </root>

@@ -277,12 +277,7 @@ namespace Microsoft.VisualStudioTools.Project
         /// <returns></returns>
         protected override bool CanShowDefaultIcon()
         {
-            if (String.IsNullOrEmpty(this.assemblyPath) || !File.Exists(this.assemblyPath))
-            {
-                return false;
-            }
-
-            return true;
+            return File.Exists(assemblyPath);
         }
 
         private void GetPathNameFromProjectFile()

@@ -645,12 +645,7 @@ namespace Microsoft.VisualStudioTools.Project
         {
             string moniker = this.GetMkDocument();
 
-            if (String.IsNullOrEmpty(moniker) || !File.Exists(moniker))
-            {
-                return false;
-            }
-
-            return true;
+            return File.Exists(moniker);
         }
 
         #endregion

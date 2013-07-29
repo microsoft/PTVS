@@ -19,6 +19,7 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Analysis {
     public struct ModulePath {
@@ -104,12 +105,6 @@ namespace Microsoft.PythonTools.Analysis {
             LibraryPath = libraryPath;
         }
 
-        private static bool DirectoryExists(string path) {
-            return !string.IsNullOrEmpty(path) &&
-                path.IndexOfAny(Path.GetInvalidPathChars()) < 0 &&
-                Directory.Exists(path);
-        }
-
         private static readonly Regex PythonPackageRegex = new Regex(@"^(?!\d)(?<name>(\w|_)+)$", RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
         private static readonly Regex PythonEggRegex = new Regex(@"^(?!\d)(?<name>(\w|_)+)-.+\.egg$", RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
         private static readonly Regex PythonFileRegex = new Regex(@"^(?!\d)(?<name>(\w|_)+)\.pyw?$", RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
@@ -123,7 +118,7 @@ namespace Microsoft.PythonTools.Analysis {
 
             Debug.Assert(baseModule == "" || baseModule.EndsWith("."));
 
-            if (!DirectoryExists(path)) {
+            if (!Directory.Exists(path)) {
                 yield break;
             }
 
@@ -203,13 +198,13 @@ namespace Microsoft.PythonTools.Analysis {
         /// </summary>
         public static IEnumerable<string> ExpandPathFiles(IEnumerable<string> paths) {
             foreach (var path in paths) {
-                if (!string.IsNullOrEmpty(path) && Directory.Exists(path)) {
+                if (Directory.Exists(path)) {
                     foreach (var file in Directory.EnumerateFiles(path, "*.pth")) {
                         using (var reader = new StreamReader(file)) {
                             string line;
                             while ((line = reader.ReadLine()) != null) {
                                 if (line.StartsWith("import ", StringComparison.Ordinal) ||
-                                    line.IndexOfAny(Path.GetInvalidPathChars()) >= 0) {
+                                    !CommonUtils.IsValidPath(line)) {
                                     continue;
                                 }
                                 line = line.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
@@ -242,7 +237,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// </summary>
         public static IEnumerable<ModulePath> GetModulesInLib(string libraryPath,
                                                               HashSet<string> allModuleNames = null) {
-            if (!DirectoryExists(libraryPath)) {
+            if (!Directory.Exists(libraryPath)) {
                 return Enumerable.Empty<ModulePath>();
             }
             if (allModuleNames == null) {

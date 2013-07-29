@@ -89,7 +89,8 @@ namespace Microsoft.PythonTools {
     [ProvideOptionPage(typeof(PythonInterpreterOptionsPage), "Python Tools", "Interpreters", 115, 116, true)]
     [ProvideOptionPage(typeof(PythonInteractiveOptionsPage), "Python Tools", "Interactive Windows", 115, 117, true)]
     [ProvideOptionPage(typeof(PythonDebugInteractiveOptionsPage), "Python Tools", "Debug Interactive Window", 115, 119, true)]
-    [ProvideOptionPage(typeof(PythonAdvancedOptionsPage), "Python Tools", "Advanced", 115, 118, true)]
+    [ProvideOptionPage(typeof(PythonGeneralOptionsPage), "Python Tools", "General", 115, 120, true)]
+    [ProvideOptionPage(typeof(PythonDebuggingOptionsPage), "Python Tools", "Debugging", 115, 125, true)]
     [Guid(GuidList.guidPythonToolsPkgString)]              // our packages GUID        
     [ProvideLanguageService(typeof(PythonLanguageInfo), PythonConstants.LanguageName, 106, RequestStockColors = true, ShowSmartIndent = true, ShowCompletion = true, DefaultToInsertSpaces = true, HideAdvancedMembersByDefault = true, EnableAdvancedMembersOption = true, ShowDropDownOptions = true)]
     [ProvideLanguageExtension(typeof(PythonLanguageInfo), PythonConstants.FileExtension)]
@@ -130,7 +131,7 @@ namespace Microsoft.PythonTools {
     [ProvideDebugException(AD7Engine.DebugEngineId, "Python Exceptions", "Python 2.x", "exceptions", "exceptions.MemoryError")]
     [ProvideDebugException(AD7Engine.DebugEngineId, "Python Exceptions", "Python 2.x", "exceptions", "exceptions.NameError")]
     [ProvideDebugException(AD7Engine.DebugEngineId, "Python Exceptions", "Python 2.x", "exceptions", "exceptions.NotImplementedError")]
-                                                                       
+
     [ProvideDebugException(AD7Engine.DebugEngineId, "Python Exceptions", "Python 2.x", "exceptions", "exceptions.OSError")]
     [ProvideDebugException(AD7Engine.DebugEngineId, "Python Exceptions", "Python 2.x", "exceptions", "exceptions.OSError", "exceptions.BlockingIOError")]
     [ProvideDebugException(AD7Engine.DebugEngineId, "Python Exceptions", "Python 2.x", "exceptions", "exceptions.OSError", "exceptions.ChildProcessError")]
@@ -147,7 +148,7 @@ namespace Microsoft.PythonTools {
     [ProvideDebugException(AD7Engine.DebugEngineId, "Python Exceptions", "Python 2.x", "exceptions", "exceptions.OSError", "exceptions.PermissionError")]
     [ProvideDebugException(AD7Engine.DebugEngineId, "Python Exceptions", "Python 2.x", "exceptions", "exceptions.OSError", "exceptions.ProcessLookupError")]
     [ProvideDebugException(AD7Engine.DebugEngineId, "Python Exceptions", "Python 2.x", "exceptions", "exceptions.OSError", "exceptions.TimeoutError")]
-                                                                      
+
     [ProvideDebugException(AD7Engine.DebugEngineId, "Python Exceptions", "Python 2.x", "exceptions", "exceptions.OverflowError")]
     [ProvideDebugException(AD7Engine.DebugEngineId, "Python Exceptions", "Python 2.x", "exceptions", "exceptions.PendingDeprecationWarning")]
     [ProvideDebugException(AD7Engine.DebugEngineId, "Python Exceptions", "Python 2.x", "exceptions", "exceptions.ReferenceError")]
@@ -199,7 +200,7 @@ namespace Microsoft.PythonTools {
     [ProvideDebugException(AD7Engine.DebugEngineId, "Python Exceptions", "Python 3.x", "builtins", "builtins.MemoryError")]
     [ProvideDebugException(AD7Engine.DebugEngineId, "Python Exceptions", "Python 3.x", "builtins", "builtins.NameError")]
     [ProvideDebugException(AD7Engine.DebugEngineId, "Python Exceptions", "Python 3.x", "builtins", "builtins.NotImplementedError")]
-                                                                       
+
     [ProvideDebugException(AD7Engine.DebugEngineId, "Python Exceptions", "Python 3.x", "builtins", "builtins.OSError")]
     [ProvideDebugException(AD7Engine.DebugEngineId, "Python Exceptions", "Python 3.x", "builtins", "builtins.OSError", "builtins.BlockingIOError")]
     [ProvideDebugException(AD7Engine.DebugEngineId, "Python Exceptions", "Python 3.x", "builtins", "builtins.OSError", "builtins.ChildProcessError")]
@@ -216,7 +217,7 @@ namespace Microsoft.PythonTools {
     [ProvideDebugException(AD7Engine.DebugEngineId, "Python Exceptions", "Python 3.x", "builtins", "builtins.OSError", "builtins.PermissionError")]
     [ProvideDebugException(AD7Engine.DebugEngineId, "Python Exceptions", "Python 3.x", "builtins", "builtins.OSError", "builtins.ProcessLookupError")]
     [ProvideDebugException(AD7Engine.DebugEngineId, "Python Exceptions", "Python 3.x", "builtins", "builtins.OSError", "builtins.TimeoutError")]
-                                                                       
+
     [ProvideDebugException(AD7Engine.DebugEngineId, "Python Exceptions", "Python 3.x", "builtins", "builtins.OverflowError")]
     [ProvideDebugException(AD7Engine.DebugEngineId, "Python Exceptions", "Python 3.x", "builtins", "builtins.PendingDeprecationWarning")]
     [ProvideDebugException(AD7Engine.DebugEngineId, "Python Exceptions", "Python 3.x", "builtins", "builtins.ReferenceError")]
@@ -291,7 +292,7 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
 
         internal static bool IsIpyToolsInstalled() {
             // the component guid which IpyTools is installed under from IronPython 2.7
-            const string ipyToolsComponentGuid = "{2DF41B37-FAEF-4FD8-A2F5-46B57FF9E951}";  
+            const string ipyToolsComponentGuid = "{2DF41B37-FAEF-4FD8-A2F5-46B57FF9E951}";
 
             // Check if the IpyTools component is known...
             StringBuilder productBuffer = new StringBuilder(39);
@@ -313,7 +314,7 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
             IVsTextView viewAdapter;
             IVsWindowFrame pWindowFrame;
             OpenDocument(filename, out viewAdapter, out pWindowFrame);
-            
+
             ErrorHandler.ThrowOnFailure(pWindowFrame.Show());
 
             // Set the cursor at the beginning of the declaration.            
@@ -344,10 +345,10 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
 
             IVsTextLines lines;
             ErrorHandler.ThrowOnFailure(viewAdapter.GetBuffer(out lines));
-            
+
             var adapter = ComponentModel.GetService<IVsEditorAdaptersFactoryService>();
 
-            return adapter.GetDocumentBuffer(lines);            
+            return adapter.GetDocumentBuffer(lines);
         }
 
         internal static IProjectLauncher GetLauncher(IPythonProject project) {
@@ -435,9 +436,15 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
             }
         }
 
-        public PythonAdvancedOptionsPage OptionsPage {
+        public PythonGeneralOptionsPage GeneralOptionsPage {
             get {
-                return (PythonAdvancedOptionsPage)GetDialogPage(typeof(PythonAdvancedOptionsPage));
+                return (PythonGeneralOptionsPage)GetDialogPage(typeof(PythonGeneralOptionsPage));
+            }
+        }
+
+        public PythonDebuggingOptionsPage DebuggingOptionsPage {
+            get {
+                return (PythonDebuggingOptionsPage)GetDialogPage(typeof(PythonDebuggingOptionsPage));
             }
         }
 
@@ -532,7 +539,7 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
         /// hasn't disabled this option.
         /// </summary>
         internal static void EnsureCompletionDb(IPythonInterpreterFactory fact) {
-            if (PythonToolsPackage.Instance.OptionsPage.AutoAnalyzeStandardLibrary) {
+            if (PythonToolsPackage.Instance.DebuggingOptionsPage.AutoAnalyzeStandardLibrary) {
                 IInterpreterWithCompletionDatabase interpWithDb = fact as IInterpreterWithCompletionDatabase;
                 if (interpWithDb != null) {
                     interpWithDb.AutoGenerateCompletionDatabase();
@@ -581,9 +588,9 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
         internal static new RegistryKey UserRegistryRoot {
             get {
                 try {
-                if (Instance != null) {
-                    return ((CommonPackage)Instance).UserRegistryRoot;
-                }
+                    if (Instance != null) {
+                        return ((CommonPackage)Instance).UserRegistryRoot;
+                    }
                     return VSRegistry.RegistryRoot(__VsLocalRegistryType.RegType_UserSettings, writable: true);
                 } catch (ArgumentException) {
                     // Thrown if we can't use VSRegistry, which typically means
@@ -875,8 +882,8 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
                 using (var sfd = new System.Windows.Forms.OpenFileDialog()) {
                     sfd.AutoUpgradeEnabled = true;
                     sfd.Filter = filter;
-                        sfd.FileName = Path.GetFileName(initialPath);
-                        sfd.InitialDirectory = Path.GetDirectoryName(initialPath);
+                    sfd.FileName = Path.GetFileName(initialPath);
+                    sfd.InitialDirectory = Path.GetDirectoryName(initialPath);
                     DialogResult result;
                     if (owner == IntPtr.Zero) {
                         result = sfd.ShowDialog();
@@ -902,9 +909,9 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
             openInfo[0].nMaxFileName = 260;
             var pFileName = Marshal.AllocCoTaskMem(520);
             openInfo[0].pwzFileName = pFileName;
-                openInfo[0].pwzInitialDir = Path.GetDirectoryName(initialPath);
+            openInfo[0].pwzInitialDir = Path.GetDirectoryName(initialPath);
             var nameArray = (Path.GetFileName(initialPath) + "\0").ToCharArray();
-                Marshal.Copy(nameArray, 0, pFileName, nameArray.Length);
+            Marshal.Copy(nameArray, 0, pFileName, nameArray.Length);
             try {
                 int hr = uiShell.GetOpenFileNameViaDlg(openInfo);
                 if (hr == VSConstants.OLE_E_PROMPTSAVECANCELLED) {
@@ -929,8 +936,8 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
                 using (var sfd = new System.Windows.Forms.SaveFileDialog()) {
                     sfd.AutoUpgradeEnabled = true;
                     sfd.Filter = filter;
-                        sfd.FileName = Path.GetFileName(initialPath);
-                        sfd.InitialDirectory = Path.GetDirectoryName(initialPath);
+                    sfd.FileName = Path.GetFileName(initialPath);
+                    sfd.InitialDirectory = Path.GetDirectoryName(initialPath);
                     DialogResult result;
                     if (owner == IntPtr.Zero) {
                         result = sfd.ShowDialog();
@@ -956,9 +963,9 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
             saveInfo[0].nMaxFileName = 260;
             var pFileName = Marshal.AllocCoTaskMem(520);
             saveInfo[0].pwzFileName = pFileName;
-                saveInfo[0].pwzInitialDir = Path.GetDirectoryName(initialPath);
+            saveInfo[0].pwzInitialDir = Path.GetDirectoryName(initialPath);
             var nameArray = (Path.GetFileName(initialPath) + "\0").ToCharArray();
-                Marshal.Copy(nameArray, 0, pFileName, nameArray.Length);
+            Marshal.Copy(nameArray, 0, pFileName, nameArray.Length);
             try {
                 int hr = uiShell.GetSaveFileNameViaDlg(saveInfo);
                 if (hr == VSConstants.OLE_E_PROMPTSAVECANCELLED) {
@@ -1017,7 +1024,7 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
                 }
             }
         }
-        
+
         /// <summary>
         /// Creates a new Python REPL window which is independent from the default Python REPL windows.
         /// 
@@ -1037,15 +1044,15 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
             Utilities.ArgumentNotNull("title", title);
 
             // Full ID as parsed by PythonReplEvaulatorProvider
-            
+
             string fullId = String.Format("{0}|{1}|{2}|{3}|{4}|{5}",
                 PythonReplEvaluatorProvider._configurableGuid,
                 workingDir,
                 interpreter.Id,
                 interpreter.Configuration.Version,
                 id,
-                envVars == null ? 
-                    "" : 
+                envVars == null ?
+                    "" :
                     string.Join(";", envVars.Select(kvp => kvp.Key + "=" + kvp.Value))
             );
 
@@ -1123,7 +1130,7 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
                                 JavaScriptSerializer serializer = new JavaScriptSerializer();
                                 var results = serializer.Deserialize<Dictionary<string, List<string>>>(json);
                                 available = results["notvoted"];
-                            } catch (ArgumentException){
+                            } catch (ArgumentException) {
                             } catch (InvalidOperationException) {
                             }
                         }
@@ -1137,7 +1144,7 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
                 } else if (warnIfNoneAvailable) {
                     lock (_surveyNewsUrlLock) {
                         if (available != null) {
-                            _surveyNewsUrl = OptionsPage.SurveyNewsIndexUrl;
+                            _surveyNewsUrl = GeneralOptionsPage.SurveyNewsIndexUrl;
                         } else {
                             _surveyNewsUrl = CommonUtils.GetAbsoluteFilePath(PythonToolsPackage.GetPythonToolsInstallPath(), "NoSurveyNewsFeed.html");
                         }
@@ -1153,16 +1160,17 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
             if (forceCheckAndWarnIfNoneAvailable) {
                 shouldQueryServer = true;
             } else {
+                var options = GeneralOptionsPage;
                 // Ensure that we don't prompt the user on their very first project creation.
                 // Delay by 3 days by pretending we checked 4 days ago (the default of check
                 // once a week ensures we'll check again in 3 days).
-                if (OptionsPage.SurveyNewsLastCheck == DateTime.MinValue) {
-                    OptionsPage.SurveyNewsLastCheck = DateTime.Now - TimeSpan.FromDays(4);
-                    OptionsPage.SaveSettingsToStorage();
+                if (options.SurveyNewsLastCheck == DateTime.MinValue) {
+                    options.SurveyNewsLastCheck = DateTime.Now - TimeSpan.FromDays(4);
+                    options.SaveSettingsToStorage();
                 }
 
-                var elapsedTime = DateTime.Now - OptionsPage.SurveyNewsLastCheck;
-                switch (OptionsPage.SurveyNewsCheck) {
+                var elapsedTime = DateTime.Now - options.SurveyNewsLastCheck;
+                switch (options.SurveyNewsCheck) {
                     case SurveyNewsPolicy.Disabled:
                         break;
                     case SurveyNewsPolicy.CheckOnceDay:
@@ -1175,15 +1183,16 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
                         shouldQueryServer = elapsedTime.TotalDays >= 30;
                         break;
                     default:
-                        Debug.Assert(false, String.Format("Unexpected SurveyNewsPolicy: {0}.", OptionsPage.SurveyNewsCheck));
+                        Debug.Assert(false, String.Format("Unexpected SurveyNewsPolicy: {0}.", options.SurveyNewsCheck));
                         break;
                 }
             }
 
             if (shouldQueryServer) {
-                OptionsPage.SurveyNewsLastCheck = DateTime.Now;
-                OptionsPage.SaveSettingsToStorage();
-                CheckSurveyNewsThread(new Uri(OptionsPage.SurveyNewsFeedUrl), forceCheckAndWarnIfNoneAvailable);
+                var options = GeneralOptionsPage;
+                options.SurveyNewsLastCheck = DateTime.Now;
+                options.SaveSettingsToStorage();
+                CheckSurveyNewsThread(new Uri(options.SurveyNewsFeedUrl), forceCheckAndWarnIfNoneAvailable);
             }
         }
 
