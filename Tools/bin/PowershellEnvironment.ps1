@@ -15,11 +15,15 @@ function VsVars32()
     #   Visual Studio 2012
     #   Visual Studio 2010
     #
-    $vscomntools = (Get-ChildItem env:VS110COMNTOOLS).Value
-    if($vscomntools -eq '')
-    {
-        "Visual Studio 2012 not installed, Falling back to 2010"
-        $vscomntools = (Get-ChildItem env:VS100COMNTOOLS).Value
+    $vscomntools = (Get-ChildItem env:VS120COMNTOOLS).Value
+    if($vscomntools -eq '') {
+        "Visual Studio 2013 not installed, Falling back to 2012"
+        $vscomntools = (Get-ChildItem env:VS110COMNTOOLS).Value
+        if($vscomntools -eq '')
+        {
+            "Visual Studio 2012 not installed, Falling back to 2010"
+            $vscomntools = (Get-ChildItem env:VS100COMNTOOLS).Value
+        }
     }
 
     $batchFile = [System.IO.Path]::Combine($vscomntools, "vsvars32.bat")
