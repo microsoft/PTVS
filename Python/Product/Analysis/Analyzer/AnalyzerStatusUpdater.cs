@@ -43,7 +43,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         /// </summary>
         Complete = 3
     }
-    
+
     /// <summary>
     /// Structure representing an analysis operation's progress.
     /// </summary>
@@ -60,6 +60,21 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         /// The status of the current analysis.
         /// </summary>
         public AnalysisStatus Status;
+    }
+
+    /// <summary>
+    /// The exception raised when an identifier is not unique. This typically
+    /// indicates that the specified interpreter is already being analyzed.
+    /// </summary>
+    [Serializable]
+    public class IdentifierInUseException : Exception {
+        public IdentifierInUseException() { }
+        public IdentifierInUseException(string message) : base(message) { }
+        public IdentifierInUseException(string message, Exception inner) : base(message, inner) { }
+        protected IdentifierInUseException(
+          System.Runtime.Serialization.SerializationInfo info,
+          System.Runtime.Serialization.StreamingContext context)
+            : base(info, context) { }
     }
 
     /// <summary>
@@ -164,10 +179,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         AnalysisProgress _latestUpdate;
         volatile bool _abort;
         readonly AutoResetEvent _newRequest;
-
-        Mutex _globalLock;
-        MemoryMappedFile _sharedData;
-        long _dataOffset;
+        readonly ManualResetEvent _workerStarted;
 
         Exception _pending;
 
@@ -178,7 +190,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         static readonly string MUTEX_NAME = "Microsoft.PythonTools.AnalyzerStatus.Mutex." + AssemblyVersionInfo.Version;
         static readonly string MMF_NAME = "Microsoft.PythonTools.AnalyzerStatus.File." + AssemblyVersionInfo.Version;
         const int MAX_IDENTIFIER_LENGTH = 250;
-        
+
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
         unsafe struct Data {
             public fixed char _Identifier[MAX_IDENTIFIER_LENGTH];
@@ -247,6 +259,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             _identifier = null;
             _period = period;
             _newRequest = new AutoResetEvent(false);
+            _workerStarted = new ManualResetEvent(false);
             _worker = new Thread(ThreadProc);
             _worker.Name = "AnalyzerStatusUpdater Listener";
             _worker.IsBackground = true;
@@ -256,10 +269,20 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         internal AnalyzerStatusUpdaterImplementation(string identifier) {
             _identifier = identifier;
             _newRequest = new AutoResetEvent(false);
+            _workerStarted = new ManualResetEvent(false);
             _worker = new Thread(ThreadProc);
             _worker.Name = "AnalyzerStatusUpdater Identifier=" + identifier;
             _worker.IsBackground = true;
             _worker.Start();
+        }
+
+        /// <summary>
+        /// Waits for the worker to be fully initialized and running. To
+        /// determine whether an exception was raised on initialization, call
+        /// this function before <see cref="ThrowPendingExceptions"/>.
+        /// </summary>
+        public void WaitForWorkerStarted() {
+            _workerStarted.WaitOne();
         }
 
         /// <summary>
@@ -315,15 +338,20 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
 
         void ThreadProc() {
             Data me;
+            Mutex globalLock;
+            MemoryMappedFile sharedData;
+            long dataOffset;
+
             int SIZE = Marshal.SizeOf(typeof(Data));
             int knownEntries = 0;
 
             try {
-                Initialize(_identifier, out _globalLock, out _sharedData, out _dataOffset, out me);
+                Initialize(_identifier, out globalLock, out sharedData, out dataOffset, out me);
             } catch (Exception ex) {
                 _pending = ex;
-                Dispose();
                 return;
+            } finally {
+                _workerStarted.Set();
             }
 
             Dictionary<string, AnalysisProgress> response = null;
@@ -339,7 +367,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 }
 
                 try {
-                    if (!_globalLock.WaitOne(LOCK_TIMEOUT)) {
+                    if (!globalLock.WaitOne(LOCK_TIMEOUT)) {
                         continue;
                     }
                 } catch (AbandonedMutexException) {
@@ -353,17 +381,17 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                             update = _latestUpdate;
                         }
 
-                        using (var accessor = _sharedData.CreateViewAccessor(_dataOffset, SIZE)) {
+                        using (var accessor = sharedData.CreateViewAccessor(dataOffset, SIZE)) {
                             me.Status = update.Status;
                             me.ItemsInQueue = update.Progress;
                             me.MaximumItems = update.Maximum;
                             accessor.Write(0, ref me);
                         }
                     } else {
-                        response = ReadAllStatuses(ref knownEntries);
+                        response = ReadAllStatuses(sharedData, ref knownEntries);
                     }
                 } finally {
-                    _globalLock.ReleaseMutex();
+                    globalLock.ReleaseMutex();
                 }
 
                 // Send the response outside the lock.
@@ -374,19 +402,18 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             }
 
             try {
-                Uninitialize(_identifier, _globalLock, _sharedData, _dataOffset);
+                Uninitialize(_identifier, globalLock, sharedData, dataOffset);
             } catch (Exception ex) {
                 _pending = ex;
-                Dispose();
             }
         }
 
-        private Dictionary<string, AnalysisProgress> ReadAllStatuses(ref int knownEntries) {
+        private Dictionary<string, AnalysisProgress> ReadAllStatuses(MemoryMappedFile sharedData, ref int knownEntries) {
             Data me = new Data { Initialized = false };
             int SIZE = Marshal.SizeOf(typeof(Data));
 
             var response = new Dictionary<string, AnalysisProgress>();
-            using (var accessor = _sharedData.CreateViewAccessor(0, (knownEntries + 1) * SIZE)) {
+            using (var accessor = sharedData.CreateViewAccessor(0, (knownEntries + 1) * SIZE)) {
                 for (int i = 0; i <= knownEntries; ++i) {
                     accessor.Read(i * SIZE, out me);
                     if (me.InUse) {
@@ -397,7 +424,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                                 Progress = me.ItemsInQueue,
                                 Maximum = me.MaximumItems
                             };
-                        } catch(InvalidOperationException) {
+                        } catch (InvalidOperationException) {
                         } catch (ArgumentException) {
                             // Process has died
                             me.InUse = false;
@@ -411,7 +438,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             // following it, so we keep reading.
             while (me.Initialized) {
                 knownEntries += 1;
-                using (var accessor = _sharedData.CreateViewAccessor(knownEntries * SIZE, SIZE)) {
+                using (var accessor = sharedData.CreateViewAccessor(knownEntries * SIZE, SIZE)) {
                     accessor.Read(0, out me);
                     if (me.InUse) {
                         try {
@@ -460,8 +487,14 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             }
             offset = 0;
 
-            if (isNew) {
-                try {
+            if (!isNew && !mutex.WaitOne(LOCK_TIMEOUT)) {
+                mutex.Dispose();
+                throw new InvalidOperationException("Unable to initialize inter-process communication");
+            }
+
+            file = null;
+            try {
+                if (isNew) {
                     file = MemoryMappedFile.CreateNew(MMF_NAME, (MAX_ITEMS + 2) * SIZE,
                         MemoryMappedFileAccess.ReadWrite,
                         MemoryMappedFileOptions.None,
@@ -480,14 +513,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                             accessor.Write(0, ref empty);
                         }
                     }
-                } finally {
-                    mutex.ReleaseMutex();
-                }
-            } else {
-                if (!mutex.WaitOne(LOCK_TIMEOUT)) {
-                    throw new InvalidOperationException("Unable to initialize inter-process communication");
-                }
-                try {
+                } else {
                     file = MemoryMappedFile.OpenExisting(MMF_NAME, MemoryMappedFileRights.ReadWrite);
 
                     if (identifier != null) {
@@ -508,6 +534,8 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                                     // Initialized is true, so the next entry is zeroed already
                                     succeeded = true;
                                     break;
+                                } else if (existing.Identifier == identifier) {
+                                    throw new IdentifierInUseException("Identifier is already in use");
                                 }
                             }
                         }
@@ -515,7 +543,18 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                             throw new InvalidOperationException("Out of space for entries");
                         }
                     }
-                } finally {
+                }
+            } catch {
+                mutex.ReleaseMutex();
+                mutex.Dispose();
+                mutex = null;
+                if (file != null) {
+                    file.Dispose();
+                    file = null;
+                }
+                throw;
+            } finally {
+                if (mutex != null) {
                     mutex.ReleaseMutex();
                 }
             }
@@ -527,6 +566,9 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                     throw new InvalidOperationException("Unable to uninitialize inter-process communication");
                 }
             } catch (AbandonedMutexException) {
+                mutex.Dispose();
+                file.Dispose();
+                return;
             }
             try {
                 Data me;
@@ -539,6 +581,8 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 }
             } finally {
                 mutex.ReleaseMutex();
+                mutex.Dispose();
+                file.Dispose();
             }
         }
 
@@ -550,14 +594,6 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 _disposed = true;
                 Abort();
                 _worker.Join(LOCK_TIMEOUT);
-                if (_sharedData != null) {
-                    _sharedData.Dispose();
-                    _sharedData = null;
-                }
-                if (_globalLock != null) {
-                    _globalLock.Dispose();
-                    _globalLock = null;
-                }
             }
         }
     }

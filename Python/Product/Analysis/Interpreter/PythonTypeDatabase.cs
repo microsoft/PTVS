@@ -408,10 +408,15 @@ namespace Microsoft.PythonTools.Interpreter {
 
                     if (output.ExitCode == 0) {
                         withDb.NotifyNewDatabase();
+                        withDb.RefreshIsCurrent();
+                    } else if (output.ExitCode == -3) {
+                        // This error code indicates that the interpreter is
+                        // already being analyzed.
+                        withDb.NotifyGeneratingDatabase(true);
                     } else {
                         withDb.NotifyGeneratingDatabase(false);
+                        withDb.RefreshIsCurrent();
                     }
-                    withDb.RefreshIsCurrent();
                 }
             });
         }

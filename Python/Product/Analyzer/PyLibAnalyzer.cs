@@ -109,6 +109,9 @@ namespace Microsoft.PythonTools.Analysis {
                 Console.Error.WriteLine("'{0}' is not valid for {1}", ex.Message, ex.ParamName);
                 Help();
                 return -1;
+            } catch (IdentifierInUseException) {
+                Console.Error.WriteLine("This interpreter is already being analyzed.");
+                return -3;
             } catch (InvalidOperationException ex) {
                 Console.Error.WriteLine(ex.Message);
                 Help();
@@ -193,6 +196,10 @@ namespace Microsoft.PythonTools.Analysis {
             if (_id != Guid.Empty) {
                 var identifier = AnalyzerStatusUpdater.GetIdentifier(_id, _version);
                 _updater = new AnalyzerStatusUpdater(identifier);
+                // We worry about initialization exceptions here, specifically
+                // that our identifier may already be in use.
+                _updater.WaitForWorkerStarted();
+                _updater.ThrowPendingExceptions();
                 // Immediately inform any listeners that we've started running
                 // successfully.
                 _updater.UpdateStatus(AnalysisStatus.Preparing, 0, 0);

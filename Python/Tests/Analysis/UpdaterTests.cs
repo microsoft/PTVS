@@ -43,8 +43,9 @@ namespace AnalyzerStatusTests {
 
                 using (var sender1 = new AnalyzerStatusUpdater("s1"))
                 using (var sender2 = new AnalyzerStatusUpdater("s2")) {
-                    // No way to block on initialization
-                    Thread.Sleep(100);
+                    // Block until workers have started
+                    sender1.WaitForWorkerStarted();
+                    sender2.WaitForWorkerStarted();
 
                     ready.Reset();
                     listener.RequestUpdate();
@@ -108,7 +109,9 @@ namespace AnalyzerStatusTests {
                     updaters.Add(newUpdater);
                 }
                 // Give the updaters a chance to start
-                Thread.Sleep(1000);
+                foreach (var updater in updaters) {
+                    updater.WaitForWorkerStarted();
+                }
 
                 // Make sure that we got failures.
                 try {
@@ -122,6 +125,27 @@ namespace AnalyzerStatusTests {
                     u.Dispose();
                 }
                 updaters.Clear();
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public void IdentifierInUse() {
+            using (var updater = new AnalyzerStatusUpdater("Identifier")) {
+                updater.UpdateStatus(AnalysisStatus.Preparing, 1, 100);
+                updater.WaitForWorkerStarted();
+                // Should not throw
+                updater.ThrowPendingExceptions();
+
+                using (var updater2 = new AnalyzerStatusUpdater("Identifier")) {
+                    updater2.UpdateStatus(AnalysisStatus.Preparing, 99, 100);
+                    updater.WaitForWorkerStarted();
+
+                    try {
+                        updater2.ThrowPendingExceptions();
+                        Assert.Fail("Expected IdentifierInUseException");
+                    } catch (IdentifierInUseException) {
+                    }
+                }
             }
         }
     }
