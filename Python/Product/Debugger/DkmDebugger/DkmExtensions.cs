@@ -13,14 +13,12 @@
  * ***************************************************************************/
 
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using Microsoft.Dia;
 using Microsoft.PythonTools.DkmDebugger.Proxies;
 using Microsoft.VisualStudio.Debugger;
 using Microsoft.VisualStudio.Debugger.Breakpoints;
-using Microsoft.VisualStudio.Debugger.CallStack;
 using Microsoft.VisualStudio.Debugger.CustomRuntimes;
 using Microsoft.VisualStudio.Debugger.DefaultPort;
 using Microsoft.VisualStudio.Debugger.Native;
@@ -71,24 +69,33 @@ namespace Microsoft.PythonTools.DkmDebugger {
             public DkmNativeModuleInstance DebuggerHelperDll { get; set; }
         }
 
-        public static IDiaSymbol TryGetSymbols(this DkmModuleInstance moduleInstance) {
+        public static ComPtr<IDiaSymbol> TryGetSymbols(this DkmModuleInstance moduleInstance) {
             if (moduleInstance.Module == null) {
-                return null;
+                return new ComPtr<IDiaSymbol>();
             }
 
-            var diaSession = (IDiaSession)moduleInstance.Module.GetSymbolInterface(typeof(IDiaSession).GUID);
-            IDiaEnumSymbols exeSymEnum;
-            diaSession.findChildren(null, SymTagEnum.SymTagExe, null, 0, out exeSymEnum);
-            if (exeSymEnum.count != 1) {
-                return null;
-            }
+            using (var diaSession = ComPtr.Create((IDiaSession)moduleInstance.Module.GetSymbolInterface(typeof(IDiaSession).GUID))) {
+                IDiaEnumSymbols exeSymEnum;
+                diaSession.Object.findChildren(null, SymTagEnum.SymTagExe, null, 0, out exeSymEnum);
+                using (ComPtr.Create(exeSymEnum)) {
+                    if (exeSymEnum.count != 1) {
+                        return new ComPtr<IDiaSymbol>();
+                    }
 
-            return exeSymEnum.Item(0);
+                    return ComPtr.Create(exeSymEnum.Item(0));
+                }
+            }
         }
 
-        public static IDiaSymbol GetSymbols(this DkmModuleInstance moduleInstance) {
+        public static bool HasSymbols(this DkmModuleInstance moduleInstance) {
+            using (var sym = moduleInstance.TryGetSymbols()) {
+                return sym.Object != null;
+            }
+        }
+
+        public static ComPtr<IDiaSymbol> GetSymbols(this DkmModuleInstance moduleInstance) {
             var result = TryGetSymbols(moduleInstance);
-            if (result == null) {
+            if (result.Object == null) {
                 Debug.Fail("Failed to load symbols for module " + moduleInstance.Name);
                 throw new InvalidOperationException();
             }
@@ -96,31 +103,36 @@ namespace Microsoft.PythonTools.DkmDebugger {
         }
 
         public static ulong GetFunctionAddress(this DkmNativeModuleInstance moduleInstance, string name, bool debugStart = false) {
-            var funcSym = moduleInstance.GetSymbols().GetSymbol(SymTagEnum.SymTagFunction, name);
-            if (debugStart) {
-                funcSym = funcSym.GetSymbol(SymTagEnum.SymTagFuncDebugStart, null);
+            uint rva;
+            using (var moduleSym = moduleInstance.GetSymbols()) {
+                using (var funcSym = moduleSym.Object.GetSymbol(SymTagEnum.SymTagFunction, name)) {
+                    if (debugStart) {
+                        using (var startSym = funcSym.Object.GetSymbol(SymTagEnum.SymTagFuncDebugStart, null)) {
+                            rva = startSym.Object.relativeVirtualAddress;
+                        }
+                    } else {
+                        rva = funcSym.Object.relativeVirtualAddress;
+                    }
+                }
             }
-            return moduleInstance.BaseAddress + funcSym.relativeVirtualAddress;
+            return moduleInstance.BaseAddress + rva;
         }
 
         public static ulong GetStaticVariableAddress(this DkmNativeModuleInstance moduleInstance, string name, string objFileName = null) {
-            var symbols = moduleInstance.GetSymbols();
-
-            if (objFileName != null) {
-                var compilands = symbols.GetSymbols(SymTagEnum.SymTagCompiland, null).Where(cmp => cmp.name.EndsWith(objFileName)).ToArray();
-                if (compilands.Length == 0) {
-                    Debug.Fail("Compiland '" + objFileName + "' was not found.");
-                    throw new ArgumentException();
-                } else if (compilands.Length > 1) {
-                    Debug.Fail("Found more than one compiland named '" + objFileName + "'.");
-                    throw new ArgumentException();
+            uint rva;
+            using (var moduleSym = moduleInstance.GetSymbols()) {
+                if (objFileName != null) {
+                    using (var compiland = moduleSym.Object.GetSymbol(SymTagEnum.SymTagCompiland, null, cmp => cmp.name.EndsWith(objFileName)))
+                    using (var varSym = moduleSym.Object.GetSymbol(SymTagEnum.SymTagData, name)) {
+                        rva = varSym.Object.relativeVirtualAddress;
+                    }
                 } else {
-                    symbols = compilands[0];
+                    using (var varSym = moduleSym.Object.GetSymbol(SymTagEnum.SymTagData, name)) {
+                        rva = varSym.Object.relativeVirtualAddress;
+                    }
                 }
             }
-
-            var varSym = symbols.GetSymbol(SymTagEnum.SymTagData, name);
-            return moduleInstance.BaseAddress + varSym.relativeVirtualAddress;
+            return moduleInstance.BaseAddress + rva;
         }
 
         public static TProxy GetStaticVariable<TProxy>(this DkmNativeModuleInstance moduleInstance, string name, string objFileName = null)

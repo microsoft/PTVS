@@ -134,6 +134,7 @@
     <Compile Include="Debugger\PythonBreakpoint.cs" />
     <Compile Include="Debugger\TryHandlerWalker.cs" />
     <Compile Include="Debugger\FrameKind.cs" />
+    <Compile Include="DkmDebugger\ComPtr.cs" />
   </ItemGroup>
   <ItemGroup Condition="'$(VSTarget)' != '10.0'">
     <Compile Include="DkmDebugger\ComponentBase.cs" />

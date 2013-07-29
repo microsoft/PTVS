@@ -87,7 +87,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
                 if (PythonDLLs.GetPythonLanguageVersion(moduleInstance) != Parsing.PythonLanguageVersion.None) {
                     pyrtInfo.DLLs.Python = moduleInstance;
                     for (int i = 0; i < 2; ++i) {
-                        if (moduleInstance.TryGetSymbols() != null) {
+                        if (moduleInstance.HasSymbols()) {
                             if (process.LivePart == null) {
                                 // If debugging crash dumps, runtime can be created as soon as Python symbols are resolved.
                                 CreatePythonRuntimeInstance(process);
@@ -119,7 +119,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
                     bool isInitialized = moduleInstance.GetExportedStaticVariable<ByteProxy>("isInitialized").Read() != 0;
                     if (isInitialized) {
                         pyrtInfo.DLLs.DebuggerHelper = moduleInstance;
-                        if (pyrtInfo.DLLs.Python != null && pyrtInfo.DLLs.Python.TryGetSymbols() != null) {
+                        if (pyrtInfo.DLLs.Python != null && pyrtInfo.DLLs.Python.HasSymbols()) {
                             CreatePythonRuntimeInstance(process);
                         }
                     } else {
@@ -127,7 +127,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
                         initBP = CreateRuntimeDllExportedFunctionBreakpoint(moduleInstance, "OnInitialized", (thread, frameBase, vFrame) => {
                             initBP.Close();
                             pyrtInfo.DLLs.DebuggerHelper = moduleInstance;
-                            if (pyrtInfo.DLLs.Python != null && pyrtInfo.DLLs.Python.TryGetSymbols() != null) {
+                            if (pyrtInfo.DLLs.Python != null && pyrtInfo.DLLs.Python.HasSymbols()) {
                                 CreatePythonRuntimeInstance(process);
                             }
                         });
@@ -163,7 +163,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
                 return;
             }
 
-            if (pyrtInfo.DLLs.Python != null && pyrtInfo.DLLs.Python.TryGetSymbols() != null) {
+            if (pyrtInfo.DLLs.Python != null && pyrtInfo.DLLs.Python.HasSymbols()) {
                 if (process.LivePart == null || pyrtInfo.DLLs.DebuggerHelper != null) {
                     CreatePythonRuntimeInstance(process);
                 } else {
@@ -446,31 +446,39 @@ namespace Microsoft.PythonTools.DkmDebugger {
             var process = moduleInstance.Process;
             var runtimeBreakpoints = process.GetOrCreateDataItem(() => new RuntimeDllBreakpoints());
 
-            var funcSym = moduleInstance.GetSymbols().GetSymbol(SymTagEnum.SymTagFunction, funcName);
-            var funcEnds = funcSym.GetSymbols(SymTagEnum.SymTagFuncDebugEnd, null).ToArray();
-            if (funcEnds.Length == 0) {
-                Debug.Fail("Cannot set exit breakpoint for function " + funcName + " because it has no FuncDebugEnd symbols.");
-                throw new NotSupportedException();
-            }
+            using (var moduleSym = moduleInstance.GetSymbols()) 
+            using (var funcSym = moduleSym.Object.GetSymbol(SymTagEnum.SymTagFunction, funcName)) {
+                var funcEnds = funcSym.Object.GetSymbols(SymTagEnum.SymTagFuncDebugEnd, null);
+                try {
+                    if (funcEnds.Length == 0) {
+                        Debug.Fail("Cannot set exit breakpoint for function " + funcName + " because it has no FuncDebugEnd symbols.");
+                        throw new NotSupportedException();
+                    }
 
-            var bps = new List<DkmRuntimeBreakpoint>();
-            foreach (var funcEnd in funcEnds) {
-                if (funcEnd.locationType != (uint)DiaLocationType.LocIsStatic) {
-                    Debug.Fail("Cannot set exit breakpoint for function " + funcName + " because it has a non-static FuncDebugEnd symbol.");
-                    throw new NotSupportedException();
+                    var bps = new List<DkmRuntimeBreakpoint>();
+                    foreach (var funcEnd in funcEnds) {
+                        if (funcEnd.Object.locationType != (uint)DiaLocationType.LocIsStatic) {
+                            Debug.Fail("Cannot set exit breakpoint for function " + funcName + " because it has a non-static FuncDebugEnd symbol.");
+                            throw new NotSupportedException();
+                        }
+
+                        ulong addr = moduleInstance.BaseAddress + funcEnd.Object.relativeVirtualAddress;
+                        var bp = process.CreateBreakpoint(Guids.LocalComponentGuid, addr);
+                        if (enable) {
+                            bp.Enable();
+                        }
+                        bps.Add(bp);
+
+                        runtimeBreakpoints.Handlers.Add(bp.UniqueId, handler);
+                    }
+
+                    return bps.ToArray();
+                } finally {
+                    foreach (var funcEnd in funcEnds) {
+                        funcEnd.Dispose();
+                    }
                 }
-
-                ulong addr = moduleInstance.BaseAddress + funcEnd.relativeVirtualAddress;
-                var bp = process.CreateBreakpoint(Guids.LocalComponentGuid, addr);
-                if (enable) {
-                    bp.Enable();
-                }
-                bps.Add(bp);
-
-                runtimeBreakpoints.Handlers.Add(bp.UniqueId, handler);
             }
-
-            return bps.ToArray();
         }
 
         [DataContract]

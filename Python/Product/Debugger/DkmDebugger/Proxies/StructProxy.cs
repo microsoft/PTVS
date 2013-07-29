@@ -34,18 +34,28 @@ namespace Microsoft.PythonTools.DkmDebugger.Proxies {
 
         public class StructMetadata : DkmDataItem {
             public DkmProcess Process { get; private set; }
-            public IDiaSymbol Symbol { get; private set; }
             public string Name { get; private set; }
             public long Size { get; private set; }
             internal object Fields { get; set; }
+            private readonly ComPtr<IDiaSymbol> _symbol;
 
             public StructMetadata(DkmProcess process, string name) {
                 Process = process;
                 Name = name;
 
-                var pythonSymbols = process.GetPythonRuntimeInfo().DLLs.Python.GetSymbols();
-                Symbol = pythonSymbols.GetTypeSymbol(name);
+                using (var pythonSymbols = process.GetPythonRuntimeInfo().DLLs.Python.GetSymbols()) {
+                    _symbol = pythonSymbols.Object.GetTypeSymbol(name);
+                }
                 Size = (long)Symbol.length;
+            }
+
+            public IDiaSymbol Symbol {
+                get { return _symbol.Object; }
+            }
+
+            protected override void OnClose() {
+                _symbol.Dispose();
+                base.OnClose();
             }
         }
 
