@@ -95,6 +95,9 @@
             <Component Id="cmpAECA7C7BA8604DC995F00FFD6208A8AE" Directory="INSTALLLOCATION" Guid="{C69AD6BF-3B48-41EF-A2DE-AB1EB65C72A1}">
                 <File Id="fil83E122C66D1C4B21ABC1129A0FC1C2F1" KeyPath="yes" Source="$(var.TargetDir)\Microsoft.PythonTools.Analyzer.exe" />
             </Component>
+            <Component Id="cmp9CFC90C4442A47B882E22AB7B7600CB9" Directory="INSTALLLOCATION" Guid="{5C8BC145-056A-4343-8CFF-3DB70C0508FB}">
+                <File Id="filE582FBA80066410A8570ADB1243F8B37" KeyPath="yes" Source="$(var.TargetDir)\Microsoft.PythonTools.Analyzer.exe.config" />
+            </Component>
             <Component Id="cmp8287D95F1497479A85767903C9F88FA1" Directory="INSTALLLOCATION" Guid="{CE82D032-5D6B-4847-B431-C3070D704C01}">
                 <File Id="filF7E9BDFC2B58492A925D5AC7591111F4" KeyPath="yes" Source="$(var.TargetDir)\Microsoft.PythonTools.VSInterpreters.dll" />
             </Component>

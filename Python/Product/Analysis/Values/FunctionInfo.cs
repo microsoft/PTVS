@@ -43,10 +43,15 @@ namespace Microsoft.PythonTools.Analysis.Values {
             _projectEntry = declUnit.ProjectEntry;
             _functionDefinition = node;
             _declVersion = declUnit.ProjectEntry.AnalysisVersion;
-            _callDepthLimit = declUnit.ProjectState.Limits.CallDepth;
 
             if (Name == "__new__") {
                 IsClassMethod = true;
+            }
+
+            object value;
+            if (!ProjectEntry.Properties.TryGetValue(AnalysisLimits.CallDepthKey, out value) ||
+                (_callDepthLimit = (value as int?) ?? -1) < 0) {
+                _callDepthLimit = declUnit.ProjectState.Limits.CallDepth;
             }
 
             _analysisUnit = new FunctionAnalysisUnit(this, declUnit, declScope);
@@ -88,7 +93,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
             FunctionAnalysisUnit calledUnit;
             bool updateArguments = true;
 
-            if (callArgs.Count == 0 || (ProjectState.Limits.UnifyCallsToNew && Name == "__new__")) {
+            if (callArgs.Count == 0 ||
+                (ProjectState.Limits.UnifyCallsToNew && Name == "__new__") ||
+                _callDepthLimit == 0) {
                 calledUnit = (FunctionAnalysisUnit)AnalysisUnit;
             } else {
                 if (_allCalls == null) {

@@ -16,11 +16,13 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.ComponentModel.Composition.Hosting;
+using System.Configuration;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Security;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -55,6 +57,7 @@ namespace Microsoft.PythonTools.Analysis {
         private TextWriter _listener;
         private List<List<ModulePath>> _fileGroups;
         private HashSet<string> _existingDatabase;
+        private IEnumerable<string> _callDepthOverrides;
 
         private const string BuiltinName2x = "__builtin__.idb";
         private const string BuiltinName3x = "builtins.idb";
@@ -271,7 +274,7 @@ namespace Microsoft.PythonTools.Analysis {
             if (!options.TryGetValue("python", out value) && !options.TryGetValue("py", out value)) {
                 value = null;
             }
-            if (CommonUtils.IsValidPath(value)) {
+            if (!string.IsNullOrEmpty(value) && !CommonUtils.IsValidPath(value)) {
                 throw new ArgumentException(value, "python");
             }
             interpreter = value;
@@ -279,7 +282,7 @@ namespace Microsoft.PythonTools.Analysis {
             if (!options.TryGetValue("library", out value) && !options.TryGetValue("lib", out value)) {
                 throw new ArgumentNullException("library");
             }
-            if (CommonUtils.IsValidPath(value)) {
+            if (!CommonUtils.IsValidPath(value)) {
                 throw new ArgumentException(value, "library");
             }
             library = value;
@@ -287,7 +290,7 @@ namespace Microsoft.PythonTools.Analysis {
             if (!options.TryGetValue("outdir", out value)) {
                 value = Environment.CurrentDirectory;
             }
-            if (CommonUtils.IsValidPath(value)) {
+            if (!CommonUtils.IsValidPath(value)) {
                 throw new ArgumentException(value, "outdir");
             }
             outDir = value;
@@ -295,7 +298,7 @@ namespace Microsoft.PythonTools.Analysis {
             if (!options.TryGetValue("basedb", out value)) {
                 value = Environment.CurrentDirectory;
             }
-            if (CommonUtils.IsValidPath(value)) {
+            if (!CommonUtils.IsValidPath(value)) {
                 throw new ArgumentException(value, "basedb");
             }
             baseDb = value.Split(';').ToList();
@@ -304,7 +307,7 @@ namespace Microsoft.PythonTools.Analysis {
             if (!options.TryGetValue("log", out value)) {
                 value = Path.Combine(Environment.CurrentDirectory, "Analysislog.txt");
             }
-            if (CommonUtils.IsValidPath(value)) {
+            if (!CommonUtils.IsValidPath(value)) {
                 throw new ArgumentException(value, "log");
             }
             if (!Path.IsPathRooted(value)) {
@@ -544,6 +547,20 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
+        private IEnumerable<string> CallDepthOverrides {
+            get {
+                if (_callDepthOverrides == null) {
+                    var values = ConfigurationManager.AppSettings.Get("NoCallSiteAnalysis");
+                    if (string.IsNullOrEmpty(values)) {
+                        _callDepthOverrides = Enumerable.Empty<string>();
+                    } else {
+                        _callDepthOverrides = values.Split(',', ';').Where(n => !string.IsNullOrWhiteSpace(n)).ToArray();
+                    }
+                }
+                return _callDepthOverrides;
+            }
+        }
+
         internal void Analyze() {
             if (_updater != null) {
                 _updater.UpdateStatus(AnalysisStatus.Analyzing, 0, 1);
@@ -629,7 +646,13 @@ namespace Microsoft.PythonTools.Analysis {
 
                 var modules = new List<IPythonProjectEntry>();
                 for (int i = 0; i < files.Count; i++) {
-                    modules.Add(projectState.AddModule(files[i].ModuleName, files[i].SourceFile));
+                    var module = projectState.AddModule(files[i].ModuleName, files[i].SourceFile);
+
+                    if (CallDepthOverrides.Any(n => files[i].ModuleName.StartsWith(n))) {
+                        module.Properties[AnalysisLimits.CallDepthKey] = 0;
+                    }
+
+                    modules.Add(module);
                 }
 
                 var nodes = new List<PythonAst>();

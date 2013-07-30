@@ -111,6 +111,12 @@ namespace Microsoft.PythonTools.Analysis {
             key.SetValue(UnifyCallsToNewId, UnifyCallsToNew ? 1 : 0, RegistryValueKind.DWord);
         }
 
+        /// <summary>
+        /// The key to use with ProjectEntry.Properties to override the call
+        /// depth for functions in that module.
+        /// </summary>
+        public static readonly object CallDepthKey = new object();
+
         public AnalysisLimits() {
             CallDepth = 3;
             DecreaseCallDepth = 30;
