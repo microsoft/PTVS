@@ -20,15 +20,16 @@ using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Analyzer {
     abstract class InterpreterScope {
-        private readonly AnalysisValue _av;
-        private readonly Node _node;
         public readonly InterpreterScope OuterScope;
         public readonly List<InterpreterScope> Children = new List<InterpreterScope>();
-        private Dictionary<string, HashSet<VariableDef>> _linkedVariables;
+        public bool ContainsImportStar;
 
+        private readonly AnalysisValue _av;
+        private readonly Node _node;
         private readonly Dictionary<Node, InterpreterScope> _nodeScopes;
         private readonly Dictionary<Node, IAnalysisSet> _nodeValues;
         private readonly Dictionary<string, VariableDef> _variables;
+        private Dictionary<string, HashSet<VariableDef>> _linkedVariables;
 
         public InterpreterScope(AnalysisValue av, Node ast, InterpreterScope outerScope) {
             _av = av;

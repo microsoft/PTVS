@@ -800,6 +800,31 @@ z = None
         }
 
         [TestMethod, Priority(0)]
+        public void ImportStarMro() {
+            PermutedTest(
+                "mod",
+                new[] { 
+                    @"
+class Test_test1(object):
+    def test_A(self):
+        pass
+",
+ @"from mod1 import *
+
+class Test_test2(Test_test1):
+    def test_newtest(self):pass"
+                },
+                (modules) => {
+                    var mro = modules[1].Analysis.GetValuesByIndex("Test_test2", 0).First().Mro.ToArray();
+                    Assert.AreEqual(3, mro.Length);
+                    Assert.AreEqual("Test_test2", mro[0].First().Name);
+                    Assert.AreEqual("Test_test1", mro[1].First().Name);
+                    Assert.AreEqual("object", mro[2].First().Name);
+                }
+            );
+        }
+
+        [TestMethod, Priority(0)]
         public void Iterator() {
             var entry = ProcessText(@"
 A = [1, 2, 3]
@@ -5344,8 +5369,11 @@ class Derived3(object):
                     Prepare(result[p[i]], GetSourceUnit(code[p[i]]));
                 }
                 for (int i = 0; i < code.Length; i++) {
-                    result[p[i]].Analyze(CancellationToken.None);
+                    result[p[i]].Analyze(CancellationToken.None, true);
                 }
+
+                state.AnalyzeQueuedEntries(CancellationToken.None);
+
                 yield return result;
             }
         }

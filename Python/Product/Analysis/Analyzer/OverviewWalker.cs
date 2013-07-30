@@ -425,7 +425,11 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             for (int i = 0; i < len; i++) {
                 var nameNode = asNames[i] ?? node.Names[i];
                 if (nameNode != null) {
-                    CreateVariableInDeclaredScope(nameNode);
+                    if (nameNode.Name == "*") {
+                        _scope.ContainsImportStar = true;
+                    } else {
+                        CreateVariableInDeclaredScope(nameNode);
+                    }
                 }
             }
             return base.Walk(node);

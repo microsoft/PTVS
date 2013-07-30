@@ -109,8 +109,9 @@ namespace Microsoft.PythonTools.TestAdapter {
 
                 // Second pass, analyze
                 foreach (var entry in entries) {
-                    entry.Analyze(CancellationToken.None);
+                    entry.Analyze(CancellationToken.None, true);
                 }
+                analyzer.AnalyzeQueuedEntries(CancellationToken.None);
 
                 // Third pass, get the results of the analysis
                 foreach (var entry in entries) {

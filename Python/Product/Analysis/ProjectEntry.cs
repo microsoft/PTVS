@@ -234,7 +234,7 @@ namespace Microsoft.PythonTools.Analysis {
             _unit.Enqueue();
 
             if (!enqueOnly) {
-                ((IGroupableAnalysisProject)_projectState).AnalyzeQueuedEntries(cancel);
+                _projectState.AnalyzeQueuedEntries(cancel);
             }
 
             // publish the analysis now that it's complete

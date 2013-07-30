@@ -85,6 +85,10 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                                 }
                             }
                             return refs.Types;
+                        } else if (scope.ContainsImportStar && addRef) {
+                            // create the variable so that we can appropriately
+                            // add any dependent reads to it.
+                            scope.CreateVariable(node, _unit, name, addRef);
                         }
                     }
                 }

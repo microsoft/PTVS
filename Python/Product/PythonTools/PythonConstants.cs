@@ -13,7 +13,6 @@
  * ***************************************************************************/
 
 using System;
-using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools {

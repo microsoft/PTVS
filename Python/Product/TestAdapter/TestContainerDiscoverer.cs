@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Microsoft.PythonTools.Analysis;
@@ -34,23 +35,26 @@ namespace Microsoft.PythonTools.TestAdapter {
         private readonly SolutionEventsListener _solutionListener;
         private readonly Dictionary<string, string> _fileRootMap;
         private readonly Dictionary<string, IVsProject> _knownProjects;
-        private bool _firstLoad, _isDisposed;
+        private bool _firstLoad, _isDisposed, _building, _detectingChanges;
 
         [ImportingConstructor]
-        private TestContainerDiscoverer([Import(typeof(SVsServiceProvider))]IServiceProvider serviceProvider)
+        private TestContainerDiscoverer([Import(typeof(SVsServiceProvider))]IServiceProvider serviceProvider, [Import(typeof(IOperationState))]IOperationState operationState)
             : this(serviceProvider,
                    new SolutionEventsListener(serviceProvider),
                    new TestFilesUpdateWatcher(),
-                   new TestFileAddRemoveListener(serviceProvider)) { }
+                   new TestFileAddRemoveListener(serviceProvider),
+                    operationState) { }
 
         public TestContainerDiscoverer(IServiceProvider serviceProvider,
                                        SolutionEventsListener solutionListener,
                                        TestFilesUpdateWatcher testFilesUpdateWatcher,
-                                       TestFileAddRemoveListener testFilesAddRemoveListener) {
+                                       TestFileAddRemoveListener testFilesAddRemoveListener,
+                                       IOperationState operationState) {
             ValidateArg.NotNull(serviceProvider, "serviceProvider");
             ValidateArg.NotNull(solutionListener, "solutionListener");
             ValidateArg.NotNull(testFilesUpdateWatcher, "testFilesUpdateWatcher");
             ValidateArg.NotNull(testFilesAddRemoveListener, "testFilesAddRemoveListener");
+            ValidateArg.NotNull(operationState, "operationState");
 
             _fileRootMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             _knownProjects = new Dictionary<string, IVsProject>(StringComparer.OrdinalIgnoreCase);
@@ -65,11 +69,31 @@ namespace Microsoft.PythonTools.TestAdapter {
             _solutionListener.ProjectUnloading += OnProjectUnloaded;
             _solutionListener.ProjectRenamed += OnProjectRenamed;
             _solutionListener.SolutionClosed += OnSolutionClosed;
+            _solutionListener.BuildCompleted += OnBuildCompleted;
+            _solutionListener.BuildStarted += OnBuildStarted;
 
             _testFilesUpdateWatcher = testFilesUpdateWatcher;
             _testFilesUpdateWatcher.FileChangedEvent += OnProjectItemChanged;
+            operationState.StateChanged += OperationStateChanged;
 
             _firstLoad = true;
+        }
+
+        private void OperationStateChanged(object sender, OperationStateChangedEventArgs e) {
+            if (e.State == TestOperationStates.ChangeDetectionStarting) {
+                _detectingChanges = true;
+            } else if (e.State == TestOperationStates.ChangeDetectionFinished) {
+                _detectingChanges = false;
+            }
+        }
+
+        private void OnBuildStarted(object sender, EventArgs e) {
+            _building = true;
+        }
+
+        private void OnBuildCompleted(object sender, EventArgs e) {
+            OnTestContainersChanged();
+            _building = false;
         }
 
         void IDisposable.Dispose() {
@@ -139,6 +163,10 @@ namespace Microsoft.PythonTools.TestAdapter {
             string path;
             project.GetMkDocument(VSConstants.VSITEMID_ROOT, out path);
 
+            if (_detectingChanges) {
+                SaveModifiedFiles(project);
+            }
+
             if (!_knownProjects.ContainsKey(path)) {
                 // Don't return any containers for projects we don't know about.
                 yield break;
@@ -156,11 +184,28 @@ namespace Microsoft.PythonTools.TestAdapter {
                     }
                     return latest;
                 });
-
+            
             var architecture = Architecture.X86;
             // TODO: Read the architecture from the project
 
             yield return new TestContainer(this, path, latestWrite, architecture);
+        }
+
+        private void SaveModifiedFiles(IVsProject project) {
+            // save all the open files in the project...
+            foreach (var itemPath in project.GetProjectItems()) {
+                if (String.IsNullOrEmpty(itemPath)) {
+                    continue;
+                }
+                var solution = (IVsSolution)_serviceProvider.GetService(typeof(SVsSolution));
+                ErrorHandler.ThrowOnFailure(
+                    solution.SaveSolutionElement(
+                        0,
+                        (IVsHierarchy)project,
+                        0
+                    )
+                );
+            }
         }
 
         private bool ShouldDiscover(string pathToItem) {
@@ -328,9 +373,22 @@ namespace Microsoft.PythonTools.TestAdapter {
         }
 
         private void OnTestContainersChanged() {
-            var evt = TestContainersUpdated;
-            if (evt != null) {
-                evt(this, EventArgs.Empty);
+            // https://pytools.codeplex.com/workitem/1271
+            // When test explorer kicks off a run it kicks off a test discovery
+            // phase, which kicks off a build, which results in us saving files.
+            // If we raise the files changed event then test explorer immediately turns
+            // around and queries us for the changed files.  Then it continues
+            // along with the test discovery phase it was already initiating, and 
+            // discovers that no changes have occured - because it already updated
+            // to the latest changes when we informed it our containers had changed.  
+            // Therefore if we are both building and detecting changes then we 
+            // don't want to raise the event, instead it'll query us in a little 
+            // bit and get the most recent changes.
+            if (!_building || !_detectingChanges) {
+                var evt = TestContainersUpdated;
+                if (evt != null) {
+                    evt(this, EventArgs.Empty);
+                }
             }
         }
     }

@@ -39,6 +39,8 @@ namespace Microsoft.VisualStudioTools {
         public event EventHandler<ProjectEventArgs> ProjectUnloading;
         public event EventHandler<ProjectEventArgs> ProjectClosing;
         public event EventHandler<ProjectEventArgs> ProjectRenamed;
+        public event EventHandler BuildCompleted;
+        public event EventHandler BuildStarted;
         public event EventHandler ActiveSolutionConfigurationChanged;
 
         public SolutionEventsListener(IServiceProvider serviceProvider) {
@@ -100,39 +102,31 @@ namespace Microsoft.VisualStudioTools {
             return VSConstants.E_NOTIMPL;
         }
 
-        int IVsUpdateSolutionEvents2.UpdateSolution_Begin(ref int pfCancelUpdate) {
+        public int OnActiveProjectCfgChange(IVsHierarchy pIVsHierarchy) {
             return VSConstants.E_NOTIMPL;
         }
 
-        int IVsUpdateSolutionEvents2.UpdateSolution_Cancel() {
+        public int UpdateSolution_Begin(ref int pfCancelUpdate) {
+            var buildStarted = BuildStarted;
+            if (buildStarted != null) {
+                buildStarted(this, EventArgs.Empty);
+            }
+            return VSConstants.S_OK;
+        }
+
+        public int UpdateSolution_Cancel() {
             return VSConstants.E_NOTIMPL;
         }
 
-        int IVsUpdateSolutionEvents2.UpdateSolution_Done(int fSucceeded, int fModified, int fCancelCommand) {
-            return VSConstants.E_NOTIMPL;
+        public int UpdateSolution_Done(int fSucceeded, int fModified, int fCancelCommand) {
+            var buildCompleted = BuildCompleted;
+            if (buildCompleted != null) {
+                buildCompleted(this, EventArgs.Empty);
+            }
+            return VSConstants.S_OK;
         }
 
-        int IVsUpdateSolutionEvents2.UpdateSolution_StartUpdate(ref int pfCancelUpdate) {
-            return VSConstants.E_NOTIMPL;
-        }
-
-        int IVsUpdateSolutionEvents.OnActiveProjectCfgChange(IVsHierarchy pIVsHierarchy) {
-            return VSConstants.E_NOTIMPL;
-        }
-
-        int IVsUpdateSolutionEvents.UpdateSolution_Begin(ref int pfCancelUpdate) {
-            return VSConstants.E_NOTIMPL;
-        }
-
-        int IVsUpdateSolutionEvents.UpdateSolution_Cancel() {
-            return VSConstants.E_NOTIMPL;
-        }
-
-        int IVsUpdateSolutionEvents.UpdateSolution_Done(int fSucceeded, int fModified, int fCancelCommand) {
-            return VSConstants.E_NOTIMPL;
-        }
-
-        int IVsUpdateSolutionEvents.UpdateSolution_StartUpdate(ref int pfCancelUpdate) {
+        public int UpdateSolution_StartUpdate(ref int pfCancelUpdate) {
             return VSConstants.E_NOTIMPL;
         }
 

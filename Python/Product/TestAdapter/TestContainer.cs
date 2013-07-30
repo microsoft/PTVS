@@ -14,26 +14,25 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
+using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestWindow.Extensibility;
 using Microsoft.VisualStudio.TestWindow.Extensibility.Model;
 
 namespace Microsoft.PythonTools.TestAdapter {
     internal class TestContainer : ITestContainer {
-        private readonly DateTime timeStamp;
-        private readonly Architecture architecture;
+        private readonly DateTime _timeStamp;
+        private readonly Architecture _architecture;
 
         public TestContainer(ITestContainerDiscoverer discoverer, string source, DateTime timeStamp, Architecture architecture) {
-            this.Discoverer = discoverer;
-            this.Source = source;
-            this.timeStamp = timeStamp;
-            this.architecture = architecture;
+            Discoverer = discoverer;
+            Source = source;
+            _timeStamp = timeStamp;
+            _architecture = architecture;
         }
 
         private TestContainer(TestContainer copy)
-            : this(copy.Discoverer, copy.Source, copy.timeStamp, copy.architecture) { }
+            : this(copy.Discoverer, copy.Source, copy._timeStamp, copy._architecture) { }
 
         public int CompareTo(ITestContainer other) {
             var container = other as TestContainer;
@@ -41,12 +40,12 @@ namespace Microsoft.PythonTools.TestAdapter {
                 return -1;
             }
 
-            var result = String.Compare(this.Source, container.Source, StringComparison.OrdinalIgnoreCase);
+            var result = String.Compare(Source, container.Source, StringComparison.OrdinalIgnoreCase);
             if (result != 0) {
                 return result;
             }
 
-            return this.timeStamp.CompareTo(container.timeStamp);
+            return _timeStamp.CompareTo(container._timeStamp);
         }
 
         public IEnumerable<Guid> DebugEngines {
@@ -82,11 +81,11 @@ namespace Microsoft.PythonTools.TestAdapter {
         }
 
         public Architecture TargetPlatform {
-            get { return architecture; }
+            get { return _architecture; }
         }
 
         public override string ToString() {
-            return this.Source + ":" + this.Discoverer.ExecutorUri.ToString();
+            return Source + ":" + Discoverer.ExecutorUri.ToString();
         }
     }
 }

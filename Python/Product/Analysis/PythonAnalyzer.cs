@@ -696,7 +696,7 @@ namespace Microsoft.PythonTools.Analysis {
 
         #region IGroupableAnalysisProject Members
 
-        void IGroupableAnalysisProject.AnalyzeQueuedEntries(CancellationToken cancel) {
+        public void AnalyzeQueuedEntries(CancellationToken cancel) {
             if (cancel.IsCancellationRequested) {
                 return;
             }
