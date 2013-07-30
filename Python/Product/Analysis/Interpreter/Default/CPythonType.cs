@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using Microsoft.PythonTools.Analysis;
 
 namespace Microsoft.PythonTools.Interpreter.Default {
@@ -24,7 +25,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         private readonly BuiltinTypeId _typeId;
         private readonly CPythonModule _module;
         private readonly List<IPythonType> _bases;
-        private readonly List<CPythonType> _mro;
+        private readonly IPythonType[] _mro;
         private readonly bool _isBuiltin;
         private readonly Dictionary<string, IMember> _members = new Dictionary<string, IMember>();
         private readonly bool _hasLocation;
@@ -68,9 +69,10 @@ namespace Microsoft.PythonTools.Interpreter.Default {
             if (typeTable.TryGetValue("mro", out value)) {
                 var mroList = (List<object>)value;
                 if (mroList != null) {
-                    _mro = new List<CPythonType>();
-                    foreach (var mroType in mroList) {
-                        typeDb.LookupType(mroType, StoreMro);
+                    _mro = new IPythonType[mroList.Count];
+                    for (int i = 0; i < mroList.Count; ++i) {
+                        var capturedI = i;
+                        typeDb.LookupType(mroList[i], t => _mro[capturedI] = t);
                     }
                 }
             }
@@ -92,13 +94,6 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         private void StoreBase(IPythonType type) {
             if (type != null && _bases != null) {
                 _bases.Add(type);
-            }
-        }
-
-        private void StoreMro(IPythonType type) {
-            var cpt = type as CPythonType;
-            if (cpt != null && _mro != null) {
-                _mro.Add(cpt);
             }
         }
 
@@ -132,7 +127,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
                 return res;
             }
             if (_mro != null) {
-                foreach (var mroType in _mro) {
+                foreach (var mroType in _mro.OfType<CPythonType>()) {
                     if (mroType._members.TryGetValue(name, out res)) {
                         return res;
                     }
@@ -159,6 +154,12 @@ namespace Microsoft.PythonTools.Interpreter.Default {
                 return member as IPythonFunction;
             }
             return null;
+        }
+
+        public IList<IPythonType> Mro {
+            get {
+                return _mro;
+            }
         }
 
         public string Name {
@@ -204,7 +205,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
                 }
             }
             if (_mro != null) {
-                foreach (var type in _mro) {
+                foreach (var type in _mro.OfType<CPythonType>()) {
                     foreach (var key in type._members.Keys) {
                         if (seen.Add(key)) {
                             yield return key;

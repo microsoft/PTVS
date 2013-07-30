@@ -479,6 +479,15 @@ namespace Microsoft.IronPythonTools.Interpreter {
             }
         }
 
+        internal ObjectIdentityHandle[] GetPythonTypeMro(ObjectIdentityHandle handle) {
+            var mro = PythonType.Get__mro__((PythonType)Unwrap(handle));
+            var mroHandles = new List<ObjectIdentityHandle>();
+            foreach(var item in mro.OfType<PythonType>()) {
+                mroHandles.Add(MakeHandle(item));
+            }
+            return mroHandles.ToArray();
+        }
+
         internal BuiltinTypeId PythonTypeGetBuiltinTypeId(ObjectIdentityHandle handle) {
             var value = (PythonType)Unwrap(handle);
 

@@ -56,6 +56,10 @@ namespace Microsoft.PythonTools.Interpreter.Default {
             get { return _type.TypeId; }
         }
 
+        public IList<IPythonType> Mro {
+            get { return _type.Mro; }
+        }
+
         public IPythonModule DeclaringModule {
             get { return _type.DeclaringModule; }
         }

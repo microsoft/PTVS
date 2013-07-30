@@ -424,7 +424,7 @@ a.original()
             var expectedTupleType1 = new[] { BuiltinTypeId.Tuple, BuiltinTypeId.NoneType };
             var expectedTupleType2 = new[] { BuiltinTypeId.Tuple, BuiltinTypeId.NoneType };
             if (this is StdLibAnalysisTest) {
-                expectedIntType1 = expectedIntType2 = new BuiltinTypeId[0];
+                expectedIntType1 = new BuiltinTypeId[0];
                 expectedTupleType1 = new[] { BuiltinTypeId.NoneType };
             }
 

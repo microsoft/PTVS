@@ -234,6 +234,10 @@ namespace Microsoft.IronPythonTools.Interpreter {
             return _remoteInterpreter.PythonTypeGetBuiltinTypeId(value);
         }
 
+        internal ObjectIdentityHandle[] GetPythonTypeMro(ObjectIdentityHandle value) {
+            return _remoteInterpreter.GetPythonTypeMro(value);
+        }
+
         internal string GetTypeDeclaringModule(ObjectIdentityHandle value) {
             return _remoteInterpreter.GetTypeDeclaringModule(value);
         }

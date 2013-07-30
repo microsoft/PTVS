@@ -137,8 +137,8 @@ namespace AnalyzerStatusTests {
                 updater.ThrowPendingExceptions();
 
                 using (var updater2 = new AnalyzerStatusUpdater("Identifier")) {
+                    updater2.WaitForWorkerStarted();
                     updater2.UpdateStatus(AnalysisStatus.Preparing, 99, 100);
-                    updater.WaitForWorkerStarted();
 
                     try {
                         updater2.ThrowPendingExceptions();

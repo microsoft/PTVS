@@ -22,6 +22,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
         private bool? _genericTypeDefinition;
         private PythonMemberType _memberType;
         private IList<IPythonType> _eventInvokeArgs;
+        private IList<IPythonType> _mro;
         private IPythonFunction _ctors;
 
         public IronPythonTypeGroup(IronPythonInterpreter interpreter, ObjectIdentityHandle type)
@@ -94,6 +95,15 @@ namespace Microsoft.IronPythonTools.Interpreter {
             }
         }
 
+        public IList<IPythonType> Mro {
+            get {
+                if (_mro == null) {
+                    _mro = new IPythonType[] { this };
+                }
+                return _mro;
+            }
+        }
+
         public bool IsBuiltin {
             get {
                 return true;
@@ -120,7 +130,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
             if (_eventInvokeArgs == null) {
                 var types = Interpreter.Remote.GetTypeGroupEventInvokeArgs(Value);
                 if (types == null) {
-                    _eventInvokeArgs = IronPythonType.NoPropagateOnCall;
+                    _eventInvokeArgs = IronPythonType.EmptyTypes;
                 } else {
                     var args = new IPythonType[types.Length];
                     for (int i = 0; i < types.Length; i++) {
@@ -130,7 +140,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
                 }
             }
 
-            return _eventInvokeArgs == IronPythonType.NoPropagateOnCall ? null : _eventInvokeArgs;
+            return _eventInvokeArgs == IronPythonType.EmptyTypes ? null : _eventInvokeArgs;
         }
 
         #endregion
@@ -157,5 +167,6 @@ namespace Microsoft.IronPythonTools.Interpreter {
         }
 
         #endregion
+
     }
 }

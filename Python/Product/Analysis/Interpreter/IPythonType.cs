@@ -12,6 +12,8 @@
  *
  * ***************************************************************************/
 
+using System.Collections.Generic;
+
 namespace Microsoft.PythonTools.Interpreter {
     public interface IPythonType : IMemberContainer, IMember {
         IPythonFunction GetConstructors();
@@ -30,6 +32,10 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         IPythonModule DeclaringModule {
+            get;
+        }
+
+        IList<IPythonType> Mro {
             get;
         }
 

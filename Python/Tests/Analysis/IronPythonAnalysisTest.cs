@@ -21,6 +21,7 @@ using System.Runtime.Remoting;
 using System.Threading;
 using Microsoft.IronPythonTools.Interpreter;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -303,6 +304,30 @@ mod.
             var indexes = tooltips[0].FindIndexesOf("CreateGlobalFunctions").ToArray();
             Assert.AreEqual(1, indexes.Length);
 #endif
+        }
+
+        [TestMethod, Priority(0)]
+        public void IronPythonMro() {
+            var text = @"
+from System import DivideByZeroException
+";
+            var entry = ProcessText(text);
+            var dbzEx = entry.GetValuesByIndex("DivideByZeroException", 0).First() as BuiltinClassInfo;
+            Assert.IsNotNull(dbzEx);
+            // Check values from IPythonType MRO
+            AssertUtil.ContainsExactly(dbzEx.PythonType.Mro.Select(t => t.Name),
+                "DivideByZeroException",
+                "ArithmeticException",
+                "SystemException",
+                "Exception",
+                "object");
+            // Check values from BuiltinClassInfo MRO
+            AssertUtil.ContainsExactly(dbzEx.Mro.Select(t => t.First().Name),
+                "DivideByZeroException",
+                "ArithmeticException",
+                "SystemException",
+                "Exception",
+                "object");
         }
 
         [TestMethod, Priority(0)]

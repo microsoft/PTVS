@@ -24,10 +24,11 @@ namespace Microsoft.IronPythonTools.Interpreter {
         private string _name;
         private BuiltinTypeId? _typeId;
         private IList<IPythonType> _propagateOnCall;
+        private IList<IPythonType> _mro;
         private PythonMemberType _memberType;
         private bool? _genericTypeDefinition;
 
-        internal static IPythonType[] NoPropagateOnCall = new IPythonType[0];
+        internal static IPythonType[] EmptyTypes = new IPythonType[0];
 
         public IronPythonType(IronPythonInterpreter interpreter, ObjectIdentityHandle type)
             : base(interpreter, type) {
@@ -99,6 +100,20 @@ namespace Microsoft.IronPythonTools.Interpreter {
             }
         }
 
+        public IList<IPythonType> Mro {
+            get {
+                if (_mro == null) {
+                    var types = Interpreter.Remote.GetPythonTypeMro(Value);
+                    var mro = new IPythonType[types.Length];
+                    for (int i = 0; i < types.Length; ++i) {
+                        mro[i] = Interpreter.GetTypeFromType(types[i]);
+                    }
+                    _mro = mro;
+                }
+                return _mro;
+            }
+        }
+
         public bool IsBuiltin {
             get {
                 return true;
@@ -126,11 +141,11 @@ namespace Microsoft.IronPythonTools.Interpreter {
                 if (Interpreter.Remote.IsDelegateType(Value)) {
                     _propagateOnCall = GetEventInvokeArgs();
                 } else {
-                    _propagateOnCall = NoPropagateOnCall;
+                    _propagateOnCall = EmptyTypes;
                 }
             }
 
-            return _propagateOnCall == NoPropagateOnCall ? null : _propagateOnCall;
+            return _propagateOnCall == EmptyTypes ? null : _propagateOnCall;
         }
 
         #endregion
