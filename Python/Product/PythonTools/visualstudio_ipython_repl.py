@@ -1,29 +1,51 @@
 ﻿"""Implements REPL support over IPython/ZMQ for VisualStudio"""
 
+import re
 import sys
 from visualstudio_py_repl import BasicReplBackend, ReplBackend, UnsupportedReplException, _command_line_to_args_list
+try:
+    import thread
+except:
+    import _thread as thread    # Renamed as Py3k
+
+from base64 import decodestring
+
 try:
     import IPython
 except ImportError:
     exc_value = sys.exc_info()[1]
     raise UnsupportedReplException('IPython mode requires IPython 0.11 or later: ' + str(exc_value))
 
+def is_ipython_versionorgreater(major, minor):
+    """checks if we are at least a specific IPython version"""
+    match = re.match('(\d+).(\d+)', IPython.__version__)
+    if match:
+        groups = match.groups()
+        if int(groups[0]) > major:
+            return True
+        elif int(groups[0]) == major:
+            return int(groups[1]) >= minor
+
+    return False
+
 try:
-    import IPython.zmq
-    from IPython.zmq import kernelmanager
-    from IPython.zmq.kernelmanager import ShellSocketChannel, KernelManager, SubSocketChannel, StdInSocketChannel, HBSocketChannel
+    if is_ipython_versionorgreater(1, 0):
+        from IPython.kernel import KernelManager, KernelClient
+        from IPython.kernel.channels import ShellChannel, HBChannel, StdInChannel, IOPubChannel
+    else:
+        import IPython.zmq
+        KernelClient = object # was split out from KernelManager in 1.0
+        from IPython.zmq.kernelmanager import (KernelManager, 
+                                               ShellSocketChannel as ShellChannel, 
+                                               SubSocketChannel as IOPubChannel, 
+                                               StdInSocketChannel as StdInChannel, 
+                                               HBSocketChannel as HBChannel)
+
     from IPython.utils.traitlets import Type
 except ImportError:
     exc_value = sys.exc_info()[1]
     raise UnsupportedReplException(str(exc_value))
 
-try:
-    import thread
-except:
-    import _thread as thread    # Renamed as Py3k
-
-import re
-from base64 import decodestring
 
 # TODO: SystemExit exceptions come back to us as strings, can we automatically exit when ones raised somehow?
 
@@ -45,7 +67,7 @@ class DefaultHandler(object):
         
         getattr(self, msg_type, unknown_command)(msg['content'])
     
-class VsShellSocketChannel(DefaultHandler, ShellSocketChannel):    
+class VsShellChannel(DefaultHandler, ShellChannel):
     
     def handle_execute_reply(self, content):
         # we could have a payload here...
@@ -55,17 +77,17 @@ class VsShellSocketChannel(DefaultHandler, ShellSocketChannel):
             output = item.get('text', None)
             if output is not None:
                 self._vs_backend.write_stdout(output)
-        self._vs_backend.send_command_executed()     
+        self._vs_backend.send_command_executed()
         
     def handle_object_info_reply(self, content):
-        self._vs_backend.object_info_reply = content        
+        self._vs_backend.object_info_reply = content
         self._vs_backend.members_lock.release()
 
     def handle_complete_reply(self, content):
-        self._vs_backend.complete_reply = content        
+        self._vs_backend.complete_reply = content
         self._vs_backend.members_lock.release()
 
-class VsSubSocketChannel(DefaultHandler, SubSocketChannel):    
+class VsIOPubChannel(DefaultHandler, IOPubChannel):
     def call_handlers(self, msg):
         msg_type = 'handle_' + msg['msg_type']
         getattr(self, msg_type, unknown_command)(msg['content'])
@@ -86,7 +108,7 @@ class VsSubSocketChannel(DefaultHandler, SubSocketChannel):
             self._vs_backend.write_stderr(output)
         # TODO: stdin can show up here, do we echo that?
     
-    def handle_pyout(self, content):
+    def handle_execute_output(self, content):
         # called when an expression statement is printed, we treat 
         # identical to stream output but it always goes to stdout
         output = content['data']
@@ -117,7 +139,7 @@ class VsSubSocketChannel(DefaultHandler, SubSocketChannel):
             self._vs_backend.write_stdout('\n') 
             return
 
-    def handle_pyerr(self, content):
+    def handle_error(self, content):
         # TODO: this includes escape sequences w/ color, we need to unescape that
         ename = content['ename']
         evalue = content['evalue']
@@ -125,7 +147,7 @@ class VsSubSocketChannel(DefaultHandler, SubSocketChannel):
         self._vs_backend.write_stderr('\n'.join(tb))
         self._vs_backend.write_stdout('\n')
     
-    def handle_pyin(self, content):
+    def handle_execute_input(self, content):
         # just a rebroadcast of the command to be executed, can be ignored
         self._vs_backend.execution_count += 1
         self._vs_backend.send_prompt('\r\nIn [%d]: ' % (self._vs_backend.execution_count), '   ' + ('.' * (len(str(self._vs_backend.execution_count)) + 2)) + ': ', False)
@@ -134,8 +156,13 @@ class VsSubSocketChannel(DefaultHandler, SubSocketChannel):
     def handle_status(self, content):
         pass
 
+    # Backwards compat w/ 0.13
+    handle_pyin = handle_execute_input
+    handle_pyout = handle_execute_output
+    handle_pyerr = handle_error
 
-class VsStdInSocketChannel(DefaultHandler, StdInSocketChannel):
+
+class VsStdInChannel(DefaultHandler, StdInChannel):
     def handle_input_request(self, content):
         # queue this to another thread so we don't block the channel
         def read_and_respond():
@@ -146,28 +173,19 @@ class VsStdInSocketChannel(DefaultHandler, StdInSocketChannel):
         thread.start_new_thread(read_and_respond, ())
 
 
-class VsHBSocketChannel(DefaultHandler, HBSocketChannel):
+class VsHBChannel(DefaultHandler, HBChannel):
     pass
 
 
-class VsKernelManager(KernelManager):
-    shell_channel_class = Type(VsShellSocketChannel)
-    sub_channel_class = Type(VsSubSocketChannel)
-    stdin_channel_class = Type(VsStdInSocketChannel)
-    hb_channel_class = Type(VsHBSocketChannel)
+class VsKernelManager(KernelManager, KernelClient):
+    shell_channel_class = Type(VsShellChannel)
+    if is_ipython_versionorgreater(1, 0):
+        iopub_channel_class = Type(VsIOPubChannel)
+    else:
+        sub_channel_class = Type(VsIOPubChannel)
+    stdin_channel_class = Type(VsStdInChannel)
+    hb_channel_class = Type(VsHBChannel)
 
-
-def is_ipython_version(major, minor):
-    """checks if we are at least a specific IPython version"""
-    match = re.match('(\d+).(\d+)', IPython.__version__)
-    if match:
-        groups = match.groups()
-        if int(groups[0]) > major:
-            return True
-        elif int(groups[0]) == major:
-            return int(groups[1]) >= minor
-
-    return False
 
 class IPythonBackend(ReplBackend):
     def __init__(self, mod_name = '__main__', launch_file = None):
@@ -176,7 +194,7 @@ class IPythonBackend(ReplBackend):
         self.mod_name = mod_name
         self.km = VsKernelManager()
         
-        if is_ipython_version(0, 13):
+        if is_ipython_versionorgreater(0, 13):
             # http://pytools.codeplex.com/workitem/759
             # IPython stopped accepting the ipython flag and switched to launcher, the new
             # default is what we want though.
@@ -191,9 +209,12 @@ class IPythonBackend(ReplBackend):
         
         self.km.shell_channel._vs_backend = self
         self.km.stdin_channel._vs_backend = self
-        self.km.sub_channel._vs_backend = self
-        self.km.hb_channel._vs_backend = self        
-        self.execution_count = 1        
+        if is_ipython_versionorgreater(1, 0):
+            self.km.iopub_channel._vs_backend = self
+        else:
+            self.km.sub_channel._vs_backend = self
+        self.km.hb_channel._vs_backend = self
+        self.execution_count = 1
 
     def get_extra_arguments(self):
         if sys.version <= '2.':
