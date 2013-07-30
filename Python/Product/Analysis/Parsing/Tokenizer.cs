@@ -315,7 +315,7 @@ namespace Microsoft.PythonTools.Parsing {
             if (GroupingLevel > 0 && 
                 (_options & TokenizerOptions.GroupingRecovery) != 0 && 
                 _state.GroupingRecovery != null &&
-                _state.GroupingRecovery.BufferStart == _start) {
+                _state.GroupingRecovery.TokenStart == _tokenStartIndex) {
 
                 _state.ParenLevel = _state.BraceLevel = _state.BracketLevel = 0;
 
@@ -468,7 +468,8 @@ namespace Microsoft.PythonTools.Parsing {
 
                     case '\\':
                         NewLineKind nlKind;
-                        if ((nlKind = ReadEolnOpt(NextChar())) != NewLineKind.None) {
+                        var nextChar = NextChar();
+                        if ((nlKind = ReadEolnOpt(nextChar)) != NewLineKind.None) {
                             _newLineLocations.Add(CurrentIndex);
 
                             if ((_options & TokenizerOptions.VerbatimCommentsAndLineJoins) != 0) {
@@ -492,7 +493,7 @@ namespace Microsoft.PythonTools.Parsing {
                             break;
 
                         } else {
-                            if (Peek() == -1) {
+                            if (nextChar == -1) {
                                 _endContinues = true;
                                 MarkTokenEnd();
                                 return new VerbatimToken(TokenKind.EndOfFile, "\\", "<eof>");
@@ -1824,7 +1825,7 @@ namespace Microsoft.PythonTools.Parsing {
                                     sb, 
                                     _tokenStartIndex, 
                                     startingWhiteSpace,
-                                    _position
+                                    _tokenStartIndex + tokenLength
                                 );
                             }
                             return false;
@@ -2148,19 +2149,19 @@ namespace Microsoft.PythonTools.Parsing {
             /// </summary>
             public readonly int VerbatimWhiteSpaceLength;
             /// <summary>
-            /// The _start position when we hit the newline, this GroupingRecovery is only 
+            /// The starting position of the next token after the newline we hit, this GroupingRecovery is only 
             /// valid if this is unchanged which means we haven't ready an additional tokens.
             /// </summary>
-            public readonly int BufferStart;
+            public readonly int TokenStart;
 
-            public GroupingRecovery(NewLineKind newlineKind, string noAllocWhiteSpace, int spaces, StringBuilder whitespace, int newlineStart, int verbatimWhiteSpaceLength, int bufferStart) {
+            public GroupingRecovery(NewLineKind newlineKind, string noAllocWhiteSpace, int spaces, StringBuilder whitespace, int newlineStart, int verbatimWhiteSpaceLength, int tokenStart) {
                 NewLineKind = newlineKind;
                 NoAllocWhiteSpace = noAllocWhiteSpace;
                 Spaces = spaces;
                 Whitespace = whitespace;
                 NewlineStart = newlineStart;
                 VerbatimWhiteSpaceLength = verbatimWhiteSpaceLength;
-                BufferStart = bufferStart;
+                TokenStart = tokenStart;
             }
         }
 

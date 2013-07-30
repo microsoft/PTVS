@@ -98,6 +98,21 @@ namespace AnalysisTests {
                     new ExpectedToken(TokenKind.EndOfFile, new IndexSpan(5, 1), "\\"),
                 }
             );
+
+            tokens = TestOneString(
+                PythonLanguageVersion.V27,
+                TokenizerOptions.Verbatim | TokenizerOptions.VerbatimCommentsAndLineJoins,
+                "foo\r\n\\b"
+            );
+            AssertEqualTokens(
+                tokens,
+                new[] { 
+                    new ExpectedToken(TokenKind.Name, new IndexSpan(0, 3), "foo"), 
+                    new ExpectedToken(TokenKind.NewLine, new IndexSpan(3, 2), "\r\n"), 
+                    new ExpectedToken(TokenKind.Error, new IndexSpan(5, 1), "\\"), 
+                    new ExpectedToken(TokenKind.Name, new IndexSpan(6, 1), "b")
+                }
+            );
         }
 
         private static void AssertEqualTokens(List<TokenWithSpan> tokens, ExpectedToken[] expectedTokens) {
