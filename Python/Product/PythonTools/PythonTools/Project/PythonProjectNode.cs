@@ -222,6 +222,24 @@ namespace Microsoft.PythonTools.Project {
             OnProjectPropertyChanged += PythonProjectNode_OnProjectPropertyChanged;
             base.Reload();
 
+            string id;
+            if (_interpreters.IsActiveInterpreterGlobalDefault &&
+                !string.IsNullOrEmpty(id = GetProjectProperty(MSBuildProjectInterpreterFactoryProvider.InterpreterIdProperty))) {
+                // The interpreter in the project file has no reference, so
+                // find and add it.
+                var interpService = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
+                if (interpService != null) {
+                    var existing = interpService.FindInterpreter(
+                        id,
+                        GetProjectProperty(MSBuildProjectInterpreterFactoryProvider.InterpreterVersionProperty));
+                    if (existing != null && QueryEditProjectFile(false)) {
+                        _interpreters.AddInterpreter(existing);
+                        SetProjectFileDirty(true);
+                        Debug.Assert(_interpreters.ActiveInterpreter == existing);
+                    }
+                }
+            }
+
             PythonToolsPackage.Instance.CheckSurveyNews(false);
         }
 

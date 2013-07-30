@@ -24,5 +24,8 @@
     <None Include="$safeprojectname$.html" />
     <None Include="$safeprojectname$.py" />
   </ItemGroup>
+  <ItemGroup>
+    <InterpreterReference Include="{80659ab7-4d53-4e0c-8588-a766116cbd46}\2.7" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" />
 </Project>

@@ -1186,7 +1186,8 @@ namespace Microsoft.VisualStudioTools.Project {
             // GetItemState will fail if the item has not yet been added to the
             // hierarchy. If it succeeds, we can make the item bold.
             uint state;
-            if (ErrorHandler.Failed(windows.GetItemState(
+            if (windows == null ||
+                ErrorHandler.Failed(windows.GetItemState(
                 this.GetOuterInterface<IVsUIHierarchy>(),
                 node.ID,
                 (uint)__VSHIERARCHYITEMSTATE.HIS_Bold,
@@ -1199,7 +1200,8 @@ namespace Microsoft.VisualStudioTools.Project {
             }
 #endif
 
-            if (ErrorHandler.Failed(windows.SetItemAttribute(
+            if (windows == null ||
+                ErrorHandler.Failed(windows.SetItemAttribute(
                 this.GetOuterInterface<IVsUIHierarchy>(),
                 node.ID,
                 (uint)__VSHIERITEMATTRIBUTE.VSHIERITEMATTRIBUTE_Bold,
@@ -1215,7 +1217,8 @@ namespace Microsoft.VisualStudioTools.Project {
             // GetItemState will return 0 for HIS_Bold if the setting did not
             // stick.
             uint state;
-            if (ErrorHandler.Failed(windows.GetItemState(
+            if (windows == null ||
+                ErrorHandler.Failed(windows.GetItemState(
                 this.GetOuterInterface<IVsUIHierarchy>(),
                 node.ID,
                 (uint)__VSHIERARCHYITEMSTATE.HIS_Bold,
@@ -1238,12 +1241,16 @@ namespace Microsoft.VisualStudioTools.Project {
                 return;
             }
             var items = _needBolding.ToArray();
-            _needBolding.Clear();
 
             IVsUIHierarchyWindow2 windows = UIHierarchyUtilities.GetUIHierarchyWindow(
                 Site as IServiceProvider,
                 new Guid(ToolWindowGuids80.SolutionExplorer)) as IVsUIHierarchyWindow2;
 
+            if (windows == null) {
+                return;
+            }
+
+            _needBolding.Clear();
             foreach (var node in items) {
 #if DEV10
                 // GetItemState will fail if the item has not yet been added to the
@@ -1298,7 +1305,7 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <summary>
         /// Create a file node based on an msbuild item.
         /// </summary>
-        /// <param name="item">The msbuild item to be analyzed</param>        
+        /// <param name="item">The msbuild item to be analyzed</param>
         public override FileNode CreateFileNode(ProjectElement item) {
             Utilities.ArgumentNotNull("item", item);
 
@@ -1453,6 +1460,10 @@ namespace Microsoft.VisualStudioTools.Project {
             IVsUIHierarchyWindow2 windows = UIHierarchyUtilities.GetUIHierarchyWindow(
                 Site,
                 new Guid(ToolWindowGuids80.SolutionExplorer)) as IVsUIHierarchyWindow2;
+
+            if (windows == null) {
+                return;
+            }
 
             for (HierarchyNode n = parent.FirstChild; n != null; n = n.NextSibling) {
                 // TODO: Distinguish between real Urls and fake ones (eg. "References")
