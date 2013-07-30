@@ -123,7 +123,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
             using (var moduleSym = moduleInstance.GetSymbols()) {
                 if (objFileName != null) {
                     using (var compiland = moduleSym.Object.GetSymbol(SymTagEnum.SymTagCompiland, null, cmp => cmp.name.EndsWith(objFileName)))
-                    using (var varSym = moduleSym.Object.GetSymbol(SymTagEnum.SymTagData, name)) {
+                    using (var varSym = compiland.Object.GetSymbol(SymTagEnum.SymTagData, name)) {
                         rva = varSym.Object.relativeVirtualAddress;
                     }
                 } else {
