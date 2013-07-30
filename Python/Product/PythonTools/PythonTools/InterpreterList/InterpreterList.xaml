@@ -73,9 +73,20 @@
 
                     <DataTemplate x:Key="NameTemplate" DataType="{x:Type ptvs:InterpreterView}">
                         <StackPanel Orientation="Vertical" VerticalAlignment="Center">
-                            <Label Name="InterpreterName"
-                                   Padding="0"
-                                   Content="{Binding Name}" />
+                            <Grid>
+                                <Label Name="InterpreterName"
+                                       Padding="0"
+                                       Content="{Binding Name}" />
+                                <!-- Include a bold version of the name but
+                                     hidden, so it participates in layout only.
+                                     This will ensure there is room in the
+                                     column for the bolded name if the user
+                                     makes it bold. -->
+                                <Label Padding="0"
+                                       FontWeight="Bold"
+                                       Visibility="Hidden"
+                                       Content="{Binding Name}" />
+                            </Grid>
                             <Label Name="InterpreterSubName"
                                    Padding="0"
                                    Style="{StaticResource SubNameStyle}"
