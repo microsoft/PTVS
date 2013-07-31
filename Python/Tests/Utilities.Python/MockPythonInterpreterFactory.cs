@@ -91,7 +91,7 @@ namespace TestUtilities.Python {
         public void EndGenerateCompletionDatabase(string id, bool success) {
             using (var updater = new AnalyzerStatusUpdater(id)) {
                 for (int i = 0; i <= 100; i += 30) {
-                    updater.UpdateStatus(AnalysisStatus.Analyzing, i, 100);
+                    updater.UpdateStatus(i, 100);
                     // Need to sleep to allow the update to go through.
                     Thread.Sleep(500);
                 }

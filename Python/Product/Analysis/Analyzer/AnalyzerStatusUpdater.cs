@@ -23,28 +23,6 @@ using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.PythonTools.Analysis.Analyzer {
     /// <summary>
-    /// Enumeration representing the current analysis operation.
-    /// </summary>
-    public enum AnalysisStatus : int {
-        /// <summary>
-        /// Analysis is being prepared.
-        /// </summary>
-        Preparing = 0,
-        /// <summary>
-        /// Builtin and compiled modules are being scraped.
-        /// </summary>
-        Scraping = 1,
-        /// <summary>
-        /// Files with available source are being analyzed.
-        /// </summary>
-        Analyzing = 2,
-        /// <summary>
-        /// Analysis has completed.
-        /// </summary>
-        Complete = 3
-    }
-
-    /// <summary>
     /// Structure representing an analysis operation's progress.
     /// </summary>
     public struct AnalysisProgress {
@@ -57,9 +35,9 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         /// </summary>
         public int Maximum;
         /// <summary>
-        /// The status of the current analysis.
+        /// A message describing the current status, up to 100 characters long.
         /// </summary>
-        public AnalysisStatus Status;
+        public string Message;
     }
 
     /// <summary>
@@ -103,8 +81,8 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         /// The value that <paramref name="progress"/> is approaching. This is
         /// permitted to vary during analysis.
         /// </param>
-        public void UpdateStatus(AnalysisStatus status, int progress, int maximum) {
-            base.UpdateStatusImplementation(status, progress, maximum);
+        public void UpdateStatus(int progress, int maximum, string message = null) {
+            base.UpdateStatusImplementation(progress, maximum, message);
         }
     }
 
@@ -189,17 +167,18 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         const int MAX_ITEMS = 128;
         static readonly string MUTEX_NAME = "Microsoft.PythonTools.AnalyzerStatus.Mutex." + AssemblyVersionInfo.Version;
         static readonly string MMF_NAME = "Microsoft.PythonTools.AnalyzerStatus.File." + AssemblyVersionInfo.Version;
-        const int MAX_IDENTIFIER_LENGTH = 250;
+        const int MAX_IDENTIFIER_LENGTH = 249;
+        internal const int MAX_MESSAGE_LENGTH = 99;
 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
         unsafe struct Data {
-            public fixed char _Identifier[MAX_IDENTIFIER_LENGTH];
+            public fixed char _Identifier[MAX_IDENTIFIER_LENGTH + 1];
             public bool Initialized;
             public bool InUse;
             public int OwnerProcessId;
             public int ItemsInQueue;
             public int MaximumItems;
-            public int _Status;
+            public fixed char _Message[MAX_MESSAGE_LENGTH + 1];
 
             public string Identifier {
                 get {
@@ -210,8 +189,8 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                     }
                 }
                 set {
-                    if (value != null && value.Length >= MAX_IDENTIFIER_LENGTH) {
-                        throw new ArgumentException(string.Format("Identifier must be less than {0} characters", MAX_IDENTIFIER_LENGTH));
+                    if (value != null && value.Length > MAX_IDENTIFIER_LENGTH) {
+                        throw new ArgumentException(string.Format("Identifier must be less than {0} characters", MAX_IDENTIFIER_LENGTH + 1));
                     }
 
                     unsafe {
@@ -230,12 +209,33 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 }
             }
 
-            public AnalysisStatus Status {
+            public string Message {
                 get {
-                    return (AnalysisStatus)_Status;
+                    unsafe {
+                        fixed (char* msg = _Message) {
+                            return new string(msg);
+                        }
+                    }
                 }
                 set {
-                    _Status = (int)value;
+                    var actualMessage = value;
+                    if (actualMessage != null && actualMessage.Length > MAX_MESSAGE_LENGTH) {
+                        actualMessage = value.Substring(0, MAX_MESSAGE_LENGTH - 3) + "...";
+                    }
+
+                    unsafe {
+                        fixed (char* msg = _Message) {
+                            if (actualMessage == null) {
+                                msg[0] = '\0';
+                            } else {
+                                char* p = msg;
+                                foreach (var c in actualMessage) {
+                                    *p++ = c;
+                                }
+                                *p = '\0';
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -296,16 +296,16 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             }
         }
 
-        protected void UpdateStatusImplementation(AnalysisStatus status, int progress, int maximum) {
+        protected void UpdateStatusImplementation(int progress, int maximum, string message) {
             if (_identifier == null) {
                 throw new InvalidOperationException("Cannot update status without providing an identifier");
             }
 
             lock (_latestUpdateLock) {
                 _latestUpdate = new AnalysisProgress {
-                    Status = status,
                     Progress = progress,
-                    Maximum = maximum
+                    Maximum = maximum,
+                    Message = message
                 };
             }
             _newRequest.Set();
@@ -382,9 +382,9 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                         }
 
                         using (var accessor = sharedData.CreateViewAccessor(dataOffset, SIZE)) {
-                            me.Status = update.Status;
                             me.ItemsInQueue = update.Progress;
                             me.MaximumItems = update.Maximum;
+                            me.Message = update.Message;
                             accessor.Write(0, ref me);
                         }
                     } else {
@@ -420,9 +420,9 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                         try {
                             var owner = Process.GetProcessById(me.OwnerProcessId);
                             response[me.Identifier] = new AnalysisProgress {
-                                Status = me.Status,
                                 Progress = me.ItemsInQueue,
-                                Maximum = me.MaximumItems
+                                Maximum = me.MaximumItems,
+                                Message = me.Message
                             };
                         } catch (InvalidOperationException) {
                         } catch (ArgumentException) {
@@ -444,9 +444,9 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                         try {
                             var owner = Process.GetProcessById(me.OwnerProcessId);
                             response[me.Identifier] = new AnalysisProgress {
-                                Status = me.Status,
                                 Progress = me.ItemsInQueue,
-                                Maximum = me.MaximumItems
+                                Maximum = me.MaximumItems,
+                                Message = me.Message
                             };
                         } catch (InvalidOperationException) {
                         } catch (ArgumentException) {
@@ -467,9 +467,9 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 Initialized = true,
                 InUse = true,
                 OwnerProcessId = Process.GetCurrentProcess().Id,
-                Status = AnalysisStatus.Preparing,
                 ItemsInQueue = int.MaxValue,
                 MaximumItems = 0,
+                Message = null
             };
             Data empty = new Data {
                 Identifier = string.Empty,

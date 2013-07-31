@@ -111,9 +111,13 @@ namespace Microsoft.PythonTools {
                             Progress = update.Progress;
                         }
                         Maximum = update.Maximum;
+                        Message = update.Message;
                     }));
                 } else {
-                    update.Progress = 0;
+                    Dispatcher.BeginInvoke((Action)(() => {
+                        Progress = 0;
+                        Message = null;
+                    }));
                 }
             } else if (IsRunning && !_startedRunning) {
                 _startedRunning = true;
@@ -205,6 +209,11 @@ namespace Microsoft.PythonTools {
             private set { SetValue(ProgressPropertyKey, value); }
         }
 
+        public string Message {
+            get { return (string)GetValue(MessageProperty); }
+            private set { SetValue(MessagePropertyKey, value); }
+        }
+
         public int Maximum {
             get { return (int)GetValue(MaximumProperty); }
             private set { SetValue(MaximumPropertyKey, value); }
@@ -248,6 +257,7 @@ namespace Microsoft.PythonTools {
         private static readonly DependencyPropertyKey IsCurrentPropertyKey = DependencyProperty.RegisterReadOnly("IsCurrent", typeof(bool), typeof(InterpreterView), new PropertyMetadata(true));
         private static readonly DependencyPropertyKey IsRunningPropertyKey = DependencyProperty.RegisterReadOnly("IsRunning", typeof(bool), typeof(InterpreterView), new PropertyMetadata(false, IsRunning_Changed));
         private static readonly DependencyPropertyKey ProgressPropertyKey = DependencyProperty.RegisterReadOnly("Progress", typeof(int), typeof(InterpreterView), new PropertyMetadata(0));
+        private static readonly DependencyPropertyKey MessagePropertyKey = DependencyProperty.RegisterReadOnly("Message", typeof(string), typeof(InterpreterView), new PropertyMetadata());
         private static readonly DependencyPropertyKey MaximumPropertyKey = DependencyProperty.RegisterReadOnly("Maximum", typeof(int), typeof(InterpreterView), new PropertyMetadata(0));
         private static readonly DependencyPropertyKey IsDefaultPropertyKey = DependencyProperty.RegisterReadOnly("IsDefault", typeof(bool), typeof(InterpreterView), new PropertyMetadata(false));
         private static readonly DependencyPropertyKey CanBeDefaultPropertyKey = DependencyProperty.RegisterReadOnly("CanBeDefault", typeof(bool), typeof(InterpreterView), new PropertyMetadata(true));
@@ -259,6 +269,7 @@ namespace Microsoft.PythonTools {
         public static readonly DependencyProperty IsCurrentProperty = IsCurrentPropertyKey.DependencyProperty;
         public static readonly DependencyProperty IsRunningProperty = IsRunningPropertyKey.DependencyProperty;
         public static readonly DependencyProperty ProgressProperty = ProgressPropertyKey.DependencyProperty;
+        public static readonly DependencyProperty MessageProperty = MessagePropertyKey.DependencyProperty;
         public static readonly DependencyProperty MaximumProperty = MaximumPropertyKey.DependencyProperty;
         public static readonly DependencyProperty IsDefaultProperty = IsDefaultPropertyKey.DependencyProperty;
         public static readonly DependencyProperty CanBeDefaultProperty = CanBeDefaultPropertyKey.DependencyProperty;

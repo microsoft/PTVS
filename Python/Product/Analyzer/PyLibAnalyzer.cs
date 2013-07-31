@@ -205,7 +205,7 @@ namespace Microsoft.PythonTools.Analysis {
                 _updater.ThrowPendingExceptions();
                 // Immediately inform any listeners that we've started running
                 // successfully.
-                _updater.UpdateStatus(AnalysisStatus.Preparing, 0, 0);
+                _updater.UpdateStatus(0, 0);
             }
             // TODO: Link cancellation into the updater
             _cancel = CancellationToken.None;
@@ -373,7 +373,7 @@ namespace Microsoft.PythonTools.Analysis {
 
         internal void Prepare() {
             if (_updater != null) {
-                _updater.UpdateStatus(AnalysisStatus.Preparing, 0, 0);
+                _updater.UpdateStatus(0, 0, "Collecting files");
             }
 
             // Concat the contents of directories referenced by .pth files
@@ -395,6 +395,14 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             Directory.CreateDirectory(_outDir);
+
+            // Mark the database as invalid until we complete analysis.
+            try {
+                File.Delete(Path.Combine(_outDir, "database.ver"));
+            } catch (ArgumentException) {
+            } catch (IOException) {
+            } catch (UnauthorizedAccessException) {
+            }
 
             _existingDatabase = new HashSet<string>(
                 Directory.EnumerateFiles(_outDir, "*.idb", SearchOption.AllDirectories),
@@ -447,7 +455,7 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             if (_updater != null) {
-                _updater.UpdateStatus(AnalysisStatus.Scraping, 0, 0);
+                _updater.UpdateStatus(0, 0, "Scraping standard library");
             }
 
             // Ignoring case because these will become file paths, even though
@@ -511,6 +519,11 @@ namespace Microsoft.PythonTools.Analysis {
                 .ToArray();
 
             foreach (var file in scrapeFiles) {
+                if (_updater != null) {
+                    _updater.UpdateStatus(0, 0, 
+                        "Scraping " + CommonUtils.GetRelativeFilePath(_library, file.LibraryPath));
+                }
+
                 var destFile = Path.ChangeExtension(GetOutputFile(file), null);
                 _existingDatabase.Remove(destFile + ".idb");
                 if (ShouldAnalyze(file)) {
@@ -563,7 +576,7 @@ namespace Microsoft.PythonTools.Analysis {
 
         internal void Analyze() {
             if (_updater != null) {
-                _updater.UpdateStatus(AnalysisStatus.Analyzing, 0, 1);
+                _updater.UpdateStatus(0, 1, "Starting analysis");
             }
 
             int progressOffset = 0;
@@ -612,7 +625,7 @@ namespace Microsoft.PythonTools.Analysis {
                     TraceInformation("Skipped group \"{0}\"", files[0].LibraryPath);
                     progressOffset += files.Count;
                     if (_updater != null) {
-                        _updater.UpdateStatus(AnalysisStatus.Analyzing, progressOffset, progressTotal);
+                        _updater.UpdateStatus(progressOffset, progressTotal);
                     }
                     continue;
                 }
@@ -620,20 +633,28 @@ namespace Microsoft.PythonTools.Analysis {
                 TraceInformation("Start group \"{0}\" with {1} files", files[0].LibraryPath, files.Count);
                 AnalysisLog.StartFileGroup(files[0].LibraryPath, files.Count);
                 Console.WriteLine("Now analyzing: {0}", files[0].LibraryPath);
+                string currentLibrary;
+                if (_builtinSourceLibraries.Contains(files[0].LibraryPath)) {
+                    currentLibrary = "standard library";
+                } else {
+                    currentLibrary = CommonUtils.CreateFriendlyDirectoryPath(_library, files[0].LibraryPath);
+                }
 
                 var projectState = new PythonAnalyzer(factory);
 
                 int mostItemsInQueue = 0;
                 if (_updater != null) {
+
                     projectState.SetQueueReporting(itemsInQueue => {
                         if (itemsInQueue > mostItemsInQueue) {
                             mostItemsInQueue = itemsInQueue;
                         }
 
                         if (mostItemsInQueue > 0) {
-                            _updater.UpdateStatus(AnalysisStatus.Analyzing, progressOffset + (files.Count * (mostItemsInQueue - itemsInQueue)) / mostItemsInQueue, progressTotal);
+                            var progress = progressOffset + (files.Count * (mostItemsInQueue - itemsInQueue)) / mostItemsInQueue;
+                            _updater.UpdateStatus(progress, progressTotal, "Analyzing " + currentLibrary);
                         } else {
-                            _updater.UpdateStatus(AnalysisStatus.Analyzing, 0, 0);
+                            _updater.UpdateStatus(0, 0, "Analyzing " + currentLibrary);
                         }
                     }, 10);
                 }
@@ -658,6 +679,10 @@ namespace Microsoft.PythonTools.Analysis {
                 var nodes = new List<PythonAst>();
                 for (int i = 0; i < modules.Count && !_cancel.IsCancellationRequested; i++) {
                     PythonAst ast = null;
+                    if (_updater != null) {
+                        _updater.UpdateStatus(progressOffset, progressTotal,
+                            string.Format("Parsing {0} ({1}/{2})", currentLibrary, i, modules.Count));
+                    }
                     try {
                         var sourceUnit = new FileStream(files[i].SourceFile, FileMode.Open, FileAccess.Read, FileShare.Read);
                         var errors = new CollectingErrorSink();
@@ -709,6 +734,10 @@ namespace Microsoft.PythonTools.Analysis {
                 }
 
                 TraceInformation("Saving group \"{0}\"", files[0].LibraryPath);
+                if (_updater != null) {
+                    _updater.UpdateStatus(progressOffset + files.Count, progressTotal,
+                        "Saving " + currentLibrary);
+                }
                 var outDir = GetOutputDir(files[0]);
                 Directory.CreateDirectory(outDir);
                 new SaveAnalysis().Save(projectState, outDir);
@@ -725,6 +754,10 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         internal void Clean() {
+            if (_updater != null) {
+                _updater.UpdateStatus(1, 1, "Cleaning old files");
+            }
+
             TraceInformation("Deleting {0} files", _existingDatabase.Count);
             foreach (var file in _existingDatabase) {
                 try {

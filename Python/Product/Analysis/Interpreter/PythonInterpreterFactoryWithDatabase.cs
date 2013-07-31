@@ -34,7 +34,7 @@ namespace Microsoft.PythonTools.Interpreter {
         private readonly Guid _id;
         private readonly InterpreterConfiguration _config;
         private PythonTypeDatabase _typeDb;
-        private bool _generating, _disposed;
+        private bool _generating, _isValid, _disposed;
         private string[] _missingModules;
         private readonly Timer _refreshIsCurrentTrigger;
         private FileSystemWatcher _libWatcher;
@@ -134,7 +134,8 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         private static bool ConfigurableDatabaseExists(string databasePath, Version languageVersion) {
-            if (File.Exists(Path.Combine(databasePath, languageVersion.Major == 3 ? "builtins.idb" : "__builtin__.idb"))) {
+            if (Directory.Exists(databasePath) &&   // also ensures databasePath won't crash Path.Combine()
+                File.Exists(Path.Combine(databasePath, languageVersion.Major == 3 ? "builtins.idb" : "__builtin__.idb"))) {
                 string versionFile = Path.Combine(databasePath, "database.ver");
                 if (File.Exists(versionFile)) {
                     try {
@@ -250,9 +251,7 @@ namespace Microsoft.PythonTools.Interpreter {
 
         public virtual bool IsCurrent {
             get {
-                return !_generating &&
-                    ConfigurableDatabaseExists(DatabasePath, Configuration.Version) &&
-                    _missingModules == null;
+                return !_generating && _isValid && _missingModules == null;
             }
         }
 
@@ -292,7 +291,10 @@ namespace Microsoft.PythonTools.Interpreter {
             bool reasonChanged = false;
 
             try {
-                if (Directory.Exists(DatabasePath)) {
+                if (!ConfigurableDatabaseExists(DatabasePath, Configuration.Version)) {
+                    _isValid = false;
+                } else {
+                    _isValid = true;
                     var existingDatabase = new HashSet<string>(
                         Directory.EnumerateFiles(DatabasePath, "*.idb", SearchOption.AllDirectories)
                             .Select(f => Path.GetFileNameWithoutExtension(f)),
@@ -382,7 +384,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 return "Interpreter has no library";
             } else if (!Directory.Exists(DatabasePath)) {
                 return "Database has never been generated";
-            } else if (!ConfigurableDatabaseExists(DatabasePath, Configuration.Version)) {
+            } else if (!_isValid) {
                 return "Database is corrupt or an old version";
             } else if (missingModules != null) {
                 if (missingModules.Length < 100) {
@@ -426,7 +428,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 return "Interpreter has no library";
             } else if (!Directory.Exists(DatabasePath)) {
                 return reason + " does not exist";
-            } else if (!ConfigurableDatabaseExists(DatabasePath, Configuration.Version)) {
+            } else if (!_isValid) {
                 return reason + " is corrupt or an old version";
             } else if (missingModules != null) {
                 return reason + " does not contain the following modules:" + Environment.NewLine +

@@ -4,6 +4,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:s="clr-namespace:System;assembly=mscorlib"
              xmlns:ptvs="clr-namespace:Microsoft.PythonTools"
              xmlns:l="clr-namespace:Microsoft.PythonTools.InterpreterList"
              xmlns:wpf="clr-namespace:Microsoft.PythonTools.Wpf"
@@ -144,12 +145,21 @@
                             <Grid Name="Refreshing"
                                   Visibility="Collapsed"
                                   Margin="6 1"
-                                  VerticalAlignment="Center">
+                                  VerticalAlignment="Stretch"
+                                  IsHitTestVisible="True"
+                                  Background="Transparent"
+                                  ToolTipService.ShowDuration="{x:Static s:Int32.MaxValue}">
+                                <Grid.ToolTip>
+                                    <ToolTip Content="{Binding Message,Mode=OneWay}"
+                                             Placement="Bottom"
+                                             PlacementTarget="{Binding ElementName=RefreshingDBLabel}"
+                                             StaysOpen="True" />
+                                </Grid.ToolTip>
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="auto" />
-                                    <RowDefinition />
+                                    <RowDefinition Height="*" />
                                 </Grid.RowDefinitions>
-                                <Label Grid.Row="0" HorizontalAlignment="Center">
+                                <Label Grid.Row="0" Name="RefreshingDBLabel" HorizontalAlignment="Center">
                                     Refreshing DB
                                 </Label>
                                 <ProgressBar Name="Progress"
@@ -277,6 +287,7 @@
                             <ItemsPresenter />
                             <Grid Margin="6 12">
                                 <Button Style="{StaticResource NavigationButton}"
+                                        HorizontalAlignment="Left"
                                         Command="{x:Static l:InterpreterList.WebChooseInterpreterCommand}">
                                     Go online and help me find another environment
                                 </Button>
