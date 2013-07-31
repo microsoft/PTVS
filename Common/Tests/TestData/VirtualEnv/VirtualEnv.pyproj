@@ -28,6 +28,9 @@
     <Compile Include="Program.py" />
   </ItemGroup>
   <ItemGroup>
+    <InterpreterReference Include="{2af0f10d-7135-4994-9156-5d01c9c11b7e}\2.7" />
+  </ItemGroup>
+  <ItemGroup>
     <Interpreter Include="env\">
       <Id>{f7bb6716-ecef-4beb-87b9-2a60d1565ffe}</Id>
       <BaseInterpreter>{2af0f10d-7135-4994-9156-5d01c9c11b7e}</BaseInterpreter>

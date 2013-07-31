@@ -213,6 +213,56 @@ namespace PythonToolsUITests {
 
         [TestMethod, Priority(0), TestCategory("InterpreterList")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void ActivateVirtualEnvInInterpreterListInVS() {
+            var dte = VsIdeTestHostContext.Dte;
+            var app = new VisualStudioApp(dte);
+            var proj = app.OpenAndFindProject(@"TestData\VirtualEnv.sln");
+
+            dte.ExecuteCommand("View.PythonEnvironments");
+            var list = new VisualStudioApp(dte).FindByAutomationId("PythonTools.InterpreterList");
+            Assert.IsNotNull(list, "interpreter list is null");
+
+            // Check that the current environment is the virtual environment
+            Guid venvId = Guid.Parse((string)proj.Properties.Item("InterpreterId").Value);
+
+            // Get the activate button and check that it's disabled because the project should have the virtual environment
+            // activated already
+            var activateButton = list.FindFirst(TreeScope.Descendants, new PropertyCondition(AutomationElement.NameProperty, "Activate"));
+            Assert.IsNotNull(activateButton);
+            Assert.IsFalse((bool)activateButton.GetCurrentPropertyValue(AutomationElement.IsEnabledProperty), "Activate button is not disabled");
+
+            // Enable another interpreter so the virtual environment is deactivated
+            var python27Env = new AutomationWrapper(app.SolutionExplorerTreeView.FindItem(
+                "Solution '" + app.Dte.Solution.Projects.Item(1).Name + "' (1 project)",
+                app.Dte.Solution.Projects.Item(1).Name,
+                "Python Environments",
+                "Python 2.7"));
+            python27Env.Select();
+            app.Dte.ExecuteCommand("Project.ActivateEnvironment");
+
+            // Check that the activate button for the virtual environment is now enabled and the interpreter
+            // id has been changed to something else
+            Guid interpreterId = Guid.Parse((string)proj.Properties.Item("InterpreterId").Value);
+            activateButton = list.FindFirst(TreeScope.Descendants, new PropertyCondition(AutomationElement.NameProperty, "Activate"));
+            Assert.IsTrue((bool)activateButton.GetCurrentPropertyValue(AutomationElement.IsEnabledProperty), "Activate button is not enabled");
+            Assert.IsFalse(interpreterId == venvId, "The active interpreter hasn't been set to Python 2.7");
+
+            // Activate the virtual environment by clicking on it
+            ((InvokePattern)activateButton.GetCurrentPattern(InvokePattern.Pattern)).Invoke();
+
+            // Check that the activate button is now disabled
+            activateButton = list.FindFirst(TreeScope.Descendants, new PropertyCondition(AutomationElement.NameProperty, "Activate"));
+            Assert.IsFalse((bool)activateButton.GetCurrentPropertyValue(AutomationElement.IsEnabledProperty), "Activate button is not redisabled");
+
+            // Check that the virtual environment is now selected
+            interpreterId = Guid.Parse((string)proj.Properties.Item("InterpreterId").Value);
+            Assert.IsTrue(interpreterId == venvId, "The active interpreter hasn't been set back to the virtual environment");
+
+            dte.Solution.Close(SaveFirst: false);
+        }
+
+        [TestMethod, Priority(0), TestCategory("InterpreterList")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ChangeDefaultInVS() {
             var dte = VsIdeTestHostContext.Dte;
             var model = (IComponentModel)VsIdeTestHostContext.ServiceProvider.GetService(typeof(SComponentModel));

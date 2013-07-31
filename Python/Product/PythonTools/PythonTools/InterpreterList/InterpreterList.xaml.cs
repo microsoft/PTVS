@@ -349,13 +349,29 @@ namespace Microsoft.PythonTools.InterpreterList {
         }
 
         private void MakeDefault_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
-            var view = e.Parameter as InterpreterView;
-            e.CanExecute = view != null && view.Interpreter != null && !view.IsDefault && view.CanBeDefault;
+            var view = e.Parameter as InterpreterView;            
+
+            // Check to see if the interpreter is associated with a project. If it is, then it's a virtual
+            // environment, so change the logic to just check if it's the project's current active interpreter.
+            // If not, then check to see if it can be set as default.
+            if (view.Project != null) {
+                e.CanExecute = view.Project.Interpreters.ActiveInterpreter != view.Interpreter;
+            } else {
+                e.CanExecute = view != null && view.Interpreter != null && !view.IsDefault && view.CanBeDefault;
+            }
         }
 
         private void MakeDefault_Executed(object sender, ExecutedRoutedEventArgs e) {
             var view = (InterpreterView)e.Parameter;
-            _interpService.DefaultInterpreter = view.Interpreter;
+
+            // Check to see if the interpreter is associated with a project. If it is, then it's a virtual
+            // environment, so change the logic to just activate it for the project. If not, then it's for the
+            // global scope, so set it as default on the interpreter service.
+            if (view.Project != null) {
+                view.Project.Interpreters.ActiveInterpreter = view.Interpreter;
+            } else {
+                _interpService.DefaultInterpreter = view.Interpreter;
+            }
         }
 
         private void CopyReason_CanExecute(object sender, CanExecuteRoutedEventArgs e) {

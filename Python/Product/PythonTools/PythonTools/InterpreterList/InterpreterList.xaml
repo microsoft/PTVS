@@ -104,12 +104,17 @@
                     </DataTemplate>
 
                     <DataTemplate x:Key="MakeDefaultTemplate" DataType="{x:Type ptvs:InterpreterView}">
-                        <Button Command="{x:Static l:InterpreterList.MakeDefaultCommand}" CommandParameter="{Binding}"
+                        <Button Name="MakeDefaultButton" Command="{x:Static l:InterpreterList.MakeDefaultCommand}" CommandParameter="{Binding}"
                                 VerticalAlignment="Center">
-                            Make Default
+                            Activate
                         </Button>
+                        <DataTemplate.Triggers>
+                            <DataTrigger Binding="{Binding Project}" Value="{x:Null}">
+                                <Setter TargetName="MakeDefaultButton" Property="Content" Value="Make Default" />
+                            </DataTrigger>
+                        </DataTemplate.Triggers>
                     </DataTemplate>
-
+                    
                     <DataTemplate x:Key="DatabaseTemplate" DataType="{x:Type ptvs:InterpreterView}">
                         <Grid HorizontalAlignment="Stretch">
                             <Grid Name="Status" VerticalAlignment="Center" Margin="0 1">
