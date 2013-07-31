@@ -35,15 +35,16 @@ parser.add_option('-m', '--module', type='str', help = 'name of the module to im
 
 sys.path[0] = os.getcwd()
 
+if ptvsd and opts.secret and opts.port:
+    DONT_DEBUG.append(__file__)
+    enable_attach(opts.secret, ('127.0.0.1', opts.port), redirect_output = True)
+    wait_for_attach()
+
 __import__(opts.module)
 module = sys.modules[opts.module]
 test = unittest.defaultTestLoader.loadTestsFromNames(opts.tests, module)
 runner = unittest.TextTestRunner(verbosity=0)
 
-if ptvsd and opts.secret and opts.port:
-    DONT_DEBUG.append(__file__)
-    enable_attach(opts.secret, ('127.0.0.1', opts.port), redirect_output = True)
-    wait_for_attach()
 
 result = runner.run(test)
 sys.exit(not result.wasSuccessful())

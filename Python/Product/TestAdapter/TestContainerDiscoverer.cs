@@ -68,7 +68,6 @@ namespace Microsoft.PythonTools.TestAdapter {
             _solutionListener.ProjectLoaded += OnProjectLoaded;
             _solutionListener.ProjectUnloading += OnProjectUnloaded;
             _solutionListener.ProjectRenamed += OnProjectRenamed;
-            _solutionListener.SolutionClosed += OnSolutionClosed;
             _solutionListener.BuildCompleted += OnBuildCompleted;
             _solutionListener.BuildStarted += OnBuildStarted;
 
@@ -302,10 +301,6 @@ namespace Microsoft.PythonTools.TestAdapter {
 
                 OnTestContainersChanged();
             }
-        }
-
-        private void OnSolutionClosed(object sender, EventArgs e) {
-            OnTestContainersChanged();
         }
 
         /// <summary>
