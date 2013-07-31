@@ -25,13 +25,14 @@ using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestWindow.Extensibility;
 using MSBuild = Microsoft.Build.Evaluation;
 
 namespace Microsoft.PythonTools.TestAdapter {
-    [Export(typeof(ITestMethodResolver ))]
+    [Export(typeof(ITestMethodResolver))]
     class TestMethodResolver : ITestMethodResolver {
         private readonly IServiceProvider _serviceProvider;
         private readonly TestContainerDiscoverer _discoverer;
@@ -44,7 +45,7 @@ namespace Microsoft.PythonTools.TestAdapter {
             [Import]TestContainerDiscoverer discoverer) {
             _serviceProvider = serviceProvider;
             _discoverer = discoverer;
-            _interpService = InterpreterOptionsServiceProvider.GetService();
+            _interpService = ((IComponentModel)_serviceProvider.GetService(typeof(SComponentModel))).GetService<IInterpreterOptionsService>();
         }
 
         public Uri ExecutorUri {
@@ -105,7 +106,6 @@ namespace Microsoft.PythonTools.TestAdapter {
             }
 
             public override bool Walk(FunctionDefinition node) {
-
                 var start = node.GetStart(_root);
                 var end = node.GetEnd(_root);
                 if (start.Line <= _line && end.Line >= _line) {
