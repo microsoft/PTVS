@@ -115,6 +115,7 @@
     </Compile>
     <Compile Include="InterpreterOptionsServiceProvider.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RunFromContextFileExtensions.cs" />
     <Compile Include="ServiceProviderExtension.cs" />
     <Compile Include="TestContainer.cs" />
     <Compile Include="TestContainerDiscoverer.cs" />
@@ -122,6 +123,7 @@
     <Compile Include="TestExecutor.cs" />
     <Compile Include="TestFileAddRemoveListener.cs" />
     <Compile Include="TestFilesUpdateWatcher.cs" />
+    <Compile Include="TestMethodResolver.cs" />
     <Compile Include="VisualStudioApp.cs" />
     <Compile Include="VsProjectExtensions.cs" />
   </ItemGroup>

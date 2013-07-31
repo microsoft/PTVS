@@ -4766,7 +4766,7 @@ If the files in the existing folder have the same names as files in the folder y
             else
             {
                 HierarchyNode child = this.FindNodeByFullPath(EnsureRootedPath(mkDoc));
-                if (child != null)
+                if (child != null && !child.IsNonMemberItem)
                 {
                     found = 1;
                     itemId = child.ID;

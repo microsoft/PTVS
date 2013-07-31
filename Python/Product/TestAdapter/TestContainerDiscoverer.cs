@@ -28,6 +28,7 @@ using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.TestAdapter {
     [Export(typeof(ITestContainerDiscoverer))]
+    [Export(typeof(TestContainerDiscoverer))]
     class TestContainerDiscoverer : ITestContainerDiscoverer, IDisposable {
         private readonly IServiceProvider _serviceProvider;
         private readonly TestFileAddRemoveListener _testFilesAddRemoveListener;
@@ -170,7 +171,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                 // Don't return any containers for projects we don't know about.
                 yield break;
             }
-
+            
             var latestWrite = project.GetProjectItemPaths().Aggregate(
                 DateTime.MinValue,
                 (latest, filePath) => {
@@ -385,6 +386,10 @@ namespace Microsoft.PythonTools.TestAdapter {
                     evt(this, EventArgs.Empty);
                 }
             }
+        }
+
+        internal bool IsProjectKnown(IVsProject project) {
+            return _knownProjects.ContainsKey(project.GetProjectPath());
         }
     }
 }
