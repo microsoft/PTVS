@@ -15,6 +15,7 @@
 using System;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
+using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Project.Automation;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
@@ -72,6 +73,13 @@ namespace Microsoft.PythonTools.Project {
         public string InterpreterId {
             get {
                 return ((PythonProjectNode)this.Node).Interpreters.ActiveInterpreter.Id.ToString();
+            }
+        }
+
+        [Browsable(false)]
+        public MSBuildProjectInterpreterFactoryProvider InterpreterFactoryProvider {
+            get {
+                return ((PythonProjectNode)this.Node).Interpreters;
             }
         }
 

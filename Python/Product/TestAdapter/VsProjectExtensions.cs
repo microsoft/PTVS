@@ -22,6 +22,20 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
 namespace Microsoft.PythonTools.TestAdapter {
     internal static class VSProjectExtensions {
+        internal static EnvDTE.Project GetProject(this IVsHierarchy hierarchy) {
+            object project;
+
+            ErrorHandler.ThrowOnFailure(
+                hierarchy.GetProperty(
+                    VSConstants.VSITEMID_ROOT,
+                    (int)__VSHPROPID.VSHPROPID_ExtObject,
+                    out project
+                )
+            );
+
+            return (project as EnvDTE.Project);
+        }
+
         /// <summary>
         /// Gets the name of the project.
         /// </summary>

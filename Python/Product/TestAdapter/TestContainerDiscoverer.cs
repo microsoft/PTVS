@@ -19,6 +19,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -35,7 +36,7 @@ namespace Microsoft.PythonTools.TestAdapter {
         private readonly TestFilesUpdateWatcher _testFilesUpdateWatcher;
         private readonly SolutionEventsListener _solutionListener;
         private readonly Dictionary<string, string> _fileRootMap;
-        private readonly Dictionary<string, IVsProject> _knownProjects;
+        private readonly Dictionary<string, ProjectInfo> _knownProjects;
         private bool _firstLoad, _isDisposed, _building, _detectingChanges;
 
         [ImportingConstructor]
@@ -58,7 +59,7 @@ namespace Microsoft.PythonTools.TestAdapter {
             ValidateArg.NotNull(operationState, "operationState");
 
             _fileRootMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-            _knownProjects = new Dictionary<string, IVsProject>(StringComparer.OrdinalIgnoreCase);
+            _knownProjects = new Dictionary<string, ProjectInfo>(StringComparer.OrdinalIgnoreCase);
 
             _serviceProvider = serviceProvider;
 
@@ -68,6 +69,7 @@ namespace Microsoft.PythonTools.TestAdapter {
             _solutionListener = solutionListener;
             _solutionListener.ProjectLoaded += OnProjectLoaded;
             _solutionListener.ProjectUnloading += OnProjectUnloaded;
+            _solutionListener.ProjectClosing += OnProjectUnloaded;
             _solutionListener.ProjectRenamed += OnProjectRenamed;
             _solutionListener.BuildCompleted += OnBuildCompleted;
             _solutionListener.BuildStarted += OnBuildStarted;
@@ -244,7 +246,16 @@ namespace Microsoft.PythonTools.TestAdapter {
 
                 var path = e.Project.GetProjectPath();
                 if (!_knownProjects.ContainsKey(path)) {
-                    _knownProjects.Add(path, e.Project);
+                    var dteProject = ((IVsHierarchy)e.Project).GetProject();
+                    var interpFact = (MSBuildProjectInterpreterFactoryProvider)dteProject.Properties.Item("InterpreterFactoryProvider").Value;
+
+                    var projectInfo = new ProjectInfo(
+                        this,
+                        interpFact
+                    );
+
+                    _knownProjects.Add(path, projectInfo);
+
                     foreach (var p in e.Project.GetProjectItemPaths()) {
                         if (!string.IsNullOrEmpty(root) && CommonUtils.IsSubpathOf(root, p)) {
                             _testFilesUpdateWatcher.AddDirectoryWatch(root);
@@ -258,7 +269,7 @@ namespace Microsoft.PythonTools.TestAdapter {
 
             OnTestContainersChanged();
         }
-
+        
         private void OnProjectUnloaded(object sender, ProjectEventArgs e) {
             if (e.Project != null) {
                 string root = null;
@@ -273,7 +284,12 @@ namespace Microsoft.PythonTools.TestAdapter {
                     // watchers into a single recursive watcher.
                 }
 
-                if (_knownProjects.Remove(e.Project.GetProjectPath())) {
+                ProjectInfo projectInfo;
+                if (_knownProjects.TryGetValue(e.Project.GetProjectPath(), out projectInfo)) {
+                    _knownProjects.Remove(e.Project.GetProjectPath());
+
+                    projectInfo.Detach();
+
                     foreach (var p in e.Project.GetProjectItemPaths()) {
                         if (string.IsNullOrEmpty(root) || !CommonUtils.IsSubpathOf(root, p)) {
                             _testFilesUpdateWatcher.RemoveWatch(p);
@@ -290,18 +306,8 @@ namespace Microsoft.PythonTools.TestAdapter {
         }
 
         private void OnProjectRenamed(object sender, ProjectEventArgs e) {
-            var oldKey = _knownProjects.FirstOrDefault(kv => kv.Value == e.Project).Key;
-
-            if (oldKey == null) {
-                // If we don't recognize the project, treat it as if it has just
-                // been loaded.
-                OnProjectLoaded(sender, e);
-            } else {
-                _knownProjects.Remove(oldKey);
-                _knownProjects[e.Project.GetProjectPath()] = e.Project;
-
-                OnTestContainersChanged();
-            }
+            OnProjectUnloaded(this, e);
+            OnProjectLoaded(this, e);
         }
 
         /// <summary>
@@ -390,6 +396,57 @@ namespace Microsoft.PythonTools.TestAdapter {
 
         internal bool IsProjectKnown(IVsProject project) {
             return _knownProjects.ContainsKey(project.GetProjectPath());
+        }
+
+        class ProjectInfo {
+            public readonly TestContainerDiscoverer Discoverer;
+            public readonly MSBuildProjectInterpreterFactoryProvider FactoryProvider;
+            public IPythonInterpreterFactory ActiveInterpreter;
+
+            public ProjectInfo(TestContainerDiscoverer discoverer, MSBuildProjectInterpreterFactoryProvider factoryProvider) {
+                Discoverer = discoverer;
+                FactoryProvider = factoryProvider;
+                ActiveInterpreter = FactoryProvider.ActiveInterpreter;
+
+                Attach();
+                HookDatabaseCurrentChanged();
+            }
+
+            private void ActiveInterpreterChanged(object sender, EventArgs args) {
+                UnhookDatabaseCurrentChanged();
+
+                ActiveInterpreter = FactoryProvider.ActiveInterpreter;
+
+                HookDatabaseCurrentChanged();
+
+                Discoverer.OnTestContainersChanged();
+            }
+
+            private void HookDatabaseCurrentChanged() {
+                var dbInterp = ActiveInterpreter as IInterpreterWithCompletionDatabase;
+                if (dbInterp != null) {
+                    dbInterp.IsCurrentChanged += DatabaseIsCurrentChanged;
+                }
+            }
+
+            private void UnhookDatabaseCurrentChanged() {
+                var dbInterp = ActiveInterpreter as IInterpreterWithCompletionDatabase;
+                if (dbInterp != null) {
+                    dbInterp.IsCurrentChanged -= DatabaseIsCurrentChanged;
+                }
+            }
+
+            private void DatabaseIsCurrentChanged(object sender, EventArgs args) {
+                Discoverer.OnTestContainersChanged();
+            }
+
+            internal void Attach() {
+                FactoryProvider.ActiveInterpreterChanged += ActiveInterpreterChanged;
+            }
+
+            internal void Detach() {
+                FactoryProvider.ActiveInterpreterChanged -= ActiveInterpreterChanged;
+            }
         }
     }
 }
