@@ -15,15 +15,14 @@
 using System;
 using System.Runtime.InteropServices;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio.Shell;
 
 namespace Microsoft.PythonTools.InterpreterList {
     [Guid(PythonConstants.InterpreterListToolWindowGuid)]
     class InterpreterListToolWindow : ToolWindowPane {
-        const string Title = "Python Interpreters";
-        
         public InterpreterListToolWindow() {
-            Caption = Title;
+            Caption = SR.GetString(SR.Interpreters);
 
             Content = new InterpreterList(
                 PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>(),
