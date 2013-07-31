@@ -182,7 +182,7 @@ namespace Microsoft.PythonTools.Analysis {
                 case PythonMemberType.Method:
                     BoundMethodInfo mi = type as BoundMethodInfo;
                     if (mi != null) {
-                        return GenerateFunction(mi.Function);
+                        return GenerateMethod(mi);
                     }
                     return "method";
                 case PythonMemberType.Property:
@@ -222,7 +222,7 @@ namespace Microsoft.PythonTools.Analysis {
                     break;
                 case PythonMemberType.Instance:
                     return new Dictionary<string, object> {
-                        { "type", GenerateTypeName(type, declModule, true) }
+                        { "type", GenerateTypeName(type, true) }
                     };
                 default:
                     return new Dictionary<string, object>() {
@@ -284,7 +284,7 @@ namespace Microsoft.PythonTools.Analysis {
         private object GenerateProperty(FunctionInfo prop) {
             return new Dictionary<string, object>() {
                 { "doc", MemoizeString(prop.Documentation) },
-                { "type", GenerateTypeName(GetFunctionReturnTypes(prop), prop.DeclaringModule.GetModuleInfo(), true) },
+                { "type", GenerateTypeName(GetFunctionReturnTypes(prop), true) },
                 { "location", GenerateLocation(prop.Locations) }
             };
         }
@@ -354,7 +354,7 @@ namespace Microsoft.PythonTools.Analysis {
             List<object> res = new List<object>();
             foreach (var baseClassSet in ci.Bases) {
                 foreach (var baseClass in baseClassSet) {
-                    var typeName = GenerateTypeName(baseClass, ((ProjectEntry)ci.DeclaringModule).GetModuleInfo(), true);
+                    var typeName = GenerateTypeName(baseClass, true);
                     if (typeName != null) {
                         res.Add(typeName);
                     }
@@ -363,17 +363,17 @@ namespace Microsoft.PythonTools.Analysis {
             return res;
         }
 
-        private object GenerateTypeName(IAnalysisSet name, ModuleInfo declModule, bool isRef) {
+        private object GenerateTypeName(IAnalysisSet name, bool isRef) {
             if (name.Count == 0) {
                 return null;
             } else if (name.Count == 1) {
-                return GenerateTypeName(name.First(), declModule, isRef);
+                return GenerateTypeName(name.First(), isRef);
             }
 
-            return name.Select(ns => GenerateTypeName(ns, declModule, isRef)).Distinct().ToList<object>();
+            return name.Select(ns => GenerateTypeName(ns, isRef)).Distinct().ToList<object>();
         }
 
-        private object GenerateTypeName(AnalysisValue baseClass, ModuleInfo declModule, bool isRef) {
+        private object GenerateTypeName(AnalysisValue baseClass, bool isRef) {
             ClassInfo ci = baseClass as ClassInfo;
             if (ci != null) {
                 return GetTypeName(((ProjectEntry)ci.DeclaringModule).GetModuleInfo().Name, ci.ClassDefinition.Name);
@@ -386,17 +386,17 @@ namespace Microsoft.PythonTools.Analysis {
 
             IterableInfo iteri = baseClass as IterableInfo;
             if (iteri != null) {
-                return GenerateTypeName(iteri.PythonType, declModule, isRef, iteri.IndexTypes);
+                return GenerateTypeName(iteri.PythonType, isRef, iteri.IndexTypes);
             }
 
             InstanceInfo ii = baseClass as InstanceInfo;
             if (ii != null) {
-                return GenerateTypeName(ii.ClassInfo, declModule, isRef);
+                return GenerateTypeName(ii.ClassInfo, isRef);
             }
 
             BuiltinInstanceInfo bii = baseClass as BuiltinInstanceInfo;
             if (bii != null) {
-                return GenerateTypeName(bii.ClassInfo, declModule, isRef);
+                return GenerateTypeName(bii.ClassInfo, isRef);
             }
 
             return GenerateTypeName(baseClass.PythonType);
@@ -409,7 +409,7 @@ namespace Microsoft.PythonTools.Analysis {
             return null;
         }
 
-        private object GenerateTypeName(IPythonType type, ModuleInfo declModule, bool isRef, VariableDef[] indexTypes) {
+        private object GenerateTypeName(IPythonType type, bool isRef, VariableDef[] indexTypes) {
             if (type != null) {
                 if (indexTypes == null || indexTypes.Length == 0) {
                     return GetTypeName(type.DeclaringModule.Name, type.Name);
@@ -436,7 +436,7 @@ namespace Microsoft.PythonTools.Analysis {
                     typeNames[className] = typeName = new Dictionary<string, object> {
                         { "module_name", mModuleName },
                         { "type_name", mTypeName },
-                        { "index_types", indexTypes.Select(vd => GenerateTypeName(vd.TypesNoCopy, declModule, isRef)).ToList<object>() },
+                        { "index_types", indexTypes.Select(vd => GenerateTypeName(vd.TypesNoCopy, isRef)).ToList<object>() },
                     };
                 }
 
@@ -449,7 +449,7 @@ namespace Microsoft.PythonTools.Analysis {
             List<object> res = new List<object>();
             foreach (var mroClassSet in ci.Mro) {
                 foreach (var mroClass in mroClassSet) {
-                    var typeName = GenerateTypeName(mroClass, ci.DeclaringModule.GetModuleInfo(), true);
+                    var typeName = GenerateTypeName(mroClass, true);
                     if (typeName != null) {
                         res.Add(typeName);
                     }
@@ -467,6 +467,14 @@ namespace Microsoft.PythonTools.Analysis {
                 { "location", GenerateLocation(fi.Locations) },
                 { "overloads", GenerateOverloads(fi) }
             };
+        }
+
+        private Dictionary<string, object> GenerateMethod(BoundMethodInfo bmi) {
+            var res = GenerateFunction(bmi.Function);
+            if (bmi.Instance != null && bmi.Instance.TypeId != BuiltinTypeId.NoneType) {
+                res["bound"] = true;
+            }
+            return res;
         }
 
         private static object[] GenerateLocation(LocationInfo location) {
@@ -489,7 +497,7 @@ namespace Microsoft.PythonTools.Analysis {
             // TODO: Store distinct calls as separate overloads
             res.Add(new Dictionary<string, object> {
                 { "args", GenerateArgInfo(fi, fi.GetParameterTypes()) },
-                { "ret_type", GenerateTypeName(fi.GetReturnValue(), fi.DeclaringModule.GetModuleInfo(), true) }
+                { "ret_type", GenerateTypeName(fi.GetReturnValue(), true) }
             });
 
             return res;
@@ -498,7 +506,7 @@ namespace Microsoft.PythonTools.Analysis {
         private object[] GenerateArgInfo(FunctionInfo fi, IAnalysisSet[] parameters) {
             var res = new object[Math.Min(fi.FunctionDefinition.Parameters.Count, parameters.Length)];
             for (int i = 0; i < res.Length; i++) {
-                res[i] = GenerateParameter(fi.FunctionDefinition.Parameters[i], parameters[i], fi.DeclaringModule.GetModuleInfo());
+                res[i] = GenerateParameter(fi.FunctionDefinition.Parameters[i], parameters[i]);
             }
             return res;
         }
@@ -514,7 +522,7 @@ namespace Microsoft.PythonTools.Analysis {
             return res;
         }
 
-        private object GenerateParameter(Parameter param, IAnalysisSet typeInfo, ModuleInfo declModule) {
+        private object GenerateParameter(Parameter param, IAnalysisSet typeInfo) {
             Dictionary<string, object> res = new Dictionary<string, object>();
             // TODO: Serialize default values
             if (param.Kind == ParameterKind.Dictionary) {
@@ -523,7 +531,7 @@ namespace Microsoft.PythonTools.Analysis {
                 res["arg_format"] = "*";
             }
             res["name"] = MemoizeString(param.Name);
-            res["type"] = GenerateTypeName(typeInfo, declModule, true);
+            res["type"] = GenerateTypeName(typeInfo, true);
             return res;
         }
 

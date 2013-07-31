@@ -36,7 +36,7 @@ namespace AnalysisTests {
         }
 
         [TestMethod, Priority(0)]
-        public void SaveLoad() {
+        public void General() {
             string code = @"def f(a, *b, **c): pass
 
 def f1(x = 42): pass
@@ -66,55 +66,6 @@ tuple_of_str = 'a', 'b', 'c'
 
 import nt
 m = max
-
-class FunctionNoRetType(object):
-    def __init__(self, value):
-        pass
-        
-class Aliased(object):
-    '''class doc'''
-    def f(self):
-        pass
-        
-def Aliased(foo):
-    '''function doc'''
-    pass
-
-def Overloaded():
-    '''help 1'''
-    pass
-
-def Overloaded():
-    '''help 2'''
-    pass
-
-def Overloaded():
-    '''help 2'''
-    pass
-
-class WithInstanceMembers(object):
-    def __init__(self):
-        self.foo = 42
-
-class WithMemberFunctions(object):
-    def bar(self):
-        pass
-
-class SingleInheritance(WithMemberFunctions):
-    def baz(self):
-        pass
-
-class DoubleInheritance(SingleInheritance):
-    pass
-
-class MultipleInheritance(WithInstanceMembers, WithMemberFunctions):
-    pass
-
-class MultiplyDefinedClass(object): pass
-class MultiplyDefinedClass(object): pass
-
-def ReturningMultiplyDefinedClass():
-    return MultiplyDefinedClass()
 ";
 
             using (var newPs = SaveLoad(PythonLanguageVersion.V27, new AnalysisModule("test", "test.py", code))) {
@@ -136,16 +87,6 @@ tuple_of_str = test.tuple_of_str
 f1 = test.f1
 f2 = test.f2
 m = test.m
-Aliased = test.Aliased
-FunctionNoRetType = test.FunctionNoRetType
-Overloaded = test.Overloaded
-WithInstanceMembers = test.WithInstanceMembers
-WithMemberFunctions = test.WithMemberFunctions
-SingleInheritance = test.SingleInheritance
-DoubleInheritance = test.DoubleInheritance
-MultipleInheritance = test.MultipleInheritance
-MultiplyDefinedClass = test.MultiplyDefinedClass
-ReturningMultiplyDefinedClass = test.ReturningMultiplyDefinedClass
 ";
                 var newMod = newPs.NewModule("baz", codeText);
                 int pos = codeText.LastIndexOf('\n');
@@ -177,6 +118,49 @@ ReturningMultiplyDefinedClass = test.ReturningMultiplyDefinedClass
                 var members = newMod.Analysis.GetMembersByIndex("Aliased", pos, GetMemberOptions.None);
                 AssertUtil.Contains(members.Select(x => x.Name), "f");
                 AssertUtil.Contains(members.Select(x => x.Name), "__self__");
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public void OverloadDocString() {
+            string code = @"
+class FunctionNoRetType(object):
+    def __init__(self, value):
+        pass
+        
+class Aliased(object):
+    '''class doc'''
+    def f(self):
+        pass
+        
+def Aliased(foo):
+    '''function doc'''
+    pass
+
+def Overloaded():
+    '''help 1'''
+    pass
+
+def Overloaded():
+    '''help 2'''
+    pass
+
+def Overloaded():
+    '''help 2'''
+    pass
+";
+
+            using (var newPs = SaveLoad(PythonLanguageVersion.V27, new AnalysisModule("test", "test.py", code))) {
+                AssertUtil.Contains(newPs.Analyzer.GetModules().Select(x => x.Name), "test");
+
+                string codeText = @"
+import test
+Aliased = test.Aliased
+FunctionNoRetType = test.FunctionNoRetType
+Overloaded = test.Overloaded
+";
+                var newMod = newPs.NewModule("baz", codeText);
+                int pos = codeText.LastIndexOf('\n');
 
                 var allMembers = newMod.Analysis.GetAllAvailableMembersByIndex(pos, GetMemberOptions.None);
 
@@ -184,6 +168,44 @@ ReturningMultiplyDefinedClass = test.ReturningMultiplyDefinedClass
                 Assert.AreEqual(1, newMod.Analysis.GetSignaturesByIndex("FunctionNoRetType", pos).ToArray().Length);
 
                 Assert.AreEqual("help 1\r\n\r\nhelp 2", newMod.Analysis.GetMembersByIndex("test", pos).Where(x => x.Name == "Overloaded").First().Documentation);
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public void Inheritance() {
+            string code = @"
+class WithInstanceMembers(object):
+    def __init__(self):
+        self.foo = 42
+
+class WithMemberFunctions(object):
+    def bar(self):
+        pass
+
+class SingleInheritance(WithMemberFunctions):
+    def baz(self):
+        pass
+
+class DoubleInheritance(SingleInheritance):
+    pass
+
+class MultipleInheritance(WithInstanceMembers, WithMemberFunctions):
+    pass
+";
+
+            using (var newPs = SaveLoad(PythonLanguageVersion.V27, new AnalysisModule("test", "test.py", code))) {
+                AssertUtil.Contains(newPs.Analyzer.GetModules().Select(x => x.Name), "test");
+
+                string codeText = @"
+import test
+WithInstanceMembers = test.WithInstanceMembers
+WithMemberFunctions = test.WithMemberFunctions
+SingleInheritance = test.SingleInheritance
+DoubleInheritance = test.DoubleInheritance
+MultipleInheritance = test.MultipleInheritance
+";
+                var newMod = newPs.NewModule("baz", codeText);
+                int pos = codeText.LastIndexOf('\n');
 
                 // instance attributes are present
                 var instMembers = newMod.Analysis.GetMembersByIndex("WithInstanceMembers", pos);
@@ -194,6 +216,29 @@ ReturningMultiplyDefinedClass = test.ReturningMultiplyDefinedClass
                 AssertUtil.ContainsAtLeast(newMod.Analysis.GetMemberNamesByIndex("SingleInheritance", pos), "bar", "baz");
                 AssertUtil.ContainsAtLeast(newMod.Analysis.GetMemberNamesByIndex("DoubleInheritance", pos), "bar", "baz");
                 AssertUtil.ContainsAtLeast(newMod.Analysis.GetMemberNamesByIndex("MultipleInheritance", pos), "foo", "bar");
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public void MultiplyDefinedClasses() {
+            string code = @"
+class MultiplyDefinedClass(object): pass
+class MultiplyDefinedClass(object): pass
+
+def ReturningMultiplyDefinedClass():
+    return MultiplyDefinedClass()
+";
+
+            using (var newPs = SaveLoad(PythonLanguageVersion.V27, new AnalysisModule("test", "test.py", code))) {
+                AssertUtil.Contains(newPs.Analyzer.GetModules().Select(x => x.Name), "test");
+
+                string codeText = @"
+import test
+MultiplyDefinedClass = test.MultiplyDefinedClass
+ReturningMultiplyDefinedClass = test.ReturningMultiplyDefinedClass
+";
+                var newMod = newPs.NewModule("baz", codeText);
+                int pos = codeText.LastIndexOf('\n');
 
                 var mdc = newMod.Analysis.GetValuesByIndex("MultiplyDefinedClass", pos).ToList();
                 Assert.AreEqual(2, mdc.Count);
@@ -204,7 +249,7 @@ ReturningMultiplyDefinedClass = test.ReturningMultiplyDefinedClass
         }
 
         [TestMethod, Priority(0)]
-        public void SaveRecursionClasses() {
+        public void RecursionClasses() {
             string code = @"
 class C(object): pass
 
@@ -215,7 +260,7 @@ C.abc = C
         }
 
         [TestMethod, Priority(0)]
-        public void SaveRecursionSequenceClasses() {
+        public void RecursionSequenceClasses() {
             string code = @"
 C = []
 C.append(C)
@@ -230,7 +275,7 @@ C = test.C";
         }
 
         [TestMethod, Priority(0)]
-        public void SaveModuleRef() {
+        public void ModuleRef() {
             string foo = @"
 import bar
 x = bar.f()
@@ -250,7 +295,7 @@ abc = foo.x
         }
 
         [TestMethod, Priority(0)]
-        public void SaveFunctionOverloads() {
+        public void FunctionOverloads() {
             string code = @"
 def f(a, b):
     return a * b
@@ -266,6 +311,38 @@ f([1, 2], 3)
             }
         }
 
+        [TestMethod, Priority(0)]
+        public void StandaloneMethods() {
+            string code = @"
+class A(object):
+    def f(self, a, b):
+        pass
+
+cls_f = A.f
+inst_f = A().f
+";
+            using (var newPs = SaveLoad(PythonLanguageVersion.V27, new AnalysisModule("test", "test.py", code))) {
+                var newMod = newPs.NewModule("test2", "from test import cls_f, inst_f");
+
+                var clsSig = newMod.Analysis.GetSignaturesByIndex("cls_f", 0).Single();
+                var instSig = newMod.Analysis.GetSignaturesByIndex("inst_f", 0).Single();
+
+                var clsProto = string.Format("cls_f({0})", string.Join(", ", clsSig.Parameters.Select(p => p.Name)));
+                var instProto = string.Format("inst_f({0})", string.Join(", ", instSig.Parameters.Select(p => p.Name)));
+                Console.WriteLine(clsProto);
+                Console.WriteLine(instProto);
+
+                Assert.AreEqual(3, clsSig.Parameters.Length, clsProto);
+                Assert.AreEqual(2, instSig.Parameters.Length, instProto);
+
+                Assert.AreEqual("self", clsSig.Parameters[0].Name);
+                Assert.AreEqual("a", clsSig.Parameters[1].Name);
+                Assert.AreEqual("b", clsSig.Parameters[2].Name);
+
+                Assert.AreEqual("a", instSig.Parameters[0].Name);
+                Assert.AreEqual("b", instSig.Parameters[1].Name);
+            }
+        }
 
 
         private SaveLoadResult SaveLoad(PythonLanguageVersion version, params AnalysisModule[] modules) {

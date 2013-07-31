@@ -594,7 +594,14 @@ namespace Microsoft.PythonTools.Analysis {
                 var bf = (IPythonFunction)attr;
                 return GetCached(attr, () => new BuiltinFunctionInfo(bf, this));
             } else if (attr is IPythonMethodDescriptor) {
-                return GetCached(attr, () => new BuiltinMethodInfo((IPythonMethodDescriptor)attr, this));
+                return GetCached(attr, () => {
+                    var md = (IPythonMethodDescriptor)attr;
+                    if (md.IsBound) {
+                        return new BuiltinFunctionInfo(md.Function, this);
+                    } else {
+                        return new BuiltinMethodInfo(md, this);
+                    }
+                });
             } else if (attr is IBuiltinProperty) {
                 return GetCached(attr, () => new BuiltinPropertyInfo((IBuiltinProperty)attr, this));
             } else if (attr is IPythonModule) {

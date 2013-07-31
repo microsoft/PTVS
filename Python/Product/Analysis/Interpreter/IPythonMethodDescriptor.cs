@@ -24,5 +24,12 @@ namespace Microsoft.PythonTools.Interpreter {
         IPythonFunction Function {
             get;
         }
+
+        /// <summary>
+        /// True if the method is already bound to an instance.
+        /// </summary>
+        bool IsBound {
+            get;
+        }
     }
 }

@@ -37,6 +37,12 @@ namespace Microsoft.IronPythonTools.Interpreter {
             }
         }
 
+        public bool IsBound {
+            get {
+                return false;
+            }
+        }
+
         #endregion
 
         #region IMember Members

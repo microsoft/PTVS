@@ -44,6 +44,12 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
+        public AnalysisValue Instance {
+            get {
+                return _instanceInfo;
+            }
+        }
+
         public override IPythonProjectEntry DeclaringModule {
             get {
                 return _function.DeclaringModule;

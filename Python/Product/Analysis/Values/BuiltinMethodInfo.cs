@@ -86,7 +86,15 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public override IEnumerable<OverloadResult> Overloads {
             get {
-                return Function.Overloads.Select(overload => new BuiltinFunctionOverloadResult(ProjectState, _function.Name, overload, 0, new ParameterResult("self")));
+                return Function.Overloads.Select(overload => 
+                    new BuiltinFunctionOverloadResult(
+                        ProjectState,
+                        _function.Name,
+                        overload,
+                        0,
+                        new ParameterResult("self")
+                    )
+                );
             }
         }
 
