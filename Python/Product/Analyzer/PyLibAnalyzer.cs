@@ -61,6 +61,9 @@ namespace Microsoft.PythonTools.Analysis {
 
         private const string BuiltinName2x = "__builtin__.idb";
         private const string BuiltinName3x = "builtins.idb";
+        private static readonly HashSet<string> SkipBuiltinNames = new HashSet<string> {
+            "__main__"
+        };
 
         private static void Help() {
             Console.WriteLine("Python Library Analyzer {0} ({1})",
@@ -396,6 +399,11 @@ namespace Microsoft.PythonTools.Analysis {
 
             Directory.CreateDirectory(_outDir);
 
+            // If the database was invalid, we have to refresh everything.
+            if (!File.Exists(Path.Combine(_outDir, "database.ver"))) {
+                _all = true;
+            }
+
             // Mark the database as invalid until we complete analysis.
             try {
                 File.Delete(Path.Combine(_outDir, "database.ver"));
@@ -447,9 +455,6 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         internal void Scrape() {
-            if (!Directory.Exists(_outDir)) {
-                Directory.CreateDirectory(_outDir);
-            }
             if (string.IsNullOrEmpty(_interpreter)) {
                 return;
             }
@@ -481,11 +486,12 @@ namespace Microsoft.PythonTools.Analysis {
             TraceVerbose("Builtin names are: {0}", string.Join(", ", builtinNames.OrderBy(s => s, StringComparer.OrdinalIgnoreCase)));
 
             var builtinModulePaths = builtinNames
+                .Where(n => !SkipBuiltinNames.Contains(n))
                 .Where(CommonUtils.IsValidPath)
                 .Select(n => GetOutputFile(n))
                 .ToArray();
 
-            if (_all || builtinModulePaths.Any(p => !File.Exists(p)) || !File.Exists(Path.Combine(_outDir, "database.ver"))) {
+            if (_all || builtinModulePaths.Any(p => !File.Exists(p))) {
                 _all = true;
                 // Scape builtin Python types
                 using (var output = ProcessOutput.RunHiddenAndCapture(_interpreter, PythonScraperPath, _outDir, _baseDb.First())) {
