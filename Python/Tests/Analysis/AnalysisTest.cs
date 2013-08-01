@@ -786,17 +786,17 @@ z = None
             clsA = entry.GetValuesByIndex("A", code.IndexOf("z =")).FirstOrDefault() as ClassInfo;
             Assert.IsNotNull(clsA);
             mroA = clsA.Mro.SelectMany(ns => ns.Select(n => n.ShortDescription)).ToList();
-            AssertUtil.ContainsExactly(mroA, "A", "type int");
+            AssertUtil.ContainsExactly(mroA, "A", "type int", "type object");
 
             var clsB = entry.GetValuesByIndex("B", code.IndexOf("z =")).FirstOrDefault() as ClassInfo;
             Assert.IsNotNull(clsB);
             var mroB = clsB.Mro.SelectMany(ns => ns.Select(n => n.ShortDescription)).ToList();
-            AssertUtil.ContainsExactly(mroB, "B", "type float");
+            AssertUtil.ContainsExactly(mroB, "B", "type float", "type object");
 
             clsC = entry.GetValuesByIndex("C", code.IndexOf("z =")).FirstOrDefault() as ClassInfo;
             Assert.IsNotNull(clsC);
             var mroC = clsC.Mro.SelectMany(ns => ns.Select(n => n.ShortDescription)).ToList();
-            AssertUtil.ContainsExactly(mroC, "C", "type str");
+            AssertUtil.ContainsExactly(mroC, "C", "type str", "type object");
         }
 
         [TestMethod, Priority(0)]

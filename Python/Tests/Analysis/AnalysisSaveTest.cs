@@ -66,6 +66,13 @@ tuple_of_str = 'a', 'b', 'c'
 
 import nt
 m = max
+
+class Aliased(object):
+    def f(self):
+        pass
+
+def Aliased(foo):
+    pass
 ";
 
             using (var newPs = SaveLoad(PythonLanguageVersion.V27, new AnalysisModule("test", "test.py", code))) {
@@ -87,6 +94,7 @@ tuple_of_str = test.tuple_of_str
 f1 = test.f1
 f2 = test.f2
 m = test.m
+Aliased = test.Aliased
 ";
                 var newMod = newPs.NewModule("baz", codeText);
                 int pos = codeText.LastIndexOf('\n');
@@ -127,12 +135,11 @@ m = test.m
 class FunctionNoRetType(object):
     def __init__(self, value):
         pass
-        
+
 class Aliased(object):
     '''class doc'''
-    def f(self):
-        pass
-        
+    pass
+
 def Aliased(foo):
     '''function doc'''
     pass

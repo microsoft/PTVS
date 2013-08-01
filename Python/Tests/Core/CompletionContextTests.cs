@@ -435,43 +435,45 @@ except (None)"}) {
         }
 
         private static void OSPathImportTest(MockCompletionDB db) {
-            var fact = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(db.LanguageVersion.ToVersion(), db.Database);
-
             var code = "from ";
-            var completions = GetCompletionSetCtrlSpace(-1, code, factory: fact);
+            var completions = GetCompletionSetCtrlSpace(-1, code, factory: db.Factory);
             AssertUtil.ContainsAtLeast(GetCompletionNames(completions), "os", "sys");
 
             code = "from o";
-            completions = GetCompletionSetCtrlSpace(-1, code, factory: fact);
+            completions = GetCompletionSetCtrlSpace(-1, code, factory: db.Factory);
             AssertUtil.ContainsAtLeast(GetCompletionNames(completions), "os");
             AssertUtil.DoesntContain(GetCompletionNames(completions), "sys");
 
             code = "from os ";
-            completions = GetCompletionSetCtrlSpace(-1, code, factory: fact);
+            completions = GetCompletionSetCtrlSpace(-1, code, factory: db.Factory);
             AssertUtil.ContainsExactly(GetCompletionNames(completions), "import");
 
             code = "from os import";
-            completions = GetCompletionSetCtrlSpace(-1, code, factory: fact);
+            completions = GetCompletionSetCtrlSpace(-1, code, factory: db.Factory);
             AssertUtil.ContainsExactly(GetCompletionNames(completions), "import");
 
+            code = "from os import ";
+            completions = GetCompletionSetCtrlSpace(-1, code, factory: db.Factory);
+            AssertUtil.ContainsAtLeast(GetCompletionNames(completions), "path");
+
             code = "from os.";
-            completions = GetCompletionSetCtrlSpace(-1, code, factory: fact);
+            completions = GetCompletionSetCtrlSpace(-1, code, factory: db.Factory);
             AssertUtil.ContainsExactly(GetCompletionNames(completions), "path");
 
             code = "from os.path import ";
-            completions = GetCompletionSetCtrlSpace(-1, code, factory: fact);
+            completions = GetCompletionSetCtrlSpace(-1, code, factory: db.Factory);
             AssertUtil.ContainsAtLeast(GetCompletionNames(completions), "abspath", "relpath");
 
             var allNames = new HashSet<string>();
             code = "from ntpath import ";
-            completions = GetCompletionSetCtrlSpace(-1, code, factory: fact);
+            completions = GetCompletionSetCtrlSpace(-1, code, factory: db.Factory);
             allNames.UnionWith(GetCompletionNames(completions));
             code = "from posixpath import ";
-            completions = GetCompletionSetCtrlSpace(-1, code, factory: fact);
+            completions = GetCompletionSetCtrlSpace(-1, code, factory: db.Factory);
             allNames.UnionWith(GetCompletionNames(completions));
 
             code = "from os.path import ";
-            completions = GetCompletionSetCtrlSpace(-1, code, factory: fact);
+            completions = GetCompletionSetCtrlSpace(-1, code, factory: db.Factory);
             var osNames = new HashSet<string>(GetCompletionNames(completions));
             AssertUtil.ContainsAtLeast(osNames, allNames);
         }

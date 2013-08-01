@@ -26,7 +26,7 @@ namespace TestUtilities.Mocks {
         public readonly PythonLanguageVersion LanguageVersion;
         public readonly string DBPath;
         private PythonTypeDatabase _database;
-        private IPythonInterpreterFactory _factory;
+        private readonly PythonInterpreterFactoryWithDatabase _factory;
 
         public MockCompletionDB(string path, PythonLanguageVersion version) {
             DBPath = path;
@@ -42,7 +42,7 @@ namespace TestUtilities.Mocks {
         public PythonTypeDatabase Database {
             get {
                 if (_database == null) {
-                    _database = new PythonTypeDatabase(_factory, new[] { DBPath });
+                    _database = _factory.MakeTypeDatabase(DBPath);
                 }
                 return _database;
             }
@@ -54,9 +54,6 @@ namespace TestUtilities.Mocks {
         /// <remarks>This instance is created lazily and cached.</remarks>
         public IPythonInterpreterFactory Factory {
             get {
-                if (_factory == null) {
-                    _factory = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(LanguageVersion.ToVersion(), Database);
-                }
                 return _factory;
             }
         }

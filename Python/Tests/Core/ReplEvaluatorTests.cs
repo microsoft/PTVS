@@ -91,23 +91,11 @@ namespace PythonToolsTests {
             }
         }
 
-        private static string FindPythonInterpreterDir(string version) {
-            return (from path in Environment.GetEnvironmentVariable("PATH").Split(Path.PathSeparator)
-                    let exePath = Path.Combine(path, "python.exe")
-                    where File.Exists(exePath) && path.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar).EndsWith(version, StringComparison.OrdinalIgnoreCase)
-                    select path).FirstOrDefault() ?? @"C:\Python" + version;
-        }
-
         private static PythonReplEvaluator MakeEvaluator() {
-            string pythonDir = FindPythonInterpreterDir("26");
-            string pythonExe = Path.Combine(pythonDir, "python.exe");
-            string pythonWinExe = Path.Combine(pythonDir, "pythonw.exe");
-
-            if (!File.Exists(pythonExe) || !File.Exists(pythonWinExe)) {
-                Assert.Inconclusive("Test requires Python 2.6 to be installed and in PATH or C:\\Python26\\");
-            }
-
-            return new PythonReplEvaluator(new SimpleFactoryProvider(pythonExe, pythonWinExe).GetInterpreterFactories().First(), null, new ReplTestReplOptions());
+            var python = PythonPaths.Python27 ?? PythonPaths.Python27_x64 ?? PythonPaths.Python26 ?? PythonPaths.Python26_x64;
+            python.AssertInstalled();
+            var provider = new SimpleFactoryProvider(python.Path, python.Path);
+            return new PythonReplEvaluator(provider.GetInterpreterFactories().First(), null, new ReplTestReplOptions());
         }
 
         class SimpleFactoryProvider : IPythonInterpreterFactoryProvider {
@@ -187,7 +175,7 @@ namespace PythonToolsTests {
             task.Wait(timeout);
 
             if (!completed) {
-                Assert.Fail("command didn't complete in 3 seconds");
+                Assert.Fail(string.Format("command didn't complete in {0} seconds", timeout / 1000.0));
             }
         }
 
