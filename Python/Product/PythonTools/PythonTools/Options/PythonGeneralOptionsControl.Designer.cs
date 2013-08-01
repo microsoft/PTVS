@@ -105,9 +105,9 @@
             this._autoAnalysis.Location = new System.Drawing.Point(6, 95);
             this._autoAnalysis.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
             this._autoAnalysis.Name = "_autoAnalysis";
-            this._autoAnalysis.Size = new System.Drawing.Size(272, 17);
+            this._autoAnalysis.Size = new System.Drawing.Size(259, 17);
             this._autoAnalysis.TabIndex = 2;
-            this._autoAnalysis.Text = "&Automatically analyze standard library in background";
+            this._autoAnalysis.Text = "&Automatically generate completion DB on first use";
             this._autoAnalysis.UseVisualStyleBackColor = true;
             this._autoAnalysis.CheckedChanged += new System.EventHandler(this._autoAnalysis_CheckedChanged);
             // 

@@ -393,13 +393,13 @@
             this._removeInterpreter.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
             this._removeInterpreter.AutoSize = true;
             this._removeInterpreter.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this._removeInterpreter.Location = new System.Drawing.Point(129, 3);
+            this._removeInterpreter.Location = new System.Drawing.Point(124, 3);
             this._removeInterpreter.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
             this._removeInterpreter.Name = "_removeInterpreter";
             this._removeInterpreter.Padding = new System.Windows.Forms.Padding(12, 3, 12, 3);
-            this._removeInterpreter.Size = new System.Drawing.Size(132, 29);
+            this._removeInterpreter.Size = new System.Drawing.Size(143, 29);
             this._removeInterpreter.TabIndex = 0;
-            this._removeInterpreter.Text = "&Remove Interpreter";
+            this._removeInterpreter.Text = "&Remove Environment";
             this._removeInterpreter.UseVisualStyleBackColor = true;
             this._removeInterpreter.Click += new System.EventHandler(this.RemoveInterpreterClick);
             // 
