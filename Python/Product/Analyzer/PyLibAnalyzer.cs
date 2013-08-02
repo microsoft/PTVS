@@ -48,12 +48,13 @@ namespace Microsoft.PythonTools.Analysis {
         private readonly string _outDir;
         private readonly List<string> _baseDb;
         private readonly string _logPrivate, _logGlobal, _logDiagnostic;
+        private readonly bool _dryRun;
 
         private bool _all;
         private readonly HashSet<string> _needsRefresh;
 
         private readonly AnalyzerStatusUpdater _updater;
-        private CancellationToken _cancel;
+        private readonly CancellationToken _cancel;
         private TextWriter _listener;
         private List<List<ModulePath>> _fileGroups;
         private HashSet<string> _existingDatabase;
@@ -83,6 +84,8 @@ namespace Microsoft.PythonTools.Analysis {
             Console.WriteLine(" /log        [filename]         - write analysis log");
             Console.WriteLine(" /glog       [filename]         - write start/stop events");
             Console.WriteLine(" /diag       [filename]         - write detailed (CSV) analysis log");
+            Console.WriteLine(" /dryrun                        - don't analyze, but write out list of files that " +
+                              "would have been analyzed.");
         }
 
         private static IEnumerable<KeyValuePair<string, string>> ParseArguments(IEnumerable<string> args) {
@@ -175,16 +178,19 @@ namespace Microsoft.PythonTools.Analysis {
             return 0;
         }
 
-        public PyLibAnalyzer(Guid id,
-                             Version langVersion,
-                             string interpreter,
-                             string library,
-                             List<string> baseDb,
-                             string outDir,
-                             string logPrivate,
-                             string logGlobal,
-                             string logDiagnostic,
-                             bool rescanAll) {
+        public PyLibAnalyzer(
+            Guid id,
+            Version langVersion,
+            string interpreter,
+            string library,
+            List<string> baseDb,
+            string outDir,
+            string logPrivate,
+            string logGlobal,
+            string logDiagnostic,
+            bool rescanAll,
+            bool dryRun
+        ) {
             _id = id;
             _version = langVersion;
             _interpreter = interpreter;
@@ -195,6 +201,7 @@ namespace Microsoft.PythonTools.Analysis {
             _logGlobal = logGlobal;
             _logDiagnostic = logDiagnostic;
             _all = rescanAll;
+            _dryRun = dryRun;
             _needsRefresh = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             _builtinSourceLibraries = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             _builtinSourceLibraries.Add(_library);
@@ -260,7 +267,7 @@ namespace Microsoft.PythonTools.Analysis {
             string interpreter, library, outDir;
             List<string> baseDb;
             string logPrivate, logGlobal, logDiagnostic;
-            bool rescanAll;
+            bool rescanAll, dryRun;
 
             if (!options.TryGetValue("id", out value)) {
                 id = Guid.Empty;
@@ -347,6 +354,7 @@ namespace Microsoft.PythonTools.Analysis {
             logDiagnostic = value;
 
             rescanAll = options.ContainsKey("all");
+            dryRun = options.ContainsKey("dryrun");
 
             return new PyLibAnalyzer(
                 id,
@@ -358,7 +366,9 @@ namespace Microsoft.PythonTools.Analysis {
                 logPrivate,
                 logGlobal,
                 logDiagnostic,
-                rescanAll);
+                rescanAll,
+                dryRun
+            );
         }
 
         internal void StartTraceListener() {
@@ -384,37 +394,55 @@ namespace Microsoft.PythonTools.Analysis {
             // naming collisions.
             var allModuleNames = new HashSet<string>(StringComparer.Ordinal);
 
-            _fileGroups = ModulePath.GetModulesInLib(_library, allModuleNames)
+            _fileGroups = ModulePath.GetModulesInLib(
+                _interpreter,
+                _library,
+                null,   // default site-packages path
+                allModuleNames,
+                requireInitPyFiles: ModulePath.PythonVersionRequiresInitPyFiles(_version)
+            )
                 .GroupBy(mp => mp.LibraryPath, StringComparer.OrdinalIgnoreCase)
                 .Select(group => group.ToList())
                 .ToList();
 
-            if (!string.IsNullOrEmpty(_interpreter)) {
-                var dllPath = Path.Combine(Path.GetDirectoryName(_interpreter), "DLLs");
-                if (Directory.Exists(dllPath)) {
-                    _builtinSourceLibraries.Add(dllPath);
-                    _fileGroups.Add(ModulePath.GetModulesInPath(dllPath, recurse: false).ToList());
-                }
-            }
-
-            Directory.CreateDirectory(_outDir);
+            // Move the standard library to the first position within the list
+            // of groups.
+            var stdLibGroups = _fileGroups.FindAll(g => g.Count > 0 && CommonUtils.IsSamePath(g[0].LibraryPath, _library));
+            _fileGroups.RemoveAll(g => stdLibGroups.Contains(g));
+            _fileGroups.InsertRange(0, stdLibGroups);
 
             // If the database was invalid, we have to refresh everything.
             if (!File.Exists(Path.Combine(_outDir, "database.ver"))) {
                 _all = true;
             }
 
-            // Mark the database as invalid until we complete analysis.
-            try {
-                File.Delete(Path.Combine(_outDir, "database.ver"));
-            } catch (ArgumentException) {
-            } catch (IOException) {
-            } catch (UnauthorizedAccessException) {
-            }
+            if (_dryRun) {
+                // The output directory for a dry run may be completely invalid.
+                // If the top level does not contain any .idb files, we won't
+                // bother recursing.
+                if (Directory.Exists(_outDir) &&
+                    Directory.EnumerateFiles(_outDir, "*.idb", SearchOption.TopDirectoryOnly).Any()) {
+                    _existingDatabase = new HashSet<string>(
+                        Directory.EnumerateFiles(_outDir, "*.idb", SearchOption.AllDirectories),
+                        StringComparer.OrdinalIgnoreCase);
+                } else {
+                    _existingDatabase = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                }
+            } else {
+                Directory.CreateDirectory(_outDir);
 
-            _existingDatabase = new HashSet<string>(
-                Directory.EnumerateFiles(_outDir, "*.idb", SearchOption.AllDirectories),
-                StringComparer.OrdinalIgnoreCase);
+                // Mark the database as invalid until we complete analysis.
+                try {
+                    File.Delete(Path.Combine(_outDir, "database.ver"));
+                } catch (ArgumentException) {
+                } catch (IOException) {
+                } catch (UnauthorizedAccessException) {
+                }
+
+                _existingDatabase = new HashSet<string>(
+                    Directory.EnumerateFiles(_outDir, "*.idb", SearchOption.AllDirectories),
+                    StringComparer.OrdinalIgnoreCase);
+            }
         }
 
         internal string PythonScraperPath {
@@ -430,6 +458,20 @@ namespace Microsoft.PythonTools.Analysis {
                 var dir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
                 var file = Path.Combine(dir, "ExtensionScraper.py");
                 return file;
+            }
+        }
+
+        private IEnumerable<string> CallDepthOverrides {
+            get {
+                if (_callDepthOverrides == null) {
+                    var values = ConfigurationManager.AppSettings.Get("NoCallSiteAnalysis");
+                    if (string.IsNullOrEmpty(values)) {
+                        _callDepthOverrides = Enumerable.Empty<string>();
+                    } else {
+                        _callDepthOverrides = values.Split(',', ';').Where(n => !string.IsNullOrWhiteSpace(n)).ToArray();
+                    }
+                }
+                return _callDepthOverrides;
             }
         }
 
@@ -493,52 +535,14 @@ namespace Microsoft.PythonTools.Analysis {
 
             if (_all || builtinModulePaths.Any(p => !File.Exists(p))) {
                 _all = true;
-                // Scape builtin Python types
-                using (var output = ProcessOutput.RunHiddenAndCapture(_interpreter, PythonScraperPath, _outDir, _baseDb.First())) {
-                    TraceInformation("Scraping builtin modules");
-                    TraceInformation("Command: {0}", output.Arguments);
-                    output.Wait();
-
-                    if (output.StandardOutputLines.Any()) {
-                        TraceInformation("Output{0}{1}", Environment.NewLine, string.Join(Environment.NewLine, output.StandardOutputLines));
+                if (_dryRun) {
+                    foreach (var file in builtinModulePaths) {
+                        Console.WriteLine("[{0}];{1}", Path.GetFileNameWithoutExtension(file), file);
                     }
-                    if (output.StandardErrorLines.Any()) {
-                        TraceWarning("Errors{0}{1}", Environment.NewLine, string.Join(Environment.NewLine, output.StandardErrorLines));
-                    }
-
-                    if (output.ExitCode != 0) {
-                        if (output.ExitCode.HasValue) {
-                            TraceError("Failed to scrape builtin modules (Exit Code: {0})", output.ExitCode);
-                        } else {
-                            TraceError("Failed to scrape builtin modules");
-                        }
-                        return;
-                    } else {
-                        TraceInformation("Scraped builtin modules");
-                    }
-                }
-            }
-            _existingDatabase.ExceptWith(builtinModulePaths);
-
-            var scrapeFiles = _fileGroups.SelectMany(l => l)
-                .Where(mp => mp.IsCompiled)
-                .ToArray();
-
-            foreach (var file in scrapeFiles) {
-                if (_updater != null) {
-                    _updater.UpdateStatus(0, 0, 
-                        "Scraping " + CommonUtils.GetRelativeFilePath(_library, file.LibraryPath));
-                }
-
-                var destFile = Path.ChangeExtension(GetOutputFile(file), null);
-                _existingDatabase.Remove(destFile + ".idb");
-                if (ShouldAnalyze(file)) {
-                    _needsRefresh.Add(file.LibraryPath);
-
-                    Directory.CreateDirectory(Path.GetDirectoryName(destFile));
-
-                    using (var output = ProcessOutput.RunHiddenAndCapture(_interpreter, ExtensionScraperPath, "scrape", file.ModuleName, "-", destFile)) {
-                        TraceInformation("Scraping {0}", file.ModuleName);
+                } else {
+                    // Scape builtin Python types
+                    using (var output = ProcessOutput.RunHiddenAndCapture(_interpreter, PythonScraperPath, _outDir, _baseDb.First())) {
+                        TraceInformation("Scraping builtin modules");
                         TraceInformation("Command: {0}", output.Arguments);
                         output.Wait();
 
@@ -551,32 +555,66 @@ namespace Microsoft.PythonTools.Analysis {
 
                         if (output.ExitCode != 0) {
                             if (output.ExitCode.HasValue) {
-                                TraceError("Failed to scrape {1} (Exit code: {0})", output.ExitCode, file.ModuleName);
+                                TraceError("Failed to scrape builtin modules (Exit Code: {0})", output.ExitCode);
                             } else {
-                                TraceError("Failed to scrape {0}", file.ModuleName);
+                                TraceError("Failed to scrape builtin modules");
                             }
+                            return;
                         } else {
-                            TraceVerbose("Scraped {0}", file.ModuleName);
+                            TraceInformation("Scraped builtin modules");
+                        }
+                    }
+                }
+            }
+            _existingDatabase.ExceptWith(builtinModulePaths);
+
+            var scrapeFiles = _fileGroups.SelectMany(l => l)
+                .Where(mp => mp.IsCompiled)
+                .ToArray();
+
+            foreach (var file in scrapeFiles) {
+                if (_updater != null) {
+                    _updater.UpdateStatus(0, 0,
+                        "Scraping " + CommonUtils.GetRelativeFilePath(_library, file.LibraryPath));
+                }
+
+                var destFile = Path.ChangeExtension(GetOutputFile(file), null);
+                _existingDatabase.Remove(destFile + ".idb");
+                if (ShouldAnalyze(file)) {
+                    _needsRefresh.Add(file.LibraryPath);
+
+                    if (_dryRun) {
+                        Console.WriteLine("{0};{1}.idb", file.SourceFile, CommonUtils.CreateFriendlyDirectoryPath(_outDir, destFile));
+                    } else {
+                        Directory.CreateDirectory(Path.GetDirectoryName(destFile));
+
+                        using (var output = ProcessOutput.RunHiddenAndCapture(_interpreter, ExtensionScraperPath, "scrape", file.ModuleName, "-", destFile)) {
+                            TraceInformation("Scraping {0}", file.ModuleName);
+                            TraceInformation("Command: {0}", output.Arguments);
+                            output.Wait();
+
+                            if (output.StandardOutputLines.Any()) {
+                                TraceInformation("Output{0}{1}", Environment.NewLine, string.Join(Environment.NewLine, output.StandardOutputLines));
+                            }
+                            if (output.StandardErrorLines.Any()) {
+                                TraceWarning("Errors{0}{1}", Environment.NewLine, string.Join(Environment.NewLine, output.StandardErrorLines));
+                            }
+
+                            if (output.ExitCode != 0) {
+                                if (output.ExitCode.HasValue) {
+                                    TraceError("Failed to scrape {1} (Exit code: {0})", output.ExitCode, file.ModuleName);
+                                } else {
+                                    TraceError("Failed to scrape {0}", file.ModuleName);
+                                }
+                            } else {
+                                TraceVerbose("Scraped {0}", file.ModuleName);
+                            }
                         }
                     }
                 }
             }
             if (scrapeFiles.Any()) {
                 TraceInformation("Scraped {0} files", scrapeFiles.Length);
-            }
-        }
-
-        private IEnumerable<string> CallDepthOverrides {
-            get {
-                if (_callDepthOverrides == null) {
-                    var values = ConfigurationManager.AppSettings.Get("NoCallSiteAnalysis");
-                    if (string.IsNullOrEmpty(values)) {
-                        _callDepthOverrides = Enumerable.Empty<string>();
-                    } else {
-                        _callDepthOverrides = values.Split(',', ';').Where(n => !string.IsNullOrWhiteSpace(n)).ToArray();
-                    }
-                }
-                return _callDepthOverrides;
             }
         }
 
@@ -600,11 +638,16 @@ namespace Microsoft.PythonTools.Analysis {
                 }
             }
 
-            var factory = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(
-                _version,
-                null,
-                _baseDb.Skip(1).Concat(Enumerable.Repeat(_outDir, 1)).ToArray()
-            );
+            PythonInterpreterFactoryWithDatabase factory;
+            if (_dryRun) {
+                factory = null;
+            } else {
+                factory = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(
+                    _version,
+                    null,
+                    _baseDb.Skip(1).Concat(Enumerable.Repeat(_outDir, 1)).ToArray()
+                );
+            }
 
             foreach (var fileGroup in _fileGroups) {
                 if (_cancel.IsCancellationRequested) {
@@ -618,7 +661,7 @@ namespace Microsoft.PythonTools.Analysis {
 
                 bool needAnalyze = false;
                 foreach (var file in files) {
-                    var destName = GetOutputFile(file); 
+                    var destName = GetOutputFile(file);
                     _existingDatabase.Remove(destName);
 
                     // Deliberately short-circuit the check once we know we'll
@@ -636,6 +679,20 @@ namespace Microsoft.PythonTools.Analysis {
                     continue;
                 }
 
+                var outDir = GetOutputDir(files[0]);
+
+                if (_dryRun) {
+                    foreach (var file in files) {
+                        var idbFile = CommonUtils.CreateFriendlyDirectoryPath(
+                            _outDir,
+                            Path.Combine(outDir, file.ModuleName)
+                        );
+                        Console.WriteLine("{0};{1}.idb", file.SourceFile, idbFile);
+                    }
+                    continue;
+                }
+
+
                 TraceInformation("Start group \"{0}\" with {1} files", files[0].LibraryPath, files.Count);
                 AnalysisLog.StartFileGroup(files[0].LibraryPath, files.Count);
                 Console.WriteLine("Now analyzing: {0}", files[0].LibraryPath);
@@ -650,7 +707,6 @@ namespace Microsoft.PythonTools.Analysis {
 
                 int mostItemsInQueue = 0;
                 if (_updater != null) {
-
                     projectState.SetQueueReporting(itemsInQueue => {
                         if (itemsInQueue > mostItemsInQueue) {
                             mostItemsInQueue = itemsInQueue;
@@ -744,7 +800,6 @@ namespace Microsoft.PythonTools.Analysis {
                     _updater.UpdateStatus(progressOffset + files.Count, progressTotal,
                         "Saving " + currentLibrary);
                 }
-                var outDir = GetOutputDir(files[0]);
                 Directory.CreateDirectory(outDir);
                 new SaveAnalysis().Save(projectState, outDir);
                 TraceInformation("End of group \"{0}\"", files[0].LibraryPath);
@@ -752,11 +807,18 @@ namespace Microsoft.PythonTools.Analysis {
 
                 progressOffset += files.Count;
                 AnalysisLog.Flush();
+
+                if (CommonUtils.IsSamePath(files[0].LibraryPath, _library)) {
+                    // Reload database with new standard library analysis.
+                    factory.NotifyNewDatabase();
+                }
             }
         }
 
         internal void Epilogue() {
-            File.WriteAllText(Path.Combine(_outDir, "database.ver"), PythonTypeDatabase.CurrentVersion.ToString());
+            if (!_dryRun) {
+                File.WriteAllText(Path.Combine(_outDir, "database.ver"), PythonTypeDatabase.CurrentVersion.ToString());
+            }
         }
 
         internal void Clean() {
@@ -768,27 +830,38 @@ namespace Microsoft.PythonTools.Analysis {
             foreach (var file in _existingDatabase) {
                 try {
                     TraceVerbose("Deleting \"{0}\"", file);
-                    File.Delete(file);
-                    File.Delete(file + ".$memlist");
+                    if (_dryRun) {
+                        Console.WriteLine("{0};[DELETED]", file);
+                    } else {
+                        File.Delete(file);
+                        File.Delete(file + ".$memlist");
+                        var dirName = Path.GetDirectoryName(file);
+                        if (!Directory.EnumerateFileSystemEntries(dirName, null, SearchOption.TopDirectoryOnly).Any()) {
+                            Directory.Delete(dirName);
+                        }
+                    }
                 } catch {
                 }
             }
         }
 
         private string GetOutputDir(ModulePath file) {
-            if (_builtinSourceLibraries.Contains(file.LibraryPath)) {
+            if (_builtinSourceLibraries.Contains(file.LibraryPath) ||
+                !CommonUtils.IsSubpathOf(_library, file.LibraryPath)) {
                 return _outDir;
             } else {
-                return Path.Combine(_outDir,
-                    Regex.Replace(CommonUtils.GetRelativeFilePath(_library, file.LibraryPath), @"[.\\/]", "_")
-                );
+                return Path.Combine(_outDir, Regex.Replace(
+                    CommonUtils.TrimEndSeparator(CommonUtils.GetRelativeFilePath(_library, file.LibraryPath)),
+                    @"[.\\/]",
+                    "_"
+                ));
             }
         }
 
         private string GetOutputFile(string builtinName) {
             return Path.Combine(_outDir, builtinName + ".idb");
         }
-        
+
         private string GetOutputFile(ModulePath file) {
             return Path.Combine(GetOutputDir(file), file.ModuleName + ".idb");
         }

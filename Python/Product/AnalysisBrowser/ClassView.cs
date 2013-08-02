@@ -45,7 +45,7 @@ namespace Microsoft.PythonTools.Analysis.Browser {
 
                 int i = 1;
                 foreach(var c in _type.Mro) {
-                    yield return new KeyValuePair<string, object>(string.Format("MRO #{0}", i++), MemberView.Make(_context, c.Name, c));
+                    yield return new KeyValuePair<string, object>(string.Format("MRO #{0}", i++), MemberView.Make(_context, c == null ? "(null)" : c.Name, c));
                 }
             }
         }

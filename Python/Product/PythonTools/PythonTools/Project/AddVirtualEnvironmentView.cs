@@ -316,7 +316,7 @@ namespace Microsoft.PythonTools.Project {
                 bool hasPip = false;
                 bool hasVirtualEnv = false;
                 Task.Factory.StartNew((Action)(() => {
-                    foreach (var mp in ModulePath.GetModulesInLib(libPath)) {
+                    foreach (var mp in ModulePath.GetModulesInLib(interp.Configuration.InterpreterPath, libPath)) {
                         if (!hasPip && mp.ModuleName == "pip") {
                             hasPip = true;
                         }

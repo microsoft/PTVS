@@ -35,7 +35,7 @@ namespace Microsoft.PythonTools.Analysis.Browser {
         readonly IModuleContext _context;
         readonly IEnumerable<ModuleView> _modules;
         
-        public AnalysisView(string dbDir, Version version) {
+        public AnalysisView(string dbDir, Version version = null) {
             var paths = new List<string>();
             paths.Add(dbDir);
             while (!File.Exists(IOPath.Combine(paths[0], "__builtin__.idb")) &&
@@ -46,7 +46,15 @@ namespace Microsoft.PythonTools.Analysis.Browser {
                 }
                 paths.Insert(0, upOne);
             }
-            
+
+            if (version == null) {
+                if (File.Exists(IOPath.Combine(paths[0], "builtins.idb"))) {
+                    version = new Version(3, 3);
+                } else {
+                    version = new Version(2, 7);
+                }
+            }
+
             _factory = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(
                 version,
                 dbDir,

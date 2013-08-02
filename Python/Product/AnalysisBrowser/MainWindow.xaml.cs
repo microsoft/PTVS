@@ -104,7 +104,7 @@ namespace Microsoft.PythonTools.Analysis.Browser {
             Analysis = null;
             Cursor = Cursors.Wait;
             Task.Factory.StartNew(() => {
-                var av = new AnalysisView(path, new Version(2, 7));
+                var av = new AnalysisView(path);
 
                 foreach (var mod in av.Modules) {
                     mod.Children.ToList();

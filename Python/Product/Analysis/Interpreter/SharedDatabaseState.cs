@@ -156,17 +156,25 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
-        private IPythonType ObjectType {
-            get {
-                if (_objectType == null) {
-                    _objectType = BuiltinModule.GetAnyMember(GetBuiltinTypeName(BuiltinTypeId.Object)) as IPythonType;
-                    if (_objectType != null) {
-                        var fixups = _objectTypeFixups;
-                        _objectTypeFixups = null;
+        private void RunObjectTypeFixups() {
+            if (_objectType == null) {
+                _objectType = BuiltinModule.GetAnyMember(GetBuiltinTypeName(BuiltinTypeId.Object)) as IPythonType;
+                if (_objectType != null) {
+                    var fixups = _objectTypeFixups;
+                    _objectTypeFixups = null;
+                    if (fixups != null) {
                         foreach (var assign in fixups) {
                             assign(_objectType);
                         }
                     }
+                }
+            }
+        }
+
+        private IPythonType ObjectType {
+            get {
+                if (_objectType == null) {
+                    RunObjectTypeFixups();
                 }
                 return _objectType;
             }
@@ -348,6 +356,8 @@ namespace Microsoft.PythonTools.Interpreter {
             }
 
             _fixups.Clear();
+
+            RunObjectTypeFixups();
         }
 
         public void ReadMember(string memberName, Dictionary<string, object> memberValue, Action<string, IMember> assign, IMemberContainer container) {

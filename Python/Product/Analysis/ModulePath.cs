@@ -26,6 +26,14 @@ namespace Microsoft.PythonTools.Analysis {
         public static readonly ModulePath Empty = new ModulePath(null, null, null);
 
         /// <summary>
+        /// Returns true if the provided version of Python can only import
+        /// packages containing an <c>__init__.py</c> file.
+        /// </summary>
+        public static bool PythonVersionRequiresInitPyFiles(Version languageVersion) {
+            return languageVersion < new Version(3, 3);
+        }
+
+        /// <summary>
         /// The name by which the module can be imported in Python code.
         /// </summary>
         public string FullName { get; set; }
@@ -105,17 +113,21 @@ namespace Microsoft.PythonTools.Analysis {
             LibraryPath = libraryPath;
         }
 
-        private static readonly Regex PythonPackageRegex = new Regex(@"^(?!\d)(?<name>(\w|_)+)$", RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
-        private static readonly Regex PythonEggRegex = new Regex(@"^(?!\d)(?<name>(\w|_)+)-.+\.egg$", RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
-        private static readonly Regex PythonFileRegex = new Regex(@"^(?!\d)(?<name>(\w|_)+)\.pyw?$", RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
-        private static readonly Regex PythonBinaryRegex = new Regex(@"^(?!\d)(?<name>(\w|_)+)\.pyd$", RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
+        private static readonly Regex PythonPackageRegex = new Regex(@"^(?!\d)(?<name>(\w|_)+)$", 
+            RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
+        private static readonly Regex PythonFileRegex = new Regex(@"^(?!\d)(?<name>(\w|_)+)\.pyw?$", 
+            RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
+        private static readonly Regex PythonBinaryRegex = new Regex(@"^(?!\d)(?<name>(\w|_)+)\.pyd$", 
+            RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
 
-        private static IEnumerable<ModulePath> GetModuleNamesFromPathHelper(string libPath,
-                                                                            string path,
-                                                                            string baseModule,
-                                                                            bool skipFiles,
-                                                                            bool recurse) {
-
+        private static IEnumerable<ModulePath> GetModuleNamesFromPathHelper(
+            string libPath,
+            string path,
+            string baseModule,
+            bool skipFiles,
+            bool recurse,
+            bool requireInitPy
+        ) {
             Debug.Assert(baseModule == "" || baseModule.EndsWith("."));
 
             if (!Directory.Exists(path)) {
@@ -139,18 +151,15 @@ namespace Microsoft.PythonTools.Analysis {
                 foreach (var dir in Directory.EnumerateDirectories(path)) {
                     var dirname = Path.GetFileName(dir);
                     var match = PythonPackageRegex.Match(dirname);
-                    if (match.Success && File.Exists(Path.Combine(dir, "__init__.py"))) {
+                    if (match.Success && (!requireInitPy || File.Exists(Path.Combine(dir, "__init__.py")))) {
                         foreach (var entry in GetModuleNamesFromPathHelper(
                             skipFiles ? dir : libPath,
                             dir,
                             baseModule + match.Groups["name"].Value + ".",
                             false,
-                            true)
-                        ) {
-                            yield return entry;
-                        }
-                    } else if (PythonEggRegex.IsMatch(dirname)) {
-                        foreach (var entry in GetModuleNamesFromPathHelper(dir, dir, baseModule, false, true)) {
+                            true,
+                            requireInitPy
+                        )) {
                             yield return entry;
                         }
                     }
@@ -162,32 +171,42 @@ namespace Microsoft.PythonTools.Analysis {
         /// Returns a sequence of ModulePath items for all modules importable
         /// from the provided path, optionally excluding top level files.
         /// </summary>
-        public static IEnumerable<ModulePath> GetModulesInPath(string path,
-                                                               bool includeTopLevelFiles = true,
-                                                               bool recurse = true) {
-            return GetModuleNamesFromPathHelper(path, path, "", !includeTopLevelFiles, recurse);
+        public static IEnumerable<ModulePath> GetModulesInPath(
+            string path,
+            bool includeTopLevelFiles = true,
+            bool recurse = true,
+            string basePackage = null,
+            bool requireInitPy = true
+        ) {
+            return GetModuleNamesFromPathHelper(
+                path,
+                path,
+                basePackage ?? string.Empty,
+                !includeTopLevelFiles,
+                recurse,
+                requireInitPy
+            );
         }
 
         /// <summary>
         /// Returns a sequence of ModulePath items for all modules importable
         /// from the provided path, optionally excluding top level files.
         /// </summary>
-        public static IEnumerable<ModulePath> GetModulesInPath(IEnumerable<string> paths,
-                                                               bool includeTopLevelFiles = true,
-                                                               bool recurse = true) {
-            return paths.SelectMany(p => GetModuleNamesFromPathHelper(p, p, "", !includeTopLevelFiles, recurse));
-        }
-
-        private static IEnumerable<ModulePath> GetModulesInPathHelper(IEnumerable<string> paths,
-                                                                      bool includeTopLevelFiles, HashSet<string> allModuleNames) {
-            if (paths != null) {
-                foreach (var module in paths.SelectMany(path => GetModulesInPath(path, includeTopLevelFiles))) {
-                    if (!string.IsNullOrEmpty(module.ModuleName) && 
-                        (allModuleNames == null || allModuleNames.Add(module.ModuleName))) {
-                        yield return module;
-                    }
-                }
-            }
+        public static IEnumerable<ModulePath> GetModulesInPath(
+            IEnumerable<string> paths,
+            bool includeTopLevelFiles = true,
+            bool recurse = true,
+            string baseModule = null,
+            bool requireInitPy = true
+        ) {
+            return paths.SelectMany(p => GetModuleNamesFromPathHelper(
+                p,
+                p,
+                baseModule ?? string.Empty,
+                !includeTopLevelFiles,
+                recurse,
+                requireInitPy
+            ));
         }
 
         /// <summary>
@@ -209,7 +228,7 @@ namespace Microsoft.PythonTools.Analysis {
                                 }
                                 line = line.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
                                 if (!Path.IsPathRooted(line)) {
-                                    line = Path.Combine(path, line);
+                                    line = CommonUtils.GetAbsoluteDirectoryPath(path, line);
                                 }
                                 if (Directory.Exists(line)) {
                                     yield return line;
@@ -235,25 +254,56 @@ namespace Microsoft.PythonTools.Analysis {
         /// Returns a sequence of ModulePaths for all modules importable from
         /// the specified library.
         /// </summary>
-        public static IEnumerable<ModulePath> GetModulesInLib(string libraryPath,
-                                                              HashSet<string> allModuleNames = null) {
+        public static IEnumerable<ModulePath> GetModulesInLib(
+            string interpreterPath,
+            string libraryPath,
+            string sitePath = null,
+            HashSet<string> allModuleNames = null,
+            bool requireInitPyFiles = true
+        ) {
+            if (File.Exists(interpreterPath)) {
+                interpreterPath = Path.GetDirectoryName(interpreterPath);
+            } else if (!Directory.Exists(interpreterPath)) {
+                return Enumerable.Empty<ModulePath>();
+            }
             if (!Directory.Exists(libraryPath)) {
                 return Enumerable.Empty<ModulePath>();
             }
+            if (string.IsNullOrEmpty(sitePath)) {
+                sitePath = Path.Combine(libraryPath, "site-packages");
+            }
+            var pthDirs = ExpandPathFiles(sitePath);
+
             if (allModuleNames == null) {
                 allModuleNames = new HashSet<string>(StringComparer.Ordinal);
             }
-            var siteDir = Path.Combine(libraryPath, "site-packages");
-            var pthDirs = ExpandPathFiles(siteDir);
 
             // Get modules in stdlib
-            return GetModulesInPath(libraryPath, true, true)
-                // Get files in site-packages, but don't recurse
-                .Concat(GetModulesInPath(siteDir, true, false))
-                // Get directories in site-packages
-                .Concat(GetModulesInPath(siteDir, false, true))
-                // Get directories referenced by pth files
-                .Concat(GetModulesInPath(pthDirs, true, true))
+            var modulesInStdLib = GetModulesInPath(libraryPath, true, true, requireInitPy: requireInitPyFiles);
+
+            // Get files in site-packages
+            var modulesInSitePackages = GetModulesInPath(sitePath, true, false, requireInitPy: requireInitPyFiles);
+
+            // Get directories in site-packages
+            // This is separate from getting files to ensure that each package
+            // gets its own library path.
+            var packagesInSitePackages = GetModulesInPath(sitePath, false, true, requireInitPy: requireInitPyFiles);
+
+            // Get directories referenced by pth files
+            var modulesInPath = GetModulesInPath(pthDirs, true, true, requireInitPy: requireInitPyFiles);
+
+            // Get modules in DLLs directory
+            var modulesInDllsPath = GetModulesInPath(Path.Combine(interpreterPath, "DLLs"), true, false);
+
+            // Get modules in interpreter directory
+            var modulesInExePath = GetModulesInPath(interpreterPath, true, false);
+
+            return modulesInPath
+                .Concat(modulesInDllsPath)
+                .Concat(modulesInStdLib)
+                .Concat(modulesInExePath)
+                .Concat(modulesInSitePackages)
+                .Concat(packagesInSitePackages)
                 // Ensure only the first module of each importable name is
                 // returned
                 .Where(mp => allModuleNames.Add(mp.ModuleName));
@@ -263,9 +313,17 @@ namespace Microsoft.PythonTools.Analysis {
         /// Returns a sequence of ModulePaths for all modules importable by the
         /// provided factory.
         /// </summary>
-        public static IEnumerable<ModulePath> GetModulesInLib(IPythonInterpreterFactory factory,
-                                                              HashSet<string> allModuleNames = null) {
-            return GetModulesInLib(factory.Configuration.LibraryPath, allModuleNames);
+        public static IEnumerable<ModulePath> GetModulesInLib(
+            IPythonInterpreterFactory factory,
+            HashSet<string> allModuleNames = null
+        ) {
+            return GetModulesInLib(
+                factory.Configuration.InterpreterPath,
+                factory.Configuration.LibraryPath,
+                null,   // default site-packages path
+                allModuleNames,
+                PythonVersionRequiresInitPyFiles(factory.Configuration.Version)
+            );
         }
 
         /// <summary>
