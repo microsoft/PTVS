@@ -314,7 +314,8 @@ namespace Microsoft.PythonTools.Navigation {
 
                 if (oldTopLevel != -1) {
                     // we need to refresh to make the entry gray and 
-                    _dropDownBar.RefreshCombo(TopLevelComboBoxId, 0);
+                    _dropDownBar.RefreshCombo(TopLevelComboBoxId, -1);
+                    _dropDownBar.RefreshCombo(NestedComboBoxId, -1);
                 }
             }
 
@@ -370,7 +371,7 @@ namespace Microsoft.PythonTools.Navigation {
                 _curNestedIndex = -1;
 
                 // we need to refresh to make the entry gray and 
-                _dropDownBar.RefreshCombo(NestedComboBoxId, 0);
+                _dropDownBar.RefreshCombo(NestedComboBoxId, -1);
             }
         }
 

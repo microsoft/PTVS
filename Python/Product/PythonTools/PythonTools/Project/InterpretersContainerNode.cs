@@ -24,6 +24,7 @@ using Microsoft.PythonTools.Interpreters;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools.Project;
+using VsCommands = Microsoft.VisualStudio.VSConstants.VSStd97CmdID;
 using OleConstants = Microsoft.VisualStudio.OLE.Interop.Constants;
 
 namespace Microsoft.PythonTools.Project {
@@ -111,7 +112,14 @@ namespace Microsoft.PythonTools.Project {
         }
 
         internal override int QueryStatusOnNode(Guid cmdGroup, uint cmd, IntPtr pCmdText, ref QueryStatusResult result) {
-            if (cmdGroup == GuidList.guidPythonToolsCmdSet) {
+            if (cmdGroup == VsMenus.guidStandardCommandSet97) {
+                switch ((VsCommands)cmd) {
+                    case VsCommands.Copy:
+                    case VsCommands.Cut:
+                        result |= QueryStatusResult.SUPPORTED | QueryStatusResult.INVISIBLE;
+                        return VSConstants.S_OK;
+                }
+            } else if (cmdGroup == GuidList.guidPythonToolsCmdSet) {
                 switch (cmd) {
                     case PythonConstants.AddEnvironment:
                     case PythonConstants.AddVirtualEnv:

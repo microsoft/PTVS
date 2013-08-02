@@ -318,7 +318,14 @@ namespace Microsoft.PythonTools.Project {
         /// Disable Copy/Cut/Paste commands on interpreter node.
         /// </summary>
         internal override int QueryStatusOnNode(Guid cmdGroup, uint cmd, IntPtr pCmdText, ref QueryStatusResult result) {
-            if (cmdGroup == GuidList.guidPythonToolsCmdSet) {
+            if (cmdGroup == VsMenus.guidStandardCommandSet97) {
+                switch ((VsCommands)cmd) {
+                    case VsCommands.Copy:
+                    case VsCommands.Cut:
+                        result |= QueryStatusResult.SUPPORTED | QueryStatusResult.INVISIBLE;
+                        return VSConstants.S_OK;
+                }
+            } else if (cmdGroup == GuidList.guidPythonToolsCmdSet) {
                 switch (cmd) {
                     case PythonConstants.ActivateEnvironment:
                         result |= QueryStatusResult.SUPPORTED;
