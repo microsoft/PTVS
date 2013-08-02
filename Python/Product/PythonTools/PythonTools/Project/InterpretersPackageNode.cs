@@ -209,6 +209,10 @@ namespace Microsoft.PythonTools.Project {
         internal override int QueryStatusOnNode(Guid cmdGroup, uint cmd, IntPtr pCmdText, ref QueryStatusResult result) {
             if (cmdGroup == VsMenus.guidStandardCommandSet97) {
                 switch ((VsCommands)cmd) {
+                    case VsCommands.Copy:
+                    case VsCommands.Cut:
+                        result |= QueryStatusResult.SUPPORTED | QueryStatusResult.INVISIBLE;
+                        return VSConstants.S_OK;
                     case VsCommands.Delete:
                         if (!_canUninstall) {
                             // If we can't uninstall the package, still show the

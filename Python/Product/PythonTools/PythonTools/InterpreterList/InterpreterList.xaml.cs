@@ -349,7 +349,7 @@ namespace Microsoft.PythonTools.InterpreterList {
         }
 
         private void MakeDefault_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
-            var view = e.Parameter as InterpreterView;            
+            var view = e.Parameter as InterpreterView;
 
             // Check to see if the interpreter is associated with a project. If it is, then it's a virtual
             // environment, so change the logic to just check if it's the project's current active interpreter.
@@ -386,14 +386,13 @@ namespace Microsoft.PythonTools.InterpreterList {
 
         private void OpenPath_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
             var view = e.Parameter as InterpreterView;
-            e.CanExecute = view != null && view.Interpreter != null && !string.IsNullOrEmpty(view.Interpreter.Configuration.InterpreterPath) &&
-                File.Exists(view.Interpreter.Configuration.InterpreterPath);
+            e.CanExecute = view != null && view.Interpreter != null &&
+                Directory.Exists(view.Interpreter.Configuration.PrefixPath);
         }
 
         private void OpenPath_Executed(object sender, ExecutedRoutedEventArgs e) {
-            var path = Path.GetDirectoryName(((InterpreterView)e.Parameter).Interpreter.Configuration.InterpreterPath);
             Process.Start(new ProcessStartInfo {
-                FileName = path,
+                FileName = ((InterpreterView)e.Parameter).Interpreter.Configuration.PrefixPath,
                 Verb = "open",
                 UseShellExecute = true
             });

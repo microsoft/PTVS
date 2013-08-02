@@ -162,7 +162,17 @@ namespace Microsoft.PythonTools.Project {
         }
 
         internal override int ExecCommandOnNode(Guid cmdGroup, uint cmd, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut) {
-            if (cmdGroup == GuidList.guidPythonToolsCmdSet) {
+            if (cmdGroup == VsMenus.guidStandardCommandSet2K) {
+                switch((VsCommands2K)cmd) {
+                    case CommonConstants.OpenFolderInExplorerCmdId:
+                        Process.Start(new ProcessStartInfo {
+                            FileName = _factory.Configuration.PrefixPath,
+                            Verb = "open",
+                            UseShellExecute = true
+                        });
+                        return VSConstants.S_OK;
+                }
+            } else if (cmdGroup == GuidList.guidPythonToolsCmdSet) {
                 switch (cmd) {
                     case PythonConstants.ActivateEnvironment:
                         //Make sure we can edit the project file
@@ -323,6 +333,15 @@ namespace Microsoft.PythonTools.Project {
                     case VsCommands.Copy:
                     case VsCommands.Cut:
                         result |= QueryStatusResult.SUPPORTED | QueryStatusResult.INVISIBLE;
+                        return VSConstants.S_OK;
+                }
+            } else if (cmdGroup == VsMenus.guidStandardCommandSet2K) {
+                switch ((VsCommands2K)cmd) {
+                    case CommonConstants.OpenFolderInExplorerCmdId:
+                        result = QueryStatusResult.SUPPORTED;
+                        if (_factory != null && Directory.Exists(_factory.Configuration.PrefixPath)) {
+                            result |= QueryStatusResult.ENABLED;
+                        }
                         return VSConstants.S_OK;
                 }
             } else if (cmdGroup == GuidList.guidPythonToolsCmdSet) {

@@ -61,7 +61,7 @@ namespace Microsoft.PythonTools.Project {
                 args.Insert(0, "--always-copy");
                 args.Insert(0, "--always-unzip");
                 if (isScript) {
-                    args.Insert(0, easyInstallPath);
+                    args.Insert(0, ProcessOutput.QuoteSingleArgument(easyInstallPath));
                     easyInstallPath = factory.Configuration.InterpreterPath;
                 }
                 using (var proc = ProcessOutput.Run(

@@ -57,8 +57,12 @@
         <Parent guid="guidPythonToolsCmdSet" id="ToolsMenu"/>
       </Group>
 
-      <!-- Group on normal project items -->
+      <!-- Two groups on normal project items with a line separating them -->
       <Group guid="guidPythonToolsCmdSet" id="CodeFileGroup" priority="0x600">
+        <Parent guid="guidSHLMainMenu" id="IDM_VS_MENU_PROJECT"/>
+      </Group>
+
+      <Group guid="guidPythonToolsCmdSet" id="CodeFileGroup2" priority="0x601">
         <Parent guid="guidSHLMainMenu" id="IDM_VS_MENU_PROJECT"/>
       </Group>
 
@@ -651,6 +655,10 @@
   </Commands>
 
   <CommandPlacements>
+    <CommandPlacement guid="guidVSStd2K" id="cmdidExploreFolderInWindows" priority="0x800">
+      <Parent guid="guidPythonToolsCmdSet" id="CodeFileGroup2" />
+    </CommandPlacement>
+    
     <!-- Place the Send to REPL item in our context group in addition to it's normal placement in the Edit menu. -->
     <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidSendToRepl" priority="0x100">
       <Parent guid="guidPythonToolsCmdSet" id="EditorContextGroup"/>
@@ -766,6 +774,10 @@
       <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_ITEMNODE"/>
     </CommandPlacement>
 
+    <CommandPlacement guid="guidPythonToolsCmdSet" id="CodeFileGroup2" priority="0x650">
+      <Parent guid="guidSHLMainMenu" id="IDM_VS_CTXT_ITEMNODE"/>
+    </CommandPlacement>
+
     <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdIdAddSearchPath" priority="0x601">
       <Parent guid="guidPythonToolsCmdSet" id="CodeFileGroup"/>
     </CommandPlacement>
@@ -851,6 +863,7 @@
       <IDSymbol name="DocWinTabGroup" value="0x1056" />
       <IDSymbol name="InterpretersItemsGroup" value="0x1057" />
       <IDSymbol name="DebuggerPythonContextGroup" value="0x1058" />
+      <IDSymbol name="CodeFileGroup2" value="0x1059" />
       
       <!-- Menus -->
       <IDSymbol name="ToolsMenu" value ="0x2001" />
@@ -883,5 +896,6 @@
 
   <UsedCommands>
     <UsedCommand guid="guidVSStd2K" id="ECMD_SHOWALLFILES"/>
+    <UsedCommand guid="guidVSStd2K" id="cmdidExploreFolderInWindows" />
   </UsedCommands>
 </CommandTable>
