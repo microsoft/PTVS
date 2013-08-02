@@ -1,0 +1,34 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:l="clr-namespace:Microsoft.PythonTools.Analysis.Browser"
+                    xmlns:s="clr-namespace:System;assembly=mscorlib">
+    <l:PropertyItemTemplateSelector x:Key="PropertyItemTemplate">
+        <l:PropertyItemTemplateSelector.Text>
+            <DataTemplate>
+                <TextBox IsReadOnly="True"
+                         IsReadOnlyCaretVisible="True"
+                         AcceptsReturn="True"
+                         Text="{Binding Mode=OneWay}"/>
+            </DataTemplate>
+        </l:PropertyItemTemplateSelector.Text>
+        <l:PropertyItemTemplateSelector.AnalysisItem>
+            <DataTemplate>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    
+                    <ContentControl Grid.Column="0"
+                                    HorizontalAlignment="Left"
+                                    Content="{Binding Mode=OneWay}" />
+                    <Button Grid.Column="1"
+                            Command="{x:Static l:MainWindow.GoToItemCommand}"
+                            CommandParameter="{Binding}"
+                            HorizontalAlignment="Right"
+                            Content="Go" />
+                </Grid>
+            </DataTemplate>
+        </l:PropertyItemTemplateSelector.AnalysisItem>
+    </l:PropertyItemTemplateSelector>
+</ResourceDictionary>

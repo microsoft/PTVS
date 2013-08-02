@@ -1,0 +1,153 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:l="clr-namespace:Microsoft.PythonTools.Analysis.Browser">
+    <SolidColorBrush x:Key="ModuleBackground" Color="Blue" Opacity="0.3" />
+    <SolidColorBrush x:Key="ModuleBorder" Color="Blue" Opacity="0.7" />
+    <SolidColorBrush x:Key="ClassBackground" Color="Teal" Opacity="0.3" />
+    <SolidColorBrush x:Key="ClassBorder" Color="Teal" Opacity="0.7" />
+    <SolidColorBrush x:Key="ValueBackground" Color="Green" Opacity="0.3" />
+    <SolidColorBrush x:Key="ValueBorder" Color="Green" Opacity="0.7" />
+    <SolidColorBrush x:Key="PropertyBackground" Color="OrangeRed" Opacity="0.3" />
+    <SolidColorBrush x:Key="PropertyBorder" Color="OrangeRed" Opacity="0.7" />
+    <SolidColorBrush x:Key="FunctionBackground" Color="Red" Opacity="0.3" />
+    <SolidColorBrush x:Key="FunctionBorder" Color="Red" Opacity="0.7" />
+    <SolidColorBrush x:Key="FunctionOverloadBackground" Color="Red" Opacity="0.1" />
+    <SolidColorBrush x:Key="FunctionOverloadBorder" Color="Red" Opacity="0.7" />
+    <SolidColorBrush x:Key="MultipleMemberBackground" Color="Yellow" Opacity="0.3" />
+    <SolidColorBrush x:Key="MultipleMemberBorder" Color="Yellow" Opacity="0.7" />
+    <SolidColorBrush x:Key="ModuleRefBackground" Color="Blue" Opacity="0.1" />
+    <SolidColorBrush x:Key="ModuleRefBorder" Color="Blue" Opacity="0.7" />
+    <SolidColorBrush x:Key="NullBackground" Color="Transparent" Opacity="0.3" />
+    <SolidColorBrush x:Key="NullBorder" Color="Transparent" Opacity="0.7" />
+
+    <Style x:Key="ItemBorder" TargetType="{x:Type Border}">
+        <Setter Property="BorderThickness" Value="2" />
+        <Setter Property="Margin" Value="1" />
+        <Setter Property="Padding" Value="2" />
+        <Setter Property="ToolTip" Value="{Binding DisplayType}" />
+    </Style>
+        
+    <Style x:Key="HorizontalChildren" TargetType="{x:Type ItemsControl}">
+        <Setter Property="ItemsSource" Value="{Binding SortedChildren}" />
+        <Setter Property="Focusable" Value="False" />
+        <Setter Property="ItemsPanel">
+            <Setter.Value>
+                <ItemsPanelTemplate>
+                    <StackPanel Orientation="Horizontal" />
+                </ItemsPanelTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+        
+    <DataTemplate DataType="{x:Type l:ModuleView}">
+        <Border Background="{StaticResource ModuleBackground}"
+                BorderBrush="{StaticResource ModuleBorder}"
+                Style="{StaticResource ItemBorder}">
+            <TextBlock Text="{Binding Name}" />
+        </Border>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type l:ClassView}">
+        <Border Background="{StaticResource ClassBackground}"
+                BorderBrush="{StaticResource ClassBorder}"
+                Style="{StaticResource ItemBorder}">
+            <TextBlock Text="{Binding Name,Mode=OneTime}" />
+        </Border>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type l:ValueView}">
+        <StackPanel Orientation="Horizontal">
+            <Border Background="{StaticResource ValueBackground}"
+                    BorderBrush="{StaticResource ValueBorder}"
+                    Style="{StaticResource ItemBorder}">
+                <TextBlock Text="{Binding Name,Mode=OneTime}" />
+            </Border>
+            <TextBlock Text="of type" VerticalAlignment="Center" Margin="3" />
+            <ItemsControl Style="{StaticResource HorizontalChildren}" />
+        </StackPanel>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type l:PropertyView}">
+        <StackPanel Orientation="Horizontal">
+            <Border Background="{StaticResource PropertyBackground}"
+                    BorderBrush="{StaticResource PropertyBorder}"
+                    Style="{StaticResource ItemBorder}">
+                <TextBlock Text="{Binding Name,Mode=OneTime}" />
+            </Border>
+            <TextBlock Text="&lt;-&gt;" VerticalAlignment="Center" Margin="3" />
+            <ItemsControl Style="{StaticResource HorizontalChildren}" />
+        </StackPanel>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type l:FunctionView}">
+        <StackPanel Orientation="Horizontal">
+            <Border Background="{StaticResource FunctionBackground}"
+                    BorderBrush="{StaticResource FunctionBorder}"
+                    Style="{StaticResource ItemBorder}">
+                <TextBlock>
+                    <Run Text="{Binding Name,Mode=OneTime}" /><Run Text="(" /><Run Text="{Binding OverloadSummary,Mode=OneTime}" /><Run Text=")" />
+                </TextBlock>
+            </Border>
+            <StackPanel Name="ReturnType" Visibility="Collapsed" Orientation="Horizontal">
+                <TextBlock Text="->" VerticalAlignment="Center" Margin="3" />
+                <ItemsControl Name="ReturnTypeItems"
+                              Style="{StaticResource HorizontalChildren}"
+                              ItemsSource="{Binding ReturnTypes}" />
+            </StackPanel>
+        </StackPanel>
+        <DataTemplate.Triggers>
+            <DataTrigger Binding="{Binding HasItems,ElementName=ReturnTypeItems}" Value="True">
+                <Setter TargetName="ReturnType" Property="Visibility" Value="Visible" />
+            </DataTrigger>
+        </DataTemplate.Triggers>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type l:FunctionOverloadView}">
+        <StackPanel Orientation="Horizontal">
+            <Border Background="{StaticResource FunctionOverloadBackground}"
+                    BorderBrush="{StaticResource FunctionOverloadBorder}"
+                    Style="{StaticResource ItemBorder}">
+                <TextBlock Text="{Binding Prototype,Mode=OneTime}" />
+            </Border>
+            <StackPanel Name="ReturnType" Visibility="Collapsed" Orientation="Horizontal">
+                <TextBlock Text="->" VerticalAlignment="Center" Margin="3" />
+                <ItemsControl Name="ReturnTypeItems"
+                              Style="{StaticResource HorizontalChildren}"
+                              ItemsSource="{Binding ReturnTypes}" />
+            </StackPanel>
+        </StackPanel>
+        <DataTemplate.Triggers>
+            <DataTrigger Binding="{Binding HasItems,ElementName=ReturnTypeItems}" Value="True">
+                <Setter TargetName="ReturnType" Property="Visibility" Value="Visible" />
+            </DataTrigger>
+        </DataTemplate.Triggers>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type l:MultipleMemberView}">
+        <StackPanel Orientation="Horizontal">
+            <Border Background="{StaticResource MultipleMemberBackground}"
+                    BorderBrush="{StaticResource MultipleMemberBorder}"
+                    Style="{StaticResource ItemBorder}">
+                <TextBlock Text="{Binding Name,Mode=OneTime}" />
+            </Border>
+            <ItemsControl Style="{StaticResource HorizontalChildren}" />
+        </StackPanel>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type l:ModuleRefView}">
+        <Border Background="{StaticResource ModuleRefBackground}"
+                BorderBrush="{StaticResource ModuleRefBorder}"
+                Style="{StaticResource ItemBorder}">
+            <TextBlock Text="{Binding Name,Mode=OneTime}" />
+        </Border>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type l:NullMember}">
+        <Border Background="{StaticResource NullBackground}"
+                BorderBrush="{StaticResource NullBorder}"
+                Style="{StaticResource ItemBorder}">
+            <TextBlock Text="{Binding Name,Mode=OneTime}" />
+        </Border>
+    </DataTemplate>
+        
+</ResourceDictionary>

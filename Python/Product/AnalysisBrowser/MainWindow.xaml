@@ -1,0 +1,207 @@
+﻿<Window x:Class="Microsoft.PythonTools.Analysis.Browser.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:l="clr-namespace:Microsoft.PythonTools.Analysis.Browser"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:s="clr-namespace:System;assembly=mscorlib"
+        xmlns:scm="clr-namespace:System.ComponentModel;assembly=WindowsBase"
+        Title="Python Tools Analysis Browser"
+        Width="800" Height="600"
+        Background="{x:Static SystemColors.ControlBrush}"
+        DataContext="{Binding RelativeSource={RelativeSource Self}}">
+    <Window.CommandBindings>
+        <CommandBinding Command="ApplicationCommands.Open"
+                        CanExecute="Open_CanExecute"
+                        Executed="Open_Executed" />
+        <CommandBinding Command="ApplicationCommands.Close"
+                        CanExecute="Close_CanExecute"
+                        Executed="Close_Executed" />
+        <CommandBinding Command="{x:Static l:MainWindow.BrowseSaveCommand}"
+                        CanExecute="BrowseSave_CanExecute"
+                        Executed="BrowseSave_Executed" />
+        <CommandBinding Command="{x:Static l:MainWindow.GoToItemCommand}"
+                        CanExecute="GoToItem_CanExecute"
+                        Executed="GoToItem_Executed" />
+        <CommandBinding Command="{x:Static l:AnalysisView.ExportTreeCommand}"
+                        CanExecute="Export_CanExecute"
+                        Executed="Export_Executed" />
+        <CommandBinding Command="{x:Static l:AnalysisView.ExportDiffableCommand}"
+                        CanExecute="Export_CanExecute"
+                        Executed="Export_Executed" />
+    </Window.CommandBindings>
+    
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="ItemResources.xaml" />
+                <ResourceDictionary Source="PropertyResources.xaml" />
+                <ResourceDictionary>
+                    <Style x:Key="ItemStyle" TargetType="{x:Type TreeViewItem}">
+                        <Setter Property="FontFamily" Value="Consolas" />
+                    </Style>
+
+                    <HierarchicalDataTemplate x:Key="ItemTemplate"
+                                              ItemsSource="{Binding SortedChildren}">
+                        <ContentPresenter Content="{Binding}" />
+                    </HierarchicalDataTemplate>
+
+                    <BooleanToVisibilityConverter x:Key="BoolToVis" />
+                    <l:NotConverter x:Key="Not" />
+                </ResourceDictionary>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
+    
+    <Grid Margin="3">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="2*" />
+            <ColumnDefinition Width="4" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        
+        <Grid Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3">
+            <Menu IsEnabled="{Binding Loading,Converter={StaticResource Not}}"
+                  Padding="3">
+                <MenuItem Header="_Database">
+                    <MenuItem Header="_Open" Command="ApplicationCommands.Open" />
+                    <Separator />
+                    <MenuItem Header="E_xit" Command="ApplicationCommands.Close" />
+                </MenuItem>
+                
+                <MenuItem Header="_Export">
+                    <MenuItem Header="_Tree" Command="{x:Static l:AnalysisView.ExportTreeCommand}" />
+                    <MenuItem Header="_Diffable" Command="{x:Static l:AnalysisView.ExportDiffableCommand}" />
+                </MenuItem>
+            </Menu>
+        </Grid>
+        
+        <Grid Grid.Row="1" Grid.Column="0">
+            <Grid Visibility="{Binding HasAnalysis,Converter={StaticResource BoolToVis}}">
+                <TreeView Name="DatabaseTreeView"
+                          ItemsSource="{Binding Analysis.Modules}"
+                          ItemTemplate="{StaticResource ItemTemplate}"
+                          ItemContainerStyle="{StaticResource ItemStyle}"/>
+            </Grid>
+            
+            <StackPanel Visibility="{Binding Loading,Converter={StaticResource BoolToVis}}"
+                        Orientation="Horizontal"
+                        HorizontalAlignment="Center" VerticalAlignment="Center">
+                <TextBlock>Loading...</TextBlock>
+            </StackPanel>
+        </Grid>
+        
+        <GridSplitter Grid.Row="1" Grid.Column="1" />
+        
+        <StackPanel Grid.Row="1" Grid.Column="2"
+                    Orientation="Vertical"
+                    HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+            <StackPanel.Resources>
+                <Style TargetType="{x:Type TextBox}">
+                    <Setter Property="Margin" Value="3" />
+                    <Setter Property="FontFamily" Value="Consolas" />
+                    <Setter Property="VerticalContentAlignment" Value="Center" />
+                </Style>
+                <Style TargetType="{x:Type Button}">
+                    <Setter Property="Margin" Value="3" />
+                </Style>
+                <Style TargetType="{x:Type Label}">
+                    <Setter Property="HorizontalAlignment" Value="Left" />
+                    <Setter Property="VerticalAlignment" Value="Center" />
+                </Style>
+            </StackPanel.Resources>
+
+            <GroupBox HorizontalAlignment="Stretch" VerticalAlignment="Top">
+                <GroupBox.Header>
+                    Export Settings
+                </GroupBox.Header>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="auto" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="auto" />
+                        <RowDefinition Height="auto" />
+                    </Grid.RowDefinitions>
+
+                    <Label Grid.Row="0" Grid.Column="0">
+                        File:
+                    </Label>
+                    <TextBox Grid.Row="0" Grid.Column="1"
+                             Name="ExportFilename" />
+                    <Button Grid.Row="0" Grid.Column="2"
+                            Content="..."
+                            MinWidth="{Binding ActualHeight,RelativeSource={RelativeSource Self}}"
+                            Command="{x:Static l:MainWindow.BrowseSaveCommand}"
+                            CommandParameter="UTF-8 Text File (*.txt)|*.txt|All Files (*.*)|*.*"
+                            CommandTarget="{Binding ElementName=ExportFilename}" />
+                    
+                    <Label Grid.Row="1" Grid.Column="0">
+                        <Label.Content>
+                            Filter:
+                        </Label.Content>
+                        <Label.ToolTip>
+                            A regular expression. Only modules with a name that
+                            matches are included in the output file.
+                        </Label.ToolTip>
+                    </Label>
+                    <TextBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2"
+                             Name="ExportFilter">
+                        <TextBox.ToolTip>
+                            A regular expression. Only modules with a name that
+                            matches are included in the output file.
+                        </TextBox.ToolTip>
+                    </TextBox>
+                </Grid>
+            </GroupBox>
+            
+            <GroupBox HorizontalAlignment="Stretch" VerticalAlignment="Top"
+                      ScrollViewer.VerticalScrollBarVisibility="Auto"
+                      DataContext="{Binding SelectedItem,ElementName=DatabaseTreeView}">
+                <GroupBox.Header>
+                    Item Properties
+                </GroupBox.Header>
+                
+                <StackPanel Orientation="Vertical"
+                            Grid.IsSharedSizeScope="True">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition SharedSizeGroup="PropertyName" Width="auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Label Grid.Column="0" Content="Type" />
+                        <ContentControl Grid.Column="1"
+                                        Content="{Binding DisplayType}"
+                                        ContentTemplateSelector="{StaticResource PropertyItemTemplate}"/>
+                    </Grid>
+                    <ItemsControl ItemsSource="{Binding Properties}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Vertical" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition SharedSizeGroup="PropertyName" Width="auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <Label Grid.Column="0" Content="{Binding Key}" />
+                                    <ContentControl Grid.Column="1"
+                                        Content="{Binding Value}"
+                                        ContentTemplateSelector="{StaticResource PropertyItemTemplate}"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </GroupBox>
+        </StackPanel>
+    </Grid>
+</Window>
