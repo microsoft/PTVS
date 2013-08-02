@@ -24,8 +24,8 @@ using Microsoft.PythonTools.Interpreters;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools.Project;
-using VsCommands = Microsoft.VisualStudio.VSConstants.VSStd97CmdID;
 using OleConstants = Microsoft.VisualStudio.OLE.Interop.Constants;
+using VsCommands = Microsoft.VisualStudio.VSConstants.VSStd97CmdID;
 
 namespace Microsoft.PythonTools.Project {
     /// <summary>

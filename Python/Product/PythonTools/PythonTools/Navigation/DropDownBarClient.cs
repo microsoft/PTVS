@@ -313,7 +313,7 @@ namespace Microsoft.PythonTools.Navigation {
                 _curNestedIndex = -1;
 
                 if (oldTopLevel != -1) {
-                    // we need to refresh to make the entry gray and 
+                    // we need to refresh to clear both combo boxes since there is no associated entry
                     _dropDownBar.RefreshCombo(TopLevelComboBoxId, -1);
                     _dropDownBar.RefreshCombo(NestedComboBoxId, -1);
                 }
@@ -370,7 +370,7 @@ namespace Microsoft.PythonTools.Navigation {
                 // there's no associated entry, we should disable the bar
                 _curNestedIndex = -1;
 
-                // we need to refresh to make the entry gray and 
+                // we need to refresh to clear the nested combo box since there is no associated nested entry
                 _dropDownBar.RefreshCombo(NestedComboBoxId, -1);
             }
         }
