@@ -24,9 +24,10 @@ using System.Windows;
 using EnvDTE;
 using EnvDTE80;
 using Microsoft.PythonTools.Intellisense;
+using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Options;
-using Microsoft.PythonTools.Project.Automation;
 using Microsoft.TC.TestHostAdapters;
+using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudioTools.Project.Automation;
@@ -34,8 +35,8 @@ using TestUtilities;
 using TestUtilities.UI;
 using TestUtilities.UI.Python;
 using VSLangProj;
-using ST = System.Threading;
 using MessageBoxButton = TestUtilities.UI.MessageBoxButton;
+using ST = System.Threading;
 
 namespace PythonToolsUITests {
     [TestClass]
@@ -511,20 +512,22 @@ namespace PythonToolsUITests {
         public void ChangeDefaultInterpreterProjectClosed() {
             var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte);
             try {
-                try {
-                    app.SelectDefaultInterpreter("Python 2.6");
-                } catch (System.Windows.Automation.ElementNotAvailableException) {
-                    try {
-                        app.SelectDefaultInterpreter("Python 3.2");
-                    } catch (System.Windows.Automation.ElementNotAvailableException) {
-                        Assert.Inconclusive("Test needs Python 2.7 and one of 2.6 or 3.2");
-                    }
-                }
+                var model = (IComponentModel)VsIdeTestHostContext.ServiceProvider.GetService(typeof(SComponentModel));
+                var service = model.GetService<IInterpreterOptionsService>();
+
+                var currentDefault = service.DefaultInterpreter;
+
+                app.SelectDefaultInterpreter(service.Interpreters.First(i => i != currentDefault).Description);
 
                 var project = app.OpenAndFindProject(@"TestData\HelloWorld.sln");
                 VsIdeTestHostContext.Dte.Solution.Close();
 
-                app.SelectDefaultInterpreter("Python 2.7");
+                Assert.AreNotEqual(currentDefault, service.DefaultInterpreter);
+
+                System.Threading.Thread.Sleep(1000);
+                app.SelectDefaultInterpreter(currentDefault.Description);
+
+                Assert.AreEqual(currentDefault, service.DefaultInterpreter);
             } finally {
                 app.DismissAllDialogs();
                 VsIdeTestHostContext.Dte.Solution.Close();

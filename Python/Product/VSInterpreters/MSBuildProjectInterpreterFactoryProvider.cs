@@ -552,6 +552,10 @@ namespace Microsoft.PythonTools.Interpreter {
         /// reference in this project.
         /// </summary>
         public bool IsInterpreterReference(IPythonInterpreterFactory factory) {
+            if (factory is NotFoundInterpreterFactory) {
+                return true;
+            }
+
             lock (_factoriesLock) {
                 FactoryInfo info;
                 if (_factories.TryGetValue(factory, out info)) {
@@ -680,6 +684,7 @@ namespace Microsoft.PythonTools.Interpreter {
                         // Need to start listening to this event
                         _service.DefaultInterpreterChanged += GlobalDefaultInterpreterChanged;
                     }
+                    _project.MarkDirty();
 
                     var evt = ActiveInterpreterChanged;
                     if (evt != null) {

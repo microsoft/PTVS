@@ -80,7 +80,7 @@ namespace Microsoft.PythonTools.Project {
             if (interp != null && !PythonProject.Interpreters.GetInterpreterFactories().Contains(interp)) {
                 PythonProject.Interpreters.AddInterpreter(interp);
             }
-            PythonProject.Interpreters.ActiveInterpreter = _control.DefaultInterpreter;
+            PythonProject.SetInterpreterFactory(_control.DefaultInterpreter);
             IsDirty = false;
             LoadSettings();
         }

@@ -77,6 +77,9 @@ namespace Microsoft.PythonTools.Project {
                 } catch (InvalidDataException ex) {
                     OutputWindowRedirector.GetGeneral(Site).WriteErrorLine(ex.Message);
                 }
+                if (project.IsDirty) {
+                    SetProjectFileDirty(true);
+                }
                 _interpreters.ActiveInterpreterChanged += ActiveInterpreterChanged;
                 _interpreters.InterpreterFactoriesChanged += InterpreterFactoriesChanged;
             } else {
@@ -320,6 +323,10 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private void RefreshInterpreters() {
+            if (IsClosed) {
+                return;
+            }
+
             if (_uiSync.InvokeRequired) {
                 _uiSync.BeginInvoke((Action)RefreshInterpreters, null);
                 return;
@@ -333,14 +340,17 @@ namespace Microsoft.PythonTools.Project {
             var service = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
             var remaining = node.AllChildren.OfType<InterpretersNode>().ToDictionary(n => n._factory);
 
-            foreach (var fact in Interpreters.GetInterpreterFactories()) {
-                if (!remaining.Remove(fact)) {
-                    node.AddChild(new InterpretersNode(
-                        this,
-                        Interpreters.GetProjectItem(fact),
-                        fact,
-                        isInterpreterReference: service != null && service.Interpreters.Contains(fact),
-                        canDelete: fact is DerivedInterpreterFactory));
+            var interpreters = Interpreters;
+            if (interpreters != null) {
+                foreach (var fact in interpreters.GetInterpreterFactories()) {
+                    if (!remaining.Remove(fact)) {
+                        node.AddChild(new InterpretersNode(
+                            this,
+                            Interpreters.GetProjectItem(fact),
+                            fact,
+                            isInterpreterReference: interpreters.IsInterpreterReference(fact),
+                            canDelete: fact is DerivedInterpreterFactory));
+                    }
                 }
             }
 
@@ -522,6 +532,19 @@ namespace Microsoft.PythonTools.Project {
             base.Dispose(disposing);
         }
 
+        public int SetInterpreterFactory(IPythonInterpreterFactory factory) {
+            if (Interpreters != null && factory != Interpreters.ActiveInterpreter) {
+                //Make sure we can edit the project file
+                if (!ProjectMgr.QueryEditProjectFile(false)) {
+                    return VSConstants.OLE_E_PROMPTSAVECANCELLED;
+                }
+
+                Interpreters.ActiveInterpreter = factory;
+                SetProjectFileDirty(true);
+            }
+            return VSConstants.S_OK;
+        }
+
         public IPythonInterpreter GetInterpreter() {
             return GetAnalyzer().Interpreter;
         }
@@ -601,6 +624,10 @@ namespace Microsoft.PythonTools.Project {
         /// can provide a matching analyzer.
         /// </summary>
         private void ActiveInterpreterChanged(object sender, EventArgs e) {
+            if (IsClosed) {
+                return;
+            }
+
             if (_uiSync.InvokeRequired) {
                 _uiSync.Invoke((EventHandler)ActiveInterpreterChanged, sender, e);
                 return;

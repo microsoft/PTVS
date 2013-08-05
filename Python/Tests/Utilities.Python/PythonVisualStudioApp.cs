@@ -191,7 +191,7 @@ namespace TestUtilities.UI.Python {
                     "SysTreeView32")
                 ));
 
-            treeView.FindItem("Python Tools", "Interpreter Options").SetFocus();
+            treeView.FindItem("Python Tools", "Environment Options").SetFocus();
 
             var defaultInterpreter = new ComboBox(
                 AutomationElement.FromHandle(dialog).FindFirst(
@@ -199,7 +199,7 @@ namespace TestUtilities.UI.Python {
                     new AndCondition(
                        new PropertyCondition(
                            AutomationElement.NameProperty,
-                           "Default Interpreter:"
+                           "Default Environment:"
                        ),
                        new PropertyCondition(
                            AutomationElement.ControlTypeProperty,

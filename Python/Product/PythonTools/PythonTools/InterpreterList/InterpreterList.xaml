@@ -104,7 +104,10 @@
                     </DataTemplate>
 
                     <DataTemplate x:Key="MakeDefaultTemplate" DataType="{x:Type ptvs:InterpreterView}">
-                        <Button Name="MakeDefaultButton" Command="{x:Static l:InterpreterList.MakeDefaultCommand}" CommandParameter="{Binding}"
+                        <Button Name="MakeDefaultButton"
+                                Command="{x:Static l:InterpreterList.MakeDefaultCommand}"
+                                CommandParameter="{Binding}"
+                                AutomationProperties.AutomationId="MakeDefault"
                                 VerticalAlignment="Center">
                             Activate
                         </Button>

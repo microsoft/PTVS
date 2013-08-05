@@ -368,7 +368,9 @@ namespace Microsoft.PythonTools.InterpreterList {
             // environment, so change the logic to just activate it for the project. If not, then it's for the
             // global scope, so set it as default on the interpreter service.
             if (view.Project != null) {
-                view.Project.Interpreters.ActiveInterpreter = view.Interpreter;
+                // Safe to ignore failure here, because we don't update state
+                // until the event comes through.
+                view.Project.SetInterpreterFactory(view.Interpreter);
             } else {
                 _interpService.DefaultInterpreter = view.Interpreter;
             }

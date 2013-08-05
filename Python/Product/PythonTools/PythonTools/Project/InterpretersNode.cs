@@ -175,13 +175,7 @@ namespace Microsoft.PythonTools.Project {
             } else if (cmdGroup == GuidList.guidPythonToolsCmdSet) {
                 switch (cmd) {
                     case PythonConstants.ActivateEnvironment:
-                        //Make sure we can edit the project file
-                        if (!ProjectMgr.QueryEditProjectFile(false)) {
-                            return VSConstants.OLE_E_PROMPTSAVECANCELLED;
-                        }
-
-                        ProjectMgr.Interpreters.ActiveInterpreter = _factory;
-                        return VSConstants.S_OK;
+                        return ProjectMgr.SetInterpreterFactory(_factory);
                     case PythonConstants.InstallPythonPackage:
                         var task = InterpretersPackageNode.InstallNewPackage(this);
                         return VSConstants.S_OK;
