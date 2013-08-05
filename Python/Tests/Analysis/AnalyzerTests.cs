@@ -44,6 +44,7 @@ namespace AnalysisTests {
                     log1,
                     log2,
                     null,
+                    false,
                     false)) {
 
                     analyzer.StartTraceListener();
