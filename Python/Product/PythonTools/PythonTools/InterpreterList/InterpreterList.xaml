@@ -276,8 +276,12 @@
 
     <Grid>
         <Grid.Resources>
-            <BooleanToVisibilityConverter x:Key="BVConverter" />
-            <wpf:BooleanToCollapsedConverter x:Key="BCConverter" />
+            <wpf:IfElseConverter x:Key="BVConverter"
+                                 IfTrue="{x:Static Visibility.Visible}"
+                                 IfFalse="{x:Static Visibility.Collapsed}"/>
+            <wpf:IfElseConverter x:Key="BCConverter"
+                                 IfTrue="{x:Static Visibility.Collapsed}"
+                                 IfFalse="{x:Static Visibility.Visible}"/>
         </Grid.Resources>
         <ListView x:Name="interpreterList"
                   AutomationProperties.AutomationId="PythonTools.InterpreterList"

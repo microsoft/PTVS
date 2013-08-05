@@ -23,29 +23,36 @@ try:
 except ImportError:
     from urllib import urlretrieve
 
-DISTRIBUTE_SOURCE = 'https://go.microsoft.com/fwlink/?LinkID=306663'
-PIP_SOURCE = 'https://go.microsoft.com/fwlink/?LinkId=313647'
+if sys.version_info[0:2] < (2, 5):
+    print('Python versions earlier than 2.5 are not supported by PTVS.')
+    sys.exit(-1)
+elif sys.version_info[0:2] == (2, 5):
+    SETUPTOOLS_SOURCE = 'https://go.microsoft.com/fwlink/?LinkId=317602'
+    PIP_SOURCE = 'https://go.microsoft.com/fwlink/?LinkId=313647'
+else:
+    SETUPTOOLS_SOURCE = 'https://go.microsoft.com/fwlink/?LinkId=317603'
+    PIP_SOURCE = 'https://go.microsoft.com/fwlink/?LinkId=317604'
 
-distribute_temp_dir = tempfile.mkdtemp('-distribute', 'ptvs-')
+setuptools_temp_dir = tempfile.mkdtemp('-setuptools', 'ptvs-')
 pip_temp_dir = tempfile.mkdtemp('-pip', 'ptvs-')
 cwd = os.getcwd()
 
 try:
-    os.chdir(distribute_temp_dir)
-    print('Downloading distribute from ' + DISTRIBUTE_SOURCE)
+    os.chdir(setuptools_temp_dir)
+    print('Downloading setuptools from ' + SETUPTOOLS_SOURCE)
     sys.stdout.flush()
-    distribute_package, _ = urlretrieve(DISTRIBUTE_SOURCE, 'distribute.tar.gz')
+    setuptools_package, _ = urlretrieve(SETUPTOOLS_SOURCE, 'setuptools.tar.gz')
 
-    package = tarfile.open(distribute_package)
+    package = tarfile.open(setuptools_package)
     try:
         safe_members = [m for m in package.getmembers() if not m.name.startswith(('..', '\\'))]
-        package.extractall(distribute_temp_dir, members=safe_members)
+        package.extractall(setuptools_temp_dir, members=safe_members)
     finally:
         package.close()
 
-    extracted_dirs = [d for d in os.listdir(distribute_temp_dir) if os.path.exists(os.path.join(d, 'setup.py'))]
+    extracted_dirs = [d for d in os.listdir(setuptools_temp_dir) if os.path.exists(os.path.join(d, 'setup.py'))]
     if not extracted_dirs:
-        raise OSError("Failed to find distribute's setup.py")
+        raise OSError("Failed to find setuptools's setup.py")
     extracted_dir = extracted_dirs[0]
 
     print('\nInstalling from ' + extracted_dir)
@@ -80,7 +87,7 @@ try:
 finally:
     try:
         os.chdir(cwd)
-        shutil.rmtree(distribute_temp_dir)
+        shutil.rmtree(setuptools_temp_dir)
         shutil.rmtree(pip_temp_dir)
     except:
         # Don't report errors deleting temporary files

@@ -31,8 +31,13 @@
                 <ResourceDictionary Source="pack://application:,,,/Microsoft.PythonTools;component/Wpf/Controls.xaml" />
 
                 <ResourceDictionary>
-                    <l:BoolToVisibleConverter x:Key="BoolToVisible" Else="Hidden" />
-                    <l:BoolToVisibleConverter x:Key="BoolToVisibleOrCollapsed" Else="Collapsed" />
+                    <wpf:IfElseConverter x:Key="BoolToVisible"
+                                         IfTrue="{x:Static Visibility.Visible}"
+                                         IfFalse="{x:Static Visibility.Hidden}" />
+                    <wpf:IfElseConverter x:Key="BoolToVisibleOrCollapsed"
+                                         IfTrue="{x:Static Visibility.Visible}"
+                                         IfFalse="{x:Static Visibility.Collapsed}" />
+                    <wpf:IfElseConverter x:Key="BoolNot" IfTrue="False" IfFalse="True" />
                     
                     <Style x:Key="MonoTextBox" TargetType="{x:Type TextBox}" BasedOn="{StaticResource {x:Type TextBox}}">
                         <Setter Property="FontFamily" Value="Consolas" />
@@ -154,53 +159,42 @@
         </Label>
 
         <StackPanel Grid.Row="4" Margin="12 3" Orientation="Vertical">
-            <StackPanel.Resources>
-                <Style TargetType="{x:Type Label}" BasedOn="{StaticResource {x:Type Label}}">
-                    <Setter Property="Padding" Value="1" />
-                    <Setter Property="ContentTemplate">
-                        <Setter.Value>
-                            <DataTemplate>
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="auto" />
-                                        <ColumnDefinition Width="*" />
-                                    </Grid.ColumnDefinitions>
-                                    
-                                    <Ellipse Grid.Column="0"
-                                             Height="{Binding ActualWidth,RelativeSource={RelativeSource Self}}"
-                                             MinWidth="4"
-                                             HorizontalAlignment="Stretch"
-                                             VerticalAlignment="Center"
-                                             Margin="5"
-                                             Fill="{Binding Foreground,RelativeSource={RelativeSource FindAncestor,AncestorType=Label}}" />
-                                    <!-- Em-space for sizing the bullet point -->
-                                    <TextBlock Grid.Column="0" Visibility="Hidden" Text="M" />
-                                    
-                                    <TextBlock Grid.Column="1"
-                                               TextWrapping="Wrap"
-                                               Text="{Binding}" />
-                                </Grid>
-                            </DataTemplate>
-                        </Setter.Value>
-                    </Setter>
-                </Style>
-            </StackPanel.Resources>
-            <Label Visibility="{Binding WillInstallPipAndVirtualEnv,Converter={StaticResource BoolToVisibleOrCollapsed}}">
+            <Label Visibility="{Binding WillInstallPipAndVirtualEnv,Converter={StaticResource BoolToVisibleOrCollapsed}}"
+                   Style="{StaticResource BulletedLabel}">
                 Install pip and virtualenv packages
             </Label>
-            <Label Visibility="{Binding WillInstallVirtualEnv,Converter={StaticResource BoolToVisibleOrCollapsed}}">
+            <Label Visibility="{Binding WillInstallVirtualEnv,Converter={StaticResource BoolToVisibleOrCollapsed}}"
+                   Style="{StaticResource BulletedLabel}">
                 Install the virtualenv package
             </Label>
-            <Label Visibility="{Binding WillAddVirtualEnv,Converter={StaticResource BoolToVisibleOrCollapsed}}">
+            <Label Visibility="{Binding WillAddVirtualEnv,Converter={StaticResource BoolToVisibleOrCollapsed}}"
+                   Style="{StaticResource BulletedLabel}">
                 Add the virtual environment
             </Label>
-            <Label Visibility="{Binding WillCreateVirtualEnv,Converter={StaticResource BoolToVisibleOrCollapsed}}">
+            <Label Style="{StaticResource BulletedLabel}">
+                <Label.Visibility>
+                    <MultiBinding Converter="{StaticResource BoolToVisibleOrCollapsed}">
+                        <Binding Path="WillCreateVirtualEnv" />
+                        <Binding Path="UseVEnv" Converter="{StaticResource BoolNot}" />
+                    </MultiBinding>
+                </Label.Visibility>
                 Create a virtual environment
             </Label>
-            <Label Visibility="{Binding CannotCreateVirtualEnv,Converter={StaticResource BoolToVisibleOrCollapsed}}">
+            <Label Style="{StaticResource BulletedLabel}">
+                <Label.Visibility>
+                    <MultiBinding Converter="{StaticResource BoolToVisibleOrCollapsed}">
+                        <Binding Path="WillCreateVirtualEnv" />
+                        <Binding Path="UseVEnv" />
+                    </MultiBinding>
+                </Label.Visibility>
+                Create a virtual environment using venv
+            </Label>
+            <Label Visibility="{Binding CannotCreateVirtualEnv,Converter={StaticResource BoolToVisibleOrCollapsed}}"
+                   Style="{StaticResource BulletedLabel}">
                 No action will be taken.
             </Label>
-            <Label Visibility="{Binding MayNotSupportVirtualEnv,Converter={StaticResource BoolToVisibleOrCollapsed}}">
+            <Label Visibility="{Binding MayNotSupportVirtualEnv,Converter={StaticResource BoolToVisibleOrCollapsed}}"
+                   Style="{StaticResource BulletedLabel}">
                 Warning - the selected interpreter may not support virtual
                 environments.
             </Label>

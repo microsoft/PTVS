@@ -23,6 +23,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace TestUtilities.UI {
     public class DefaultInterpreterSetter : IDisposable {
         public readonly IPythonInterpreterFactory OriginalInterpreter;
+        public readonly IPythonInterpreterFactory CurrentDefault;
         private bool _isDisposed;
 
         public DefaultInterpreterSetter(IPythonInterpreterFactory factory) {
@@ -32,6 +33,7 @@ namespace TestUtilities.UI {
             Assert.IsNotNull(interpService);
 
             OriginalInterpreter = interpService.DefaultInterpreter;
+            CurrentDefault = factory;
             interpService.DefaultInterpreter = factory;
         }
 

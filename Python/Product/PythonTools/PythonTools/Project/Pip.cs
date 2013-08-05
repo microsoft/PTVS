@@ -54,7 +54,6 @@ namespace Microsoft.PythonTools.Project {
                 pipPath = null;
             }
 
-
             if (string.IsNullOrEmpty(pipPath)) {
                 args = new[] { "-m", "pip" }.Concat(args);
                 isScript = true;
@@ -112,12 +111,36 @@ namespace Microsoft.PythonTools.Project {
             }));
         }
 
+        /// <summary>
+        /// Returns true if installing a package will be secure.
+        /// 
+        /// This returns false for Python 2.5 and earlier because it does not
+        /// include the required SSL support by default. No detection is done to
+        /// determine whether the support has been added separately.
+        /// </summary>
+        public static bool IsSecureInstall(IPythonInterpreterFactory factory) {
+            return factory.Configuration.Version > new Version(2, 5);
+        }
+
+        private static string GetInsecureArg(IPythonInterpreterFactory factory,
+            Redirector output = null) {
+            if (!IsSecureInstall(factory)) {
+                // Python 2.5 does not include ssl, and so the --insecure
+                // option is required to use pip.
+                if (output != null) {
+                    output.WriteErrorLine("Using '--insecure' option for Python 2.5.");
+                }
+                return "--insecure";
+            }
+            return null;
+        }
+
         public static Task Install(IPythonInterpreterFactory factory,
             string package,
             bool elevate,
             Redirector output = null) {
             return Task.Factory.StartNew((Action)(() => {
-                using (var proc = Run(factory, output, elevate, "install", package)) {
+                using (var proc = Run(factory, output, elevate, "install", GetInsecureArg(factory, output), package)) {
                     proc.Wait();
                 }
             }));
@@ -146,7 +169,7 @@ namespace Microsoft.PythonTools.Project {
                         output.Show();
                     }
                 }
-                using (var proc = Run(factory, output, elevate, "install", package)) {
+                using (var proc = Run(factory, output, elevate, "install", GetInsecureArg(factory, output), package)) {
                     proc.Wait();
 
                     if (output != null) {

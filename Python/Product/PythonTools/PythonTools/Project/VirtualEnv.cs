@@ -16,11 +16,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 
@@ -36,10 +34,21 @@ namespace Microsoft.PythonTools.Project {
         /// </summary>
         public static Task Install(IPythonInterpreterFactory factory, Redirector output = null) {
             bool elevate = PythonToolsPackage.Instance != null && PythonToolsPackage.Instance.GeneralOptionsPage.ElevatePip;
-            return Pip.Install(factory, "virtualenv==1.9.1", elevate, output);
+            if (factory.Configuration.Version < new Version(2, 5)) {
+                if (output != null) {
+                    output.WriteErrorLine("Python versions earlier than 2.5 are not supported by PTVS.");
+                }
+                var tcs = new TaskCompletionSource<object>();
+                tcs.SetCanceled();
+                return tcs.Task;
+            } else if (factory.Configuration.Version == new Version(2, 5)) {
+                return Pip.Install(factory, "virtualenv==1.9.1", elevate, output);
+            } else {
+                return Pip.Install(factory, "virtualenv==1.10", elevate, output);
+            }
         }
 
-        private static Task ContinueCreate(Task task, IPythonInterpreterFactory factory, string path, Redirector output) {
+        private static Task ContinueCreate(Task task, IPythonInterpreterFactory factory, string path, bool useVEnv, Redirector output) {
             return task.ContinueWith(t => {
                 path = CommonUtils.TrimEndSeparator(path);
                 var name = Path.GetFileName(path);
@@ -54,8 +63,9 @@ namespace Microsoft.PythonTools.Project {
                         output.Show();
                     }
                 }
+
                 using (var proc = ProcessOutput.Run(factory.Configuration.InterpreterPath,
-                    new[] { "-m", "virtualenv", "--distribute", name },
+                    new[] { "-m", useVEnv ? "venv" : "virtualenv", name },
                     dir,
                     UnbufferedEnv,
                     false,
@@ -90,25 +100,24 @@ namespace Microsoft.PythonTools.Project {
         public static Task Create(IPythonInterpreterFactory factory, string path, Redirector output = null) {
             var tcs = new TaskCompletionSource<object>();
             tcs.SetResult(null);
-            return ContinueCreate(tcs.Task, factory, path, output);
+            return ContinueCreate(tcs.Task, factory, path, false, output);
         }
 
-        private static Task<Tuple<bool, bool>> FindPipAndVirtualEnv(IPythonInterpreterFactory factory) {
-            return Task.Factory.StartNew((Func<Tuple<bool, bool>>)(() => {
-                bool hasPip = false, hasVirtualEnv = false;
-                foreach (var mp in ModulePath.GetModulesInLib(factory)) {
-                    if (!hasPip && mp.ModuleName == "pip") {
-                        hasPip = true;
-                    }
-                    if (!hasVirtualEnv && mp.ModuleName == "virtualenv") {
-                        hasVirtualEnv = true;
-                    }
-                    if (hasPip && hasVirtualEnv) {
-                        break;
-                    }
-                }
-                return Tuple.Create(hasPip, hasVirtualEnv);
-            }));
+        /// <summary>
+        /// Creates a virtual environment using venv. If venv is not available,
+        /// the task will succeed but error text will be passed to the
+        /// redirector.
+        /// </summary>
+        public static Task CreateWithVEnv(IPythonInterpreterFactory factory, string path, Redirector output = null) {
+            var tcs = new TaskCompletionSource<object>();
+            tcs.SetResult(null);
+            return ContinueCreate(tcs.Task, factory, path, true, output);
+        }
+
+        internal static Task<HashSet<string>> FindPipAndVirtualEnv(IPythonInterpreterFactory factory) {
+            return Task.Factory.StartNew((Func<HashSet<string>>)(
+                () => factory.FindModules("pip", "virtualenv", "venv")
+            ));
         }
 
         /// <summary>
@@ -120,9 +129,9 @@ namespace Microsoft.PythonTools.Project {
             string path, Redirector output = null) {
             Utilities.ArgumentNotNull("factory", factory);
 
-            var task = FindPipAndVirtualEnv(factory).ContinueWith((Action<Task<Tuple<bool, bool>>>)(t => {
-                bool hasPip = t.Result.Item1;
-                bool hasVirtualEnv = t.Result.Item2;
+            var task = FindPipAndVirtualEnv(factory).ContinueWith(t => {
+                bool hasPip = t.Result.Contains("pip");
+                bool hasVirtualEnv = t.Result.Contains("virtualenv") || t.Result.Contains("venv");
 
                 if (!hasVirtualEnv) {
                     if (!hasPip) {
@@ -131,87 +140,49 @@ namespace Microsoft.PythonTools.Project {
                     }
                     Install(factory, output).Wait();
                 }
-            }));
+            });
 
-            return ContinueCreate(task, factory, path, output);
-        }
-
-        /// <summary>
-        /// Creates a virtual environment. If virtualenv or pip are not
-        /// installed then the user is asked whether to install them. If the
-        /// user refuses, the returned task will be cancelled.
-        /// </summary>
-        public static Task QueryCreateAndInstallDependencies(
-            IPythonInterpreterFactory factory,
-            IServiceProvider site,
-            string path,
-            Redirector output = null) {
-
-            Utilities.ArgumentNotNull("factory", factory);
-            Utilities.ArgumentNotNull("site", site);
-
-            var cts = new CancellationTokenSource();
-
-            var task = FindPipAndVirtualEnv(factory).ContinueWith((Func<Task<Tuple<bool, bool>>, Tuple<bool, bool>>)(t => {
-                bool hasPip = t.Result.Item1;
-                bool hasVirtualEnv = t.Result.Item2;
-
-                string message;
-                if (!hasVirtualEnv) {
-                    if (!hasPip) {
-                        message = SR.GetString(SR.InstallVirtualEnvAndPip);
-                    } else {
-                        message = SR.GetString(SR.InstallVirtualEnv);
-                    }
-                    if (Microsoft.VisualStudio.Shell.VsShellUtilities.ShowMessageBox(site,
-                        message,
-                        null,
-                        OLEMSGICON.OLEMSGICON_QUERY,
-                        OLEMSGBUTTON.OLEMSGBUTTON_OKCANCEL,
-                        OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST) == 2) {
-                        cts.Cancel();
-                    }
-                }
-                return t.Result;
-            }), cts.Token,
-                TaskContinuationOptions.OnlyOnRanToCompletion,
-                TaskScheduler.FromCurrentSynchronizationContext()
-            ).ContinueWith((Action<Task<Tuple<bool, bool>>>)(t => {
-                if (t.IsCanceled) {
-                    return;
-                }
-                
-                bool hasPip = t.Result.Item1;
-                bool hasVirtualEnv = t.Result.Item2;
-
-                if (!hasVirtualEnv) {
-                    if (!hasPip) {
-                        bool elevate = PythonToolsPackage.Instance != null && PythonToolsPackage.Instance.GeneralOptionsPage.ElevatePip;
-                        Pip.InstallPip(factory, elevate, output).Wait();
-                    }
-                    Install(factory, output).Wait();
-                }
-            }));
-
-            return ContinueCreate(task, factory, path, output);
+            return ContinueCreate(task, factory, path, false, output);
         }
 
         private static IPythonInterpreterFactory FindBaseInterpreterFromVirtualEnv(
+            string prefixPath,
             string libPath,
             IInterpreterOptionsService service) {
-            string prefixFile = Path.Combine(libPath, "orig-prefix.txt");
-            if (File.Exists(prefixFile)) {
+            string basePath = null;
+            
+            var cfgFile = Path.Combine(prefixPath, "pyvenv.cfg");
+            if (File.Exists(cfgFile)) {
                 try {
-                    var lines = File.ReadAllLines(prefixFile);
-                    if (lines.Length >= 1 && CommonUtils.IsValidPath(lines[0])) {
-                        return service.Interpreters.FirstOrDefault(interp =>
-                            CommonUtils.IsSamePath(interp.Configuration.PrefixPath, lines[0])
-                        );
-                    }
+                    var lines = File.ReadAllLines(cfgFile);
+                    basePath = lines
+                        .Select(line => Regex.Match(line, "^home *= *(?<path>.+)$", RegexOptions.IgnoreCase))
+                        .Where(m => m != null && m.Success)
+                        .Select(m => m.Groups["path"])
+                        .Where(g => g != null && g.Success)
+                        .Select(g => g.Value)
+                        .FirstOrDefault(CommonUtils.IsValidPath);
                 } catch (IOException) {
                 } catch (UnauthorizedAccessException) {
                 } catch (System.Security.SecurityException) {
                 }
+            }
+
+            var prefixFile = Path.Combine(libPath, "orig-prefix.txt");
+            if (basePath != null && File.Exists(prefixFile)) {
+                try {
+                    var lines = File.ReadAllLines(prefixFile);
+                    basePath = lines.FirstOrDefault(CommonUtils.IsValidPath);
+                } catch (IOException) {
+                } catch (UnauthorizedAccessException) {
+                } catch (System.Security.SecurityException) {
+                }
+            }
+
+            if (Directory.Exists(basePath)) {
+                return service.Interpreters.FirstOrDefault(interp =>
+                    CommonUtils.IsSamePath(interp.Configuration.PrefixPath, basePath)
+                );
             }
             return null;
         }
@@ -263,13 +234,19 @@ namespace Microsoft.PythonTools.Project {
             // Find site.py to find the library
             var libPath = FindFile(prefixPath, "site.py");
             if (!File.Exists(libPath)) {
-                return null;
+                // Python 3.3 venv does not add site.py, but always puts the
+                // library in prefixPath\Lib
+                libPath = Path.Combine(prefixPath, "Lib");
+                if (!Directory.Exists(libPath)) {
+                    return null;
+                }
+            } else {
+                libPath = Path.GetDirectoryName(libPath);
             }
-            libPath = Path.GetDirectoryName(libPath);
 
 
             if (baseInterpreter == null) {
-                baseInterpreter = FindBaseInterpreterFromVirtualEnv(libPath, service);
+                baseInterpreter = FindBaseInterpreterFromVirtualEnv(prefixPath, libPath, service);
                 if (baseInterpreter == null) {
                     return null;
                 }

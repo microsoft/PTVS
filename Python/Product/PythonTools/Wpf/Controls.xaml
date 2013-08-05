@@ -58,6 +58,34 @@
         <Setter Property="Margin" Value="0" />
     </Style>
 
+    <Style x:Key="BulletedLabel" TargetType="{x:Type Label}" BasedOn="{StaticResource {x:Type Label}}">
+        <Setter Property="Padding" Value="1" />
+        <Setter Property="ContentTemplate">
+            <Setter.Value>
+                <DataTemplate>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <Ellipse Grid.Column="0"
+                                 Height="{Binding ActualWidth,RelativeSource={RelativeSource Self}}"
+                                 MinWidth="4"
+                                 HorizontalAlignment="Stretch"
+                                 VerticalAlignment="Center"
+                                 Margin="5"
+                                 Fill="{Binding Foreground,RelativeSource={RelativeSource FindAncestor,AncestorType=Label}}" />
+
+                        <!-- Em-space for sizing the bullet point -->
+                        <TextBlock Grid.Column="0" Visibility="Hidden" Text="M" />
+                        <TextBlock Grid.Column="1" TextWrapping="Wrap" Text="{Binding}" />
+                    </Grid>
+                </DataTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <Style TargetType="{x:Type Control}">
         <Setter Property="FontFamily" Value="Segoe UI" />
         <Setter Property="Background" Value="{DynamicResource {x:Static wpf:Controls.ControlBackgroundKey}}" />

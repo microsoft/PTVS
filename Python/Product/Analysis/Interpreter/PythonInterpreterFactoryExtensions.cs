@@ -13,8 +13,10 @@
  * ***************************************************************************/
 
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using Microsoft.PythonTools.Analysis;
 
 namespace Microsoft.PythonTools.Interpreter {
     public static class PythonInterpreterFactoryExtensions {
@@ -42,6 +44,26 @@ namespace Microsoft.PythonTools.Interpreter {
             return x.Id == y.Id && 
                 x.Description == y.Description &&
                 x.Configuration.Equals(y.Configuration);
+        }
+
+        /// <summary>
+        /// Determines whether the interpreter factory contains the specified
+        /// modules.
+        /// </summary>
+        /// <returns>The names of the modules that were found.</returns>
+        internal static HashSet<string> FindModules(this IPythonInterpreterFactory factory, params string[] moduleNames) {
+            var expected = new HashSet<string>(moduleNames);
+            var result = new HashSet<string>();
+            foreach (var mp in ModulePath.GetModulesInLib(factory)) {
+                if (expected.Count == 0) {
+                    break;
+                }
+
+                if (expected.Remove(mp.ModuleName)) {
+                    result.Add(mp.ModuleName);
+                }
+            }
+            return result;
         }
     }
 }

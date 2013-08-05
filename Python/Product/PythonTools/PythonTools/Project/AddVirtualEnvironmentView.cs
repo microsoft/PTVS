@@ -226,6 +226,19 @@ namespace Microsoft.PythonTools.Project {
         public static readonly DependencyProperty WillCreateVirtualEnvProperty =
             WillCreateVirtualEnvPropertyKey.DependencyProperty;
 
+        public bool UseVEnv {
+            get { return (bool)GetValue(UseVEnvProperty); }
+            private set { SafeSetValue(UseVEnvPropertyKey, value); }
+        }
+
+        private static readonly DependencyPropertyKey UseVEnvPropertyKey =
+            DependencyProperty.RegisterReadOnly("UseVEnv",
+                typeof(bool),
+                typeof(AddVirtualEnvironmentView),
+                new PropertyMetadata(false));
+        public static readonly DependencyProperty UseVEnvProperty =
+            UseVEnvPropertyKey.DependencyProperty;
+
         public bool WillAddVirtualEnv {
             get { return (bool)GetValue(WillAddVirtualEnvProperty); }
             private set { SafeSetValue(WillAddVirtualEnvPropertyKey, value); }
@@ -313,26 +326,21 @@ namespace Microsoft.PythonTools.Project {
 
             var libPath = interp.Configuration.LibraryPath;
             if (Directory.Exists(libPath)) {
-                bool hasPip = false;
-                bool hasVirtualEnv = false;
-                Task.Factory.StartNew((Action)(() => {
-                    foreach (var mp in ModulePath.GetModulesInLib(interp.Configuration.InterpreterPath, libPath)) {
-                        if (!hasPip && mp.ModuleName == "pip") {
-                            hasPip = true;
-                        }
-                        if (!hasVirtualEnv && mp.ModuleName == "virtualenv") {
-                            hasVirtualEnv = true;
-                        }
-                        if (hasPip && hasVirtualEnv) {
-                            break;
-                        }
+                Task.Factory.StartNew((Func<HashSet<string>>)(() =>
+                    interp.FindModules("pip", "virtualenv", "venv")
+                )).ContinueWith((Action<Task<HashSet<string>>>)(t => {
+                    if (t.Result.Contains("venv") || t.Result.Contains("virtualenv")) {
+                        WillInstallPipAndVirtualEnv = false;
+                        WillInstallVirtualEnv = false;
+                        WillInstallElevated = false;
+                        UseVEnv = !t.Result.Contains("virtualenv");
+                    } else {
+                        WillInstallPipAndVirtualEnv = !t.Result.Contains("pip");
+                        WillInstallVirtualEnv = !WillInstallPipAndVirtualEnv;
+                        WillInstallElevated = PythonToolsPackage.Instance != null &&
+                            PythonToolsPackage.Instance.GeneralOptionsPage.ElevatePip;
+                        UseVEnv = false;
                     }
-                })).ContinueWith((Action<Task>)(t => {
-                    WillInstallPipAndVirtualEnv = !hasPip;
-                    WillInstallVirtualEnv = hasPip && !hasVirtualEnv;
-                    WillInstallElevated = !hasVirtualEnv &&
-                        PythonToolsPackage.Instance != null &&
-                        PythonToolsPackage.Instance.GeneralOptionsPage.ElevatePip;
                 }), TaskScheduler.FromCurrentSynchronizationContext());
             }
         }

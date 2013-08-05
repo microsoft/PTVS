@@ -869,7 +869,11 @@ namespace Microsoft.PythonTools.Project {
             var baseInterp = data.BaseInterpreter.Interpreter;
 
             Task task;
-            if (doCreate) {
+            if (doCreate && data.UseVEnv) {
+                task = VirtualEnv.CreateWithVEnv(baseInterp,
+                    path,
+                    OutputWindowRedirector.GetGeneral(Site));
+            } else if (doCreate) {
                 task = VirtualEnv.CreateAndInstallDependencies(baseInterp,
                     path,
                     OutputWindowRedirector.GetGeneral(Site));

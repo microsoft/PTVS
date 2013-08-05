@@ -64,7 +64,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public static System.Threading.Tasks.Task InstallNewPackage(InterpretersNode parent) {
-            var view = InstallPythonPackage.ShowDialog();
+            var view = InstallPythonPackage.ShowDialog(parent._factory);
             if (view == null) {
                 var tcs = new TaskCompletionSource<object>();
                 tcs.SetCanceled();

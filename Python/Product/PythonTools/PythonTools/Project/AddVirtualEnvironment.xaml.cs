@@ -112,22 +112,5 @@ namespace Microsoft.PythonTools.Project {
             DialogResult = false;
             Close();
         }
-
-    }
-
-    [ValueConversion(typeof(bool), typeof(Visibility))]
-    sealed class BoolToVisibleConverter : IValueConverter {
-        public Visibility Else {
-            get;
-            set;
-        }
-
-        public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture) {
-            return (value as bool? ?? true) ? Visibility.Visible : Else;
-        }
-
-        public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture) {
-            throw new NotImplementedException();
-        }
     }
 }

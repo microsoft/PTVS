@@ -1,16 +1,15 @@
 ﻿<vstools:DialogWindowVersioningWorkaround
     x:Class="Microsoft.PythonTools.Project.InstallPythonPackage"
+    x:ClassModifier="internal"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:ui="clr-namespace:Microsoft.PythonTools.Project"
     xmlns:vstools="clr-namespace:Microsoft.VisualStudioTools"
     xmlns:wpf="clr-namespace:Microsoft.PythonTools.Wpf"
     Title="Install Python Package" 
-    MinHeight="220"
+    MinHeight="245"
     Width="500" MinWidth="500"
     SizeToContent="Height"
-    x:Name="CreateVirtual" 
-    x:ClassModifier="internal"
     TextOptions.TextFormattingMode="Display"
     ResizeMode="CanResizeWithGrip"
     UseLayoutRounding="True"
@@ -27,10 +26,13 @@
             <RowDefinition Height="auto" />
             <RowDefinition Height="auto" />
             <RowDefinition Height="auto" />
+            <RowDefinition Height="*" />
         </Grid.RowDefinitions>
         
         <Grid.Resources>
-            <BooleanToVisibilityConverter x:Key="BoolToVisible" />
+            <wpf:IfElseConverter x:Key="BoolToVisible"
+                                 IfTrue="{x:Static Visibility.Visible}"
+                                 IfFalse="{x:Static Visibility.Collapsed}"/>
         </Grid.Resources>
         
         <wpf:LabelledControl Grid.Row="0"
@@ -60,14 +62,24 @@
         </Label>
         
         <Label Grid.Row="2"
+               Style="{StaticResource BulletedLabel}"
                Visibility="{Binding InstallUsingEasyInstall,Converter={StaticResource BoolToVisible}}">
-            <TextBlock>
-                Packages installed with easy_install may not be displayed in
-                Solution Explorer and may not be uninstallable.
-            </TextBlock>
+            Packages installed with easy_install may not be displayed in
+            Solution Explorer and may not be uninstallable.
         </Label>
         
-        <Grid Grid.Row="3" VerticalAlignment="Bottom">
+        <Label Grid.Row="3"
+               Style="{StaticResource BulletedLabel}">
+            <Label.Visibility>
+                <MultiBinding Converter="{StaticResource BoolToVisible}">
+                    <Binding Path="InstallUsingPip" />
+                    <Binding Path="IsInsecure" />
+                </MultiBinding>
+            </Label.Visibility>
+            The package will not be downloaded using SSL.
+        </Label>
+        
+        <Grid Grid.Row="4" VerticalAlignment="Bottom">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="auto" />
                 <ColumnDefinition Width="*" />

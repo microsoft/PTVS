@@ -14,6 +14,7 @@
 
 using System;
 using System.Drawing;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
@@ -91,14 +92,32 @@ namespace Microsoft.PythonTools.Wpf {
         }
     }
 
-    [ValueConversion(typeof(bool), typeof(Visibility))]
-    class BooleanToCollapsedConverter : IValueConverter {
-        public object Convert(object value, System.Type targetType, object parameter, System.Globalization.CultureInfo culture) {
-            return (value as bool? ?? false) ? Visibility.Collapsed : Visibility.Visible;
+    [ValueConversion(typeof(bool), typeof(object))]
+    sealed class IfElseConverter : IValueConverter, IMultiValueConverter {
+        public object IfTrue {
+            get;
+            set;
         }
 
-        public object ConvertBack(object value, System.Type targetType, object parameter, System.Globalization.CultureInfo culture) {
-            return ((value as Visibility? ?? Visibility.Visible) == Visibility.Collapsed);
+        public object IfFalse {
+            get;
+            set;
+        }
+
+        public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture) {
+            return (value as bool? == true) ? IfTrue : IfFalse;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture) {
+            return (value == IfTrue);
+        }
+
+        public object Convert(object[] values, Type targetType, object parameter, System.Globalization.CultureInfo culture) {
+            return values.All(b => b as bool? == true) ? IfTrue : IfFalse;
+        }
+
+        public object[] ConvertBack(object value, Type[] targetTypes, object parameter, System.Globalization.CultureInfo culture) {
+            throw new NotImplementedException();
         }
     }
 }

@@ -27,14 +27,17 @@ namespace Microsoft.PythonTools.Project {
         private bool _installUsingPip, _installUsingEasyInstall;
         private bool _installElevated;
         private bool _isValid;
+        private readonly bool _isInsecure;
 
         private static readonly string[] _installUsingOptions = new[] { "pip", "easy_install" };
+
 
         /// <summary>
         /// Create a InstallPythonPackageView with default values.
         /// </summary>
-        public InstallPythonPackageView() {
+        public InstallPythonPackageView(bool isInsecure) {
             InstallUsing = _installUsingOptions[0];
+            _isInsecure = isInsecure;
             PropertyChanged += new PropertyChangedEventHandler(OnPropertyChanged);
         }
 
@@ -50,6 +53,15 @@ namespace Microsoft.PythonTools.Project {
                     _name = value;
                     OnPropertyChanged("Name");
                 }
+            }
+        }
+
+        /// <summary>
+        /// Gets whether the download may be insecure.
+        /// </summary>
+        public bool IsInsecure {
+            get {
+                return _isInsecure;
             }
         }
 
