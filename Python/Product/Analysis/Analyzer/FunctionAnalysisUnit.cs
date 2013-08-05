@@ -42,7 +42,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             _decoratorCalls = new Dictionary<Node, Expression>();
 
             var scope = new FunctionScope(Function, Function.FunctionDefinition, declScope);
-            scope.EnsureParameters(this, null);
+            scope.EnsureParameters(this);
             _scope = scope;
 
             AnalysisLog.NewUnit(this);
@@ -53,7 +53,6 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             _originalUnit = originalUnit;
             _declUnit = originalUnit._declUnit;
             Function = originalUnit.Function;
-            _decoratorCalls = originalUnit._decoratorCalls;
 
             CallChain = callChain;
 
@@ -88,7 +87,9 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             // continue to associate changes with this unit.
             ddg.Scope = _declUnit.Scope;
             AnalyzeDefaultParameters(ddg);
-            ProcessFunctionDecorators(ddg);
+            if (_decoratorCalls != null) {
+                ProcessFunctionDecorators(ddg);
+            }
 
             // Set the scope to within the function
             ddg.Scope = Scope;

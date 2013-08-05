@@ -3677,6 +3677,23 @@ a = x().StaticMethod(4.0)
         }
 
         [TestMethod, Priority(0)]
+        public void InheritedStaticMethod() {
+            var text = @"
+class x(object):
+    @staticmethod
+    def StaticMethod(value):
+        return value
+
+class y(x):
+    pass
+
+a = y().StaticMethod(4.0)
+";
+            var entry = ProcessText(text);
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("a", text.IndexOf("a = ")), BuiltinTypeId.Float);
+        }
+
+        [TestMethod, Priority(0)]
         public void ClassMethod() {
             var text = @"
 class x(object):
@@ -3685,11 +3702,50 @@ class x(object):
         return cls
 
 a = x().ClassMethod()
+b = x.ClassMethod()
 ";
             var entry = ProcessText(text);
             AssertUtil.ContainsExactly(entry.GetShortDescriptionsByIndex("a", text.IndexOf("a =")), "x");
+            AssertUtil.ContainsExactly(entry.GetShortDescriptionsByIndex("b", text.IndexOf("b =")), "x");
+            AssertUtil.ContainsExactly(entry.GetShortDescriptionsByIndex("cls", text.IndexOf("return")), "x");
 
             var exprs = new[] { "x.ClassMethod", "x().ClassMethod" };
+            foreach (var expr in exprs) {
+                var sigs = entry.GetSignaturesByIndex(expr, text.IndexOf("a = ")).ToArray();
+                Assert.AreEqual(1, sigs.Length);
+                Assert.AreEqual(sigs[0].Parameters.Length, 0); // cls is implicitly implied
+            }
+
+            text = @"
+class x(object):
+    @classmethod
+    def UncalledClassMethod(cls):
+        return cls
+";
+            entry = ProcessText(text);
+            AssertUtil.ContainsExactly(entry.GetShortDescriptionsByIndex("cls", text.IndexOf("return")), "x");
+        }
+
+        [TestMethod, Priority(0)]
+        public void InheritedClassMethod() {
+            var text = @"
+class x(object):
+    @classmethod
+    def ClassMethod(cls):
+        return cls
+
+class y(x):
+    pass
+
+a = y().ClassMethod()
+b = y.ClassMethod()
+";
+            var entry = ProcessText(text);
+            AssertUtil.ContainsExactly(entry.GetShortDescriptionsByIndex("a", text.IndexOf("a =")), "y");
+            AssertUtil.ContainsExactly(entry.GetShortDescriptionsByIndex("b", text.IndexOf("b =")), "y");
+            AssertUtil.ContainsExactly(entry.GetShortDescriptionsByIndex("cls", text.IndexOf("return")), "x", "y");
+
+            var exprs = new[] { "y.ClassMethod", "y().ClassMethod" };
             foreach (var expr in exprs) {
                 var sigs = entry.GetSignaturesByIndex(expr, text.IndexOf("a = ")).ToArray();
                 Assert.AreEqual(1, sigs.Length);

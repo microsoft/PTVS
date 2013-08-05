@@ -43,7 +43,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             }
         }
 
-        internal void EnsureParameters(FunctionAnalysisUnit unit, FunctionScope scopeWithDefaultParameters = null) {
+        internal void EnsureParameters(FunctionAnalysisUnit unit) {
             var astParams = Function.FunctionDefinition.Parameters;
             for (int i = 0; i < astParams.Count; ++i) {
                 VariableDef param, defParam;
@@ -54,10 +54,6 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                         param = _dictParameters = _dictParameters ?? new DictParameterVariableDef(unit, astParams[i]);
                     } else {
                         param = new LocatedVariableDef(unit.ProjectEntry, astParams[i]);
-                    }
-                    if (scopeWithDefaultParameters != null && scopeWithDefaultParameters != this &&
-                        scopeWithDefaultParameters.Variables.TryGetValue(astParams[i].Name, out defParam)) {
-                        defParam.CopyTo(param);
                     }
                     AddVariable(astParams[i].Name, param);
                 }
@@ -74,7 +70,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         }
 
         internal bool UpdateParameters(FunctionAnalysisUnit unit, ArgumentSet others, bool enqueue = true, FunctionScope scopeWithDefaultParameters = null) {
-            EnsureParameters(unit, scopeWithDefaultParameters);
+            EnsureParameters(unit);
 
             var astParams = Function.FunctionDefinition.Parameters;
             bool added = false;
@@ -98,6 +94,18 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             if (_dictParameters != null) {
                 _dictParameters.Dict.MakeUnionStrongerIfMoreThan(limits.DictArgumentTypes, others.DictArgs);
                 added |= _dictParameters.Dict.AddTypes(Function.FunctionDefinition, unit, state.GetConstant(""), others.DictArgs);
+            }
+
+            if (scopeWithDefaultParameters != null) {
+                for (int i = 0; i < others.Args.Length && i < astParams.Count; ++i) {
+                    VariableDef defParam, param;
+                    if (Variables.TryGetValue(astParams[i].Name, out param) &&
+                        !param.TypesNoCopy.Any() &&
+                        scopeWithDefaultParameters.Variables.TryGetValue(astParams[i].Name, out defParam)) {
+                        param.MakeUnionStrongerIfMoreThan(limits.NormalArgumentTypes, defParam.TypesNoCopy);
+                        added |= param.AddTypes(entry, defParam.TypesNoCopy, false);
+                    }
+                }
             }
 
             if (enqueue && added) {
