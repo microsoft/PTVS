@@ -46,7 +46,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         internal void EnsureParameters(FunctionAnalysisUnit unit) {
             var astParams = Function.FunctionDefinition.Parameters;
             for (int i = 0; i < astParams.Count; ++i) {
-                VariableDef param, defParam;
+                VariableDef param;
                 if (!Variables.TryGetValue(astParams[i].Name, out param)) {
                     if (astParams[i].Kind == ParameterKind.List) {
                         param = _seqParameters = _seqParameters ?? new ListParameterVariableDef(unit, astParams[i]);
