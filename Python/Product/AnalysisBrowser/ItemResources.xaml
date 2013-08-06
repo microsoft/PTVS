@@ -19,6 +19,8 @@
     <SolidColorBrush x:Key="ModuleRefBorder" Color="Blue" Opacity="0.7" />
     <SolidColorBrush x:Key="NullBackground" Color="Transparent" Opacity="0.3" />
     <SolidColorBrush x:Key="NullBorder" Color="Transparent" Opacity="0.7" />
+    <SolidColorBrush x:Key="RawBackground" Color="Transparent" Opacity="0.3" />
+    <SolidColorBrush x:Key="RawBorder" Color="Transparent" Opacity="0.7" />
 
     <Style x:Key="ItemBorder" TargetType="{x:Type Border}">
         <Setter Property="BorderThickness" Value="2" />
@@ -45,6 +47,19 @@
                 Style="{StaticResource ItemBorder}">
             <TextBlock Text="{Binding Name}" />
         </Border>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type l:RawView}">
+        <StackPanel Orientation="Horizontal">
+            <Border Background="{StaticResource RawBackground}"
+                    BorderBrush="{StaticResource RawBorder}"
+                    Style="{StaticResource ItemBorder}">
+                <TextBlock Text="{Binding Name,Mode=OneTime}" />
+            </Border>
+            <TextBlock Text="{Binding Value,Mode=OneTime}"
+                       VerticalAlignment="Center"
+                       Margin="3" />
+        </StackPanel>
     </DataTemplate>
 
     <DataTemplate DataType="{x:Type l:ClassView}">

@@ -70,6 +70,7 @@
     <Compile Include="ModuleRefView.cs" />
     <Compile Include="MultipleMemberView.cs" />
     <Compile Include="NotConverter.cs" />
+    <Compile Include="RawView.cs" />
     <Compile Include="ValueView.cs" />
     <Page Include="ItemResources.xaml">
       <SubType>Designer</SubType>

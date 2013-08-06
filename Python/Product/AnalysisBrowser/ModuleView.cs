@@ -21,12 +21,14 @@ namespace Microsoft.PythonTools.Analysis.Browser {
     class ModuleView : IAnalysisItemView {
         readonly IPythonInterpreter _interpreter;
         readonly IModuleContext _context;
+        readonly string _idbPath;
         IPythonModule _module;
 
-        public ModuleView(IPythonInterpreter interpreter, IModuleContext context, string name) {
+        public ModuleView(IPythonInterpreter interpreter, IModuleContext context, string name, string idbPath) {
             _interpreter = interpreter;
             _context = context;
             Name = name;
+            _idbPath = idbPath;
         }
 
         public string Name { get; private set; }
@@ -45,6 +47,10 @@ namespace Microsoft.PythonTools.Analysis.Browser {
             get {
                 if (_module == null) {
                     _module = _interpreter.ImportModule(Name);
+                }
+
+                if (File.Exists(_idbPath)) {
+                    yield return RawView.FromFile(_idbPath);
                 }
 
                 foreach (var memberName in _module.GetMemberNames(_context)) {

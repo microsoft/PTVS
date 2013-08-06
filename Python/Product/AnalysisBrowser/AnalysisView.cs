@@ -66,8 +66,9 @@ namespace Microsoft.PythonTools.Analysis.Browser {
 
             _modules = _interpreter
                 .GetModuleNames()
-                .Where(n => File.Exists(IOPath.Combine(dbDir, n + ".idb")))
-                .Select(n => new ModuleView(_interpreter, _context, n))
+                .Select(n => Tuple.Create(n, IOPath.Combine(dbDir, n + ".idb")))
+                .Where(t => File.Exists(t.Item2))
+                .Select(t => new ModuleView(_interpreter, _context, t.Item1, t.Item2))
                 .OrderBy(m => m.SortKey)
                 .ThenBy(m => m.Name)
                 .ToList();
