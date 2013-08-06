@@ -68,6 +68,12 @@ if sys.platform == 'cli':
     from System.Runtime.CompilerServices import ConditionalWeakTable
     IPY_SEEN_MODULES = ConditionalWeakTable[object, object]()
 
+# Import encodings early to avoid import on the debugger thread, which may cause deadlock
+from encodings import utf_8
+
+# WARNING: Avoid imports beyond this point, specifically on the debugger thread, as this may cause
+# deadlock where the debugger thread performs an import while a user thread has the import lock
+
 # save start_new_thread so we can call it later, we'll intercept others calls to it.
 
 debugger_dll_handle = None
@@ -143,14 +149,6 @@ if sys.version[0] == '3':
 else:
   StackOverflowException = RuntimeError
   
-# we can't run the importer at some random point because we might be importing 
-# something complete with the loader lock held.  Therefore we eagerly run a UTF8
-# decode here so that any required imports for it to succeed later have already
-# been imported.
-
-to_bytes('').decode('utf8')
-''.encode('utf8') # just in case they differ in what they import...
-
 ASBR = to_bytes('ASBR')
 SETL = to_bytes('SETL')
 THRF = to_bytes('THRF')
@@ -1910,7 +1908,7 @@ class DebuggerBuffer(object):
     def write(self, data):
         if not DETACHED:
             probe_stack(3)
-            str_data = data.decode('utf8')
+            str_data = utf_8.decode(data)[0]
             with _SendLockCtx:
                 write_bytes(conn, OUTP)
                 write_int(conn, thread.get_ident())

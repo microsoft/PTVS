@@ -17,6 +17,12 @@ import os
 import sys
 import struct
 
+# Import encodings early to avoid import on the debugger thread, which may cause deadlock
+from encodings import utf_8, ascii
+
+# WARNING: Avoid imports beyond this point, specifically on the debugger thread, as this may cause
+# deadlock where the debugger thread performs an import while a user thread has the import lock
+
 # Py3k compat - alias unicode to str
 try:
     unicode
@@ -25,7 +31,7 @@ except:
 
 if sys.version_info[0] >= 3:
     def to_bytes(cmd_str):
-        return bytes(cmd_str, 'ascii')
+        return ascii.Codec.encode(cmd_str)[0]
 else:
     def to_bytes(cmd_str):
         return cmd_str
@@ -103,11 +109,11 @@ def read_string(conn):
     while len(res) < strlen:
         res = res + conn.recv(strlen - len(res))
 
-    res = res.decode('utf8')
+    res = utf_8.decode(res)[0]
     if sys.version_info[0] == 2 and sys.platform != 'cli':
         # Py 2.x, we want an ASCII string if possible
         try:
-            res = res.encode('ascii')
+            res = ascii.Codec.encode(res)[0]
         except UnicodeEncodeError:
             pass
 
@@ -118,7 +124,7 @@ def write_string(conn, s):
     if s is None:
         write_bytes(conn, NONE_PREFIX)
     elif isinstance(s, unicode):
-        b = s.encode('utf8')
+        b = utf_8.encode(s)[0]
         b_len = len(b)
         write_bytes(conn, UNICODE_PREFIX)
         write_int(conn, b_len)
