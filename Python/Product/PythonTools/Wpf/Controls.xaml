@@ -660,13 +660,6 @@
                         <Trigger Property="HasItems" Value="False">
                             <Setter Property="Height" TargetName="DropDownBorder" Value="95" />
                         </Trigger>
-                        <MultiTrigger>
-                            <MultiTrigger.Conditions>
-                                <Condition Property="IsGrouping" Value="True" />
-                                <Condition Property="VirtualizingPanel.IsVirtualizingWhenGrouping" Value="False" />
-                            </MultiTrigger.Conditions>
-                            <Setter Property="ScrollViewer.CanContentScroll" Value="False" />
-                        </MultiTrigger>
                         <Trigger Property="CanContentScroll" SourceName="DropDownScrollViewer" Value="False">
                             <Setter Property="Canvas.Top"
                                     TargetName="OpaqueRect"
