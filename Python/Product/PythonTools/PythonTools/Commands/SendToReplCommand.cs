@@ -46,6 +46,7 @@ namespace Microsoft.PythonTools.Commands {
             
             PythonReplEvaluator eval = repl.Evaluator as PythonReplEvaluator;
             
+            eval.EnsureConnected();
             repl.Submit(GetActiveInputs(activeView, eval));
 
             repl.Focus();

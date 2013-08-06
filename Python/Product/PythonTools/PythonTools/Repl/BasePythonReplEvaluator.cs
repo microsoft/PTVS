@@ -103,7 +103,7 @@ namespace Microsoft.PythonTools.Repl {
             }
         }
 
-        protected void EnsureConnected() {
+        internal void EnsureConnected() {
             if (_curListener == null) {
                 Connect();
             }

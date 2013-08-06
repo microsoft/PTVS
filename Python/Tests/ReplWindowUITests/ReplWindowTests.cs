@@ -2783,6 +2783,58 @@ def g(): pass
             interactive.WaitForTextEnd("42 100", ReplPrompt);
         }
 
+        /// <summary>
+        /// Test Ipython execution mode supporting multiline paste
+        /// </summary>
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void TestIPythonMultiStatementPaste() {
+            if (!IPythonSupported) {
+                // Requires IPython
+                return;
+            }
+
+            GetInteractiveOptions().ExecutionMode = "IPython";
+            InteractiveWindow interactive = null;
+            try {
+                var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+                var project = app.OpenAndFindProject(@"TestData\Repl.sln");
+
+                var program = project.ProjectItems.Item("Program.py");
+
+                interactive = Prepare();
+
+                var window = program.Open();
+                window.Activate();
+                var doc = app.GetDocument(program.Document.FullName);
+                doc.Invoke(() =>
+                    doc.TextView.Selection.Select(
+                        new SnapshotSpan(
+                            doc.TextView.TextBuffer.CurrentSnapshot,
+                            0,
+                            doc.TextView.TextBuffer.CurrentSnapshot.Length
+                        ),
+                        false
+                    )
+                );
+
+                VsIdeTestHostContext.Dte.ExecuteCommand("Edit.SendtoInteractive");
+
+                interactive.WaitForText(
+                    ReplPrompt + "def f():",
+                    SecondPrompt + "    return 42",
+                    SecondPrompt,
+                    SecondPrompt + "100",
+                    SecondPrompt,
+                    "Out[2]: 100",
+                    ReplPrompt
+                );
+            } finally {
+                GetInteractiveOptions().ExecutionMode = "Standard";
+                ForceReset();
+            }
+        }
+
         protected override string InterpreterDescription {
             get {
                 return "Python 2.7 Interactive";
