@@ -567,13 +567,11 @@ namespace Microsoft.VisualStudioTools.Project {
             /// Returns true if the merge needs to continue, or false if the merge has completed.
             /// </summary>
             public bool ContinueMerge() {
-                if (_remainingDirs.Count == 0 ||        // all done
-                    !Directory.Exists(_initialDir)) {   // directory went away
+                if (_remainingDirs.Count == 0) {   // all done
                     return false;
                 }
 
                 var dir = _remainingDirs.Pop();
-                Debug.WriteLine(dir.Name);
                 if (!Directory.Exists(dir.Name)) {
                     return true;
                 }
@@ -615,10 +613,6 @@ namespace Microsoft.VisualStudioTools.Project {
                 }
 
                 foreach (var file in files) {
-                    if (!Directory.Exists(dir.Name)) {
-                        // file went away
-                        break;
-                    }
                     if (_project.IsFileHidden(file)) {
                         continue;
                     }

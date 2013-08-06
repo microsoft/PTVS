@@ -194,14 +194,13 @@ namespace Microsoft.VisualStudioTools.Navigation {
                 var project = task.ModuleID.Hierarchy.GetProject().GetCommonProject();
 
                 HierarchyNode fileNode = fileNode = project.NodeFromItemId(task.ModuleID.ItemID);
-                if (fileNode == null) {
+                HierarchyInfo parent;
+                if (fileNode == null || !_hierarchies.TryGetValue(task.ModuleID.Hierarchy, out parent)) {
                     return;
                 }
 
-                var parent = _hierarchies[task.ModuleID.Hierarchy].ProjectLibraryNode;
-
                 LibraryNode module = CreateFileLibraryNode(
-                    parent,
+                    parent.ProjectLibraryNode,
                     fileNode,
                     System.IO.Path.GetFileName(task.FileName),
                     task.FileName,
@@ -220,11 +219,11 @@ namespace Microsoft.VisualStudioTools.Navigation {
                     lock (_files) {
                         if (_files.TryGetValue(task.ModuleID, out previousItem)) {
                             _files.Remove(task.ModuleID);
-                            parent.RemoveNode(previousItem);
+                            parent.ProjectLibraryNode.RemoveNode(previousItem);
                         }
                     }
                 }
-                parent.AddNode(module);
+                parent.ProjectLibraryNode.AddNode(module);
                 _library.Update();
                 if (null != task.ModuleID) {
                     lock (_files) {

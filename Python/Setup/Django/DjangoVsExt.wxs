@@ -42,6 +42,12 @@
                 <File Id="filAD9E9715475C402D8927BFA29168E597" KeyPath="yes" Source="$(var.TargetDir)\ItemTemplates\Python\DjangoHtml.zip" />
             </Component>
 
+            <Component Id="cmp58D9E461B63E44B183C59BB134A727B0" Directory="dir25D6546B68914D63B88D47F600FEEDFE" Guid="{59997500-9E07-4359-A80F-5BA61B0C7E5C}">
+                <File Id="filA3BC8F8027224F8A83783CDCA3C2FB20" KeyPath="yes" Source="$(var.TargetDir)\ItemTemplates\Python\JavaScript.zip" />
+            </Component>
+            <Component Id="cmp1CD7CCFFC72F4A1BA90610CDE5028D45" Directory="dir25D6546B68914D63B88D47F600FEEDFE" Guid="{3A56AD2D-7858-4E24-8836-D0F99FAE87B2}">
+                <File Id="fil0D633913738B42F9988B80F115C3CE00" KeyPath="yes" Source="$(var.TargetDir)\ItemTemplates\Python\Stylesheet.zip" />
+            </Component>
 
             <Component Id="cmp8FD2DCD84D064839ADBA2841550496C7" Directory="dir25D6546B68914D63B88D47F600FEEDFE" Guid="{1654E889-E8E9-4B57-BEAD-DD268EB0C709}">
                 <File Id="filAD5040460E0C42D8BE43C8E81DBAD43F" KeyPath="yes" Source="$(var.TargetDir)\ItemTemplates\Python\DjangoNewAppFiles14.zip" />

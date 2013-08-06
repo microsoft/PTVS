@@ -115,15 +115,6 @@ namespace Microsoft.VisualStudioTools.Project
         }
 
         /// <summary>
-        /// This method is called by the interface method GetMkDocument to specify the item moniker.
-        /// </summary>
-        /// <returns>The moniker for this item</returns>
-        public override string GetMkDocument()
-        {
-            return this.Url;
-        }
-
-        /// <summary>
         /// Not supported.
         /// </summary>
         internal override int ExcludeFromProject()

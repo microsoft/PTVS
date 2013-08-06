@@ -181,5 +181,22 @@ namespace Microsoft.PythonTools.Project {
             }
             return res;
         }
+
+        internal override int IncludeInProject(bool includeChildren) {
+            var analyzer = ((PythonProjectNode)this.ProjectMgr).GetAnalyzer();
+            analyzer.AnalyzeFile(Url);
+
+            return base.IncludeInProject(includeChildren);
+        }
+
+        internal override int ExcludeFromProject() {
+            var analyzer = ((PythonProjectNode)this.ProjectMgr).GetAnalyzer();
+            var analysis = GetAnalysis();
+            if (analysis != null) {
+                analyzer.UnloadFile(analysis);
+            }
+
+            return base.ExcludeFromProject();
+        }
     }
 }

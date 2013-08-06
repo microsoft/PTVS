@@ -2138,21 +2138,25 @@ namespace Microsoft.VisualStudioTools.Project
             }
 
             
-            string[] parts = path.Split(new [] { Path.DirectorySeparatorChar }, StringSplitOptions.RemoveEmptyEntries);
+            string[] parts = strFullPath.Substring(ProjectHome.Length).Split(new [] { Path.DirectorySeparatorChar }, StringSplitOptions.RemoveEmptyEntries);
             if (parts.Length == 0)
             {
                 throw new ArgumentException("The path is invalid", "path");
             }
             path = parts[0];
-            HierarchyNode curParent = VerifySubFolderExists(path, this, createOnDisk);
+            string fullPath = Path.Combine(ProjectHome, path) + "\\";
+            string relPath = path;
+
+            HierarchyNode curParent = VerifySubFolderExists(path, fullPath, this, createOnDisk);
 
             // now we have an array of subparts....
             for (int i = 1; i < parts.Length; i++)
             {
                 if (parts[i].Length > 0)
                 {
-                    path = Path.Combine(path, parts[i]);
-                    curParent = VerifySubFolderExists(path, curParent, createOnDisk);
+                    fullPath = Path.Combine(fullPath, parts[i]) + "\\";
+                    relPath = Path.Combine(relPath, parts[i]);
+                    curParent = VerifySubFolderExists(relPath, fullPath, curParent, createOnDisk);
                 }
             }
             return curParent;
@@ -2200,44 +2204,42 @@ namespace Microsoft.VisualStudioTools.Project
         /// It is meant to be a helper method for CreateFolderNodes().
         /// For some scenario it may be useful to override.
         /// </summary>
-        /// <param name="path">full path to the subfolder we want to verify.</param>
+        /// <param name="relativePath">The relative path to the subfolder we want to create, without a trailing \</param>
+        /// <param name="fullPath">the full path to the subfolder we want to verify.</param>
         /// <param name="parent">the parent node where to add the subfolder if it does not exist.</param>
         /// <returns>the foldernode correcsponding to the path.</returns>
         [SuppressMessage("Microsoft.Naming", "CA1702:CompoundWordsShouldBeCasedCorrectly", MessageId = "SubFolder")]
-        protected virtual FolderNode VerifySubFolderExists(string path, HierarchyNode parent, bool createOnDisk = true)
+        protected virtual FolderNode VerifySubFolderExists(string relativePath, string fullPath, HierarchyNode parent, bool createOnDisk = true)
         {
+            Debug.Assert(!CommonUtils.HasEndSeparator(relativePath));
+
             FolderNode folderNode = null;
             uint uiItemId;
-            string strFullPath = CommonUtils.GetAbsoluteDirectoryPath(ProjectHome, path);
-            if (ErrorHandler.Succeeded(this.ParseCanonicalName(strFullPath, out uiItemId)) &&
+            if (ErrorHandler.Succeeded(this.ParseCanonicalName(fullPath, out uiItemId)) &&
                 uiItemId != 0)
             {
                 Debug.Assert(this.NodeFromItemId(uiItemId) is FolderNode, "Not a FolderNode");
                 folderNode = (FolderNode)this.NodeFromItemId(uiItemId);
             }
 
-            if (folderNode == null && strFullPath != null && parent != null)
+            if (folderNode == null && fullPath != null && parent != null)
             {
                 // folder does not exist yet...
                 // We could be in the process of loading so see if msbuild knows about it
                 ProjectElement item = null;
-                foreach (MSBuild.ProjectItem folder in buildProject.GetItems(ProjectFileConstants.Folder))
-                {
-                    var absPath = CommonUtils.GetAbsoluteDirectoryPath(ProjectHome, folder.EvaluatedInclude);
-                    if (CommonUtils.IsSameDirectory(absPath, strFullPath))
-                    {
-                        item = new MsBuildProjectElement(this, folder);
-                        break;
-                    }
+                var items = buildProject.GetItemsByEvaluatedInclude(relativePath);
+                if (items.Count == 0) {
+                    items = buildProject.GetItemsByEvaluatedInclude(relativePath + "\\");
                 }
-                // If MSBuild did not know about it, create a new one
-                if (item == null) {
-                    item = this.AddFolderToMsBuild(strFullPath);
+                if (items.Count != 0) {
+                    item = new MsBuildProjectElement(this, items.First());
+                } else {
+                    item = AddFolderToMsBuild(fullPath);
                 }
                 if (createOnDisk) {
-                    Directory.CreateDirectory(strFullPath);
+                    Directory.CreateDirectory(fullPath);
                 }
-                folderNode = this.CreateFolderNode(item);
+                folderNode = CreateFolderNode(item);
                 parent.AddChild(folderNode);
             }
 
@@ -2405,9 +2407,9 @@ namespace Microsoft.VisualStudioTools.Project
 
                 this.ProcessReferences();
 
-                this.ProcessFiles();
-
                 this.ProcessFolders();
+
+                this.ProcessFiles();
 
                 this.LoadNonBuildInformation();
 
@@ -3123,7 +3125,7 @@ namespace Microsoft.VisualStudioTools.Project
         protected internal virtual void ProcessFolders()
         {
             // Process Folders (useful to persist empty folder)
-            foreach (MSBuild.ProjectItem folder in this.buildProject.GetItems(ProjectFileConstants.Folder))
+            foreach (MSBuild.ProjectItem folder in this.buildProject.GetItems(ProjectFileConstants.Folder).ToArray())
             {
                 string strPath = folder.EvaluatedInclude;
 
@@ -5552,8 +5554,13 @@ If the files in the existing folder have the same names as files in the folder y
             }
             else
             {
-                string absPath = CommonUtils.GetAbsoluteFilePath(ProjectHome, strPath);
+                HierarchyNode parent;
+                if (_diskNodes.TryGetValue(Path.GetDirectoryName(Path.Combine(ProjectHome, strPath)) + "\\", out parent)) {
+                    // fast path, filename is normalized, and the folder already exists
+                    return parent;
+                }
 
+                string absPath = CommonUtils.GetAbsoluteFilePath(ProjectHome, strPath);
                 if (CommonUtils.IsSubpathOf(ProjectHome, absPath))
                 {
                     strPath = CommonUtils.GetRelativeDirectoryPath(ProjectHome, Path.GetDirectoryName(absPath));

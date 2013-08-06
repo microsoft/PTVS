@@ -39,7 +39,6 @@ namespace Microsoft.VisualStudioTools.Project {
 
             _item = project.BuildProject.AddItem(itemType, Microsoft.Build.Evaluation.ProjectCollection.Escape(itemPath))[0];
             ItemProject.SetProjectFileDirty(true);
-            RefreshProperties();
         }
 
         /// <summary>

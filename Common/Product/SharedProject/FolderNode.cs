@@ -266,7 +266,7 @@ namespace Microsoft.VisualStudioTools.Project
         {
             get
             {
-                return CommonUtils.NormalizeDirectoryPath(GetAbsoluteUrlFromMsbuild());
+                return CommonUtils.EnsureEndSeparator(GetAbsoluteUrlFromMsbuild());
             }
         }
 

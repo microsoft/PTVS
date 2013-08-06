@@ -38,6 +38,7 @@ namespace Microsoft.PythonTools.TestAdapter {
         private readonly Dictionary<string, string> _fileRootMap;
         private readonly Dictionary<string, ProjectInfo> _knownProjects;
         private bool _firstLoad, _isDisposed, _building, _detectingChanges;
+        private DateTime _lastWrite = DateTime.MinValue;
 
         [ImportingConstructor]
         private TestContainerDiscoverer([Import(typeof(SVsServiceProvider))]IServiceProvider serviceProvider, [Import(typeof(IOperationState))]IOperationState operationState)
@@ -175,7 +176,7 @@ namespace Microsoft.PythonTools.TestAdapter {
             }
             
             var latestWrite = project.GetProjectItemPaths().Aggregate(
-                DateTime.MinValue,
+                _lastWrite,
                 (latest, filePath) => {
                     try {
                         var ft = File.GetLastWriteTimeUtc(filePath);
@@ -349,6 +350,11 @@ namespace Microsoft.PythonTools.TestAdapter {
                         } else {
                             _testFilesUpdateWatcher.RemoveWatch(e.File);
                         }
+
+                        // https://pytools.codeplex.com/workitem/1546
+                        // track the last delete as an update as our file system scan won't see it
+                        _lastWrite = DateTime.Now.ToUniversalTime();  
+
                         OnTestContainersChanged();
                         break;
 #if DEV12_OR_LATER

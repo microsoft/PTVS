@@ -103,6 +103,17 @@ namespace Microsoft.VisualStudioTools.Project
         }
 
         /// <summary>
+        /// Returns true if the item should be included in search results
+        /// 
+        /// By default all items in the project are searchable.
+        /// </summary>
+        public virtual bool IsSearchable {
+            get {
+                return !IsNonMemberItem;
+            }
+        }
+
+        /// <summary>
         /// Gets the full path to where children of this node live on disk.
         /// 
         /// This should only be called on nodes which actually can have children, such
@@ -416,7 +427,17 @@ namespace Microsoft.VisualStudioTools.Project
                 return String.Empty;
             }
 
-            return CommonUtils.GetAbsoluteFilePath(this.ProjectMgr.ProjectHome, path);
+            // we use Path.GetFileName and reverse it because it's much faster 
+            // than Path.GetDirectoryName
+            string filename = Path.GetFileName(path);
+            if (path.Substring(0, path.Length - filename.Length).IndexOf('.') != -1) {
+                // possibly non-canonical form...
+                return CommonUtils.GetAbsoluteFilePath(this.ProjectMgr.ProjectHome, path);
+            }
+
+            // fast path, we know ProjectHome is canonical, and with no dots
+            // in the directory name, so is path.
+            return Path.Combine(ProjectMgr.ProjectHome, path);
         }
 
         [System.ComponentModel.BrowsableAttribute(false)]
@@ -668,8 +689,11 @@ namespace Microsoft.VisualStudioTools.Project
                     break;
 
                 case __VSHPROPID.VSHPROPID_IsHiddenItem:
-                case __VSHPROPID.VSHPROPID_IsNonSearchable:
                     result = !IsVisible;
+                    break;
+
+                case __VSHPROPID.VSHPROPID_IsNonSearchable:
+                    result = !IsSearchable;
                     break;
 
                 case __VSHPROPID.VSHPROPID_FirstChild:
@@ -1813,16 +1837,18 @@ namespace Microsoft.VisualStudioTools.Project
             }
 
         /// <summary>
-        /// Searches the immediate children of this node for a file who's moniker's filename (w/o path) matches
+        /// Searches the immediate children of this node for a file who's filename (w/o path) matches
         /// the requested name.
         /// </summary>
         internal HierarchyNode FindImmediateChildByName(string name) {
+            Debug.Assert(!String.IsNullOrEmpty(GetMkDocument()));
+
             for (HierarchyNode child = this.firstChild; child != null; child = child.NextSibling) {
-                string filename = Path.GetFileName(CommonUtils.TrimEndSeparator(child.GetMkDocument()));
+                string filename = Path.GetFileName(CommonUtils.TrimEndSeparator(child.ItemNode.GetMetadata(ProjectFileConstants.Include)));
 
                 if (String.Equals(filename, name, StringComparison.OrdinalIgnoreCase)) {
                     return child;
-        }
+                }
             }
             return null;
         }
@@ -1834,18 +1860,15 @@ namespace Microsoft.VisualStudioTools.Project
         /// <param name="nodes">A list of nodes of type T</param>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
         internal void FindNodesOfType<T>(List<T> nodes)
-            where T : HierarchyNode
-            {
-            for (HierarchyNode n = this.FirstChild; n != null; n = n.NextSibling)
-        {
+            where T : HierarchyNode {
+            for (HierarchyNode n = this.FirstChild; n != null; n = n.NextSibling) {
                 T nodeAsT = n as T;
-                if (nodeAsT != null)
-        {
+                if (nodeAsT != null) {
                     nodes.Add(nodeAsT);
-        }
+                }
 
                 n.FindNodesOfType<T>(nodes);
-        }
+            }
         }
 
         /// <summary>
@@ -1855,20 +1878,17 @@ namespace Microsoft.VisualStudioTools.Project
         /// <param name="nodes">A list of nodes of type T</param>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
         internal IEnumerable<T> EnumNodesOfType<T>()
-            where T : HierarchyNode
-        {
-            for (HierarchyNode n = this.FirstChild; n != null; n = n.NextSibling)
-        {
+            where T : HierarchyNode {
+            for (HierarchyNode n = this.FirstChild; n != null; n = n.NextSibling) {
                 T nodeAsT = n as T;
-                if (nodeAsT != null)
-        {
+                if (nodeAsT != null) {
                     yield return nodeAsT;
-        }
+                }
 
-                foreach(var node in n.EnumNodesOfType<T>()) {
+                foreach (var node in n.EnumNodesOfType<T>()) {
                     yield return node;
+                }
             }
-        }
         }
 
         #endregion
@@ -1889,5 +1909,6 @@ namespace Microsoft.VisualStudioTools.Project
             Link = 4
         };
         #endregion
+
     }
 }
