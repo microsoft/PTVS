@@ -48,7 +48,7 @@ private:
             EnterCriticalSection(&_stream->_lock);
         }
 
-        _Releases_lock_(this->_stream_lock) ~LockHolder() {
+        ~LockHolder() {
             LeaveCriticalSection(&_stream->_lock);
         }
     };
