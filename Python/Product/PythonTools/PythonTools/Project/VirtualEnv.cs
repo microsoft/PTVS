@@ -42,9 +42,9 @@ namespace Microsoft.PythonTools.Project {
                 tcs.SetCanceled();
                 return tcs.Task;
             } else if (factory.Configuration.Version == new Version(2, 5)) {
-                return Pip.Install(factory, "virtualenv==1.9.1", elevate, output);
+                return Pip.Install(factory, "https://go.microsoft.com/fwlink/?LinkID=317970", elevate, output);
             } else {
-                return Pip.Install(factory, "virtualenv==1.10", elevate, output);
+                return Pip.Install(factory, "https://go.microsoft.com/fwlink/?LinkID=317969", elevate, output);
             }
         }
 

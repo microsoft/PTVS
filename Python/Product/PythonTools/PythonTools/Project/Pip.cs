@@ -57,6 +57,7 @@ namespace Microsoft.PythonTools.Project {
             if (string.IsNullOrEmpty(pipPath)) {
                 args = new[] { "-m", "pip" }.Concat(args);
                 isScript = true;
+                pipPath = factory.Configuration.InterpreterPath;
             } else if (isScript) {
                 args = new[] { ProcessOutput.QuoteSingleArgument(pipPath) }.Concat(args);
                 pipPath = factory.Configuration.InterpreterPath;
