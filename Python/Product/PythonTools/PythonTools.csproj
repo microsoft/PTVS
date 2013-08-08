@@ -687,6 +687,7 @@
     <Content Include="ptvsd\attach_server.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <None Include="RefreshDefaultDB.py" />
     <ZipProject Include="Templates\Projects\FromExistingCode\FromExistingCode.pyproj" />
     <ZipProject Include="Templates\Projects\FromExistingCode\FromExistingCode.vstemplate">
       <SubType>Designer</SubType>

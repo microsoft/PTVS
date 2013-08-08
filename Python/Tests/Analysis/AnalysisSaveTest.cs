@@ -64,7 +64,6 @@ union = Y()
 list_of_int = [1, 2, 3]
 tuple_of_str = 'a', 'b', 'c'
 
-import nt
 m = max
 
 class Aliased(object):

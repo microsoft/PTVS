@@ -38,7 +38,7 @@ namespace Microsoft.PythonTools.Interpreter {
         /// <summary>
         /// Gets the version of the analysis format that this class reads.
         /// </summary>
-        public static readonly int CurrentVersion = 22;
+        public static readonly int CurrentVersion = 23;
 
         private static string _completionDatabasePath;
         private static string _baselineDatabasePath;
@@ -515,7 +515,7 @@ namespace Microsoft.PythonTools.Interpreter {
         // This is duplicated throughout different assemblies in PythonTools, so search for it if you update it.
         private static string GetPythonToolsInstallPath() {
             string path = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            if (File.Exists(Path.Combine(path, "Microsoft.PythonTools.dll"))) {
+            if (File.Exists(Path.Combine(path, "Microsoft.PythonTools.Analysis.dll"))) {
                 return path;
             }
 
@@ -524,7 +524,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 var installDir = configKey.GetValue("InstallDir") as string;
                 if (installDir != null) {
                     var toolsPath = Path.Combine(installDir, "Extensions\\Microsoft\\Python Tools for Visual Studio\\2.0");
-                    if (File.Exists(Path.Combine(toolsPath, "Microsoft.PythonTools.dll"))) {
+                    if (File.Exists(Path.Combine(toolsPath, "Microsoft.PythonTools.Analysis.dll"))) {
                         return toolsPath;
                     }
                 }

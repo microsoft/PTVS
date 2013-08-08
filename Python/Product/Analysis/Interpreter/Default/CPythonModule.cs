@@ -156,10 +156,6 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         public void Imported(IModuleContext context) {
         }
 
-        #endregion
-
-        #region IPythonModule2 Members
-
         public string Documentation {
             get { return _docString; }
         }

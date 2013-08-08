@@ -3,6 +3,8 @@
                     xmlns:l="clr-namespace:Microsoft.PythonTools.Analysis.Browser">
     <SolidColorBrush x:Key="ModuleBackground" Color="Blue" Opacity="0.3" />
     <SolidColorBrush x:Key="ModuleBorder" Color="Blue" Opacity="0.7" />
+    <SolidColorBrush x:Key="KnownTypesBackground" Color="Blue" Opacity="0.1" />
+    <SolidColorBrush x:Key="KnownTypesBorder" Color="Blue" Opacity="0.8" />
     <SolidColorBrush x:Key="ClassBackground" Color="Teal" Opacity="0.3" />
     <SolidColorBrush x:Key="ClassBorder" Color="Teal" Opacity="0.7" />
     <SolidColorBrush x:Key="ValueBackground" Color="Green" Opacity="0.3" />
@@ -49,6 +51,14 @@
         </Border>
     </DataTemplate>
 
+    <DataTemplate DataType="{x:Type l:KnownTypesView}">
+        <Border Background="{StaticResource KnownTypesBackground}"
+                BorderBrush="{StaticResource KnownTypesBorder}"
+                Style="{StaticResource ItemBorder}">
+            <TextBlock Text="{Binding Name}" />
+        </Border>
+    </DataTemplate>
+
     <DataTemplate DataType="{x:Type l:RawView}">
         <StackPanel Orientation="Horizontal">
             <Border Background="{StaticResource RawBackground}"
@@ -78,7 +88,7 @@
                 <TextBlock Text="{Binding Name,Mode=OneTime}" />
             </Border>
             <TextBlock Text="of type" VerticalAlignment="Center" Margin="3" />
-            <ItemsControl Style="{StaticResource HorizontalChildren}" />
+            <ContentControl Content="{Binding Type}" />
         </StackPanel>
     </DataTemplate>
 

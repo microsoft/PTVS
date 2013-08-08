@@ -59,7 +59,6 @@
         
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="2*" />
-            <ColumnDefinition Width="4" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
         
@@ -94,10 +93,14 @@
             </StackPanel>
         </Grid>
         
-        <GridSplitter Grid.Row="1" Grid.Column="1" />
+        <GridSplitter Grid.Row="1" Grid.Column="1"
+                      VerticalAlignment="Stretch"
+                      HorizontalAlignment="Left"
+                      Width="4" />
         
-        <StackPanel Grid.Row="1" Grid.Column="2"
+        <StackPanel Grid.Row="1" Grid.Column="1"
                     Orientation="Vertical"
+                    Margin="4 0 0 0"
                     HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
             <StackPanel.Resources>
                 <Style TargetType="{x:Type TextBox}">
@@ -168,6 +171,7 @@
                 </GroupBox.Header>
                 
                 <StackPanel Orientation="Vertical"
+                            HorizontalAlignment="Stretch"
                             Grid.IsSharedSizeScope="True">
                     <Grid>
                         <Grid.ColumnDefinitions>

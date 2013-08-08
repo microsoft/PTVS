@@ -904,9 +904,10 @@ iB = iter(B)
 iC = iter(C)
 ", PythonLanguageVersion.V27);
 
-            AssertUtil.ContainsExactly(entry.GetTypesByIndex("iA", 1), entry.ProjectState.Types[BuiltinTypeId.ListIterator]);
-            AssertUtil.ContainsExactly(entry.GetTypesByIndex("iB", 1), entry.ProjectState.Types[BuiltinTypeId.StrIterator]);
-            AssertUtil.ContainsExactly(entry.GetTypesByIndex("iC", 1), entry.ProjectState.Types[BuiltinTypeId.ListIterator]);
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("iA", 1), BuiltinTypeId.ListIterator);
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("B", 1), BuiltinTypeId_Str);
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("iB", 1), BuiltinTypeId_StrIterator);
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("iC", 1), BuiltinTypeId.ListIterator);
 
             entry = ProcessText(@"
 A = [1, 2, 3]
@@ -918,9 +919,10 @@ iB = B.__iter__()
 iC = C.__iter__()
 ", PythonLanguageVersion.V27);
 
-            AssertUtil.ContainsExactly(entry.GetTypesByIndex("iA", 1), entry.ProjectState.Types[BuiltinTypeId.ListIterator]);
-            AssertUtil.ContainsExactly(entry.GetTypesByIndex("iB", 1), entry.ProjectState.Types[BuiltinTypeId.StrIterator]);
-            AssertUtil.ContainsExactly(entry.GetTypesByIndex("iC", 1), entry.ProjectState.Types[BuiltinTypeId.ListIterator]);
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("iA", 1), BuiltinTypeId.ListIterator);
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("B", 1), BuiltinTypeId_Str);
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("iB", 1), BuiltinTypeId_StrIterator);
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("iC", 1), BuiltinTypeId.ListIterator);
 
 
             entry = ProcessText(@"
@@ -1007,11 +1009,7 @@ d = a.__next__()
             AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("a", 1), BuiltinTypeId.Generator);
             AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("b", 1), BuiltinTypeId.Int);
             AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("c", 1), BuiltinTypeId.Int);
-            if (this is IronPythonAnalysisTest) {
-                AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("d", 1));
-            } else {
-                AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("d", 1), BuiltinTypeId.Object);
-            }
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("d", 1));
 
             entry = ProcessText(@"
 def f(x):
@@ -1032,11 +1030,7 @@ d = a1.__next__()
             AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("a2", 1), BuiltinTypeId.Generator);
             AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("b2", 1), BuiltinTypeId_Str);
             AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("c", 1));
-            if (this is IronPythonAnalysisTest) {
-                AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("d", 1));
-            } else {
-                AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("d", 1), BuiltinTypeId.Object);
-            }
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("d", 1));
 
             var text = @"
 def f():
@@ -1052,11 +1046,7 @@ d = a.__next__()";
             AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("a", 1), BuiltinTypeId.Generator);
             AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("b", 1), BuiltinTypeId.Int);
             AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("c", 1), BuiltinTypeId.Int);
-            if (this is IronPythonAnalysisTest) {
-                AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("d", 1));
-            } else {
-                AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("d", 1), BuiltinTypeId.Object);
-            }
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("d", 1));
         }
 
         [TestMethod, Priority(0)]
@@ -1084,7 +1074,7 @@ d = a.next()
             AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("a", 1), BuiltinTypeId.Generator);
             AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("b", 1), BuiltinTypeId.Int);
             AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("c", 1), BuiltinTypeId.Int);
-            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("d", 1), BuiltinTypeId.Object);
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("d", 1));
 
             entry = ProcessText(@"
 def f(x):
@@ -1105,7 +1095,7 @@ d = a1.next()
             AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("a2", 1), BuiltinTypeId.Generator);
             AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("b2", 1), BuiltinTypeId.Unicode);
             AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("c", 1), BuiltinTypeId.Int);
-            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("d", 1), BuiltinTypeId.Object);
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("d", 1));
 
             var text = @"
 def f():
@@ -1122,7 +1112,7 @@ d = a.next()";
             AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("b", 1), BuiltinTypeId.Int);
             AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("c", 1), BuiltinTypeId.Int);
             AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("x", text.IndexOf("yield 2")), BuiltinTypeId.Unicode);
-            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("d", 1), BuiltinTypeId.Object);
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("d", 1));
         }
 
         [TestMethod, Priority(0)]
@@ -1842,6 +1832,7 @@ foo2 = u'abc' + u'%d'
 bar2 = foo2 * 100";
 
             var entry = ProcessText(text);
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("x", text.IndexOf("y =")), BuiltinTypeId.Unicode);
             AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("y", text.IndexOf("y =")), BuiltinTypeId.Unicode);
             AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("y1", text.IndexOf("y1 =")), BuiltinTypeId_Str);
             AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("bar", text.IndexOf("bar =")), BuiltinTypeId_Str);
@@ -5578,6 +5569,23 @@ class Derived3(object):
                 var state = analysis.ProjectState;
                 if (m == state._noneInst) {
                     return BuiltinTypeId.NoneType;
+                }
+
+                var bci = m as BuiltinClassInfo;
+                if (bci == null) {
+                    var bii = m as BuiltinInstanceInfo;
+                    if (bii != null) {
+                        bci = bii.ClassInfo;
+                    }
+                }
+                if (bci != null) {
+                    int count = (int)BuiltinTypeIdExtensions.LastTypeId;
+                    for (int i = 1; i <= count; ++i) {
+                        var bti = (BuiltinTypeId)i;
+                        if (!bti.IsVirtualId() && analysis.ProjectState.ClassInfos[bti] == bci) {
+                            return bti;
+                        }
+                    }
                 }
 
                 return BuiltinTypeId.Unknown;

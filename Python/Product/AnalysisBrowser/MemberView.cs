@@ -74,7 +74,8 @@ namespace Microsoft.PythonTools.Analysis.Browser {
         readonly Lazy<IEnumerable<IAnalysisItemView>> _children;
 
         static readonly IAnalysisItemView[] EmptyArray = new IAnalysisItemView[0];
-        static readonly Dictionary<IMember, IAnalysisItemView> _cache = new Dictionary<IMember, IAnalysisItemView>();
+        static readonly Dictionary<Tuple<string, IMember>, IAnalysisItemView> _cache =
+            new Dictionary<Tuple<string, IMember>, IAnalysisItemView>();
 
         protected MemberView(IModuleContext context, string name, IMember member) {
             _context = context;
@@ -157,10 +158,11 @@ namespace Microsoft.PythonTools.Analysis.Browser {
             }
 
             IAnalysisItemView result;
-            if (_cache.TryGetValue(member, out result)) {
+            var key = Tuple.Create(name, member);
+            if (_cache.TryGetValue(key, out result)) {
                 return result;
             }
-            _cache[member] = result = MakeNoCache(context, name, member);
+            _cache[key] = result = MakeNoCache(context, name, member);
             return result;
         }
 

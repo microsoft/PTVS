@@ -263,8 +263,6 @@ namespace Microsoft.PythonTools.Analysis {
         ) {
             if (File.Exists(interpreterPath)) {
                 interpreterPath = Path.GetDirectoryName(interpreterPath);
-            } else if (!Directory.Exists(interpreterPath)) {
-                return Enumerable.Empty<ModulePath>();
             }
             if (!Directory.Exists(libraryPath)) {
                 return Enumerable.Empty<ModulePath>();
@@ -293,10 +291,18 @@ namespace Microsoft.PythonTools.Analysis {
             var modulesInPath = GetModulesInPath(pthDirs, true, true, requireInitPy: requireInitPyFiles);
 
             // Get modules in DLLs directory
-            var modulesInDllsPath = GetModulesInPath(Path.Combine(interpreterPath, "DLLs"), true, false);
+            IEnumerable<ModulePath> modulesInDllsPath;
 
             // Get modules in interpreter directory
-            var modulesInExePath = GetModulesInPath(interpreterPath, true, false);
+            IEnumerable<ModulePath> modulesInExePath;
+
+            if (Directory.Exists(interpreterPath)) {
+                modulesInDllsPath = GetModulesInPath(Path.Combine(interpreterPath, "DLLs"), true, false);
+                modulesInExePath = GetModulesInPath(interpreterPath, true, false);
+            } else {
+                modulesInDllsPath = Enumerable.Empty<ModulePath>();
+                modulesInExePath = Enumerable.Empty<ModulePath>();
+            }
 
             return modulesInPath
                 .Concat(modulesInDllsPath)

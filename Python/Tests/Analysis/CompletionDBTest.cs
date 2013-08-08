@@ -79,8 +79,8 @@ namespace PythonToolsTests {
                 dynamic builtinDb = Unpickle.Load(new FileStream(Path.Combine(testDir, path.Version.Is3x() ? "builtins.idb" : "__builtin__.idb"), FileMode.Open, FileAccess.Read));
                 if (path.Version.Is2x()) { // no open in 3.x
                     foreach (var overload in builtinDb["members"]["open"]["value"]["overloads"]) {
-                        Assert.AreEqual("__builtin__", overload["ret_type"][0]["module_name"]);
-                        Assert.AreEqual("file", overload["ret_type"][0]["type_name"]);
+                        Assert.AreEqual("__builtin__", overload["ret_type"][0][0]);
+                        Assert.AreEqual("file", overload["ret_type"][0][1]);
                     }
 
                     if (!path.Path.Contains("Iron")) {
@@ -116,6 +116,7 @@ namespace PythonToolsTests {
         [TestMethod, Priority(0)]
         public void TestPthFiles() {
             var outputPath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+            Console.WriteLine("Writing to: " + outputPath);
             Directory.CreateDirectory(outputPath);
 
             // run the analyzer
@@ -123,7 +124,8 @@ namespace PythonToolsTests {
                 "/lib", TestData.GetPath(@"TestData\PathStdLib"),
                 "/version", "2.7",
                 "/outdir", outputPath,
-                "/indir", TestData.GetPath("CompletionDB"))) {
+                "/indir", TestData.GetPath("CompletionDB"),
+                "/log", "AnalysisLog.txt")) {
                 output.Wait();
                 Console.WriteLine("* Stdout *");
                 foreach (var line in output.StandardOutputLines) {
@@ -143,12 +145,12 @@ namespace PythonToolsTests {
             paths.AddRange(Directory.EnumerateDirectories(outputPath));
             var typeDb = new PythonTypeDatabase(fact, paths);
             var module = typeDb.GetModule("SomeLib");
-            Assert.AreNotEqual(null, module);
-            var fooMod = module.GetMember(null, "foo");
-            Assert.AreNotEqual(null, fooMod);
+            Assert.IsNotNull(module, "Could not import SomeLib");
+            var fooMod = typeDb.GetModule("SomeLib.foo");
+            Assert.IsNotNull(fooMod, "Could not import SomeLib.foo");
 
             var cClass = ((IPythonModule)fooMod).GetMember(null, "C");
-            Assert.AreNotEqual(null, cClass);
+            Assert.IsNotNull(cClass, "Could not get SomeLib.foo.C");
 
             Assert.AreEqual(PythonMemberType.Class, cClass.MemberType);
         }

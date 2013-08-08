@@ -33,7 +33,7 @@ namespace Microsoft.PythonTools.Analysis.Browser {
         readonly IPythonInterpreterFactory _factory;
         readonly IPythonInterpreter _interpreter;
         readonly IModuleContext _context;
-        readonly IEnumerable<ModuleView> _modules;
+        readonly List<IAnalysisItemView> _modules;
         
         public AnalysisView(string dbDir, Version version = null) {
             var paths = new List<string>();
@@ -71,10 +71,11 @@ namespace Microsoft.PythonTools.Analysis.Browser {
                 .Select(t => new ModuleView(_interpreter, _context, t.Item1, t.Item2))
                 .OrderBy(m => m.SortKey)
                 .ThenBy(m => m.Name)
-                .ToList();
+                .ToList<IAnalysisItemView>();
+            _modules.Insert(0, new KnownTypesView(_interpreter, version));
         }
 
-        public IEnumerable<ModuleView> Modules {
+        public IEnumerable<IAnalysisItemView> Modules {
             get { return _modules; }
         }
 

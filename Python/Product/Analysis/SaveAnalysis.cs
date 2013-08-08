@@ -30,7 +30,7 @@ namespace Microsoft.PythonTools.Analysis {
         private List<AnalysisValue> _path = new List<AnalysisValue>();
         private Dictionary<string, Dictionary<string, object>> _typeNames = new Dictionary<string, Dictionary<string, object>>();
         private Dictionary<string, string> _MemoizedStrings = new Dictionary<string, string>();
-        private Dictionary<string, Dictionary<string, object>> _moduleNames = new Dictionary<string, Dictionary<string, object>>();
+        private Dictionary<string, object[]> _moduleNames = new Dictionary<string, object[]>();
         private static readonly List<object> _EmptyMro = new List<object>();
 
         public void Save(PythonAnalyzer state, string outDir) {
@@ -196,7 +196,7 @@ namespace Microsoft.PythonTools.Analysis {
                     if (ci != null) {
                         if (isRef || ci.DeclaringModule.GetModuleInfo() != declModule) {
                             // TODO: Save qualified name so that classes defined in classes/function can be resolved
-                            return GetTypeName(ci.DeclaringModule.ModuleName, ci.Name);
+                            return GetTypeRef(ci.DeclaringModule.ModuleName, ci.Name);
                         } else {
                             return GenerateClass(ci, declModule);
                         }
@@ -204,7 +204,7 @@ namespace Microsoft.PythonTools.Analysis {
 
                     BuiltinClassInfo bci = type as BuiltinClassInfo;
                     if (bci != null) {
-                        return GetTypeName(bci.PythonType.DeclaringModule.Name, bci.PythonType.Name);
+                        return GetTypeRef(bci.PythonType.DeclaringModule.Name, bci.PythonType.Name);
                     }
                     return "type";
                 case PythonMemberType.Constant:
@@ -237,6 +237,7 @@ namespace Microsoft.PythonTools.Analysis {
             if (bfi.Function.DeclaringType != null) {
                 name += "." + bfi.Function.DeclaringType.Name;
             }
+            
             name += "." + bfi.Function.Name;
 
             return new Dictionary<string, object>() {
@@ -264,7 +265,7 @@ namespace Microsoft.PythonTools.Analysis {
             switch (type.MemberType) {
                 case PythonMemberType.Function:
                     if (type is BuiltinFunctionInfo) {
-                        return "func_ref";
+                        return "funcref";
                     }
                     return "function";
                 case PythonMemberType.Method: return "method";
@@ -310,6 +311,10 @@ namespace Microsoft.PythonTools.Analysis {
             };
         }
 
+        private object GetTypeRef(string moduleName, string className) {
+            return new List<object> { GetTypeName(moduleName, className) };
+        }
+
         private object GetTypeName(string moduleName, string className) {
             // memoize types names for a more efficient on disk representation.
             object typeName;
@@ -319,19 +324,19 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             if (!typeNames.TryGetValue(className, out typeName)) {
-                typeNames[className] = typeName = new Dictionary<string, object> {
-                    { "module_name", MemoizeString(moduleName) },
-                    { "type_name", MemoizeString(className) }
+                typeNames[className] = typeName = new object[] { 
+                    MemoizeString(moduleName),
+                    MemoizeString(className)
                 };
             }
             return typeName;
         }
 
-        private Dictionary<string, object> GetModuleName(string moduleName) {
+        private object[] GetModuleName(string moduleName) {
             // memoize types names for a more efficient on disk representation.
-            Dictionary<string, object> name;
+            object[] name;
             if (!_moduleNames.TryGetValue(moduleName, out name)) {
-                _moduleNames[moduleName] = name = new Dictionary<string, object>() { { "module_name", MemoizeString(moduleName) } };
+                _moduleNames[moduleName] = name = new object[] { MemoizeString(moduleName), string.Empty };
             }
             return name;
         }
@@ -428,15 +433,12 @@ namespace Microsoft.PythonTools.Analysis {
                     var mTypeName = MemoizeString(type.Name);
                     // Create a type without the typename that will be used if
                     // the index types recurse.
-                    typeNames[className] = typeName = new Dictionary<string, object> {
-                        { "module_name", mModuleName },
-                        { "type_name", mTypeName }
-                    };
+                    typeNames[className] = typeName = new object[] { mModuleName, mTypeName };
 
-                    typeNames[className] = typeName = new Dictionary<string, object> {
-                        { "module_name", mModuleName },
-                        { "type_name", mTypeName },
-                        { "index_types", indexTypes.Select(vd => GenerateTypeName(vd.TypesNoCopy, isRef)).ToList<object>() },
+                    typeNames[className] = typeName = new object[] {
+                        mModuleName,
+                        mTypeName,
+                        indexTypes.Select(vd => GenerateTypeName(vd.TypesNoCopy, isRef)).ToList<object>(),
                     };
                 }
 

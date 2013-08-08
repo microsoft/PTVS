@@ -12,10 +12,12 @@
  *
  * ***************************************************************************/
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Interpreter.Default;
 
 namespace Microsoft.PythonTools.Analysis.Browser {
     class ModuleView : IAnalysisItemView {
@@ -51,6 +53,13 @@ namespace Microsoft.PythonTools.Analysis.Browser {
 
                 if (File.Exists(_idbPath)) {
                     yield return RawView.FromFile(_idbPath);
+                }
+
+                CPythonModule cpm;
+                if ((cpm = _module as CPythonModule) != null && cpm._hiddenMembers != null) {
+                    foreach (var keyValue in cpm._hiddenMembers) {
+                        yield return MemberView.Make(_context, keyValue.Key, keyValue.Value);
+                    }
                 }
 
                 foreach (var memberName in _module.GetMemberNames(_context)) {

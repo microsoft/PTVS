@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text;
 using Microsoft.PythonTools.Interpreter.Default;
 
 namespace Microsoft.PythonTools.Interpreter {
@@ -185,21 +186,16 @@ namespace Microsoft.PythonTools.Interpreter {
         /// Receives a delegate which assigns the value to the appropriate field.
         /// </summary>
         public void LookupType(object typeRefOrList, Action<IPythonType> assign) {
-            var typeRef = typeRefOrList as Dictionary<string, object>;
-            if (typeRef != null) {
-                object value;
+            var typeRef = typeRefOrList as object[];
+            if (typeRef != null && typeRef.Length >= 2) {
                 string modName = null, typeName = null;
                 List<object> indexTypes = null;
                 IPythonType res = null;
 
-                if (typeRef.TryGetValue("module_name", out value)) {
-                    modName = value as string;
-                }
-                if (typeRef.TryGetValue("type_name", out value)) {
-                    typeName = value as string;
-                }
-                if (typeRef.TryGetValue("index_types", out value)) {
-                    indexTypes = value as List<object>;
+                modName = typeRef[0] as string;
+                typeName = typeRef[1] as string;
+                if (typeRef.Length > 2) {
+                    indexTypes = typeRef[2] as List<object>;
                 }
 
                 if (typeName == null) {
@@ -289,7 +285,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 case BuiltinTypeId.Float: name = "float"; break;
                 case BuiltinTypeId.Int: name = "int"; break;
                 case BuiltinTypeId.List: name = "list"; break;
-                case BuiltinTypeId.Long: name = "long"; break;
+                case BuiltinTypeId.Long: name = languageVersion.Major == 3 ? "int" : "long"; break;
                 case BuiltinTypeId.Object: name = "object"; break;
                 case BuiltinTypeId.Set: name = "set"; break;
                 case BuiltinTypeId.Str: name = "str"; break;
@@ -312,7 +308,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 case BuiltinTypeId.TupleIterator: name = "tuple_iterator"; break;
                 case BuiltinTypeId.SetIterator: name = "set_iterator"; break;
                 case BuiltinTypeId.StrIterator: name = "str_iterator"; break;
-                case BuiltinTypeId.UnicodeIterator: name = "str_iterator"; break;
+                case BuiltinTypeId.UnicodeIterator: name = languageVersion.Major == 3 ? "str_iterator" : "unicode_iterator"; break;
                 case BuiltinTypeId.BytesIterator: name = languageVersion.Major == 3 ? "bytes_iterator" : "str_iterator"; break;
                 case BuiltinTypeId.CallableIterator: name = "callable_iterator"; break;
 
@@ -360,97 +356,167 @@ namespace Microsoft.PythonTools.Interpreter {
             RunObjectTypeFixups();
         }
 
-        public void ReadMember(string memberName, Dictionary<string, object> memberValue, Action<string, IMember> assign, IMemberContainer container) {
+        private static object[] MakeTypeRef(IEnumerable<string> nameParts) {
+            string typeName = null;
+            var moduleName = new StringBuilder();
+            foreach (var name in nameParts) {
+                if (!string.IsNullOrEmpty(typeName)) {
+                    moduleName.Append(typeName);
+                    moduleName.Append(".");
+                }
+                typeName = name;
+            }
+
+            if (moduleName.Length > 1) {
+                moduleName.Length -= 1;
+            }
+
+            return new object[] {
+                moduleName.ToString(),
+                typeName
+            };
+        }
+
+        private void ResolveMemberRef(
+            string[] names,
+            string memberName,
+            Action<string, IMember> assign,
+            int fixupsLevel = -1
+        ) {
+            IMemberContainer container;
+            IMember member;
+            var module = GetModule(names[0]);
+            member = module;
+
+            if (module == null) {
+                if (fixupsLevel < 0) {
+                    // Fixup 1: Could not resolve module.
+                    AddFixup(() => ResolveMemberRef(names, memberName, assign, 0));
+                }
+                return;
+            }
+
+            for (int i = 1; i < names.Length - 1; ++i) {
+                if ((module = member as IPythonModule) != null) {
+                    member = GetModule(module.Name + "." + names[i]);
+                    if (member == null) {
+                        member = module.GetMember(null, names[i]);
+                    }
+                } else if ((container = member as IMemberContainer) != null) {
+                    member = container.GetMember(null, names[i]);
+                }
+                if (member == null) {
+                    if (fixupsLevel < i) {
+                        // Fixup 2: Could not resolve member
+                        AddFixup(() => ResolveMemberRef(names, memberName, assign, i));
+                    }
+                    return;
+                }
+            }
+
+            if ((container = member as IMemberContainer) != null) {
+                member = container.GetMember(null, names[names.Length - 1]);
+                if (member != null) {
+                    assign(memberName, member);
+                }
+            }
+        }
+
+        public void ReadMember(
+            string memberName,
+            Dictionary<string, object> memberValue,
+            Action<string, IMember> assign,
+            IMemberContainer container
+        ) {
             object memberKind;
             object value;
             Dictionary<string, object> valueDict;
+            List<object> valueList;
+            object[] valueArray;
 
             if (memberValue.TryGetValue("value", out value) &&
-                (valueDict = (value as Dictionary<string, object>)) != null &&
                 memberValue.TryGetValue("kind", out memberKind) && memberKind is string) {
-                switch ((string)memberKind) {
-                    case "function":
-                        if (CheckVersion(valueDict)) {
-                            assign(memberName, new CPythonFunction(this, memberName, valueDict, container));
-                        }
-                        break;
-                    case "func_ref":
-                        string funcName;
-                        if (valueDict.TryGetValue("func_name", out value) && (funcName = value as string) != null) {
-                            var names = funcName.Split('.');
-                            IPythonModule mod = GetModule(names[0]);
-                            if (mod != null) {
-                                if (names.Length == 2) {
-                                    var mem = mod.GetMember(null, names[1]);
-                                    if (mem == null) {
-                                        AddFixup(() => {
-                                            var tmp = mod.GetMember(null, names[1]);
-                                            if (tmp != null) {
-                                                assign(memberName, tmp);
-                                            }
-                                        });
-                                    } else {
-                                        assign(memberName, mem);
-                                    }
-                                } else {
-                                    LookupType(new object[] { names[0], names[1] }, type => {
-                                        var mem = type.GetMember(null, names[2]);
-                                        if (mem != null) {
-                                            assign(memberName, mem);
-                                        }
-                                    });
-                                }
+                if ((valueDict = (value as Dictionary<string, object>)) != null) {
+                    switch ((string)memberKind) {
+                        case "function":
+                            if (CheckVersion(memberValue)) {
+                                assign(memberName, new CPythonFunction(this, memberName, valueDict, container));
                             }
-                        }
-                        break;
-                    case "method":
-                        if (CheckVersion(valueDict)) {
-                            assign(memberName, new CPythonMethodDescriptor(this, memberName, valueDict, container));
-                        }
-                        break;
-                    case "property":
-                        if (CheckVersion(valueDict)) {
-                            assign(memberName, new CPythonProperty(this, valueDict, container));
-                        }
-                        break;
-                    case "data":
-                        object typeInfo;
-                        if (valueDict.TryGetValue("type", out typeInfo) && CheckVersion(valueDict)) {
-                            LookupType(
-                                typeInfo,
-                                dataType => {
-                                    if (!(dataType is IPythonSequenceType)) {
-                                        assign(memberName, GetConstant(dataType));
-                                    } else {
-                                        assign(memberName, dataType);
+                            break;
+                        case "funcref":
+                            string funcName;
+                            if (valueDict.TryGetValue("func_name", out value) && (funcName = value as string) != null) {
+                                ResolveMemberRef(funcName.Split('.'), memberName, assign);
+                            }
+                            break;
+                        case "method":
+                            if (CheckVersion(memberValue)) {
+                                assign(memberName, new CPythonMethodDescriptor(this, memberName, valueDict, container));
+                            }
+                            break;
+                        case "property":
+                            if (CheckVersion(memberValue)) {
+                                assign(memberName, new CPythonProperty(this, valueDict, container));
+                            }
+                            break;
+                        case "data":
+                            object typeInfo;
+                            if (valueDict.TryGetValue("type", out typeInfo) && CheckVersion(memberValue)) {
+                                LookupType(
+                                    typeInfo,
+                                    dataType => {
+                                        if (!(dataType is IPythonSequenceType)) {
+                                            assign(memberName, GetConstant(dataType));
+                                        } else {
+                                            assign(memberName, dataType);
+                                        }
                                     }
+                                );
+                            }
+                            break;
+                        case "type":
+                            if (CheckVersion(memberValue)) {
+                                assign(memberName, MakeType(memberName, valueDict, container));
+                            }
+                            break;
+                        case "multiple":
+                            object members;
+                            object[] memsArray;
+                            if (valueDict.TryGetValue("members", out members) && (memsArray = members as object[]) != null) {
+                                assign(memberName, new CPythonMultipleMembers(container, this, memberName, memsArray));
+                            }
+                            break;
+                        default:
+                            Debug.Fail("Unexpected member kind: " + (string)memberKind);
+                            break;
+                    }
+                } else if ((valueList = value as List<object>) != null) {
+                    switch ((string)memberKind) {
+                        case "typeref":
+                            if (CheckVersion(memberValue)) {
+                                LookupType(valueList, dataType => assign(memberName, dataType));
+                            }
+                            break;
+                        default:
+                            Debug.Fail("Unexpected member kind: " + (string)memberKind);
+                            break;
+                    }
+                } else if ((valueArray = value as object[]) != null) {
+                    switch ((string)memberKind) {
+                        case "moduleref":
+                            string modName;
+                            if (valueArray.Length >= 1 && !string.IsNullOrEmpty(modName = valueArray[0] as string)) {
+                                var module = GetModule(modName);
+                                if (module == null) {
+                                    throw new InvalidOperationException("Failed to find module " + modName);
                                 }
-                            );
-                        }
-                        break;
-                    case "type":
-                        if (CheckVersion(valueDict)) {
-                            assign(memberName, MakeType(memberName, valueDict, container));
-                        }
-                        break;
-                    case "multiple":
-                        object members;
-                        object[] memsArray;
-                        if (valueDict.TryGetValue("members", out members) && (memsArray = members as object[]) != null) {
-                            assign(memberName, new CPythonMultipleMembers(container, this, memberName, memsArray));
-                        }
-                        break;
-                    case "typeref":
-                        LookupType(valueDict, dataType => assign(memberName, dataType));
-                        break;
-                    case "moduleref":
-                        object modName;
-                        if (!valueDict.TryGetValue("module_name", out modName) || !(modName is string)) {
-                            throw new InvalidOperationException("Failed to find module name: " + modName);
-                        }
-
-                        assign(memberName, GetModule((string)modName));
-                        break;
+                                assign(modName, GetModule(modName));
+                            }
+                            break;
+                        default:
+                            Debug.Fail("Unexpected member kind: " + (string)memberKind);
+                            break;
+                    }
                 }
             }
         }
@@ -598,7 +664,8 @@ namespace Microsoft.PythonTools.Interpreter {
                 case "list_iterator": return BuiltinTypeId.ListIterator;
                 case "tuple_iterator": return BuiltinTypeId.TupleIterator;
                 case "set_iterator": return BuiltinTypeId.SetIterator;
-                case "str_iterator": return BuiltinTypeId.UnicodeIterator;
+                case "str_iterator": return _langVersion.Major == 3 ? BuiltinTypeId.UnicodeIterator : BuiltinTypeId.BytesIterator;
+                case "unicode_iterator": return BuiltinTypeId.UnicodeIterator;
                 case "bytes_iterator": return BuiltinTypeId.BytesIterator;
                 case "callable_iterator": return BuiltinTypeId.CallableIterator;
                 case "property": return BuiltinTypeId.Property;

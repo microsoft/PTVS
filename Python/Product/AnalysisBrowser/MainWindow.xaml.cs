@@ -75,12 +75,16 @@ namespace Microsoft.PythonTools.Analysis.Browser {
 
         private void Open_Executed(object sender, ExecutedRoutedEventArgs e) {
             string path;
-            using (var bfd = new System.Windows.Forms.FolderBrowserDialog()) {
-                bfd.RootFolder = Environment.SpecialFolder.Desktop;
+            using (var bfd = new Microsoft.WindowsAPICodePack.Dialogs.CommonOpenFileDialog()) {
+                bfd.IsFolderPicker = true;
+                bfd.RestoreDirectory = true;
                 if (HasAnalysis) {
                     path = Analysis.Path;
                 } else {
-                    path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Python Tools");
+                    path = Path.Combine(
+                        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                        "Python Tools"
+                    );
                 }
                 while (path.Length >= 4 && !Directory.Exists(path)) {
                     path = Path.GetDirectoryName(path);
@@ -88,11 +92,11 @@ namespace Microsoft.PythonTools.Analysis.Browser {
                 if (path.Length <= 3) {
                     path = null;
                 }
-                bfd.SelectedPath = path;
-                if (bfd.ShowDialog() == System.Windows.Forms.DialogResult.Cancel) {
+                bfd.InitialDirectory = path;
+                if (bfd.ShowDialog() == WindowsAPICodePack.Dialogs.CommonFileDialogResult.Cancel) {
                     return;
                 }
-                path = bfd.SelectedPath;
+                path = bfd.FileName;
             }
 
             Load(path);

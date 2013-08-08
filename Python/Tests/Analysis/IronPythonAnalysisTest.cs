@@ -60,7 +60,10 @@ namespace AnalysisTests {
 
         public override BuiltinTypeId BuiltinTypeId_StrIterator {
             get {
-                return BuiltinTypeId.UnicodeIterator;
+                // IronPython does not distinguish between string iterators, and
+                // since BytesIterator < UnicodeIterator, it is the one returned
+                // for iter("").
+                return BuiltinTypeId.BytesIterator;
             }
         }
 

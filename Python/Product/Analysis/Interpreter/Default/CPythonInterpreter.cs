@@ -51,24 +51,6 @@ namespace Microsoft.PythonTools.Interpreter.Default {
                 return null;
             }
             
-            if (id == BuiltinTypeId.Str) {
-                if (_typeDb.LanguageVersion.Major == 3) {
-                    id = BuiltinTypeId.Unicode;
-                } else {
-                    id = BuiltinTypeId.Bytes;
-                }
-            } else if (id == BuiltinTypeId.StrIterator) {
-                if (_typeDb.LanguageVersion.Major == 2) {
-                    id = BuiltinTypeId.UnicodeIterator;
-                } else {
-                    id = BuiltinTypeId.BytesIterator;
-                }
-            } else if (id == BuiltinTypeId.Long) {
-                if (_typeDb.LanguageVersion.Major == 3) {
-                    id = BuiltinTypeId.Int;
-                }
-            }
-
             var name = SharedDatabaseState.GetBuiltinTypeName(id, _typeDb.LanguageVersion);
             var res = _typeDb.BuiltinModule.GetAnyMember(name) as IPythonType;
             if (res == null) {

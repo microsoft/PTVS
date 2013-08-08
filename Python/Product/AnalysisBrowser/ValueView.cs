@@ -20,6 +20,7 @@ using Microsoft.PythonTools.Interpreter;
 namespace Microsoft.PythonTools.Analysis.Browser {
     class ValueView : MemberView {
         readonly IPythonConstant _value;
+        IAnalysisItemView _type;
 
         public ValueView(IModuleContext context, string name, IPythonConstant member)
             : base(context, name, member) {
@@ -34,10 +35,23 @@ namespace Microsoft.PythonTools.Analysis.Browser {
             get { return "Constant"; }
         }
 
-        public override IEnumerable<IAnalysisItemView> Children {
+        public IAnalysisItemView Type {
             get {
-                if (_value != null && _value.Type != null) {
-                    yield return MemberView.Make(_context, _value.Type.Name, _value.Type);
+                if (_value != null && _value.Type != null && _type == null) {
+                    _type = MemberView.Make(_context, _value.Type.Name, _value.Type);
+                }
+                return _type;
+            }
+        }
+
+        public override IEnumerable<KeyValuePair<string, object>> Properties {
+            get {
+                foreach (var p in base.Properties) {
+                    yield return p;
+                }
+
+                if (Type != null) {
+                    yield return new KeyValuePair<string, object>("Type", Type);
                 }
             }
         }

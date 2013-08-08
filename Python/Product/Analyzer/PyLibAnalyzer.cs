@@ -205,6 +205,12 @@ namespace Microsoft.PythonTools.Analysis {
             _needsRefresh = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             _builtinSourceLibraries = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             _builtinSourceLibraries.Add(_library);
+            if (!string.IsNullOrEmpty(_library)) {
+                var sitePackagesDir = Path.Combine(_library, "site-packages");
+                if (Directory.Exists(sitePackagesDir)) {
+                    _builtinSourceLibraries.Add(sitePackagesDir);
+                }
+            }
 
             if (_id != Guid.Empty) {
                 var identifier = AnalyzerStatusUpdater.GetIdentifier(_id, _version);
@@ -405,10 +411,13 @@ namespace Microsoft.PythonTools.Analysis {
                 .Select(group => group.ToList())
                 .ToList();
 
-            // Move the standard library to the first position within the list
-            // of groups.
-            var stdLibGroups = _fileGroups.FindAll(g => g.Count > 0 && CommonUtils.IsSamePath(g[0].LibraryPath, _library));
-            _fileGroups.RemoveAll(g => stdLibGroups.Contains(g));
+            // Move the standard library and builtin groups to the first
+            // positions within the list of groups.
+            var builtinGroups = _fileGroups.FindAll(g => g.Count > 0 && _builtinSourceLibraries.Contains(g[0].LibraryPath));
+            var stdLibGroups = builtinGroups.FindAll(g => g.Count > 0 && CommonUtils.IsSamePath(g[0].LibraryPath, _library));
+            _fileGroups.RemoveAll(g => builtinGroups.Contains(g));
+            builtinGroups.RemoveAll(g => stdLibGroups.Contains(g));
+            _fileGroups.InsertRange(0, builtinGroups);
             _fileGroups.InsertRange(0, stdLibGroups);
 
             // If the database was invalid, we have to refresh everything.
@@ -638,31 +647,23 @@ namespace Microsoft.PythonTools.Analysis {
                 }
             }
 
-            PythonInterpreterFactoryWithDatabase factory;
-            if (_dryRun) {
-                factory = null;
-            } else {
-                factory = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(
-                    _version,
-                    null,
-                    _baseDb.Skip(1).Concat(Enumerable.Repeat(_outDir, 1)).ToArray()
-                );
-            }
-
             foreach (var fileGroup in _fileGroups) {
                 if (_cancel.IsCancellationRequested) {
                     break;
                 }
 
-                var files = fileGroup.Where(file => !file.IsCompiled).ToList();
-                if (files.Count == 0) {
-                    continue;
-                }
-
+                var doNotAnalyze = new HashSet<string>(StringComparer.Ordinal);
                 bool needAnalyze = false;
-                foreach (var file in files) {
+                foreach (var file in fileGroup) {
                     var destName = GetOutputFile(file);
                     _existingDatabase.Remove(destName);
+
+                    // Add compiled files to the do-not-analyze list. This will
+                    // also prevent us from analyzing any source files with the
+                    // same name.
+                    if (file.IsCompiled) {
+                        doNotAnalyze.Add(file.ModuleName);
+                    }
 
                     // Deliberately short-circuit the check once we know we'll
                     // need to analyze this group. We don't break because we
@@ -670,9 +671,13 @@ namespace Microsoft.PythonTools.Analysis {
                     needAnalyze = needAnalyze || ShouldAnalyze(file, destName);
                 }
 
-                if (!needAnalyze) {
-                    TraceInformation("Skipped group \"{0}\"", files[0].LibraryPath);
-                    progressOffset += files.Count;
+                var files = fileGroup.Where(mp => !doNotAnalyze.Contains(mp.ModuleName)).ToList();
+
+                if (!needAnalyze || files.Count == 0) {
+                    if (fileGroup.Count > 0) {
+                        TraceInformation("Skipped group \"{0}\"", fileGroup[0].LibraryPath);
+                    }
+                    progressOffset += fileGroup.Count;
                     if (_updater != null) {
                         _updater.UpdateStatus(progressOffset, progressTotal);
                     }
@@ -692,6 +697,7 @@ namespace Microsoft.PythonTools.Analysis {
                     continue;
                 }
 
+                Directory.CreateDirectory(outDir);
 
                 TraceInformation("Start group \"{0}\" with {1} files", files[0].LibraryPath, files.Count);
                 AnalysisLog.StartFileGroup(files[0].LibraryPath, files.Count);
@@ -701,6 +707,17 @@ namespace Microsoft.PythonTools.Analysis {
                     currentLibrary = "standard library";
                 } else {
                     currentLibrary = CommonUtils.CreateFriendlyDirectoryPath(_library, files[0].LibraryPath);
+                }
+
+                IPythonInterpreterFactory factory;
+                if (_dryRun) {
+                    factory = null;
+                } else {
+                    factory = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(
+                        _version,
+                        null,
+                        new[] { _outDir, outDir }.Concat(_baseDb.Skip(1)).ToArray()
+                    );
                 }
 
                 var projectState = new PythonAnalyzer(factory);
@@ -807,11 +824,6 @@ namespace Microsoft.PythonTools.Analysis {
 
                 progressOffset += files.Count;
                 AnalysisLog.Flush();
-
-                if (CommonUtils.IsSamePath(files[0].LibraryPath, _library)) {
-                    // Reload database with new standard library analysis.
-                    factory.NotifyNewDatabase();
-                }
             }
         }
 

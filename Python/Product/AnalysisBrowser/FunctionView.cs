@@ -62,10 +62,14 @@ namespace Microsoft.PythonTools.Analysis.Browser {
         }
 
         private IEnumerable<IAnalysisItemView> CalculateReturnTypes() {
+            var seen = new HashSet<IAnalysisItemView>();
+
             foreach (var overload in _function.Overloads) {
                 if (overload.ReturnType != null) {
                     foreach (var type in overload.ReturnType.Select(t => MemberView.Make(_context, t.Name, t))) {
-                        yield return type;
+                        if (seen.Add(type)) {
+                            yield return type;
+                        }
                     }
                 }
             }
@@ -91,6 +95,19 @@ namespace Microsoft.PythonTools.Analysis.Browser {
                     _overloads = _function.Overloads.Select(o => new FunctionOverloadView(_context, Name, o)).ToList();
                 }
                 return _overloads;
+            }
+        }
+
+        public override IEnumerable<KeyValuePair<string, object>> Properties {
+            get {
+                foreach (var p in base.Properties) {
+                    yield return p;
+                }
+
+                int i = 1;
+                foreach (var t in ReturnTypes) {
+                    yield return new KeyValuePair<string, object>(string.Format("Retval #{0}", i++), t);
+                }
             }
         }
 
