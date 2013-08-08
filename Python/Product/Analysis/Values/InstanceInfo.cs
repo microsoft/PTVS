@@ -208,6 +208,20 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public override IAnalysisSet BinaryOperation(Node node, AnalysisUnit unit, PythonOperator operation, IAnalysisSet rhs) {
+            string op = BinaryOpToString(operation);
+
+            if (op != null) {
+                var invokeMem = GetMember(node, unit, op);
+                if (invokeMem.Count > 0) {
+                    // call __*__ method
+                    return invokeMem.Call(node, unit, new[] { rhs }, ExpressionEvaluator.EmptyNames);
+                }
+            }
+
+            return base.BinaryOperation(node, unit, operation, rhs);
+        }
+
+        internal static string BinaryOpToString(PythonOperator operation) {
             string op = null;
             switch (operation) {
                 case PythonOperator.Multiply: op = "__mul__"; break;
@@ -224,19 +238,24 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 case PythonOperator.RightShift: op = "__rshift__"; break;
                 case PythonOperator.TrueDivide: op = "__truediv__"; break;
             }
+            return op;
+        }
+
+        public override IAnalysisSet ReverseBinaryOperation(Node node, AnalysisUnit unit, PythonOperator operation, IAnalysisSet rhs) {
+            string op = ReverseBinaryOpToString(operation);
 
             if (op != null) {
                 var invokeMem = GetMember(node, unit, op);
                 if (invokeMem.Count > 0) {
-                    // call __*__ method
+                    // call __r*__ method
                     return invokeMem.Call(node, unit, new[] { rhs }, ExpressionEvaluator.EmptyNames);
                 }
             }
 
-            return base.BinaryOperation(node, unit, operation, rhs);
+            return base.ReverseBinaryOperation(node, unit, operation, rhs);
         }
 
-        public override IAnalysisSet ReverseBinaryOperation(Node node, AnalysisUnit unit, PythonOperator operation, IAnalysisSet rhs) {
+        private static string ReverseBinaryOpToString(PythonOperator operation) {
             string op = null;
             switch (operation) {
                 case PythonOperator.Multiply: op = "__rmul__"; break;
@@ -253,16 +272,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 case PythonOperator.RightShift: op = "__rrshift__"; break;
                 case PythonOperator.TrueDivide: op = "__rtruediv__"; break;
             }
-
-            if (op != null) {
-                var invokeMem = GetMember(node, unit, op);
-                if (invokeMem.Count > 0) {
-                    // call __r*__ method
-                    return invokeMem.Call(node, unit, new[] { rhs }, ExpressionEvaluator.EmptyNames);
-                }
-            }
-
-            return base.ReverseBinaryOperation(node, unit, operation, rhs);
+            return op;
         }
 
         public override IPythonProjectEntry DeclaringModule {

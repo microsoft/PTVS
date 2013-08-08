@@ -143,6 +143,29 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         }
 #endif
 
+        /// <summary>
+        /// Assigns a variable in the given scope, creating the variable if necessary, and performing
+        /// any scope specific behavior such as propagating to outer scopes (is instance), updating
+        /// __metaclass__ (class scopes), or enqueueing dependent readers (modules).
+        /// 
+        /// Returns true if a new type has been signed to the variable, false if the variable
+        /// is left unchanged.
+        /// </summary>
+        public virtual bool AssignVariable(string name, Node location, AnalysisUnit unit, IAnalysisSet values) {
+            var vars = CreateVariable(location, unit, name, false);
+
+            return AssignVariableWorker(location, unit, values, vars);
+        }
+
+        /// <summary>
+        /// Handles the base assignment case for assign to a variable, minus variable creation.
+        /// </summary>
+        protected static bool AssignVariableWorker(Node location, AnalysisUnit unit, IAnalysisSet values, VariableDef vars) {
+            vars.AddAssignment(location, unit);
+            vars.MakeUnionStrongerIfMoreThan(unit.ProjectState.Limits.AssignedTypes, values);
+            return vars.AddTypes(unit, values);
+        }
+
         public VariableDef AddLocatedVariable(string name, Node location, AnalysisUnit unit, ParameterKind paramKind = ParameterKind.Normal) {
             VariableDef value;
             if (!Variables.TryGetValue(name, out value)) {

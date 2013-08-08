@@ -41,5 +41,16 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 return false;
             }
         }
+
+        public override bool AssignVariable(string name, Node location, AnalysisUnit unit, IAnalysisSet values) {
+            var res = base.AssignVariable(name, location, unit, values);
+
+            if (name == "__metaclass__") {
+                // assignment to __metaclass__, save it in our metaclass variable
+                Class.GetOrCreateMetaclassVariable().AddTypes(unit, values);
+            }
+
+            return res;
+        }
     }
 }

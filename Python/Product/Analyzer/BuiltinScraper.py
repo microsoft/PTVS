@@ -137,6 +137,19 @@ def get_ret_type(ret_type, obj_class, mod):
             return [type_name_to_typeref(ret_type, mod, RETURN_TYPE_OVERRIDES)]
 
 
+RETURNS_REGEX = ['.*Returns\\s*-*\\s*[a-zA-Z_][a-zA-Z_0-9-]*\\s*:\\s*([a-zA-Z_][a-zA-Z_0-9-]*)']
+
+def update_overload_from_doc_str(overload, doc_str, obj_class, mod):
+    # see if we can get additional information from the doc string
+    if 'ret_type' not in overload:
+        for ret_regex in RETURNS_REGEX:
+            match = re.match(ret_regex, doc_str)
+            if match:
+                ret_type = match.groups(0)[0]
+                overload['ret_type'] = get_ret_type(ret_type, obj_class, mod)
+                break
+
+
 def parse_doc_str(input_str, module_name, mod, func_name, extra_args = [], obj_class = None):    
     # we split, so as long as we have all tokens every other item is a token, and the
     # rest are empty space.  If we have unrecognized tokens (for example during the description
@@ -177,6 +190,7 @@ def parse_doc_str(input_str, module_name, mod, func_name, extra_args = [], obj_c
             ret_types = get_ret_type(ret_type, obj_class, mod)
             if ret_types is not None:
                 overload['ret_type'] = ret_types
+            update_overload_from_doc_str(overload, doc_str, obj_class, mod)
             overloads.append(overload)
         # see if we have funcname(
         elif (cur_token + 4 < len(tokens) and
@@ -204,6 +218,7 @@ def parse_doc_str(input_str, module_name, mod, func_name, extra_args = [], obj_c
             ret_types = get_ret_type(ret_type, obj_class, mod)
             if ret_types is not None:
                 overload['ret_type'] = ret_types
+            update_overload_from_doc_str(overload, doc_str, obj_class, mod)
             overloads.append(overload)
 
         else:
@@ -213,7 +228,9 @@ def parse_doc_str(input_str, module_name, mod, func_name, extra_args = [], obj_c
     finish_doc = ''.join(tokens[start_token:cur_token])
     if finish_doc:
         for overload in overloads:
-            overload['doc'] += finish_doc            
+            overload['doc'] += finish_doc
+            update_overload_from_doc_str(overload, overload['doc'], obj_class, mod)
+
     return overloads
 
 
@@ -253,6 +270,9 @@ def parse_args(tokens, cur_token, module):
                 break
         elif token == ',':
             cur_token += 2
+            if cur_token < len(tokens) and tokens[cur_token] == ']':
+                # [foo,], ignore the trailing ]
+                cur_token += 2
             continue
         elif token == '(':
             is_tuple_param = True
@@ -419,6 +439,26 @@ def get_new_overloads(type_obj, obj):
 
 
 if __name__ == '__main__':
+    import pprint
+    r = parse_doc_str("""arange([start,] stop[, step,], dtype=None)
+
+    Returns
+    -------
+    out : ndarray""",
+        'numpy',
+        None,
+        'arange')
+
+    assert r == [{
+        'doc': 'Returns\n    -------\n    out : ndarray',
+        'ret_type': [{'type_name': 'ndarray'}],
+        'args': ({'name': 'start', 'default_value':'None'}, 
+                 {'name': 'stop'}, 
+                 {'name': 'step', 'default_value': 'None'},
+                 {'name': 'dtype', 'default_value':'None'}, 
+                )
+    }], pprint.pformat(r)
+
     r = parse_doc_str('reduce(function, sequence[, initial]) -> value', '__builtin__', sys.modules['__builtin__'], 'reduce')
     assert r == [
            {'args': (

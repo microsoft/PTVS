@@ -27,7 +27,7 @@ namespace Microsoft.PythonTools.Intellisense {
     /// Provides the smart tag action for adding missing import statements.
     /// </summary>
     class ImportSmartTagAction : SmartTagAction {
-        private readonly string _name, _fromName;
+        public readonly string Name, FromName;
         private readonly ITextBuffer _buffer;
         private readonly ITextView _view;
 
@@ -36,7 +36,7 @@ namespace Microsoft.PythonTools.Intellisense {
         /// </summary>
         public ImportSmartTagAction(string name, ITextBuffer buffer, ITextView view)
             : base(RefactoringIconKind.AddUsing) {
-            _name = name;
+            Name = name;
             _buffer = buffer;
             _view = view;
         }
@@ -46,8 +46,8 @@ namespace Microsoft.PythonTools.Intellisense {
         /// </summary>
         public ImportSmartTagAction(string fromName, string name, ITextBuffer buffer, ITextView view)
             : base(RefactoringIconKind.AddUsing) {
-            _fromName = fromName;
-            _name = name;
+            FromName = fromName;
+            Name = name;
             _buffer = buffer;
             _view = view;
         }
@@ -71,14 +71,14 @@ namespace Microsoft.PythonTools.Intellisense {
                     firstStatement = false;
 
                     // __future__ imports go first
-                    if (_fromName == null || _fromName != "__future__") {
+                    if (FromName == null || FromName != "__future__") {
                         if (statement is ImportStatement) {
                             // we insert after this
                             continue;
                         } else if (statement is FromImportStatement) {
                             // we might update this, we might insert after
                             FromImportStatement fromImport = statement as FromImportStatement;
-                            if (fromImport.Root.MakeString() == _fromName) {
+                            if (fromImport.Root.MakeString() == FromName) {
                                 // update the existing from ... import statement to include the new name.
                                 UpdateFromImport(curAst, fromImport);
                                 return;
@@ -150,7 +150,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private void UpdateFromImport(PythonAst curAst, FromImportStatement fromImport) {
             NameExpression[] names = new NameExpression[fromImport.Names.Count + 1];
             NameExpression[] asNames = fromImport.AsNames == null ? null : new NameExpression[fromImport.AsNames.Count + 1];
-            NameExpression newName = new NameExpression(_name);
+            NameExpression newName = new NameExpression(Name);
             for (int i = 0; i < fromImport.Names.Count; i++) {
                 names[i] = fromImport.Names[i];
             }
@@ -184,10 +184,10 @@ namespace Microsoft.PythonTools.Intellisense {
         private string InsertionText {
             get {
                 string res;
-                if (_fromName != null) {
-                    res = "from " + _fromName + " import " + _name;
+                if (FromName != null) {
+                    res = "from " + FromName + " import " + Name;
                 } else {
-                    res = "import " + _name;
+                    res = "import " + Name;
                 }
                 return res;
             }

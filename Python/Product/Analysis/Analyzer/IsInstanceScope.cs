@@ -39,6 +39,22 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             return ast.IndexToLocation(_endIndex).Index;
         }
 
+        public override bool AssignVariable(string name, Node location, AnalysisUnit unit, IAnalysisSet values) {
+            var vars = CreateVariable(location, unit, name, false);
+
+            var res = AssignVariableWorker(location, unit, values, vars);
+
+            if (OuterScope != null) {
+                var outerVar = OuterScope.GetVariable(location, unit, name, false);
+                if (outerVar != null && outerVar != vars) {
+                    outerVar.AddAssignment(location, unit);
+                    outerVar.AddTypes(unit, values);
+                }
+            }
+
+            return res;
+        }
+
         public override VariableDef GetVariable(Node node, AnalysisUnit unit, string name, bool addRef = true) {
             return base.GetVariable(node, unit, name, addRef) ?? OuterScope.GetVariable(node, unit, name, addRef);
         }

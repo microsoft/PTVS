@@ -114,6 +114,12 @@ import subprocess
 import sys
 import types
 
+try:
+    callable
+except:
+    def callable(obj):
+        return hasattr(obj, '__call__')
+
 # The version number should match the value of PythonTypeDatabase.CurrentVersion in
 #  \Release\Product\Python\Analysis\Interpreter\PythonTypeDatabase.cs
 #
@@ -263,6 +269,14 @@ def generate_member(obj, is_hidden=False, from_type = False):
     elif isinstance(obj, (getset_descriptor_type, member_descriptor_type)):
         member_table['kind'] = 'property'
         member_table['value'] = generate_getset_descriptor(obj)
+    elif callable(obj):
+        try:
+            member_table['kind'] = 'function'
+            member_table['value'] = generate_builtin_function(obj)
+        except:
+            # random callable might not quite be function like enough...
+            member_table['kind'] = 'data'
+            member_table['value'] = generate_data(obj)
     else:
         member_table['kind'] = 'data'
         member_table['value'] = generate_data(obj)

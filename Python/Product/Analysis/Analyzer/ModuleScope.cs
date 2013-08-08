@@ -26,5 +26,14 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         public override string Name {
             get { return Module.Name; }
         }
+
+        public override bool AssignVariable(string name, Parsing.Ast.Node location, AnalysisUnit unit, IAnalysisSet values) {
+            if (base.AssignVariable(name, location, unit, values)) {
+                Module.ModuleDefinition.EnqueueDependents();
+                return true;
+            }
+
+            return false;
+        }
     }
 }

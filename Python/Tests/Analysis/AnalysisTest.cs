@@ -125,6 +125,74 @@ f(x=42, y = 'abc')
         }
 
         [TestMethod, Priority(0)]
+        public void TestPackageImportStar() {
+            var fooInit = GetSourceUnit("from bar import *", @"C:\\Test\\Lib\\foo\\__init__.py");
+            var barInit = GetSourceUnit("from baz import *", @"C:\\Test\\Lib\\foo\\bar\\__init__.py");
+            var baz = GetSourceUnit("import quox\r\nfunc = quox.func", @"C:\\Test\\Lib\\foo\\bar\\baz.py");
+            var quox = GetSourceUnit("def func(): return 42", @"C:\\Test\\Lib\\foo\\bar\\quox.py");
+
+            var state = new PythonAnalyzer(InterpreterFactory, Interpreter);
+
+            var fooInitState = state.AddModule("foo", @"C:\\Test\\Lib\\foo\\__init__.py", EmptyAnalysisCookie.Instance);
+            var barInitState = state.AddModule("foo.bar", @"C:\\Test\\Lib\\foo\\bar\\__init__.py", EmptyAnalysisCookie.Instance);
+            var bazState = state.AddModule("foo.bar.baz", @"C:\\Test\\Lib\\foo\\bar\\baz.py", EmptyAnalysisCookie.Instance);
+            var quoxState = state.AddModule("foo.bar.quox", @"C:\\Test\\Lib\\foo\\bar\\quox.py", EmptyAnalysisCookie.Instance);
+
+            Prepare(fooInitState, fooInit);
+            Prepare(barInitState, barInit);
+            Prepare(bazState, baz);
+            Prepare(quoxState, quox);
+
+            fooInitState.Analyze(CancellationToken.None);
+            barInitState.Analyze(CancellationToken.None);
+            bazState.Analyze(CancellationToken.None);
+            quoxState.Analyze(CancellationToken.None);
+            Assert.AreEqual(
+                quoxState.Analysis.GetValuesByIndex("func", 1).First().Description,
+                "def func(...) -> int"
+            );
+            Assert.AreEqual(
+                bazState.Analysis.GetValuesByIndex("func", 1).First().Description,
+                "def func(...) -> int"
+            );
+            Assert.AreEqual(
+                barInitState.Analysis.GetValuesByIndex("func", 1).First().Description,
+                "def func(...) -> int"
+            );
+
+            Assert.AreEqual(
+                fooInitState.Analysis.GetValuesByIndex("func", 1).First().Description, 
+                "def func(...) -> int"
+            );
+        }
+        
+        /// <summary>
+        /// Binary operators should assume their result type
+        /// https://pytools.codeplex.com/workitem/1575
+        /// 
+        /// Slicing should assume the incoming type
+        /// https://pytools.codeplex.com/workitem/1581
+        /// </summary>
+        [TestMethod, Priority(0)]
+        public void TestBuiltinOperatorsFallback() {
+            var code = @"import array
+
+slice = array.array('b', b'abcdef')[2:3]
+add = array.array('b', b'abcdef') + array.array('b', b'foo')
+";
+            var entry = ProcessText(code);
+
+            AssertUtil.ContainsExactly(
+                entry.GetTypesByIndex("slice", code.IndexOf("slice = ")).Select(x => x.Name), 
+                "array"
+            );
+            AssertUtil.ContainsExactly(
+                entry.GetTypesByIndex("add", code.IndexOf("add = ")).Select(x => x.Name), 
+                "array"
+            );
+        }
+
+        [TestMethod, Priority(0)]
         public void ExcessPositionalArguments() {
             var code = @"def f(a, *args):
     return args[0]

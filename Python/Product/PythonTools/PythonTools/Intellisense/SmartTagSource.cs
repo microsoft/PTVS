@@ -53,11 +53,11 @@ namespace Microsoft.PythonTools.Intellisense {
                 // as we're working on the same location (our SmartTagController tracks this) then we'll keep working
                 // through the same enumerator so we make progress over time.   So we'll read the AbortedAugment
                 // here and continue working, and if we run out of idletime we'll add or update the aborted augment.
-                List<ISmartTagAction> actions;
+                List<ImportSmartTagAction> actions;
                 IEnumerator<ExportedMemberInfo> importsEnum;
 
                 if (controller == null || controller._abortedAugment == null) {
-                    actions = new List<ISmartTagAction>();
+                    actions = new List<ImportSmartTagAction>();
                     importsEnum = imports.AvailableImports.GetEnumerator();
                 } else {
                     // continue processing of the old imports
@@ -96,10 +96,29 @@ namespace Microsoft.PythonTools.Intellisense {
                     controller._abortedAugment = null;
                 }
 
-                if (actions.Count > 0) {
+                if (actions.Count > 0 && !aborted) {
+                    actions.Sort(SmartTagComparer);
                     smartTagActionSets.Add(new SmartTagActionSet(new ReadOnlyCollection<ISmartTagAction>(actions.ToArray())));
                 }
             }
+        }
+
+        private int SmartTagComparer(ImportSmartTagAction left, ImportSmartTagAction right) {
+            if (left.FromName == null) {
+                if (right.FromName != null) {
+                    // left is import <foo>, order it first
+                    return -1;
+                }
+
+                // two imports, order by name
+                return String.Compare(left.Name, right.Name);
+            } else if (right.FromName == null) {
+                // left is from import, right is import, import comes first
+                return 1;
+            }
+
+            // two from imports, order by from names, shorter names will come first
+            return String.Compare(left.FromName, right.FromName);
         }
 
         public void Dispose() {
@@ -107,9 +126,9 @@ namespace Microsoft.PythonTools.Intellisense {
 
         internal class AbortedAugmentInfo {
             public readonly IEnumerator<ExportedMemberInfo> Imports;
-            public readonly List<ISmartTagAction> Actions;
+            public readonly List<ImportSmartTagAction> Actions;
 
-            public AbortedAugmentInfo(IEnumerator<ExportedMemberInfo> importsEnum, List<ISmartTagAction> actions) {
+            public AbortedAugmentInfo(IEnumerator<ExportedMemberInfo> importsEnum, List<ImportSmartTagAction> actions) {
                 Imports = importsEnum;
                 Actions  = actions;
             }

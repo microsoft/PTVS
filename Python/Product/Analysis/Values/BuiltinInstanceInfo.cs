@@ -92,7 +92,45 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public override IAnalysisSet BinaryOperation(Node node, AnalysisUnit unit, PythonOperator operation, IAnalysisSet rhs) {
-            return ConstantInfo.NumericOp(node, this, unit, operation, rhs) ?? base.BinaryOperation(node, unit, operation, rhs) ?? AnalysisSet.Empty;
+            return ConstantInfo.NumericOp(node, this, unit, operation, rhs) ?? NumericOp(node, unit, operation, rhs) ?? AnalysisSet.Empty;
+        }
+
+        private IAnalysisSet NumericOp(Node node, AnalysisUnit unit, Parsing.PythonOperator operation, IAnalysisSet rhs) {
+            string methodName = InstanceInfo.BinaryOpToString(operation);
+            if (methodName != null) {
+                var method = GetMember(node, unit, methodName);
+                if (method.Count > 0) {
+                    var res = method.Call(
+                        node,
+                        unit,
+                        new[] { this, rhs },
+                        ExpressionEvaluator.EmptyNames
+                    );
+
+                    if (res.IsObjectOrUnknown()) {
+                        // the type defines the operator, assume it returns 
+                        // some combination of the input types.
+                        return SelfSet.Union(rhs);
+                    }
+
+                    return res;
+                }
+            }
+
+            return base.BinaryOperation(node, unit, operation, rhs);
+        }
+
+        public override IAnalysisSet GetIndex(Node node, AnalysisUnit unit, IAnalysisSet index) {
+            var getItem = GetMember(node, unit, "__getitem__");
+            if (getItem.Count > 0) {
+                var res = getItem.Call(node, unit, new[] { index }, ExpressionEvaluator.EmptyNames);
+                if (res.IsObjectOrUnknown() && index.Contains(SliceInfo.Instance)) {
+                    // assume slicing returns a type of the same object...
+                    return this;
+                }
+                return res;
+            }
+            return AnalysisSet.Empty;
         }
 
         internal override bool IsOfType(IAnalysisSet klass) {

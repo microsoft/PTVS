@@ -46,9 +46,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 case PythonOperator.RightShift:
                 case PythonOperator.Power:
                 case PythonOperator.FloorDivide:
-                    return ConstantInfo.NumericOp(node, this, unit, operation, rhs) ?? base.BinaryOperation(node, unit, operation, rhs);
+                    return ConstantInfo.NumericOp(node, this, unit, operation, rhs) ?? CallReverseBinaryOp(node, unit, operation, rhs);
             }
-            return base.BinaryOperation(node, unit, operation, rhs);
+            return CallReverseBinaryOp(node, unit, operation, rhs);
         }
     }
 }

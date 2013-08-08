@@ -202,12 +202,18 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             bool addRef = node.Name != "*";
 
             var variable = Scope.CreateVariable(node, _unit, saveName, addRef);
+            bool added = false;
             if (userMod != null) {
-                variable.AddTypes(_unit, userMod.GetModuleMember(node, _unit, impName, addRef, Scope, saveName));
+                added = variable.AddTypes(_unit, userMod.GetModuleMember(node, _unit, impName, addRef, Scope, saveName));
             }
 
             if (addRef) {
                 variable.AddAssignment(node, _unit);
+            } 
+            
+            if (added) {
+                // anyone who read from the module will now need to get the new values
+                GlobalScope.ModuleDefinition.EnqueueDependents();
             }
         }
 
@@ -276,6 +282,8 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                                 WalkFromImportWorker(nameNode, userMod, varName, null);
                             }
                         }
+
+                        userMod.Imported(_unit);
                     }
                 } else {
                     WalkFromImportWorker(nameNode, userMod, impName, newName);

@@ -185,6 +185,10 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         public virtual IAnalysisSet BinaryOperation(Node node, AnalysisUnit unit, PythonOperator operation, IAnalysisSet rhs) {
+            return CallReverseBinaryOp(node, unit, operation, rhs);
+        }
+
+        internal IAnalysisSet CallReverseBinaryOp(Node node, AnalysisUnit unit, PythonOperator operation, IAnalysisSet rhs) {
             switch (operation) {
                 case PythonOperator.Is:
                 case PythonOperator.IsNot:

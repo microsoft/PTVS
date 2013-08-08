@@ -415,24 +415,12 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             if (left is NameExpression) {
                 var l = (NameExpression)left;
                 if (l.Name != null) {
-                    var vars = Scope.CreateVariable(l, _unit, l.Name, false);
-
-                    if (Scope is IsInstanceScope && Scope.OuterScope != null) {
-                        var outerVar = Scope.OuterScope.GetVariable(l, _unit, l.Name, false);
-                        if (outerVar != null && outerVar != vars) {
-                            outerVar.AddAssignment(left, _unit);
-                            outerVar.AddTypes(_unit, values);
-                        }
-                    }
-
-                    vars.AddAssignment(left, _unit);
-                    vars.MakeUnionStrongerIfMoreThan(ProjectState.Limits.AssignedTypes, values);
-                    vars.AddTypes(_unit, values);
-
-                    if (Scope is ClassScope && l.Name == "__metaclass__") {
-                        // assignment to __metaclass__, save it in our metaclass variable
-                        ((ClassScope)Scope).Class.GetOrCreateMetaclassVariable().AddTypes(_unit, values);
-                    }
+                    Scope.AssignVariable(
+                        l.Name,
+                        l,
+                        _unit,
+                        values
+                    );
                 }
             } else if (left is MemberExpression) {
                 var l = (MemberExpression)left;
