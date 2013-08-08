@@ -18,6 +18,8 @@
 
 VsPyProf* VsPyProf::Create(HMODULE pythonModule) {
     wchar_t buffer[MAX_PATH];
+    buffer[0] = '\0';
+
 #if DEV12
     const wchar_t *dllName = L"\\System32\\VsPerf120.dll";
 #elif DEV11
@@ -325,6 +327,9 @@ void VsPyProf::GetModuleName(wstring name, wstring& finalName) {
     // build up name w/ any parent packages.
     for (;;) {
         wchar_t drive[_MAX_DRIVE], dir[_MAX_DIR], file[_MAX_FNAME];
+        drive[0] = '\0';
+        dir[0] = '\0';
+        file[0] = '\0';
         _wsplitpath_s(curName.c_str(), drive, _MAX_DRIVE, dir, _MAX_DIR, file, _MAX_FNAME, nullptr, 0);
 
         if (finalName.length() != 0) {
@@ -333,6 +338,7 @@ void VsPyProf::GetModuleName(wstring name, wstring& finalName) {
         finalName.insert(0, file);
 
         wchar_t newName[MAX_PATH];
+        newName[0] = '\0';
         _wmakepath_s(newName, drive, dir, L"__init__.py", nullptr);
 
         if (GetFileAttributes(newName) == -1) {

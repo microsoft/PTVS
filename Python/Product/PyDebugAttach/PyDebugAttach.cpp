@@ -261,12 +261,18 @@ typedef __kernel_entry NTSTATUS NTAPI
 // (http://msdn.microsoft.com/en-us/library/windows/desktop/ms684280(v=vs.85).aspx) and walk the 
 // LDR_DATA_TABLE_ENTRY data structures http://msdn.microsoft.com/en-us/library/windows/desktop/aa813708(v=vs.85).aspx
 // which have changed in Windows 7, and may change more in the future, so we can't use them there.
-BOOL EnumProcessModulesHelper(
+_Success_(return) BOOL EnumProcessModulesHelper(
     __in   HANDLE hProcess,
     __out  HMODULE *lphModule,
     __in   DWORD cb,
     __out  LPDWORD lpcbNeeded
     ) {
+        lphModule = nullptr;
+
+        if (lpcbNeeded == nullptr) {
+            return FALSE;
+        }
+
         auto kernel32 = GetModuleHandle(L"kernel32.dll");
         if (kernel32 == nullptr) {
             return FALSE;
@@ -495,15 +501,17 @@ void SuspendThreads(MyHashMap &suspendedThreads, Py_AddPendingCall* addPendingCa
                                 SuspendThread(hThread);
 
                                 bool addingPendingCall = false;
-#if defined(_X86_)
+
                                 CONTEXT context;
+                                memset(&context, 0x00, sizeof(CONTEXT));
+                                context.ContextFlags = CONTEXT_ALL;
                                 GetThreadContext(hThread, &context);
+
+#if defined(_X86_)
                                 if(context.Eip >= *((DWORD*)addPendingCall) && context.Eip <= (*((DWORD*)addPendingCall)) + 0x100) {
                                     addingPendingCall = true;
                                 }
 #elif defined(_AMD64_)
-                                CONTEXT context;
-                                GetThreadContext(hThread, &context);
                                 if (context.Rip >= *((DWORD64*)addPendingCall) && context.Rip <= *((DWORD64*)addPendingCall + 0x100)) {
                                     addingPendingCall = true;
                                 }

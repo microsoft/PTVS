@@ -255,11 +255,12 @@ extern "C" {
 
             if(SUCCEEDED(hr)) {
                 for(ULONG i = 0; i<altCount; i++) {
-                    pcpPhraseAlt[i]->GetText(SP_GETWHOLEPHRASE, SP_GETWHOLEPHRASE, TRUE, &pwszText, NULL);
-                    altCallback(pwszText);
-
-                    // TODO: Could hold onto the phrase and send it back to Python so it can be committed.
-                    ::CoTaskMemFree(pwszText);
+                    hr = pcpPhraseAlt[i]->GetText(SP_GETWHOLEPHRASE, SP_GETWHOLEPHRASE, TRUE, &pwszText, NULL);
+                    if (!FAILED(hr)) {
+                        altCallback(pwszText);
+                        // TODO: Could hold onto the phrase and send it back to Python so it can be committed.
+                        ::CoTaskMemFree(pwszText);
+                    }
                 }
 
                 ::CoTaskMemFree(phrase);
