@@ -14,6 +14,7 @@
 
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.Debugger;
 using Microsoft.VisualStudio.Debugger.Evaluation;
@@ -24,6 +25,10 @@ namespace Microsoft.PythonTools.DkmDebugger.Proxies.Structs {
             // Not CStringProxy, because the array can contain embedded null chars.
             public StructField<PointerProxy<ArrayProxy<ByteProxy>>> ob_bytes;
         }
+
+        // Use Latin-1 here because it just zero-extends 8-bit characters to 16-bit, preserving their numerical values.
+        // We display the higher 128 chars as \x## escape sequences anyway, so the actual glyphs don't matter.
+        private static readonly Encoding _latin1 = Encoding.GetEncoding(28591);
 
         private readonly Fields _fields;
 
@@ -49,10 +54,7 @@ namespace Microsoft.PythonTools.DkmDebugger.Proxies.Structs {
         }
 
         public override unsafe string ToString() {
-            var bytes = ToBytes();
-            fixed (byte* p = bytes) {
-                return new string((sbyte*)p, 0, bytes.Length);
-            }
+            return _latin1.GetString(ToBytes());
         }
 
         public override void Repr(ReprBuilder builder) {

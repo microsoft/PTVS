@@ -137,7 +137,7 @@ namespace Microsoft.PythonTools.DkmDebugger.Proxies.Structs {
             var expectedType = proxyTypes.PyTypeFromType[typeof(TObject)];
             var ob_type = this.ob_type.Read();
             if (!ob_type.IsSubtypeOf(expectedType)) {
-                Debug.Fail("Expected object of type " + expectedType.tp_name.Read().Read() + " but got a " + ob_type.tp_name.Read().Read() + " instead.");
+                Debug.Fail("Expected object of type " + expectedType.tp_name.Read().ReadUnicode() + " but got a " + ob_type.tp_name.Read().ReadUnicode() + " instead.");
                 throw new InvalidOperationException();
             }
         }
@@ -206,7 +206,7 @@ namespace Microsoft.PythonTools.DkmDebugger.Proxies.Structs {
             if (this == None(Process)) {
                 builder.Append("None");
             } else {
-                builder.AppendFormat("<{0} object at {1:PTR}>", ob_type.Read().tp_name.Read().Read(), Address);
+                builder.AppendFormat("<{0} object at {1:PTR}>", ob_type.Read().tp_name.Read().ReadUnicode(), Address);
             }
         }
 
@@ -263,29 +263,40 @@ namespace Microsoft.PythonTools.DkmDebugger.Proxies.Structs {
                 yield break;
             }
 
+            var langVer = Process.GetPythonRuntimeInfo().LanguageVersion;
+
             var memberDefs = tp_members.Read().TakeWhile(md => !md.name.IsNull);
             foreach (PyMemberDef memberDef in memberDefs) {
                 var offset = memberDef.offset.Read();
                 IValueStore value;
                 switch (memberDef.type.Read()) {
                     case PyMemberDefType.T_OBJECT:
-                    case PyMemberDefType.T_OBJECT_EX: {
+                    case PyMemberDefType.T_OBJECT_EX:
+                        {
                             var objProxy = GetFieldProxy(new StructField<PointerProxy<PyObject>> { Process = Process, Offset = offset });
                             if (objProxy.IsNull) {
                                 continue;
                             }
                             value = objProxy;
                         } break;
-                    case PyMemberDefType.T_STRING: {
+                    case PyMemberDefType.T_STRING:
+                        {
                             var ptr = GetFieldProxy(new StructField<PointerProxy> { Process = Process, Offset = offset }).Read();
-                            string s = new CStringProxy(Process, ptr).Read();
-                            value = new ValueStore<string>(s);
+                            var proxy = new CStringProxy(Process, ptr);
+                            if (langVer <= PythonLanguageVersion.V27) {
+                                value = new ValueStore<AsciiString>(proxy.ReadAscii());
+                            } else {
+                                value = new ValueStore<string>(proxy.ReadUnicode());
+                            }
                         } break;
                     case PyMemberDefType.T_STRING_INPLACE: {
-                            string s = new CStringProxy(Process, Address.OffsetBy(offset)).Read();
-                            value = new ValueStore<string>(s);
+                            var proxy = new CStringProxy(Process, Address.OffsetBy(offset));
+                            if (langVer <= PythonLanguageVersion.V27) {
+                                value = new ValueStore<AsciiString>(proxy.ReadAscii());
+                            } else {
+                                value = new ValueStore<string>(proxy.ReadUnicode());
+                            }
                         } break;
-                    case PyMemberDefType.T_CHAR:
                     case PyMemberDefType.T_BYTE:
                         value = GetFieldProxy(new StructField<SByteProxy> { Process = Process, Offset = offset });
                         break;
@@ -322,7 +333,10 @@ namespace Microsoft.PythonTools.DkmDebugger.Proxies.Structs {
                         value = GetFieldProxy(new StructField<DoubleProxy> { Process = Process, Offset = offset });
                         break;
                     case PyMemberDefType.T_BOOL:
-                        value = GetFieldProxy(new StructField<SByteProxy> { Process = Process, Offset = offset });
+                        value = GetFieldProxy(new StructField<BoolProxy> { Process = Process, Offset = offset });
+                        break;
+                    case PyMemberDefType.T_CHAR:
+                        value = GetFieldProxy(new StructField<CharProxy> { Process = Process, Offset = offset });
                         break;
                     case PyMemberDefType.T_NONE:
                         value = new ValueStore<PyObject>(None(Process));
@@ -331,7 +345,7 @@ namespace Microsoft.PythonTools.DkmDebugger.Proxies.Structs {
                         continue;
                 }
 
-                yield return new PythonEvaluationResult(value, memberDef.name.Read().Read());
+                yield return new PythonEvaluationResult(value, memberDef.name.Read().ReadUnicode());
             }
         }
 

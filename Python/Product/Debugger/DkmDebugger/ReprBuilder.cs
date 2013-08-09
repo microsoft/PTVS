@@ -197,7 +197,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
             }
 
             var constExpr = new ConstantExpression(value);
-            Append(constExpr.GetConstantRepr(Options.LanguageVersion));
+            Append(constExpr.GetConstantRepr(Options.LanguageVersion, escape8bitStrings: true));
             return this;
         }
 

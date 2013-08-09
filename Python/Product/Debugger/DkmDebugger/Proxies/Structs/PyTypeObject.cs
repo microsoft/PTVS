@@ -88,7 +88,7 @@ namespace Microsoft.PythonTools.DkmDebugger.Proxies.Structs {
                     var nameObj = heapType.ht_name.Read() as IPyBaseStringObject;
                     return nameObj.ToStringOrNull();
                 } else {
-                    string name = tp_name.Read().Read();
+                    string name = tp_name.Read().ReadUnicode();
                     return name.Split('.').LastOrDefault();
                 }
             }
@@ -111,7 +111,7 @@ namespace Microsoft.PythonTools.DkmDebugger.Proxies.Structs {
                                  ).FirstOrDefault();
                     return (module as IPyBaseStringObject).ToStringOrNull();
                 } else {
-                    string name = tp_name.Read().Read();
+                    string name = tp_name.Read().ReadUnicode();
 
                     int lastDot = name.LastIndexOf('.');
                     if (lastDot < 0) {
@@ -145,7 +145,7 @@ namespace Microsoft.PythonTools.DkmDebugger.Proxies.Structs {
         }
 
         public override void Repr(ReprBuilder builder) {
-            builder.AppendFormat("<class '{0}'>", tp_name.Read().Read());
+            builder.AppendFormat("<class '{0}'>", tp_name.Read().ReadUnicode());
         }
     }
 

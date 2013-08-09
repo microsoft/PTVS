@@ -69,7 +69,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             }
         }
 
-        public string GetConstantRepr(PythonLanguageVersion version) {
+        public string GetConstantRepr(PythonLanguageVersion version, bool escape8bitStrings = false) {
             if (_value == null) {
                 return "None";
             } else if (_value is AsciiString) {
@@ -90,7 +90,13 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                         case '\v': res.Append("\\v"); break;
                         case '\'': res.Append("\\'"); break;
                         case '\\': res.Append("\\\\"); break;
-                        default: res.Append(b); break;
+                        default:
+                            if ((int)b < 0x20 || (escape8bitStrings && (int)b >= 0x80)) {
+                                res.AppendFormat("\\x{0:X02}", (int)b);
+                            } else {
+                                res.Append(b);
+                            }
+                            break;
                     }
                 }
                 res.Append("'");

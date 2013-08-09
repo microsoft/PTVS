@@ -18,7 +18,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Numerics;
-using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -75,6 +74,32 @@ namespace Microsoft.PythonTools.DkmDebugger {
         /// Data item attached to a <see cref="DkmEvaluationResult"/> that represents a Python object (a variable, field of another object, collection item etc).
         /// </summary>
         private class PyObjectEvaluationResult : DkmDataItem, IPythonEvaluationResult {
+
+            // Maps CLR types as returned from IValueStore.Read() to corresponding Python types.
+            // Used to compute the expected Python type for a T_* slot of a native object, since we don't have the actual PyObject value yet.
+            private static readonly Dictionary<Type, string> _typeMapping = new Dictionary<Type, string>() {
+                { typeof(sbyte), "int" },
+                { typeof(byte), "int" },
+                { typeof(short), "int" },
+                { typeof(ushort), "int" },
+                { typeof(int), "int" },
+                { typeof(uint), "int" },
+                { typeof(long), "int" },
+                { typeof(ulong), "int" },
+                { typeof(float), "float" },
+                { typeof(double), "float" },
+                { typeof(Complex), "complex" },
+                { typeof(bool), "bool" },
+                { typeof(string), "str" },
+                { typeof(AsciiString), "bytes" },
+            };
+
+            // 2.x-specific mappings that override the ones above.
+            private static readonly Dictionary<Type, string> _typeMapping2x = new Dictionary<Type, string>() {
+                { typeof(string), "unicode" },
+                { typeof(AsciiString), "str" },
+            };
+
             public PyObjectEvaluationResult(DkmProcess process, string fullName, IValueStore<PyObject> valueStore, string cppTypeName, bool hasCppView, bool isOwned) {
                 Process = process;
                 FullName = fullName;
@@ -183,6 +208,14 @@ namespace Microsoft.PythonTools.DkmDebugger {
                         reprBuilder.Clear();
                         reprBuilder.AppendLiteral(value);
 
+                        string type = null;
+                        if (Process.GetPythonRuntimeInfo().LanguageVersion <= PythonLanguageVersion.V27) {
+                            _typeMapping2x.TryGetValue(value.GetType(), out type);
+                        }
+                        if (type == null) {
+                            _typeMapping.TryGetValue(value.GetType(), out type);
+                        }
+
                         var flags = DkmEvaluationResultFlags.ReadOnly;
                         if (value is string) {
                             flags |= DkmEvaluationResultFlags.RawString;
@@ -201,7 +234,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
                         }
 
                         evalResult = DkmSuccessEvaluationResult.Create(
-                            inspectionContext, stackFrame, child.Name, childFullName, flags, reprBuilder.ToString(), null, null,
+                            inspectionContext, stackFrame, child.Name, childFullName, flags, reprBuilder.ToString(), null, type,
                             child.Category, child.AccessType, child.StorageType, child.TypeModifierFlags, null, null, null,
                             new RawEvaluationResult { Value = value });
                     }
@@ -297,7 +330,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
             }
 
             var valueObj = valueStore.Read();
-            string typeName = valueObj.ob_type.Read().tp_name.Read().Read();
+            string typeName = valueObj.ob_type.Read().tp_name.Read().ReadUnicode();
 
             var reprOptions = new ReprOptions(inspectionContext);
             string repr = valueObj.Repr(reprOptions);
@@ -716,7 +749,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
                 string typeName;
                 var typeObject = exc_type as PyTypeObject;
                 if (typeObject != null) {
-                    typeName = typeObject.tp_name.Read().Read();
+                    typeName = typeObject.tp_name.Read().ReadUnicode();
                 } else {
                     typeName = "<unknown exception type>";
                 }

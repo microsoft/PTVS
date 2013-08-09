@@ -142,7 +142,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
                     return;
                 }
 
-                string filename = new CStringProxy(process, filenamePtr).Read();
+                string filename = new CStringProxy(process, filenamePtr).ReadUnicode();
                 if (process.GetPythonRuntimeInstance().GetModuleInstances().Any(mi => mi.FullName == filename)) {
                     return;
                 }

@@ -14,6 +14,7 @@
 
 using System;
 using System.Diagnostics;
+using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.Debugger;
 
 namespace Microsoft.PythonTools.DkmDebugger.Proxies {
@@ -464,6 +465,70 @@ namespace Microsoft.PythonTools.DkmDebugger.Proxies {
 
         public void Decrement(long amount = 1) {
             Increment(-amount);
+        }
+    }
+
+    [DebuggerDisplay("& {Read()}")]
+    internal struct BoolProxy : IWritableDataProxy<bool> {
+        public DkmProcess Process { get; private set; }
+        public ulong Address { get; private set; }
+
+        public BoolProxy(DkmProcess process, ulong address)
+            : this() {
+            Debug.Assert(process != null && address != 0);
+            Process = process;
+            Address = address;
+        }
+
+        public long ObjectSize {
+            get { return sizeof(byte); }
+        }
+
+        public unsafe bool Read() {
+            byte b;
+            Process.ReadMemory(Address, DkmReadMemoryFlags.None, &b, sizeof(byte));
+            return b != 0;
+        }
+
+        object IValueStore.Read() {
+            return Read();
+        }
+
+        public void Write(bool value) {
+            Process.WriteMemory(Address, new[] { value ? (byte)1 : (byte)0 });
+        }
+
+        void IWritableDataProxy.Write(object value) {
+            Write((bool)value);
+        }
+    }
+
+    [DebuggerDisplay("& {Read()}")]
+    internal struct CharProxy : IDataProxy {
+        public DkmProcess Process { get; private set; }
+        public ulong Address { get; private set; }
+
+        public CharProxy(DkmProcess process, ulong address)
+            : this() {
+            Debug.Assert(process != null && address != 0);
+            Process = process;
+            Address = address;
+        }
+
+        public long ObjectSize {
+            get { return sizeof(byte); }
+        }
+
+        unsafe object IValueStore.Read() {
+            byte b;
+            Process.ReadMemory(Address, DkmReadMemoryFlags.None, &b, sizeof(byte));
+            string s = ((char)b).ToString();
+
+            if (Process.GetPythonRuntimeInfo().LanguageVersion <= PythonLanguageVersion.V27) {
+                return new AsciiString(new[] { b }, s);
+            } else {
+                return s;
+            }
         }
     }
 }

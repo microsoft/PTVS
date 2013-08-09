@@ -15,6 +15,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Text;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.Debugger;
 using Microsoft.VisualStudio.Debugger.Evaluation;
@@ -25,6 +26,10 @@ namespace Microsoft.PythonTools.DkmDebugger.Proxies.Structs {
     [PyType(MaxVersion = PythonLanguageVersion.V27, VariableName = "PyString_Type")]
     [PyType(MinVersion = PythonLanguageVersion.V30)]
     internal class PyBytesObject : PyVarObject, IPyBaseStringObject {
+        // Use Latin-1 here because it just zero-extends 8-bit characters to 16-bit, preserving their numerical values.
+        // We display the higher 128 chars as \x## escape sequences anyway, so the actual glyphs don't matter.
+        private static readonly Encoding _latin1 = Encoding.GetEncoding(28591);
+
         internal class Fields {
             // Not CStringProxy, because the array can contain embedded null chars.
             public StructField<ArrayProxy<ByteProxy>> ob_sval;
@@ -71,10 +76,7 @@ namespace Microsoft.PythonTools.DkmDebugger.Proxies.Structs {
         }
 
         public override unsafe string ToString() {
-            var bytes = ToBytes();
-            fixed (byte* p = bytes) {
-                return new string((sbyte*)p, 0, bytes.Length);
-            }
+            return _latin1.GetString(ToBytes());
         }
 
         public override void Repr(ReprBuilder builder) {
@@ -88,7 +90,15 @@ namespace Microsoft.PythonTools.DkmDebugger.Proxies.Structs {
             };
 
             foreach (var b in ob_sval.Take((int)count)) {
-                yield return new PythonEvaluationResult(b);
+                if (reprOptions.LanguageVersion <= PythonLanguageVersion.V27) {
+                    // In 2.x, bytes is a string type, so display characters in object expansion.
+                    byte[] bytes = new[] { b.Read() };
+                    string s = _latin1.GetString(bytes);
+                    yield return new PythonEvaluationResult(new ValueStore<AsciiString>(new AsciiString(bytes, s)));
+                } else {
+                    // In 3.x, it's supposed to be used for byte arrays only, so display numeric values in expansion.
+                    yield return new PythonEvaluationResult(b);
+                }
             }
         }
     }
