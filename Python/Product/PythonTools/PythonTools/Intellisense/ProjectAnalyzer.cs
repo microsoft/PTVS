@@ -85,6 +85,8 @@ namespace Microsoft.PythonTools.Intellisense {
             return new TaskProvider(_errorList);
         }, LazyThreadSafetyMode.ExecutionAndPublication);
 
+        private object _contentsLock = new object();
+
         internal VsProjectAnalyzer(IPythonInterpreterFactory factory, IPythonInterpreterFactory[] allFactories, IErrorProviderFactory errorProvider)
             : this(factory.CreateInterpreter(), factory, allFactories, errorProvider) {
         }
@@ -144,7 +146,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private void OnModulesChanged(object sender, EventArgs e) {
-            lock (this) {
+            lock (_contentsLock) {
                 _pyAnalyzer.ReloadModules();
 
                 // re-analyze all of the modules when we get a new set of modules loaded...
@@ -251,7 +253,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private void QueueDirectoryAnalysis(string path) {
-            ThreadPool.QueueUserWorkItem(x => { lock (this) { AnalyzeDirectory(CommonUtils.NormalizeDirectoryPath(Path.GetDirectoryName(path))); } });
+            ThreadPool.QueueUserWorkItem(x => { lock (_contentsLock) { AnalyzeDirectory(CommonUtils.NormalizeDirectoryPath(Path.GetDirectoryName(path))); } });
         }
 
         private bool ShouldAnalyzePath(string path) {
@@ -1055,7 +1057,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
             
             if (addDir) {
-                lock (this) {
+                lock (_contentsLock){
                     _pyAnalyzer.AddAnalysisDirectory(dir);
                 }
             }
@@ -1143,7 +1145,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
 
         private void AnalyzeZipArchiveWorker(string zipFileName, Action<IProjectEntry> onFileAnalyzed, CancellationToken cancel) {
-            lock (this) {
+            lock (_contentsLock){
                 _pyAnalyzer.AddAnalysisDirectory(zipFileName);
             }
 
@@ -1250,7 +1252,7 @@ namespace Microsoft.PythonTools.Intellisense {
 #endif
 
         internal void StopAnalyzingDirectory(string directory) {
-            lock (this) {
+            lock (_contentsLock){
                 _pyAnalyzer.RemoveAnalysisDirectory(directory);
             }
         }
@@ -1283,7 +1285,7 @@ namespace Microsoft.PythonTools.Intellisense {
             private readonly Dictionary<string, List<ErrorResult>> _errors = new Dictionary<string, List<ErrorResult>>();
             private readonly uint _cookie;
             private readonly IVsTaskList _errorList;
-
+            private readonly object _contentsLock = new object();
 
             private class WorkerMessage {
                 public enum MessageType { Clear, Warnings, Errors, Update }
@@ -1315,13 +1317,13 @@ namespace Microsoft.PythonTools.Intellisense {
                     while (_workerQueue.TryTake(out msg, 1000)) {
                         switch (msg.Type) {
                             case WorkerMessage.MessageType.Clear:
-                                lock (this) {
+                                lock (_contentsLock){
                                     changed = _errors.Remove(msg.Filename) || changed;
                                     changed = _warnings.Remove(msg.Filename) || changed;
                                 }
                                 break;
                             case WorkerMessage.MessageType.Warnings:
-                                lock (this) {
+                                lock (_contentsLock){
                                     if (_warnings.TryGetValue(msg.Filename, out existing)) {
                                         existing.AddRange(msg.Errors);
                                     } else {
@@ -1331,7 +1333,7 @@ namespace Microsoft.PythonTools.Intellisense {
                                 changed = true;
                                 break;
                             case WorkerMessage.MessageType.Errors:
-                                lock (this) {
+                                lock (_contentsLock){
                                     if (_errors.TryGetValue(msg.Filename, out existing)) {
                                         existing.AddRange(msg.Errors);
                                     } else {
@@ -1395,7 +1397,7 @@ namespace Microsoft.PythonTools.Intellisense {
             #region IVsTaskProvider Members
 
             public int EnumTaskItems(out IVsEnumTaskItems ppenum) {
-                lock (this) {
+                lock (_contentsLock){
                     ppenum = new TaskEnum(CopyErrorList(_warnings), CopyErrorList(_errors));
                 }
                 return VSConstants.S_OK;
@@ -1682,7 +1684,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             _analysisQueue.Stop();
-            lock (this) {
+            lock (_contentsLock){
                 _pyAnalyzer.Interpreter.ModuleNamesChanged -= OnModulesChanged;
                 ((IDisposable)_pyAnalyzer).Dispose();
             }
@@ -1691,7 +1693,7 @@ namespace Microsoft.PythonTools.Intellisense {
         #endregion
 
         internal void RemoveReference(ProjectAssemblyReference reference) {
-            lock (this) {
+            lock (_contentsLock){
                 var interp = Interpreter;
                 if (interp != null) {
                     interp.RemoveReference(reference);
