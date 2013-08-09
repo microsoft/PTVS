@@ -16,6 +16,7 @@ using System;
 using System.ComponentModel.Design;
 using System.Globalization;
 using System.Runtime.InteropServices;
+using System.Windows;
 using Microsoft.PythonTools.DkmDebugger;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Debugger.Interop;
@@ -30,6 +31,9 @@ namespace Microsoft.PythonTools.Debugger {
             switch ((VsPackageMessage)message.MessageCode) {
                 case VsPackageMessage.WarnAboutPythonSymbols:
                     WarnAboutPythonSymbols((string)message.Parameter1);
+                    return 0;
+                case VsPackageMessage.WarnAboutPGO:
+                    WarnAboutPGO((string)message.Parameter1);
                     return 0;
                 default:
                     return 0;
@@ -79,6 +83,14 @@ namespace Microsoft.PythonTools.Debugger {
                 PythonToolsPackage.OpenWebBrowser(
                     string.Format("http://go.microsoft.com/fwlink/?LinkId=308954&clcid=0x{0:X}", CultureInfo.CurrentCulture.LCID));
             }
+        }
+
+        private void WarnAboutPGO(string moduleName) {
+            const string content =
+                "Python/native mixed-mode debugging does not support Python interpreters that are built with PGO (profile-guided optimization) enabled. " +
+                "If you are using a stock Python interpreter, you should upgrade to a more recent version of it. If you're using a custom built " +
+                "interpreter, please disable PGO.";
+            MessageBox.Show(content, "PGO Is Not Supported", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 }

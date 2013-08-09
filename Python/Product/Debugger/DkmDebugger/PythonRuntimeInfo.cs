@@ -45,8 +45,10 @@ namespace Microsoft.PythonTools.DkmDebugger {
             }
             set {
                 _python = value;
-                _pyrtInfo.LanguageVersion = GetPythonLanguageVersion(value);
-                Debug.Assert(_pyrtInfo.LanguageVersion != PythonLanguageVersion.None);
+                if (value != null) {
+                    _pyrtInfo.LanguageVersion = GetPythonLanguageVersion(value);
+                    Debug.Assert(_pyrtInfo.LanguageVersion != PythonLanguageVersion.None);
+                }
             }
         }
 

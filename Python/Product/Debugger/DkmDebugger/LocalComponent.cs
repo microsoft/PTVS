@@ -21,6 +21,7 @@ using Microsoft.Dia;
 using Microsoft.PythonTools.Debugger;
 using Microsoft.PythonTools.Debugger.DebugEngine;
 using Microsoft.PythonTools.DkmDebugger.Proxies;
+using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.Debugger;
 using Microsoft.VisualStudio.Debugger.Breakpoints;
 using Microsoft.VisualStudio.Debugger.CallStack;
@@ -84,10 +85,17 @@ namespace Microsoft.PythonTools.DkmDebugger {
 
                 var pyrtInfo = process.GetPythonRuntimeInfo();
                 var moduleInstance = process.GetNativeRuntimeInstance().GetNativeModuleInstances().Single(mi => mi.UniqueId == ModuleInstanceId);
-                if (PythonDLLs.GetPythonLanguageVersion(moduleInstance) != Parsing.PythonLanguageVersion.None) {
+                if (PythonDLLs.GetPythonLanguageVersion(moduleInstance) != PythonLanguageVersion.None) {
                     pyrtInfo.DLLs.Python = moduleInstance;
                     for (int i = 0; i < 2; ++i) {
                         if (moduleInstance.HasSymbols()) {
+                            if (IsModuleCompiledWithPGO(moduleInstance)) {
+                                pyrtInfo.DLLs.Python = null;
+                                var pgoWarnMsg = DkmCustomMessage.Create(process.Connection, process, Guid.Empty, (int)VsPackageMessage.WarnAboutPGO, moduleInstance.Name, null);
+                                pgoWarnMsg.SendToVsService(Guids.CustomDebuggerEventHandlerGuid, IsBlocking: true);
+                                return;
+                            }
+
                             if (process.LivePart == null) {
                                 // If debugging crash dumps, runtime can be created as soon as Python symbols are resolved.
                                 CreatePythonRuntimeInstance(process);
@@ -105,8 +113,8 @@ namespace Microsoft.PythonTools.DkmDebugger {
                         moduleInstance.TryLoadSymbols();
                     }
 
-                    var warnMsg = DkmCustomMessage.Create(process.Connection, process, Guid.Empty, (int)VsPackageMessage.WarnAboutPythonSymbols, moduleInstance.Name, null);
-                    warnMsg.SendToVsService(Guids.CustomDebuggerEventHandlerGuid, IsBlocking: true);
+                    var symWarnMsg = DkmCustomMessage.Create(process.Connection, process, Guid.Empty, (int)VsPackageMessage.WarnAboutPythonSymbols, moduleInstance.Name, null);
+                    symWarnMsg.SendToVsService(Guids.CustomDebuggerEventHandlerGuid, IsBlocking: true);
                 } else if (PythonDLLs.DebuggerHelperNames.Contains(moduleInstance.Name)) {
                     moduleInstance.TryLoadSymbols();
 
@@ -150,15 +158,24 @@ namespace Microsoft.PythonTools.DkmDebugger {
             var pyrtInfo = process.GetPythonRuntimeInfo();
 
             var nativeModuleInstance = moduleInstance as DkmNativeModuleInstance;
-            if (nativeModuleInstance != null && PythonDLLs.CTypesNames.Contains(moduleInstance.Name)) {
-                pyrtInfo.DLLs.CTypes = nativeModuleInstance;
+            if (nativeModuleInstance != null) {
+                if (PythonDLLs.CTypesNames.Contains(moduleInstance.Name)) {
+                    pyrtInfo.DLLs.CTypes = nativeModuleInstance;
 
-                var traceHelper = process.GetDataItem<TraceManagerLocalHelper>();
-                if (traceHelper != null) {
-                    traceHelper.OnCTypesLoaded(nativeModuleInstance);
+                    var traceHelper = process.GetDataItem<TraceManagerLocalHelper>();
+                    if (traceHelper != null) {
+                        traceHelper.OnCTypesLoaded(nativeModuleInstance);
+                    }
+                } else if (PythonDLLs.GetPythonLanguageVersion(nativeModuleInstance) != PythonLanguageVersion.None) {
+                    if (IsModuleCompiledWithPGO(moduleInstance)) {
+                        pyrtInfo.DLLs.Python = null;
+                        var pgoWarnMsg = DkmCustomMessage.Create(process.Connection, process, Guid.Empty, (int)VsPackageMessage.WarnAboutPGO, moduleInstance.Name, null);
+                        pgoWarnMsg.SendToVsService(Guids.CustomDebuggerEventHandlerGuid, IsBlocking: true);
+                        return;
+                    }
                 }
             }
-
+            
             if (process.GetPythonRuntimeInstance() != null) {
                 return;
             }
@@ -170,6 +187,40 @@ namespace Microsoft.PythonTools.DkmDebugger {
                     DebugAttach.AttachDkm(process.LivePart.Id);
                 }
             }
+        }
+
+        // For PGO-enabled binaries, their symbol information is unreliable, often in dangerous ways (e.g. FuncDebugStart/End is basically garbage
+        // for split functions, and locals can be messed up), so we do not support Python built with PGO (currently only 2.7.3 and below).
+        private static bool IsModuleCompiledWithPGO(DkmModuleInstance moduleInstance) {
+            using (var moduleSym = moduleInstance.GetSymbols()) {
+                var compSyms = moduleSym.Object.GetSymbols(SymTagEnum.SymTagCompiland, null);
+                try {
+                    foreach (var compSym in compSyms) {
+                        var blockSyms = compSym.Object.GetSymbols(SymTagEnum.SymTagBlock, null);
+                        try {
+                            foreach (var blockSym in blockSyms) {
+                                using (var parentSym = ComPtr.Create(blockSym.Object.lexicalParent)) {
+                                    uint blockStart = blockSym.Object.relativeVirtualAddress;
+                                    uint funcStart = parentSym.Object.relativeVirtualAddress;
+                                    uint funcEnd = funcStart + (uint)parentSym.Object.length;
+                                    if (blockStart < funcStart || blockStart >= funcEnd) {
+                                        return true;
+                                    }
+                                }
+                            }
+                        } finally {
+                            foreach (var blockSym in blockSyms) {
+                                blockSym.Dispose();
+                            }
+                        }
+                    }
+                } finally {
+                    foreach (var funcSym in compSyms) {
+                        funcSym.Dispose();
+                    }
+                }
+            }
+            return false;
         }
 
         unsafe void IDkmRuntimeInstanceLoadNotification.OnRuntimeInstanceLoad(DkmRuntimeInstance runtimeInstance, DkmEventDescriptor eventDescriptor) {
