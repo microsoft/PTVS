@@ -267,8 +267,6 @@ _Success_(return) BOOL EnumProcessModulesHelper(
     __in   DWORD cb,
     __out  LPDWORD lpcbNeeded
     ) {
-        lphModule = nullptr;
-
         if (lpcbNeeded == nullptr) {
             return FALSE;
         }
