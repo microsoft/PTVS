@@ -89,21 +89,17 @@
       <Project>{29a4fa1f-a562-4ed1-86fb-5850ef5da92c}</Project>
       <Name>Analyzer</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\Product\IronPython\IronPython.csproj">
-      <Project>{5AE43C93-8EF6-4D57-BC10-511035EF56C5}</Project>
-      <Name>IronPython</Name>
-    </ProjectReference>
     <ProjectReference Include="..\..\..\Common\Tests\Utilities\TestUtilities.csproj">
       <Project>{D092D54E-FF29-4D32-9AEE-4EF704C92F67}</Project>
       <Name>TestUtilities</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\Product\IronPython\IronPython.Interpreter.csproj">
       <Project>{012293b1-168a-4c48-a678-db8361b50ba7}</Project>
-      <Name>IronPython.Interpreter</Name>
+      <Name>Microsoft.PythonTools.IronPython.Interpreter</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Utilities.Python\TestUtilities.Python.csproj">
+    <ProjectReference Include="..\Utilities.Python.Analysis\TestUtilities.Python.Analysis.csproj">
       <Project>{a731c4c3-3741-4080-a946-c47574c1f3bf}</Project>
-      <Name>TestUtilities.Python</Name>
+      <Name>TestUtilities.Python.Analysis</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

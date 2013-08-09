@@ -67,9 +67,9 @@
       <Project>{D092D54E-FF29-4D32-9AEE-4EF704C92F67}</Project>
       <Name>TestUtilities</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Utilities.Python\TestUtilities.Python.csproj">
+    <ProjectReference Include="..\Utilities.Python.Analysis\TestUtilities.Python.Analysis.csproj">
       <Project>{a731c4c3-3741-4080-a946-c47574c1f3bf}</Project>
-      <Name>TestUtilities.Python</Name>
+      <Name>TestUtilities.Python.Analysis</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

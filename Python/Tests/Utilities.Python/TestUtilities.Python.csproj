@@ -6,7 +6,7 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{A731C4C3-3741-4080-A946-C47574C1F3BF}</ProjectGuid>
+    <ProjectGuid>{62641B47-1ABB-4638-A3D5-2A834D089667}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>TestUtilities.Python</RootNamespace>
@@ -85,15 +85,10 @@
     <Compile Include="Django\NewAppDialog.cs" />
     <Compile Include="Django\PythonProjectDebugProperties.cs" />
     <Compile Include="FormattingOptionsTreeView.cs" />
-    <Compile Include="MockInterpreterOptionsService.cs" />
-    <Compile Include="MockPythonInterpreter.cs" />
-    <Compile Include="MockPythonInterpreterFactory.cs" />
-    <Compile Include="MockPythonInterpreterFactoryProvider.cs" />
+    <Compile Include="MockClassificationTypeRegistryService.cs" />
+    <Compile Include="MockPythonInterpreterFactoryExtensions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PythonLaunchWithErrorsDialog.cs" />
-    <Compile Include="PythonPaths.cs" />
-    <Compile Include="MockClassificationTypeRegistryService.cs" />
-    <Compile Include="MockCompletionDB.cs" />
     <Compile Include="PythonPerfExplorer.cs" />
     <Compile Include="PythonPerfTarget.cs" />
     <Compile Include="PythonPerfToolBar.cs" />
@@ -123,6 +118,10 @@
     <ProjectReference Include="..\..\..\Common\Tests\Utilities\TestUtilities.csproj">
       <Project>{d092d54e-ff29-4d32-9aee-4ef704c92f67}</Project>
       <Name>TestUtilities</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Utilities.Python.Analysis\TestUtilities.Python.Analysis.csproj">
+      <Project>{a731c4c3-3741-4080-a946-c47574c1f3bf}</Project>
+      <Name>TestUtilities.Python.Analysis</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="..\TestProjectAfter.settings" />

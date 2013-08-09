@@ -80,8 +80,12 @@
       <Project>{E50E1B02-257C-4E10-AC1C-5ED36B48EE40}</Project>
       <Name>DebuggerTests</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Utilities.Python\TestUtilities.Python.csproj">
+    <ProjectReference Include="..\Utilities.Python.Analysis\TestUtilities.Python.Analysis.csproj">
       <Project>{a731c4c3-3741-4080-a946-c47574c1f3bf}</Project>
+      <Name>TestUtilities.Python.Analysis</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Utilities.Python\TestUtilities.Python.csproj">
+      <Project>{62641b47-1abb-4638-a3d5-2a834d089667}</Project>
       <Name>TestUtilities.Python</Name>
     </ProjectReference>
   </ItemGroup>

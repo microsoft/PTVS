@@ -18,14 +18,13 @@ using System.Threading;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.InterpreterList;
 
 namespace TestUtilities.Python {
     public class MockPythonInterpreterFactory : IPythonInterpreterFactory, IInterpreterWithCompletionDatabase {
         readonly InterpreterConfiguration _config;
         private bool _isCurrent;
         private string _isCurrentReason;
-        private bool? _success;
+        internal bool? _success;
 
         public const string UpToDateReason = "Database is up to date";
         public const string NoDatabaseReason = "Database has never been generated";
@@ -108,23 +107,9 @@ namespace TestUtilities.Python {
             }
         }
 
-        public void EndGenerateCompletionDatabase(object interpreterList, string id, bool success) {
+        public void EndGenerateCompletionDatabase(bool success) {
             _success = success;
-            
-            // Because InterpreterList is InternalsVisibleTo, we have to smuggle
-            // it in as an object.
-            var list = (InterpreterList)interpreterList;
-            if (list != null) {
-                // No need to sleep between updates because we're going directly
-                // to the control.
-                for (int i = 0; i < 100; i += 30) {
-                    list.Update(new Dictionary<string, AnalysisProgress> { { id, new AnalysisProgress { Progress = i, Maximum = 100 } } });
-                }
-
-                list.Update(new Dictionary<string, AnalysisProgress>());
-            } else {
-                NotifyNewDatabase();
-            }
+            NotifyNewDatabase();
         }
 
         public void AutoGenerateCompletionDatabase() {

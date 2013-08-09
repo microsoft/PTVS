@@ -122,8 +122,12 @@
       <Project>{E75E5DB1-0EA0-4247-A830-FE467C016816}</Project>
       <Name>TestSccPackage</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Utilities.Python.Analysis\TestUtilities.Python.Analysis.csproj">
+      <Project>{A731C4C3-3741-4080-A946-C47574C1F3BF}</Project>
+      <Name>TestUtilities.Python.Analysis</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Utilities.Python\TestUtilities.Python.csproj">
-      <Project>{a731c4c3-3741-4080-a946-c47574c1f3bf}</Project>
+      <Project>{62641B47-1ABB-4638-A3D5-2A834D089667}</Project>
       <Name>TestUtilities.Python</Name>
     </ProjectReference>
   </ItemGroup>
