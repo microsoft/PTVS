@@ -65,7 +65,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     }
                     break;
                 default:
-                    res = base.BinaryOperation(node, unit, operation, rhs);
+                    res = CallReverseBinaryOp(node, unit, operation, rhs);
                     break;
             }
             return res;
