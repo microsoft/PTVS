@@ -242,8 +242,8 @@ namespace Microsoft.PythonTools.Project {
 
             if (showPrompt && !Utilities.IsInAutomationFunction(ProjectMgr.Site)) {
                 string message = SR.GetString(removeFromStorage ?
-                        SR.InterpreterDeleteConfirmation :
-                        SR.InterpreterRemoveConfirmation,
+                        SR.EnvironmentDeleteConfirmation :
+                        SR.EnvironmentRemoveConfirmation,
                     Caption,
                     _factory.Configuration.PrefixPath);
                 int res = VsShellUtilities.ShowMessageBox(

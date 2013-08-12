@@ -97,7 +97,7 @@ namespace PythonToolsUITests {
             var virtualEnv = app.SolutionExplorerTreeView.FindItem(
                 "Solution '" + app.Dte.Solution.Projects.Item(1).Name + "' (1 project)",
                 app.Dte.Solution.Projects.Item(1).Name,
-                "Python Environments");
+                SR.GetString(SR.Environments));
             AutomationWrapper.Select(virtualEnv);
 
             var createVenv = new AutomationWrapper(AutomationElement.FromHandle(
@@ -119,7 +119,7 @@ namespace PythonToolsUITests {
                 env = app.SolutionExplorerTreeView.WaitForItem(
                     "Solution '" + app.Dte.Solution.Projects.Item(1).Name + "' (1 project)",
                     app.Dte.Solution.Projects.Item(1).Name,
-                    "Python Environments",
+                    SR.GetString(SR.Environments),
                     envName);
             }
             Assert.IsNotNull(env);
@@ -131,7 +131,7 @@ namespace PythonToolsUITests {
             var virtualEnv = app.SolutionExplorerTreeView.FindItem(
                 "Solution '" + app.Dte.Solution.Projects.Item(1).Name + "' (1 project)",
                 app.Dte.Solution.Projects.Item(1).Name,
-                "Python Environments");
+                SR.GetString(SR.Environments));
             AutomationWrapper.Select(virtualEnv);
 
             var createVenv = new AutomationWrapper(AutomationElement.FromHandle(
@@ -152,7 +152,7 @@ namespace PythonToolsUITests {
                 env = app.SolutionExplorerTreeView.WaitForItem(
                     "Solution '" + app.Dte.Solution.Projects.Item(1).Name + "' (1 project)",
                     app.Dte.Solution.Projects.Item(1).Name,
-                    "Python Environments",
+                    SR.GetString(SR.Environments),
                     envName);
             }
             Assert.IsNotNull(env);
@@ -182,7 +182,7 @@ namespace PythonToolsUITests {
                 var azure = app.SolutionExplorerTreeView.WaitForItem(
                     "Solution '" + app.Dte.Solution.Projects.Item(1).Name + "' (1 project)",
                     app.Dte.Solution.Projects.Item(1).Name,
-                    "Python Environments",
+                    SR.GetString(SR.Environments),
                     envName,
                     "azure (0.6.2)");
 
@@ -196,7 +196,7 @@ namespace PythonToolsUITests {
                 app.SolutionExplorerTreeView.WaitForItemRemoved(
                     "Solution '" + app.Dte.Solution.Projects.Item(1).Name + "' (1 project)",
                     app.Dte.Solution.Projects.Item(1).Name,
-                    "Python Environments",
+                    SR.GetString(SR.Environments),
                     envName,
                     "azure (0.6.2)");
             }
@@ -222,7 +222,7 @@ namespace PythonToolsUITests {
                     env2 = app.SolutionExplorerTreeView.WaitForItem(
                         "Solution '" + app.Dte.Solution.Projects.Item(1).Name + "' (1 project)",
                         app.Dte.Solution.Projects.Item(1).Name,
-                        "Python Environments",
+                        SR.GetString(SR.Environments),
                         envName);
                 }
             }
@@ -264,13 +264,13 @@ namespace PythonToolsUITests {
                 var virtualEnv = app.SolutionExplorerTreeView.FindItem(
                     "Solution '" + app.Dte.Solution.Projects.Item(1).Name + "' (1 project)",
                     app.Dte.Solution.Projects.Item(1).Name,
-                    "Python Environments");
+                    SR.GetString(SR.Environments));
                 AutomationWrapper.Select(virtualEnv);
 
                 env1 = new AutomationWrapper(app.SolutionExplorerTreeView.FindItem(
                     "Solution '" + app.Dte.Solution.Projects.Item(1).Name + "' (1 project)",
                     app.Dte.Solution.Projects.Item(1).Name,
-                    "Python Environments",
+                    SR.GetString(SR.Environments),
                     envName1));
                 env1.Select();
                 System.Threading.Thread.Sleep(1000);
@@ -301,7 +301,7 @@ namespace PythonToolsUITests {
                 app.SolutionExplorerTreeView.WaitForItemRemoved(
                     "Solution '" + app.Dte.Solution.Projects.Item(1).Name + "' (1 project)",
                     app.Dte.Solution.Projects.Item(1).Name,
-                    "Python Environments",
+                    SR.GetString(SR.Environments),
                     envName);
 
                 var projectHome = (string)app.Dte.Solution.Projects.Item(1).Properties.Item("ProjectHome").Value;
@@ -340,7 +340,7 @@ namespace PythonToolsUITests {
                 app.SolutionExplorerTreeView.WaitForItemRemoved(
                     "Solution '" + app.Dte.Solution.Projects.Item(1).Name + "' (1 project)",
                     app.Dte.Solution.Projects.Item(1).Name,
-                    "Python Environments",
+                    SR.GetString(SR.Environments),
                     envName);
 
                 var projectHome = (string)app.Dte.Solution.Projects.Item(1).Properties.Item("ProjectHome").Value;
@@ -370,7 +370,7 @@ namespace PythonToolsUITests {
                 var env = new AutomationWrapper(app.SolutionExplorerTreeView.FindItem(
                     "Solution '" + app.Dte.Solution.Projects.Item(1).Name + "' (1 project)",
                     app.Dte.Solution.Projects.Item(1).Name,
-                    "Python Environments",
+                    SR.GetString(SR.Environments),
                     "Python 2.7"));
                 env.Select();
                 app.Dte.ExecuteCommand("Project.ActivateEnvironment");
@@ -379,7 +379,7 @@ namespace PythonToolsUITests {
                 var virtualEnv = app.SolutionExplorerTreeView.FindItem(
                     "Solution '" + app.Dte.Solution.Projects.Item(1).Name + "' (1 project)",
                     app.Dte.Solution.Projects.Item(1).Name,
-                    "Python Environments");
+                    SR.GetString(SR.Environments));
                 AutomationWrapper.Select(virtualEnv);
 
                 var createVenv = new AutomationWrapper(AutomationElement.FromHandle(
@@ -395,7 +395,7 @@ namespace PythonToolsUITests {
                 env = new AutomationWrapper(app.SolutionExplorerTreeView.FindItem(
                     "Solution '" + app.Dte.Solution.Projects.Item(1).Name + "' (1 project)",
                     app.Dte.Solution.Projects.Item(1).Name,
-                    "Python Environments",
+                    SR.GetString(SR.Environments),
                     "Python 3.3"));
                 env.Select();
                 app.Dte.ExecuteCommand("Project.ActivateEnvironment");
@@ -404,7 +404,7 @@ namespace PythonToolsUITests {
                 virtualEnv = app.SolutionExplorerTreeView.FindItem(
                     "Solution '" + app.Dte.Solution.Projects.Item(1).Name + "' (1 project)",
                     app.Dte.Solution.Projects.Item(1).Name,
-                    "Python Environments");
+                    SR.GetString(SR.Environments));
                 AutomationWrapper.Select(virtualEnv);
 
                 createVenv = new AutomationWrapper(AutomationElement.FromHandle(

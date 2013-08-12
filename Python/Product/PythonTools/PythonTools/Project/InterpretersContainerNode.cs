@@ -29,7 +29,7 @@ using VsCommands = Microsoft.VisualStudio.VSConstants.VSStd97CmdID;
 
 namespace Microsoft.PythonTools.Project {
     /// <summary>
-    /// Python Interpreters container node.
+    /// Python Environments container node.
     /// </summary>
     [ComVisible(true)]
     internal class InterpretersContainerNode : HierarchyNode {
@@ -82,7 +82,7 @@ namespace Microsoft.PythonTools.Project {
         /// Gets the caption of the hierarchy node.
         /// </summary>
         public override string Caption {
-            get { return SR.GetString(SR.Interpreters); }
+            get { return SR.GetString(SR.Environments); }
         }
 
         /// <summary>

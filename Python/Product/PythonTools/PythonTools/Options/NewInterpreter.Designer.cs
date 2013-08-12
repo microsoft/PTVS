@@ -70,9 +70,9 @@
             this.label1.Location = new System.Drawing.Point(6, 8);
             this.label1.Margin = new System.Windows.Forms.Padding(6, 8, 6, 8);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(152, 13);
+            this.label1.Size = new System.Drawing.Size(177, 13);
             this.label1.TabIndex = 0;
-            this.label1.Text = "Enter name for new interpreter:";
+            this.label1.Text = "Enter name for custom environment:";
             // 
             // _description
             // 
@@ -124,7 +124,7 @@
             this.MinimizeBox = false;
             this.Name = "NewInterpreter";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-            this.Text = "Add Python Interpreter";
+            this.Text = "Add Python Environment";
             this.tableLayoutPanel1.ResumeLayout(false);
             this.tableLayoutPanel1.PerformLayout();
             this.ResumeLayout(false);

@@ -131,8 +131,8 @@ namespace Microsoft.PythonTools.Options {
 
         private void InitializeWithNoInterpreters() {
             _loadingOptions = true;
-            _showSettingsFor.Items.Add("No Python Interpreters Installed");
-            _defaultInterpreter.Items.Add("No Python Interpreters Installed");
+            _showSettingsFor.Items.Add("No Python Environments Installed");
+            _defaultInterpreter.Items.Add("No Python Environments Installed");
             _showSettingsFor.SelectedIndex = _defaultInterpreter.SelectedIndex = 0;
             _defaultInterpreter.Enabled = false;
             _showSettingsFor.Enabled = false;
@@ -260,6 +260,7 @@ namespace Microsoft.PythonTools.Options {
 
         private void AddInterpreterClick(object sender, EventArgs e) {
             var newInterp = new NewInterpreter();
+            newInterp.Font = Font;
             if (newInterp.ShowDialog() == DialogResult.OK) {
                 if (!_showSettingsFor.Enabled) {
                     // previously we had no interpreters, re-enable the control

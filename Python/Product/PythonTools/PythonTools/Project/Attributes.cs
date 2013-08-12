@@ -30,21 +30,23 @@ namespace Microsoft.PythonTools.Project {
         public const string WarningAnalysisNotCurrent = "WarningAnalysisNotCurrent";
 
         public const string SearchPaths = "SearchPaths";
+        public const string SearchPathContainerProperties = "SearchPathProperties";
+        public const string SearchPathProperties = "SearchPathProperties";
         public const string SearchPathsDescription = "SearchPathsDescription";
         public const string SearchPathRemoveConfirmation = "SearchPathRemoveConfirmation";
 
-        public const string Interpreters = "Interpreters";
-        public const string InterpreterRemoveConfirmation = "InterpreterRemoveConfirmation";
-        public const string InterpreterDeleteConfirmation = "InterpreterDeleteConfirmation";
-        public const string InterpreterDeleteError = "InterpreterDeleteError";
+        public const string Environments = "Environments";
+        public const string EnvironmentRemoveConfirmation = "EnvironmentRemoveConfirmation";
+        public const string EnvironmentDeleteConfirmation = "EnvironmentDeleteConfirmation";
+        public const string EnvironmentDeleteError = "EnvironmentDeleteError";
 
         public const string PackageFullName = "PackageFullName";
         public const string PackageFullNameDescription = "PackageFullNameDescription";
 
-        public const string InterpreterIdDisplayName = "InterpreterIdDisplayName";
-        public const string InterpreterIdDescription = "InterpreterIdDescription";
-        public const string InterpreterVersionDisplayName = "InterpreterVersionDisplayName";
-        public const string InterpreterVersionDescription = "InterpreterVersionDescription";
+        public const string EnvironmentIdDisplayName = "EnvironmentIdDisplayName";
+        public const string EnvironmentIdDescription = "EnvironmentIdDescription";
+        public const string EnvironmentVersionDisplayName = "EnvironmentVersionDisplayName";
+        public const string EnvironmentVersionDescription = "EnvironmentVersionDescription";
 
         public const string BaseInterpreterDisplayName = "BaseInterpreterDisplayName";
         public const string BaseInterpreterDescription = "BaseInterpreterDescription";

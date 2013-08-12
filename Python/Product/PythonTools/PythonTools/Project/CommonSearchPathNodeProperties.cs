@@ -63,7 +63,7 @@ namespace Microsoft.PythonTools.Project {
         #endregion
 
         public override string GetClassName() {
-            return "Search Path Properties";
+            return SR.GetString(SR.SearchPathProperties);
         }
     }
 }

@@ -41,7 +41,7 @@ namespace Microsoft.PythonTools.Commands {
 
         public string Description {
             get {
-                return "Python Interpreters";
+                return "Python Environments";
             }
         }
 

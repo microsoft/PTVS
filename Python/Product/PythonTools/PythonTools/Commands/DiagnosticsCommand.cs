@@ -100,7 +100,7 @@ namespace Microsoft.PythonTools.Commands {
                 res.AppendLine();
             }
 
-            res.AppendLine("Interpreters: ");
+            res.AppendLine("Environments: ");
             foreach (var provider in interpService.KnownProviders) {
                 res.AppendLine("    " + provider.GetType().FullName);
                 foreach (var factory in provider.GetInterpreterFactories()) {

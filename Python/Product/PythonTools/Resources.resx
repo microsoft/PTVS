@@ -147,33 +147,33 @@ Continue?</value>
 
 Continue?</value>
   </data>
-  <data name="InterpreterDeleteConfirmation" xml:space="preserve">
+  <data name="EnvironmentDeleteConfirmation" xml:space="preserve">
     <value>'{0}' will be removed froh the project and the directory
 '{1}'
 and all its contents will be deleted from disk.</value>
   </data>
-  <data name="InterpreterDeleteError" xml:space="preserve">
+  <data name="EnvironmentDeleteError" xml:space="preserve">
     <value>We weren't able to delete all the files from {0}.
 
 Some files may need to be removed manually.</value>
   </data>
-  <data name="InterpreterIdDescription" xml:space="preserve">
+  <data name="EnvironmentIdDescription" xml:space="preserve">
     <value>The identifier of the environment.</value>
   </data>
-  <data name="InterpreterIdDisplayName" xml:space="preserve">
+  <data name="EnvironmentIdDisplayName" xml:space="preserve">
     <value>Id</value>
   </data>
-  <data name="InterpreterRemoveConfirmation" xml:space="preserve">
+  <data name="EnvironmentRemoveConfirmation" xml:space="preserve">
     <value>'{0}' will be removed from the project.
 No files will be deleted from disk.</value>
   </data>
-  <data name="Interpreters" xml:space="preserve">
+  <data name="Environments" xml:space="preserve">
     <value>Python Environments</value>
   </data>
-  <data name="InterpreterVersionDescription" xml:space="preserve">
+  <data name="EnvironmentVersionDescription" xml:space="preserve">
     <value>The Python language version supported by the environment.</value>
   </data>
-  <data name="InterpreterVersionDisplayName" xml:space="preserve">
+  <data name="EnvironmentVersionDisplayName" xml:space="preserve">
     <value>Version</value>
   </data>
   <data name="MissingStartupScript" xml:space="preserve">
@@ -240,7 +240,7 @@ No files will be deleted from disk.</value>
     <value>'{0}' will be removed from the project's search path.</value>
   </data>
   <data name="SearchPaths" xml:space="preserve">
-    <value>Search Path</value>
+    <value>Search Paths</value>
   </data>
   <data name="SearchPathsDescription" xml:space="preserve">
     <value>The list of directories to search for modules and files.</value>
@@ -273,6 +273,14 @@ No files will be deleted from disk.</value>
     <value>Warning: the IntelliSense database is currently not up to date and completions may be missing.</value>
   </data>
   <data name="InstallEasyInstall" xml:space="preserve">
-    <value>To install your Python package, we will install the distribute and pip package managers.</value>
+    <value>To install your Python package, we will install setuptools and the pip package manager.
+
+Continue?</value>
+  </data>
+  <data name="SearchPathProperties" xml:space="preserve">
+    <value>Search Path Properties</value>
+  </data>
+  <data name="SearchPathContainerProperties" xml:space="preserve">
+    <value>Search Paths Properties</value>
   </data>
 </root>

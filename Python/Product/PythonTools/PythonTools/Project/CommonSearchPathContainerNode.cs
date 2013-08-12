@@ -14,7 +14,6 @@
 
 using System;
 using System.Runtime.InteropServices;
-using System.Text;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools;
@@ -65,7 +64,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         /// <summary>
-        /// Gets the absolute path for this node.         
+        /// Gets the absolute path for this node.
         /// </summary>
         public override string Url {
             // TODO: This node is not real - should we return null for Url?
@@ -73,7 +72,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         /// <summary>
-        /// Gets the caption of the hierarchy node.        
+        /// Gets the caption of the hierarchy node.
         /// </summary>
         public override string Caption {
             get { return SR.GetString(SR.SearchPaths); }
@@ -132,7 +131,7 @@ namespace Microsoft.PythonTools.Project {
 
         /// <summary>
         /// SearchPathContainer Node cannot be deleted.
-        /// </summary>        
+        /// </summary>
         internal override bool CanDeleteItem(__VSDELETEITEMOPERATION deleteOperation) {
             return false;
         }

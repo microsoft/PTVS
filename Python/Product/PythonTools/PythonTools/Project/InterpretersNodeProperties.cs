@@ -65,8 +65,8 @@ namespace Microsoft.PythonTools.Project {
 
 #if DEBUG
         [SRCategory(SR.Misc)]
-        [LocDisplayName(SR.InterpreterIdDisplayName)]
-        [SRDescription(SR.InterpreterIdDescription)]
+        [LocDisplayName(SR.EnvironmentIdDisplayName)]
+        [SRDescription(SR.EnvironmentIdDescription)]
         [AutomationBrowsable(true)]
         public string Id {
             get {
@@ -77,8 +77,8 @@ namespace Microsoft.PythonTools.Project {
 #endif
 
         [SRCategory(SR.Misc)]
-        [LocDisplayName(SR.InterpreterVersionDisplayName)]
-        [SRDescription(SR.InterpreterVersionDescription)]
+        [LocDisplayName(SR.EnvironmentVersionDisplayName)]
+        [SRDescription(SR.EnvironmentVersionDescription)]
         [AutomationBrowsable(true)]
         public string Version {
             get {

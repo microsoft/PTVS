@@ -73,7 +73,7 @@ namespace Microsoft.PythonTools.Intellisense {
             var toolWindow = PythonToolsPackage.Instance.FindToolWindow(typeof(InterpreterList.InterpreterListToolWindow), 0, true) as ToolWindowPane;
             var frame = toolWindow != null ? toolWindow.Frame as IVsWindowFrame : null;
             if (toolWindow == null || frame == null) {
-                ErrorHandler.ThrowOnFailure(VsShellUtilities.ShowMessageBox(PythonToolsPackage.Instance, "Unable to create Python Interpreters window.", "Python Tools for Visual Studio", OLEMSGICON.OLEMSGICON_NOICON, OLEMSGBUTTON.OLEMSGBUTTON_OK, OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST));
+                ErrorHandler.ThrowOnFailure(VsShellUtilities.ShowMessageBox(PythonToolsPackage.Instance, "Unable to create Python Environments window.", "Python Tools for Visual Studio", OLEMSGICON.OLEMSGICON_NOICON, OLEMSGBUTTON.OLEMSGBUTTON_OK, OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST));
                 return;
             }
             ErrorHandler.ThrowOnFailure(frame.Show());

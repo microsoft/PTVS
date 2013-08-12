@@ -14,7 +14,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -22,7 +21,7 @@ using System.Threading;
 using System.Windows.Automation;
 using System.Windows.Input;
 using EnvDTE;
-using EnvDTE80;
+using Microsoft.PythonTools.Project;
 using Microsoft.TC.TestHostAdapters;
 using Microsoft.TestSccPackage;
 using Microsoft.VisualStudio;
@@ -168,7 +167,7 @@ namespace PythonToolsUITests {
             var window = app.SolutionExplorerTreeView;
 
             // find Program.py, send copy & paste, verify copy of file is there
-            var projectNode = window.FindItem("Solution 'AddSearchPaths' (1 project)", "AddSearchPaths", "Search Path");
+            var projectNode = window.FindItem("Solution 'AddSearchPaths' (1 project)", "AddSearchPaths", SR.GetString(SR.SearchPaths));
             AutomationWrapper.Select(projectNode);
 
             // Need to lock inside the worker and around the SaveAll command to ensure that AddSearchPath
@@ -197,25 +196,25 @@ namespace PythonToolsUITests {
             var window = app.SolutionExplorerTreeView;
 
             // Entered in file as ..\AddSearchPaths\
-            var path1 = window.FindItem("Solution 'LoadSearchPaths' (1 project)", "LoadSearchPaths", "Search Path", "..\\AddSearchPaths");
+            var path1 = window.FindItem("Solution 'LoadSearchPaths' (1 project)", "LoadSearchPaths", SR.GetString(SR.SearchPaths), "..\\AddSearchPaths");
             Assert.IsNotNull(path1, "Could not find ..\\AddSearchPaths");
 
             // Entered in file as ..\HelloWorld
-            var path2 = window.FindItem("Solution 'LoadSearchPaths' (1 project)", "LoadSearchPaths", "Search Path", "..\\HelloWorld");
+            var path2 = window.FindItem("Solution 'LoadSearchPaths' (1 project)", "LoadSearchPaths", SR.GetString(SR.SearchPaths), "..\\HelloWorld");
             Assert.IsNotNull(path2, "Could not find ..\\HelloWorld");
 
             // Entered in file as ..\LoadSearchPaths\NotHere\..\ - resolves to .\
-            var path3 = window.FindItem("Solution 'LoadSearchPaths' (1 project)", "LoadSearchPaths", "Search Path", ".");
+            var path3 = window.FindItem("Solution 'LoadSearchPaths' (1 project)", "LoadSearchPaths", SR.GetString(SR.SearchPaths), ".");
             Assert.IsNotNull(path3, "Could not find .");
             
             // Entered in file as .\NotHere\
-            var path4 = window.FindItem("Solution 'LoadSearchPaths' (1 project)", "LoadSearchPaths", "Search Path", "NotHere");
+            var path4 = window.FindItem("Solution 'LoadSearchPaths' (1 project)", "LoadSearchPaths", SR.GetString(SR.SearchPaths), "NotHere");
             Assert.IsNotNull(path4, "Could not find NotHere");
 
             // Entered in file as .\NotHere\
             AutomationWrapper.Select(path4);
             Keyboard.Type(Key.Delete);  // should not prompt, https://pytools.codeplex.com/workitem/1233
-            Assert.IsNull(window.WaitForItemRemoved("Solution 'LoadSearchPaths' (1 project)", "LoadSearchPaths", "Search Path", "NotHere"));
+            Assert.IsNull(window.WaitForItemRemoved("Solution 'LoadSearchPaths' (1 project)", "LoadSearchPaths", SR.GetString(SR.SearchPaths), "NotHere"));
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
@@ -1142,7 +1141,7 @@ namespace PythonToolsUITests {
             var solutionTree = app.SolutionExplorerTreeView;
 
             // open the solution, add a reference to our spam.pyd Python extension module
-            var folderNode = solutionTree.FindItem("Solution 'ExtensionReference' (1 project)", "ExtensionReference", "References");
+            var folderNode = solutionTree.FindItem("Solution 'ExtensionReference' (1 project)", "ExtensionReference", SR.GetString(SR.ReferencesNodeName));
             Mouse.MoveTo(folderNode.GetClickablePoint());
             Mouse.Click();
             Keyboard.PressAndRelease(Key.Apps); // context menu
@@ -1159,7 +1158,7 @@ namespace PythonToolsUITests {
             System.Threading.Thread.Sleep(2000);
             
             // make sure the reference got added
-            var spamItem = solutionTree.FindItem("Solution 'ExtensionReference' (1 project)", "ExtensionReference", "References", "spam.pyd");
+            var spamItem = solutionTree.FindItem("Solution 'ExtensionReference' (1 project)", "ExtensionReference", SR.GetString(SR.ReferencesNodeName), "spam.pyd");
             Assert.IsNotNull(spamItem);
 
             // now open a file and make sure we get completions against the spam module
@@ -1190,7 +1189,7 @@ namespace PythonToolsUITests {
             System.Threading.Thread.Sleep(3000);
 
             // make sure it got removed
-            spamItem = solutionTree.FindItem("Solution 'ExtensionReference' (1 project)", "ExtensionReference", "References", "spam.pyd");
+            spamItem = solutionTree.FindItem("Solution 'ExtensionReference' (1 project)", "ExtensionReference", SR.GetString(SR.ReferencesNodeName), "spam.pyd");
             Assert.AreEqual(spamItem, null);
 
             window.Activate();

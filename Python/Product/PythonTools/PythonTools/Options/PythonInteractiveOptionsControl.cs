@@ -72,7 +72,7 @@ namespace Microsoft.PythonTools.Options {
                 Enabled = true;
                 RefreshOptions();
             } else {
-                _showSettingsFor.Items.Add("No Python Interpreters Installed");
+                _showSettingsFor.Items.Add("No Python Environments Installed");
                 _showSettingsFor.SelectedIndex = 0;
                 Enabled = false;
             }

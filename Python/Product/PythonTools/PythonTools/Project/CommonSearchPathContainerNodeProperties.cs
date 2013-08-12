@@ -12,9 +12,6 @@
  *
  * ***************************************************************************/
 
-using System;
-using System.ComponentModel;
-using System.IO;
 using System.Runtime.InteropServices;
 using Microsoft.VisualStudioTools.Project;
 
@@ -25,7 +22,7 @@ namespace Microsoft.PythonTools.Project {
             : base(node) { }
 
         public override string GetClassName() {
-            return "Search Paths Properties";
+            return SR.GetString(SR.SearchPathContainerProperties);
         }
     }
 }

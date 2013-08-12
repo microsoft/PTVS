@@ -971,7 +971,7 @@ namespace Microsoft.PythonTools.Project {
                 if (removeFromStorage) {
                     Task.Factory.StartNew((Action)(() => Directory.Delete(path, recursive: true))).ContinueWith(t => {
                         MessageBox.Show(
-                            SR.GetString(SR.InterpreterDeleteError, path),
+                            SR.GetString(SR.EnvironmentDeleteError, path),
                             SR.GetString(SR.PythonToolsForVisualStudio)
                         );
                     }, CancellationToken.None, TaskContinuationOptions.OnlyOnFaulted, TaskScheduler.FromCurrentSynchronizationContext());

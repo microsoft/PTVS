@@ -22,7 +22,7 @@ namespace Microsoft.PythonTools.InterpreterList {
     [Guid(PythonConstants.InterpreterListToolWindowGuid)]
     class InterpreterListToolWindow : ToolWindowPane {
         public InterpreterListToolWindow() {
-            Caption = SR.GetString(SR.Interpreters);
+            Caption = SR.GetString(SR.Environments);
 
             Content = new InterpreterList(
                 PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>(),
