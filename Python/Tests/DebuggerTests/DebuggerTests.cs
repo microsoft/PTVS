@@ -547,6 +547,14 @@ namespace DebuggerTests {
                     new ExpectedStep(StepKind.Over, 7),     // step over print('abc')
                     new ExpectedStep(StepKind.Resume, 10)     // wait for exit
                 );
+            // 1315 resurrected:
+            StepTest(DebuggerTestPath + @"SteppingTestBug1315.py",
+                    new [] { 6 },
+                    null,
+                    new ExpectedStep(StepKind.Resume, 1),   // continue from import thread
+                    new ExpectedStep(StepKind.Over, 6),   
+                    new ExpectedStep(StepKind.Resume, 7)
+                );
             
             // Bug 507: http://pytools.codeplex.com/workitem/507
             StepTest(DebuggerTestPath + @"SteppingTestBug507.py",

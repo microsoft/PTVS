@@ -635,7 +635,7 @@ class Thread(object):
         # walk up our frames and make sure no debugger code is on the stack
         while frame is not None:
             if is_same_py_file(frame.f_code.co_filename, __file__):
-                if frame.f_code.co_name == 'debug' or frame.f_code.co_name == 'thread_creator':
+                if frame.f_code.co_name == 'debug' or frame.f_code.co_name == 'new_thread_wrapper':
                     # our top-level functions
                     break
                 # something like our stdout writer, don't block below here

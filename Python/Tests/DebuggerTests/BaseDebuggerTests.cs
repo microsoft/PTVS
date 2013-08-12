@@ -236,6 +236,7 @@ namespace DebuggerTests {
         }
 
         internal void StepTest(string filename, string breakFile, string arguments, int[] breakLines, Action<PythonProcess>[] breakAction, Action processLoaded, PythonDebugOptions options = PythonDebugOptions.RedirectOutput, bool waitForExit = true, params ExpectedStep[] kinds) {
+            Console.WriteLine("--- Begin Step Test ---");
             var debugger = new PythonDebugger();
             if (breakFile == null) {
                 breakFile = filename;
@@ -274,7 +275,10 @@ namespace DebuggerTests {
 
             int breakHits = 0;
             process.BreakpointHit += (sender, args) => {
-                breakAction[breakHits++](process);
+                Console.WriteLine("Breakpoint hit");
+                if (breakAction != null) {
+                    breakAction[breakHits++](process);
+                }
                 stepComplete = true;
                 processEvent.Set();
             };
