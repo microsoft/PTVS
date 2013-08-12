@@ -18,6 +18,7 @@ using System.IO;
 using System.Text;
 using System.Threading;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Logging;
 using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio.ComponentModelHost;
 
@@ -133,6 +134,11 @@ namespace Microsoft.PythonTools.Commands {
                 res.AppendLine("        " + launcher.Name);
                 res.AppendLine();
             }
+
+            res.AppendLine("Logged events/stats:");
+            var inMemLogger = PythonToolsPackage.ComponentModel.GetService<InMemoryLogger>();
+            res.AppendLine(inMemLogger.ToString());
+            res.AppendLine();
 
             string globalAnalysisLog = PythonTypeDatabase.GlobalLogFilename;
             if (File.Exists(globalAnalysisLog)) {

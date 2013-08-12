@@ -330,6 +330,7 @@ try {
             $bindir = "Binaries\$config$($targetVs.number)"
             $destdir = "$outdir\$($targetVs.name)\$config"
             mkdir $destdir -EA 0 | Out-Null
+            $includeVsLogger = test-path Internal\Python\VsLogger\VsLogger.csproj
             
             if (-not $skiptests)
             {
@@ -356,6 +357,7 @@ try {
             /p:VSTarget=$($targetVs.number) `
             /p:VisualStudioVersion=$($targetVs.number) `
             /p:"CustomBuildIdentifier=$name" `
+            /p:IncludeVsLogger=$includeVsLogger `
             Python\Setup\dirs.proj
 
             if ($LASTEXITCODE -gt 0) {
@@ -405,6 +407,7 @@ try {
                     "Microsoft.PythonTools.PyKinect.dll",
                     "Microsoft.PythonTools.WebRole.dll",
                     "Microsoft.PythonTools.Django.dll",
+                    "Microsoft.PythonTools.VsLogger.dll",
                     "Microsoft.PythonTools.AzureSetup.exe",
                     "Microsoft.IronPythonTools.Resolver.dll",
                     "Microsoft.PythonTools.Pyvot.dll"

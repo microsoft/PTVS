@@ -22,6 +22,7 @@
     <ProjectFile Include="PyKinectInstaller\PyKinectInstaller.wixproj"/>
     <ProjectFile Include="PyVotInstaller\PyVotInstaller.wixproj"/>
     <ProjectFile Include="FastCgiInstaller\FastCgi.wixproj"/>    
+    <ProjectFile Include="..\..\Internal\Python\VsLoggerSetup\VsLogger.wixproj" Condition="'$(IncludeVsLogger)' == 'True'"/>    
   </ItemGroup>
 
   <Import Project="$(TargetsPath)\Common.Build.Traversal.targets" />

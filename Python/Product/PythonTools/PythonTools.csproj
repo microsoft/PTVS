@@ -265,6 +265,10 @@
       <Link>PythonInterpreterFactoryExtensions.cs</Link>
     </Compile>
     <Compile Include="PythonToolsInstallPath.cs" />
+    <Compile Include="PythonTools\Logging\InMemoryLogger.cs" />
+    <Compile Include="PythonTools\Logging\IPythonToolsLogger.cs" />
+    <Compile Include="PythonTools\Logging\PythonLogEvent.cs" />
+    <Compile Include="PythonTools\Logging\PythonToolsLogger.cs" />
     <Compile Include="PythonTools\Options\PythonGeneralOptionsControl.cs">
       <SubType>UserControl</SubType>
     </Compile>

@@ -15,7 +15,8 @@
     <DefineConstants>
       PyToolsDir=$(BuildRoot)\Python\Product\PythonTools;
       MsiVersion=$(WixVersion);
-      VSTargetVersion=$(VSTarget);      
+      VSTargetVersion=$(VSTarget);
+      IncludeVsLogger=$(IncludeVsLogger)
     </DefineConstants>
     <DefineConstants Condition="'$(CustomBuildIdentifier)' != ''">
       $(DefineConstants);
@@ -71,6 +72,13 @@
     <ProjectReference Include="..\Django\Django.wixproj">
       <Name>DjangoMsm</Name>
       <Project>{16671BE6-DD23-41D9-841A-0B80D47A090D}</Project>
+      <Private>True</Private>
+      <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
+      <RefTargetDir>INSTALLLOCATION</RefTargetDir>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\Internal\Python\VsLoggerSetup\VsLogger.wixproj" Condition="'$(IncludeVsLogger)' == 'True'">
+      <Name>VsLoggerMsm</Name>
+      <Project>{639BFC80-B31B-4D3F-9DF3-A65913000B4B}</Project>
       <Private>True</Private>
       <RefProjectOutputGroups>Binaries;Content;Satellites</RefProjectOutputGroups>
       <RefTargetDir>INSTALLLOCATION</RefTargetDir>

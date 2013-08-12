@@ -91,8 +91,10 @@ namespace Microsoft.PythonTools.Project {
 
         public int LaunchFile(string/*!*/ file, bool debug) {
             if (debug) {
+                PythonToolsPackage.Instance.Logger.LogEvent(Logging.PythonLogEvent.Launch, 1);
                 StartWithDebugger(file);
             } else {
+                PythonToolsPackage.Instance.Logger.LogEvent(Logging.PythonLogEvent.Launch, 0);
                 var process = StartWithoutDebugger(file);
                 var url = GetFullUrl();
                 Uri uri;

@@ -37,6 +37,7 @@ using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.InterpreterList;
+using Microsoft.PythonTools.Logging;
 using Microsoft.PythonTools.Navigation;
 using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Parsing;
@@ -264,6 +265,7 @@ namespace Microsoft.PythonTools {
         private SolutionEventsListener _solutionEventListener;
         private string _surveyNewsUrl;
         private object _surveyNewsUrlLock = new object();
+        private PythonToolsLogger _logger;
 
         /// <summary>
         /// Default constructor of the package.
@@ -287,6 +289,12 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Warning
                 );
+            }
+        }
+
+        internal PythonToolsLogger Logger {
+            get {
+                return _logger;
             }
         }
 
@@ -714,7 +722,26 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
             interpService.InterpretersChanged += RefreshReplCommands;
             interpService.DefaultInterpreterChanged += UpdateDefaultAnalyzer;
 
+            InitializeLogging(interpService);
             this.OnIdle += PythonToolsPackage_OnIdle;
+        }
+
+        private void InitializeLogging(IInterpreterOptionsService interpService) {
+            _logger = new PythonToolsLogger(ComponentModel.GetExtensions<IPythonToolsLogger>().ToArray());
+
+            // log interesting stats on startup
+            var installed = interpService.KnownProviders
+                .Where(x => !(x is ConfigurablePythonInterpreterFactoryProvider))
+                .SelectMany(x => x.GetInterpreterFactories())
+                .Count();
+
+            var configured = interpService.KnownProviders.
+                Where(x => x is ConfigurablePythonInterpreterFactoryProvider).
+                SelectMany(x => x.GetInterpreterFactories())
+                .Count();
+
+            _logger.LogEvent(PythonLogEvent.InstalledInterpreters, installed);
+            _logger.LogEvent(PythonLogEvent.ConfiguredInterpreters, configured);
         }
 
         internal SolutionEventsListener SolutionEvents {
