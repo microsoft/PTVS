@@ -833,9 +833,6 @@ class Thread(object):
             self.unblock_work()
             self.unblock_work = None
             self._is_working = False
-
-            # send thread frames again in case something (e.g. locals) changes
-            self.enum_thread_frames_locally()
                 
         self._block_starting_lock.acquire()
         assert self._is_blocked
@@ -920,8 +917,12 @@ class Thread(object):
             code = self.compile(text, cur_frame)
             res = eval(code, cur_frame.f_globals, self.get_locals(cur_frame, frame_kind))
             self.locals_to_fast(cur_frame)
+            # Report any updated variable values first
+            self.enum_thread_frames_locally()
             report_execution_result(execution_id, res)
         except:
+            # Report any updated variable values first
+            self.enum_thread_frames_locally()
             report_execution_exception(execution_id, sys.exc_info())
 
     def run_locally_no_report(self, text, cur_frame, frame_kind):
