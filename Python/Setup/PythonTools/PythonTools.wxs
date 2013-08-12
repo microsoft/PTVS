@@ -14,26 +14,23 @@
         <Directory Id="_48ABEECB7E104253B82907FA93A3A324" Name="Extensions">
           <Directory Id="_42CE42D0B12F4D5DBD0FF6B42799150C" Name="Microsoft">
             <Directory Id="_B3593B26D51E4E91BED2317473CC5D85" Name="Python Tools for Visual Studio">
-              <Directory Id="INSTALLLOCATION" Name="2.0">
-                <Directory Id="X64INSTALL" Name="x64">
-                    </Directory>
-                </Directory>
-              </Directory>
+              <Directory Id="INSTALLLOCATION" Name="2.0" />
+            </Directory>
           </Directory>
         </Directory>
       </Directory>
 
       <Directory Id="ProgramFilesFolder" Name="PFILES">
-          <Directory Id="Dir_MSBuild" Name="MSBuild"> 
-              <Directory Id="Dir_MSBuildMS" Name="Microsoft"> 
-                  <Directory Id="Dir_MSBuildVisualStudio" Name="VisualStudio"> 
-                      <Directory Id="Dir_VSVersion" Name="v$(var.VSTargetVersion)">
-                        <Directory Id="Dir_PythonToolsMsBuild" Name="Python Tools"> 
-                        </Directory>
-                      </Directory>
-                  </Directory> 
-              </Directory> 
-          </Directory> 
+        <Directory Id="Dir_MSBuild" Name="MSBuild">
+          <Directory Id="Dir_MSBuildMS" Name="Microsoft">
+            <Directory Id="Dir_MSBuildVisualStudio" Name="VisualStudio">
+              <Directory Id="Dir_VSVersion" Name="v$(var.VSTargetVersion)">
+                <Directory Id="Dir_PythonToolsMsBuild" Name="Python Tools">
+                </Directory>
+              </Directory>
+            </Directory>
+          </Directory>
+        </Directory>
       </Directory>
 
       <Directory Id="ProgramMenuFolder">

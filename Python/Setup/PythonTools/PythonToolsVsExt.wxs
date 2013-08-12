@@ -408,7 +408,7 @@
                         Directory="ApplicationProgramsFolder"
                         Description="Python Tools for Visual Studio Debugger package"
                         Target="[$cmpDB59A8DAF5AF4EF5BF5C73297E6D80CF]" />
-              <RegistryValue Root='HKCU' Key='SOFTWARE\Microsoft\PythonTools\$(var.VSTargetVersion)' Type='string' Name='ptvsd' Value='[$cmpDB59A8DAF5AF4EF5BF5C73297E6D80CF]' KeyPath='yes' />
+              <RegistryValue Root='HKMU' Key='SOFTWARE\Microsoft\PythonTools\$(var.VSTargetVersion)' Type='string' Name='ptvsd' Value='[$cmpDB59A8DAF5AF4EF5BF5C73297E6D80CF]' KeyPath='yes' />
               <RemoveFolder Id='DeleteApplicationProgramsFolder' Directory='ApplicationProgramsFolder' On='uninstall'/>
             </Component>
         </ComponentGroup>

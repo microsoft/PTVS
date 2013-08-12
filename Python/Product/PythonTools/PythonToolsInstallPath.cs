@@ -20,7 +20,7 @@ using Microsoft.Win32;
 
 namespace Microsoft.PythonTools {
     static class PythonToolsInstallPath {
-        public static string GetFromAssembly(Assembly assembly, string filename) {
+        private static string GetFromAssembly(Assembly assembly, string filename) {
             string path = Path.Combine(
                 Path.GetDirectoryName(assembly.Location),
                 filename
@@ -31,47 +31,26 @@ namespace Microsoft.PythonTools {
             return string.Empty;
         }
 
-        public static string GetFromRegistry(
-            string extensionName,
-            string extensionVersion,
-            string filename,
-            RegistryKey preferredKey = null
-        ) {
-            if (preferredKey != null) {
-                var installDir = preferredKey.GetValue("InstallDir") as string;
-                if (!String.IsNullOrEmpty(installDir)) {
-                    var path = Path.Combine(
-                        installDir,
-                        "Extensions",
-                        "Microsoft",
-                        extensionName,
-                        extensionVersion,
-                        filename
-                    );
-                    if (File.Exists(path)) {
-                        return path;
-                    }
+        private static string GetFromRegistry(string filename) {
+            const string ROOT_KEY = "Software\\Microsoft\\PythonTools\\" + AssemblyVersionInfo.VSVersion;
+
+            string installDir;
+            using (var baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32))
+            using (var configKey = baseKey.OpenSubKey(ROOT_KEY)) {
+                installDir = configKey.GetValue("InstallDir") as string;
+            }
+
+            if (string.IsNullOrEmpty(installDir)) {
+                using (var baseKey = RegistryKey.OpenBaseKey(RegistryHive.CurrentUser, RegistryView.Registry32))
+                using (var configKey = baseKey.OpenSubKey(ROOT_KEY)) {
+                    installDir = configKey.GetValue("InstallDir") as string;
                 }
             }
-            
-            const string VS_KEY = "Software\\Microsoft\\VisualStudio\\" + AssemblyVersionInfo.VSVersion;
 
-            // Look to the VS install dir.
-            using (var baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32))
-            using (var configKey = baseKey.OpenSubKey(VS_KEY)) {
-                var installDir = configKey.GetValue("InstallDir") as string;
-                if (!String.IsNullOrEmpty(installDir)) {
-                    var path = Path.Combine(
-                        installDir,
-                        "Extensions",
-                        "Microsoft",
-                        extensionName,
-                        extensionVersion,
-                        filename
-                    );
-                    if (File.Exists(path)) {
-                        return path;
-                    }
+            if (!String.IsNullOrEmpty(installDir)) {
+                var path = Path.Combine(installDir, filename);
+                if (File.Exists(path)) {
+                    return path;
                 }
             }
 
@@ -79,23 +58,19 @@ namespace Microsoft.PythonTools {
         }
 
         public static string GetFile(string filename) {
-            string path = GetFromAssembly(Assembly.GetExecutingAssembly(), filename);
+            string path = GetFromAssembly(typeof(PythonToolsInstallPath).Assembly, filename);
             if (!string.IsNullOrEmpty(path)) {
                 return path;
             }
 
-            path = GetFromAssembly(Assembly.GetEntryAssembly(), filename);
+            path = GetFromRegistry(filename);
             if (!string.IsNullOrEmpty(path)) {
                 return path;
             }
 
-            path = GetFromRegistry("Python Tools for Visual Studio", AssemblyVersionInfo.ReleaseVersion, filename);
-            if (!string.IsNullOrEmpty(path)) {
-                return path;
-            }
-
-            Debug.Fail("Unable to determine Python Tools installation path");
-            return string.Empty;
+            throw new InvalidOperationException(
+                "Unable to determine Python Tools installation path"
+            );
         }
     }
 }

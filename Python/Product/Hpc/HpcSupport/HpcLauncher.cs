@@ -544,7 +544,7 @@ namespace Microsoft.PythonTools.Hpc {
                         allFiles.Add(new CopyFile(Path.Combine(pyInstallDir, file), file));
                     }
 
-                    string pyHpcInstallDir = GetPythonHpcToolsInstallPath();
+                    string pyHpcInstallDir = Path.GetDirectoryName(PythonToolsInstallPath.GetFile(MpiShimExe));
                     foreach (var file in _hpcDebuggerFiles) {
                         allFiles.Add(new CopyFile(Path.Combine(pyHpcInstallDir, file), file));
                     }
@@ -948,26 +948,6 @@ namespace Microsoft.PythonTools.Hpc {
                 return true;
             }
             return false;
-        }
-
-        internal static string GetPythonHpcToolsInstallPath() {
-            string path = PythonToolsInstallPath.GetFromAssembly(typeof(HpcSupportPackage).Assembly, MpiShimExe);
-            if (!string.IsNullOrEmpty(path)) {
-                return Path.GetDirectoryName(path);
-            }
-
-            path = PythonToolsInstallPath.GetFromRegistry(
-                "Python Tools HPC Support",
-                AssemblyVersionInfo.ReleaseVersion,
-                MpiShimExe,
-                HpcSupportPackage.Instance != null ? HpcSupportPackage.Instance.ApplicationRegistryRoot : null
-            );
-            if (!string.IsNullOrEmpty(path)) {
-                return Path.GetDirectoryName(path);
-            }
-
-            Debug.Fail("Unable to determine HPC Support installation path");
-            return null;
         }
 
         private static bool IsPathUnc(string path) {

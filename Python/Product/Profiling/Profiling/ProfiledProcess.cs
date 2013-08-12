@@ -42,10 +42,7 @@ namespace Microsoft.PythonTools.Profiling {
             _arch = arch;
 
             ProcessStartInfo processInfo;
-            string pythonInstallDir = GetPythonProfilingToolsInstallPath();
-            if (string.IsNullOrEmpty(pythonInstallDir)) {
-                throw new InvalidOperationException("Unable to determine installation directory");
-            }
+            string pythonInstallDir = Path.GetDirectoryName(PythonToolsInstallPath.GetFile("VsPyProf.dll"));
             string dll = _arch == ProcessorArchitecture.Amd64 ? "VsPyProf.dll" : "VsPyProfX86.dll";
             string arguments = "\"" + Path.Combine(pythonInstallDir, "proflaun.py") + "\" " +
                 "\"" + Path.Combine(pythonInstallDir, dll) + "\" " +
@@ -159,28 +156,6 @@ namespace Microsoft.PythonTools.Profiling {
 
         internal void StopProfiling() {
             _process.Kill();
-        }
-
-        internal static string GetPythonProfilingToolsInstallPath() {
-            const string VsPyProfDll = "vspyprof.dll";
-
-            string path = PythonToolsInstallPath.GetFromAssembly(typeof(PythonProfilingPackage).Assembly, VsPyProfDll);
-            if (!string.IsNullOrEmpty(path)) {
-                return Path.GetDirectoryName(path);
-            }
-
-            path = PythonToolsInstallPath.GetFromRegistry(
-                "PythonProfiling",
-                AssemblyVersionInfo.ReleaseVersion,
-                VsPyProfDll,
-                PythonProfilingPackage.Instance != null ? PythonProfilingPackage.Instance.ApplicationRegistryRoot : null
-            );
-            if (!string.IsNullOrEmpty(path)) {
-                return Path.GetDirectoryName(path);
-            }
-
-            Debug.Fail("Unable to determine Python Profiling installation path");
-            return null;
         }
     }
 }

@@ -71,9 +71,7 @@
         <Directory Id="_48ABEECB7E104253B82907FA93A3A324" Name="Extensions">
           <Directory Id="_42CE42D0B12F4D5DBD0FF6B42799150C" Name="Microsoft">
             <Directory Id="_B3593B26D51E4E91BED2317473CC5D85" Name="Python Tools for Visual Studio">
-              <Directory Id="INSTALLLOCATION" Name="2.0">
-                <Directory Id="X64INSTALL" Name="x64" />
-              </Directory>
+              <Directory Id="INSTALLLOCATION" Name="2.0" />
             </Directory>
           </Directory>
         </Directory>
@@ -82,7 +80,7 @@
 
     <!-- Install the tools into the VS directory -->
     <DirectoryRef Id="INSTALLLOCATION">
-      <Component Id="Comp_InstallDirItems" DiskId="1" Guid="F0C653EF-F90B-4C63-8AC6-7B1EC8F044A4">
+      <Component Id="Comp_InstallDirItems" Guid="F0C653EF-F90B-4C63-8AC6-7B1EC8F044A4">
         <File Id="File_License.html" Name="License.html" Source="$(var.PyToolsDir)\License.html">
           <Shortcut Id="LicenseShortcut"
                     Directory="ApplicationProgramsFolder"
@@ -95,13 +93,19 @@
         <util:RestartResource Path="[DEVENV_PATH]\devenv.exe" />
       </Component>
 
+      <Component Id="Comp_InstallLocation" Guid="{40BEB328-A5F0-4D60-B454-F777AF0508EC}">
+        <RegistryKey Root="HKMU" Key="Software\Microsoft\PythonTools\$(var.VSTargetVersion)">
+          <RegistryValue Type="string" Name="InstallDir" Value="[INSTALLLOCATION]" KeyPath="yes"/>
+        </RegistryKey>
+      </Component>
+      
       <!-- Edit with Visual Studio context menu -->
-      <Component Id="Comp_PyFileRegistration" DiskId="1" Guid="86592E35-864B-43D8-8E7E-E00F01EA0B6E">
+      <Component Id="Comp_PyFileRegistration" Guid="86592E35-864B-43D8-8E7E-E00F01EA0B6E">
         <RegistryKey Root='HKCR' Key='[PYTHONFILETYPE]'>
           <RegistryValue Type='string' Value='Python source file' />
 
           <RegistryKey Key='DefaultIcon'>
-            <RegistryValue Type='string' Value="[VSINSTALLPATH]\Extensions\Microsoft\Python Tools for Visual Studio\2.0\PythonFile.ico" />
+            <RegistryValue Type='string' Value="[INSTALLLOCATION]\PythonFile.ico" />
           </RegistryKey>
 
           <RegistryKey Key='shell\Edit with Visual Studio'>
@@ -130,7 +134,7 @@
 
       <Component Id="Comp_PyProgRegistration" DiskId="1" Guid="933CFC77-F315-4058-AB16-AE737B31B2F8">
         <RegistryValue Root='HKCR' Key='.pyproj' Type='string' Name='PerceivedType' Value='text' />
-        <RegistryValue Root='HKCR' Key='VisualStudio.Launcher.pyproj.$(var.VSTargetVersion)\DefaultIcon' Type='string' Value='[VSINSTALLPATH]\Extensions\Microsoft\Python Tools for Visual Studio\2.0\PythonProject.ico' />
+        <RegistryValue Root='HKCR' Key='VisualStudio.Launcher.pyproj.$(var.VSTargetVersion)\DefaultIcon' Type='string' Value='[INSTALLLOCATION]\PythonProject.ico' />
 
         <ProgId Id="VisualStudio.Launcher.pyproj.$(var.VSTargetVersion)" Description="Python Project">
           <Extension Id="pyproj" ContentType="text/plain">
@@ -146,6 +150,7 @@
     <Feature Id="ProductFeature" Title="$(var.ProductName)" Description="$(var.ProductName)"
              Display="expand" Level="1" AllowAdvertise="no" Absent="disallow"  >
       <ComponentRef Id="Comp_InstallDirItems" Primary="yes" />
+      <ComponentRef Id="Comp_InstallLocation" Primary="yes" />
       <ComponentRef Id="Comp_PyProgRegistration" Primary="yes" />
 
       <MergeRef Id="PythonTools"/>
