@@ -14,17 +14,12 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Reflection;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Interpreter.Default;
-using Microsoft.Win32;
-using Microsoft.Win32.SafeHandles;
 
 namespace Microsoft.PythonTools.Interpreter {
     /// <summary>
@@ -34,6 +29,7 @@ namespace Microsoft.PythonTools.Interpreter {
         private readonly IPythonInterpreterFactory _factory;
         private readonly SharedDatabaseState _sharedState;
         private readonly bool _cloned;
+        private int _databaseReplacedListenerCount;
 
         /// <summary>
         /// Gets the version of the analysis format that this class reads.
@@ -208,11 +204,11 @@ namespace Microsoft.PythonTools.Interpreter {
                 }
 
                 using (var output = interpreter.Run(
-                    Path.Combine(GetPythonToolsInstallPath(), "ExtensionScraper.py"),   // script to run
-                    "scrape",                                                           // scrape
-                    "-",                                                                // no module name
-                    extensionModuleFilename,                                            // extension module path
-                    dbFile.Substring(0, dbFile.Length - 4)                              // output file path (minus .idb)
+                    PythonToolsInstallPath.GetFile("ExtensionScraper.py"),
+                    "scrape",
+                    "-",                                    // do not use __import__
+                    extensionModuleFilename,                // extension module path
+                    Path.ChangeExtension(dbFile, null)      // output file path (minus .idb)
                     )) {
                     if (_cancel.CanBeCanceled) {
                         if (WaitHandle.WaitAny(new[] { _cancel.WaitHandle, output.WaitHandle }) != 1) {
@@ -373,7 +369,7 @@ namespace Microsoft.PythonTools.Interpreter {
             var outPath = request.OutputPath;
 
             ThreadPool.QueueUserWorkItem(x => {
-                var path = Path.Combine(GetPythonToolsInstallPath(), "Microsoft.PythonTools.Analyzer.exe");
+                var path = PythonToolsInstallPath.GetFile("Microsoft.PythonTools.Analyzer.exe");
 
                 Directory.CreateDirectory(CompletionDatabasePath);
 
@@ -443,7 +439,9 @@ namespace Microsoft.PythonTools.Interpreter {
         internal static string BaselineDatabasePath {
             get {
                 if (_baselineDatabasePath == null) {
-                    _baselineDatabasePath = Path.Combine(GetPythonToolsInstallPath(), "CompletionDB");
+                    _baselineDatabasePath = Path.GetDirectoryName(
+                        PythonToolsInstallPath.GetFile("CompletionDB\\__builtin__.idb")
+                    );
                 }
                 return _baselineDatabasePath;
             }
@@ -457,9 +455,9 @@ namespace Microsoft.PythonTools.Interpreter {
                         "Python Tools",
                         "CompletionDB",
 #if DEBUG
- "Debug",
+                        "Debug",
 #endif
- AssemblyVersionInfo.VSVersion
+                        AssemblyVersionInfo.VSVersion
                     );
                 }
                 return _completionDatabasePath;
@@ -493,53 +491,33 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
-        public event EventHandler<DatabaseReplacedEventArgs> DatabaseReplaced;
+        private event EventHandler<DatabaseReplacedEventArgs> _databaseReplaced;
+        public event EventHandler<DatabaseReplacedEventArgs> DatabaseReplaced {
+            add {
+                Interlocked.Increment(ref _databaseReplacedListenerCount);
+                _databaseReplaced += value;
+            }
+            remove {
+                Interlocked.Decrement(ref _databaseReplacedListenerCount);
+                _databaseReplaced -= value;
+            }
+        }
 
         public void OnDatabaseReplaced(PythonTypeDatabase newDatabase) {
-            var evt = DatabaseReplaced;
+            var evt = _databaseReplaced;
             if (evt != null) {
                 evt(this, new DatabaseReplacedEventArgs(newDatabase));
             }
         }
 
-        internal bool HasListeners {
+        internal bool HasDatabaseReplacedListeners {
             get {
-                return DatabaseReplaced != null;
+                return _databaseReplacedListenerCount != 0;
             }
         }
 
         internal CPythonConstant GetConstant(IPythonType type) {
             return _sharedState.GetConstant(type);
-        }
-
-        // This is duplicated throughout different assemblies in PythonTools, so search for it if you update it.
-        private static string GetPythonToolsInstallPath() {
-            string path = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            if (File.Exists(Path.Combine(path, "Microsoft.PythonTools.Analysis.dll"))) {
-                return path;
-            }
-
-            // running from the GAC in remote attach scenario.  Look to the VS install dir.
-            using (var configKey = OpenVisualStudioKey()) {
-                var installDir = configKey.GetValue("InstallDir") as string;
-                if (installDir != null) {
-                    var toolsPath = Path.Combine(installDir, "Extensions\\Microsoft\\Python Tools for Visual Studio\\2.0");
-                    if (File.Exists(Path.Combine(toolsPath, "Microsoft.PythonTools.Analysis.dll"))) {
-                        return toolsPath;
-                    }
-                }
-            }
-
-            Debug.Assert(false, "Unable to determine Python Tools installation path");
-            return string.Empty;
-        }
-
-        private static Win32.RegistryKey OpenVisualStudioKey() {
-            if (Environment.Is64BitOperatingSystem) {
-                return RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32).OpenSubKey("Software\\Microsoft\\VisualStudio\\" + AssemblyVersionInfo.VSVersion);
-            } else {
-                return Microsoft.Win32.Registry.LocalMachine.OpenSubKey("Software\\Microsoft\\VisualStudio\\" + AssemblyVersionInfo.VSVersion);
-            }
         }
 
         internal static bool TryGetLocation(Dictionary<string, object> table, ref int line, ref int column) {

@@ -49,6 +49,17 @@ namespace Microsoft.PythonTools.Interpreters {
             _description = options.Description;
         }
 
+        protected override void Dispose(bool disposing) {
+            if (_baseDb != null) {
+                _baseDb.DatabaseCorrupt -= Base_DatabaseCorrupt;
+                _baseDb.DatabaseReplaced -= Base_DatabaseReplaced;
+            }
+            _base.IsCurrentChanged -= OnIsCurrentChanged;
+            _base.IsCurrentReasonChanged -= OnIsCurrentReasonChanged;
+
+            base.Dispose(disposing);
+        }
+
         public IPythonInterpreterFactory BaseInterpreter {
             get {
                 return _base;
@@ -90,8 +101,8 @@ namespace Microsoft.PythonTools.Interpreters {
 
                 if (_baseHasRefreshed) {
                     if (IsCurrentDatabaseInUse) {
-                        // We have interpreter instances using our database, so we'd
-                        // better refresh it immediately.
+                        // We have interpreter instances using our database, so
+                        // refresh it immediately.
                         GenerateCompletionDatabase(GenerateDatabaseOptions.None, exitCode => {
                             // When we finish, refresh our status.
                             _baseHasRefreshed = (exitCode != 0);

@@ -539,7 +539,7 @@ namespace Microsoft.PythonTools.Hpc {
                     List<IPublishFile> allFiles = new List<IPublishFile>();
 
                     // add python debugger files
-                    string pyInstallDir = GetPythonToolsInstallPath();
+                    string pyInstallDir = Path.GetDirectoryName(PythonToolsInstallPath.GetFile(_pyDebuggerFiles[0]));
                     foreach (var file in _pyDebuggerFiles) {
                         allFiles.Add(new CopyFile(Path.Combine(pyInstallDir, file), file));
                     }
@@ -950,58 +950,24 @@ namespace Microsoft.PythonTools.Hpc {
             return false;
         }
 
-        // This is duplicated throughout different assemblies in PythonTools, so search for it if you update it.
-        internal static string GetPythonToolsInstallPath() {
-            string path = Path.GetDirectoryName(typeof(PythonToolsPackage).Assembly.Location);
-            if (File.Exists(Path.Combine(path, "PyDebugAttach.dll"))) {
-                return path;
-            }
-
-            // running from the GAC in remote attach scenario.  Look to the VS install dir.
-            using (var configKey = OpenVisualStudioKey()) {
-                var installDir = configKey.GetValue("InstallDir") as string;
-                if (installDir != null) {
-                    var toolsPath = Path.Combine(installDir, "Extensions\\Microsoft\\Python Tools for Visual Studio\\2.0");
-                    if (File.Exists(Path.Combine(toolsPath, "PyDebugAttach.dll"))) {
-                        return toolsPath;
-                    }
-                }
-            }
-
-            Debug.Assert(false, "Unable to determine Python Tools installation path");
-            return string.Empty;
-        }
-
         internal static string GetPythonHpcToolsInstallPath() {
-            string path = Path.GetDirectoryName(typeof(HpcSupportPackage).Assembly.Location);
-            if (File.Exists(Path.Combine(path, MpiShimExe))) {
-                return path;
+            string path = PythonToolsInstallPath.GetFromAssembly(typeof(HpcSupportPackage).Assembly, MpiShimExe);
+            if (!string.IsNullOrEmpty(path)) {
+                return Path.GetDirectoryName(path);
             }
 
-            // running from the GAC in remote attach scenario.  Look to the VS install dir.
-            using (var configKey = OpenVisualStudioKey()) {
-                var installDir = configKey.GetValue("InstallDir") as string;
-                if (installDir != null) {
-                    var toolsPath = Path.Combine(installDir, "Extensions\\Microsoft\\Python Tools HPC Support\\2.0");
-                    if (File.Exists(Path.Combine(toolsPath, MpiShimExe))) {
-                        return toolsPath;
-                    }
-                }
+            path = PythonToolsInstallPath.GetFromRegistry(
+                "Python Tools HPC Support",
+                AssemblyVersionInfo.ReleaseVersion,
+                MpiShimExe,
+                HpcSupportPackage.Instance != null ? HpcSupportPackage.Instance.ApplicationRegistryRoot : null
+            );
+            if (!string.IsNullOrEmpty(path)) {
+                return Path.GetDirectoryName(path);
             }
 
+            Debug.Fail("Unable to determine HPC Support installation path");
             return null;
-        }
-
-        private static Win32.RegistryKey OpenVisualStudioKey() {
-            if (HpcSupportPackage.Instance != null) {
-                return HpcSupportPackage.Instance.ApplicationRegistryRoot;
-            }
-
-            if (Environment.Is64BitOperatingSystem) {
-                return RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32).OpenSubKey("Software\\Microsoft\\VisualStudio\\" + AssemblyVersionInfo.VSVersion);
-            } else {
-                return Microsoft.Win32.Registry.LocalMachine.OpenSubKey("Software\\Microsoft\\VisualStudio\\" + AssemblyVersionInfo.VSVersion);
-            }
         }
 
         private static bool IsPathUnc(string path) {

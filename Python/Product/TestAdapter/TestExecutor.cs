@@ -36,41 +36,11 @@ namespace Microsoft.PythonTools.TestAdapter {
         public const string ExecutorUriString = "executor://PythonTestExecutor/v1";
         public static readonly Uri ExecutorUri = new Uri(ExecutorUriString);
         private static readonly Guid PythonRemoteDebugPortSupplierUnsecuredId = new Guid("{FEB76325-D127-4E02-B59D-B16D93D46CF5}");
-        private static readonly string TestLauncherPath = Path.Combine(GetPythonToolsInstallPath(), "visualstudio_py_testlauncher.py");
+        private static readonly string TestLauncherPath = PythonToolsInstallPath.GetFile("visualstudio_py_testlauncher.py");
 
         private readonly IInterpreterOptionsService _interpService = InterpreterOptionsServiceProvider.GetService();
 
         private readonly ManualResetEvent _cancelRequested = new ManualResetEvent(false);
-
-        // This is duplicated throughout different assemblies in PythonTools, so search for it if you update it.
-        private static string GetPythonToolsInstallPath() {
-            string path = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            if (File.Exists(Path.Combine(path, "PyDebugAttach.dll"))) {
-                return path;
-            }
-
-            // running from the GAC in remote attach scenario.  Look to the VS install dir.
-            using (var configKey = OpenVisualStudioKey()) {
-                var installDir = configKey.GetValue("InstallDir") as string;
-                if (installDir != null) {
-                    var toolsPath = Path.Combine(installDir, "Extensions\\Microsoft\\Python Tools for Visual Studio\\2.0");
-                    if (File.Exists(Path.Combine(toolsPath, "PyDebugAttach.dll"))) {
-                        return toolsPath;
-                    }
-                }
-            }
-
-            Debug.Assert(false, "Unable to determine Python Tools installation path");
-            return string.Empty;
-        }
-
-        private static Win32.RegistryKey OpenVisualStudioKey() {
-            if (Environment.Is64BitOperatingSystem) {
-                return Win32.RegistryKey.OpenBaseKey(Win32.RegistryHive.LocalMachine, Win32.RegistryView.Registry32).OpenSubKey("Software\\Microsoft\\VisualStudio\\" + AssemblyVersionInfo.VSVersion);
-            } else {
-                return Win32.Registry.LocalMachine.OpenSubKey("Software\\Microsoft\\VisualStudio\\" + AssemblyVersionInfo.VSVersion);
-            }
-        }
 
         public void Cancel() {
             _cancelRequested.Set();

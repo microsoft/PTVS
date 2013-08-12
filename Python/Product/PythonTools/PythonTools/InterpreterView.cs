@@ -17,17 +17,15 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
 using System.IO;
-using System.Threading.Tasks;
 using System.Windows;
-using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Project;
-using Microsoft.VisualStudio.ComponentModelHost;
 
 namespace Microsoft.PythonTools {
     internal class InterpreterView : DependencyObject, INotifyPropertyChanged {
         private readonly string _identifier;
+        private DateTime _expectFirstUpdateBy;
         private bool _startedRunning;
         private bool _isRunning;
 
@@ -98,12 +96,14 @@ namespace Microsoft.PythonTools {
                 if (!IsRunning) {
                     // We're analyzing, but we weren't started by this process.
                     IsRunning = true;
-                    withDb.NotifyGeneratingDatabase(true);
+                    // ...unless our DB already knew we were generating, which
+                    // means we WERE started by this process, just not through
+                    // this UI.
+                    _startedRunning = withDb.NotifyGeneratingDatabase(true);
                 }
-                if (_startedRunning) {
-                    // We're analyzing and we were started by this process.
-                    _startedRunning = false;
-                }
+
+                // We've received a message, so stop worrying about the timeout.
+                _expectFirstUpdateBy = DateTime.MinValue;
 
                 if (update.Progress < int.MaxValue) {
                     Dispatcher.BeginInvoke((Action)(() => {
@@ -119,13 +119,15 @@ namespace Microsoft.PythonTools {
                         Message = null;
                     }));
                 }
-            } else if (IsRunning && !_startedRunning) {
-                _startedRunning = true;
-                Task.Factory.StartNew((Action)(() => {
-                    _startedRunning = false;
-                    IsRunning = false;
+            } else if (IsRunning && DateTime.Now > _expectFirstUpdateBy) {
+                // We've finished running
+                IsRunning = false;
+                if (!_startedRunning) {
+                    // Weren't started by this process, so we need to notify
+                    // the interpreter to reload its DB.
                     withDb.NotifyNewDatabase();
-                }));
+                }
+                _startedRunning = false;
             }
         }
 
@@ -141,13 +143,13 @@ namespace Microsoft.PythonTools {
             if (Dispatcher.CheckAccess()) {
                 var withDb = Interpreter as IInterpreterWithCompletionDatabase;
                 if (withDb != null) {
+                    // Expect the first update within 10 seconds or else stop
+                    // running.
+                    _expectFirstUpdateBy = DateTime.Now + TimeSpan.FromSeconds(10);
                     IsRunning = _startedRunning = true;
-                    withDb.GenerateCompletionDatabase(GenerateDatabaseOptions.None, exitCode => {
-                        if (_startedRunning) {
-                            _startedRunning = false;
-                            withDb.RefreshIsCurrent();
-                            IsRunning = false;
-                        }
+                    withDb.GenerateCompletionDatabase(GenerateDatabaseOptions.SkipUnchanged, exitCode => {
+                        _startedRunning = false;
+                        IsRunning = false;
                     });
                 }
             } else {

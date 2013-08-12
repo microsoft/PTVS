@@ -107,6 +107,9 @@
     <Content Include="Templates\Projects\HpcMpiProject\PythonApp.pyproj" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\PythonTools\PythonToolsInstallPath.cs">
+      <Link>HpcSupport\PythonToolsInstallPath.cs</Link>
+    </Compile>
     <Compile Include="Guids.cs" />
     <Compile Include="HpcSupport\ClusterEnvironment.cs" />
     <Compile Include="HpcSupport\Extensions.cs" />

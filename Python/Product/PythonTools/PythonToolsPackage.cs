@@ -850,28 +850,6 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
             }
         }
 
-        // This is duplicated throughout different assemblies in PythonTools, so search for it if you update it.
-        internal static string GetPythonToolsInstallPath() {
-            string path = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            if (File.Exists(Path.Combine(path, "PyDebugAttach.dll"))) {
-                return path;
-            }
-
-            // running from the GAC in remote attach scenario.  Look to the VS install dir.
-            using (var configKey = PythonToolsPackage.ApplicationRegistryRoot) {
-                var installDir = configKey.GetValue("InstallDir") as string;
-                if (installDir != null) {
-                    var toolsPath = Path.Combine(installDir, "Extensions\\Microsoft\\Python Tools for Visual Studio\\" + AssemblyVersionInfo.ReleaseVersion);
-                    if (File.Exists(Path.Combine(toolsPath, "PyDebugAttach.dll"))) {
-                        return toolsPath;
-                    }
-                }
-            }
-
-            Debug.Assert(false, "Unable to determine Python Tools installation path");
-            return string.Empty;
-        }
-
         public string BrowseForFileOpen(IntPtr owner, string filter, string initialPath = null) {
             if (string.IsNullOrEmpty(initialPath)) {
                 initialPath = Environment.GetFolderPath(Environment.SpecialFolder.Personal) + Path.DirectorySeparatorChar;
@@ -1146,7 +1124,7 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
                         if (available != null) {
                             _surveyNewsUrl = GeneralOptionsPage.SurveyNewsIndexUrl;
                         } else {
-                            _surveyNewsUrl = CommonUtils.GetAbsoluteFilePath(PythonToolsPackage.GetPythonToolsInstallPath(), "NoSurveyNewsFeed.html");
+                            _surveyNewsUrl = PythonToolsInstallPath.GetFile("NoSurveyNewsFeed.html");
                         }
                     }
                 }

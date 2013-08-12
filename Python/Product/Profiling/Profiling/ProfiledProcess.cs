@@ -42,7 +42,10 @@ namespace Microsoft.PythonTools.Profiling {
             _arch = arch;
 
             ProcessStartInfo processInfo;
-            string pythonInstallDir = GetPythonToolsInstallPath();
+            string pythonInstallDir = GetPythonProfilingToolsInstallPath();
+            if (string.IsNullOrEmpty(pythonInstallDir)) {
+                throw new InvalidOperationException("Unable to determine installation directory");
+            }
             string dll = _arch == ProcessorArchitecture.Amd64 ? "VsPyProf.dll" : "VsPyProfX86.dll";
             string arguments = "\"" + Path.Combine(pythonInstallDir, "proflaun.py") + "\" " +
                 "\"" + Path.Combine(pythonInstallDir, dll) + "\" " +
@@ -158,55 +161,26 @@ namespace Microsoft.PythonTools.Profiling {
             _process.Kill();
         }
 
-        // This is duplicated throughout different assemblies in PythonTools, so search for it if you update it.
-        private static string GetPythonToolsInstallPath() {
-            string path = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            if (File.Exists(Path.Combine(path, "vspyprof.dll"))) {
-                return path;
+        internal static string GetPythonProfilingToolsInstallPath() {
+            const string VsPyProfDll = "vspyprof.dll";
+
+            string path = PythonToolsInstallPath.GetFromAssembly(typeof(PythonProfilingPackage).Assembly, VsPyProfDll);
+            if (!string.IsNullOrEmpty(path)) {
+                return Path.GetDirectoryName(path);
             }
 
-            // running from the GAC in remote attach scenario.  Look to the VS install dir.
-            using (var configKey = OpenVisualStudioKey()) {
-                var installDir = configKey.GetValue("InstallDir") as string;
-                if (installDir != null) {
-                    var toolsPath = Path.Combine(installDir, "Extensions\\Microsoft\\PythonProfiling\\2.0");
-                    if (File.Exists(Path.Combine(toolsPath, "vspyprof.dll"))) {
-                        return toolsPath;
-                    }
-                }
+            path = PythonToolsInstallPath.GetFromRegistry(
+                "PythonProfiling",
+                AssemblyVersionInfo.ReleaseVersion,
+                VsPyProfDll,
+                PythonProfilingPackage.Instance != null ? PythonProfilingPackage.Instance.ApplicationRegistryRoot : null
+            );
+            if (!string.IsNullOrEmpty(path)) {
+                return Path.GetDirectoryName(path);
             }
 
-            Debug.Assert(false, "Unable to determine Python Tools installation path");
-            return string.Empty;
+            Debug.Fail("Unable to determine Python Profiling installation path");
+            return null;
         }
-
-        private static Win32.RegistryKey OpenVisualStudioKey() {
-            if (PythonProfilingPackage.Instance != null) {
-                return PythonProfilingPackage.Instance.ApplicationRegistryRoot;
-            }
-
-            if (Environment.Is64BitOperatingSystem) {
-#if DEV12
-                return RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32).OpenSubKey("Software\\Microsoft\\VisualStudio\\12.0");
-#elif DEV11
-                return RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32).OpenSubKey("Software\\Microsoft\\VisualStudio\\11.0");
-#elif DEV10
-                return RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32).OpenSubKey("Software\\Microsoft\\VisualStudio\\10.0");
-#else
-#error Unsupported version of Visual Studio
-#endif
-            } else {
-#if DEV12
-                return Microsoft.Win32.Registry.LocalMachine.OpenSubKey("Software\\Microsoft\\VisualStudio\\12.0");
-#elif DEV11
-                return Microsoft.Win32.Registry.LocalMachine.OpenSubKey("Software\\Microsoft\\VisualStudio\\11.0");
-#elif DEV10
-                return Microsoft.Win32.Registry.LocalMachine.OpenSubKey("Software\\Microsoft\\VisualStudio\\10.0");
-#else
-#error Unsupported version of Visual Studio
-#endif
-            }
-        }
-
     }
 }

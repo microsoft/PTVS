@@ -19,9 +19,9 @@ using System.Reflection;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace InterpretersTests {
+namespace VSInterpretersTests {
     [TestClass]
-    public class InterpretersTests {
+    public class VSInterpretersTests {
         [TestMethod, Priority(0)]
         public void MinimumAssembliesLoaded() {
             var assembliesBefore = new HashSet<Assembly>(AppDomain.CurrentDomain.GetAssemblies());
@@ -38,7 +38,7 @@ namespace InterpretersTests {
             // Ensure these assemblies were loaded.
             var expectedAssemblies = new HashSet<string> {
                 "Microsoft.PythonTools.Analysis",
-                "Microsoft.PythonTools.Interpreters",
+                "Microsoft.PythonTools.VSInterpreters",
                 "Microsoft.PythonTools.IronPython.Interpreter"
             };
 

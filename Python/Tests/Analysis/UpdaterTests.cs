@@ -22,6 +22,14 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace AnalyzerStatusTests {
     [TestClass]
     public class UpdaterTests {
+        [TestInitialize]
+        public void EnsureCleanedUp() {
+            // If a test fails, Dispose() may not have been called for all
+            // analyzers.
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+        }
+        
         [TestMethod, Priority(0)]
         public void InitializeWithoutCrashing() {
             using (var updater = new AnalyzerStatusUpdater("hi")) { }
@@ -104,30 +112,29 @@ namespace AnalyzerStatusTests {
         public void LotsOfUpdaters() {
             var updaters = new List<AnalyzerStatusUpdater>();
 
-            for (int i = 0; i < 1; ++i) {
-                // We should stop creating new entries well before 1000
-                for (int j = 0; j < 1000; ++j) {
-                    var newUpdater = new AnalyzerStatusUpdater("S" + j.ToString());
-                    updaters.Add(newUpdater);
-                }
-                // Give the updaters a chance to start
-                foreach (var updater in updaters) {
-                    updater.WaitForWorkerStarted();
-                }
-
-                // Make sure that we got failures.
-                try {
-                    foreach (var u in updaters) {
-                        u.ThrowPendingExceptions();
-                    }
-                    Assert.Fail("Should not have been able to create 1000 updaters");
-                } catch (InvalidOperationException) {
-                }
-                foreach (var u in updaters) {
-                    u.Dispose();
-                }
-                updaters.Clear();
+            // We should stop creating new entries well before 1000
+            for (int j = 0; j < 1000; ++j) {
+                Console.WriteLine("Creating S{0}", j);
+                var newUpdater = new AnalyzerStatusUpdater("S" + j.ToString());
+                updaters.Add(newUpdater);
             }
+            // Give the updaters a chance to start
+            foreach (var updater in updaters) {
+                updater.WaitForWorkerStarted();
+            }
+
+            // Make sure that we got failures.
+            try {
+                foreach (var u in updaters) {
+                    u.ThrowPendingExceptions();
+                }
+                Assert.Fail("Should not have been able to create 1000 updaters");
+            } catch (InvalidOperationException) {
+            }
+            foreach (var u in updaters) {
+                u.Dispose();
+            }
+            updaters.Clear();
         }
 
         [TestMethod, Priority(0)]
@@ -154,7 +161,7 @@ namespace AnalyzerStatusTests {
         [TestMethod, Priority(0)]
         public void MessageMaximumLength() {
             Dictionary<string, AnalysisProgress> results = null;
-            
+
             using (var ready = new AutoResetEvent(false))
             using (var listener = new AnalyzerStatusListener(r => { results = r; ready.Set(); })) {
                 ready.Reset();

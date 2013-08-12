@@ -68,7 +68,8 @@ namespace TestUtilities.Python {
             IsCurrentReason = GeneratingReason;
         }
 
-        public void NotifyGeneratingDatabase(bool isGenerating) {
+        public bool NotifyGeneratingDatabase(bool isGenerating) {
+            var wasGenerating = (IsCurrentReason == GeneratingReason);
             if (isGenerating) {
                 IsCurrent = false;
                 IsCurrentReason = GeneratingReason;
@@ -76,6 +77,7 @@ namespace TestUtilities.Python {
                 IsCurrent = true;
                 IsCurrentReason = InvalidReason;
             }
+            return wasGenerating;
         }
 
         public void NotifyNewDatabase() {

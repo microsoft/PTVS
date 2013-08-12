@@ -23,7 +23,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 using TestUtilities.Python;
 
-namespace InterpretersTests {
+namespace AnalysisTests {
     [TestClass]
     public class ProcessOutputTests {
         [TestMethod, Priority(0)]

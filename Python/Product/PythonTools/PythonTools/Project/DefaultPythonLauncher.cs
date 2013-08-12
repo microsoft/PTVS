@@ -146,7 +146,7 @@ namespace Microsoft.PythonTools.Project {
             var interpreter = _project.GetInterpreterFactory();
             var interpService = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
             if (interpService == null || interpService.NoInterpretersValue == interpreter) {
-                PythonToolsPackage.OpenVsWebBrowser(CommonUtils.GetAbsoluteFilePath(PythonToolsPackage.GetPythonToolsInstallPath(), "NoInterpreters.html"));
+                PythonToolsPackage.OpenVsWebBrowser(PythonToolsInstallPath.GetFile("NoInterpreters.html"));
                 return null;
             }
 

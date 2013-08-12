@@ -26,7 +26,8 @@ namespace TestUtilities.Python {
             this MockPythonInterpreterFactory factory,
             object interpreterList,
             string id,
-            bool success
+            bool success,
+            bool notifyDatabaseDirectly = false
         ) {
             factory._success = success;
 
@@ -41,6 +42,9 @@ namespace TestUtilities.Python {
                 }
 
                 list.Update(new Dictionary<string, AnalysisProgress>());
+                if (notifyDatabaseDirectly) {
+                    factory.NotifyNewDatabase();
+                }
             } else {
                 factory.NotifyNewDatabase();
             }

@@ -114,6 +114,7 @@ namespace PythonToolsUITests {
             app.WaitForDialogDismissed();
 
             AutomationElement env = null;
+            app.OpenSolutionExplorer();
             for (int i = 0; i < 6 && env == null; i++) {
                 env = app.SolutionExplorerTreeView.WaitForItem(
                     "Solution '" + app.Dte.Solution.Projects.Item(1).Name + "' (1 project)",

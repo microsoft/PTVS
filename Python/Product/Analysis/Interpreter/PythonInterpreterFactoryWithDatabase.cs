@@ -16,7 +16,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Security;
 using System.Threading;
 using System.Threading.Tasks;
@@ -74,7 +73,7 @@ namespace Microsoft.PythonTools.Interpreter {
 
         public bool IsCurrentDatabaseInUse {
             get {
-                return _typeDb.HasListeners;
+                return _typeDb.HasDatabaseReplacedListeners;
             }
         }
 
@@ -196,9 +195,13 @@ namespace Microsoft.PythonTools.Interpreter {
             PythonTypeDatabase.Generate(req);
         }
 
-        public void NotifyGeneratingDatabase(bool isGenerating) {
-            WatchingLibrary = !isGenerating;
-            _generating = isGenerating;
+        public bool NotifyGeneratingDatabase(bool isGenerating) {
+            var wasGenerating = _generating;
+            if (isGenerating != _generating) {
+                WatchingLibrary = !isGenerating;
+                _generating = isGenerating;
+            }
+            return wasGenerating;
         }
 
         /// <summary>
@@ -441,20 +444,24 @@ namespace Microsoft.PythonTools.Interpreter {
 
         #region IDisposable Members
 
-        public void Dispose() {
-            if (!_disposed) {
-                if (_libWatcher != null) {
-                    lock (_libWatcherLock) {
-                        if (_libWatcher != null) {
-                            _libWatcher.EnableRaisingEvents = false;
-                            _libWatcher.Dispose();
-                            _libWatcher = null;
-                        }
+        protected virtual void Dispose(bool disposing) {
+            if (_libWatcher != null) {
+                lock (_libWatcherLock) {
+                    if (_libWatcher != null) {
+                        _libWatcher.EnableRaisingEvents = false;
+                        _libWatcher.Dispose();
+                        _libWatcher = null;
                     }
                 }
-                if (_refreshIsCurrentTrigger != null) {
-                    _refreshIsCurrentTrigger.Dispose();
-                }
+            }
+            if (_refreshIsCurrentTrigger != null) {
+                _refreshIsCurrentTrigger.Dispose();
+            }
+        }
+
+        public void Dispose() {
+            if (!_disposed) {
+                Dispose(true);
                 _disposed = true;
             }
         }

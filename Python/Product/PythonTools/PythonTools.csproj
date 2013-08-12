@@ -264,6 +264,7 @@
     <Compile Include="..\Analysis\Interpreter\PythonInterpreterFactoryExtensions.cs">
       <Link>PythonInterpreterFactoryExtensions.cs</Link>
     </Compile>
+    <Compile Include="PythonToolsInstallPath.cs" />
     <Compile Include="PythonTools\Options\PythonGeneralOptionsControl.cs">
       <SubType>UserControl</SubType>
     </Compile>

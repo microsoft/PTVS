@@ -284,12 +284,12 @@ namespace Microsoft.PythonTools.Debugger {
         }
 
         private static Process CreateProcess(string args, string exeName) {
-            string basePath = GetPythonToolsInstallPath();
-            if (string.IsNullOrEmpty(basePath)) {
+            string exePath = PythonToolsInstallPath.GetFile(exeName);
+            if (string.IsNullOrEmpty(exePath)) {
                 return null;
             }
 
-            return ConfigureAndStartProcess(new ProcessStartInfo(Path.Combine(basePath, exeName), args));
+            return ConfigureAndStartProcess(new ProcessStartInfo(exePath, args));
         }
 
         private static Process ConfigureAndStartProcess(ProcessStartInfo psi) {
@@ -305,16 +305,14 @@ namespace Microsoft.PythonTools.Debugger {
         internal static DebugAttach AttachAD7Worker(int pid, int portNum, Guid debugId, EventWaitHandle attachDoneEvent = null) {
             var hProcess = OpenProcess(ProcessAccessFlags.All, false, pid);
             if (hProcess != IntPtr.Zero) {
-                string basePath = GetPythonToolsInstallPath();
-                string dll;
+                string dllPath;
                 if (IntPtr.Size == 4) {
-                    dll = "PyDebugAttachX86.dll";
+                    dllPath = PythonToolsInstallPath.GetFile("PyDebugAttachX86.dll");
                 } else {
-                    dll = "PyDebugAttach.dll";
+                    dllPath = PythonToolsInstallPath.GetFile("PyDebugAttach.dll");
                 }
 
-                string dllPath;
-                if (string.IsNullOrEmpty(basePath) || !File.Exists(dllPath = Path.Combine(basePath, dll))) {
+                if (!File.Exists(dllPath)) {
                     return new DebugAttach(ConnErrorMessages.PyDebugAttachNotFound);
                 }
 
@@ -346,10 +344,9 @@ namespace Microsoft.PythonTools.Debugger {
                 return ConnErrorMessages.CannotOpenProcess;
             }
 
-            string basePath = GetPythonToolsInstallPath();
             string dllName = string.Format("Microsoft.PythonTools.Debugger.Helper.{0}.dll", IntPtr.Size == 4 ? "x86" : "x64");
-            string dllPath;
-            if (string.IsNullOrEmpty(basePath) || !File.Exists(dllPath = Path.Combine(basePath, dllName))) {
+            string dllPath = PythonToolsInstallPath.GetFile(dllName);
+            if (!File.Exists(dllPath)) {
                 return ConnErrorMessages.PyDebugAttachNotFound;
             }
 
@@ -421,36 +418,6 @@ namespace Microsoft.PythonTools.Debugger {
                 }
             }
             return ConnErrorMessages.CannotInjectThread;
-        }
-
-        // This is duplicated throughout different assemblies in PythonTools, so search for it if you update it.
-        private static string GetPythonToolsInstallPath() {
-            string path = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            if (File.Exists(Path.Combine(path, "PyDebugAttach.dll"))) {
-                return path;
-            }
-
-            // running from the GAC in remote attach scenario.  Look to the VS install dir.
-            using (var configKey = OpenVisualStudioKey()) {
-                var installDir = configKey.GetValue("InstallDir") as string;
-                if (installDir != null) {
-                    var toolsPath = Path.Combine(installDir, "Extensions\\Microsoft\\Python Tools for Visual Studio\\2.0");
-                    if (File.Exists(Path.Combine(toolsPath, "PyDebugAttach.dll"))) {
-                        return toolsPath;
-                    }
-                }
-            }
-
-            Debug.Assert(false, "Unable to determine Python Tools installation path");
-            return string.Empty;
-        }
-
-        private static Win32.RegistryKey OpenVisualStudioKey() {
-            if (Environment.Is64BitOperatingSystem) {
-                return RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32).OpenSubKey("Software\\Microsoft\\VisualStudio\\" + AssemblyVersionInfo.VSVersion);
-            } else {
-                return Microsoft.Win32.Registry.LocalMachine.OpenSubKey("Software\\Microsoft\\VisualStudio\\" + AssemblyVersionInfo.VSVersion);
-            }
         }
 
         private static ConnErrorMessages InjectDll(string dllPath, IntPtr hProcess, IntPtr hKernel32) {

@@ -204,7 +204,7 @@ namespace Microsoft.PythonTools.Repl {
                 _ownsAnalyzer = false;
             }
 
-            args.Add(ProcessOutput.QuoteSingleArgument(Path.Combine(PythonToolsPackage.GetPythonToolsInstallPath(), "visualstudio_py_repl.py")));
+            args.Add(ProcessOutput.QuoteSingleArgument(PythonToolsInstallPath.GetFile("visualstudio_py_repl.py")));
             args.Add("--port");
             args.Add(portNum.ToString());
 

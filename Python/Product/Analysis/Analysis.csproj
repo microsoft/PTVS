@@ -62,6 +62,9 @@
     <Compile Include="..\..\..\Common\Product\SharedProject\CommonUtils.cs">
       <Link>CommonUtils.cs</Link>
     </Compile>
+    <Compile Include="..\PythonTools\PythonToolsInstallPath.cs">
+      <Link>PythonToolsInstallPath.cs</Link>
+    </Compile>
     <Compile Include="AnalysisExtensions.cs" />
     <Compile Include="AnalysisLimits.cs" />
     <Compile Include="AnalysisLog.cs" />

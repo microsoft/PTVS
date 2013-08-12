@@ -51,14 +51,15 @@ namespace Microsoft.PythonTools.Analysis {
         private readonly bool _dryRun;
 
         private bool _all;
-        private readonly HashSet<string> _needsRefresh;
 
         private readonly AnalyzerStatusUpdater _updater;
         private readonly CancellationToken _cancel;
         private TextWriter _listener;
-        private List<List<ModulePath>> _fileGroups;
-        private HashSet<string> _existingDatabase;
+        internal readonly List<List<ModulePath>> _scrapeFileGroups, _analyzeFileGroups;
         private IEnumerable<string> _callDepthOverrides;
+
+        private int _progressOffset;
+        private int _progressTotal;
 
         private const string BuiltinName2x = "__builtin__.idb";
         private const string BuiltinName3x = "builtins.idb";
@@ -150,7 +151,6 @@ namespace Microsoft.PythonTools.Analysis {
                     inst.Scrape();
                     inst.Analyze();
                     inst.Epilogue();
-                    inst.Clean();
                 } else {
 #endif
                     try {
@@ -158,7 +158,6 @@ namespace Microsoft.PythonTools.Analysis {
                         inst.Scrape();
                         inst.Analyze();
                         inst.Epilogue();
-                        inst.Clean();
                     } catch (Exception e) {
                         Console.WriteLine("Error while saving analysis: {0}{1}", Environment.NewLine, e.ToString());
                         inst.LogToGlobal("FAIL_STDLIB" + Environment.NewLine + e.ToString());
@@ -202,7 +201,8 @@ namespace Microsoft.PythonTools.Analysis {
             _logDiagnostic = logDiagnostic;
             _all = rescanAll;
             _dryRun = dryRun;
-            _needsRefresh = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            _scrapeFileGroups = new List<List<ModulePath>>();
+            _analyzeFileGroups = new List<List<ModulePath>>();
             _builtinSourceLibraries = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             _builtinSourceLibraries.Add(_library);
             if (!string.IsNullOrEmpty(_library)) {
@@ -221,7 +221,7 @@ namespace Microsoft.PythonTools.Analysis {
                 _updater.ThrowPendingExceptions();
                 // Immediately inform any listeners that we've started running
                 // successfully.
-                _updater.UpdateStatus(0, 0);
+                _updater.UpdateStatus(0, 0, "Initializing");
             }
             // TODO: Link cancellation into the updater
             _cancel = CancellationToken.None;
@@ -400,7 +400,7 @@ namespace Microsoft.PythonTools.Analysis {
             // naming collisions.
             var allModuleNames = new HashSet<string>(StringComparer.Ordinal);
 
-            _fileGroups = ModulePath.GetModulesInLib(
+            var fileGroups = ModulePath.GetModulesInLib(
                 _interpreter,
                 _library,
                 null,   // default site-packages path
@@ -413,46 +413,201 @@ namespace Microsoft.PythonTools.Analysis {
 
             // Move the standard library and builtin groups to the first
             // positions within the list of groups.
-            var builtinGroups = _fileGroups.FindAll(g => g.Count > 0 && _builtinSourceLibraries.Contains(g[0].LibraryPath));
+            var builtinGroups = fileGroups.FindAll(g => g.Count > 0 && _builtinSourceLibraries.Contains(g[0].LibraryPath));
             var stdLibGroups = builtinGroups.FindAll(g => g.Count > 0 && CommonUtils.IsSamePath(g[0].LibraryPath, _library));
-            _fileGroups.RemoveAll(g => builtinGroups.Contains(g));
+            fileGroups.RemoveAll(g => builtinGroups.Contains(g));
             builtinGroups.RemoveAll(g => stdLibGroups.Contains(g));
-            _fileGroups.InsertRange(0, builtinGroups);
-            _fileGroups.InsertRange(0, stdLibGroups);
+            fileGroups.InsertRange(0, builtinGroups);
+            fileGroups.InsertRange(0, stdLibGroups);
 
             // If the database was invalid, we have to refresh everything.
-            if (!File.Exists(Path.Combine(_outDir, "database.ver"))) {
+            var databaseVer = Path.Combine(_outDir, "database.ver");
+            if (!_all) {
                 _all = true;
+                try {
+                    var version = int.Parse(File.ReadAllText(databaseVer));
+                    if (version == PythonTypeDatabase.CurrentVersion) {
+                        _all = false;
+                    }
+                } catch (ArgumentException) {
+                } catch (IOException) {
+                } catch (UnauthorizedAccessException) {
+                } catch (NotSupportedException) {
+                } catch (FormatException) {
+                } catch (OverflowException) {
+                }
             }
 
+            var filesInDatabase = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
             if (_dryRun) {
+                if (File.Exists(databaseVer)) {
+                    Console.WriteLine("DELETE;{0}", databaseVer);
+                }
+
                 // The output directory for a dry run may be completely invalid.
                 // If the top level does not contain any .idb files, we won't
                 // bother recursing.
                 if (Directory.Exists(_outDir) &&
                     Directory.EnumerateFiles(_outDir, "*.idb", SearchOption.TopDirectoryOnly).Any()) {
-                    _existingDatabase = new HashSet<string>(
-                        Directory.EnumerateFiles(_outDir, "*.idb", SearchOption.AllDirectories),
-                        StringComparer.OrdinalIgnoreCase);
-                } else {
-                    _existingDatabase = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                    filesInDatabase.UnionWith(Directory.EnumerateFiles(_outDir, "*.idb", SearchOption.AllDirectories));
                 }
             } else {
                 Directory.CreateDirectory(_outDir);
 
                 // Mark the database as invalid until we complete analysis.
                 try {
-                    File.Delete(Path.Combine(_outDir, "database.ver"));
+                    File.Delete(databaseVer);
                 } catch (ArgumentException) {
                 } catch (IOException) {
                 } catch (UnauthorizedAccessException) {
+                } catch (NotSupportedException) {
                 }
 
-                _existingDatabase = new HashSet<string>(
-                    Directory.EnumerateFiles(_outDir, "*.idb", SearchOption.AllDirectories),
-                    StringComparer.OrdinalIgnoreCase);
+                filesInDatabase.UnionWith(Directory.EnumerateFiles(_outDir, "*.idb", SearchOption.AllDirectories));
+            }
+
+            // Store the files we want to keep separately, in case we decide to
+            // delete the entire existing database.
+            var filesToKeep = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            if (!_all) {
+                var builtinModulePaths = GetBuiltinModuleOutputFiles().ToArray();
+                if (builtinModulePaths.Any()) {
+                    var interpreterTime = File.GetLastWriteTimeUtc(_interpreter);
+                    if (builtinModulePaths.All(p => File.Exists(p) && File.GetLastWriteTimeUtc(p) > interpreterTime)) {
+                        filesToKeep.UnionWith(builtinModulePaths);
+                    } else {
+                        _all = true;
+                    }
+                } else {
+                    // Failed to get builtin names, so don't delete anything
+                    // from the main output directory.
+                    filesToKeep.UnionWith(
+                        Directory.EnumerateFiles(_outDir, "*.idb", SearchOption.TopDirectoryOnly)
+                    );
+                }
+            }
+
+            _progressTotal = 0;
+            _progressOffset = 0;
+
+            var seen = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var fileGroup in fileGroups) {
+                if (ShouldAnalyze(fileGroup)) {
+                    if (!_all && (builtinGroups.Contains(fileGroup) || stdLibGroups.Contains(fileGroup))) {
+                        _all = true;
+                    }
+
+                    var toScrape = fileGroup.Where(mp => mp.IsCompiled && seen.Add(mp.ModuleName)).ToList();
+                    var toAnalyze = fileGroup.Where(mp => seen.Add(mp.ModuleName)).ToList();
+
+                    _progressTotal += toScrape.Count + toAnalyze.Count;
+
+                    if (toScrape.Any()) {
+                        _scrapeFileGroups.Add(toScrape);
+                    }
+                    if (toAnalyze.Any()) {
+                        _analyzeFileGroups.Add(toAnalyze);
+                    }
+                } else if (!_all) {
+                    filesToKeep.UnionWith(fileGroup
+                        .Where(mp => File.Exists(mp.SourceFile))
+                        .Select(GetOutputFile));
+                }
+            }
+
+            if (!_all) {
+                filesInDatabase.ExceptWith(filesToKeep);
+            }
+
+            // Scale file removal by 10 because it's much quicker than analysis.
+            _progressTotal += filesInDatabase.Count / 10;
+            Clean(filesInDatabase, 10);
+        }
+
+        bool ShouldAnalyze(IEnumerable<ModulePath> group) {
+            if (_all) {
+                return true;
+            }
+
+            foreach (var file in group.Where(f => File.Exists(f.SourceFile))) {
+                var destPath = GetOutputFile(file);
+                if (!File.Exists(destPath) ||
+                    File.GetLastWriteTimeUtc(file.SourceFile) > File.GetLastWriteTimeUtc(destPath)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        internal IEnumerable<string> GetBuiltinModuleOutputFiles() {
+            if (string.IsNullOrEmpty(_interpreter)) {
+                return Enumerable.Empty<string>();
+            }
+
+            // Ignoring case because these will become file paths, even though
+            // they are case-sensitive module names.
+            var builtinNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            builtinNames.Add(_version.Major == 3 ? BuiltinName3x : BuiltinName2x);
+            using (var output = ProcessOutput.RunHiddenAndCapture(
+                _interpreter,
+                "-c",
+                "import sys; print('\\n'.join(sys.builtin_module_names))"
+            )) {
+                output.Wait();
+                if (output.ExitCode != 0) {
+                    TraceInformation("Getting builtin names");
+                    TraceInformation("Command {0}", output.Arguments);
+                    if (output.StandardErrorLines.Any()) {
+                        TraceError("Errors{0}{1}", Environment.NewLine, string.Join(Environment.NewLine, output.StandardErrorLines));
+                    }
+                    return Enumerable.Empty<string>();
+                } else {
+                    builtinNames = new HashSet<string>(output.StandardOutputLines);
+                }
+            }
+            TraceVerbose("Builtin names are: {0}", string.Join(", ", builtinNames.OrderBy(s => s, StringComparer.OrdinalIgnoreCase)));
+
+            return builtinNames
+                .Where(n => !SkipBuiltinNames.Contains(n))
+                .Where(CommonUtils.IsValidPath)
+                .Select(n => GetOutputFile(n));
+        }
+
+        internal void Clean(HashSet<string> files, int progressScale = 1) {
+            if (_updater != null) {
+                _updater.UpdateStatus(_progressOffset, _progressTotal, "Cleaning old files");
+            }
+
+            int modCount = 0;
+            TraceInformation("Deleting {0} files", files.Count);
+            foreach (var file in files) {
+                if (_updater != null && ++modCount >= progressScale) {
+                    modCount = 0;
+                    _updater.UpdateStatus(++_progressOffset, _progressTotal, "Cleaning old files");
+                }
+
+                TraceVerbose("Deleting \"{0}\"", file);
+                if (_dryRun) {
+                    Console.WriteLine("DELETE:{0}", file);
+                } else {
+                    try {
+                        File.Delete(file);
+                        File.Delete(file + ".$memlist");
+                        var dirName = Path.GetDirectoryName(file);
+                        if (!Directory.EnumerateFileSystemEntries(dirName, "*", SearchOption.TopDirectoryOnly).Any()) {
+                            Directory.Delete(dirName);
+                        }
+                    } catch (ArgumentException) {
+                    } catch (IOException) {
+                    } catch (UnauthorizedAccessException) {
+                    } catch (NotSupportedException) {
+                    }
+                }
             }
         }
+
 
         internal string PythonScraperPath {
             get {
@@ -484,70 +639,18 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
-        private bool ShouldAnalyze(ModulePath path, string destPath = null) {
-            if (_all) {
-                return true;
-            }
-            if (_needsRefresh.Contains(path.LibraryPath)) {
-                return true;
-            }
-            destPath = destPath ?? GetOutputFile(path);
-
-            if (!File.Exists(destPath) ||
-                File.GetLastWriteTimeUtc(destPath) < File.GetLastWriteTimeUtc(path.SourceFile)) {
-                if (path.LibraryPath.Equals(_library, StringComparison.OrdinalIgnoreCase)) {
-                    _all = true;
-                } else {
-                    _needsRefresh.Add(path.LibraryPath);
-                }
-                return true;
-            }
-            return false;
-        }
-
         internal void Scrape() {
             if (string.IsNullOrEmpty(_interpreter)) {
                 return;
             }
 
             if (_updater != null) {
-                _updater.UpdateStatus(0, 0, "Scraping standard library");
+                _updater.UpdateStatus(_progressOffset, _progressTotal, "Scraping standard library");
             }
 
-            // Ignoring case because these will become file paths, even though
-            // they are case-sensitive module names.
-            var builtinNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            builtinNames.Add(_version.Major == 3 ? BuiltinName3x : BuiltinName2x);
-            using (var output = ProcessOutput.RunHiddenAndCapture(_interpreter,
-                "-c",
-                "import sys; print('\\n'.join(sys.builtin_module_names))")) {
-                output.Wait();
-                if (output.ExitCode != 0) {
-                    // Don't delete anything if we don't get the right names.
-                    _existingDatabase.Clear();
-                    TraceInformation("Getting builtin names");
-                    TraceInformation("Command {0}", output.Arguments);
-                    if (output.StandardErrorLines.Any()) {
-                        TraceError("Errors{0}{1}", Environment.NewLine, string.Join(Environment.NewLine, output.StandardErrorLines));
-                    }
-                } else {
-                    builtinNames = new HashSet<string>(output.StandardOutputLines);
-                }
-            }
-            TraceVerbose("Builtin names are: {0}", string.Join(", ", builtinNames.OrderBy(s => s, StringComparer.OrdinalIgnoreCase)));
-
-            var builtinModulePaths = builtinNames
-                .Where(n => !SkipBuiltinNames.Contains(n))
-                .Where(CommonUtils.IsValidPath)
-                .Select(n => GetOutputFile(n))
-                .ToArray();
-
-            if (_all || builtinModulePaths.Any(p => !File.Exists(p))) {
-                _all = true;
+            if (_all) {
                 if (_dryRun) {
-                    foreach (var file in builtinModulePaths) {
-                        Console.WriteLine("[{0}];{1}", Path.GetFileNameWithoutExtension(file), file);
-                    }
+                    Console.WriteLine("Scrape builtin modules");
                 } else {
                     // Scape builtin Python types
                     using (var output = ProcessOutput.RunHiddenAndCapture(_interpreter, PythonScraperPath, _outDir, _baseDb.First())) {
@@ -575,67 +678,53 @@ namespace Microsoft.PythonTools.Analysis {
                     }
                 }
             }
-            _existingDatabase.ExceptWith(builtinModulePaths);
 
-            var scrapeFiles = _fileGroups.SelectMany(l => l)
-                .Where(mp => mp.IsCompiled)
-                .ToArray();
+            foreach (var file in _scrapeFileGroups.SelectMany()) {
+                Debug.Assert(file.IsCompiled);
 
-            foreach (var file in scrapeFiles) {
                 if (_updater != null) {
-                    _updater.UpdateStatus(0, 0,
+                    _updater.UpdateStatus(_progressOffset++, _progressTotal,
                         "Scraping " + CommonUtils.GetRelativeFilePath(_library, file.LibraryPath));
                 }
 
                 var destFile = Path.ChangeExtension(GetOutputFile(file), null);
-                _existingDatabase.Remove(destFile + ".idb");
-                if (ShouldAnalyze(file)) {
-                    _needsRefresh.Add(file.LibraryPath);
+                if (_dryRun) {
+                    Console.WriteLine("SCRAPE;{0};{1}.idb", file.SourceFile, CommonUtils.CreateFriendlyDirectoryPath(_outDir, destFile));
+                } else {
+                    Directory.CreateDirectory(Path.GetDirectoryName(destFile));
 
-                    if (_dryRun) {
-                        Console.WriteLine("{0};{1}.idb", file.SourceFile, CommonUtils.CreateFriendlyDirectoryPath(_outDir, destFile));
-                    } else {
-                        Directory.CreateDirectory(Path.GetDirectoryName(destFile));
+                    using (var output = ProcessOutput.RunHiddenAndCapture(_interpreter, ExtensionScraperPath, "scrape", file.ModuleName, "-", destFile)) {
+                        TraceInformation("Scraping {0}", file.ModuleName);
+                        TraceInformation("Command: {0}", output.Arguments);
+                        output.Wait();
 
-                        using (var output = ProcessOutput.RunHiddenAndCapture(_interpreter, ExtensionScraperPath, "scrape", file.ModuleName, "-", destFile)) {
-                            TraceInformation("Scraping {0}", file.ModuleName);
-                            TraceInformation("Command: {0}", output.Arguments);
-                            output.Wait();
+                        if (output.StandardOutputLines.Any()) {
+                            TraceInformation("Output{0}{1}", Environment.NewLine, string.Join(Environment.NewLine, output.StandardOutputLines));
+                        }
+                        if (output.StandardErrorLines.Any()) {
+                            TraceWarning("Errors{0}{1}", Environment.NewLine, string.Join(Environment.NewLine, output.StandardErrorLines));
+                        }
 
-                            if (output.StandardOutputLines.Any()) {
-                                TraceInformation("Output{0}{1}", Environment.NewLine, string.Join(Environment.NewLine, output.StandardOutputLines));
-                            }
-                            if (output.StandardErrorLines.Any()) {
-                                TraceWarning("Errors{0}{1}", Environment.NewLine, string.Join(Environment.NewLine, output.StandardErrorLines));
-                            }
-
-                            if (output.ExitCode != 0) {
-                                if (output.ExitCode.HasValue) {
-                                    TraceError("Failed to scrape {1} (Exit code: {0})", output.ExitCode, file.ModuleName);
-                                } else {
-                                    TraceError("Failed to scrape {0}", file.ModuleName);
-                                }
+                        if (output.ExitCode != 0) {
+                            if (output.ExitCode.HasValue) {
+                                TraceError("Failed to scrape {1} (Exit code: {0})", output.ExitCode, file.ModuleName);
                             } else {
-                                TraceVerbose("Scraped {0}", file.ModuleName);
+                                TraceError("Failed to scrape {0}", file.ModuleName);
                             }
+                        } else {
+                            TraceVerbose("Scraped {0}", file.ModuleName);
                         }
                     }
                 }
             }
-            if (scrapeFiles.Any()) {
-                TraceInformation("Scraped {0} files", scrapeFiles.Length);
+            if (_scrapeFileGroups.Any()) {
+                TraceInformation("Scraped {0} files", _scrapeFileGroups.SelectMany().Count());
             }
         }
 
         internal void Analyze() {
             if (_updater != null) {
-                _updater.UpdateStatus(0, 1, "Starting analysis");
-            }
-
-            int progressOffset = 0;
-            int progressTotal = 0;
-            foreach (var files in _fileGroups) {
-                progressTotal += files.Count;
+                _updater.UpdateStatus(_progressOffset, _progressTotal, "Starting analysis");
             }
 
             if (!string.IsNullOrEmpty(_logDiagnostic) && AnalysisLog.Output == null) {
@@ -647,40 +736,12 @@ namespace Microsoft.PythonTools.Analysis {
                 }
             }
 
-            foreach (var fileGroup in _fileGroups) {
+            foreach (var files in _analyzeFileGroups) {
                 if (_cancel.IsCancellationRequested) {
                     break;
                 }
 
-                var doNotAnalyze = new HashSet<string>(StringComparer.Ordinal);
-                bool needAnalyze = false;
-                foreach (var file in fileGroup) {
-                    var destName = GetOutputFile(file);
-                    _existingDatabase.Remove(destName);
-
-                    // Add compiled files to the do-not-analyze list. This will
-                    // also prevent us from analyzing any source files with the
-                    // same name.
-                    if (file.IsCompiled) {
-                        doNotAnalyze.Add(file.ModuleName);
-                    }
-
-                    // Deliberately short-circuit the check once we know we'll
-                    // need to analyze this group. We don't break because we
-                    // still have to remove the files from _existingDatabase.
-                    needAnalyze = needAnalyze || ShouldAnalyze(file, destName);
-                }
-
-                var files = fileGroup.Where(mp => !doNotAnalyze.Contains(mp.ModuleName)).ToList();
-
-                if (!needAnalyze || files.Count == 0) {
-                    if (fileGroup.Count > 0) {
-                        TraceInformation("Skipped group \"{0}\"", fileGroup[0].LibraryPath);
-                    }
-                    progressOffset += fileGroup.Count;
-                    if (_updater != null) {
-                        _updater.UpdateStatus(progressOffset, progressTotal);
-                    }
+                if (files.Count == 0) {
                     continue;
                 }
 
@@ -688,11 +749,12 @@ namespace Microsoft.PythonTools.Analysis {
 
                 if (_dryRun) {
                     foreach (var file in files) {
+                        Debug.Assert(!file.IsCompiled);
                         var idbFile = CommonUtils.CreateFriendlyDirectoryPath(
                             _outDir,
                             Path.Combine(outDir, file.ModuleName)
                         );
-                        Console.WriteLine("{0};{1}.idb", file.SourceFile, idbFile);
+                        Console.WriteLine("ANALYZE;{0};{1}.idb", file.SourceFile, idbFile);
                     }
                     continue;
                 }
@@ -709,31 +771,28 @@ namespace Microsoft.PythonTools.Analysis {
                     currentLibrary = CommonUtils.CreateFriendlyDirectoryPath(_library, files[0].LibraryPath);
                 }
 
-                IPythonInterpreterFactory factory;
-                if (_dryRun) {
-                    factory = null;
-                } else {
-                    factory = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(
-                        _version,
-                        null,
-                        new[] { _outDir, outDir }.Concat(_baseDb.Skip(1)).ToArray()
-                    );
-                }
+                var factory = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(
+                    _version,
+                    null,
+                    new[] { _outDir, outDir }.Concat(_baseDb.Skip(1)).Distinct(StringComparer.OrdinalIgnoreCase).ToArray()
+                );
 
                 var projectState = new PythonAnalyzer(factory);
 
-                int mostItemsInQueue = 0;
+                int? mostItemsInQueue = null;
                 if (_updater != null) {
                     projectState.SetQueueReporting(itemsInQueue => {
-                        if (itemsInQueue > mostItemsInQueue) {
+                        if (itemsInQueue > (mostItemsInQueue ?? 0)) {
                             mostItemsInQueue = itemsInQueue;
                         }
 
                         if (mostItemsInQueue > 0) {
-                            var progress = progressOffset + (files.Count * (mostItemsInQueue - itemsInQueue)) / mostItemsInQueue;
-                            _updater.UpdateStatus(progress, progressTotal, "Analyzing " + currentLibrary);
+                            var progress = (files.Count * (mostItemsInQueue - itemsInQueue)) / mostItemsInQueue;
+                            _updater.UpdateStatus(_progressOffset +  (progress ?? 0), _progressTotal,
+                                "Analyzing " + currentLibrary);
                         } else {
-                            _updater.UpdateStatus(0, 0, "Analyzing " + currentLibrary);
+                            _updater.UpdateStatus(_progressOffset + files.Count, _progressTotal,
+                                "Analyzing " + currentLibrary);
                         }
                     }, 10);
                 }
@@ -744,67 +803,77 @@ namespace Microsoft.PythonTools.Analysis {
                     }
                 }
 
-                var modules = new List<IPythonProjectEntry>();
-                for (int i = 0; i < files.Count; i++) {
-                    var module = projectState.AddModule(files[i].ModuleName, files[i].SourceFile);
+                var items = files.Select(f => new AnalysisItem(f)).ToList();
 
-                    if (CallDepthOverrides.Any(n => files[i].ModuleName.StartsWith(n))) {
-                        module.Properties[AnalysisLimits.CallDepthKey] = 0;
+                foreach (var item in items) {
+                    if (_cancel.IsCancellationRequested) {
+                        break;
                     }
 
-                    modules.Add(module);
+                    item.Entry = projectState.AddModule(item.ModuleName, item.SourceFile);
+
+                    if (CallDepthOverrides.Any(n => item.ModuleName.StartsWith(n))) {
+                        item.Entry.Properties[AnalysisLimits.CallDepthKey] = 0;
+                    }
                 }
 
-                var nodes = new List<PythonAst>();
-                for (int i = 0; i < modules.Count && !_cancel.IsCancellationRequested; i++) {
-                    PythonAst ast = null;
+                foreach (var item in items) {
+                    if (_cancel.IsCancellationRequested) {
+                        break;
+                    }
+
                     if (_updater != null) {
-                        _updater.UpdateStatus(progressOffset, progressTotal,
-                            string.Format("Parsing {0} ({1}/{2})", currentLibrary, i, modules.Count));
+                        _updater.UpdateStatus(_progressOffset, _progressTotal,
+                            string.Format("Parsing {0}", currentLibrary));
                     }
                     try {
-                        var sourceUnit = new FileStream(files[i].SourceFile, FileMode.Open, FileAccess.Read, FileShare.Read);
+                        var sourceUnit = new FileStream(item.SourceFile, FileMode.Open, FileAccess.Read, FileShare.Read);
                         var errors = new CollectingErrorSink();
                         var opts = new ParserOptions() { BindReferences = true, ErrorSink = errors };
 
-                        TraceInformation("Parsing \"{0}\" (\"{1}\")", modules[i].ModuleName, modules[i].FilePath);
-                        ast = Parser.CreateParser(sourceUnit, _version.ToLanguageVersion(), opts).ParseFile();
+                        TraceInformation("Parsing \"{0}\" (\"{1}\")", item.ModuleName, item.SourceFile);
+                        item.Tree = Parser.CreateParser(sourceUnit, _version.ToLanguageVersion(), opts).ParseFile();
                         if (errors.Errors.Any() || errors.Warnings.Any()) {
-                            TraceWarning("File \"{0}\" contained parse errors", modules[i].FilePath);
+                            TraceWarning("File \"{0}\" contained parse errors", item.SourceFile);
                             TraceInformation(string.Join(Environment.NewLine, errors.Errors.Concat(errors.Warnings)
                                 .Select(er => string.Format("{0} {1}", er.Span, er.Message))));
                         }
                     } catch (Exception ex) {
-                        TraceError("Error parsing \"{0}\" \"{1}\"{2}{3}", modules[i].ModuleName, modules[i].FilePath, Environment.NewLine, ex.ToString());
+                        TraceError("Error parsing \"{0}\" \"{1}\"{2}{3}", item.ModuleName, item.SourceFile, Environment.NewLine, ex.ToString());
                     }
-                    nodes.Add(ast);
                 }
+
                 TraceInformation("Parsing complete");
 
-                for (int i = 0; i < modules.Count && !_cancel.IsCancellationRequested; i++) {
-                    var ast = nodes[i];
+                foreach (var item in items) {
+                    if (_cancel.IsCancellationRequested) {
+                        break;
+                    }
 
-                    if (ast != null) {
-                        modules[i].UpdateTree(ast, null);
+                    if (item.Tree != null) {
+                        item.Entry.UpdateTree(item.Tree, null);
                     }
                 }
 
-                for (int i = 0; i < modules.Count && !_cancel.IsCancellationRequested; i++) {
+                foreach (var item in items) {
+                    if (_cancel.IsCancellationRequested) {
+                        break;
+                    }
+
                     try {
-                        var ast = nodes[i];
-                        if (ast != null) {
-                            TraceInformation("Analyzing \"{0}\"", modules[i].ModuleName);
-                            modules[i].Analyze(_cancel, true);
-                            TraceVerbose("Analyzed \"{0}\"", modules[i].FilePath);
+                        if (item.Tree != null) {
+                            TraceInformation("Analyzing \"{0}\"", item.ModuleName);
+                            item.Entry.Analyze(_cancel, true);
+                            TraceVerbose("Analyzed \"{0}\"", item.SourceFile);
                         }
                     } catch (Exception ex) {
-                        TraceError("Error analyzing \"{0}\" \"{1}\"{2}{3}", modules[i].ModuleName, modules[i].FilePath, Environment.NewLine, ex.ToString());
+                        TraceError("Error analyzing \"{0}\" \"{1}\"{2}{3}", item.ModuleName, item.SourceFile, Environment.NewLine, ex.ToString());
                     }
                 }
 
-                if (modules.Count > 0 && !_cancel.IsCancellationRequested) {
-                    TraceInformation("Starting analysis of {0} modules", modules.Count);
-                    modules[0].AnalysisGroup.AnalyzeQueuedEntries(_cancel);
+                if (items.Count > 0 && !_cancel.IsCancellationRequested) {
+                    TraceInformation("Starting analysis of {0} modules", items.Count);
+                    items[0].Entry.AnalysisGroup.AnalyzeQueuedEntries(_cancel);
                     TraceInformation("Analysis complete");
                 }
 
@@ -814,46 +883,23 @@ namespace Microsoft.PythonTools.Analysis {
 
                 TraceInformation("Saving group \"{0}\"", files[0].LibraryPath);
                 if (_updater != null) {
-                    _updater.UpdateStatus(progressOffset + files.Count, progressTotal,
-                        "Saving " + currentLibrary);
+                    _progressOffset += files.Count;
+                    _updater.UpdateStatus(_progressOffset, _progressTotal, "Saving " + currentLibrary);
                 }
                 Directory.CreateDirectory(outDir);
                 new SaveAnalysis().Save(projectState, outDir);
                 TraceInformation("End of group \"{0}\"", files[0].LibraryPath);
                 AnalysisLog.EndFileGroup();
 
-                progressOffset += files.Count;
                 AnalysisLog.Flush();
             }
         }
 
         internal void Epilogue() {
-            if (!_dryRun) {
+            if (_dryRun) {
+                Console.WriteLine("WRITE;{0};{1}", Path.Combine(_outDir, "database.ver"), PythonTypeDatabase.CurrentVersion);
+            } else {
                 File.WriteAllText(Path.Combine(_outDir, "database.ver"), PythonTypeDatabase.CurrentVersion.ToString());
-            }
-        }
-
-        internal void Clean() {
-            if (_updater != null) {
-                _updater.UpdateStatus(1, 1, "Cleaning old files");
-            }
-
-            TraceInformation("Deleting {0} files", _existingDatabase.Count);
-            foreach (var file in _existingDatabase) {
-                try {
-                    TraceVerbose("Deleting \"{0}\"", file);
-                    if (_dryRun) {
-                        Console.WriteLine("{0};[DELETED]", file);
-                    } else {
-                        File.Delete(file);
-                        File.Delete(file + ".$memlist");
-                        var dirName = Path.GetDirectoryName(file);
-                        if (!Directory.EnumerateFileSystemEntries(dirName, null, SearchOption.TopDirectoryOnly).Any()) {
-                            Directory.Delete(dirName);
-                        }
-                    }
-                } catch {
-                }
             }
         }
 
@@ -878,25 +924,48 @@ namespace Microsoft.PythonTools.Analysis {
             return Path.Combine(GetOutputDir(file), file.ModuleName + ".idb");
         }
 
+        class AnalysisItem {
+            readonly ModulePath _path;
+
+            public IPythonProjectEntry Entry { get; set; }
+            public PythonAst Tree { get; set; }
+
+            public AnalysisItem(ModulePath path) {
+                _path = path;
+            }
+
+            public string ModuleName { get { return _path.ModuleName; } }
+            public string SourceFile { get { return _path.SourceFile; } }
+        }
+
+
         internal void TraceInformation(string message, params object[] args) {
-            _listener.WriteLine(DateTime.Now.ToString("s") + ": " + string.Format(message, args));
-            _listener.Flush();
+            if (_listener != null) {
+                _listener.WriteLine(DateTime.Now.ToString("s") + ": " + string.Format(message, args));
+                _listener.Flush();
+            }
         }
 
         internal void TraceWarning(string message, params object[] args) {
-            _listener.WriteLine(DateTime.Now.ToString("s") + ": [WARNING] " + string.Format(message, args));
-            _listener.Flush();
+            if (_listener != null) {
+                _listener.WriteLine(DateTime.Now.ToString("s") + ": [WARNING] " + string.Format(message, args));
+                _listener.Flush();
+            }
         }
 
         internal void TraceError(string message, params object[] args) {
-            _listener.WriteLine(DateTime.Now.ToString("s") + ": [ERROR] " + string.Format(message, args));
-            _listener.Flush();
+            if (_listener != null) {
+                _listener.WriteLine(DateTime.Now.ToString("s") + ": [ERROR] " + string.Format(message, args));
+                _listener.Flush();
+            }
         }
 
         [Conditional("DEBUG")]
         internal void TraceVerbose(string message, params object[] args) {
-            _listener.WriteLine(DateTime.Now.ToString("s") + ": [VERBOSE] " + string.Format(message, args));
-            _listener.Flush();
+            if (_listener != null) {
+                _listener.WriteLine(DateTime.Now.ToString("s") + ": [VERBOSE] " + string.Format(message, args));
+                _listener.Flush();
+            }
         }
     }
 }

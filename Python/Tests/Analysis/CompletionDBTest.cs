@@ -52,28 +52,29 @@ namespace PythonToolsTests {
                 Directory.CreateDirectory(testDir);
 
                 // run the scraper
-                var startInfo = new ProcessStartInfo(path.Path,
-                    String.Format("\"{2}\" \"{0}\" \"{1}\"",
-                        testDir,
-                        TestData.GetPath("CompletionDB"),
-                        TestData.GetPath("PythonScraper.py")
-                    )
-                );
-                startInfo.RedirectStandardError = true;
-                startInfo.RedirectStandardOutput = true;
-                startInfo.UseShellExecute = false;
+                using (var proc = ProcessOutput.RunHiddenAndCapture(
+                    path.Path,
+                    TestData.GetPath("PythonScraper.py"),
+                    testDir,
+                    TestData.GetPath("CompletionDB")
+                )) {
+                    Console.WriteLine("Command: " + proc.Arguments);
 
-                var process = Process.Start(startInfo);
-                var receiver = new OutputReceiver();
-                process.OutputDataReceived += receiver.OutputDataReceived;
-                process.ErrorDataReceived += receiver.OutputDataReceived;
-                process.BeginErrorReadLine();
-                process.BeginOutputReadLine();
+                    proc.Wait();
+
+                    // it should succeed
+                    Console.WriteLine("**Stdout**");
+                    foreach (var line in proc.StandardOutputLines) {
+                        Console.WriteLine(line);
+                    }
+                    Console.WriteLine("");
+                    Console.WriteLine("**Stdout**");
+                    foreach (var line in proc.StandardErrorLines) {
+                        Console.WriteLine(line);
+                    }
                 
-                process.WaitForExit();
-
-                // it should succeed
-                Assert.AreEqual(0, process.ExitCode, "Bad exit code: " + process.ExitCode + "\r\n" + receiver.Output.ToString());
+                    Assert.AreEqual(0, proc.ExitCode, "Bad exit code: " + proc.ExitCode);
+                }
 
                 // perform some basic validation
                 dynamic builtinDb = Unpickle.Load(new FileStream(Path.Combine(testDir, path.Version.Is3x() ? "builtins.idb" : "__builtin__.idb"), FileMode.Open, FileAccess.Read));

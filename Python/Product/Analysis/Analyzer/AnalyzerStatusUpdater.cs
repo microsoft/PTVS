@@ -263,7 +263,12 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             _worker = new Thread(ThreadProc);
             _worker.Name = "AnalyzerStatusUpdater Listener";
             _worker.IsBackground = true;
-            _worker.Start();
+            try {
+                _worker.Start();
+            } catch (Exception ex) {
+                _pending = ex;
+                _disposed = true;
+            }
         }
 
         internal AnalyzerStatusUpdaterImplementation(string identifier) {
@@ -273,7 +278,12 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             _worker = new Thread(ThreadProc);
             _worker.Name = "AnalyzerStatusUpdater Identifier=" + identifier;
             _worker.IsBackground = true;
-            _worker.Start();
+            try {
+                _worker.Start();
+            } catch (Exception ex) {
+                _pending = ex;
+                _disposed = true;
+            }
         }
 
         /// <summary>

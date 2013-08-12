@@ -388,7 +388,7 @@ namespace PythonToolsUITests {
                 Assert.AreEqual(1, service.Interpreters.Count());
 
                 dte.ExecuteCommand("View.PythonEnvironments");
-                var list = new TestUtilities.UI.AutomationWrapper(new VisualStudioApp(dte).FindByAutomationId("PythonTools.InterpreterList"));
+                var list = new AutomationWrapper(new VisualStudioApp(dte).FindByAutomationId("PythonTools.InterpreterList"));
                 Assert.IsNotNull(list);
 
                 var rowCount = (int)list.Element.GetCurrentPropertyValue(GridPattern.RowCountProperty);
@@ -417,7 +417,7 @@ namespace PythonToolsUITests {
                 Assert.IsTrue((bool)progress.GetCurrentPropertyValue(AutomationElement.IsOffscreenProperty));
 
                 buttonClick.Invoke();
-                Thread.Sleep(500);
+                Thread.Sleep(1000);
 
                 Assert.IsTrue((bool)required.GetCurrentPropertyValue(AutomationElement.IsOffscreenProperty));
                 Assert.IsTrue((bool)button.GetCurrentPropertyValue(AutomationElement.IsOffscreenProperty));
@@ -651,7 +651,7 @@ namespace PythonToolsUITests {
             Assert.IsFalse(fact.IsCurrent);
             Assert.AreEqual(MockPythonInterpreterFactory.GeneratingReason, fact.GetIsCurrentReason(null));
 
-            fact.EndGenerateCompletionDatabase(list, view.Identifier, false);
+            fact.EndGenerateCompletionDatabase(list, view.Identifier, false, true);
             while ((bool)view.Dispatcher.Invoke((Func<bool>)(() => view.IsRunning))) {
                 view.Dispatcher.BeginInvoke((Action)(() => { e.Set(); }), DispatcherPriority.ApplicationIdle);
                 Assert.IsTrue(e.WaitOne(5000));
@@ -669,7 +669,7 @@ namespace PythonToolsUITests {
             Assert.IsFalse(fact.IsCurrent);
             Assert.AreEqual(MockPythonInterpreterFactory.GeneratingReason, fact.GetIsCurrentReason(null));
 
-            fact.EndGenerateCompletionDatabase(list, view.Identifier, true);
+            fact.EndGenerateCompletionDatabase(list, view.Identifier, true, true);
             while ((bool)view.Dispatcher.Invoke((Func<bool>)(() => view.IsRunning))) {
                 view.Dispatcher.BeginInvoke((Action)(() => { e.Set(); }), DispatcherPriority.ApplicationIdle);
                 Assert.IsTrue(e.WaitOne(5000));

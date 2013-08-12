@@ -130,6 +130,9 @@
     </COMReference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\PythonTools\PythonToolsInstallPath.cs">
+      <Link>Profiling\PythonToolsInstallPath.cs</Link>
+    </Compile>
     <Compile Include="DialogWindowVersioningWorkaround.cs" />
     <Compile Include="Profiling\AutomationProfiling.cs" />
     <Compile Include="Profiling\AutomationReport.cs" />

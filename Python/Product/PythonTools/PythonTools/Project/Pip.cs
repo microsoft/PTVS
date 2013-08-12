@@ -221,7 +221,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public static Task InstallPip(IPythonInterpreterFactory factory, bool elevate, Redirector output = null) {
-            var pipDownloaderPath = Path.Combine(PythonToolsPackage.GetPythonToolsInstallPath(), "pip_downloader.py");
+            var pipDownloaderPath = PythonToolsInstallPath.GetFile("pip_downloader.py");
 
             return Task.Factory.StartNew((Action)(() => {
                 if (output != null) {

@@ -58,8 +58,9 @@ namespace Microsoft.PythonTools.Interpreter {
         /// </summary>
         /// <param name="isGenerating">True if the database is being generated;
         /// otherwise, false.</param>
+        /// <returns>The previous generating state.</returns>
         /// <remarks>New in 2.0</remarks>
-        void NotifyGeneratingDatabase(bool isGenerating);
+        bool NotifyGeneratingDatabase(bool isGenerating);
 
         /// <summary>
         /// Called to inform the interpreter that its database has been
