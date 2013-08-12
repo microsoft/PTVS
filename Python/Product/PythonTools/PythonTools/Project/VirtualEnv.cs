@@ -169,7 +169,7 @@ namespace Microsoft.PythonTools.Project {
             }
 
             var prefixFile = Path.Combine(libPath, "orig-prefix.txt");
-            if (basePath != null && File.Exists(prefixFile)) {
+            if (basePath == null && File.Exists(prefixFile)) {
                 try {
                     var lines = File.ReadAllLines(prefixFile);
                     basePath = lines.FirstOrDefault(CommonUtils.IsValidPath);

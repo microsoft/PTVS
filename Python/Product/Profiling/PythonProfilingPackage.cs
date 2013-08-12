@@ -208,14 +208,13 @@ namespace Microsoft.PythonTools.Profiling {
             var model = (IComponentModel)(GetGlobalService(typeof(SComponentModel)));
             var interpService = model.GetService<IInterpreterOptionsService>();
 
-            var interpreterId = (string)projectToProfile.Properties.Item("InterpreterId").Value;
-            var interpreterVersion = (string)projectToProfile.Properties.Item("InterpreterVersion").Value;
+            var interpProvider = (MSBuildProjectInterpreterFactoryProvider)projectToProfile.Properties.Item("InterpreterFactoryProvider").Value;
             var args = (string)projectToProfile.Properties.Item("CommandLineArguments").Value;
             var interpreterPath = (string)projectToProfile.Properties.Item("InterpreterPath").Value;
             var searchPath = (string)projectToProfile.Properties.Item("SearchPath").Value;
 
-            var interpreter = interpService.FindInterpreter(interpreterId, interpreterVersion);
-            if (interpreter == null) {
+            var interpreter = interpProvider != null ? interpProvider.ActiveInterpreter : null;
+            if (interpreter == null || interpreter == interpService.NoInterpretersValue) {
                 MessageBox.Show(String.Format("Could not find interpreter for project {0}", projectToProfile.Name), "Python Tools for Visual Studio");
                 return;
             }

@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -123,8 +124,8 @@ namespace Microsoft.PythonTools.Profiling {
         #endregion
 
         protected void OnItemAdded(uint itemidParent, uint itemidSiblingPrev, uint itemidAdded) {
-            foreach(var ev in _events.Values) {
-                ev.OnItemAdded(itemidParent, itemidSiblingPrev, itemidAdded);                
+            foreach (var ev in _events.Values.ToArray()) {
+                ev.OnItemAdded(itemidParent, itemidSiblingPrev, itemidAdded);
             }
         }
 
@@ -134,7 +135,7 @@ namespace Microsoft.PythonTools.Profiling {
             }
         }
 
-        protected void OnInvalidateItems(uint itemidParent) {            
+        protected void OnInvalidateItems(uint itemidParent) {
             foreach (var ev in _events.Values) {
                 ev.OnInvalidateItems(itemidParent);
             }

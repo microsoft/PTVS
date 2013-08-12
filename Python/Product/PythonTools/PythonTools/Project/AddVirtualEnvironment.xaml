@@ -7,6 +7,7 @@
     xmlns:ptvs="clr-namespace:Microsoft.PythonTools"
     xmlns:l="clr-namespace:Microsoft.PythonTools.Project"
     xmlns:il="clr-namespace:Microsoft.PythonTools.InterpreterList"
+    xmlns:sys="clr-namespace:System;assembly=mscorlib"
     xmlns:wpf="clr-namespace:Microsoft.PythonTools.Wpf"
     Title="Add Virtual Environment"
     SizeToContent="Height"
@@ -37,7 +38,14 @@
                     <wpf:IfElseConverter x:Key="BoolToVisibleOrCollapsed"
                                          IfTrue="{x:Static Visibility.Visible}"
                                          IfFalse="{x:Static Visibility.Collapsed}" />
-                    <wpf:IfElseConverter x:Key="BoolNot" IfTrue="False" IfFalse="True" />
+                    <wpf:IfElseConverter x:Key="BoolNot">
+                        <wpf:IfElseConverter.IfTrue>
+                            <sys:Boolean>False</sys:Boolean>
+                        </wpf:IfElseConverter.IfTrue>
+                        <wpf:IfElseConverter.IfFalse>
+                            <sys:Boolean>True</sys:Boolean>
+                        </wpf:IfElseConverter.IfFalse>
+                    </wpf:IfElseConverter>
                     
                     <Style x:Key="MonoTextBox" TargetType="{x:Type TextBox}" BasedOn="{StaticResource {x:Type TextBox}}">
                         <Setter Property="FontFamily" Value="Consolas" />

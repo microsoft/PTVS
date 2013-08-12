@@ -12,10 +12,8 @@
  *
  * ***************************************************************************/
 
-using System;
+using System.IO;
 using System.Windows;
-using Microsoft.VisualStudio.PlatformUI;
-using Microsoft.Win32;
 
 namespace Microsoft.PythonTools.Profiling {
     /// <summary>
@@ -35,12 +33,13 @@ namespace Microsoft.PythonTools.Profiling {
         private void FindInterpreterClick(object sender, RoutedEventArgs e) {
             var standalone = _viewModel.Standalone;
             if (standalone != null) {
-                var dlg = new OpenFileDialog();
-                // TODO: Specify an OpenFileDialog filter for finding an interpreter to profile
-                dlg.CheckFileExists = true;
-                bool res = dlg.ShowDialog() ?? false;
-                if (res) {
-                    standalone.InterpreterPath = dlg.FileName;
+                var path = PythonToolsPackage.Instance.BrowseForFileOpen(
+                    new System.Windows.Interop.WindowInteropHelper(this).Handle,
+                    "Executable files (*.exe;*.bat;*.cmd)|*.exe;*.bat;*.cmd|All Files (*.*)|*.*",
+                    standalone.InterpreterPath
+                );
+                if (File.Exists(path)) {
+                    standalone.InterpreterPath = path;
                 }
             }
         }
@@ -48,12 +47,13 @@ namespace Microsoft.PythonTools.Profiling {
         private void FindScriptClick(object sender, RoutedEventArgs e) {
             var standalone = _viewModel.Standalone;
             if (standalone != null) {
-                var dlg = new OpenFileDialog();
-                // TODO: Specify an OpenFileDialog filter for finding a script to profile
-                dlg.CheckFileExists = true;
-                bool res = dlg.ShowDialog() ?? false;
-                if (res) {
-                    standalone.ScriptPath = dlg.FileName;
+                var path = PythonToolsPackage.Instance.BrowseForFileOpen(
+                    new System.Windows.Interop.WindowInteropHelper(this).Handle,
+                    "Python files (*.py;*.pyw)|*.py;*.pyw|All Files (*.*)|*.*",
+                    standalone.ScriptPath
+                );
+                if (File.Exists(path)) {
+                    standalone.ScriptPath = path;
                 }
             }
         }
@@ -61,11 +61,12 @@ namespace Microsoft.PythonTools.Profiling {
         private void FindWorkingDirectoryClick(object sender, RoutedEventArgs e) {
             var standalone = _viewModel.Standalone;
             if (standalone != null) {
-                var dlg = new System.Windows.Forms.FolderBrowserDialog();
-                dlg.SelectedPath = standalone.WorkingDirectory;
-                var res = dlg.ShowDialog();
-                if (res == System.Windows.Forms.DialogResult.OK) {
-                    standalone.WorkingDirectory = dlg.SelectedPath;
+                var path = PythonToolsPackage.Instance.BrowseForDirectory(
+                    new System.Windows.Interop.WindowInteropHelper(this).Handle,
+                    standalone.WorkingDirectory
+                );
+                if (!string.IsNullOrEmpty(path)) {
+                    standalone.WorkingDirectory = path;
                 }
             }
         }

@@ -37,7 +37,9 @@
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="auto" />
             </Grid.ColumnDefinitions>
-            <TextBox Grid.Column="0" Text="{Binding BaselineFile,UpdateSourceTrigger=PropertyChanged}"
+            <TextBox Grid.Column="0"
+                     Text="{Binding BaselineFile,UpdateSourceTrigger=PropertyChanged}"
+                     VerticalContentAlignment="Center"
                      AutomationProperties.AutomationId="BaselineFile" />
             <Button Grid.Column="1" Click="BaselineBrowseClick" Style="{StaticResource BrowseButtonStyle}" />
         </Grid>
@@ -48,7 +50,9 @@
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="auto" />
             </Grid.ColumnDefinitions>
-            <TextBox Grid.Column="0" Text="{Binding ComparisonFile,UpdateSourceTrigger=PropertyChanged}"
+            <TextBox Grid.Column="0"
+                     Text="{Binding ComparisonFile,UpdateSourceTrigger=PropertyChanged}"
+                     VerticalContentAlignment="Center"
                      AutomationProperties.AutomationId="ComparisonFile" />
             <Button Grid.Column="1" Click="CompareBrowseClick" Style="{StaticResource BrowseButtonStyle}" />
         </Grid>
