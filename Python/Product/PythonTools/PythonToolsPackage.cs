@@ -722,7 +722,7 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
             interpreterService.InterpretersChanged += RefreshReplCommands;
             interpreterService.DefaultInterpreterChanged += UpdateDefaultAnalyzer;
 
-            InitializeLogging(interpService);
+            InitializeLogging(interpreterService);
             this.OnIdle += PythonToolsPackage_OnIdle;
         }
 
