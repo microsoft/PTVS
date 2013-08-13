@@ -44,7 +44,7 @@ namespace DebuggerTests {
         /// </summary>
         internal void BreakpointTest(string filename, int[] linenos, int[] lineHits, string[] conditions = null, bool[] breakWhenChanged = null, 
                                      string cwd = null, string breakFilename = null, bool checkBound = true, bool checkThread = true, string arguments = "", 
-                                     Action processLoaded = null, PythonDebugOptions debugOptions = PythonDebugOptions.RedirectOutput,
+                                     Action onProcessLoaded = null, PythonDebugOptions debugOptions = PythonDebugOptions.RedirectOutput,
                                     bool waitForExit = true) {
             var debugger = new PythonDebugger();
             PythonThread thread = null;
@@ -53,55 +53,74 @@ namespace DebuggerTests {
                 rootedFilename = DebuggerTestPath + filename;
             }
 
-            var process = DebugProcess(debugger, rootedFilename, (newproc, newthread) => {
-                for (int i = 0; i < linenos.Length; i++) {
-                    var line = linenos[i];
+            AutoResetEvent processLoaded = new AutoResetEvent(false);
+            var process =
+                DebugProcess(
+                    debugger,
+                    rootedFilename,
+                    cwd: cwd,
+                    arguments: arguments,
+                    resumeOnProcessLoaded: false,
+                    onLoaded: (newproc, newthread) => {
+                        for (int i = 0; i < linenos.Length; i++) {
+                            var line = linenos[i];
 
-                    int finalLine = line;
-                    if (finalLine < 0) {
-                        finalLine = -finalLine;
-                    }
+                            int finalLine = line;
+                            if (finalLine < 0) {
+                                finalLine = -finalLine;
+                            }
 
-                    PythonBreakpoint breakPoint;
-                    var finalBreakFilename = breakFilename ?? filename;
+                            PythonBreakpoint breakPoint;
+                            var finalBreakFilename = breakFilename ?? rootedFilename;
 
-                    if (conditions != null) {
-                        if (breakWhenChanged != null) {
-                            breakPoint = newproc.AddBreakPoint(finalBreakFilename, line, conditions[i], breakWhenChanged[i]);
-                        } else {
-                            breakPoint = newproc.AddBreakPoint(finalBreakFilename, line, conditions[i]);
+                            if (conditions != null) {
+                                if (breakWhenChanged != null) {
+                                    breakPoint = newproc.AddBreakPoint(finalBreakFilename, line, conditions[i], breakWhenChanged[i]);
+                                } else {
+                                    breakPoint = newproc.AddBreakPoint(finalBreakFilename, line, conditions[i]);
+                                }
+                            } else {
+                                breakPoint = newproc.AddBreakPointByFileExtension(line, finalBreakFilename);
+                            }
+
+                            breakPoint.Add();
                         }
-                    } else {
-                        breakPoint = newproc.AddBreakPointByFileExtension(line, finalBreakFilename);
+                        thread = newthread;
+
+                        if (onProcessLoaded != null) {
+                            onProcessLoaded();
+                        }
+                        processLoaded.Set();
                     }
+                );
 
-                    breakPoint.Add();
-                }
-                thread = newthread;
-
-                if (processLoaded != null) {
-                    processLoaded();
-                }
-            }, cwd: cwd, arguments: arguments);
-
+            var lineList = new List<int>(linenos);
+            var breakpointsToBeBound = lineList.Count;
+            int breakpointsBound = 0;
+            int breakpointsNotBound = 0;
+            AutoResetEvent allBreakpointBindResults = new AutoResetEvent(breakpointsToBeBound == 0);
             process.BreakpointBindFailed += (sender, args) => {
                 if (checkBound) {
                     Assert.Fail("unexpected bind failure");
                 }
+                ++breakpointsNotBound;
+                if (breakpointsBound + breakpointsNotBound == breakpointsToBeBound) {
+                    allBreakpointBindResults.Set();
+                }
             };
 
-            var lineList = new List<int>(linenos);
-
-            int breakpointBound = 0;
-            int breakpointHit = 0;
             process.BreakpointBindSucceeded += (sender, args) => {
-                Assert.AreEqual(args.Breakpoint.Filename, breakFilename ?? filename);
+                Assert.AreEqual(args.Breakpoint.Filename, breakFilename ?? rootedFilename);
                 int index = lineList.IndexOf(args.Breakpoint.LineNo);
                 Assert.IsTrue(index != -1);
                 lineList[index] = -1;
-                breakpointBound++;
+                breakpointsBound++;
+                if (breakpointsBound + breakpointsNotBound == breakpointsToBeBound) {
+                    allBreakpointBindResults.Set();
+                }
             };
 
+            int breakpointHit = 0;
             AutoResetEvent allBreakpointsHit = new AutoResetEvent(false);
             process.BreakpointHit += (sender, args) => {
                 if (lineHits[breakpointHit] < 0) {
@@ -124,6 +143,9 @@ namespace DebuggerTests {
             };
 
             process.Start();
+            AssertWaited(processLoaded);
+            AssertWaited(allBreakpointBindResults);
+            process.AutoResumeThread(thread.Id);
 
             if (waitForExit) {
                 WaitForExit(process);
@@ -134,12 +156,12 @@ namespace DebuggerTests {
 
             Assert.AreEqual(breakpointHit, lineHits.Length);
             if (checkBound) {
-                Assert.AreEqual(breakpointBound, linenos.Length);
+                Assert.AreEqual(breakpointsBound, linenos.Length);
             }
         }
 
-        internal PythonProcess DebugProcess(PythonDebugger debugger, string filename, Action<PythonProcess, PythonThread> onLoaded = null, string interpreterOptions = null, PythonDebugOptions debugOptions = PythonDebugOptions.RedirectOutput, string cwd = null, string arguments = "") {
-            return debugger.DebugProcess(Version, filename, onLoaded, interpreterOptions, debugOptions, cwd, arguments);
+        internal PythonProcess DebugProcess(PythonDebugger debugger, string filename, Action<PythonProcess, PythonThread> onLoaded = null, bool resumeOnProcessLoaded = true, string interpreterOptions = null, PythonDebugOptions debugOptions = PythonDebugOptions.RedirectOutput, string cwd = null, string arguments = "") {
+            return debugger.DebugProcess(Version, filename, onLoaded, resumeOnProcessLoaded, interpreterOptions, debugOptions, cwd, arguments);
         }
 
         internal void LocalsTest(string filename, int lineNo, string[] paramNames, string[] localsNames, string breakFilename = null, string arguments = "", Action processLoaded = null, PythonDebugOptions debugOptions = PythonDebugOptions.RedirectOutput, bool waitForExit = true) {

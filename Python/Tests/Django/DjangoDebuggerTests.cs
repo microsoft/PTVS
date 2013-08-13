@@ -165,7 +165,7 @@ namespace DjangoTests {
                 arguments: "runserver --noreload",
                 checkBound: false,
                 checkThread: false,
-                processLoaded: new WebPageRequester().DoRequest,
+                onProcessLoaded: new WebPageRequester().DoRequest,
                 debugOptions: PythonDebugOptions.DjangoDebugging,
                 waitForExit: false
             );

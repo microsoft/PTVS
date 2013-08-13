@@ -19,7 +19,7 @@ using TestUtilities;
 
 namespace DebuggerTests {
     static class DebugExtensions {
-        internal static PythonProcess DebugProcess(this PythonDebugger debugger, PythonVersion version, string filename, Action<PythonProcess, PythonThread> onLoaded = null, string interpreterOptions = null, PythonDebugOptions debugOptions = PythonDebugOptions.RedirectOutput, string cwd = null, string arguments = "") {
+        internal static PythonProcess DebugProcess(this PythonDebugger debugger, PythonVersion version, string filename, Action<PythonProcess, PythonThread> onLoaded = null, bool resumeOnProcessLoaded = true, string interpreterOptions = null, PythonDebugOptions debugOptions = PythonDebugOptions.RedirectOutput, string cwd = null, string arguments = "") {
             string fullPath = Path.GetFullPath(filename);
             string dir = cwd ?? Path.GetFullPath(Path.GetDirectoryName(filename));
             if (!String.IsNullOrEmpty(arguments)) {
@@ -35,7 +35,9 @@ namespace DebuggerTests {
                 if (onLoaded != null) {
                     onLoaded(process, args.Thread);
                 }
-                process.Resume();
+                if (resumeOnProcessLoaded) {
+                    process.Resume();
+                }
             };
 
             return process;

@@ -659,6 +659,11 @@ namespace Microsoft.PythonTools.Debugger {
                 (typeName == "str" && LanguageVersion.Is3x())) {
                 objRepr = objRepr.FixupEscapedUnicodeChars();
             }
+
+            if (typeName == "bool") {
+                hexRepr = null;
+            }
+
             return new PythonEvaluationResult(this, objRepr, hexRepr, typeName, text, childText, childIsIndex, childIsEnumerate, frame, isExpandable);
         }
 

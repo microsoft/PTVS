@@ -1056,30 +1056,22 @@ class Thread(object):
                 if source_obj is not None:
                     frame_locals = self.get_locals(cur_frame, FRAME_KIND_DJANGO)
 
-            if source_obj is not None:
-                var_names = frame_locals
-            elif frame_locals is cur_frame.f_globals:
+            process_globals_in_functions = True
+            if source_obj is None and frame_locals is cur_frame.f_globals:
                 var_names = cur_frame.f_globals
+                process_globals_in_functions = False
             else:
-                var_names = cur_frame.f_code.co_varnames
-                        
+                var_names = frame_locals
+
             vars = []
-            for var_name in var_names:
-                try:
-                    obj = frame_locals[var_name]
-                except:
-                    obj = '<undefined>'
-                try:
-                    if sys.version[0] == '2' and type(obj) is types.InstanceType:
-                        type_name = "instance (" + obj.__class__.__name__ + ")"
-                    else:
-                        type_name = type(obj).__name__
-                except:
-                    type_name = 'unknown'
-                    
-                vars.append((var_name, type(obj), safe_repr(obj), safe_hex_repr(obj), type_name, get_object_len(obj)))
-                
-        
+            # collect frame locals
+            self.collect_variables(vars, frame_locals, var_names)
+            if process_globals_in_functions:
+                # collect globals used locally
+                self.collect_variables(vars, cur_frame.f_globals, cur_frame.f_code.co_varnames, var_names)
+                # collect non-locals (closed over variables) used locally
+                self.collect_variables(vars, cur_frame.f_globals, cur_frame.f_code.co_names, var_names)
+            
             frame_info = None
 
             if source_obj is not None:
@@ -1125,6 +1117,27 @@ class Thread(object):
             cur_frame = cur_frame.f_back
                         
         return frames
+
+    def collect_variables(self, vars, objects, names, skip_names = None):
+        # Ensure skip_names is not a dict to work around IronPython issue with incorrectly
+        # resolving name not in skip_names when it is a dict
+        if skip_names is not None and type(skip_names) is dict:
+            skip_names = skip_names.keys()
+        for name in names:
+            if skip_names is None or name not in skip_names:
+                try:
+                    obj = objects[name]
+                    try:
+                        if sys.version[0] == '2' and type(obj) is types.InstanceType:
+                            type_name = "instance (" + obj.__class__.__name__ + ")"
+                        else:
+                            type_name = type(obj).__name__
+                    except:
+                        type_name = 'unknown'
+                except:
+                    obj = '<undefined>'
+                    type_name = 'unknown'
+                vars.append((name, type(obj), safe_repr(obj), safe_hex_repr(obj), type_name, get_object_len(obj)))
 
     def send_frame_list(self, frames, thread_name = None):
         with _SendLockCtx:

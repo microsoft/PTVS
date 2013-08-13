@@ -249,11 +249,17 @@ namespace DebuggerTests {
 
             var debugger = new PythonDebugger();
             PythonThread thread = null;
-            var process = DebugProcess(debugger, DebuggerTestPath + @"SetNextLine.py", (newproc, newthread) => {
-                var breakPoint = newproc.AddBreakPoint("SetNextLine.py", 1);
-                breakPoint.Add();
+            AutoResetEvent processLoaded = new AutoResetEvent(false);
+            var process =
+                DebugProcess(
+                    debugger,
+                    DebuggerTestPath + @"SetNextLine.py",
+                    resumeOnProcessLoaded: false,
+                    onLoaded: (newproc, newthread) => {
                 thread = newthread;
-            });
+                        processLoaded.Set();
+                    }
+                );
 
             AutoResetEvent brkHit = new AutoResetEvent(false);
             AutoResetEvent stepDone = new AutoResetEvent(false);
@@ -266,7 +272,7 @@ namespace DebuggerTests {
 
             process.Start();
 
-            AssertWaited(brkHit);
+            AssertWaited(processLoaded);
 
             var moduleFrame = thread.Frames[0];
             Assert.AreEqual(moduleFrame.StartLine, 1);
@@ -517,6 +523,31 @@ namespace DebuggerTests {
             LocalsTest("LocalsTest3.py", 2, new string[] { "x" }, new string[] { "y" });
         }
 
+        /// <summary>
+        /// https://pytools.codeplex.com/workitem/1347
+        /// </summary>
+        [TestMethod, Priority(0)]
+        public void LocalGlobalsTest() {
+            LocalsTest("LocalGlobalsTest.py", 3, new string[] { }, new string[] { "x" });
+
+            LocalsTest("LocalGlobalsTest.py", 4, new string[] { }, new string[] { "x" });
+        }
+
+        /// <summary>
+        /// https://pytools.codeplex.com/workitem/1348
+        /// </summary>
+        [TestMethod, Priority(0)]
+        public void LocalClosureVarsTest() {
+            // IronPython doesn't expose closure variables in frame.f_locals
+            if (GetType() == typeof(DebuggerTestsIpy)) {
+                return;
+            }
+
+            // CONSIDER Understand why frame.f_locals does not have args first for this scenario
+            //LocalsTest("LocalClosureVarsTest.py", 4, new string[] { "z" }, new string[] { "x", "y" });
+            LocalsTest("LocalClosureVarsTest.py", 4, new string[] { "y" }, new string[] { "x", "z" });
+        }
+
         [TestMethod, Priority(0)]
         public void GlobalsTest() {
             if (Version.Version >= PythonLanguageVersion.V33) {
@@ -528,6 +559,50 @@ namespace DebuggerTests {
             } else {
                 LocalsTest("GlobalsTest.py", 4, new string[] { }, new[] { "x", "y", "__file__", "__name__", "__builtins__", "__doc__" });
             }
+        }
+
+        [TestMethod, Priority(0)]
+        public void LocalBooleanTest() {
+            // https://pytools.codeplex.com/workitem/1334
+            var filename = DebuggerTestPath + "LocalBooleanTest.py";
+            var debugger = new PythonDebugger();
+
+            PythonThread thread = null;
+            AutoResetEvent loaded = new AutoResetEvent(false);
+            var process =
+                DebugProcess(
+                    debugger,
+                    filename,
+                    (newproc, newthread) => {
+                        var bp = newproc.AddBreakPoint(filename, 2);
+                        bp.Add();
+                        thread = newthread;
+                        loaded.Set();
+                    }
+                );
+
+            AutoResetEvent breakpointHit = new AutoResetEvent(false);
+            process.BreakpointHit += (sender, args) => {
+                breakpointHit.Set();
+            };
+
+            process.Start();
+            AssertWaited(breakpointHit);
+
+            // Null hex representation flags AD7 to substitute string representation
+            var parms = thread.Frames[0].Parameters;
+            Assert.IsNull(parms[0].HexRepr);
+            Assert.IsNull(parms[1].HexRepr);
+
+            // Handle order inconsitencies accross interpreters
+            foreach (var parm in parms) {
+                if (parm.Expression == "x") {
+                    Assert.AreEqual("True", parm.StringRepr);
+                } else {
+                    Assert.AreEqual("False", parm.StringRepr);
+                }
+            }
+            process.Terminate();
         }
 
         #endregion
@@ -804,10 +879,9 @@ namespace DebuggerTests {
                 breakPoint.Add();
             }, cwd: cwd);
 
-            bool hitBp = false;
+            int hitBp = 0;
             process.BreakpointHit += (sender, args) => {
-                Assert.IsTrue(!hitBp);
-                hitBp = true;
+                ++hitBp;
                 args.Thread.StepOver();
             };
             bool sentStep = false;
@@ -1337,7 +1411,7 @@ namespace DebuggerTests {
             Assert.AreEqual(expectedExitCode, exitCode, String.Format("Unexpected Python process exit code for '{0}'", filename));
         }
 
-        private new PythonProcess DebugProcess(PythonDebugger debugger, string filename, Action<PythonProcess, PythonThread> onLoaded = null, string interpreterOptions = null, PythonDebugOptions debugOptions = PythonDebugOptions.RedirectOutput, string cwd = null, string pythonExe = null) {
+        private new PythonProcess DebugProcess(PythonDebugger debugger, string filename, Action<PythonProcess, PythonThread> onLoaded = null, bool resumeOnProcessLoaded = true, string interpreterOptions = null, PythonDebugOptions debugOptions = PythonDebugOptions.RedirectOutput, string cwd = null, string pythonExe = null) {
             string fullPath = Path.GetFullPath(filename);
             string dir = cwd ?? Path.GetFullPath(Path.GetDirectoryName(filename));
             var process = debugger.CreateProcess(Version.Version, pythonExe ?? Version.Path, "\"" + fullPath + "\"", dir, "", interpreterOptions, debugOptions);
@@ -1345,7 +1419,9 @@ namespace DebuggerTests {
                 if (onLoaded != null) {
                     onLoaded(process, args.Thread);
                 }
+                if (resumeOnProcessLoaded) {
                 process.Resume();
+                }
             };
 
             return process;
@@ -1429,7 +1505,7 @@ namespace DebuggerTests {
                 proc.StartListening();
 
                 Assert.IsTrue(attached.WaitOne(10000));
-                Assert.IsTrue(breakpointHit.WaitOne(10000));
+                Assert.IsTrue(breakpointHit.WaitOne(20000));
                 Assert.IsFalse(wrongLine);
 
                 Assert.AreNotEqual(mainThread, bpThread);
