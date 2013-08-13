@@ -510,7 +510,7 @@ namespace Microsoft.PythonTools.Interpreter {
                                 if (module == null) {
                                     throw new InvalidOperationException("Failed to find module " + modName);
                                 }
-                                assign(modName, GetModule(modName));
+                                assign(memberName, GetModule(modName));
                             }
                             break;
                         default:

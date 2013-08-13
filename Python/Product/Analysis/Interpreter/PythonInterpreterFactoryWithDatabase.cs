@@ -219,16 +219,16 @@ namespace Microsoft.PythonTools.Interpreter {
                 _typeDb.DatabaseCorrupt -= OnDatabaseCorrupt;
             }
             var oldDb = _typeDb;
+            var wasGenerating = NotifyGeneratingDatabase(false);
+
             _typeDb = MakeTypeDatabase(DatabasePath);
             if (_typeDb != null) {
                 _typeDb.DatabaseCorrupt += OnDatabaseCorrupt;
             }
 
             WatchingLibrary = true;
-            if (_generating) {
-                var previousIsCurrent = IsCurrent;
-                _generating = false;
-                RefreshIsCurrent(previousIsCurrent);
+            if (wasGenerating) {
+                RefreshIsCurrent(false);
             }
 
             if (oldDb != null) {
