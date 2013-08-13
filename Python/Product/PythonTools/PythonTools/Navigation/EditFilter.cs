@@ -62,6 +62,7 @@ namespace Microsoft.PythonTools.Language {
 
         public EditFilter(ITextView textView, IEditorOperations editorOps) {
             _textView = textView;
+            _textView.Properties[typeof(EditFilter)] = this;
             _editorOps = editorOps;
             
             BraceMatcher.WatchBraceHighlights(textView, PythonToolsPackage.ComponentModel);

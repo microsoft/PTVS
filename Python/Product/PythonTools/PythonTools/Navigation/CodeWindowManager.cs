@@ -12,6 +12,7 @@
  *
  * ***************************************************************************/
 
+using System;
 using System.Collections.Generic;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Intellisense;
@@ -19,18 +20,20 @@ using Microsoft.PythonTools.Language;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.OLE.Interop;
+using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Operations;
 using Microsoft.VisualStudio.TextManager.Interop;
 using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Navigation {
-    class CodeWindowManager : IVsCodeWindowManager {
+    class CodeWindowManager : IVsCodeWindowManager, IVsCodeWindowEvents {
         private readonly IVsCodeWindow _window;
-        private readonly IWpfTextView _textView;
-        private readonly EditFilter _filter;
-        private static readonly Dictionary<IWpfTextView, CodeWindowManager> _windows = new Dictionary<IWpfTextView, CodeWindowManager>();
+        private readonly ITextBuffer _textBuffer;
+        private static readonly HashSet<CodeWindowManager> _windows = new HashSet<CodeWindowManager>();
+        private uint _cookieVsCodeWindowEvents;
         private DropDownBarClient _client;
+        private static IVsEditorAdaptersFactoryService _vsEditorAdaptersFactoryService = null;
 
         static CodeWindowManager() {
             PythonToolsPackage.Instance.OnIdle += OnIdle;
@@ -38,23 +41,7 @@ namespace Microsoft.PythonTools.Navigation {
 
         public CodeWindowManager(IVsCodeWindow codeWindow, IWpfTextView textView) {
             _window = codeWindow;
-            _textView = textView;
-
-            var model = PythonToolsPackage.ComponentModel;
-            var adaptersFactory = model.GetService<IVsEditorAdaptersFactoryService>();
-            IEditorOperationsFactoryService factory = model.GetService<IEditorOperationsFactoryService>();
-
-            EditFilter editFilter = _filter = new EditFilter(textView, factory.GetEditorOperations(textView));
-            IntellisenseController intellisenseController = IntellisenseControllerProvider.GetOrCreateController(model, textView);
-
-            var adapter = adaptersFactory.GetViewAdapter(textView);
-            editFilter.AttachKeyboardFilter(adapter);
-            intellisenseController.AttachKeyboardFilter();
-
-#if DEV11_OR_LATER
-            var viewFilter = new TextViewFilter();
-            viewFilter.AttachFilter(adapter);
-#endif
+            _textBuffer = textView.TextBuffer;
         }
 
         private static void OnIdle(object sender, ComponentManagerEventArgs e) {
@@ -63,23 +50,32 @@ namespace Microsoft.PythonTools.Navigation {
                     break;
                 }
 
-                window.Value._filter.DoIdle(e.ComponentManager);
+                IVsTextView vsTextView;
+                if (ErrorHandler.Succeeded(window._window.GetLastActiveView(out vsTextView)) && vsTextView != null) {
+                    var wpfTextView = VsEditorAdaptersFactoryService.GetWpfTextView(vsTextView);
+                    if (wpfTextView != null) {
+                        EditFilter editFilter;
+                        if (wpfTextView.Properties.TryGetProperty(typeof(EditFilter), out editFilter) && editFilter != null) {
+                            editFilter.DoIdle(e.ComponentManager);
+                        }
+                    }
+                }
             }
         }
 
         #region IVsCodeWindowManager Members
 
         public int AddAdornments() {
-            _windows[_textView] = this;
+            _windows.Add(this);
 
             IVsTextView textView;
 
             if (ErrorHandler.Succeeded(_window.GetPrimaryView(out textView))) {
-                OnNewView(textView);
+                ((IVsCodeWindowEvents)this).OnNewView(textView);
             }
 
             if (ErrorHandler.Succeeded(_window.GetSecondaryView(out textView))) {
-                OnNewView(textView);
+                ((IVsCodeWindowEvents)this).OnNewView(textView);
             }
 
             if (PythonToolsPackage.Instance.LangPrefs.NavigationBar) {
@@ -90,12 +86,30 @@ namespace Microsoft.PythonTools.Navigation {
         }
 
         private int AddDropDownBar() {
-            var pythonProjectEntry = _textView.TextBuffer.GetAnalysis() as IPythonProjectEntry;
+            var cpc = (IConnectionPointContainer)_window;
+            if (cpc != null) {
+                IConnectionPoint cp;
+                cpc.FindConnectionPoint(typeof(IVsCodeWindowEvents).GUID, out cp);
+                if (cp != null) {
+                    cp.Advise(this, out _cookieVsCodeWindowEvents);
+                }
+            }
+
+            var pythonProjectEntry = _textBuffer.GetAnalysis() as IPythonProjectEntry;
             if (pythonProjectEntry == null) {
                 return VSConstants.E_FAIL;
             }
 
-            DropDownBarClient dropDown = _client = new DropDownBarClient(_textView, pythonProjectEntry);
+            IWpfTextView wpfTextView = null;
+            IVsTextView vsTextView;
+            if (ErrorHandler.Succeeded(_window.GetLastActiveView(out vsTextView)) && vsTextView != null) {
+                wpfTextView = VsEditorAdaptersFactoryService.GetWpfTextView(vsTextView);
+            }
+            if (wpfTextView == null) {
+                return VSConstants.E_FAIL;
+            }
+
+            _client = new DropDownBarClient(wpfTextView, pythonProjectEntry);
             
             IVsDropdownBarManager manager = (IVsDropdownBarManager)_window;
 
@@ -108,46 +122,124 @@ namespace Microsoft.PythonTools.Navigation {
                 }
             }
 
-            int res = manager.AddDropdownBar(2, dropDown);
+            int res = manager.AddDropdownBar(2, _client);
             if (ErrorHandler.Succeeded(res)) {
-                _textView.TextBuffer.Properties[typeof(DropDownBarClient)] = dropDown;
+                // A buffer may have multiple DropDownBarClients, given one may open multiple CodeWindows
+                // over a single buffer using Window/New Window
+                List<DropDownBarClient> listDropDownBarClient;
+                if (!_textBuffer.Properties.TryGetProperty(typeof(DropDownBarClient), out listDropDownBarClient) || listDropDownBarClient == null) {
+                    listDropDownBarClient = new List<DropDownBarClient>();
+                    _textBuffer.Properties[typeof(DropDownBarClient)] = listDropDownBarClient;
+                }
+                listDropDownBarClient.Add(_client);
             }
             return res;
         }
 
         private int RemoveDropDownBar() {
+            var cpc = (IConnectionPointContainer)_window;
+            if (cpc != null) {
+                IConnectionPoint cp;
+                cpc.FindConnectionPoint(typeof(IVsCodeWindowEvents).GUID, out cp);
+                if (cp != null) {
+                    cp.Unadvise(_cookieVsCodeWindowEvents);
+                }
+            }
+
             if (_client != null) {
                 IVsDropdownBarManager manager = (IVsDropdownBarManager)_window;
                 _client.Unregister();
+                // A buffer may have multiple DropDownBarClients, given one may open multiple CodeWindows
+                // over a single buffer using Window/New Window
+                List<DropDownBarClient> listDropDownBarClient;
+                if (_textBuffer.Properties.TryGetProperty(typeof(DropDownBarClient), out listDropDownBarClient) && listDropDownBarClient != null) {
+                    listDropDownBarClient.Remove(_client);
+                    if (listDropDownBarClient.Count == 0) {
+                        _textBuffer.Properties.RemoveProperty(typeof(DropDownBarClient));
+                    }
+                }
                 _client = null;
-                _textView.TextBuffer.Properties.RemoveProperty(typeof(DropDownBarClient));
                 return manager.RemoveDropdownBar();
             }
             return VSConstants.S_OK;
         }
 
         public int OnNewView(IVsTextView pView) {
-            // TODO: We pass _textView which may not be right for split buffers, we need
-            // to test the case where we split a text file and save it as an existing file?
+            // NO-OP We use IVsCodeWindowEvents to track text view lifetime
             return VSConstants.S_OK;
         }
-
+            
         public int RemoveAdornments() {
-            _windows.Remove(_textView);
+            _windows.Remove(this);
+
+            IVsTextView textView;
+
+            if (ErrorHandler.Succeeded(_window.GetPrimaryView(out textView))) {
+                ((IVsCodeWindowEvents)this).OnCloseView(textView);
+            }
+
+            if (ErrorHandler.Succeeded(_window.GetSecondaryView(out textView))) {
+                ((IVsCodeWindowEvents)this).OnCloseView(textView);
+            }
+
             return RemoveDropDownBar();
         }
 
         public static void ToggleNavigationBar(bool fEnable) {
-            foreach (var keyValue in _windows) {
+            foreach (var window in _windows) {
                 if (fEnable) {
-                    ErrorHandler.ThrowOnFailure(keyValue.Value.AddDropDownBar());
+                    ErrorHandler.ThrowOnFailure(window.AddDropDownBar());
                 } else {
-                    ErrorHandler.ThrowOnFailure(keyValue.Value.RemoveDropDownBar());
+                    ErrorHandler.ThrowOnFailure(window.RemoveDropDownBar());
                 }
             }
         }
 
         #endregion
-    }
 
+        #region IVsCodeWindowEvents Members
+
+        int IVsCodeWindowEvents.OnNewView(IVsTextView vsTextView) {
+            var wpfTextView = VsEditorAdaptersFactoryService.GetWpfTextView(vsTextView);
+            if (wpfTextView != null) {
+                var factory = PythonToolsPackage.ComponentModel.GetService<IEditorOperationsFactoryService>();
+                var editFilter = new EditFilter(wpfTextView, factory.GetEditorOperations(wpfTextView));
+                editFilter.AttachKeyboardFilter(vsTextView);
+#if DEV11_OR_LATER
+                var viewFilter = new TextViewFilter();
+                viewFilter.AttachFilter(vsTextView);
+#endif
+                wpfTextView.GotAggregateFocus += OnTextViewGotAggregateFocus;
+            }
+            return VSConstants.S_OK;
+        }
+
+        int IVsCodeWindowEvents.OnCloseView(IVsTextView vsTextView) {
+            var wpfTextView = VsEditorAdaptersFactoryService.GetWpfTextView(vsTextView);
+            if (wpfTextView != null) {
+                wpfTextView.GotAggregateFocus -= OnTextViewGotAggregateFocus;
+            }
+            return VSConstants.S_OK;
+        }
+
+        private void OnTextViewGotAggregateFocus(object sender, EventArgs e) {
+            var wpfTextView = sender as IWpfTextView;
+            if (wpfTextView != null) {
+                if (_client != null) {
+                    _client.UpdateView(wpfTextView);
+                }
+            }
+        }
+
+        private static IVsEditorAdaptersFactoryService VsEditorAdaptersFactoryService {
+            get {
+                if (_vsEditorAdaptersFactoryService == null) {
+                    _vsEditorAdaptersFactoryService = PythonToolsPackage.ComponentModel.GetService<IVsEditorAdaptersFactoryService>();
+                }
+                return _vsEditorAdaptersFactoryService;
+            }
+        }
+
+        #endregion
+    }
 }

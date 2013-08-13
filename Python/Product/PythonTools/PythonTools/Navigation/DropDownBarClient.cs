@@ -58,7 +58,7 @@ namespace Microsoft.PythonTools.Navigation {
         private ReadOnlyCollection<DropDownEntryInfo> _topLevelEntries; // entries for top-level members of the file
         private ReadOnlyCollection<DropDownEntryInfo> _nestedEntries;   // entries for nested members in the file
         private readonly Dispatcher _dispatcher;                        // current dispatcher so we can get back to our thread
-        private readonly IWpfTextView _textView;                        // text view we're drop downs for
+        private IWpfTextView _textView;                                 // text view we're drop downs for
         private IVsDropdownBar _dropDownBar;                            // drop down bar - used to refresh when changes occur
         private int _curTopLevelIndex = -1, _curNestedIndex = -1;       // currently selected indices for each bar
         
@@ -83,6 +83,15 @@ namespace Microsoft.PythonTools.Navigation {
         internal void Unregister() {
             _projectEntry.OnNewParseTree -= ParserOnNewParseTree;
             _textView.Caret.PositionChanged -= CaretPositionChanged;
+        }
+
+        public void UpdateView(IWpfTextView textView) {
+            if (_textView != textView) {
+                _textView.Caret.PositionChanged -= CaretPositionChanged;
+                _textView = textView;
+                _textView.Caret.PositionChanged += CaretPositionChanged;
+                CaretPositionChanged(this, new CaretPositionChangedEventArgs(null, _textView.Caret.Position, _textView.Caret.Position));
+            }
         }
 
         #region IVsDropdownBarClient Members
@@ -251,6 +260,10 @@ namespace Microsoft.PythonTools.Navigation {
         /// </summary>
         public int SetDropdownBar(IVsDropdownBar pDropdownBar) {
             _dropDownBar = pDropdownBar;
+            if (_dropDownBar != null) {
+                CaretPositionChanged(this, new CaretPositionChangedEventArgs(null, _textView.Caret.Position, _textView.Caret.Position));
+            }
+            
             return VSConstants.S_OK;
         }
 
@@ -633,7 +646,7 @@ namespace Microsoft.PythonTools.Navigation {
         private void ParserOnNewParseTree(object sender, EventArgs e) {
             var dropDownBar = _dropDownBar;
             if (dropDownBar != null) {
-                Action callback = () => { dropDownBar.RefreshCombo(0, 0); };
+                Action callback = () => { CaretPositionChanged(this, new CaretPositionChangedEventArgs(null, _textView.Caret.Position, _textView.Caret.Position)); };
                 _dispatcher.BeginInvoke(callback, DispatcherPriority.Background);
             }
         }
