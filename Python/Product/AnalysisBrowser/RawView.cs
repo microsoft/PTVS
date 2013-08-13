@@ -88,10 +88,13 @@ namespace Microsoft.PythonTools.Analysis.Browser {
             get {
                 string s;
                 int? i;
+                bool? b;
                 if ((s = _item as string) != null) {
                     return s;
                 } else if ((i = _item as int?) != null) {
                     return string.Format("{0} ({0:X})", i.Value);
+                } else if ((b = _item as bool?) != null) {
+                    return b.Value.ToString();
                 } else {
                     return GetTypeName(_item);
                 }

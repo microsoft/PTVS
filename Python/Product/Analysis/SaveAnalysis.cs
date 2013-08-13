@@ -170,12 +170,16 @@ namespace Microsoft.PythonTools.Analysis {
                 case PythonMemberType.Function:
                     FunctionInfo fi = type as FunctionInfo;
                     if (fi != null) {
-                        return GenerateFunction(fi);
+                        if (fi.DeclaringModule.GetModuleInfo() != declModule) {
+                            return GenerateFuncRef(fi);
+                        } else {
+                            return GenerateFunction(fi);
+                        }
                     }
 
                     BuiltinFunctionInfo bfi = type as BuiltinFunctionInfo;
                     if (bfi != null) {
-                        return GenerateFunction(bfi);
+                        return GenerateFuncRef(bfi);
                     }
 
                     return "function";
@@ -232,7 +236,21 @@ namespace Microsoft.PythonTools.Analysis {
             return null;
         }
 
-        private object GenerateFunction(BuiltinFunctionInfo bfi) {
+        private object GenerateFuncRef(FunctionInfo fi) {
+            string name = ".";
+            for (var cd = fi.FunctionDefinition.Parent as ClassDefinition;
+                cd != null;
+                cd = cd.Parent as ClassDefinition) {
+                name = "." + cd.Name + name;
+            }
+            name = fi.DeclaringModule.ModuleName + name + fi.Name;
+
+            return new Dictionary<string, object>() {
+                { "func_name", MemoizeString(name) }
+            };
+        }
+
+        private object GenerateFuncRef(BuiltinFunctionInfo bfi) {
             string name = bfi.Function.DeclaringModule.Name;
             if (bfi.Function.DeclaringType != null) {
                 name += "." + bfi.Function.DeclaringType.Name;
@@ -264,7 +282,7 @@ namespace Microsoft.PythonTools.Analysis {
 
             switch (type.MemberType) {
                 case PythonMemberType.Function:
-                    if (type is BuiltinFunctionInfo) {
+                    if (type is BuiltinFunctionInfo || type.DeclaringModule != declModule.ProjectEntry) {
                         return "funcref";
                     }
                     return "function";
@@ -488,7 +506,7 @@ namespace Microsoft.PythonTools.Analysis {
             Debug.Assert(locations.Count() == 1);
             var location = locations.FirstOrDefault();
             if (location != null) {
-                return new object[] { location.Line, location.Column };
+                return GenerateLocation(location);
             }
             return new object[0];
         }

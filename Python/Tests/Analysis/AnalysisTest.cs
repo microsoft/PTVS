@@ -601,8 +601,8 @@ class D(object):
 
             VerifyReferences(
                 UniqifyVariables(mod2.Analysis.GetVariablesByIndex("D", text2.IndexOf("class D"))),
-                new VariableLocation(2, 7, VariableType.Definition),
-                new VariableLocation(4, 5, VariableType.Reference)
+                new VariableLocation(2, 7, VariableType.Definition, "mod2"),
+                new VariableLocation(4, 5, VariableType.Reference, "mod1")
             );
         }
 
@@ -1713,11 +1713,17 @@ def g():
             public readonly int StartLine;
             public readonly int StartCol;
             public readonly VariableType Type;
+            public readonly string FilePath;
 
             public VariableLocation(int startLine, int startCol, VariableType type) {
                 StartLine = startLine;
                 StartCol = startCol;
                 Type = type;
+            }
+
+            public VariableLocation(int startLine, int startCol, VariableType type, string filePath)
+            : this(startLine, startCol, type) {
+                FilePath = filePath;
             }
         }
 
@@ -2412,7 +2418,8 @@ def f(a):
 
                         if (have.Location.Line == expected.StartLine &&
                             have.Location.Column == expected.StartCol &&
-                            have.Type == expected.Type) {
+                            have.Type == expected.Type &&
+                            (expected.FilePath == null || have.Location.FilePath == expected.FilePath)) {
                             vars.RemoveAt(i);
                             removed++;
                             removedOne = found = true;
@@ -2421,7 +2428,12 @@ def f(a):
                     }
 
                     if (!found) {
-                        StringBuilder error = new StringBuilder(String.Format("Failed to find VariableLocation({0}, {1}, VariableType.{2}) in" + Environment.NewLine, expected.StartLine, expected.StartCol, expected.Type));
+                        var error = new StringBuilder();
+                        error.AppendFormat("Failed to find VariableLocation({0}, {1}, VariableType.{2}", expected.StartLine, expected.StartCol, expected.Type);
+                        if (expected.FilePath != null) {
+                            error.AppendFormat(", \"{0}\"", expected.FilePath);
+                        }
+                        error.AppendLine(") in");
                         LocationNames(vars, error);
 
                         Assert.Fail(error.ToString());
@@ -2457,9 +2469,9 @@ abc()
             barMod.Analyze(CancellationToken.None);
 
             VerifyReferences(UniqifyVariables(barMod.Analysis.GetVariablesByIndex("abc", barText.IndexOf("abc"))),
-                new VariableLocation(1, 7, VariableType.Definition),     // definition 
-                new VariableLocation(2, 17, VariableType.Reference),     // import
-                new VariableLocation(4, 1, VariableType.Reference)       // call
+                new VariableLocation(1, 7, VariableType.Definition, "bar"),     // definition 
+                new VariableLocation(2, 17, VariableType.Reference, "foo"),     // import
+                new VariableLocation(4, 1, VariableType.Reference, "foo")       // call
             );
         }
 
@@ -2514,8 +2526,13 @@ from baz import abc2 as abc";
         }
 
         private static void LocationNames(List<IAnalysisVariable> vars, StringBuilder error) {
+            bool careAboutNames = (vars.Select(v => v.Location.FilePath).Distinct().Count() > 1);
             foreach (var var in vars) { //.OrderBy(v => v.Location.Line).ThenBy(v => v.Location.Column)) {
-                error.AppendFormat("   new VariableLocation({0}, {1}, VariableType.{2}),", var.Location.Line, var.Location.Column, var.Type);
+                if (careAboutNames) {
+                    error.AppendFormat("   new VariableLocation({0}, {1}, VariableType.{2}, \"{3}\"),", var.Location.Line, var.Location.Column, var.Type, var.Location.FilePath);
+                } else {
+                    error.AppendFormat("   new VariableLocation({0}, {1}, VariableType.{2}),", var.Location.Line, var.Location.Column, var.Type);
+                }
                 error.AppendLine();
             }
         }

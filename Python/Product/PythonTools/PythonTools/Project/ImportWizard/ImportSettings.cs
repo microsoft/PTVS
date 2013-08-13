@@ -262,8 +262,8 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
             string searchPaths,
             string startupFile,
             PythonInterpreterView selectedInterpreter,
-            bool supportDjango) {
-
+            bool supportDjango
+        ) {
             var projectHome = CommonUtils.GetRelativeDirectoryPath(Path.GetDirectoryName(projectPath), sourcePath);
 
             writer.WriteStartDocument();
@@ -364,6 +364,15 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
                 writer.WriteElementString("Feed", "https://www.microsoft.com/web/webpi/3.0/toolsproductlist.xml");
                 writer.WriteElementString("ProductId", "Django");
                 writer.WriteElementString("FriendlyName", "Django 1.4");
+
+                writer.WriteEndElement(); // </WebPiReference>
+
+                writer.WriteStartElement("WebPiReference");
+                writer.WriteAttributeString("Include", "https://www.microsoft.com/web/webpi/3.0/toolsproductlist.xml%3fPytho27");
+
+                writer.WriteElementString("Feed", "https://www.microsoft.com/web/webpi/3.0/toolsproductlist.xml");
+                writer.WriteElementString("ProductId", "Python27");
+                writer.WriteElementString("FriendlyName", "Python 2.7");
 
                 writer.WriteEndElement(); // </WebPiReference>
 
