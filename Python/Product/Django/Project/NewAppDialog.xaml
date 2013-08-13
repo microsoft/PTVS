@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:ui="clr-namespace:Microsoft.PythonTools.Django"
         x:ClassModifier="internal"
-        Title="Add Django App..." Height="110" Width="381" ShowInTaskbar="False" WindowStartupLocation="CenterOwner" Background="{x:Static SystemColors.ControlBrush}" TextOptions.TextFormattingMode="Display" MinHeight="110">
+        Title="Add Django App..." Height="110" Width="381" ShowInTaskbar="False" WindowStartupLocation="CenterOwner" Background="{x:Static SystemColors.ControlBrush}" TextOptions.TextFormattingMode="Display" MinHeight="110" MinWidth="300">
     <DockPanel>        
         <DockPanel LastChildFill="true" HorizontalAlignment="Stretch" DockPanel.Dock="Top">
             <TextBlock Text="New App Name:" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="6,6,6,6" DockPanel.Dock="Left"/>

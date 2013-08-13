@@ -34,7 +34,7 @@ using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Django.Project {
     [Guid("564253E9-EF07-4A40-89CF-790E61F53368")]
-    partial class DjangoProject : FlavoredProjectBase, IOleCommandTarget, IVsProjectFlavorCfgProvider, IVsProject, IDjangoProject {
+    partial class DjangoProject : FlavoredProjectBase, IOleCommandTarget, IVsProjectFlavorCfgProvider, IVsProject, IDjangoProject, IVsFilterAddProjectItemDlg {
         internal DjangoPackage _package;
         internal IVsProject _innerProject;
         internal IVsProject3 _innerProject3;
@@ -984,6 +984,34 @@ Either stop the current command, or reset the REPL window.");
 
         public ProjectSmuggler GetDjangoProject() {
             return new ProjectSmuggler(this);
+        }
+
+        #endregion
+
+        #region IVsFilterAddProjectItemDlg Members
+
+        int IVsFilterAddProjectItemDlg.FilterListItemByLocalizedName(ref Guid rguidProjectItemTemplates, string pszLocalizedName, out int pfFilter) {
+            pfFilter = 0;
+            return VSConstants.S_OK;
+        }
+
+        int IVsFilterAddProjectItemDlg.FilterListItemByTemplateFile(ref Guid rguidProjectItemTemplates, string pszTemplateFile, out int pfFilter) {
+            pfFilter = 0;
+            return VSConstants.S_OK;
+        }
+
+        int IVsFilterAddProjectItemDlg.FilterTreeItemByLocalizedName(ref Guid rguidProjectItemTemplates, string pszLocalizedName, out int pfFilter) {
+            pfFilter = 0;
+            return VSConstants.S_OK;
+        }
+
+        int IVsFilterAddProjectItemDlg.FilterTreeItemByTemplateDir(ref Guid rguidProjectItemTemplates, string pszTemplateDir, out int pfFilter) {
+            // https://pytools.codeplex.com/workitem/1313
+            // ASP.NET will filter some things out, including .css files, which we don't want it to do.
+            // So we shut that down by not forwarding this to any inner projects, which is fine, because
+            // Python projects don't implement this interface either.
+            pfFilter = 0;
+            return VSConstants.S_OK;
         }
 
         #endregion
