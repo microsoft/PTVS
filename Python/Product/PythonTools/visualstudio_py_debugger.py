@@ -320,7 +320,10 @@ def probe_stack(depth = 10):
 # specifies list of files not to debug, can be added to externally (the REPL does this
 # for $attach support and not stepping into the REPL)
 
-DONT_DEBUG = [__file__, _vspu.__file__]
+if sys.version_info >= (3, 3):
+    DONT_DEBUG = [__file__, _vspu.__file__, '<frozen importlib._bootstrap>']
+else:
+    DONT_DEBUG = [__file__, _vspu.__file__]
 PREFIXES = [sys.prefix]
 if hasattr(sys, 'real_prefix'):
     # we're running in a virtual env, DEBUG_STDLIB should respect this too.
