@@ -762,6 +762,24 @@ namespace DebuggerTests {
             }
         }
 
+        [TestMethod, Priority(0)]
+        public void StepToEntryPoint() {
+            // https://pytools.codeplex.com/workitem/1344
+            var debugger = new PythonDebugger();
+
+            PythonThread thread = null;
+            AutoResetEvent loaded = new AutoResetEvent(false);
+            var process = DebugProcess(debugger, DebuggerTestPath + "SteppingTest.py", (newproc, newthread) => {
+                thread = newthread;
+                loaded.Set();
+            });
+
+            process.Start();
+            AssertWaited(loaded);
+            Assert.IsTrue(thread.Frames[0].FileName.EndsWith("SteppingTest.py"));
+            Assert.AreEqual(1, thread.Frames[0].StartLine);
+            process.Terminate();
+        }
 
         #endregion
 

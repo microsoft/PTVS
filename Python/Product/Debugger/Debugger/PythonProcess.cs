@@ -56,6 +56,8 @@ namespace Microsoft.PythonTools.Debugger {
         private bool _stoppedForException;
         private int _defaultBreakMode;
         private ICollection<KeyValuePair<string, int>> _breakOn;
+        private bool _handleEntryPointHit = true;
+        private bool _handleEntryPointBreakpoint = true;
 
         protected PythonProcess(int pid, PythonLanguageVersion languageVersion) {
             _pid = pid;
@@ -264,11 +266,50 @@ namespace Microsoft.PythonTools.Debugger {
         }
 
         public void Resume() {
+            // Resume must be from entry point or past
+            _handleEntryPointHit = false;
+
             _stoppedForException = false;
             DebugWriteCommand("ResumeAll");
             lock (_socketLock) {
                 _stream.Write(ResumeAllCommandBytes);
             }
+        }
+
+        public void AutoResumeThread(long threadId) {
+            if (_handleEntryPointHit) {
+                // Handle entrypoint breakpoint/tracepoint
+                var thread = _threads[threadId];
+                if (_handleEntryPointBreakpoint) {
+                    _handleEntryPointBreakpoint = false;
+                    var frames = thread.Frames;
+                    if (frames != null && frames.Count() > 0) {
+                        var frame = frames[0];
+                        if (frame != null) {
+                            foreach (var breakpoint in _breakpoints.Values) {
+                                // UNDONE Fuzzy filename matching
+                                if (breakpoint.LineNo == frame.StartLine && breakpoint.Filename.Equals(frame.FileName, StringComparison.OrdinalIgnoreCase)) {
+                                    // UNDONE: Conditional breakpoint/tracepoint
+                                    var breakpointHit = BreakpointHit;
+                                    if (breakpointHit != null) {
+                                        breakpointHit(this, new BreakpointHitEventArgs(breakpoint, thread));
+                                        return;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                _handleEntryPointHit = false;
+                var entryPointHit = EntryPointHit;
+                if (entryPointHit != null) {
+                    entryPointHit(this, new ThreadEventArgs(thread));
+                    return;
+                }
+            }
+
+            SendAutoResumeThread(threadId);
         }
 
         public bool StoppedForException {
@@ -837,7 +878,16 @@ namespace Microsoft.PythonTools.Debugger {
             }
         }
 
-    public void SendClearStepping(long threadId) {
+        public void SendAutoResumeThread(long threadId) {
+            _stoppedForException = false;
+            DebugWriteCommand("AutoResumeThread");
+            lock (_socketLock) {
+                _stream.Write(AutoResumeThreadCommandBytes);
+                _stream.WriteInt64(threadId);
+            }
+        }
+
+        public void SendClearStepping(long threadId) {
             DebugWriteCommand("ClearStepping");
             lock (_socketLock) {
                 // race w/ removing the breakpoint, let the thread continue
@@ -1046,6 +1096,7 @@ namespace Microsoft.PythonTools.Debugger {
         private static byte[] GetThreadFramesCommandBytes = MakeCommand("thrf");
         private static byte[] ExecuteTextCommandBytes = MakeCommand("exec");
         private static byte[] ResumeThreadCommandBytes = MakeCommand("rest");
+        private static byte[] AutoResumeThreadCommandBytes = MakeCommand("ares");
         private static byte[] ClearSteppingCommandBytes = MakeCommand("clst");
         private static byte[] SetLineNumberCommand = MakeCommand("setl");
         private static byte[] GetChildrenCommandBytes = MakeCommand("chld");
@@ -1084,6 +1135,7 @@ namespace Microsoft.PythonTools.Debugger {
         public event EventHandler<ProcessExitedEventArgs> ProcessExited;
         public event EventHandler<ModuleLoadedEventArgs> ModuleLoaded;
         public event EventHandler<ExceptionRaisedEventArgs> ExceptionRaised;
+        public event EventHandler<ThreadEventArgs> EntryPointHit;
         public event EventHandler<BreakpointHitEventArgs> BreakpointHit;
         public event EventHandler<BreakpointEventArgs> BreakpointBindSucceeded;
         public event EventHandler<BreakpointEventArgs> BreakpointBindFailed;

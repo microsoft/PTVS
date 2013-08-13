@@ -66,7 +66,6 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         private AD7Thread _processLoadedThread, _startThread;
         private AD7Module _startModule;
         private bool _attached, _pseudoAttach;
-        bool _handleEntryPointHit = true;
         private readonly BreakpointManager _breakpointManager;
         private Guid _ad7ProgramId;             // A unique identifier for the program being debugged.
         private static HashSet<WeakReference> _engines = new HashSet<WeakReference>();
@@ -891,21 +890,13 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                 return VSConstants.E_NOTIMPL;
             }
 
-            AssertMainThread();
-
             AD7Thread thread = (AD7Thread)pThread;
 
-            if (_handleEntryPointHit) {
-                _handleEntryPointHit = false;
-                Send(new AD7EntryPointEvent(), AD7EntryPointEvent.IID, thread);
-                return VSConstants.S_OK;
-            }
-
             Debug.WriteLine("PythonEngine Continue " + thread.GetDebuggedThread().Id);
+            AssertMainThread();
 
             // Resume process, but leave stepping state intact, allowing stepping accross tracepoints
-            ResumeProcess();
-
+            thread.GetDebuggedThread().AutoResume();
             return VSConstants.S_OK;
         }
 
@@ -1114,9 +1105,6 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         }
 
         private void ResumeProcess() {
-            // Resume must be from entry point or past
-            _handleEntryPointHit = false;
-
             _process.Resume();
         }
 
@@ -1198,6 +1186,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             process.BreakpointBindSucceeded += OnBreakpointBindSucceeded;
 
             process.BreakpointHit += OnBreakpointHit;
+            process.EntryPointHit += OnEntryPointHit;
             process.AsyncBreakComplete += OnAsyncBreakComplete;
             process.ExceptionRaised += OnExceptionRaised;
             process.ProcessExited += OnProcessExited;
@@ -1292,6 +1281,10 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             Send(new AD7BreakpointEvent(new AD7BoundBreakpointsEnum(boundBreakpoints)), AD7BreakpointEvent.IID, _threads[e.Thread]);
         }
 
+        private void OnEntryPointHit(object sender, ThreadEventArgs e) {
+            Send(new AD7EntryPointEvent(), AD7EntryPointEvent.IID, _threads[e.Thread]);
+        }
+        
         private void OnBreakpointBindSucceeded(object sender, BreakpointEventArgs e) {
             IDebugPendingBreakpoint2 pendingBreakpoint;
             var boundBreakpoint = _breakpointManager.GetBreakpoint(e.Breakpoint);

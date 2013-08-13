@@ -45,6 +45,10 @@ namespace Microsoft.PythonTools.Debugger {
             _process.SendResumeThread(_identity);
         }
 
+        public void AutoResume() {
+            _process.AutoResumeThread(_identity);
+        }
+
         public bool IsWorkerThread {
             get {
                 return _isWorkerThread;

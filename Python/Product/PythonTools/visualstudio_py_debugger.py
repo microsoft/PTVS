@@ -349,7 +349,7 @@ def filename_is_same(win_path, local_path):
     return path.normcase(ntpath.basename(win_path)) == path.normcase(path.basename(local_path))
 
 
-def update_all_thread_stacks(blocking_thread):
+def update_all_thread_stacks(blocking_thread = None, check_is_blocked = True):
     THREADS_LOCK.acquire()
     all_threads = list(THREADS.values())
     THREADS_LOCK.release()
@@ -359,7 +359,7 @@ def update_all_thread_stacks(blocking_thread):
             continue
             
         cur_thread._block_starting_lock.acquire()
-        if not cur_thread._is_blocked:
+        if not check_is_blocked or not cur_thread._is_blocked:
             # release the lock, we're going to run user code to evaluate the frames
             cur_thread._block_starting_lock.release()        
                             
@@ -368,7 +368,7 @@ def update_all_thread_stacks(blocking_thread):
             # re-acquire the lock and make sure we're still not blocked.  If so send
             # the frame list.
             cur_thread._block_starting_lock.acquire()
-            if not cur_thread._is_blocked:
+            if not check_is_blocked or not cur_thread._is_blocked:
                 cur_thread.send_frame_list(frames)
     
         cur_thread._block_starting_lock.release()
@@ -579,7 +579,7 @@ class Thread(object):
                     if should_break:
                         probe_stack()
                         update_all_thread_stacks(self)
-                        self.block(lambda: (report_breakpoint_hit(bkpt_id, self.id), mark_all_threads_for_break()))
+                        self.block(lambda: (report_breakpoint_hit(bkpt_id, self.id), mark_all_threads_for_break(skip_thread = self)))
                 if not should_break and self.django_stepping:
                     self.django_stepping = None
                     self.stepping = STEPPING_OVER
@@ -645,28 +645,28 @@ class Thread(object):
 
     def handle_line(self, frame, arg):
         if not DETACHED:
+            # resolve whether step_complete and/or handling_breakpoints
+            step_complete = False
+            handle_breakpoints = True
             stepping = self.stepping
-
-            # http://pytools.codeplex.com/workitem/815
-            # if we block for a step into/over we don't want to block again for a breakpoint
-            blocked_for_stepping = False
-
             if stepping is not STEPPING_NONE:   # check for the common case of no stepping first...
-                if (((stepping == STEPPING_OVER or stepping == STEPPING_INTO) and frame.f_lineno != self.stopped_on_line) 
-                    or stepping == STEPPING_LAUNCH_BREAK 
-                    or stepping == STEPPING_ATTACH_BREAK):
+                if ((stepping == STEPPING_OVER or stepping == STEPPING_INTO) and frame.f_lineno != self.stopped_on_line):
+                    if self.should_block_on_frame(frame):   # don't step complete in our own debugger / non-user code
+                        step_complete = True
+                elif stepping == STEPPING_LAUNCH_BREAK or stepping == STEPPING_ATTACH_BREAK:
                     if ((stepping == STEPPING_LAUNCH_BREAK and not MODULES) or
-                        not self.should_block_on_frame(frame)):  # don't break into our own debugger / non-user code
-                        # don't break into inital Python code needed to set things up
-                        return self.trace_func
-                    blocked_for_stepping = stepping != STEPPING_LAUNCH_BREAK and stepping != STEPPING_ATTACH_BREAK
-                    self.block_maybe_attach()
+                        not self.should_block_on_frame(frame)): # don't break into inital Python code needed to set things up
+                        handle_breakpoints = False
+                    else:
+                        step_complete = True
 
-            if BREAKPOINTS and blocked_for_stepping is False:
+            # handle breakpoints
+            hit_bp_id = None
+            if BREAKPOINTS and handle_breakpoints:
                 bp = BREAKPOINTS.get(frame.f_lineno)
                 if bp is not None:
                     for (filename, bp_id), (condition, bound) in bp.items():
-                        if filename == frame.f_code.co_filename or (not bound and filename_is_same(filename, frame.f_code.co_filename)):   
+                        if filename == frame.f_code.co_filename or (not bound and filename_is_same(filename, frame.f_code.co_filename)):
                             if condition:
                                 try:
                                     res = eval(condition.condition, frame.f_globals, frame.f_locals)
@@ -681,10 +681,18 @@ class Thread(object):
                                 block = True
 
                             if block:
-                                probe_stack()
-                                update_all_thread_stacks(self)
-                                self.block(lambda: (report_breakpoint_hit(bp_id, self.id), mark_all_threads_for_break()))
+                                hit_bp_id = bp_id
                                 break
+
+            if hit_bp_id is not None:
+                # handle case where both hitting a breakpoint and step complete by reporting the breakpoint
+                # if the reported breakpoint is a tracepoint, report the step complete if/when the tracepoint is auto-resumed
+                probe_stack()
+                update_all_thread_stacks(self)
+                self.block(lambda: (report_breakpoint_hit(hit_bp_id, self.id), mark_all_threads_for_break(skip_thread = self)), step_complete)
+
+            elif step_complete:
+                self.block_maybe_attach()
 
         # forward call to previous trace function, if any, updating trace function appropriately
         old_trace_func = self.prev_trace_func
@@ -713,14 +721,14 @@ class Thread(object):
                             self.push_frame(ModuleExitFrame(frame))
                             self.stepping = STEPPING_NONE
                             update_all_thread_stacks(self)
-                            self.block(lambda: (report_step_finished(self.id), mark_all_threads_for_break()))
+                            self.block(lambda: (report_step_finished(self.id), mark_all_threads_for_break(skip_thread = self)))
                             self.pop_frame()
                     elif self.should_block_on_frame(self.cur_frame):
                         # if we're returning into non-user code then don't block in the
                         # non-user code, wait until we hit user code again
                         self.stepping = STEPPING_NONE
                         update_all_thread_stacks(self)
-                        self.block(lambda: (report_step_finished(self.id), mark_all_threads_for_break()))
+                        self.block(lambda: (report_step_finished(self.id), mark_all_threads_for_break(skip_thread = self)))
 
         # forward call to previous trace function, if any
         old_trace_func = self.prev_trace_func
@@ -778,7 +786,7 @@ class Thread(object):
             if will_block_now:
                 if stepping == STEPPING_OVER or stepping == STEPPING_INTO:
                     report_step_finished(self.id)
-                    return mark_all_threads_for_break()
+                    return mark_all_threads_for_break(skip_thread = self)
                 else:
                     if not DETACHED:
                         if stepping == STEPPING_ATTACH_BREAK:
@@ -808,7 +816,7 @@ class Thread(object):
         self.stepping = STEPPING_NONE
         self.block(async_break_send)
 
-    def block(self, block_lambda):
+    def block(self, block_lambda, keep_stopped_on_line = False):
         """blocks the current thread until the debugger resumes it"""
         assert not self._is_blocked
         #assert self.id == thread.get_ident(), 'wrong thread identity' + str(self.id) + ' ' + str(thread.get_ident())    # we should only ever block ourselves
@@ -816,7 +824,9 @@ class Thread(object):
         # send thread frames before we block
         self.enum_thread_frames_locally()
         
-        self.stopped_on_line = self.cur_frame.f_lineno
+        if not keep_stopped_on_line:
+            self.stopped_on_line = self.cur_frame.f_lineno
+
         # need to synchronize w/ sending the reason we're blocking
         self._block_starting_lock.acquire()
         self._is_blocked = True
@@ -1208,9 +1218,11 @@ class PendingBreakPoint(object):
 
 PENDING_BREAKPOINTS = set()
 
-def mark_all_threads_for_break(stepping = STEPPING_BREAK):
+def mark_all_threads_for_break(stepping = STEPPING_BREAK, skip_thread = None):
     THREADS_LOCK.acquire()
     for thread in THREADS.values():
+        if thread is skip_thread:
+            continue
         thread.stepping = stepping
     THREADS_LOCK.release()
 
@@ -1232,6 +1244,7 @@ class DebuggerLoop(object):
             to_bytes('brka') : self.command_break_all,
             to_bytes('resa') : self.command_resume_all,
             to_bytes('rest') : self.command_resume_thread,
+            to_bytes('ares') : self.command_auto_resume,
             to_bytes('exec') : self.command_execute_code,
             to_bytes('chld') : self.command_enum_children,
             to_bytes('setl') : self.command_set_lineno,
@@ -1268,6 +1281,7 @@ class DebuggerLoop(object):
         tid = read_int(self.conn)
         thread = get_thread_from_id(tid)
         if thread is not None:
+            assert thread._is_blocked
             thread.stepping = STEPPING_INTO
             self.command_resume_all()
 
@@ -1275,6 +1289,7 @@ class DebuggerLoop(object):
         tid = read_int(self.conn)
         thread = get_thread_from_id(tid)
         if thread is not None:
+            assert thread._is_blocked
             thread.stepping = STEPPING_OUT
             self.command_resume_all()
     
@@ -1283,6 +1298,7 @@ class DebuggerLoop(object):
         tid = read_int(self.conn)
         thread = get_thread_from_id(tid)
         if thread is not None:
+            assert thread._is_blocked
             if DJANGO_DEBUG:
                 source_obj = get_django_frame_source(thread.cur_frame)
                 if source_obj is not None:
@@ -1401,6 +1417,18 @@ class DebuggerLoop(object):
             self.command_resume_all()
         else:
             thread.unblock()
+
+    def command_auto_resume(self):
+        tid = read_int(self.conn)
+        THREADS_LOCK.acquire()
+        thread = THREADS[tid]
+        THREADS_LOCK.release()
+
+        stepping = thread.stepping
+        if ((stepping == STEPPING_OVER or stepping == STEPPING_INTO) and thread.cur_frame.f_lineno != thread.stopped_on_line): 
+            report_step_finished(tid)
+        else:
+            self.command_resume_all()
 
     def command_set_exception_info(self):
         BREAK_ON.Clear()
