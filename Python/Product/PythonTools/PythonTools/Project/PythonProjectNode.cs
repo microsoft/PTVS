@@ -70,8 +70,8 @@ namespace Microsoft.PythonTools.Project {
             }
 
             if (project != null) {
-                var interpService = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
-                _interpreters = new MSBuildProjectInterpreterFactoryProvider(interpService, project);
+                var interpreterService = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
+                _interpreters = new MSBuildProjectInterpreterFactoryProvider(interpreterService, project);
                 try {
                     _interpreters.DiscoverInterpreters();
                 } catch (InvalidDataException ex) {
@@ -230,9 +230,9 @@ namespace Microsoft.PythonTools.Project {
                 !string.IsNullOrEmpty(id = GetProjectProperty(MSBuildProjectInterpreterFactoryProvider.InterpreterIdProperty))) {
                 // The interpreter in the project file has no reference, so
                 // find and add it.
-                var interpService = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
-                if (interpService != null) {
-                    var existing = interpService.FindInterpreter(
+                var interpreterService = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
+                if (interpreterService != null) {
+                    var existing = interpreterService.FindInterpreter(
                         id,
                         GetProjectProperty(MSBuildProjectInterpreterFactoryProvider.InterpreterVersionProperty));
                     if (existing != null && QueryEditProjectFile(false)) {
@@ -582,12 +582,12 @@ namespace Microsoft.PythonTools.Project {
             }
 
             var model = PythonToolsPackage.ComponentModel;
-            var interpService = model.GetService<IInterpreterOptionsService>();
+            var interpreterService = model.GetService<IInterpreterOptionsService>();
             var factory = GetInterpreterFactory();
             return new VsProjectAnalyzer(
                 factory.CreateInterpreter(),
                 factory,
-                interpService.Interpreters.ToArray(),
+                interpreterService.Interpreters.ToArray(),
                 model.GetService<IErrorProviderFactory>(),
                 this);
         }

@@ -31,7 +31,7 @@ using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Project {
     sealed class AddVirtualEnvironmentView : DependencyObject, INotifyPropertyChanged {
-        readonly IInterpreterOptionsService _service;
+        readonly IInterpreterOptionsService _interpreterService;
         readonly HashSet<InterpreterView> _busy;
         internal readonly string _projectHome;
 
@@ -44,22 +44,22 @@ namespace Microsoft.PythonTools.Project {
 
         public AddVirtualEnvironmentView(
             string projectHome,
-            IInterpreterOptionsService interpService,
-            IPythonInterpreterFactory selectInterpreter) {
-            
-            _service = interpService;
+            IInterpreterOptionsService interpreterService,
+            IPythonInterpreterFactory selectInterpreter
+        ) {
+            _interpreterService = interpreterService;
             _projectHome = projectHome;
             VirtualEnvBasePath = _projectHome;
             _busy = new HashSet<InterpreterView>();
-            Interpreters = new ObservableCollection<InterpreterView>(InterpreterView.GetInterpreters(interpService));
+            Interpreters = new ObservableCollection<InterpreterView>(InterpreterView.GetInterpreters(interpreterService));
             var selection = Interpreters.FirstOrDefault(v => v.Interpreter == selectInterpreter);
             if (selection == null) {
-                selection = Interpreters.FirstOrDefault(v => v.Interpreter == interpService.DefaultInterpreter)
+                selection = Interpreters.FirstOrDefault(v => v.Interpreter == interpreterService.DefaultInterpreter)
                     ?? Interpreters.LastOrDefault();
             }
             BaseInterpreter = selection;
 
-            _service.InterpretersChanged += OnInterpretersChanged;
+            _interpreterService.InterpretersChanged += OnInterpretersChanged;
 
             var venvName = "env";
             for (int i = 1; Directory.Exists(Path.Combine(_projectHome, venvName)); ++i) {
@@ -74,10 +74,10 @@ namespace Microsoft.PythonTools.Project {
                 return;
             }
             var existing = Interpreters.Where(iv => iv.Interpreter != null).ToDictionary(iv => iv.Interpreter);
-            var def = _service.DefaultInterpreter;
+            var def = _interpreterService.DefaultInterpreter;
 
             int i = 0;
-            foreach (var interp in _service.Interpreters) {
+            foreach (var interp in _interpreterService.Interpreters) {
                 if (!existing.Remove(interp)) {
                     Interpreters.Insert(i, new InterpreterView(interp, interp.Description, interp == def));
                 }
@@ -193,9 +193,9 @@ namespace Microsoft.PythonTools.Project {
             if (Directory.Exists(path) && Directory.EnumerateFileSystemEntries(path).Any()) {
                 WillCreateVirtualEnv = false;
 
-                var options = VirtualEnv.FindInterpreterOptions(path, _service);
+                var options = VirtualEnv.FindInterpreterOptions(path, _interpreterService);
                 if (options != null) {
-                    var baseInterp = _service.FindInterpreter(options.Id, options.LanguageVersion);
+                    var baseInterp = _interpreterService.FindInterpreter(options.Id, options.LanguageVersion);
                     BaseInterpreter = baseInterp != null ?
                         Interpreters.FirstOrDefault(iv => iv.Interpreter == baseInterp) :
                         null;

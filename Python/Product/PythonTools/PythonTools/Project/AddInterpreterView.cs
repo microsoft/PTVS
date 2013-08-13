@@ -31,12 +31,14 @@ using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Project {
     sealed class AddInterpreterView : DependencyObject, INotifyPropertyChanged {
-        readonly IInterpreterOptionsService _service;
+        readonly IInterpreterOptionsService _interpreterService;
 
-        public AddInterpreterView(IInterpreterOptionsService interpService,
-            IEnumerable<IPythonInterpreterFactory> selected) {
-            _service = interpService;
-            Interpreters = new ObservableCollection<InterpreterView>(InterpreterView.GetInterpreters(interpService));
+        public AddInterpreterView(
+            IInterpreterOptionsService interpreterService,
+            IEnumerable<IPythonInterpreterFactory> selected
+        ) {
+            _interpreterService = interpreterService;
+            Interpreters = new ObservableCollection<InterpreterView>(InterpreterView.GetInterpreters(interpreterService));
             
             var map = new Dictionary<IPythonInterpreterFactory, InterpreterView>();
             foreach (var view in Interpreters) {
@@ -55,7 +57,7 @@ namespace Microsoft.PythonTools.Project {
                 }
             }
 
-            _service.InterpretersChanged += OnInterpretersChanged;
+            _interpreterService.InterpretersChanged += OnInterpretersChanged;
         }
 
         private void OnInterpretersChanged(object sender, EventArgs e) {
@@ -64,10 +66,10 @@ namespace Microsoft.PythonTools.Project {
                 return;
             }
             var existing = Interpreters.Where(iv => iv.Interpreter != null).ToDictionary(iv => iv.Interpreter);
-            var def = _service.DefaultInterpreter;
+            var def = _interpreterService.DefaultInterpreter;
 
             int i = 0;
-            foreach (var interp in _service.Interpreters) {
+            foreach (var interp in _interpreterService.Interpreters) {
                 if (!existing.Remove(interp)) {
                     Interpreters.Insert(i, new InterpreterView(interp, interp.Description, interp == def));
                 }

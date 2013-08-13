@@ -29,19 +29,21 @@ namespace Microsoft.PythonTools {
         private bool _startedRunning;
         private bool _isRunning;
 
-        public static IEnumerable<InterpreterView> GetInterpreters(IInterpreterOptionsService interpService = null) {
-            if (interpService == null) {
-                interpService = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
-                if (interpService == null) {
+        public static IEnumerable<InterpreterView> GetInterpreters(
+            IInterpreterOptionsService interpreterService = null
+        ) {
+            if (interpreterService == null) {
+                interpreterService = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
+                if (interpreterService == null) {
                     yield break;
                 }
             }
 
-            foreach (var interp in interpService.Interpreters) {
+            foreach (var interp in interpreterService.Interpreters) {
                 yield return new InterpreterView(
                     interp,
                     interp.Description,
-                    interp == interpService.DefaultInterpreter);
+                    interp == interpreterService.DefaultInterpreter);
             }
         }
 

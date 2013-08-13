@@ -36,7 +36,7 @@ namespace Microsoft.PythonTools.TestAdapter {
     class TestMethodResolver : ITestMethodResolver {
         private readonly IServiceProvider _serviceProvider;
         private readonly TestContainerDiscoverer _discoverer;
-        private readonly IInterpreterOptionsService _interpService;
+        private readonly IInterpreterOptionsService _interpreterService;
 
         #region ITestMethodResolver Members
 
@@ -45,7 +45,7 @@ namespace Microsoft.PythonTools.TestAdapter {
             [Import]TestContainerDiscoverer discoverer) {
             _serviceProvider = serviceProvider;
             _discoverer = discoverer;
-            _interpService = ((IComponentModel)_serviceProvider.GetService(typeof(SComponentModel))).GetService<IInterpreterOptionsService>();
+            _interpreterService = ((IComponentModel)_serviceProvider.GetService(typeof(SComponentModel))).GetService<IInterpreterOptionsService>();
         }
 
         public Uri ExecutorUri {
@@ -59,7 +59,7 @@ namespace Microsoft.PythonTools.TestAdapter {
 
                 var proj = buildEngine.LoadProject(project.GetProjectPath());
 
-                var provider = new MSBuildProjectInterpreterFactoryProvider(_interpService, proj);
+                var provider = new MSBuildProjectInterpreterFactoryProvider(_interpreterService, proj);
                 try {
                     provider.DiscoverInterpreters();
                 } catch (InvalidDataException) {

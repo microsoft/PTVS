@@ -85,12 +85,12 @@ namespace Microsoft.PythonTools.Options {
         }
 
         public override void LoadSettingsFromStorage() {
-            var interpService = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
+            var interpreterService = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
 
             var seenIds = new HashSet<Guid>();
             var placeholders = _options.Where(kv => kv.Key is InterpreterPlaceholder).ToArray();
             _options.Clear();
-            foreach (var interpreter in interpService.Interpreters) {
+            foreach (var interpreter in interpreterService.Interpreters) {
                 string interpreterId = GetInterpreterPath(interpreter) + "\\";
                 seenIds.Add(interpreter.Id);
                 _options[interpreter] = ReadOptions(interpreterId);

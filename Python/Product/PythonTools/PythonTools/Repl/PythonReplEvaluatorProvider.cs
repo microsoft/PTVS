@@ -31,7 +31,7 @@ namespace Microsoft.PythonTools.Repl {
     
     [Export(typeof(IReplEvaluatorProvider))]
     class PythonReplEvaluatorProvider : IReplEvaluatorProvider {
-        readonly IInterpreterOptionsService _interpService;
+        readonly IInterpreterOptionsService _interpreterService;
         readonly IErrorProviderFactory _errorProviderFactory;
         readonly IServiceProvider _serviceProvider;
 
@@ -40,12 +40,12 @@ namespace Microsoft.PythonTools.Repl {
 
         [ImportingConstructor]
         public PythonReplEvaluatorProvider(
-            [Import] IInterpreterOptionsService interpService,
+            [Import] IInterpreterOptionsService interpreterService,
             [Import] IErrorProviderFactory errorProviderFactory,
             [Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider) {
-            Debug.Assert(interpService != null);
+            Debug.Assert(interpreterService != null);
             Debug.Assert(errorProviderFactory != null);
-            _interpService = interpService;
+            _interpreterService = interpreterService;
             _errorProviderFactory = errorProviderFactory;
             _serviceProvider = serviceProvider;
         }
@@ -54,9 +54,9 @@ namespace Microsoft.PythonTools.Repl {
 
         public IReplEvaluator GetEvaluator(string replId) {
             if (replId.StartsWith(_replGuid)) {
-                var interpreter = _interpService.FindInterpreter(replId.Substring(_replGuid.Length + 1, _replGuid.Length), replId.Substring(_replGuid.Length * 2 + 2));
+                var interpreter = _interpreterService.FindInterpreter(replId.Substring(_replGuid.Length + 1, _replGuid.Length), replId.Substring(_replGuid.Length * 2 + 2));
                 if (interpreter != null) {
-                    return new PythonReplEvaluator(interpreter, _errorProviderFactory, _interpService);
+                    return new PythonReplEvaluator(interpreter, _errorProviderFactory, _interpreterService);
                 }
             } else if (replId.StartsWith(_configurableGuid)) {
                 return CreateConfigurableInterpreter(replId);
@@ -76,7 +76,7 @@ namespace Microsoft.PythonTools.Repl {
                 string envVars = components[5];
                 // we don't care about the user identifier
 
-                var pyInterpreter = _interpService.FindInterpreter(interpreter, interpreterVersion);
+                var pyInterpreter = _interpreterService.FindInterpreter(interpreter, interpreterVersion);
 
                 if (pyInterpreter == null && components.Length == 7) {
                     string projectName = components[6];
@@ -101,7 +101,7 @@ namespace Microsoft.PythonTools.Repl {
                         workingDir
                     );
 
-                    return new PythonReplEvaluatorDontPersist(pyInterpreter, _errorProviderFactory, replOptions, envVars, _interpService);
+                    return new PythonReplEvaluatorDontPersist(pyInterpreter, _errorProviderFactory, replOptions, envVars, _interpreterService);
                 }
             }
             return null;

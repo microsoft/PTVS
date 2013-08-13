@@ -532,13 +532,13 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
         }
 
         private VsProjectAnalyzer CreateAnalyzer() {
-            var interpService = ComponentModel.GetService<IInterpreterOptionsService>();
-            var defaultFactory = interpService.DefaultInterpreter;
+            var interpreterService = ComponentModel.GetService<IInterpreterOptionsService>();
+            var defaultFactory = interpreterService.DefaultInterpreter;
             EnsureCompletionDb(defaultFactory);
             return new VsProjectAnalyzer(
                 defaultFactory.CreateInterpreter(),
                 defaultFactory,
-                interpService.Interpreters.ToArray(),
+                interpreterService.Interpreters.ToArray(),
                 ComponentModel.GetService<IErrorProviderFactory>());
         }
 
@@ -718,9 +718,9 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
 
             RegisterCommands(GetReplCommands());
 
-            var interpService = ComponentModel.GetService<IInterpreterOptionsService>();
-            interpService.InterpretersChanged += RefreshReplCommands;
-            interpService.DefaultInterpreterChanged += UpdateDefaultAnalyzer;
+            var interpreterService = ComponentModel.GetService<IInterpreterOptionsService>();
+            interpreterService.InterpretersChanged += RefreshReplCommands;
+            interpreterService.DefaultInterpreterChanged += UpdateDefaultAnalyzer;
 
             InitializeLogging(interpService);
             this.OnIdle += PythonToolsPackage_OnIdle;
@@ -802,14 +802,14 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
 
         private List<OpenReplCommand> GetReplCommands() {
             var replCommands = new List<OpenReplCommand>();
-            var interpService = ComponentModel.GetService<IInterpreterOptionsService>();
-            var factories = interpService.Interpreters.ToList();
+            var interpreterService = ComponentModel.GetService<IInterpreterOptionsService>();
+            var factories = interpreterService.Interpreters.ToList();
             if (factories.Count == 0) {
                 return replCommands;
             }
 
-            var defaultFactory = interpService.DefaultInterpreter;
-            if (defaultFactory != interpService.NoInterpretersValue) {
+            var defaultFactory = interpreterService.DefaultInterpreter;
+            if (defaultFactory != interpreterService.NoInterpretersValue) {
                 factories.Remove(defaultFactory);
                 factories.Insert(0, defaultFactory);
             }

@@ -330,8 +330,8 @@ namespace DebuggerUITests {
                 return interpreterPath;
             }
 
-            var interpService = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
-            var interpreter = interpService.FindInterpreter(interpreterId, interpreterVersion);
+            var interpreterService = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
+            var interpreter = interpreterService.FindInterpreter(interpreterId, interpreterVersion);
 
             // use the project's interpreter if we can find it
             if (interpreter != null) {
@@ -341,7 +341,7 @@ namespace DebuggerUITests {
             }
             // use the VS instance's default interpreter if there is one
             SD.Debug.WriteLine("Project specified interpreter not found: {0} - {1}", interpreterId, interpreterVersion);
-            interpreter = interpService.DefaultInterpreter;
+            interpreter = interpreterService.DefaultInterpreter;
             if (interpreter != null) {
                 interpreterPath = Path.GetFullPath(interpreter.Configuration.InterpreterPath);
                 SD.Debug.WriteLine("Using VS default interpreter: {0}", interpreter, null);

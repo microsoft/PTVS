@@ -297,14 +297,7 @@ namespace Microsoft.PythonTools.Interpreter {
         /// <see cref="InterpreterFactoriesChanged"/> event and potentially
         /// display UI.
         /// </summary>
-        /// <param name="interpService">
-        /// A current interpreter options service. If null, the global service
-        /// provider will be queried (if available).
-        /// </param>
-        /// <param name="project">
-        /// The project to add the factory to.
-        /// </param>
-        /// <param name="configuration">
+        /// <param name="options">
         /// <para>The options for the new interpreter:</para>
         /// <para>Guid: ID of the base interpreter.</para>
         /// <para>Version: Version of the base interpreter. This will also be

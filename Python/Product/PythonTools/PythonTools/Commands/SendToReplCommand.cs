@@ -64,8 +64,8 @@ namespace Microsoft.PythonTools.Commands {
             if (factory == null) {
                 return false;
             }
-            var interpService = CommonPackage.ComponentModel.GetService<IInterpreterOptionsService>();
-            return interpService != null && interpService.NoInterpretersValue != factory;
+            var interpreterService = CommonPackage.ComponentModel.GetService<IInterpreterOptionsService>();
+            return interpreterService != null && interpreterService.NoInterpretersValue != factory;
         }
 
         public override int? EditFilterQueryStatus(ref VisualStudio.OLE.Interop.OLECMD cmd, IntPtr pCmdText) {

@@ -50,7 +50,7 @@ namespace Microsoft.PythonTools.Commands {
                 res.AppendLine("WARNING: IpyTools is installed on this machine.  Having both IpyTools and Python Tools for Visual Studio installed will break Python editing.");
             }
 
-            var interpService = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
+            var interpreterService = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
 
             var dte = (EnvDTE.DTE)PythonToolsPackage.GetGlobalService(typeof(EnvDTE.DTE));
             res.AppendLine("Projects: ");
@@ -84,7 +84,7 @@ namespace Microsoft.PythonTools.Commands {
                             res.AppendLine("        Interpreter: " + factory.Description);
                             res.AppendLine("            Id: " + factory.Id);
                             res.AppendLine("            Version: " + factory.Configuration.Version);
-                            if (interpService.FindInterpreter(factory.Id, factory.Configuration.Version) == null) {
+                            if (interpreterService.FindInterpreter(factory.Id, factory.Configuration.Version) == null) {
                                 res.AppendLine("            Arch: " + factory.Configuration.Architecture);
                                 res.AppendLine("            Prefix Path: " + factory.Configuration.PrefixPath ?? "(null)");
                                 res.AppendLine("            Path: " + factory.Configuration.InterpreterPath ?? "(null)");
@@ -102,7 +102,7 @@ namespace Microsoft.PythonTools.Commands {
             }
 
             res.AppendLine("Environments: ");
-            foreach (var provider in interpService.KnownProviders) {
+            foreach (var provider in interpreterService.KnownProviders) {
                 res.AppendLine("    " + provider.GetType().FullName);
                 foreach (var factory in provider.GetInterpreterFactories()) {
                     res.AppendLine("        Id: " + factory.Id);

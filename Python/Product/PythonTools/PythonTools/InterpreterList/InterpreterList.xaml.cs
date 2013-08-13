@@ -49,7 +49,7 @@ namespace Microsoft.PythonTools.InterpreterList {
         readonly AnalyzerStatusListener _listener;
         readonly List<InterpreterView> _interpreters;
         readonly DispatcherTimer _refreshTimer;
-        readonly IInterpreterOptionsService _interpService;
+        readonly IInterpreterOptionsService _interpreterService;
         readonly IVsSolution _solutionService;
         readonly SolutionEventsListener _solutionEvents;
         readonly Dictionary<IVsProject, PythonProjectNode> _hookedProjects;
@@ -75,7 +75,7 @@ namespace Microsoft.PythonTools.InterpreterList {
             _refreshTimer = new DispatcherTimer();
             _refreshTimer.Interval = TimeSpan.FromMilliseconds(500.0);
             _refreshTimer.Tick += AutoRefresh_Elapsed;
-            _interpService = service;
+            _interpreterService = service;
 
             if (!ignoreProvider) {
                 _solutionService = provider.GetService(typeof(SVsSolution)) as IVsSolution;
@@ -89,8 +89,8 @@ namespace Microsoft.PythonTools.InterpreterList {
 
             InterpretersChanged(this, EventArgs.Empty);
 
-            _interpService.InterpretersChanged += InterpretersChanged;
-            _interpService.DefaultInterpreterChanged += DefaultInterpreterChanged;
+            _interpreterService.InterpretersChanged += InterpretersChanged;
+            _interpreterService.DefaultInterpreterChanged += DefaultInterpreterChanged;
 
             if (_solutionService != null) {
                 _solutionEvents = new SolutionEventsListener(_solutionService);
@@ -184,7 +184,7 @@ namespace Microsoft.PythonTools.InterpreterList {
 
                 _interpreters.Clear();
 
-                _interpreters.AddRange(InterpreterView.GetInterpreters(_interpService));
+                _interpreters.AddRange(InterpreterView.GetInterpreters(_interpreterService));
                 if (_hookedProjects != null) {
                     foreach (var project in _solutionService.EnumerateLoadedProjects()) {
                         var pyProject = project.GetPythonProject();
@@ -229,7 +229,7 @@ namespace Microsoft.PythonTools.InterpreterList {
                 interps = _interpreters.ToArray();
             }
             foreach (var interp in interps) {
-                interp.DefaultInterpreterUpdate(_interpService.DefaultInterpreter);
+                interp.DefaultInterpreterUpdate(_interpreterService.DefaultInterpreter);
             }
         }
 
@@ -372,7 +372,7 @@ namespace Microsoft.PythonTools.InterpreterList {
                 // until the event comes through.
                 view.Project.SetInterpreterFactory(view.Interpreter);
             } else {
-                _interpService.DefaultInterpreter = view.Interpreter;
+                _interpreterService.DefaultInterpreter = view.Interpreter;
             }
         }
 

@@ -84,12 +84,12 @@ namespace Microsoft.Samples {
             // Add our command handlers for menu (commands must exist in the .vsct file)
             OleMenuCommandService mcs = GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
             if (null != mcs) {
-                var interpService = ComponentModel.GetService<IInterpreterOptionsService>();
-                var factories = interpService.Interpreters.ToList();
-                var defaultFactory = interpService.DefaultInterpreter;
+                var interpreterService = ComponentModel.GetService<IInterpreterOptionsService>();
+                var factories = interpreterService.Interpreters.ToList();
+                var defaultFactory = interpreterService.DefaultInterpreter;
                 factories.Remove(defaultFactory);
                 factories.Insert(0, defaultFactory);
-                interpService.InterpretersChanged += RefreshPerInterpreterCommands;
+                interpreterService.InterpretersChanged += RefreshPerInterpreterCommands;
 
                 for (var i = 0; i < factories.Count && i < (PkgCmdIDList.cmdidInstallPyKinectF - PkgCmdIDList.cmdidInstallPyKinect0); i++) {
                     // Create the command for the menu item.

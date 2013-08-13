@@ -44,9 +44,9 @@ namespace Microsoft.PythonTools.Profiling {
         /// </summary>
         public StandaloneTargetView() {
             var componentService = (IComponentModel)(PythonProfilingPackage.GetGlobalService(typeof(SComponentModel)));
-            var interpService = componentService.GetService<IInterpreterOptionsService>();
+            var interpreterService = componentService.GetService<IInterpreterOptionsService>();
 
-            var availableInterpreters = interpService.Interpreters.Select(factory => new PythonInterpreterView(factory)).ToList();
+            var availableInterpreters = interpreterService.Interpreters.Select(factory => new PythonInterpreterView(factory)).ToList();
 
             _customInterpreter = new PythonInterpreterView("Other...", Guid.Empty, new Version(), null);
             availableInterpreters.Add(_customInterpreter);

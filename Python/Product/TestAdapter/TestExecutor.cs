@@ -38,7 +38,7 @@ namespace Microsoft.PythonTools.TestAdapter {
         private static readonly Guid PythonRemoteDebugPortSupplierUnsecuredId = new Guid("{FEB76325-D127-4E02-B59D-B16D93D46CF5}");
         private static readonly string TestLauncherPath = PythonToolsInstallPath.GetFile("visualstudio_py_testlauncher.py");
 
-        private readonly IInterpreterOptionsService _interpService = InterpreterOptionsServiceProvider.GetService();
+        private readonly IInterpreterOptionsService _interpreterService = InterpreterOptionsServiceProvider.GetService();
 
         private readonly ManualResetEvent _cancelRequested = new ManualResetEvent(false);
 
@@ -54,7 +54,7 @@ namespace Microsoft.PythonTools.TestAdapter {
             _cancelRequested.Reset();
 
             var receiver = new TestReceiver();
-            var discoverer = new TestDiscoverer(_interpService);
+            var discoverer = new TestDiscoverer(_interpreterService);
             discoverer.DiscoverTests(sources, null, null, receiver);
 
             if (_cancelRequested.WaitOne(0)) {
@@ -242,14 +242,14 @@ namespace Microsoft.PythonTools.TestAdapter {
         private PythonProjectSettings LoadProjectSettings(string projectFile) {
             var buildEngine = new MSBuild.ProjectCollection();
             var proj = buildEngine.LoadProject(projectFile);
-            var provider = new MSBuildProjectInterpreterFactoryProvider(_interpService, proj);
+            var provider = new MSBuildProjectInterpreterFactoryProvider(_interpreterService, proj);
             try {
                 provider.DiscoverInterpreters();
             } catch (InvalidDataException) {
                 // Can safely ignore this exception here.
             }
 
-            if (provider.ActiveInterpreter == _interpService.NoInterpretersValue) {
+            if (provider.ActiveInterpreter == _interpreterService.NoInterpretersValue) {
                 return null;
             }
             

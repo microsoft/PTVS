@@ -29,12 +29,12 @@ namespace TestUtilities.UI {
         public DefaultInterpreterSetter(IPythonInterpreterFactory factory) {
             var sp = new ServiceProvider(VsIdeTestHostContext.Dte as Microsoft.VisualStudio.OLE.Interop.IServiceProvider);
             var model = (IComponentModel)sp.GetService(typeof(SComponentModel));
-            var interpService = model.GetService<IInterpreterOptionsService>();
-            Assert.IsNotNull(interpService);
+            var interpreterService = model.GetService<IInterpreterOptionsService>();
+            Assert.IsNotNull(interpreterService);
 
-            OriginalInterpreter = interpService.DefaultInterpreter;
+            OriginalInterpreter = interpreterService.DefaultInterpreter;
             CurrentDefault = factory;
-            interpService.DefaultInterpreter = factory;
+            interpreterService.DefaultInterpreter = factory;
         }
 
         public void Dispose() {
@@ -43,9 +43,9 @@ namespace TestUtilities.UI {
 
                 var sp = new ServiceProvider(VsIdeTestHostContext.Dte as Microsoft.VisualStudio.OLE.Interop.IServiceProvider);
                 var model = (IComponentModel)sp.GetService(typeof(SComponentModel));
-                var interpService = model.GetService<IInterpreterOptionsService>();
-                Assert.IsNotNull(interpService);
-                interpService.DefaultInterpreter = OriginalInterpreter;
+                var interpreterService = model.GetService<IInterpreterOptionsService>();
+                Assert.IsNotNull(interpreterService);
+                interpreterService.DefaultInterpreter = OriginalInterpreter;
             }
         }
     }

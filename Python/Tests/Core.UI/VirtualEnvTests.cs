@@ -50,8 +50,8 @@ namespace PythonToolsUITests {
 
             var sp = new ServiceProvider(VsIdeTestHostContext.Dte as Microsoft.VisualStudio.OLE.Interop.IServiceProvider);
             var model = (IComponentModel)sp.GetService(typeof(SComponentModel));
-            var interpService = model.GetService<IInterpreterOptionsService>();
-            var factory = interpService.FindInterpreter(interp.Interpreter, interp.Configuration.Version);
+            var interpreterService = model.GetService<IInterpreterOptionsService>();
+            var factory = interpreterService.FindInterpreter(interp.Interpreter, interp.Configuration.Version);
             var defaultInterpreterSetter = new DefaultInterpreterSetter(factory);
 
             if (install) {

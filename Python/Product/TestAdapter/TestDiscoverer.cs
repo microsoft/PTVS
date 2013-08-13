@@ -32,14 +32,14 @@ namespace Microsoft.PythonTools.TestAdapter {
     [FileExtension(".pyproj")]
     [DefaultExecutorUri(TestExecutor.ExecutorUriString)]
     class TestDiscoverer : ITestDiscoverer {
-        readonly IInterpreterOptionsService _interpService;
+        readonly IInterpreterOptionsService _interpreterService;
 
         public TestDiscoverer() {
-            _interpService = InterpreterOptionsServiceProvider.GetService();
+            _interpreterService = InterpreterOptionsServiceProvider.GetService();
         }
 
-        internal TestDiscoverer(IInterpreterOptionsService interpService) {
-            _interpService = interpService;
+        internal TestDiscoverer(IInterpreterOptionsService interpreterService) {
+            _interpreterService = interpreterService;
         }
 
         public void DiscoverTests(IEnumerable<string> sources, IDiscoveryContext discoveryContext, IMessageLogger logger, ITestCaseDiscoverySink discoverySink) {
@@ -54,14 +54,14 @@ namespace Microsoft.PythonTools.TestAdapter {
             }
 
             foreach (var proj in buildEngine.LoadedProjects) {
-                var provider = new MSBuildProjectInterpreterFactoryProvider(_interpService, proj);
+                var provider = new MSBuildProjectInterpreterFactoryProvider(_interpreterService, proj);
                 try {
                     provider.DiscoverInterpreters();
                 } catch (InvalidDataException) {
                     // This exception can be safely ignored here.
                 }
                 var factory = provider.ActiveInterpreter;
-                if (factory == _interpService.NoInterpretersValue) {
+                if (factory == _interpreterService.NoInterpretersValue) {
                     logger.SendMessage(TestMessageLevel.Warning, "No interpreters available for project " + proj.FullPath);
                     continue;
                 }

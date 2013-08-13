@@ -43,8 +43,8 @@ namespace DjangoUITests {
         [TestInitialize]
         public void ChangeDefaultInterpreter() {
             var model = (IComponentModel)VsIdeTestHostContext.ServiceProvider.GetService(typeof(SComponentModel));
-            var interpService = model.GetService<IInterpreterOptionsService>();
-            PreviousDefault = interpService.DefaultInterpreter;
+            var interpreterService = model.GetService<IInterpreterOptionsService>();
+            PreviousDefault = interpreterService.DefaultInterpreter;
 
             foreach (var ver in PythonPaths.Versions) {
                 if (!ver.IsCPython) {
@@ -53,7 +53,7 @@ namespace DjangoUITests {
 
                 foreach (var p in Directory.EnumerateDirectories(Path.Combine(ver.LibPath, "site-packages"))) {
                     if (Path.GetFileName(p).StartsWith("django")) {
-                        interpService.DefaultInterpreter = interpService.FindInterpreter(ver.Interpreter, ver.Version.ToVersion());
+                        interpreterService.DefaultInterpreter = interpreterService.FindInterpreter(ver.Interpreter, ver.Version.ToVersion());
                         return;
                     }
                 }
@@ -65,8 +65,8 @@ namespace DjangoUITests {
         [TestCleanup]
         public void MyTestCleanup() {
             var model = (IComponentModel)VsIdeTestHostContext.ServiceProvider.GetService(typeof(SComponentModel));
-            var interpService = model.GetService<IInterpreterOptionsService>();
-            interpService.DefaultInterpreter = PreviousDefault;
+            var interpreterService = model.GetService<IInterpreterOptionsService>();
+            interpreterService.DefaultInterpreter = PreviousDefault;
 
             VsIdeTestHostContext.Dte.Solution.Close(false);
         }
