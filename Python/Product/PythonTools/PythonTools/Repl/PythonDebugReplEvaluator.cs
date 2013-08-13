@@ -667,6 +667,10 @@ namespace Microsoft.PythonTools.Repl {
             OnMultipleScopeSupportChanged();
         }
 
+        protected override void OnExecutionDone() {
+            this.Process.InvalidateDebugger();
+        }
+
         internal IList<PythonThread> GetThreads() {
             return _process.GetThreads();
         }

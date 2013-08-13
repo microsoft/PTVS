@@ -181,6 +181,25 @@ namespace Microsoft.PythonTools.Debugger {
             }
         }
 
+        public void InvalidateDebugger() {
+            var debuggerInvalidated = DebuggerInvalidated;
+            if (debuggerInvalidated != null) {
+                debuggerInvalidated(this, EventArgs.Empty);
+            }
+        }
+
+        public void ResendFrameLists(PythonThread thread) {
+            SendResendFrameLists(thread.Id);
+        }
+
+        private void HandleResendFrameListsDone(Stream stream) {
+            long threadId = stream.ReadInt64();
+            var resendFrameListsComplete = ResendFrameListsComplete;
+            if (resendFrameListsComplete != null) {
+                resendFrameListsComplete(this, new ThreadEventArgs(_threads[threadId]));
+            }
+        }
+
         public Guid ProcessGuid {
             get {
                 return _processGuid;
@@ -435,6 +454,7 @@ namespace Microsoft.PythonTools.Debugger {
                         case "CHLD": HandleEnumChildren(stream); break;
                         case "OUTP": HandleDebuggerOutput(stream); break;
                         case "REQH": HandleRequestHandlers(stream); break;
+                        case "RESD": HandleResendFrameListsDone(stream); break;
                         case "DETC": _process_Exited(this, EventArgs.Empty); break; // detach, report process exit
                         case "LAST": HandleLast(); break;
                     }
@@ -873,6 +893,14 @@ namespace Microsoft.PythonTools.Debugger {
             }
         }
 
+        public void SendResendFrameLists(long threadId) {
+            DebugWriteCommand("ResendFrameLists");
+            lock (_socketLock) {
+                _stream.Write(ResendFrameListsCommandBytes);
+                _stream.WriteInt64(threadId);
+            }
+        }
+
         public void SendResumeThread(long threadId) {
             _stoppedForException = false;
             DebugWriteCommand("ResumeThread");
@@ -892,7 +920,7 @@ namespace Microsoft.PythonTools.Debugger {
             }
         }
 
-        public void SendClearStepping(long threadId) {
+    public void SendClearStepping(long threadId) {
             DebugWriteCommand("ClearStepping");
             lock (_socketLock) {
                 // race w/ removing the breakpoint, let the thread continue
@@ -1112,6 +1140,7 @@ namespace Microsoft.PythonTools.Debugger {
         private static byte[] AddDjangoBreakPointCommandBytes = MakeCommand("bkda");
         private static byte[] ConnectReplCommandBytes = MakeCommand("crep");
         private static byte[] DisconnectReplCommandBytes = MakeCommand("drep");
+        private static byte[] ResendFrameListsCommandBytes = MakeCommand("resf");
         private static byte[] LastAckCommandBytes = MakeCommand("lack");
 
         private static byte[] MakeCommand(string command) {
@@ -1145,6 +1174,8 @@ namespace Microsoft.PythonTools.Debugger {
         public event EventHandler<BreakpointEventArgs> BreakpointBindSucceeded;
         public event EventHandler<BreakpointEventArgs> BreakpointBindFailed;
         public event EventHandler<OutputEventArgs> DebuggerOutput;
+        public event EventHandler<EventArgs> DebuggerInvalidated;
+        public event EventHandler<ThreadEventArgs> ResendFrameListsComplete;
 
         #endregion
 
