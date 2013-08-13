@@ -22,7 +22,7 @@ using Microsoft.VisualStudioTools;
 namespace Microsoft.PythonTools.Debugger.DebugEngine {
     // Represents a logical stack frame on the thread stack. 
     // Also implements the IDebugExpressionContext interface, which allows expression evaluation and watch windows.
-    class AD7StackFrame : IDebugStackFrame2, IDebugExpressionContext2 {
+    class AD7StackFrame : IDebugStackFrame2, IDebugExpressionContext2, IDebugProperty2 {
         private readonly AD7Engine _engine;
         private readonly AD7Thread _thread;
         private readonly PythonStackFrame _stackFrame;
@@ -250,7 +250,8 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         // Calling the IDebugProperty2::EnumChildren method with appropriate filters can retrieve the local variables, method parameters, registers, and "this" 
         // pointer associated with the stack frame. The debugger calls EnumProperties to obtain these values in the sample.
         int IDebugStackFrame2.GetDebugProperty(out IDebugProperty2 property) {
-            throw new NotImplementedException();
+            property = this;
+            return VSConstants.S_OK;
         }
 
         // Gets the document context for this stack frame. The debugger will call this when the current stack frame is changed
@@ -367,6 +368,76 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         }
 
         #endregion
+
+        int IDebugProperty2.EnumChildren(enum_DEBUGPROP_INFO_FLAGS dwFields, uint dwRadix, ref Guid guidFilter, enum_DBG_ATTRIB_FLAGS dwAttribFilter, string pszNameFilter, uint dwTimeout, out IEnumDebugPropertyInfo2 ppEnum) {
+            int hr;
+
+            uint elementsReturned = 0;
+            ppEnum = null;
+
+            if (guidFilter == DebuggerConstants.guidFilterLocalsPlusArgs ||
+                    guidFilter == DebuggerConstants.guidFilterAllLocalsPlusArgs ||
+                    guidFilter == DebuggerConstants.guidFilterAllLocals) {
+                        CreateLocalsPlusArgsProperties(dwRadix, out elementsReturned, out ppEnum);
+                hr = VSConstants.S_OK;
+            } else if (guidFilter == DebuggerConstants.guidFilterLocals) {
+                CreateLocalProperties(dwRadix, out elementsReturned, out ppEnum);
+                hr = VSConstants.S_OK;
+            } else if (guidFilter == DebuggerConstants.guidFilterArgs) {
+                CreateParameterProperties(dwRadix, out elementsReturned, out ppEnum);
+                hr = VSConstants.S_OK;
+            } else {
+                hr = VSConstants.E_NOTIMPL;
+            }
+            return hr;
+        }
+
+        int IDebugProperty2.GetDerivedMostProperty(out IDebugProperty2 ppDerivedMost) {
+            ppDerivedMost = null;
+            return VSConstants.E_NOTIMPL;
+        }
+
+        int IDebugProperty2.GetExtendedInfo(ref Guid guidExtendedInfo, out object pExtendedInfo) {
+            pExtendedInfo = null;
+            return VSConstants.E_NOTIMPL;
+        }
+
+        int IDebugProperty2.GetMemoryBytes(out IDebugMemoryBytes2 ppMemoryBytes) {
+            ppMemoryBytes = null;
+            return VSConstants.E_NOTIMPL;
+        }
+
+        int IDebugProperty2.GetMemoryContext(out IDebugMemoryContext2 ppMemory) {
+            ppMemory = null;
+            return VSConstants.E_NOTIMPL;
+        }
+
+        int IDebugProperty2.GetParent(out IDebugProperty2 ppParent) {
+            ppParent = null;
+            return VSConstants.E_NOTIMPL;
+        }
+
+        int IDebugProperty2.GetPropertyInfo(enum_DEBUGPROP_INFO_FLAGS dwFields, uint dwRadix, uint dwTimeout, IDebugReference2[] rgpArgs, uint dwArgCount, DEBUG_PROPERTY_INFO[] pPropertyInfo) {
+            return VSConstants.E_NOTIMPL;
+        }
+
+        int IDebugProperty2.GetReference(out IDebugReference2 ppReference) {
+            ppReference = null;
+            return VSConstants.E_NOTIMPL;
+        }
+
+        int IDebugProperty2.GetSize(out uint pdwSize) {
+            pdwSize = 0;
+            return VSConstants.E_NOTIMPL;
+        }
+
+        int IDebugProperty2.SetValueAsReference(IDebugReference2[] rgpArgs, uint dwArgCount, IDebugReference2 pValue, uint dwTimeout) {
+            return VSConstants.E_NOTIMPL;
+        }
+
+        int IDebugProperty2.SetValueAsString(string pszValue, uint dwRadix, uint dwTimeout) {
+            return VSConstants.E_NOTIMPL;
+        }
     }
 }
 
