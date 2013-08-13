@@ -4824,6 +4824,29 @@ b2 = r2.b[0]
         }
 
         [TestMethod, Priority(0)]
+        public void IsInstanceReferences() {
+            var text = @"def foo():
+    bar = get_b()
+    assert isinstance(bar, float)
+
+    if bar.complex:
+        raise IndexError
+
+    return bar";
+
+            var entry = ProcessText(text);
+
+            for (int i = text.IndexOf("bar", 0); i >= 0; i = text.IndexOf("bar", i + 1)) {
+                VerifyReferences(UniqifyVariables(entry.GetVariablesByIndex("bar", i)),
+                    new VariableLocation(2, 5, VariableType.Definition),
+                    new VariableLocation(3, 23, VariableType.Reference),
+                    new VariableLocation(5, 8, VariableType.Reference),
+                    new VariableLocation(8, 12, VariableType.Reference)
+                );
+            }
+        }
+
+        [TestMethod, Priority(0)]
         public void QuickInfo() {
             var text = @"
 import sys

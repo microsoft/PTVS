@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Parsing.Ast;
 
@@ -60,7 +61,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         }
 
         public override IEnumerable<VariableDef> GetMergedVariables(string name) {
-            return OuterScope.GetMergedVariables(name);
+            return base.GetMergedVariables(name).Concat(OuterScope.GetMergedVariables(name));
         }
 
         public override IAnalysisSet GetMergedVariableTypes(string name) {
@@ -72,7 +73,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         }
 
         public override IEnumerable<KeyValuePair<string, VariableDef>> GetAllMergedVariables() {
-            return OuterScope.GetAllMergedVariables();
+            return base.GetAllMergedVariables().Concat(OuterScope.GetAllMergedVariables());
         }
 
         public override VariableDef AddVariable(string name, VariableDef variable = null) {
