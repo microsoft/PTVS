@@ -29,14 +29,14 @@ namespace Microsoft.PythonTools {
         private readonly TokenCache _tokenCache;
         private readonly PythonClassifierProvider _provider;
         private readonly ITextBuffer _buffer;
-        
+
         [ThreadStatic]
         private static Dictionary<PythonLanguageVersion, Tokenizer> _tokenizers;    // tokenizer for each version, shared between all buffers
-        
+
         internal PythonClassifier(PythonClassifierProvider provider, ITextBuffer buffer) {
             buffer.Changed += BufferChanged;
             buffer.ContentTypeChanged += BufferContentTypeChanged;
-            
+
             _tokenCache = new TokenCache();
             _provider = provider;
             _buffer = buffer;
@@ -64,7 +64,7 @@ namespace Microsoft.PythonTools {
             var classifications = new List<ClassificationSpan>();
             var snapshot = span.Snapshot;
 
-            
+
             if (span.Length > 0) {
                 // don't add classifications for REPL commands.
                 if (!span.Snapshot.IsReplBufferWithCommand()) {
@@ -136,7 +136,7 @@ namespace Microsoft.PythonTools {
         private void AddClassifications(Tokenizer tokenizer, List<ClassificationSpan> classifications, SnapshotSpan span) {
             Debug.Assert(span.Length > 0);
 
-            var snapshot = span.Snapshot;            
+            var snapshot = span.Snapshot;
             int firstLine = snapshot.GetLineNumberFromPosition(span.Start);
             int lastLine = snapshot.GetLineNumberFromPosition(span.End - 1);
 
@@ -163,7 +163,7 @@ namespace Microsoft.PythonTools {
                         // we need to walk backwards to find the start of this multi-line string...
 
                         TokenInfo startToken = token;
-                        int validPrevLine;  
+                        int validPrevLine;
                         int length = startToken.SourceSpan.Length;
                         if (i == 0) {
                             length += GetLeadingMultiLineStrings(tokenizer, snapshot, firstLine, currentLine, out validPrevLine, ref startToken);
@@ -178,7 +178,7 @@ namespace Microsoft.PythonTools {
                         var multiStrSpan = new Span(SnapshotSpanToSpan(snapshot, startToken, validPrevLine).Start, length);
                         classifications.Add(
                             new ClassificationSpan(
-                                new SnapshotSpan(snapshot, multiStrSpan), 
+                                new SnapshotSpan(snapshot, multiStrSpan),
                                 _provider.StringLiteral
                             )
                         );
@@ -199,7 +199,7 @@ namespace Microsoft.PythonTools {
             validPrevLine = currentLine;
             int prevLine = currentLine - 1;
             int length = 0;
-            
+
             while (prevLine >= 0) {
                 LineTokenization prevLineTokenization;
                 if (!_tokenCache.TryGetTokenization(prevLine, out prevLineTokenization)) {
@@ -347,8 +347,8 @@ namespace Microsoft.PythonTools {
             if (classification != null) {
                 var tokenSpan = SnapshotSpanToSpan(span.Snapshot, token, lineNumber);
                 var intersection = span.Intersection(tokenSpan);
-                
-                if (intersection != null && intersection.Value.Length > 0 || 
+
+                if (intersection != null && intersection.Value.Length > 0 ||
                     (span.Length == 0 && tokenSpan.Contains(span.Start))) { // handle zero-length spans which Intersect and Overlap won't return true on ever.
                     return new ClassificationSpan(new SnapshotSpan(span.Snapshot, tokenSpan), classification);
                 }

@@ -369,33 +369,6 @@ namespace Microsoft.PythonTools.Intellisense {
         /// Gets a CompletionList providing a list of possible members the user can dot through.
         /// </summary>
         internal static CompletionAnalysis GetCompletions(ITextSnapshot snapshot, ITrackingSpan span, ITrackingPoint point, CompletionOptions options) {
-            var buffer = snapshot.TextBuffer;
-
-            var loc = point.GetPoint(snapshot);
-            var line = loc.GetContainingLine();
-
-            if (loc <= line.Start) {
-                // Ctrl-Space on an empty line, we just want to get global vars
-
-                var classifier = buffer.GetPythonClassifier();
-                if (classifier != null) {
-                    var classSpans = classifier.GetClassificationSpans(line.ExtentIncludingLineBreak);
-                    if (classSpans.Count > 0 &&
-                        classSpans[0].ClassificationType.IsOfType(PredefinedClassificationTypeNames.String)) {
-                        // unless we're in a string literal
-                        return NormalCompletionAnalysis.EmptyCompletionContext;
-                    }
-                }
-
-                return new NormalCompletionAnalysis(
-                    snapshot.TextBuffer.GetAnalyzer(),
-                    snapshot,
-                    span,
-                    buffer,
-                    options
-                );
-            }
-
             return TrySpecialCompletions(snapshot, span, point, options) ??
                    GetNormalCompletionContext(snapshot, span, point, options);
         }
@@ -942,7 +915,17 @@ namespace Microsoft.PythonTools.Intellisense {
             if (classifier == null) {
                 return null;
             }
-            var tokens = classifier.GetClassificationSpans(new SnapshotSpan(snapSpan.Start.GetContainingLine().Start, snapSpan.Start));
+            var start = snapSpan.Start;
+
+            var parser = new ReverseExpressionParser(snapshot, buffer, span);
+            if (parser.IsInGrouping()) {
+                var range = parser.GetExpressionRange(nesting: 1);
+                if (range != null) {
+                    start = range.Value.Start;
+                }
+            }
+
+            var tokens = classifier.GetClassificationSpans(new SnapshotSpan(start.GetContainingLine().Start, snapSpan.Start));
             if (tokens.Count > 0) {
                 // Check for context-sensitive intellisense
                 var lastClass = tokens[tokens.Count - 1];
@@ -976,6 +959,10 @@ namespace Microsoft.PythonTools.Intellisense {
                     return FromImportCompletionAnalysis.Make(tokens, span, buffer, options);
                 }
                 return null;
+            } else if ((tokens = classifier.GetClassificationSpans(snapSpan.Start.GetContainingLine().ExtentIncludingLineBreak)).Count > 0 &&
+               tokens[0].ClassificationType == classifier.Provider.StringLiteral) {
+                // multi-line string, no string completions.
+                return CompletionAnalysis.EmptyCompletionContext;
             } else if (snapshot.IsReplBufferWithCommand()) {
                 return CompletionAnalysis.EmptyCompletionContext;
             }
@@ -992,9 +979,9 @@ namespace Microsoft.PythonTools.Intellisense {
 
             var parser = new ReverseExpressionParser(snapshot, snapshot.TextBuffer, applicableSpan);
             if (parser.IsInGrouping()) {
-            options = options.Clone();
-            options.IncludeStatementKeywords = false;
-                }
+                options = options.Clone();
+                options.IncludeStatementKeywords = false;
+            }
 
             return new NormalCompletionAnalysis(
                 snapshot.TextBuffer.GetAnalyzer(),
@@ -1059,9 +1046,9 @@ namespace Microsoft.PythonTools.Intellisense {
                 Debug.Assert(!string.IsNullOrEmpty(dir));
                 return;
             }
-            
+
             if (addDir) {
-                lock (_contentsLock){
+                lock (_contentsLock) {
                     _pyAnalyzer.AddAnalysisDirectory(dir);
                 }
             }
@@ -1149,7 +1136,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
 
         private void AnalyzeZipArchiveWorker(string zipFileName, Action<IProjectEntry> onFileAnalyzed, CancellationToken cancel) {
-            lock (_contentsLock){
+            lock (_contentsLock) {
                 _pyAnalyzer.AddAnalysisDirectory(zipFileName);
             }
 
@@ -1256,7 +1243,7 @@ namespace Microsoft.PythonTools.Intellisense {
 #endif
 
         internal void StopAnalyzingDirectory(string directory) {
-            lock (_contentsLock){
+            lock (_contentsLock) {
                 _pyAnalyzer.RemoveAnalysisDirectory(directory);
             }
         }
@@ -1321,13 +1308,13 @@ namespace Microsoft.PythonTools.Intellisense {
                     while (_workerQueue.TryTake(out msg, 1000)) {
                         switch (msg.Type) {
                             case WorkerMessage.MessageType.Clear:
-                                lock (_contentsLock){
+                                lock (_contentsLock) {
                                     changed = _errors.Remove(msg.Filename) || changed;
                                     changed = _warnings.Remove(msg.Filename) || changed;
                                 }
                                 break;
                             case WorkerMessage.MessageType.Warnings:
-                                lock (_contentsLock){
+                                lock (_contentsLock) {
                                     if (_warnings.TryGetValue(msg.Filename, out existing)) {
                                         existing.AddRange(msg.Errors);
                                     } else {
@@ -1337,7 +1324,7 @@ namespace Microsoft.PythonTools.Intellisense {
                                 changed = true;
                                 break;
                             case WorkerMessage.MessageType.Errors:
-                                lock (_contentsLock){
+                                lock (_contentsLock) {
                                     if (_errors.TryGetValue(msg.Filename, out existing)) {
                                         existing.AddRange(msg.Errors);
                                     } else {
@@ -1401,7 +1388,7 @@ namespace Microsoft.PythonTools.Intellisense {
             #region IVsTaskProvider Members
 
             public int EnumTaskItems(out IVsEnumTaskItems ppenum) {
-                lock (_contentsLock){
+                lock (_contentsLock) {
                     ppenum = new TaskEnum(CopyErrorList(_warnings), CopyErrorList(_errors));
                 }
                 return VSConstants.S_OK;
@@ -1688,7 +1675,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             _analysisQueue.Stop();
-            lock (_contentsLock){
+            lock (_contentsLock) {
                 _pyAnalyzer.Interpreter.ModuleNamesChanged -= OnModulesChanged;
                 ((IDisposable)_pyAnalyzer).Dispose();
             }
@@ -1697,7 +1684,7 @@ namespace Microsoft.PythonTools.Intellisense {
         #endregion
 
         internal void RemoveReference(ProjectAssemblyReference reference) {
-            lock (_contentsLock){
+            lock (_contentsLock) {
                 var interp = Interpreter;
                 if (interp != null) {
                     interp.RemoveReference(reference);

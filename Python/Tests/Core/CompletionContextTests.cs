@@ -422,14 +422,14 @@ except (None)"}) {
 
         [TestMethod, Priority(0)]
         public void FromOSPathImportCompletions2x() {
-            using (var db = MockCompletionDB.Create(PythonLanguageVersion.V27, "os", "ntpath", "posixpath")) {
+            using (var db = MockCompletionDB.Create(PythonLanguageVersion.V27, "os", "ntpath", "posixpath", "os2emxpath")) {
                 OSPathImportTest(db);
             }
         }
 
         [TestMethod, Priority(0)]
         public void FromOSPathImportCompletions3x() {
-            using (var db = MockCompletionDB.Create(PythonLanguageVersion.V33, "os", "ntpath", "posixpath")) {
+            using (var db = MockCompletionDB.Create(PythonLanguageVersion.V33, "os", "ntpath", "posixpath", "os2emxpath")) {
                 OSPathImportTest(db);
             }
         }
@@ -478,7 +478,7 @@ except (None)"}) {
             AssertUtil.ContainsAtLeast(osNames, allNames);
         }
 
-        //[TestMethod, Priority(0)]
+        [TestMethod, Priority(0)]
         public void FromImportMultilineCompletions() {
             var code = "from sys import (";
             var completions = GetCompletionSetCtrlSpace(-1, code);
@@ -487,21 +487,21 @@ except (None)"}) {
 
             code = "from nt import (\r\n    ";
             completions = GetCompletionSetCtrlSpace(-1, code);
-            AssertUtil.ContainsAtLeast(GetCompletionNames(completions), "settrace", "api_version");
+            AssertUtil.ContainsAtLeast(GetCompletionNames(completions), "abort", "W_OK");
             AssertUtil.DoesntContain(GetCompletionNames(completions), "*");
 
             code = "from nt import (getfilesystemencoding,\r\n    ";
             completions = GetCompletionSetCtrlSpace(-1, code);
-            AssertUtil.ContainsAtLeast(GetCompletionNames(completions), "settrace", "api_version");
+            AssertUtil.ContainsAtLeast(GetCompletionNames(completions), "abort", "W_OK");
             AssertUtil.DoesntContain(GetCompletionNames(completions), "*");
 
             // Need a comma for more completions
             code = "from sys import (settrace\r\n    ";
             completions = GetCompletionSetCtrlSpace(-1, code);
-            Assert.IsNull(completions);
+            AssertUtil.ContainsExactly(GetCompletionNames(completions), "as");
         }
 
-        private static IEnumerable<string> GetCompletionNames(CompletionSet completions) {            
+        private static IEnumerable<string> GetCompletionNames(CompletionSet completions) {
             foreach (var comp in completions.Completions) {
                 yield return comp.InsertionText;
             }
@@ -540,7 +540,7 @@ baz
                         new MockTrackingPoint(snapshot, i),
                         new CompletionOptions { HideAdvancedMembers = false });
 #pragma warning restore 618
-                    Assert.AreEqual(context, NormalCompletionAnalysis.EmptyCompletionContext);
+                    Assert.AreEqual(NormalCompletionAnalysis.EmptyCompletionContext, context);
                 }
             }
         }

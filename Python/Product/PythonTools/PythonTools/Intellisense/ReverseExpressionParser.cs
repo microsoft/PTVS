@@ -52,12 +52,12 @@ namespace Microsoft.PythonTools.Intellisense {
             _tokens = Classifier.GetClassificationSpans(new SnapshotSpan(snapshot, targetSpan));
         }
 
-        public SnapshotSpan? GetExpressionRange(bool forCompletion = true) {
+        public SnapshotSpan? GetExpressionRange(bool forCompletion = true, int nesting = 0) {
             int dummy;
             SnapshotPoint? dummyPoint;
             string lastKeywordArg;
             bool isParameterName;
-            return GetExpressionRange(0, out dummy, out dummyPoint, out lastKeywordArg, out isParameterName, forCompletion);
+            return GetExpressionRange(nesting, out dummy, out dummyPoint, out lastKeywordArg, out isParameterName, forCompletion);
         }
 
         internal static IEnumerator<ClassificationSpan> ReverseClassificationSpanEnumerator(PythonClassifier classifier, SnapshotPoint startPoint) {

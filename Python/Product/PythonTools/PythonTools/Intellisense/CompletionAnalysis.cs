@@ -145,6 +145,9 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         public override string ToString() {
+            if (Span == null) {
+                return "CompletionContext.EmptyCompletionContext";
+            };
             var snapSpan = Span.GetSpan(TextBuffer.CurrentSnapshot);
             return String.Format("CompletionContext({0}): {1} @{2}", GetType().Name, snapSpan.GetText(), snapSpan.Span);
         }
