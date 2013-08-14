@@ -307,19 +307,15 @@ namespace Microsoft.PythonTools.InterpreterList {
             var interp = view.Interpreter;
             IReplWindow window;
 
-            if (view.Project == null) {
-                window = ExecuteInReplCommand.EnsureReplWindow(interp);
-            } else {
-                window = PythonToolsPackage.Instance.CreatePythonRepl(
-                    string.Format("{0};{1}", view.Project.ProjectIDGuid, interp.Id),
-                    string.Format("{0} ({1}) Interactive", view.Name, view.SubName),
-                    interp,
-                    view.Project.GetWorkingDirectory(),
-                    null,
-                    view.Project
+            try {
+                window = ExecuteInReplCommand.EnsureReplWindow(interp, view.Project);
+            } catch (InvalidOperationException ex) {
+                MessageBox.Show(
+                    string.Format("An error occurred opening this interactive window.{0}{0}{1}", Environment.NewLine, ex),
+                    SR.GetString(SR.PythonToolsForVisualStudio)
                 );
+                return;
             }
-
             if (window != null) {
                 var pane = window as ToolWindowPane;
                 if (pane != null) {

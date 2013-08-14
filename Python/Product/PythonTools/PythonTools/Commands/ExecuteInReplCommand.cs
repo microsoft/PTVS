@@ -37,15 +37,15 @@ namespace Microsoft.PythonTools.Commands {
     /// Provides the command for starting a file or the start item of a project in the REPL window.
     /// </summary>
     internal sealed class ExecuteInReplCommand : Command {
-        internal static IReplWindow/*!*/ EnsureReplWindow(VsProjectAnalyzer analyzer) {
-            return EnsureReplWindow(analyzer.InterpreterFactory);
+        internal static IReplWindow/*!*/ EnsureReplWindow(VsProjectAnalyzer analyzer, PythonProjectNode project) {
+            return EnsureReplWindow(analyzer.InterpreterFactory, project);
         }
 
-        internal static IReplWindow/*!*/ EnsureReplWindow(IPythonInterpreterFactory factory) {
+        internal static IReplWindow/*!*/ EnsureReplWindow(IPythonInterpreterFactory factory, PythonProjectNode project) {
             var compModel = PythonToolsPackage.ComponentModel;
             var provider = compModel.GetService<IReplWindowProvider>();
-            
-            string replId = PythonReplEvaluatorProvider.GetReplId(factory);
+
+            string replId = PythonReplEvaluatorProvider.GetReplId(factory, project);
             var window = provider.FindReplWindow(replId);
             if (window == null) {
                 window = provider.CreateReplWindow(
@@ -79,10 +79,10 @@ namespace Microsoft.PythonTools.Commands {
                 oleMenu.Enabled = false;
                 oleMenu.Supported = true;
             } else {
-                var window = (IReplWindow)EnsureReplWindow(analyzer);
 
                 IWpfTextView textView;
                 var pyProj = CommonPackage.GetStartupProject() as PythonProjectNode;
+                var window = (IReplWindow)EnsureReplWindow(analyzer, pyProj);
                 if (pyProj != null) {
                     // startup project, enabled in Start in REPL mode.
                     oleMenu.Visible = true;
@@ -107,12 +107,13 @@ namespace Microsoft.PythonTools.Commands {
         public override void DoCommand(object sender, EventArgs args) {
             VsProjectAnalyzer analyzer;
             string filename, dir;
+            var pyProj = CommonPackage.GetStartupProject() as PythonProjectNode;
             if (!PythonToolsPackage.TryGetStartupFileAndDirectory(out filename, out dir, out analyzer)) {
                 // TODO: Error reporting
                 return;
             }
             
-            var window = (IReplWindow)EnsureReplWindow(analyzer);
+            var window = (IReplWindow)EnsureReplWindow(analyzer, pyProj);
             IVsWindowFrame windowFrame = (IVsWindowFrame)((ToolWindowPane)window).Frame;
 
             ErrorHandler.ThrowOnFailure(windowFrame.Show());

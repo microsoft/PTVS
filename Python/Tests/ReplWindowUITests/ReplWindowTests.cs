@@ -129,19 +129,160 @@ g()",
         }
     }
 
-    [TestClass]
-    public class Python26ReplWindowTests {
-        [ClassInitialize]
-        public static void DoDeployment(TestContext context) {
+    public abstract class ReplWindowTestHelperBase {
+        static ReplWindowTestHelperBase() {
             AssertListener.Initialize();
             TestData.Deploy();
         }
 
-        [TestInitialize]
-        public void DisplayVersion() {
+        // Should be called from [TestInitialize] methods
+        protected void TestInitialize() {
             // Writes the interpreter version to the console so it can be
             // viewed in the output for the test.
             Console.WriteLine(InterpreterDescription);
+            PythonVersion.AssertInstalled();
+        }
+
+        /// <summary>
+        /// Opens the interactive window, clears the screen.
+        /// </summary>
+        internal InteractiveWindow Prepare(bool reopenOnly = false, string description = null) {
+            var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte);
+
+            if (!reopenOnly) {
+                ConfigurePrompts();
+            }
+
+            description = description ?? InterpreterDescription;
+
+            try {
+                GetPythonAutomation().OpenInteractive(description);
+            } catch (KeyNotFoundException) {
+                // Can't open it, but may still be able to find it.
+            }
+            var interactive = app.GetInteractiveWindow(description);
+            if (interactive == null) {
+                Assert.Inconclusive("Need " + description);
+            }
+
+            interactive.WaitForIdleState();
+            app.Element.SetFocus();
+            interactive.Element.SetFocus();
+
+            if (!reopenOnly) {
+                interactive.ClearScreen();
+                interactive.ReplWindow.ClearHistory();
+                interactive.WaitForReadyState();
+
+                interactive.Reset();
+                var task = interactive.ReplWindow.Evaluator.ExecuteText("print('READY')");
+                Assert.IsTrue(task.Wait(10000), "ReplWindow did not initialize in time");
+                Assert.AreEqual(ExecutionResult.Success, task.Result);
+                interactive.WaitForTextEnd("READY", ReplPrompt);
+
+                interactive.ClearScreen();
+                interactive.ReplWindow.ClearHistory();
+            }
+            interactive.WaitForReadyState();
+            return interactive;
+        }
+
+        protected void ForceReset() {
+            var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte);
+
+            var interactive = app.GetInteractiveWindow(InterpreterDescription);
+            interactive.Reset();
+        }
+
+        protected virtual void ConfigurePrompts() {
+            var options = GetInteractiveOptions();
+
+            options.InlinePrompts = true;
+            options.UseInterpreterPrompts = false;
+            options.PrimaryPrompt = ReplPrompt;
+            options.SecondaryPrompt = SecondPrompt;
+        }
+
+        protected IPythonInteractiveOptions GetInteractiveOptions(string name = null) {
+            name = name ?? InterpreterDescription;
+            Debug.Assert(name.EndsWith(" Interactive"));
+            var options = ((IPythonOptions)VsIdeTestHostContext.Dte.GetObject("VsPython")).GetInteractiveOptions(name.Substring(0, name.Length - " Interactive".Length));
+            if (options == null) {
+                Assert.Inconclusive("Need " + name);
+            }
+            return options;
+        }
+
+        protected static IVsPython GetPythonAutomation() {
+            return ((IVsPython)VsIdeTestHostContext.Dte.GetObject("VsPython"));
+        }
+
+        protected abstract PythonVersion PythonVersion { get; }
+
+        protected abstract string InterpreterDescription { get; }
+
+        protected virtual bool IPythonSupported {
+            get { return true; }
+        }
+
+        protected virtual string RawInput {
+            get { return "raw_input"; }
+        }
+
+        protected virtual string IntFirstMember {
+            get { return "conjugate"; }
+        }
+
+        protected virtual string ReplPrompt {
+            get { return ">>> "; }
+        }
+
+        protected virtual string SecondPrompt {
+            get { return "... "; }
+        }
+
+        protected virtual string SourceFileName {
+            get { return "stdin"; }
+        }
+
+        protected virtual bool KeyboardInterruptHasTracebackHeader {
+            get { return true; }
+        }
+
+        protected virtual string Print42Output {
+            get { return "42"; }
+        }
+
+        protected virtual bool CanRedirectSubprocess {
+            get { return true; }
+        }
+
+        protected virtual IEnumerable<string> IntDocumentation {
+            get {
+                yield return "Type:       int";
+                //yield return "Base Class: <type 'int'>";
+                yield return "String Form:42";
+                //yield return "AnalysisValue:  Interactive";
+                yield return "Docstring:";
+                yield return "int(x[, base]) -> integer";
+                yield return "";
+                yield return "Convert a string or number to an integer, if possible.  A floating point";
+                yield return "argument will be truncated towards zero (this does not include a string";
+                yield return "representation of a floating point number!)  When converting a string, use";
+                yield return "the optional base.  It is an error to supply a base when converting a";
+                yield return "non-string.  If base is zero, the proper base is guessed based on the";
+                yield return "string content.  If the argument is outside the integer range a";
+                yield return "long object will be returned instead.";
+
+            }
+        }
+    }
+
+    [TestClass]
+    public abstract class Python26ReplWindowTests : ReplWindowTestHelperBase {
+        [TestInitialize]
+        public void Initialize() {
+            TestInitialize();
         }
 
         /// <summary>
@@ -2606,150 +2747,13 @@ def g(): pass
             Keyboard.PressAndRelease(Key.Escape);
         }
 
-        /// <summary>
-        /// Opens the interactive window, clears the screen.
-        /// </summary>
-        internal InteractiveWindow Prepare(bool reopenOnly = false) {
-            var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte);
-
-            if (!reopenOnly) {
-                ConfigurePrompts();
-            }
-
-            GetPythonAutomation().OpenInteractive(InterpreterDescription);
-            var interactive = app.GetInteractiveWindow(InterpreterDescription);
-            if (interactive == null) {
-                Assert.Inconclusive("Need " + InterpreterDescription);
-            }
-
-            interactive.WaitForIdleState();
-            app.Element.SetFocus();
-            interactive.Element.SetFocus();
-
-            if (!reopenOnly) {
-                interactive.ClearScreen();
-                interactive.ReplWindow.ClearHistory();
-                interactive.WaitForReadyState();
-
-                interactive.Reset();
-                var task = interactive.ReplWindow.Evaluator.ExecuteText("print('READY')");
-                Assert.IsTrue(task.Wait(10000), "ReplWindow did not initialize in time");
-                Assert.AreEqual(ExecutionResult.Success, task.Result);
-                interactive.WaitForTextEnd("READY", ReplPrompt);
-
-                interactive.ClearScreen();
-                interactive.ReplWindow.ClearHistory();
-            }
-            interactive.WaitForReadyState();
-            return interactive;
+        protected override string InterpreterDescription {
+            get { return "Python 2.6 Interactive"; }
         }
 
-        protected void ForceReset() {
-            var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte);
-
-            var interactive = app.GetInteractiveWindow(InterpreterDescription);
-            interactive.Reset();
-        }
-
-
-        protected virtual string InterpreterDescription {
+        protected override PythonVersion PythonVersion {
             get {
-                return "Python 2.6 Interactive";
-            }
-        }
-
-        protected virtual bool IPythonSupported {
-            get {
-                return true;
-            }
-        }
-
-        protected virtual string RawInput {
-            get {
-                return "raw_input";
-            }
-        }
-
-        public virtual string IntFirstMember {
-            get {
-                return "conjugate";
-            }
-        }
-
-        protected virtual string ReplPrompt {
-            get {
-                return ">>> ";
-            }
-        }
-        protected virtual string SecondPrompt {
-            get {
-                return "... ";
-            }
-        }
-        protected virtual void ConfigurePrompts() {
-            var options = GetInteractiveOptions();
-
-            options.InlinePrompts = true;
-            options.UseInterpreterPrompts = false;
-            options.PrimaryPrompt = ReplPrompt;
-            options.SecondaryPrompt = SecondPrompt;
-        }
-
-        protected virtual string SourceFileName {
-            get {
-                return "stdin";
-            }
-        }
-
-        protected virtual bool KeyboardInterruptHasTracebackHeader {
-            get {
-                return true;
-            }
-        }
-
-        protected virtual string Print42Output {
-            get {
-                return "42";
-            }
-        }
-
-        protected virtual bool CanRedirectSubprocess {
-            get {
-                return true;
-            }
-        }
-
-        protected IPythonInteractiveOptions GetInteractiveOptions() {
-            string name = InterpreterDescription;
-            Debug.Assert(name.EndsWith(" Interactive"));
-            var options = ((IPythonOptions)VsIdeTestHostContext.Dte.GetObject("VsPython")).GetInteractiveOptions(name.Substring(0, name.Length - " Interactive".Length));
-            if (options == null) {
-                Assert.Inconclusive("Need " + InterpreterDescription);
-            }
-            return options;
-        }
-
-        protected static IVsPython GetPythonAutomation() {
-            return ((IVsPython)VsIdeTestHostContext.Dte.GetObject("VsPython"));
-        }
-
-        protected virtual IEnumerable<string> IntDocumentation {
-            get {
-                yield return "Type:       int";
-                //yield return "Base Class: <type 'int'>";
-                yield return "String Form:42";
-                //yield return "AnalysisValue:  Interactive";
-                yield return "Docstring:";
-                yield return "int(x[, base]) -> integer";
-                yield return "";
-                yield return "Convert a string or number to an integer, if possible.  A floating point";
-                yield return "argument will be truncated towards zero (this does not include a string";
-                yield return "representation of a floating point number!)  When converting a string, use";
-                yield return "the optional base.  It is an error to supply a base when converting a";
-                yield return "non-string.  If base is zero, the proper base is guessed based on the";
-                yield return "string content.  If the argument is outside the integer range a";
-                yield return "long object will be returned instead.";
-
+                return PythonPaths.Python26;
             }
         }
     }
@@ -2757,13 +2761,11 @@ def g(): pass
 
 
 
-
     [TestClass]
     public class Python27ReplWindowTests : Python26ReplWindowTests {
-        [ClassInitialize]
-        public static new void DoDeployment(TestContext context) {
-            AssertListener.Initialize();
-            TestData.Deploy();
+        [TestInitialize]
+        public new void Initialize() {
+            TestInitialize();
         }
 
         /// <summary>
@@ -2835,13 +2837,62 @@ def g(): pass
             }
         }
 
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void VirtualEnvironmentSendToInteractive() {
+            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            var project = app.OpenAndFindProject(@"TestData\VirtualEnv.sln");
+
+            var program = project.ProjectItems.Item("Program.py");
+
+            var window = program.Open();
+            window.Activate();
+            var doc = app.GetDocument(program.Document.FullName);
+            doc.Invoke(() =>
+                doc.TextView.Selection.Select(
+                    new SnapshotSpan(
+                        doc.TextView.TextBuffer.CurrentSnapshot,
+                        0,
+                        doc.TextView.TextBuffer.CurrentSnapshot.Length
+                    ),
+                    false
+                )
+            );
+
+            // This is required to open the window, since VS automation is
+            // currently unable to find virtual environments. Once the window
+            // is open, UI automation will find it by the description.
+            VsIdeTestHostContext.Dte.ExecuteCommand("Edit.SendtoInteractive");
+
+            var interactive = Prepare(description: "env (Python 2.7) Interactive");
+            VsIdeTestHostContext.Dte.ExecuteCommand("Edit.SendtoInteractive");
+
+            var expectedText = new List<string>();
+
+            using (var reader = TestData.Read(@"TestData\VirtualEnv\Program.py")) {
+                for (var line = reader.ReadLine(); line != null; line = reader.ReadLine()) {
+                    expectedText.Add(ReplPrompt + line);
+                }
+            }
+            expectedText.Add(TestData.GetPath(@"TestData\VirtualEnv\env\Scripts\python.exe"));
+            expectedText.Add(ReplPrompt);
+
+            interactive.WaitForText(expectedText);
+        }
+
         protected override string InterpreterDescription {
             get {
                 return "Python 2.7 Interactive";
             }
         }
 
-        public override string IntFirstMember {
+        protected override PythonVersion PythonVersion {
+            get {
+                return PythonPaths.Python27;
+            }
+        }
+
+        protected override string IntFirstMember {
             get {
                 // bit_length was added in 2.7
                 return "bit_length";
@@ -2850,14 +2901,14 @@ def g(): pass
     }
 
 
-    public class Python3kReplWindowTests : Python26ReplWindowTests {
+    public abstract class Python3kReplWindowTests : Python26ReplWindowTests {
         protected override string RawInput {
             get {
                 return "input";
             }
         }
 
-        public override string IntFirstMember {
+        protected override string IntFirstMember {
             get {
                 return "bit_length";
             }
@@ -2880,6 +2931,7 @@ def g(): pass
                 return "42\r";
             }
         }
+
         protected override IEnumerable<string> IntDocumentation {
             get {
                 yield return "Type:       int";
@@ -2896,24 +2948,27 @@ def g(): pass
                 yield return "converting a non-string.";
             }
         }
-
     }
-
 
 
 
 
     [TestClass]
     public class Python30ReplWindowTests : Python3kReplWindowTests {
-        [ClassInitialize]
-        public static new void DoDeployment(TestContext context) {
-            AssertListener.Initialize();
-            TestData.Deploy();
+        [TestInitialize]
+        public new void Initialize() {
+            TestInitialize();
         }
 
         protected override string InterpreterDescription {
             get {
                 return "Python 3.0 Interactive";
+            }
+        }
+
+        protected override PythonVersion PythonVersion {
+            get {
+                return PythonPaths.Python30;
             }
         }
 
@@ -2926,15 +2981,20 @@ def g(): pass
 
     [TestClass]
     public class Python31ReplWindowTests : Python3kReplWindowTests {
-        [ClassInitialize]
-        public static new void DoDeployment(TestContext context) {
-            AssertListener.Initialize();
-            TestData.Deploy();
+        [TestInitialize]
+        public new void Initialize() {
+            TestInitialize();
         }
 
         protected override string InterpreterDescription {
             get {
                 return "Python 3.1 Interactive";
+            }
+        }
+
+        protected override PythonVersion PythonVersion {
+            get {
+                return PythonPaths.Python31;
             }
         }
 
@@ -2964,10 +3024,9 @@ def g(): pass
 
     [TestClass]
     public class Python32ReplWindowTests : Python3kReplWindowTests {
-        [ClassInitialize]
-        public static new void DoDeployment(TestContext context) {
-            AssertListener.Initialize();
-            TestData.Deploy();
+        [TestInitialize]
+        public new void Initialize() {
+            TestInitialize();
         }
 
         protected override string InterpreterDescription {
@@ -2975,14 +3034,19 @@ def g(): pass
                 return "Python 3.2 Interactive";
             }
         }
+
+        protected override PythonVersion PythonVersion {
+            get {
+                return PythonPaths.Python32;
+            }
+        }
     }
 
     [TestClass]
     public class Python33ReplWindowTests : Python3kReplWindowTests {
-        [ClassInitialize]
-        public static new void DoDeployment(TestContext context) {
-            AssertListener.Initialize();
-            TestData.Deploy();
+        [TestInitialize]
+        public new void Initialize() {
+            TestInitialize();
         }
 
         protected override string InterpreterDescription {
@@ -2990,14 +3054,19 @@ def g(): pass
                 return "Python 3.3 Interactive";
             }
         }
+
+        protected override PythonVersion PythonVersion {
+            get {
+                return PythonPaths.Python33;
+            }
+        }
     }
 
     [TestClass]
     public class Python34ReplWindowTests : Python3kReplWindowTests {
-        [ClassInitialize]
-        public static new void DoDeployment(TestContext context) {
-            AssertListener.Initialize();
-            TestData.Deploy();
+        [TestInitialize]
+        public new void Initialize() {
+            TestInitialize();
         }
 
         protected override string InterpreterDescription {
@@ -3005,257 +3074,23 @@ def g(): pass
                 return "Python 3.4 Interactive";
             }
         }
+
+        protected override PythonVersion PythonVersion {
+            get {
+                return PythonPaths.Python34;
+            }
+        }
     }
 
 
 
 
-
-
-    [TestClass]
-    public class IronPythonReplTests : Python27ReplWindowTests {
-        [ClassInitialize]
-        public static new void DoDeployment(TestContext context) {
-            AssertListener.Initialize();
-            TestData.Deploy();
-        }
-
-        protected override string InterpreterDescription {
-            get {
-                return "IronPython 2.7 Interactive";
-            }
-        }
-
-        protected override bool IPythonSupported {
-            get {
-                return false;
-            }
-        }
-
-        protected override string SourceFileName {
-            get {
-                return "string";
-            }
-        }
-
-        protected override bool KeyboardInterruptHasTracebackHeader {
-            get {
-                return false;
-            }
-        }
-
-        protected override bool CanRedirectSubprocess {
-            get {
-                return false;
-            }
-        }
-
-        private IPythonInterpreterFactory IronPythonInterpreter {
-            get {
-                var provider = new IronPythonInterpreterFactoryProvider();
-                return provider.GetInterpreterFactories().First();
-            }
-        }
-
-        /// <summary>
-        /// “x = 42”
-        /// “x.” should bring up intellisense completion
-        /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
-        public void ResetRepl() {
-            var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte); 
-            var interactive = Prepare();
-
-            const string code = "x = 42";
-            Keyboard.Type(code + "\r");
-
-            interactive.WaitForText(ReplPrompt + code, ReplPrompt);
-
-            Keyboard.Type("x.");
-
-            interactive.WaitForText(ReplPrompt + code, ReplPrompt + "x.");
-
-            var session = interactive.WaitForSession<ICompletionSession>();
-            Assert.IsNotNull(session.SelectedCompletionSet);
-            Keyboard.Type(Key.Escape);
-            Keyboard.Type(Key.Back);
-            Keyboard.Type(Key.Back);
-
-            interactive.Reset();
-
-            Keyboard.Type("x.");
-
-            System.Threading.Thread.Sleep(1000);
-            // make sure we didn't pop up an exception dialog
-            app.WaitForDialogDismissed();
-
-            // and make sure we have no completions for the old buffers
-            var sessionStack = interactive.IntellisenseSessionStack;
-            Assert.IsNull(sessionStack.TopSession);
-        }
-
-        [TestMethod, Priority(0)]
-        public void IronPythonModuleName() {
-            var replEval = new PythonReplEvaluator(IronPythonInterpreter, null, new ReplTestReplOptions());
-            var replWindow = new MockReplWindow(replEval);
-            replEval.Initialize(replWindow);
-            replWindow.ClearScreen();
-            var execute = replEval.ExecuteText("__name__");
-            execute.Wait();
-            Assert.AreEqual(execute.Result, ExecutionResult.Success);
-            Assert.AreEqual(replWindow.Output, "'__main__'\r\n");
-            replWindow.ClearScreen();
-        }
-
-        [TestMethod, Priority(0)]
-        public void IronPythonSignatures() {
-            var replEval = new PythonReplEvaluator(IronPythonInterpreter, null, new ReplTestReplOptions());
-            var replWindow = new MockReplWindow(replEval);
-            replEval.Initialize(replWindow);
-            var execute = replEval.ExecuteText("from System import Array");
-            execute.Wait();
-            Assert.AreEqual(execute.Result, ExecutionResult.Success);
-
-            var sigs = replEval.GetSignatureDocumentation("Array[int]");
-            Assert.AreEqual(sigs.Length, 1);
-            Assert.AreEqual("Array[int](: int)\r\n", sigs[0].Documentation);
-        }
-
-        [TestMethod, Priority(0)]
-        public void IronPythonCommentInput() {
-            // http://pytools.codeplex.com/workitem/649
-            var replEval = new PythonReplEvaluator(IronPythonInterpreter, null, new ReplTestReplOptions());
-            var replWindow = new MockReplWindow(replEval);
-            replEval.Initialize(replWindow);
-            var execute = replEval.ExecuteText("#foo\n1+2");
-            execute.Wait();
-            Assert.AreEqual(execute.Result, ExecutionResult.Success);
-        }
-
-        [TestMethod, Priority(0)]
-        public void ConsoleWriteLineTest() {
-            // http://pytools.codeplex.com/workitem/649
-            var replEval = new PythonReplEvaluator(IronPythonInterpreter, null, new ReplTestReplOptions());
-            var replWindow = new MockReplWindow(replEval);
-            replEval.Initialize(replWindow);
-            var execute = replEval.ExecuteText("import System");
-            execute.Wait();
-            Assert.AreEqual(execute.Result, ExecutionResult.Success);
-            replWindow.ClearScreen();
-
-            execute = replEval.ExecuteText("System.Console.WriteLine(42)");
-            execute.Wait();
-            Assert.AreEqual(replWindow.Output, "42\r\n");
-            replWindow.ClearScreen();
-
-            Assert.AreEqual(execute.Result, ExecutionResult.Success);
-
-            execute = replEval.ExecuteText("System.Console.Write(42)");
-            execute.Wait();
-
-            Assert.AreEqual(execute.Result, ExecutionResult.Success);
-
-            Assert.AreEqual(replWindow.Output, "42");
-        }
-
-        [TestMethod, Priority(0)]
-        public void GenericMethodCompletions() {
-            // http://pytools.codeplex.com/workitem/661
-            var fact = IronPythonInterpreter;
-            var replEval = new PythonReplEvaluator(fact, null, new ReplTestReplOptions());
-            var replWindow = new MockReplWindow(replEval);
-            replEval.Initialize(replWindow);
-            var execute = replEval.ExecuteText("from System.Threading.Tasks import Task");
-            execute.Wait();
-            Assert.AreEqual(execute.Result, ExecutionResult.Success);
-            replWindow.ClearScreen();
-
-            execute = replEval.ExecuteText("def func1(): print 'hello world'\r\n\r\n");
-            execute.Wait();
-            replWindow.ClearScreen();
-
-            Assert.AreEqual(execute.Result, ExecutionResult.Success);
-
-            execute = replEval.ExecuteText("t = Task.Factory.StartNew(func1)");
-            execute.Wait();
-            Assert.AreEqual(execute.Result, ExecutionResult.Success);
-
-            using (var analyzer = new VsProjectAnalyzer(fact, new[] { fact }, new MockErrorProviderFactory())) {
-                replWindow.TextView.TextBuffer.Properties.AddProperty(typeof(VsProjectAnalyzer), analyzer);
-
-                var names = replEval.GetMemberNames("t");
-                foreach (var name in names) {
-                    Debug.WriteLine(name.Name);
-                }
-            }
-        }
-
-        [TestMethod, Priority(0)]
-        public void NoTraceFunction() {
-            // http://pytools.codeplex.com/workitem/662
-            var replEval = new PythonReplEvaluator(IronPythonInterpreter, null, new ReplTestReplOptions());
-            var replWindow = new MockReplWindow(replEval);
-            replEval.Initialize(replWindow);
-            var execute = replEval.ExecuteText("import sys");
-            execute.Wait();
-            Assert.AreEqual(execute.Result, ExecutionResult.Success);
-            replWindow.ClearScreen();
-
-            execute = replEval.ExecuteText("sys.gettrace()");
-            execute.Wait();
-            Assert.AreEqual(replWindow.Output, "");
-            replWindow.ClearScreen();
-        }
-
-        [TestMethod, Priority(0)]
-        public void CommentFollowedByBlankLine() {
-            // http://pytools.codeplex.com/workitem/659
-            var replEval = new PythonReplEvaluator(IronPythonInterpreter, null, new ReplTestReplOptions());
-            var replWindow = new MockReplWindow(replEval);
-            replEval.Initialize(replWindow);
-            var execute = replEval.ExecuteText("# foo\r\n\r\n    \r\n\t\t\r\na = 42");
-            execute.Wait();
-            Assert.AreEqual(execute.Result, ExecutionResult.Success);
-            replWindow.ClearScreen();
-        }
-
-
-
-        [TestMethod, Priority(0)]
-        public void AttachSupportMultiThreaded() {
-            // http://pytools.codeplex.com/workitem/663
-            var replEval = new PythonReplEvaluator(IronPythonInterpreter, null, new ReplTestReplOptions());
-            var replWindow = new MockReplWindow(replEval);
-            replEval.Initialize(replWindow);
-            var code = new[] {
-                "import threading",
-                "def sayHello():\r\n    pass",
-                "t1 = threading.Thread(target=sayHello)",
-                "t1.start()",
-                "t2 = threading.Thread(target=sayHello)",
-                "t2.start()"
-            };
-            foreach (var line in code) {
-                var execute = replEval.ExecuteText(line);
-                execute.Wait();
-                Assert.AreEqual(execute.Result, ExecutionResult.Success);
-            }
-
-            replWindow.ClearScreen();
-            var finalExecute = replEval.ExecuteText("42");
-            finalExecute.Wait();
-            Assert.AreEqual(finalExecute.Result, ExecutionResult.Success);
-            Assert.AreEqual(replWindow.Output, "42\r\n");
-        }
-    }
 
     [TestClass]
     public class Python26x64ReplWindowTests : Python26ReplWindowTests {
-        [ClassInitialize]
-        public static new void DoDeployment(TestContext context) {
-            AssertListener.Initialize();
-            TestData.Deploy();
+        [TestInitialize]
+        public new void Initialize() {
+            TestInitialize();
         }
 
         protected override string InterpreterDescription {
@@ -3263,14 +3098,19 @@ def g(): pass
                 return "Python 64-bit 2.6 Interactive";
             }
         }
+
+        protected override PythonVersion PythonVersion {
+            get {
+                return PythonPaths.Python26_x64;
+            }
+        }
     }
 
     [TestClass]
     public class Python27x64ReplWindowTests : Python27ReplWindowTests {
-        [ClassInitialize]
-        public static new void DoDeployment(TestContext context) {
-            AssertListener.Initialize();
-            TestData.Deploy();
+        [TestInitialize]
+        public new void Initialize() {
+            TestInitialize();
         }
 
         protected override string InterpreterDescription {
@@ -3278,14 +3118,19 @@ def g(): pass
                 return "Python 64-bit 2.7 Interactive";
             }
         }
+
+        protected override PythonVersion PythonVersion {
+            get {
+                return PythonPaths.Python27_x64;
+            }
+        }
     }
 
     [TestClass]
     public class Python30x64ReplWindowTests : Python30ReplWindowTests {
-        [ClassInitialize]
-        public static new void DoDeployment(TestContext context) {
-            AssertListener.Initialize();
-            TestData.Deploy();
+        [TestInitialize]
+        public new void Initialize() {
+            TestInitialize();
         }
 
         protected override string InterpreterDescription {
@@ -3293,14 +3138,19 @@ def g(): pass
                 return "Python 64-bit 3.0 Interactive";
             }
         }
+
+        protected override PythonVersion PythonVersion {
+            get {
+                return PythonPaths.Python30_x64;
+            }
+        }
     }
 
     [TestClass]
     public class Python31x64ReplWindowTests : Python31ReplWindowTests {
-        [ClassInitialize]
-        public static new void DoDeployment(TestContext context) {
-            AssertListener.Initialize();
-            TestData.Deploy();
+        [TestInitialize]
+        public new void Initialize() {
+            TestInitialize();
         }
 
         protected override string InterpreterDescription {
@@ -3308,14 +3158,19 @@ def g(): pass
                 return "Python 64-bit 3.1 Interactive";
             }
         }
+
+        protected override PythonVersion PythonVersion {
+            get {
+                return PythonPaths.Python31_x64;
+            }
+        }
     }
 
     [TestClass]
     public class Python32x64ReplWindowTests : Python32ReplWindowTests {
-        [ClassInitialize]
-        public static new void DoDeployment(TestContext context) {
-            AssertListener.Initialize();
-            TestData.Deploy();
+        [TestInitialize]
+        public new void Initialize() {
+            TestInitialize();
         }
 
         protected override string InterpreterDescription {
@@ -3323,14 +3178,19 @@ def g(): pass
                 return "Python 64-bit 3.2 Interactive";
             }
         }
+
+        protected override PythonVersion PythonVersion {
+            get {
+                return PythonPaths.Python32_x64;
+            }
+        }
     }
 
     [TestClass]
     public class Python33x64ReplWindowTests : Python33ReplWindowTests {
-        [ClassInitialize]
-        public static new void DoDeployment(TestContext context) {
-            AssertListener.Initialize();
-            TestData.Deploy();
+        [TestInitialize]
+        public new void Initialize() {
+            TestInitialize();
         }
 
         protected override string InterpreterDescription {
@@ -3338,14 +3198,19 @@ def g(): pass
                 return "Python 64-bit 3.3 Interactive";
             }
         }
+
+        protected override PythonVersion PythonVersion {
+            get {
+                return PythonPaths.Python33_x64;
+            }
+        }
     }
 
     [TestClass]
-    public class Python34x64ReplWindowTests : Python33ReplWindowTests {
-        [ClassInitialize]
-        public static new void DoDeployment(TestContext context) {
-            AssertListener.Initialize();
-            TestData.Deploy();
+    public class Python34x64ReplWindowTests : Python34ReplWindowTests {
+        [TestInitialize]
+        public new void Initialize() {
+            TestInitialize();
         }
 
         protected override string InterpreterDescription {
@@ -3353,29 +3218,19 @@ def g(): pass
                 return "Python 64-bit 3.4 Interactive";
             }
         }
-    }
 
-    [TestClass]
-    public class IronPythonx64ReplTests : IronPythonReplTests {
-        [ClassInitialize]
-        public static new void DoDeployment(TestContext context) {
-            AssertListener.Initialize();
-            TestData.Deploy();
-        }
-
-        protected override string InterpreterDescription {
+        protected override PythonVersion PythonVersion {
             get {
-                return "IronPython 64-bit 2.7 Interactive";
+                return PythonPaths.Python34_x64;
             }
         }
     }
 
     [TestClass]
     public class PrimaryPromptOnlyPython27ReplWindowTests : Python27ReplWindowTests {
-        [ClassInitialize]
-        public static new void DoDeployment(TestContext context) {
-            AssertListener.Initialize();
-            TestData.Deploy();
+        [TestInitialize]
+        public new void Initialize() {
+            TestInitialize();
         }
 
         protected override string ReplPrompt {
@@ -3401,10 +3256,9 @@ def g(): pass
 
     [TestClass]
     public class GlyphPromptPython27ReplWindowTests : Python27ReplWindowTests {
-        [ClassInitialize]
-        public static new void DoDeployment(TestContext context) {
-            AssertListener.Initialize();
-            TestData.Deploy();
+        [TestInitialize]
+        public new void Initialize() {
+            TestInitialize();
         }
 
         protected override string ReplPrompt {
@@ -3436,10 +3290,9 @@ def g(): pass
 
     [TestClass]
     public class PrimaryPromptOnlyPython33ReplWindowTests : Python33ReplWindowTests {
-        [ClassInitialize]
-        public static new void DoDeployment(TestContext context) {
-            AssertListener.Initialize();
-            TestData.Deploy();
+        [TestInitialize]
+        public new void Initialize() {
+            TestInitialize();
         }
 
         protected override string ReplPrompt {
@@ -3465,10 +3318,9 @@ def g(): pass
 
     [TestClass]
     public class GlyphPromptPython33ReplWindowTests : Python33ReplWindowTests {
-        [ClassInitialize]
-        public static new void DoDeployment(TestContext context) {
-            AssertListener.Initialize();
-            TestData.Deploy();
+        [TestInitialize]
+        public new void Initialize() {
+            TestInitialize();
         }
 
         protected override string ReplPrompt {

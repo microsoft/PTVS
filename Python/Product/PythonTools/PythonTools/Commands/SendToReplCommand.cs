@@ -36,9 +36,11 @@ namespace Microsoft.PythonTools.Commands {
     class SendToReplCommand : Command {
         public override void DoCommand(object sender, EventArgs args) {
             var activeView = CommonPackage.GetActiveTextView();
+            var dteProject = activeView.TextBuffer.GetProject();
+            var project = dteProject != null ? dteProject.GetPythonProject() : null;
             var analyzer = activeView.GetAnalyzer();
 
-            ToolWindowPane window = (ToolWindowPane)ExecuteInReplCommand.EnsureReplWindow(analyzer);
+            ToolWindowPane window = (ToolWindowPane)ExecuteInReplCommand.EnsureReplWindow(analyzer, project);
 
             IVsWindowFrame windowFrame = (IVsWindowFrame)window.Frame;
             ErrorHandler.ThrowOnFailure(windowFrame.Show());

@@ -17,6 +17,7 @@ using System.ComponentModel.Composition;
 using System.Diagnostics;
 using System.Linq;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio.Repl;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -109,10 +110,22 @@ namespace Microsoft.PythonTools.Repl {
 
         #endregion
 
-        internal static string GetReplId(IPythonInterpreterFactory interpreter) {
-            return _replGuid + " " +
-                interpreter.Id + " " +
-                interpreter.Configuration.Version;
+        internal static string GetReplId(IPythonInterpreterFactory interpreter, PythonProjectNode project = null) {
+            if (project == null || project.Interpreters.IsInterpreterReference(interpreter)) {
+                return _replGuid + " " +
+                    interpreter.Id + " " +
+                    interpreter.Configuration.Version;
+            } else {
+                return String.Format("{0}|{1}|{2}|{3}|{4};{5}||{6}",
+                    PythonReplEvaluatorProvider._configurableGuid,
+                    project.GetWorkingDirectory(),
+                    interpreter.Id,
+                    interpreter.Configuration.Version,
+                    project.ProjectIDGuid,
+                    interpreter.Id,
+                    ((IVsProject)project).GetRootCanonicalName()
+                );
+            }
         }
     }
 
