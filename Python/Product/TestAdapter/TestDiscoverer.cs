@@ -88,13 +88,15 @@ namespace Microsoft.PythonTools.TestAdapter {
 
                     try {
                         var entry = analyzer.AddModule(fullName, fileAbsolutePath);
-
                         using (var reader = new StreamReader(fileAbsolutePath))
                         using (var parser = Parser.CreateParser(reader, factory.GetLanguageVersion(), new ParserOptions() { BindReferences = true })) {
                             entry.UpdateTree(parser.ParseFile(), null);
                         }
 
                         entries.Add(entry);
+                    } catch (FileNotFoundException) {
+                        // user deleted file, we send the test update, but the project
+                        // isn't saved.
 #if DEBUG
                     } catch (Exception ex) {
                         logger.SendMessage(TestMessageLevel.Warning, "Failed to discover tests in " + fileAbsolutePath);

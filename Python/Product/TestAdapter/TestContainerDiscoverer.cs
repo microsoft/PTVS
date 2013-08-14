@@ -95,7 +95,16 @@ namespace Microsoft.PythonTools.TestAdapter {
         }
 
         private void OnBuildCompleted(object sender, EventArgs e) {
-            OnTestContainersChanged();
+            var solution = (IVsSolution)_serviceProvider.GetService(typeof(SVsSolution));
+            foreach (var project in EnumerateLoadedProjects(solution)) {
+                if (OnTestContainersChanged(project)) {
+                    // We only need to fire the event once as the event 
+                    // is not per-project, but we shouldn't fire it if 
+                    // there's not yet any projects which we've been 
+                    // queried for. 
+                    break;
+                }
+            }
             _building = false;
         }
 
@@ -170,10 +179,12 @@ namespace Microsoft.PythonTools.TestAdapter {
                 SaveModifiedFiles(project);
             }
 
-            if (!_knownProjects.ContainsKey(path)) {
+            ProjectInfo projectInfo;
+            if (!_knownProjects.TryGetValue(path, out projectInfo)) {
                 // Don't return any containers for projects we don't know about.
                 yield break;
             }
+            projectInfo.HasRequestedContainers = true;
             
             var latestWrite = project.GetProjectItemPaths().Aggregate(
                 _lastWrite,
@@ -251,6 +262,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                     var interpFact = (MSBuildProjectInterpreterFactoryProvider)dteProject.Properties.Item("InterpreterFactoryProvider").Value;
 
                     var projectInfo = new ProjectInfo(
+                        e.Project,
                         this,
                         interpFact
                     );
@@ -268,7 +280,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                 }
             }
 
-            OnTestContainersChanged();
+            OnTestContainersChanged(e.Project);
         }
         
         private void OnProjectUnloaded(object sender, ProjectEventArgs e) {
@@ -303,7 +315,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                 }
             }
 
-            OnTestContainersChanged();
+            OnTestContainersChanged(e.Project);
         }
 
         private void OnProjectRenamed(object sender, ProjectEventArgs e) {
@@ -319,29 +331,23 @@ namespace Microsoft.PythonTools.TestAdapter {
                 string root = null;
                 switch (e.ChangedReason) {
                     case TestFileChangedReason.Added:
-                        if (e.Project != null) {
-                            try {
-                                root = e.Project.GetProjectHome();
-                            } catch (Exception ex) {
-                                if (EqtTrace.IsVerboseEnabled) {
-                                    EqtTrace.Warning("TestContainerDiscoverer: Failed to get project home {0}", ex);
-                                }
-                                // If we fail to get ProjectHome, we still want to track the
-                                // project. We just won't get the benefits of merging
-                                // watchers into a single recursive watcher.
+                        Debug.Assert(e.Project != null);
+                        if (e.Project.IsTestProject()) {
+                            root = e.Project.GetProjectHome();
+
+                            if (!string.IsNullOrEmpty(root) && CommonUtils.IsSubpathOf(root, e.File)) {
+                                _testFilesUpdateWatcher.AddDirectoryWatch(root);
+                                _fileRootMap[e.File] = root;
+                            } else {
+                                _testFilesUpdateWatcher.AddWatch(e.File);
                             }
-                        }
 
-                        if (!string.IsNullOrEmpty(root) && CommonUtils.IsSubpathOf(root, e.File)) {
-                            _testFilesUpdateWatcher.AddDirectoryWatch(root);
-                            _fileRootMap[e.File] = root;
-                        } else {
-                            _testFilesUpdateWatcher.AddWatch(e.File);
+                            OnTestContainersChanged(e.Project);
                         }
-
-                        OnTestContainersChanged();
                         break;
                     case TestFileChangedReason.Removed:
+                        Debug.Assert(e.Project != null);
+
                         if (_fileRootMap.TryGetValue(e.File, out root)) {
                             _fileRootMap.Remove(e.File);
                             if (!_fileRootMap.Values.Contains(root)) {
@@ -353,34 +359,51 @@ namespace Microsoft.PythonTools.TestAdapter {
 
                         // https://pytools.codeplex.com/workitem/1546
                         // track the last delete as an update as our file system scan won't see it
-                        _lastWrite = DateTime.Now.ToUniversalTime();  
+                        _lastWrite = DateTime.Now.ToUniversalTime();
 
-                        OnTestContainersChanged();
+                        OnTestContainersChanged(e.Project);
                         break;
 #if DEV12_OR_LATER
                     // Dev12 renames files instead of overwriting them when
                     // saving, so we need to listen for renames where the new
                     // path is part of the project.
                     case TestFileChangedReason.Renamed:
-                        var solution = _serviceProvider.GetService<IVsSolution>(typeof(SVsSolution));
-                        if (solution != null) {
-                            if (EnumerateLoadedProjects(solution)
-                                .SelectMany(proj => proj.GetProjectItemPaths())
-                                .Contains(e.File, StringComparer.OrdinalIgnoreCase)) {
-                                OnTestContainersChanged();
-                            }
-                        }
-                        break;
 #endif
                     case TestFileChangedReason.Changed:
-                        OnTestContainersChanged();
+                        OnTestContainersChanged(GetTestProjectFromFile(e.File));
                         break;
                 }
 
             }
         }
 
-        private void OnTestContainersChanged() {
+        /// <summary>
+        /// Given a filename that might be in an open project returns the test
+        /// project which contains it, or null if it is not in a test project.
+        /// </summary>
+        private IVsProject GetTestProjectFromFile(string filename) {
+            var solution = (IVsSolution)_serviceProvider.GetService(typeof(SVsSolution));
+
+            foreach (var project in EnumerateLoadedProjects(solution)) {
+
+                IVsHierarchy hierarchy = project as IVsHierarchy;
+                uint itemid;
+                if (CommonUtils.IsSamePath(project.GetProjectPath(), filename) ||
+                    (hierarchy != null &&
+                    project.IsTestProject() &&
+                    ErrorHandler.Succeeded(hierarchy.ParseCanonicalName(filename, out itemid)))) {
+                    return project;
+                }
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Raises the test containers changed event, returns true if the event was delivered
+        /// or would be delivered and there were no listeners.
+        /// </summary>
+        /// <param name="project">The project which the event is being raised for</param>
+        private bool OnTestContainersChanged(IVsProject project) {
             // https://pytools.codeplex.com/workitem/1271
             // When test explorer kicks off a run it kicks off a test discovery
             // phase, which kicks off a build, which results in us saving files.
@@ -392,12 +415,20 @@ namespace Microsoft.PythonTools.TestAdapter {
             // Therefore if we are both building and detecting changes then we 
             // don't want to raise the event, instead it'll query us in a little 
             // bit and get the most recent changes.
-            if (!_building || !_detectingChanges) {
-                var evt = TestContainersUpdated;
-                if (evt != null) {
-                    evt(this, EventArgs.Empty);
+            ProjectInfo projectInfo;
+            if (project != null &&
+                _knownProjects.TryGetValue(project.GetProjectPath(), out projectInfo) &&
+                projectInfo.HasRequestedContainers) {
+                
+                if (!_building || !_detectingChanges) {
+                    var evt = TestContainersUpdated;
+                    if (evt != null) {
+                        evt(this, EventArgs.Empty);
+                    }
+                    return true;
                 }
             }
+            return false;
         }
 
         internal bool IsProjectKnown(IVsProject project) {
@@ -405,11 +436,20 @@ namespace Microsoft.PythonTools.TestAdapter {
         }
 
         class ProjectInfo {
+            public readonly IVsProject Project;
             public readonly TestContainerDiscoverer Discoverer;
             public readonly MSBuildProjectInterpreterFactoryProvider FactoryProvider;
             public IPythonInterpreterFactory ActiveInterpreter;
+            /// <summary>
+            /// used to track when the test window has asked us for tests from this project, 
+            /// so we don't deliver events before it's ready.  It will ask when the project 
+            /// is opened the 1st time, and then we can start delivering events as things
+            /// change.  Fixes 2nd round of https://pytools.codeplex.com/workitem/1252
+            /// </summary>
+            public bool HasRequestedContainers;    
 
-            public ProjectInfo(TestContainerDiscoverer discoverer, MSBuildProjectInterpreterFactoryProvider factoryProvider) {
+            public ProjectInfo(IVsProject project, TestContainerDiscoverer discoverer, MSBuildProjectInterpreterFactoryProvider factoryProvider) {
+                Project = project;
                 Discoverer = discoverer;
                 FactoryProvider = factoryProvider;
                 ActiveInterpreter = FactoryProvider.ActiveInterpreter;
@@ -425,7 +465,7 @@ namespace Microsoft.PythonTools.TestAdapter {
 
                 HookDatabaseCurrentChanged();
 
-                Discoverer.OnTestContainersChanged();
+                Discoverer.OnTestContainersChanged(Project);
             }
 
             private void HookDatabaseCurrentChanged() {
@@ -443,7 +483,7 @@ namespace Microsoft.PythonTools.TestAdapter {
             }
 
             private void DatabaseIsCurrentChanged(object sender, EventArgs args) {
-                Discoverer.OnTestContainersChanged();
+                Discoverer.OnTestContainersChanged(Project);
             }
 
             internal void Attach() {
