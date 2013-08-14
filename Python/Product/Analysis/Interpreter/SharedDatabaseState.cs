@@ -28,6 +28,7 @@ namespace Microsoft.PythonTools.Interpreter {
         private readonly Dictionary<string, IPythonModule> _modules = new Dictionary<string, IPythonModule>();
         private readonly List<Action> _fixups = new List<Action>();
         private List<Action<IPythonType>> _objectTypeFixups = new List<Action<IPythonType>>();
+        private readonly Dictionary<string, List<Action<IMember>>> _moduleFixups = new Dictionary<string, List<Action<IMember>>>();
         private readonly string _dbDir;
         private readonly Dictionary<IPythonType, CPythonConstant> _constants = new Dictionary<IPythonType, CPythonConstant>();
         private readonly Dictionary<string, IPythonType> _sequenceTypes = new Dictionary<string, IPythonType>();
@@ -84,6 +85,8 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         internal void LoadDatabase(string databaseDirectory) {
+            var addedModules = new Dictionary<string, IMember>();
+
             foreach (var file in Directory.GetFiles(databaseDirectory)) {
                 if (!file.EndsWith(".idb", StringComparison.OrdinalIgnoreCase) || file.IndexOf('$') != -1) {
                     continue;
@@ -101,7 +104,17 @@ namespace Microsoft.PythonTools.Interpreter {
                         case "thread": modName = "_thread"; break;
                     }
                 }
-                _modules[modName] = new CPythonModule(this, modName, file, false);
+                addedModules[modName] = _modules[modName] = new CPythonModule(this, modName, file, false);
+            }
+
+            foreach (var keyValue in addedModules) {
+                List<Action<IMember>> fixups;
+                if (_moduleFixups.TryGetValue(keyValue.Key, out fixups)) {
+                    _moduleFixups.Remove(keyValue.Key);
+                    foreach (var fixup in fixups) {
+                        fixup(keyValue.Value);
+                    }
+                }
             }
         }
 
@@ -508,9 +521,14 @@ namespace Microsoft.PythonTools.Interpreter {
                             if (valueArray.Length >= 1 && !string.IsNullOrEmpty(modName = valueArray[0] as string)) {
                                 var module = GetModule(modName);
                                 if (module == null) {
-                                    throw new InvalidOperationException("Failed to find module " + modName);
+                                    List<Action<IMember>> fixups;
+                                    if (!_moduleFixups.TryGetValue(modName, out fixups)) {
+                                        _moduleFixups[modName] = fixups = new List<Action<IMember>>();
+                                    }
+                                    fixups.Add(m => assign(memberName, m));
+                                } else {
+                                    assign(memberName, module);
                                 }
-                                assign(memberName, GetModule(modName));
                             }
                             break;
                         default:

@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -107,7 +108,7 @@ namespace Microsoft.PythonTools.Analysis.Browser {
             Loading = true;
             Analysis = null;
             Cursor = Cursors.Wait;
-            Task.Factory.StartNew(() => {
+            var loadTask = Task.Factory.StartNew(() => {
                 var av = new AnalysisView(path);
 
                 foreach (var mod in av.Modules) {
@@ -115,12 +116,22 @@ namespace Microsoft.PythonTools.Analysis.Browser {
                 }
 
                 return av;
-            }, TaskCreationOptions.LongRunning).ContinueWith(t => {
-                Analysis = t.Result;
-                HasAnalysis = true;
-                Loading = false;
-                Cursor = Cursors.Arrow;
-            }, TaskScheduler.FromCurrentSynchronizationContext());
+            }, TaskCreationOptions.LongRunning);
+
+            loadTask.ContinueWith(
+                t => {
+                    try {
+                        Analysis = t.Result;
+                        HasAnalysis = true;
+                    } catch (Exception ex) {
+                        HasAnalysis = false;
+                        MessageBox.Show(string.Format("Error occurred:{0}{0}{1}", Environment.NewLine, ex));
+                    }
+                    Loading = false;
+                    Cursor = Cursors.Arrow;
+                },
+                TaskScheduler.FromCurrentSynchronizationContext()
+            );
         }
 
         private void Export_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
