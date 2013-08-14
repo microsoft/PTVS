@@ -2992,6 +2992,21 @@ def g(): pass
         }
     }
 
+    [TestClass]
+    public class Python34ReplWindowTests : Python3kReplWindowTests {
+        [ClassInitialize]
+        public static new void DoDeployment(TestContext context) {
+            AssertListener.Initialize();
+            TestData.Deploy();
+        }
+
+        protected override string InterpreterDescription {
+            get {
+                return "Python 3.4 Interactive";
+            }
+        }
+    }
+
 
 
 
@@ -3321,6 +3336,21 @@ def g(): pass
         protected override string InterpreterDescription {
             get {
                 return "Python 64-bit 3.3 Interactive";
+            }
+        }
+    }
+
+    [TestClass]
+    public class Python34x64ReplWindowTests : Python33ReplWindowTests {
+        [ClassInitialize]
+        public static new void DoDeployment(TestContext context) {
+            AssertListener.Initialize();
+            TestData.Deploy();
+        }
+
+        protected override string InterpreterDescription {
+            get {
+                return "Python 64-bit 3.4 Interactive";
             }
         }
     }

@@ -29,7 +29,8 @@ namespace Microsoft.PythonTools.Parsing {
         V30 = 0x0300,
         V31 = 0x0301,
         V32 = 0x0302,
-        V33 = 0x0303
+        V33 = 0x0303,
+        V34 = 0x0304
     }
 
     public static class PythonLanguageVersionExtensions {
@@ -61,6 +62,7 @@ namespace Microsoft.PythonTools.Parsing {
                         case 1: return PythonLanguageVersion.V31;
                         case 2: return PythonLanguageVersion.V32;
                         case 3: return PythonLanguageVersion.V33;
+                        case 4: return PythonLanguageVersion.V34;
                     }
                     break;
             }

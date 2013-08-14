@@ -337,7 +337,8 @@
             "3.0",
             "3.1",
             "3.2",
-            "3.3"});
+            "3.3",
+            "3.4"});
             this._version.Location = new System.Drawing.Point(153, 117);
             this._version.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
             this._version.Name = "_version";

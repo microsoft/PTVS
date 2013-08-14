@@ -39,6 +39,7 @@ namespace TestUtilities {
         public static readonly PythonVersion Python31 = GetCPythonVersion(PythonLanguageVersion.V31);
         public static readonly PythonVersion Python32 = GetCPythonVersion(PythonLanguageVersion.V32);
         public static readonly PythonVersion Python33 = GetCPythonVersion(PythonLanguageVersion.V33);
+        public static readonly PythonVersion Python34 = GetCPythonVersion(PythonLanguageVersion.V34);
         public static readonly PythonVersion IronPython27 = GetIronPythonVersion(false);
         public static readonly PythonVersion Python25_x64 = GetCPythonVersion(PythonLanguageVersion.V25, true);
         public static readonly PythonVersion Python26_x64 = GetCPythonVersion(PythonLanguageVersion.V26, true);
@@ -47,6 +48,7 @@ namespace TestUtilities {
         public static readonly PythonVersion Python31_x64 = GetCPythonVersion(PythonLanguageVersion.V31, true);
         public static readonly PythonVersion Python32_x64 = GetCPythonVersion(PythonLanguageVersion.V32, true);
         public static readonly PythonVersion Python33_x64 = GetCPythonVersion(PythonLanguageVersion.V33, true);
+        public static readonly PythonVersion Python34_x64 = GetCPythonVersion(PythonLanguageVersion.V34, true);
         public static readonly PythonVersion IronPython27_x64 = GetIronPythonVersion(true);
 
         private static PythonVersion GetIronPythonVersion(bool x64) {
@@ -150,6 +152,7 @@ namespace TestUtilities {
                 if (Python31 != null) yield return Python31;
                 if (Python32 != null) yield return Python32;
                 if (Python33 != null) yield return Python33;
+                if (Python34 != null) yield return Python34;
                 if (IronPython27 != null) yield return IronPython27;
                 if (Python25_x64 != null) yield return Python25_x64;
                 if (Python26_x64 != null) yield return Python26_x64;
@@ -158,6 +161,7 @@ namespace TestUtilities {
                 if (Python31_x64 != null) yield return Python31_x64;
                 if (Python32_x64 != null) yield return Python32_x64;
                 if (Python33_x64 != null) yield return Python33_x64;
+                if (Python34_x64 != null) yield return Python34_x64;
                 if (IronPython27_x64 != null) yield return IronPython27_x64;
             }
         }
