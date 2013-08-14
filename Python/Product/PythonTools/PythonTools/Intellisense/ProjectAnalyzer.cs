@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows.Forms;
 using Microsoft.PythonTools.Analysis;
@@ -74,7 +75,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly IErrorProviderFactory _errorProvider;
         private readonly ConcurrentDictionary<string, IProjectEntry> _projectFiles;
         private readonly PythonAnalyzer _pyAnalyzer;
-        private readonly PythonProjectNode _project;
+        private readonly bool _implicitProject;
         private readonly AutoResetEvent _queueActivityEvent = new AutoResetEvent(false);
         private readonly IPythonInterpreterFactory[] _allFactories;
 
@@ -91,7 +92,7 @@ namespace Microsoft.PythonTools.Intellisense {
             : this(factory.CreateInterpreter(), factory, allFactories, errorProvider) {
         }
 
-        internal VsProjectAnalyzer(IPythonInterpreter interpreter, IPythonInterpreterFactory factory, IPythonInterpreterFactory[] allFactories, IErrorProviderFactory errorProvider, PythonProjectNode project = null) {
+        internal VsProjectAnalyzer(IPythonInterpreter interpreter, IPythonInterpreterFactory factory, IPythonInterpreterFactory[] allFactories, IErrorProviderFactory errorProvider, bool implicitProject = true) {
             _errorProvider = errorProvider;
 
             _queue = new ParseQueue(this);
@@ -99,7 +100,7 @@ namespace Microsoft.PythonTools.Intellisense {
             _allFactories = allFactories;
 
             _interpreterFactory = factory;
-            _project = project;
+            _implicitProject = implicitProject;
 
             _pyAnalyzer = new PythonAnalyzer(factory, interpreter);
             interpreter.ModuleNamesChanged += OnModulesChanged;
@@ -527,9 +528,13 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
+        /// <summary>
+        /// True if the project is an implicit project and it should model files on disk in addition
+        /// to files which are explicitly added.
+        /// </summary>
         internal bool ImplicitProject {
             get {
-                return _project == null;
+                return _implicitProject;
             }
         }
 
@@ -599,8 +604,8 @@ namespace Microsoft.PythonTools.Intellisense {
                 if (errorSink.Warnings.Count > 0 || errorSink.Errors.Count > 0) {
                     TaskProvider provider = GetTaskProviderAndClearProjectItems(projectEntry);
                     if (provider != null) {
-                        provider.AddWarnings(projectEntry.FilePath, errorSink.Warnings);
-                        provider.AddErrors(projectEntry.FilePath, errorSink.Errors);
+                        provider.ReplaceWarnings(projectEntry.FilePath, errorSink.Warnings);
+                        provider.ReplaceErrors(projectEntry.FilePath, errorSink.Errors);
 
                         UpdateErrorList(errorSink, projectEntry.FilePath, provider);
                     }
@@ -714,8 +719,8 @@ namespace Microsoft.PythonTools.Intellisense {
                     AddErrors(_snapshot, _errorSink, _squiggles, _filename);
 
                     if (_provider != null) {
-                        _provider.AddWarnings(_filename, _errorSink.Warnings);
-                        _provider.AddErrors(_filename, _errorSink.Errors);
+                        _provider.ReplaceWarnings(_filename, _errorSink.Warnings);
+                        _provider.ReplaceErrors(_filename, _errorSink.Errors);
                     }
                 }
             }
@@ -747,17 +752,15 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private void UpdateErrorList(CollectingErrorSink errorSink, string filepath, TaskProvider provider) {
-            if (_project != null && provider != null) {
                 if (errorSink.Warnings.Count > 0) {
-                    _project.WarningFiles.Add(filepath);
+                OnWarningAdded(filepath);
                 } else {
-                    _project.WarningFiles.Remove(filepath);
+                OnWarningRemoved(filepath);
                 }
                 if (errorSink.Errors.Count > 0) {
-                    _project.ErrorFiles.Add(filepath);
+                OnErrorAdded(filepath);
                 } else {
-                    _project.ErrorFiles.Remove(filepath);
-                }
+                OnErrorRemoved(filepath);
             }
 
             if (provider != null && (errorSink.Errors.Count > 0 || errorSink.Warnings.Count > 0)) {
@@ -979,9 +982,9 @@ namespace Microsoft.PythonTools.Intellisense {
 
             var parser = new ReverseExpressionParser(snapshot, snapshot.TextBuffer, applicableSpan);
             if (parser.IsInGrouping()) {
-                options = options.Clone();
-                options.IncludeStatementKeywords = false;
-            }
+            options = options.Clone();
+            options.IncludeStatementKeywords = false;
+                }
 
             return new NormalCompletionAnalysis(
                 snapshot.TextBuffer.GetAnalyzer(),
@@ -1046,7 +1049,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 Debug.Assert(!string.IsNullOrEmpty(dir));
                 return;
             }
-
+            
             if (addDir) {
                 lock (_contentsLock) {
                     _pyAnalyzer.AddAnalysisDirectory(dir);
@@ -1254,20 +1257,57 @@ namespace Microsoft.PythonTools.Intellisense {
 
         internal void UnloadFile(IProjectEntry entry, bool suppressUpdate = false) {
             if (entry != null && entry.FilePath != null) {
-                if (_taskProvider.IsValueCreated) {
-                    // _taskProvider may not be created if we've never opened a Python file and
-                    // none of the project files have errors
-                    _taskProvider.Value.Clear(entry.FilePath, !suppressUpdate);
-                }
-                if (_project != null) {
-                    _project.WarningFiles.Remove(entry.FilePath);
-                    _project.ErrorFiles.Remove(entry.FilePath);
-                }
+                RemoveErrors(entry, suppressUpdate);
                 _pyAnalyzer.RemoveModule(entry);
                 IProjectEntry removed;
                 _projectFiles.TryRemove(entry.FilePath, out removed);
             }
         }
+
+        internal void RemoveErrors(IProjectEntry entry, bool suppressUpdate) {
+            if (entry != null && entry.FilePath != null) {
+                if (_taskProvider.IsValueCreated) {
+                    // _taskProvider may not be created if we've never opened a Python file and
+                    // none of the project files have errors
+                    _taskProvider.Value.Clear(entry.FilePath, !suppressUpdate);
+                }
+                OnWarningRemoved(entry.FilePath);
+                OnErrorRemoved(entry.FilePath);
+            }
+        }
+
+        private void OnWarningAdded(string path) {
+            var evt = WarningAdded;
+            if (evt != null) {
+                evt(this, new FileEventArgs(path));
+            }
+        }
+
+        private void OnWarningRemoved(string path) {
+            var evt = WarningRemoved;
+            if (evt != null) {
+                evt(this, new FileEventArgs(path));
+                }
+            }
+
+        private void OnErrorAdded(string path) {
+            var evt = ErrorAdded;
+            if (evt != null) {
+                evt(this, new FileEventArgs(path));
+        }
+        }
+
+        private void OnErrorRemoved(string path) {
+            var evt = ErrorRemoved;
+            if (evt != null) {
+                evt(this, new FileEventArgs(path));
+            }
+        }
+
+        internal EventHandler<FileEventArgs> WarningAdded;
+        internal EventHandler<FileEventArgs> WarningRemoved;
+        internal EventHandler<FileEventArgs> ErrorAdded;
+        internal EventHandler<FileEventArgs> ErrorRemoved;
 
         #endregion
 
@@ -1300,7 +1340,6 @@ namespace Microsoft.PythonTools.Intellisense {
             private void Worker(object param) {
                 bool changed = false;
                 WorkerMessage msg;
-                List<ErrorResult> existing;
                 var lastUpdateTime = DateTime.Now;
 
                 for (; ; ) {
@@ -1315,21 +1354,13 @@ namespace Microsoft.PythonTools.Intellisense {
                                 break;
                             case WorkerMessage.MessageType.Warnings:
                                 lock (_contentsLock) {
-                                    if (_warnings.TryGetValue(msg.Filename, out existing)) {
-                                        existing.AddRange(msg.Errors);
-                                    } else {
-                                        _warnings[msg.Filename] = msg.Errors;
-                                    }
+                                    _warnings[msg.Filename] = msg.Errors;
                                 }
                                 changed = true;
                                 break;
                             case WorkerMessage.MessageType.Errors:
                                 lock (_contentsLock) {
-                                    if (_errors.TryGetValue(msg.Filename, out existing)) {
-                                        existing.AddRange(msg.Errors);
-                                    } else {
-                                        _errors[msg.Filename] = msg.Errors;
-                                    }
+                                    _errors[msg.Filename] = msg.Errors;
                                 }
                                 changed = true;
                                 break;
@@ -1342,7 +1373,7 @@ namespace Microsoft.PythonTools.Intellisense {
                         if (changed && _errorList != null) {
                             var currentTime = DateTime.Now;
                             if ((currentTime - lastUpdateTime).TotalMilliseconds > 1000) {
-                                _errorList.RefreshTasks(_cookie);
+                                RefreshTasks();
                                 lastUpdateTime = currentTime;
                                 changed = false;
                             }
@@ -1359,7 +1390,15 @@ namespace Microsoft.PythonTools.Intellisense {
 
                 // Handle refresh not handled in loop
                 if (changed && _errorList != null) {
+                    RefreshTasks();
+                }
+            }
+
+            private void RefreshTasks() {
+                try {
                     _errorList.RefreshTasks(_cookie);
+                } catch (InvalidComObjectException) {
+                    // DevDiv2 759317 - Watson bug, COM object can go away...
                 }
             }
 
@@ -1424,13 +1463,19 @@ namespace Microsoft.PythonTools.Intellisense {
 
             #endregion
 
-            internal void AddErrors(string filename, List<ErrorResult> errors) {
+            /// <summary>
+            /// Replaces the errors for the specified filename with the new set of errors.
+            /// </summary>
+            internal void ReplaceErrors(string filename, List<ErrorResult> errors) {
                 if (errors.Count > 0) {
                     SendMessage(new WorkerMessage { Type = WorkerMessage.MessageType.Errors, Filename = filename, Errors = errors });
                 }
             }
 
-            internal void AddWarnings(string filename, List<ErrorResult> warnings) {
+            /// <summary>
+            /// Replaces the warnings for the specified filename with the new set of errors.
+            /// </summary>
+            internal void ReplaceWarnings(string filename, List<ErrorResult> warnings) {
                 if (warnings.Count > 0) {
                     SendMessage(new WorkerMessage { Type = WorkerMessage.MessageType.Warnings, Filename = filename, Errors = warnings });
                 }

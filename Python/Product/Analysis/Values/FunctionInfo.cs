@@ -380,10 +380,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 foreach (var keyValue in references) {
                     yield return new SimpleOverloadResult(
                         FunctionDefinition.Parameters.Select((p, i) => {
-                            var name = MakeParameterName(ProjectState, p, DeclaringModule.Tree);
+                            var name = MakeParameterName(p);
+                            var defaultValue = GetDefaultValue(ProjectState, p, DeclaringModule.Tree);
                             var type = keyValue.Key[i];
                             var refs = keyValue.Value[i];
-                            return new ParameterResult(name, string.Empty, type, false, refs);
+                            return new ParameterResult(name, string.Empty, type, false, refs, defaultValue);
                         }).ToArray(),
                         FunctionDefinition.Name,
                         Documentation
@@ -392,7 +393,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        internal static string MakeParameterName(PythonAnalyzer state, Parameter curParam, PythonAst tree) {
+        internal static string MakeParameterName(Parameter curParam) {
             string name = curParam.Name;
             if (curParam.IsDictionary) {
                 name = "**" + name;
@@ -400,55 +401,58 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 name = "*" + curParam.Name;
             }
 
+            return name;
+        }
+
+        internal static string GetDefaultValue(PythonAnalyzer state, Parameter curParam, PythonAst tree) {
             if (curParam.DefaultValue != null) {
                 // TODO: Support all possible expressions for default values, we should
                 // probably have a PythonAst walker for expressions or we should add ToCodeString()
                 // onto Python ASTs so they can round trip
                 ConstantExpression defaultValue = curParam.DefaultValue as ConstantExpression;
                 if (defaultValue != null) {
-                    name = name + " = " + defaultValue.GetConstantRepr(state.LanguageVersion);
+                    return defaultValue.GetConstantRepr(state.LanguageVersion);
                 } else {
 
                     NameExpression nameExpr = curParam.DefaultValue as NameExpression;
                     if (nameExpr != null) {
-                        name = name + " = " + nameExpr.Name;
+                        return nameExpr.Name;
                     } else {
 
                         DictionaryExpression dict = curParam.DefaultValue as DictionaryExpression;
                         if (dict != null) {
                             if (dict.Items.Count == 0) {
-                                name = name + " = {}";
+                                return "{}";
                             } else {
-                                name = name + " = {...}";
+                                return "{...}";
                             }
                         } else {
 
                             ListExpression list = curParam.DefaultValue as ListExpression;
                             if (list != null) {
                                 if (list.Items.Count == 0) {
-                                    name = name + " = []";
+                                    return "[]";
                                 } else {
-                                    name = name + " = [...]";
+                                    return "[...]";
                                 }
                             } else {
 
                                 TupleExpression tuple = curParam.DefaultValue as TupleExpression;
                                 if (tuple != null) {
                                     if (tuple.Items.Count == 0) {
-                                        name = name + " = ()";
+                                        return "()";
                                     } else {
-                                        name = name + " = (...)";
+                                        return "(...)";
                                     }
                                 } else {
-                                    name = name + " = " + curParam.DefaultValue.ToCodeString(tree);
+                                    return curParam.DefaultValue.ToCodeString(tree);
                                 }
                             }
                         }
                     }
                 }
             }
-
-            return name;
+            return null;
         }
 
         public override void SetMember(Node node, AnalysisUnit unit, string name, IAnalysisSet value) {

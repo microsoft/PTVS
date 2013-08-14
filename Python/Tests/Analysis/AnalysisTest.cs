@@ -2558,14 +2558,14 @@ def m(x = math.atan2(1, 0)): pass
 ");
 
             var tests = new[] {
-                new { FuncName = "f", ParamName="x = None" },
-                new { FuncName = "g", ParamName="x = {}" },
-                new { FuncName = "h", ParamName="x = {...}" },
-                new { FuncName = "i", ParamName="x = []" },
-                new { FuncName = "j", ParamName="x = [...]" },
-                new { FuncName = "k", ParamName="x = ()" },
-                new { FuncName = "l", ParamName="x = (...)" },
-                new { FuncName = "m", ParamName="x = math.atan2(1,0)" },
+                new { FuncName = "f", ParamName="x", DefaultValue = "None" },
+                new { FuncName = "g", ParamName="x", DefaultValue = "{}" },
+                new { FuncName = "h", ParamName="x", DefaultValue = "{...}" },
+                new { FuncName = "i", ParamName="x", DefaultValue = "[]" },
+                new { FuncName = "j", ParamName="x", DefaultValue="[...]" },
+                new { FuncName = "k", ParamName="x", DefaultValue = "()" },
+                new { FuncName = "l", ParamName="x", DefaultValue = "(...)" },
+                new { FuncName = "m", ParamName="x", DefaultValue = "math.atan2(1,0)" },
             };
 
             foreach (var test in tests) {
@@ -2573,6 +2573,7 @@ def m(x = math.atan2(1, 0)): pass
                 Assert.AreEqual(result.Length, 1);
                 Assert.AreEqual(result[0].Parameters.Length, 1);
                 Assert.AreEqual(result[0].Parameters[0].Name, test.ParamName);
+                Assert.AreEqual(result[0].Parameters[0].DefaultValue, test.DefaultValue);
             }
         }
 
@@ -3255,7 +3256,23 @@ f('a', 'b', 1)
 ";
             var entry = ProcessText(text);
             var f = entry.GetSignaturesByIndex("f", 0).Select(sig => {
-                return string.Format("{0}({1})", sig.Name, string.Join(", ", sig.Parameters.Select(p => string.Format("{0} := ({1})", p.Name, p.Type))));
+                return string.Format(
+                    "{0}({1})",
+                    sig.Name,
+                    string.Join(
+                        ", ",
+                        sig.Parameters
+                        .Select(
+                            p => {
+                                if (String.IsNullOrWhiteSpace(p.DefaultValue)) {
+                                    return string.Format("{0} := ({1})", p.Name, p.Type);
+                                } else {
+                                    return string.Format("{0} = {1} := ({2})", p.Name, p.DefaultValue, p.Type);
+                                }
+                            }
+                        )
+                    )
+                );
             }).ToList();
             foreach (var sig in f) {
                 Console.WriteLine(sig);

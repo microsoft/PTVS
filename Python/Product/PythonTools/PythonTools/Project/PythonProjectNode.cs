@@ -512,15 +512,21 @@ namespace Microsoft.PythonTools.Project {
 
         protected override void Dispose(bool disposing) {
             if (disposing) {
-                if (_analyzer != null && _analyzer.RemoveUser()) {
+                if (_analyzer != null) {
                     if (this.WarningFiles.Count > 0 || this.ErrorFiles.Count > 0) {
-                        foreach (var node in EnumNodesOfType<PythonFileNode>()) {
-                            _analyzer.UnloadFile(node.GetAnalysis(), suppressUpdate: true);
+                        foreach (var file in WarningFiles.Concat(ErrorFiles)) {
+                            var node = FindNodeByFullPath(file) as PythonFileNode;
+                            if (node != null) {
+                                _analyzer.RemoveErrors(node.GetAnalysis(), suppressUpdate: false);
+                            }
                         }
                     }
 
-                    _analyzer.Dispose();
-                    _analyzer = null;
+                    if (_analyzer.RemoveUser()) {
+                        _analyzer.Dispose();
+                        _analyzer = null;
+                    }
+                    UnHookErrorsAndWarnings(_analyzer);
                 }
 
                 if (_interpreters != null) {
@@ -576,6 +582,7 @@ namespace Microsoft.PythonTools.Project {
                         pyProj._analyzer.InterpreterFactory == curFactory) {
                         // we have the same interpreter, we'll share analysis engines across projects.
                         pyProj._analyzer.AddUser();
+                        HookErrorsAndWarnings(pyProj._analyzer);
                         return pyProj._analyzer;
                     }
                 }
@@ -584,12 +591,49 @@ namespace Microsoft.PythonTools.Project {
             var model = PythonToolsPackage.ComponentModel;
             var interpreterService = model.GetService<IInterpreterOptionsService>();
             var factory = GetInterpreterFactory();
-            return new VsProjectAnalyzer(
+            var res = new VsProjectAnalyzer(
                 factory.CreateInterpreter(),
                 factory,
                 interpreterService.Interpreters.ToArray(),
                 model.GetService<IErrorProviderFactory>(),
-                this);
+                false);
+
+            HookErrorsAndWarnings(res);
+            return res;
+        }
+
+        private void HookErrorsAndWarnings(VsProjectAnalyzer res) {
+            res.ErrorAdded += OnErrorAdded;
+            res.ErrorRemoved += OnErrorRemoved;
+            res.WarningAdded += OnWarningAdded;
+            res.WarningRemoved += OnWarningRemoved;
+        }
+
+        private void UnHookErrorsAndWarnings(VsProjectAnalyzer res) {
+            res.ErrorAdded -= OnErrorAdded;
+            res.ErrorRemoved -= OnErrorRemoved;
+            res.WarningAdded -= OnWarningAdded;
+            res.WarningRemoved -= OnWarningRemoved;
+        }
+
+        private void OnErrorAdded(object sender, FileEventArgs args) {
+            if (_diskNodes.ContainsKey(args.Filename)) {
+                _errorFiles.Add(args.Filename);
+            }
+        }
+
+        private void OnErrorRemoved(object sender, FileEventArgs args) {
+            _errorFiles.Remove(args.Filename);
+        }
+
+        private void OnWarningAdded(object sender, FileEventArgs args) {
+            if (_diskNodes.ContainsKey(args.Filename)) {
+                _warningFiles.Add(args.Filename);
+            }
+        }
+
+        private void OnWarningRemoved(object sender, FileEventArgs args) {
+            _warningFiles.Remove(args.Filename);
         }
 
         /// <summary>
@@ -634,6 +678,9 @@ namespace Microsoft.PythonTools.Project {
             }
             RefreshInterpreters();
 
+            if (_analyzer != null) {
+                UnHookErrorsAndWarnings(_analyzer);
+            }
             var analyzer = CreateAnalyzer();
 
             Reanalyze(this, analyzer);

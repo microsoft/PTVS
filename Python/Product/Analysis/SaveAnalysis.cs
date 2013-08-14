@@ -32,15 +32,20 @@ namespace Microsoft.PythonTools.Analysis {
         private Dictionary<string, string> _MemoizedStrings = new Dictionary<string, string>();
         private Dictionary<string, object[]> _moduleNames = new Dictionary<string, object[]>();
         private static readonly List<object> _EmptyMro = new List<object>();
+        private PythonAnalyzer _curAnalyzer;
+        private ModuleInfo _curModule;
 
         public void Save(PythonAnalyzer state, string outDir) {
-
+            _curAnalyzer = state;
             foreach (var modKeyValue in state.Modules) {
                 string name = modKeyValue.Key;
                 var moduleInfo = modKeyValue.Value.Module as ModuleInfo;
 
                 if (moduleInfo != null) {
+                    _curModule = moduleInfo;
+
                     var info = SerializeModule(moduleInfo);
+                    
                     for (int i = 0; i < 10; i++) {
                         try {
                             using (var writer = new FileStream(Path.Combine(outDir, name + ".idb"), FileMode.Create, FileAccess.ReadWrite)) {
@@ -544,7 +549,6 @@ namespace Microsoft.PythonTools.Analysis {
 
         private object GenerateParameter(Parameter param, IAnalysisSet typeInfo) {
             Dictionary<string, object> res = new Dictionary<string, object>();
-            // TODO: Serialize default values
             if (param.Kind == ParameterKind.Dictionary) {
                 res["arg_format"] = "**";
             } else if (param.Kind == ParameterKind.List) {
@@ -552,6 +556,10 @@ namespace Microsoft.PythonTools.Analysis {
             }
             res["name"] = MemoizeString(param.Name);
             res["type"] = GenerateTypeName(typeInfo, true);
+            var defaultValue = FunctionInfo.GetDefaultValue(_curAnalyzer, param, _curModule.ProjectEntry.Tree);
+            if (defaultValue != null) {
+                res["default_value"] = defaultValue;
+            }
             return res;
         }
 

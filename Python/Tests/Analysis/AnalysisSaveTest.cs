@@ -350,6 +350,48 @@ inst_f = A().f
             }
         }
 
+        [TestMethod, Priority(0)]
+        public void DefaultParameters() {
+            var code = @"
+def f(x = None): pass
+
+def g(x = {}): pass
+
+def h(x = {2:3}): pass
+
+def i(x = []): pass
+
+def j(x = [None]): pass
+
+def k(x = ()): pass
+
+def l(x = (2, )): pass
+
+def m(x = math.atan2(1, 0)): pass
+";
+
+            var tests = new[] {
+                new { FuncName = "f", ParamName="x", DefaultValue = "None" },
+                new { FuncName = "g", ParamName="x", DefaultValue = "{}" },
+                new { FuncName = "h", ParamName="x", DefaultValue = "{...}" },
+                new { FuncName = "i", ParamName="x", DefaultValue = "[]" },
+                new { FuncName = "j", ParamName="x", DefaultValue="[...]" },
+                new { FuncName = "k", ParamName="x", DefaultValue = "()" },
+                new { FuncName = "l", ParamName="x", DefaultValue = "(...)" },
+                new { FuncName = "m", ParamName="x", DefaultValue = "math.atan2(1,0)" },
+            };
+
+            using (var newPs = SaveLoad(PythonLanguageVersion.V27, new AnalysisModule("test", "test.py", code))) {
+                var entry = newPs.NewModule("test2", "from test import *");
+                foreach (var test in tests) {
+                    var result = entry.Analysis.GetSignaturesByIndex(test.FuncName, 1).ToArray();
+                    Assert.AreEqual(result.Length, 1);
+                    Assert.AreEqual(result[0].Parameters.Length, 1);
+                    Assert.AreEqual(result[0].Parameters[0].Name, test.ParamName);
+                    Assert.AreEqual(result[0].Parameters[0].DefaultValue, test.DefaultValue);
+                }
+            }
+        }
 
         private SaveLoadResult SaveLoad(PythonLanguageVersion version, params AnalysisModule[] modules) {
             IPythonProjectEntry[] entries = new IPythonProjectEntry[modules.Length];

@@ -45,7 +45,7 @@ namespace Microsoft.VisualStudio.Repl {
                 var span = new SnapshotSpan(_textView.TextSnapshot, _tags[i].Item1, 0);
                 bool intersects = false;
                 foreach (var applicableSpan in spans) {
-                    if (applicableSpan.IntersectsWith(span)) {
+                    if (applicableSpan.TranslateTo(_textView.TextSnapshot, SpanTrackingMode.EdgeInclusive).IntersectsWith(span)) {
                         intersects = true;
                         break;
                     }

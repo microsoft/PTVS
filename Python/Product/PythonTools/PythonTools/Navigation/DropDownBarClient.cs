@@ -646,6 +646,8 @@ namespace Microsoft.PythonTools.Navigation {
         private void ParserOnNewParseTree(object sender, EventArgs e) {
             var dropDownBar = _dropDownBar;
             if (dropDownBar != null) {
+                _curNestedIndex = -1;
+                _curTopLevelIndex = -1;
                 Action callback = () => { CaretPositionChanged(this, new CaretPositionChangedEventArgs(null, _textView.Caret.Position, _textView.Caret.Position)); };
                 _dispatcher.BeginInvoke(callback, DispatcherPriority.Background);
             }

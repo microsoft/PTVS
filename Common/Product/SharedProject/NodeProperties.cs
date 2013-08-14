@@ -327,6 +327,7 @@ namespace Microsoft.VisualStudioTools.Project
         }
     }
 
+    [ComVisible(true)]
     public class ExcludedFileNodeProperties : FileNodeProperties {
         internal ExcludedFileNodeProperties(HierarchyNode node)
             : base(node)
