@@ -24,7 +24,7 @@
     </DefineConstants>
   </PropertyGroup>
   <ItemGroup>
-    <WixExtension Include="WixUIExtension;WixUtilExtension" />
+    <WixExtension Include="WixUIExtension;WixUtilExtension;WixDependencyExtension" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="PythonToolsInstaller.wxs" />

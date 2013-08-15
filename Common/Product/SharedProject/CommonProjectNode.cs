@@ -23,7 +23,6 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows.Threading;
 using Microsoft.VisualStudio;
@@ -31,7 +30,6 @@ using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools.Navigation;
 using Microsoft.VisualStudioTools.Project.Automation;
-using Microsoft.Windows.Design.Host;
 using MSBuild = Microsoft.Build.Evaluation;
 using VsCommands2K = Microsoft.VisualStudio.VSConstants.VSStd2KCmdID;
 using VSConstants = Microsoft.VisualStudio.VSConstants;
@@ -1164,11 +1162,6 @@ namespace Microsoft.VisualStudioTools.Project {
             if (null != libraryManager) {
                 libraryManager.RegisterHierarchy(InteropSafeHierarchy);
             }
-
-
-            //If this is a WPFFlavor-ed project, then add a project-level DesignerContext service to provide
-            //event handler generation (EventBindingProvider) for the XAML designer.
-            this.OleServiceProvider.AddService(typeof(DesignerContext), new OleServiceProvider.ServiceCreatorCallback(this.CreateServices), false);
         }
 
         public void BoldItem(HierarchyNode node, bool isBold) {
@@ -1316,16 +1309,9 @@ namespace Microsoft.VisualStudioTools.Project {
                 newNode.SetIsLinkFile(true);
             }
 
-            string include = item.GetMetadata(ProjectFileConstants.Include);
-
             newNode.OleServiceProvider.AddService(typeof(EnvDTE.Project),
                 new OleServiceProvider.ServiceCreatorCallback(CreateServices), false);
             newNode.OleServiceProvider.AddService(typeof(EnvDTE.ProjectItem), newNode.ServiceCreator, false);
-
-            if (!string.IsNullOrEmpty(include) && Path.GetExtension(include).Equals(".xaml", StringComparison.OrdinalIgnoreCase)) {
-                //Create a DesignerContext for the XAML designer for this file
-                newNode.OleServiceProvider.AddService(typeof(DesignerContext), newNode.ServiceCreator, false);
-            }
 
             newNode.OleServiceProvider.AddService(typeof(VSLangProj.VSProject),
                 new OleServiceProvider.ServiceCreatorCallback(CreateServices), false);
@@ -1581,23 +1567,15 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <summary>
         /// Creates the services exposed by this project.
         /// </summary>
-        private object CreateServices(Type serviceType) {
+        protected virtual object CreateServices(Type serviceType) {
             object service = null;
             if (typeof(VSLangProj.VSProject) == serviceType) {
                 service = VSProject;
             } else if (typeof(EnvDTE.Project) == serviceType) {
                 service = GetAutomationObject();
-            } else if (typeof(DesignerContext) == serviceType) {
-                service = this.DesignerContext;
             }
 
             return service;
-        }
-
-        protected virtual internal Microsoft.Windows.Design.Host.DesignerContext DesignerContext {
-            get {
-                return null;
-            }
         }
 
         /// <summary>

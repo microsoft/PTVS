@@ -258,7 +258,6 @@ namespace Microsoft.PythonTools.Analysis {
             string interpreterPath,
             string libraryPath,
             string sitePath = null,
-            HashSet<string> allModuleNames = null,
             bool requireInitPyFiles = true
         ) {
             if (File.Exists(interpreterPath)) {
@@ -271,10 +270,6 @@ namespace Microsoft.PythonTools.Analysis {
                 sitePath = Path.Combine(libraryPath, "site-packages");
             }
             var pthDirs = ExpandPathFiles(sitePath);
-
-            if (allModuleNames == null) {
-                allModuleNames = new HashSet<string>(StringComparer.Ordinal);
-            }
 
             // Get modules in stdlib
             var modulesInStdLib = GetModulesInPath(libraryPath, true, true, requireInitPy: requireInitPyFiles);
@@ -309,25 +304,18 @@ namespace Microsoft.PythonTools.Analysis {
                 .Concat(modulesInStdLib)
                 .Concat(modulesInExePath)
                 .Concat(modulesInSitePackages)
-                .Concat(packagesInSitePackages)
-                // Ensure only the first module of each importable name is
-                // returned
-                .Where(mp => allModuleNames.Add(mp.ModuleName));
+                .Concat(packagesInSitePackages);
         }
 
         /// <summary>
         /// Returns a sequence of ModulePaths for all modules importable by the
         /// provided factory.
         /// </summary>
-        public static IEnumerable<ModulePath> GetModulesInLib(
-            IPythonInterpreterFactory factory,
-            HashSet<string> allModuleNames = null
-        ) {
+        public static IEnumerable<ModulePath> GetModulesInLib(IPythonInterpreterFactory factory) {
             return GetModulesInLib(
                 factory.Configuration.InterpreterPath,
                 factory.Configuration.LibraryPath,
                 null,   // default site-packages path
-                allModuleNames,
                 PythonVersionRequiresInitPyFiles(factory.Configuration.Version)
             );
         }

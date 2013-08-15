@@ -30,6 +30,7 @@ namespace Microsoft.PythonTools.Interpreter {
         private readonly SharedDatabaseState _sharedState;
         private readonly bool _cloned;
         private int _databaseReplacedListenerCount;
+        private bool _hasCustomBuiltins;
 
         /// <summary>
         /// Gets the version of the analysis format that this class reads.
@@ -39,9 +40,9 @@ namespace Microsoft.PythonTools.Interpreter {
         private static string _completionDatabasePath;
         private static string _baselineDatabasePath;
 
-        public PythonTypeDatabase(IPythonInterpreterFactory factory, IEnumerable<string> databaseDirectories, IBuiltinPythonModule builtinsModule = null) {
+        public PythonTypeDatabase(IPythonInterpreterFactory factory, IEnumerable<string> databaseDirectories) {
             _factory = factory;
-            _sharedState = new SharedDatabaseState(databaseDirectories.First(), _factory.Configuration.Version, builtinsModule);
+            _sharedState = new SharedDatabaseState(databaseDirectories.First(), _factory.Configuration.Version);
             _sharedState.ListenForCorruptDatabase(this);
             foreach (var d in databaseDirectories.Skip(1)) {
                 LoadDatabase(d);
@@ -353,7 +354,19 @@ namespace Microsoft.PythonTools.Interpreter {
                 return _sharedState.BuiltinModule;
             }
             set {
+                _hasCustomBuiltins |= _sharedState.BuiltinModule != value;
                 _sharedState.BuiltinModule = value;
+            }
+        }
+
+        /// <summary>
+        /// True if someone has replaced the builtin module.  Because the database doesn't own
+        /// a custom built-ins module we can't reason about whether or not those are shareable
+        /// and we must re-load the database.
+        /// </summary>
+        internal bool HasCustomBuiltins {
+            get {
+                return _hasCustomBuiltins;
             }
         }
 

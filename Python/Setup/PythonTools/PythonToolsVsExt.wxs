@@ -11,10 +11,10 @@
         </DirectoryRef>
         <DirectoryRef Id="EXTENSION_INSTALLPATH">
             <Directory Id="Dir_ProjectTemplates" Name="ProjectTemplates">
-                <Directory Id="Dir_PythonProjectTemplates" Name="Python" />
+                <Directory Id="Dir_ProjectTemplates_Python" Name="Python" />
             </Directory>
             <Directory Id="Dir_ItemTemplates" Name="ItemTemplates">
-                <Directory Id="Dir_PythonItemTemplates" Name="Python" />
+                <Directory Id="Dir_ItemTemplates_Python" Name="Python" />
             </Directory>
         </DirectoryRef>
     </Fragment>
@@ -24,7 +24,7 @@
             <Component Id="PerUserInstallRegistry" Directory="INSTALLLOCATION" Guid="{F0602549-7439-4DEC-8DCC-BF986EA53DF0}">
                 <Condition>NOT ALLUSERS = 1</Condition>
                 <RegistryKey Root='HKCU' Key='Software\Microsoft\VisualStudio\$(var.VSTargetVersion)\ExtensionManager\EnabledExtensions'>
-                    <RegistryValue Type='string' Name='96492FC7-7BC6-46F7-8559-66BB4E09FD1E,2.0' Value='[EXTENSION_INSTALLPATH]Extensions\Microsoft\Python Tools for Visual Studio\2.0\'/>
+                    <RegistryValue Type='string' Name='96492FC7-7BC6-46F7-8559-66BB4E09FD1E,2.0' Value='[INSTALLLOCATION]'/>
                 </RegistryKey>
                 <RegistryKey Root='HKCU' Key='Software\Microsoft\VisualStudio\$(var.VSTargetVersion)\ExtensionManager\ExtensionTypes'>
                     <RegistryValue Type='string' Name='96492FC7-7BC6-46F7-8559-66BB4E09FD1E,2.0' Value='Tool'/>
@@ -155,22 +155,22 @@
             <Component Id="cmpB938B4EA7BB94D7F9FB6FB7650B0CA88" Directory="Dir_PythonNewItem" Guid="{54547C3E-D86C-40C9-85C5-91A8CF3EDA93}">
                 <File Id="filADFBA8BEFE9E42CAB841543A6F84D7F1" KeyPath="yes" Source="$(var.TargetDir)\Templates\NewItem\NewPythonItems.vsdir" />
             </Component>
-            <Component Id="cmpEE3557B31D8245178251B6F1FFAD529D" Directory="Dir_PythonItemTemplates" Guid="{19DC2DB5-8303-40C3-8529-45FD843685CD}">
+            <Component Id="cmpEE3557B31D8245178251B6F1FFAD529D" Directory="Dir_ItemTemplates_Python" Guid="{19DC2DB5-8303-40C3-8529-45FD843685CD}">
                 <File Id="fil0BA0EEA2FC68E80AD0214890CEC8F83F" KeyPath="yes" Source="$(var.TargetDir)\ItemTemplates\Python\EmptyPackage.zip" />
             </Component>
-            <Component Id="cmpA361CE8A7384E191107235678B8EEAEC" Directory="Dir_PythonItemTemplates" Guid="{C9CB017F-7245-48E4-BF12-F26FF4168AF7}">
+            <Component Id="cmpA361CE8A7384E191107235678B8EEAEC" Directory="Dir_ItemTemplates_Python" Guid="{C9CB017F-7245-48E4-BF12-F26FF4168AF7}">
                 <File Id="filA978F5681675A6AD62419FF664CAD281" KeyPath="yes" Source="$(var.TargetDir)\ItemTemplates\Python\EmptyPyFile.zip" />
             </Component>
-            <Component Id="cmpEA22F203D13A097F254EA336CC391B72" Directory="Dir_PythonItemTemplates" Guid="{DA90A1AB-EDC5-4D28-8C01-821FD5D2EF92}">
+            <Component Id="cmpEA22F203D13A097F254EA336CC391B72" Directory="Dir_ItemTemplates_Python" Guid="{DA90A1AB-EDC5-4D28-8C01-821FD5D2EF92}">
                 <File Id="filF28BA8CAC3482FBB1B947A162A12F328" KeyPath="yes" Source="$(var.TargetDir)\ItemTemplates\Python\PyClass.zip" />
             </Component>
-            <Component Id="cmp78345A4E7E944A24AB7FCB4675EA2E2C" Directory="Dir_PythonItemTemplates" Guid="{F94B32FD-4532-45DD-AAE2-81A5E96861B0}">
+            <Component Id="cmp78345A4E7E944A24AB7FCB4675EA2E2C" Directory="Dir_ItemTemplates_Python" Guid="{F94B32FD-4532-45DD-AAE2-81A5E96861B0}">
                 <File Id="fil4A3F1FCBCA8D4269A7739CE80BB024A9" KeyPath="yes" Source="$(var.TargetDir)\ItemTemplates\Python\TextFile.zip" />
             </Component>
-            <Component Id="cmpF2FFD4C8F8F3A803EFF2ACC027975136" Directory="Dir_PythonProjectTemplates" Guid="{5D696F4F-0141-4CC9-A3EB-DAB200E4E3AB}">
+            <Component Id="cmpF2FFD4C8F8F3A803EFF2ACC027975136" Directory="Dir_ProjectTemplates_Python" Guid="{5D696F4F-0141-4CC9-A3EB-DAB200E4E3AB}">
                 <File Id="filF3356809E63779C8D279862E6C856094" KeyPath="yes" Source="$(var.TargetDir)\ProjectTemplates\Python\ConsoleAppProject.zip" />
             </Component>
-            <Component Id="cmp8135586F02804D91A8DB72CC7FC6ACD4" Directory="Dir_PythonProjectTemplates" Guid="{5982C49A-8FAA-4351-BA08-2F6DDD71B0F8}">
+            <Component Id="cmp8135586F02804D91A8DB72CC7FC6ACD4" Directory="Dir_ProjectTemplates_Python" Guid="{5982C49A-8FAA-4351-BA08-2F6DDD71B0F8}">
                 <File Id="filA06AE3FFF4054E38B7EBD00CA9F67187" KeyPath="yes" Source="$(var.TargetDir)\ProjectTemplates\Python\FromExistingCode.zip" />
             </Component>
             <Component Id="cmp5E1CEDE43A189A6AACBB60829AD63E1D" Directory="dir1B4805CEC92CD8586B8C95875EA0F7DF" Guid="{6BF9570B-B452-4D37-AC11-7376E0D43881}">
@@ -363,7 +363,7 @@
             <Component Id="cmp48B91B84718448098913BE17C2917A75" Directory="INSTALLLOCATION" Guid="{1594FEB3-FCDD-40B1-AB02-865D2910F0BD}">
                 <File Id="filD0CBF62C782C4544B634211F866AE0C1" KeyPath="yes" Source="$(var.TargetDir)\visualstudio_py_testlauncher.py" />
             </Component>
-            <Component Id="cmp4BF6750831F24AF881FB1E73C426E467" Directory="Dir_PythonItemTemplates" Guid="{5A275BA2-90A3-4797-9D45-F5D7994A2B2F}">
+            <Component Id="cmp4BF6750831F24AF881FB1E73C426E467" Directory="Dir_ItemTemplates_Python" Guid="{5A275BA2-90A3-4797-9D45-F5D7994A2B2F}">
                 <File Id="fil46B04FF46A1B42B885B66E15A98196C9" KeyPath="yes" Source="$(var.TargetDir)\ItemTemplates\Python\UnitTestFile.zip" />
             </Component>
             <?endif?>

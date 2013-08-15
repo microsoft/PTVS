@@ -44,7 +44,7 @@ namespace Microsoft.PythonTools.Analysis {
         private readonly string _documentation;
         public SimpleOverloadResult(ParameterResult[] parameters, string name, string documentation)
             : base(parameters, name) {
-            _documentation = ParameterResult.Trim(documentation);
+            _documentation = documentation;
         }
 
         public override string Documentation {

@@ -41,8 +41,5 @@
   <Content>
     <VsPackage>|%CurrentProject%;PkgdefProjectOutputGroup|</VsPackage>
     <MefComponent>|%CurrentProject%|</MefComponent>
-    <ProjectTemplate>Templates\Projects\DjangoProject</ProjectTemplate>
-    <ProjectTemplate>Templates\Projects\AzureDjangoProject</ProjectTemplate>
-    <ItemTemplate>Templates\Files\DjangoHtmlTemplate</ItemTemplate>
   </Content>
 </Vsix>

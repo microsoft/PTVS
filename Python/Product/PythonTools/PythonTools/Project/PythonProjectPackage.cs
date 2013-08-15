@@ -31,9 +31,8 @@ namespace Microsoft.PythonTools.Project {
     [ProvideObject(typeof(PythonGeneralPropertyPage))]
     [ProvideObject(typeof(PythonDebugPropertyPage))]
     [ProvideObject(typeof(PublishPropertyPage))]
-    [ProvideEditorExtension(typeof(PythonEditorFactory), PythonConstants.FileExtension, 50, ProjectGuid = VSConstants.CLSID.MiscellaneousFilesProject_string, NameResourceID = 3004, DefaultName = "module", TemplateDir = "NewItemTemplates")]
-    [ProvideFileExtensionMapping("{E23E32ED-3467-4401-A364-1352666A3502}", "Python Editor", typeof(PythonEditorFactory), "{" + PythonConstants.ProjectSystemPackageGuid + "}", 100)]
-#if DEV11_OR_LATER
+    [ProvideEditorExtension(typeof(PythonEditorFactory), PythonConstants.FileExtension, 50, ProjectGuid = VSConstants.CLSID.MiscellaneousFilesProject_string, NameResourceID = 3004, DefaultName = "module", TemplateDir = "Templates\\NewItem")]
+    #if DEV11_OR_LATER
     [ProvideEditorExtension2(typeof(PythonEditorFactory), PythonConstants.FileExtension, 50, __VSPHYSICALVIEWATTRIBUTES.PVA_SupportsPreview, "*:1", ProjectGuid = PythonConstants.ProjectFactoryGuid, NameResourceID = 3004, DefaultName = "module", TemplateDir = ".\\NullPath")]
     [ProvideEditorExtension2(typeof(PythonEditorFactory), PythonConstants.WindowsFileExtension, 60, __VSPHYSICALVIEWATTRIBUTES.PVA_SupportsPreview, null, ProjectGuid = PythonConstants.ProjectFactoryGuid, NameResourceID = 3004, DefaultName = "module", TemplateDir = ".\\NullPath")]
     [ProvideEditorExtension2(typeof(PythonEditorFactoryPromptForEncoding), PythonConstants.FileExtension, 50, __VSPHYSICALVIEWATTRIBUTES.PVA_SupportsPreview, ProjectGuid = PythonConstants.ProjectFactoryGuid, NameResourceID = 3015, LinkedEditorGuid = PythonConstants.EditorFactoryGuid, TemplateDir = ".\\NullPath")]

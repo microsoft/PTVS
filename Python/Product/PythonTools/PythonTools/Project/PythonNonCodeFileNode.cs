@@ -14,22 +14,20 @@
 
 using System;
 using System.IO;
-using Microsoft.PythonTools.Designer;
 using Microsoft.VisualStudioTools.Project;
-using Microsoft.Windows.Design.Host;
 
 namespace Microsoft.PythonTools.Project {
     class PythonNonCodeFileNode : CommonNonCodeFileNode {
-        private DesignerContext _designerContext;
+        private object _designerContext;
 
         public PythonNonCodeFileNode(CommonProjectNode root, ProjectElement e)
             : base(root, e) {
         }
 
-        protected internal Microsoft.Windows.Design.Host.DesignerContext DesignerContext {
+        protected internal object DesignerContext {
             get {
                 if (_designerContext == null) {
-                    _designerContext = new DesignerContext();
+                    _designerContext = XamlDesignerSupport.CreateDesignerContext();
                     //Set the EventBindingProvider for this XAML file so the designer will call it
                     //when event handlers need to be generated
                     var dirName = Path.GetDirectoryName(Url);
@@ -44,7 +42,7 @@ namespace Microsoft.PythonTools.Project {
                     }
 
                     if (child != null) {
-                        _designerContext.EventBindingProvider = new WpfEventBindingProvider(child as PythonFileNode);
+                        XamlDesignerSupport.InitializeEventBindingProvider(_designerContext, child as PythonFileNode);
                     }
                 }
                 return _designerContext;
@@ -53,7 +51,7 @@ namespace Microsoft.PythonTools.Project {
 
         protected override object CreateServices(Type serviceType) {
             object service = null;
-            if (typeof(DesignerContext) == serviceType) {
+            if (XamlDesignerSupport.DesignerContextType == serviceType) {
                 service = this.DesignerContext;
             } else {
                 return base.CreateServices(serviceType);

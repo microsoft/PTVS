@@ -350,6 +350,25 @@ namespace AnalysisTests {
         }
 
 
+        [TestMethod, Priority(0)]
+        public void ConflictingPyAndPyd() {
+            var files = new[] {
+                "a.py",
+                "a.pyd",
+                "b.pyd",
+                "b.pyw"
+            };
+            using (var libDb = new TemporaryLibAndDB(files))
+            using (var analyzer = libDb.Analyzer) {
+                libDb.DeleteDatabase(files);
+
+                analyzer.Prepare();
+
+                Assert.AreEqual(0, analyzer._analyzeFileGroups.Count);
+                Assert.AreEqual(1, analyzer._scrapeFileGroups.Count);
+                Assert.AreEqual(2, analyzer._scrapeFileGroups[0].Count);
+            }
+        }
 
         /// <summary>
         /// Creates a temporary 'library' and 'database' on disk for testing the

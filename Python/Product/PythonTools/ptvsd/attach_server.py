@@ -12,7 +12,7 @@
  #
  # ###########################################################################
 
-__all__ = ['enable_attach', 'wait_for_attach', 'break_into_debugger', 'settrace']
+__all__ = ['enable_attach', 'wait_for_attach', 'break_into_debugger', 'settrace', 'AttachAlreadyEnabledError']
 
 import atexit
 import getpass
@@ -77,8 +77,13 @@ INFO = to_bytes('INFO')
 ATCH = to_bytes('ATCH')
 REPL = to_bytes('REPL')
 
+_attach_enabled = False
 _attached = threading.Event()
 vspd.DONT_DEBUG.append(__file__)
+
+
+class AttachAlreadyEnabledError(Exception):
+    """ptvsd.enable_attach() has already been called in this process."""
 
 
 def enable_attach(secret, address = ('0.0.0.0', DEFAULT_PORT), certfile = None, keyfile = None, redirect_output = True):
@@ -113,6 +118,12 @@ def enable_attach(secret, address = ('0.0.0.0', DEFAULT_PORT), certfile = None, 
     is attached, call ptvsd.wait_for_attach. The debugger can be detached and
     re-attached multiple times after enable_attach is called.
 
+    This function can only be called once during the lifetime of the process.
+    On a second call, an AttachAlreadyEnabledError is raised. In circumstances
+    where the caller does not control how many times the function will be
+    called (e.g. when a script with a single call is run more than once by
+    a hosting app or framework), the call should be wrapped in try..except.
+
     Only the thread on which this function is called, and any threads that are
     created after it returns, will be visible in the debugger once it is
     attached. Any threads that are already running before this function is
@@ -130,6 +141,11 @@ def enable_attach(secret, address = ('0.0.0.0', DEFAULT_PORT), certfile = None, 
         x_frames = clr.GetCurrentRuntime().GetLanguageByExtension('py').Options.Frames
         if not x_tracing or not x_frames:
             raise RuntimeError('IronPython must be started with -X:Tracing and -X:Frames options to support PTVS remote debugging.')
+
+    global _attach_enabled
+    if _attach_enabled:
+        raise AttachAlreadyEnabledError('ptvsd.enable_attach() has already been called in this process.')
+    _attach_enabled = True
 
     if redirect_output:
         vspd.enable_output_redirection()

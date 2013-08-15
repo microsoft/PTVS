@@ -119,7 +119,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     base.Description = _lazyDescriptionSource();
                     _lazyDescriptionSource = null;
                 }
-                return base.Description;
+                return base.Description.LimitLines();
             }
             set {
                 base.Description = value;

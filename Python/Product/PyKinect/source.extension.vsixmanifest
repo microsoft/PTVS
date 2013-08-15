@@ -39,6 +39,5 @@
   </References>
   <Content>
     <VsPackage>|%CurrentProject%;PkgdefProjectOutputGroup|</VsPackage>
-    <ProjectTemplate>Templates\Projects\PyKinectPyGame</ProjectTemplate>
   </Content>
 </Vsix>

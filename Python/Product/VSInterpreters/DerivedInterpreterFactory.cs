@@ -14,6 +14,8 @@
 
 using System;
 using System.IO;
+using System.Linq;
+using System.Text.RegularExpressions;
 using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.PythonTools.Interpreters {
@@ -126,11 +128,43 @@ namespace Microsoft.PythonTools.Interpreters {
             return _base.MakeInterpreter(typeDb);
         }
 
+        private static bool ShouldIncludeGlobalSitePackages(string prefixPath, string libPath) {
+            var cfgFile = Path.Combine(prefixPath, "pyvenv.cfg");
+            if (File.Exists(cfgFile)) {
+                try {
+                    var lines = File.ReadAllLines(cfgFile);
+                    return lines
+                        .Select(line => Regex.Match(
+                            line,
+                            "^include-system-site-packages\\s*=\\s*true",
+                            RegexOptions.IgnoreCase
+                        ))
+                        .Any(m => m != null && m.Success);
+                } catch (IOException) {
+                } catch (UnauthorizedAccessException) {
+                } catch (System.Security.SecurityException) {
+                }
+                return false;
+            }
+
+            var prefixFile = Path.Combine(libPath, "orig-prefix.txt");
+            var markerFile = Path.Combine(libPath, "no-global-site-packages.txt");
+            if (File.Exists(prefixFile)) {
+                return !File.Exists(markerFile);
+            }
+
+            return false;
+        }
+
+
         public override PythonTypeDatabase MakeTypeDatabase(string databasePath, bool includeSitePackages = true) {
             if (_baseDb == null) {
-                // Calling CreateInterpreter should get us a new database
-                // notification.
-                _baseDb = _base.MakeTypeDatabase(_base.DatabasePath, includeSitePackages: false);
+                var includeBaseSitePackages = ShouldIncludeGlobalSitePackages(
+                    Configuration.PrefixPath,
+                    Configuration.LibraryPath
+                );
+
+                _baseDb = _base.MakeTypeDatabase(_base.DatabasePath, includeSitePackages: includeBaseSitePackages);
                 _baseDb.DatabaseCorrupt += Base_DatabaseCorrupt;
                 _baseDb.DatabaseReplaced += Base_DatabaseReplaced;
             }

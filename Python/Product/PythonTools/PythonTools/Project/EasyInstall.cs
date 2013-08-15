@@ -47,16 +47,20 @@ namespace Microsoft.PythonTools.Project {
             return null;
         }
 
-        private static Task<int> Run(IPythonInterpreterFactory factory, Redirector output, bool elevate, params string[] cmd) {
-            bool isScript;
-            var easyInstallPath = GetEasyInstallPath(factory, out isScript);
-            if (easyInstallPath == null) {
-                var tcs = new TaskCompletionSource<int>();
-                tcs.SetException(new FileNotFoundException("Cannot find distribute ('easy_install.exe')"));
-                return tcs.Task;
-            }
+        private static Task<int> ContinueRun(
+            Task task,
+            IPythonInterpreterFactory factory,
+            Redirector output,
+            bool elevate,
+            params string[] cmd
+        ) {
+            return task.ContinueWith((Func<Task, int>)(t => {
+                bool isScript;
+                var easyInstallPath = GetEasyInstallPath(factory, out isScript);
+                if (easyInstallPath == null) {
+                    throw new FileNotFoundException("Cannot find setuptools ('easy_install.exe')");
+                }
 
-            return Task.Factory.StartNew<int>((Func<int>)(() => {
                 var args = cmd.ToList();
                 args.Insert(0, "--always-copy");
                 args.Insert(0, "--always-unzip");
@@ -72,27 +76,32 @@ namespace Microsoft.PythonTools.Project {
                     false,
                     output,
                     false,
-                    elevate)) {
+                    elevate
+                )) {
                     proc.Wait();
                     return proc.ExitCode ?? -1;
                 }
-            }));
+            }), TaskContinuationOptions.LongRunning);
         }
 
-        public static Task Install(IPythonInterpreterFactory factory, string package, bool elevate, Redirector output = null) {
-            return Task.Factory.StartNew((Action)(() => {
-                using (var proc = Run(factory, output, elevate, "install", package)) {
-                    proc.Wait();
-                }
-            }));
+        public static Task Install(
+            IPythonInterpreterFactory factory,
+            string package,
+            bool elevate,
+            Redirector output = null
+        ) {
+            var tcs = new TaskCompletionSource<object>();
+            tcs.SetResult(null);
+            return ContinueRun(tcs.Task, factory, output, elevate, package);
         }
 
-        public static Task<bool> Install(IPythonInterpreterFactory factory,
+        public static Task<bool> Install(
+            IPythonInterpreterFactory factory,
             string package,
             IServiceProvider site,
             bool elevate,
-            Redirector output = null) {
-
+            Redirector output = null
+        ) {
             Task task;
             bool isScript;
             if (site != null && GetEasyInstallPath(factory, out isScript) == null) {
@@ -103,15 +112,18 @@ namespace Microsoft.PythonTools.Project {
                 task = tcs.Task;
             }
 
-            if (output != null) {
-                output.WriteLine(SR.GetString(SR.PackageInstalling, package));
-                if (PythonToolsPackage.Instance != null && PythonToolsPackage.Instance.GeneralOptionsPage.ShowOutputWindowForPackageInstallation) {
-                    output.ShowAndActivate();
-                } else {
-                    output.Show();
+            var task2 = task.ContinueWith(t => {
+                if (output != null) {
+                    output.WriteLine(SR.GetString(SR.PackageInstalling, package));
+                    if (PythonToolsPackage.Instance != null && PythonToolsPackage.Instance.GeneralOptionsPage.ShowOutputWindowForPackageInstallation) {
+                        output.ShowAndActivate();
+                    } else {
+                        output.Show();
+                    }
                 }
-            }
-            return Run(factory, output, elevate, package).ContinueWith(t => {
+            });
+
+            return ContinueRun(task2, factory, output, elevate, package).ContinueWith(t => {
                 var exitCode = t.Result;
 
                 if (output != null) {
@@ -127,7 +139,7 @@ namespace Microsoft.PythonTools.Project {
                     }
                 }
                 return exitCode == 0;
-            }, TaskContinuationOptions.OnlyOnRanToCompletion);
+            });
         }
     }
 }

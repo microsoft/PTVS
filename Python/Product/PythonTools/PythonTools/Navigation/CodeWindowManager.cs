@@ -206,8 +206,7 @@ namespace Microsoft.PythonTools.Navigation {
                 var editFilter = new EditFilter(wpfTextView, factory.GetEditorOperations(wpfTextView));
                 editFilter.AttachKeyboardFilter(vsTextView);
 #if DEV11_OR_LATER
-                var viewFilter = new TextViewFilter();
-                viewFilter.AttachFilter(vsTextView);
+                new TextViewFilter(vsTextView);
 #endif
                 wpfTextView.GotAggregateFocus += OnTextViewGotAggregateFocus;
             }

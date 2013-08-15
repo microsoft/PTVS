@@ -36,7 +36,5 @@
     <MefComponent>|Microsoft.PythonTools.Analysis|</MefComponent>
     <MefComponent>|Microsoft.PythonTools.Debugger|</MefComponent>
     <MefComponent>|Microsoft.PythonTools.VSInterpreters|</MefComponent>
-    <ProjectTemplate>ProjectTemplates</ProjectTemplate>
-    <ItemTemplate>ItemTemplates</ItemTemplate>
   </Content>
 </Vsix>

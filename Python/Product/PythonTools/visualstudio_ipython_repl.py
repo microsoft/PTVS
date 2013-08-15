@@ -89,8 +89,12 @@ class VsShellChannel(DefaultHandler, ShellChannel):
 
 class VsIOPubChannel(DefaultHandler, IOPubChannel):
     def call_handlers(self, msg):
-        msg_type = 'handle_' + msg['msg_type']
-        getattr(self, msg_type, unknown_command)(msg['content'])
+        # only output events from our session or no sessions
+        # https://pytools.codeplex.com/workitem/1622
+        parent = msg.get('parent_header')
+        if not parent or parent.get('session') == self.session.session:
+            msg_type = 'handle_' + msg['msg_type']
+            getattr(self, msg_type, unknown_command)(msg['content'])
         
     def handle_display_data(self, content):
         # called when user calls display()

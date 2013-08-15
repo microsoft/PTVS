@@ -86,7 +86,9 @@ namespace Microsoft.PythonTools.Project {
                 EasyInstall.Install(parent._factory, name, parent.ProjectMgr.Site, view.InstallElevated, redirector);
 
             return task.ContinueWith(t => {
-                if (t.IsCompleted) {
+                if (t.IsCanceled || t.IsFaulted) {
+                    statusBar.SetText(SR.GetString(SR.PackageInstallFailed, name));
+                } else {
                     bool success = t.Result;
 
                     statusBar.SetText(SR.GetString(

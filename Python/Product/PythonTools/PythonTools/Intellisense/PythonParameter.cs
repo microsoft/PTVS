@@ -20,16 +20,19 @@ namespace Microsoft.PythonTools.Intellisense {
     internal class PythonParameter : IParameter {
         private readonly ISignature _signature;
         private readonly ParameterResult _param;
-        private readonly Span _locus;
+        private readonly string _documentation;
+        private readonly Span _locus, _ppLocus;
 
-        public PythonParameter(ISignature signature, ParameterResult param, Span locus) {
+        public PythonParameter(ISignature signature, ParameterResult param, Span locus, Span ppLocus) {
             _signature = signature;
             _param = param;
             _locus = locus;
+            _ppLocus = ppLocus;
+            _documentation = _param.Documentation.LimitLines();
         }
 
         public string Documentation {
-            get { return _param.Documentation; }
+            get { return _documentation; }
         }
 
         public Span Locus {
@@ -45,7 +48,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         public Span PrettyPrintedLocus {
-            get { return Locus; }
+            get { return _ppLocus; }
         }
     }
 }

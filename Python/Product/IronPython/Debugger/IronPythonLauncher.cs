@@ -224,7 +224,9 @@ namespace Microsoft.IronPythonTools.Debugger {
 
             result = GetInterpreterExecutable(out isWindows);
             if (result == null) {
-                Contract.Assert(result != null);
+                throw new FileNotFoundException(@"The project is currently set to use the .NET debugger for IronPython debugging but IronPython is not installed.
+
+You may need to download it from http://ironpython.codeplex.com.");
             }
             return result;
         }

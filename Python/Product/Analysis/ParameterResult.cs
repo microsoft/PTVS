@@ -41,19 +41,11 @@ namespace Microsoft.PythonTools.Analysis {
         }
         public ParameterResult(string name, string doc, string type, bool isOptional, IEnumerable<IAnalysisVariable> variable, string defaultValue) {
             Name = name;
-            Documentation = Trim(doc);
+            Documentation = doc;
             Type = type;
             IsOptional = isOptional;
             Variables = variable;
             DefaultValue = defaultValue;
-        }
-
-        private const int MaxDocLength = 1000;
-        internal static string Trim(string doc) {
-            if (doc != null && doc.Length > MaxDocLength) {
-                return doc.Substring(0, MaxDocLength) + "...";
-            }
-            return doc;
         }
 
         public override bool Equals(object obj) {

@@ -13,8 +13,12 @@
  * ***************************************************************************/
 
 using System;
+using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.OLE.Interop;
+using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.TextManager.Interop;
 
 namespace Microsoft.PythonTools.Language {
@@ -23,12 +27,18 @@ namespace Microsoft.PythonTools.Language {
     /// Do not use this from VS2010, it will break debugger tooltips!
     /// </summary>
     public sealed class TextViewFilter : IOleCommandTarget, IVsTextViewFilter {
-        private IOleCommandTarget _next;
+        private static IVsEditorAdaptersFactoryService _vsEditorAdaptersFactoryService;
+        private readonly IOleCommandTarget _next;
+        private readonly IWpfTextView _wpfTextView;
 
-        public void AttachFilter(IVsTextView vsTextView) {
-            if (_next == null) {
-                ErrorHandler.ThrowOnFailure(vsTextView.AddCommandFilter(this, out _next));
+        public TextViewFilter(IVsTextView vsTextView) {
+            if (_vsEditorAdaptersFactoryService == null) {
+                _vsEditorAdaptersFactoryService = PythonToolsPackage.ComponentModel.GetService<IVsEditorAdaptersFactoryService>();
             }
+
+            _wpfTextView = _vsEditorAdaptersFactoryService.GetWpfTextView(vsTextView);
+
+            ErrorHandler.ThrowOnFailure(vsTextView.AddCommandFilter(this, out _next));
         }
 
         #region IOleCommandTarget Members
@@ -70,8 +80,27 @@ namespace Microsoft.PythonTools.Language {
         #endregion
 
         public int GetDataTipText(TextSpan[] pSpan, out string pbstrText) {
+            if (pSpan.Length != 1) {
+                throw new ArgumentException("Array parameter should contain exactly one TextSpan", "pSpan");
+            }
+
+            // Debugger will handle this itself by evaluating the expression in the span if TIP_S_NODEFAULTTIP is returned.
             pbstrText = null;
-            return VSConstants.E_NOTIMPL;
+
+            // Adjust the span to expression boundaries.
+            var snapshot = _wpfTextView.TextSnapshot;
+            var snapshotSpan = TextSpanToSnapshotSpan(snapshot, pSpan[0]);
+            var trackingSpan = snapshot.CreateTrackingSpan(snapshotSpan.Span, SpanTrackingMode.EdgeExclusive);
+            var rep = new ReverseExpressionParser(snapshot, _wpfTextView.TextBuffer, trackingSpan);
+            var exprSpan = rep.GetExpressionRange(forCompletion: false);
+            if (exprSpan != null) {
+                pSpan[0] = SnapshotSpanToTextSpan(exprSpan.Value);
+            } else {
+                // If it's not an expression, suppress the tip.
+                return VSConstants.E_FAIL;
+            }
+
+            return (int)TipSuccesses2.TIP_S_NODEFAULTTIP;
         }
 
         public int GetPairExtents(int iLine, int iIndex, TextSpan[] pSpan) {
@@ -80,6 +109,31 @@ namespace Microsoft.PythonTools.Language {
 
         public int GetWordExtent(int iLine, int iIndex, uint dwFlags, TextSpan[] pSpan) {
             return VSConstants.E_NOTIMPL;
+        }
+
+        private static SnapshotPoint LineAndColumnNumberToSnapshotPoint(ITextSnapshot snapshot, int lineNumber, int columnNumber) {
+            var line = snapshot.GetLineFromLineNumber(lineNumber);
+            var snapShotPoint = new SnapshotPoint(snapshot, line.Start + columnNumber);
+            return snapShotPoint;
+        }
+
+        private static SnapshotSpan TextSpanToSnapshotSpan(ITextSnapshot snapshot, TextSpan textSpan) {
+            var start = LineAndColumnNumberToSnapshotPoint(snapshot, textSpan.iStartLine, textSpan.iStartIndex);
+            var end = LineAndColumnNumberToSnapshotPoint(snapshot, textSpan.iEndLine, textSpan.iEndIndex);
+            return new SnapshotSpan(start, end);
+        }
+
+        private static void SnapshotPointToLineAndColumnNumber(SnapshotPoint snapshotPoint, out int lineNumber, out int columnNumber) {
+            var line = snapshotPoint.GetContainingLine();
+            lineNumber = line.LineNumber;
+            columnNumber = snapshotPoint.Position - line.Start.Position;
+        }
+
+        private static TextSpan SnapshotSpanToTextSpan(SnapshotSpan snapshotSpan) {
+            TextSpan textSpan;
+            SnapshotPointToLineAndColumnNumber(snapshotSpan.Start, out textSpan.iStartLine, out textSpan.iStartIndex);
+            SnapshotPointToLineAndColumnNumber(snapshotSpan.End, out textSpan.iEndLine, out textSpan.iEndIndex);
+            return textSpan;
         }
     }
 }

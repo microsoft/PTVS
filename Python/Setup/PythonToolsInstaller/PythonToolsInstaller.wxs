@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
-     xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
+     xmlns:util="http://schemas.microsoft.com/wix/UtilExtension"
+     xmlns:dep="http://schemas.microsoft.com/wix/DependencyExtension">
   <?include PythonToolsInstallerVars.wxi ?>
 
   <Product Id="$(var.InstallerGuid)" Name="$(var.ProductName)" Language="1033" Version="$(var.MsiVersion)" Manufacturer="Microsoft Corporation" UpgradeCode="$(var.InstallerUpgradeGuid)">
@@ -33,7 +34,7 @@
     </Property>
 
     <Property Id="DEVENV_PATH" Secure="yes">
-      <RegistrySearch Id="DevEnvPath" Root="HKLM" Key="Software\Microsoft\VisualStudio\$(var.VSTargetVersion)\Setup\VS" Name="EnvironmentPath" Type="file" />
+      <RegistrySearch Id="DevEnvPath" Root="HKLM" Key="Software\Microsoft\VisualStudio\$(var.VSTargetVersion)\Setup\VS" Name="EnvironmentPath" Type="raw" />
     </Property>
 
     <Property Id="HPC_CLIENT_INSTALLED">
@@ -90,7 +91,7 @@
         <RegistryValue Root='HKCU' Key='SOFTWARE\Microsoft\PythonTools\$(var.VSTargetVersion)' Type='string' Value='Readme' KeyPath='yes' />
         <RemoveFolder Id='DeleteApplicationProgramsFolder' Directory='ApplicationProgramsFolder' On='uninstall'/>
         
-        <util:RestartResource Path="[DEVENV_PATH]\devenv.exe" />
+        <util:RestartResource Path="[DEVENV_PATH]" />
       </Component>
 
       <Component Id="Comp_InstallLocation" Guid="{40BEB328-A5F0-4D60-B454-F777AF0508EC}">
@@ -189,21 +190,22 @@
 
     <!-- User interface elements -->
 
-    <CustomAction Id="DevEnvSetup_Cmd"  Property="DevEnv_Setup" Value='"[DEVENV_PATH]\devenv.exe" /setup' Execute="immediate" />
-    <CustomAction Id="DevEnv_Setup" BinaryKey="WixCA" DllEntry="CAQuietExec" Execute="deferred" Return="check" Impersonate="no"/>
-
+    <CustomAction Id="DevEnvSetup" Property="DEVENV_PATH" ExeCommand="/setup" Execute="deferred" Return="check" Impersonate="no" />
+    <CustomAction Id="DevEnvSetup_Rollback" Property="DEVENV_PATH" ExeCommand="/setup" Execute="rollback" Return="check" Impersonate="no" />
+    
     <InstallExecuteSequence>
-      <Custom Action="DevEnvSetup_Cmd" After="CostFinalize"/>
-      <Custom Action="DevEnv_Setup" Before="InstallFinalize"/>
+      <Custom Action="DevEnvSetup_Rollback" Before="DevEnvSetup" Overridable="yes">DEVENV_PATH</Custom>
+      <Custom Action="DevEnvSetup" Before="InstallFinalize" Overridable="yes">DEVENV_PATH</Custom>
     </InstallExecuteSequence>
     <InstallUISequence>
       <Show Dialog="CustomAdvancedWelcomeEulaDlg" Before="FindRelatedProducts">NOT Installed</Show>
-      <Show Dialog="CustomFeaturesDlg" After="CostFinalize">NOT Installed AND EasyInstall=0</Show>
+      <Show Dialog="CustomFeaturesDlg" After="CostFinalize">NOT Installed AND EasyInstall=0</Show>      
     </InstallUISequence>
 
     <UI>
-      <ProgressText Action="DevEnv_Setup">Updating extension registration with Visual Studio...</ProgressText>
-
+      <ProgressText Action="DevEnvSetup">Updating extension registration with Visual Studio...</ProgressText>
+      <ProgressText Action="DevEnvSetup_Rollback">Removing extension registration with Visual Studio...</ProgressText>
+      
       <Dialog Id="CustomAdvancedWelcomeEulaDlg" Width="370" Height="270" Title="!(loc.AdvancedWelcomeEulaDlg_Title)">
         <Control Id="BannerBitmap" Type="Bitmap" X="0" Y="0" Width="370" Height="44" TabSkip="no" Text="!(loc.AdvancedWelcomeEulaDlgBannerBitmap)" />
         <Control Id="Title" Type="Text" X="20" Y="10" Width="300" Height="24" Transparent="yes" NoPrefix="yes" Text="!(loc.AdvancedWelcomeEulaDlgTitle)" />
@@ -235,7 +237,7 @@
           <Condition Action="enable">LicenseAccepted</Condition>
         </Control>
         <Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17" Cancel="yes" Text="!(loc.WixUICancel)">
-          <Publish Event="SpawnDialog" Value="CancelDlg">1</Publish>
+          <Publish Event="SpawnDialog" Value="CancelDlg">1</Publish>          
         </Control>
         <Control Id="Print" Type="PushButton" X="88" Y="243" Width="56" Height="17" Text="!(loc.WixUIPrint)">
           <Publish Event="DoAction" Value="WixUIPrintEula">1</Publish>
@@ -348,5 +350,15 @@
     <WixVariable Id="WixUIBannerBmp" Value="UIBannerDev12.bmp" />
     <WixVariable Id="WixUIDialogBmp" Value="DialogDev12.bmp" />
     <?endif?>
+    <Feature Id="Provider" Absent="disallow" AllowAdvertise="no" Description="Used for Ref Counting" Display="hidden" Level="1" InstallDefault="local" Title="RefCounting" TypicalDefault="install">
+      <ComponentRef Id="PythonTools_Provider" />
+    </Feature>
   </Product>
+  <Fragment>
+    <DirectoryRef Id="TARGETDIR">
+      <Component Id="PythonTools_Provider" Guid="8F19174A-E8A1-4608-9084-E9ADEDE9E4C1">
+        <dep:Provides Key="Microsoft.PythonTools,v2" />
+      </Component>
+    </DirectoryRef>
+  </Fragment>
 </Wix>

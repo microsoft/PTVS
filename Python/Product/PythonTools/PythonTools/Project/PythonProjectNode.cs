@@ -32,7 +32,6 @@ using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text.Adornments;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
-using Microsoft.Windows.Design.Host;
 using NativeMethods = Microsoft.VisualStudioTools.Project.NativeMethods;
 using VsCommands2K = Microsoft.VisualStudio.VSConstants.VSStd2KCmdID;
 
@@ -44,7 +43,7 @@ namespace Microsoft.PythonTools.Project {
         // they can be located and removed when that directory is removed from the path.
         private static readonly object _searchPathEntryKey = new { Name = "SearchPathEntry" };
 
-        private DesignerContext _designerContext;
+        private object _designerContext;
         private VsProjectAnalyzer _analyzer;
         private readonly HashSet<string> _warningFiles = new HashSet<string>();
         private readonly HashSet<string> _errorFiles = new HashSet<string>();
@@ -205,12 +204,46 @@ namespace Microsoft.PythonTools.Project {
             return new PythonFolderNode(this, element);
         }
 
+        public override FileNode CreateFileNode(ProjectElement item) {
+            var newNode = base.CreateFileNode(item);
+            string include = item.GetMetadata(ProjectFileConstants.Include);
+
+            if (XamlDesignerSupport.DesignerContextType != null &&
+                newNode is CommonFileNode &&
+                !string.IsNullOrEmpty(include) && 
+                Path.GetExtension(include).Equals(".xaml", StringComparison.OrdinalIgnoreCase)) {
+                //Create a DesignerContext for the XAML designer for this file
+                newNode.OleServiceProvider.AddService(XamlDesignerSupport.DesignerContextType, ((CommonFileNode)newNode).ServiceCreator, false);
+            }
+            
+            return newNode;
+        }
+
         protected override bool FilterItemTypeToBeAddedToHierarchy(string itemType) {
             if (MSBuildProjectInterpreterFactoryProvider.InterpreterReferenceItem.Equals(itemType, StringComparison.Ordinal) ||
                 MSBuildProjectInterpreterFactoryProvider.InterpreterItem.Equals(itemType, StringComparison.Ordinal)) {
                 return true;
             }
             return base.FilterItemTypeToBeAddedToHierarchy(itemType);
+        }
+
+        public override void Load(string filename, string location, string name, uint flags, ref Guid iidProject, out int canceled) {
+            base.Load(filename, location, name, flags, ref iidProject, out canceled);
+
+            if (XamlDesignerSupport.DesignerContextType != null) {
+                //If this is a WPFFlavor-ed project, then add a project-level DesignerContext service to provide
+                //event handler generation (EventBindingProvider) for the XAML designer.
+                OleServiceProvider.AddService(XamlDesignerSupport.DesignerContextType, new OleServiceProvider.ServiceCreatorCallback(this.CreateServices), false);
+            }
+        }
+
+        protected override object CreateServices(Type serviceType) {
+            if (XamlDesignerSupport.DesignerContextType == serviceType) {
+                return DesignerContext;
+            } 
+            
+            var res = base.CreateServices(serviceType);
+            return res;
         }
 
         protected override void Reload() {
@@ -480,17 +513,10 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-        protected override internal Microsoft.Windows.Design.Host.DesignerContext DesignerContext {
+        internal object DesignerContext {
             get {
                 if (_designerContext == null) {
-                    _designerContext = new DesignerContext();
-                    //Set the RuntimeNameProvider so the XAML designer will call it when items are added to
-                    //a design surface. Since the provider does not depend on an item context, we provide it at 
-                    //the project level.
-                    // This is currently disabled because we don't successfully serialize to the remote domain
-                    // and the default name provider seems to work fine.  Likely installing our assembly into
-                    // the GAC or implementing an IsolationProvider would solve this.
-                    //designerContext.RuntimeNameProvider = new PythonRuntimeNameProvider();
+                    _designerContext = XamlDesignerSupport.CreateDesignerContext();
                 }
                 return _designerContext;
             }
@@ -513,7 +539,8 @@ namespace Microsoft.PythonTools.Project {
         protected override void Dispose(bool disposing) {
             if (disposing) {
                 if (_analyzer != null) {
-                    if (this.WarningFiles.Count > 0 || this.ErrorFiles.Count > 0) {
+                    UnHookErrorsAndWarnings(_analyzer);
+                    if (WarningFiles.Count > 0 || ErrorFiles.Count > 0) {
                         foreach (var file in WarningFiles.Concat(ErrorFiles)) {
                             var node = FindNodeByFullPath(file) as PythonFileNode;
                             if (node != null) {
@@ -524,9 +551,8 @@ namespace Microsoft.PythonTools.Project {
 
                     if (_analyzer.RemoveUser()) {
                         _analyzer.Dispose();
-                        _analyzer = null;
                     }
-                    UnHookErrorsAndWarnings(_analyzer);
+                    _analyzer = null;
                 }
 
                 if (_interpreters != null) {

@@ -331,7 +331,12 @@ namespace Microsoft.PythonTools.Django.Project {
                             return VSConstants.S_OK;
                     }
                 }
-
+            } else if (pguidCmdGroup == GuidList.guidOfficeSharePointCmdSet) {
+                for (int i = 0; i < prgCmds.Length; i++) {
+                    // Report it as supported so that it's not routed any further, but disable it and make it invisible.
+                    prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_SUPPORTED | OLECMDF.OLECMDF_INVISIBLE);
+                }
+                return VSConstants.S_OK;
             }
 
             return base.QueryStatusCommand(itemid, ref pguidCmdGroup, cCmds, prgCmds, pCmdText);

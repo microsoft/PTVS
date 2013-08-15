@@ -33,16 +33,19 @@ namespace Microsoft.PythonTools.Intellisense {
             : base(span, textBuffer, options) {
         }
 
-        internal static readonly Regex ValidParameterName = new Regex(@"^(\*|\*\*)?[a-z_][a-z0-9_]*( *= *.+)?", RegexOptions.IgnoreCase | RegexOptions.Singleline);
+        internal static readonly Regex ValidParameterName = new Regex(@"^(\*|\*\*)?[a-z_][a-z0-9_]*", RegexOptions.IgnoreCase | RegexOptions.Singleline);
         internal static string GetSafeParameterName(ParameterResult result) {
             var match = ValidParameterName.Match(result.Name);
 
-            return match.Success ? match.Value : result.Name;
+            var name = match.Success ? match.Value : result.Name;
+            if (!string.IsNullOrEmpty(result.DefaultValue)) {
+                name += " = " + result.DefaultValue;
+            }
+            return name;
         }
 
-        internal static readonly Regex ValidArgumentName = new Regex(@"^(\*|\*\*)?[a-z_][a-z0-9_]*", RegexOptions.IgnoreCase);
         internal static string GetSafeArgumentName(ParameterResult result) {
-            var match = ValidArgumentName.Match(result.Name);
+            var match = ValidParameterName.Match(result.Name);
 
             return match.Success ? match.Value : result.Name;
         }

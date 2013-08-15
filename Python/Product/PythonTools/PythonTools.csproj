@@ -283,7 +283,6 @@
     <Compile Include="ProvideComponentPickerPropertyPageAttribute.cs" />
     <Compile Include="ProvideDiffSupportedContentTypeAttribute.cs" />
     <Compile Include="ProvideEditorExtension2Attribute.cs" />
-    <Compile Include="ProvideFileExtensionMapping.cs" />
     <Compile Include="ProvideFileFilterAttribute.cs" />
     <Compile Include="PythonTools\Commands\OpenInterpreterListCommand.cs" />
     <Compile Include="PythonTools\Commands\SurveyNewsCommand.cs" />
@@ -329,6 +328,7 @@
     <Compile Include="PythonTools\Commands\ImportWizardCommand.cs" />
     <Compile Include="PythonTools\Project\Pip.cs" />
     <Compile Include="PythonTools\Project\VirtualEnv.cs" />
+    <Compile Include="PythonTools\Project\XamlDesignerSupport.cs" />
     <Compile Include="Wpf\Commands.cs" />
     <Compile Include="Wpf\LabelledButton.cs" />
     <Compile Include="Wpf\LabelledControl.cs" />

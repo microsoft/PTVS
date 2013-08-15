@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Net.Sockets;
 using System.Text;
@@ -474,6 +475,42 @@ namespace Microsoft.PythonTools {
 
         internal static int GetStartIncludingIndentation(this Node self, PythonAst ast) {
             return self.StartIndex - (self.GetIndentationLevel(ast) ?? "").Length;
+        }
+
+        internal static string LimitLines(
+            this string str,
+            int maxLines = 30,
+            int charsPerLine = 200,
+            bool ellipsisAtEnd = true
+        ) {
+            if (string.IsNullOrEmpty(str)) {
+                return str;
+            }
+
+            int lineCount = 0;
+            var prettyPrinted = new StringBuilder();
+            bool wasEmpty = false;
+
+            using (var reader = new StringReader(str)) {
+                for (var line = reader.ReadLine(); line != null && lineCount < maxLines; line = reader.ReadLine()) {
+                    if (string.IsNullOrWhiteSpace(line)) {
+                        if (wasEmpty) {
+                            continue;
+                        }
+                        wasEmpty = true;
+                        lineCount += 1;
+                        prettyPrinted.AppendLine();
+                    } else {
+                        wasEmpty = false;
+                        lineCount += (line.Length / charsPerLine) + 1;
+                        prettyPrinted.AppendLine(line);
+                    }
+                }
+            }
+            if (ellipsisAtEnd && lineCount >= maxLines) {
+                prettyPrinted.AppendLine("...");
+            }
+            return prettyPrinted.ToString().TrimEnd();
         }
     }
 }

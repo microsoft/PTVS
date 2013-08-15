@@ -675,9 +675,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 }
 
                 if (isValid) {
-                    if (finalMro.Any()) {
-                        mergeList.Add(finalMro);
-                    }
+                    mergeList.Add(finalMro);
+                    mergeList.RemoveAll(mro => mro.Count == 0);
 
                     while (mergeList.Count > 0) {
                         AnalysisValue nextInMro = null;

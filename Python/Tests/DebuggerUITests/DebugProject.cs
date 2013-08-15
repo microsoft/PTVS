@@ -601,6 +601,36 @@ namespace DebuggerUITests {
         }
 
         /// <summary>
+        /// Make sure deleting a project clears the error list when there are errors in multiple files
+        /// 
+        /// Take 2 of https://pytools.codeplex.com/workitem/1523
+        /// </summary>
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void TestProjectWithErrorsMultipleFilesUnloadProject() {
+            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            var project = app.OpenAndFindProject(@"TestData\ErrorProjectMultipleFiles.sln");
+
+            var errorList = (IVsErrorList)VsIdeTestHostContext.ServiceProvider.GetService(typeof(SVsErrorList));
+
+            const int expectedItems = 12;
+            List<IVsTaskItem> allItems = GetErrorListItems(errorList, expectedItems);
+            Assert.AreEqual(expectedItems, allItems.Count);
+
+            IVsSolution solutionService = VsIdeTestHostContext.ServiceProvider.GetService(typeof(SVsSolution)) as IVsSolution;
+            Assert.IsNotNull(solutionService);
+
+            IVsHierarchy selectedHierarchy;
+            ErrorHandler.ThrowOnFailure(solutionService.GetProjectOfUniqueName(project.UniqueName, out selectedHierarchy));
+            Assert.IsNotNull(selectedHierarchy);
+
+            ErrorHandler.ThrowOnFailure(solutionService.CloseSolutionElement((uint)__VSSLNCLOSEOPTIONS.SLNCLOSEOPT_UnloadProject, selectedHierarchy, 0));
+
+            allItems = GetErrorListItems(errorList, 0);
+            Assert.AreEqual(0, allItems.Count);
+        }
+
+        /// <summary>
         /// Make sure deleting a file w/ errors clears the error list
         /// </summary>
         [TestMethod, Priority(0), TestCategory("Core")]

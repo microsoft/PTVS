@@ -1,9 +1,17 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
     <Fragment>
+        <DirectoryRef Id="EXTENSION_INSTALLPATH">
+            <Directory Id="Dir_ProjectTemplates" Name="ProjectTemplates">
+                <Directory Id="Dir_ProjectTemplates_Python" Name="Python" />
+            </Directory>
+        </DirectoryRef>
         <DirectoryRef Id="INSTALLLOCATION">
-            <Directory Id="dir436142373C244AC4A66B8C6ED1FC3150" Name="Templates" />
-            <Directory Id="dir55B286326A5D40B38CA619211B36E74C" Name="Pyvot" />
+            <Directory Id="dir55B286326A5D40B38CA619211B36E74C" Name="Pyvot">
+                <Directory Id="dir996AC28292904A2AAEB5BD3E7690E314" Name="xl">
+                    <Directory Id="dir20981893AF4A4AACB649D1963B5EC257" Name="_impl" />
+                </Directory>
+            </Directory>
         </DirectoryRef>
     </Fragment>
     <Fragment>
@@ -12,7 +20,7 @@
             <Component Id="PerUserInstallRegistry" Directory="INSTALLLOCATION" Guid="{9FD7D797-439F-4A33-9FB7-6FEB97CDF3CD}">
                 <Condition>NOT ALLUSERS = 1</Condition>
                 <RegistryKey Root='HKCU' Key='Software\Microsoft\VisualStudio\$(var.VSTargetVersion)\ExtensionManager\EnabledExtensions'>
-                    <RegistryValue Type='string' Name='5034726D-E9C8-4E93-83D6-B61F1B515C12,2.0' Value='[EXTENSION_INSTALLPATH]Extensions\Microsoft\Python Tools Pyvot Sample\2.0\'/>
+                    <RegistryValue Type='string' Name='5034726D-E9C8-4E93-83D6-B61F1B515C12,2.0' Value='[INSTALLLOCATION]'/>
                 </RegistryKey>
                 <RegistryKey Root='HKCU' Key='Software\Microsoft\VisualStudio\$(var.VSTargetVersion)\ExtensionManager\ExtensionTypes'>
                     <RegistryValue Type='string' Name='5034726D-E9C8-4E93-83D6-B61F1B515C12,2.0' Value='Tool'/>
@@ -29,7 +37,7 @@
             <Component Id="cmpEFE7B65F84524C6A83582DBEE4D9C3A6" Directory="INSTALLLOCATION" Guid="{E88283D3-884B-4DB1-ABDA-6035F02D0331}">
                 <File Id="filD99E9EC7DC4245D8A49899A9AB980F01" KeyPath="yes" Source="$(var.TargetDir)\Microsoft.PythonTools.Pyvot.pkgdef" />
             </Component>
-            <Component Id="cmpBCCFECD8844643E9926F83F764B752AF" Directory="dir0CC0B1D9E1EF4456A302A4658E12D6BA" Guid="{249D848C-F561-4B6C-8560-3C14BEBCDD1B}">
+            <Component Id="cmpBCCFECD8844643E9926F83F764B752AF" Directory="Dir_ProjectTemplates_Python" Guid="{249D848C-F561-4B6C-8560-3C14BEBCDD1B}">
                 <File Id="filFAE03906AF05E4B6AB766E615F7788059" KeyPath="yes" Source="$(var.TargetDir)\Templates\Projects\Pyvot\PyvotProject.zip" />
             </Component>
             <Component Id="cmp45D33C3A2C2B4DAE8DCD963EF7FB94A9" Directory="INSTALLLOCATION" Guid="{2A87D288-A96E-4655-9DAF-84EBE77B14DC}">
@@ -96,25 +104,4 @@
 
         </ComponentGroup>
     </Fragment>
-    <Fragment>
-        <DirectoryRef Id="dir436142373C244AC4A66B8C6ED1FC3150">
-            <Directory Id="dir4CFC157C6EEC49548A5F0690FCC9B47B" Name="Projects" />
-        </DirectoryRef>
-    </Fragment>
-    <Fragment>
-        <DirectoryRef Id="dir4CFC157C6EEC49548A5F0690FCC9B47B">
-            <Directory Id="dir0CC0B1D9E1EF4456A302A4658E12D6BA" Name="Pyvot" />
-        </DirectoryRef>
-    </Fragment>
-    <Fragment>
-        <DirectoryRef Id="dir55B286326A5D40B38CA619211B36E74C">
-            <Directory Id="dir996AC28292904A2AAEB5BD3E7690E314" Name="xl" />
-        </DirectoryRef>
-    </Fragment>
-    <Fragment>
-        <DirectoryRef Id="dir996AC28292904A2AAEB5BD3E7690E314">
-            <Directory Id="dir20981893AF4A4AACB649D1963B5EC257" Name="_impl" />
-        </DirectoryRef>
-    </Fragment>
-
 </Wix>

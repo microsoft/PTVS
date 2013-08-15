@@ -44,22 +44,17 @@ namespace Microsoft.PythonTools.Django {
     [InstalledProductRegistration("#110", "#112", AssemblyVersionInfo.Version, IconResourceID = 400)]
     // This attribute is needed to let the shell know that this package exposes some menus.
     [ProvideMenuResource("Menus.ctmenu", 1)]
-    [ProvideEditorExtension(typeof(DjangoEditorFactory), ".djt", 50,
-              ProjectGuid = "{A2FE74E1-B743-11d0-AE1A-00A0C90FFFC3}",
-              TemplateDir = "Templates",
-              NameResourceID = 102,
-              DefaultName = "webpage")]
     [ProvideLanguageService(typeof(DjangoLanguageInfo), "Django Templates", 107, RequestStockColors = true, ShowSmartIndent = true, ShowCompletion = true, DefaultToInsertSpaces = true, HideAdvancedMembersByDefault = false, EnableAdvancedMembersOption = true, ShowDropDownOptions = true)]
     [ProvideLanguageExtension(typeof(DjangoLanguageInfo), ".djt")]
     [ProvideDebugLanguage("Django Templates", DjangoTemplateLanguageId, "{" + DjangoExpressionEvaluatorGuid + "}", "{EC1375B7-E2CE-43E8-BF75-DC638DE1F1F9}")]
-    [ProvideEditorExtension2(typeof(DjangoEditorFactory), ".djt", 50, "*:1", ProjectGuid = "{A2FE74E1-B743-11d0-AE1A-00A0C90FFFC3}", NameResourceID = 102, DefaultName = "webpage")]
-    [ProvideEditorExtension2(typeof(DjangoEditorFactoryPromptForEncoding), ".djt", 50, "*:1", ProjectGuid = "{A2FE74E1-B743-11d0-AE1A-00A0C90FFFC3}", NameResourceID = 113, DefaultName = "webpage")]
+    [ProvideEditorExtension2(typeof(DjangoEditorFactory), ".djt", 50, "*:1", ProjectGuid = "{A2FE74E1-B743-11d0-AE1A-00A0C90FFFC3}", TemplateDir = ".\\NullPath", NameResourceID = 102, DefaultName = "webpage")]
+    [ProvideEditorExtension2(typeof(DjangoEditorFactoryPromptForEncoding), ".djt", 50, "*:1", ProjectGuid = "{A2FE74E1-B743-11d0-AE1A-00A0C90FFFC3}", TemplateDir = ".\\NullPath", NameResourceID = 113, DefaultName = "webpage")]
     [ProvideKeyBindingTable(GuidList.guidDjangoKeyBindingString, 102)]
     [ProvideEditorLogicalView(typeof(DjangoEditorFactory), VSConstants.LOGVIEWID.TextView_string)]
     [ProvideEditorLogicalView(typeof(DjangoEditorFactoryPromptForEncoding), VSConstants.LOGVIEWID.TextView_string)]
     [Guid(GuidList.guidDjangoPkgString)]
     [ProvideObject(typeof(DjangoProject), RegisterUsing = RegistrationMethod.CodeBase)]
-    [ProvideProjectFactory(typeof(DjangoProjectFactory), "Django/Python", "Django Project Files (*.pyproj);*.pyproj", "pyproj", "pyproj", ".\\NullPath", LanguageVsTemplate = "Python")]
+    [ProvideProjectFactory(typeof(DjangoProjectFactory), "Django/Python", "Python Project Files (*.pyproj);*.pyproj", "pyproj", "pyproj", ".\\NullPath", LanguageVsTemplate = "Python")]
     [ProvideLanguageTemplates("{349C5851-65DF-11DA-9384-00065B846F21}", "Python", GuidList.guidDjangoPkgString, "Web", "Python Application Project Templates", "{888888a0-9f3d-457c-b088-3a5042f75d52}", ".py", "Python", "{9AF89C0F-85F6-4A20-9023-5D15D912F3B1}")]
     public sealed class DjangoPackage : Package {
         internal const string DjangoTemplateLanguageId = "{918E5764-7026-4D57-918D-19D86AD73AC4}";

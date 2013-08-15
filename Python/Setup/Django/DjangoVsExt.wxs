@@ -1,8 +1,13 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
     <Fragment>
-        <DirectoryRef Id="INSTALLLOCATION">
-            <Directory Id="dirF0D3CF56D8C94E078A27303E15108536" Name="Templates" />
+        <DirectoryRef Id="EXTENSION_INSTALLPATH">
+            <Directory Id="Dir_ProjectTemplates" Name="ProjectTemplates">
+                <Directory Id="Dir_ProjectTemplates_Python" Name="Python" />
+            </Directory>
+            <Directory Id="Dir_ItemTemplates" Name="ItemTemplates">
+                <Directory Id="Dir_ItemTemplates_Python" Name="Python" />
+            </Directory>
         </DirectoryRef>
     </Fragment>
     <Fragment>
@@ -11,7 +16,7 @@
             <Component Id="PerUserInstallRegistry" Directory="INSTALLLOCATION" Guid="{4B9498D3-AA15-4DA7-951B-47A49883AF73}">
                 <Condition>NOT ALLUSERS = 1</Condition>
                 <RegistryKey Root='HKCU' Key='Software\Microsoft\VisualStudio\$(var.VSTargetVersion)\ExtensionManager\EnabledExtensions'>
-                    <RegistryValue Type='string' Name='a8637c34-aa55-46e2-973c-9c3e09afc17b,2.0' Value='[EXTENSION_INSTALLPATH]Extensions\Microsoft\Python Tools Django Support\2.0\'/>
+                    <RegistryValue Type='string' Name='a8637c34-aa55-46e2-973c-9c3e09afc17b,2.0' Value='[INSTALLLOCATION]'/>
                 </RegistryKey>
                 <RegistryKey Root='HKCU' Key='Software\Microsoft\VisualStudio\$(var.VSTargetVersion)\ExtensionManager\ExtensionTypes'>
                     <RegistryValue Type='string' Name='a8637c34-aa55-46e2-973c-9c3e09afc17b,2.0' Value='Tool'/>
@@ -35,21 +40,22 @@
             <Component Id="cmp529D4DBADD5343BC9BA9C9D10627E979" Directory="INSTALLLOCATION" Guid="{505D2DA1-16AB-4FE3-8415-9237474E3190}">
                 <File Id="filBAF64E97BE09427086DEBB9703D146C6" KeyPath="yes" Source="$(var.TargetDir)\Microsoft.PythonTools.Django.pkgdef" />
             </Component>
-            <Component Id="cmp843B7FB2D6434D2799C80D60D9842459" Directory="dir117EF6E430844404B5E87390FC3DFD4E" Guid="{26F95137-B41F-47CB-B3A2-6769E513D11F}">
+            
+            <Component Id="cmp843B7FB2D6434D2799C80D60D9842459" Directory="Dir_ProjectTemplates_Python" Guid="{26F95137-B41F-47CB-B3A2-6769E513D11F}">
                 <File Id="filC0DD732153BC4B168791158F3DEF4CAD" KeyPath="yes" Source="$(var.TargetDir)\ProjectTemplates\Python\DjangoProject.zip" />
             </Component>
-            <Component Id="cmpE95A9B6479B549C5BCFADF24CBF605FD" Directory="dir25D6546B68914D63B88D47F600FEEDFE" Guid="{1296CCF7-C82C-4D7A-8086-9742FD984D3B}">
+            
+            <Component Id="cmpE95A9B6479B549C5BCFADF24CBF605FD" Directory="Dir_ItemTemplates_Python" Guid="{1296CCF7-C82C-4D7A-8086-9742FD984D3B}">
                 <File Id="filAD9E9715475C402D8927BFA29168E597" KeyPath="yes" Source="$(var.TargetDir)\ItemTemplates\Python\DjangoHtml.zip" />
             </Component>
-
-            <Component Id="cmp58D9E461B63E44B183C59BB134A727B0" Directory="dir25D6546B68914D63B88D47F600FEEDFE" Guid="{59997500-9E07-4359-A80F-5BA61B0C7E5C}">
+            <Component Id="cmp58D9E461B63E44B183C59BB134A727B0" Directory="Dir_ItemTemplates_Python" Guid="{59997500-9E07-4359-A80F-5BA61B0C7E5C}">
                 <File Id="filA3BC8F8027224F8A83783CDCA3C2FB20" KeyPath="yes" Source="$(var.TargetDir)\ItemTemplates\Python\JavaScript.zip" />
             </Component>
-            <Component Id="cmp1CD7CCFFC72F4A1BA90610CDE5028D45" Directory="dir25D6546B68914D63B88D47F600FEEDFE" Guid="{3A56AD2D-7858-4E24-8836-D0F99FAE87B2}">
+            <Component Id="cmp1CD7CCFFC72F4A1BA90610CDE5028D45" Directory="Dir_ItemTemplates_Python" Guid="{3A56AD2D-7858-4E24-8836-D0F99FAE87B2}">
                 <File Id="fil0D633913738B42F9988B80F115C3CE00" KeyPath="yes" Source="$(var.TargetDir)\ItemTemplates\Python\Stylesheet.zip" />
             </Component>
 
-            <Component Id="cmp8FD2DCD84D064839ADBA2841550496C7" Directory="dir25D6546B68914D63B88D47F600FEEDFE" Guid="{1654E889-E8E9-4B57-BEAD-DD268EB0C709}">
+            <Component Id="cmp8FD2DCD84D064839ADBA2841550496C7" Directory="Dir_ItemTemplates_Python" Guid="{1654E889-E8E9-4B57-BEAD-DD268EB0C709}">
                 <File Id="filAD5040460E0C42D8BE43C8E81DBAD43F" KeyPath="yes" Source="$(var.TargetDir)\ItemTemplates\Python\DjangoNewAppFiles14.zip" />
             </Component>
             
@@ -71,30 +77,5 @@
                 <File Id="fil9943C86CCCD64C819C835AD211971097" KeyPath="yes" Source="$(var.TargetDir)\Microsoft.PythonTools.AzureSetup.exe.config" />
             </Component>
         </ComponentGroup>
-    </Fragment>
-    <Fragment>
-        <DirectoryRef Id="dirF0D3CF56D8C94E078A27303E15108536">
-            <Directory Id="dirDA7AFFEC217E48F596C479C46EAC4797" Name="Projects" />
-        </DirectoryRef>
-    </Fragment>
-    <Fragment>
-        <DirectoryRef Id="dirF0D3CF56D8C94E078A27303E15108536">
-            <Directory Id="dirC3001A197C764F83A0D06485365F13EF" Name="Files" />
-        </DirectoryRef>
-    </Fragment>
-    <Fragment>
-        <DirectoryRef Id="dirDA7AFFEC217E48F596C479C46EAC4797">
-            <Directory Id="dir117EF6E430844404B5E87390FC3DFD4E" Name="DjangoProject" />
-        </DirectoryRef>
-    </Fragment>
-    <Fragment>
-        <DirectoryRef Id="dirC3001A197C764F83A0D06485365F13EF">
-            <Directory Id="dir25D6546B68914D63B88D47F600FEEDFE" Name="DjangoHtmlTemplate" />
-        </DirectoryRef>
-    </Fragment>
-    <Fragment>
-        <DirectoryRef Id="dirC3001A197C764F83A0D06485365F13EF">
-            <Directory Id="dir1BD051D972A14535AD8882E451431619" Name="DjangoNewAppFiles" />
-        </DirectoryRef>
     </Fragment>
 </Wix>

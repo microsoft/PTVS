@@ -175,6 +175,17 @@ def typename_to_typeref(n1, n2=None):
     return memoize_type_name(name)
 
 def type_to_typeref(type):
+    try:
+        type_name = type.__name__
+    except:
+        # Some compiled types fail here, so warn and treat as object
+        try:
+            print('Cannot get type name of ' + repr(type))
+        except:
+            # If __name__ doesn't work, __repr__ might not either, so we just
+            # won't log a message.
+            pass
+        type = object
     if hasattr(type, '__module__'):
         if type.__module__ == '__builtin__':
             name = (builtin_name, type.__name__)
@@ -343,13 +354,18 @@ def generate_member(obj, is_hidden = False, from_type = False):
 
     # Callable objects with a docstring that provides us with at least one
     # overload will be treated as functions rather than data.
-    if hasattr(obj, '__call__'):
-        try:
-            info = generate_builtin_function(obj, from_type)
-            if info and info['overloads']:
-                return 'method' if from_type else 'function', info
-        except:
-            pass
+    try:
+        if hasattr(obj, '__call__'):
+            try:
+                info = generate_builtin_function(obj, from_type)
+                if info and info['overloads']:
+                    return 'method' if from_type else 'function', info
+            except:
+                pass
+    except:
+        # Some compiled types fail here, so catch everything and treat the
+        # object as data.
+        pass
 
     # We don't have any special handling for this object type, so treat it as
     # a constant.

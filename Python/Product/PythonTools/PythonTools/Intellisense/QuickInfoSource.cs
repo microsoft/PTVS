@@ -77,6 +77,8 @@ namespace Microsoft.PythonTools.Intellisense {
                     }
                 }
 
+                description = description.LimitLines();
+
                 if (description != null && descriptions.Add(description)) {
                     if (first) {
                         first = false;
@@ -94,7 +96,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             string expr = vars.Expression;
             if (expr.Length > 4096) {
-                expr = expr.Substring(0, 4096) + "...";
+                expr = expr.Substring(0, 4093) + "...";
             }
             if (multiline) {
                 result.Insert(0, expr + ": " + Environment.NewLine);

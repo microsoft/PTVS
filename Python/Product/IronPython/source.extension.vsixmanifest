@@ -35,10 +35,5 @@
     <Assembly AssemblyName="Microsoft.IronPythonTools.Resolver">Microsoft.IronPythonTools.Resolver</Assembly>
     <VsPackage>|%CurrentProject%;PkgdefProjectOutputGroup|</VsPackage>
     <MefComponent>|%CurrentProject%|</MefComponent>
-    <ProjectTemplate>Templates\Projects\SilverlightProject</ProjectTemplate>
-    <ProjectTemplate>Templates\Projects\WinformsProject</ProjectTemplate>
-    <ProjectTemplate>Templates\Projects\WpfProject</ProjectTemplate>
-    <ProjectTemplate>Templates\Projects\ConsoleProject</ProjectTemplate>
-    <ItemTemplate>Templates\Files\WpfWindow</ItemTemplate>
   </Content>
 </Vsix>

@@ -104,6 +104,10 @@ namespace Microsoft.PythonTools.Analysis {
                         currentKey = null;
                     }
                 }
+
+                if (currentKey != null) {
+                    yield return new KeyValuePair<string, string>(currentKey, null);
+                }
             }
         }
 
@@ -218,10 +222,17 @@ namespace Microsoft.PythonTools.Analysis {
                 // We worry about initialization exceptions here, specifically
                 // that our identifier may already be in use.
                 _updater.WaitForWorkerStarted();
-                _updater.ThrowPendingExceptions();
-                // Immediately inform any listeners that we've started running
-                // successfully.
-                _updater.UpdateStatus(0, 0, "Initializing");
+                try {
+                    _updater.ThrowPendingExceptions();
+                    // Immediately inform any listeners that we've started running
+                    // successfully.
+                    _updater.UpdateStatus(0, 0, "Initializing");
+                } catch (InvalidOperationException) {
+                    // Thrown when we run out of space in our shared memory
+                    // block. Disable updates for this run.
+                    _updater.Dispose();
+                    _updater = null;
+                }
             }
             // TODO: Link cancellation into the updater
             _cancel = CancellationToken.None;
@@ -395,16 +406,10 @@ namespace Microsoft.PythonTools.Analysis {
                 _updater.UpdateStatus(0, 0, "Collecting files");
             }
 
-            // Concat the contents of directories referenced by .pth files
-            // to ensure that they are overruled by normal packages in
-            // naming collisions.
-            var allModuleNames = new HashSet<string>(StringComparer.Ordinal);
-
             var fileGroups = ModulePath.GetModulesInLib(
                 _interpreter,
                 _library,
                 null,   // default site-packages path
-                allModuleNames,
                 requireInitPyFiles: ModulePath.PythonVersionRequiresInitPyFiles(_version)
             )
                 .GroupBy(mp => mp.LibraryPath, StringComparer.OrdinalIgnoreCase)

@@ -1,9 +1,19 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
     <Fragment>
+        <DirectoryRef Id="EXTENSION_INSTALLPATH">
+            <Directory Id="Dir_ProjectTemplates" Name="ProjectTemplates">
+                <Directory Id="Dir_ProjectTemplates_Python" Name="Python" />
+            </Directory>
+        </DirectoryRef>
         <DirectoryRef Id="INSTALLLOCATION">
-            <Directory Id="dir436142373C244AC4A66B8C6ED1FC3150" Name="Templates" />
-            <Directory Id="dirEB615C5BD073420189EF582A99D7486B" Name="PyKinect" />
+            <Directory Id="dirEB615C5BD073420189EF582A99D7486B" Name="PyKinect">
+                <Directory Id="dirD024E1804578437F96ECD9F13F35BF80" Name="pykinect">
+                    <Directory Id="dirCABFC4921316431EBD358749000089A8" Name="audio" />
+                    <Directory Id="dir88A5CB985C334A88981F7E1DA6D0EF4B" Name="nui" />
+                </Directory>
+                <Directory Id="dir2A04F814997C4D2F88133D144E5B3EEE" Name="winspeech" />
+            </Directory>
         </DirectoryRef>
     </Fragment>
     <Fragment>
@@ -12,7 +22,7 @@
             <Component Id="PerUserInstallRegistry" Directory="INSTALLLOCATION" Guid="{9FD7D797-439F-4A33-9FB7-6FEB97CDF3CD}">
                 <Condition>NOT ALLUSERS = 1</Condition>
                 <RegistryKey Root='HKCU' Key='Software\Microsoft\VisualStudio\$(var.VSTargetVersion)\ExtensionManager\EnabledExtensions'>
-                    <RegistryValue Type='string' Name='83f5123e-4b4a-45c0-baec-bea8964d7b25,2.0' Value='[EXTENSION_INSTALLPATH]Extensions\Microsoft\Python Tools PyKinect Sample\2.0\'/>
+                    <RegistryValue Type='string' Name='83f5123e-4b4a-45c0-baec-bea8964d7b25,2.0' Value='[INSTALLLOCATION]'/>
                 </RegistryKey>
                 <RegistryKey Root='HKCU' Key='Software\Microsoft\VisualStudio\$(var.VSTargetVersion)\ExtensionManager\ExtensionTypes'>
                     <RegistryValue Type='string' Name='83f5123e-4b4a-45c0-baec-bea8964d7b25,2.0' Value='Tool'/>
@@ -29,7 +39,7 @@
             <Component Id="cmpEFE7B65F84524C6A83582DBEE4D9C3A6" Directory="INSTALLLOCATION" Guid="{E88283D3-884B-4DB1-ABDA-6035F02D0331}">
                 <File Id="filD99E9EC7DC4245D8A49899A9AB980F01" KeyPath="yes" Source="$(var.TargetDir)\Microsoft.PythonTools.PyKinect.pkgdef" />
             </Component>
-            <Component Id="cmpEE6F7822BA6B46688EB4153D801FBC55" Directory="dir59239D18CB7D4212A63144179AC90432" Guid="{10E30EA3-5476-4F0B-BE03-E94E59BDF8C3}">
+            <Component Id="cmpEE6F7822BA6B46688EB4153D801FBC55" Directory="Dir_ProjectTemplates_Python" Guid="{10E30EA3-5476-4F0B-BE03-E94E59BDF8C3}">
                 <File Id="filF4E4D1649FD14DACA42D4CFCC3FE85F1" KeyPath="yes" Source="$(var.TargetDir)\Templates\Projects\PyKinectPyGame\KinectGame.zip" />
             </Component>
             <Component Id="cmp45D33C3A2C2B4DAE8DCD963EF7FB94A9" Directory="INSTALLLOCATION" Guid="{2A87D288-A96E-4655-9DAF-84EBE77B14DC}">
@@ -82,38 +92,6 @@
 
 
         </ComponentGroup>
-    </Fragment>
-    <Fragment>
-        <DirectoryRef Id="dir436142373C244AC4A66B8C6ED1FC3150">
-            <Directory Id="dir4CFC157C6EEC49548A5F0690FCC9B47B" Name="Projects" />
-        </DirectoryRef>
-    </Fragment>
-    <Fragment>
-        <DirectoryRef Id="dir4CFC157C6EEC49548A5F0690FCC9B47B">
-            <Directory Id="dir59239D18CB7D4212A63144179AC90432" Name="PyKinectPyGame" />
-        </DirectoryRef>
-    </Fragment>
-    <Fragment>
-        <DirectoryRef Id="dirEB615C5BD073420189EF582A99D7486B">
-            <Directory Id="dirD024E1804578437F96ECD9F13F35BF80" Name="pykinect" />
-            <Directory Id="dir2A04F814997C4D2F88133D144E5B3EEE" Name="winspeech" />
-        </DirectoryRef>
-    </Fragment>
-    <Fragment>
-        <DirectoryRef Id="dirD024E1804578437F96ECD9F13F35BF80">
-            <Directory Id="dirCABFC4921316431EBD358749000089A8" Name="audio" />
-            <Directory Id="dir88A5CB985C334A88981F7E1DA6D0EF4B" Name="nui" />
-        </DirectoryRef>
-    </Fragment>
-    <Fragment>
-        <DirectoryRef Id="dir55B286326A5D40B38CA619211B36E74C">
-            <Directory Id="dir996AC28292904A2AAEB5BD3E7690E314" Name="xl" />
-        </DirectoryRef>
-    </Fragment>
-    <Fragment>
-        <DirectoryRef Id="dir996AC28292904A2AAEB5BD3E7690E314">
-            <Directory Id="dir20981893AF4A4AACB649D1963B5EC257" Name="_impl" />
-        </DirectoryRef>
     </Fragment>
 
 </Wix>

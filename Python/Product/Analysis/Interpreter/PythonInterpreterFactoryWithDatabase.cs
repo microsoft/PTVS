@@ -93,7 +93,9 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         public IPythonInterpreter CreateInterpreter() {
-            if (_typeDb == null || _typeDb.DatabaseDirectory != DatabasePath) {
+            if (_typeDb == null || 
+                _typeDb.DatabaseDirectory != DatabasePath ||
+                _typeDb.HasCustomBuiltins) {
                 var oldDb = _typeDb;
                 if (_typeDb != null) {
                     _typeDb.DatabaseCorrupt -= OnDatabaseCorrupt;

@@ -55,8 +55,12 @@ namespace Microsoft.PythonTools.Intellisense {
                             const int iconSize = 16;
 
                             using (Bitmap bitmap = Bitmap.FromHbitmap(hbmpValue)) {
-                                // Get rid of the white backdrop behind the refactoring icons.
+                                // Get rid of the backdrop behind the refactoring icons.
+#if DEV11_OR_LATER
+                                bitmap.MakeTransparent(System.Drawing.Color.Black);
+#else
                                 bitmap.MakeTransparent(System.Drawing.Color.White);
+#endif
 
                                 _icons[_iconKind] = res = Imaging.CreateBitmapSourceFromHBitmap(bitmap.GetHbitmap(),
                                     IntPtr.Zero,

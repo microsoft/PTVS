@@ -749,6 +749,63 @@ class B(dict):
             AssertUtil.DoesntContain(completions, "bit_length");
         }
 
+        private static IEnumerable<string> GenerateText(int lines, int width, string prefix = "") {
+            var rand = new Random();
+            const string VALID_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.(),     '\"";
+            for (int i = 0; i < lines; ++i) {
+                yield return prefix + new String(Enumerable.Repeat(0, width - prefix.Length)
+                    .Select(_ => rand.Next(VALID_CHARS.Length))
+                    .Select(j => VALID_CHARS[j])
+                    .ToArray()
+                );
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public void CompletionWithLongDocString() {
+            var docString = GenerateText(100, 72, "    ").ToArray();
+            string code = @"
+def func(a):
+    '''" + string.Join(Environment.NewLine, docString) + @"'''
+    pass
+
+";
+
+            // Because there is an extra line added for the Quick Info we only
+            // want the first 29 lines of the docstring. However, for the
+            // signature documentation, we'll get an extra one.
+            var expected1 = string.Join(Environment.NewLine, docString.Take(29)) + Environment.NewLine + "...";
+            var expected2 = string.Join(Environment.NewLine, docString.Take(30)) + Environment.NewLine + "...";
+
+            TestQuickInfo(code, code.IndexOf("func"), code.IndexOf("func") + 4, "func: def func(...)\r\n" + expected1);
+
+            SignatureAnalysis sigs;
+            SignatureTest(-1, code + "func(", "func", 0, PythonLanguageVersion.V27, true, out sigs);
+            Assert.AreEqual(1, sigs.Signatures.Count);
+            Assert.AreEqual(1, sigs.Signatures[0].Parameters.Count);
+            Assert.AreEqual(expected2, sigs.Signatures[0].Documentation);
+
+            docString = GenerateText(100, 250, "    ").ToArray();
+            code = @"
+def func(a):
+    '''" + string.Join(Environment.NewLine, docString) + @"'''
+    pass
+
+";
+
+            // The long lines cause us to truncate sooner. Coincidentally, we
+            // come up with the same number of lines for Quick Info and the
+            // signature.
+            expected1 = expected2 = string.Join(Environment.NewLine, docString.Take(15)) + Environment.NewLine + "...";
+
+            TestQuickInfo(code, code.IndexOf("func"), code.IndexOf("func") + 4, "func: def func(...)\r\n" + expected1);
+
+            SignatureTest(-1, code + "func(", "func", 0, PythonLanguageVersion.V27, true, out sigs);
+            Assert.AreEqual(1, sigs.Signatures.Count);
+            Assert.AreEqual(1, sigs.Signatures[0].Parameters.Count);
+            Assert.AreEqual(expected2, sigs.Signatures[0].Documentation);
+        }
+
         private static HashSet<string> EditAndGetCompletions(string code, string editText, int editInsert, string completeAfter, PythonLanguageVersion version = PythonLanguageVersion.V27) {
             CompletionAnalysis context;
 
@@ -929,6 +986,11 @@ class B(dict):
         }
 
         private static void SignatureTest(int location, string sourceCode, string expectedExpression, int paramIndex, PythonLanguageVersion version = PythonLanguageVersion.V27) {
+            SignatureAnalysis dummy;
+            SignatureTest(location, sourceCode, expectedExpression, paramIndex, version, false, out dummy);
+        }
+
+        private static void SignatureTest(int location, string sourceCode, string expectedExpression, int paramIndex, PythonLanguageVersion version, bool analyze, out SignatureAnalysis sigs) {
             if (location < 0) {
                 location = sourceCode.Length + location;
             }
@@ -939,10 +1001,21 @@ class B(dict):
                 var classifierProvider = new PythonClassifierProvider(new MockContentTypeRegistryService());
                 classifierProvider._classificationRegistry = new MockClassificationTypeRegistryService();
                 classifierProvider.GetClassifier(buffer);
+                
                 var snapshot = (MockTextSnapshot)buffer.CurrentSnapshot;
-                var context = snapshot.GetSignatures(new MockTrackingSpan(snapshot, location, 1));
-                Assert.AreEqual(expectedExpression, context.Text, sourceCode);
-                Assert.AreEqual(paramIndex, context.ParameterIndex, sourceCode);
+
+                if (analyze) {
+                    var monitoredBuffer = analyzer.MonitorTextBuffer(new MockTextView(buffer), buffer);
+                    analyzer.WaitForCompleteAnalysis(x => true);
+                    while (((IPythonProjectEntry)buffer.GetAnalysis()).Analysis == null) {
+                        System.Threading.Thread.Sleep(500);
+                    }
+                    analyzer.StopMonitoringTextBuffer(monitoredBuffer.BufferParser);
+                }
+
+                sigs = snapshot.GetSignatures(new MockTrackingSpan(snapshot, location, 1));
+                Assert.AreEqual(expectedExpression, sigs.Text, sourceCode);
+                Assert.AreEqual(paramIndex, sigs.ParameterIndex, sourceCode);
             }
         }
 

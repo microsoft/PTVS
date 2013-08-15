@@ -44,21 +44,19 @@ namespace Microsoft.PythonTools.Interpreter {
         private readonly string _builtinName;
 
         public SharedDatabaseState(string databaseDirectory,
-                                   Version languageVersion,
-                                   IBuiltinPythonModule builtinsModule = null)
-            : this(databaseDirectory, languageVersion, false, builtinsModule) {
+                                   Version languageVersion)
+            : this(databaseDirectory, languageVersion, false) {
         }
 
         internal SharedDatabaseState(string databaseDirectory,
             Version languageVersion,
-            bool defaultDatabase,
-            IBuiltinPythonModule builtinsModule = null) {
+            bool defaultDatabase) {
 
             _dbDir = databaseDirectory;
             _langVersion = languageVersion;
             _isDefaultDb = defaultDatabase;
             _builtinName = (_langVersion.Major == 3) ? BuiltinName3x : BuiltinName2x;
-            _modules[_builtinName] = _builtinModule = builtinsModule ?? MakeBuiltinModule(databaseDirectory);
+            _modules[_builtinName] = _builtinModule = MakeBuiltinModule(databaseDirectory);
             if (_isDefaultDb && _langVersion.Major == 3) {
                 _modules[BuiltinName2x] = _builtinModule;
             }

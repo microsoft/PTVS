@@ -51,8 +51,7 @@ namespace Microsoft.PythonTools.Django {
                 controller.AttachKeyboardFilter();
 
 #if DEV11_OR_LATER
-                var viewFilter = new TextViewFilter();
-                viewFilter.AttachFilter(textView);
+                new TextViewFilter(textView);
 #endif
             }
 
