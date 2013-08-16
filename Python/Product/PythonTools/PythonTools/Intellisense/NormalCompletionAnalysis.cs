@@ -86,7 +86,11 @@ namespace Microsoft.PythonTools.Intellisense {
                     lock (_analyzer) {
                         members = members.Concat(analysis.GetMembersByIndex(
                             fixedText,
-                            Span.GetEndPoint(_snapshot).Position,
+                            VsProjectAnalyzer.TranslateIndex(
+                                Span.GetEndPoint(_snapshot).Position,
+                                _snapshot,
+                                analysis
+                            ),
                             _options.MemberOptions
                         ).ToArray());
                     }
@@ -101,7 +105,14 @@ namespace Microsoft.PythonTools.Intellisense {
                     }
                 }
             } else {
-                members = analysis.GetAllAvailableMembersByIndex(Span.GetStartPoint(_snapshot).Position, _options.MemberOptions);
+                members = analysis.GetAllAvailableMembersByIndex(
+                    VsProjectAnalyzer.TranslateIndex(
+                        Span.GetStartPoint(_snapshot).Position, 
+                        _snapshot,
+                        analysis
+                    ),
+                    _options.MemberOptions
+                );
             }
 
             var end = _stopwatch.ElapsedMilliseconds;

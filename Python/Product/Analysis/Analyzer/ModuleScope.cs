@@ -21,6 +21,10 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             : base(moduleInfo, null) {
         }
 
+        private ModuleScope(ModuleScope scope)
+            : base(scope.AnalysisValue, scope, true) {
+        }
+
         public ModuleInfo Module { get { return AnalysisValue as ModuleInfo; } }
 
         public override string Name {
@@ -34,6 +38,10 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             }
 
             return false;
+        }
+
+        public ModuleScope CloneForPublish() {
+            return new ModuleScope(this);
         }
     }
 }

@@ -164,7 +164,10 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         private void Parse(bool enqueOnly, CancellationToken cancel) {
-            if (_tree == null) {
+            PythonAst tree;
+            IAnalysisCookie cookie;
+            GetTreeAndCookie(out tree, out cookie);
+            if (tree == null) {
                 return;
             }
 
@@ -194,7 +197,7 @@ namespace Microsoft.PythonTools.Analysis {
                 }
             }
 
-            _unit = new AnalysisUnit(_tree, _myScope.Scope);
+            _unit = new AnalysisUnit(tree, _myScope.Scope);
             AnalysisLog.NewUnit(_unit);
 
             MyScope.Scope.Children.Clear();
@@ -206,7 +209,7 @@ namespace Microsoft.PythonTools.Analysis {
 
             // collect top-level definitions first
             var walker = new OverviewWalker(this, _unit);
-            _tree.Walk(walker);
+            tree.Walk(walker);
             _myScope.Specialize();
 
             // It may be that we have analyzed some child packages of this package already, but because it wasn't analyzed,
@@ -238,7 +241,10 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             // publish the analysis now that it's complete
-            _currentAnalysis = new ModuleAnalysis(_unit, _unit.Scope);
+            _currentAnalysis = new ModuleAnalysis(
+                _unit, 
+                ((ModuleScope)_unit.Scope).CloneForPublish(),
+                cookie);
         }
 
         public IGroupableAnalysisProject AnalysisGroup {

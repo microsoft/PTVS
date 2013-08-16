@@ -28,15 +28,16 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly ITrackingSpan _span;
         private readonly int _index;
         private readonly VsProjectAnalyzer _analyzer;
-        public static readonly ExpressionAnalysis Empty = new ExpressionAnalysis(null, "", null, 0, null);
+        private readonly ITextSnapshot _snapshot;
+        public static readonly ExpressionAnalysis Empty = new ExpressionAnalysis(null, "", null, 0, null, null);
 
-        
-        internal ExpressionAnalysis(VsProjectAnalyzer analyzer, string expression, ModuleAnalysis analysis, int index, ITrackingSpan span) {
+        internal ExpressionAnalysis(VsProjectAnalyzer analyzer, string expression, ModuleAnalysis analysis, int index, ITrackingSpan span, ITextSnapshot snapshot) {
             _expr = expression;
             _analysis = analysis;
             _index = index;
             _span = span;
             _analyzer = analyzer;
+            _snapshot = snapshot;
         }
 
         /// <summary>
@@ -64,7 +65,7 @@ namespace Microsoft.PythonTools.Intellisense {
             get {
                 if (_analysis != null) {
                     lock (_analyzer) {
-                        return _analysis.GetVariablesByIndex(_expr, _index);
+                        return _analysis.GetVariablesByIndex(_expr, TranslatedIndex);
                     }
                 }
                 return new IAnalysisVariable[0];
@@ -78,7 +79,7 @@ namespace Microsoft.PythonTools.Intellisense {
             get {
                 if (_analysis != null) {
                     lock (_analyzer) {
-                        return _analysis.GetValuesByIndex(_expr, _index);
+                        return _analysis.GetValuesByIndex(_expr, TranslatedIndex);
                     }
                 }
                 return new AnalysisValue[0];
@@ -86,7 +87,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         public Expression GetEvaluatedExpression() {
-            return Statement.GetExpression(_analysis.GetAstFromTextByIndex(_expr, _index).Body);
+            return Statement.GetExpression(_analysis.GetAstFromTextByIndex(_expr, TranslatedIndex).Body);
         }
 
         /// <summary>
@@ -97,7 +98,13 @@ namespace Microsoft.PythonTools.Intellisense {
         /// </summary>
         /// <returns></returns>
         public PythonAst GetEvaluatedAst() {
-            return _analysis.GetAstFromTextByIndex(_expr, _index);
+            return _analysis.GetAstFromTextByIndex(_expr, TranslatedIndex);
+        }
+
+        private int TranslatedIndex {
+            get {
+                return VsProjectAnalyzer.TranslateIndex(_index, _snapshot, _analysis);
+            }
         }
     }
 }

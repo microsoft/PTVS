@@ -359,7 +359,8 @@ namespace Microsoft.PythonTools.Intellisense {
                         text,
                         analysis,
                         loc.Start,
-                        applicableSpan);
+                        applicableSpan,
+                        parser.Snapshot);
                 }
             }
 
@@ -408,8 +409,7 @@ namespace Microsoft.PythonTools.Intellisense {
             if (analysisItem != null) {
                 var analysis = ((IPythonProjectEntry)analysisItem).Analysis;
                 if (analysis != null) {
-
-                    int index = loc.Start;
+                    int index = TranslateIndex(loc.Start, snapshot, analysis);
 
                     IEnumerable<IOverloadResult> sigs;
                     lock (snapshot.TextBuffer.GetAnalyzer()) {
@@ -437,6 +437,17 @@ namespace Microsoft.PythonTools.Intellisense {
             return new SignatureAnalysis(text, paramIndex, new ISignature[0]);
         }
 
+        internal static int TranslateIndex(int index, ITextSnapshot fromSnapshot, ModuleAnalysis toAnalysisSnapshot) {
+            var snapshotCookie = toAnalysisSnapshot.AnalysisCookie as SnapshotCookie;
+            if (snapshotCookie != null && fromSnapshot != null) {
+                index = new SnapshotPoint(fromSnapshot, index).TranslateTo(
+                    snapshotCookie.Snapshot,
+                    PointTrackingMode.Negative
+                ).Position;
+            }
+            return index;
+        }
+
         internal static MissingImportAnalysis GetMissingImports(ITextSnapshot snapshot, ITrackingSpan span) {
             ReverseExpressionParser parser = new ReverseExpressionParser(snapshot, snapshot.TextBuffer, span);
             var loc = span.GetSpan(snapshot.Version);
@@ -458,7 +469,16 @@ namespace Microsoft.PythonTools.Intellisense {
             var analyzer = analysis.ProjectState;
             var index = span.GetStartPoint(snapshot).Position;
 
-            var expr = Statement.GetExpression(analysis.GetAstFromTextByIndex(text, index).Body);
+            var expr = Statement.GetExpression(
+                analysis.GetAstFromTextByIndex(
+                    text, 
+                    TranslateIndex(
+                        index,
+                        snapshot,
+                        analysis
+                    )
+                ).Body
+            );
 
             if (expr != null && expr is NameExpression) {
                 var nameExpr = (NameExpression)expr;
@@ -470,7 +490,13 @@ namespace Microsoft.PythonTools.Intellisense {
                     );
 
                     lock (snapshot.TextBuffer.GetAnalyzer()) {
+                        index = TranslateIndex(
+                            index,
+                            snapshot,
+                            analysis
+                        );
                         var variables = analysis.GetVariablesByIndex(text, index).Where(IsDefinition).Count();
+
                         var values = analysis.GetValuesByIndex(text, index).ToArray();
 
                         // if we have type information or an assignment to the variable we won't offer 
@@ -982,9 +1008,9 @@ namespace Microsoft.PythonTools.Intellisense {
 
             var parser = new ReverseExpressionParser(snapshot, snapshot.TextBuffer, applicableSpan);
             if (parser.IsInGrouping()) {
-            options = options.Clone();
-            options.IncludeStatementKeywords = false;
-                }
+                options = options.Clone();
+                options.IncludeStatementKeywords = false;
+            }
 
             return new NormalCompletionAnalysis(
                 snapshot.TextBuffer.GetAnalyzer(),

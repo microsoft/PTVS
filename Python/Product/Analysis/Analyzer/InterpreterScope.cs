@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Parsing.Ast;
@@ -49,6 +50,21 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
 
         public InterpreterScope(AnalysisValue av, InterpreterScope outerScope)
             : this(av, null, outerScope) { }
+
+        protected InterpreterScope(AnalysisValue av, InterpreterScope cloned, bool isCloned) {
+            Debug.Assert(isCloned);
+            _av = av;
+            Children.AddRange(cloned.Children);
+            _variables = cloned._variables;
+            if (cloned._linkedVariables == null) {
+                // linkedVariables could be created later, and we need to share them if it.
+                cloned._linkedVariables = new Dictionary<string, HashSet<VariableDef>>();
+            }
+            _linkedVariables = cloned._linkedVariables;
+#if DEBUG
+            Variables = new ReadOnlyDictionary<string, VariableDef>(_variables);
+#endif
+        }
 
         public InterpreterScope GlobalScope {
             get {
@@ -314,7 +330,9 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         }
 
         public void ClearLinkedVariables() {
-            _linkedVariables = null;
+            if (_linkedVariables != null) {
+                _linkedVariables.Clear();
+            }
         }
 
         internal HashSet<VariableDef> GetLinkedVariables(string saveName) {

@@ -73,6 +73,7 @@ namespace Microsoft.PythonTools.Navigation {
                         criteria.szName.Substring(criteria.szName.LastIndexOf(':') + 1),
                         analysis.Analysis,
                         0,
+                        null,
                         null
                     );
 

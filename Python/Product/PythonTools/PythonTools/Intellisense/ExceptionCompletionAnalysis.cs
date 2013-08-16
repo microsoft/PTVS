@@ -52,7 +52,8 @@ namespace Microsoft.PythonTools.Intellisense {
             var start = _stopwatch.ElapsedMilliseconds;
 
             var analysis = GetAnalysisEntry();
-            var completions = analysis.GetAllAvailableMembersByIndex(Span.GetEndPoint(TextBuffer.CurrentSnapshot).Position, GetMemberOptions.None)
+            var index = VsProjectAnalyzer.TranslateIndex(Span.GetEndPoint(TextBuffer.CurrentSnapshot).Position, TextBuffer.CurrentSnapshot, analysis);
+            var completions = analysis.GetAllAvailableMembersByIndex(index, GetMemberOptions.None)
                 .Where(IsExceptionType)
                 .Select(member => PythonCompletion(glyphService, member))
                 .OrderBy(completion => completion.DisplayText);
