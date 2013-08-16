@@ -504,17 +504,25 @@ Either stop the current command, or reset the REPL window.");
                     (int)__VSHPROPID.VSHPROPID_ProjectIDGuid,
                     out projectIdGuid)
                 );
+                IReplWindow replWindow;
+                try {
+                    replWindow = PythonToolsPackage.Instance.CreatePythonRepl(
+                        DjangoReplId + projectIdGuid.ToString(),
+                        "Django Management Console - " + projectName,
+                        pyProj,
+                        (projectDir ?? "").ToString(),
+                        new Dictionary<string, string>() {
+                            { "DJANGO_SETTINGS_MODULE", projectName + ".settings" }
+                        },
+                        _innerVsHierarchy
+                    );
+                } catch (InvalidOperationException) {
+                    MessageBox.Show(@"Cannot start the Django management console.
 
-                IReplWindow replWindow = PythonToolsPackage.Instance.CreatePythonRepl(
-                    DjangoReplId + projectIdGuid.ToString(),
-                    "Django Management Console - " + projectName,
-                    pyProj,
-                    (projectDir ?? "").ToString(),
-                    new Dictionary<string, string>() {
-                        { "DJANGO_SETTINGS_MODULE", projectName + ".settings" }
-                    },
-                    _innerVsHierarchy
-                );
+Please install a Python interpreter before using the Django management console.");
+
+                    return null;
+                }
 
                 IVsWindowFrame windowFrame = (IVsWindowFrame)((ToolWindowPane)replWindow).Frame;
                 ErrorHandler.ThrowOnFailure(windowFrame.Show());
