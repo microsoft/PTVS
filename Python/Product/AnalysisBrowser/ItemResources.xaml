@@ -92,6 +92,27 @@
         </StackPanel>
     </DataTemplate>
 
+    <DataTemplate DataType="{x:Type l:ParameterView}">
+        <StackPanel Orientation="Horizontal">
+            <Border Background="{StaticResource ValueBackground}"
+                    BorderBrush="{StaticResource ValueBorder}"
+                    Style="{StaticResource ItemBorder}">
+                <TextBlock Text="{Binding Name,Mode=OneTime}" />
+            </Border>
+            <StackPanel Name="Types" Orientation="Horizontal" Visibility="Collapsed">
+                <TextBlock Text="of type" VerticalAlignment="Center" Margin="3"/>
+                <ItemsControl Style="{StaticResource HorizontalChildren}"
+                              Name="TypesItems"
+                              ItemsSource="{Binding Types}"/>
+            </StackPanel>
+        </StackPanel>
+        <DataTemplate.Triggers>
+            <DataTrigger Binding="{Binding HasItems,ElementName=TypesItems}" Value="True">
+                <Setter TargetName="Types" Property="Visibility" Value="Visible" />
+            </DataTrigger>
+        </DataTemplate.Triggers>
+    </DataTemplate>
+
     <DataTemplate DataType="{x:Type l:PropertyView}">
         <StackPanel Orientation="Horizontal">
             <Border Background="{StaticResource PropertyBackground}"

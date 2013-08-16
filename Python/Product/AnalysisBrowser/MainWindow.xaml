@@ -9,7 +9,10 @@
         Background="{x:Static SystemColors.ControlBrush}"
         DataContext="{Binding RelativeSource={RelativeSource Self}}">
     <Window.CommandBindings>
-        <CommandBinding Command="ApplicationCommands.Open"
+        <CommandBinding Command="{x:Static l:MainWindow.CloseDatabaseCommand}"
+                        CanExecute="CloseDatabase_CanExecute"
+                        Executed="CloseDatabase_Executed" />
+        <CommandBinding Command="{x:Static l:MainWindow.OpenDatabaseCommand}"
                         CanExecute="Open_CanExecute"
                         Executed="Open_Executed" />
         <CommandBinding Command="ApplicationCommands.Close"
@@ -18,6 +21,9 @@
         <CommandBinding Command="{x:Static l:MainWindow.BrowseSaveCommand}"
                         CanExecute="BrowseSave_CanExecute"
                         Executed="BrowseSave_Executed" />
+        <CommandBinding Command="{x:Static l:MainWindow.BrowseFolderCommand}"
+                        CanExecute="BrowseFolder_CanExecute"
+                        Executed="BrowseFolder_Executed" />
         <CommandBinding Command="{x:Static l:MainWindow.GoToItemCommand}"
                         CanExecute="GoToItem_CanExecute"
                         Executed="GoToItem_Executed" />
@@ -28,7 +34,14 @@
                         CanExecute="Export_CanExecute"
                         Executed="Export_Executed" />
     </Window.CommandBindings>
-    
+    <Window.InputBindings>
+        <KeyBinding Command="{x:Static l:MainWindow.CloseDatabaseCommand}"
+                    Key="O"
+                    Modifiers="Control" />
+        <KeyBinding Command="ApplicationCommands.Close"
+                    Key="Escape" />
+    </Window.InputBindings>
+
     <Window.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
@@ -44,40 +57,67 @@
                         <ContentPresenter Content="{Binding}" />
                     </HierarchicalDataTemplate>
 
-                    <BooleanToVisibilityConverter x:Key="BoolToVis" />
-                    <l:NotConverter x:Key="Not" />
+                    <l:IfElseConverter x:Key="BoolToVis"
+                                       IfTrue="{x:Static Visibility.Visible}"
+                                       IfFalse="{x:Static Visibility.Collapsed}" />
+
+                    <l:IfElseConverter x:Key="BoolToCollapsed"
+                                       IfTrue="{x:Static Visibility.Collapsed}"
+                                       IfFalse="{x:Static Visibility.Visible}" />
+
+                    <l:IfElseConverter x:Key="All">
+                        <l:IfElseConverter.IfTrue>
+                            <s:Boolean>True</s:Boolean>
+                        </l:IfElseConverter.IfTrue>
+                        <l:IfElseConverter.IfFalse>
+                            <s:Boolean>False</s:Boolean>
+                        </l:IfElseConverter.IfFalse>
+                    </l:IfElseConverter>
+
+                    <l:IfElseConverter x:Key="Not">
+                        <l:IfElseConverter.IfTrue>
+                            <s:Boolean>False</s:Boolean>
+                        </l:IfElseConverter.IfTrue>
+                        <l:IfElseConverter.IfFalse>
+                            <s:Boolean>True</s:Boolean>
+                        </l:IfElseConverter.IfFalse>
+                    </l:IfElseConverter>
                 </ResourceDictionary>
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Window.Resources>
-    
+
     <Grid Margin="3">
         <Grid.RowDefinitions>
             <RowDefinition Height="auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
-        
+
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="2*" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
-        
+
         <Grid Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3">
             <Menu IsEnabled="{Binding Loading,Converter={StaticResource Not}}"
                   Padding="3">
                 <MenuItem Header="_Database">
-                    <MenuItem Header="_Open" Command="ApplicationCommands.Open" />
+                    <MenuItem Header="_Open"
+                              InputGestureText="Ctrl+O"
+                              Command="{x:Static l:MainWindow.CloseDatabaseCommand}" />
                     <Separator />
-                    <MenuItem Header="E_xit" Command="ApplicationCommands.Close" />
+                    <MenuItem Header="E_xit"
+                              InputGestureText="Esc"
+                              Command="ApplicationCommands.Close" />
                 </MenuItem>
-                
+
                 <MenuItem Header="_Export">
                     <MenuItem Header="_Tree" Command="{x:Static l:AnalysisView.ExportTreeCommand}" />
                     <MenuItem Header="_Diffable" Command="{x:Static l:AnalysisView.ExportDiffableCommand}" />
                 </MenuItem>
             </Menu>
         </Grid>
-        
+
         <Grid Grid.Row="1" Grid.Column="0">
             <Grid Visibility="{Binding HasAnalysis,Converter={StaticResource BoolToVis}}">
                 <TreeView Name="DatabaseTreeView"
@@ -85,19 +125,122 @@
                           ItemTemplate="{StaticResource ItemTemplate}"
                           ItemContainerStyle="{StaticResource ItemStyle}"/>
             </Grid>
-            
-            <StackPanel Visibility="{Binding Loading,Converter={StaticResource BoolToVis}}"
-                        Orientation="Horizontal"
-                        HorizontalAlignment="Center" VerticalAlignment="Center">
-                <TextBlock>Loading...</TextBlock>
-            </StackPanel>
+
+            <Grid Visibility="{Binding HasAnalysis,Converter={StaticResource BoolToCollapsed}}">
+                <Grid.Resources>
+                    <Style TargetType="{x:Type TextBox}">
+                        <Setter Property="Margin" Value="3" />
+                        <Setter Property="Padding" Value="3" />
+                        <Setter Property="FontFamily" Value="Consolas" />
+                        <Setter Property="VerticalContentAlignment" Value="Center" />
+                    </Style>
+                    <Style TargetType="{x:Type ComboBox}">
+                        <Setter Property="Margin" Value="3" />
+                        <Setter Property="FontFamily" Value="Consolas" />
+                        <Setter Property="VerticalContentAlignment" Value="Center" />
+                    </Style>
+                    <Style TargetType="{x:Type Button}">
+                        <Setter Property="Margin" Value="3" />
+                        <Setter Property="Padding" Value="3" />
+                    </Style>
+                    <Style TargetType="{x:Type Label}">
+                        <Setter Property="HorizontalAlignment" Value="Left" />
+                        <Setter Property="VerticalAlignment" Value="Center" />
+                    </Style>
+
+                    <DataTemplate DataType="{x:Type s:Version}">
+                        <TextBlock Margin="3" Text="{Binding}" />
+                    </DataTemplate>
+
+                    <l:DirectoryList x:Key="SubDirList" IncludeDirectories="True" IncludeParentDirectory="True" />
+                </Grid.Resources>
+
+                <Grid Grid.IsSharedSizeScope="True"
+                      Margin="6"
+                      Visibility="{Binding Loading,Converter={StaticResource BoolToCollapsed}}">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="auto" />
+                        <RowDefinition Height="auto" />
+                        <RowDefinition Height="auto" />
+                    </Grid.RowDefinitions>
+
+                    <Grid Grid.Row="0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="auto" SharedSizeGroup="Labels" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="auto" />
+                            <ColumnDefinition Width="auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <Label Grid.Column="0">
+                            DB Dir:
+                        </Label>
+                        <TextBox Grid.Column="1"
+                                    TextChanged="DatabaseDirectory_TextChanged"
+                                    Name="DatabaseDirectory" />
+                        <Popup Grid.Column="1"
+                                Name="DatabaseDirectoryPopup"
+                                PlacementTarget="{Binding ElementName=DatabaseDirectory}"
+                                AllowsTransparency="True"
+                                Placement="Bottom">
+                            <Popup.IsOpen>
+                                <MultiBinding Converter="{StaticResource All}" Mode="OneWay">
+                                    <MultiBinding.Bindings>
+                                        <Binding Path="HasItems" ElementName="DatabaseDirectory_SubDirs" Mode="OneWay" />
+                                        <Binding Path="IsFocused" ElementName="DatabaseDirectory" Mode="OneWay" />
+                                    </MultiBinding.Bindings>
+                                </MultiBinding>
+                            </Popup.IsOpen>
+                            <ListBox Name="DatabaseDirectory_SubDirs"
+                                        FontFamily="Consolas"
+                                        Padding="0"
+                                        MaxHeight="200"
+                                        ItemsSource="{Binding Text,ElementName=DatabaseDirectory,Converter={StaticResource SubDirList}}"
+                                        SelectionChanged="DatabaseDirectory_SelectionChanged" />
+                        </Popup>
+                        <Button Grid.Column="2"
+                                VerticalAlignment="Top"
+                                Content="..."
+                                MinWidth="{Binding ActualHeight,RelativeSource={RelativeSource Self}}"
+                                Command="{x:Static l:MainWindow.BrowseFolderCommand}"
+                                CommandTarget="{Binding ElementName=DatabaseDirectory}" />
+                        <Button Grid.Row="1" Grid.Column="3"
+                                Command="{x:Static l:MainWindow.OpenDatabaseCommand}"
+                                CommandTarget="{Binding ElementName=DatabaseDirectory}">
+                            _Open
+                        </Button>
+                    </Grid>
+
+                    <Grid Grid.Row="1">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="auto" SharedSizeGroup="Labels" />
+                            <ColumnDefinition Width="auto" />
+                            <ColumnDefinition Width="auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <Label Grid.Column="0">
+                            Version:
+                        </Label>
+                        <ComboBox Grid.Column="1"
+                                    SelectedItem="{Binding Version}"
+                                    ItemsSource="{Binding Source={x:Static l:MainWindow.SupportedVersions},Mode=OneTime}" />
+                    </Grid>
+                </Grid>
+
+                <StackPanel Visibility="{Binding Loading,Converter={StaticResource BoolToVis}}"
+                            Orientation="Horizontal"
+                            HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <TextBlock>Loading...</TextBlock>
+                </StackPanel>
+            </Grid>
         </Grid>
-        
+
         <GridSplitter Grid.Row="1" Grid.Column="1"
                       VerticalAlignment="Stretch"
                       HorizontalAlignment="Left"
                       Width="4" />
-        
+
         <StackPanel Grid.Row="1" Grid.Column="1"
                     Orientation="Vertical"
                     Margin="4 0 0 0"
@@ -143,7 +286,7 @@
                             Command="{x:Static l:MainWindow.BrowseSaveCommand}"
                             CommandParameter="UTF-8 Text File (*.txt)|*.txt|All Files (*.*)|*.*"
                             CommandTarget="{Binding ElementName=ExportFilename}" />
-                    
+
                     <Label Grid.Row="1" Grid.Column="0">
                         <Label.Content>
                             Filter:
@@ -162,14 +305,14 @@
                     </TextBox>
                 </Grid>
             </GroupBox>
-            
+
             <GroupBox HorizontalAlignment="Stretch" VerticalAlignment="Top"
                       ScrollViewer.VerticalScrollBarVisibility="Auto"
                       DataContext="{Binding SelectedItem,ElementName=DatabaseTreeView}">
                 <GroupBox.Header>
                     Item Properties
                 </GroupBox.Header>
-                
+
                 <StackPanel Orientation="Vertical"
                             HorizontalAlignment="Stretch"
                             Grid.IsSharedSizeScope="True">
@@ -196,7 +339,9 @@
                                         <ColumnDefinition SharedSizeGroup="PropertyName" Width="auto" />
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
-                                    <Label Grid.Column="0" Content="{Binding Key}" />
+                                    <Label Grid.Column="0">
+                                        <TextBlock Text="{Binding Key}" />
+                                    </Label>
                                     <ContentControl Grid.Column="1"
                                         Content="{Binding Value}"
                                         ContentTemplateSelector="{StaticResource PropertyItemTemplate}"/>

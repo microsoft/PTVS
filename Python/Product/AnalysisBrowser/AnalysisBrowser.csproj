@@ -69,7 +69,9 @@
     <Compile Include="..\..\..\Common\Product\SharedProject\CommonUtils.cs">
       <Link>CommonUtils.cs</Link>
     </Compile>
+    <Compile Include="IfElseConverter.cs" />
     <Compile Include="KnownTypesView.cs" />
+    <Compile Include="ParameterView.cs" />
     <Compile Include="PropertyView.cs" />
     <Compile Include="FunctionOverloadView.cs" />
     <Compile Include="FunctionView.cs" />

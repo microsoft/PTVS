@@ -28,11 +28,30 @@ using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Analysis.Browser {
     public partial class MainWindow : Window {
+        public static readonly ICommand CloseDatabaseCommand = new RoutedCommand();
+        public static readonly ICommand OpenDatabaseCommand = new RoutedCommand();
         public static readonly ICommand BrowseSaveCommand = new RoutedCommand();
+        public static readonly ICommand BrowseFolderCommand = new RoutedCommand();
         public static readonly ICommand GoToItemCommand = new RoutedCommand();
+
+        public static readonly IEnumerable<Version> SupportedVersions = new[] {
+            new Version(2, 5),
+            new Version(2, 6),
+            new Version(2, 7),
+            new Version(3, 0),
+            new Version(3, 1),
+            new Version(3, 2),
+            new Version(3, 3),
+            new Version(3, 4),
+        };
 
         public MainWindow() {
             InitializeComponent();
+
+            DatabaseDirectory.Text = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "Python Tools"
+            );
 
             var path = Environment.GetCommandLineArgs().LastOrDefault();
             try {
@@ -70,34 +89,45 @@ namespace Microsoft.PythonTools.Analysis.Browser {
         public static readonly DependencyProperty LoadingProperty = LoadingPropertyKey.DependencyProperty;
 
 
+
+        public Version Version {
+            get { return (Version)GetValue(VersionProperty); }
+            set { SetValue(VersionProperty, value); }
+        }
+
+        public static readonly DependencyProperty VersionProperty = DependencyProperty.Register("Version", typeof(Version), typeof(MainWindow), new PropertyMetadata(new Version(2, 7)));
+
         private void Open_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
             e.CanExecute = !Loading;
         }
 
         private void Open_Executed(object sender, ExecutedRoutedEventArgs e) {
             string path;
-            using (var bfd = new Microsoft.WindowsAPICodePack.Dialogs.CommonOpenFileDialog()) {
-                bfd.IsFolderPicker = true;
-                bfd.RestoreDirectory = true;
-                if (HasAnalysis) {
-                    path = Analysis.Path;
-                } else {
-                    path = Path.Combine(
-                        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                        "Python Tools"
-                    );
+            var tb = e.Source as TextBox;
+            if (tb == null || !Directory.Exists(path = tb.Text)) {
+                using (var bfd = new Microsoft.WindowsAPICodePack.Dialogs.CommonOpenFileDialog()) {
+                    bfd.IsFolderPicker = true;
+                    bfd.RestoreDirectory = true;
+                    if (HasAnalysis) {
+                        path = Analysis.Path;
+                    } else {
+                        path = Path.Combine(
+                            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                            "Python Tools"
+                        );
+                    }
+                    while (path.Length >= 4 && !Directory.Exists(path)) {
+                        path = Path.GetDirectoryName(path);
+                    }
+                    if (path.Length <= 3) {
+                        path = null;
+                    }
+                    bfd.InitialDirectory = path;
+                    if (bfd.ShowDialog() == WindowsAPICodePack.Dialogs.CommonFileDialogResult.Cancel) {
+                        return;
+                    }
+                    path = bfd.FileName;
                 }
-                while (path.Length >= 4 && !Directory.Exists(path)) {
-                    path = Path.GetDirectoryName(path);
-                }
-                if (path.Length <= 3) {
-                    path = null;
-                }
-                bfd.InitialDirectory = path;
-                if (bfd.ShowDialog() == WindowsAPICodePack.Dialogs.CommonFileDialogResult.Cancel) {
-                    return;
-                }
-                path = bfd.FileName;
             }
 
             Load(path);
@@ -195,6 +225,29 @@ namespace Microsoft.PythonTools.Analysis.Browser {
             }
         }
 
+        private void BrowseFolder_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
+            e.CanExecute = e.Source is TextBox;
+        }
+
+        private void BrowseFolder_Executed(object sender, ExecutedRoutedEventArgs e) {
+            using (var bfd = new Microsoft.WindowsAPICodePack.Dialogs.CommonOpenFileDialog()) {
+                bfd.IsFolderPicker = true;
+                bfd.RestoreDirectory = true;
+                var path = ((TextBox)e.Source).Text;
+                while (path.Length >= 4 && !Directory.Exists(path)) {
+                    path = Path.GetDirectoryName(path);
+                }
+                if (path.Length <= 3) {
+                    path = null;
+                }
+                bfd.InitialDirectory = path;
+                if (bfd.ShowDialog() == WindowsAPICodePack.Dialogs.CommonFileDialogResult.Cancel) {
+                    return;
+                }
+                ((TextBox)e.Source).SetCurrentValue(TextBox.TextProperty, bfd.FileName);
+            }
+        }
+
         private void GoToItem_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
             e.CanExecute = e.Parameter is IAnalysisItemView;
         }
@@ -257,6 +310,39 @@ namespace Microsoft.PythonTools.Analysis.Browser {
         private void Close_Executed(object sender, ExecutedRoutedEventArgs e) {
             Close();
         }
+
+        private void CloseDatabase_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
+            e.CanExecute = HasAnalysis;
+        }
+
+        private void CloseDatabase_Executed(object sender, ExecutedRoutedEventArgs e) {
+            Analysis = null;
+            Loading = false;
+            HasAnalysis = false;
+            DatabaseDirectory.SelectAll();
+        }
+
+        private void DatabaseDirectory_SelectionChanged(object sender, SelectionChangedEventArgs e) {
+            if (e.AddedItems.Count == 1) {
+                DatabaseDirectory.SetCurrentValue(TextBox.TextProperty, e.AddedItems[0]);
+                DatabaseDirectory.Focus();
+                DatabaseDirectory.SelectAll();
+            }
+        }
+
+        private void DatabaseDirectory_TextChanged(object sender, TextChangedEventArgs e) {
+            var dir = DatabaseDirectory.Text;
+            if (!Directory.Exists(dir)) {
+                return;
+            }
+
+            foreach (var ver in SupportedVersions.Reverse()) {
+                if (dir.Contains("\\" + ver.ToString())) {
+                    Version = ver;
+                    break;
+                }
+            }
+        }
     }
 
     class PropertyItemTemplateSelector : DataTemplateSelector {
@@ -272,4 +358,59 @@ namespace Microsoft.PythonTools.Analysis.Browser {
             return null;
         }
     }
+
+    [ValueConversion(typeof(string), typeof(IEnumerable<string>))]
+    class DirectoryList : IValueConverter {
+        public bool IncludeParentDirectory { get; set; }
+        public bool IncludeDirectories { get; set; }
+        public bool IncludeFiles { get; set; }
+        public bool NamesOnly { get; set; }
+
+        private IEnumerable<string> GetParentDirectory(string dir) {
+            if (!IncludeParentDirectory || ! CommonUtils.IsValidPath(dir)) {
+                yield break;
+            }
+
+            var parentDir = Path.GetDirectoryName(dir);
+            if (!string.IsNullOrEmpty(parentDir)) {
+                yield return parentDir;
+            }
+        }
+
+        private IEnumerable<string> GetFiles(string dir) {
+            if (!IncludeFiles) {
+                return Enumerable.Empty<string>();
+            }
+            var files = Directory.EnumerateFiles(dir);
+            if (NamesOnly) {
+                files = files.Select(f => Path.GetFileName(f));
+            }
+            return files.OrderBy(f => f);
+        }
+
+        private IEnumerable<string> GetDirectories(string dir) {
+            if (!IncludeDirectories) {
+                return Enumerable.Empty<string>();
+            }
+            var dirs = Directory.EnumerateDirectories(dir);
+            if (NamesOnly) {
+                dirs = dirs.Select(d => Path.GetFileName(d));
+            }
+            return dirs.OrderBy(d => d);
+        }
+
+        public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture) {
+            var dir = value as string;
+            if (!Directory.Exists(dir)) {
+                return Enumerable.Empty<string>();
+            }
+
+            return GetParentDirectory(dir).Concat(GetDirectories(dir)).Concat(GetFiles(dir));
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture) {
+            throw new NotImplementedException();
+        }
+    }
+
 }

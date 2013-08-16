@@ -104,6 +104,10 @@ namespace Microsoft.PythonTools.Analysis.Browser {
                     yield return p;
                 }
 
+                if (!string.IsNullOrEmpty(_function.Documentation)) {
+                    yield return new KeyValuePair<string, object>("__doc__", _function.Documentation);
+                }
+
                 int i = 1;
                 foreach (var t in ReturnTypes) {
                     yield return new KeyValuePair<string, object>(string.Format("Retval #{0}", i++), t);

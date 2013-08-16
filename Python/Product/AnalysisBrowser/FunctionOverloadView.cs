@@ -25,6 +25,7 @@ namespace Microsoft.PythonTools.Analysis.Browser {
         readonly IPythonFunctionOverload _overload;
         readonly Lazy<string> _prototype;
         readonly Lazy<IEnumerable<IAnalysisItemView>> _returnTypes;
+        readonly Lazy<IEnumerable<IAnalysisItemView>> _parameters;
 
         public FunctionOverloadView(IModuleContext context, string name, IPythonFunctionOverload overload) {
             _context = context;
@@ -32,6 +33,7 @@ namespace Microsoft.PythonTools.Analysis.Browser {
             _overload = overload;
             _prototype = new Lazy<string>(CalculatePrototype);
             _returnTypes = new Lazy<IEnumerable<IAnalysisItemView>>(CalculateReturnTypes);
+            _parameters = new Lazy<IEnumerable<IAnalysisItemView>>(CalculateParameters);
         }
 
         public string Name { get; private set; }
@@ -83,6 +85,15 @@ namespace Microsoft.PythonTools.Analysis.Browser {
             }
         }
 
+        private IEnumerable<IAnalysisItemView> CalculateParameters() {
+            var parameters = _overload.GetParameters();
+            if (parameters == null || parameters.Length == 0) {
+                return Enumerable.Empty<IAnalysisItemView>();
+            }
+
+            return parameters.Select(p => new ParameterView(_context, p));
+        }
+
         public IEnumerable<IAnalysisItemView> ReturnTypes {
             get {
                 return _returnTypes.Value;
@@ -100,7 +111,7 @@ namespace Microsoft.PythonTools.Analysis.Browser {
         }
 
         public IEnumerable<IAnalysisItemView> Children {
-            get { return Enumerable.Empty<IAnalysisItemView>(); }
+            get { return _parameters.Value; }
         }
 
         public IEnumerable<IAnalysisItemView> SortedChildren {
@@ -113,7 +124,9 @@ namespace Microsoft.PythonTools.Analysis.Browser {
 
         public IEnumerable<KeyValuePair<string, object>> Properties {
             get {
-                yield return new KeyValuePair<string, object>("__doc__", _overload.Documentation);
+                if (!string.IsNullOrEmpty(_overload.Documentation)) {
+                    yield return new KeyValuePair<string, object>("__doc__", _overload.Documentation);
+                }
             }
         }
 
