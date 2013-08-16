@@ -1136,6 +1136,10 @@ class _ReplOutput(object):
             else:
                 self.write(data)
 
+    @property
+    def encoding(self):
+        return 'utf8'
+
     def writelines(self, lines):
         for line in lines:
             self.write(line)
