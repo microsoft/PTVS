@@ -890,9 +890,8 @@ namespace Microsoft.VisualStudioTools.Project
                 {
                     return false;
                 }
-                // Allow the user to "fix" the project by renaming the item in the hierarchy
-                // to the real name of the file on disk.
-                if (IsFileOnDisk(oldName) || !IsFileOnDisk(newName))
+
+                if (IsFileOnDisk(oldName))
                 {
                     RenameInStorage(oldName, newName);
                 }
