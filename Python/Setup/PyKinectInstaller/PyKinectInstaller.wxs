@@ -16,7 +16,7 @@
     <!-- By default we install for all users, users can change this -->
     <Property Id="ALLUSERS" Value="1"/>
     <Property Id="INSTALLLEVEL" Value="1"/>
-    <Property Id="ApplicationFolderName" Value="PyKinect" />
+    <Property Id="ApplicationFolderName" Value="$(var.ProductName)" />
 
     <?include ..\InstallPath.wxi ?>
     
@@ -45,9 +45,9 @@
         <!-- Read me in Program Files\PyKinect Sample-->
         
         <Directory Id="APPLICATIONFOLDER" Name="[ApplicationFolderName]"  FileSource="$(var.TargetDir)">
-          <Component Id="Comp_InstallDirItems" DiskId="1" Guid="F0C653EF-F90B-4C63-8AC6-7B1EC8F044A4">
+          <Component Id="Comp_InstallDirItems" DiskId="1" Guid="$(var.Comp_InstallDirItemsGuid)">
               <File Id="File_License.htm" Name="License.htm" Source="License.htm" />
-              <RegistryValue Root='HKCU' Key='SOFTWARE\Microsoft\PythonTools\PyKinect' Type='string' Value='Readme' KeyPath='yes' />
+              <RegistryValue Root='HKCU' Key='SOFTWARE\Microsoft\PythonTools\$(var.VSTargetVersion)\PyKinect' Type='string' Value='Readme' KeyPath='yes' />
               
               <RemoveFolder Id='Comp_InstallDirItems' On='uninstall'/>
           </Component>

@@ -1,6 +1,14 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
-    <Fragment>
+  <?if "$(var.VSTargetVersion)" = "10.0" ?>
+    <?define Comp_PTVSDShortcutGuid=77AC6ECB-D100-4E1A-83B3-95069098EEEE?>
+  <?elseif "$(var.VSTargetVersion)" = "11.0" ?>
+    <?define Comp_PTVSDShortcutGuid=5DD43BC7-B38F-46F1-BD72-705207743912?>
+  <?elseif "$(var.VSTargetVersion)" = "12.0" ?>
+    <?define Comp_PTVSDShortcutGuid=DA8A6ECB-5662-4778-977A-D79C65ACB827?>
+  <?endif ?>
+
+  <Fragment>
         <DirectoryRef Id="INSTALLLOCATION">
             <Directory Id="dir0D2EB39806B8FE87825F141262A782D4" Name="Templates">
                 <Directory Id="Dir_PythonNewItem" Name="NewItem" />
@@ -402,7 +410,7 @@
             <Component Id="cmp63F59CCB28BB48C5BB67D7B08E776099" Directory="dir550D5637E4804BC5AA8590B918C5FB54" Guid="{8AE068E7-7625-436E-AD0A-51FF13BDE6E5}">
               <File Id="fil367A2890295845708024C1AC5D8140A5" KeyPath="yes" Source="$(var.TargetDir)\ptvsd\__main__.py" />
             </Component>
-            <Component Id="cmpDB59A8DAF5AF4EF5BF5C73297E6D80CF" Directory="dir550D5637E4804BC5AA8590B918C5FB54" Guid="{6CD3060F-AF10-40AF-94F9-071069EAF7C8}">
+            <Component Id="cmpDB59A8DAF5AF4EF5BF5C73297E6D80CF" Directory="dir550D5637E4804BC5AA8590B918C5FB54" Guid="$(var.Comp_PTVSDShortcutGuid)">
               <Shortcut Id="PTVSDShortcut"
                         Name="ptvsd Package"
                         Directory="ApplicationProgramsFolder"

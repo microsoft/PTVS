@@ -34,7 +34,7 @@
       </Directory>
 
       <Directory Id="ProgramMenuFolder">
-        <Directory Id="ApplicationProgramsFolder" Name="Python Tools for Visual Studio" />
+        <Directory Id="ApplicationProgramsFolder" Name="$(var.ProductName)" />
       </Directory>
     </Directory>
 

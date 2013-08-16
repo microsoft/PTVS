@@ -66,7 +66,7 @@
 
     <Directory Id="TARGETDIR" Name="SourceDir">
       <Directory Id="ProgramMenuFolder">
-        <Directory Id="ApplicationProgramsFolder" Name="Python Tools for Visual Studio" />
+        <Directory Id="ApplicationProgramsFolder" Name="$(var.ProductName)" />
       </Directory>
       <Directory Id="EXTENSION_INSTALLPATH">
         <Directory Id="_48ABEECB7E104253B82907FA93A3A324" Name="Extensions">
@@ -81,7 +81,7 @@
 
     <!-- Install the tools into the VS directory -->
     <DirectoryRef Id="INSTALLLOCATION">
-      <Component Id="Comp_InstallDirItems" Guid="F0C653EF-F90B-4C63-8AC6-7B1EC8F044A4">
+      <Component Id="Comp_InstallDirItems" Guid="$(var.Comp_InstallDirItemsGuid)">
         <File Id="File_License.html" Name="License.html" Source="$(var.PyToolsDir)\License.html">
           <Shortcut Id="LicenseShortcut"
                     Directory="ApplicationProgramsFolder"
@@ -94,14 +94,14 @@
         <util:RestartResource Path="[DEVENV_PATH]" />
       </Component>
 
-      <Component Id="Comp_InstallLocation" Guid="{40BEB328-A5F0-4D60-B454-F777AF0508EC}">
+      <Component Id="Comp_InstallLocation" Guid="$(var.Comp_InstallLocationGuid)">
         <RegistryKey Root="HKMU" Key="Software\Microsoft\PythonTools\$(var.VSTargetVersion)">
           <RegistryValue Type="string" Name="InstallDir" Value="[INSTALLLOCATION]" KeyPath="yes"/>
         </RegistryKey>
       </Component>
       
       <!-- Edit with Visual Studio context menu -->
-      <Component Id="Comp_PyFileRegistration" Guid="86592E35-864B-43D8-8E7E-E00F01EA0B6E">
+      <Component Id="Comp_PyFileRegistration" Guid="$(var.Comp_PyFileRegistrationGuid)">
         <RegistryKey Root='HKCR' Key='[PYTHONFILETYPE]'>
           <RegistryValue Type='string' Value='Python source file' />
 
@@ -120,7 +120,7 @@
       </Component>
 
       <!-- Double click to open with Visual Studio context menu -->
-      <Component Id="Comp_PyFileExistance" DiskId="1" Guid="C63701DE-61D0-4C6E-877D-7717735EF737">
+      <Component Id="Comp_PyFileExistance" DiskId="1" Guid="$(var.Comp_PyFileExistanceGuid)">
         <!-- This is only installed if .py is not already registered.  -->
         <RegistryValue Root='HKCR' Key='.py' Type='string' Value='[PYTHONFILETYPE]' />
         <RegistryValue Root='HKCR' Key='.py' Name='Content Type' Type='string' Value='text/plain' />
@@ -136,7 +136,7 @@
         <Merge Id="PTVSVsLoggerPackage" Language="1033" SourceFile="$(var.TargetDir)VsLoggerMsm.msm" DiskId="1" />
       <?endif?>
       
-      <Component Id="Comp_PyProgRegistration" DiskId="1" Guid="933CFC77-F315-4058-AB16-AE737B31B2F8">
+      <Component Id="Comp_PyProgRegistration" DiskId="1" Guid="$(var.Comp_PyProgRegistrationGuid)">
         <RegistryValue Root='HKCR' Key='.pyproj' Type='string' Name='PerceivedType' Value='text' />
         <RegistryValue Root='HKCR' Key='VisualStudio.Launcher.pyproj.$(var.VSTargetVersion)\DefaultIcon' Type='string' Value='[INSTALLLOCATION]\PythonProject.ico' />
 

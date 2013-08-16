@@ -4,16 +4,19 @@
 
   <!-- Product GUIDs: Must just be unique-->
   <?if "$(var.VSTargetVersion)" = "10.0" ?>
-      <?define InstallerGuid=D8B1B9F9-71B5-4B7F-8D0C-0CD4B0E382BC?>
+      <?define InstallerGuid=*?>
       <?define InstallerUpgradeGuid=92098E3A-86B6-46BC-9A1B-CC9911304704?>
+      <?define Comp_InstallDirItemsGuid=F87A5DBF-4B41-4CF7-B17D-34505FAF456E?>
       <?define ProductName = "Python Tools for Visual Studio 2010 - Pyvot Sample" ?>
   <?elseif "$(var.VSTargetVersion)" = "11.0" ?>
-      <?define InstallerGuid=47BA9DED-F582-495D-84AE-3C505F5AA83F?>
-      <?define InstallerUpgradeGuid=E4223E1B-B79A-47BF-919F-B2A26933C8CB?>  
+      <?define InstallerGuid=*?>
+      <?define InstallerUpgradeGuid=E4223E1B-B79A-47BF-919F-B2A26933C8CB?>
+      <?define Comp_InstallDirItemsGuid=7F3BDC3A-93A5-418B-8649-EF21113DC336?>
       <?define ProductName = "Python Tools for Visual Studio 2012 - Pyvot Sample" ?>
   <?else?>
-      <?define InstallerGuid=86274B02-5EA0-4BA5-85EB-865577497BE4?>
-      <?define InstallerUpgradeGuid=F16829AC-8954-4D4C-BEE3-AE19E3EA1302?>  
+      <?define InstallerGuid=*?>
+      <?define InstallerUpgradeGuid=F16829AC-8954-4D4C-BEE3-AE19E3EA1302?>
+      <?define Comp_InstallDirItemsGuid=C881616C-EF8E-4D3E-9E05-13564C84EBD9?>
       <?define ProductName = "Python Tools for Visual Studio 2013 - Pyvot Sample" ?>
   <?endif ?>
 </Include>

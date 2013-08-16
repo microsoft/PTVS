@@ -18,7 +18,7 @@
     
     <!-- we detect other installed software (IronPython, HPC pack) and set the install level of the feature to 2 if they're not installed to uncheck them by default.  -->
     <Property Id="INSTALLLEVEL" Value="1"/>
-    <Property Id="ApplicationFolderName" Value="Python Tools Pyvot Sample" />
+    <Property Id="ApplicationFolderName" Value="$(var.ProductName)" />
 
     <?include ..\InstallPath.wxi ?>
     
@@ -48,9 +48,9 @@
         <!-- Read me in Program Files\Pyvot Sample -->
         
         <Directory Id="APPLICATIONFOLDER" Name="[ApplicationFolderName]"  FileSource="$(var.TargetDir)">
-          <Component Id="Comp_InstallDirItems" DiskId="1" Guid="F0C653EF-F90B-4C63-8AC6-7B1EC8F044A4">
+          <Component Id="Comp_InstallDirItems" DiskId="1" Guid="$(var.Comp_InstallDirItemsGuid)">
               <File Id="File_License.html" Name="License.html" Source="$(var.PyToolsDir)\License.html" />
-              <RegistryValue Root='HKCU' Key='SOFTWARE\Microsoft\PythonTools\Pyvot' Type='string' Value='Readme' KeyPath='yes' />
+              <RegistryValue Root='HKCU' Key='SOFTWARE\Microsoft\PythonTools\$(var.VSTargetVersion)\Pyvot' Type='string' Value='Readme' KeyPath='yes' />
               
               <RemoveFolder Id='Comp_InstallDirItems' On='uninstall'/>
           </Component>
