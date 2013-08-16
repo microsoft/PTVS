@@ -17,6 +17,7 @@ using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.OLE.Interop;
+using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.TextManager.Interop;
@@ -28,14 +29,20 @@ namespace Microsoft.PythonTools.Language {
     /// </summary>
     public sealed class TextViewFilter : IOleCommandTarget, IVsTextViewFilter {
         private static IVsEditorAdaptersFactoryService _vsEditorAdaptersFactoryService;
+        private static  IVsDebugger _debugger;
         private readonly IOleCommandTarget _next;
+        private readonly IVsTextLines _vsTextLines;
         private readonly IWpfTextView _wpfTextView;
 
         public TextViewFilter(IVsTextView vsTextView) {
             if (_vsEditorAdaptersFactoryService == null) {
                 _vsEditorAdaptersFactoryService = PythonToolsPackage.ComponentModel.GetService<IVsEditorAdaptersFactoryService>();
             }
+            if (_debugger == null) {
+                _debugger = (IVsDebugger)PythonToolsPackage.GetGlobalService(typeof(IVsDebugger));
+            }
 
+            vsTextView.GetBuffer(out _vsTextLines);
             _wpfTextView = _vsEditorAdaptersFactoryService.GetWpfTextView(vsTextView);
 
             ErrorHandler.ThrowOnFailure(vsTextView.AddCommandFilter(this, out _next));
@@ -84,8 +91,12 @@ namespace Microsoft.PythonTools.Language {
                 throw new ArgumentException("Array parameter should contain exactly one TextSpan", "pSpan");
             }
 
-            // Debugger will handle this itself by evaluating the expression in the span if TIP_S_NODEFAULTTIP is returned.
-            pbstrText = null;
+            // If this is a zero-length span (which it usually is, unless there's selection), adjust it
+            // to cover one char to the right, since an empty span at the beginning of the expression does
+            // not count as belonging to that expression;
+            if (pSpan[0].iStartLine == pSpan[0].iEndLine && pSpan[0].iStartIndex == pSpan[0].iEndIndex) {
+                ++pSpan[0].iEndIndex;
+            }
 
             // Adjust the span to expression boundaries.
             var snapshot = _wpfTextView.TextSnapshot;
@@ -97,10 +108,11 @@ namespace Microsoft.PythonTools.Language {
                 pSpan[0] = SnapshotSpanToTextSpan(exprSpan.Value);
             } else {
                 // If it's not an expression, suppress the tip.
+                pbstrText = null;
                 return VSConstants.E_FAIL;
             }
 
-            return (int)TipSuccesses2.TIP_S_NODEFAULTTIP;
+            return _debugger.GetDataTipValue(_vsTextLines, pSpan, null, out pbstrText);
         }
 
         public int GetPairExtents(int iLine, int iIndex, TextSpan[] pSpan) {
