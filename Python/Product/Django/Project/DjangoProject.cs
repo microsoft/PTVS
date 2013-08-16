@@ -397,7 +397,7 @@ namespace Microsoft.PythonTools.Django.Project {
         private void StartNewApp() {
             var selectedItems = GetSelectedItems();
             var dialog = new NewAppDialog();
-            bool? res = dialog.ShowDialog();
+            bool? res = dialog.ShowModal();
             if (res != null && res.Value) {
                 object projectObj;
                 ErrorHandler.ThrowOnFailure(

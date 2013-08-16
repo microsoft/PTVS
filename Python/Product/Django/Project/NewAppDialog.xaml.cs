@@ -25,6 +25,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using Microsoft.VisualStudio.PlatformUI;
+using Microsoft.VisualStudio.Shell;
 
 namespace Microsoft.PythonTools.Django.Project {
     /// <summary>
@@ -33,6 +34,9 @@ namespace Microsoft.PythonTools.Django.Project {
     partial class NewAppDialog : DialogWindowVersioningWorkaround {
         private readonly NewAppDialogViewModel _viewModel;
 
+        public static readonly object BackgroundKey = VsBrushes.WindowKey;
+        public static readonly object ForegroundKey = VsBrushes.WindowTextKey;
+        
         public NewAppDialog() {
             InitializeComponent();
 

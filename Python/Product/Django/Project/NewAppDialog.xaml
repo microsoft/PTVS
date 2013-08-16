@@ -1,10 +1,22 @@
-﻿<ui:DialogWindowVersioningWorkaround x:Class="Microsoft.PythonTools.Django.Project.NewAppDialog"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:ui="clr-namespace:Microsoft.PythonTools.Django"
-        x:ClassModifier="internal"
-        Title="Add Django App..." Height="110" Width="381" ShowInTaskbar="False" WindowStartupLocation="CenterOwner" Background="{x:Static SystemColors.ControlBrush}" TextOptions.TextFormattingMode="Display" MinHeight="110" MinWidth="300">
-    <DockPanel>        
+﻿<ui:DialogWindowVersioningWorkaround
+    x:Class="Microsoft.PythonTools.Django.Project.NewAppDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ui="clr-namespace:Microsoft.PythonTools.Django"
+    xmlns:l="clr-namespace:Microsoft.PythonTools.Django.Project"
+    x:ClassModifier="internal"
+    Title="Add Django App..."
+    Height="110" Width="381"
+    ShowInTaskbar="False"
+    WindowStartupLocation="CenterOwner"
+    Background="{DynamicResource {x:Static l:NewAppDialog.BackgroundKey}}"
+    TextElement.Foreground="{DynamicResource {x:Static l:NewAppDialog.ForegroundKey}}"
+    TextOptions.TextFormattingMode="Display"
+    MinHeight="110" MinWidth="300">
+    <ui:DialogWindowVersioningWorkaround.Resources>
+        <ResourceDictionary Source="pack://application:,,,/Microsoft.PythonTools;component/Wpf/Controls.xaml" />
+    </ui:DialogWindowVersioningWorkaround.Resources>
+    <DockPanel>
         <DockPanel LastChildFill="true" HorizontalAlignment="Stretch" DockPanel.Dock="Top">
             <TextBlock Text="New App Name:" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="6,6,6,6" DockPanel.Dock="Left"/>
             <TextBox Height="23" Name="_newAppName" Width="Auto"  IsReadOnly="False" TextWrapping="NoWrap" Margin="6,6,6,6" VerticalAlignment="Center" Text="{Binding Name,UpdateSourceTrigger=PropertyChanged}" HorizontalContentAlignment="Stretch" />
