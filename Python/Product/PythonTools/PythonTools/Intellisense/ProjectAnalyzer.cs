@@ -439,7 +439,11 @@ namespace Microsoft.PythonTools.Intellisense {
 
         internal static int TranslateIndex(int index, ITextSnapshot fromSnapshot, ModuleAnalysis toAnalysisSnapshot) {
             var snapshotCookie = toAnalysisSnapshot.AnalysisCookie as SnapshotCookie;
-            if (snapshotCookie != null && fromSnapshot != null) {
+            // TODO: buffers differ in the REPL window case, in the future we should handle this better
+            if (snapshotCookie != null && 
+                fromSnapshot != null &&
+                snapshotCookie.Snapshot.TextBuffer == fromSnapshot.TextBuffer) {
+
                 index = new SnapshotPoint(fromSnapshot, index).TranslateTo(
                     snapshotCookie.Snapshot,
                     PointTrackingMode.Negative
