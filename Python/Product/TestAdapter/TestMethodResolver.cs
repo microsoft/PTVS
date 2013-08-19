@@ -56,32 +56,34 @@ namespace Microsoft.PythonTools.TestAdapter {
             var project = PathToProject(filePath);
             if (project != null && _discoverer.IsProjectKnown(project)) {
                 var buildEngine = new MSBuild.ProjectCollection();
+                string projectPath;
+                if (project.TryGetProjectPath(out projectPath)) {
+                    var proj = buildEngine.LoadProject(projectPath);
 
-                var proj = buildEngine.LoadProject(project.GetProjectPath());
+                    var provider = new MSBuildProjectInterpreterFactoryProvider(_interpreterService, proj);
+                    try {
+                        provider.DiscoverInterpreters();
+                    } catch (InvalidDataException) {
+                        // This exception can be safely ignored here.
+                    }
+                    var factory = provider.ActiveInterpreter;
 
-                var provider = new MSBuildProjectInterpreterFactoryProvider(_interpreterService, proj);
-                try {
-                    provider.DiscoverInterpreters();
-                } catch (InvalidDataException) {
-                    // This exception can be safely ignored here.
-                }
-                var factory = provider.ActiveInterpreter;
-                
-                var parser = Parser.CreateParser(
-                    new StreamReader(filePath),
-                    factory.GetLanguageVersion()
-                );
-                var ast = parser.ParseFile();
-                var walker = new FunctionFinder(ast, line, lineCharOffset);
-                ast.Walk(walker);
-                var projHome = Path.GetFullPath(Path.Combine(proj.DirectoryPath, proj.GetPropertyValue(PythonConstants.ProjectHomeSetting) ?? ".")); 
-
-                if (walker.ClassName != null && walker.FunctionName != null) {
-                    return TestDiscoverer.MakeFullyQualifiedTestName(
-                        Microsoft.VisualStudioTools.CommonUtils.CreateFriendlyFilePath(projHome, filePath),
-                        walker.ClassName,
-                        walker.FunctionName
+                    var parser = Parser.CreateParser(
+                        new StreamReader(filePath),
+                        factory.GetLanguageVersion()
                     );
+                    var ast = parser.ParseFile();
+                    var walker = new FunctionFinder(ast, line, lineCharOffset);
+                    ast.Walk(walker);
+                    var projHome = Path.GetFullPath(Path.Combine(proj.DirectoryPath, proj.GetPropertyValue(PythonConstants.ProjectHomeSetting) ?? "."));
+
+                    if (walker.ClassName != null && walker.FunctionName != null) {
+                        return TestDiscoverer.MakeFullyQualifiedTestName(
+                            Microsoft.VisualStudioTools.CommonUtils.CreateFriendlyFilePath(projHome, filePath),
+                            walker.ClassName,
+                            walker.FunctionName
+                        );
+                    }
                 }
             }
             return null;

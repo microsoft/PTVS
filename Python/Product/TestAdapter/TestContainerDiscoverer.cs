@@ -256,8 +256,9 @@ namespace Microsoft.PythonTools.TestAdapter {
                     // watchers into a single recursive watcher.
                 }
 
-                var path = e.Project.GetProjectPath();
-                if (!_knownProjects.ContainsKey(path)) {
+                string path;
+                if (e.Project.TryGetProjectPath(out path) &&
+                    !_knownProjects.ContainsKey(path)) {
                     var dteProject = ((IVsHierarchy)e.Project).GetProject();
                     var interpFact = (MSBuildProjectInterpreterFactoryProvider)dteProject.Properties.Item("InterpreterFactoryProvider").Value;
 
@@ -298,8 +299,10 @@ namespace Microsoft.PythonTools.TestAdapter {
                 }
 
                 ProjectInfo projectInfo;
-                if (_knownProjects.TryGetValue(e.Project.GetProjectPath(), out projectInfo)) {
-                    _knownProjects.Remove(e.Project.GetProjectPath());
+                string projectPath;
+                if (e.Project.TryGetProjectPath(out projectPath) &&
+                    _knownProjects.TryGetValue(projectPath, out projectInfo)) {
+                    _knownProjects.Remove(projectPath);
 
                     projectInfo.Detach();
 
@@ -388,7 +391,9 @@ namespace Microsoft.PythonTools.TestAdapter {
 
                 IVsHierarchy hierarchy = project as IVsHierarchy;
                 uint itemid;
-                if (CommonUtils.IsSamePath(project.GetProjectPath(), filename) ||
+                string projectPath;
+                if (project.TryGetProjectPath(out projectPath) && 
+                    CommonUtils.IsSamePath(projectPath, filename) ||
                     (hierarchy != null &&
                     project.IsTestProject() &&
                     ErrorHandler.Succeeded(hierarchy.ParseCanonicalName(filename, out itemid)))) {
@@ -416,8 +421,10 @@ namespace Microsoft.PythonTools.TestAdapter {
             // don't want to raise the event, instead it'll query us in a little 
             // bit and get the most recent changes.
             ProjectInfo projectInfo;
+            string projectPath;
             if (project != null &&
-                _knownProjects.TryGetValue(project.GetProjectPath(), out projectInfo) &&
+                project.TryGetProjectPath(out projectPath) && 
+                _knownProjects.TryGetValue(projectPath, out projectInfo) &&
                 projectInfo.HasRequestedContainers) {
                 
                 if (!_building || !_detectingChanges) {
@@ -432,7 +439,11 @@ namespace Microsoft.PythonTools.TestAdapter {
         }
 
         internal bool IsProjectKnown(IVsProject project) {
-            return _knownProjects.ContainsKey(project.GetProjectPath());
+            string projectPath;
+            if (project.TryGetProjectPath(out projectPath)) {
+                return _knownProjects.ContainsKey(projectPath);
+            }
+            return false;
         }
 
         class ProjectInfo {
