@@ -64,7 +64,7 @@ namespace Microsoft.PythonTools.Project {
             _scheduler = TaskScheduler.FromCurrentSynchronizationContext();
 
             if (Directory.Exists(_factory.Configuration.LibraryPath)) {
-                // TODO: Need to handle watching for creation, and show broken icon
+                // TODO: Need to handle watching for creation
                 _fileWatcher = new FileSystemWatcher(_factory.Configuration.LibraryPath);
                 _fileWatcher.IncludeSubdirectories = true;
                 _fileWatcher.Deleted += PackagesChanged;
@@ -72,7 +72,6 @@ namespace Microsoft.PythonTools.Project {
                 _fileWatcher.EnableRaisingEvents = true;
                 _timer = new Timer(CheckPackages);
             }
-            IsExpanded = false;
         }
 
         private static ProjectElement ChooseElement(PythonProjectNode project, ProjectItem item) {
@@ -108,6 +107,8 @@ namespace Microsoft.PythonTools.Project {
             _checkingItems = true;
             _checkedItems = true;
             if (!Directory.Exists(_factory.Configuration.LibraryPath)) {
+                _checkingItems = false;
+                ProjectMgr.OnPropertyChanged(this, (int)__VSHPROPID.VSHPROPID_Expandable, 0);
                 return;
             }
 
@@ -138,10 +139,13 @@ namespace Microsoft.PythonTools.Project {
                 }
                 _checkingItems = false;
 
+                var wasExpanded = prevChecked && GetIsExpanded();
                 ProjectMgr.OnInvalidateItems(this);
-                if (!prevChecked && IsExpanded) {
-                    ExpandItem(EXPANDFLAGS.EXPF_ExpandFolder);
+                if (!prevChecked) {
                     ProjectMgr.OnPropertyChanged(this, (int)__VSHPROPID.VSHPROPID_Expandable, 0);
+                }
+                if (wasExpanded) {
+                    ExpandItem(EXPANDFLAGS.EXPF_ExpandFolder);
                 }
 
                 if (prevChecked && anyChanges) {
