@@ -133,12 +133,14 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-
+        /// <summary>
+        /// True if the user wants to elevate to install this package.
+        /// </summary>
         public bool InstallElevated {
             get {
                 return _installElevated;
             }
-            private set {
+            set {
                 if (_installElevated != value) {
                     _installElevated = value;
                     OnPropertyChanged("InstallElevated");
