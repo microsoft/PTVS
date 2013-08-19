@@ -27,6 +27,20 @@ import types
 import bisect
 from os import path
 
+max_collection_repr = 50
+if sys.version_info >= (3, 0):
+    import reprlib
+else:
+    import repr as reprlib
+myrepr = reprlib.Repr()
+myrepr.maxarray = max_collection_repr
+myrepr.maxdeque = max_collection_repr
+myrepr.maxdict = max_collection_repr
+myrepr.maxfrozenset = max_collection_repr
+myrepr.maxlist = max_collection_repr
+myrepr.maxset = max_collection_repr
+myrepr.maxother = max_collection_repr
+
 try:
     import visualstudio_py_util as _vspu
 except ImportError:
@@ -1690,7 +1704,7 @@ def report_execution_exception(execution_id, exc_info):
 
 def safe_repr(obj):
     try:
-        return repr(obj)
+        return myrepr.repr(obj)
     except:
         return '__repr__ raised an exception'
 
