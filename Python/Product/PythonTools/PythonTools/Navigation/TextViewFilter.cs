@@ -87,6 +87,11 @@ namespace Microsoft.PythonTools.Language {
         #endregion
 
         public int GetDataTipText(TextSpan[] pSpan, out string pbstrText) {
+            if (!_wpfTextView.TextBuffer.ContentType.IsOfType(PythonCoreConstants.ContentType)) {
+                pbstrText = null;
+                return VSConstants.E_NOTIMPL;
+            }
+
             if (pSpan.Length != 1) {
                 throw new ArgumentException("Array parameter should contain exactly one TextSpan", "pSpan");
             }
