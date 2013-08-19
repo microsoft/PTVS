@@ -481,7 +481,8 @@ namespace Microsoft.PythonTools {
             this string str,
             int maxLines = 30,
             int charsPerLine = 200,
-            bool ellipsisAtEnd = true
+            bool ellipsisAtEnd = true,
+            bool stopAtFirstBlankLine = false
         ) {
             if (string.IsNullOrEmpty(str)) {
                 return str;
@@ -489,7 +490,7 @@ namespace Microsoft.PythonTools {
 
             int lineCount = 0;
             var prettyPrinted = new StringBuilder();
-            bool wasEmpty = false;
+            bool wasEmpty = true;
 
             using (var reader = new StringReader(str)) {
                 for (var line = reader.ReadLine(); line != null && lineCount < maxLines; line = reader.ReadLine()) {
@@ -498,6 +499,10 @@ namespace Microsoft.PythonTools {
                             continue;
                         }
                         wasEmpty = true;
+                        if (stopAtFirstBlankLine) {
+                            lineCount = maxLines;
+                            break;
+                        }
                         lineCount += 1;
                         prettyPrinted.AppendLine();
                     } else {

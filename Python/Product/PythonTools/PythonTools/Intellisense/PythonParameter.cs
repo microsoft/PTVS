@@ -28,7 +28,7 @@ namespace Microsoft.PythonTools.Intellisense {
             _param = param;
             _locus = locus;
             _ppLocus = ppLocus;
-            _documentation = _param.Documentation.LimitLines();
+            _documentation = _param.Documentation.LimitLines(15, stopAtFirstBlankLine: true).Trim();
         }
 
         public string Documentation {
