@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Windows;
 using System.Windows.Interop;
 using Microsoft.PythonTools.Analysis;
@@ -24,6 +25,7 @@ using Microsoft.PythonTools.Navigation;
 using Microsoft.PythonTools.Refactoring;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Repl;
@@ -93,12 +95,12 @@ namespace Microsoft.PythonTools.Language {
             if ((values.Count + definitions.Count) == 1) {
                 if (values.Count != 0) {
                     foreach (var location in values.Keys) {
-                        location.GotoSource();
+                        GotoLocation(location);
                         break;
                     }
                 } else {
                     foreach (var location in definitions.Keys) {
-                        location.GotoSource();
+                        GotoLocation(location);
                         break;
                     }
                 }
@@ -122,6 +124,27 @@ namespace Microsoft.PythonTools.Language {
             }
 
             return VSConstants.S_OK;
+        }
+
+        /// <summary>
+        /// Moves the caret to the specified location, staying in the current text view 
+        /// if possible.
+        /// 
+        /// https://pytools.codeplex.com/workitem/1649
+        /// </summary>
+        private void GotoLocation(LocationInfo location) {
+            Debug.Assert(location != null);
+            Debug.Assert(location.Line > 0);
+            Debug.Assert(location.Column > 0);
+
+            if (CommonUtils.IsSamePath(location.FilePath, _textView.GetFilePath())) {
+                var adapterFactory = PythonToolsPackage.ComponentModel.GetService<IVsEditorAdaptersFactoryService>();
+                var viewAdapter = adapterFactory.GetViewAdapter(_textView);
+                viewAdapter.SetCaretPos(location.Line - 1, location.Column - 1);
+                viewAdapter.CenterLines(location.Line - 1, 1);
+            } else {
+                location.GotoSource();
+            }
         }
 
         /// <summary>
