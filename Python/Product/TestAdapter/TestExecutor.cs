@@ -182,8 +182,13 @@ namespace Microsoft.PythonTools.TestAdapter {
                 args = args.Concat(GetDebugArgs(settings, out secret, out port));
             }
 
+            if (!File.Exists(settings.Factory.Configuration.InterpreterPath)) {
+                frameworkHandle.SendMessage(TestMessageLevel.Error, "Interpreter path does not exist: " + settings.Factory.Configuration.InterpreterPath);
+                return;
+            }
+
             var env = new Dictionary<string, string> {
-                { settings.Factory.Configuration.PathEnvironmentVariable, searchPath }
+                { settings.Factory.Configuration.PathEnvironmentVariable ?? "PYTHONPATH", searchPath }
             };
 
             using (var proc = ProcessOutput.Run(

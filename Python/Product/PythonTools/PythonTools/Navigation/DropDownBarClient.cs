@@ -97,7 +97,7 @@ namespace Microsoft.PythonTools.Navigation {
         #region IVsDropdownBarClient Members
 
         /// <summary>
-        /// Gets the attributes for the specified combo box.  We return teh number of elements that we will
+        /// Gets the attributes for the specified combo box.  We return the number of elements that we will
         /// display, the various attributes that VS should query for next (text, image, and attributes of
         /// the text such as being grayed out), along with the appropriate image list.
         /// 
@@ -648,7 +648,10 @@ namespace Microsoft.PythonTools.Navigation {
             if (dropDownBar != null) {
                 _curNestedIndex = -1;
                 _curTopLevelIndex = -1;
-                Action callback = () => { CaretPositionChanged(this, new CaretPositionChangedEventArgs(null, _textView.Caret.Position, _textView.Caret.Position)); };
+                Action callback = () => {
+                    CalculateTopLevelEntries();
+                    CaretPositionChanged(this, new CaretPositionChangedEventArgs(null, _textView.Caret.Position, _textView.Caret.Position));
+                };
                 _dispatcher.BeginInvoke(callback, DispatcherPriority.Background);
             }
         }

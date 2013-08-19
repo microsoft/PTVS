@@ -282,7 +282,7 @@ namespace Microsoft.VisualStudioTools.Project {
             ResetNodeProperties();
             ItemNode = ProjectMgr.CreateMsBuildFileItem(
                 CommonUtils.GetRelativeFilePath(ProjectMgr.ProjectHome, Url),
-                ProjectFileConstants.Compile
+                ProjectMgr.IsCodeFile(Url) ? ProjectFileConstants.Compile : ProjectFileConstants.Content
             );
             IsVisible = true;
             ProjectMgr.OnInvalidateItems(Parent);

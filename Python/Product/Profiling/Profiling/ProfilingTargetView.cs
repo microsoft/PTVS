@@ -28,6 +28,7 @@ namespace Microsoft.PythonTools.Profiling {
         private ProjectTargetView _project;
         private bool _isProjectSelected;
         private StandaloneTargetView _standalone;
+        private readonly string _startText;
 
         private bool _isValid;
         
@@ -60,6 +61,7 @@ namespace Microsoft.PythonTools.Profiling {
             } else {
                 IsStandaloneSelected = true;
             }
+            _startText = "_Start";
         }
 
         /// <summary>
@@ -75,6 +77,7 @@ namespace Microsoft.PythonTools.Profiling {
                 Standalone = new StandaloneTargetView(template.StandaloneTarget);
                 IsStandaloneSelected = true;
             }
+            _startText = "_OK";
         }
 
         /// <summary>
@@ -206,6 +209,12 @@ namespace Microsoft.PythonTools.Profiling {
                     _isValid = value;
                     OnPropertyChanged("IsValid");
                 }
+            }
+        }
+
+        public string StartText {
+            get {
+                return _startText;
             }
         }
 

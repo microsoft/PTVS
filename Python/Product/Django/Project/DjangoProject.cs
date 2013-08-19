@@ -377,7 +377,10 @@ namespace Microsoft.PythonTools.Django.Project {
             } else if (pguidCmdGroup == GuidList.guidDjangoCmdSet) {
                 switch (nCmdID) {
                     case PkgCmdIDList.cmdidDjangoShell:
-                        GetDjangoManagementConsoleWindow();
+                        var window = GetDjangoManagementConsoleWindow();
+                        if (window == null) {
+                            NoInterpretersInstalled();
+                        }
                         return VSConstants.S_OK;
                     case PkgCmdIDList.cmdidValidateDjangoApp:
                         ValidateDjangoApp();
@@ -477,8 +480,14 @@ Either stop the current command, or reset the REPL window.");
                     DoRunManageCommand(arguments, (string)projectDir, managePyPath, replWindow, evaluator);
                 }
             } else {
-                MessageBox.Show("Unable to run management command - no Python interpreters are configured");
+                NoInterpretersInstalled();
             }
+        }
+
+        private static void NoInterpretersInstalled() {
+            MessageBox.Show(@"Unable to run management command - no Python environments are configured.
+            
+Please install a Python environment before using the Django management console or Django commands.");
         }
 
         private IReplWindow GetDjangoManagementConsoleWindow() {
@@ -517,10 +526,6 @@ Either stop the current command, or reset the REPL window.");
                         _innerVsHierarchy
                     );
                 } catch (InvalidOperationException) {
-                    MessageBox.Show(@"Cannot start the Django management console.
-
-Please install a Python interpreter before using the Django management console.");
-
                     return null;
                 }
 
