@@ -515,7 +515,7 @@ namespace Microsoft.PythonTools {
             if (ellipsisAtEnd && lineCount >= maxLines) {
                 prettyPrinted.AppendLine("...");
             }
-            return prettyPrinted.ToString().TrimEnd();
+            return prettyPrinted.ToString().Trim();
         }
     }
 }

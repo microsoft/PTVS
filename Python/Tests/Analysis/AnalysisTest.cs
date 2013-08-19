@@ -1603,26 +1603,76 @@ def funicode():
 class C:
     '''class doc'''
 
-class Cunicode:
+class CUnicode:
     u'''unicode class doc'''
 
-            ");
+class CNewStyle(object):
+    '''new-style class doc'''
+
+class CInherited(CNewStyle):
+    pass
+
+class CInit:
+    '''class doc'''
+    def __init__(self):
+        '''init doc'''
+        pass
+
+class CUnicodeInit:
+    u'''unicode class doc'''
+    def __init__(self):
+        u'''unicode init doc'''
+        pass
+
+class CNewStyleInit(object):
+    '''new-style class doc'''
+    def __init__(self):
+        '''new-style init doc'''
+        pass
+
+class CInheritedInit(CNewStyleInit):
+    pass
+");
 
             var result = entry.GetSignaturesByIndex("f", 1).ToArray();
-            Assert.AreEqual(result.Length, 1);
-            Assert.AreEqual(result[0].Documentation, "func doc");
+            Assert.AreEqual(1, result.Length);
+            Assert.AreEqual("func doc", result[0].Documentation);
 
             result = entry.GetSignaturesByIndex("C", 1).ToArray();
-            Assert.AreEqual(result.Length, 1);
-            Assert.AreEqual(result[0].Documentation, "class doc");
+            Assert.AreEqual(1, result.Length);
+            Assert.AreEqual("class doc", result[0].Documentation);
 
             result = entry.GetSignaturesByIndex("funicode", 1).ToArray();
-            Assert.AreEqual(result.Length, 1);
-            Assert.AreEqual(result[0].Documentation, "unicode func doc");
+            Assert.AreEqual(1, result.Length);
+            Assert.AreEqual("unicode func doc", result[0].Documentation);
 
-            result = entry.GetSignaturesByIndex("Cunicode", 1).ToArray();
-            Assert.AreEqual(result.Length, 1);
-            Assert.AreEqual(result[0].Documentation, "unicode class doc");
+            result = entry.GetSignaturesByIndex("CUnicode", 1).ToArray();
+            Assert.AreEqual(1, result.Length);
+            Assert.AreEqual("unicode class doc", result[0].Documentation);
+
+            result = entry.GetSignaturesByIndex("CNewStyle", 1).ToArray();
+            Assert.AreEqual(1, result.Length);
+            Assert.AreEqual("new-style class doc", result[0].Documentation);
+
+            result = entry.GetSignaturesByIndex("CInherited", 1).ToArray();
+            Assert.AreEqual(1, result.Length);
+            Assert.AreEqual("new-style class doc", result[0].Documentation);
+
+            result = entry.GetSignaturesByIndex("CInit", 1).ToArray();
+            Assert.AreEqual(1, result.Length);
+            Assert.AreEqual("init doc", result[0].Documentation);
+
+            result = entry.GetSignaturesByIndex("CUnicodeInit", 1).ToArray();
+            Assert.AreEqual(1, result.Length);
+            Assert.AreEqual("unicode init doc", result[0].Documentation);
+
+            result = entry.GetSignaturesByIndex("CNewStyleInit", 1).ToArray();
+            Assert.AreEqual(1, result.Length);
+            Assert.AreEqual("new-style init doc", result[0].Documentation);
+
+            result = entry.GetSignaturesByIndex("CInheritedInit", 1).ToArray();
+            Assert.AreEqual(1, result.Length);
+            Assert.AreEqual("new-style init doc", result[0].Documentation);
         }
 
         [TestMethod, Priority(0)]

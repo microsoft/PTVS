@@ -212,13 +212,17 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 if (result.Count == 0) {
                     foreach (var baseClass in _bases) {
                         foreach (var ns in baseClass) {
+                            if (ns.TypeId == BuiltinTypeId.Object) {
+                                continue;
+                            }
                             if (ns.Push()) {
                                 try {
                                     foreach (var overload in ns.Overloads) {
                                         result.Add(
-                                            new OverloadResult(
+                                            new SimpleOverloadResult(
                                                 overload.Parameters,
-                                                ClassDefinition.Name
+                                                ClassDefinition.Name,
+                                                overload.Documentation
                                             )
                                         );
                                     }
