@@ -24,6 +24,7 @@ namespace Microsoft.PythonTools.Analysis.Browser {
         readonly IPythonInterpreter _interpreter;
         readonly IModuleContext _context;
         readonly string _idbPath;
+        readonly IEnumerable<IAnalysisItemView> _children;
         IPythonModule _module;
 
         public ModuleView(IPythonInterpreter interpreter, IModuleContext context, string name, string idbPath) {
@@ -31,6 +32,28 @@ namespace Microsoft.PythonTools.Analysis.Browser {
             _context = context;
             Name = name;
             _idbPath = idbPath;
+            _children = CalculateChildren().ToArray();
+        }
+
+        private IEnumerable<IAnalysisItemView> CalculateChildren() {
+            if (_module == null) {
+                _module = _interpreter.ImportModule(Name);
+            }
+
+            if (File.Exists(_idbPath)) {
+                yield return RawView.FromFile(_idbPath);
+            }
+
+            CPythonModule cpm;
+            if ((cpm = _module as CPythonModule) != null && cpm._hiddenMembers != null) {
+                foreach (var keyValue in cpm._hiddenMembers) {
+                    yield return MemberView.Make(_context, keyValue.Key, keyValue.Value);
+                }
+            }
+
+            foreach (var memberName in _module.GetMemberNames(_context)) {
+                yield return MemberView.Make(_context, _module, memberName);
+            }
         }
 
         public string Name { get; private set; }
@@ -47,24 +70,7 @@ namespace Microsoft.PythonTools.Analysis.Browser {
 
         public IEnumerable<IAnalysisItemView> Children {
             get {
-                if (_module == null) {
-                    _module = _interpreter.ImportModule(Name);
-                }
-
-                if (File.Exists(_idbPath)) {
-                    yield return RawView.FromFile(_idbPath);
-                }
-
-                CPythonModule cpm;
-                if ((cpm = _module as CPythonModule) != null && cpm._hiddenMembers != null) {
-                    foreach (var keyValue in cpm._hiddenMembers) {
-                        yield return MemberView.Make(_context, keyValue.Key, keyValue.Value);
-                    }
-                }
-
-                foreach (var memberName in _module.GetMemberNames(_context)) {
-                    yield return MemberView.Make(_context, _module, memberName);
-                }
+                return _children;
             }
         }
 

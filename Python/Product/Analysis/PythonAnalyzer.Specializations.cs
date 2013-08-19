@@ -70,6 +70,7 @@ namespace Microsoft.PythonTools.Analysis {
                 IModule mod = module.Module as IModule;
                 if (mod != null) {
                     mod.SpecializeFunction(name, callable, mergeOriginalAnalysis);
+                    return;
                 }
             } else if ((lastDot = moduleName.LastIndexOf('.')) != -1 &&
                 Modules.TryGetValue(realModName = moduleName.Substring(0, lastDot), out module)) {
@@ -77,6 +78,7 @@ namespace Microsoft.PythonTools.Analysis {
                 IModule mod = module.Module as IModule;
                 if (mod != null) {
                     mod.SpecializeFunction(moduleName.Substring(lastDot + 1, moduleName.Length - (lastDot + 1)) + "." + name, callable, mergeOriginalAnalysis);
+                    return;
                 }
             }
 

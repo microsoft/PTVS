@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -35,7 +36,7 @@ namespace Microsoft.PythonTools.Analysis.Browser {
         readonly IModuleContext _context;
         readonly List<IAnalysisItemView> _modules;
         
-        public AnalysisView(string dbDir, Version version = null) {
+        public AnalysisView(string dbDir, Version version = null, bool withContention = false) {
             var paths = new List<string>();
             paths.Add(dbDir);
             while (!File.Exists(IOPath.Combine(paths[0], "__builtin__.idb")) &&
@@ -64,15 +65,28 @@ namespace Microsoft.PythonTools.Analysis.Browser {
             _interpreter = _factory.CreateInterpreter();
             _context = _interpreter.CreateModuleContext();
 
-            _modules = _interpreter
-                .GetModuleNames()
+            var modNames = _interpreter.GetModuleNames()
                 .Select(n => Tuple.Create(n, IOPath.Combine(dbDir, n + ".idb")))
-                .Where(t => File.Exists(t.Item2))
+                .Where(t => File.Exists(t.Item2));
+
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
+            if (withContention) {
+                modNames = modNames
+                    .AsParallel()
+                    .WithExecutionMode(ParallelExecutionMode.ForceParallelism);
+            }
+            _modules = modNames
                 .Select(t => new ModuleView(_interpreter, _context, t.Item1, t.Item2))
                 .OrderBy(m => m.SortKey)
                 .ThenBy(m => m.Name)
                 .ToList<IAnalysisItemView>();
+            stopwatch.Stop();
+
             _modules.Insert(0, new KnownTypesView(_interpreter, version));
+
+            LoadMilliseconds = stopwatch.ElapsedMilliseconds;
+            TopLevelModuleCount = _modules.Count - 1;
         }
 
         public IEnumerable<IAnalysisItemView> Modules {
@@ -81,6 +95,8 @@ namespace Microsoft.PythonTools.Analysis.Browser {
 
         public string Path { get; private set; }
 
+        public long LoadMilliseconds { get; private set; }
+        public int TopLevelModuleCount { get; private set; }
 
         public Task ExportTree(string filename, string filter) {
             return Task.Factory.StartNew(() => {

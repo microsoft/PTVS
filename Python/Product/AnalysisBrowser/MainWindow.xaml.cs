@@ -97,6 +97,15 @@ namespace Microsoft.PythonTools.Analysis.Browser {
 
         public static readonly DependencyProperty VersionProperty = DependencyProperty.Register("Version", typeof(Version), typeof(MainWindow), new PropertyMetadata(new Version(2, 7)));
 
+
+        public bool LoadWithContention {
+            get { return (bool)GetValue(LoadWithContentionProperty); }
+            set { SetValue(LoadWithContentionProperty, value); }
+        }
+
+        public static readonly DependencyProperty LoadWithContentionProperty = DependencyProperty.Register("LoadWithContention", typeof(bool), typeof(MainWindow), new PropertyMetadata(false));
+
+
         private void Open_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
             e.CanExecute = !Loading;
         }
@@ -138,14 +147,12 @@ namespace Microsoft.PythonTools.Analysis.Browser {
             Loading = true;
             Analysis = null;
             Cursor = Cursors.Wait;
+
+            var version = Version;
+            var withContention = LoadWithContention;
+
             var loadTask = Task.Factory.StartNew(() => {
-                var av = new AnalysisView(path);
-
-                foreach (var mod in av.Modules) {
-                    mod.Children.ToList();
-                }
-
-                return av;
+                return new AnalysisView(path, version, withContention);
             }, TaskCreationOptions.LongRunning);
 
             loadTask.ContinueWith(

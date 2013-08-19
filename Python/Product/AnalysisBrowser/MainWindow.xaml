@@ -139,6 +139,10 @@
                         <Setter Property="FontFamily" Value="Consolas" />
                         <Setter Property="VerticalContentAlignment" Value="Center" />
                     </Style>
+                    <Style TargetType="{x:Type CheckBox}">
+                        <Setter Property="Margin" Value="3" />
+                        <Setter Property="VerticalContentAlignment" Value="Center" />
+                    </Style>
                     <Style TargetType="{x:Type Button}">
                         <Setter Property="Margin" Value="3" />
                         <Setter Property="Padding" Value="3" />
@@ -223,8 +227,26 @@
                             Version:
                         </Label>
                         <ComboBox Grid.Column="1"
-                                    SelectedItem="{Binding Version}"
-                                    ItemsSource="{Binding Source={x:Static l:MainWindow.SupportedVersions},Mode=OneTime}" />
+                                  SelectedItem="{Binding Version}"
+                                  ItemsSource="{Binding Source={x:Static l:MainWindow.SupportedVersions},Mode=OneTime}" />
+                    </Grid>
+                    
+                    <Grid Grid.Row="2">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="auto" SharedSizeGroup="Labels" />
+                            <ColumnDefinition Width="auto" />
+                            <ColumnDefinition Width="auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        
+                        <Label Grid.Column="0">
+                            Break me:
+                        </Label>
+                        
+                        <CheckBox Grid.Column="1"
+                                  IsChecked="{Binding LoadWithContention}">
+                            Multithreaded load
+                        </CheckBox>
                     </Grid>
                 </Grid>
 
@@ -259,6 +281,42 @@
                     <Setter Property="VerticalAlignment" Value="Center" />
                 </Style>
             </StackPanel.Resources>
+
+            <GroupBox HorizontalAlignment="Stretch" VerticalAlignment="Top"
+                      DataContext="{Binding Analysis}">
+                <GroupBox.Header>
+                    Statistics
+                </GroupBox.Header>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="auto" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="auto" />
+                        <RowDefinition Height="auto" />
+                    </Grid.RowDefinitions>
+
+                    <Label Grid.Row="0" Grid.Column="0">
+                        Load Time:
+                    </Label>
+                    <TextBox Grid.Row="0" Grid.Column="1"
+                             IsReadOnlyCaretVisible="True"
+                             Text="{Binding LoadMilliseconds,Mode=OneWay}" />
+                    <TextBlock Grid.Row="0" Grid.Column="2"
+                               VerticalAlignment="Center">
+                        ms
+                    </TextBlock>
+
+                    <Label Grid.Row="1" Grid.Column="0">
+                        Modules:
+                    </Label>
+                    <TextBox Grid.Row="1" Grid.Column="1"
+                             IsReadOnlyCaretVisible="True"
+                             Text="{Binding TopLevelModuleCount,Mode=OneWay}" />
+                </Grid>
+            </GroupBox>
 
             <GroupBox HorizontalAlignment="Stretch" VerticalAlignment="Top">
                 <GroupBox.Header>

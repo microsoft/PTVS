@@ -485,10 +485,6 @@ namespace Microsoft.PythonTools.Interpreter {
             return _sharedState.GetBuiltinTypeName(id);
         }
 
-        void ITypeDatabaseReader.RunFixups() {
-            _sharedState.RunFixups();
-        }
-
         void ITypeDatabaseReader.ReadMember(string memberName, Dictionary<string, object> memberValue, Action<string, IMember> assign, IMemberContainer container) {
             _sharedState.ReadMember(memberName, memberValue, assign, container);
         }
@@ -544,6 +540,15 @@ namespace Microsoft.PythonTools.Interpreter {
                 }
             }
             return false;
+        }
+
+
+        public bool BeginModuleLoad(IPythonModule module, int millisecondsTimeout) {
+            return _sharedState.BeginModuleLoad(module, millisecondsTimeout);
+        }
+
+        public void EndModuleLoad(IPythonModule module) {
+            _sharedState.EndModuleLoad(module);
         }
     }
 

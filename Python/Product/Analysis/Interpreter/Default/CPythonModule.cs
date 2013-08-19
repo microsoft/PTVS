@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using Microsoft.PythonTools.Analysis;
@@ -31,8 +32,6 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         private string _docString, _filename;
         private List<object> _children;
         private bool _loaded;
-        [ThreadStatic]
-        private static int _loadDepth;
 
         public CPythonModule(ITypeDatabaseReader typeDb, string moduleName, string databaseFilename, bool isBuiltin) {
             _modName = moduleName;
@@ -42,40 +41,48 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         }
 
         internal void EnsureLoaded() {
-            if (!_loaded) {
-                // mark as loading now (before it completes), if we have circular references we'll fix them up after loading completes.
-                _loaded = true;
+            if (_loaded) {
+                return;
+            }
 
-                _loadDepth++;
-                try {
-                    using (var stream = new FileStream(_dbFile, FileMode.Open, FileAccess.Read, FileShare.Read)) {
-                        Dictionary<string, object> contents = null;
-                        try {
-                            contents = (Dictionary<string, object>)Unpickle.Load(stream);
-                        } catch (ArgumentException) {
-                            _typeDb.OnDatabaseCorrupt();
-                        } catch (InvalidOperationException) {
-                            // Bug 511 - http://pytools.codeplex.com/workitem/511
-                            // Ignore a corrupt database file.
-                            _typeDb.OnDatabaseCorrupt();
-                        }
+            if (!_typeDb.BeginModuleLoad(this, 10000)) {
+                Debug.Fail("Timeout loading {0}", _modName);
+                return;
+            }
 
-                        if (contents != null) {
-                            LoadModule(contents);
-                        }
+            // ensure we haven't been loaded while waiting
+            if (_loaded) {
+                _typeDb.EndModuleLoad(this);
+                return;
+            }
+
+            // mark as loading now (before it completes), if we have circular references we'll fix them up after loading
+            // completes.
+            _loaded = true;
+
+            try {
+                using (var stream = new FileStream(_dbFile, FileMode.Open, FileAccess.Read, FileShare.Read)) {
+                    Dictionary<string, object> contents = null;
+                    try {
+                        contents = (Dictionary<string, object>)Unpickle.Load(stream);
+                    } catch (ArgumentException) {
+                        _typeDb.OnDatabaseCorrupt();
+                    } catch (InvalidOperationException) {
+                        // Bug 511 - http://pytools.codeplex.com/workitem/511
+                        // Ignore a corrupt database file.
+                        _typeDb.OnDatabaseCorrupt();
                     }
-                } catch (FileNotFoundException) {
-                    // if the file got deleted before we've loaded it don't crash...
-                } catch (IOException) {
-                    // or if someone has locked the file for some reason, also don't crash...
-                }
 
-                // don't run fixups until we've processed all of the inter-dependent modules.
-                if (_loadDepth == 1) {
-                    _typeDb.RunFixups();
+                    if (contents != null) {
+                        LoadModule(contents);
+                    }
                 }
-
-                _loadDepth--;
+            } catch (FileNotFoundException) {
+                // if the file got deleted before we've loaded it don't crash...
+            } catch (IOException) {
+                // or if someone has locked the file for some reason, also don't crash...
+            } finally {
+                _typeDb.EndModuleLoad(this);
             }
         }
 

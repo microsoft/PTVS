@@ -118,6 +118,7 @@ import datetime
 import os
 import subprocess
 import sys
+import traceback
 import types
 
 # The version number should match the value of PythonTypeDatabase.CurrentVersion in
@@ -330,31 +331,31 @@ def generate_member_table(obj, is_hidden = False, from_type = False, extra_types
     return table
 
 def generate_member(obj, is_hidden = False, from_type = False):
-    if isinstance(obj, (types.BuiltinFunctionType, class_method_descriptor_type)):
-        return 'function', generate_builtin_function(obj)
-    elif isinstance(obj, types.FunctionType):
-        # PyPy - we see plain old Python functions in addition to built-ins
-        return 'method' if from_type else 'function', generate_builtin_function(obj, from_type)
-    elif isinstance(obj, (type, OldStyleClassType)):
-        return 'typeref', type_to_typelist(obj)
-    elif isinstance(obj, (types.BuiltinMethodType, slot_wrapper_type, method_descriptor_type)):
-        return 'method', generate_builtin_function(obj, True)
-    elif isinstance(obj, (getset_descriptor_type, member_descriptor_type)):
-        return 'property', generate_getset_descriptor(obj)
-
-    # Check whether we recognize the type name as one that does not respond
-    # correctly to isinstance checks.
-    type_name = type_to_typeref(type(obj))
-
-    if type_name in KNOWN_METHOD_TYPES:
-        return 'method', generate_builtin_function(obj, True)
-
-    if type_name in KNOWN_FUNCTION_TYPES:
-        return 'method' if from_type else 'function', generate_builtin_function(obj, from_type)
-
-    # Callable objects with a docstring that provides us with at least one
-    # overload will be treated as functions rather than data.
     try:
+        if isinstance(obj, (types.BuiltinFunctionType, class_method_descriptor_type)):
+            return 'function', generate_builtin_function(obj)
+        elif isinstance(obj, types.FunctionType):
+            # PyPy - we see plain old Python functions in addition to built-ins
+            return 'method' if from_type else 'function', generate_builtin_function(obj, from_type)
+        elif isinstance(obj, (type, OldStyleClassType)):
+            return 'typeref', type_to_typelist(obj)
+        elif isinstance(obj, (types.BuiltinMethodType, slot_wrapper_type, method_descriptor_type)):
+            return 'method', generate_builtin_function(obj, True)
+        elif isinstance(obj, (getset_descriptor_type, member_descriptor_type)):
+            return 'property', generate_getset_descriptor(obj)
+
+        # Check whether we recognize the type name as one that does not respond
+        # correctly to isinstance checks.
+        type_name = type_to_typeref(type(obj))
+
+        if type_name in KNOWN_METHOD_TYPES:
+            return 'method', generate_builtin_function(obj, True)
+
+        if type_name in KNOWN_FUNCTION_TYPES:
+            return 'method' if from_type else 'function', generate_builtin_function(obj, from_type)
+
+        # Callable objects with a docstring that provides us with at least one
+        # overload will be treated as functions rather than data.
         if hasattr(obj, '__call__'):
             try:
                 info = generate_builtin_function(obj, from_type)
@@ -365,7 +366,8 @@ def generate_member(obj, is_hidden = False, from_type = False):
     except:
         # Some compiled types fail here, so catch everything and treat the
         # object as data.
-        pass
+        traceback.print_exc()
+        print('Treating type as data')
 
     # We don't have any special handling for this object type, so treat it as
     # a constant.

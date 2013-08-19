@@ -163,7 +163,7 @@ namespace Microsoft.PythonTools.Analysis {
                         inst.Analyze();
                         inst.Epilogue();
                     } catch (Exception e) {
-                        Console.WriteLine("Error while saving analysis: {0}{1}", Environment.NewLine, e.ToString());
+                        Console.WriteLine("Error during analysis: {0}{1}", Environment.NewLine, e.ToString());
                         inst.LogToGlobal("FAIL_STDLIB" + Environment.NewLine + e.ToString());
                         inst.TraceError("Analysis failed{0}{1}", Environment.NewLine, e.ToString());
                         return -10;
@@ -406,15 +406,38 @@ namespace Microsoft.PythonTools.Analysis {
                 _updater.UpdateStatus(0, 0, "Collecting files");
             }
 
-            var fileGroups = ModulePath.GetModulesInLib(
-                _interpreter,
-                _library,
-                null,   // default site-packages path
-                requireInitPyFiles: ModulePath.PythonVersionRequiresInitPyFiles(_version)
-            )
-                .GroupBy(mp => mp.LibraryPath, StringComparer.OrdinalIgnoreCase)
-                .Select(group => group.ToList())
-                .ToList();
+            Exception lastException = null;
+            List<List<ModulePath>> fileGroups = null;
+            for (int retries = 3; retries > 0; --retries) {
+                try {
+                    fileGroups = ModulePath.GetModulesInLib(
+                        _interpreter,
+                        _library,
+                        null,   // default site-packages path
+                        requireInitPyFiles: ModulePath.PythonVersionRequiresInitPyFiles(_version)
+                    )
+                        .GroupBy(mp => mp.LibraryPath, StringComparer.OrdinalIgnoreCase)
+                        .Select(group => group.ToList())
+                        .ToList();
+                    break;
+                } catch (UnauthorizedAccessException ex) {
+                    // May be a transient error, so try again shortly.
+                    lastException = ex;
+                    Thread.Sleep(1000);
+                } catch (Exception ex) {
+                    lastException = ex;
+                    break;
+                }
+            }
+
+            if (fileGroups == null) {
+                // Exception will be caught and logged
+                if (lastException != null) {
+                    throw new InvalidOperationException("Cannot obtain list of files", lastException);
+                } else {
+                    throw new InvalidOperationException("Cannot obtain list of files");
+                }
+            }
 
             // Move the standard library and builtin groups to the first
             // positions within the list of groups.

@@ -18,6 +18,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using Microsoft.PythonTools.Interpreter.Default;
 
 namespace Microsoft.PythonTools.Interpreter {
@@ -26,8 +27,13 @@ namespace Microsoft.PythonTools.Interpreter {
     /// </summary>
     class SharedDatabaseState : ITypeDatabaseReader {
         private readonly Dictionary<string, IPythonModule> _modules = new Dictionary<string, IPythonModule>();
-        private readonly List<Action> _fixups = new List<Action>();
-        private List<Action<IPythonType>> _objectTypeFixups = new List<Action<IPythonType>>();
+        private readonly object _moduleLoadLock = new object();
+#if DEBUG
+        private Thread _moduleLoadLockThread;
+#endif
+        private readonly List<IPythonModule> _modulesLoading = new List<IPythonModule>();
+        private List<Action> _fixups;
+        private List<Action<IPythonType>> _objectTypeFixups;
         private readonly Dictionary<string, List<Action<IMember>>> _moduleFixups = new Dictionary<string, List<Action<IMember>>>();
         private readonly string _dbDir;
         private readonly Dictionary<IPythonType, CPythonConstant> _constants = new Dictionary<IPythonType, CPythonConstant>();
@@ -43,15 +49,11 @@ namespace Microsoft.PythonTools.Interpreter {
         internal const string BuiltinName3x = "builtins";
         private readonly string _builtinName;
 
-        public SharedDatabaseState(string databaseDirectory,
-                                   Version languageVersion)
+        public SharedDatabaseState(string databaseDirectory, Version languageVersion)
             : this(databaseDirectory, languageVersion, false) {
         }
 
-        internal SharedDatabaseState(string databaseDirectory,
-            Version languageVersion,
-            bool defaultDatabase) {
-
+        internal SharedDatabaseState(string databaseDirectory, Version languageVersion, bool defaultDatabase) {
             _dbDir = databaseDirectory;
             _langVersion = languageVersion;
             _isDefaultDb = defaultDatabase;
@@ -335,34 +337,72 @@ namespace Microsoft.PythonTools.Interpreter {
             return name;
         }
 
+        public bool BeginModuleLoad(IPythonModule module, int millisecondsTimeout) {
+#if DEBUG
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
+#endif
+            if (!Monitor.TryEnter(_moduleLoadLock, millisecondsTimeout)) {
+                return false;
+            }
+#if DEBUG
+            stopwatch.Stop();
+            if (stopwatch.ElapsedMilliseconds > 100) {
+                string heldByMessage = "";
+                if (_moduleLoadLockThread != null) {
+                    heldByMessage = string.Format(" (held by {0}:{1})",
+                        _moduleLoadLockThread.Name, _moduleLoadLockThread.ManagedThreadId
+                    );
+                }
+                Console.WriteLine(
+                    "Waited {0}ms for module loader lock on thread {1}:{2}{3}",
+                    stopwatch.ElapsedMilliseconds,
+                    Thread.CurrentThread.Name, Thread.CurrentThread.ManagedThreadId,
+                    heldByMessage
+                );
+            }
+            _moduleLoadLockThread = Thread.CurrentThread;
+#endif
+            _modulesLoading.Add(module);
+            return true;
+        }
+
+        public void EndModuleLoad(IPythonModule module) {
+            bool wasRemoved = _modulesLoading.Remove(module);
+            Debug.Assert(wasRemoved);
+            if (_modulesLoading.Count == 0) {
+                RunFixups();
+            }
+            Monitor.Exit(_moduleLoadLock);
+        }
+
         /// <summary>
-        /// Adds a custom action which will attempt to resolve a type lookup which failed because the
-        /// type was not yet defined.  All fixups are run after the database is loaded so all types
-        /// should be available.
+        /// Adds a custom action which will attempt to resolve a type lookup
+        /// which failed because the type was not yet defined. Fixups are run
+        /// immediately before the module lock is released, which should ensure
+        /// that all required modules are, or can be, loaded.
         /// </summary>
         private void AddFixup(Action action) {
             Debug.Assert(action != null);
             if (action != null) {
+                if (_fixups == null) {
+                    _fixups = new List<Action>();
+                }
                 _fixups.Add(action);
             }
         }
 
-        /// <summary>
-        /// Runs all of the custom fixup actions.
-        /// </summary>
-        public void RunFixups() {
-            // we don't use foreach here because we can add fixups while
-            // running fixups, in which case we want to keep processing
-            // the additional fixups.
-            for (int i = 0; i < _fixups.Count; i++) {
-                var fixup = _fixups[i];
-                Debug.Assert(fixup != null);
-                if (fixup != null) {
-                    fixup();
+        private void RunFixups() {
+            var fixups = _fixups;
+            _fixups = null;
+            if (fixups != null) {
+                foreach (var fixup in fixups) {
+                    Debug.Assert(fixup != null);
+                    if (fixup != null) {
+                        fixup();
+                    }
                 }
             }
-
-            _fixups.Clear();
 
             RunObjectTypeFixups();
         }
