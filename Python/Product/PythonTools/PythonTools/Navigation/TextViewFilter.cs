@@ -96,21 +96,26 @@ namespace Microsoft.PythonTools.Language {
                 throw new ArgumentException("Array parameter should contain exactly one TextSpan", "pSpan");
             }
 
+            // Adjust the span to expression boundaries.
+
+            var snapshot = _wpfTextView.TextSnapshot;
+            var start = LineAndColumnNumberToSnapshotPoint(snapshot, pSpan[0].iStartLine, pSpan[0].iStartIndex);
+            var end = LineAndColumnNumberToSnapshotPoint(snapshot, pSpan[0].iEndLine, pSpan[0].iEndIndex);
+
             // If this is a zero-length span (which it usually is, unless there's selection), adjust it
             // to cover one char to the right, since an empty span at the beginning of the expression does
             // not count as belonging to that expression;
-            if (pSpan[0].iStartLine == pSpan[0].iEndLine && pSpan[0].iStartIndex == pSpan[0].iEndIndex) {
-                ++pSpan[0].iEndIndex;
+            if (start == end && start.Position != snapshot.Length) {
+                end += 1;
             }
 
-            // Adjust the span to expression boundaries.
-            var snapshot = _wpfTextView.TextSnapshot;
-            var snapshotSpan = TextSpanToSnapshotSpan(snapshot, pSpan[0]);
+            var snapshotSpan = new SnapshotSpan(start, end);
             var trackingSpan = snapshot.CreateTrackingSpan(snapshotSpan.Span, SpanTrackingMode.EdgeExclusive);
             var rep = new ReverseExpressionParser(snapshot, _wpfTextView.TextBuffer, trackingSpan);
             var exprSpan = rep.GetExpressionRange(forCompletion: false);
             if (exprSpan != null) {
-                pSpan[0] = SnapshotSpanToTextSpan(exprSpan.Value);
+                SnapshotPointToLineAndColumnNumber(exprSpan.Value.Start, out pSpan[0].iStartLine, out pSpan[0].iStartIndex);
+                SnapshotPointToLineAndColumnNumber(exprSpan.Value.End, out pSpan[0].iEndLine, out pSpan[0].iEndIndex);
             } else {
                 // If it's not an expression, suppress the tip.
                 pbstrText = null;
@@ -130,27 +135,14 @@ namespace Microsoft.PythonTools.Language {
 
         private static SnapshotPoint LineAndColumnNumberToSnapshotPoint(ITextSnapshot snapshot, int lineNumber, int columnNumber) {
             var line = snapshot.GetLineFromLineNumber(lineNumber);
-            var snapShotPoint = new SnapshotPoint(snapshot, line.Start + columnNumber);
-            return snapShotPoint;
-        }
-
-        private static SnapshotSpan TextSpanToSnapshotSpan(ITextSnapshot snapshot, TextSpan textSpan) {
-            var start = LineAndColumnNumberToSnapshotPoint(snapshot, textSpan.iStartLine, textSpan.iStartIndex);
-            var end = LineAndColumnNumberToSnapshotPoint(snapshot, textSpan.iEndLine, textSpan.iEndIndex);
-            return new SnapshotSpan(start, end);
+            var snapshotPoint = new SnapshotPoint(snapshot, line.Start + columnNumber);
+            return snapshotPoint;
         }
 
         private static void SnapshotPointToLineAndColumnNumber(SnapshotPoint snapshotPoint, out int lineNumber, out int columnNumber) {
             var line = snapshotPoint.GetContainingLine();
             lineNumber = line.LineNumber;
             columnNumber = snapshotPoint.Position - line.Start.Position;
-        }
-
-        private static TextSpan SnapshotSpanToTextSpan(SnapshotSpan snapshotSpan) {
-            TextSpan textSpan;
-            SnapshotPointToLineAndColumnNumber(snapshotSpan.Start, out textSpan.iStartLine, out textSpan.iStartIndex);
-            SnapshotPointToLineAndColumnNumber(snapshotSpan.End, out textSpan.iEndLine, out textSpan.iEndIndex);
-            return textSpan;
         }
     }
 }
