@@ -92,6 +92,7 @@ namespace Microsoft.PythonTools.TestAdapter {
         /// Gets the project home directory.
         /// </summary>
         public static string GetProjectHome(this IVsProject project) {
+            Debug.Assert(project != null);
             var hier = (IVsHierarchy)project;
             object extObject;
             ErrorHandler.ThrowOnFailure(hier.GetProperty(
@@ -103,7 +104,16 @@ namespace Microsoft.PythonTools.TestAdapter {
             if (proj == null) {
                 return null;
             }
-            return proj.Properties.Item("ProjectHome").Value as string;
+            var props = proj.Properties;
+            if (props == null) {
+                return null;
+            }
+            var projHome = props.Item("ProjectHome");
+            if (projHome == null) {
+                return null;
+            }
+
+            return projHome.Value as string;
         }
 
         /// <summary>
