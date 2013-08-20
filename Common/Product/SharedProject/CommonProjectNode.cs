@@ -206,7 +206,7 @@ namespace Microsoft.VisualStudioTools.Project {
         }
         internal override object Object {
             get {
-                return null;
+                return VSProject;
             }
         }
         #endregion
