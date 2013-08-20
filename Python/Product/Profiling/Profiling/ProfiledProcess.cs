@@ -60,6 +60,7 @@ namespace Microsoft.PythonTools.Profiling {
             processInfo.CreateNoWindow = false;
             processInfo.UseShellExecute = false;
             processInfo.RedirectStandardOutput = false;
+            processInfo.WorkingDirectory = _dir;
 
             if (envVars != null) {
                 foreach (var keyValue in envVars) {
