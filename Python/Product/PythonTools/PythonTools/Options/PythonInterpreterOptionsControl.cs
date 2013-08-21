@@ -111,6 +111,7 @@ namespace Microsoft.PythonTools.Options {
                 try {
                     _path.Text = curOptions.InterpreterPath;
                     _windowsPath.Text = curOptions.WindowsInterpreterPath;
+                    _libraryPath.Text = curOptions.LibraryPath;
                     _arch.SelectedIndex = _arch.Items.Count - 1;
                     for (int i = 0; i < _arch.Items.Count; i++) {
                         if (String.Equals((string)_arch.Items[i], curOptions.Architecture, StringComparison.OrdinalIgnoreCase)) {
@@ -140,6 +141,7 @@ namespace Microsoft.PythonTools.Options {
 
             _path.Text = "";
             _windowsPath.Text = "";
+            _libraryPath.Text = "";
             _version.SelectedIndex = _version.FindStringExact("2.7");
             _pathEnvVar.Text = "";
             _arch.SelectedIndex = 0;

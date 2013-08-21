@@ -466,9 +466,16 @@ namespace Microsoft.PythonTools.Interpreter {
             }
 
             if ((container = member as IMemberContainer) != null) {
-                member = container.GetMember(null, names[names.Length - 1]);
+                int i = names.Length - 1;
+                member = container.GetMember(null, names[i]);
                 if (member != null) {
                     assign(memberName, member);
+                } else if (fixupsLevel < i) {
+                    // Fixup 3: Could not resolve final member
+                    AddFixup(() => ResolveMemberRef(names, memberName, assign, i));
+                } else {
+                    // Complete failure to resolve - assign `object`
+                    AddObjectTypeFixup(t => assign(memberName, t));
                 }
             }
         }

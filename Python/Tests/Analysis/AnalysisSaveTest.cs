@@ -32,7 +32,7 @@ namespace AnalysisTests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
-            TestData.Deploy();
+            TestData.Deploy(includeTestData: false);
         }
 
         [TestMethod, Priority(0)]
@@ -297,6 +297,38 @@ abc = foo.x
                 var newMod = newPs.NewModule("baz", code);
 
                 Assert.AreEqual(newMod.Analysis.GetValuesByIndex("abc", code.LastIndexOf('\n')).First().PythonType, newPs.Analyzer.Interpreter.GetBuiltinType(BuiltinTypeId.Int));
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public void CrossModuleTypeRef() {
+            string foo = @"
+class Foo(object):
+    pass
+";
+            string bar = @"
+from foo import *
+";
+
+            string baz = @"
+from bar import *
+";
+
+            using (var newPs = SaveLoad(
+                PythonLanguageVersion.V27,
+                new AnalysisModule("foo", "foo.py", foo),
+                new AnalysisModule("bar", "bar.py", bar),
+                new AnalysisModule("baz", "baz.py", baz)
+            )) {
+                string code = @"
+import bar, baz
+bar_Foo = bar.Foo
+baz_Foo = baz.Foo
+";
+                var newMod = newPs.NewModule("fez", code);
+
+                AssertUtil.ContainsExactly(newMod.Analysis.GetShortDescriptionsByIndex("bar_Foo", 0), "class Foo");
+                AssertUtil.ContainsExactly(newMod.Analysis.GetShortDescriptionsByIndex("baz_Foo", 0), "class Foo");
             }
         }
 

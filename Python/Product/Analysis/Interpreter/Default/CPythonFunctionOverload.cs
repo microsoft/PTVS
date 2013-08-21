@@ -22,7 +22,11 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         private readonly List<IPythonType> _retType;
         private static readonly CPythonParameterInfo[] EmptyParameters = new CPythonParameterInfo[0];
 
-        internal CPythonFunctionOverload(CPythonParameterInfo[] parameters, IEnumerable<IPythonType> returnType, bool isMethod) {
+        internal CPythonFunctionOverload(
+            CPythonParameterInfo[] parameters,
+            IEnumerable<IPythonType> returnType,
+            bool isMethod
+        ) {
             _parameters = EmptyParameters;
 
             if (parameters != null) {
@@ -37,8 +41,13 @@ namespace Microsoft.PythonTools.Interpreter.Default {
 
             _retType = returnType.ToList();
         }
-        
-        public CPythonFunctionOverload(ITypeDatabaseReader typeDb, Dictionary<string, object> argInfo, bool isMethod) {
+
+        public CPythonFunctionOverload(
+            ITypeDatabaseReader typeDb,
+            CPythonFunction function,
+            Dictionary<string, object> argInfo,
+            bool isMethod
+        ) {
             _parameters = EmptyParameters;
 
             if (argInfo != null) {
@@ -56,6 +65,9 @@ namespace Microsoft.PythonTools.Interpreter.Default {
                 object docObj;
                 if (argInfo.TryGetValue("doc", out docObj)) {
                     _doc = docObj as string;
+                }
+                if (string.IsNullOrEmpty(_doc)) {
+                    _doc = function.Documentation;
                 }
 
                 if (argInfo.TryGetValue("return_doc", out docObj)) {

@@ -76,7 +76,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
             if (overloads != null) {
                 return overloads
                     .OfType<Dictionary<string, object>>()
-                    .Select(o => new CPythonFunctionOverload(typeDb, o, isMethod))
+                    .Select(o => new CPythonFunctionOverload(typeDb, this, o, isMethod))
                     .ToList<IPythonFunctionOverload>();
             }
             return EmptyOverloads;
