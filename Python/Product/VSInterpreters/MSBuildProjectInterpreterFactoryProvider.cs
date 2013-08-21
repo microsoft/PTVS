@@ -541,21 +541,49 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         /// <summary>
-        /// Returns true if the provided interpreter was specified as a
-        /// reference in this project.
+        /// Returns true if the provided interpreter was specified in the
+        /// project (as opposed to included by reference).
         /// </summary>
-        public bool IsInterpreterReference(IPythonInterpreterFactory factory) {
-            if (factory is NotFoundInterpreterFactory) {
-                return true;
-            }
-
+        /// <remarks>
+        /// This will always return false if <see cref="Contains"/> would return
+        /// false.
+        /// </remarks>
+        public bool IsProjectSpecific(IPythonInterpreterFactory factory) {
             lock (_factoriesLock) {
                 FactoryInfo info;
                 if (_factories.TryGetValue(factory, out info)) {
-                    return info.ProjectItem.ItemType.Equals(InterpreterReferenceItem);
+                    return info.ProjectItem.ItemType.Equals(InterpreterItem);
                 }
             }
+            // We don't contain the interpreter, so it's not specific to this
+            // project.
             return false;
+        }
+
+        /// <summary>
+        /// Returns true if the provided interpreter was resolved when it was
+        /// loaded.
+        /// </summary>
+        /// <remarks>
+        /// This may return true even if <see cref="Contains"/> would return
+        /// false for the same interpreter.
+        /// </remarks>
+        public bool IsAvailable(IPythonInterpreterFactory factory) {
+            return !(factory is NotFoundInterpreterFactory);
+        }
+
+        /// <summary>
+        /// Returns true if the provided interpreter is available to this
+        /// project. 
+        /// </summary>
+        /// <remarks>
+        /// If the project did not specify any interpreters, the global default
+        /// interpreter is available, but this function will still return false.
+        /// </remarks>
+        public bool Contains(IPythonInterpreterFactory factory) {
+            lock (_factoriesLock) {
+                return _factories.ContainsKey(factory);
+            }
         }
 
         public IPythonInterpreterFactory FindInterpreter(string rootPath) {

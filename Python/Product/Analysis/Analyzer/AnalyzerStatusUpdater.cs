@@ -165,8 +165,10 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
 
         const int LOCK_TIMEOUT = 1000;
         const int MAX_ITEMS = 128;
-        static readonly string MUTEX_NAME = "Microsoft.PythonTools.AnalyzerStatus.Mutex." + AssemblyVersionInfo.Version;
-        static readonly string MMF_NAME = "Microsoft.PythonTools.AnalyzerStatus.File." + AssemblyVersionInfo.Version;
+        private const string MUTEX_NAME = "Microsoft.PythonTools.AnalyzerStatus.Mutex." +
+            AssemblyVersionInfo.Version + "." + AssemblyVersionInfo.VSVersion;
+        private const string MMF_NAME = "Microsoft.PythonTools.AnalyzerStatus.File." +
+            AssemblyVersionInfo.Version + "." + AssemblyVersionInfo.VSVersion;
         const int MAX_IDENTIFIER_LENGTH = 249;
         internal const int MAX_MESSAGE_LENGTH = 99;
 

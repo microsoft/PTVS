@@ -188,6 +188,10 @@ namespace Microsoft.PythonTools.Interpreters {
                 return;
             }
 
+            if (!Directory.Exists(Configuration.LibraryPath)) {
+                return;
+            }
+
             if (!_base.IsCurrent) {
                 _base.GenerateCompletionDatabase(GenerateDatabaseOptions.SkipUnchanged, onExit);
                 return;

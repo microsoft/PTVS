@@ -35,6 +35,7 @@ namespace Microsoft.PythonTools.Interpreter {
         private PythonTypeDatabase _typeDb;
         private bool _generating, _isValid, _disposed;
         private string[] _missingModules;
+        private string _isCurrentException;
         private readonly Timer _refreshIsCurrentTrigger;
         private FileSystemWatcher _libWatcher;
         private readonly object _libWatcherLock = new object();
@@ -256,7 +257,7 @@ namespace Microsoft.PythonTools.Interpreter {
 
         public virtual bool IsCurrent {
             get {
-                return !_generating && _isValid && _missingModules == null;
+                return !_generating && _isValid && _missingModules == null && _isCurrentException == null;
             }
         }
 
@@ -292,6 +293,22 @@ namespace Microsoft.PythonTools.Interpreter {
             RefreshIsCurrent(IsCurrent);
         }
 
+        private static HashSet<string> GetExistingDatabase(string databasePath) {
+            return new HashSet<string>(
+                Directory.EnumerateFiles(databasePath, "*.idb", SearchOption.AllDirectories)
+                    .Select(f => Path.GetFileNameWithoutExtension(f)),
+                StringComparer.InvariantCultureIgnoreCase
+            );
+        }
+
+        private string[] GetMissingModules(HashSet<string> existingDatabase) {
+            return ModulePath.GetModulesInLib(this)
+                .Select(mp => mp.ModuleName)
+                .Where(name => !existingDatabase.Contains(name))
+                .OrderBy(name => name, StringComparer.InvariantCultureIgnoreCase)
+                .ToArray();
+        }
+
         private void RefreshIsCurrent(bool initialValue) {
             bool reasonChanged = false;
 
@@ -300,16 +317,40 @@ namespace Microsoft.PythonTools.Interpreter {
                     _isValid = false;
                 } else {
                     _isValid = true;
-                    var existingDatabase = new HashSet<string>(
-                        Directory.EnumerateFiles(DatabasePath, "*.idb", SearchOption.AllDirectories)
-                            .Select(f => Path.GetFileNameWithoutExtension(f)),
-                        StringComparer.InvariantCultureIgnoreCase
-                    );
-                    var missingModules = ModulePath.GetModulesInLib(this)
-                        .Select(mp => mp.ModuleName)
-                        .Where(name => !existingDatabase.Contains(name))
-                        .OrderBy(name => name, StringComparer.InvariantCultureIgnoreCase)
-                        .ToArray();
+                    HashSet<string> existingDatabase = null;
+                    string[] missingModules = null;
+
+                    for (int retries = 3; retries > 0; --retries) {
+                        try {
+                            existingDatabase = GetExistingDatabase(DatabasePath);
+                            break;
+                        } catch (UnauthorizedAccessException) {
+                        } catch (IOException) {
+                        }
+                        Thread.Sleep(100);
+                    }
+
+                    if (existingDatabase == null) {
+                        // This will either succeed or throw again. If it throws
+                        // then the error is reported to the user.
+                        existingDatabase = GetExistingDatabase(DatabasePath);
+                    }
+
+                    for (int retries = 3; retries > 0; --retries) {
+                        try {
+                            missingModules = GetMissingModules(existingDatabase);
+                            break;
+                        } catch (UnauthorizedAccessException) {
+                        } catch (IOException) {
+                        }
+                        Thread.Sleep(100);
+                    }
+
+                    if (missingModules == null) {
+                        // This will either succeed or throw again. If it throws
+                        // then the error is reported to the user.
+                        missingModules = GetMissingModules(existingDatabase);
+                    }
 
                     if (missingModules.Length > 0) {
                         var oldModules = _missingModules;
@@ -323,11 +364,11 @@ namespace Microsoft.PythonTools.Interpreter {
                         _missingModules = null;
                     }
                 }
-            } catch (IOException) {                 // We want to avoid crashing
-            } catch (UnauthorizedAccessException) { // here, and IsCurrent
-            } catch (SecurityException) {           // should be false if any of
-            } catch (NotSupportedException) {       // these are non-transient
-            } catch (ArgumentException) {           // faults.
+                _isCurrentException = null;
+            } catch (Exception ex) {
+                // Report the exception text as the reason.
+                _isCurrentException = ex.ToString();
+                reasonChanged = true;
             }
 
             if (IsCurrent != initialValue) {
@@ -383,7 +424,9 @@ namespace Microsoft.PythonTools.Interpreter {
 
         public virtual string GetFriendlyIsCurrentReason(IFormatProvider culture) {
             var missingModules = _missingModules;
-            if (_generating) {
+            if (_isCurrentException != null) {
+                return "An error occurred. Click Copy to get full details.";
+            } else if (_generating) {
                 return "Currently regenerating";
             } else if (_libWatcher == null) {
                 return "Interpreter has no library";
@@ -397,14 +440,15 @@ namespace Microsoft.PythonTools.Interpreter {
                         "The following modules have not been analyzed:{0}    {1}",
                         Environment.NewLine,
                         string.Join(Environment.NewLine + "    ", missingModules)
-                        );
+                    );
                 } else {
                     var packages = new List<string>(
                         from m in missingModules
                         group m by GetPackageName(m) into groupedByPackage
                         where groupedByPackage.Count() > 1
                         orderby groupedByPackage.Key
-                        select groupedByPackage.Key);
+                        select groupedByPackage.Key
+                    );
 
                     if (packages.Count > 0 && packages.Count < 100) {
                         return string.Format(culture,
@@ -412,11 +456,12 @@ namespace Microsoft.PythonTools.Interpreter {
                             missingModules.Length,
                             string.Join(Environment.NewLine + "    ", packages),
                             Environment.NewLine
-                            );
+                        );
                     } else {
                         return string.Format(culture,
                             "{0} modules have not been analyzed.",
-                            missingModules.Length);
+                            missingModules.Length
+                        );
                     }
                 }
             }
@@ -427,7 +472,9 @@ namespace Microsoft.PythonTools.Interpreter {
         public virtual string GetIsCurrentReason(IFormatProvider culture) {
             var missingModules = _missingModules;
             var reason = "Database at " + DatabasePath;
-            if (_generating) {
+            if (_isCurrentException != null) {
+                return _isCurrentException;
+            } else if (_generating) {
                 return reason + " is regenerating";
             } else if (_libWatcher == null) {
                 return "Interpreter has no library";

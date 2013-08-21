@@ -370,7 +370,6 @@ namespace Microsoft.PythonTools.Project {
                 return;
             }
 
-            var service = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
             var remaining = node.AllChildren.OfType<InterpretersNode>().ToDictionary(n => n._factory);
 
             var interpreters = Interpreters;
@@ -381,8 +380,11 @@ namespace Microsoft.PythonTools.Project {
                             this,
                             Interpreters.GetProjectItem(fact),
                             fact,
-                            isInterpreterReference: interpreters.IsInterpreterReference(fact),
-                            canDelete: fact is DerivedInterpreterFactory));
+                            isInterpreterReference: !interpreters.IsProjectSpecific(fact),
+                            canDelete: 
+                                interpreters.IsProjectSpecific(fact) &&
+                                Directory.Exists(fact.Configuration.PrefixPath)
+                        ));
                     }
                 }
             }

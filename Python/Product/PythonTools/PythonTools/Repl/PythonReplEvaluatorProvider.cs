@@ -55,9 +55,12 @@ namespace Microsoft.PythonTools.Repl {
 
         public IReplEvaluator GetEvaluator(string replId) {
             if (replId.StartsWith(_replGuid)) {
-                var interpreter = _interpreterService.FindInterpreter(replId.Substring(_replGuid.Length + 1, _replGuid.Length), replId.Substring(_replGuid.Length * 2 + 2));
-                if (interpreter != null) {
-                    return new PythonReplEvaluator(interpreter, _errorProviderFactory, _interpreterService);
+                string[] components = replId.Split(new[] { ' ' }, 3);
+                if (components.Length == 3) {
+                    var interpreter = _interpreterService.FindInterpreter(components[1], components[2]);
+                    if (interpreter != null) {
+                        return new PythonReplEvaluator(interpreter, _errorProviderFactory, _interpreterService);
+                    }
                 }
             } else if (replId.StartsWith(_configurableGuid)) {
                 return CreateConfigurableInterpreter(replId);
@@ -111,11 +114,7 @@ namespace Microsoft.PythonTools.Repl {
         #endregion
 
         internal static string GetReplId(IPythonInterpreterFactory interpreter, PythonProjectNode project = null) {
-            if (project == null || project.Interpreters.IsInterpreterReference(interpreter)) {
-                return _replGuid + " " +
-                    interpreter.Id + " " +
-                    interpreter.Configuration.Version;
-            } else {
+            if (project != null && project.Interpreters.IsProjectSpecific(interpreter)) {
                 return String.Format("{0}|{1}|{2}|{3}|{4};{5}||{6}",
                     PythonReplEvaluatorProvider._configurableGuid,
                     project.GetWorkingDirectory(),
@@ -125,6 +124,10 @@ namespace Microsoft.PythonTools.Repl {
                     interpreter.Id,
                     ((IVsProject)project).GetRootCanonicalName()
                 );
+            } else {
+                return _replGuid + " " +
+                    interpreter.Id + " " +
+                    interpreter.Configuration.Version;
             }
         }
     }

@@ -200,7 +200,7 @@ namespace Microsoft.PythonTools.InterpreterList {
                         _interpreters.AddRange(
                             from f in interp.GetInterpreterFactories()
                             // Interpreter references are already included
-                            where !interp.IsInterpreterReference(f)
+                            where interp.IsProjectSpecific(f)
                             select new InterpreterView(f, f.Description, pyProject)
                         );
                     }

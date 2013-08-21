@@ -720,6 +720,7 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
 
             var interpreterService = ComponentModel.GetService<IInterpreterOptionsService>();
             interpreterService.InterpretersChanged += RefreshReplCommands;
+            interpreterService.DefaultInterpreterChanged += RefreshReplCommands;
             interpreterService.DefaultInterpreterChanged += UpdateDefaultAnalyzer;
 
             InitializeLogging(interpreterService);

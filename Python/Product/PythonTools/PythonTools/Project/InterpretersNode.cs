@@ -346,13 +346,17 @@ namespace Microsoft.PythonTools.Project {
                 switch (cmd) {
                     case PythonConstants.ActivateEnvironment:
                         result |= QueryStatusResult.SUPPORTED;
-                        if (_interpreters.ActiveInterpreter != _factory) {
+                        if (_interpreters.IsAvailable(_factory) &&
+                            _interpreters.ActiveInterpreter != _factory &&
+                            Directory.Exists(_factory.Configuration.PrefixPath)) {
                             result |= QueryStatusResult.ENABLED;
                         }
                         return VSConstants.S_OK;
                     case PythonConstants.InstallPythonPackage:
                         result |= QueryStatusResult.SUPPORTED;
-                        if (!_installingPackage) {
+                        if (_interpreters.IsAvailable(_factory) &&
+                            Directory.Exists(_factory.Configuration.PrefixPath) &&
+                            !_installingPackage) {
                             result |= QueryStatusResult.ENABLED;
                         }
                         return VSConstants.S_OK;
