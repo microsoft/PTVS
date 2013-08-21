@@ -89,9 +89,6 @@ namespace Microsoft.PythonTools.Repl {
         protected virtual void OnConnected() {
         }
 
-        protected virtual void OnExecutionDone() {
-        }
-
         protected void SetMultipleScopes(bool multipleScopes) {
             if (multipleScopes != _multipleScopes) {
                 OnMultipleScopeSupportChanged();
@@ -592,7 +589,6 @@ namespace Microsoft.PythonTools.Repl {
                         _completion = null;
                     }
                 }
-                _eval.OnExecutionDone();
             }
 
             static readonly string _noReplProcess = "Current interactive window is disconnected - please reset the process." + Environment.NewLine;

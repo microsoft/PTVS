@@ -181,7 +181,6 @@ EXCE = to_bytes('EXCE')
 EXCR = to_bytes('EXCR')
 CHLD = to_bytes('CHLD')
 OUTP = to_bytes('OUTP')
-RESD = to_bytes('RESD')
 REQH = to_bytes('REQH')
 LAST = to_bytes('LAST')
 
@@ -1286,7 +1285,6 @@ class DebuggerLoop(object):
             to_bytes('bkdr') : self.command_remove_django_breakpoint,
             to_bytes('bkda') : self.command_add_django_breakpoint,
             to_bytes('crep') : self.command_connect_repl,
-            to_bytes('resf') : self.command_resend_framelists,
             to_bytes('drep') : self.command_disconnect_repl,
             to_bytes('lack') : self.command_last_ack,
         }
@@ -1414,13 +1412,6 @@ class DebuggerLoop(object):
         self.repl_backend = _vspr.DebugReplBackend(self)
         self.repl_backend.connect_from_debugger_using_socket(sock)
         self.repl_backend.execution_loop()
-
-    def command_resend_framelists(self):
-        tid = read_int(self.conn)
-        update_all_thread_stacks(check_is_blocked = False)
-        with _SendLockCtx:
-            write_bytes(conn, RESD)
-            write_int(conn, tid)
 
     def command_disconnect_repl(self):
         if self.repl_backend is not None:

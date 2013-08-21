@@ -66,7 +66,6 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         private AD7Thread _processLoadedThread, _startThread;
         private AD7Module _startModule;
         private bool _attached, _pseudoAttach;
-        private bool _pseudoStep;
         private readonly BreakpointManager _breakpointManager;
         private Guid _ad7ProgramId;             // A unique identifier for the program being debugged.
         private static HashSet<WeakReference> _engines = new HashSet<WeakReference>();
@@ -1061,13 +1060,6 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             }
 
             var thread = ((AD7Thread)pThread).GetDebuggedThread();
-
-            if (_pseudoStep) {
-                _pseudoStep = false;
-                _process.ResendFrameLists(thread);
-                return VSConstants.S_OK;
-            }
-
             switch (sk) {
                 case enum_STEPKIND.STEP_INTO: thread.StepInto(); break;
                 case enum_STEPKIND.STEP_OUT: thread.StepOut(); break;
@@ -1201,8 +1193,6 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             process.StepComplete += OnStepComplete;
             process.ThreadExited += OnThreadExited;
             process.DebuggerOutput += OnDebuggerOutput;
-            process.DebuggerInvalidated += OnDebuggerInvalidated;
-            process.ResendFrameListsComplete += OnResendFrameListsComplete;
             
             process.StartListening();
         }
@@ -1330,23 +1320,6 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             }
 
             Send(new AD7DebugOutputStringEvent2(e.Output), AD7DebugOutputStringEvent2.IID, thread);
-        }
-
-        private void OnDebuggerInvalidated(object sender, EventArgs e) {
-            var debugger = ((EnvDTE.DTE)ServiceProvider.GlobalProvider.GetService(typeof(EnvDTE.DTE))).Debugger;
-            if (debugger != null) {
-                _pseudoStep = true;
-                debugger.StepOver(WaitForBreakOrEnd: false);
-            }
-        }
-
-        private void OnResendFrameListsComplete(object sender, ThreadEventArgs e) {
-            AD7Thread thread;
-            if (!_threads.TryGetValue(e.Thread, out thread)) {
-                _threads[e.Thread] = thread = new AD7Thread(this, e.Thread);
-            }
-
-            Send(new AD7SteppingCompleteEvent(), AD7SteppingCompleteEvent.IID, thread);
         }
 
         #endregion
