@@ -129,7 +129,6 @@ namespace Microsoft.VisualStudioTools.Project.Automation
 
         public virtual void Refresh()
         {
-            throw new NotImplementedException();
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1065:DoNotRaiseExceptionsInUnexpectedLocations")]

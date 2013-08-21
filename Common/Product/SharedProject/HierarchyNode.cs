@@ -1770,7 +1770,14 @@ namespace Microsoft.VisualStudioTools.Project
             // so it'll rescan the children items and see that we're not visible.
             if (!node.IsVisible) 
             {
-                ProjectMgr.OnInvalidateItems(this);
+                if (previous != null) 
+                {
+                    ProjectMgr.OnPropertyChanged(previous, (int)__VSHPROPID.VSHPROPID_NextVisibleSibling, 0);
+                } 
+                else 
+                {
+                    ProjectMgr.OnPropertyChanged(this, (int)__VSHPROPID.VSHPROPID_FirstVisibleChild, 0);
+                }
             }
 #endif
         }
