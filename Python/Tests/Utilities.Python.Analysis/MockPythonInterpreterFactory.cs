@@ -165,6 +165,13 @@ namespace TestUtilities.Python {
 
         public event EventHandler IsCurrentReasonChanged;
 
+        public event EventHandler NewDatabaseAvailable {
+            add {
+            }
+            remove {
+            }
+        }
+
         public void RefreshIsCurrent() {
             if (_success.HasValue) {
                 _isCurrent = _success.Value;

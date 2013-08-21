@@ -466,7 +466,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                 ActiveInterpreter = FactoryProvider.ActiveInterpreter;
 
                 Attach();
-                HookDatabaseCurrentChanged();
+                HookNewDatabaseAvailable();
             }
 
             private void ActiveInterpreterChanged(object sender, EventArgs args) {
@@ -474,26 +474,26 @@ namespace Microsoft.PythonTools.TestAdapter {
 
                 ActiveInterpreter = FactoryProvider.ActiveInterpreter;
 
-                HookDatabaseCurrentChanged();
+                HookNewDatabaseAvailable();
 
                 Discoverer.OnTestContainersChanged(Project);
             }
 
-            private void HookDatabaseCurrentChanged() {
+            private void HookNewDatabaseAvailable() {
                 var dbInterp = ActiveInterpreter as IInterpreterWithCompletionDatabase;
                 if (dbInterp != null) {
-                    dbInterp.IsCurrentChanged += DatabaseIsCurrentChanged;
+                    dbInterp.NewDatabaseAvailable += DatabaseChanged;
                 }
             }
 
             private void UnhookDatabaseCurrentChanged() {
                 var dbInterp = ActiveInterpreter as IInterpreterWithCompletionDatabase;
                 if (dbInterp != null) {
-                    dbInterp.IsCurrentChanged -= DatabaseIsCurrentChanged;
+                    dbInterp.NewDatabaseAvailable -= DatabaseChanged;
                 }
             }
 
-            private void DatabaseIsCurrentChanged(object sender, EventArgs args) {
+            private void DatabaseChanged(object sender, EventArgs args) {
                 Discoverer.OnTestContainersChanged(Project);
             }
 

@@ -92,6 +92,12 @@ namespace Microsoft.PythonTools.Interpreter {
         event EventHandler IsCurrentReasonChanged;
 
         /// <summary>
+        /// Raised when a new database is available
+        /// </summary>
+        /// <remarks>New in 2.0</remarks>
+        event EventHandler NewDatabaseAvailable;
+
+        /// <summary>
         /// Called to manually trigger a refresh of <see cref="IsCurrent"/>.
         /// </summary>
         /// <remarks>New in 2.0</remarks>

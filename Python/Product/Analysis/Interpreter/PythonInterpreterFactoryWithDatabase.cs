@@ -237,6 +237,11 @@ namespace Microsoft.PythonTools.Interpreter {
             if (oldDb != null) {
                 oldDb.OnDatabaseReplaced(_typeDb);
             }
+
+            var onNewDb = NewDatabaseAvailable;
+            if (onNewDb != null) {
+                onNewDb(this, EventArgs.Empty);
+            }
         }
 
         private void OnDatabaseCorrupt(object sender, EventArgs args) {
@@ -400,6 +405,8 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         public event EventHandler IsCurrentChanged;
+
+        public event EventHandler NewDatabaseAvailable;
 
         protected void OnIsCurrentChanged() {
             var evt = IsCurrentChanged;

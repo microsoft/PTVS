@@ -381,6 +381,10 @@ namespace Microsoft.IronPythonTools.Interpreter {
         }
 
         private object Unwrap(ObjectIdentityHandle handle) {
+            if (handle.IsNull) {
+                return null;
+            }
+
             lock (_members) {
                 return _reverseMembers[handle.Id - 1];
             }

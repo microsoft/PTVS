@@ -296,6 +296,10 @@ namespace Microsoft.VisualStudioTools.Navigation {
             lock (_files) {
                 if (_files.TryGetValue(id, out node)) {
                     _files.Remove(id);
+                    HierarchyInfo parent;
+                    if (_hierarchies.TryGetValue(hierarchy, out parent)) {
+                        parent.ProjectLibraryNode.RemoveNode(node);
+                    }
                 }
             }
             if (null != node) {
