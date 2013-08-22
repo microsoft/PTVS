@@ -337,9 +337,9 @@ namespace Microsoft.VisualStudioTools.Project {
                     node.Remove(true);
                 }
                 ItemsDraggedOrCutOrCopied.Clear();
+                ClearCopyCutState();
             }
 
-            ClearCopyCutState();
             return VSConstants.S_OK;
         }
 
