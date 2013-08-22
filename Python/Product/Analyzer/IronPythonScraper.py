@@ -149,3 +149,8 @@ def get_new_overloads(type_obj, func):
         return get_function_overloads(clrType.GetConstructors())
 
     return None
+
+SPECIAL_MODULES = ('wpf', 'clr')
+
+def should_include_module(name):
+    return name not in SPECIAL_MODULES

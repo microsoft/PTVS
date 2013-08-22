@@ -976,7 +976,9 @@ if __name__ == "__main__":
     write_module(builtin_name, outpath, res)
     
     for mod_name in sys.builtin_module_names:
-        if mod_name == builtin_name or mod_name == '__main__': continue
+        if (mod_name == builtin_name or 
+            mod_name == '__main__' or
+            not BuiltinScraper.should_include_module(mod_name)): continue
         
         res = generate_module(lookup_module(mod_name))
         if res is not None:

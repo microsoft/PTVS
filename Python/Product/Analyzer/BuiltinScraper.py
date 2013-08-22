@@ -437,6 +437,8 @@ def get_new_overloads(type_obj, obj):
 
     return res
 
+def should_include_module(name):
+    return True
 
 if __name__ == '__main__':
     import pprint
