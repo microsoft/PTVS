@@ -55,6 +55,8 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             Debug.Assert(isCloned);
             _av = av;
             Children.AddRange(cloned.Children);
+            _nodeScopes = cloned._nodeScopes;
+            _nodeValues = cloned._nodeValues;
             _variables = cloned._variables;
             if (cloned._linkedVariables == null) {
                 // linkedVariables could be created later, and we need to share them if it.
@@ -62,6 +64,8 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             }
             _linkedVariables = cloned._linkedVariables;
 #if DEBUG
+            NodeScopes = new ReadOnlyDictionary<Node, InterpreterScope>(_nodeScopes);
+            NodeValues = new ReadOnlyDictionary<Node, IAnalysisSet>(_nodeValues);
             Variables = new ReadOnlyDictionary<string, VariableDef>(_variables);
 #endif
         }

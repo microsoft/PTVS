@@ -19,28 +19,51 @@ using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Values {
-    internal struct CallChain : IEquatable<CallChain>, IEnumerable<Node> {
+    internal struct CallChain : IEnumerable<Node> {
         private readonly object _chain;
 
-        public CallChain(Node call) {
-            _chain = call;
+        private static Node EmptyNode = new NameExpression(null);
+        private static IEnumerable<Node> EmptyNodes {
+            get {
+                while (true) {
+                    yield return EmptyNode;
+                }
+            }
+        }
+
+        private CallChain(object chain) {
+            _chain = chain;
         }
 
         public CallChain(Node call, CallChain preceding, int limit) {
             if (limit == 1) {
                 _chain = call;
             } else {
-                _chain = Enumerable.Repeat(call, 1).Concat(preceding).Take(limit).ToArray();
+                _chain = Enumerable.Repeat(call, 1).Concat(preceding).Concat(EmptyNodes).Take(limit).ToArray();
             }
         }
 
-        internal CallChain(Node call, AnalysisUnit unit, int limit) {
+        public CallChain(Node call, AnalysisUnit unit, int limit) {
             var fau = unit as FunctionAnalysisUnit;
             if (fau == null || limit == 1) {
                 _chain = call;
             } else {
-                _chain = Enumerable.Repeat(call, 1).Concat(fau.CallChain).Take(limit).ToArray();
+                _chain = Enumerable.Repeat(call, 1).Concat(fau.CallChain).Concat(EmptyNodes).Take(limit).ToArray();
             }
+        }
+
+        public CallChain Trim(int limit) {
+            object newChain;
+            if (_chain == null || limit == 0) {
+                newChain = null;
+            } else if (_chain is Node) {
+                newChain = _chain;
+            } else if (limit == 1) {
+                newChain = ((Node[])_chain)[0];
+            } else {
+                newChain = ((Node[])_chain).Take(limit).ToArray();
+            }
+            return new CallChain(newChain);
         }
 
         public Node this[int index] {
@@ -84,50 +107,41 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return GetEnumerator();
         }
 
+        public override int GetHashCode() {
+            return this.Aggregate(13187, (hc, n) => n.GetHashCode() ^ hc);
+        }
+
         public override bool Equals(object obj) {
             if (obj == null) {
                 return false;
             }
-            return Equals((CallChain)obj);
+            var other = (CallChain)obj;
+            return this.SequenceEqual(other);
         }
 
-        public override int GetHashCode() {
-            if (_chain != null) {
-                return ((_chain as Node) ?? ((Node[])_chain)[0]).GetHashCode() ^ 13187;
-            }
-            return 13187;
-        }
-
-        public bool Equals(CallChain other) {
-            for (int i = 0; i < Count && i < other.Count; ++i) {
-                if (!this[i].Equals(other[i])) {
-                    return false;
-                }
-            }
-            // Unequal length is okay as long as the prefix matches.
-            return true;
+        public bool PrefixMatches(CallChain other, int limit) {
+            return this.Take(limit).SequenceEqual(other.Take(limit));
         }
     }
 
     internal class CallChainSet<T> {
-        Dictionary<IPythonProjectEntry, Tuple<int, Dictionary<CallChain, T>>> _data;
+        Dictionary<IPythonProjectEntry, KeyValuePair<int, Dictionary<CallChain, T>>> _data;
 
-        public bool TryGetValue(IPythonProjectEntry entry, CallChain chain, out T value) {
+        public bool TryGetValue(IPythonProjectEntry entry, CallChain chain, int prefixLength, out T value) {
             value = default(T);
-
             if (_data == null) {
                 return false;
             }
 
-            Tuple<int, Dictionary<CallChain, T>> entryData;
+            KeyValuePair<int, Dictionary<CallChain, T>> entryData;
             if (!_data.TryGetValue(entry, out entryData)) {
                 return false;
             }
-            if (entryData.Item1 != entry.AnalysisVersion) {
+            if (entryData.Key != entry.AnalysisVersion) {
                 _data.Remove(entry);
                 return false;
             }
-            return entryData.Item2.TryGetValue(chain, out value);
+            return entryData.Value.TryGetValue(chain, out value);
         }
 
         public void Clear() {
@@ -143,24 +157,24 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 if (_data == null) {
                     return 0;
                 }
-                return _data.Values.Sum(v => v.Item2.Values.Count);
+                return _data.Values.Sum(v => v.Value.Count);
             }
         }
 
         public void Add(IPythonProjectEntry entry, CallChain chain, T value) {
             if (_data == null) {
-                _data = new Dictionary<IPythonProjectEntry, Tuple<int, Dictionary<CallChain, T>>>();
+                _data = new Dictionary<IPythonProjectEntry, KeyValuePair<int, Dictionary<CallChain, T>>>();
             }
-            
-            Tuple<int, Dictionary<CallChain, T>> entryData;
-            if (!_data.TryGetValue(entry, out entryData) || entryData.Item1 != entry.AnalysisVersion) {
-                _data[entry] = entryData = new Tuple<int, Dictionary<CallChain, T>>(
+
+            KeyValuePair<int, Dictionary<CallChain, T>> entryData;
+            if (!_data.TryGetValue(entry, out entryData) || entryData.Key != entry.AnalysisVersion) {
+                _data[entry] = entryData = new KeyValuePair<int, Dictionary<CallChain, T>>(
                     entry.AnalysisVersion,
                     new Dictionary<CallChain, T>()
                 );
             }
 
-            entryData.Item2[chain] = value;
+            entryData.Value[chain] = value;
         }
 
         public IEnumerable<T> Values {
@@ -169,7 +183,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     return Enumerable.Empty<T>();
                 }
 
-                return _data.Values.SelectMany(v => v.Item2.Values);
+                return _data.Values.SelectMany(v => v.Value.Values);
             }
         }
     }

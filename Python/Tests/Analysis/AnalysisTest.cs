@@ -375,6 +375,34 @@ y = f('foo', 'bar')";
         }
 
         [TestMethod, Priority(0)]
+        public void CartesianMerge() {
+            var limits = GetLimits();
+            // Ensure we include enough calls
+            var callCount = limits.CallDepth * limits.DecreaseCallDepth + 1;
+            var code = new StringBuilder(@"def f(a):
+    return g(a)
+
+def g(b):
+    return h(b)
+
+def h(c):
+    return c
+
+");
+            for (int i = 0; i < callCount; ++i) {
+                code.AppendLine("x = g(123)");
+            }
+            code.AppendLine("y = f(3.1415)");
+
+            var text = code.ToString();
+            Console.WriteLine(text);
+            var entry = ProcessText(text);
+
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("x", 0), BuiltinTypeId.Int, BuiltinTypeId.Float);
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("y", 0), BuiltinTypeId.Int, BuiltinTypeId.Float);
+        }
+
+        [TestMethod, Priority(0)]
         public void ImportAs() {
             var entry = ProcessText(@"import sys as s, array as a");
 
@@ -493,6 +521,7 @@ a.original()
             var expectedTupleType2 = new[] { BuiltinTypeId.Tuple, BuiltinTypeId.NoneType };
             if (this is StdLibAnalysisTest) {
                 expectedIntType1 = new BuiltinTypeId[0];
+                expectedIntType2 = new BuiltinTypeId[0];
                 expectedTupleType1 = new[] { BuiltinTypeId.NoneType };
             }
 
@@ -4479,6 +4508,56 @@ x = items(0)
             index = text.IndexOf("x = ");
             AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("items", index), entry.GetTypeIdsByIndex("items2", index));
             AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("x", index), BuiltinTypeId.List, BuiltinTypeId.Set, BuiltinTypeId_Str);
+        }
+
+        [TestMethod, Priority(0)]
+        public void DecoratorReturnTypes() {
+            // https://pytools.codeplex.com/workitem/1694
+            var text = @"# without decorator
+def returnsGiven(parm):
+    return parm
+
+retGivenInt = returnsGiven(1)
+retGivenString = returnsGiven('str')
+retGivenBool = returnsGiven(True)
+
+# with decorator without wrap
+def decoratorFunctionTakesArg1(f):
+    def wrapped_f(arg):
+        return f(arg)
+    return wrapped_f
+
+@decoratorFunctionTakesArg1
+def returnsGivenWithDecorator1(parm):
+    return parm
+
+retGivenInt1 = returnsGivenWithDecorator1(1)
+retGivenString1 = returnsGivenWithDecorator1('str')
+retGivenBool1 = returnsGivenWithDecorator1(True)
+
+# with decorator with wrap
+def decoratorFunctionTakesArg2():
+    def wrap(f):
+        def wrapped_f(arg):
+            return f(arg)
+        return wrapped_f
+    return wrap
+
+@decoratorFunctionTakesArg2()
+def returnsGivenWithDecorator2(parm):
+    return parm
+
+retGivenInt2 = returnsGivenWithDecorator2(1)
+retGivenString2 = returnsGivenWithDecorator2('str')
+retGivenBool2 = returnsGivenWithDecorator2(True)";
+
+            var entry = ProcessText(text);
+
+            foreach (var suffix in new[] { "", "1", "2" }) {
+                AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("retGivenInt" + suffix, 0), BuiltinTypeId.Int);
+                AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("retGivenString" + suffix, 0), BuiltinTypeId_Str);
+                AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("retGivenBool" + suffix, 0), BuiltinTypeId.Bool);
+            }
         }
 
         [TestMethod, Priority(0)]

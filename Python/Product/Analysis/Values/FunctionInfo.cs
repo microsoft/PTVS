@@ -36,7 +36,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
         private int _callDepthLimit;
         private int _callsSinceLimitChange;
 
-        static readonly CallChain _arglessCall = new CallChain(new CallExpression(null, null));
         internal CallChainSet<FunctionAnalysisUnit> _allCalls;
 
         internal FunctionInfo(FunctionDefinition node, AnalysisUnit declUnit, InterpreterScope declScope) {
@@ -103,7 +102,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 }
 
                 var chain = new CallChain(node, unit, _callDepthLimit);
-                if (!_allCalls.TryGetValue(unit.ProjectEntry, chain, out calledUnit)) {
+                if (!_allCalls.TryGetValue(unit.ProjectEntry, chain, _callDepthLimit, out calledUnit)) {
                     if (unit.ForEval) {
                         // Call expressions that weren't analyzed get the union result
                         // of all calls to this function.
@@ -113,15 +112,18 @@ namespace Microsoft.PythonTools.Analysis.Values {
                         }
                         return res;
                     } else {
-                        calledUnit = new FunctionAnalysisUnit((FunctionAnalysisUnit)AnalysisUnit, chain, callArgs);
-                        _allCalls.Add(unit.ProjectEntry, chain, calledUnit);
-                        updateArguments = false;
                         _callsSinceLimitChange += 1;
                         if (_callsSinceLimitChange >= ProjectState.Limits.DecreaseCallDepth && _callDepthLimit > 1) {
                             _callDepthLimit -= 1;
                             _callsSinceLimitChange = 0;
                             AnalysisLog.ReduceCallDepth(this, _allCalls.Count, _callDepthLimit);
+                            
+                            _allCalls.Clear();
+                            chain = chain.Trim(_callDepthLimit);
                         }
+                        calledUnit = new FunctionAnalysisUnit((FunctionAnalysisUnit)AnalysisUnit, chain, callArgs);
+                        _allCalls.Add(unit.ProjectEntry, chain, calledUnit);
+                        updateArguments = false;
                     }
                 }
             }
