@@ -68,8 +68,13 @@ namespace Microsoft.PythonTools.Interpreter.Default {
 
             if (typeTable.TryGetValue("mro", out value)) {
                 var mroList = (List<object>)value;
-                if (mroList != null) {
+                if (mroList != null && mroList.Count >= 1) {
                     _mro = new IPythonType[mroList.Count];
+                    // Many scraped types have invalid MRO entries because they
+                    // report their own module/name incorrectly. Since the first
+                    // item in the MRO is always self, we set it now. If the MRO
+                    // has a resolvable entry it will replace this one.
+                    _mro[0] = this;
                     for (int i = 0; i < mroList.Count; ++i) {
                         var capturedI = i;
                         typeDb.LookupType(mroList[i], t => _mro[capturedI] = t);

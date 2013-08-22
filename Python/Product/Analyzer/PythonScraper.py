@@ -319,10 +319,34 @@ def generate_member_table(obj, is_hidden = False, from_type = False, extra_types
 
     if dependencies:
         obj_mod, obj_name = type_to_typeref(obj)
+        def needs_type_info(other_mod, other_name, other_obj):
+            if obj_mod != other_mod:
+                other_module = sys.modules.get(other_mod)
+                if other_module and getattr(other_module, other_name, None) is other_obj:
+                    # Use a reference for types that have been imported properly
+                    return False
+
+                # Use the full type for cross-module/unimportable types
+                print('[WARNING] Cannot resolve %s:%s referenced by %s:%s' % (other_mod, other_name, obj_mod, obj_name))
+                return True
+
+            # We know obj_mod == other_mod at this point
+
+            if not obj_name:
+                # Writing ourselves in the expected place
+                return True
+            elif obj_name.startswith(other_name + '.'):
+                # Always write references to outer types
+                return False
+            elif other_name and other_name.startswith(obj_name + '.'):
+                # Always write type info for inner types
+                return True
+
+            # Otherwise, use a typeref
+            return False
+
         for (dep_mod, dep_name), dep_obj in dependencies.items():
-            if ((not obj_mod or obj_mod == dep_mod) and
-                (not obj_name or dep_name.startswith(obj_name)) and
-                not (obj_mod == dep_mod and obj_name == dep_name)):
+            if needs_type_info(dep_mod, dep_name, dep_obj):
                 table[dep_name] = {
                     'kind': 'type',
                     'value': generate_type(dep_obj, is_hidden = dep_name not in table),
@@ -482,7 +506,7 @@ def generate_module(module, extra_types = None):
     if isinstance(module.__doc__, str):
         module_table['doc'] = module.__doc__
 
-    module_table['members'] = generate_member_table(module, extra_types=extra_types)
+    module_table['members'] = generate_member_table(module, extra_types = extra_types)
 
     return module_table
 
@@ -525,8 +549,9 @@ def generate_builtin_module():
         extra_types['unicode_iterator'] = type(iter(""))
     extra_types['callable_iterator'] = type(iter(lambda: None, None))
 
-    res = generate_module(lookup_module(builtin_name), extra_types.items())
+    res = generate_module(lookup_module(builtin_name), extra_types = extra_types.items())
 
+    assert res['members']['object']['kind'] == 'type', "Unexpected: " + repr(res['members']['object'])
     res['members']['object']['value']['doc'] = "The most base type"
 
     return res

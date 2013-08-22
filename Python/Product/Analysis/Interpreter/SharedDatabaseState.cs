@@ -194,6 +194,37 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
+        private IPythonModule GetModuleOrClass(string modName, ref string typeName) {
+            // Some scraped libraries (PySide) put the class name in __module__:
+            //
+            //      >>> import PySide.QtCore
+            //      >>> PySide.QtCore.Qt.ApplicationAttribute.__module__
+            //      'PySide.QtCore.Qt'
+            //      >>> isinstance(PySide.QtCore, types.ModuleType)
+            //      True
+            //      >>> isinstance(PySide.QtCore.Qt, types.ModuleType)
+            //      False
+            //
+            // As a result, we cannot resolve what they claim is their module.
+            // When we cannot find a module and it has a dot in its name, we now
+            // try and find the parent module and then treat the last part of
+            // the module name as the first part of the type name.
+            var module = GetModule(modName);
+            if (module != null) {
+                return module;
+            }
+            int lastDot = modName.LastIndexOf('.');
+            if (lastDot > 0 && lastDot < modName.Length - 1) {
+                var modParentName = modName.Remove(lastDot);
+                module = GetModule(modParentName);
+                if (module != null) {
+                    typeName = modName.Substring(lastDot + 1) + "." + typeName;
+                    return module;
+                }
+            }
+            return null;
+        }
+
         /// <summary>
         /// Looks up a type and queues a fixup if the type is not yet available.
         /// Receives a delegate which assigns the value to the appropriate field.
@@ -225,18 +256,19 @@ namespace Microsoft.PythonTools.Interpreter {
                             AddObjectTypeFixup(assign);
                         }
                     } else {
-                        module = GetModule(modName);
+                        string alternateTypeName = typeName;
+                        module = GetModuleOrClass(modName, ref alternateTypeName);
                         if (module == null) {
                             AddFixup(() => {
                                 // Fixup 1: Module was not found.
-                                var mod2 = GetModule(modName);
+                                var mod2 = GetModuleOrClass(modName, ref alternateTypeName);
                                 if (mod2 != null) {
-                                    AssignMemberFromModule(mod2, typeName, null, indexTypes, assign, true);
+                                    AssignMemberFromModule(mod2, alternateTypeName, null, indexTypes, assign, true);
                                 }
                             });
                             return;
                         }
-                        AssignMemberFromModule(module, typeName, null, indexTypes, assign, true);
+                        AssignMemberFromModule(module, alternateTypeName, null, indexTypes, assign, true);
                     }
                 }
                 return;

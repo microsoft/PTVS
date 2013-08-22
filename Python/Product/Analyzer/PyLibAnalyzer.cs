@@ -699,7 +699,7 @@ namespace Microsoft.PythonTools.Analysis {
                             } else {
                                 TraceError("Failed to scrape builtin modules");
                             }
-                            return;
+                            throw new InvalidOperationException("Failed to scrape builtin modules");
                         } else {
                             TraceInformation("Scraped builtin modules");
                         }
