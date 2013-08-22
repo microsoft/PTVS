@@ -63,7 +63,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 }
             }
 
-            Task.Factory.StartNew(() => RefreshIsCurrent(false));
+            Task.Factory.StartNew(() => RefreshIsCurrent());
         }
 
         public InterpreterConfiguration Configuration {
@@ -231,7 +231,7 @@ namespace Microsoft.PythonTools.Interpreter {
 
             WatchingLibrary = true;
             if (wasGenerating) {
-                RefreshIsCurrent(false);
+                RefreshIsCurrent();
             }
 
             if (oldDb != null) {
@@ -295,28 +295,6 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         public virtual void RefreshIsCurrent() {
-            RefreshIsCurrent(IsCurrent);
-        }
-
-        private static HashSet<string> GetExistingDatabase(string databasePath) {
-            return new HashSet<string>(
-                Directory.EnumerateFiles(databasePath, "*.idb", SearchOption.AllDirectories)
-                    .Select(f => Path.GetFileNameWithoutExtension(f)),
-                StringComparer.InvariantCultureIgnoreCase
-            );
-        }
-
-        private string[] GetMissingModules(HashSet<string> existingDatabase) {
-            return ModulePath.GetModulesInLib(this)
-                .Select(mp => mp.ModuleName)
-                .Where(name => !existingDatabase.Contains(name))
-                .OrderBy(name => name, StringComparer.InvariantCultureIgnoreCase)
-                .ToArray();
-        }
-
-        private void RefreshIsCurrent(bool initialValue) {
-            bool reasonChanged = false;
-
             try {
                 if (!ConfigurableDatabaseExists(DatabasePath, Configuration.Version)) {
                     _isValid = false;
@@ -362,7 +340,6 @@ namespace Microsoft.PythonTools.Interpreter {
                         if (oldModules == null ||
                             oldModules.Length != missingModules.Length ||
                             !oldModules.SequenceEqual(missingModules)) {
-                            reasonChanged = true;
                         }
                         _missingModules = missingModules;
                     } else {
@@ -373,20 +350,32 @@ namespace Microsoft.PythonTools.Interpreter {
             } catch (Exception ex) {
                 // Report the exception text as the reason.
                 _isCurrentException = ex.ToString();
-                reasonChanged = true;
+                _missingModules = null;
             }
 
-            if (IsCurrent != initialValue) {
-                OnIsCurrentReasonChanged();
-                OnIsCurrentChanged();
-            } else if (reasonChanged) {
-                OnIsCurrentReasonChanged();
-            }
+            OnIsCurrentReasonChanged();
+            OnIsCurrentChanged();
+        }
+
+        private static HashSet<string> GetExistingDatabase(string databasePath) {
+            return new HashSet<string>(
+                Directory.EnumerateFiles(databasePath, "*.idb", SearchOption.AllDirectories)
+                    .Select(f => Path.GetFileNameWithoutExtension(f)),
+                StringComparer.InvariantCultureIgnoreCase
+            );
+        }
+
+        private string[] GetMissingModules(HashSet<string> existingDatabase) {
+            return ModulePath.GetModulesInLib(this)
+                .Select(mp => mp.ModuleName)
+                .Where(name => !existingDatabase.Contains(name))
+                .OrderBy(name => name, StringComparer.InvariantCultureIgnoreCase)
+                .ToArray();
         }
 
         private void RefreshIsCurrentTimer_Elapsed(object state) {
             if (Directory.Exists(Configuration.LibraryPath)) {
-                RefreshIsCurrent(false);
+                RefreshIsCurrent();
             } else {
                 lock (_libWatcherLock) {
                     _libWatcher.Dispose();

@@ -88,6 +88,7 @@ namespace Microsoft.PythonTools {
             }
             if (_refreshingStatusAfterRunning) {
                 _refreshingStatusAfterRunning = false;
+                Message = string.Empty;
                 IsRunning = false;
             }
         }
@@ -132,6 +133,7 @@ namespace Microsoft.PythonTools {
                     // Notifying about the new DB will trigger RefreshIsCurrent,
                     // so wait for that to complete before changise IsRunning.
                     _refreshingStatusAfterRunning = true;
+                    Message = "Validating DB";
                     // Weren't started by this process, so we need to notify
                     // the interpreter to reload its DB.
                     withDb.NotifyNewDatabase();
@@ -162,6 +164,7 @@ namespace Microsoft.PythonTools {
                             // Ensure the progress bar stays visible until
                             // RefreshIsCurrent completes.
                             _refreshingStatusAfterRunning = true;
+                            Message = "Validating DB";
                         } else {
                             IsRunning = false;
                         }
@@ -228,7 +231,7 @@ namespace Microsoft.PythonTools {
 
         public string Message {
             get { return (string)GetValue(MessageProperty); }
-            private set { SetValue(MessagePropertyKey, value); }
+            private set { SafeSetValue(MessagePropertyKey, value); }
         }
 
         public int Maximum {

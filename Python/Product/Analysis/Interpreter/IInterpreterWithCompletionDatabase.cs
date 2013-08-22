@@ -99,6 +99,9 @@ namespace Microsoft.PythonTools.Interpreter {
 
         /// <summary>
         /// Called to manually trigger a refresh of <see cref="IsCurrent"/>.
+        /// After completion, <see cref="IsCurrentChanged"/> and
+        /// <see cref="IsCurrentReasonChanged"/> will always be raised,
+        /// regardless of whether the values were changed.
         /// </summary>
         /// <remarks>New in 2.0</remarks>
         void RefreshIsCurrent();
