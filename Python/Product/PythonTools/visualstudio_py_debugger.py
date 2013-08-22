@@ -1066,28 +1066,30 @@ class Thread(object):
                     else:
                         lineno += ord(line_incr)
 
-            source_obj = None
             frame_locals = cur_frame.f_locals
+            var_names = cur_frame.f_code.co_varnames
+
+            source_obj = None
             if DJANGO_DEBUG:
                 source_obj = get_django_frame_source(cur_frame)
                 if source_obj is not None:
                     frame_locals = self.get_locals(cur_frame, FRAME_KIND_DJANGO)
+                    var_names = frame_locals
 
             process_globals_in_functions = True
             if source_obj is None and frame_locals is cur_frame.f_globals:
-                var_names = cur_frame.f_globals
-                process_globals_in_functions = False
-            else:
                 var_names = frame_locals
+                process_globals_in_functions = False
 
-            vars = []
             # collect frame locals
-            self.collect_variables(vars, frame_locals, var_names)
+            vars = []
+            treated = set()
+            self.collect_variables(vars, frame_locals, var_names, treated)
             if process_globals_in_functions:
-                # collect globals used locally
-                self.collect_variables(vars, cur_frame.f_globals, cur_frame.f_code.co_varnames, var_names)
-                # collect non-locals (closed over variables) used locally
-                self.collect_variables(vars, cur_frame.f_globals, cur_frame.f_code.co_names, var_names)
+                # collect closed over variables used locally (frame_locals not already treated based on var_names)
+                self.collect_variables(vars, frame_locals, frame_locals, treated)
+                # collect globals used locally, skipping undefined found in builtins
+                self.collect_variables(vars, cur_frame.f_globals, cur_frame.f_code.co_names, treated, cur_frame.f_globals.get('__builtins__'))
             
             frame_info = None
 
@@ -1135,13 +1137,13 @@ class Thread(object):
                         
         return frames
 
-    def collect_variables(self, vars, objects, names, skip_names = None):
-        # Ensure skip_names is not a dict to work around IronPython issue with incorrectly
-        # resolving name not in skip_names when it is a dict
-        if skip_names is not None and type(skip_names) is dict:
-            skip_names = skip_names.keys()
+    
+    def collect_variables(self, vars, objects, names, treated, builtins = None):
+        if builtins:
+            builtin_sentinal = object()
+
         for name in names:
-            if skip_names is None or name not in skip_names:
+            if name not in treated:
                 try:
                     obj = objects[name]
                     try:
@@ -1152,9 +1154,21 @@ class Thread(object):
                     except:
                         type_name = 'unknown'
                 except:
+                    # skip undefined, if builtin
+                    if builtins:
+                        if isinstance(builtins, dict):
+                            # handle builtins for imported modules (dictionary elements)
+                            if builtins.get(name, builtin_sentinal) is not builtin_sentinal:
+                                continue
+                        else:
+                            # handle builtins for '__main__' module (module attributes)
+                            if getattr(builtins, name, builtin_sentinal) is not builtin_sentinal:
+                                continue
+                            
                     obj = '<undefined>'
                     type_name = 'unknown'
                 vars.append((name, type(obj), safe_repr(obj), safe_hex_repr(obj), type_name, get_object_len(obj)))
+                treated.add(name)
 
     def send_frame_list(self, frames, thread_name = None):
         with _SendLockCtx:

@@ -4,3 +4,7 @@ def foo():
   pass
 
 foo()
+
+import LocalGlobalsTestImported
+
+print('done')

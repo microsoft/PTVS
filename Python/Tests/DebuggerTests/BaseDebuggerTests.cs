@@ -174,7 +174,7 @@ namespace DebuggerTests {
 
                 AssertUtil.ContainsExactly(frames[0].Locals.Select(x => x.Expression), localsExpected);
                 AssertUtil.ContainsExactly(frames[0].Parameters.Select(x => x.Expression), paramsExpected);
-                Assert.AreEqual(frames[0].FileName, breakFilename ?? Path.GetFullPath(DebuggerTestPath + filename), true);
+                Assert.AreEqual(frames[0].FileName, breakFilename != null ? Path.GetFullPath(DebuggerTestPath + breakFilename) : Path.GetFullPath(DebuggerTestPath + filename), true);
 
                 process.Continue();
 

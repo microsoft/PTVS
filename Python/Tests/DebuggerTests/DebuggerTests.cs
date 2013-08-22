@@ -529,8 +529,10 @@ namespace DebuggerTests {
         [TestMethod, Priority(0)]
         public void LocalGlobalsTest() {
             LocalsTest("LocalGlobalsTest.py", 3, new string[] { }, new string[] { "x" });
-
             LocalsTest("LocalGlobalsTest.py", 4, new string[] { }, new string[] { "x" });
+
+            LocalsTest("LocalGlobalsTest.py", 5, new string[] { "self" }, new string[] { "x" }, "LocalGlobalsTestImported.py");
+            LocalsTest("LocalGlobalsTest.py", 6, new string[] { "self" }, new string[] { "x" }, "LocalGlobalsTestImported.py");            
         }
 
         /// <summary>
@@ -540,12 +542,28 @@ namespace DebuggerTests {
         public void LocalClosureVarsTest() {
             // IronPython doesn't expose closure variables in frame.f_locals
             if (GetType() == typeof(DebuggerTestsIpy)) {
+                LocalsTest("LocalClosureVarsTest.py", 4, new string[] { "z" }, new string[] { });
+                LocalsTest("LocalClosureVarsTest.py", 6, new string[] { "z" }, new string[] { }, "LocalClosureVarsTestImported.py");
                 return;
             }
 
-            // CONSIDER Understand why frame.f_locals does not have args first for this scenario
-            //LocalsTest("LocalClosureVarsTest.py", 4, new string[] { "z" }, new string[] { "x", "y" });
-            LocalsTest("LocalClosureVarsTest.py", 4, new string[] { "y" }, new string[] { "x", "z" });
+            LocalsTest("LocalClosureVarsTest.py", 4, new string[] { "z" }, new string[] { "x", "y" });
+            LocalsTest("LocalClosureVarsTest.py", 6, new string[] { "z" }, new string[] { "x", "y" }, "LocalClosureVarsTestImported.py");
+        }
+
+        /// <summary>
+        /// https://pytools.codeplex.com/workitem/1710
+        /// </summary>
+        [TestMethod, Priority(0)]
+        public void LocalBuiltinUsageTest() {
+            // IronPython exposes some builtin elements in co_names not in __builtins__
+            if (GetType() == typeof(DebuggerTestsIpy)) {
+                LocalsTest("LocalBuiltinUsageTest.py", 4, new string[] { "start", "end" }, new string[] { "i", "foreach_enumerator" });
+                LocalsTest("LocalBuiltinUsageTest.py", 6, new string[] { "self", "start", "end" }, new string[] { "i", "foreach_enumerator" }, "LocalBuiltinUsageTestImported.py");
+                return;
+            }
+            LocalsTest("LocalBuiltinUsageTest.py", 4, new string[] { "start", "end" }, new string[] { "i" });
+            LocalsTest("LocalBuiltinUsageTest.py", 6, new string[] { "self", "start", "end" }, new string[] { "i" }, "LocalBuiltinUsageTestImported.py");
         }
 
         [TestMethod, Priority(0)]
