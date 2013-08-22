@@ -46,8 +46,11 @@ namespace Microsoft.PythonTools.Analysis.Browser {
                 yield return new KeyValuePair<string, object>("Original Name", OriginalName);
 
                 int i = 1;
-                foreach(var c in _type.Mro) {
-                    yield return new KeyValuePair<string, object>(string.Format("MRO #{0}", i++), MemberView.Make(_context, c == null ? "(null)" : c.Name, c));
+                var mro = _type.Mro;
+                if (mro != null) {
+                    foreach (var c in mro) {
+                        yield return new KeyValuePair<string, object>(string.Format("MRO #{0}", i++), MemberView.Make(_context, c == null ? "(null)" : c.Name, c));
+                    }
                 }
             }
         }

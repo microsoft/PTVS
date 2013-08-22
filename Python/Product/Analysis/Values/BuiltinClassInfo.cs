@@ -73,7 +73,13 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public override IEnumerable<IAnalysisSet> Mro {
-            get { return _type.Mro.Where(t => t != null).Select(t => ProjectState.GetBuiltinType(t)); }
+            get {
+                var mro = _type.Mro;
+                if (mro != null) {
+                    return mro.Where(t => t != null).Select(t => ProjectState.GetBuiltinType(t));
+                }
+                return Enumerable.Empty<IAnalysisSet>();
+            }
         }
 
         public BuiltinInstanceInfo Instance {
