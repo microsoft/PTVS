@@ -1089,7 +1089,9 @@ class Thread(object):
                 # collect closed over variables used locally (frame_locals not already treated based on var_names)
                 self.collect_variables(vars, frame_locals, frame_locals, treated)
                 # collect globals used locally, skipping undefined found in builtins
-                self.collect_variables(vars, cur_frame.f_globals, cur_frame.f_code.co_names, treated, cur_frame.f_globals.get('__builtins__'))
+                f_globals = cur_frame.f_globals
+                if f_globals: # ensure globals to work with (IPy may have None for cur_frame.f_globals for frames within stdlib)
+                    self.collect_variables(vars, f_globals, cur_frame.f_code.co_names, treated, f_globals.get('__builtins__', None))
             
             frame_info = None
 
@@ -1139,9 +1141,6 @@ class Thread(object):
 
     
     def collect_variables(self, vars, objects, names, treated, builtins = None):
-        if builtins:
-            builtin_sentinal = object()
-
         for name in names:
             if name not in treated:
                 try:
@@ -1158,11 +1157,11 @@ class Thread(object):
                     if builtins:
                         if isinstance(builtins, dict):
                             # handle builtins for imported modules (dictionary elements)
-                            if builtins.get(name, builtin_sentinal) is not builtin_sentinal:
+                            if name in builtins:
                                 continue
                         else:
                             # handle builtins for '__main__' module (module attributes)
-                            if getattr(builtins, name, builtin_sentinal) is not builtin_sentinal:
+                            if hasattr(builtins, name):
                                 continue
                             
                     obj = '<undefined>'
