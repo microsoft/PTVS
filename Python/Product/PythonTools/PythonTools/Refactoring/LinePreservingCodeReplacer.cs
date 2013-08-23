@@ -112,11 +112,13 @@ namespace Microsoft.PythonTools.Refactoring {
             int newLineCount = endNewLine - startNewLine;
 
             // replace one line at a time instead of all of the lines at once so that we preserve breakpoints
+            int excessNewLineStart = startNewLine - startOldLine;
             for (int i = startOldLine; i < endOldLine && i < (endNewLine - startNewLine + startOldLine); i++) {
                 edit.Replace(
                     _snapshot.GetLineFromLineNumber(_startingReplacementLine + i).Extent,
                     _newLines[startNewLine + i - startOldLine]
                 );
+                excessNewLineStart = startNewLine + i - startOldLine + 1;
             }
 
             if (oldLineCount > newLineCount) {
@@ -134,8 +136,8 @@ namespace Microsoft.PythonTools.Refactoring {
                     string.Join(
                         _view.Options.GetNewLineCharacter(),
                         _newLines,
-                        startNewLine + (newLineCount - oldLineCount + 1),
-                        endNewLine - startNewLine - (newLineCount - oldLineCount + 1)
+                        excessNewLineStart,
+                        endNewLine - excessNewLineStart
                     ) + _view.Options.GetNewLineCharacter()
                 );
             }
