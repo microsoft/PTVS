@@ -52,14 +52,32 @@
 
 
     <!-- Conditions for install -->
+      
+    <Property Id="PTVS_15_PERUSER" Secure="no"> 
+      <RegistrySearch Id="PTVS15RegistrySearch" Root="HKCU" Key="Software\Microsoft\VisualStudio\$(var.VSTargetVersion)\ExtensionManager\EnabledExtensions" Name="96492FC7-7BC6-46F7-8559-66BB4E09FD1E,1.5" Type="raw"/>
+    </Property>
 
+    <Condition Message="Python Tools 1.5 was installed per-user.  Python Tools 1.5 must be uninstalled via Add\Remove Programs before continuing installation.">NOT PTVS_15_PERUSER OR Installed</Condition>
+    
+    <!-- On 2013 prevent installing on Visual Studio pre-RC builds -->
+    <?if "$(var.VSTargetVersion)" = "12.0" ?>
+      <Property Id="vs2013_preview" Secure="no"> 
+        <DirectorySearch Id="VS120DevEnvFilePathSearch" Path="[VSINSTALLPATH]"> 
+          <FileSearch Id="VS120DevEnvFileVersionSearch" Name="devenv.exe" MaxVersion="12.0.20618.0"/> 
+        </DirectorySearch>
+      </Property> 
+    
+      <Condition Message="Visual Studio 2013 Preview was detected.  This version of Python Tools is not supported on Visual Studio 2013 Preview.  Please upgrade to Visual Studio 2013 RC."> NOT vs2013_preview OR Installed </Condition>
+    <?endif ?>
+    
+    
     <Condition Message="The IronPython Tools feature of IronPython 2.7 must be uninstalled.  Python Tools replaces IronPython Tools and supports all the same features and more.">NOT IPYTOOLS_INSTALLED OR REMOVE ~= "ALL"</Condition>
     <?if "$(var.VSTargetVersion)" = "10.0" ?>
     <Condition Message="Visual Studio 2010 must be installed."> VSINSTALLPATH OR Installed </Condition>
     <?elseif "$(var.VSTargetVersion)" = "11.0" ?>
     <Condition Message="Visual Studio 2012 must be installed."> VSINSTALLPATH OR Installed </Condition>
     <?else?>
-    <Condition Message="Visual Studio 2013 must be installed.  The free integrated shell (and its dependent isolated shell) can be downloaded at http://www.microsoft.com/visualstudio."> VSINSTALLPATH OR Installed </Condition>
+    <Condition Message="Visual Studio 2013 RC must be installed.  The free integrated shell (and its dependent isolated shell) can be downloaded at http://www.microsoft.com/visualstudio."> VSINSTALLPATH OR Installed </Condition>
     <?endif ?>
 
     <!-- Files/Components/MSMs to install -->
