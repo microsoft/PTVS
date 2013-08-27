@@ -32,10 +32,14 @@ namespace Microsoft.PythonTools.Commands {
 
             ThreadPool.QueueUserWorkItem(x => {
                 var data = GetData();
-                dlg.BeginInvoke((Action)(() => {
-                    dlg.TextBox.Text = data;
-                    dlg.TextBox.SelectAll();
-                }));
+                try {
+                    dlg.BeginInvoke((Action)(() => {
+                        dlg.TextBox.Text = data;
+                        dlg.TextBox.SelectAll();
+                    }));
+                } catch (InvalidOperationException) {
+                    // Window has been closed already
+                }
             });
             dlg.ShowDialog();
         }

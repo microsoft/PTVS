@@ -98,7 +98,7 @@
         <Parent guid="guidPythonToolsCmdSet" id="ToolsMenuItemsGroup"/>
         <Strings>
           <ButtonText>&amp;Samples</ButtonText>
-          <CommandName>Samples</CommandName>
+          <CommandName>&amp;Samples</CommandName>
         </Strings>
       </Menu>
 
@@ -106,7 +106,7 @@
         <Parent guid="guidSHLMainMenu" id="IDG_VS_TOOLS_OTHER2"/>
         <Strings>
           <ButtonText>P&amp;ython Tools</ButtonText>
-          <CommandName>Python Tools</CommandName>
+          <CommandName>P&amp;ython Tools</CommandName>
         </Strings>
       </Menu>
 
@@ -114,7 +114,7 @@
         <Parent guid="guidSHLMainMenu" id="IDG_VS_CODEWIN_LANGUAGE"/>
         <Strings>
           <ButtonText>Rem&amp;ove Imports</ButtonText>
-          <CommandName>Remove Imports</CommandName>
+          <CommandName>Rem&amp;ove Imports</CommandName>
         </Strings>
       </Menu>
 
@@ -122,7 +122,7 @@
         <Parent guid="guidSHLMainMenu" id="IDG_VS_CODEWIN_LANGUAGE" />
         <Strings>
           <ButtonText>&amp;Refactor</ButtonText>
-          <CommandName>Refactor</CommandName>
+          <CommandName>&amp;Refactor</CommandName>
         </Strings>
       </Menu>
 
@@ -131,7 +131,7 @@
         <Parent guid="guidVSDebugGroup" id="IDG_DEBUG_DISPLAY"/>
         <Strings>
           <ButtonText>&amp;Python</ButtonText>
-          <CommandName>Python</CommandName>
+          <CommandName>&amp;Python</CommandName>
         </Strings>
       </Menu>
 
