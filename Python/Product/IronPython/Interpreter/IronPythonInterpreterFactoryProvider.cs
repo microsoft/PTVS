@@ -26,7 +26,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
     class IronPythonInterpreterFactoryProvider : IPythonInterpreterFactoryProvider {
         private IPythonInterpreterFactory _interpreter;
         private IPythonInterpreterFactory _interpreterX64;
-        const string IronPythonCorePath = "SOFTWARE\\IronPython";
+        const string IronPythonCorePath = "Software\\IronPython";
 
         public IronPythonInterpreterFactoryProvider() {
             DiscoverInterpreterFactories();
@@ -44,17 +44,36 @@ namespace Microsoft.IronPythonTools.Interpreter {
         }
 
         private void Registry_Changed(object sender, RegistryChangedEventArgs e) {
-            DiscoverInterpreterFactories();
+            if (!Exists(e)) {
+                // IronPython key no longer exists, so go back to watching
+                // Software.
+                RegistryWatcher.Instance.Add(RegistryHive.LocalMachine, RegistryView.Registry32, "Software",
+                    Registry_Software_Changed,
+                    recursive: false, notifyValueChange: false, notifyKeyChange: true);
+                e.CancelWatcher = true;
+            } else {
+                DiscoverInterpreterFactories();
+                if (_interpreter != null) {
+                    e.CancelWatcher = true;
+                }
+            }
+        }
+
+        private static bool Exists(RegistryChangedEventArgs e) {
+            using (var root = RegistryKey.OpenBaseKey(e.Hive, e.View))
+            using (var key = root.OpenSubKey(e.Key)) {
+                return key != null;
+            }
         }
 
         private void Registry_Software_Changed(object sender, RegistryChangedEventArgs e) {
             using (var root = RegistryKey.OpenBaseKey(e.Hive, e.View))
             using (var key = root.OpenSubKey(IronPythonCorePath)) {
                 if (key != null) {
-                    Registry_Changed(sender, e);
-                    e.CancelWatcher = true;
                     RegistryWatcher.Instance.Add(e.Hive, e.View, IronPythonCorePath, Registry_Changed,
                         recursive: true, notifyValueChange: true, notifyKeyChange: true);
+                    e.CancelWatcher = true;
+                    Registry_Changed(sender, e);
                 }
             }
         }

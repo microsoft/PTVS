@@ -18,6 +18,11 @@ namespace Microsoft.PythonTools.Options {
     public partial class PythonFormattingGeneralOptionsControl : UserControl {
         public PythonFormattingGeneralOptionsControl() {
             InitializeComponent();
+            _pasteRemovesReplPrompts.Checked = PythonToolsPackage.Instance.AdvancedEditorOptionsPage.PasteRemovesReplPrompts;
+        }
+
+        private void _pasteRemovesReplPrompts_CheckedChanged(object sender, System.EventArgs e) {
+            PythonToolsPackage.Instance.AdvancedEditorOptionsPage.PasteRemovesReplPrompts = _pasteRemovesReplPrompts.Checked;
         }
     }
 }

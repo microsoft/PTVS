@@ -27,45 +27,95 @@ namespace Microsoft.PythonTools.Interpreter {
     [PartCreationPolicy(CreationPolicy.Shared)]
     class CPythonInterpreterFactoryProvider : IPythonInterpreterFactoryProvider {
         private readonly List<IPythonInterpreterFactory> _interpreters;
-        const string PythonCorePath = "SOFTWARE\\Python\\PythonCore";
+        const string PythonPath = "Software\\Python";
+        const string PythonCorePath = "Software\\Python\\PythonCore";
 
         public CPythonInterpreterFactoryProvider() {
             _interpreters = new List<IPythonInterpreterFactory>();
             DiscoverInterpreterFactories();
 
-            WatchOrWatchSoftware(RegistryHive.CurrentUser, RegistryView.Default, PythonCorePath);
-            WatchOrWatchSoftware(RegistryHive.LocalMachine, RegistryView.Registry32, PythonCorePath);
+            StartWatching(RegistryHive.CurrentUser, RegistryView.Default);
+            StartWatching(RegistryHive.LocalMachine, RegistryView.Registry32);
             if (Environment.Is64BitOperatingSystem) {
-                WatchOrWatchSoftware(RegistryHive.LocalMachine, RegistryView.Registry64, PythonCorePath);
+                StartWatching(RegistryHive.LocalMachine, RegistryView.Registry64);
             }
         }
 
-        private void WatchOrWatchSoftware(RegistryHive hive, RegistryView view, string key) {
+        private void StartWatching(RegistryHive hive, RegistryView view) {
             try {
-                RegistryWatcher.Instance.Add(hive, view, key, Registry_Changed,
+                RegistryWatcher.Instance.Add(hive, view, PythonCorePath, Registry_PythonCorePath_Changed,
                     recursive: true, notifyValueChange: true, notifyKeyChange: true);
-                return;
             } catch (ArgumentException) {
-            }
-            RegistryWatcher.Instance.Add(hive, view, "SOFTWARE", Registry_Software_Changed,
-                recursive: false, notifyValueChange: false, notifyKeyChange: true);
-        }
-
-        private void Registry_Changed(object sender, RegistryChangedEventArgs e) {
-            DiscoverInterpreterFactories();
-        }
-
-        private void Registry_Software_Changed(object sender, RegistryChangedEventArgs e) {
-            using (var root = RegistryKey.OpenBaseKey(e.Hive, e.View))
-            using (var key = root.OpenSubKey(PythonCorePath)) {
-                if (key != null) {
-                    Registry_Changed(sender, e);
-                    e.CancelWatcher = true;
-                    RegistryWatcher.Instance.Add(e.Hive, e.View, PythonCorePath, Registry_Changed,
-                        recursive: true, notifyValueChange: true, notifyKeyChange: true);
+                try {
+                    RegistryWatcher.Instance.Add(hive, view, PythonPath, Registry_PythonPath_Changed,
+                        recursive: false, notifyValueChange: false, notifyKeyChange: true);
+                } catch (ArgumentException) {
+                    RegistryWatcher.Instance.Add(hive, view, "Software", Registry_Software_Changed,
+                        recursive: false, notifyValueChange: false, notifyKeyChange: true);
                 }
             }
         }
+
+        #region Registry Watching
+
+        private static bool Exists(RegistryChangedEventArgs e) {
+            using (var root = RegistryKey.OpenBaseKey(e.Hive, e.View))
+            using (var key = root.OpenSubKey(e.Key)) {
+                return key != null;
+            }
+        }
+
+        private void Registry_PythonCorePath_Changed(object sender, RegistryChangedEventArgs e) {
+            if (!Exists(e)) {
+                // PythonCore key no longer exists, so go back to watching
+                // Python.
+                e.CancelWatcher = true;
+                StartWatching(e.Hive, e.View);
+            } else {
+                DiscoverInterpreterFactories();
+            }
+        }
+
+        private void Registry_PythonPath_Changed(object sender, RegistryChangedEventArgs e) {
+            using (var root = RegistryKey.OpenBaseKey(e.Hive, e.View))
+            using (var key = root.OpenSubKey(PythonCorePath)) {
+                if (key != null) {
+                    // PythonCore key now exists, so start watching it and also
+                    // discover any interpreters.
+                    RegistryWatcher.Instance.Add(e.Hive, e.View, PythonCorePath, Registry_PythonCorePath_Changed,
+                        recursive: true, notifyValueChange: true, notifyKeyChange: true);
+                    e.CancelWatcher = true;
+                    DiscoverInterpreterFactories();
+                } else if (!Exists(e)) {
+                    // Python key no longer exists, so go back to watching
+                    // Software.
+                    e.CancelWatcher = true;
+                    StartWatching(e.Hive, e.View);
+                }
+            }
+        }
+
+        private void Registry_Software_Changed(object sender, RegistryChangedEventArgs e) {
+            Registry_PythonPath_Changed(sender, e);
+            if (e.CancelWatcher) {
+                // PythonCore key also exists and is now being watched, so just
+                // return.
+                return;
+            }
+
+            using (var root = RegistryKey.OpenBaseKey(e.Hive, e.View))
+            using (var key = root.OpenSubKey(PythonPath)) {
+                if (key != null) {
+                    // Python exists, but not PythonCore, so watch Python until
+                    // PythonCore is created.
+                    RegistryWatcher.Instance.Add(e.Hive, e.View, PythonPath, Registry_PythonPath_Changed,
+                        recursive: false, notifyValueChange: false, notifyKeyChange: true);
+                    e.CancelWatcher = true;
+                }
+            }
+        }
+
+        #endregion
 
         private bool RegisterInterpreters(HashSet<string> registeredPaths, RegistryKey python, ProcessorArchitecture? arch) {
             bool anyAdded = false;

@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Security.AccessControl;
@@ -358,7 +359,16 @@ namespace Microsoft.PythonTools {
                 lock (this) {
                     // only re-register if we haven't been closed
                     if (_registered) {
-                        Register();
+                        try {
+                            Register();
+                        } catch (Win32Exception ex) {
+                            // If we fail to re-register (probably because the
+                            // key has been deleted), there's nothing that can
+                            // be done. Fail if we're debugging, otherwise just
+                            // continue without registering the watcher again.
+                            Debug.Fail("Error registering registry watcher: " + ex.ToString());
+                            _registered = false;
+                        }
                     }
                 }
                 return true;

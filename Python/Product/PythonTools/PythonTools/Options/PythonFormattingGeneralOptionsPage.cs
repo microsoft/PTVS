@@ -39,15 +39,15 @@ namespace Microsoft.PythonTools.Options {
         }
 
         public override void ResetSettings() {
-            base.ResetSettings();
+            PythonToolsPackage.Instance.AdvancedEditorOptionsPage.ResetSettings();
         }
 
         public override void LoadSettingsFromStorage() {
-            base.LoadSettingsFromStorage();
+            PythonToolsPackage.Instance.AdvancedEditorOptionsPage.LoadSettingsFromStorage();
         }
 
         public override void SaveSettingsToStorage() {
-            base.SaveSettingsToStorage();
+            PythonToolsPackage.Instance.AdvancedEditorOptionsPage.SaveSettingsToStorage();
         }
     }
 }
