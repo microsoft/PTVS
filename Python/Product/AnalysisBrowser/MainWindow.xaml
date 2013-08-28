@@ -166,6 +166,8 @@
                         <RowDefinition Height="auto" />
                         <RowDefinition Height="auto" />
                         <RowDefinition Height="auto" />
+                        <RowDefinition Height="auto" />
+                        <RowDefinition Height="auto" />
                     </Grid.RowDefinitions>
 
                     <Grid Grid.Row="0">
@@ -231,7 +233,25 @@
                                   ItemsSource="{Binding Source={x:Static l:MainWindow.SupportedVersions},Mode=OneTime}" />
                     </Grid>
                     
-                    <Grid Grid.Row="2">
+                    <Grid Grid.Row="3">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="auto" SharedSizeGroup="Labels" />
+                            <ColumnDefinition Width="auto" />
+                            <ColumnDefinition Width="auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        
+                        <Label Grid.Column="0">
+                            Options:
+                        </Label>
+                        
+                        <CheckBox Grid.Column="1"
+                                  IsChecked="{Binding LoadRecursive}">
+                            Load all subdirectories
+                        </CheckBox>
+                    </Grid>
+                    
+                    <Grid Grid.Row="4">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="auto" SharedSizeGroup="Labels" />
                             <ColumnDefinition Width="auto" />
@@ -246,6 +266,11 @@
                         <CheckBox Grid.Column="1"
                                   IsChecked="{Binding LoadWithContention}">
                             Multithreaded load
+                        </CheckBox>
+                        
+                        <CheckBox Grid.Column="2"
+                                  IsChecked="{Binding LoadWithLowMemory}">
+                            Low memory
                         </CheckBox>
                     </Grid>
                 </Grid>

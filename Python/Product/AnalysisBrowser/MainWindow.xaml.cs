@@ -105,6 +105,21 @@ namespace Microsoft.PythonTools.Analysis.Browser {
 
         public static readonly DependencyProperty LoadWithContentionProperty = DependencyProperty.Register("LoadWithContention", typeof(bool), typeof(MainWindow), new PropertyMetadata(false));
 
+        public bool LoadWithLowMemory {
+            get { return (bool)GetValue(LoadWithLowMemoryProperty); }
+            set { SetValue(LoadWithLowMemoryProperty, value); }
+        }
+
+        public static readonly DependencyProperty LoadWithLowMemoryProperty = DependencyProperty.Register("LoadWithLowMemory", typeof(bool), typeof(MainWindow), new PropertyMetadata(false));
+
+
+        public bool LoadRecursive {
+            get { return (bool)GetValue(LoadRecursiveProperty); }
+            set { SetValue(LoadRecursiveProperty, value); }
+        }
+
+        public static readonly DependencyProperty LoadRecursiveProperty = DependencyProperty.Register("LoadRecursive", typeof(bool), typeof(MainWindow), new PropertyMetadata(false));
+
 
         private void Open_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
             e.CanExecute = !Loading;
@@ -150,13 +165,43 @@ namespace Microsoft.PythonTools.Analysis.Browser {
 
             var version = Version;
             var withContention = LoadWithContention;
+            var withLowMemory = LoadWithLowMemory;
+            var withRecursion = LoadRecursive;
 
-            var loadTask = Task.Factory.StartNew(() => {
-                return new AnalysisView(path, version, withContention);
-            }, TaskCreationOptions.LongRunning);
+            var tcs = new TaskCompletionSource<object>();
+            tcs.SetResult(null);
+            Task startTask = tcs.Task;
+
+            if (withLowMemory) {
+                startTask = Task.Factory.StartNew(() => {
+                    var bigBlocks = new LinkedList<byte[]>();
+                    var rnd = new Random();
+                    try {
+                        while (true) {
+                            var block = new byte[10 * 1024 * 1024];
+                            rnd.NextBytes(block);
+                            bigBlocks.AddLast(block);
+                        }
+                    } catch (OutOfMemoryException) {
+                        // Leave 200MB of memory available
+                        for (int i = 0; i < 20 && bigBlocks.Any(); ++i) {
+                            bigBlocks.RemoveFirst();
+                        }
+                    }
+                    return bigBlocks;
+                }).ContinueWith(t => {
+                    Tag = t.Result;
+                }, TaskScheduler.FromCurrentSynchronizationContext());
+            }
+
+            var loadTask = startTask.ContinueWith<AnalysisView>(t => {
+                return new AnalysisView(path, version, withContention, withRecursion);
+            }, TaskContinuationOptions.LongRunning);
 
             loadTask.ContinueWith(
                 t => {
+                    Tag = null;
+
                     try {
                         Analysis = t.Result;
                         HasAnalysis = true;

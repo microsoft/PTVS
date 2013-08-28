@@ -36,7 +36,12 @@ namespace Microsoft.PythonTools.Analysis.Browser {
         readonly IModuleContext _context;
         readonly List<IAnalysisItemView> _modules;
         
-        public AnalysisView(string dbDir, Version version = null, bool withContention = false) {
+        public AnalysisView(
+            string dbDir,
+            Version version = null,
+            bool withContention = false,
+            bool withRecursion = false
+        ) {
             var paths = new List<string>();
             paths.Add(dbDir);
             while (!File.Exists(IOPath.Combine(paths[0], "__builtin__.idb")) &&
@@ -46,6 +51,10 @@ namespace Microsoft.PythonTools.Analysis.Browser {
                     break;
                 }
                 paths.Insert(0, upOne);
+            }
+
+            if (withRecursion) {
+                paths.AddRange(Directory.EnumerateDirectories(dbDir, "*", SearchOption.AllDirectories));
             }
 
             if (version == null) {
@@ -65,18 +74,30 @@ namespace Microsoft.PythonTools.Analysis.Browser {
             _interpreter = _factory.CreateInterpreter();
             _context = _interpreter.CreateModuleContext();
 
-            var modNames = _interpreter.GetModuleNames()
-                .Select(n => Tuple.Create(n, IOPath.Combine(dbDir, n + ".idb")))
-                .Where(t => File.Exists(t.Item2));
+            var modNames = _interpreter.GetModuleNames();
+            IEnumerable<Tuple<string, string>> modItems;
+
+            if (!withRecursion) {
+                modItems = modNames
+                    .Select(n => Tuple.Create(n, IOPath.Combine(dbDir, n + ".idb")))
+                    .Where(t => File.Exists(t.Item2));
+            } else {
+                modItems = modNames
+                    .Select(n => Tuple.Create(
+                        n,
+                        Directory.EnumerateFiles(dbDir, n + ".idb", SearchOption.AllDirectories).FirstOrDefault()
+                    ))
+                    .Where(t => File.Exists(t.Item2));
+            }
 
             var stopwatch = new Stopwatch();
             stopwatch.Start();
             if (withContention) {
-                modNames = modNames
+                modItems = modItems
                     .AsParallel()
                     .WithExecutionMode(ParallelExecutionMode.ForceParallelism);
             }
-            _modules = modNames
+            _modules = modItems
                 .Select(t => new ModuleView(_interpreter, _context, t.Item1, t.Item2))
                 .OrderBy(m => m.SortKey)
                 .ThenBy(m => m.Name)
