@@ -187,15 +187,16 @@ def type_to_typeref(type):
             # won't log a message.
             pass
         type = object
+        type_name = 'object'
     if hasattr(type, '__module__'):
         if type.__module__ == '__builtin__':
-            name = (builtin_name, type.__name__)
+            name = (builtin_name, type_name)
         else:
-            name = (type.__module__, type.__name__)
+            name = (type.__module__, type_name)
     elif isinstance(type, types.ModuleType):
-        name = (type.__name__, '')
+        name = (type_name, '')
     else:
-        name = ('', type.__name__)
+        name = ('', type_name)
     # memoize so when we pickle we can share refs
     return memoize_type_name(name)
 
@@ -248,6 +249,7 @@ def generate_builtin_function(function, is_method = False):
             function_table['doc'] = function.__doc__
     except:
         # IronPython can throw here if an assembly load fails
+        # Some compiled types may also fail here.
         pass
 
     function_table['overloads'] = BuiltinScraper.get_overloads(function, is_method)
@@ -257,8 +259,12 @@ def generate_builtin_function(function, is_method = False):
 def generate_getset_descriptor(descriptor):
     descriptor_table = {}
     
-    if isinstance(descriptor.__doc__, str):
-        descriptor_table['doc'] = descriptor.__doc__
+    try:
+        if isinstance(descriptor.__doc__, str):
+            descriptor_table['doc'] = descriptor.__doc__
+    except:
+        # Some compiled types may fail here, so catch everything.
+        pass
     
     desc_type = BuiltinScraper.get_descriptor_type(descriptor)
     descriptor_table['type'] = type_to_typelist(desc_type)
@@ -429,11 +435,18 @@ def generate_type_new(type_obj, obj):
     return generate_member(obj)
 
 def oldstyle_mro(type_obj, res):
-    for base in type_obj.__bases__:
+    try:
+        type_bases = type_obj.__bases__
+    except:
+        # Some compiled types fail here, so catch everything and treat the
+        # object as having no bases.
+        return res
+
+    for base in type_bases:
         if base not in res:
             res.append(type_to_typeref(base))
 
-    for base in type_obj.__bases__:
+    for base in type_bases:
         oldstyle_mro(base, res)
     return res
 
@@ -447,8 +460,12 @@ def generate_type(type_obj, is_hidden=False):
 
     type_table['bases'] = types_to_typelist(type_obj.__bases__)
     
-    if isinstance(type_obj.__doc__, str):
-         type_table['doc'] = type_obj.__doc__
+    try:
+        if isinstance(type_obj.__doc__, str):
+            type_table['doc'] = type_obj.__doc__
+    except:
+        # Some compiled types fail here, so catch everything.
+        pass
 
     if is_hidden:
         type_table['is_hidden'] = True
@@ -502,9 +519,13 @@ def generate_module(module, extra_types = None):
         return None
     
     module_table = {}
-        
-    if isinstance(module.__doc__, str):
-        module_table['doc'] = module.__doc__
+
+    try:
+        if isinstance(module.__doc__, str):
+            module_table['doc'] = module.__doc__
+    except:
+        # Some compiled types may fail here, so catch everything.
+        pass
 
     module_table['members'] = generate_member_table(module, extra_types = extra_types)
 
