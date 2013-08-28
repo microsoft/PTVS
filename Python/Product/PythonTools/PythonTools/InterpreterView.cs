@@ -28,7 +28,6 @@ namespace Microsoft.PythonTools {
         private DateTime _expectFirstUpdateBy;
         private bool _startedRunning;
         private bool _isRunning;
-        private bool _refreshingStatusAfterRunning;
 
         public static IEnumerable<InterpreterView> GetInterpreters(
             IInterpreterOptionsService interpreterService = null
@@ -86,11 +85,6 @@ namespace Microsoft.PythonTools {
                 IsCurrent = withDb.IsCurrent;
                 IsCurrentReason = withDb.GetFriendlyIsCurrentReason(CultureInfo.CurrentUICulture);
             }
-            if (_refreshingStatusAfterRunning) {
-                _refreshingStatusAfterRunning = false;
-                Message = string.Empty;
-                IsRunning = false;
-            }
         }
 
         public void ProgressUpdate(Dictionary<string, AnalysisProgress> updateInfo) {
@@ -127,13 +121,12 @@ namespace Microsoft.PythonTools {
                         Message = "Starting refresh DB";
                     }));
                 }
-            } else if (!_refreshingStatusAfterRunning && IsRunning && DateTime.Now > _expectFirstUpdateBy) {
+            } else if (IsRunning && DateTime.Now > _expectFirstUpdateBy) {
                 // We've finished running
+                Message = string.Empty;
+                IsRunning = false;
+
                 if (!_startedRunning) {
-                    // Notifying about the new DB will trigger RefreshIsCurrent,
-                    // so wait for that to complete before changise IsRunning.
-                    _refreshingStatusAfterRunning = true;
-                    Message = "Validating DB";
                     // Weren't started by this process, so we need to notify
                     // the interpreter to reload its DB.
                     withDb.NotifyNewDatabase();
@@ -160,14 +153,7 @@ namespace Microsoft.PythonTools {
                     IsRunning = _startedRunning = true;
                     withDb.GenerateCompletionDatabase(GenerateDatabaseOptions.SkipUnchanged, exitCode => {
                         _startedRunning = false;
-                        if (exitCode == 0) {
-                            // Ensure the progress bar stays visible until
-                            // RefreshIsCurrent completes.
-                            _refreshingStatusAfterRunning = true;
-                            Message = "Validating DB";
-                        } else {
-                            IsRunning = false;
-                        }
+                        IsRunning = false;
                     });
                 }
             } else {
