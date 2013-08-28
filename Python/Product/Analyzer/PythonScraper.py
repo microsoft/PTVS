@@ -458,9 +458,8 @@ def generate_type(type_obj, is_hidden=False):
     else:
         type_table['mro'] = oldstyle_mro(type_obj, [])
 
-    type_table['bases'] = types_to_typelist(type_obj.__bases__)
-    
     try:
+        type_table['bases'] = types_to_typelist(type_obj.__bases__)
         if isinstance(type_obj.__doc__, str):
             type_table['doc'] = type_obj.__doc__
     except:
