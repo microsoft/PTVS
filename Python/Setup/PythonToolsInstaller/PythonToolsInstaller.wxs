@@ -41,16 +41,6 @@
       <ComponentSearch Id="SchedUtil" Guid="4BC84A98-B96A-4564-8BD7-11CE7340DA3B" Type="file" />
     </Property>
 
-    <Property Id="PYTHONFILETYPE" Value="Python.File">
-      <RegistrySearch Id="PythonFileTypeSearch" Root="HKCR" Key=".py" Type="raw" />
-    </Property>
-
-    <Property Id="PYTHONFILETYPENODEFAULT" >
-      <!-- Same thing as PYTHONFILETYPE but used to decide if we should install the default info for the file type -->
-      <RegistrySearch Id="PythonFileTypeNoDefaultSearch" Root="HKCR" Key=".py" Type="raw" />
-    </Property>
-
-
     <!-- Conditions for install -->
       
     <Property Id="PTVS_15_PERUSER" Secure="no"> 
@@ -118,16 +108,29 @@
         </RegistryKey>
       </Component>
       
-      <!-- Edit with Visual Studio context menu -->
-      <Component Id="Comp_PyFileRegistration" Guid="$(var.Comp_PyFileRegistrationGuid)">
-        <RegistryKey Root='HKCR' Key='[PYTHONFILETYPE]'>
+      <!-- Double click to open Python projects with Visual Studio -->
+      <Component Id="Comp_PyProjRegistration" DiskId="1" Guid="$(var.Comp_PyProjRegistrationGuid)">
+        <RegistryValue Root='HKCR' Key='.pyproj' Type='string' Name='PerceivedType' Value='text' />
+        <RegistryValue Root='HKCR' Key='VisualStudio.Launcher.pyproj.$(var.VSTargetVersion)\DefaultIcon' Type='string' Value='[INSTALLLOCATION]\PythonProject.ico' />
+
+        <ProgId Id="VisualStudio.Launcher.pyproj.$(var.VSTargetVersion)" Description="Python Project">
+          <Extension Id="pyproj" ContentType="text/plain">
+            <Verb Id="Open" Command="Open" TargetProperty="VSLAUNCHER" Argument="&quot;%1&quot;"/>
+          </Extension>
+        </ProgId>
+      </Component>
+
+      <!-- Open with Visual Studio context menu -->
+      <Component Id="Comp_PyFileProgId" Guid="$(var.Comp_PyFileProgIdGuid)">
+        <!-- Manually writing the ProdId so we can add DDE info -->
+        <RegistryKey Root='HKCR' Key='VisualStudio.py.$(var.VSTargetVersion)'>
           <RegistryValue Type='string' Value='Python source file' />
 
           <RegistryKey Key='DefaultIcon'>
             <RegistryValue Type='string' Value="[INSTALLLOCATION]\PythonFile.ico" />
           </RegistryKey>
 
-          <RegistryKey Key='shell\Edit with Visual Studio'>
+          <RegistryKey Key='shell\open'>
             <RegistryValue Key='Command' Type='string' Value='[VSINSTALLPATH]devenv.exe /dde "%1"' />
 
             <RegistryValue Key='ddeexec' Type='string' Value='Open("%1")' />
@@ -135,13 +138,9 @@
             <RegistryValue Key='ddeexec\Topic' Type='string' Value='system' />
           </RegistryKey>
         </RegistryKey>
-      </Component>
 
-      <!-- Double click to open with Visual Studio context menu -->
-      <Component Id="Comp_PyFileExistance" DiskId="1" Guid="$(var.Comp_PyFileExistanceGuid)">
-        <!-- This is only installed if .py is not already registered.  -->
-        <RegistryValue Root='HKCR' Key='.py' Type='string' Value='[PYTHONFILETYPE]' />
-        <RegistryValue Root='HKCR' Key='.py' Name='Content Type' Type='string' Value='text/plain' />
+        <RegistryValue Root='HKCR' Key='.py\OpenWithProgids' Name='VisualStudio.py.$(var.VSTargetVersion)' Type='string' Value='' />
+        <RegistryValue Root='HKCR' Key='.pyw\OpenWithProgids' Name='VisualStudio.py.$(var.VSTargetVersion)' Type='string' Value='' />
       </Component>
 
       <Merge Id="ReplWindow" Language="1033" SourceFile="$(var.TargetDir)ReplWindow.msm" DiskId="1" />
@@ -153,17 +152,6 @@
       <?if "$(var.IncludeVsLogger)" = "True" ?>
         <Merge Id="PTVSVsLoggerPackage" Language="1033" SourceFile="$(var.TargetDir)VsLoggerMsm.msm" DiskId="1" />
       <?endif?>
-      
-      <Component Id="Comp_PyProgRegistration" DiskId="1" Guid="$(var.Comp_PyProgRegistrationGuid)">
-        <RegistryValue Root='HKCR' Key='.pyproj' Type='string' Name='PerceivedType' Value='text' />
-        <RegistryValue Root='HKCR' Key='VisualStudio.Launcher.pyproj.$(var.VSTargetVersion)\DefaultIcon' Type='string' Value='[INSTALLLOCATION]\PythonProject.ico' />
-
-        <ProgId Id="VisualStudio.Launcher.pyproj.$(var.VSTargetVersion)" Description="Python Project">
-          <Extension Id="pyproj" ContentType="text/plain">
-            <Verb Id="Open" Command="Open" TargetProperty="VSLAUNCHER" Argument="&quot;%1&quot;"/>
-          </Extension>
-        </ProgId>
-      </Component>
     </DirectoryRef>
 
     <!-- Features to install -->
@@ -171,9 +159,8 @@
     <!-- Main visual studio support feature, requires Visual Studio. -->
     <Feature Id="ProductFeature" Title="$(var.ProductName)" Description="$(var.ProductName)"
              Display="expand" Level="1" AllowAdvertise="no" Absent="disallow"  >
-      <ComponentRef Id="Comp_InstallDirItems" Primary="yes" />
-      <ComponentRef Id="Comp_InstallLocation" Primary="yes" />
-      <ComponentRef Id="Comp_PyProgRegistration" Primary="yes" />
+      <ComponentRef Id="Comp_InstallDirItems" />
+      <ComponentRef Id="Comp_InstallLocation" />
 
       <MergeRef Id="PythonTools"/>
       <MergeRef Id="ReplWindow"/>
@@ -196,12 +183,9 @@
         <MergeRef Id="PythonHpc"/>
       </Feature>
 
-      <Feature Id="Feature_VsPyFile" AllowAdvertise="no" Level="1" Title="Register .py context menu." Description="Adds a Edit with Visual Studio context menu for .py files">
-        <ComponentRef Id="Comp_PyFileRegistration" />
-        <Feature Id="Feature_PyFileExist" AllowAdvertise="no" Level="0" Title="Register .py with Visual Studio if not already registered">
-          <Condition Level="1">NOT PYTHONFILETYPENODEFAULT</Condition>
-          <ComponentRef Id="Comp_PyFileExistance" Primary="yes" />
-        </Feature>
+      <Feature Id="Feature_VsPyFile" AllowAdvertise="no" Level="1" Title="Register file associations" Description="Associates Python projects and source files with Visual Studio (existing source file associations are not modified).">
+        <ComponentRef Id="Comp_PyFileProgId"/>
+        <ComponentRef Id="Comp_PyProjRegistration" />
       </Feature>
     </Feature>
 
@@ -217,7 +201,7 @@
     </InstallExecuteSequence>
     <InstallUISequence>
       <Show Dialog="CustomAdvancedWelcomeEulaDlg" Before="FindRelatedProducts">NOT Installed</Show>
-      <Show Dialog="CustomFeaturesDlg" After="CostFinalize">NOT Installed AND EasyInstall=0</Show>      
+      <Show Dialog="CustomFeaturesDlg" After="CostFinalize">NOT Installed AND EasyInstall=0</Show>
     </InstallUISequence>
 
     <UI>

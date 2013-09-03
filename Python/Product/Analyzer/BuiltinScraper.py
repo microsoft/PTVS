@@ -32,6 +32,8 @@ def get_builtin(name):
 
     return getattr(__builtins__, name)
 
+safe_getattr = PythonScraper.safe_getattr
+
 BUILTIN_TYPES = [type_name for type_name in builtins_keys() if type(get_builtin(type_name)) is type]
 if sys.version >= '3.':
     BUILTIN = 'builtins'
@@ -137,13 +139,13 @@ def get_ret_type(ret_type, obj_class, mod):
             return [type_name_to_typeref(ret_type, mod, RETURN_TYPE_OVERRIDES)]
 
 
-RETURNS_REGEX = ['.*Returns\\s*-*\\s*[a-zA-Z_][a-zA-Z_0-9-]*\\s*:\\s*([a-zA-Z_][a-zA-Z_0-9-]*)']
+RETURNS_REGEX = [r'^\s*returns?[\s\-]*[a-z_]\w*\s*:\s*([a-z_]\w*)']
 
 def update_overload_from_doc_str(overload, doc_str, obj_class, mod):
     # see if we can get additional information from the doc string
     if 'ret_type' not in overload:
         for ret_regex in RETURNS_REGEX:
-            match = re.match(ret_regex, doc_str)
+            match = re.search(ret_regex, doc_str, re.MULTILINE | re.IGNORECASE)
             if match:
                 ret_type = match.groups(0)[0]
                 overload['ret_type'] = get_ret_type(ret_type, obj_class, mod)
@@ -413,27 +415,46 @@ def get_overloads(func, is_method = False):
     else:
         extra_args = []
 
-    return get_overloads_from_doc_string(func.__doc__, 
-                                         getattr(func, '__module__', None), 
-                                         getattr(func, '__objclass__', None),
-                                         getattr(func, '__name__', None),
-                                         extra_args)
+    func_doc = safe_getattr(func, '__doc__', None)
+    if not func_doc:
+        return None
+    
+    return get_overloads_from_doc_string(
+        func_doc, 
+        safe_getattr(func, '__module__', None), 
+        safe_getattr(func, '__objclass__', None),
+        safe_getattr(func, '__name__', None),
+        extra_args,
+    )
 
 def get_descriptor_type(descriptor):
     return object
 
 def get_new_overloads(type_obj, obj):
-    res = get_overloads_from_doc_string(type_obj.__doc__, 
-                                        getattr(type_obj, '__module__', None), 
-                                        type(type_obj), 
-                                        getattr(type_obj, '__name__', None),
-                                        [{'type': PythonScraper.type_to_typelist(type), 'name': 'cls'}])
+    try:
+        type_doc = safe_getattr(type_obj, '__doc__', None)
+        type_type = type(type_obj)
+    except:
+        return None
+    
+    res = get_overloads_from_doc_string(
+        type_doc, 
+        safe_getattr(type_obj, '__module__', None), 
+        type_type, 
+        safe_getattr(type_obj, '__name__', None),
+        [{'type': PythonScraper.type_to_typelist(type), 'name': 'cls'}],
+    )
 
     if not res:
-        res = get_overloads_from_doc_string(obj.__doc__, 
-                                            getattr(type_obj, '__module__', None), 
-                                            type(type_obj), 
-                                            getattr(type_obj, '__name__', None))
+        obj_doc = safe_getattr(obj, '__doc__', None)
+        if not obj_doc:
+            return None
+        res = get_overloads_from_doc_string(
+            obj_doc, 
+            safe_getattr(type_obj, '__module__', None), 
+            type_type, 
+            safe_getattr(type_obj, '__name__', None),
+        )
 
     return res
 
@@ -453,7 +474,7 @@ if __name__ == '__main__':
 
     assert r == [{
         'doc': 'Returns\n    -------\n    out : ndarray',
-        'ret_type': [{'type_name': 'ndarray'}],
+        'ret_type': [('', 'ndarray')],
         'args': ({'name': 'start', 'default_value':'None'}, 
                  {'name': 'stop'}, 
                  {'name': 'step', 'default_value': 'None'},
@@ -461,14 +482,31 @@ if __name__ == '__main__':
                 )
     }], pprint.pformat(r)
 
-    r = parse_doc_str('reduce(function, sequence[, initial]) -> value', '__builtin__', sys.modules['__builtin__'], 'reduce')
+    r = parse_doc_str("""arange([start,] stop[, step,], dtype=None)
+
+    Return - out : ndarray""",
+        'numpy',
+        None,
+        'arange')
+
+    assert r == [{
+        'doc': 'Return - out : ndarray',
+        'ret_type': [('', 'ndarray')],
+        'args': ({'name': 'start', 'default_value':'None'}, 
+                 {'name': 'stop'}, 
+                 {'name': 'step', 'default_value': 'None'},
+                 {'name': 'dtype', 'default_value':'None'}, 
+                )
+    }], pprint.pformat(r)
+
+    r = parse_doc_str('reduce(function, sequence[, initial]) -> value', BUILTIN, __builtins__, 'reduce')
     assert r == [
            {'args': (
                 {'name': 'function'},
                 {'name': 'sequence'},
                 {'default_value': 'None', 'name': 'initial'}), 
             'doc': '', 
-            'ret_type': [{'type_name': 'value'}]
+            'ret_type': [('', 'value')]
            }
         ], repr(r)
 
@@ -486,7 +524,7 @@ if __name__ == '__main__':
                {'name': 'stop_angle'},
                {'default_value': '1', 'name': 'width'}),
             'doc': '',
-            'ret_type': [{'type_name': 'Rect'}]
+            'ret_type': [('', 'Rect')]
            }
     ]
 
@@ -501,7 +539,7 @@ and there is at least one character in B, False otherwise.''',
     assert r == [
         {'args': (),
          'doc': 'Return True if all characters in B are digits\nand there is at least one character in B, False otherwise.',
-         'ret_type': [{'module_name': '__builtin__', 'type_name': 'bool'}]}
+         'ret_type': [(BUILTIN, 'bool')]}
     ], repr(r)
     r = parse_doc_str('x.__init__(...) initializes x; see help(type(x)) for signature',
                       'str',
@@ -523,7 +561,7 @@ and there is at least one character in B, False otherwise.''',
             {'default_value': 'None', 'name': 'end'}
         ),
         'doc': '',
-        'ret_type': [{'module_name': '__builtin__', 'type_name': 'int'}]
+        'ret_type': [(BUILTIN, 'int')]
     }], repr(r)
 
     r = parse_doc_str('S.format(*args, **kwargs) -> unicode',
@@ -536,7 +574,7 @@ and there is at least one character in B, False otherwise.''',
                            {'arg_format': '**', 'name': 'kwargs'}
                           ),
                  'doc': '',
-                 'ret_type': [{'module_name': '__builtin__', 'type_name': 'unicode'}]}
+                 'ret_type': [(BUILTIN, unicode.__name__)]}
     ], repr(r)
     
     r = parse_doc_str("'ascii(object) -> string\n\nReturn the same as repr().  In Python 3.x, the repr() result will\\ncontain printable characters unescaped, while the ascii() result\\nwill have such characters backslash-escaped.'",
@@ -545,16 +583,16 @@ and there is at least one character in B, False otherwise.''',
             'ascii')
     assert r == [{'args': ({'name': 'object'},),
                  'doc': "Return the same as repr().  In Python 3.x, the repr() result will\\ncontain printable characters unescaped, while the ascii() result\\nwill have such characters backslash-escaped.'",
-                 'ret_type': [{'module_name': '__builtin__', 'type_name': 'str'}]}
+                 'ret_type': [(BUILTIN, 'str')]}
     ], repr(r)
 
     r = parse_doc_str('f(INT class_code) => SpaceID',
                 'foo',
                 None,
                 'f')    
-    assert r == [{'args': ({'name': 'class_code', 'type': [{'module_name': '__builtin__', 'type_name': 'int'}]},),
+    assert r == [{'args': ({'name': 'class_code', 'type': [(BUILTIN, 'int')]},),
         'doc': '',
-        'ret_type': [{'type_name': 'SpaceID'}]}], repr(r)
+        'ret_type': [('', 'SpaceID')]}], repr(r)
 
     r = parse_doc_str('compress(data, selectors) --> iterator over selected data\n\nReturn data elements',
                       'itertools',
@@ -562,13 +600,13 @@ and there is at least one character in B, False otherwise.''',
                       'compress')
     assert r == [{'args': ({'name': 'data'}, {'name': 'selectors'}),
                   'doc': 'Return data elements',
-                  'ret_type': [{'type_name': 'iterator'}]}], repr(r)
+                  'ret_type': [('', 'iterator')]}], repr(r)
                   
     r = parse_doc_str('isinstance(object, class-or-type-or-tuple) -> bool\n\nReturn whether an object is an '
                       'instance of a class or of a subclass thereof.\nWith a type as second argument, '
                       'return whether that is the object\'s type.\nThe form using a tuple, isinstance(x, (A, B, ...)),'
                       ' is a shortcut for\nisinstance(x, A) or isinstance(x, B) or ... (etc.).',
-                      '__builtin__',
+                      BUILTIN,
                       None,
                       'isinstance')
     
@@ -577,7 +615,7 @@ and there is at least one character in B, False otherwise.''',
                           "With a type as second argument, return whether that is the object's type.\n"
                           "The form using a tuple, isinstance(x, (A, B, ...)), is a shortcut for\n"
                           "isinstance(x, A) or isinstance(x, B) or ... (etc.).",
-                   'ret_type': [{'module_name': '__builtin__', 'type_name': 'bool'}]}], repr(r)
+                   'ret_type': [(BUILTIN, 'bool')]}], repr(r)
 
     r = parse_doc_str('pygame.Rect(left, top, width, height): return Rect\n'
                       'pygame.Rect((left, top), (width, height)): return Rect\n'
@@ -590,20 +628,20 @@ and there is at least one character in B, False otherwise.''',
     assert r == [
         {'args': ({'name': 'left'}, {'name': 'top'}, {'name': 'width'}, {'name': 'height'}),
          'doc': 'pygame object for storing rectangular coordinates',
-         'ret_type': [{'type_name': 'Rect'}]},
+         'ret_type': [('', 'Rect')]},
          {'args': ({'name': 'left, top'}, {'name': 'width, height'}),
           'doc': 'pygame object for storing rectangular coordinates',
-         'ret_type': [{'type_name': 'Rect'}]},
+         'ret_type': [('', 'Rect')]},
          {'args': ({'name': 'object'},),
           'doc': 'pygame object for storing rectangular coordinates',
-         'ret_type': [{'type_name': 'Rect'}]}
+         'ret_type': [('', 'Rect')]}
     ], repr(r)
 
     r = parse_doc_str('read([size]) -> read at most size bytes, returned as a string.\n\n'
                       'If the size argument is negative or omitted, read until EOF is reached.\n'
                       'Notice that when in non-blocking mode, less data than what was requested\n'
                       'may be returned, even if no size parameter was given.',
-                      '__builtin__',
+                      BUILTIN,
                       __builtins__,
                       'read'
      )
@@ -611,7 +649,7 @@ and there is at least one character in B, False otherwise.''',
     assert r == [{
         'args': ({'default_value': 'None', 'name': 'size'},),
         'doc': 'read at most size bytes, returned as a string.\n\nIf the size argument is negative or omitted, read until EOF is reached.\nNotice that when in non-blocking mode, less data than what was requested\nmay be returned, even if no size parameter was given.',
-        'ret_type': [{'type_name': ''}]
+        'ret_type': [('', '')]
     }], repr(r)
 
 
@@ -620,13 +658,13 @@ and there is at least one character in B, False otherwise.''',
                       'Notice that when in non-blocking mode, less data than what was requested\n'
                       'may be returned, even if no size parameter was given.',
                       __builtins__,
-                      file,
+                      None,
                       'read'
      )
 
     assert r == [{'args': ({'default_value': 'None', 'name': 'size'},),
                  'doc': 'read at most size bytes, returned as a string.\n\nIf the size argument is negative or omitted, read until EOF is reached.\nNotice that when in non-blocking mode, less data than what was requested\nmay be returned, even if no size parameter was given.',
-                 'ret_type': [{'type_name': ''}]}], repr(r)
+                 'ret_type': [('', '')]}], repr(r)
 
     r = parse_doc_str('T.__new__(S, ...) -> a new object with type S, a subtype of T',
                       'struct',
@@ -635,7 +673,7 @@ and there is at least one character in B, False otherwise.''',
      )
 
     assert r == [{
-        'ret_type': [{'type_name': ''}],
+        'ret_type': [('', '')],
         'doc': 'a new object with type S, a subtype of T',
         'args': ({'name': 'S'}, {'arg_format': '*', 'name': 'args'})
     }], repr(r)

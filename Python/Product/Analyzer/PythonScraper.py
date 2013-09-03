@@ -148,6 +148,50 @@ KNOWN_FUNCTION_TYPES = frozenset(
 )
 
 
+# Safe member access methods because PyQt4 contains compiled types that crash
+# on operations that should be completely safe, such as getattr() and dir().
+# These should be used throughout when accessing members on type objects.
+
+def safe_getattr(obj, attr, default):
+    try:
+        return getattr(obj, attr, default)
+    except:
+        return default
+
+def safe_hasattr(obj, attr):
+    try:
+        return hasattr(obj, attr)
+    except:
+        return False
+
+def safe_isinstance(obj, types):
+    try:
+        return isinstance(obj, types)
+    except:
+        return False
+
+def safe_dir(obj):
+    try:
+        return frozenset(obj.__dict__) | frozenset(dir(obj))
+    except:
+        # Some types crash when we access __dict__ and/or dir()
+        pass
+    try:
+        return frozenset(dir(obj))
+    except:
+        pass
+    try:
+        return frozenset(obj.__dict__)
+    except:
+        pass
+    return frozenset()
+
+def safe_repr(obj):
+    try:
+        return repr(obj)
+    except:
+        return 'invalid object'
+
 
 if sys.version_info[0] == 2:
     builtin_name = '__builtin__'
@@ -176,24 +220,17 @@ def typename_to_typeref(n1, n2=None):
     return memoize_type_name(name)
 
 def type_to_typeref(type):
-    try:
-        type_name = type.__name__
-    except:
-        # Some compiled types fail here, so warn and treat as object
-        try:
-            print('Cannot get type name of ' + repr(type))
-        except:
-            # If __name__ doesn't work, __repr__ might not either, so we just
-            # won't log a message.
-            pass
+    type_name = safe_getattr(type, '__name__', None)
+    if not type_name:
+        print('Cannot get type name of ' + safe_repr(type))
         type = object
         type_name = 'object'
-    if hasattr(type, '__module__'):
-        if type.__module__ == '__builtin__':
+    if safe_hasattr(type, '__module__'):
+        if safe_getattr(type, '__module__', '') == '__builtin__':
             name = (builtin_name, type_name)
         else:
             name = (type.__module__, type_name)
-    elif isinstance(type, types.ModuleType):
+    elif safe_isinstance(type, types.ModuleType):
         name = (type_name, '')
     else:
         name = ('', type_name)
@@ -244,13 +281,9 @@ else:
 def generate_builtin_function(function, is_method = False):
     function_table = {}
     
-    try:
-        if isinstance(function.__doc__, str):
-            function_table['doc'] = function.__doc__
-    except:
-        # IronPython can throw here if an assembly load fails
-        # Some compiled types may also fail here.
-        pass
+    func_doc = safe_getattr(function, '__doc__', None)
+    if safe_isinstance(func_doc, str):
+        function_table['doc'] = func_doc
 
     function_table['overloads'] = BuiltinScraper.get_overloads(function, is_method)
     
@@ -259,12 +292,9 @@ def generate_builtin_function(function, is_method = False):
 def generate_getset_descriptor(descriptor):
     descriptor_table = {}
     
-    try:
-        if isinstance(descriptor.__doc__, str):
-            descriptor_table['doc'] = descriptor.__doc__
-    except:
-        # Some compiled types may fail here, so catch everything.
-        pass
+    desc_doc = safe_getattr(descriptor, '__doc__', None)
+    if safe_isinstance(desc_doc, str):
+        descriptor_table['doc'] = desc_doc
     
     desc_type = BuiltinScraper.get_descriptor_type(descriptor)
     descriptor_table['type'] = type_to_typelist(desc_type)
@@ -296,13 +326,12 @@ def generate_member_table(obj, is_hidden = False, from_type = False, extra_types
     to this table. These types are always hidden.
     '''
 
+    sentinel = object()
     members = []
-    for name in frozenset(obj.__dict__) | frozenset(dir(obj)):
-        try:
-            member = getattr(obj, name)
-        except AttributeError:
-            continue
-        members.append((name, member))
+    for name in safe_dir(obj):
+        member = safe_getattr(obj, name, sentinel)
+        if member is not sentinel:
+            members.append((name, member))
 
     dependencies = {}
     table = {}
@@ -328,7 +357,7 @@ def generate_member_table(obj, is_hidden = False, from_type = False, extra_types
         def needs_type_info(other_mod, other_name, other_obj):
             if obj_mod != other_mod:
                 other_module = sys.modules.get(other_mod)
-                if other_module and getattr(other_module, other_name, None) is other_obj:
+                if other_module and safe_getattr(other_module, other_name, None) is other_obj:
                     # Use a reference for types that have been imported properly
                     return False
 
@@ -362,6 +391,9 @@ def generate_member_table(obj, is_hidden = False, from_type = False, extra_types
 
 def generate_member(obj, is_hidden = False, from_type = False):
     try:
+        # Already handling all exceptions here, so don't worry about using the
+        # 'safe_*' functions.
+
         if isinstance(obj, (types.BuiltinFunctionType, class_method_descriptor_type)):
             return 'function', generate_builtin_function(obj)
         elif isinstance(obj, types.FunctionType):
@@ -411,7 +443,7 @@ else:
 
 
 def generate_type_new(type_obj, obj):
-    if isinstance(obj, (types.BuiltinFunctionType, class_method_descriptor_type)):
+    if safe_isinstance(obj, (types.BuiltinFunctionType, class_method_descriptor_type)):
         function_info = generate_builtin_function(obj)
 
         new_overloads = BuiltinScraper.get_new_overloads(type_obj, obj)
@@ -420,9 +452,9 @@ def generate_type_new(type_obj, obj):
             function_info['overloads'] = new_overloads
             return 'function', function_info
 
-    if obj.__doc__ == 'T.__new__(S, ...) -> a new object with type S, a subtype of T':
-        doc_str = type_obj.__doc__
-        if not isinstance(doc_str, str_types):
+    if safe_getattr(obj, '__doc__', '') == 'T.__new__(S, ...) -> a new object with type S, a subtype of T':
+        doc_str = safe_getattr(type_obj, '__doc__', None)
+        if not safe_isinstance(doc_str, str_types):
             doc_str = ''
         return (
             'function',
@@ -435,11 +467,9 @@ def generate_type_new(type_obj, obj):
     return generate_member(obj)
 
 def oldstyle_mro(type_obj, res):
-    try:
-        type_bases = type_obj.__bases__
-    except:
-        # Some compiled types fail here, so catch everything and treat the
-        # object as having no bases.
+    type_bases = safe_getattr(type_obj, '__bases__', None)
+
+    if not type_bases:
         return res
 
     for base in type_bases:
@@ -453,19 +483,20 @@ def oldstyle_mro(type_obj, res):
 def generate_type(type_obj, is_hidden=False):
     type_table = {}
     
-    if hasattr(type_obj, '__mro__'):
-        type_table['mro'] = types_to_typelist(type_obj.__mro__)
+    type_mro = safe_getattr(type_obj, '__mro__', None)
+    if type_mro:
+        type_table['mro'] = types_to_typelist(type_mro)
     else:
         type_table['mro'] = oldstyle_mro(type_obj, [])
-
-    try:
-        type_table['bases'] = types_to_typelist(type_obj.__bases__)
-        if isinstance(type_obj.__doc__, str):
-            type_table['doc'] = type_obj.__doc__
-    except:
-        # Some compiled types fail here, so catch everything.
-        pass
-
+    
+    type_bases = safe_getattr(type_obj, '__bases__', None)
+    if type_bases:
+        type_table['bases'] = types_to_typelist(type_bases)
+    
+    type_doc = safe_getattr(type_obj, '__doc__', None)
+    if safe_isinstance(type_doc, str):
+        type_table['doc'] = type_doc
+    
     if is_hidden:
         type_table['is_hidden'] = True
     
@@ -480,12 +511,12 @@ def generate_type(type_obj, is_hidden=False):
     elif '__new__' not in member_table:
         member_table['__new__'] = generate_type_new(
             type_obj, 
-            getattr(type_obj, '__new__', object.__new__),
+            safe_getattr(type_obj, '__new__', object.__new__),
         )
     
     if ('__getattribute__' in member_table and 
         type_obj is not object and
-        type(type_obj.__getattribute__) is slot_wrapper_type):
+        safe_isinstance(safe_getattr(type_obj, '__getattribute__', None), slot_wrapper_type)):
         # skip __getattribute__ on types other than object if it's just a slot wrapper.
         del member_table['__getattribute__']
 
@@ -506,25 +537,21 @@ def lookup_module(module_name):
         return None
     if '.' in module_name:
         for name in module_name.split('.')[1:]:
-            try:
-                module = getattr(module, name)
-            except AttributeError:
+            module = safe_getattr(module, name, None)
+            if not module:
                 module = sys.modules[module_name]
     
     return module
 
 def generate_module(module, extra_types = None):
-    if not isinstance(module, type(sys)):
+    if not safe_isinstance(module, type(sys)):
         return None
     
     module_table = {}
 
-    try:
-        if isinstance(module.__doc__, str):
-            module_table['doc'] = module.__doc__
-    except:
-        # Some compiled types may fail here, so catch everything.
-        pass
+    module_doc = safe_getattr(module, '__doc__', None)
+    if safe_isinstance(module_doc, str):
+        module_table['doc'] = module_doc
 
     module_table['members'] = generate_member_table(module, extra_types = extra_types)
 
@@ -533,10 +560,11 @@ def generate_module(module, extra_types = None):
 
 def get_module_members(module):
     """returns an iterable which gives the names of the module which should be exposed"""
-    if hasattr(module, '__all__'):
-        return frozenset(module.__all__)
+    module_all = safe_getattr(module, '__all__', None)
+    if module_all:
+        return frozenset(module_all)
 
-    return frozenset(module.__dict__) | frozenset(dir(module))
+    return safe_dir(module)
 
 def generate_builtin_module():
     extra_types = {}
@@ -971,7 +999,7 @@ def write_analysis(out_filename, analysis):
     # write a list of members which we can load to check for member existance
     out_file = open(out_filename + '.idb.$memlist', 'wb')
     for member in sorted(analysis['members']):
-        if sys.version >= '3.':
+        if sys.version_info >= (3, 0):
             out_file.write((member + '\n').encode('utf8'))
         else:
             out_file.write(member + '\n')
