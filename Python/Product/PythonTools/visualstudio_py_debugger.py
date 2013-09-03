@@ -62,7 +62,7 @@ myrepr.maxdict = max_collection_repr
 myrepr.maxfrozenset = max_collection_repr
 myrepr.maxlist = max_collection_repr
 myrepr.maxset = max_collection_repr
-myrepr.maxother = max_collection_repr
+myrepr.maxother = 1000
 myrepr.maxlevel = 2
 
 try:
