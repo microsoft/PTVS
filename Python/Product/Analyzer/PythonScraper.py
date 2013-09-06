@@ -354,15 +354,14 @@ def generate_member_table(obj, is_hidden = False, from_type = False, extra_types
 
     if dependencies:
         obj_mod, obj_name = type_to_typeref(obj)
-        def needs_type_info(other_mod, other_name, other_obj):
+        def needs_type_info(other_mod, other_name):
             if obj_mod != other_mod:
-                other_module = sys.modules.get(other_mod)
-                if other_module and safe_getattr(other_module, other_name, None) is other_obj:
-                    # Use a reference for types that have been imported properly
+                if other_mod == builtin_name:
+                    # Never embed builtins (unless obj_mod is builtins, in which
+                    # case the first comparison failed)
                     return False
-
-                # Use the full type for cross-module/unimportable types
-                print('[WARNING] Cannot resolve %s:%s referenced by %s:%s' % (other_mod, other_name, obj_mod, obj_name))
+                
+                # Always embed external types
                 return True
 
             # We know obj_mod == other_mod at this point
@@ -381,7 +380,7 @@ def generate_member_table(obj, is_hidden = False, from_type = False, extra_types
             return False
 
         for (dep_mod, dep_name), dep_obj in dependencies.items():
-            if needs_type_info(dep_mod, dep_name, dep_obj):
+            if needs_type_info(dep_mod, dep_name):
                 table[dep_name] = {
                     'kind': 'type',
                     'value': generate_type(dep_obj, is_hidden = dep_name not in table),
