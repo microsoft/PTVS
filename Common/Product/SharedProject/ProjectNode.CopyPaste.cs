@@ -256,19 +256,16 @@ namespace Microsoft.VisualStudioTools.Project {
             fCancelDrop = 0;
             bool dirty = false;
             foreach (HierarchyNode node in this.ItemsDraggedOrCutOrCopied) {
-                bool isDirty, isOpen, isOpenedByUs;
-                uint docCookie;
-                IVsPersistDocData ppIVsPersistDocData;
-                DocumentManager manager = node.GetDocumentManager();
                 if (node.IsLinkFile) {
                     continue;
                 }
-                if (manager != null) {
-                    manager.GetDocInfo(out isOpen, out isDirty, out isOpenedByUs, out docCookie, out ppIVsPersistDocData);
-                    if (isDirty && isOpenedByUs) {
-                        dirty = true;
-                        break;
-                    }
+
+                DocumentManager manager = node.GetDocumentManager();
+                if (manager != null &&
+                    manager.IsDirty && 
+                    manager.IsOpenedByUs) {
+                    dirty = true;
+                    break;
                 }
             }
 
@@ -295,6 +292,7 @@ namespace Microsoft.VisualStudioTools.Project {
 
                 default:
                     fCancelDrop = 1;
+                    ItemsDraggedOrCutOrCopied.Clear();
                     return VSConstants.S_OK;
             }
 

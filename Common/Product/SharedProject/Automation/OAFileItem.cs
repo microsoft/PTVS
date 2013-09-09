@@ -13,7 +13,6 @@
  * ***************************************************************************/
 
 using System;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
@@ -71,10 +70,7 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
                         DocumentManager manager = this.Node.GetDocumentManager();
                         Utilities.CheckNotNull(manager);
 
-                        bool isOpen, isOpenedByUs;
-                        uint docCookie;
-                        IVsPersistDocData persistDocData;
-                        manager.GetDocInfo(out isOpen, out isDirty, out isOpenedByUs, out docCookie, out persistDocData);
+                        isDirty = manager.IsDirty;
                     });
                 }
                 return isDirty;

@@ -1769,16 +1769,16 @@ namespace Microsoft.VisualStudioTools.Project {
         private void MoveFilesForDeferredSave(HierarchyNode node, string basePath, string baseNewPath) {
             if (node != null) {
                 for (var child = node.FirstChild; child != null; child = child.NextSibling) {
-                    bool isOpen, isDirty, isOpenedByUs;
-                    uint docCookie;
-                    IVsPersistDocData persist;
                     var docMgr = child.GetDocumentManager();
-                    if (docMgr != null) {
-                        docMgr.GetDocInfo(out isOpen, out isDirty, out isOpenedByUs, out docCookie, out persist);
+                    if (docMgr != null && docMgr.IsDirty) {
                         int cancelled;
-                        if (isDirty) {
-                            child.ProjectMgr.SaveItem(VSSAVEFLAGS.VSSAVE_Save, null, docCookie, IntPtr.Zero, out cancelled);
-                        }
+                        child.ProjectMgr.SaveItem(
+                            VSSAVEFLAGS.VSSAVE_Save, 
+                            null, 
+                            docMgr.DocCookie, 
+                            IntPtr.Zero, 
+                            out cancelled
+                        );
                     }
 
                     IDiskBasedNode diskNode = child as IDiskBasedNode;

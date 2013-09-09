@@ -114,13 +114,7 @@ namespace Microsoft.VisualStudioTools.Project
                 return VSConstants.E_FAIL;
             }
 
-            // Get info about the document
-            bool isDirty, isOpen, isOpenedByUs;
-            uint docCookie;
-            IVsPersistDocData ppIVsPersistDocData;
-            this.GetDocInfo(out isOpen, out isDirty, out isOpenedByUs, out docCookie, out ppIVsPersistDocData);
-
-            if (isOpenedByUs)
+            if (IsOpenedByUs)
             {
                 IVsUIShellOpenDocument shell = this.Node.ProjectMgr.Site.GetService(typeof(IVsUIShellOpenDocument)) as IVsUIShellOpenDocument;
                 Guid logicalView = Guid.Empty;
@@ -133,7 +127,6 @@ namespace Microsoft.VisualStudioTools.Project
 
                 if (windowFrame != null)
                 {
-                    docCookie = 0;
                     return windowFrame.CloseFrame((uint)closeFlag);
                 }
             }
@@ -148,25 +141,121 @@ namespace Microsoft.VisualStudioTools.Project
         /// <remarks>The call to SaveDocData may return Microsoft.VisualStudio.Shell.Interop.PFF_RESULTS.STG_S_DATALOSS to indicate some characters could not be represented in the current codepage</remarks>
         public virtual void Save(bool saveIfDirty)
         {
-            bool isDirty, isOpen, isOpenedByUs;
-            uint docCookie;
-            IVsPersistDocData persistDocData;
-            this.GetDocInfo(out isOpen, out isDirty, out isOpenedByUs, out docCookie, out persistDocData);
-            if (isDirty && saveIfDirty && persistDocData != null)
-            {
-                string name;
-                int cancelled;
-                ErrorHandler.ThrowOnFailure(persistDocData.SaveDocData(VSSAVEFLAGS.VSSAVE_SilentSave, out name, out cancelled));
+            if (saveIfDirty && IsDirty) {
+                IVsPersistDocData persistDocData = DocData;
+                if (persistDocData != null) {
+                    string name;
+                    int cancelled;
+                    ErrorHandler.ThrowOnFailure(persistDocData.SaveDocData(VSSAVEFLAGS.VSSAVE_SilentSave, out name, out cancelled));
+                }
             }
         }
 
         #endregion
 
+        /// <summary>
+        /// Queries the RDT to see if the document is currently edited and not saved.
+        /// </summary>
+        public bool IsDirty {
+            get {
+#if DEV12_OR_LATER
+                var docTable = (IVsRunningDocumentTable4)node.ProjectMgr.GetService(typeof(SVsRunningDocumentTable));
+                if (!docTable.IsMonikerValid(node.GetMkDocument())) {
+                    return false;
+                }
+
+                return docTable.IsDocumentDirty(docTable.GetDocumentCookie(node.GetMkDocument()));
+#else
+                bool isOpen, isDirty, isOpenedByUs;
+                uint docCookie;
+                IVsPersistDocData persistDocData;
+                GetDocInfo(out isOpen, out isDirty, out isOpenedByUs, out docCookie, out persistDocData);
+                return isDirty;
+#endif
+            }
+        }
+
+        /// <summary>
+        /// Queries the RDT to see if the document was opened by our project.
+        /// </summary>
+        public bool IsOpenedByUs {
+            get {
+#if DEV12_OR_LATER
+                var docTable = (IVsRunningDocumentTable4)node.ProjectMgr.GetService(typeof(SVsRunningDocumentTable));
+                if (!docTable.IsMonikerValid(node.GetMkDocument())) {
+                    return false;
+                }
+
+                IVsHierarchy hierarchy;
+                uint itemId;
+                docTable.GetDocumentHierarchyItem(
+                    docTable.GetDocumentCookie(node.GetMkDocument()),
+                    out hierarchy,
+                    out itemId
+                );
+                return Utilities.IsSameComObject(node.ProjectMgr, hierarchy);
+#else
+                bool isOpen, isDirty, isOpenedByUs;
+                uint docCookie;
+                IVsPersistDocData persistDocData;
+                GetDocInfo(out isOpen, out isDirty, out isOpenedByUs, out docCookie, out persistDocData);
+                return isOpenedByUs;
+#endif
+
+            }
+        }
+
+        /// <summary>
+        /// Returns the doc cookie in the RDT for the associated file.
+        /// </summary>
+        public uint DocCookie {
+            get {
+#if DEV12_OR_LATER
+                var docTable = (IVsRunningDocumentTable4)node.ProjectMgr.GetService(typeof(SVsRunningDocumentTable));
+                if (!docTable.IsMonikerValid(node.GetMkDocument())) {
+                    return (uint)ShellConstants.VSDOCCOOKIE_NIL;
+                }
+
+                return docTable.GetDocumentCookie(node.GetMkDocument());
+#else
+                bool isOpen, isDirty, isOpenedByUs;
+                uint docCookie;
+                IVsPersistDocData persistDocData;
+                GetDocInfo(out isOpen, out isDirty, out isOpenedByUs, out docCookie, out persistDocData);
+                return docCookie;
+#endif
+            }
+        }
+
+        /// <summary>
+        /// Returns the IVsPersistDocData associated with the document, or null if there isn't one.
+        /// </summary>
+        public IVsPersistDocData DocData {
+            get {
+#if DEV12_OR_LATER
+                var docTable = (IVsRunningDocumentTable4)node.ProjectMgr.GetService(typeof(SVsRunningDocumentTable));
+                if (!docTable.IsMonikerValid(node.GetMkDocument())) {
+                    return null;
+                }
+
+                return docTable.GetDocumentData(docTable.GetDocumentCookie(node.GetMkDocument())) as IVsPersistDocData;
+#else
+                bool isOpen, isDirty, isOpenedByUs;
+                uint docCookie;
+                IVsPersistDocData persistDocData;
+                GetDocInfo(out isOpen, out isDirty, out isOpenedByUs, out docCookie, out persistDocData);
+                return persistDocData;
+#endif
+            }
+        }
+
         #region helper methods
+
+#if !DEV12_OR_LATER
         /// <summary>
         /// Get document properties from RDT
         /// </summary>
-        internal void GetDocInfo(
+        private void GetDocInfo(
             out bool isOpen,     // true if the doc is opened
             out bool isDirty,    // true if the doc is dirty
             out bool isOpenedByUs, // true if opened by our project
@@ -206,6 +295,7 @@ namespace Microsoft.VisualStudioTools.Project
                 isDirty = (isDocDataDirty != 0);
             }
         }
+#endif
 
         protected string GetOwnerCaption()
         {
