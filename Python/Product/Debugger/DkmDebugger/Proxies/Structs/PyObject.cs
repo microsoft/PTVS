@@ -274,19 +274,24 @@ namespace Microsoft.PythonTools.DkmDebugger.Proxies.Structs {
                     case PyMemberDefType.T_OBJECT_EX:
                         {
                             var objProxy = GetFieldProxy(new StructField<PointerProxy<PyObject>> { Process = Process, Offset = offset });
-                            if (objProxy.IsNull) {
-                                continue;
+                            if (!objProxy.IsNull) {
+                                value = objProxy;
+                            } else {
+                                value = new ValueStore<PyObject>(None(Process));
                             }
-                            value = objProxy;
                         } break;
                     case PyMemberDefType.T_STRING:
                         {
                             var ptr = GetFieldProxy(new StructField<PointerProxy> { Process = Process, Offset = offset }).Read();
-                            var proxy = new CStringProxy(Process, ptr);
-                            if (langVer <= PythonLanguageVersion.V27) {
-                                value = new ValueStore<AsciiString>(proxy.ReadAscii());
+                            if (ptr != 0) {
+                                var proxy = new CStringProxy(Process, ptr);
+                                if (langVer <= PythonLanguageVersion.V27) {
+                                    value = new ValueStore<AsciiString>(proxy.ReadAscii());
+                                } else {
+                                    value = new ValueStore<string>(proxy.ReadUnicode());
+                                }
                             } else {
-                                value = new ValueStore<string>(proxy.ReadUnicode());
+                                value = new ValueStore<PyObject>(None(Process));
                             }
                         } break;
                     case PyMemberDefType.T_STRING_INPLACE: {

@@ -905,10 +905,12 @@ namespace Microsoft.PythonTools.DkmDebugger {
                         if (pyrtInfo.LanguageVersion <= PythonLanguageVersion.V27) {
                             // 'True' and 'False' are not literals in 2.x, but we want to treat them as such.
                             var name = expr as NameExpression;
-                            if (name.Name == "True") {
-                                newObj = PyBoolObject27.Create(process, true);
-                            } else if (name.Name == "False") {
-                                newObj = PyBoolObject27.Create(process, false);
+                            if (name != null) {
+                                if (name.Name == "True") {
+                                    newObj = PyBoolObject27.Create(process, true);
+                                } else if (name.Name == "False") {
+                                    newObj = PyBoolObject27.Create(process, false);
+                                }
                             }
                         }
                     }

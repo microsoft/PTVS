@@ -481,8 +481,9 @@ namespace Microsoft.PythonTools.DkmDebugger {
 
             // This step-in gate is not marked [StepInGate] because it doesn't live in pythonXX.dll, and so we register it manually.
             public void _call_function_pointer(DkmThread thread, ulong frameBase, ulong vframe) {
+                var process = thread.Process;
                 var cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
-                ulong pProc = cppEval.EvaluateUInt64("pProc");
+                ulong pProc = cppEval.EvaluateUInt64(process.Is64Bit() ? "@rdx" : "pProc");
                 _owner.OnPotentialRuntimeExit(thread, pProc);
             }
 
@@ -758,7 +759,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
 
                 string argsVar = process.Is64Bit() ? "((PyTupleObject*)@rdx)" : "((PyTupleObject*)args)";
 
-                ulong tp_iternext = cppEval.EvaluateUInt64(argsVar + "->ob_item[1]->ob_type->tp_iternext");
+                ulong tp_iternext = cppEval.EvaluateUInt64(argsVar + "->ob_item[0]->ob_type->tp_iternext");
                 _owner.OnPotentialRuntimeExit(thread, tp_iternext);
             }
         }

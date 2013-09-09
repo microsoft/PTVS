@@ -1,4 +1,7 @@
-﻿u"unicode string"
+﻿True
+False
+111222333444
+u"unicode string"
 U"unicode string"
 ur"raw unicode"
 UR"raw unicode"

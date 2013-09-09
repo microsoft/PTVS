@@ -68,7 +68,7 @@ namespace Microsoft.PythonTools.DkmDebugger.Proxies.Structs {
                 }
             } else {
                 for (var digitPtr = new UInt32Proxy(process, result.ob_digit.Address); absValue != 0; digitPtr = digitPtr.GetAdjacentProxy(1)) {
-                    digitPtr.Write((ushort)(absValue % (1 << bitsInDigit)));
+                    digitPtr.Write((uint)(absValue % (1 << bitsInDigit)));
                     absValue >>= bitsInDigit;
                 }
             }

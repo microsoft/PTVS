@@ -47,10 +47,6 @@ namespace Microsoft.PythonTools.DkmDebugger {
                 return;
             }
 
-            if (process.GetPythonRuntimeInstance() != null) {
-                return;
-            }
-
             if (moduleInstance.RuntimeInstance == process.GetNativeRuntimeInstance()) {
                 new LocalComponent.NativeModuleInstanceLoadedNotification { ModuleInstanceId = moduleInstance.UniqueId }.SendLower(process);
             }

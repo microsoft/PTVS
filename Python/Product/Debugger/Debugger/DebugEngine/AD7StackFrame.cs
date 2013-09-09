@@ -80,7 +80,11 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                         funcName = _stackFrame.FileName + " unknown code";
                     }
                 } else if ((dwFieldSpec & enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_MODULE) != 0) {
-                    funcName += " in " + Path.GetFileNameWithoutExtension(_stackFrame.FileName);
+                    if (CommonUtils.IsValidPath(_stackFrame.FileName)) {
+                        funcName += " in " + Path.GetFileNameWithoutExtension(_stackFrame.FileName);
+                    } else {
+                        funcName += " in " + _stackFrame.FileName;
+                    }
                     frameInfo.m_dwValidFields |= enum_FRAMEINFO_FLAGS.FIF_FUNCNAME_MODULE;
                 }
 

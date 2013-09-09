@@ -65,7 +65,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 }
             } else {
                 format.ReflowComment(res, this.GetProceedingWhiteSpaceDefaultNull(ast));
-                res.Append(this.GetExtraVerbatimText(ast) ?? (_value == null ? "None" : _value.ToString()));
+                res.Append(this.GetExtraVerbatimText(ast) ?? GetConstantRepr(ast.LanguageVersion));
             }
         }
 
@@ -127,46 +127,52 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 return res.ToString();
             } else if (_value is Complex) {
                 Complex x = (Complex)_value;
-
                 if (x.Real != 0) {
                     if (x.Imaginary < 0 || IsNegativeZero(x.Imaginary)) {
-                        return "(" + FormatComplexValue(x.Real) + FormatComplexValue(x.Imaginary) + "j)";
+                        return string.Format(nfi, "({0:g}{1:g}j)", x.Real, x.Imaginary);
                     } else /* x.Imaginary() is NaN or >= +0.0 */ {
-                        return "(" + FormatComplexValue(x.Real) + "+" + FormatComplexValue(x.Imaginary) + "j)";
+                        return string.Format(nfi, "({0:g}+{1:g}j)", x.Real, x.Imaginary);
                     }
+                } else {
+                    return string.Format(nfi, "{0:g}j", x.Imaginary);
                 }
-
-                return FormatComplexValue(x.Imaginary) + "j";
             } else if (_value is BigInteger) {
                 if (!version.Is3x()) {
                     return _value.ToString() + "L";
                 }
+            } else if (_value is double) {
+                double n = (double)_value;
+                string s = n.ToString("g", nfi);
+                // If there's no fractional part, and this is not NaN or +-Inf, G format will not include the decimal
+                // point. This is okay if we're using scientific notation as this implies float, but if not, add the
+                // decimal point to indicate the type, just like Python repr() does.
+                if ((n - Math.Truncate(n)) == 0 && !s.Contains("e")) {
+                    s += ".0";
+                }
+                return s;
+            } else if (_value is IFormattable) {
+                return ((IFormattable)_value).ToString(null, CultureInfo.InvariantCulture);
             }
 
             // TODO: We probably need to handle more primitives here
             return _value.ToString();
         }
 
-        private static NumberFormatInfo FloatingPointNumberFormatInfo;
+        private static NumberFormatInfo _nfi;
 
         private static NumberFormatInfo nfi {
             get {
-                if (FloatingPointNumberFormatInfo == null) {
+                if (_nfi == null) {
                     NumberFormatInfo numberFormatInfo = ((CultureInfo)CultureInfo.InvariantCulture.Clone()).NumberFormat;
                     // The CLI formats as "Infinity", but CPython formats differently
                     numberFormatInfo.PositiveInfinitySymbol = "inf";
                     numberFormatInfo.NegativeInfinitySymbol = "-inf";
                     numberFormatInfo.NaNSymbol = "nan";
                     numberFormatInfo.NumberDecimalDigits = 0;
-
-                    FloatingPointNumberFormatInfo = numberFormatInfo;
+                    _nfi = numberFormatInfo;
                 }
-                return FloatingPointNumberFormatInfo;
+                return _nfi;
             }
-        }
-
-        private static string FormatComplexValue(double x) {
-            return String.Format(nfi, "{0,0:f0}", x);
         }
 
         private static bool IsNegativeZero(double value) {

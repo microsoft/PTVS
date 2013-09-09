@@ -79,12 +79,27 @@ namespace Microsoft.PythonTools.DkmDebugger {
                 if (process.LivePart == null) {
                     // When debugging dumps, we don't need the helper, and don't care about it even if it's loaded in the dump.
                     return;
-                } else if (process.GetPythonRuntimeInstance() != null) {
-                    return;
                 }
 
                 var pyrtInfo = process.GetPythonRuntimeInfo();
                 var moduleInstance = process.GetNativeRuntimeInstance().GetNativeModuleInstances().Single(mi => mi.UniqueId == ModuleInstanceId);
+
+                if (pyrtInfo.DLLs.CTypes == null && PythonDLLs.CTypesNames.Contains(moduleInstance.Name)) {
+                    moduleInstance.TryLoadSymbols();
+                    if (moduleInstance.HasSymbols()) {
+                        pyrtInfo.DLLs.CTypes = moduleInstance;
+
+                        var traceHelper = process.GetDataItem<TraceManagerLocalHelper>();
+                        if (traceHelper != null) {
+                            traceHelper.OnCTypesLoaded(moduleInstance);
+                        }
+                    }
+                }
+
+                if (process.GetPythonRuntimeInstance() != null) {
+                    return;
+                }
+
                 if (PythonDLLs.GetPythonLanguageVersion(moduleInstance) != PythonLanguageVersion.None) {
                     pyrtInfo.DLLs.Python = moduleInstance;
                     for (int i = 0; i < 2; ++i) {
@@ -141,8 +156,6 @@ namespace Microsoft.PythonTools.DkmDebugger {
                         });
                         initBP.Enable();
                     }
-                } else if (PythonDLLs.CTypesNames.Contains(moduleInstance.Name)) {
-                    moduleInstance.TryLoadSymbols();
                 }
             }
         }
