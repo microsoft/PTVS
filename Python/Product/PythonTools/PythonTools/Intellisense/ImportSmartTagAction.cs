@@ -168,8 +168,9 @@ namespace Microsoft.PythonTools.Intellisense {
             var newCode = newImport.ToCodeString(curAst);
 
             var span = fromImport.GetSpan(curAst);
+            int leadingWhiteSpaceLength = (fromImport.GetLeadingWhiteSpace(curAst) ?? "").Length;
             using (var edit = _buffer.CreateEdit()) {
-                edit.Delete(span.Start.Index, span.Length);
+                edit.Delete(span.Start.Index - leadingWhiteSpaceLength, span.Length + leadingWhiteSpaceLength);
                 edit.Insert(span.Start.Index, newCode);
                 edit.Apply();
             }

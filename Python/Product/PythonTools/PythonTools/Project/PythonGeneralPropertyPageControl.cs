@@ -72,7 +72,9 @@ namespace Microsoft.PythonTools.Project {
                     // the property to find out if it's following the global
                     // default.
                     SetDefaultInterpreter(null);
-                } else {
+                } else if (selection != null) {
+                    SetDefaultInterpreter((IPythonInterpreterFactory)selection);
+                } else { 
                     SetDefaultInterpreter(provider.ActiveInterpreter);
                 }
             } finally {

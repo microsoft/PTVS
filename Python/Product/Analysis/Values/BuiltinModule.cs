@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
@@ -127,11 +128,26 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 foreach (var v in def) {
                     BuiltinClassInfo ci = v as BuiltinClassInfo;
                     if (ci != null) {
-                        var existing = ci._type.GetMember(ProjectState._defaultContext, methodName);
-                        if (existing != null) {
-                            ci[methodName] = new SpecializedCallable(v, callable, mergeOriginalAnalysis).SelfSet;
+                        IAnalysisSet classValue;
+                        if (ci.TryGetMember(methodName, out classValue)) {
+                            ci[methodName] = new SpecializedCallable(classValue.FirstOrDefault(), callable, mergeOriginalAnalysis).SelfSet;
                         } else {
                             ci[methodName] = new SpecializedCallable(null, callable, mergeOriginalAnalysis).SelfSet;
+                        }
+
+                        IAnalysisSet instValue;
+                        if (ci.Instance.TryGetMember(methodName, out instValue)) {
+                            ci.Instance[methodName] = new SpecializedCallable(
+                                instValue.FirstOrDefault(), 
+                                ci.Instance, 
+                                callable, 
+                                mergeOriginalAnalysis).SelfSet;
+                        } else {
+                            ci.Instance[methodName] = new SpecializedCallable(
+                                null,
+                                ci.Instance,
+                                callable,
+                                mergeOriginalAnalysis).SelfSet;
                         }
                     }
                 }
