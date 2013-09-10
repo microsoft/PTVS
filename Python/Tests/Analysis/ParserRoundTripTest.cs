@@ -311,6 +311,46 @@ namespace AnalysisTests {
                 new {
                     Before = "  #\r\n  #   Beautiful is better than ugly.\r\n  #   import foo\r\n  #   Explicit is better than implicit. Simple is better than complex. Complex is better than complicated.\r\n",
                     After =  "  #\r\n  #   Beautiful is better than ugly.\r\n  #   import foo\r\n  #   Explicit is better than implicit.  Simple is better than complex.\r\n  #   Complex is better than complicated.\r\n"
+                },
+                new {
+                    Before = @"def foo ( ):
+    # 12345678901234567890123456789012345678901234567890123456789012345678901234567890
+    print 'foo'",
+                    After =  @"def foo ( ):
+    # 12345678901234567890123456789012345678901234567890123456789012345678901234567890
+    print 'foo'",
+                },
+                new {
+                    Before = @"def foo ( ):
+    # 12345678901234567890123456789012345678901234567890123456789012345678901234567890          
+    print 'foo'",
+                    After =  @"def foo ( ):
+    # 12345678901234567890123456789012345678901234567890123456789012345678901234567890
+    print 'foo'",
+                },
+                new {
+                    Before = @"def f ( ):
+    # foooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+    pass
+
+def f ( ):
+    # fooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+    pass
+
+def f ( ):
+    # foooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+    pass",
+                    After =  @"def f ( ):
+    # foooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+    pass
+
+def f ( ):
+    # fooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+    pass
+
+def f ( ):
+    # foooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+    pass",
                 }
             };
 

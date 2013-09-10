@@ -19,7 +19,6 @@ namespace Microsoft.PythonTools.Options {
     [ComVisible(true)]
     public class PythonAdvancedEditorOptionsPage : PythonDialogPage {
         private bool _enterCommitsIntellisense, _intersectMembers, _addNewLineAtEndOfFullyTypedWord, _enterOutliningMode, _pasteRemovesReplPrompts;
-        private int _fillParagraphColumns;
         private PythonAdvancedEditorOptionsControl _window;
         private string _completionCommittedBy;
         private const string _defaultCompletionChars = "{}[]().,:;+-*/%&|^~=<>#'\"\\";
@@ -65,11 +64,6 @@ namespace Microsoft.PythonTools.Options {
             set { _addNewLineAtEndOfFullyTypedWord = value; }
         }
 
-        public int FillParagraphColumns {
-            get { return _fillParagraphColumns; }
-            set { _fillParagraphColumns = value; }
-        }
-
         public bool EnterOutliningModeOnOpen {
             get { return _enterOutliningMode; }
             set { _enterOutliningMode = value; }
@@ -91,7 +85,6 @@ namespace Microsoft.PythonTools.Options {
             _addNewLineAtEndOfFullyTypedWord = false;
             _completionCommittedBy = _defaultCompletionChars;
             _enterOutliningMode = true;
-            _fillParagraphColumns = 80;
             _pasteRemovesReplPrompts = true;
             _filterCompletions = true;
             _searchMode = FuzzyMatchMode.Default;
@@ -102,7 +95,6 @@ namespace Microsoft.PythonTools.Options {
         private const string NewLineAtEndOfWordSetting = "NewLineAtEndOfWord";
         private const string CompletionCommittedBySetting = "CompletionCommittedBy";
         private const string EnterOutlingModeOnOpenSetting = "EnterOutlingModeOnOpen";
-        private const string FillParagraphColumnsSetting = "FillParagraphColumns";
         private const string PasteRemovesReplPromptsSetting = "PasteRemovesReplPrompts";
         private const string FilterCompletionsSetting = "FilterCompletions";
         private const string SearchModeSetting = "SearchMode";
@@ -113,7 +105,6 @@ namespace Microsoft.PythonTools.Options {
             _addNewLineAtEndOfFullyTypedWord = LoadBool(NewLineAtEndOfWordSetting) ?? false;
             _completionCommittedBy = LoadString("CompletionCommittedBy") ?? _defaultCompletionChars;
             _enterOutliningMode = LoadBool(EnterOutlingModeOnOpenSetting) ?? true;
-            _fillParagraphColumns = LoadInt(FillParagraphColumnsSetting) ?? 80;
             _pasteRemovesReplPrompts = LoadBool(PasteRemovesReplPromptsSetting) ?? true;
             _filterCompletions = LoadBool(FilterCompletionsSetting) ?? true;
             _searchMode = LoadEnum<FuzzyMatchMode>(SearchModeSetting) ?? FuzzyMatchMode.Default;
@@ -125,7 +116,6 @@ namespace Microsoft.PythonTools.Options {
             SaveBool(NewLineAtEndOfWordSetting, _addNewLineAtEndOfFullyTypedWord);
             SaveString(CompletionCommittedBySetting, _completionCommittedBy);
             SaveBool(EnterOutlingModeOnOpenSetting, _enterOutliningMode);
-            SaveInt(FillParagraphColumnsSetting, _fillParagraphColumns);
             SaveBool(PasteRemovesReplPromptsSetting, _pasteRemovesReplPrompts);
             SaveBool(FilterCompletionsSetting, _filterCompletions);
             SaveEnum(SearchModeSetting, _searchMode);

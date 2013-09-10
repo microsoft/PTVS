@@ -75,7 +75,7 @@ It must be invoked on a comment line or within a triple quoted line.", "Python T
                 }
 
                 int curLine = 0, curOffset = fillPrefix.Prefix.Length;
-                int columnCutoff = PythonToolsPackage.Instance.AdvancedEditorOptionsPage.FillParagraphColumns - fillPrefix.Prefix.Length;
+                int columnCutoff = PythonToolsPackage.Instance.GetCodeFormattingOptions().WrappingWidth - fillPrefix.Prefix.Length;
                 int defaultColumnCutoff = columnCutoff;
                 StringBuilder newText = new StringBuilder(end.Position - start.Position);
                 while (curLine < lines.Length) {

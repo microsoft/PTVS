@@ -392,11 +392,14 @@ namespace Microsoft.PythonTools.Parsing {
                     }
                 }
 
-                if (lastSpace - curOffset < columnCutoff || columnCutoff == defaultColumnCutoff) {
+                bool startNewLine = lastSpace - curOffset >= columnCutoff &&    // word won't fit in remaining space
+                                    columnCutoff != defaultColumnCutoff;        // we're not already at the start of a new line
+
+                if (!startNewLine) {
                     // we found a like break in the region and it's a reasonable size or
                     // we have a really long word that we need to append unbroken
                     if (columnCutoff == defaultColumnCutoff) {
-                        // first time we're appending to this line                        
+                        // first time we're appending to this line
                         newText.Append(linesWritten == 0 ? prefix : additionalLinePrefix);
                     }
 
@@ -415,36 +418,26 @@ namespace Microsoft.PythonTools.Parsing {
                         columnCutoff -= lastSpace - curOffset + 1;
                     }
                     curOffset = lastSpace + 1;
-                } else {
-                    // current word is too long to append.  Start the next line.
+
+                    // if we reached the end of the line preserve the existing line break.
+                    startNewLine = curOffset >= lines[curLine].Length;
+                }
+
+                if (startNewLine) {
+                    // remove any trailing white space
                     while (newText.Length > 0 && newText[newText.Length - 1] == ' ') {
                         newText.Length = newText.Length - 1;
                     }
+
                     linesWritten++;
                     newText.Append(newLine);
                     columnCutoff = defaultColumnCutoff;
                 }
 
                 if (curOffset >= lines[curLine].Length) {
-                    // we're not reading from the next line
-                    if (lastSpace - curOffset < columnCutoff) {
-                        // preserve existing new lines if they are shorter
-                        // than the maximum length
-
-                        // and remove any trailing whitespace from the line 
-                        // before appending the new line
-                        while (newText.Length > 0 && newText[newText.Length - 1] == ' ') {
-                            newText.Length = newText.Length - 1;
-                        }
-
-                        linesWritten++;
-                        columnCutoff = defaultColumnCutoff;
-                        newText.Append(newLine);
-                    }
-
+                    // we're now reading from the next line
                     curLine++;
                     curOffset = prefix.Length;
-
                 }
             }
             return newText.ToString();

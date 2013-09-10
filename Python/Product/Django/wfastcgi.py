@@ -343,7 +343,7 @@ def get_environment(dir):
                             key = curAdd.getAttribute('key')
                             value = curAdd.getAttribute('value')
                             if key and value is not None:
-                                d[key] = value
+                                d[key.strip()] = value
             finally:
               wc.close()
         except:
