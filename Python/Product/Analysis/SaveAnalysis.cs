@@ -62,8 +62,14 @@ namespace Microsoft.PythonTools.Analysis {
                     for (int i = 0; i < 10; i++) {
                         try {
                             using (var writer = new StreamWriter(new FileStream(Path.Combine(outDir, name + ".idb.$memlist"), FileMode.Create, FileAccess.ReadWrite))) {
-                                foreach (var keyValue in moduleInfo.Scope.Variables) {
-                                    writer.WriteLine(keyValue.Key);
+                                object membersObj;
+                                Dictionary<string, object> members;
+                                if (!info.TryGetValue("members", out membersObj) ||
+                                    (members = membersObj as Dictionary<string, object>) == null) {
+                                        members = moduleInfo.Scope.Variables.ToDictionary(kv => kv.Key, kv => (object)null);
+                                }
+                                foreach (var memberName in members.Keys) {
+                                    writer.WriteLine(memberName);
                                 }
                             }
                             break;
@@ -84,10 +90,11 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         private Dictionary<string, object> SerializeModule(ModuleInfo moduleInfo) {
+            var children = GenerateChildModules(moduleInfo);
             return new Dictionary<string, object>() {
-                { "members", GenerateMembers(moduleInfo) },
+                { "members", GenerateMembers(moduleInfo, children) },
                 { "doc", MemoizeString(moduleInfo.Documentation) },
-                { "children", GenerateChildModules(moduleInfo) },
+                { "children", children },
                 { "filename", moduleInfo.ProjectEntry.FilePath }
             };
         }
@@ -103,17 +110,112 @@ namespace Microsoft.PythonTools.Analysis {
                 where lastDot >= 0
                 let packageName = moduleName.Substring(0, lastDot)
                 where packageName == moduleInfo.Name
-                select moduleName.Substring(lastDot + 1));
+                select moduleName.Substring(lastDot + 1)
+            );
 
             return res.ToList();
         }
 
-        private Dictionary<string, object> GenerateMembers(ModuleInfo moduleInfo) {
+        private Dictionary<string, object> GenerateMembers(ModuleInfo moduleInfo, IEnumerable<object> children) {
             Dictionary<string, object> res = new Dictionary<string, object>();
             foreach (var keyValue in moduleInfo.Scope.Variables) {
                 res[keyValue.Key] = GenerateMember(keyValue.Value, moduleInfo);
             }
+            foreach (var child in children.OfType<string>()) {
+                var modRef = new Dictionary<string, object> {
+                    { "kind", "moduleref" },
+                    { "value", GetModuleName(moduleInfo.Name + "." + child) }
+                };
+                object existing;
+                if (res.TryGetValue(child, out existing) && IsValidMember(existing) && !AreSameModuleRef(existing, modRef)) {
+                    var members = GetMultipleMembersOrDefault(existing);
+                    if (members == null) {
+                        members = new[] { existing, modRef };
+                    } else {
+                        members = members.Concat(Enumerable.Repeat(modRef, 1)).ToArray();
+                    }
+                    res[child] = new Dictionary<string, object> {
+                        { "kind", "multiple" },
+                        { "value", new Dictionary<string, object> { { "members", members } } }
+                    };
+                } else {
+                    res[child] = modRef;
+                }
+            }
             return res;
+        }
+
+        private static bool AreSameModuleRef(object info1, object info2) {
+            var asDict1 = info1 as Dictionary<string, object>;
+            var asDict2 = info2 as Dictionary<string, object>;
+            if (asDict1 == null || asDict2 == null) {
+                return false;
+            }
+
+            object obj;
+            if (!asDict1.TryGetValue("kind", out obj) || (obj as string) != "moduleref") {
+                return false;
+            }
+            if (!asDict2.TryGetValue("kind", out obj) || (obj as string) != "moduleref") {
+                return false;
+            }
+
+            object[] modref1, modref2;
+            if (!asDict1.TryGetValue("value", out obj) || (modref1 = obj as object[]) == null) {
+                return false;
+            }
+            if (!asDict2.TryGetValue("value", out obj) || (modref2 = obj as object[]) == null) {
+                return false;
+            }
+
+            return modref1.SequenceEqual(modref2);
+        }
+
+        private static bool IsValidMember(object info) {
+            var asDict = info as Dictionary<string, object>;
+            if (asDict == null) {
+                return false;
+            }
+
+            object obj;
+            string kind;
+            if (!asDict.TryGetValue("kind", out obj) || (kind = obj as string) == null) {
+                return false;
+            }
+
+            if (!asDict.TryGetValue("value", out obj)) {
+                return false;
+            }
+
+            if (kind == "data" && (asDict = obj as Dictionary<string, object>) != null) {
+                // { 'data': { 'type': None } } is invalid
+                return asDict.TryGetValue("type", out obj) && obj != null;
+            }
+
+            return true;
+        }
+
+        private static object[] GetMultipleMembersOrDefault(object info) {
+            var asDict = info as Dictionary<string, object>;
+            if (asDict == null) {
+                return null;
+            }
+
+            object obj;
+            string kind;
+            if (!asDict.TryGetValue("kind", out obj) || (kind = obj as string) == null || kind != "multiple") {
+                return null;
+            }
+
+            if (!asDict.TryGetValue("value", out obj) || (asDict = obj as Dictionary<string, object>) == null) {
+                return null;
+            }
+
+            if (!asDict.TryGetValue("members", out obj)) {
+                return null;
+            }
+
+            return obj as object[];
         }
 
         private object GenerateMember(VariableDef variableDef, ModuleInfo declModule, bool isRef = false) {

@@ -33,10 +33,19 @@ mod_name, mod_path, output_path = sys.argv[2:]
 module = None
 
 if mod_name and mod_name != '-':
+    remove_sys_path_0 = False
     try:
+        if mod_path and mod_path != '-':
+            import os.path
+            if os.path.exists(mod_path):
+                sys.path.insert(0, mod_path)
+                remove_sys_path_0 = True
         __import__(mod_name)
         module = sys.modules[mod_name]
     finally:
+        if remove_sys_path_0:
+            del sys.path[0]
+
         if not module:
             print('__import__("' + mod_name + '")')
             PythonScraper.write_analysis(output_path, {"members": {}, "doc": "Could not import compiled module"})

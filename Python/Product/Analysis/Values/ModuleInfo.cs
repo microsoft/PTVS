@@ -82,7 +82,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 realName = childPackage.Name.Substring(lastDot + 1);
             }
 
-            childPackage.ParentPackage = this;            
+            childPackage.ParentPackage = this;
             Scope.SetVariable(childPackage.ProjectEntry.Tree, curUnit, realName, childPackage.SelfSet, false);
 
             if (_packageModules == null) {
@@ -139,18 +139,18 @@ namespace Microsoft.PythonTools.Analysis.Values {
             VariableDef def;
             if (Scope.Variables.TryGetValue(name, out def)) {
                 SpecializeVariableDef(def, callable, mergeOriginalAnalysis);
-            } else if ((lastIndex = name.LastIndexOf('.')) != -1 && 
+            } else if ((lastIndex = name.LastIndexOf('.')) != -1 &&
                 Scope.Variables.TryGetValue(name.Substring(0, lastIndex), out def)) {
-                    var methodName = name.Substring(lastIndex + 1, name.Length - (lastIndex + 1));
-                    foreach (var v in def.TypesNoCopy) {
-                        ClassInfo ci = v as ClassInfo;
-                        if (ci != null) {
-                            VariableDef methodDef;
-                            if (ci.Scope.Variables.TryGetValue(methodName, out methodDef)) {
-                                SpecializeVariableDef(methodDef, callable, mergeOriginalAnalysis);
-                            }
+                var methodName = name.Substring(lastIndex + 1, name.Length - (lastIndex + 1));
+                foreach (var v in def.TypesNoCopy) {
+                    ClassInfo ci = v as ClassInfo;
+                    if (ci != null) {
+                        VariableDef methodDef;
+                        if (ci.Scope.Variables.TryGetValue(methodName, out methodDef)) {
+                            SpecializeVariableDef(methodDef, callable, mergeOriginalAnalysis);
                         }
                     }
+                }
             }
         }
 
@@ -179,7 +179,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             if (variable.AddTypes(unit, value)) {
                 ModuleDefinition.EnqueueDependents();
             }
-            
+
             variable.AddAssignment(node, unit);
         }
 

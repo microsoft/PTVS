@@ -20,12 +20,14 @@ using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Numerics;
+using System.Security;
 using System.Threading;
 using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.PyAnalysis;
+using Microsoft.Win32;
 
 namespace Microsoft.PythonTools.Analysis {
     /// <summary>
@@ -48,8 +50,11 @@ namespace Microsoft.PythonTools.Analysis {
         internal readonly AnalysisUnit _evalUnit;   // a unit used for evaluating when we don't otherwise have a unit available
         private readonly HashSet<string> _analysisDirs = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         private Dictionary<string, List<SpecializationInfo>> _specializationInfo = new Dictionary<string, List<SpecializationInfo>>();  // delayed specialization information, for modules not yet loaded...
-        private AnalysisLimits _limits = new AnalysisLimits();
+        private AnalysisLimits _limits;
         private static object _nullKey = new object();
+
+        private const string AnalysisLimitsKey = @"Software\Microsoft\PythonTools\" + AssemblyVersionInfo.VSVersion +
+            @"\Analysis\Project";
 
         public PythonAnalyzer(IPythonInterpreterFactory factory, IPythonInterpreter interpreter = null)
             : this(factory, interpreter ?? factory.CreateInterpreter(), null) {
@@ -62,6 +67,18 @@ namespace Microsoft.PythonTools.Analysis {
             _modules = new ModuleTable(this, _interpreter, _interpreter.GetModuleNames());
             _modulesByFilename = new ConcurrentDictionary<string, ModuleInfo>(StringComparer.OrdinalIgnoreCase);
             _itemCache = new Dictionary<object, AnalysisValue>();
+
+            try {
+                using (var key = Registry.CurrentUser.OpenSubKey(AnalysisLimitsKey)) {
+                    Limits = AnalysisLimits.LoadFromStorage(key);
+                }
+            } catch (SecurityException) {
+                Limits = new AnalysisLimits();
+            } catch (UnauthorizedAccessException) {
+                Limits = new AnalysisLimits();
+            } catch (IOException) {
+                Limits = new AnalysisLimits();
+            }
 
             _queue = new Deque<AnalysisUnit>();
 

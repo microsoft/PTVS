@@ -63,8 +63,11 @@ namespace Microsoft.PythonTools.Analysis {
         /// <summary>
         /// Loads a new instance from the specified registry key.
         /// </summary>
-        /// <param name="key">The key to load settings from. Each setting is a
-        /// DWORD value.</param>
+        /// <param name="key">
+        /// The key to load settings from. Each setting is a DWORD value. If
+        /// null, all settings are assumed to be unspecified and the default
+        /// values are used.
+        /// </param>
         /// <param name="defaultToStdLib">
         /// If True, unspecified settings are taken from the defaults for
         /// standard library analysis. Otherwise, they are taken from the

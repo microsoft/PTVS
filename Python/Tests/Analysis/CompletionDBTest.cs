@@ -17,10 +17,12 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Interpreter.Default;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
@@ -154,6 +156,76 @@ namespace PythonToolsTests {
             Assert.IsNotNull(cClass, "Could not get SomeLib.foo.C");
 
             Assert.AreEqual(PythonMemberType.Class, cClass.MemberType);
+        }
+
+        [TestMethod, Priority(0)]
+        public void PydInPackage() {
+            PythonPaths.Python27.AssertInstalled();
+
+            var outputPath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+            Console.WriteLine("Writing to: " + outputPath);
+            Directory.CreateDirectory(outputPath);
+
+            // run the analyzer
+            using (var output = ProcessOutput.RunHiddenAndCapture("Microsoft.PythonTools.Analyzer.exe",
+                "/python", PythonPaths.Python27.Path,
+                "/lib", TestData.GetPath(@"TestData\PydStdLib"),
+                "/version", "2.7",
+                "/outdir", outputPath,
+                "/indir", TestData.GetPath("CompletionDB"),
+                "/log", "AnalysisLog.txt")) {
+                output.Wait();
+                Console.WriteLine("* Stdout *");
+                foreach (var line in output.StandardOutputLines) {
+                    Console.WriteLine(line);
+                }
+                Console.WriteLine("* Stderr *");
+                foreach (var line in output.StandardErrorLines) {
+                    Console.WriteLine(line);
+                }
+                Assert.AreEqual(0, output.ExitCode);
+            }
+
+            var fact = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(new Version(2, 7));
+            var paths = new List<string> { outputPath };
+            paths.AddRange(Directory.EnumerateDirectories(outputPath));
+            var typeDb = new PythonTypeDatabase(fact, paths);
+            var module = typeDb.GetModule("Package.winsound");
+            Assert.IsNotNull(module, "Package.winsound was not analyzed");
+            var package = typeDb.GetModule("Package");
+            Assert.IsNotNull(package, "Could not import Package");
+            var member = package.GetMember(null, "winsound");
+            Assert.IsNotNull(member, "Could not get member Package.winsound");
+            Assert.AreSame(module, member);
+
+            module = typeDb.GetModule("Package._testcapi");
+            Assert.IsNotNull(module, "Package._testcapi was not analyzed");
+            package = typeDb.GetModule("Package");
+            Assert.IsNotNull(package, "Could not import Package");
+            member = package.GetMember(null, "_testcapi");
+            Assert.IsNotNull(member, "Could not get member Package._testcapi");
+            Assert.IsNotInstanceOfType(member, typeof(CPythonMultipleMembers));
+            Assert.AreSame(module, member);
+
+            module = typeDb.GetModule("Package.select");
+            Assert.IsNotNull(module, "Package.select was not analyzed");
+            package = typeDb.GetModule("Package");
+            Assert.IsNotNull(package, "Could not import Package");
+            member = package.GetMember(null, "select");
+            Assert.IsNotNull(member, "Could not get member Package.select");
+            Assert.IsInstanceOfType(member, typeof(CPythonMultipleMembers));
+            var mm = (CPythonMultipleMembers)member;
+            AssertUtil.ContainsExactly(mm.Members.Select(m => m.MemberType),
+                PythonMemberType.Module,
+                PythonMemberType.Constant,
+                PythonMemberType.Class
+            );
+            Assert.IsNotNull(mm.Members.Contains(module));
+
+            try {
+                // Only clean up if the test passed
+                Directory.Delete(outputPath, true);
+            } catch { }
         }
 
         /// <summary>

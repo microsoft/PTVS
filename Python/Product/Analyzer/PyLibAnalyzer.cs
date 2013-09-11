@@ -14,11 +14,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.Composition;
-using System.ComponentModel.Composition.Hosting;
 using System.Configuration;
 using System.Diagnostics;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -28,7 +25,6 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Interpreter.Default;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.VisualStudioTools;
@@ -36,9 +32,8 @@ using Microsoft.Win32;
 
 namespace Microsoft.PythonTools.Analysis {
     internal class PyLibAnalyzer : IDisposable {
-        private const string AnalysisLimitsKey = "Software\\Microsoft\\VisualStudio\\" +
-            AssemblyVersionInfo.VSVersion +
-            "\\PythonTools\\Analysis\\StandardLibrary";
+        private const string AnalysisLimitsKey = @"Software\Microsoft\PythonTools\" + AssemblyVersionInfo.VSVersion + 
+            @"\Analysis\StandardLibrary";
 
         private readonly Guid _id;
         private readonly Version _version;
@@ -271,6 +266,10 @@ namespace Microsoft.PythonTools.Analysis {
                 _listener.Close();
                 _listener = null;
             }
+        }
+
+        internal bool SkipUnchanged {
+            get { return !_all; }
         }
 
         private static PyLibAnalyzer MakeFromArguments(IEnumerable<string> args) {
@@ -520,15 +519,24 @@ namespace Microsoft.PythonTools.Analysis {
             _progressTotal = 0;
             _progressOffset = 0;
 
+            var candidateScrapeFileGroups = new List<List<ModulePath>>();
+            var candidateAnalyzeFileGroups = new List<List<ModulePath>>();
+
             var seen = new HashSet<string>(StringComparer.Ordinal);
             foreach (var fileGroup in fileGroups) {
+                var toScrape = fileGroup.Where(mp => mp.IsCompiled && seen.Add(mp.ModuleName)).ToList();
+                var toAnalyze = fileGroup.Where(mp => seen.Add(mp.ModuleName)).ToList();
+
                 if (ShouldAnalyze(fileGroup)) {
                     if (!_all && (builtinGroups.Contains(fileGroup) || stdLibGroups.Contains(fileGroup))) {
                         _all = true;
+                        // Include all the file groups we've already seen.
+                        _scrapeFileGroups.InsertRange(0, candidateScrapeFileGroups);
+                        _analyzeFileGroups.InsertRange(0, candidateAnalyzeFileGroups);
+                        _progressTotal += candidateScrapeFileGroups.Concat(candidateAnalyzeFileGroups).Sum(fg => fg.Count);
+                        candidateScrapeFileGroups = null;
+                        candidateAnalyzeFileGroups = null;
                     }
-
-                    var toScrape = fileGroup.Where(mp => mp.IsCompiled && seen.Add(mp.ModuleName)).ToList();
-                    var toAnalyze = fileGroup.Where(mp => seen.Add(mp.ModuleName)).ToList();
 
                     _progressTotal += toScrape.Count + toAnalyze.Count;
 
@@ -538,10 +546,17 @@ namespace Microsoft.PythonTools.Analysis {
                     if (toAnalyze.Any()) {
                         _analyzeFileGroups.Add(toAnalyze);
                     }
-                } else if (!_all) {
+                } else {
                     filesToKeep.UnionWith(fileGroup
                         .Where(mp => File.Exists(mp.SourceFile))
                         .Select(GetOutputFile));
+
+                    if (candidateScrapeFileGroups != null) {
+                        candidateScrapeFileGroups.Add(toScrape);
+                    }
+                    if (candidateAnalyzeFileGroups != null) {
+                        candidateAnalyzeFileGroups.Add(toAnalyze);
+                    }
                 }
             }
 
@@ -721,7 +736,21 @@ namespace Microsoft.PythonTools.Analysis {
                 } else {
                     Directory.CreateDirectory(Path.GetDirectoryName(destFile));
 
-                    using (var output = ProcessOutput.RunHiddenAndCapture(_interpreter, ExtensionScraperPath, "scrape", file.ModuleName, "-", destFile)) {
+                    // Provide a sys.path entry to ensure we can import the
+                    // extension module. For cases where this is necessary, it
+                    // probably means that the user can't import the module
+                    // either, but they may have some other way of resolving it
+                    // at runtime.
+                    var scrapePath = Path.GetDirectoryName(file.SourceFile);
+                    foreach (var part in file.ModuleName.Split('.').Reverse().Skip(1)) {
+                        if (Path.GetFileName(scrapePath).Equals(part, StringComparison.Ordinal)) {
+                            scrapePath = Path.GetDirectoryName(scrapePath);
+                        } else {
+                            break;
+                        }
+                    }
+
+                    using (var output = ProcessOutput.RunHiddenAndCapture(_interpreter, ExtensionScraperPath, "scrape", file.ModuleName, scrapePath, destFile)) {
                         TraceInformation("Scraping {0}", file.ModuleName);
                         TraceInformation("Command: {0}", output.Arguments);
                         output.Wait();
@@ -825,10 +854,16 @@ namespace Microsoft.PythonTools.Analysis {
                     }, 10);
                 }
 
-                using (var key = Registry.CurrentUser.OpenSubKey(AnalysisLimitsKey)) {
-                    if (key != null) {
+                try {
+                    using (var key = Registry.CurrentUser.OpenSubKey(AnalysisLimitsKey)) {
                         projectState.Limits = AnalysisLimits.LoadFromStorage(key, defaultToStdLib: true);
                     }
+                } catch (SecurityException) {
+                    projectState.Limits = AnalysisLimits.GetStandardLibraryLimits();
+                } catch (UnauthorizedAccessException) {
+                    projectState.Limits = AnalysisLimits.GetStandardLibraryLimits();
+                } catch (IOException) {
+                    projectState.Limits = AnalysisLimits.GetStandardLibraryLimits();
                 }
 
                 var items = files.Select(f => new AnalysisItem(f)).ToList();

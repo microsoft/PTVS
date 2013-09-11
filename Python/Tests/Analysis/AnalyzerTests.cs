@@ -370,6 +370,25 @@ namespace AnalysisTests {
             }
         }
 
+        [TestMethod, Priority(0)]
+        public void ChangeAllToTrueOnSecondGroup() {
+            var files = new[] {
+                "a.py",
+                "site-packages\\b.py",
+                "site-packages\\C\\__init__.py"
+            };
+
+            using (var libDb = new TemporaryLibAndDB(files))
+            using (var analyzer = libDb.Analyzer) {
+                Assert.IsTrue(analyzer.SkipUnchanged);
+
+                analyzer.Prepare();
+
+                Assert.IsFalse(analyzer.SkipUnchanged);
+                Assert.AreEqual(3, analyzer._analyzeFileGroups.Count);
+            }
+        }
+
         /// <summary>
         /// Creates a temporary 'library' and 'database' on disk for testing the
         /// analyzer's change detection.
