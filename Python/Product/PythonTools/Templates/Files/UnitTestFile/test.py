@@ -1,4 +1,4 @@
-﻿import unittest
+import unittest
 
 class Test_$safeitemname$(unittest.TestCase):
     def test_A(self):
