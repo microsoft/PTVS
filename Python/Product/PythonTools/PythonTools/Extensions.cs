@@ -151,7 +151,7 @@ namespace Microsoft.PythonTools {
 
             // Handle "abc|."
             // ("ab|c." would have been treated as "ab|c")
-            if (secondLastToken.Span.End == position && secondLastToken.CanComplete()) {
+            if (secondLastToken != null && secondLastToken.Span.End == position && secondLastToken.CanComplete()) {
                 return snapshot.CreateTrackingSpan(secondLastToken.Span, SpanTrackingMode.EdgeInclusive);
             }
 
