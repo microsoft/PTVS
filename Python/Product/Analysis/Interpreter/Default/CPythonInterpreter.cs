@@ -65,6 +65,9 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         }
 
         public IPythonModule ImportModule(string name) {
+            if (_typeDb == null) {
+                return null;
+            }
             return _typeDb.GetModule(name);
         }
 
