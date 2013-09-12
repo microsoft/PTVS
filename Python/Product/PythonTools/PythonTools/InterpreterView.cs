@@ -26,7 +26,6 @@ namespace Microsoft.PythonTools {
     internal class InterpreterView : DependencyObject, INotifyPropertyChanged {
         private readonly string _identifier;
         private DateTime _expectFirstUpdateBy;
-        private bool _startedRunning;
         private bool _isRunning;
 
         public static IEnumerable<InterpreterView> GetInterpreters(
@@ -62,12 +61,11 @@ namespace Microsoft.PythonTools {
             SubName = string.Empty;
             Identifier = _identifier = AnalyzerStatusListener.GetIdentifier(interpreter);
 
-            var withDb = interpreter as IInterpreterWithCompletionDatabase;
+            var withDb = interpreter as IPythonInterpreterFactoryWithDatabase;
             if (withDb != null) {
                 CanRefresh = File.Exists(interpreter.Configuration.InterpreterPath) &&
                     Directory.Exists(interpreter.Configuration.LibraryPath);
                 withDb.IsCurrentChanged += Interpreter_IsCurrentChanged;
-                withDb.IsCurrentReasonChanged += Interpreter_IsCurrentChanged;
                 IsCurrent = withDb.IsCurrent;
                 IsCurrentReason = withDb.GetFriendlyIsCurrentReason(CultureInfo.CurrentUICulture);
             }
@@ -80,15 +78,16 @@ namespace Microsoft.PythonTools {
         }
 
         private void Interpreter_IsCurrentChanged(object sender, EventArgs e) {
-            var withDb = sender as IInterpreterWithCompletionDatabase;
+            var withDb = sender as IPythonInterpreterFactoryWithDatabase;
             if (withDb != null) {
                 IsCurrent = withDb.IsCurrent;
                 IsCurrentReason = withDb.GetFriendlyIsCurrentReason(CultureInfo.CurrentUICulture);
+                IsCheckingDatabase = withDb.IsCheckingDatabase;
             }
         }
 
         public void ProgressUpdate(Dictionary<string, AnalysisProgress> updateInfo) {
-            var withDb = Interpreter as IInterpreterWithCompletionDatabase;
+            var withDb = Interpreter as IPythonInterpreterFactoryWithDatabase;
             if (withDb == null) {
                 return;
             }
@@ -98,10 +97,6 @@ namespace Microsoft.PythonTools {
                 if (!IsRunning) {
                     // We're analyzing, but we weren't started by this process.
                     IsRunning = true;
-                    // ...unless our DB already knew we were generating, which
-                    // means we WERE started by this process, just not through
-                    // this UI.
-                    _startedRunning = withDb.NotifyGeneratingDatabase(true);
                 }
 
                 // We've received a message, so stop worrying about the timeout.
@@ -122,16 +117,7 @@ namespace Microsoft.PythonTools {
                     }));
                 }
             } else if (IsRunning && DateTime.Now > _expectFirstUpdateBy) {
-                // We've finished running
-                Message = string.Empty;
                 IsRunning = false;
-
-                if (!_startedRunning) {
-                    // Weren't started by this process, so we need to notify
-                    // the interpreter to reload its DB.
-                    withDb.NotifyNewDatabase();
-                }
-                _startedRunning = false;
             }
         }
 
@@ -145,15 +131,17 @@ namespace Microsoft.PythonTools {
 
         public void Start() {
             if (Dispatcher.CheckAccess()) {
-                var withDb = Interpreter as IInterpreterWithCompletionDatabase;
+                var withDb = Interpreter as IPythonInterpreterFactoryWithDatabase;
                 if (withDb != null) {
                     // Expect the first update within 10 seconds or else stop
                     // running.
                     _expectFirstUpdateBy = DateTime.Now + TimeSpan.FromSeconds(10);
-                    IsRunning = _startedRunning = true;
-                    withDb.GenerateCompletionDatabase(GenerateDatabaseOptions.SkipUnchanged, exitCode => {
-                        _startedRunning = false;
-                        IsRunning = false;
+                    IsRunning = true;
+                    Message = "Starting refresh DB";
+                    withDb.GenerateDatabase(GenerateDatabaseOptions.SkipUnchanged, exitCode => {
+                        if (exitCode != PythonTypeDatabase.AlreadyGeneratingExitCode) {
+                            IsRunning = false;
+                        }
                     });
                 }
             } else {
@@ -203,6 +191,11 @@ namespace Microsoft.PythonTools {
         public bool IsRunning {
             get { return _isRunning; }
             private set { SafeSetValue(IsRunningPropertyKey, value); }
+        }
+
+        public bool IsCheckingDatabase {
+            get { return (bool)GetValue(IsCheckingDatabaseProperty); }
+            private set { SafeSetValue(IsCheckingDatabasePropertyKey, value); }
         }
 
         public bool IsCurrent {
@@ -262,6 +255,7 @@ namespace Microsoft.PythonTools {
         private static readonly DependencyPropertyKey IsCurrentReasonPropertyKey = DependencyProperty.RegisterReadOnly("IsCurrentReason", typeof(string), typeof(InterpreterView), new PropertyMetadata());
         private static readonly DependencyPropertyKey IsCurrentPropertyKey = DependencyProperty.RegisterReadOnly("IsCurrent", typeof(bool), typeof(InterpreterView), new PropertyMetadata(true));
         private static readonly DependencyPropertyKey IsRunningPropertyKey = DependencyProperty.RegisterReadOnly("IsRunning", typeof(bool), typeof(InterpreterView), new PropertyMetadata(false, IsRunning_Changed));
+        private static readonly DependencyPropertyKey IsCheckingDatabasePropertyKey = DependencyProperty.RegisterReadOnly("IsCheckingDatabase", typeof(bool), typeof(InterpreterView), new PropertyMetadata(false));
         private static readonly DependencyPropertyKey ProgressPropertyKey = DependencyProperty.RegisterReadOnly("Progress", typeof(int), typeof(InterpreterView), new PropertyMetadata(0));
         private static readonly DependencyPropertyKey MessagePropertyKey = DependencyProperty.RegisterReadOnly("Message", typeof(string), typeof(InterpreterView), new PropertyMetadata());
         private static readonly DependencyPropertyKey MaximumPropertyKey = DependencyProperty.RegisterReadOnly("Maximum", typeof(int), typeof(InterpreterView), new PropertyMetadata(0));
@@ -273,6 +267,7 @@ namespace Microsoft.PythonTools {
         public static readonly DependencyProperty SubNameProperty = SubNamePropertyKey.DependencyProperty;
         public static readonly DependencyProperty IsCurrentReasonProperty = IsCurrentReasonPropertyKey.DependencyProperty;
         public static readonly DependencyProperty IsCurrentProperty = IsCurrentPropertyKey.DependencyProperty;
+        public static readonly DependencyProperty IsCheckingDatabaseProperty = IsCheckingDatabasePropertyKey.DependencyProperty;
         public static readonly DependencyProperty IsRunningProperty = IsRunningPropertyKey.DependencyProperty;
         public static readonly DependencyProperty ProgressProperty = ProgressPropertyKey.DependencyProperty;
         public static readonly DependencyProperty MessageProperty = MessagePropertyKey.DependencyProperty;

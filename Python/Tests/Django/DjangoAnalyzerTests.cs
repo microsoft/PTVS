@@ -28,6 +28,7 @@ namespace DjangoTests {
     public class DjangoAnalyzerTests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
+            AssertListener.Initialize();
             TestData.Deploy();
         }
 

@@ -21,26 +21,28 @@ using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
 
 namespace Microsoft.PythonTools.Interpreter.Default {
-    class CPythonInterpreter : IPythonInterpreter, IDisposable {
+    class CPythonInterpreter : IPythonInterpreter, IPythonInterpreterWithProjectReferences, IDisposable {
         readonly Version _langVersion;
+        private PythonInterpreterFactoryWithDatabase _factory;
         private PythonTypeDatabase _typeDb;
         private HashSet<ProjectReference> _references;
 
-        public CPythonInterpreter(PythonTypeDatabase typeDb) {
-            _typeDb = typeDb;
-            _langVersion = _typeDb.LanguageVersion;
-            _typeDb.DatabaseReplaced += OnDatabaseReplaced;
+        public CPythonInterpreter(PythonInterpreterFactoryWithDatabase factory) {
+            _langVersion = factory.Configuration.Version;
+            _factory = factory;
+            _typeDb = _factory.GetCurrentDatabase();
+            _factory.NewDatabaseAvailable += OnNewDatabaseAvailable;
         }
 
-        private void OnDatabaseReplaced(object sender, DatabaseReplacedEventArgs e) {
-            _typeDb.DatabaseReplaced -= OnDatabaseReplaced;
-            _typeDb = e.NewDatabase;
-            if (_typeDb != null) {
-                _typeDb.DatabaseReplaced += OnDatabaseReplaced;
-            }
-            var modsChanged = ModuleNamesChanged;
-            if (modsChanged != null) {
-                modsChanged(this, EventArgs.Empty);
+        private void OnNewDatabaseAvailable(object sender, EventArgs e) {
+            _typeDb = _factory.GetCurrentDatabase();
+            // Clear references to indicate that the current DB cannot load
+            // modules.
+            _references = null;
+
+            var evt = ModuleNamesChanged;
+            if (evt != null) {
+                evt(this, EventArgs.Empty);
             }
         }
 
@@ -85,13 +87,15 @@ namespace Microsoft.PythonTools.Interpreter.Default {
                 return MakeExceptionTask(new ArgumentNullException("reference"));
             }
 
-            EnsureInstanceDb();
+            if (_references == null) {
+                _references = new HashSet<ProjectReference>();
+                // If we needed to set _references, then we also need to clone
+                // _typeDb to avoid adding modules to the shared database.
+                _typeDb = _typeDb.Clone();
+            }
 
             switch (reference.Kind) {
                 case ProjectReferenceKind.ExtensionModule:
-                    if (_references == null) {
-                        _references = new HashSet<ProjectReference>();
-                    }
                     _references.Add(reference);
                     string filename;
                     try {
@@ -138,19 +142,16 @@ namespace Microsoft.PythonTools.Interpreter.Default {
             }
         }
 
-        private void EnsureInstanceDb() {
-            if (!_typeDb.CanLoadModules) {
-                _typeDb = _typeDb.Clone();
-            }
-        }
-
         #endregion
 
 
         public void Dispose() {
             if (_typeDb != null) {
-                _typeDb.DatabaseReplaced -= OnDatabaseReplaced;
                 _typeDb = null;
+            }
+            if (_factory != null) {
+                _factory.NewDatabaseAvailable -= OnNewDatabaseAvailable;
+                _factory = null;
             }
         }
     }

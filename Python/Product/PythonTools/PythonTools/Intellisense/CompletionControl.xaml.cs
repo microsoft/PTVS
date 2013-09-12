@@ -46,7 +46,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             Content = view;
 
-            var fact = session.TextView.GetAnalyzer().InterpreterFactory as IInterpreterWithCompletionDatabase;
+            var fact = session.TextView.GetAnalyzer().InterpreterFactory as IPythonInterpreterFactoryWithDatabase;
             if (fact == null) {
                 SetValue(WarningVisibilityPropertyKey, Visibility.Collapsed);
             } else {

@@ -747,8 +747,12 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public override ReferenceNode CreateReferenceNodeForFile(string filename) {
-            var interp = this.GetInterpreter();
-            CancellationTokenSource cancelSource = new CancellationTokenSource();
+            var interp = this.GetInterpreter() as IPythonInterpreterWithProjectReferences;
+            if (interp == null) {
+                return null;
+            }
+
+            var cancelSource = new CancellationTokenSource();
             var task = interp.AddReferenceAsync(new ProjectReference(filename, ProjectReferenceKind.ExtensionModule), cancelSource.Token);
 
             // try to complete synchronously w/o flashing the dialog...

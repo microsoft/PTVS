@@ -30,8 +30,16 @@ namespace Microsoft.PythonTools.Interpreter {
     class InterpreterOptionsService : IInterpreterOptionsService {
         private static Guid NoInterpretersFactoryGuid = new Guid("{15CEBB59-1008-4305-97A9-CF5E2CB04711}");
 
+        // Two locations for specifying factory providers.
+        // The first is within the VS 1x.0_Config hive, and is easiest to
+        // specify in pkgdef files.
         private const string FactoryProvidersCollection = @"PythonTools\InterpreterFactories";
+        // The second is a static registry entry for the local machine and/or
+        // the current user (HKCU takes precedence), intended for being set by
+        // other installers.
+        private const string FactoryProvidersRegKey = @"Software\Microsoft\PythonTools\" + AssemblyVersionInfo.VSVersion + @"\InterpreterFactories";
         private const string FactoryProviderCodeBaseSetting = "CodeBase";
+
 
         private const string DefaultInterpreterOptionsCollection = @"PythonTools\Options\Interpreters";
         private const string DefaultInterpreterSetting = "DefaultInterpreter";
@@ -90,11 +98,7 @@ namespace Microsoft.PythonTools.Interpreter {
             BeginSuppressInterpretersChangedEvent();
             try {
                 var store = _settings.GetReadOnlySettingsStore(SettingsScope.Configuration);
-                if (store.CollectionExists(FactoryProvidersCollection)) {
-                    _providers = LoadProviders(store).Where(provider => provider != null).ToArray();
-                } else {
-                    _providers = new IPythonInterpreterFactoryProvider[0];
-                }
+                _providers = LoadProviders(store).Where(provider => provider != null).ToArray();
             } finally {
                 EndSuppressInterpretersChangedEvent();
             }
@@ -129,11 +133,28 @@ namespace Microsoft.PythonTools.Interpreter {
             var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             var catalog = new AggregateCatalog();
 
-            foreach (var idStr in store.GetSubCollectionNames(FactoryProvidersCollection)) {
-                var key = FactoryProvidersCollection + "\\" + idStr;
-                var codebase = store.GetString(key, FactoryProviderCodeBaseSetting, "");
-                if (!string.IsNullOrEmpty(codebase) && seen.Add(codebase)) {
-                    catalog.Catalogs.Add(new AssemblyCatalog(codebase));
+            if (store.CollectionExists(FactoryProvidersCollection)) {
+                foreach (var idStr in store.GetSubCollectionNames(FactoryProvidersCollection)) {
+                    var key = FactoryProvidersCollection + "\\" + idStr;
+                    var codebase = store.GetString(key, FactoryProviderCodeBaseSetting, "");
+                    if (!string.IsNullOrEmpty(codebase) && seen.Add(codebase)) {
+                        catalog.Catalogs.Add(new AssemblyCatalog(codebase));
+                    }
+                }
+            }
+
+            foreach (var baseKey in new[] { Registry.CurrentUser, Registry.LocalMachine }) {
+                using (var key = baseKey.OpenSubKey(FactoryProvidersRegKey)) {
+                    if (key != null) {
+                        foreach (var idStr in key.GetSubKeyNames()) {
+                            using (var subkey = key.OpenSubKey(idStr)) {
+                                var codebase = subkey.GetValue(FactoryProviderCodeBaseSetting, "") as string;
+                                if (!string.IsNullOrEmpty(codebase) && seen.Add(codebase)) {
+                                    catalog.Catalogs.Add(new AssemblyCatalog(codebase));
+                                }
+                            }
+                        }
+                    }
                 }
             }
 

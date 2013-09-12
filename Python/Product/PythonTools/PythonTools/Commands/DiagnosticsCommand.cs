@@ -120,7 +120,7 @@ namespace Microsoft.PythonTools.Commands {
                     res.AppendLine("        Path Env: " + factory.Configuration.PathEnvironmentVariable ?? "(null)");
                     res.AppendLine();
 
-                    var withDb = factory as IInterpreterWithCompletionDatabase;
+                    var withDb = factory as IPythonInterpreterFactoryWithDatabase;
                     if (withDb != null) {
                         string analysisLog = withDb.GetAnalysisLogContent(CultureInfo.InvariantCulture);
                         if (!string.IsNullOrEmpty(analysisLog)) {

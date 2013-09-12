@@ -82,6 +82,7 @@
     <Compile Include="Interpreter\Default\CPythonSequenceType.cs" />
     <Compile Include="Interpreter\InterpreterFactoryCreator.cs" />
     <Compile Include="Interpreter\InterpreterFactoryCreationOptions.cs" />
+    <Compile Include="Interpreter\IPythonInterpreterWithProjectReferences.cs" />
     <Compile Include="Interpreter\ProcessOutput.cs" />
     <Compile Include="Interpreter\IPythonSequenceType.cs" />
     <Compile Include="Interpreter\NewDatabaseEventArgs.cs" />
@@ -164,7 +165,7 @@
     <Compile Include="Interpreter\IPythonFunctionOverload.cs" />
     <Compile Include="Interpreter\IPythonMethodDescriptor.cs" />
     <Compile Include="Interpreter\IBuiltinProperty.cs" />
-    <Compile Include="Interpreter\IInterpreterWithCompletionDatabase.cs" />
+    <Compile Include="Interpreter\IPythonInterpreterFactoryWithDatabase.cs" />
     <Compile Include="Interpreter\IMember.cs" />
     <Compile Include="Interpreter\IMemberContainer.cs" />
     <Compile Include="Interpreter\IModuleContext.cs" />

@@ -38,19 +38,19 @@ namespace Microsoft.IronPythonTools.Interpreter {
         private RemoteInterpreterProxy _remote;
         private DomainUnloader _unloader;
         private PythonAnalyzer _state;
+        private readonly PythonInterpreterFactoryWithDatabase _factory;
         private PythonTypeDatabase _typeDb;
 #if DEBUG
         private int _id;
         private static int _interpreterCount;
 #endif
 
-        public IronPythonInterpreter(PythonTypeDatabase typeDb) {
+        public IronPythonInterpreter(PythonInterpreterFactoryWithDatabase factory) {
 #if DEBUG
             _id = Interlocked.Increment(ref _interpreterCount);
             Debug.WriteLine(String.Format("IronPython Interpreter Created {0}", _id));
             Debug.WriteLine(new StackTrace(true).ToString());
 #endif
-            typeDb.DatabaseReplaced += OnDatabaseReplaced;
 
             AppDomain.CurrentDomain.AssemblyResolve += AssemblyResolver.Instance.CurrentDomain_AssemblyResolve;
 
@@ -62,25 +62,21 @@ namespace Microsoft.IronPythonTools.Interpreter {
                 // IronPython not installed in the GAC...
             }
 
-            LoadModules();
+            var mod = Remote.ImportBuiltinModule("__builtin__");
+            var newMod = new IronPythonBuiltinModule(this, mod, "__builtin__");
+            _modules[newMod.Name] = newMod;
 
-            if (typeDb != null) {
-                _typeDb = typeDb;
-                lock (this) {
-                    _typeDb.BuiltinModule = (IronPythonBuiltinModule)_modules["__builtin__"];
-                }
-            }
+            _factory = factory;
+            _typeDb = _factory.GetCurrentDatabase().CloneWithNewBuiltins(newMod);
+            _factory.NewDatabaseAvailable += OnNewDatabaseAvailable;
+
+            LoadModules();
         }
 
-        private void OnDatabaseReplaced(object sender, DatabaseReplacedEventArgs e) {
-            _typeDb.DatabaseReplaced -= OnDatabaseReplaced;
-            _typeDb = e.NewDatabase;
-            if (_typeDb != null) {
-                _typeDb.DatabaseReplaced += OnDatabaseReplaced;
-                lock (this) {
-                    _typeDb.BuiltinModule = (IronPythonBuiltinModule)_modules["__builtin__"];
-                }
-            }
+        void OnNewDatabaseAvailable(object sender, EventArgs e) {
+            var mod = _modules["__builtin__"] as IBuiltinPythonModule;
+            _typeDb = _factory.GetCurrentDatabase().CloneWithNewBuiltins(mod);
+            RaiseModuleNamesChanged();
         }
 
         private void InitializeRemoteDomain() {
@@ -137,13 +133,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
                 try {
                     var mod = Remote.ImportBuiltinModule(modName);
 
-                    if (modName == "__builtin__") {
-                        var newMod = new IronPythonBuiltinModule(this, mod, modName);
-                        _modules[modName] = newMod;
-                        if (_typeDb != null) {
-                            _typeDb.BuiltinModule = newMod;
-                        }
-                    } else {
+                    if (modName != "__builtin__") {
                         _modules[modName] = new IronPythonModule(this, mod, modName);
                     }
                 } catch {
@@ -377,10 +367,6 @@ namespace Microsoft.IronPythonTools.Interpreter {
             return new IronPythonModuleContext();
         }
 
-        public void NotifyInvalidDatabase() {
-            _typeDb.OnDatabaseCorrupt();
-        }
-
         public Task AddReferenceAsync(ProjectReference reference, CancellationToken cancellationToken = default(CancellationToken)) {
             switch (reference.Kind) {
                 case ProjectReferenceKind.Assembly:
@@ -522,10 +508,10 @@ namespace Microsoft.IronPythonTools.Interpreter {
         #region IDisposable Members
 
         public void Dispose() {
-            if (_typeDb != null) {
-                _typeDb.DatabaseReplaced -= OnDatabaseReplaced;
-                _typeDb = null;
+            if (_factory != null) {
+                _factory.NewDatabaseAvailable -= OnNewDatabaseAvailable;
             }
+            _typeDb = null;
             AppDomain.CurrentDomain.AssemblyResolve -= AssemblyResolver.Instance.CurrentDomain_AssemblyResolve;
             _unloader.Dispose();
         }

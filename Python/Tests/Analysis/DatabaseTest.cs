@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System;
+using System.Linq;
 using Microsoft.IronPythonTools.Interpreter;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Interpreter;
@@ -59,7 +60,9 @@ namespace AnalysisTests {
                 Assert.IsNotNull(ptd.GetModule("__builtin__"));
 
                 var factory = new IronPythonInterpreterFactory();
-                var analyzer = new PythonAnalyzer(factory, factory.MakeInterpreter(ptd));
+                // Explicitly create an IronPythonInterpreter from factory that
+                // will use the database in db.Factory.
+                var analyzer = new PythonAnalyzer(factory, factory.MakeInterpreter(db.Factory));
 
                 // String type should have been loaded anyway
                 Assert.IsNotNull(analyzer.ClassInfos[BuiltinTypeId.Str]);
@@ -138,16 +141,16 @@ namespace AnalysisTests {
                 Assert.AreSame(ptd.GetModule("posixpath"), db1.Database.GetModule("posixpath"));
                 Assert.AreNotSame(ptd.GetModule("posixpath"), db2.Database.GetModule("posixpath"));
 
-                ptd = ptd.Clone();
-                ptd.LoadDatabase(db2.DBPath);
-
-                Assert.AreNotSame(ptd.GetModule("posixpath"), db1.Database.GetModule("posixpath"));
-
                 var ptd2 = ptd.Clone();
-                ptd2.LoadDatabase(db3.DBPath);
+                ptd2.LoadDatabase(db2.DBPath);
 
-                Assert.IsNotNull(ptd2.GetModule("ntpath"));
-                Assert.IsNull(ptd.GetModule("ntpath"));
+                Assert.AreNotSame(ptd2.GetModule("posixpath"), ptd.GetModule("posixpath"));
+
+                var ptd3 = ptd2.Clone();
+                ptd3.LoadDatabase(db3.DBPath);
+
+                Assert.IsNotNull(ptd3.GetModule("ntpath"));
+                Assert.IsNull(ptd2.GetModule("ntpath"));
             }
         }
     }

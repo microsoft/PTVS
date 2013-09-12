@@ -46,7 +46,10 @@ namespace Microsoft.PythonTools.InterpreterList {
     using IReplEvaluator = IInteractiveEngine;
 #endif
     internal partial class InterpreterList : UserControl, IDisposable {
-        readonly AnalyzerStatusListener _listener;
+        AnalyzerStatusListener _listener;
+        readonly object _listenerLock = new object();
+        int _refreshCount;
+
         readonly List<InterpreterView> _interpreters;
         readonly DispatcherTimer _refreshTimer;
         readonly IInterpreterOptionsService _interpreterService;
@@ -156,7 +159,9 @@ namespace Microsoft.PythonTools.InterpreterList {
             if (_solutionEvents != null) {
                 _solutionEvents.Dispose();
             }
-            _listener.Dispose();
+            lock (_listenerLock) {
+                _listener.Dispose();
+            }
         }
 
         private void View_PropertyChanged(object sender, PropertyChangedEventArgs e) {
@@ -235,8 +240,10 @@ namespace Microsoft.PythonTools.InterpreterList {
 
         private void AutoRefresh_Elapsed(object sender, EventArgs e) {
             Debug.Assert(Dispatcher.CheckAccess());
-            _listener.ThrowPendingExceptions();
-            _listener.RequestUpdate();
+            lock (_listenerLock) {
+                _listener.ThrowPendingExceptions();
+                _listener.RequestUpdate();
+            }
         }
 
         public ObservableCollection<InterpreterView> Interpreters {
@@ -263,7 +270,9 @@ namespace Microsoft.PythonTools.InterpreterList {
 
         private void Refresh_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
             try {
-                _listener.ThrowPendingExceptions();
+                lock (_listenerLock) {
+                    _listener.ThrowPendingExceptions();
+                }
                 e.CanExecute = true;
             } catch (Exception ex) {
                 Debug.WriteLine(ex.ToString());
@@ -272,7 +281,16 @@ namespace Microsoft.PythonTools.InterpreterList {
         }
 
         private void Refresh_Executed(object sender, ExecutedRoutedEventArgs e) {
-            _listener.RequestUpdate();
+            lock (_listenerLock) {
+                if (++_refreshCount >= 120) {
+                    _refreshCount = 0;
+                    _listener.Dispose();
+                    _listener = new AnalyzerStatusListener(Update);
+                    _listener.WaitForWorkerStarted();
+                    _listener.ThrowPendingExceptions();
+                }
+                _listener.RequestUpdate();
+            }
         }
 
         internal void Update(Dictionary<string, AnalysisProgress> data) {
@@ -374,11 +392,11 @@ namespace Microsoft.PythonTools.InterpreterList {
 
         private void CopyReason_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
             var view = e.Parameter as InterpreterView;
-            e.CanExecute = view != null && view.Interpreter is IInterpreterWithCompletionDatabase && !view.IsCurrent;
+            e.CanExecute = view != null && view.Interpreter is IPythonInterpreterFactoryWithDatabase && !view.IsCurrent;
         }
 
         private void CopyReason_Executed(object sender, ExecutedRoutedEventArgs e) {
-            var withDb = (IInterpreterWithCompletionDatabase)((InterpreterView)e.Parameter).Interpreter;
+            var withDb = (IPythonInterpreterFactoryWithDatabase)((InterpreterView)e.Parameter).Interpreter;
             Clipboard.SetText(withDb.GetIsCurrentReason(CultureInfo.CurrentUICulture));
         }
 

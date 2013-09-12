@@ -1760,7 +1760,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         internal void RemoveReference(ProjectAssemblyReference reference) {
             lock (_contentsLock) {
-                var interp = Interpreter;
+                var interp = Interpreter as IPythonInterpreterWithProjectReferences;
                 if (interp != null) {
                     interp.RemoveReference(reference);
                 }

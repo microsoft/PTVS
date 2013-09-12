@@ -12,26 +12,23 @@
  *
  * ***************************************************************************/
 
-using System;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Microsoft.PythonTools.Interpreter {
-    /// <summary>
-    /// The options that may be passed to
-    /// <see cref="IPythonInterpreterFactoryWithDatabase.GenerateDatabase"/>
-    /// </summary>
-    [Flags]
-    public enum GenerateDatabaseOptions {
+    public interface IPythonInterpreterWithProjectReferences {
         /// <summary>
-        /// Runs a full analysis for the interpreter's standard library and
-        /// installed packages.
+        /// Asynchronously loads the assocated project reference into the interpreter.
+        /// 
+        /// Returns a new task which can be waited upon for completion of the reference being added.
         /// </summary>
-        None,
+        /// <remarks>New in 2.0.</remarks>
+        Task AddReferenceAsync(ProjectReference reference, CancellationToken cancellationToken = default(CancellationToken));
+
         /// <summary>
-        /// Skips analysis if the modification time of every file in a package
-        /// is earlier than the database's time. This option prefers false
-        /// negatives (that is, analyze something that did not need it) if it is
-        /// likely that the results could be outdated.
+        /// Removes the associated project reference from the interpreter.
         /// </summary>
-        SkipUnchanged
+        /// <remarks>New in 2.0.</remarks>
+        void RemoveReference(ProjectReference reference);
     }
 }

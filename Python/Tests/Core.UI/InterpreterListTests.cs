@@ -94,82 +94,86 @@ namespace PythonToolsUITests {
 
             newProjDialog.ClickOK();
 
-            // wait for new solution to load...
-            for (int i = 0; i < 100 && app.Dte.Solution.Projects.Count == 0; i++) {
-                System.Threading.Thread.Sleep(1000);
+            try {
+                // wait for new solution to load...
+                for (int i = 0; i < 100 && app.Dte.Solution.Projects.Count == 0; i++) {
+                    System.Threading.Thread.Sleep(1000);
+                }
+
+                Assert.AreEqual(1, app.Dte.Solution.Projects.Count);
+
+                Assert.AreNotEqual(null, app.Dte.Solution.Projects.Item(1).ProjectItems.Item(Path.GetFileNameWithoutExtension(app.Dte.Solution.FullName) + ".py"));
+
+                // Check that only global environments are in the list
+                var model = (IComponentModel)VsIdeTestHostContext.ServiceProvider.GetService(typeof(SComponentModel));
+                var service = model.GetService<IInterpreterOptionsService>();
+                Assert.IsNotNull(service);
+
+                dte.ExecuteCommand("View.PythonEnvironments");
+                var list = app.FindByAutomationId("PythonTools.InterpreterList");
+                Assert.IsNotNull(list);
+
+                var allNames = new HashSet<string>(service.Interpreters.Select(i => i.Description));
+
+                var names = list.FindAll(TreeScope.Descendants, new PropertyCondition(AutomationElement.AutomationIdProperty, "InterpreterName"));
+                foreach (var obj in names.Cast<AutomationElement>()) {
+                    var name = (string)obj.GetCurrentPropertyValue(AutomationElement.NameProperty);
+                    Assert.IsTrue(allNames.Remove(name), name + " should not have been in UI");
+                }
+                Assert.AreEqual(0, allNames.Count);
+
+
+                // Create a virtual environment
+                string envName;
+                var env = VirtualEnvTests.CreateVirtualEnvironment(app, out envName);
+                env.Select();
+
+                dte.ExecuteCommand("View.PythonEnvironments");
+                list = app.FindByAutomationId("PythonTools.InterpreterList");
+                Assert.IsNotNull(list);
+
+                // Check that it has been added to the list
+                allNames = new HashSet<string>(service.Interpreters.Select(i => i.Description));
+                allNames.Add(envName);
+
+                names = list.FindAll(TreeScope.Descendants, new PropertyCondition(AutomationElement.AutomationIdProperty, "InterpreterName"));
+                foreach (var obj in names.Cast<AutomationElement>()) {
+                    var name = (string)obj.GetCurrentPropertyValue(AutomationElement.NameProperty);
+                    Assert.IsTrue(allNames.Remove(name), name + " should not have been in UI");
+                }
+                Assert.AreEqual(0, allNames.Count);
+
+                // Remove the virtual environment
+                env.SetFocus();
+
+                var removeDeleteDlg = new AutomationWrapper(AutomationElement.FromHandle(
+                    app.OpenDialogWithDteExecuteCommand("Edit.Delete")));
+                removeDeleteDlg.ClickButtonByName("Remove");
+                app.WaitForDialogDismissed();
+
+                app.SolutionExplorerTreeView.WaitForItemRemoved(
+                    "Solution '" + app.Dte.Solution.Projects.Item(1).Name + "' (1 project)",
+                    app.Dte.Solution.Projects.Item(1).Name,
+                    "Python Environments",
+                    envName);
+
+                // Check that only global environments are in the list
+                allNames = new HashSet<string>(service.Interpreters.Select(i => i.Description));
+
+                dte.ExecuteCommand("View.PythonEnvironments");
+                list = app.FindByAutomationId("PythonTools.InterpreterList");
+                Assert.IsNotNull(list);
+                names = list.FindAll(TreeScope.Descendants, new PropertyCondition(AutomationElement.AutomationIdProperty, "InterpreterName"));
+                foreach (var obj in names.Cast<AutomationElement>()) {
+                    var name = (string)obj.GetCurrentPropertyValue(AutomationElement.NameProperty);
+                    Assert.IsTrue(allNames.Remove(name), name + " should not have been in UI");
+                }
+                Assert.AreEqual(0, allNames.Count);
+
+                dte.Solution.Close(SaveFirst: false);
+            } finally {
+                dte.Solution.Close();
             }
-
-            Assert.AreEqual(1, app.Dte.Solution.Projects.Count);
-
-            Assert.AreNotEqual(null, app.Dte.Solution.Projects.Item(1).ProjectItems.Item(Path.GetFileNameWithoutExtension(app.Dte.Solution.FullName) + ".py"));
-
-            // Check that only global environments are in the list
-            var model = (IComponentModel)VsIdeTestHostContext.ServiceProvider.GetService(typeof(SComponentModel));
-            var service = model.GetService<IInterpreterOptionsService>();
-            Assert.IsNotNull(service);
-
-            dte.ExecuteCommand("View.PythonEnvironments");
-            var list = app.FindByAutomationId("PythonTools.InterpreterList");
-            Assert.IsNotNull(list);
-
-            var allNames = new HashSet<string>(service.Interpreters.Select(i => i.Description));
-
-            var names = list.FindAll(TreeScope.Descendants, new PropertyCondition(AutomationElement.AutomationIdProperty, "InterpreterName"));
-            foreach (var obj in names.Cast<AutomationElement>()) {
-                var name = (string)obj.GetCurrentPropertyValue(AutomationElement.NameProperty);
-                Assert.IsTrue(allNames.Remove(name), name + " should not have been in UI");
-            }
-            Assert.AreEqual(0, allNames.Count);
-
-
-            // Create a virtual environment
-            string envName;
-            var env = VirtualEnvTests.CreateVirtualEnvironment(app, out envName);
-            env.Select();
-
-            dte.ExecuteCommand("View.PythonEnvironments");
-            list = app.FindByAutomationId("PythonTools.InterpreterList");
-            Assert.IsNotNull(list);
-
-            // Check that it has been added to the list
-            allNames = new HashSet<string>(service.Interpreters.Select(i => i.Description));
-            allNames.Add(envName);
-
-            names = list.FindAll(TreeScope.Descendants, new PropertyCondition(AutomationElement.AutomationIdProperty, "InterpreterName"));
-            foreach (var obj in names.Cast<AutomationElement>()) {
-                var name = (string)obj.GetCurrentPropertyValue(AutomationElement.NameProperty);
-                Assert.IsTrue(allNames.Remove(name), name + " should not have been in UI");
-            }
-            Assert.AreEqual(0, allNames.Count);
-
-            // Remove the virtual environment
-            env.SetFocus();
-
-            var removeDeleteDlg = new AutomationWrapper(AutomationElement.FromHandle(
-                app.OpenDialogWithDteExecuteCommand("Edit.Delete")));
-            removeDeleteDlg.ClickButtonByName("Remove");
-            app.WaitForDialogDismissed();
-
-            app.SolutionExplorerTreeView.WaitForItemRemoved(
-                "Solution '" + app.Dte.Solution.Projects.Item(1).Name + "' (1 project)",
-                app.Dte.Solution.Projects.Item(1).Name,
-                "Python Environments",
-                envName);
-
-            // Check that only global environments are in the list
-            allNames = new HashSet<string>(service.Interpreters.Select(i => i.Description));
-
-            dte.ExecuteCommand("View.PythonEnvironments");
-            list = app.FindByAutomationId("PythonTools.InterpreterList");
-            Assert.IsNotNull(list);
-            names = list.FindAll(TreeScope.Descendants, new PropertyCondition(AutomationElement.AutomationIdProperty, "InterpreterName"));
-            foreach (var obj in names.Cast<AutomationElement>()) {
-                var name = (string)obj.GetCurrentPropertyValue(AutomationElement.NameProperty);
-                Assert.IsTrue(allNames.Remove(name), name + " should not have been in UI");
-            }
-            Assert.AreEqual(0, allNames.Count);
-
-            dte.Solution.Close(SaveFirst: false);
         }
 
         [TestMethod, Priority(0), TestCategory("InterpreterList")]
@@ -179,36 +183,38 @@ namespace PythonToolsUITests {
             var app = new VisualStudioApp(dte);
             var proj = app.OpenAndFindProject(@"TestData\VirtualEnv.sln");
 
-            var model = (IComponentModel)VsIdeTestHostContext.ServiceProvider.GetService(typeof(SComponentModel));
-            var service = model.GetService<IInterpreterOptionsService>();
-            Assert.IsNotNull(service);
+            try {
+                var model = (IComponentModel)VsIdeTestHostContext.ServiceProvider.GetService(typeof(SComponentModel));
+                var service = model.GetService<IInterpreterOptionsService>();
+                Assert.IsNotNull(service);
 
-            dte.ExecuteCommand("View.PythonEnvironments");
-            var list = new VisualStudioApp(dte).FindByAutomationId("PythonTools.InterpreterList");
-            Assert.IsNotNull(list);
+                dte.ExecuteCommand("View.PythonEnvironments");
+                var list = new VisualStudioApp(dte).FindByAutomationId("PythonTools.InterpreterList");
+                Assert.IsNotNull(list);
 
-            var allNames = new HashSet<string>(service.Interpreters.Select(i => i.Description));
-            allNames.Add("env (Python 2.7)");
+                var allNames = new HashSet<string>(service.Interpreters.Select(i => i.Description));
+                allNames.Add("env (Python 2.7)");
 
-            var names = list.FindAll(TreeScope.Descendants, new PropertyCondition(AutomationElement.AutomationIdProperty, "InterpreterName"));
-            foreach (var obj in names.Cast<AutomationElement>()) {
-                var name = (string)obj.GetCurrentPropertyValue(AutomationElement.NameProperty);
-                Assert.IsTrue(allNames.Remove(name), name + " should not have been in UI");
+                var names = list.FindAll(TreeScope.Descendants, new PropertyCondition(AutomationElement.AutomationIdProperty, "InterpreterName"));
+                foreach (var obj in names.Cast<AutomationElement>()) {
+                    var name = (string)obj.GetCurrentPropertyValue(AutomationElement.NameProperty);
+                    Assert.IsTrue(allNames.Remove(name), name + " should not have been in UI");
+                }
+                Assert.AreEqual(0, allNames.Count);
+
+                proj.Delete();
+
+                allNames = new HashSet<string>(service.Interpreters.Select(i => i.Description));
+
+                names = list.FindAll(TreeScope.Descendants, new PropertyCondition(AutomationElement.AutomationIdProperty, "InterpreterName"));
+                foreach (var obj in names.Cast<AutomationElement>()) {
+                    var name = (string)obj.GetCurrentPropertyValue(AutomationElement.NameProperty);
+                    Assert.IsTrue(allNames.Remove(name), name + " should not have been in UI");
+                }
+                Assert.AreEqual(0, allNames.Count);
+            } finally {
+                dte.Solution.Close(SaveFirst: false);
             }
-            Assert.AreEqual(0, allNames.Count);
-
-            proj.Delete();
-
-            allNames = new HashSet<string>(service.Interpreters.Select(i => i.Description));
-
-            names = list.FindAll(TreeScope.Descendants, new PropertyCondition(AutomationElement.AutomationIdProperty, "InterpreterName"));
-            foreach (var obj in names.Cast<AutomationElement>()) {
-                var name = (string)obj.GetCurrentPropertyValue(AutomationElement.NameProperty);
-                Assert.IsTrue(allNames.Remove(name), name + " should not have been in UI");
-            }
-            Assert.AreEqual(0, allNames.Count);
-
-            dte.Solution.Close(SaveFirst: false);
         }
 
         [TestMethod, Priority(0), TestCategory("InterpreterList")]
@@ -218,47 +224,49 @@ namespace PythonToolsUITests {
             var app = new VisualStudioApp(dte);
             var proj = app.OpenAndFindProject(@"TestData\VirtualEnv.sln");
 
-            dte.ExecuteCommand("View.PythonEnvironments");
-            var list = new VisualStudioApp(dte).FindByAutomationId("PythonTools.InterpreterList");
-            Assert.IsNotNull(list, "interpreter list is null");
+            try {
+                dte.ExecuteCommand("View.PythonEnvironments");
+                var list = new VisualStudioApp(dte).FindByAutomationId("PythonTools.InterpreterList");
+                Assert.IsNotNull(list, "interpreter list is null");
 
-            // Check that the current environment is the virtual environment
-            Guid venvId = Guid.Parse((string)proj.Properties.Item("InterpreterId").Value);
+                // Check that the current environment is the virtual environment
+                Guid venvId = Guid.Parse((string)proj.Properties.Item("InterpreterId").Value);
 
-            // Get the activate button and check that it's disabled because the project should have the virtual environment
-            // activated already
-            var activateButton = list.FindFirst(TreeScope.Descendants, new PropertyCondition(AutomationElement.NameProperty, "Activate"));
-            Assert.IsNotNull(activateButton);
-            Assert.IsFalse((bool)activateButton.GetCurrentPropertyValue(AutomationElement.IsEnabledProperty), "Activate button is not disabled");
+                // Get the activate button and check that it's disabled because the project should have the virtual environment
+                // activated already
+                var activateButton = list.FindFirst(TreeScope.Descendants, new PropertyCondition(AutomationElement.NameProperty, "Activate"));
+                Assert.IsNotNull(activateButton);
+                Assert.IsFalse((bool)activateButton.GetCurrentPropertyValue(AutomationElement.IsEnabledProperty), "Activate button is not disabled");
 
-            // Enable another interpreter so the virtual environment is deactivated
-            var python27Env = new AutomationWrapper(app.SolutionExplorerTreeView.FindItem(
-                "Solution '" + app.Dte.Solution.Projects.Item(1).Name + "' (1 project)",
-                app.Dte.Solution.Projects.Item(1).Name,
-                "Python Environments",
-                "Python 2.7"));
-            python27Env.Select();
-            app.Dte.ExecuteCommand("Project.ActivateEnvironment");
+                // Enable another interpreter so the virtual environment is deactivated
+                var python27Env = new AutomationWrapper(app.SolutionExplorerTreeView.FindItem(
+                    "Solution '" + app.Dte.Solution.Projects.Item(1).Name + "' (1 project)",
+                    app.Dte.Solution.Projects.Item(1).Name,
+                    "Python Environments",
+                    "Python 2.7"));
+                python27Env.Select();
+                app.Dte.ExecuteCommand("Project.ActivateEnvironment");
 
-            // Check that the activate button for the virtual environment is now enabled and the interpreter
-            // id has been changed to something else
-            Guid interpreterId = Guid.Parse((string)proj.Properties.Item("InterpreterId").Value);
-            activateButton = list.FindFirst(TreeScope.Descendants, new PropertyCondition(AutomationElement.NameProperty, "Activate"));
-            Assert.IsTrue((bool)activateButton.GetCurrentPropertyValue(AutomationElement.IsEnabledProperty), "Activate button is not enabled");
-            Assert.IsFalse(interpreterId == venvId, "The active interpreter hasn't been set to Python 2.7");
+                // Check that the activate button for the virtual environment is now enabled and the interpreter
+                // id has been changed to something else
+                Guid interpreterId = Guid.Parse((string)proj.Properties.Item("InterpreterId").Value);
+                activateButton = list.FindFirst(TreeScope.Descendants, new PropertyCondition(AutomationElement.NameProperty, "Activate"));
+                Assert.IsTrue((bool)activateButton.GetCurrentPropertyValue(AutomationElement.IsEnabledProperty), "Activate button is not enabled");
+                Assert.IsFalse(interpreterId == venvId, "The active interpreter hasn't been set to Python 2.7");
 
-            // Activate the virtual environment by clicking on it
-            ((InvokePattern)activateButton.GetCurrentPattern(InvokePattern.Pattern)).Invoke();
+                // Activate the virtual environment by clicking on it
+                ((InvokePattern)activateButton.GetCurrentPattern(InvokePattern.Pattern)).Invoke();
 
-            // Check that the activate button is now disabled
-            activateButton = list.FindFirst(TreeScope.Descendants, new PropertyCondition(AutomationElement.NameProperty, "Activate"));
-            Assert.IsFalse((bool)activateButton.GetCurrentPropertyValue(AutomationElement.IsEnabledProperty), "Activate button is not redisabled");
+                // Check that the activate button is now disabled
+                activateButton = list.FindFirst(TreeScope.Descendants, new PropertyCondition(AutomationElement.NameProperty, "Activate"));
+                Assert.IsFalse((bool)activateButton.GetCurrentPropertyValue(AutomationElement.IsEnabledProperty), "Activate button is not redisabled");
 
-            // Check that the virtual environment is now selected
-            interpreterId = Guid.Parse((string)proj.Properties.Item("InterpreterId").Value);
-            Assert.IsTrue(interpreterId == venvId, "The active interpreter hasn't been set back to the virtual environment");
-
-            dte.Solution.Close(SaveFirst: false);
+                // Check that the virtual environment is now selected
+                interpreterId = Guid.Parse((string)proj.Properties.Item("InterpreterId").Value);
+                Assert.IsTrue(interpreterId == venvId, "The active interpreter hasn't been set back to the virtual environment");
+            } finally {
+                dte.Solution.Close(SaveFirst: false);
+            }
         }
 
         [TestMethod, Priority(0), TestCategory("InterpreterList")]
@@ -472,8 +480,8 @@ namespace PythonToolsUITests {
             try {
                 // Not crashing is sufficient to ensure that
                 // https://pytools.codeplex.com/workitem/1199 is fixed.
-                var withDb = (IInterpreterWithCompletionDatabase)fake;
-                withDb.GenerateCompletionDatabase(GenerateDatabaseOptions.None);
+                var withDb = (IPythonInterpreterFactoryWithDatabase)fake;
+                withDb.GenerateDatabase(GenerateDatabaseOptions.None);
             } finally {
                 configurable.RemoveInterpreter(fake.Id);
             }

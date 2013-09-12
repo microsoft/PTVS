@@ -480,14 +480,14 @@ namespace Microsoft.PythonTools.TestAdapter {
             }
 
             private void HookNewDatabaseAvailable() {
-                var dbInterp = ActiveInterpreter as IInterpreterWithCompletionDatabase;
+                var dbInterp = ActiveInterpreter as PythonInterpreterFactoryWithDatabase;
                 if (dbInterp != null) {
                     dbInterp.NewDatabaseAvailable += DatabaseChanged;
                 }
             }
 
             private void UnhookDatabaseCurrentChanged() {
-                var dbInterp = ActiveInterpreter as IInterpreterWithCompletionDatabase;
+                var dbInterp = ActiveInterpreter as PythonInterpreterFactoryWithDatabase;
                 if (dbInterp != null) {
                     dbInterp.NewDatabaseAvailable -= DatabaseChanged;
                 }

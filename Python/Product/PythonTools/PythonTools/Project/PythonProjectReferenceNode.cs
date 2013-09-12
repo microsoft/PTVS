@@ -45,17 +45,17 @@ namespace Microsoft.PythonTools.Project {
             _fileChangeListener.FileChangedOnDisk += FileChangedOnDisk;
             PythonToolsPackage.Instance.SolutionEvents.ProjectLoaded += PythonProjectReferenceNode_ProjectLoaded;
             InitializeFileChangeListener();
-            AddAnalyzedAssembly(((PythonProjectNode)ProjectMgr).GetInterpreter());
+            AddAnalyzedAssembly(((PythonProjectNode)ProjectMgr).GetInterpreter() as IPythonInterpreterWithProjectReferences);
         }
 
         private void PythonProjectReferenceNode_ProjectLoaded(object sender, ProjectEventArgs e) {
             InitializeFileChangeListener();
-            AddAnalyzedAssembly(((PythonProjectNode)ProjectMgr).GetInterpreter());
+            AddAnalyzedAssembly(((PythonProjectNode)ProjectMgr).GetInterpreter() as IPythonInterpreterWithProjectReferences);
         }
 
         private void EventListener_AfterActiveSolutionConfigurationChange(object sender, EventArgs e) {
             InitializeFileChangeListener();
-            AddAnalyzedAssembly(((PythonProjectNode)ProjectMgr).GetInterpreter());
+            AddAnalyzedAssembly(((PythonProjectNode)ProjectMgr).GetInterpreter() as IPythonInterpreterWithProjectReferences);
         }
 
         private void InitializeFileChangeListener() {
@@ -70,7 +70,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private void FileChangedOnDisk(object sender, FileChangedOnDiskEventArgs e) {
-            var interp = ((PythonProjectNode)ProjectMgr).GetInterpreter();
+            var interp = ((PythonProjectNode)ProjectMgr).GetInterpreter() as IPythonInterpreterWithProjectReferences;
             // remove the reference to whatever we are currently observing
             RemoveAnalyzedAssembly(interp);
 
@@ -80,7 +80,7 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-        private void RemoveAnalyzedAssembly(IPythonInterpreter interp) {
+        private void RemoveAnalyzedAssembly(IPythonInterpreterWithProjectReferences interp) {
             if (interp != null) {
                 if (_curReference != null) {
                     interp.RemoveReference(_curReference);
@@ -89,7 +89,7 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-        private void AddAnalyzedAssembly(IPythonInterpreter interp) {
+        private void AddAnalyzedAssembly(IPythonInterpreterWithProjectReferences interp) {
             if (interp != null) {
                 var asmName = AssemblyName;
                 if (asmName != null) {

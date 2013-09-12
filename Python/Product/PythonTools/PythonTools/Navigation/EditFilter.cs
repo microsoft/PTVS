@@ -675,10 +675,12 @@ namespace Microsoft.PythonTools.Language {
                         ExtractMethod();
                         return VSConstants.S_OK;
                     default:
-                        foreach (var command in PythonToolsPackage.Commands.Keys) {
-                            if (command.CommandId == nCmdID) {
-                                command.DoCommand(this, EventArgs.Empty);
-                                return VSConstants.S_OK;
+                        lock (PythonToolsPackage.CommandsLock) {
+                            foreach (var command in PythonToolsPackage.Commands.Keys) {
+                                if (command.CommandId == nCmdID) {
+                                    command.DoCommand(this, EventArgs.Empty);
+                                    return VSConstants.S_OK;
+                                }
                             }
                         }
                         break;
@@ -857,11 +859,13 @@ namespace Microsoft.PythonTools.Language {
                             }
                             return VSConstants.S_OK;
                         default:
-                            foreach (var command in PythonToolsPackage.Commands.Keys) {
-                                if (command.CommandId == prgCmds[i].cmdID) {
-                                    int? res = command.EditFilterQueryStatus(ref prgCmds[i], pCmdText);
-                                    if (res != null) {
-                                        return res.Value;
+                            lock (PythonToolsPackage.CommandsLock) {
+                                foreach (var command in PythonToolsPackage.Commands.Keys) {
+                                    if (command.CommandId == prgCmds[i].cmdID) {
+                                        int? res = command.EditFilterQueryStatus(ref prgCmds[i], pCmdText);
+                                        if (res != null) {
+                                            return res.Value;
+                                        }
                                     }
                                 }
                             }

@@ -13,9 +13,11 @@
  * ***************************************************************************/
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.PythonTools.Interpreters {
@@ -45,19 +47,24 @@ namespace Microsoft.PythonTools.Interpreters {
             }
 
             _base = baseFactory;
-            _base.IsCurrentChanged += OnIsCurrentChanged;
-            _base.IsCurrentReasonChanged += OnIsCurrentReasonChanged;
+            _base.IsCurrentChanged += Base_IsCurrentChanged;
+            _base.NewDatabaseAvailable += Base_NewDatabaseAvailable;
 
             _description = options.Description;
         }
 
-        protected override void Dispose(bool disposing) {
+        private void Base_NewDatabaseAvailable(object sender, EventArgs e) {
             if (_baseDb != null) {
-                _baseDb.DatabaseCorrupt -= Base_DatabaseCorrupt;
-                _baseDb.DatabaseReplaced -= Base_DatabaseReplaced;
+                _baseDb = null;
+                _baseHasRefreshed = true;
             }
-            _base.IsCurrentChanged -= OnIsCurrentChanged;
-            _base.IsCurrentReasonChanged -= OnIsCurrentReasonChanged;
+            OnNewDatabaseAvailable();
+            OnIsCurrentChanged();
+        }
+
+        protected override void Dispose(bool disposing) {
+            _base.IsCurrentChanged -= Base_IsCurrentChanged;
+            _base.NewDatabaseAvailable -= Base_NewDatabaseAvailable;
 
             base.Dispose(disposing);
         }
@@ -78,54 +85,8 @@ namespace Microsoft.PythonTools.Interpreters {
             _description = value;
         }
 
-        private void OnIsCurrentChanged(object sender, EventArgs e) {
-            base.OnIsCurrentChanged();
-        }
-
-        private void OnIsCurrentReasonChanged(object sender, EventArgs e) {
-            base.OnIsCurrentReasonChanged();
-        }
-
-        private void Base_DatabaseReplaced(object sender, DatabaseReplacedEventArgs e) {
-            if (_baseDb == e.NewDatabase) {
-                return;
-            }
-
-            if (_baseDb != null) {
-                _baseDb.DatabaseCorrupt -= Base_DatabaseCorrupt;
-                _baseDb.DatabaseReplaced -= Base_DatabaseReplaced;
-                _baseHasRefreshed = true;
-            }
-            _baseDb = e.NewDatabase;
-            if (_baseDb != null) {
-                _baseDb.DatabaseCorrupt += Base_DatabaseCorrupt;
-                _baseDb.DatabaseReplaced += Base_DatabaseReplaced;
-
-                if (_baseHasRefreshed) {
-                    if (IsCurrentDatabaseInUse) {
-                        // We have interpreter instances using our database, so
-                        // refresh it immediately.
-                        GenerateCompletionDatabase(GenerateDatabaseOptions.None, exitCode => {
-                            // When we finish, refresh our status.
-                            _baseHasRefreshed = (exitCode != 0);
-                            OnIsCurrentChanged(this, EventArgs.Empty);
-                            OnIsCurrentReasonChanged(this, EventArgs.Empty);
-                        });
-                    } else {
-                        // Otherwise, update our IsCurrent status.
-                        OnIsCurrentChanged(this, EventArgs.Empty);
-                        OnIsCurrentReasonChanged(this, EventArgs.Empty);
-                    }
-                }
-            }
-        }
-
-        private void Base_DatabaseCorrupt(object sender, EventArgs e) {
-            NotifyInvalidDatabase();
-        }
-
-        public override IPythonInterpreter MakeInterpreter(PythonTypeDatabase typeDb) {
-            return _base.MakeInterpreter(typeDb);
+        public override IPythonInterpreter MakeInterpreter(PythonInterpreterFactoryWithDatabase factory) {
+            return _base.MakeInterpreter(factory);
         }
 
         private static bool ShouldIncludeGlobalSitePackages(string prefixPath, string libPath) {
@@ -164,36 +125,27 @@ namespace Microsoft.PythonTools.Interpreters {
                     Configuration.LibraryPath
                 );
 
-                _baseDb = _base.MakeTypeDatabase(_base.DatabasePath, includeSitePackages: includeBaseSitePackages);
-                _baseDb.DatabaseCorrupt += Base_DatabaseCorrupt;
-                _baseDb.DatabaseReplaced += Base_DatabaseReplaced;
+                _baseDb = _base.GetCurrentDatabase(includeBaseSitePackages);
             }
 
-            var db = _baseDb.Clone(this);
-            try {
-                db.LoadDatabase(databasePath);
-                if (includeSitePackages) {
-                    foreach (var dir in Directory.EnumerateDirectories(databasePath)) {
-                        db.LoadDatabase(dir);
-                    }
-                }
-            } catch (IOException) {
-            } catch (UnauthorizedAccessException) {
+            if (!IsCurrent || !Directory.Exists(databasePath)) {
+                GenerateDatabase(GenerateDatabaseOptions.SkipUnchanged);
+                return _baseDb;
             }
-            return db;
+
+            var paths = new List<string> { databasePath };
+            if (includeSitePackages) {
+                try {
+                    paths.AddRange(Directory.EnumerateDirectories(databasePath));
+                } catch (IOException) {
+                } catch (UnauthorizedAccessException) {
+                }
+            }
+            return new PythonTypeDatabase(this, paths, _baseDb);
         }
 
-        public override void GenerateCompletionDatabase(GenerateDatabaseOptions options, Action<int> onExit = null) {
-            if (IsGenerating) {
-                return;
-            }
-
+        public override void GenerateDatabase(GenerateDatabaseOptions options, Action<int> onExit = null) {
             if (!Directory.Exists(Configuration.LibraryPath)) {
-                return;
-            }
-
-            if (!_base.IsCurrent) {
-                _base.GenerateCompletionDatabase(GenerateDatabaseOptions.SkipUnchanged, onExit);
                 return;
             }
 
@@ -205,7 +157,6 @@ namespace Microsoft.PythonTools.Interpreters {
             } catch (UnauthorizedAccessException) {
             }
 
-            NotifyGeneratingDatabase(true);
             var req = new PythonTypeDatabaseCreationRequest {
                 Factory = this,
                 OutputPath = DatabasePath,
@@ -213,9 +164,19 @@ namespace Microsoft.PythonTools.Interpreters {
             };
 
             req.ExtraInputDatabases.Add(_base.DatabasePath);
-            req.OnExit = onExit;
 
-            PythonTypeDatabase.Generate(req);
+            if (_base.IsCurrent) {
+                base.GenerateDatabase(req, onExit);
+            } else {
+                req.WaitFor = _base;
+                req.SkipUnchanged = false;
+                // Start our analyzer first, since we will wait up to a minute
+                // for our base analyzer to start (which may cause a one minute
+                // delay if it completes before we start).
+                base.GenerateDatabase(req, onExit);
+                _base.GenerateDatabase(GenerateDatabaseOptions.SkipUnchanged);
+            }
+            _baseHasRefreshed = false;
         }
 
         private string BaseDatabasePath {
@@ -237,17 +198,20 @@ namespace Microsoft.PythonTools.Interpreters {
             }
         }
 
-        public override void AutoGenerateCompletionDatabase() {
-            _base.AutoGenerateCompletionDatabase();
-            if (_base.IsCurrent) {
-                base.AutoGenerateCompletionDatabase();
-            }
-        }
-
         public override bool IsCurrent {
             get {
                 return !_baseHasRefreshed && _base.IsCurrent && base.IsCurrent;
             }
+        }
+
+        public override bool IsCheckingDatabase {
+            get {
+                return base.IsCheckingDatabase || _base.IsCheckingDatabase;
+            }
+        }
+
+        private void Base_IsCurrentChanged(object sender, EventArgs e) {
+            base.OnIsCurrentChanged();
         }
 
         public override void RefreshIsCurrent() {

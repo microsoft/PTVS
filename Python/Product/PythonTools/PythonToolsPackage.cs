@@ -87,7 +87,10 @@ namespace Microsoft.PythonTools {
     [ProvideLanguageEditorOptionPage(typeof(PythonFormattingSpacingOptionsPage), PythonConstants.LanguageName, "Formatting", "Spacing", "122")]
     [ProvideLanguageEditorOptionPage(typeof(PythonFormattingStatementsOptionsPage), PythonConstants.LanguageName, "Formatting", "Statements", "123")]
     [ProvideLanguageEditorOptionPage(typeof(PythonFormattingWrappingOptionsPage), PythonConstants.LanguageName, "Formatting", "Wrapping", "124")]
-    [ProvideOptionPage(typeof(PythonInterpreterOptionsPage), "Python Tools", "Environments", 115, 116, true)]
+    // Continue to provide this options page as "Interpreters" for DTE access
+    // and because it matches the registry store. The localized string should
+    // read "Environments".
+    [ProvideOptionPage(typeof(PythonInterpreterOptionsPage), "Python Tools", "Interpreters", 115, 116, true)]
     [ProvideOptionPage(typeof(PythonInteractiveOptionsPage), "Python Tools", "Interactive Windows", 115, 117, true)]
     [ProvideOptionPage(typeof(PythonDebugInteractiveOptionsPage), "Python Tools", "Debug Interactive Window", 115, 119, true)]
     [ProvideOptionPage(typeof(PythonGeneralOptionsPage), "Python Tools", "General", 115, 120, true)]
@@ -257,7 +260,8 @@ namespace Microsoft.PythonTools {
         private LanguagePreferences _langPrefs;
         public static PythonToolsPackage Instance;
         private VsProjectAnalyzer _analyzer;
-        private static Dictionary<Command, MenuCommand> _commands = new Dictionary<Command, MenuCommand>();
+        private static readonly object _commandsLock = new object();
+        private static readonly Dictionary<Command, MenuCommand> _commands = new Dictionary<Command, MenuCommand>();
         private PythonAutomation _autoObject = new PythonAutomation();
         private IContentType _contentType;
         private PackageContainer _packageContainer;
@@ -543,14 +547,14 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
         }
 
         /// <summary>
-        /// Asks the interpreter to auto-generate it's completion database if it doesn't already exist and the user
-        /// hasn't disabled this option.
+        /// Asks the interpreter to generate its completion database if the
+        /// option is enabled (the default) and the database is not current.
         /// </summary>
-        internal static void EnsureCompletionDb(IPythonInterpreterFactory fact) {
+        internal static void EnsureCompletionDb(IPythonInterpreterFactory factory) {
             if (PythonToolsPackage.Instance.DebuggingOptionsPage.AutoAnalyzeStandardLibrary) {
-                IInterpreterWithCompletionDatabase interpWithDb = fact as IInterpreterWithCompletionDatabase;
-                if (interpWithDb != null) {
-                    interpWithDb.AutoGenerateCompletionDatabase();
+                var withDb = factory as IPythonInterpreterFactoryWithDatabase;
+                if (withDb != null && !withDb.IsCurrent) {
+                    withDb.GenerateDatabase(GenerateDatabaseOptions.SkipUnchanged);
                 }
             }
         }
@@ -764,18 +768,20 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
         private void RegisterCommands(IEnumerable<Command> commands) {
             OleMenuCommandService mcs = GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
             if (null != mcs) {
-                foreach (var command in commands) {
-                    var beforeQueryStatus = command.BeforeQueryStatus;
-                    CommandID toolwndCommandID = new CommandID(GuidList.guidPythonToolsCmdSet, command.CommandId);
-                    if (beforeQueryStatus == null) {
-                        MenuCommand menuToolWin = new MenuCommand(command.DoCommand, toolwndCommandID);
-                        mcs.AddCommand(menuToolWin);
-                        _commands[command] = menuToolWin;
-                    } else {
-                        OleMenuCommand menuToolWin = new OleMenuCommand(command.DoCommand, toolwndCommandID);
-                        menuToolWin.BeforeQueryStatus += beforeQueryStatus;
-                        mcs.AddCommand(menuToolWin);
-                        _commands[command] = menuToolWin;
+                lock (_commandsLock) {
+                    foreach (var command in commands) {
+                        var beforeQueryStatus = command.BeforeQueryStatus;
+                        CommandID toolwndCommandID = new CommandID(GuidList.guidPythonToolsCmdSet, command.CommandId);
+                        if (beforeQueryStatus == null) {
+                            MenuCommand menuToolWin = new MenuCommand(command.DoCommand, toolwndCommandID);
+                            mcs.AddCommand(menuToolWin);
+                            _commands[command] = menuToolWin;
+                        } else {
+                            OleMenuCommand menuToolWin = new OleMenuCommand(command.DoCommand, toolwndCommandID);
+                            menuToolWin.BeforeQueryStatus += beforeQueryStatus;
+                            mcs.AddCommand(menuToolWin);
+                            _commands[command] = menuToolWin;
+                        }
                     }
                 }
             }
@@ -783,22 +789,27 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
 
         private void RefreshReplCommands(object sender, EventArgs e) {
             OleMenuCommandService mcs = GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
+            if (mcs == null) {
+                return;
+            }
             List<OpenReplCommand> replCommands = new List<OpenReplCommand>();
-            foreach (var keyValue in _commands) {
-                var command = keyValue.Key;
-                OpenReplCommand openRepl = command as OpenReplCommand;
-                if (openRepl != null) {
-                    replCommands.Add(openRepl);
+            lock (_commandsLock) {
+                foreach (var keyValue in _commands) {
+                    var command = keyValue.Key;
+                    OpenReplCommand openRepl = command as OpenReplCommand;
+                    if (openRepl != null) {
+                        replCommands.Add(openRepl);
 
-                    mcs.RemoveCommand(keyValue.Value);
+                        mcs.RemoveCommand(keyValue.Value);
+                    }
                 }
-            }
 
-            foreach (var command in replCommands) {
-                _commands.Remove(command);
-            }
+                foreach (var command in replCommands) {
+                    _commands.Remove(command);
+                }
 
-            RegisterCommands(GetReplCommands());
+                RegisterCommands(GetReplCommands());
+            }
         }
 
         private List<OpenReplCommand> GetReplCommands() {
@@ -869,6 +880,12 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
                     _contentType = ComponentModel.GetService<IContentTypeRegistryService>().GetContentType(PythonCoreConstants.ContentType);
                 }
                 return _contentType;
+            }
+        }
+
+        internal static object CommandsLock {
+            get {
+                return _commandsLock;
             }
         }
 

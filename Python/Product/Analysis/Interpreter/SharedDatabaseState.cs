@@ -35,7 +35,7 @@ namespace Microsoft.PythonTools.Interpreter {
         private List<Action> _fixups;
         private List<Action<IPythonType>> _objectTypeFixups;
         private readonly Dictionary<string, List<Action<IMember>>> _moduleFixups = new Dictionary<string, List<Action<IMember>>>();
-        private readonly string _dbDir;
+        private string _dbDir;
         private readonly Dictionary<IPythonType, CPythonConstant> _constants = new Dictionary<IPythonType, CPythonConstant>();
         private readonly Dictionary<string, IPythonType> _sequenceTypes = new Dictionary<string, IPythonType>();
         private readonly bool _isDefaultDb;
@@ -49,31 +49,31 @@ namespace Microsoft.PythonTools.Interpreter {
         internal const string BuiltinName3x = "builtins";
         private readonly string _builtinName;
 
-        public SharedDatabaseState(string databaseDirectory, Version languageVersion)
-            : this(databaseDirectory, languageVersion, false) {
-        }
-
-        internal SharedDatabaseState(string databaseDirectory, Version languageVersion, bool defaultDatabase) {
-            _dbDir = databaseDirectory;
+        public SharedDatabaseState(Version languageVersion) {
             _langVersion = languageVersion;
-            _isDefaultDb = defaultDatabase;
             _builtinName = (_langVersion.Major == 3) ? BuiltinName3x : BuiltinName2x;
-            _modules[_builtinName] = _builtinModule = MakeBuiltinModule(databaseDirectory);
-            if (_isDefaultDb && _langVersion.Major == 3) {
-                _modules[BuiltinName2x] = _builtinModule;
-            }
-
-            LoadDatabase(databaseDirectory);
         }
 
-        internal SharedDatabaseState(SharedDatabaseState inner, string databaseDirectory = null) {
-            _inner = inner;
-            _dbDir = databaseDirectory ?? _inner._dbDir;
-            _langVersion = _inner._langVersion;
-            _builtinName = _inner._builtinName;
+        public SharedDatabaseState(Version languageVersion, string databaseDirectory)
+            : this(languageVersion, databaseDirectory, false) { }
+
+        internal SharedDatabaseState(Version languageVersion, string databaseDirectory, bool defaultDatabase)
+            : this(languageVersion) {
+            _dbDir = databaseDirectory;
+            _isDefaultDb = defaultDatabase;
 
             if (!string.IsNullOrEmpty(databaseDirectory)) {
                 LoadDatabase(databaseDirectory);
+            }
+        }
+
+        internal SharedDatabaseState(SharedDatabaseState inner) {
+            _inner = inner;
+            _langVersion = _inner.LanguageVersion;
+            if (_inner.BuiltinModule != null) {
+                _builtinName = _inner.BuiltinModule.Name;
+            } else {
+                _builtinName = (_langVersion.Major == 3) ? BuiltinName3x : BuiltinName2x;
             }
         }
 
@@ -86,6 +86,18 @@ namespace Microsoft.PythonTools.Interpreter {
 
         internal void LoadDatabase(string databaseDirectory) {
             var addedModules = new Dictionary<string, IMember>();
+
+            if (_dbDir == null) {
+                _dbDir = databaseDirectory;
+            }
+
+            if (_builtinModule == null) {
+                _builtinModule = MakeBuiltinModule(databaseDirectory);
+            }
+            _modules[_builtinName] = _builtinModule;
+            if (_isDefaultDb && _langVersion.Major == 3) {
+                _modules[BuiltinName2x] = _builtinModule;
+            }
 
             foreach (var file in Directory.GetFiles(databaseDirectory)) {
                 if (!file.EndsWith(".idb", StringComparison.OrdinalIgnoreCase) || file.IndexOf('$') != -1) {
@@ -773,10 +785,8 @@ namespace Microsoft.PythonTools.Interpreter {
 
         internal CPythonConstant GetConstant(IPythonType type) {
             CPythonConstant constant;
-            for(var state = this; state != null; state = state._inner) {
-                if (state._constants.TryGetValue(type, out constant)) {
-                    return constant;
-                }
+            if (_constants.TryGetValue(type, out constant)) {
+                return constant;
             }
             _constants[type] = constant = new CPythonConstant(type);
             return constant;
@@ -784,17 +794,19 @@ namespace Microsoft.PythonTools.Interpreter {
 
         public IBuiltinPythonModule BuiltinModule {
             get {
-                for(var state = this; state != null; state = state._inner) {
-                    if (state._builtinModule != null) {
-                        return state._builtinModule;
-                    }
+                if (_builtinModule == null && _inner != null) {
+                    return _inner.BuiltinModule;
                 }
-                return null;
+                return _builtinModule;
             }
             set {
                 Modules[value.Name] = value;
                 _builtinModule = value;
             }
+        }
+
+        public IEnumerable<string> GetModuleNames() {
+            return _modules.Keys;
         }
 
         public Dictionary<string, IPythonModule> Modules {

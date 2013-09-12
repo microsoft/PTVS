@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Product Id="*"
+           Name="!(loc.ProductName)"
+           Language="!(loc.LCID)"
+           Codepage="65001"
+           Version="2.0.0.0"
+           Manufacturer="!(loc.Manufacturer)"
+           UpgradeCode="!(loc.UpgradeCode)">
+    <Package InstallerVersion="300" Compressed="yes" InstallPrivileges="limited" InstallScope="perUser" />
+
+    <Property Id="MSIINSTALLPERUSER" Value="1" />
+    <Property Id="ALLUSERS" Value="2" />
+
+    <!-- The ICE61 warning at this line is expected and can be ignored. -->
+    <MajorUpgrade AllowDowngrades="no" AllowSameVersionUpgrades="yes"
+                  DowngradeErrorMessage="A newer version of !(loc.ProductName) is already installed." />
+
+    <MediaTemplate EmbedCab="yes" />
+
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="CommonFilesFolder">
+        <!-- The install location is not important, and can be changed freely. -->
+        <Directory Id="Dir_Microsoft" Name="Microsoft">
+          <Directory Id="Dir_PythonTools" Name="Python Tools">
+            <Directory Id="Dir_CanopyInterpreter" Name="Canopy" />
+          </Directory>
+        </Directory>
+      </Directory>
+    </Directory>
+
+    <Feature Id="ProductFeature" Title="!(loc.FeatureName)" Description="!(loc.FeatureDescription)"
+             Level="1" AllowAdvertise="no" Absent="disallow">
+      <Component Id="Comp_CanopyInterpreter" Directory="Dir_CanopyInterpreter" Guid="{7CC994D2-9659-48E7-B8E8-31B4086231EE}">
+        <File Id="Fil_CanopyInterpreter" Source="$(var.CanopyInterpreter.TargetPath)" />
+  
+        <!--
+        This registry key must be set. To support multiple VS versions, it must
+        be replicated for each version, and must refer to a DLL that has been
+        built for the particular version (with references to the correct version
+        of Microsoft.PythonTools.Analysis.dll).
+        -->
+        <RegistryKey Root="HKMU" Key="Software\Microsoft\PythonTools\$(var.VSTargetVersion)\InterpreterFactories\Canopy">
+          <RegistryValue Name="CodeBase" Value="[#Fil_CanopyInterpreter]" Type="string" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+    </Feature>
+
+    <UIRef Id="WixUI_Minimal" />
+    <UIRef Id="WixUI_ErrorProgressText" />
+    <WixVariable Id="WixUILicenseRtf" Value="License.rtf" />
+  </Product>
+</Wix>

@@ -149,9 +149,9 @@ namespace Microsoft.PythonTools.Project {
                 }
 
                 if (prevChecked && anyChanges) {
-                    var withDb = _factory as IInterpreterWithCompletionDatabase;
+                    var withDb = _factory as IPythonInterpreterFactoryWithDatabase;
                     if (withDb != null) {
-                        withDb.GenerateCompletionDatabase(GenerateDatabaseOptions.SkipUnchanged);
+                        withDb.GenerateDatabase(GenerateDatabaseOptions.SkipUnchanged);
                     }
                 }
             }), _scheduler).Wait();

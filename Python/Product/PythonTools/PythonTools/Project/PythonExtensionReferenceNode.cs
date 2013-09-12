@@ -41,11 +41,11 @@ namespace Microsoft.PythonTools.Project {
             Utilities.ArgumentNotNullOrEmpty("filename", filename);
             _filename = filename;
 
-            AnalyzeReference(root.GetInterpreter());
+            AnalyzeReference(root.GetInterpreter() as IPythonInterpreterWithProjectReferences);
             InitializeFileChangeEvents();
         }
 
-        private void AnalyzeReference(IPythonInterpreter interp) {
+        private void AnalyzeReference(IPythonInterpreterWithProjectReferences interp) {
             if (interp == null) {
                 _failedToAnalyze = true;
                 return;
@@ -212,7 +212,7 @@ namespace Microsoft.PythonTools.Project {
                 return;
             }
 
-            var interp = ((PythonProjectNode)ProjectMgr).GetInterpreter();
+            var interp = ((PythonProjectNode)ProjectMgr).GetInterpreter() as IPythonInterpreterWithProjectReferences;
             if (interp != null && CommonUtils.IsSamePath(e.FileName, _filename)) {
                 if ((e.FileChangeFlag & (_VSFILECHANGEFLAGS.VSFILECHG_Attr | _VSFILECHANGEFLAGS.VSFILECHG_Size | _VSFILECHANGEFLAGS.VSFILECHG_Time | _VSFILECHANGEFLAGS.VSFILECHG_Add)) != 0) {
                     // file was modified, unload and reload the extension module from our database.
@@ -235,7 +235,7 @@ namespace Microsoft.PythonTools.Project {
                 return;
             }
 
-            var interp = ((PythonProjectNode)ProjectMgr).GetInterpreter();
+            var interp = ((PythonProjectNode)ProjectMgr).GetInterpreter() as IPythonInterpreterWithProjectReferences;
             if (interp != null) {
                 interp.RemoveReference(new ProjectReference(_filename, ProjectReferenceKind.ExtensionModule));
             }

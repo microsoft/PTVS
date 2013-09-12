@@ -52,7 +52,7 @@ namespace TestUtilities.Mocks {
         /// Returns a CPython factory using the mock DB.
         /// </summary>
         /// <remarks>This instance is created lazily and cached.</remarks>
-        public IPythonInterpreterFactory Factory {
+        public PythonInterpreterFactoryWithDatabase Factory {
             get {
                 return _factory;
             }

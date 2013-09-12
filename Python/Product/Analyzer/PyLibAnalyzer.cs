@@ -44,8 +44,10 @@ namespace Microsoft.PythonTools.Analysis {
         private readonly List<string> _baseDb;
         private readonly string _logPrivate, _logGlobal, _logDiagnostic;
         private readonly bool _dryRun;
+        private readonly string _waitForAnalysis;
 
         private bool _all;
+        private FileStream _pidMarkerFile;
 
         private readonly AnalyzerStatusUpdater _updater;
         private readonly CancellationToken _cancel;
@@ -82,6 +84,7 @@ namespace Microsoft.PythonTools.Analysis {
             Console.WriteLine(" /diag       [filename]         - write detailed (CSV) analysis log");
             Console.WriteLine(" /dryrun                        - don't analyze, but write out list of files that " +
                               "would have been analyzed.");
+            Console.WriteLine(" /wait       [identifier]       - wait for the specified analysis to complete.");
         }
 
         private static IEnumerable<KeyValuePair<string, string>> ParseArguments(IEnumerable<string> args) {
@@ -113,18 +116,18 @@ namespace Microsoft.PythonTools.Analysis {
             } catch (ArgumentNullException ex) {
                 Console.Error.WriteLine("{0} is a required argument", ex.Message);
                 Help();
-                return -1;
+                return PythonTypeDatabase.InvalidArgumentExitCode;
             } catch (ArgumentException ex) {
                 Console.Error.WriteLine("'{0}' is not valid for {1}", ex.Message, ex.ParamName);
                 Help();
-                return -1;
+                return PythonTypeDatabase.InvalidArgumentExitCode;
             } catch (IdentifierInUseException) {
                 Console.Error.WriteLine("This interpreter is already being analyzed.");
-                return -3;
+                return PythonTypeDatabase.AlreadyGeneratingExitCode;
             } catch (InvalidOperationException ex) {
                 Console.Error.WriteLine(ex.Message);
                 Help();
-                return -2;
+                return PythonTypeDatabase.InvalidOperationExitCode;
             }
 
             try {
@@ -157,6 +160,10 @@ namespace Microsoft.PythonTools.Analysis {
                         inst.Scrape();
                         inst.Analyze();
                         inst.Epilogue();
+                    } catch (IdentifierInUseException) {
+                        // Database is currently being analyzed
+                        Console.Error.WriteLine("This interpreter is already being analyzed.");
+                        return PythonTypeDatabase.AlreadyGeneratingExitCode;
                     } catch (Exception e) {
                         Console.WriteLine("Error during analysis: {0}{1}", Environment.NewLine, e.ToString());
                         inst.LogToGlobal("FAIL_STDLIB" + Environment.NewLine + e.ToString());
@@ -187,7 +194,8 @@ namespace Microsoft.PythonTools.Analysis {
             string logGlobal,
             string logDiagnostic,
             bool rescanAll,
-            bool dryRun
+            bool dryRun,
+            string waitForAnalysis
         ) {
             _id = id;
             _version = langVersion;
@@ -200,6 +208,8 @@ namespace Microsoft.PythonTools.Analysis {
             _logDiagnostic = logDiagnostic;
             _all = rescanAll;
             _dryRun = dryRun;
+            _waitForAnalysis = waitForAnalysis;
+
             _scrapeFileGroups = new List<List<ModulePath>>();
             _analyzeFileGroups = new List<List<ModulePath>>();
             _builtinSourceLibraries = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -265,6 +275,9 @@ namespace Microsoft.PythonTools.Analysis {
                 _listener.Flush();
                 _listener.Close();
                 _listener = null;
+            }
+            if (_pidMarkerFile != null) {
+                _pidMarkerFile.Close();
             }
         }
 
@@ -369,6 +382,11 @@ namespace Microsoft.PythonTools.Analysis {
             }
             logDiagnostic = value;
 
+            string waitForAnalysis;
+            if (!options.TryGetValue("wait", out waitForAnalysis)) {
+                waitForAnalysis = null;
+            }
+
             rescanAll = options.ContainsKey("all");
             dryRun = options.ContainsKey("dryrun");
 
@@ -383,7 +401,8 @@ namespace Microsoft.PythonTools.Analysis {
                 logGlobal,
                 logDiagnostic,
                 rescanAll,
-                dryRun
+                dryRun,
+                waitForAnalysis
             );
         }
 
@@ -401,6 +420,35 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         internal void Prepare() {
+            if (!string.IsNullOrEmpty(_waitForAnalysis)) {
+                if (_updater != null) {
+                    _updater.UpdateStatus(0, 0, "Waiting for another refresh to start.");
+                }
+
+                bool everSeen = false;
+                using (var evt = new AutoResetEvent(false))
+                using (var listener = new AnalyzerStatusListener(d => {
+                    AnalysisProgress progress;
+                    if (d.TryGetValue(_waitForAnalysis, out progress)) {
+                        everSeen = true;
+                        var message = "Waiting for another refresh to complete.";
+                        if (!string.IsNullOrEmpty(progress.Message)) {
+                            message += Environment.NewLine + progress.Message;
+                        }
+                        _updater.UpdateStatus(progress.Progress, progress.Maximum, message);
+                    } else if (everSeen) {
+                        evt.Set();
+                    }
+                }, TimeSpan.FromSeconds(1.0))) {
+                    if (!evt.WaitOne(TimeSpan.FromSeconds(60.0))) {
+                        if (everSeen) {
+                            // Running, but not finished yet
+                            evt.WaitOne();
+                        }
+                    }
+                }
+            }
+            
             if (_updater != null) {
                 _updater.UpdateStatus(0, 0, "Collecting files");
             }
@@ -447,30 +495,20 @@ namespace Microsoft.PythonTools.Analysis {
             fileGroups.InsertRange(0, builtinGroups);
             fileGroups.InsertRange(0, stdLibGroups);
 
-            // If the database was invalid, we have to refresh everything.
             var databaseVer = Path.Combine(_outDir, "database.ver");
-            if (!_all) {
+            var databasePid = Path.Combine(_outDir, "database.pid");
+
+            if (!PythonTypeDatabase.IsDatabaseVersionCurrent(_outDir)) {
+                // Database is not the current version, so we have to
+                // refresh all modules.
                 _all = true;
-                try {
-                    var version = int.Parse(File.ReadAllText(databaseVer));
-                    if (version == PythonTypeDatabase.CurrentVersion) {
-                        _all = false;
-                    }
-                } catch (ArgumentException) {
-                } catch (IOException) {
-                } catch (UnauthorizedAccessException) {
-                } catch (NotSupportedException) {
-                } catch (FormatException) {
-                } catch (OverflowException) {
-                }
             }
 
             var filesInDatabase = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
             if (_dryRun) {
-                if (File.Exists(databaseVer)) {
-                    Console.WriteLine("DELETE;{0}", databaseVer);
-                }
+                Console.WriteLine("WRITE;{0};{1}", databasePid, Process.GetCurrentProcess().Id);
+                Console.WriteLine("DELETE;{0}", databaseVer);
 
                 // The output directory for a dry run may be completely invalid.
                 // If the top level does not contain any .idb files, we won't
@@ -482,13 +520,36 @@ namespace Microsoft.PythonTools.Analysis {
             } else {
                 Directory.CreateDirectory(_outDir);
 
-                // Mark the database as invalid until we complete analysis.
+                try {
+                    _pidMarkerFile = new FileStream(
+                        databasePid,
+                        FileMode.CreateNew,
+                        FileAccess.Write,
+                        FileShare.ReadWrite | FileShare.Delete,
+                        8,
+                        FileOptions.DeleteOnClose
+                    );
+                } catch (IOException) {
+                    // File exists, which means we are already being refreshed
+                    // by another instance.
+                    throw new IdentifierInUseException();
+                }
+
+                // Let exceptions propagate from here. If we can't write to this
+                // file, we can't safely generate the DB.
+                var pidString = Process.GetCurrentProcess().Id.ToString();
+                var data = Encoding.UTF8.GetBytes(pidString);
+                _pidMarkerFile.Write(data, 0, data.Length);
+                _pidMarkerFile.Flush(true);
+                // Don't close the file (because it will be deleted on close).
+                // We will close it when we are disposed, or if we crash.
+
                 try {
                     File.Delete(databaseVer);
                 } catch (ArgumentException) {
                 } catch (IOException) {
-                } catch (UnauthorizedAccessException) {
                 } catch (NotSupportedException) {
+                } catch (UnauthorizedAccessException) {
                 }
 
                 filesInDatabase.UnionWith(Directory.EnumerateFiles(_outDir, "*.idb", SearchOption.AllDirectories));
@@ -610,6 +671,20 @@ namespace Microsoft.PythonTools.Analysis {
                     builtinNames = new HashSet<string>(output.StandardOutputLines);
                 }
             }
+
+            if (builtinNames.Contains("clr")) {
+                bool isCli = false;
+                using (var output = ProcessOutput.RunHiddenAndCapture(_interpreter, "-c", "import sys; print(sys.platform)")) {
+                    output.Wait();
+                    isCli = output.ExitCode == 0 && output.StandardOutputLines.Contains("cli");
+                }
+                if (isCli) {
+                    // These should match IronPythonScraper.SPECIAL_MODULES
+                    builtinNames.Remove("wpf");
+                    builtinNames.Remove("clr");
+                }
+            }
+
             TraceVerbose("Builtin names are: {0}", string.Join(", ", builtinNames.OrderBy(s => s, StringComparer.OrdinalIgnoreCase)));
 
             return builtinNames
@@ -675,6 +750,7 @@ namespace Microsoft.PythonTools.Analysis {
                     if (string.IsNullOrEmpty(values)) {
                         _callDepthOverrides = Enumerable.Empty<string>();
                     } else {
+                        TraceInformation("NoCallSiteAnalysis = {0}", values);
                         _callDepthOverrides = values.Split(',', ';').Where(n => !string.IsNullOrWhiteSpace(n)).ToArray();
                     }
                 }
@@ -828,133 +904,133 @@ namespace Microsoft.PythonTools.Analysis {
                     currentLibrary = CommonUtils.CreateFriendlyDirectoryPath(_library, files[0].LibraryPath);
                 }
 
-                var factory = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(
+                using (var factory = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(
                     _version,
                     null,
                     new[] { _outDir, outDir }.Concat(_baseDb.Skip(1)).Distinct(StringComparer.OrdinalIgnoreCase).ToArray()
-                );
-
-                var projectState = new PythonAnalyzer(factory);
-
-                int? mostItemsInQueue = null;
-                if (_updater != null) {
-                    projectState.SetQueueReporting(itemsInQueue => {
-                        if (itemsInQueue > (mostItemsInQueue ?? 0)) {
-                            mostItemsInQueue = itemsInQueue;
-                        }
-
-                        if (mostItemsInQueue > 0) {
-                            var progress = (files.Count * (mostItemsInQueue - itemsInQueue)) / mostItemsInQueue;
-                            _updater.UpdateStatus(_progressOffset +  (progress ?? 0), _progressTotal,
-                                "Analyzing " + currentLibrary);
-                        } else {
-                            _updater.UpdateStatus(_progressOffset + files.Count, _progressTotal,
-                                "Analyzing " + currentLibrary);
-                        }
-                    }, 10);
-                }
-
-                try {
-                    using (var key = Registry.CurrentUser.OpenSubKey(AnalysisLimitsKey)) {
-                        projectState.Limits = AnalysisLimits.LoadFromStorage(key, defaultToStdLib: true);
-                    }
-                } catch (SecurityException) {
-                    projectState.Limits = AnalysisLimits.GetStandardLibraryLimits();
-                } catch (UnauthorizedAccessException) {
-                    projectState.Limits = AnalysisLimits.GetStandardLibraryLimits();
-                } catch (IOException) {
-                    projectState.Limits = AnalysisLimits.GetStandardLibraryLimits();
-                }
-
-                var items = files.Select(f => new AnalysisItem(f)).ToList();
-
-                foreach (var item in items) {
-                    if (_cancel.IsCancellationRequested) {
-                        break;
-                    }
-
-                    item.Entry = projectState.AddModule(item.ModuleName, item.SourceFile);
-
-                    if (CallDepthOverrides.Any(n => item.ModuleName.StartsWith(n))) {
-                        item.Entry.Properties[AnalysisLimits.CallDepthKey] = 0;
-                    }
-                }
-
-                foreach (var item in items) {
-                    if (_cancel.IsCancellationRequested) {
-                        break;
-                    }
-
+                ))
+                using (var projectState = new PythonAnalyzer(factory)) {
+                    int? mostItemsInQueue = null;
                     if (_updater != null) {
-                        _updater.UpdateStatus(_progressOffset, _progressTotal,
-                            string.Format("Parsing {0}", currentLibrary));
-                    }
-                    try {
-                        var sourceUnit = new FileStream(item.SourceFile, FileMode.Open, FileAccess.Read, FileShare.Read);
-                        var errors = new CollectingErrorSink();
-                        var opts = new ParserOptions() { BindReferences = true, ErrorSink = errors };
+                        projectState.SetQueueReporting(itemsInQueue => {
+                            if (itemsInQueue > (mostItemsInQueue ?? 0)) {
+                                mostItemsInQueue = itemsInQueue;
+                            }
 
-                        TraceInformation("Parsing \"{0}\" (\"{1}\")", item.ModuleName, item.SourceFile);
-                        item.Tree = Parser.CreateParser(sourceUnit, _version.ToLanguageVersion(), opts).ParseFile();
-                        if (errors.Errors.Any() || errors.Warnings.Any()) {
-                            TraceWarning("File \"{0}\" contained parse errors", item.SourceFile);
-                            TraceInformation(string.Join(Environment.NewLine, errors.Errors.Concat(errors.Warnings)
-                                .Select(er => string.Format("{0} {1}", er.Span, er.Message))));
+                            if (mostItemsInQueue > 0) {
+                                var progress = (files.Count * (mostItemsInQueue - itemsInQueue)) / mostItemsInQueue;
+                                _updater.UpdateStatus(_progressOffset + (progress ?? 0), _progressTotal,
+                                    "Analyzing " + currentLibrary);
+                            } else {
+                                _updater.UpdateStatus(_progressOffset + files.Count, _progressTotal,
+                                    "Analyzing " + currentLibrary);
+                            }
+                        }, 10);
+                    }
+
+                    try {
+                        using (var key = Registry.CurrentUser.OpenSubKey(AnalysisLimitsKey)) {
+                            projectState.Limits = AnalysisLimits.LoadFromStorage(key, defaultToStdLib: true);
                         }
-                    } catch (Exception ex) {
-                        TraceError("Error parsing \"{0}\" \"{1}\"{2}{3}", item.ModuleName, item.SourceFile, Environment.NewLine, ex.ToString());
-                    }
-                }
-
-                TraceInformation("Parsing complete");
-
-                foreach (var item in items) {
-                    if (_cancel.IsCancellationRequested) {
-                        break;
+                    } catch (SecurityException) {
+                        projectState.Limits = AnalysisLimits.GetStandardLibraryLimits();
+                    } catch (UnauthorizedAccessException) {
+                        projectState.Limits = AnalysisLimits.GetStandardLibraryLimits();
+                    } catch (IOException) {
+                        projectState.Limits = AnalysisLimits.GetStandardLibraryLimits();
                     }
 
-                    if (item.Tree != null) {
-                        item.Entry.UpdateTree(item.Tree, null);
-                    }
-                }
+                    var items = files.Select(f => new AnalysisItem(f)).ToList();
 
-                foreach (var item in items) {
-                    if (_cancel.IsCancellationRequested) {
-                        break;
+                    foreach (var item in items) {
+                        if (_cancel.IsCancellationRequested) {
+                            break;
+                        }
+
+                        item.Entry = projectState.AddModule(item.ModuleName, item.SourceFile);
+
+                        if (CallDepthOverrides.Any(n => item.ModuleName == n || item.ModuleName.StartsWith(n + "."))) {
+                            TraceVerbose("Set CallDepthLimit to 0 for {0}", item.ModuleName);
+                            item.Entry.Properties[AnalysisLimits.CallDepthKey] = 0;
+                        }
                     }
 
-                    try {
+                    foreach (var item in items) {
+                        if (_cancel.IsCancellationRequested) {
+                            break;
+                        }
+
+                        if (_updater != null) {
+                            _updater.UpdateStatus(_progressOffset, _progressTotal,
+                                string.Format("Parsing {0}", currentLibrary));
+                        }
+                        try {
+                            var sourceUnit = new FileStream(item.SourceFile, FileMode.Open, FileAccess.Read, FileShare.Read);
+                            var errors = new CollectingErrorSink();
+                            var opts = new ParserOptions() { BindReferences = true, ErrorSink = errors };
+
+                            TraceInformation("Parsing \"{0}\" (\"{1}\")", item.ModuleName, item.SourceFile);
+                            item.Tree = Parser.CreateParser(sourceUnit, _version.ToLanguageVersion(), opts).ParseFile();
+                            if (errors.Errors.Any() || errors.Warnings.Any()) {
+                                TraceWarning("File \"{0}\" contained parse errors", item.SourceFile);
+                                TraceInformation(string.Join(Environment.NewLine, errors.Errors.Concat(errors.Warnings)
+                                    .Select(er => string.Format("{0} {1}", er.Span, er.Message))));
+                            }
+                        } catch (Exception ex) {
+                            TraceError("Error parsing \"{0}\" \"{1}\"{2}{3}", item.ModuleName, item.SourceFile, Environment.NewLine, ex.ToString());
+                        }
+                    }
+
+                    TraceInformation("Parsing complete");
+
+                    foreach (var item in items) {
+                        if (_cancel.IsCancellationRequested) {
+                            break;
+                        }
+
                         if (item.Tree != null) {
-                            TraceInformation("Analyzing \"{0}\"", item.ModuleName);
-                            item.Entry.Analyze(_cancel, true);
-                            TraceVerbose("Analyzed \"{0}\"", item.SourceFile);
+                            item.Entry.UpdateTree(item.Tree, null);
                         }
-                    } catch (Exception ex) {
-                        TraceError("Error analyzing \"{0}\" \"{1}\"{2}{3}", item.ModuleName, item.SourceFile, Environment.NewLine, ex.ToString());
                     }
-                }
 
-                if (items.Count > 0 && !_cancel.IsCancellationRequested) {
-                    TraceInformation("Starting analysis of {0} modules", items.Count);
-                    items[0].Entry.AnalysisGroup.AnalyzeQueuedEntries(_cancel);
-                    TraceInformation("Analysis complete");
-                }
+                    foreach (var item in items) {
+                        if (_cancel.IsCancellationRequested) {
+                            break;
+                        }
 
-                if (_cancel.IsCancellationRequested) {
-                    break;
-                }
+                        try {
+                            if (item.Tree != null) {
+                                TraceInformation("Analyzing \"{0}\"", item.ModuleName);
+                                item.Entry.Analyze(_cancel, true);
+                                TraceVerbose("Analyzed \"{0}\"", item.SourceFile);
+                            }
+                        } catch (Exception ex) {
+                            TraceError("Error analyzing \"{0}\" \"{1}\"{2}{3}", item.ModuleName, item.SourceFile, Environment.NewLine, ex.ToString());
+                        }
+                    }
 
-                TraceInformation("Saving group \"{0}\"", files[0].LibraryPath);
-                if (_updater != null) {
-                    _progressOffset += files.Count;
-                    _updater.UpdateStatus(_progressOffset, _progressTotal, "Saving " + currentLibrary);
-                }
-                Directory.CreateDirectory(outDir);
-                new SaveAnalysis().Save(projectState, outDir);
-                TraceInformation("End of group \"{0}\"", files[0].LibraryPath);
-                AnalysisLog.EndFileGroup();
+                    if (items.Count > 0 && !_cancel.IsCancellationRequested) {
+                        TraceInformation("Starting analysis of {0} modules", items.Count);
+                        items[0].Entry.AnalysisGroup.AnalyzeQueuedEntries(_cancel);
+                        TraceInformation("Analysis complete");
+                    }
 
-                AnalysisLog.Flush();
+                    if (_cancel.IsCancellationRequested) {
+                        break;
+                    }
+
+                    TraceInformation("Saving group \"{0}\"", files[0].LibraryPath);
+                    if (_updater != null) {
+                        _progressOffset += files.Count;
+                        _updater.UpdateStatus(_progressOffset, _progressTotal, "Saving " + currentLibrary);
+                    }
+                    Directory.CreateDirectory(outDir);
+                    new SaveAnalysis().Save(projectState, outDir);
+                    TraceInformation("End of group \"{0}\"", files[0].LibraryPath);
+                    AnalysisLog.EndFileGroup();
+
+                    AnalysisLog.Flush();
+                }
             }
         }
 
@@ -962,7 +1038,19 @@ namespace Microsoft.PythonTools.Analysis {
             if (_dryRun) {
                 Console.WriteLine("WRITE;{0};{1}", Path.Combine(_outDir, "database.ver"), PythonTypeDatabase.CurrentVersion);
             } else {
-                File.WriteAllText(Path.Combine(_outDir, "database.ver"), PythonTypeDatabase.CurrentVersion.ToString());
+                try {
+                    File.WriteAllText(Path.Combine(_outDir, "database.ver"), PythonTypeDatabase.CurrentVersion.ToString());
+                } catch (ArgumentException) {
+                } catch (IOException) {
+                } catch (NotSupportedException) {
+                } catch (SecurityException) {
+                } catch (UnauthorizedAccessException) {
+                }
+
+                if (_pidMarkerFile != null) {
+                    _pidMarkerFile.Close();
+                    _pidMarkerFile = null;
+                }
             }
         }
 

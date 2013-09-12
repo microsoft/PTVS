@@ -46,8 +46,8 @@ namespace Microsoft.IronPythonTools.Interpreter {
                 new Version(2, 7));
         }
 
-        public override IPythonInterpreter MakeInterpreter(PythonTypeDatabase typeDb) {
-            return new IronPythonInterpreter(typeDb);
+        public override IPythonInterpreter MakeInterpreter(PythonInterpreterFactoryWithDatabase factory) {
+            return new IronPythonInterpreter(factory);
         }
     }
 }

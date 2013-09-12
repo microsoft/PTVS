@@ -1,6 +1,16 @@
-// <copyright>
-// Copyright (c) Microsoft Corporation.  All rights reserved.
-// </copyright>
+/* ****************************************************************************
+ *
+ * Copyright (c) Microsoft Corporation. 
+ *
+ * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
+ * copy of the license can be found in the License.html file at the root of this distribution. If 
+ * you cannot locate the Apache License, Version 2.0, please send an email to 
+ * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
+ * by the terms of the Apache License, Version 2.0.
+ *
+ * You must not remove this notice, or any other, from this software.
+ *
+ * ***************************************************************************/
 
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -21,7 +31,7 @@ class AssemblyVersionInfo {
     // This version string (and the comment for StableVersion) should be
     // updated manually between minor releases.
     // Servicing branches should retain the value
-    public const string MinorVersion = "1";
+    public const string StableBuildVersion = "2";
 
     // This version should never change from "4100.00"; BuildRelease.ps1
     // will replace it with a generated value.
@@ -42,8 +52,8 @@ class AssemblyVersionInfo {
 
     public const string VSVersion = VSMajorVersion + ".0";
 
-    // Defaults to "2.0.1.(2010|2012|2013)"
-    public const string StableVersion = ReleaseVersion + "." + MinorVersion + "." + VSVersionSuffix;
+    // Defaults to "2.0.2.(2010|2012|2013)"
+    public const string StableVersion = ReleaseVersion + "." + StableBuildVersion + "." + VSVersionSuffix;
 
     // Defaults to "2.0.4100.00"
     public const string Version = ReleaseVersion + "." + BuildNumber;

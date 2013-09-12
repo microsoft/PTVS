@@ -1,0 +1,11 @@
+<?xml version='1.0'?>
+<WixLocalization xmlns='http://schemas.microsoft.com/wix/2006/localization' Culture='en-US'>
+    <String Id='LCID'>1033</String>
+    <String Id='Lang'>en-US</String>
+    <String Id='ProductName'>Canopy Detection for PTVS</String>
+    <String Id='ProductDescription'>Canopy Detection for PTVS</String>
+    <String Id='FeatureName'>Canopy Detection</String>
+    <String Id='FeatureDescription'>Allows PTVS to detect an installation of Canopy.</String>
+    <String Id='Manufacturer'>Microsoft Corporation</String>
+    <String Id='UpgradeCode'>{D2F5FDE3-AAEB-4C53-944B-BE379C28EDAC}</String>
+</WixLocalization>

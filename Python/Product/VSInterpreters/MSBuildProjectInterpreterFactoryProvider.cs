@@ -19,6 +19,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
+using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Interpreters;
 using Microsoft.VisualStudioTools;
 using MSBuild = Microsoft.Build.Evaluation;
@@ -723,17 +724,28 @@ namespace Microsoft.PythonTools.Interpreter {
 
         public event EventHandler ActiveInterpreterChanged;
 
-        class NotFoundInterpreterFactory : PythonInterpreterFactoryWithDatabase {
-            public NotFoundInterpreterFactory(Guid id, Version version)
-                : base(
-                    id,
-                    string.Format("Unknown Python {0}", version),
-                    new InterpreterConfiguration(null, null, null, null, null, ProcessorArchitecture.None, version),
-                    false) {
+        class NotFoundInterpreter : IPythonInterpreter {
+            public void Initialize(PythonAnalyzer state) { }
+            public IPythonType GetBuiltinType(BuiltinTypeId id) { throw new KeyNotFoundException(); }
+            public IList<string> GetModuleNames() { return new string[0]; }
+            public event EventHandler ModuleNamesChanged { add { } remove { } }
+            public IPythonModule ImportModule(string name) { return null; }
+            public IModuleContext CreateModuleContext() { return null; }
+        }
+
+        class NotFoundInterpreterFactory : IPythonInterpreterFactory {
+            public NotFoundInterpreterFactory(Guid id, Version version) {
+                Id = id;
+                Configuration = new InterpreterConfiguration(null, null, null, null, null, ProcessorArchitecture.None, version);
+                Description = string.Format("Unknown Python {0}", version);
             }
 
-            public override PythonTypeDatabase MakeTypeDatabase(string databasePath, bool includeSitePackages = true) {
-                return PythonTypeDatabase.CreateDefaultTypeDatabase(this);
+            public string Description { get; private set; }
+            public InterpreterConfiguration Configuration { get; private set; }
+            public Guid Id { get; private set; }
+
+            public IPythonInterpreter CreateInterpreter() {
+                return new NotFoundInterpreter();
             }
         }
 

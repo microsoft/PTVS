@@ -17,8 +17,10 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Security;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.Interpreter.Default;
 
 namespace Microsoft.PythonTools.Interpreter {
@@ -26,11 +28,8 @@ namespace Microsoft.PythonTools.Interpreter {
     /// Provides access to an on-disk store of cached intellisense information.
     /// </summary>
     public sealed class PythonTypeDatabase : ITypeDatabaseReader {
-        private readonly IPythonInterpreterFactory _factory;
+        private readonly PythonInterpreterFactoryWithDatabase _factory;
         private readonly SharedDatabaseState _sharedState;
-        private readonly bool _cloned;
-        private int _databaseReplacedListenerCount;
-        private bool _hasCustomBuiltins;
 
         /// <summary>
         /// Gets the version of the analysis format that this class reads.
@@ -40,36 +39,63 @@ namespace Microsoft.PythonTools.Interpreter {
         private static string _completionDatabasePath;
         private static string _baselineDatabasePath;
 
-        public PythonTypeDatabase(IPythonInterpreterFactory factory, IEnumerable<string> databaseDirectories) {
-            _factory = factory;
-            _sharedState = new SharedDatabaseState(databaseDirectories.First(), _factory.Configuration.Version);
-            _sharedState.ListenForCorruptDatabase(this);
-            foreach (var d in databaseDirectories.Skip(1)) {
-                LoadDatabase(d);
-            }
-            _sharedState.ListenForCorruptDatabase(this);
-        }
-
-        private PythonTypeDatabase(IPythonInterpreterFactory factory, string databaseDirectory, bool isDefaultDatabase) {
-            _factory = factory;
-            _sharedState = new SharedDatabaseState(databaseDirectory, factory.Configuration.Version, defaultDatabase: isDefaultDatabase);
-        }
-
-        internal PythonTypeDatabase(IPythonInterpreterFactory factory, SharedDatabaseState innerState, string databaseDirectory = null) {
-            _factory = factory;
-            if (_factory.Configuration.Version != innerState.LanguageVersion) {
+        public PythonTypeDatabase(
+            PythonInterpreterFactoryWithDatabase factory,
+            IEnumerable<string> databaseDirectories = null,
+            PythonTypeDatabase innerDatabase = null
+        ) {
+            if (innerDatabase != null && factory.Configuration.Version != innerDatabase.LanguageVersion) {
                 throw new InvalidOperationException("Language versions do not match");
             }
-            _sharedState = new SharedDatabaseState(innerState, databaseDirectory);
-            _cloned = true;
+
+            _factory = factory;
+            if (innerDatabase != null) {
+                _sharedState = new SharedDatabaseState(innerDatabase._sharedState);
+            } else {
+                _sharedState = new SharedDatabaseState(_factory.Configuration.Version);
+            }
+
+            if (databaseDirectories != null) {
+                foreach (var d in databaseDirectories) {
+                    LoadDatabase(d);
+                }
+            }
+
             _sharedState.ListenForCorruptDatabase(this);
         }
 
-        /// <summary>
-        /// Fired when the database is discovered to be corrrupted.  This can happen because a file
-        /// wasn't successfully flushed to disk, or if the user modified the database by hand.
-        /// </summary>
-        public event EventHandler DatabaseCorrupt;
+        private PythonTypeDatabase(
+            PythonInterpreterFactoryWithDatabase factory,
+            string databaseDirectory,
+            bool isDefaultDatabase
+        ) {
+            _factory = factory;
+            _sharedState = new SharedDatabaseState(
+                factory.Configuration.Version,
+                databaseDirectory,
+                defaultDatabase: isDefaultDatabase
+            );
+        }
+
+        public PythonTypeDatabase Clone() {
+            return new PythonTypeDatabase(_factory, null, this);
+        }
+
+        public PythonTypeDatabase CloneWithNewFactory(PythonInterpreterFactoryWithDatabase newFactory) {
+            return new PythonTypeDatabase(newFactory, null, this);
+        }
+
+        public PythonTypeDatabase CloneWithNewBuiltins(IBuiltinPythonModule newBuiltins) {
+            var newDb = new PythonTypeDatabase(_factory, null, this);
+            newDb._sharedState.BuiltinModule = newBuiltins;
+            return newDb;
+        }
+
+        public IPythonInterpreterFactoryWithDatabase InterpreterFactory {
+            get {
+                return _factory;
+            }
+        }
 
         /// <summary>
         /// Gets the Python version associated with this database.
@@ -78,14 +104,6 @@ namespace Microsoft.PythonTools.Interpreter {
             get {
                 return _factory.Configuration.Version;
             }
-        }
-
-        /// <summary>
-        /// Creates a lightweight copy of this PythonTypeDatabase which supports
-        /// overlaying extra modules.
-        /// </summary>
-        public PythonTypeDatabase Clone(IPythonInterpreterFactory factory = null) {
-            return new PythonTypeDatabase(factory ?? _factory, _sharedState);
         }
 
         /// <summary>
@@ -309,20 +327,7 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
-        /// <summary>
-        /// Determines if this PythonTypeDatabase can load modules or not.  Only PythonTypeDatabases
-        /// which have been cloned can load modules.  All type databases which are cloned off of a parent
-        /// support adding modules and will share the common information of the parent type database.
-        /// 
-        /// Once a type database has been cloned it cannot be cloned again.
-        /// </summary>
-        public bool CanLoadModules {
-            get {
-                return _cloned;
-            }
-        }
-
-        public static PythonTypeDatabase CreateDefaultTypeDatabase(IPythonInterpreterFactory factory) {
+        public static PythonTypeDatabase CreateDefaultTypeDatabase(PythonInterpreterFactoryWithDatabase factory) {
             return new PythonTypeDatabase(factory, BaselineDatabasePath, isDefaultDatabase: true);
         }
 
@@ -332,11 +337,7 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         public IEnumerable<string> GetModuleNames() {
-            for (var state = _sharedState; state != null; state = state._inner) {
-                foreach (var key in state.Modules.Keys) {
-                    yield return key;
-                }
-            }
+            return _sharedState.GetModuleNames();
         }
 
         public IPythonModule GetModule(string name) {
@@ -353,30 +354,32 @@ namespace Microsoft.PythonTools.Interpreter {
             get {
                 return _sharedState.BuiltinModule;
             }
-            set {
-                _hasCustomBuiltins |= _sharedState.BuiltinModule != value;
-                _sharedState.BuiltinModule = value;
-            }
         }
 
         /// <summary>
-        /// True if someone has replaced the builtin module.  Because the database doesn't own
-        /// a custom built-ins module we can't reason about whether or not those are shareable
-        /// and we must re-load the database.
+        /// The exit code returned when database generation fails due to an
+        /// invalid argument.
         /// </summary>
-        internal bool HasCustomBuiltins {
-            get {
-                return _hasCustomBuiltins;
-            }
-        }
+        public const int InvalidArgumentExitCode = -1;
 
+        /// <summary>
+        /// The exit code returned when database generation fails due to a
+        /// non-specific error.
+        /// </summary>
+        public const int InvalidOperationExitCode = -2;
+
+        /// <summary>
+        /// The exit code returned when a database is already being generated
+        /// for the interpreter factory.
+        /// </summary>
+        public const int AlreadyGeneratingExitCode = -3;
+        
         /// <summary>
         /// Invokes Analyzer.exe for the specified factory.
         /// </summary>
         public static void Generate(PythonTypeDatabaseCreationRequest request) {
             var fact = request.Factory;
-            var withDb = fact as IInterpreterWithCompletionDatabase;
-            if (withDb == null || !Directory.Exists(fact.Configuration.LibraryPath)) {
+            if (fact == null || !Directory.Exists(fact.Configuration.LibraryPath)) {
                 return;
             }
             var outPath = request.OutputPath;
@@ -391,6 +394,9 @@ namespace Microsoft.PythonTools.Interpreter {
                     baseDb = baseDb + ";" + string.Join(";", request.ExtraInputDatabases);
                 }
 
+                var logPath = Path.Combine(outPath, "AnalysisLog.txt");
+                var glogPath = Path.Combine(CompletionDatabasePath, "AnalysisLog.txt");
+
                 using (var output = ProcessOutput.RunHiddenAndCapture(path,
                     "/id", fact.Id.ToString("B"),
                     "/version", fact.Configuration.Version.ToString(),
@@ -399,32 +405,30 @@ namespace Microsoft.PythonTools.Interpreter {
                     "/outdir", outPath,
                     "/basedb", baseDb,
                     (request.SkipUnchanged ? null : "/all"),  // null will be filtered out; empty strings are quoted 
-                    "/log", Path.Combine(outPath, "AnalysisLog.txt"),
-                    "/glog", Path.Combine(CompletionDatabasePath, "AnalysisLog.txt"))) {
+                    "/log", logPath,
+                    "/glog", glogPath,
+                    "/wait", (request.WaitFor != null ? AnalyzerStatusUpdater.GetIdentifier(request.WaitFor) : ""))) {
 
                     output.PriorityClass = ProcessPriorityClass.BelowNormal;
                     output.Wait();
 
-                    if (output.ExitCode.HasValue && output.ExitCode > -10 && output.ExitCode < 0) {
-                        File.AppendAllLines(Path.Combine(CompletionDatabasePath, "AnalysisLog.txt"),
-                            new[] { "FAIL_STDLIB: " + output.Arguments }.Concat(output.StandardErrorLines));
+                    if (output.ExitCode > -10 && output.ExitCode < 0) {
+                        try {
+                            File.AppendAllLines(
+                                glogPath,
+                                new[] { string.Format("FAIL_STDLIB: ({0}) {1}", output.ExitCode, output.Arguments) }
+                                    .Concat(output.StandardErrorLines)
+                            );
+                        } catch (IOException) {
+                        } catch (ArgumentException) {
+                        } catch (SecurityException) {
+                        } catch (UnauthorizedAccessException) {
+                        }
                     }
 
                     var evt = request.OnExit;
                     if (evt != null) {
-                        evt(output.ExitCode ?? -1);
-                    }
-
-                    if (output.ExitCode == 0) {
-                        withDb.NotifyNewDatabase();
-                        withDb.RefreshIsCurrent();
-                    } else if (output.ExitCode == -3) {
-                        // This error code indicates that the interpreter is
-                        // already being analyzed.
-                        withDb.NotifyGeneratingDatabase(true);
-                    } else {
-                        withDb.NotifyGeneratingDatabase(false);
-                        withDb.RefreshIsCurrent();
+                        evt(output.ExitCode ?? InvalidOperationExitCode);
                     }
                 }
             });
@@ -494,35 +498,7 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         public void OnDatabaseCorrupt() {
-            var dbCorrupt = DatabaseCorrupt;
-            if (dbCorrupt != null) {
-                dbCorrupt(this, EventArgs.Empty);
-            }
-        }
-
-        private event EventHandler<DatabaseReplacedEventArgs> _databaseReplaced;
-        public event EventHandler<DatabaseReplacedEventArgs> DatabaseReplaced {
-            add {
-                Interlocked.Increment(ref _databaseReplacedListenerCount);
-                _databaseReplaced += value;
-            }
-            remove {
-                Interlocked.Decrement(ref _databaseReplacedListenerCount);
-                _databaseReplaced -= value;
-            }
-        }
-
-        public void OnDatabaseReplaced(PythonTypeDatabase newDatabase) {
-            var evt = _databaseReplaced;
-            if (evt != null) {
-                evt(this, new DatabaseReplacedEventArgs(newDatabase));
-            }
-        }
-
-        internal bool HasDatabaseReplacedListeners {
-            get {
-                return _databaseReplacedListenerCount != 0;
-            }
+            _factory.NotifyCorruptDatabase();
         }
 
         internal CPythonConstant GetConstant(IPythonType type) {
@@ -549,6 +525,41 @@ namespace Microsoft.PythonTools.Interpreter {
 
         public void EndModuleLoad(IPythonModule module) {
             _sharedState.EndModuleLoad(module);
+        }
+
+        /// <summary>
+        /// Returns true if the specified database has a version specified that
+        /// matches the current build of PythonTypeDatabase. If false, attempts
+        /// to load the database may fail with an exception.
+        /// </summary>
+        public static bool IsDatabaseVersionCurrent(string databasePath) {
+            if (// Also ensures databasePath won't crash Path.Combine()
+                Directory.Exists(databasePath) &&
+                // Ensures that the database is not currently regenerating
+                !File.Exists(Path.Combine(databasePath, "database.pid"))) {
+                string versionFile = Path.Combine(databasePath, "database.ver");
+                if (File.Exists(versionFile)) {
+                    try {
+                        return int.Parse(File.ReadAllText(versionFile)) == CurrentVersion;
+                    } catch (IOException) {
+                    } catch (UnauthorizedAccessException) {
+                    } catch (SecurityException) {
+                    } catch (InvalidOperationException) {
+                    } catch (ArgumentException) {
+                    } catch (OverflowException) {
+                    } catch (FormatException) {
+                    }
+                }
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Returns true if the specified database is currently regenerating.
+        /// </summary>
+        public static bool IsDatabaseRegenerating(string databasePath) {
+            return Directory.Exists(databasePath) &&
+                File.Exists(Path.Combine(databasePath, "database.pid"));
         }
     }
 

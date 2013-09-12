@@ -203,7 +203,7 @@
             </Label>
             <Label Visibility="{Binding MayNotSupportVirtualEnv,Converter={StaticResource BoolToVisibleOrCollapsed}}"
                    Style="{StaticResource BulletedLabel}">
-                Warning - the selected interpreter may not support virtual
+                WARNING - the selected interpreter may not support virtual
                 environments.
             </Label>
         </StackPanel>

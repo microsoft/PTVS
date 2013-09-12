@@ -93,7 +93,14 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         private void LoadKnownTypes() {
-            _builtinModule = (BuiltinModule)Modules[_builtinName].Module;
+            ModuleReference moduleRef;
+            if (Modules.TryGetValue(_builtinName, out moduleRef)) {
+                _builtinModule = (BuiltinModule)moduleRef.Module;
+            } else {
+                var fallbackDb = PythonTypeDatabase.CreateDefaultTypeDatabase(LanguageVersion.ToVersion());
+                _builtinModule = _modules.GetBuiltinModule(fallbackDb.GetModule(SharedDatabaseState.BuiltinName2x));
+                Modules[_builtinName] = new ModuleReference(_builtinModule);
+            }
 
             Types = new KnownTypes(this);
             ClassInfos = (IKnownClasses)Types;

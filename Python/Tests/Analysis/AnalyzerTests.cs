@@ -21,10 +21,17 @@ using System.Text.RegularExpressions;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using TestUtilities;
 
 namespace AnalysisTests {
     [TestClass]
     public class AnalyzerTests {
+        [ClassInitialize]
+        public static void DoDeployment(TestContext context) {
+            AssertListener.Initialize();
+            TestData.Deploy(includeTestData: false);
+        }
+
         [TestMethod, Priority(0)]
         public void LogFileEncoding() {
             // Ensure that log messages round-trip correctly.
@@ -45,7 +52,8 @@ namespace AnalysisTests {
                     log2,
                     null,
                     false,
-                    false
+                    false,
+                    null
                 )) {
                     analyzer.StartTraceListener();
                     analyzer.TraceError(TEST);
@@ -465,7 +473,8 @@ namespace AnalysisTests {
                         null,
                         null,
                         false,
-                        false
+                        false,
+                        null
                     );
                 }
             }

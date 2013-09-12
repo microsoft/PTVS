@@ -25,12 +25,12 @@ namespace Microsoft.PythonTools.Project {
 
         public PythonAssemblyReferenceNode(PythonProjectNode root, ProjectElement element)
             : base(root, element) {
-            AnalyzeReference(root.GetInterpreter());
+            AnalyzeReference(root.GetInterpreter() as IPythonInterpreterWithProjectReferences);
         }
 
         public PythonAssemblyReferenceNode(PythonProjectNode root, string assemblyPath)
             : base(root, assemblyPath) {
-            AnalyzeReference(root.GetInterpreter());
+            AnalyzeReference(root.GetInterpreter() as IPythonInterpreterWithProjectReferences);
         }
 
         protected override void OnAssemblyReferenceChangedOnDisk(object sender, FileChangedOnDiskEventArgs e) {
@@ -42,7 +42,7 @@ namespace Microsoft.PythonTools.Project {
                     // file was modified, unload and reload the extension module from our database.
                     analyzer.RemoveReference(new ProjectAssemblyReference(AssemblyName, Url));
 
-                    AnalyzeReference(analyzer.Interpreter);
+                    AnalyzeReference(analyzer.Interpreter as IPythonInterpreterWithProjectReferences);
                 } else if ((e.FileChangeFlag & _VSFILECHANGEFLAGS.VSFILECHG_Del) != 0) {
                     // file was deleted, unload from our extension database
                     analyzer.RemoveReference(new ProjectAssemblyReference(AssemblyName, Url));
@@ -50,7 +50,7 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-        private void AnalyzeReference(IPythonInterpreter interp) {
+        private void AnalyzeReference(IPythonInterpreterWithProjectReferences interp) {
             if (interp != null) {
                 _failedToAnalyze = false;
                 var task = interp.AddReferenceAsync(new ProjectAssemblyReference(AssemblyName, Url));
@@ -70,7 +70,7 @@ namespace Microsoft.PythonTools.Project {
 
         public override void Remove(bool removeFromStorage) {
             base.Remove(removeFromStorage);
-            var interp = ((PythonProjectNode)ProjectMgr).GetInterpreter();
+            var interp = ((PythonProjectNode)ProjectMgr).GetInterpreter() as IPythonInterpreterWithProjectReferences;
             if (interp != null) {
                 interp.RemoveReference(new ProjectAssemblyReference(AssemblyName, Url));
             }

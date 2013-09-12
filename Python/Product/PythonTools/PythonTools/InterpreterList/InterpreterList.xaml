@@ -127,10 +127,22 @@
                                 </Grid.ColumnDefinitions>
 
                                 <Grid Grid.Column="0" Margin="6 0">
-                                    <Label Name="NotRequired" VerticalAlignment="Center" AutomationProperties.AutomationId="RegenerateNotRequired">
+                                    <Label Name="NotRequired"
+                                           VerticalAlignment="Center"
+                                           Visibility="Hidden"
+                                           AutomationProperties.AutomationId="RegenerateNotRequired">
                                         Completion DB is up to date
                                     </Label>
-                                    <StackPanel Name="Required" Orientation="Horizontal" Visibility="Hidden">
+                                    <Label Name="CheckingDB"
+                                           VerticalAlignment="Center"
+                                           Visibility="Hidden"
+                                           AutomationProperties.AutomationId="RegenerateCheckingDB">
+                                        Checking completion DB...
+                                    </Label>
+                                    <StackPanel Name="Required"
+                                                Orientation="Horizontal"
+                                                VerticalAlignment="Center"
+                                                Visibility="Visible">
                                         <Label VerticalAlignment="Center" FontWeight="Bold" AutomationProperties.AutomationId="RegenerateRequired">
                                             Completion DB needs refresh
                                         </Label>
@@ -230,14 +242,19 @@
                             <DataTrigger Binding="{Binding IsRunning,Mode=OneWay}" Value="true">
                                 <Setter TargetName="Status" Property="Visibility" Value="Hidden" />
                                 <Setter TargetName="Refreshing" Property="Visibility" Value="Visible" />
-                                <Setter TargetName="NoDatabase" Property="Visibility" Value="Collapsed" />
+                                <Setter TargetName="NoDatabase" Property="Visibility" Value="Hidden" />
                             </DataTrigger>
                             <DataTrigger Binding="{Binding Maximum,Mode=OneWay}" Value="0">
                                 <Setter TargetName="Progress" Property="IsIndeterminate" Value="true" />
                             </DataTrigger>
-                            <DataTrigger Binding="{Binding IsCurrent,Mode=OneWay}" Value="false">
-                                <Setter TargetName="Required" Property="Visibility" Value="Visible" />
-                                <Setter TargetName="NotRequired" Property="Visibility" Value="Hidden" />
+                            <DataTrigger Binding="{Binding IsCheckingDatabase,Mode=OneWay}" Value="true">
+                                <Setter TargetName="CheckingDB" Property="Visibility" Value="Visible" />
+                                <Setter TargetName="Required" Property="Visibility" Value="Hidden" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding IsCurrent,Mode=OneWay}" Value="true">
+                                <Setter TargetName="CheckingDB" Property="Visibility" Value="Hidden" />
+                                <Setter TargetName="Required" Property="Visibility" Value="Hidden" />
+                                <Setter TargetName="NotRequired" Property="Visibility" Value="Visible" />
                             </DataTrigger>
                         </DataTemplate.Triggers>
                     </DataTemplate>

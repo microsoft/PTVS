@@ -14,33 +14,46 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Security;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Interpreter.Default;
+using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Interpreter {
     /// <summary>
     /// Base class for interpreter factories that have an executable file
     /// following CPython command-line conventions, a standard library that is
-    /// stored on disk as .py files, and a cached completion database.
+    /// stored on disk as .py files, and using <see cref="PythonTypeDatabase"/>
+    /// for the completion database.
     /// </summary>
-    public class PythonInterpreterFactoryWithDatabase : IPythonInterpreterFactory, IInterpreterWithCompletionDatabase, IDisposable {
+    public class PythonInterpreterFactoryWithDatabase :
+        IPythonInterpreterFactoryWithDatabase,
+        IDisposable
+    {
         private readonly string _description;
         private readonly Guid _id;
         private readonly InterpreterConfiguration _config;
-        private PythonTypeDatabase _typeDb;
-        private bool _generating, _isValid, _disposed;
+        private PythonTypeDatabase _typeDb, _typeDbWithoutPackages;
+        private bool _generating, _isValid, _isCheckingDatabase, _disposed;
         private string[] _missingModules;
         private string _isCurrentException;
+        private readonly object _isCurrentLock = new object();
         private readonly Timer _refreshIsCurrentTrigger;
         private FileSystemWatcher _libWatcher;
         private readonly object _libWatcherLock = new object();
+        private FileSystemWatcher _verWatcher;
+        private readonly object _verWatcherLock = new object();
 
-        public PythonInterpreterFactoryWithDatabase(Guid id, string description, InterpreterConfiguration config, bool watchLibraryForChanges) {
+        public PythonInterpreterFactoryWithDatabase(
+            Guid id,
+            string description,
+            InterpreterConfiguration config,
+            bool watchLibraryForChanges
+        ) {
             _description = description;
             _id = id;
             _config = config;
@@ -59,22 +72,21 @@ namespace Microsoft.PythonTools.Interpreter {
                     _libWatcher.Renamed += OnRenamed;
                     _libWatcher.EnableRaisingEvents = true;
                 } catch (ArgumentException ex) {
-                    Console.WriteLine("Error starting FileSystemWatcher:\r\n{0}", ex);
+                    Debug.WriteLine("Error starting FileSystemWatcher:\r\n{0}", ex);
                 }
             }
 
+            _verWatcher = CreateDatabaseVerWatcher();
+
+            // Assume the database is valid if the directory exists, then switch
+            // to invalid after we've checked.
+            _isValid = Directory.Exists(DatabasePath);
             Task.Factory.StartNew(() => RefreshIsCurrent());
         }
 
         public InterpreterConfiguration Configuration {
             get {
                 return _config;
-            }
-        }
-
-        public bool IsCurrentDatabaseInUse {
-            get {
-                return _typeDb.HasDatabaseReplacedListeners;
             }
         }
 
@@ -87,38 +99,55 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         /// <summary>
-        /// Returns a new interpreter created with the specific database.
+        /// Returns a new interpreter created with the specified factory.
         /// </summary>
-        public virtual IPythonInterpreter MakeInterpreter(PythonTypeDatabase typeDb) {
-            return new CPythonInterpreter(typeDb);
+        /// <remarks>
+        /// This is intended for use by derived classes only. To get an
+        /// interpreter instance, use <see cref="CreateInterpreter"/>.
+        /// </remarks>
+        public virtual IPythonInterpreter MakeInterpreter(PythonInterpreterFactoryWithDatabase factory) {
+            return new CPythonInterpreter(factory);
         }
 
         public IPythonInterpreter CreateInterpreter() {
-            if (_typeDb == null || 
-                _typeDb.DatabaseDirectory != DatabasePath ||
-                _typeDb.HasCustomBuiltins) {
-                var oldDb = _typeDb;
-                if (_typeDb != null) {
-                    _typeDb.DatabaseCorrupt -= OnDatabaseCorrupt;
-                }
-                _typeDb = MakeTypeDatabase(DatabasePath);
-                if (_typeDb != null) {
-                    _typeDb.DatabaseCorrupt += OnDatabaseCorrupt;
-                }
+            return MakeInterpreter(this);
+        }
 
-                if (oldDb != null) {
-                    oldDb.OnDatabaseReplaced(_typeDb);
-                }
+        private void ClearCachedTypeDb() {
+            _typeDb = null;
+            _typeDbWithoutPackages = null;
+        }
+
+        public PythonTypeDatabase GetCurrentDatabase() {
+            if (_typeDb == null || _typeDb.DatabaseDirectory != DatabasePath) {
+                _typeDb = MakeTypeDatabase(DatabasePath);
             }
 
-            return MakeInterpreter(_typeDb);
+            return _typeDb;
+        }
+
+        public PythonTypeDatabase GetCurrentDatabase(bool includeSitePackages) {
+            if (includeSitePackages) {
+                return GetCurrentDatabase();
+            }
+
+            if (_typeDbWithoutPackages == null || _typeDbWithoutPackages.DatabaseDirectory != DatabasePath) {
+                _typeDbWithoutPackages = MakeTypeDatabase(DatabasePath, false);
+            }
+
+            return _typeDbWithoutPackages;
         }
 
         /// <summary>
         /// Returns a new database loaded from the specified path.
         /// </summary>
+        /// <remarks>
+        /// This is intended for use by derived classes. To get a queryable 
+        /// database instance, use <see cref="GetCurrentDatabase"/> or
+        /// <see cref="CreateInterpreter"/>.
+        /// </remarks>
         public virtual PythonTypeDatabase MakeTypeDatabase(string databasePath, bool includeSitePackages = true) {
-            if (!_generating && ConfigurableDatabaseExists(databasePath, Configuration.Version)) {
+            if (!_generating && PythonTypeDatabase.IsDatabaseVersionCurrent(databasePath)) {
                 var paths = new List<string>();
                 paths.Add(databasePath);
                 if (includeSitePackages) {
@@ -135,24 +164,6 @@ namespace Microsoft.PythonTools.Interpreter {
             return PythonTypeDatabase.CreateDefaultTypeDatabase(this);
         }
 
-        private static bool ConfigurableDatabaseExists(string databasePath, Version languageVersion) {
-            if (Directory.Exists(databasePath) &&   // also ensures databasePath won't crash Path.Combine()
-                File.Exists(Path.Combine(databasePath, languageVersion.Major == 3 ? "builtins.idb" : "__builtin__.idb"))) {
-                string versionFile = Path.Combine(databasePath, "database.ver");
-                if (File.Exists(versionFile)) {
-                    try {
-                        string allLines = File.ReadAllText(versionFile);
-                        int version;
-                        return Int32.TryParse(allLines, out version) && version == PythonTypeDatabase.CurrentVersion;
-                    } catch (IOException) {
-                    } catch (UnauthorizedAccessException) {
-                    } catch (SecurityException) {
-                    }
-                }
-            }
-            return false;
-        }
-
         private bool WatchingLibrary {
             get {
                 if (_libWatcher != null) {
@@ -165,7 +176,7 @@ namespace Microsoft.PythonTools.Interpreter {
             set {
                 if (_libWatcher != null) {
                     lock (_libWatcherLock) {
-                        if (_libWatcher == null) {
+                        if (_libWatcher == null || _libWatcher.EnableRaisingEvents == value) {
                             return;
                         }
                         try {
@@ -183,92 +194,97 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
-        public virtual void GenerateCompletionDatabase(GenerateDatabaseOptions options, Action<int> onExit = null) {
-            if (_generating) {
-                return;
-            }
-            WatchingLibrary = false;
-            _generating = true;
+        public virtual void GenerateDatabase(GenerateDatabaseOptions options, Action<int> onExit = null) {
             var req = new PythonTypeDatabaseCreationRequest {
                 Factory = this,
                 OutputPath = DatabasePath,
                 SkipUnchanged = options.HasFlag(GenerateDatabaseOptions.SkipUnchanged)
             };
-            req.OnExit = onExit;
-            PythonTypeDatabase.Generate(req);
+
+            GenerateDatabase(req, onExit);
         }
 
-        public bool NotifyGeneratingDatabase(bool isGenerating) {
-            var wasGenerating = _generating;
-            if (isGenerating != _generating) {
-                WatchingLibrary = !isGenerating;
-                _generating = isGenerating;
-            }
-            return wasGenerating;
+        protected virtual void GenerateDatabase(PythonTypeDatabaseCreationRequest request, Action<int> onExit = null) {
+            WatchingLibrary = false;
+            _generating = true;
+
+            var originalOnExit = request.OnExit;
+
+            request.OnExit = exitCode => {
+                if (exitCode != PythonTypeDatabase.AlreadyGeneratingExitCode) {
+                    _generating = false;
+                }
+                if (originalOnExit != null) {
+                    originalOnExit(exitCode);
+                }
+                if (onExit != null) {
+                    onExit(exitCode);
+                }
+            };
+
+            PythonTypeDatabase.Generate(request);
         }
 
         /// <summary>
-        /// Returns true if the database is currently being regenerated. This
-        /// state is managed automatically.
+        /// Called to inform the interpreter that its database cannot be loaded
+        /// and may need to be regenerated.
         /// </summary>
-        protected bool IsGenerating {
+        public void NotifyCorruptDatabase() {
+            _isValid = false;
+            ClearCachedTypeDb();
+
+            OnIsCurrentChanged();
+            OnNewDatabaseAvailable();
+        }
+
+        public bool IsGenerating {
             get {
                 return _generating;
             }
         }
 
-        public void NotifyNewDatabase() {
-            if (_typeDb != null) {
-                _typeDb.DatabaseCorrupt -= OnDatabaseCorrupt;
+        private void OnDatabaseVerChanged(object sender, FileSystemEventArgs e) {
+            if ((!e.Name.Equals("database.ver", StringComparison.OrdinalIgnoreCase) &&
+                !e.Name.Equals("database.pid", StringComparison.OrdinalIgnoreCase)) ||
+                !CommonUtils.IsSubpathOf(DatabasePath, e.FullPath)) {
+                return;
             }
-            var oldDb = _typeDb;
-            var wasGenerating = NotifyGeneratingDatabase(false);
 
-            _typeDb = MakeTypeDatabase(DatabasePath);
-            if (_typeDb != null) {
-                _typeDb.DatabaseCorrupt += OnDatabaseCorrupt;
+            RefreshIsCurrent();
+
+            if (IsCurrent) {
+                NotifyNewDatabase();
             }
+        }
+
+        private void NotifyNewDatabase() {
+            _generating = false;
+            OnIsCurrentChanged();
+
+            // Clear the previous database so that we load the new one next time
+            // someone requests it.
+            ClearCachedTypeDb();
 
             WatchingLibrary = true;
-            if (wasGenerating) {
-                RefreshIsCurrent();
-            }
 
-            if (oldDb != null) {
-                oldDb.OnDatabaseReplaced(_typeDb);
-            }
-
-            var onNewDb = NewDatabaseAvailable;
-            if (onNewDb != null) {
-                onNewDb(this, EventArgs.Empty);
-            }
+            OnNewDatabaseAvailable();
         }
 
-        private void OnDatabaseCorrupt(object sender, EventArgs args) {
-            var oldDb = _typeDb;
-            _typeDb = PythonTypeDatabase.CreateDefaultTypeDatabase(_config.Version);
-            if (oldDb != null) {
-                oldDb.OnDatabaseReplaced(_typeDb);
-            }
-            GenerateCompletionDatabase(GenerateDatabaseOptions.None);
-        }
-
-        public virtual void AutoGenerateCompletionDatabase() {
-            RefreshIsCurrent();
-            if (!IsCurrent) {
-                GenerateCompletionDatabase(GenerateDatabaseOptions.None);
+        private bool IsValid {
+            get {
+                return _isValid && _missingModules == null && _isCurrentException == null;
             }
         }
 
         public virtual bool IsCurrent {
             get {
-                return !_generating && _isValid && _missingModules == null && _isCurrentException == null;
+                return !IsGenerating && IsValid;
             }
         }
 
-        public void NotifyInvalidDatabase() {
-            if (_typeDb != null) {
-                _typeDb.OnDatabaseCorrupt();
+        public virtual bool IsCheckingDatabase {
+            get {
+                return _isCheckingDatabase;
             }
         }
 
@@ -294,66 +310,85 @@ namespace Microsoft.PythonTools.Interpreter {
             return null;
         }
 
+        /// <summary>
+        /// Called to manually trigger a refresh of <see cref="IsCurrent"/>.
+        /// After completion, <see cref="IsCurrentChanged"/> will always be
+        /// raised, regardless of whether the values were changed.
+        /// </summary>
         public virtual void RefreshIsCurrent() {
-            try {
-                if (!ConfigurableDatabaseExists(DatabasePath, Configuration.Version)) {
-                    _isValid = false;
-                } else {
-                    _isValid = true;
-                    HashSet<string> existingDatabase = null;
-                    string[] missingModules = null;
+            lock (_isCurrentLock) {
+                try {
+                    _isCheckingDatabase = true;
+                    OnIsCurrentChanged();
 
-                    for (int retries = 3; retries > 0; --retries) {
-                        try {
-                            existingDatabase = GetExistingDatabase(DatabasePath);
-                            break;
-                        } catch (UnauthorizedAccessException) {
-                        } catch (IOException) {
-                        }
-                        Thread.Sleep(100);
-                    }
+                    _generating = PythonTypeDatabase.IsDatabaseRegenerating(DatabasePath);
+                    WatchingLibrary = !_generating;
 
-                    if (existingDatabase == null) {
-                        // This will either succeed or throw again. If it throws
-                        // then the error is reported to the user.
-                        existingDatabase = GetExistingDatabase(DatabasePath);
-                    }
-
-                    for (int retries = 3; retries > 0; --retries) {
-                        try {
-                            missingModules = GetMissingModules(existingDatabase);
-                            break;
-                        } catch (UnauthorizedAccessException) {
-                        } catch (IOException) {
-                        }
-                        Thread.Sleep(100);
-                    }
-
-                    if (missingModules == null) {
-                        // This will either succeed or throw again. If it throws
-                        // then the error is reported to the user.
-                        missingModules = GetMissingModules(existingDatabase);
-                    }
-
-                    if (missingModules.Length > 0) {
-                        var oldModules = _missingModules;
-                        if (oldModules == null ||
-                            oldModules.Length != missingModules.Length ||
-                            !oldModules.SequenceEqual(missingModules)) {
-                        }
-                        _missingModules = missingModules;
-                    } else {
+                    if (_generating) {
+                        // Skip the rest of the checks, because we know we're
+                        // not current.
+                    } else if (!PythonTypeDatabase.IsDatabaseVersionCurrent(DatabasePath)) {
+                        _isValid = false;
                         _missingModules = null;
+                        _isCurrentException = null;
+                    } else {
+                        _isValid = true;
+                        HashSet<string> existingDatabase = null;
+                        string[] missingModules = null;
+
+                        for (int retries = 3; retries > 0; --retries) {
+                            try {
+                                existingDatabase = GetExistingDatabase(DatabasePath);
+                                break;
+                            } catch (UnauthorizedAccessException) {
+                            } catch (IOException) {
+                            }
+                            Thread.Sleep(100);
+                        }
+
+                        if (existingDatabase == null) {
+                            // This will either succeed or throw again. If it throws
+                            // then the error is reported to the user.
+                            existingDatabase = GetExistingDatabase(DatabasePath);
+                        }
+
+                        for (int retries = 3; retries > 0; --retries) {
+                            try {
+                                missingModules = GetMissingModules(existingDatabase);
+                                break;
+                            } catch (UnauthorizedAccessException) {
+                            } catch (IOException) {
+                            }
+                            Thread.Sleep(100);
+                        }
+
+                        if (missingModules == null) {
+                            // This will either succeed or throw again. If it throws
+                            // then the error is reported to the user.
+                            missingModules = GetMissingModules(existingDatabase);
+                        }
+
+                        if (missingModules.Length > 0) {
+                            var oldModules = _missingModules;
+                            if (oldModules == null ||
+                                oldModules.Length != missingModules.Length ||
+                                !oldModules.SequenceEqual(missingModules)) {
+                            }
+                            _missingModules = missingModules;
+                        } else {
+                            _missingModules = null;
+                        }
                     }
+                    _isCurrentException = null;
+                } catch (Exception ex) {
+                    // Report the exception text as the reason.
+                    _isCurrentException = ex.ToString();
+                    _missingModules = null;
+                } finally {
+                    _isCheckingDatabase = false;
                 }
-                _isCurrentException = null;
-            } catch (Exception ex) {
-                // Report the exception text as the reason.
-                _isCurrentException = ex.ToString();
-                _missingModules = null;
             }
 
-            OnIsCurrentReasonChanged();
             OnIsCurrentChanged();
         }
 
@@ -365,9 +400,24 @@ namespace Microsoft.PythonTools.Interpreter {
             );
         }
 
+        /// <summary>
+        /// Returns a sequence of module names that are required for a database.
+        /// If any of these are missing, the database will be marked as invalid.
+        /// </summary>
+        private IEnumerable<string> RequiredBuiltinModules {
+            get {
+                if (Configuration.Version.Major == 2) {
+                    yield return "__builtin__";
+                } else if (Configuration.Version.Major == 3) {
+                    yield return "builtins";
+                }
+            }
+        }
+
         private string[] GetMissingModules(HashSet<string> existingDatabase) {
             return ModulePath.GetModulesInLib(this)
                 .Select(mp => mp.ModuleName)
+                .Concat(RequiredBuiltinModules)
                 .Where(name => !existingDatabase.Contains(name))
                 .OrderBy(name => name, StringComparer.InvariantCultureIgnoreCase)
                 .ToArray();
@@ -404,10 +454,8 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
-        public event EventHandler IsCurrentReasonChanged;
-
-        protected void OnIsCurrentReasonChanged() {
-            var evt = IsCurrentReasonChanged;
+        protected void OnNewDatabaseAvailable() {
+            var evt = NewDatabaseAvailable;
             if (evt != null) {
                 evt(this, EventArgs.Empty);
             }
@@ -469,7 +517,7 @@ namespace Microsoft.PythonTools.Interpreter {
             var missingModules = _missingModules;
             var reason = "Database at " + DatabasePath;
             if (_isCurrentException != null) {
-                return _isCurrentException;
+                return reason + " raised an exception while refreshing:" + Environment.NewLine + _isCurrentException;
             } else if (_generating) {
                 return reason + " is regenerating";
             } else if (_libWatcher == null) {
@@ -490,6 +538,16 @@ namespace Microsoft.PythonTools.Interpreter {
         #region IDisposable Members
 
         protected virtual void Dispose(bool disposing) {
+            if (_verWatcher != null) {
+                lock (_verWatcherLock) {
+                    if (_verWatcher != null) {
+                        _verWatcher.EnableRaisingEvents = false;
+                        _verWatcher.Dispose();
+                        _verWatcher = null;
+                    }
+                }
+            }
+
             if (_libWatcher != null) {
                 lock (_libWatcherLock) {
                     if (_libWatcher != null) {
@@ -508,6 +566,63 @@ namespace Microsoft.PythonTools.Interpreter {
             if (!_disposed) {
                 Dispose(true);
                 _disposed = true;
+            }
+        }
+
+        #endregion
+
+        #region Database.ver watcher
+
+        private FileSystemWatcher CreateDatabaseVerWatcher() {
+            lock (_verWatcherLock) {
+                var dir = DatabasePath;
+                if (Directory.Exists(dir)) {
+                    try {
+                        var watcher = new FileSystemWatcher {
+                            IncludeSubdirectories = false,
+                            Path = dir,
+                            Filter = "database.*",
+                            NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite
+                        };
+                        watcher.Deleted += OnDatabaseVerChanged;
+                        watcher.Created += OnDatabaseVerChanged;
+                        watcher.Changed += OnDatabaseVerChanged;
+                        watcher.EnableRaisingEvents = true;
+                        return watcher;
+                    } catch (ArgumentException ex) {
+                        Debug.WriteLine("Error starting database.ver FileSystemWatcher:\r\n{0}", ex);
+                    }
+                    return null;
+                } else {
+                    var dirName = Path.GetFileName(CommonUtils.TrimEndSeparator(dir));
+                    while (CommonUtils.IsValidPath(dir) && !Directory.Exists(dir)) {
+                        dir = Path.GetDirectoryName(dir);
+                    }
+                    if (Directory.Exists(dir)) {
+                        var watcher = new FileSystemWatcher {
+                            IncludeSubdirectories = true,
+                            Path = dir,
+                            Filter = dirName,
+                            NotifyFilter = NotifyFilters.DirectoryName
+                        };
+                        watcher.Created += OnDatabaseFolderCreated;
+                        watcher.EnableRaisingEvents = true;
+                        return watcher;
+                    } else {
+                        return null;
+                    }
+                }
+            }
+        }
+
+        private void OnDatabaseFolderCreated(object sender, FileSystemEventArgs e) {
+            var watcher = CreateDatabaseVerWatcher();
+            if (watcher != null) {
+                lock (_verWatcherLock) {
+                    _verWatcher.EnableRaisingEvents = false;
+                    _verWatcher.Dispose();
+                    _verWatcher = watcher;
+                }
             }
         }
 
