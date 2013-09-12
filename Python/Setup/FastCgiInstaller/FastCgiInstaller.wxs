@@ -285,9 +285,17 @@
     <Property Id="EasyInstall" Value="0" />
     <UIRef Id="WixUI_Common" />
     
-    <WixVariable Id="WixUILicenseRtf" Value="License.rtf" />
-    <WixVariable Id="WixUIBannerBmp" Value="..\PythonToolsInstaller\UIBanner2012.bmp" />
-    <WixVariable Id="WixUIDialogBmp" Value="..\PythonToolsInstaller\Dialog2012.bmp" />
+    <WixVariable Id="WixUILicenseRtf" Value="..\PythonToolsInstaller\License.rtf" />
+    <?if "$(var.VSTargetVersion)" = "10.0" ?>
+        <WixVariable Id="WixUIBannerBmp" Value="..\PythonToolsInstaller\UIBanner2010.bmp" />
+        <WixVariable Id="WixUIDialogBmp" Value="..\PythonToolsInstaller\Dialog2010.bmp" />
+    <?elseif "$(var.VSTargetVersion)" = "11.0" ?>
+        <WixVariable Id="WixUIBannerBmp" Value="..\PythonToolsInstaller\UIBanner2012.bmp" />
+        <WixVariable Id="WixUIDialogBmp" Value="..\PythonToolsInstaller\Dialog2012.bmp" />
+    <?elseif "$(var.VSTargetVersion)" = "12.0" ?>
+        <WixVariable Id="WixUIBannerBmp" Value="..\PythonToolsInstaller\UIBanner2013.bmp" />
+        <WixVariable Id="WixUIDialogBmp" Value="..\PythonToolsInstaller\Dialog2013.bmp" />
+    <?endif?>
     <Property Id="WixAppFolder" Value="WixPerMachineFolder" />
 
     

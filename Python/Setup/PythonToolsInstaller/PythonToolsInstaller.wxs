@@ -349,8 +349,8 @@
     <WixVariable Id="WixUIBannerBmp" Value="UIBanner2012.bmp" />
     <WixVariable Id="WixUIDialogBmp" Value="Dialog2012.bmp" />
     <?elseif "$(var.VSTargetVersion)" = "12.0" ?>
-    <WixVariable Id="WixUIBannerBmp" Value="UIBannerDev12.bmp" />
-    <WixVariable Id="WixUIDialogBmp" Value="DialogDev12.bmp" />
+    <WixVariable Id="WixUIBannerBmp" Value="UIBanner2013.bmp" />
+    <WixVariable Id="WixUIDialogBmp" Value="Dialog2013.bmp" />
     <?endif?>
     <Feature Id="Provider" Absent="disallow" AllowAdvertise="no" Description="Used for Ref Counting" Display="hidden" Level="1" InstallDefault="local" Title="RefCounting" TypicalDefault="install">
       <ComponentRef Id="PythonTools_Provider" />
