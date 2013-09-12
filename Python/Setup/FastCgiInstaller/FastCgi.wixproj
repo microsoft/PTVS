@@ -13,7 +13,7 @@
     <SccAuxPath>SAK</SccAuxPath>
     <SccLocalPath>SAK</SccLocalPath>
     <DefineConstants>
-      DjangoDir=$(BuildRoot)\Python\Product\Django;MsiVersion=$(WixVersion);
+      DjangoDir=$(BuildRoot)\Python\Product\Django;MsiVersion=$(WixVersion);VSTargetVersion=$(VSTarget)
     </DefineConstants>
     <LinkerAdditionalOptions>-ext WixUIExtension -ext WixUtilExtension</LinkerAdditionalOptions>
   </PropertyGroup>
