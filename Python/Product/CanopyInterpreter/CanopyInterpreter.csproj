@@ -44,6 +44,7 @@
     <RootNamespace>CanopyInterpreter</RootNamespace>
     <AssemblyName>CanopyInterpreter</AssemblyName>
     <ProjectGuid>{59DFC2CF-B7D0-4D5A-B1BC-EB6EE8C92F9D}</ProjectGuid>
+    <DebugSymbols>true</DebugSymbols>
     <SccProjectName>SAK</SccProjectName>
     <SccLocalPath>SAK</SccLocalPath>
     <SccAuxPath>SAK</SccAuxPath>
@@ -51,6 +52,9 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <Optimize>true</Optimize>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Accessibility">
@@ -76,7 +80,4 @@
   <Target Name="BeforeBuild">
   </Target>
   -->
-  <Target Name="AfterBuild" Condition="Exists('$(MSBuildExtensionsPath32)\Microsoft\WiX\v3.x\wix.targets')">
-    <MSBuild Projects="CanopyInterpreter.wixproj" />
-  </Target>
 </Project>
