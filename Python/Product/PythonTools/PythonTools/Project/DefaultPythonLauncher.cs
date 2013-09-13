@@ -59,7 +59,7 @@ namespace Microsoft.PythonTools.Project {
                 }
 
                 Uri uri;
-                
+
                 if (Uri.TryCreate(url, UriKind.Absolute, out uri)) {
                     if (String.IsNullOrEmpty(uri.GetComponents(UriComponents.Port, UriFormat.Unescaped))) {
                         int portNum;
@@ -78,7 +78,7 @@ namespace Microsoft.PythonTools.Project {
 
         private string GetFullUrl() {
             var url = GetFullUrl(
-                _project.GetProperty(PythonConstants.WebBrowserUrlSetting), 
+                _project.GetProperty(PythonConstants.WebBrowserUrlSetting),
                 _project.GetProperty(PythonConstants.WebBrowserPortSetting)
             );
             Uri uri;
@@ -98,8 +98,8 @@ namespace Microsoft.PythonTools.Project {
                 var process = StartWithoutDebugger(file);
                 var url = GetFullUrl();
                 Uri uri;
-                if (process != null && 
-                    !String.IsNullOrWhiteSpace(url) && 
+                if (process != null &&
+                    !String.IsNullOrWhiteSpace(url) &&
                     Uri.TryCreate(url, UriKind.RelativeOrAbsolute, out uri)) {
                     OnPortOpenedHandler.CreateHandler(
                         uri.Port,
@@ -182,6 +182,9 @@ namespace Microsoft.PythonTools.Project {
         private Process StartWithoutDebugger(string startupFile) {
             var psi = CreateProcessStartInfoNoDebug(startupFile);
             if (psi == null) {
+                MessageBox.Show(
+                    "The project cannot be started because its active Python environment does not have the interpreter executable specified.",
+                    "Python Tools for Visual Studio", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return null;
             }
             return Process.Start(psi);
@@ -192,15 +195,21 @@ namespace Microsoft.PythonTools.Project {
         /// </summary>
         private void StartWithDebugger(string startupFile) {
             VsDebugTargetInfo dbgInfo = new VsDebugTargetInfo();
-            dbgInfo.cbSize = (uint)Marshal.SizeOf(dbgInfo);
-            SetupDebugInfo(ref dbgInfo, startupFile);
-            if (!string.IsNullOrEmpty(dbgInfo.bstrExe)) {
-                try {
-                    LaunchDebugger(PythonToolsPackage.Instance, dbgInfo);
-                } finally {
-                    if (dbgInfo.pClsidList != IntPtr.Zero) {
-                        Marshal.FreeCoTaskMem(dbgInfo.pClsidList);
-                    }
+            try {
+                dbgInfo.cbSize = (uint)Marshal.SizeOf(dbgInfo);
+                SetupDebugInfo(ref dbgInfo, startupFile);
+
+                if (string.IsNullOrEmpty(dbgInfo.bstrExe)) {
+                    MessageBox.Show(
+                        "The project cannot be debugged because its active Python environment does not have the interpreter executable specified.",
+                        "Python Tools for Visual Studio", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
+                LaunchDebugger(PythonToolsPackage.Instance, dbgInfo);
+            } finally {
+                if (dbgInfo.pClsidList != IntPtr.Zero) {
+                    Marshal.FreeCoTaskMem(dbgInfo.pClsidList);
                 }
             }
         }
@@ -338,6 +347,7 @@ namespace Microsoft.PythonTools.Project {
             if (string.IsNullOrEmpty(interpreter)) {
                 return null;
             }
+
             ProcessStartInfo startInfo;
             if (!isWindows && (PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnAbnormalExit || PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnNormalExit)) {
                 command = "/c \"\"" + interpreter + "\" " + command;

@@ -80,7 +80,14 @@ namespace Microsoft.IronPythonTools.Debugger {
         /// Default implementation of the "Start withput Debugging" command.
         /// </summary>
         private void StartWithoutDebugger(string startupFile) {
-            Process.Start(CreateProcessStartInfoNoDebug(startupFile));
+            var psi = CreateProcessStartInfoNoDebug(startupFile);
+            if (psi == null) {
+                MessageBox.Show(
+                    "The project cannot be started because its active Python environment does not have the interpreter executable specified.",
+                    "Python Tools for Visual Studio", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+            Process.Start(psi);
         }
 
         /// <summary>
@@ -91,10 +98,14 @@ namespace Microsoft.IronPythonTools.Debugger {
 
             bool isWindows;
             string interpreter = GetInterpreterExecutableInternal(out isWindows);
+            if (string.IsNullOrEmpty(interpreter)) {
+                return null;
+            }
+
             ProcessStartInfo startInfo;
             if (!isWindows && (PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnNormalExit || PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnAbnormalExit)) {
                 command = "/c \"\"" + interpreter + "\" " + command;
-                    
+
                 if (PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnNormalExit &&
                     PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnAbnormalExit) {
                     command += " & pause";
@@ -104,7 +115,7 @@ namespace Microsoft.IronPythonTools.Debugger {
                     command += " & if errorlevel 1 pause";
                 }
 
-                command += "\"";                
+                command += "\"";
                 startInfo = new ProcessStartInfo("cmd.exe", command);
             } else {
                 startInfo = new ProcessStartInfo(interpreter, command);
@@ -140,6 +151,13 @@ namespace Microsoft.IronPythonTools.Debugger {
             try {
                 Marshal.StructureToPtr(dbgInfo, ptr, false);
                 SetupDebugInfo(ref dbgInfo, startupFile);
+
+                if (string.IsNullOrEmpty(dbgInfo.bstrExe)) {
+                    MessageBox.Show(
+                        "The project cannot be debugged because its active Python environment does not have the interpreter executable specified.",
+                        "Python Tools for Visual Studio", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
 
                 LaunchDebugger(PythonToolsPackage.Instance, dbgInfo);
             } finally {
@@ -291,7 +309,7 @@ You may need to download it from http://ironpython.codeplex.com.");
                 dbgInfo.clsidCustom = debugEngine.Value;
                 dbgInfo.grfLaunch = (uint)__VSDBGLAUNCHFLAGS.DBGLAUNCH_StopDebuggingOnEnd | (uint)__VSDBGLAUNCHFLAGS4.DBGLAUNCH_UseDefaultBrowser;
                 dbgInfo.cbSize = (uint)Marshal.SizeOf(dbgInfo);
-                
+
                 VsShellUtilities.LaunchDebugger(PythonToolsPackage.Instance, dbgInfo);
             } else {
                 // run the users default browser
