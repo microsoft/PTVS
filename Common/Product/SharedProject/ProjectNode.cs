@@ -5582,6 +5582,10 @@ If the files in the existing folder have the same names as files in the folder y
 
         private MSBuildExecution.ProjectPropertyInstance GetMsBuildProperty(string propertyName, bool resetCache)
         {
+            if (isDisposed) {
+                throw new ObjectDisposedException(null);
+            }
+
             if (resetCache || this.currentConfig == null)
             {
                 // Get properties from project file and cache it

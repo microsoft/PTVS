@@ -388,18 +388,38 @@ namespace Microsoft.PythonTools.TestAdapter {
             var solution = (IVsSolution)_serviceProvider.GetService(typeof(SVsSolution));
 
             foreach (var project in EnumerateLoadedProjects(solution)) {
-
                 IVsHierarchy hierarchy = project as IVsHierarchy;
-                uint itemid;
+                if (hierarchy == null) {
+                    continue;
+                }
+
                 string projectPath;
-                if (project.TryGetProjectPath(out projectPath) && 
-                    CommonUtils.IsSamePath(projectPath, filename) ||
-                    (hierarchy != null &&
-                    project.IsTestProject() &&
-                    ErrorHandler.Succeeded(hierarchy.ParseCanonicalName(filename, out itemid)))) {
+                try {
+                    if (!project.TryGetProjectPath(out projectPath)) {
+                        continue;
+                    }
+                } catch (ObjectDisposedException) {
+                    continue;
+                }
+
+                if (!CommonUtils.IsSamePath(projectPath, filename)) {
+                    continue;
+                }
+
+                try {
+                    if (!project.IsTestProject()) {
+                        continue;
+                    }
+                } catch (ObjectDisposedException) {
+                    continue;
+                }
+
+                uint itemid;
+                if (ErrorHandler.Succeeded(hierarchy.ParseCanonicalName(filename, out itemid))) {
                     return project;
                 }
             }
+
             return null;
         }
 
