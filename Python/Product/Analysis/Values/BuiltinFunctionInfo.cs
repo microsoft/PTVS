@@ -69,10 +69,17 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public override string Description {
             get {
+                string res;
                 if (_function.IsBuiltin) {
-                    return "built-in function " + _function.Name;
+                    res = "built-in function " + _function.Name;
+                } else {
+                    res = "function " + _function.Name;
                 }
-                return "function " + _function.Name;
+
+                if (!string.IsNullOrWhiteSpace(Documentation)) {
+                    res += System.Environment.NewLine + Documentation;
+                }
+                return res;
             }
         }
 

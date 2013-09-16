@@ -146,8 +146,21 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         internal void AddParameterString(StringBuilder result) {
-            // TODO: Include parameter information
-            result.Append("...");
+            for (int i = 0; i < FunctionDefinition.Parameters.Count; i++) {
+                if (i != 0) {
+                    result.Append(", ");
+                }
+                var p = FunctionDefinition.Parameters[i];
+
+                var name = MakeParameterName(p);
+                var defaultValue = GetDefaultValue(ProjectState, p, DeclaringModule.Tree);
+
+                result.Append(name);
+                if (!String.IsNullOrWhiteSpace(defaultValue)) {
+                    result.Append(" = ");
+                    result.Append(defaultValue);
+                }
+            }
         }
 
         internal void AddReturnTypeString(StringBuilder result) {
