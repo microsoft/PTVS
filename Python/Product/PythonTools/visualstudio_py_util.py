@@ -68,8 +68,8 @@ def exec_file(file, global_variables):
             global_variables.setdefault('__loader__', None)
 
     sys.path[0] = os.path.split(file)[0]
+    f = open(file, "rb")
     try:
-        f = open(file, "rb")
         code_obj = compile(f.read().replace(to_bytes('\r\n'), to_bytes('\n')) + to_bytes('\n'), file, 'exec')
     finally:
         f.close()
