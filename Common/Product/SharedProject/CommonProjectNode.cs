@@ -377,13 +377,7 @@ namespace Microsoft.VisualStudioTools.Project {
         protected override void Reload() {
             base.Reload();
 
-            var startupPath = GetStartupFile();
-            if (!string.IsNullOrEmpty(startupPath)) {
-                var startup = FindNodeByFullPath(startupPath);
-                if (startup != null) {
-                    BoldItem(startup, true);
-                }
-            }
+            BoldStartupItem();
 
             OnProjectPropertyChanged += CommonProjectNode_OnProjectPropertyChanged;
 
@@ -412,6 +406,16 @@ namespace Microsoft.VisualStudioTools.Project {
 
             // add everything that's on disk that we don't have in the project
             MergeDiskNodes(this, ProjectHome);
+        }
+
+        private void BoldStartupItem() {
+            var startupPath = GetStartupFile();
+            if (!string.IsNullOrEmpty(startupPath)) {
+                var startup = FindNodeByFullPath(startupPath);
+                if (startup != null) {
+                    BoldItem(startup, true);
+                }
+            }
         }
 
         private FileSystemWatcher CreateFileSystemWatcher(string dir) {
@@ -485,6 +489,8 @@ namespace Microsoft.VisualStudioTools.Project {
                 UpdateShowAllFiles(this, enabled: true);
                 ExpandItem(EXPANDFLAGS.EXPF_ExpandFolder);
             }
+
+            BoldStartupItem();
 
             _showingAllFiles = !_showingAllFiles;
 

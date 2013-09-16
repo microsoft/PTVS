@@ -402,8 +402,15 @@ namespace Microsoft.PythonTools.Project {
             foreach (var child in expandAfter) {
                 child.ExpandItem(EXPANDFLAGS.EXPF_ExpandFolder);
             }
-            foreach (var child in node.AllChildren.OfType<InterpretersNode>()) {
-                BoldItem(child, child._factory == Interpreters.ActiveInterpreter);
+            BoldActiveEnvironment();
+        }
+
+        private void BoldActiveEnvironment() {
+            var node = _interpretersContainer;
+            if (node != null) {
+                foreach (var child in node.AllChildren.OfType<InterpretersNode>()) {
+                    BoldItem(child, child._factory == Interpreters.ActiveInterpreter);
+                }
             }
         }
 
@@ -1071,6 +1078,12 @@ namespace Microsoft.PythonTools.Project {
             get {
                 return GuidList.guidPythonToolsCmdSet;
             }
+        }
+
+        protected internal override int ShowAllFiles() {
+            int hr = base.ShowAllFiles();
+            BoldActiveEnvironment();
+            return hr;
         }
     }
 }
