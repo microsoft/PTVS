@@ -677,9 +677,15 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         internal void SwitchThread(PythonThread thread, bool verbose) {
+            var frame = thread.Frames.FirstOrDefault();
+            if (frame == null) {
+                Window.WriteError(string.Format("Cannot change current thread to {0}, because it does not have any visible frames.", thread.Id));
+                return;
+            }
+
             _threadId = thread.Id;
-            _frameId = thread.Frames[0].FrameId;
-            SetThreadAndFrameCommand(thread.Id, thread.Frames[0].FrameId, thread.Frames[0].Kind);
+            _frameId = frame.FrameId;
+            SetThreadAndFrameCommand(thread.Id, _frameId, frame.Kind);
             if (verbose) {
                 Window.WriteLine(String.Format("Current thread changed to {0}, frame {1}", _threadId, _frameId));
             }

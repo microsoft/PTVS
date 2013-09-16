@@ -583,7 +583,12 @@ namespace Microsoft.PythonTools.Debugger {
             int newLine = stream.ReadInt32();
             _setLineResult = res != 0;
             if (_setLineResult) {
-                _threads[tid].Frames[0].LineNo = newLine;
+                var frame = _threads[tid].Frames.FirstOrDefault();
+                if (frame != null) {
+                    frame.LineNo = newLine;
+                } else {
+                    Debug.Fail("SETL result received, but there is no frame to update");
+                }
             }
             _lineEvent.Set();
         }

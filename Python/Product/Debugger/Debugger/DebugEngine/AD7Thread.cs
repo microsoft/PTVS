@@ -37,7 +37,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         }
 
         private string GetCurrentLocation(bool fIncludeModuleName) {
-            if (_debuggedThread.Frames != null) {
+            if (_debuggedThread.Frames != null && _debuggedThread.Frames.Count > 0) {
                 return _debuggedThread.Frames[0].FunctionName;
             }
             return "<unknown location, not in Python code>";
