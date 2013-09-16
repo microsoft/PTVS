@@ -126,7 +126,7 @@ import types
 #
 # To update the baseline DB, see Python\Product\PythonTools\RefreshDefaultDB.py
 #
-CURRENT_DATABASE_VERSION = '23'
+CURRENT_DATABASE_VERSION = '24'
 
 
 # The values in KNOWN_METHOD_TYPES and KNOWN_FUNCTION_TYPES are used when
@@ -170,28 +170,13 @@ def safe_isinstance(obj, types):
     except:
         return False
 
-def safe_dir(obj):
-    try:
-        return frozenset(obj.__dict__) | frozenset(dir(obj))
-    except:
-        # Some types crash when we access __dict__ and/or dir()
-        pass
-    try:
-        return frozenset(dir(obj))
-    except:
-        pass
-    try:
-        return frozenset(obj.__dict__)
-    except:
-        pass
-    return frozenset()
+# safe_dir is imported from BuiltinScraper/IronPythonScraper
 
 def safe_repr(obj):
     try:
         return repr(obj)
     except:
         return 'invalid object'
-
 
 if sys.version_info[0] == 2:
     builtin_name = '__builtin__'
@@ -277,7 +262,6 @@ if sys.platform == "cli":
 else:
     import BuiltinScraper
 
-
 def generate_builtin_function(function, is_method = False):
     function_table = {}
     
@@ -328,7 +312,7 @@ def generate_member_table(obj, is_hidden = False, from_type = False, extra_types
 
     sentinel = object()
     members = []
-    for name in safe_dir(obj):
+    for name in BuiltinScraper.safe_dir(obj):
         member = safe_getattr(obj, name, sentinel)
         if member is not sentinel:
             members.append((name, member))
@@ -563,7 +547,7 @@ def get_module_members(module):
     if module_all:
         return frozenset(module_all)
 
-    return safe_dir(module)
+    return BuiltinScraper.safe_dir(module)
 
 def generate_builtin_module():
     extra_types = {}

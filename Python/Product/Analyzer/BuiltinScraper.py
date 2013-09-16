@@ -21,6 +21,22 @@ try:
 except:
     import _thread as thread
 
+def safe_dir(obj):
+    try:
+        return frozenset(obj.__dict__) | frozenset(dir(obj))
+    except:
+        # Some types crash when we access __dict__ and/or dir()
+        pass
+    try:
+        return frozenset(dir(obj))
+    except:
+        pass
+    try:
+        return frozenset(obj.__dict__)
+    except:
+        pass
+    return frozenset()
+
 def builtins_keys():
     if isinstance(__builtins__, dict):
         return __builtins__.keys()

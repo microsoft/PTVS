@@ -31,6 +31,22 @@ from Microsoft.Scripting.Generation import CompilerHelpers
 class NonPythonTypeException(Exception):
     pass
 
+def safe_dir(obj):
+    try:
+        return frozenset(obj.__dict__) | frozenset(clr.Dir(obj))
+    except:
+        # Some types crash when we access __dict__ and/or dir()
+        pass
+    try:
+        return frozenset(clr.Dir(obj))
+    except:
+        pass
+    try:
+        return frozenset(obj.__dict__)
+    except:
+        pass
+    return frozenset()
+
 def type_to_typelist(type_obj):
     if type_obj.IsArray:
         return PythonScraper.type_to_typelist(tuple)

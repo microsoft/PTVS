@@ -805,10 +805,23 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
+        /// <summary>
+        /// Returns all module names in this and any inner instances. Use
+        /// <see cref="Modules"/> to find only those modules belonging to this
+        /// instance.
+        /// </summary>
         public IEnumerable<string> GetModuleNames() {
-            return _modules.Keys;
+            for (var db = this; db != null; db = db._inner) {
+                foreach (var name in db._modules.Keys) {
+                    yield return name;
+                }
+            }
         }
 
+        /// <summary>
+        /// Returns all modules associated with this instance. Unlike
+        /// <see cref="GetModuleNames"/>, this does not recurse.
+        /// </summary>
         public Dictionary<string, IPythonModule> Modules {
             get {
                 return _modules;

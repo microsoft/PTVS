@@ -96,9 +96,6 @@ def main():
             except ValueError:
                 pass
 
-        if os.path.exists(os.path.join(outpath, mod_name + '.idb.$memlist')):
-            os.unlink(os.path.join(outpath, mod_name + '.idb.$memlist'))
-
     # These modules should be obtained from a CPython 2.7 analysis. This removes
     # members that are unnecessary for the default DB.
     for mod_name in ('unittest', 'unittest.case'):
@@ -108,14 +105,14 @@ def main():
                 res = load(f)
             finally:
                 f.close()
-
+            
             res = module_fixers.get(mod_name, lambda x: x)(res)
-
-            f = open(os.path.join(outpath, mod_name + '.idb'), 'wb')
-            try:
-                dump(res, f)
-            finally:
-                f.close()
+            
+            write_module(mod_name, outpath, res)
+    
+    for filename in os.listdir(outpath):
+        if filename.endswith('.$memlist'):
+            os.unlink(os.path.join(outpath, filename))
 
 
 ##############################################################################
