@@ -41,20 +41,22 @@ namespace Microsoft.PythonTools.Interpreter {
         /// file system path, <see cref="LibraryPath"/> will be set to
         /// prefixPath plus "Lib".</para>
         /// </summary>
-        public InterpreterConfiguration(string prefixPath,
-                                        string path,
-                                        string winPath,
-                                        string libraryPath,
-                                        string pathVar,
-                                        ProcessorArchitecture arch,
-                                        Version version) {
+        public InterpreterConfiguration(
+            string prefixPath,
+            string path,
+            string winPath,
+            string libraryPath,
+            string pathVar,
+            ProcessorArchitecture arch,
+            Version version
+        ) {
             _prefixPath = prefixPath;
             _interpreterPath = path;
             _windowsInterpreterPath = string.IsNullOrEmpty(winPath) ? path : winPath;
             _libraryPath = libraryPath;
             if (string.IsNullOrEmpty(_libraryPath) && !string.IsNullOrEmpty(_prefixPath)) {
                 try {
-                _libraryPath = Path.Combine(_prefixPath, "Lib");
+                    _libraryPath = Path.Combine(_prefixPath, "Lib");
                 } catch (ArgumentException) {
                 }
             }
@@ -66,22 +68,24 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         /// <summary>
-        /// Returns the prefix path of the Python installation.
+        /// Returns the prefix path of the Python installation. All files
+        /// related to the installation should be underneath this path.
         /// </summary>
         public string PrefixPath {
             get { return _prefixPath; }
         }
 
         /// <summary>
-        /// Returns the path to the interpreter executable for launching Python applications.
+        /// Returns the path to the interpreter executable for launching Python
+        /// applications.
         /// </summary>
         public string InterpreterPath {
             get { return _interpreterPath; }
         }
 
         /// <summary>
-        /// Returns the path to the interpreter executable for launching Python applications
-        /// which are windows applications (pythonw.exe, ipyw.exe)
+        /// Returns the path to the interpreter executable for launching Python
+        /// applications which are windows applications (pythonw.exe, ipyw.exe).
         /// </summary>
         public string WindowsInterpreterPath {
             get { return _windowsInterpreterPath; }

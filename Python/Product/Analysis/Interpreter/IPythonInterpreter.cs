@@ -20,44 +20,52 @@ using Microsoft.PythonTools.Analysis;
 
 namespace Microsoft.PythonTools.Interpreter {
     /// <summary>
-    /// Interface for providing an interpreter implementation for plugging into Python Tools for Visual Studio.
+    /// Interface for providing an interpreter implementation for plugging into
+    /// Python Tools for Visual Studio.
     /// 
-    /// This interface provides meta-data for completion, support for executing code, and interacting with a REPL.
+    /// This interface provides information about Python types and modules,
+    /// which will be used for program analysis and IntelliSense.
     /// 
-    /// The interpreter is provided via the IPythonInterpreterProvider interface.  This interface can inspect the
-    /// system for available interpreters that it can support (e.g. different verions) and provide different
-    /// IPythonInterpreter objects for each one.  The user is then able to select which interprerter they use.
+    /// An interpreter is provided by an object implementing 
+    /// <see cref="IPythonInterpreterFactory"/>.
     /// </summary>
     public interface IPythonInterpreter {
-
+        /// <summary>
+        /// Performs any interpreter-specific initialization that is required.
+        /// </summary>
+        /// <param name="state"></param>
         void Initialize(PythonAnalyzer state);
 
         /// <summary>
         /// Gets a well known built-in type such as int, list, dict, etc...
         /// </summary>
         /// <param name="id">The built-in type to get</param>
-        /// <returns>An IPythonType object which represents the Python type.</returns>
+        /// <returns>An IPythonType representing the type.</returns>
         IPythonType GetBuiltinType(BuiltinTypeId id);
 
         /// <summary>
-        /// Returns a list of module names (both built-in and cached modules which have been analyzed).
+        /// Returns a list of module names that can be imported by this
+        /// interpreter.
         /// </summary>
         IList<string> GetModuleNames();
 
         /// <summary>
-        /// The list of built-in module names has changed (usually because a background analysis of the standard library has changed).
+        /// The list of built-in module names has changed (usually because a
+        /// background analysis of the standard library has completed).
         /// </summary>
         event EventHandler ModuleNamesChanged;
 
         /// <summary>
-        /// Returns the IPythonModule for a given module name.  If the module does not exist null should be returned.
+        /// Returns an IPythonModule for a given module name. Returns null if
+        /// the module does not exist.
         /// </summary>
         IPythonModule ImportModule(string name);
 
         /// <summary>
-        /// Provides interpreter specific information which can be associated with a module.
+        /// Provides interpreter-specific information which can be associated
+        /// with a module.
         /// 
-        /// It's safe for the interpreter to return null here if it has no per-module state.
+        /// Interpreters can return null if they have no per-module state.
         /// </summary>
         IModuleContext CreateModuleContext();
     }

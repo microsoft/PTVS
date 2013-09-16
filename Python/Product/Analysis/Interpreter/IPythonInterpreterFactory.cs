@@ -16,14 +16,15 @@ using System;
 
 namespace Microsoft.PythonTools.Interpreter {
     /// <summary>
-    /// Provides a factory for creating IPythonInterpreter's for a specific Python implementation.
+    /// Provides a factory for creating IPythonInterpreters for a specific
+    /// Python implementation.
     /// 
-    /// The factory includes information about what type of interpreter will be created - this is
-    /// used for displaying information to the user and for tracking per-interpreter settings.
+    /// The factory includes information about what type of interpreter will be
+    /// created - this is used for displaying information to the user and for
+    /// tracking per-interpreter settings.
     /// 
-    /// It also contains a method for creating an interpreter.  This allows the interpreters to be
-    /// stateful so that they can participate in the analysis of Python code or track other state
-    /// which may change from project to project.
+    /// It also contains a method for creating an interpreter. This allows for
+    /// stateful interpreters that participate in analysis or track other state.
     /// </summary>
     public interface IPythonInterpreterFactory {
         /// <summary>
@@ -33,19 +34,22 @@ namespace Microsoft.PythonTools.Interpreter {
             get;
         }
 
+        /// <summary>
+        /// Configuration settings for the interpreter.
+        /// </summary>
         InterpreterConfiguration Configuration {
             get;
         }
 
         /// <summary>
-        /// A stable ID for the interpreter used to track the interpreter in settings.
+        /// A stable ID for the interpreter used to track settings.
         /// </summary>
         Guid Id {
             get;
         }
 
         /// <summary>
-        /// Creates an interpreter.
+        /// Creates an IPythonInterpreter instance.
         /// </summary>
         IPythonInterpreter CreateInterpreter();
     }
