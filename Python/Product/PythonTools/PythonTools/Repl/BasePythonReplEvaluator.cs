@@ -291,7 +291,7 @@ namespace Microsoft.PythonTools.Repl {
                                 case "DPNG": DisplayPng(); break;
                                 case "EXIT":
                                     // REPL has exited
-                                    stream.Write(ExitCommandBytes);
+                                    Stream.Write(ExitCommandBytes);
                                     return;
                             }
                         }
