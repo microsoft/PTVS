@@ -130,18 +130,44 @@ namespace Microsoft.PythonTools.Intellisense {
 
             var modules = Enumerable.Empty<MemberResult>();
             if (analysis != null && (pyReplEval == null || !pyReplEval.LiveCompletionsOnly)) {
-                modules = modules.Concat((package != null && package.Length > 0) ? 
+                modules = modules.Concat(package.Length > 0 ? 
                     analysis.GetModuleMembers(package, !modulesOnly) : 
                     analysis.GetModules(true));
             }
             if (replScopes != null) {
-                modules = replScopes
-                    .Select(scope => new MemberResult(scope.Key, scope.Value ? PythonMemberType.Module : PythonMemberType.Namespace))
+                modules = GetModulesFromReplScope(replScopes, package)
                     .Concat(modules)
                     .Distinct(CompletionComparer.MemberEquality);
             }
 
             return modules;
+        }
+
+        private static IEnumerable<MemberResult> GetModulesFromReplScope(
+            IEnumerable<KeyValuePair<string, bool>> scopes,
+            string[] package
+        ) {
+            if (package == null || package.Length == 0) {
+                foreach (var scope in scopes) {
+                    if (scope.Key.IndexOf('.') < 0) {
+                        yield return new MemberResult(
+                            scope.Key,
+                            scope.Value ? PythonMemberType.Module : PythonMemberType.Namespace
+                        );
+                    }
+                }
+            } else {
+                foreach (var scope in scopes) {
+                    var parts = scope.Key.Split('.');
+                    if (parts.Length - 1 == package.Length &&
+                        parts.Take(parts.Length - 1).SequenceEqual(package, StringComparer.Ordinal)) {
+                        yield return new MemberResult(
+                            parts[parts.Length - 1],
+                            scope.Value ? PythonMemberType.Module : PythonMemberType.Namespace
+                        );
+                    }
+                }
+            }
         }
 
         public override string ToString() {

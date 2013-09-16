@@ -161,18 +161,24 @@ namespace Microsoft.PythonTools {
         #endregion
 
         void IVsPython.OpenInteractive(string description) {
+            int? commandId = null;
             lock (PythonToolsPackage.CommandsLock) {
                 foreach (var command in PythonToolsPackage.Commands) {
                     OpenReplCommand replCommand = command.Key as OpenReplCommand;
                     if (replCommand != null && replCommand.Description == description) {
-                        var dte = (EnvDTE.DTE)PythonToolsPackage.GetGlobalService(typeof(EnvDTE.DTE));
-                        object inObj = null, outObj = null;
-                        dte.Commands.Raise(GuidList.guidPythonToolsCmdSet.ToString("B"), replCommand.CommandId, ref inObj, ref outObj);
-                        return;
+                        commandId = replCommand.CommandId;
+                        break;
                     }
                 }
             }
-            throw new KeyNotFoundException("Could not find interactive window with name: " + description);
+
+            if (commandId.HasValue) {
+                var dte = (EnvDTE.DTE)PythonToolsPackage.GetGlobalService(typeof(EnvDTE.DTE));
+                object inObj = null, outObj = null;
+                dte.Commands.Raise(GuidList.guidPythonToolsCmdSet.ToString("B"), commandId.Value, ref inObj, ref outObj);
+            } else {
+                throw new KeyNotFoundException("Could not find interactive window with name: " + description);
+            }
         }
     }
 

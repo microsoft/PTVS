@@ -2738,6 +2738,36 @@ def g(): pass
             interactive.WaitForTextEnd(ReplPrompt + "42", "42", ReplPrompt);
         }
 
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void ImportCompletions() {
+            var interactive = Prepare();
+
+            if (this is IronPythonReplTests) {
+                Keyboard.Type("import clr \n");
+            }
+            
+            Keyboard.Type("import ");
+            var session = interactive.WaitForSession<ICompletionSession>();
+
+            var names = session.SelectedCompletionSet.Completions.Select(c => c.DisplayText).ToList();
+
+            foreach (var name in names) {
+                Console.WriteLine(name);
+            }
+            foreach (var name in names) {
+                Assert.IsFalse(name.Contains('.'), name + " contained a dot");
+            }
+
+            Keyboard.Type("os.");
+            session = interactive.WaitForSession<ICompletionSession>();
+            names = session.SelectedCompletionSet.Completions.Select(c => c.DisplayText).ToList();
+            AssertUtil.ContainsExactly(names, "path");
+
+            interactive.ClearScreen();
+        }
+
+
         private void PasteTextTest(InteractiveWindow interactive, string code, params string[] expected) {
             ((UIElement)interactive.TextView).Dispatcher.Invoke((Action)(() => {
                 Clipboard.SetText(code, TextDataFormat.Text);
