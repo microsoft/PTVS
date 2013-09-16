@@ -603,15 +603,20 @@ namespace Microsoft.PythonTools.Project {
                 uint fetched;
                 var curFactory = GetInterpreterFactory();
                 while (ErrorHandler.Succeeded(hierarchies.Next(1, hierarchy, out fetched)) && fetched == 1) {
-                    var pyProj = hierarchy[0].GetProject().GetPythonProject();
+                    var proj = hierarchy[0].GetProject();
+                    Debug.Assert(proj != null);
+                    if (proj != null) {
+                        var pyProj = proj.GetPythonProject();
+                        Debug.Assert(pyProj != null);
 
-                    if (pyProj != this &&
-                        pyProj._analyzer != null &&
-                        pyProj._analyzer.InterpreterFactory == curFactory) {
-                        // we have the same interpreter, we'll share analysis engines across projects.
-                        pyProj._analyzer.AddUser();
-                        HookErrorsAndWarnings(pyProj._analyzer);
-                        return pyProj._analyzer;
+                        if (pyProj != this &&
+                            pyProj._analyzer != null &&
+                            pyProj._analyzer.InterpreterFactory == curFactory) {
+                            // we have the same interpreter, we'll share analysis engines across projects.
+                            pyProj._analyzer.AddUser();
+                            HookErrorsAndWarnings(pyProj._analyzer);
+                            return pyProj._analyzer;
+                        }
                     }
                 }
             }
