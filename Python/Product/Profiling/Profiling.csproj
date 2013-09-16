@@ -130,6 +130,9 @@
     </COMReference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\Analysis\Interpreter\ProcessOutput.cs">
+      <Link>Profiling\ProcessOutput.cs</Link>
+    </Compile>
     <Compile Include="..\PythonTools\PythonToolsInstallPath.cs">
       <Link>Profiling\PythonToolsInstallPath.cs</Link>
     </Compile>

@@ -276,6 +276,38 @@ namespace ProfilingUITests {
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void LaunchProjectWithSpaceInFilename() {
+            var profiling = (IPythonProfiling)VsIdeTestHostContext.Dte.GetObject("PythonProfiling");
+
+            // no sessions yet
+            Assert.IsNull(profiling.GetSession(1));
+
+            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            var project = app.OpenAndFindProject(@"TestData\Profile Test.sln");
+
+            var session = profiling.LaunchProject(project, false);
+            try {
+                while (profiling.IsProfiling) {
+                    System.Threading.Thread.Sleep(100);
+                }
+
+                var report = session.GetReport(1);
+                var filename = report.Filename;
+                Assert.IsTrue(filename.Contains("Profile Test"));
+
+                Assert.IsNull(session.GetReport(2));
+
+                Assert.IsNotNull(session.GetReport(report.Filename));
+
+                VerifyReport(report, "Program.f", "time.sleep");
+            } finally {
+                profiling.RemoveSession(session, true);
+            }
+        }
+
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestSaveDirtySession() {
             var profiling = (IPythonProfiling)VsIdeTestHostContext.Dte.GetObject("PythonProfiling");
 
@@ -1314,7 +1346,7 @@ namespace ProfilingUITests {
                     csvFilename = Path.Combine(Path.GetTempPath(), "test") + DateTime.Now.Ticks + "_" + _counter++;
                 } while (File.Exists(csvFilename + "_FunctionSummary.csv"));
 
-                var psi = new ProcessStartInfo(perfReportPath, report.Filename + " /output:" + csvFilename + " /summary:function");
+                var psi = new ProcessStartInfo(perfReportPath, "\"" + report.Filename + "\"" + " /output:" + csvFilename + " /summary:function");
                 psi.UseShellExecute = false;
                 psi.RedirectStandardOutput = true;
                 psi.RedirectStandardError = true;

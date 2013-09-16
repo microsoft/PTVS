@@ -99,7 +99,7 @@ namespace Microsoft.PythonTools.Profiling {
 
             string perfMonPath = Path.Combine(perfToolsPath, "VSPerfMon.exe");
 
-            var psi = new ProcessStartInfo(perfMonPath, "/trace /output:" + filename);
+            var psi = new ProcessStartInfo(perfMonPath, "/trace /output:" + ProcessOutput.QuoteSingleArgument(filename));
             psi.CreateNoWindow = true;
             psi.UseShellExecute = false;
             psi.RedirectStandardError = true;
