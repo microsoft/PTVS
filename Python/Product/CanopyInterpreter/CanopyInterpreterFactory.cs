@@ -203,7 +203,7 @@ namespace CanopyInterpreter {
         /// interpreter.
         /// </summary>
         public override PythonTypeDatabase MakeTypeDatabase(string databasePath, bool includeSitePackages = true) {
-            if (_baseDb == null) {
+            if (_baseDb == null && _base.IsCurrent) {
                 _baseDb = _base.GetCurrentDatabase(ShouldIncludeGlobalSitePackages);
             }
 
@@ -237,6 +237,8 @@ namespace CanopyInterpreter {
 
             req.ExtraInputDatabases.Add(_base.DatabasePath);
 
+            _baseHasRefreshed = false;
+
             if (_base.IsCurrent) {
                 // The App database is already up to date, so start analyzing
                 // the User database immediately.
@@ -253,10 +255,19 @@ namespace CanopyInterpreter {
                 // Because the underlying analysis of the standard library has
                 // changed, we must reanalyze the entire database.
                 req.SkipUnchanged = false;
+
+                // Clear out the existing base database, since we're going to
+                // need to reload it again. This also means that when
+                // NewDatabaseAvailable is raised, we are expecting it and won't
+                // incorrectly set _baseHasRefreshed to true again.
+                _baseDb = null;
+
+                // Start our analyzer first, since we will wait up to a minute
+                // for the base analyzer to start (which may cause a one minute
+                // delay if it completes before we start, but that is unlikely).
                 base.GenerateDatabase(req, onExit);
                 _base.GenerateDatabase(GenerateDatabaseOptions.SkipUnchanged);
             }
-            _baseHasRefreshed = false;
         }
 
         public override bool IsCurrent {
