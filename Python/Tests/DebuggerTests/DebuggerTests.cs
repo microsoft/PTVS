@@ -256,7 +256,7 @@ namespace DebuggerTests {
                     DebuggerTestPath + @"SetNextLine.py",
                     resumeOnProcessLoaded: false,
                     onLoaded: (newproc, newthread) => {
-                thread = newthread;
+                        thread = newthread;
                         processLoaded.Set();
                     }
                 );
@@ -532,7 +532,7 @@ namespace DebuggerTests {
             LocalsTest("LocalGlobalsTest.py", 4, new string[] { }, new string[] { "x" });
 
             LocalsTest("LocalGlobalsTest.py", 5, new string[] { "self" }, new string[] { "x" }, "LocalGlobalsTestImported.py");
-            LocalsTest("LocalGlobalsTest.py", 6, new string[] { "self" }, new string[] { "x" }, "LocalGlobalsTestImported.py");            
+            LocalsTest("LocalGlobalsTest.py", 6, new string[] { "self" }, new string[] { "x" }, "LocalGlobalsTestImported.py");
         }
 
         /// <summary>
@@ -623,6 +623,117 @@ namespace DebuggerTests {
             process.Terminate();
         }
 
+        [TestMethod, Priority(0)]
+        public void LocalReprRestrictionsTest() {
+            // https://pytools.codeplex.com/workitem/931
+            var filename = DebuggerTestPath + "LocalReprRestrictionsTest.py";
+            var debugger = new PythonDebugger();
+
+            PythonThread thread = null;
+            AutoResetEvent loaded = new AutoResetEvent(false);
+            var process =
+                DebugProcess(
+                    debugger,
+                    filename,
+                    (newproc, newthread) => {
+                        var bp = newproc.AddBreakPoint(filename, 22);
+                        bp.Add();
+                        thread = newthread;
+                        loaded.Set();
+                    }
+                );
+
+            AutoResetEvent breakpointHit = new AutoResetEvent(false);
+            process.BreakpointHit += (sender, args) => {
+                breakpointHit.Set();
+            };
+
+            process.Start();
+            try {
+                AssertWaited(breakpointHit);
+
+                // Handle order inconsitencies accross interpreters
+                var parms = thread.Frames[0].Parameters;
+                foreach (var local in thread.Frames[0].Locals) {
+                    switch (local.Expression) {
+                        case "s":
+                            Assert.AreEqual("'01234567890123456789012345678901234567890123456789'", local.StringRepr);
+                            break;
+                        case "sa1":
+                            Assert.AreEqual("['0123456789012345678...123456789']", local.StringRepr);
+                            break;
+                        case "sa2":
+                            Assert.AreEqual("[['0123456789012345678...123456789'], ['0123456789012345678...123456789']]", local.StringRepr);
+                            break;
+                        case "sa3":
+                            Assert.AreEqual("[[[...], [...]], [[...], [...]], [[...], [...]]]", local.StringRepr);
+                            break;
+                        case "sa4":
+                            Assert.AreEqual("[[[...], [...], [...]], [[...], [...], [...]], [[...], [...], [...]], [[...], [...], [...]], [[...], [...], [...]], [[...], [...], [...]], [[...], [...], [...]], [[...], [...], [...]], [[...], [...], [...]], [[...], [...], [...]], [[...], [...], [...]], [[...], [...], [...]], [[...], [...], [...]], [[...], [...], [...]], ...]", local.StringRepr);
+                            break;
+                        case "n":
+                            Assert.AreEqual(
+                                Version.Version < PythonLanguageVersion.V30 ?
+                                "12345678901234567890123456789012345678901234567890L" :
+                                "12345678901234567890123456789012345678901234567890",
+                                local.StringRepr);
+                            break;
+                        case "na1":
+                            Assert.AreEqual(
+                                Version.Version < PythonLanguageVersion.V30 ?
+                                "[12345678901234567890...234567890L]" :
+                                "[12345678901234567890...1234567890]",
+                                local.StringRepr);
+                            break;
+                        case "na2":
+                            Assert.AreEqual(
+                                Version.Version < PythonLanguageVersion.V30 ?
+                                "[[12345678901234567890...234567890L], [12345678901234567890...234567890L]]" :
+                                "[[12345678901234567890...1234567890], [12345678901234567890...1234567890]]",
+                                local.StringRepr);
+                            break;
+                        case "na3":
+                            Assert.AreEqual("[[[...], [...]], [[...], [...]], [[...], [...]]]", local.StringRepr);
+                            break;
+                        case "na4":
+                            Assert.AreEqual("[[[...], [...], [...]], [[...], [...], [...]], [[...], [...], [...]], [[...], [...], [...]], [[...], [...], [...]], [[...], [...], [...]], [[...], [...], [...]], [[...], [...], [...]], [[...], [...], [...]], [[...], [...], [...]], [[...], [...], [...]], [[...], [...], [...]], [[...], [...], [...]], [[...], [...], [...]], ...]", local.StringRepr);
+                            break;
+                        case "c":
+                            Assert.AreEqual("my_class: 0123456789012345678901234567890123456789", local.StringRepr);
+                            break;
+                        case "ca1":
+                            Assert.AreEqual("[my_class: 0123456789...0123456789]", local.StringRepr);
+                            break;
+                        case "ca2":
+                            Assert.AreEqual("[[my_class: 0123456789...0123456789], [my_class: 0123456789...0123456789]]", local.StringRepr);
+                            break;
+                        case "ca3":
+                            Assert.AreEqual("[[[...], [...]], [[...], [...]], [[...], [...]]]", local.StringRepr);
+                            break;
+                        case "ca4":
+                            Assert.AreEqual("[[[...], [...], [...]], [[...], [...], [...]], [[...], [...], [...]], [[...], [...], [...]], [[...], [...], [...]], [[...], [...], [...]], [[...], [...], [...]], [[...], [...], [...]], [[...], [...], [...]], [[...], [...], [...]], [[...], [...], [...]], [[...], [...], [...]], [[...], [...], [...]], [[...], [...], [...]], ...]", local.StringRepr);
+                            break;
+                        case "da1":
+                            Assert.AreEqual("{'0123456789012345678...123456789': '0123456789012345678...123456789'}", local.StringRepr);
+                            break;
+                        case "da2":
+                            Assert.AreEqual("{'0123456789012345678...123456789': {'0123456789012345678...123456789': '0123456789012345678...123456789'}, '1': {'0123456789012345678...123456789': '0123456789012345678...123456789'}}", local.StringRepr);
+                            break;
+                        case "da3":
+                            Assert.AreEqual("{'0123456789012345678...123456789': {'0123456789012345678...123456789': {...}, '1': {...}}, '1': {'0123456789012345678...123456789': {...}, '1': {...}}, '2': {'0123456789012345678...123456789': {...}, '1': {...}}}", local.StringRepr);
+                            break;
+                        case "da4":
+                            Assert.AreEqual("{'01': {'0123456789012345678...123456789': {...}, '1': {...}, '2': {...}}, '0123456789012345678...123456789': {'0123456789012345678...123456789': {...}, '1': {...}, '2': {...}}, '02': {'0123456789012345678...123456789': {...}, '1': {...}, '2': {...}}, '03': {'0123456789012345678...123456789': {...}, '1': {...}, '2': {...}}, '04': {'0123456789012345678...123456789': {...}, '1': {...}, '2': {...}}, '05': {'0123456789012345678...123456789': {...}, '1': {...}, '2': {...}}, '06': {'0123456789012345678...123456789': {...}, '1': {...}, '2': {...}}, '07': {'0123456789012345678...123456789': {...}, '1': {...}, '2': {...}}, '08': {'0123456789012345678...123456789': {...}, '1': {...}, '2': {...}}, '09': {'0123456789012345678...123456789': {...}, '1': {...}, '2': {...}}, '10': {'0123456789012345678...123456789': {...}, '1': {...}, '2': {...}}, '11': {'0123456789012345678...123456789': {...}, '1': {...}, '2': {...}}, '12': {'0123456789012345678...123456789': {...}, '1': {...}, '2': {...}}, '13': {'0123456789012345678...123456789': {...}, '1': {...}, '2': {...}}, ...}", local.StringRepr);
+                            break;
+                        default:
+                            break;
+                    }
+                }
+            } finally {
+                process.Terminate();
+            }
+        }
+
         #endregion
 
         #region Stepping Tests
@@ -642,13 +753,13 @@ namespace DebuggerTests {
                 );
             // 1315 resurrected:
             StepTest(DebuggerTestPath + @"SteppingTestBug1315.py",
-                    new [] { 6 },
+                    new[] { 6 },
                     null,
                     new ExpectedStep(StepKind.Resume, 1),   // continue from import thread
-                    new ExpectedStep(StepKind.Over, 6),   
+                    new ExpectedStep(StepKind.Over, 6),
                     new ExpectedStep(StepKind.Resume, 7)
                 );
-            
+
             // Bug 507: http://pytools.codeplex.com/workitem/507
             StepTest(DebuggerTestPath + @"SteppingTestBug507.py",
                     new ExpectedStep(StepKind.Over, 1),     // step over def add_two_numbers(x, y):
@@ -1438,7 +1549,7 @@ namespace DebuggerTests {
                     onLoaded(process, args.Thread);
                 }
                 if (resumeOnProcessLoaded) {
-                process.Resume();
+                    process.Resume();
                 }
             };
 
@@ -2131,7 +2242,7 @@ int main(int argc, char* argv[]) {
                 startInfo.EnvironmentVariables["INCLUDE"] = Path.Combine(vcDir, "INCLUDE")
                     + ";" + Path.Combine(kitsDir, "Include\\um")
                     + ";" + Path.Combine(kitsDir, "Include\\shared");
-                startInfo.EnvironmentVariables["LIB"] = Path.Combine(vcDir, "LIB") 
+                startInfo.EnvironmentVariables["LIB"] = Path.Combine(vcDir, "LIB")
                     + ";" + Path.Combine(kitsDir, "Lib\\win8\\um\\x86");
             } else {
                 var sdkDir = GetWindowsSDKDir();
@@ -2362,6 +2473,21 @@ int main(int argc, char* argv[]) {
         internal override PythonVersion Version {
             get {
                 return PythonPaths.Python32;
+            }
+        }
+    }
+
+    [TestClass]
+    public class DebuggerTests33 : DebuggerTests3x {
+        [ClassInitialize]
+        public static new void DoDeployment(TestContext context) {
+            AssertListener.Initialize();
+            TestData.Deploy();
+        }
+
+        internal override PythonVersion Version {
+            get {
+                return PythonPaths.Python33;
             }
         }
     }

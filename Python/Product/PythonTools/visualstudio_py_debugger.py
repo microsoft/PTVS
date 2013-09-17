@@ -27,44 +27,6 @@ import types
 import bisect
 from os import path
 
-if sys.version_info >= (3, 0):
-    import reprlib
-else:
-    import repr as reprlib
-
-class _MyRepr(reprlib.Repr):
-    def repr_str(self, x, level):
-        if level == self.maxlevel:
-            return repr(x)
-        return reprlib.Repr.repr_str(self, x, level)
-
-    if sys.version_info >= (3, 0):
-        def repr_int(self, x, level):
-            if level == self.maxlevel:
-                return repr(x)
-            return reprlib.Repr.repr_int(self, x, level)
-    else:
-        def repr_long(self, x, level):
-            if level == self.maxlevel:
-                return repr(x)
-            return reprlib.Repr.repr_long(self, x, level)
-
-    def repr_instance(self, x, level):
-        if level == self.maxlevel:
-            return repr(x)
-        return reprlib.Repr.repr_instance(self, x, level)
-
-max_collection_repr = 15
-myrepr = _MyRepr()
-myrepr.maxarray = max_collection_repr
-myrepr.maxdeque = max_collection_repr
-myrepr.maxdict = max_collection_repr
-myrepr.maxfrozenset = max_collection_repr
-myrepr.maxlist = max_collection_repr
-myrepr.maxset = max_collection_repr
-myrepr.maxother = 1000
-myrepr.maxlevel = 2
-
 try:
     import visualstudio_py_util as _vspu
 except ImportError:
@@ -81,6 +43,7 @@ read_string = _vspu.read_string
 write_bytes = _vspu.write_bytes
 write_int = _vspu.write_int
 write_string = _vspu.write_string
+safe_repr = _vspu.SafeRepr()
 
 try:
     import visualstudio_py_repl as _vspr
@@ -1729,12 +1692,6 @@ def report_execution_exception(execution_id, exc_info):
         exc_text = 'An exception was thrown'
 
     report_execution_error(exc_text, execution_id)
-
-def safe_repr(obj):
-    try:
-        return myrepr.repr(obj)
-    except:
-        return '__repr__ raised an exception'
 
 def safe_hex_repr(obj):
     try:
