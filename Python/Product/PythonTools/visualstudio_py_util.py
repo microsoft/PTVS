@@ -173,15 +173,18 @@ class SafeRepr(object):
     
     def _repr(self, obj, level):
         '''Returns an iterable of the parts in the final repr string.'''
+        obj_repr = type(obj).__repr__
         for t, prefix, suffix, comma in self.collection_types:
-            if isinstance(obj, t):
+            if isinstance(obj, t) and t.__repr__ is obj_repr:
                 return self._repr_iter(obj, level, prefix, suffix, comma)
         
-        if isinstance(obj, self.dict_types):
-            return self._repr_dict(obj, level)
+        for t in self.dict_types:
+            if isinstance(obj, t) and t.__repr__ is obj_repr:
+                return self._repr_dict(obj, level)
 
-        if isinstance(obj, self.string_types):
-            return self._repr_str(obj, level)
+        for t in self.string_types:
+            if isinstance(obj, t) and t.__repr__ is obj_repr:
+                return self._repr_str(obj, level)
         
         return self._repr_other(obj, level)
     
@@ -203,7 +206,7 @@ class SafeRepr(object):
                     yield '...'
                     break
 
-                for p in self._repr(item, level + 1):
+                for p in self._repr(item, 100 if item is obj else level + 1):
                     yield p
             else:
                 if comma_after_single_element and count == self.maxcollection[level] - 1:
@@ -241,8 +244,13 @@ class SafeRepr(object):
             for p in self._repr(key, level + 1):
                 yield p
             yield ': '
-            for p in self._repr(obj[key], level + 1):
-                yield p
+            try:
+                item = obj[key]
+            except Exception:
+                yield '<?>'
+            else:
+                for p in self._repr(item, 100 if item is obj else level + 1):
+                    yield p
         
         yield '}'
     
@@ -400,6 +408,28 @@ class SafeRepr(object):
             def __repr__(self):
                 return self.repr_str
         re_test(TestClass(), r'\<A+\.\.\.A+\>')
+
+        # Test collections that override repr
+        class TestClass(dict):
+            def __repr__(self): return 'MyRepr'
+        test(TestClass(), 'MyRepr')
+        class TestClass(list):
+            def __repr__(self): return 'MyRepr'
+        test(TestClass(), 'MyRepr')
+
+        # Test collections that don't override repr
+        class TestClass(dict): pass
+        test(TestClass(), '{}')
+        class TestClass(list): pass
+        test(TestClass(), '[]')
+
+        # Test directly recursive collections
+        c1 = [1, 2]
+        c1.append(c1)
+        test(c1, '[1, 2, [...]]')
+        d1 = {1: None}
+        d1[2] = d1
+        test(d1, '{1: None, 2: {...}}')
 
         # Find the largest possible repr and ensure it is below our arbitrary
         # limit (8KB).
