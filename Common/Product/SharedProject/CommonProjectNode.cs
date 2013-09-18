@@ -433,6 +433,7 @@ namespace Microsoft.VisualStudioTools.Project {
 
         private FileSystemWatcher CreateAttributesWatcher(string dir) {
             var watcher = new FileSystemWatcher(dir);
+            watcher.IncludeSubdirectories = true;
             watcher.NotifyFilter = NotifyFilters.Attributes;
             watcher.Changed += FileAttributesChanged;
             watcher.Error += WatcherError;
@@ -594,7 +595,7 @@ namespace Microsoft.VisualStudioTools.Project {
                         continue;
                     }
                     if (IsFileSymLink(curDir)) {
-                        if (IsRecursiveSymLink(_initialDir, curDir)) {
+                        if (IsRecursiveSymLink(dir.Name, curDir)) {
                             // don't add recursive sym links
                             continue;
                         }
