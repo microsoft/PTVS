@@ -15,6 +15,8 @@
 using System;
 using System.Globalization;
 using System.IO;
+using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using Microsoft.PythonTools.Interpreter;
@@ -119,14 +121,6 @@ namespace Microsoft.PythonTools.Commands {
                     res.AppendLine("        Lib Path: " + factory.Configuration.LibraryPath ?? "(null)");
                     res.AppendLine("        Path Env: " + factory.Configuration.PathEnvironmentVariable ?? "(null)");
                     res.AppendLine();
-
-                    var withDb = factory as IPythonInterpreterFactoryWithDatabase;
-                    if (withDb != null) {
-                        string analysisLog = withDb.GetAnalysisLogContent(CultureInfo.InvariantCulture);
-                        if (!string.IsNullOrEmpty(analysisLog)) {
-                            res.AppendLine(analysisLog);
-                        }
-                    }
                 }
             }
 
@@ -144,6 +138,17 @@ namespace Microsoft.PythonTools.Commands {
             res.AppendLine(inMemLogger.ToString());
             res.AppendLine();
 
+            res.AppendLine("Loaded assemblies:");
+            foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies().OrderBy(assem => assem.FullName)) {
+                var assemFileVersion = assembly.GetCustomAttribute<AssemblyFileVersionAttribute>();
+
+                res.AppendLine(string.Format("  {0}, FileVersion={1}",
+                    assembly.FullName,
+                    assemFileVersion == null ? "(null)" : assemFileVersion.Version
+                ));
+            }
+            res.AppendLine();
+
             string globalAnalysisLog = PythonTypeDatabase.GlobalLogFilename;
             if (File.Exists(globalAnalysisLog)) {
                 res.AppendLine("Global Analysis:");
@@ -151,6 +156,19 @@ namespace Microsoft.PythonTools.Commands {
                     res.AppendLine(File.ReadAllText(globalAnalysisLog));
                 } catch (Exception e) {
                     res.AppendLine("Error reading: " + e);
+                }
+            }
+            res.AppendLine();
+
+            res.AppendLine("Environment Analysis Logs: ");
+            foreach (var provider in interpreterService.KnownProviders) {
+                foreach (var factory in provider.GetInterpreterFactories().OfType<IPythonInterpreterFactoryWithDatabase>()) {
+                    res.AppendLine(factory.Description);
+                    string analysisLog = factory.GetAnalysisLogContent(CultureInfo.InvariantCulture);
+                    if (!string.IsNullOrEmpty(analysisLog)) {
+                        res.AppendLine(analysisLog);
+                    }
+                    res.AppendLine();
                 }
             }
             return res.ToString();
