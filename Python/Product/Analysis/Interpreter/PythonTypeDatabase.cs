@@ -37,6 +37,7 @@ namespace Microsoft.PythonTools.Interpreter {
         public static readonly int CurrentVersion = 24;
 
         private static string _completionDatabasePath;
+        private static string _referencesDatabasePath;
         private static string _baselineDatabasePath;
 
         public PythonTypeDatabase(
@@ -199,9 +200,11 @@ namespace Microsoft.PythonTools.Interpreter {
             }
 
             private FileStream OpenProjectExtensionList() {
+                Directory.CreateDirectory(ReferencesDatabasePath);
+
                 for (int i = 0; i < 50 && !_cancel.IsCancellationRequested; i++) {
                     try {
-                        return new FileStream(Path.Combine(_typeDb.DatabaseDirectory, _extensionModuleInfoFile), FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
+                        return new FileStream(Path.Combine(ReferencesDatabasePath, _extensionModuleInfoFile), FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
                     } catch (IOException) {
                         if (_cancel.CanBeCanceled) {
                             _cancel.WaitHandle.WaitOne(100);
@@ -216,10 +219,10 @@ namespace Microsoft.PythonTools.Interpreter {
 
             private string GenerateDbFile(IPythonInterpreterFactory interpreter, string moduleName, string extensionModuleFilename, List<string> existingModules, string dbFile, FileStream fs) {
                 // we need to generate the DB file
-                dbFile = Path.Combine(_typeDb._sharedState.DatabaseDirectory, moduleName + ".$project.idb");
+                dbFile = Path.Combine(ReferencesDatabasePath, moduleName + ".$project.idb");
                 int retryCount = 0;
                 while (File.Exists(dbFile)) {
-                    dbFile = Path.Combine(_typeDb._sharedState.DatabaseDirectory, moduleName + "." + ++retryCount + ".$project.idb");
+                    dbFile = Path.Combine(ReferencesDatabasePath, moduleName + "." + ++retryCount + ".$project.idb");
                 }
 
                 using (var output = interpreter.Run(
@@ -478,6 +481,23 @@ namespace Microsoft.PythonTools.Interpreter {
                     );
                 }
                 return _completionDatabasePath;
+            }
+        }
+
+        private static string ReferencesDatabasePath {
+            get {
+                if (_referencesDatabasePath == null) {
+                    _referencesDatabasePath = Path.Combine(
+                        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                        "Python Tools",
+                        "ReferencesDB",
+#if DEBUG
+                        "Debug",
+#endif
+                        AssemblyVersionInfo.VSVersion
+                    );
+                }
+                return _referencesDatabasePath;
             }
         }
 
