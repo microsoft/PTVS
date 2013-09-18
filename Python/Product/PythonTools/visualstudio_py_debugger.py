@@ -113,10 +113,22 @@ class _SendLockContextManager(object):
        is disconnected"""
 
     def __enter__(self):
+        # mark that we're about to do socket I/O so we won't deliver
+        # debug events when we're debugging the standard library
+        cur_thread = get_thread_from_id(thread.get_ident())
+        if cur_thread is not None:
+            cur_thread.is_sending = True
+
         send_lock.acquire()
 
     def __exit__(self, exc_type, exc_value, tb):
         send_lock.release()
+        
+        # start sending debug events again
+        cur_thread = get_thread_from_id(thread.get_ident())
+        if cur_thread is not None:
+            cur_thread.is_sending = False
+
         if exc_type is not None:
             detach_threads()
             detach_process()
@@ -480,6 +492,7 @@ class Thread(object):
         self.trace_func_stack = []
         self.reported_process_loaded = False
         self.django_stepping = None
+        self.is_sending = False
 
         # stackless changes
         if stackless is not None:
@@ -545,6 +558,18 @@ class Thread(object):
         # If we're so far into process shutdown that sys is already gone, just stop tracing.
         if sys is None:
             return None
+        elif self.is_sending:
+            # https://pytools.codeplex.com/workitem/1864 
+            # we're currently doing I/O w/ the socket, we don't want to deliver
+            # any breakpoints or async breaks because we'll deadlock.  Continue
+            # to return the trace function so all of our frames remain
+            # balanced.  A better way to deal with this might be to do
+            # sys.settrace(None) when we take the send lock, but that's much
+            # more difficult because our send context manager is used both
+            # inside and outside of the trace function, and so is used when
+            # tracing is enabled and disabled, and so it's very easy to get our
+            # current frame tracking to be thrown off...
+            return self.trace_func
 
         try:
             # if should_debug_code(frame.f_code) is not true during attach
