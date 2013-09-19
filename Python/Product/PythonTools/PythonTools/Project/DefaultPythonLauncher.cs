@@ -128,6 +128,12 @@ namespace Microsoft.PythonTools.Project {
 
         #endregion
 
+        private bool NoInterpretersAvailable() {
+            var interpreter = _project.GetInterpreterFactory();
+            var interpreterService = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
+            return interpreterService == null || interpreterService.NoInterpretersValue == interpreter;
+        }
+
         private string GetInterpreterExecutableInternal(out bool isWindows) {
             if (!Boolean.TryParse(_project.GetProperty(CommonConstants.IsWindowsApplication) ?? Boolean.FalseString, out isWindows)) {
                 isWindows = false;
@@ -145,13 +151,12 @@ namespace Microsoft.PythonTools.Project {
                 return result;
             }
 
-            var interpreter = _project.GetInterpreterFactory();
-            var interpreterService = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
-            if (interpreterService == null || interpreterService.NoInterpretersValue == interpreter) {
+            if (NoInterpretersAvailable()) {
                 PythonToolsPackage.OpenVsWebBrowser(PythonToolsInstallPath.GetFile("NoInterpreters.html"));
                 return null;
             }
 
+            var interpreter = _project.GetInterpreterFactory();
             return !isWindows ?
                 interpreter.Configuration.InterpreterPath :
                 interpreter.Configuration.WindowsInterpreterPath;
@@ -182,9 +187,11 @@ namespace Microsoft.PythonTools.Project {
         private Process StartWithoutDebugger(string startupFile) {
             var psi = CreateProcessStartInfoNoDebug(startupFile);
             if (psi == null) {
-                MessageBox.Show(
-                    "The project cannot be started because its active Python environment does not have the interpreter executable specified.",
-                    "Python Tools for Visual Studio", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                if (!NoInterpretersAvailable()) {
+                    MessageBox.Show(
+                        "The project cannot be started because its active Python environment does not have the interpreter executable specified.",
+                        "Python Tools for Visual Studio", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
                 return null;
             }
             return Process.Start(psi);
@@ -200,9 +207,11 @@ namespace Microsoft.PythonTools.Project {
                 SetupDebugInfo(ref dbgInfo, startupFile);
 
                 if (string.IsNullOrEmpty(dbgInfo.bstrExe)) {
-                    MessageBox.Show(
-                        "The project cannot be debugged because its active Python environment does not have the interpreter executable specified.",
-                        "Python Tools for Visual Studio", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    if (!NoInterpretersAvailable()) {
+                        MessageBox.Show(
+                            "The project cannot be debugged because its active Python environment does not have the interpreter executable specified.",
+                            "Python Tools for Visual Studio", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
                     return;
                 }
 
