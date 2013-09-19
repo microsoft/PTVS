@@ -113,11 +113,6 @@ namespace Microsoft.PythonTools.Interpreter {
             return MakeInterpreter(this);
         }
 
-        private void ClearCachedTypeDb() {
-            _typeDb = null;
-            _typeDbWithoutPackages = null;
-        }
-
         public PythonTypeDatabase GetCurrentDatabase() {
             if (_typeDb == null || _typeDb.DatabaseDirectory != DatabasePath) {
                 _typeDb = MakeTypeDatabase(DatabasePath);
@@ -231,7 +226,6 @@ namespace Microsoft.PythonTools.Interpreter {
         /// </summary>
         public void NotifyCorruptDatabase() {
             _isValid = false;
-            ClearCachedTypeDb();
 
             OnIsCurrentChanged();
             OnNewDatabaseAvailable();
@@ -261,12 +255,10 @@ namespace Microsoft.PythonTools.Interpreter {
             _generating = false;
             OnIsCurrentChanged();
 
-            // Clear the previous database so that we load the new one next time
-            // someone requests it.
-            ClearCachedTypeDb();
-
             WatchingLibrary = true;
 
+            // This also clears the previous database so that we load the new
+            // one next time someone requests it.
             OnNewDatabaseAvailable();
         }
 
@@ -454,7 +446,14 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
+        /// <summary>
+        /// Clears any cached type databases and raises the
+        /// <see cref="NewDatabaseAvailable"/> event.
+        /// </summary>
         protected void OnNewDatabaseAvailable() {
+            _typeDb = null;
+            _typeDbWithoutPackages = null;
+
             var evt = NewDatabaseAvailable;
             if (evt != null) {
                 evt(this, EventArgs.Empty);
