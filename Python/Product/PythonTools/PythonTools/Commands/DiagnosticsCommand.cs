@@ -140,7 +140,7 @@ namespace Microsoft.PythonTools.Commands {
 
             res.AppendLine("Loaded assemblies:");
             foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies().OrderBy(assem => assem.FullName)) {
-                var assemFileVersion = assembly.GetCustomAttribute<AssemblyFileVersionAttribute>();
+                var assemFileVersion = assembly.GetCustomAttributes(typeof(AssemblyFileVersionAttribute), false).OfType<AssemblyFileVersionAttribute>().FirstOrDefault();
 
                 res.AppendLine(string.Format("  {0}, FileVersion={1}",
                     assembly.FullName,
