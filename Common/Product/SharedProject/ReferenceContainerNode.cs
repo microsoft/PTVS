@@ -239,7 +239,7 @@ namespace Microsoft.VisualStudioTools.Project
         {
             foreach (string referenceType in SupportedReferenceTypes)
             {
-                IEnumerable<MSBuild.ProjectItem> refererncesGroup = this.ProjectMgr.BuildProject.GetItems(referenceType);
+                IEnumerable<MSBuild.ProjectItem> referencesGroup = this.ProjectMgr.BuildProject.GetItems(referenceType);
 
                 bool isAssemblyReference = referenceType == ProjectFileConstants.Reference;
                 // If the project was loaded for browsing we should still create the nodes but as not resolved.
@@ -249,7 +249,7 @@ namespace Microsoft.VisualStudioTools.Project
                     continue;
                 }
 
-                foreach (MSBuild.ProjectItem item in refererncesGroup)
+                foreach (MSBuild.ProjectItem item in referencesGroup)
                 {
                     ProjectElement element = new MsBuildProjectElement(this.ProjectMgr, item);
 

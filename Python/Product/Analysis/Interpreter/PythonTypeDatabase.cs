@@ -140,7 +140,6 @@ namespace Microsoft.PythonTools.Interpreter {
         public Task LoadExtensionModuleAsync(string moduleName, string extensionModuleFilename, CancellationToken cancellationToken = default(CancellationToken)) {
             return Task.Factory.StartNew(
                 new ExtensionModuleLoader(
-                    TaskScheduler.FromCurrentSynchronizationContext(),
                     this,
                     _factory,
                     moduleName,
@@ -151,7 +150,8 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         public bool UnloadExtensionModule(string moduleName) {
-            return _sharedState.Modules.Remove(moduleName);
+            IPythonModule dummy;
+            return _sharedState.Modules.TryRemove(moduleName, out dummy);
         }
 
         private static Task MakeExceptionTask(Exception e) {
@@ -166,17 +166,15 @@ namespace Microsoft.PythonTools.Interpreter {
             private readonly string _moduleName;
             private readonly string _extensionFilename;
             private readonly CancellationToken _cancel;
-            private readonly TaskScheduler _startScheduler;
 
             const string _extensionModuleInfoFile = "extensions.$list";
 
-            public ExtensionModuleLoader(TaskScheduler startScheduler, PythonTypeDatabase typeDb, IPythonInterpreterFactory factory, string moduleName, string extensionFilename, CancellationToken cancel) {
+            public ExtensionModuleLoader(PythonTypeDatabase typeDb, IPythonInterpreterFactory factory, string moduleName, string extensionFilename, CancellationToken cancel) {
                 _typeDb = typeDb;
                 _factory = factory;
                 _moduleName = moduleName;
                 _extensionFilename = extensionFilename;
                 _cancel = cancel;
-                _startScheduler = startScheduler;
             }
 
             public void LoadExtensionModule() {
@@ -191,12 +189,10 @@ namespace Microsoft.PythonTools.Interpreter {
                     }
                 }
 
-                // we need to access _typeDb._modules on the UI thread.
-                Task.Factory.StartNew(PublishModule, dbFile, default(CancellationToken), TaskCreationOptions.None, _startScheduler).Wait();
+                _typeDb._sharedState.Modules[_moduleName] = new CPythonModule(_typeDb, _moduleName, dbFile, false);
             }
 
             private void PublishModule(object state) {
-                _typeDb._sharedState.Modules[_moduleName] = new CPythonModule(_typeDb, _moduleName, (string)state, false);
             }
 
             private FileStream OpenProjectExtensionList() {

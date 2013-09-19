@@ -39,7 +39,7 @@ namespace Microsoft.PythonTools.Project {
         internal PythonExtensionReferenceNode(PythonProjectNode root, ProjectElement element, string filename)
             : base(root, element) {
             Utilities.ArgumentNotNullOrEmpty("filename", filename);
-            _filename = filename;
+            _filename = CommonUtils.GetAbsoluteFilePath(root.ProjectHome, filename);
 
             AnalyzeReference(root.GetInterpreter() as IPythonInterpreterWithProjectReferences);
             InitializeFileChangeEvents();
@@ -116,16 +116,17 @@ namespace Microsoft.PythonTools.Project {
         /// Links a reference node to the project and hierarchy.
         /// </summary>
         protected override void BindReferenceData() {
+            string relativePath = CommonUtils.GetRelativeFilePath(ProjectMgr.ProjectFolder, _filename);
+
             // If the item has not been set correctly like in case of a new reference added it now.
             // The constructor for the AssemblyReference node will create a default project item. In that case the Item is null.
             // We need to specify here the correct project element. 
             if (ItemNode == null || ItemNode is VirtualProjectElement) {
-                ItemNode = new MsBuildProjectElement(ProjectMgr, _filename, ProjectFileConstants.Reference);
+                ItemNode = new MsBuildProjectElement(ProjectMgr, relativePath, ProjectFileConstants.Reference);
             }
 
             // Set the basic information we know about
             ItemNode.SetMetadata(ProjectFileConstants.Name, Path.GetFileName(_filename));
-            string relativePath = CommonUtils.GetRelativeFilePath(ProjectMgr.ProjectFolder, _filename);
             ItemNode.SetMetadata(PythonConstants.PythonExtension, relativePath);
         }
 

@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -26,7 +27,7 @@ namespace Microsoft.PythonTools.Interpreter {
     /// Cached state that's shared between multiple PythonTypeDatabase instances.
     /// </summary>
     class SharedDatabaseState : ITypeDatabaseReader {
-        private readonly Dictionary<string, IPythonModule> _modules = new Dictionary<string, IPythonModule>();
+        private readonly ConcurrentDictionary<string, IPythonModule> _modules = new ConcurrentDictionary<string, IPythonModule>();
         private readonly object _moduleLoadLock = new object();
 #if DEBUG
         private Thread _moduleLoadLockThread;
@@ -822,7 +823,7 @@ namespace Microsoft.PythonTools.Interpreter {
         /// Returns all modules associated with this instance. Unlike
         /// <see cref="GetModuleNames"/>, this does not recurse.
         /// </summary>
-        public Dictionary<string, IPythonModule> Modules {
+        public ConcurrentDictionary<string, IPythonModule> Modules {
             get {
                 return _modules;
             }

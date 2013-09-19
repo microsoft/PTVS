@@ -36,10 +36,20 @@ namespace Microsoft.PythonTools.Interpreter.Default {
 
         private void OnNewDatabaseAvailable(object sender, EventArgs e) {
             _typeDb = _factory.GetCurrentDatabase();
-            // Clear references to indicate that the current DB cannot load
-            // modules.
-            _references = null;
-
+            
+            if (_references != null) {
+                _typeDb = _typeDb.Clone();
+                foreach (var reference in _references) {
+                    string modName;
+                    try {
+                        modName = Path.GetFileNameWithoutExtension(reference.Name);
+                    } catch (Exception) {
+                        continue;
+                    }
+                    _typeDb.LoadExtensionModuleAsync(modName, reference.Name).Wait();
+                }
+            }
+            
             var evt = ModuleNamesChanged;
             if (evt != null) {
                 evt(this, EventArgs.Empty);
@@ -63,6 +73,9 @@ namespace Microsoft.PythonTools.Interpreter.Default {
 
 
         public IList<string> GetModuleNames() {
+            if (_typeDb == null) {
+                return new string[0];
+            }
             return new List<string>(_typeDb.GetModuleNames());
         }
 
@@ -91,7 +104,9 @@ namespace Microsoft.PythonTools.Interpreter.Default {
                 _references = new HashSet<ProjectReference>();
                 // If we needed to set _references, then we also need to clone
                 // _typeDb to avoid adding modules to the shared database.
-                _typeDb = _typeDb.Clone();
+                if (_typeDb != null) {
+                    _typeDb = _typeDb.Clone();
+                }
             }
 
             switch (reference.Kind) {
@@ -104,9 +119,12 @@ namespace Microsoft.PythonTools.Interpreter.Default {
                         return MakeExceptionTask(e);
                     }
 
-                    return _typeDb.LoadExtensionModuleAsync(filename,
-                        reference.Name,
-                        cancellationToken).ContinueWith(RaiseModulesChanged);
+                    if (_typeDb != null) {
+                        return _typeDb.LoadExtensionModuleAsync(filename,
+                            reference.Name,
+                            cancellationToken).ContinueWith(RaiseModulesChanged);
+                    }
+                    break;
             }
 
             return Task.Factory.StartNew(EmptyTask);
@@ -115,7 +133,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         public void RemoveReference(ProjectReference reference) {
             switch (reference.Kind) {
                 case ProjectReferenceKind.ExtensionModule:
-                    if (_references != null && _references.Remove(reference)) {
+                    if (_references != null && _references.Remove(reference) && _typeDb != null) {
                         _typeDb.UnloadExtensionModule(Path.GetFileNameWithoutExtension(reference.Name));
                         RaiseModulesChanged(null);
                     }
