@@ -359,14 +359,11 @@ namespace Microsoft.PythonTools.Analysis {
                             .Where(child => child != null && child.AnalysisValue != null)
                             .Select(child => child.AnalysisValue);
                     } else if ((builtinClass = baseClass as BuiltinClassInfo) != null) {
-                        source = builtinClass.GetAllMembers(InterpreterContext).Values
-                            .SelectMany(children => children)
-                            .Where(child => child != null);
-
-                        // Signature is object.__init__(self, *..., **...) which is not valid.
-                        if (builtinClass.ShortDescription == "type object") {
-                            source = source.Where(child => !child.Overloads.Any(o => o.Name == "__init__"));
-                        }
+                        source = builtinClass.GetAllMembers(InterpreterContext)
+                            .SelectMany(kv => kv.Value)
+                            .Where(child => child != null && 
+                                (child.MemberType == PythonMemberType.Function ||
+                                 child.MemberType == PythonMemberType.Method));
                     } else {
                         continue;
                     }

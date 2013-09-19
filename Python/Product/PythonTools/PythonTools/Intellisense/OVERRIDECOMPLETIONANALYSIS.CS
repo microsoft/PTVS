@@ -33,27 +33,32 @@ namespace Microsoft.PythonTools.Intellisense {
             : base(span, textBuffer, options) {
         }
 
-        internal static readonly Regex ValidParameterName = new Regex(@"^(\*|\*\*)?[a-z_][a-z0-9_]*", RegexOptions.IgnoreCase | RegexOptions.Singleline);
-        internal static string GetSafeParameterName(ParameterResult result) {
-            var match = ValidParameterName.Match(result.Name);
-
-            var name = match.Success ? match.Value : result.Name;
+        private static readonly Regex ValidParameterName = new Regex(@"^(\*|\*\*)?[a-z_][a-z0-9_]*", RegexOptions.IgnoreCase | RegexOptions.Singleline);
+        private static string GetSafeParameterName(ParameterResult result, int index) {
             if (!string.IsNullOrEmpty(result.DefaultValue)) {
-                name += " = " + result.DefaultValue;
+                return GetSafeArgumentName(result, index) + " = " + result.DefaultValue;
             }
-            return name;
+            return GetSafeArgumentName(result, index);
         }
 
-        internal static string GetSafeArgumentName(ParameterResult result) {
+        private static string GetSafeArgumentName(ParameterResult result, int index) {
             var match = ValidParameterName.Match(result.Name);
 
-            return match.Success ? match.Value : result.Name;
+            if (match.Success) {
+                return match.Value;
+            } else if (result.Name.StartsWith("**")) {
+                return "**kwargs";
+            } else if (result.Name.StartsWith("*")) {
+                return "*args";
+            } else {
+                return "arg" + index.ToString();
+            }
         }
 
-        internal string MakeCompletionString(IOverloadResult result, string className) {
+        private string MakeCompletionString(IOverloadResult result, string className) {
             var sb = new StringBuilder();
 
-            sb.AppendLine(result.Name + "(" + string.Join(", ", result.Parameters.Select(GetSafeParameterName)) + "):");
+            sb.AppendLine(result.Name + "(" + string.Join(", ", result.Parameters.Select((p, i) => GetSafeParameterName(p, i))) + "):");
 
             var span = Span.GetSpan(TextBuffer.CurrentSnapshot);
             int defIndent = span.Start.GetContainingLine().GetText().IndexOf("def");
@@ -65,7 +70,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             if (result.Parameters.Length > 0) {
-                var parameterString = string.Join(", ", result.Parameters.Skip(1).Select(GetSafeArgumentName));
+                var parameterString = string.Join(", ", result.Parameters.Skip(1).Select((p, i) => GetSafeArgumentName(p, i + 1)));
 
                 if (GetAnalysisEntry().ProjectState.LanguageVersion.Is3x()) {
                     sb.AppendFormat("return super().{0}({1})",
