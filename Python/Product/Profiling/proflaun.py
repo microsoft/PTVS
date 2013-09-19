@@ -5,6 +5,12 @@ the second argument.
 """
 
 import sys
+
+if sys.platform == 'cli':
+    print('Python profiling is not supported on IronPython, press enter to exit...')
+    raw_input()
+    sys.exit(1)
+
 import vspyprof
 import os
 
