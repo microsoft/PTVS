@@ -19,7 +19,7 @@
       <?define Comp_PyFileProgIdGuid=40F901B8-3B40-44BE-8592-280725805D88?>
       <?define Comp_PyProjRegistrationGuid=8C952F07-ADEC-4896-AFA8-1163139E4F11?>
       <?define ProductNameYear = 2012?>
-  <?else?>
+  <?elseif "$(var.VSTargetVersion)" = "12.0" ?>
       <?define InstallerGuid=*?>
       <?define InstallerUpgradeGuid=D3FFD34D-B716-4496-BFF0-0C34E536DC64?>
       <?define Comp_InstallDirItemsGuid=0B534FC2-E67E-41D3-B375-6CF32303236D?>
