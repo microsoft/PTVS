@@ -1636,9 +1636,10 @@ def report_new_thread(new_thread):
 
 def report_all_threads():
     THREADS_LOCK.acquire()
-    for cur_thread in THREADS.values():
-        report_new_thread(cur_thread)
+    all_threads = list(THREADS.values())
     THREADS_LOCK.release()
+    for cur_thread in all_threads:
+        report_new_thread(cur_thread)
 
 def report_thread_exit(old_thread):
     ident = old_thread.id
@@ -1822,11 +1823,12 @@ def attach_process_from_socket(sock, report = False, block = False):
 
     if report:
         THREADS_LOCK.acquire()
+        all_threads = list(THREADS.values())
         if block:
             main_thread = THREADS[thread.get_ident()]
-        for cur_thread in THREADS.values():
-            report_new_thread(cur_thread)
         THREADS_LOCK.release()
+        for cur_thread in all_threads:
+            report_new_thread(cur_thread)
 
         for filename, module in MODULES:
             report_module_load(module)
@@ -1879,7 +1881,10 @@ def detach_process():
 def detach_threads():
     # tell all threads to stop tracing...
     THREADS_LOCK.acquire()
-    for tid, pyThread in THREADS.items():
+    all_threads = list(THREADS.items())
+    THREADS_LOCK.release()
+
+    for tid, pyThread in all_threads:
         if not _INTERCEPTING_FOR_ATTACH:
             pyThread.detach = True
             pyThread.stepping = STEPPING_BREAK
@@ -1888,11 +1893,11 @@ def detach_threads():
             pyThread.unblock()
 
     if not _INTERCEPTING_FOR_ATTACH:
+        THREADS_LOCK.acquire()
         THREADS.clear()
+        THREADS_LOCK.release()
         
     BREAKPOINTS.clear()
-
-    THREADS_LOCK.release()
 
 def new_thread(tid = None, set_break = False, frame = None):
     # called during attach w/ a thread ID provided.
