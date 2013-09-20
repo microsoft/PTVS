@@ -41,6 +41,9 @@ namespace Microsoft.PythonTools.Interpreter {
         /// </summary>
         /// <param name="id">The built-in type to get</param>
         /// <returns>An IPythonType representing the type.</returns>
+        /// <exception cref="KeyNotFoundException">
+        /// The requested type cannot be resolved by this interpreter.
+        /// </exception>
         IPythonType GetBuiltinType(BuiltinTypeId id);
 
         /// <summary>

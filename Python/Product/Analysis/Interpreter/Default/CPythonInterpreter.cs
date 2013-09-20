@@ -62,7 +62,11 @@ namespace Microsoft.PythonTools.Interpreter.Default {
             if (id == BuiltinTypeId.Unknown) {
                 return null;
             }
-            
+
+            if (_typeDb == null) {
+                throw new KeyNotFoundException(string.Format("{0} ({1})", id, (int)id));
+            }
+
             var name = SharedDatabaseState.GetBuiltinTypeName(id, _typeDb.LanguageVersion);
             var res = _typeDb.BuiltinModule.GetAnyMember(name) as IPythonType;
             if (res == null) {
