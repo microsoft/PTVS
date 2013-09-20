@@ -20,11 +20,11 @@ namespace CanopyInterpreter {
     /// Canopy's registry settings.
     /// </summary>
     public static class CanopyInterpreterFactoryConstants {
-        public const string BaseId32 = "{PLACE-NEW-GUID-HERE}";
-        public const string BaseId64 = "{PLACE-NEW-GUID-HERE}";
+        public const string BaseId32 = "{DBDF625C-9CEA-4B63-BDDD-3B02551B7AD2}";
+        public const string BaseId64 = "{935325EE-65B9-4F54-BEDB-0FB02DC8C9BE}";
 
-        public const string UserId32 = "{PLACE-NEW-GUID-HERE}";
-        public const string UserId64 = "{PLACE-NEW-GUID-HERE}";
+        public const string UserId32 = "{3A259895-9005-42A1-8100-71C47667EB29}";
+        public const string UserId64 = "{6A73168F-9101-4E5A-B8CB-E6763579096D}";
 
         public static readonly Guid BaseGuid32 = new Guid(BaseId32);
         public static readonly Guid BaseGuid64 = new Guid(BaseId64);
