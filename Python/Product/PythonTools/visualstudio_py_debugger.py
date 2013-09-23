@@ -26,6 +26,7 @@ import traceback
 import types
 import bisect
 from os import path
+import ntpath
 
 try:
     import visualstudio_py_util as _vspu
@@ -358,11 +359,32 @@ attach_lock = thread.allocate()
 attach_sent_break = False
 
 
-def filename_is_same(win_path, local_path):
-    import ntpath
-    if ntpath.isabs(win_path) and path.isabs(local_path):
-        return path.normcase(win_path) == path.normcase(local_path)
-    return path.normcase(ntpath.basename(win_path)) == path.normcase(path.basename(local_path))
+local_path_to_vs_path = {}
+
+def breakpoint_path_match(vs_path, local_path):
+    vs_path_norm = ntpath.normcase(vs_path)
+    local_path_norm = path.normcase(local_path)
+    if local_path_to_vs_path.get(local_path_norm) == vs_path_norm:
+        return True
+    
+    # Walk the local filesystem from local_path up, matching agains win_path component by component,
+    # and stop when we no longer see an __init__.py. This should give a reasonably close approximation
+    # of matching the package name.
+    while True:
+        local_path, local_name = path.split(local_path)
+        vs_path, vs_name = ntpath.split(vs_path)
+        # Match the last component in the path. If one or both components are unavailable, then
+        # we have reached the root on the corresponding path without successfully matching.
+        if not local_name or not vs_name or path.normcase(local_name) != ntpath.normcase(vs_name):
+            return False
+        # If we have an __init__.py, this module was inside the package, and we still need to match
+        # thatpackage, so walk up one level and keep matching. Otherwise, we've walked as far as we
+        # needed to, and matched all names on our way, so this is a match.
+        if not path.exists(path.join(local_path, '__init__.py')):
+            break
+    
+    local_path_to_vs_path[local_path_norm] = vs_path_norm
+    return True
 
 
 def update_all_thread_stacks(blocking_thread = None, check_is_blocked = True):
@@ -695,7 +717,7 @@ class Thread(object):
                 bp = BREAKPOINTS.get(frame.f_lineno)
                 if bp is not None:
                     for (filename, bp_id), (condition, bound) in bp.items():
-                        if filename == frame.f_code.co_filename or (not bound and filename_is_same(filename, frame.f_code.co_filename)):
+                        if filename == frame.f_code.co_filename or (not bound and breakpoint_path_match(filename, frame.f_code.co_filename)):
                             if condition:
                                 try:
                                     res = eval(condition.condition, frame.f_globals, frame.f_locals)

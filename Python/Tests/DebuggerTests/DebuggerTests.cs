@@ -1058,7 +1058,7 @@ namespace DebuggerTests {
         }
 
         [TestMethod, Priority(0)]
-        public void TestBreakpointsFilenameColide() {
+        public void TestBreakpointsCollidingFilenames() {
             // http://pytools.codeplex.com/workitem/565
 
             string cwd = Path.Combine(Environment.CurrentDirectory, DebuggerTestPath);
@@ -1072,7 +1072,7 @@ namespace DebuggerTests {
         }
 
         [TestMethod, Priority(0)]
-        public void TestBreakpointsSimpleFilename() {
+        public void TestBreakpointsRelativePathTopLevel() {
             // http://pytools.codeplex.com/workitem/522
 
             string cwd = Path.GetFullPath(Path.Combine(Path.GetDirectoryName("SimpleFilenameBreakpoint.py"), ".."));
@@ -1082,6 +1082,20 @@ namespace DebuggerTests {
                 new[] { 4, 10 },
                 cwd: cwd,
                 breakFilename: Path.Combine(Environment.CurrentDirectory, DebuggerTestPath, "CompiledCodeFile.py"),
+                checkBound: false);
+        }
+
+        [TestMethod, Priority(0)]
+        public void TestBreakpointsRelativePathInPackage() {
+            // http://pytools.codeplex.com/workitem/522
+
+            string cwd = Path.GetFullPath(Path.Combine(Path.GetDirectoryName("BreakpointRelativePathInPackage.py"), ".."));
+            BreakpointTest(
+                Path.Combine(Environment.CurrentDirectory, DebuggerTestPath, "BreakpointRelativePathInPackage.py"),
+                new[] { 6 },
+                new[] { 6, 6 },
+                cwd: cwd,
+                breakFilename: Path.Combine(Environment.CurrentDirectory, DebuggerTestPath, "A\\relpath.py"),
                 checkBound: false);
         }
 
