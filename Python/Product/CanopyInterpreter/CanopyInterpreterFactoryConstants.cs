@@ -17,31 +17,56 @@ using System;
 namespace CanopyInterpreter {
     /// <summary>
     /// Provides constants used to identify interpreters that are detected from
-    /// Canopy's registry settings.
+    /// Canopy's registry settings. These values are only used by
+    /// CanopyInterpreterFactory.
     /// </summary>
-    public static class CanopyInterpreterFactoryConstants {
-        public const string BaseId32 = "{PLACE-NEW-GUID-HERE}";
-        public const string BaseId64 = "{PLACE-NEW-GUID-HERE}";
+    static class CanopyInterpreterFactoryConstants {
+#error Update these GUIDs and delete this #error.
+        /// <summary>
+        /// The GUID that identifies the base 32-bit environment. This will be
+        /// used to store user preferences and references for the factory.
+        /// </summary>
+        public static readonly Guid BaseGuid32 = new Guid("{PLACE-NEW-GUID-HERE}");
+        /// <summary>
+        /// The GUID that identifies the base 64-bit environment. This will be
+        /// used to store user preferences and references for the factory.
+        /// </summary>
+        public static readonly Guid BaseGuid64 = new Guid("{PLACE-NEW-GUID-HERE}");
 
-        public const string UserId32 = "{PLACE-NEW-GUID-HERE}";
-        public const string UserId64 = "{PLACE-NEW-GUID-HERE}";
+        /// <summary>
+        /// The GUID that identifies the user 32-bit environment. This will be
+        /// used to store user preferences and references for the factory.
+        /// </summary>
+        public static readonly Guid UserGuid32 = new Guid("{PLACE-NEW-GUID-HERE}");
+        /// <summary>
+        /// The GUID that identifies the user 64-bit environment. This will be
+        /// used to store user preferences and references for the factory.
+        /// </summary>
+        public static readonly Guid UserGuid64 = new Guid("{PLACE-NEW-GUID-HERE}");
 
-        public static readonly Guid BaseGuid32 = new Guid(BaseId32);
-        public static readonly Guid BaseGuid64 = new Guid(BaseId64);
-
-        public static readonly Guid UserGuid32 = new Guid(UserId32);
-        public static readonly Guid UserGuid64 = new Guid(UserId64);
-
+        /// <summary>
+        /// The name of the console executable to use.
+        /// <see cref="CanopyInterpreterFactory" /> will resolve this to a full
+        /// path.
+        /// </summary>
         public const string ConsoleExecutable = "python.exe";
+        /// <summary>
+        /// The name of the windowed executable to use.
+        /// <see cref="CanopyInterpreterFactory" /> will resolve this to a full
+        /// path.
+        /// </summary>
         public const string WindowsExecutable = "pythonw.exe";
+        /// <summary>
+        /// The name of the library folder to use.
+        /// <see cref="CanopyInterpreterFactory" /> will resolve this to a full
+        /// path.
+        /// </summary>
         public const string LibrarySubPath = "lib";
+        /// <summary>
+        /// The name of the environment variable that is added to sys.path by
+        /// the interpreter. Users' search paths are stored in this variable
+        /// when running their projects.
+        /// </summary>
         public const string PathEnvironmentVariableName = "PYTHONPATH";
-
-        public const string BaseDescription = "Base Canopy";
-        public const string UserDescription = "Canopy";
-
-        // The {0} should be substituted with the Python language version
-        public const string PythonDescription32 = " ({0} 32-bit)";
-        public const string PythonDescription64 = " ({0} 64-bit)";
     }
 }

@@ -68,16 +68,17 @@ namespace CanopyInterpreter {
                 CanopyInterpreterFactoryConstants.BaseGuid64 :
                 CanopyInterpreterFactoryConstants.BaseGuid32;
 
-            // Make the description string look like "Canopy 1.1.0.46 (Python 64-bit 2.7)"
-            var description = CanopyInterpreterFactoryConstants.BaseDescription;
+            // Make the description string look like "Base Canopy 1.1.0.46 (2.7 32-bit)"
+            var description = "Base Canopy";
             if (!string.IsNullOrEmpty(canopyVersion)) {
                 description += " " + canopyVersion;
             }
-            description += string.Format(
-                arch == ProcessorArchitecture.Amd64 ?
-                    CanopyInterpreterFactoryConstants.PythonDescription64 :
-                    CanopyInterpreterFactoryConstants.PythonDescription32,
-                languageVersion);
+            description += string.Format(" ({0} ", languageVersion);
+            if (arch == ProcessorArchitecture.Amd64) {
+                description += " 64-bit)";
+            } else {
+                description += " 32-bit)";
+            }
 
             return InterpreterFactoryCreator.CreateInterpreterFactory(new InterpreterFactoryCreationOptions {
                 PrefixPath = basePath,
@@ -125,16 +126,17 @@ namespace CanopyInterpreter {
                 CanopyInterpreterFactoryConstants.UserGuid64 :
                 CanopyInterpreterFactoryConstants.UserGuid32;
 
-            // Make the description string look like "Canopy 1.1.0.46 (Python 64-bit 2.7)"
-            var description = CanopyInterpreterFactoryConstants.UserDescription;
+            // Make the description string look like "Canopy 1.1.0.46 (2.7 32-bit)"
+            var description = "Canopy ";
             if (!string.IsNullOrEmpty(canopyVersion)) {
                 description += " " + canopyVersion;
             }
-            description += string.Format(
-                baseFactory.Configuration.Architecture == ProcessorArchitecture.Amd64 ?
-                    CanopyInterpreterFactoryConstants.PythonDescription64 :
-                    CanopyInterpreterFactoryConstants.PythonDescription32,
-                baseFactory.Configuration.Version);
+            description += string.Format(" ({0} ", baseFactory.Configuration.Version);
+            if (baseFactory.Configuration.Architecture == ProcessorArchitecture.Amd64) {
+                description += " 64-bit)";
+            } else {
+                description += " 32-bit)";
+            }
 
             var config = new InterpreterConfiguration(
                 userPath,

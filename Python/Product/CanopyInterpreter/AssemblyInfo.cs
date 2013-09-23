@@ -19,12 +19,13 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("Canopy Interpreter Provider")]
+#warning Update your assembly version information and delete this #warning.
+[assembly: AssemblyTitle("Canopy Interpreter Detection")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Microsoft Corporation")]
-[assembly: AssemblyProduct("Python Tools for Visual Studio")]
-[assembly: AssemblyCopyright("Copyright © Microsoft Corporation 2013")]
+[assembly: AssemblyCompany("<YOUR COMPANY NAME HERE>")]
+[assembly: AssemblyProduct("<YOUR PRODUCT NAME HERE>")]
+[assembly: AssemblyCopyright("")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -35,6 +36,3 @@ using System.Runtime.InteropServices;
 // to COM components.  If you need to access a type in this assembly from 
 // COM, set the ComVisible attribute to true on that type.
 [assembly: ComVisible(false)]
-
-// The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("48C77E5C-EC45-4506-B32F-CBF772BB7066")]
