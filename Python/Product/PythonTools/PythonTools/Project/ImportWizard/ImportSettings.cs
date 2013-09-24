@@ -393,15 +393,25 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
         }
 
         private static IEnumerable<string> EnumerateAllFiles(string source, string filters) {
-            var files = Directory.EnumerateFiles(source, "*.py", SearchOption.AllDirectories);
-            foreach (var pattern in filters.Split(';')) {
+            var files = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var patterns = filters.Split(';').Concat(new[] { "*.py" }).Select(p => p.Trim()).ToArray();
+
+            var directories = new List<string>() { source };
+
+            try {
+                directories.AddRange(Directory.EnumerateDirectories(source, "*", SearchOption.AllDirectories));
+            } catch (UnauthorizedAccessException) {
+            }
+
+            foreach (var dir in directories) {
                 try {
-                    var theseFiles = Directory.EnumerateFiles(source, pattern.Trim(), SearchOption.AllDirectories);
-                    files = files.Concat(theseFiles);
-                } catch {
-                    // Probably an invalid pattern.
+                    foreach (var filter in patterns) {
+                        files.UnionWith(Directory.EnumerateFiles(dir, filter));
+                    }
+                } catch (UnauthorizedAccessException) {
                 }
             }
+
             return files
                 .Where(path => path.StartsWith(source))
                 .Select(path => path.Substring(source.Length).TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar))

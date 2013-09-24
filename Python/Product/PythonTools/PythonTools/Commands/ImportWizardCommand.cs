@@ -14,6 +14,8 @@
 
 using System;
 using System.IO;
+using System.Windows;
+using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools;
@@ -33,12 +35,38 @@ namespace Microsoft.PythonTools.Commands {
 
                 settings.CreateRequestedProjectAsync()
                     .ContinueWith(t => {
-                        var path = t.Result;
+                        string path;
+                        try {
+                            path = t.Result;
+                        } catch (AggregateException ex) {
+                            if (ex.InnerException is UnauthorizedAccessException) {
+                                MessageBox.Show(
+                                    "Some file paths could not be accessed." + Environment.NewLine +
+                                    "Try moving your source code to a location where you " +
+                                    "can read and write files.",
+                                    SR.GetString(SR.PythonToolsForVisualStudio)
+                                );
+                            } else {
+                                string exName = "";
+                                if (ex.InnerException != null) {
+                                    exName = "(" + ex.InnerException.GetType().Name + ") ";
+                                }
+
+                                MessageBox.Show(
+                                    "An unexpected error " + exName +
+                                    "occurred while creating your project.",
+                                    SR.GetString(SR.PythonToolsForVisualStudio)
+                                );
+                            }
+                            return;
+                        }
                         if (File.Exists(path)) {
                             object outRef = null, pathRef = ProcessOutput.QuoteSingleArgument(path);
                             PythonToolsPackage.Instance.DTE.Commands.Raise(VSConstants.GUID_VSStandardCommandSet97.ToString("B"), (int)VSConstants.VSStd97CmdID.OpenProject, ref pathRef, ref outRef);
+                            statusBar.SetText("");
+                        } else {
+                            statusBar.SetText("An error occurred and your project was not created.");
                         }
-                        statusBar.SetText("");
                     }, System.Threading.Tasks.TaskScheduler.FromCurrentSynchronizationContext());
             } else {
                 statusBar.SetText("");
