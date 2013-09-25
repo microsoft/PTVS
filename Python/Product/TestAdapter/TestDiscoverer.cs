@@ -54,85 +54,86 @@ namespace Microsoft.PythonTools.TestAdapter {
             }
 
             foreach (var proj in buildEngine.LoadedProjects) {
-                var provider = new MSBuildProjectInterpreterFactoryProvider(_interpreterService, proj);
-                try {
-                    provider.DiscoverInterpreters();
-                } catch (InvalidDataException) {
-                    // This exception can be safely ignored here.
-                }
-                var factory = provider.ActiveInterpreter;
-                if (factory == _interpreterService.NoInterpretersValue) {
-                    logger.SendMessage(TestMessageLevel.Warning, "No interpreters available for project " + proj.FullPath);
-                    continue;
-                }
-
-                var projectHome = Path.GetFullPath(Path.Combine(proj.DirectoryPath, proj.GetPropertyValue(PythonConstants.ProjectHomeSetting) ?? "."));
-
-                // Do the analysis even if the database is not up to date. At
-                // worst, we'll get no results.
-                var analyzer = new PythonAnalyzer(factory);
-                analyzer.Limits = AnalysisLimits.GetStandardLibraryLimits();
-                var entries = new List<IPythonProjectEntry>();
-
-                // First pass, prepare each file for analysis
-                foreach (var item in ((MSBuild.Project)proj).GetItems("Compile")) {
-                    string fileAbsolutePath = CommonUtils.GetAbsoluteFilePath(projectHome, item.EvaluatedInclude);
-                    string fullName;
-
+                using (var provider = new MSBuildProjectInterpreterFactoryProvider(_interpreterService, proj)) {
                     try {
-                        fullName = ModulePath.FromFullPath(fileAbsolutePath).FullName;
-                    } catch (ArgumentException) {
-                        logger.SendMessage(TestMessageLevel.Warning, "File has an invalid module name: " + fileAbsolutePath);
+                        provider.DiscoverInterpreters();
+                    } catch (InvalidDataException) {
+                        // This exception can be safely ignored here.
+                    }
+                    var factory = provider.ActiveInterpreter;
+                    if (factory == _interpreterService.NoInterpretersValue) {
+                        logger.SendMessage(TestMessageLevel.Warning, "No interpreters available for project " + proj.FullPath);
                         continue;
                     }
 
-                    try {
-                        var entry = analyzer.AddModule(fullName, fileAbsolutePath);
-                        using (var reader = new StreamReader(fileAbsolutePath))
-                        using (var parser = Parser.CreateParser(reader, factory.GetLanguageVersion(), new ParserOptions() { BindReferences = true })) {
-                            entry.UpdateTree(parser.ParseFile(), null);
+                    var projectHome = Path.GetFullPath(Path.Combine(proj.DirectoryPath, proj.GetPropertyValue(PythonConstants.ProjectHomeSetting) ?? "."));
+
+                    // Do the analysis even if the database is not up to date. At
+                    // worst, we'll get no results.
+                    var analyzer = new PythonAnalyzer(factory);
+                    analyzer.Limits = AnalysisLimits.GetStandardLibraryLimits();
+                    var entries = new List<IPythonProjectEntry>();
+
+                    // First pass, prepare each file for analysis
+                    foreach (var item in ((MSBuild.Project)proj).GetItems("Compile")) {
+                        string fileAbsolutePath = CommonUtils.GetAbsoluteFilePath(projectHome, item.EvaluatedInclude);
+                        string fullName;
+
+                        try {
+                            fullName = ModulePath.FromFullPath(fileAbsolutePath).FullName;
+                        } catch (ArgumentException) {
+                            logger.SendMessage(TestMessageLevel.Warning, "File has an invalid module name: " + fileAbsolutePath);
+                            continue;
                         }
 
-                        entries.Add(entry);
-                    } catch (FileNotFoundException) {
-                        // user deleted file, we send the test update, but the project
-                        // isn't saved.
-#if DEBUG
-                    } catch (Exception ex) {
-                        logger.SendMessage(TestMessageLevel.Warning, "Failed to discover tests in " + fileAbsolutePath);
-                        logger.SendMessage(TestMessageLevel.Informational, ex.ToString());
-                    }
-#else
-                    } catch (Exception) {
-                        logger.SendMessage(TestMessageLevel.Warning, "Failed to discover tests in " + fileAbsolutePath);
-                    }
-#endif
-                }
+                        try {
+                            var entry = analyzer.AddModule(fullName, fileAbsolutePath);
+                            using (var reader = new StreamReader(fileAbsolutePath))
+                            using (var parser = Parser.CreateParser(reader, factory.GetLanguageVersion(), new ParserOptions() { BindReferences = true })) {
+                                entry.UpdateTree(parser.ParseFile(), null);
+                            }
 
-                // Second pass, analyze
-                foreach (var entry in entries) {
-                    entry.Analyze(CancellationToken.None, true);
-                }
-                analyzer.AnalyzeQueuedEntries(CancellationToken.None);
+                            entries.Add(entry);
+                        } catch (FileNotFoundException) {
+                            // user deleted file, we send the test update, but the project
+                            // isn't saved.
+    #if DEBUG
+                        } catch (Exception ex) {
+                            logger.SendMessage(TestMessageLevel.Warning, "Failed to discover tests in " + fileAbsolutePath);
+                            logger.SendMessage(TestMessageLevel.Informational, ex.ToString());
+                        }
+    #else
+                        } catch (Exception) {
+                            logger.SendMessage(TestMessageLevel.Warning, "Failed to discover tests in " + fileAbsolutePath);
+                        }
+    #endif
+                    }
 
-                // Third pass, get the results of the analysis
-                foreach (var entry in entries) {
-                    foreach (var classValue in GetTestCaseClasses(entry)) {
-                        // Check the name of all functions on the class using the analyzer
-                        // This will return functions defined on this class and base classes
-                        var members = classValue.GetAllMembers(entry.Analysis.InterpreterContext)
-                            .Values
-                            .SelectMany(v => v)
-                            .Where(v => v.MemberType == PythonMemberType.Function || v.MemberType == PythonMemberType.Method)
-                            .Where(v => v.Name.StartsWith("test"));
-                        foreach (var member in members) {
-                            SendTestCase(discoverySink,
-                                ((MSBuild.Project)proj).FullPath,
-                                projectHome,
-                                classValue.DeclaringModule.FilePath,
-                                classValue.Name,
-                                member.Name,
-                                member.Locations.FirstOrDefault());
+                    // Second pass, analyze
+                    foreach (var entry in entries) {
+                        entry.Analyze(CancellationToken.None, true);
+                    }
+                    analyzer.AnalyzeQueuedEntries(CancellationToken.None);
+
+                    // Third pass, get the results of the analysis
+                    foreach (var entry in entries) {
+                        foreach (var classValue in GetTestCaseClasses(entry)) {
+                            // Check the name of all functions on the class using the analyzer
+                            // This will return functions defined on this class and base classes
+                            var members = classValue.GetAllMembers(entry.Analysis.InterpreterContext)
+                                .Values
+                                .SelectMany(v => v)
+                                .Where(v => v.MemberType == PythonMemberType.Function || v.MemberType == PythonMemberType.Method)
+                                .Where(v => v.Name.StartsWith("test"));
+                            foreach (var member in members) {
+                                SendTestCase(discoverySink,
+                                    ((MSBuild.Project)proj).FullPath,
+                                    projectHome,
+                                    classValue.DeclaringModule.FilePath,
+                                    classValue.Name,
+                                    member.Name,
+                                    member.Locations.FirstOrDefault());
+                            }
                         }
                     }
                 }
