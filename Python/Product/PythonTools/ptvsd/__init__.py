@@ -12,6 +12,6 @@
  #
  # ###########################################################################
 
-__all__ = ['enable_attach', 'wait_for_attach', 'break_into_debugger', 'settrace', 'AttachAlreadyEnabledError']
+__all__ = ['enable_attach', 'wait_for_attach', 'break_into_debugger', 'settrace', 'is_attached', 'AttachAlreadyEnabledError']
 
-from ptvsd.attach_server import enable_attach, wait_for_attach, break_into_debugger, settrace, AttachAlreadyEnabledError
+from ptvsd.attach_server import enable_attach, wait_for_attach, break_into_debugger, settrace, is_attached, AttachAlreadyEnabledError

@@ -12,7 +12,7 @@
  #
  # ###########################################################################
 
-__all__ = ['enable_attach', 'wait_for_attach', 'break_into_debugger', 'settrace', 'AttachAlreadyEnabledError']
+__all__ = ['enable_attach', 'wait_for_attach', 'break_into_debugger', 'settrace', 'is_attached', 'AttachAlreadyEnabledError']
 
 import atexit
 import getpass
@@ -83,46 +83,53 @@ vspd.DONT_DEBUG.append(__file__)
 
 
 class AttachAlreadyEnabledError(Exception):
-    """ptvsd.enable_attach() has already been called in this process."""
+    """`ptvsd.enable_attach` has already been called in this process."""
 
 
 def enable_attach(secret, address = ('0.0.0.0', DEFAULT_PORT), certfile = None, keyfile = None, redirect_output = True):
     """Enables Python Tools for Visual Studio to attach to this process remotely
     to debug Python code.
 
-    The secret parameter is used to validate the clients - only those clients
-    providing the valid secret will be allowed to connect to this server. On
-    client side, the secret is prepended to the Qualifier string, separated from
-    the hostname by '@', e.g.: secret@myhost.cloudapp.net:5678. If secret is
-    None, there's no validation, and any client can connect freely.
+    Parameters
+    ----------
+    secret : str
+        Used to validate the clients - only those clients providing the valid
+        secret will be allowed to connect to this server. On client side, the
+        secret is prepended to the Qualifier string, separated from the
+        hostname by ``'@'``, e.g.: ``'secret@myhost.cloudapp.net:5678'``. If
+        secret is ``None``, there's no validation, and any client can connect
+        freely.
+    address : (str, int), optional 
+        Specifies the interface and port on which the debugging server should
+        listen for TCP connections. It is in the same format as used for
+        regular sockets of the `socket.AF_INET` family, i.e. a tuple of
+        ``(hostname, port)``. On client side, the server is identified by the
+        Qualifier string in the usual ``'hostname:port'`` format, e.g.:
+        ``'myhost.cloudapp.net:5678'``. Default is ``('0.0.0.0', 5678)``.
+    certfile : str, optional
+        Used to enable SSL. If not specified, or if set to ``None``, the
+        connection between this program and the debugger will be unsecure,
+        and can be intercepted on the wire. If specified, the meaning of this
+        parameter is the same as for `ssl.wrap_socket`. 
+    keyfile : str, optional
+        Used together with `certfile` when SSL is enabled. Its meaning is the
+        same as for ``ssl.wrap_socket``.
+    redirect_output : bool, optional
+        Specifies whether any output (on both `stdout` and `stderr`) produced
+        by this program should be sent to the debugger. Default is ``True``.
 
-    The address parameter specifies the interface and port on which the
-    debugging server should listen for TCP connections. It is in the same format
-    as used for regular sockets of the AF_INET family, i.e. a tuple of
-    (hostname, port). On client side, the server is identified by the Qualifier
-    string in the usual hostname:port format, e.g.: myhost.cloudapp.net:5678.
-
-    The certfile parameter is used to enable SSL. If not specified, or if set to
-    None, the connection between this program and the debugger will be unsecure,
-    and can be intercepted on the wire. If specified, the meaning of this
-    parameter is the same as for ssl.wrap_socket. 
-
-    The keyfile parameter is used together with certfile when SSL is enabled.
-    Its meaning is the same as for ssl.wrap_socket.
-
-    The redirect_output parameter specifies whether any output (on both stdout
-    and stderr) produced by this program should be sent to the debugger. 
-
+    Notes
+    -----
     This function returns immediately after setting up the debugging server,
     and does not block program execution. If you need to block until debugger
-    is attached, call ptvsd.wait_for_attach. The debugger can be detached and
-    re-attached multiple times after enable_attach is called.
+    is attached, call `ptvsd.wait_for_attach`. The debugger can be detached
+    and re-attached multiple times after `enable_attach` is called.
 
-    This function can only be called once during the lifetime of the process.
-    On a second call, an AttachAlreadyEnabledError is raised. In circumstances
+    This function can only be called once during the lifetime of the process. 
+    On a second call, `AttachAlreadyEnabledError` is raised. In circumstances
     where the caller does not control how many times the function will be
     called (e.g. when a script with a single call is run more than once by
-    a hosting app or framework), the call should be wrapped in try..except.
+    a hosting app or framework), the call should be wrapped in ``try..except``.
 
     Only the thread on which this function is called, and any threads that are
     created after it returns, will be visible in the debugger once it is
@@ -290,9 +297,10 @@ def wait_for_attach(timeout = None):
     blocks until a remote debugger attaches to this process, or until the
     optional timeout occurs.
 
-    When the timeout argument is present and not None, it should be a floating
-    point number specifying the timeout for the operation in seconds (or
-    fractions thereof).
+    Parameters
+    ----------
+    timeout : float, optional
+        The timeout for the operation in seconds (or fractions thereof).
     """
     if vspd.DETACHED:
         _attached.clear()
@@ -306,3 +314,7 @@ def break_into_debugger():
     if not vspd.DETACHED:
         vspd.SEND_BREAK_COMPLETE = thread.get_ident()
         vspd.mark_all_threads_for_break()
+
+def is_attached():
+    """Returns ``True`` if debugger is attached, ``False`` otherwise."""
+    return not vspd.DETACHED
