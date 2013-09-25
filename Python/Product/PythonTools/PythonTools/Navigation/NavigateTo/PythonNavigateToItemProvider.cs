@@ -90,7 +90,9 @@ namespace Microsoft.PythonTools.Navigation.NavigateTo {
                 }
 
                 string kind;
-                _sggToNavItemKind.TryGetValue(node.GlyphType, out kind);
+                if (!_sggToNavItemKind.TryGetValue(node.GlyphType, out kind)) {
+                    kind = "";
+                }
                 
                 var text = node.GetTextRepresentation(VSTREETEXTOPTIONS.TTO_DISPLAYTEXT);
                 if (parentNode != null) {
