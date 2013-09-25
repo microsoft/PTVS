@@ -921,10 +921,13 @@ namespace Microsoft.VisualStudioTools.Project
 
             // Ask Document tracker listeners if we can remove the item.
             string[] filesToBeDeleted = new string[1] { documentToRemove };
-            VSQUERYREMOVEFILEFLAGS[] queryRemoveFlags = this.GetQueryRemoveFileFlags(filesToBeDeleted);
-            if (!this.ProjectMgr.Tracker.CanRemoveItems(filesToBeDeleted, queryRemoveFlags))
+            if (!String.IsNullOrWhiteSpace(documentToRemove)) 
             {
-                return;
+                VSQUERYREMOVEFILEFLAGS[] queryRemoveFlags = this.GetQueryRemoveFileFlags(filesToBeDeleted);
+                if (!this.ProjectMgr.Tracker.CanRemoveItems(filesToBeDeleted, queryRemoveFlags)) 
+                {
+                    return;
+                }
             }
 
             // Close the document if it has a manager.
@@ -949,9 +952,12 @@ namespace Microsoft.VisualStudioTools.Project
             CloseDocumentWindow(this);
 
             // Notify document tracker listeners that we have removed the item.
-            VSREMOVEFILEFLAGS[] removeFlags = this.GetRemoveFileFlags(filesToBeDeleted);
-            Debug.Assert(removeFlags != null, "At least an empty array should be returned for the GetRemoveFileFlags");
-            this.ProjectMgr.Tracker.OnItemRemoved(documentToRemove, removeFlags[0]);
+            if (!String.IsNullOrWhiteSpace(documentToRemove)) 
+            {
+                VSREMOVEFILEFLAGS[] removeFlags = this.GetRemoveFileFlags(filesToBeDeleted);
+                Debug.Assert(removeFlags != null, "At least an empty array should be returned for the GetRemoveFileFlags");
+                this.ProjectMgr.Tracker.OnItemRemoved(documentToRemove, removeFlags[0]);
+            }
 
             // Notify hierarchy event listeners that items have been invalidated
             ProjectMgr.OnInvalidateItems(this);
