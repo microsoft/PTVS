@@ -362,7 +362,7 @@ attach_sent_break = False
 local_path_to_vs_path = {}
 
 def breakpoint_path_match(vs_path, local_path):
-    vs_path_norm = ntpath.normcase(vs_path)
+    vs_path_norm = path.normcase(vs_path)
     local_path_norm = path.normcase(local_path)
     if local_path_to_vs_path.get(local_path_norm) == vs_path_norm:
         return True
@@ -375,7 +375,7 @@ def breakpoint_path_match(vs_path, local_path):
         vs_path, vs_name = ntpath.split(vs_path)
         # Match the last component in the path. If one or both components are unavailable, then
         # we have reached the root on the corresponding path without successfully matching.
-        if not local_name or not vs_name or path.normcase(local_name) != ntpath.normcase(vs_name):
+        if not local_name or not vs_name or path.normcase(local_name) != path.normcase(vs_name):
             return False
         # If we have an __init__.py, this module was inside the package, and we still need to match
         # thatpackage, so walk up one level and keep matching. Otherwise, we've walked as far as we
