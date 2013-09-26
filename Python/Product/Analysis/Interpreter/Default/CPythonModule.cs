@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Intellisense;
@@ -31,7 +32,13 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         internal Dictionary<string, IMember> _hiddenMembers;
         private string _docString, _filename;
         private List<object> _children;
-        private bool _loaded;
+
+        private enum LoadState {
+            NotLoaded,
+            Loading,
+            Loaded
+        }
+        private LoadState _loadState;
 
         public CPythonModule(ITypeDatabaseReader typeDb, string moduleName, string databaseFilename, bool isBuiltin) {
             _modName = moduleName;
@@ -41,26 +48,29 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         }
 
         internal void EnsureLoaded() {
-            if (_loaded) {
+            // If we're fully loaded, just return.
+            if (_loadState == LoadState.Loaded) {
                 return;
             }
 
+            // If we're loading or not loaded, we need to take this lock.
             if (!_typeDb.BeginModuleLoad(this, 10000)) {
                 Debug.Fail("Timeout loading {0}", _modName);
+                //throw new InvalidOperationException("Cannot load module at this time");
                 return;
             }
-
-            // ensure we haven't been loaded while waiting
-            if (_loaded) {
-                _typeDb.EndModuleLoad(this);
-                return;
-            }
-
-            // mark as loading now (before it completes), if we have circular references we'll fix them up after loading
-            // completes.
-            _loaded = true;
 
             try {
+                // Ensure we haven't started/finished loading while waiting
+                if (_loadState != LoadState.NotLoaded) {
+                    return;
+                }
+
+                // Mark as loading now (before it completes), if we have circular
+                // references we'll fix them up after loading
+                // completes.
+                _loadState = LoadState.Loading;
+
                 using (var stream = new FileStream(_dbFile, FileMode.Open, FileAccess.Read, FileShare.Read)) {
                     Dictionary<string, object> contents = null;
                     try {
@@ -82,6 +92,9 @@ namespace Microsoft.PythonTools.Interpreter.Default {
             } catch (IOException) {
                 // or if someone has locked the file for some reason, also don't crash...
             } finally {
+                // Regardless of how we finish, mark us as loaded so we don't
+                // try again.
+                _loadState = LoadState.Loaded;
                 _typeDb.EndModuleLoad(this);
             }
         }
@@ -172,7 +185,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         #region IMemberContainer Members
 
         public IMember GetMember(IModuleContext context, string name) {
-            if (!_loaded) {
+            if (_loadState != LoadState.Loaded) {
                 // avoid deserializing all of the member list if we're just checking if
                 // a member exists.
                 if (_members.Count > 0 || File.Exists(_dbFile + ".$memlist")) {
@@ -193,6 +206,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
                 EnsureLoaded();
             }
 
+            Debug.Assert(_loadState == LoadState.Loaded);
             IMember res;
             if (_members.TryGetValue(name, out res)) {
                 return res;
@@ -203,6 +217,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         public IEnumerable<string> GetMemberNames(IModuleContext moduleContext) {
             EnsureLoaded();
 
+            Debug.Assert(_loadState == LoadState.Loaded);
             return _members.Keys;
         }
 
@@ -229,6 +244,8 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         public string FilePath {
             get {
                 EnsureLoaded();
+
+                Debug.Assert(_loadState == LoadState.Loaded);
                 return _filename;
             }
         }
@@ -271,6 +288,8 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         public IEnumerable<LocationInfo> Locations {
             get {
                 EnsureLoaded();
+
+                Debug.Assert(_loadState == LoadState.Loaded);
                 yield return new LocationInfo(this, 1, 1);
             }
         }

@@ -387,38 +387,49 @@ namespace Microsoft.PythonTools.Interpreter {
             var stopwatch = new Stopwatch();
             stopwatch.Start();
 #endif
-            if (!Monitor.TryEnter(_moduleLoadLock, millisecondsTimeout)) {
-                return false;
-            }
+            bool needUnlock = true;
+            try {
+                if (!Monitor.TryEnter(_moduleLoadLock, millisecondsTimeout)) {
+                    return false;
+                }
 #if DEBUG
-            stopwatch.Stop();
-            if (stopwatch.ElapsedMilliseconds > 100) {
-                string heldByMessage = "";
-                if (_moduleLoadLockThread != null) {
-                    heldByMessage = string.Format(" (held by {0}:{1})",
-                        _moduleLoadLockThread.Name, _moduleLoadLockThread.ManagedThreadId
+                stopwatch.Stop();
+                if (stopwatch.ElapsedMilliseconds > 100) {
+                    string heldByMessage = "";
+                    if (_moduleLoadLockThread != null) {
+                        heldByMessage = string.Format(" (held by {0}:{1})",
+                            _moduleLoadLockThread.Name, _moduleLoadLockThread.ManagedThreadId
+                        );
+                    }
+                    Console.WriteLine(
+                        "Waited {0}ms for module loader lock on thread {1}:{2}{3}",
+                        stopwatch.ElapsedMilliseconds,
+                        Thread.CurrentThread.Name, Thread.CurrentThread.ManagedThreadId,
+                        heldByMessage
                     );
                 }
-                Console.WriteLine(
-                    "Waited {0}ms for module loader lock on thread {1}:{2}{3}",
-                    stopwatch.ElapsedMilliseconds,
-                    Thread.CurrentThread.Name, Thread.CurrentThread.ManagedThreadId,
-                    heldByMessage
-                );
-            }
-            _moduleLoadLockThread = Thread.CurrentThread;
+                _moduleLoadLockThread = Thread.CurrentThread;
 #endif
-            _modulesLoading.Add(module);
+                _modulesLoading.Add(module);
+                needUnlock = false;
+            } finally {
+                if (needUnlock) {
+                    Monitor.Exit(_moduleLoadLock);
+                }
+            }
             return true;
         }
 
         public void EndModuleLoad(IPythonModule module) {
-            bool wasRemoved = _modulesLoading.Remove(module);
-            Debug.Assert(wasRemoved);
-            if (_modulesLoading.Count == 0) {
-                RunFixups();
+            try {
+                bool wasRemoved = _modulesLoading.Remove(module);
+                Debug.Assert(wasRemoved);
+                if (_modulesLoading.Count == 0) {
+                    RunFixups();
+                }
+            } finally {
+                Monitor.Exit(_moduleLoadLock);
             }
-            Monitor.Exit(_moduleLoadLock);
         }
 
         /// <summary>
