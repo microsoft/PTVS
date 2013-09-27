@@ -29,7 +29,7 @@
       <?define ProductNameYear = 2013?>  
   <?endif ?>
   <?ifdef CustomBuildIdentifier?>
-      <?define ProductName = Python Tools for Visual Studio $(var.ProductNameYear) ($(var.CustomBuildIdentifier))?>
+      <?define ProductName = Python Tools $(var.CustomBuildIdentifier) for Visual Studio $(var.ProductNameYear)?>
   <?else?>
       <?define ProductName = Python Tools for Visual Studio $(var.ProductNameYear)?>
   <?endif?>
