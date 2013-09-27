@@ -246,38 +246,43 @@ namespace Microsoft.PythonTools.TestAdapter {
 
         private PythonProjectSettings LoadProjectSettings(string projectFile) {
             var buildEngine = new MSBuild.ProjectCollection();
-            var proj = buildEngine.LoadProject(projectFile);
-            var provider = new MSBuildProjectInterpreterFactoryProvider(_interpreterService, proj);
             try {
-                provider.DiscoverInterpreters();
-            } catch (InvalidDataException) {
-                // Can safely ignore this exception here.
+                var proj = buildEngine.LoadProject(projectFile);
+                var provider = new MSBuildProjectInterpreterFactoryProvider(_interpreterService, proj);
+                try {
+                    provider.DiscoverInterpreters();
+                } catch (InvalidDataException) {
+                    // Can safely ignore this exception here.
+                }
+
+                if (provider.ActiveInterpreter == _interpreterService.NoInterpretersValue) {
+                    return null;
+                }
+
+                var projectHome = Path.GetFullPath(Path.Combine(proj.DirectoryPath, proj.GetPropertyValue(PythonConstants.ProjectHomeSetting) ?? "."));
+
+                var projSettings = new PythonProjectSettings();
+                projSettings.Factory = provider.ActiveInterpreter;
+
+                bool isWindowsApplication;
+                if (bool.TryParse(proj.GetPropertyValue(PythonConstants.IsWindowsApplicationSetting), out isWindowsApplication)) {
+                    projSettings.IsWindowsApplication = isWindowsApplication;
+                } else {
+                    projSettings.IsWindowsApplication = false;
+                }
+
+                projSettings.WorkingDir = Path.GetFullPath(Path.Combine(projectHome, proj.GetPropertyValue(PythonConstants.WorkingDirectorySetting) ?? "."));
+                projSettings.SearchPath = string.Join(";",
+                    (proj.GetPropertyValue(PythonConstants.SearchPathSetting) ?? "")
+                        .Split(';')
+                        .Where(path => !string.IsNullOrEmpty(path))
+                        .Select(path => Path.GetFullPath(Path.Combine(projectHome, path))));
+
+                return projSettings;
+            } finally {
+                buildEngine.UnloadAllProjects();
+                buildEngine.Dispose();
             }
-
-            if (provider.ActiveInterpreter == _interpreterService.NoInterpretersValue) {
-                return null;
-            }
-            
-            var projectHome = Path.GetFullPath(Path.Combine(proj.DirectoryPath, proj.GetPropertyValue(PythonConstants.ProjectHomeSetting) ?? "."));
-
-            var projSettings = new PythonProjectSettings();
-            projSettings.Factory = provider.ActiveInterpreter;
-
-            bool isWindowsApplication;
-            if (bool.TryParse(proj.GetPropertyValue(PythonConstants.IsWindowsApplicationSetting), out isWindowsApplication)) {
-                projSettings.IsWindowsApplication = isWindowsApplication;
-            } else {
-                projSettings.IsWindowsApplication = false;
-            }
-
-            projSettings.WorkingDir = Path.GetFullPath(Path.Combine(projectHome, proj.GetPropertyValue(PythonConstants.WorkingDirectorySetting) ?? "."));
-            projSettings.SearchPath = string.Join(";", 
-                (proj.GetPropertyValue(PythonConstants.SearchPathSetting) ?? "")
-                    .Split(';')
-                    .Where(path => !string.IsNullOrEmpty(path))
-                    .Select(path => Path.GetFullPath(Path.Combine(projectHome, path))));
-            
-            return projSettings;
         }
 
         private static void RecordEnd(IFrameworkHandle frameworkHandle, TestCase test, TestResult result, string stdout, string stderr, TestOutcome outcome) {
