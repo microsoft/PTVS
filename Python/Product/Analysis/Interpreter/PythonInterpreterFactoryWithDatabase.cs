@@ -74,14 +74,16 @@ namespace Microsoft.PythonTools.Interpreter {
                 } catch (ArgumentException ex) {
                     Debug.WriteLine("Error starting FileSystemWatcher:\r\n{0}", ex);
                 }
-            }
 
-            _verWatcher = CreateDatabaseVerWatcher();
+                _isCheckingDatabase = true;
+                _refreshIsCurrentTrigger.Change(1000, Timeout.Infinite);
+
+                _verWatcher = CreateDatabaseVerWatcher();
+            }
 
             // Assume the database is valid if the directory exists, then switch
             // to invalid after we've checked.
             _isValid = Directory.Exists(DatabasePath);
-            Task.Factory.StartNew(() => RefreshIsCurrent());
         }
 
         public InterpreterConfiguration Configuration {
@@ -113,32 +115,49 @@ namespace Microsoft.PythonTools.Interpreter {
             return MakeInterpreter(this);
         }
 
+        /// <summary>
+        /// Returns the database for this factory. This database may be shared
+        /// between callers and should be cloned before making modifications.
+        /// 
+        /// This function never returns null.
+        /// </summary>
         public PythonTypeDatabase GetCurrentDatabase() {
             if (_typeDb == null || _typeDb.DatabaseDirectory != DatabasePath) {
-                _typeDb = MakeTypeDatabase(DatabasePath);
+                _typeDb = MakeTypeDatabase(DatabasePath) ??
+                    PythonTypeDatabase.CreateDefaultTypeDatabase(this);
             }
 
             return _typeDb;
         }
 
+        /// <summary>
+        /// Returns the database for this factory, optionally excluding package
+        /// analysis. This database may be shared between callers and should be
+        /// cloned before making modifications.
+        /// 
+        /// This function never returns null.
+        /// </summary>
         public PythonTypeDatabase GetCurrentDatabase(bool includeSitePackages) {
             if (includeSitePackages) {
                 return GetCurrentDatabase();
             }
 
             if (_typeDbWithoutPackages == null || _typeDbWithoutPackages.DatabaseDirectory != DatabasePath) {
-                _typeDbWithoutPackages = MakeTypeDatabase(DatabasePath, false);
+                _typeDbWithoutPackages = MakeTypeDatabase(DatabasePath, false) ??
+                    PythonTypeDatabase.CreateDefaultTypeDatabase(this);
             }
 
             return _typeDbWithoutPackages;
         }
 
         /// <summary>
-        /// Returns a new database loaded from the specified path.
+        /// Returns a new database loaded from the specified path. If null is
+        /// returned, <see cref="GetCurrentDatabase"/> will assume the default
+        /// completion DB is intended.
         /// </summary>
         /// <remarks>
-        /// This is intended for use by derived classes. To get a queryable 
-        /// database instance, use <see cref="GetCurrentDatabase"/> or
+        /// This is intended for overriding in derived classes. To get a
+        /// queryable database instance, use <see cref="GetCurrentDatabase"/> or
         /// <see cref="CreateInterpreter"/>.
         /// </remarks>
         public virtual PythonTypeDatabase MakeTypeDatabase(string databasePath, bool includeSitePackages = true) {
@@ -416,12 +435,20 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         private void RefreshIsCurrentTimer_Elapsed(object state) {
+            if (_disposed) {
+                return;
+            }
+
             if (Directory.Exists(Configuration.LibraryPath)) {
                 RefreshIsCurrent();
             } else {
-                lock (_libWatcherLock) {
-                    _libWatcher.Dispose();
-                    _libWatcher = null;
+                if (_libWatcher != null) {
+                    lock (_libWatcherLock) {
+                        if (_libWatcher != null) {
+                            _libWatcher.Dispose();
+                            _libWatcher = null;
+                        }
+                    }
                 }
                 OnIsCurrentChanged();
             }
@@ -537,35 +564,35 @@ namespace Microsoft.PythonTools.Interpreter {
         #region IDisposable Members
 
         protected virtual void Dispose(bool disposing) {
-            if (_verWatcher != null) {
-                lock (_verWatcherLock) {
-                    if (_verWatcher != null) {
-                        _verWatcher.EnableRaisingEvents = false;
-                        _verWatcher.Dispose();
-                        _verWatcher = null;
+            if (!_disposed) {
+                _disposed = true;
+                if (_verWatcher != null) {
+                    lock (_verWatcherLock) {
+                        if (_verWatcher != null) {
+                            _verWatcher.EnableRaisingEvents = false;
+                            _verWatcher.Dispose();
+                            _verWatcher = null;
+                        }
                     }
                 }
-            }
 
-            if (_libWatcher != null) {
-                lock (_libWatcherLock) {
-                    if (_libWatcher != null) {
-                        _libWatcher.EnableRaisingEvents = false;
-                        _libWatcher.Dispose();
-                        _libWatcher = null;
+                if (_libWatcher != null) {
+                    lock (_libWatcherLock) {
+                        if (_libWatcher != null) {
+                            _libWatcher.EnableRaisingEvents = false;
+                            _libWatcher.Dispose();
+                            _libWatcher = null;
+                        }
                     }
                 }
-            }
-            if (_refreshIsCurrentTrigger != null) {
-                _refreshIsCurrentTrigger.Dispose();
+                if (_refreshIsCurrentTrigger != null) {
+                    _refreshIsCurrentTrigger.Dispose();
+                }
             }
         }
 
         public void Dispose() {
-            if (!_disposed) {
-                Dispose(true);
-                _disposed = true;
-            }
+            Dispose(true);
         }
 
         #endregion
