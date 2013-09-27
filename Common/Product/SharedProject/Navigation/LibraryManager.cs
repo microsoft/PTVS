@@ -204,7 +204,7 @@ namespace Microsoft.VisualStudioTools.Navigation {
                     fileNode,
                     System.IO.Path.GetFileName(task.FileName),
                     task.FileName,
-                    LibraryNodeType.Package
+                    LibraryNodeType.Package | LibraryNodeType.Classes
                 );
 
                 // TODO: Creating the module tree should be done lazily as needed

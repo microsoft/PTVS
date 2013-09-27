@@ -69,7 +69,7 @@ namespace Microsoft.PythonTools.Navigation.NavigateTo {
                 _path.Push(node);
 
                 // We don't want to report modules, since they map 1-to-1 to files, and those are already reported by the standard item provider
-                if (node.NodeType == LibraryNodeType.Package) {
+                if (node.NodeType.HasFlag(LibraryNodeType.Package)) {
                     return true;
                 }
 
