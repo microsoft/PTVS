@@ -701,8 +701,10 @@ public:
 
 long GetPythonThreadId(PythonVersion version, PyThreadState* curThread) {
     long threadId;
-    if (version >= PythonVersion_30) {
-        threadId = curThread->_30_31.thread_id;
+    if (version >= PythonVersion_34) {
+        threadId = curThread->_34.thread_id;
+    } else if (version >= PythonVersion_30) {
+        threadId = curThread->_30_33.thread_id;
     } else {
         threadId = curThread->_25_27.thread_id;
     }
@@ -1112,8 +1114,10 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
                         auto pyThreadId = PyObjectHolder(isDebug, intFromLong(threadId));
                         PyFrameObject* frame;
                         // update all of the frames so they have our trace func
-                        if (version >= PythonVersion_30) {
-                            frame = curThread->_30_31.frame;
+                        if (version >= PythonVersion_34) {
+                            frame = curThread->_34.frame;
+                        } else if (version >= PythonVersion_30) {
+                            frame = curThread->_30_33.frame;
                         } else {
                             frame = curThread->_25_27.frame;
                         }
@@ -1316,7 +1320,10 @@ int TraceGeneral(int interpreterId, PyObject *obj, PyFrameObject *frame, int wha
         case PythonVersion_31:
         case PythonVersion_32:
         case PythonVersion_33:
-            curThread->_30_31.c_tracefunc(curThread->_30_31.c_traceobj, frame, what, arg);
+            curThread->_30_33.c_tracefunc(curThread->_30_33.c_traceobj, frame, what, arg);
+            break;
+        case PythonVersion_34:
+            curThread->_34.c_tracefunc(curThread->_34.c_traceobj, frame, what, arg);
             break;
         }
     }
@@ -1355,16 +1362,19 @@ int TraceGeneral(int interpreterId, PyObject *obj, PyFrameObject *frame, int wha
 void SetInitialTraceFunc(DWORD interpreterId, PyThreadState *thread) {
     auto curInterpreter = _interpreterInfo[interpreterId];
 
-    if (curInterpreter->GetVersion() <= PythonVersion_27) {
-        if (thread->_25_27.gilstate_counter == 1) {
-            // this was a newly created thread
-            curInterpreter->SetTrace(traceFuncs[interpreterId], nullptr);
-        }
+    auto version = curInterpreter->GetVersion();
+    int gilstate_counter;
+    if (version >= PythonVersion_34) {
+        gilstate_counter = thread->_34.gilstate_counter;
+    } else if (version >= PythonVersion_30) {
+        gilstate_counter = thread->_30_33.gilstate_counter;
     } else {
-        if (thread->_30_31.gilstate_counter == 1) {
-            // this was a newly created thread
-            curInterpreter->SetTrace(traceFuncs[interpreterId], nullptr);
-        }
+        gilstate_counter = thread->_25_27.gilstate_counter;
+    }
+
+    if (gilstate_counter == 1) {
+        // this was a newly created thread
+        curInterpreter->SetTrace(traceFuncs[interpreterId], nullptr);
     }
 
 }
