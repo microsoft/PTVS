@@ -152,19 +152,20 @@ namespace Microsoft.PythonTools.TestAdapter {
         /// Get project items
         /// </summary>
         private static IEnumerable<string> GetProjectItems(IVsHierarchy project, uint itemId) {
-            object pVar = GetPropertyValue((int)__VSHPROPID.VSHPROPID_FirstChild, itemId, project);
+            for (var childId = GetItemId(GetPropertyValue((int)__VSHPROPID.VSHPROPID_FirstChild, itemId, project));
+                childId != VSConstants.VSITEMID_NIL;
+                childId = GetItemId(GetPropertyValue((int)__VSHPROPID.VSHPROPID_NextSibling, childId, project))) {
 
-            uint childId = GetItemId(pVar);
-            while (childId != VSConstants.VSITEMID_NIL) {
+                if ((GetPropertyValue((int)__VSHPROPID.VSHPROPID_IsNonMemberItem, childId, project) as bool?) ?? false) {
+                    continue;
+                }
+
                 foreach (string item in GetProjectItems(project, childId)) {
                     yield return item;
                 }
 
                 string childPath = GetCanonicalName(childId, project);
                 yield return childPath;
-
-                pVar = GetPropertyValue((int)__VSHPROPID.VSHPROPID_NextSibling, childId, project);
-                childId = GetItemId(pVar);
             }
         }
 
