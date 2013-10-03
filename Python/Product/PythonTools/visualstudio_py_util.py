@@ -294,7 +294,7 @@ class SafeRepr(object):
         tests.append((7, 9, 'A' * (5)))
         tests.append((self.maxstring_outer + 3, self.maxstring_inner + 3 + 2, 'A' * (self.maxstring_outer + 10)))
         if sys.version_info >= (3, 0):
-            tests.append((self.maxstring_outer + 4, self.maxstring_inner + 4 + 2, b'A' * (self.maxstring_outer + 10)))
+            tests.append((self.maxstring_outer + 4, self.maxstring_inner + 4 + 2, bytes('A', 'ascii') * (self.maxstring_outer + 10)))
         else:
             tests.append((self.maxstring_outer + 4, self.maxstring_inner + 4 + 2, unicode('A') * (self.maxstring_outer + 10)))
         
