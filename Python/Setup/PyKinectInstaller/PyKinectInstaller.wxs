@@ -46,7 +46,7 @@
         
         <Directory Id="APPLICATIONFOLDER" Name="[ApplicationFolderName]"  FileSource="$(var.TargetDir)">
           <Component Id="Comp_InstallDirItems" DiskId="1" Guid="$(var.Comp_InstallDirItemsGuid)">
-              <File Id="File_License.htm" Name="License.htm" Source="License.htm" />
+              <File Id="File_License.htm" Name="License.html" Source="License.html" />
               <RegistryValue Root='HKCU' Key='SOFTWARE\Microsoft\PythonTools\$(var.VSTargetVersion)\PyKinect' Type='string' Value='Readme' KeyPath='yes' />
               
               <RemoveFolder Id='Comp_InstallDirItems' On='uninstall'/>
