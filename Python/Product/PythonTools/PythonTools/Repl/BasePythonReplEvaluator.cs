@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Net;
@@ -32,7 +33,6 @@ using Microsoft.PythonTools.Debugger.DebugEngine;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Language;
-using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Repl;
@@ -848,6 +848,7 @@ namespace Microsoft.PythonTools.Repl {
                     try {
                         _process.Kill();
                     } catch (InvalidOperationException) {
+                    } catch (Win32Exception) {
                         // race w/ killing the process
                     }
                 }
