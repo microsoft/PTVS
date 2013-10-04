@@ -28,12 +28,6 @@ namespace PythonToolsUITests {
             TestData.Deploy();
         }
 
-        [TestCleanup]
-        public void MyTestCleanup() {
-            VsIdeTestHostContext.Dte.Solution.Close(false);
-        }
-
-
         /// <summary>
         /// Imports get added after a doc string
         /// </summary>
@@ -277,38 +271,38 @@ sub_package";
         }
 
         private static void AddSmartTagTest(string filename, int line, int column, string[] expectedActions, int invokeAction = -1, string expectedText = null) {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            var project = app.OpenAndFindProject(@"TestData\AddImport.sln");
-            var item = project.ProjectItems.Item(filename);
-            var window = item.Open();
-            window.Activate();
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenAndFindProject(@"TestData\AddImport.sln");
+                var item = project.ProjectItems.Item(filename);
+                var window = item.Open();
+                window.Activate();
 
-            var doc = app.GetDocument(item.Document.FullName);
+                var doc = app.GetDocument(item.Document.FullName);
 
-            doc.Invoke(() => {
-                var point = doc.TextView.TextBuffer.CurrentSnapshot.GetLineFromLineNumber(line - 1).Start.Add(column - 1);
-                doc.TextView.Caret.MoveTo(point);
-            });
+                doc.Invoke(() => {
+                    var point = doc.TextView.TextBuffer.CurrentSnapshot.GetLineFromLineNumber(line - 1).Start.Add(column - 1);
+                    doc.TextView.Caret.MoveTo(point);
+                });
 
-            if (expectedActions.Length > 0) {
-                var session = doc.StartSmartTagSession();
-                Assert.AreEqual(1, session.ActionSets.Count);
-                var set = session.ActionSets.First();
+                if (expectedActions.Length > 0) {
+                    using (var sh = doc.StartSmartTagSession()) {
+                        Assert.AreEqual(1, sh.Session.ActionSets.Count);
+                        var set = sh.Session.ActionSets.First();
 
-                Assert.AreEqual(set.Actions.Count, expectedActions.Length);
-                for (int i = 0; i < set.Actions.Count; i++) {
-                    Assert.AreEqual(set.Actions[i].DisplayText, expectedActions[i].Replace("_", "__"));
+                        Assert.AreEqual(set.Actions.Count, expectedActions.Length);
+                        for (int i = 0; i < set.Actions.Count; i++) {
+                            Assert.AreEqual(set.Actions[i].DisplayText, expectedActions[i].Replace("_", "__"));
+                        }
+
+                        if (invokeAction != -1) {
+                            doc.Invoke(() => set.Actions[invokeAction].Invoke());
+                            Assert.AreEqual(expectedText, doc.Text);
+                        }
+                    }
+                } else {
+                    doc.StartSmartTagSessionNoSession();
                 }
-
-                if (invokeAction != -1) {
-                    doc.Invoke(() => set.Actions[invokeAction].Invoke());
-                    Assert.AreEqual(expectedText, doc.Text);
-                }
-            } else {
-                doc.StartSmartTagSessionNoSession();
             }
-
-            VsIdeTestHostContext.Dte.Documents.CloseAll(vsSaveChanges.vsSaveChangesNo);
         }
     }
 }

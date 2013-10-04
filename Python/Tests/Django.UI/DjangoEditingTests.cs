@@ -67,8 +67,6 @@ namespace DjangoUITests {
             var model = (IComponentModel)VsIdeTestHostContext.ServiceProvider.GetService(typeof(SComponentModel));
             var interpreterService = model.GetService<IInterpreterOptionsService>();
             interpreterService.DefaultInterpreter = PreviousDefault;
-
-            VsIdeTestHostContext.Dte.Solution.Close(false);
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
@@ -1076,112 +1074,120 @@ namespace DjangoUITests {
         }
 
         private static void SelectAllAndDeleteTest(string filename) {
-            Window window;
-            var item = OpenDjangoProjectItem(filename, out window);
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                Window window;
+                var item = OpenDjangoProjectItem(app, filename, out window);
 
-            item.Invoke(() => {
-                using (var edit = item.TextView.TextBuffer.CreateEdit()) {
-                    edit.Delete(new Span(0, item.TextView.TextBuffer.CurrentSnapshot.Length));
-                    edit.Apply();
-                }
-            });
+                item.Invoke(() => {
+                    using (var edit = item.TextView.TextBuffer.CreateEdit()) {
+                        edit.Delete(new Span(0, item.TextView.TextBuffer.CurrentSnapshot.Length));
+                        edit.Apply();
+                    }
+                });
 
-            var snapshot = item.TextView.TextBuffer.CurrentSnapshot;
-            var classifier = item.Classifier;
-            var spans = classifier.GetClassificationSpans(new SnapshotSpan(snapshot, 0, snapshot.Length));
-            Classification.Verify(spans);
-            window.Close(vsSaveChanges.vsSaveChangesNo);
+                var snapshot = item.TextView.TextBuffer.CurrentSnapshot;
+                var classifier = item.Classifier;
+                var spans = classifier.GetClassificationSpans(new SnapshotSpan(snapshot, 0, snapshot.Length));
+                Classification.Verify(spans);
+                window.Close(vsSaveChanges.vsSaveChangesNo);
+            }
         }
 
         private static void DeletionTest(string filename, int line, int column, int deletionCount, params Classification[] expected) {
-            Window window;
-            var item = OpenDjangoProjectItem(filename, out window);
-            item.MoveCaret(line, column);
-            for (int i = 0; i < deletionCount; i++) {
-                Keyboard.Backspace();
-            }
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                Window window;
+                var item = OpenDjangoProjectItem(app, filename, out window);
+                item.MoveCaret(line, column);
+                for (int i = 0; i < deletionCount; i++) {
+                    Keyboard.Backspace();
+                }
 
-            var snapshot = item.TextView.TextBuffer.CurrentSnapshot;
-            var classifier = item.Classifier;
-            var spans = classifier.GetClassificationSpans(new SnapshotSpan(snapshot, 0, snapshot.Length));
-            Classification.Verify(
-                spans,
-                expected
-            );
-            window.Close(vsSaveChanges.vsSaveChangesNo);
+                var snapshot = item.TextView.TextBuffer.CurrentSnapshot;
+                var classifier = item.Classifier;
+                var spans = classifier.GetClassificationSpans(new SnapshotSpan(snapshot, 0, snapshot.Length));
+                Classification.Verify(
+                    spans,
+                    expected
+                );
+                window.Close(vsSaveChanges.vsSaveChangesNo);
+            }
         }
 
         private static void PasteTest(string filename, int line, int column, string selectionText, string pasteText, params Classification[] expected) {
-            Window window;
-            var item = OpenDjangoProjectItem(filename, out window);
-            item.MoveCaret(line, column);
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                Window window;
+                var item = OpenDjangoProjectItem(app, filename, out window);
+                item.MoveCaret(line, column);
 
-            var snapshot = item.TextView.TextBuffer.CurrentSnapshot;
+                var snapshot = item.TextView.TextBuffer.CurrentSnapshot;
 
-            var selectionStart = snapshot.GetText().IndexOf(selectionText);
-            item.Invoke(() => {
-                item.TextView.Selection.Select(new SnapshotSpan(item.TextView.TextBuffer.CurrentSnapshot, new Span(selectionStart, selectionText.Length)), false);
-                System.Windows.Clipboard.SetText(pasteText);
-            });
+                var selectionStart = snapshot.GetText().IndexOf(selectionText);
+                item.Invoke(() => {
+                    item.TextView.Selection.Select(new SnapshotSpan(item.TextView.TextBuffer.CurrentSnapshot, new Span(selectionStart, selectionText.Length)), false);
+                    System.Windows.Clipboard.SetText(pasteText);
+                });
 
-            AutoResetEvent are = new AutoResetEvent(false);
-            EventHandler<TextContentChangedEventArgs> textChangedHandler = (sender, args) => {
-                are.Set();
-            };
-            item.TextView.TextBuffer.Changed += textChangedHandler;
-            Keyboard.ControlV();
-            Assert.IsTrue(are.WaitOne(5000), "failed to see text change");
-            item.TextView.TextBuffer.Changed -= textChangedHandler;
+                AutoResetEvent are = new AutoResetEvent(false);
+                EventHandler<TextContentChangedEventArgs> textChangedHandler = (sender, args) => {
+                    are.Set();
+                };
+                item.TextView.TextBuffer.Changed += textChangedHandler;
+                Keyboard.ControlV();
+                Assert.IsTrue(are.WaitOne(5000), "failed to see text change");
+                item.TextView.TextBuffer.Changed -= textChangedHandler;
 
-            IList<ClassificationSpan> spans = null;
-            item.Invoke(() => {
-                snapshot = item.TextView.TextBuffer.CurrentSnapshot;
-                var classifier = item.Classifier;
-                spans = classifier.GetClassificationSpans(new SnapshotSpan(snapshot, 0, snapshot.Length));
-            });
-            Assert.IsNotNull(spans);
-            Classification.Verify(
-                spans,
-                expected
-            );
-            window.Close(vsSaveChanges.vsSaveChangesNo);
+                IList<ClassificationSpan> spans = null;
+                item.Invoke(() => {
+                    snapshot = item.TextView.TextBuffer.CurrentSnapshot;
+                    var classifier = item.Classifier;
+                    spans = classifier.GetClassificationSpans(new SnapshotSpan(snapshot, 0, snapshot.Length));
+                });
+                Assert.IsNotNull(spans);
+                Classification.Verify(
+                    spans,
+                    expected
+                );
+                window.Close(vsSaveChanges.vsSaveChangesNo);
+            }
         }
 
         private static void CutUndoTest(string filename, int line, int column, string selectionText, params Classification[] expected) {
-            Window window;
-            var item = OpenDjangoProjectItem(filename, out window);
-            item.MoveCaret(line, column);
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                Window window;
+                var item = OpenDjangoProjectItem(app, filename, out window);
+                item.MoveCaret(line, column);
 
-            var snapshot = item.TextView.TextBuffer.CurrentSnapshot;
+                var snapshot = item.TextView.TextBuffer.CurrentSnapshot;
 
-            var selectionStart = snapshot.GetText().IndexOf(selectionText);
-            item.Invoke(() => {
-                item.TextView.Selection.Select(new SnapshotSpan(item.TextView.TextBuffer.CurrentSnapshot, new Span(selectionStart, selectionText.Length)), false);
-                Keyboard.ControlX();
-            });
+                var selectionStart = snapshot.GetText().IndexOf(selectionText);
+                item.Invoke(() => {
+                    item.TextView.Selection.Select(new SnapshotSpan(item.TextView.TextBuffer.CurrentSnapshot, new Span(selectionStart, selectionText.Length)), false);
+                    Keyboard.ControlX();
+                });
 
-            AutoResetEvent are = new AutoResetEvent(false);
-            EventHandler<TextContentChangedEventArgs> textChangedHandler = (sender, args) => {
-                are.Set();
-            };
-            item.TextView.TextBuffer.Changed += textChangedHandler;
+                AutoResetEvent are = new AutoResetEvent(false);
+                EventHandler<TextContentChangedEventArgs> textChangedHandler = (sender, args) => {
+                    are.Set();
+                };
+                item.TextView.TextBuffer.Changed += textChangedHandler;
 
-            Keyboard.ControlZ();
-            Assert.IsTrue(are.WaitOne(5000), "failed to see text change");
-            item.TextView.TextBuffer.Changed -= textChangedHandler;
+                Keyboard.ControlZ();
+                Assert.IsTrue(are.WaitOne(5000), "failed to see text change");
+                item.TextView.TextBuffer.Changed -= textChangedHandler;
 
-            IList<ClassificationSpan> spans = null;
-            item.Invoke(() => {
-                snapshot = item.TextView.TextBuffer.CurrentSnapshot;
-                var classifier = item.Classifier;
-                spans = classifier.GetClassificationSpans(new SnapshotSpan(snapshot, 0, snapshot.Length));
-            });
-            Assert.IsNotNull(spans);
-            Classification.Verify(
-                spans,
-                expected
-            );
-            window.Close(vsSaveChanges.vsSaveChangesNo);
+                IList<ClassificationSpan> spans = null;
+                item.Invoke(() => {
+                    snapshot = item.TextView.TextBuffer.CurrentSnapshot;
+                    var classifier = item.Classifier;
+                    spans = classifier.GetClassificationSpans(new SnapshotSpan(snapshot, 0, snapshot.Length));
+                });
+                Assert.IsNotNull(spans);
+                Classification.Verify(
+                    spans,
+                    expected
+                );
+                window.Close(vsSaveChanges.vsSaveChangesNo);
+            }
         }
 
         private static void InsertionTest(string filename, int line, int column, string insertionText, params Classification[] expected) {
@@ -1197,109 +1203,113 @@ namespace DjangoUITests {
         }
 
         private static void InsertionTest(string filename, int line, int column, int selectionLength, string insertionText, bool paste, bool checkInsertionLen, string projectName, bool wait, params Classification[] expected) {
-            Window window;
-            var item = OpenDjangoProjectItem(filename, out window, projectName, wait);
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                Window window;
+                var item = OpenDjangoProjectItem(app, filename, out window, projectName, wait);
 
-            item.MoveCaret(line, column);
-            var pos = item.TextView.Caret.Position.BufferPosition.Position;
-            if (selectionLength != -1) {
-                item.Select(line, column, selectionLength);
-            }
-            window.Activate();
+                item.MoveCaret(line, column);
+                var pos = item.TextView.Caret.Position.BufferPosition.Position;
+                if (selectionLength != -1) {
+                    item.Select(line, column, selectionLength);
+                }
+                window.Activate();
 
-            if (!String.IsNullOrEmpty(insertionText)) {
-                AutoResetEvent are = new AutoResetEvent(false);
-                int delta = 0;
-                EventHandler<TextContentChangedEventArgs> textChangedHandler = (sender, args) => {
-                    foreach (var change in args.Changes) {
-                        delta += change.Delta;
-                    }
-                    if (selectionLength == -1) {
-                        if (delta >= insertionText.Length) {
-                            are.Set();
+                if (!String.IsNullOrEmpty(insertionText)) {
+                    AutoResetEvent are = new AutoResetEvent(false);
+                    int delta = 0;
+                    EventHandler<TextContentChangedEventArgs> textChangedHandler = (sender, args) => {
+                        foreach (var change in args.Changes) {
+                            delta += change.Delta;
                         }
+                        if (selectionLength == -1) {
+                            if (delta >= insertionText.Length) {
+                                are.Set();
+                            }
+                        } else {
+                            if (delta == insertionText.Length - selectionLength) {
+                                are.Set();
+                            }
+                        }
+                    };
+
+                    item.TextView.TextBuffer.Changed += textChangedHandler;
+                    if (paste) {
+                        item.Invoke(() => System.Windows.Clipboard.SetText(insertionText));
+                        Keyboard.ControlV();
                     } else {
-                        if (delta == insertionText.Length - selectionLength) {
-                            are.Set();
-                        }
+                        Keyboard.Type(insertionText);
                     }
-                };
+                    Assert.IsTrue(are.WaitOne(5000), "failed to see text change");
 
-                item.TextView.TextBuffer.Changed += textChangedHandler;
-                if (paste) {
-                    item.Invoke(() => System.Windows.Clipboard.SetText(insertionText));
-                    Keyboard.ControlV();
-                } else {
-                    Keyboard.Type(insertionText);
+                    var newPos = item.TextView.Caret.Position.BufferPosition;
+                    if (checkInsertionLen) {
+                        Assert.AreEqual(pos + insertionText.Length, newPos.Position);
+                    }
+                    item.TextView.TextBuffer.Changed -= textChangedHandler;
                 }
-                Assert.IsTrue(are.WaitOne(5000), "failed to see text change");
 
-                var newPos = item.TextView.Caret.Position.BufferPosition;
-                if (checkInsertionLen) {
-                    Assert.AreEqual(pos + insertionText.Length, newPos.Position);
-                }
-                item.TextView.TextBuffer.Changed -= textChangedHandler;
+                IList<ClassificationSpan> spans = null;
+                item.Invoke(() => {
+                    var snapshot = item.TextView.TextBuffer.CurrentSnapshot;
+                    var classifier = item.Classifier;
+                    spans = classifier.GetClassificationSpans(new SnapshotSpan(snapshot, 0, snapshot.Length));
+                });
+
+                Assert.IsNotNull(spans);
+                Classification.Verify(
+                    spans,
+                    expected
+                );
+
+                window.Close(vsSaveChanges.vsSaveChangesNo);
             }
-
-            IList<ClassificationSpan> spans = null;
-            item.Invoke(() => {
-                var snapshot = item.TextView.TextBuffer.CurrentSnapshot;
-                var classifier = item.Classifier;
-                spans = classifier.GetClassificationSpans(new SnapshotSpan(snapshot, 0, snapshot.Length));
-            });
-
-            Assert.IsNotNull(spans);
-            Classification.Verify(
-                spans,
-                expected
-            );
-
-            window.Close(vsSaveChanges.vsSaveChangesNo);
         }
 
         private static void InsertionDeletionTest(string filename, int line, int column, string insertionText, Classification[] expectedFirst, Classification[] expectedAfter) {
-            Window window;
-            var item = OpenDjangoProjectItem(filename, out window);
-            item.MoveCaret(line, column);
-            AutoResetEvent are = new AutoResetEvent(false);
-            EventHandler<TextContentChangedEventArgs> textChangedHandler = (sender, args) => {
-                are.Set();
-            };
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                Window window;
+                var item = OpenDjangoProjectItem(app, filename, out window);
+                item.MoveCaret(line, column);
+                AutoResetEvent are = new AutoResetEvent(false);
+                EventHandler<TextContentChangedEventArgs> textChangedHandler = (sender, args) => {
+                    are.Set();
+                };
 
-            item.TextView.TextBuffer.Changed += textChangedHandler;
-            Keyboard.Type(insertionText);
-            Assert.IsTrue(are.WaitOne(5000), "failed to see text change");
-            are.Reset();
+                item.TextView.TextBuffer.Changed += textChangedHandler;
+                Keyboard.Type(insertionText);
+                Assert.IsTrue(are.WaitOne(5000), "failed to see text change");
+                are.Reset();
 
-            var snapshot = item.TextView.TextBuffer.CurrentSnapshot;
-            var classifier = item.Classifier;
-            IList<ClassificationSpan> spans = null;
-            item.Invoke(() => {
-                spans = classifier.GetClassificationSpans(new SnapshotSpan(snapshot, 0, snapshot.Length));
-            });
-            Assert.IsNotNull(spans);
-            Classification.Verify(
-                spans,
-                expectedFirst
-            );
+                var snapshot = item.TextView.TextBuffer.CurrentSnapshot;
+                var classifier = item.Classifier;
+                IList<ClassificationSpan> spans = null;
+                item.Invoke(() => {
+                    spans = classifier.GetClassificationSpans(new SnapshotSpan(snapshot, 0, snapshot.Length));
+                });
+                Assert.IsNotNull(spans);
+                Classification.Verify(
+                    spans,
+                    expectedFirst
+                );
 
-            for (int i = 0; i < insertionText.Length; i++) {
-                Keyboard.Backspace();
+                for (int i = 0; i < insertionText.Length; i++) {
+                    Keyboard.Backspace();
+                }
+                Assert.IsTrue(are.WaitOne(5000), "failed to see text change after deletion");
+                item.TextView.TextBuffer.Changed -= textChangedHandler;
+
+                item.Invoke(() => {
+                    snapshot = item.TextView.TextBuffer.CurrentSnapshot;
+                    spans = classifier.GetClassificationSpans(new SnapshotSpan(snapshot, 0, snapshot.Length));
+                });
+
+                Classification.Verify(
+                    spans,
+                    expectedAfter
+                );
+
+                window.Close(vsSaveChanges.vsSaveChangesNo);
             }
-            Assert.IsTrue(are.WaitOne(5000), "failed to see text change after deletion");
-            item.TextView.TextBuffer.Changed -= textChangedHandler;
-
-            item.Invoke(() => {
-                snapshot = item.TextView.TextBuffer.CurrentSnapshot;
-                spans = classifier.GetClassificationSpans(new SnapshotSpan(snapshot, 0, snapshot.Length));
-            });
-
-            Classification.Verify(
-                spans,
-                expectedAfter
-            );
-
-            window.Close(vsSaveChanges.vsSaveChangesNo);
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
@@ -1799,8 +1809,7 @@ namespace DjangoUITests {
             );
         }
 
-        private static EditorWindow OpenDjangoProjectItem(string startItem, out Window window, string projectName = @"TestData\DjangoEditProject.sln", bool wait = false) {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+        private static EditorWindow OpenDjangoProjectItem(VisualStudioApp app, string startItem, out Window window, string projectName = @"TestData\DjangoEditProject.sln", bool wait = false) {
             var project = app.OpenAndFindProject(projectName, startItem);
             var pyProj = project.GetPythonProject();
 
@@ -1843,7 +1852,7 @@ namespace DjangoUITests {
                         break;
                     }
 
-                    Console.WriteLine("{0} Django still not loaded, sleeping... {1} {2}", 
+                    Console.WriteLine("{0} Django still not loaded, sleeping... {1} {2}",
                         DateTime.Now,
                         django.Analyzer._filters.Count,
                         django.Analyzer._tags.Count);

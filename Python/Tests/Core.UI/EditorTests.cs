@@ -39,37 +39,33 @@ namespace PythonToolsUITests {
             TestData.Deploy();
         }
 
-        [TestCleanup]
-        public void MyTestCleanup() {
-            VsIdeTestHostContext.Dte.Solution.Close(false);
-        }
-
         #region Test Cases
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void UnregisteredFileExtensionEditor() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            var project = app.OpenAndFindProject(@"TestData\UnregisteredFileExtension.sln");
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenAndFindProject(@"TestData\UnregisteredFileExtension.sln");
 
-            var item = project.ProjectItems.Item("Foo.unregfileext");
-            var window = item.Open();
-            window.Activate();
+                var item = project.ProjectItems.Item("Foo.unregfileext");
+                var window = item.Open();
+                window.Activate();
 
-            var doc = app.GetDocument(item.Document.FullName);
-            var snapshot = doc.TextView.TextBuffer.CurrentSnapshot;
+                var doc = app.GetDocument(item.Document.FullName);
+                var snapshot = doc.TextView.TextBuffer.CurrentSnapshot;
 
-            // we shouldn't have opened this as a .py file, so we should have no classifications.
-            var classifier = doc.Classifier;
-            var spans = classifier.GetClassificationSpans(new SnapshotSpan(snapshot, 0, snapshot.Length));
-            Assert.AreEqual(spans.Count, 0);
+                // we shouldn't have opened this as a .py file, so we should have no classifications.
+                var classifier = doc.Classifier;
+                var spans = classifier.GetClassificationSpans(new SnapshotSpan(snapshot, 0, snapshot.Length));
+                Assert.AreEqual(spans.Count, 0);
+            }
         }
 
-       
+
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void OutliningTest() {
-            OutlineTest("Program.py", 
+            OutlineTest("Program.py",
                 new ExpectedTag(8, 18, "\r\n    pass"),
                 new ExpectedTag(40, 50, "\r\n    pass"),
                 new ExpectedTag(72, 82, "\r\n    pass"),
@@ -83,7 +79,7 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void OutlineNestedFuncDef() {
-            OutlineTest("NestedFuncDef.py", 
+            OutlineTest("NestedFuncDef.py",
                 new ExpectedTag(8, 36, @"
     def g():
         pass"),
@@ -99,25 +95,26 @@ namespace PythonToolsUITests {
         }
 
         private void OutlineTest(string filename, params ExpectedTag[] expected) {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            var project = app.OpenAndFindProject(@"TestData\Outlining.sln");
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenAndFindProject(@"TestData\Outlining.sln");
 
-            var item = project.ProjectItems.Item(filename);
-            var window = item.Open();
-            window.Activate();
+                var item = project.ProjectItems.Item(filename);
+                var window = item.Open();
+                window.Activate();
 
-            var doc = app.GetDocument(item.Document.FullName);
+                var doc = app.GetDocument(item.Document.FullName);
 
-            var snapshot = doc.TextView.TextBuffer.CurrentSnapshot;
-            var tags = doc.GetTaggerAggregator<IOutliningRegionTag>(doc.TextView.TextBuffer).GetTags(new SnapshotSpan(snapshot, 0, snapshot.Length));                
+                var snapshot = doc.TextView.TextBuffer.CurrentSnapshot;
+                var tags = doc.GetTaggerAggregator<IOutliningRegionTag>(doc.TextView.TextBuffer).GetTags(new SnapshotSpan(snapshot, 0, snapshot.Length));
 
-            VerifyTags(doc.TextView.TextBuffer, tags, expected);
+                VerifyTags(doc.TextView.TextBuffer, tags, expected);
+            }
         }
 
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
-        public void ClassificationTest() {            
+        public void ClassificationTest() {
             Classification.Verify(GetClassifications("Program.py"),
                 new Classification("comment", 0, 8, "#comment"),
                 new Classification("whitespace", 8, 10, "\r\n"),
@@ -170,63 +167,68 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void SignaturesTest() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            var project = app.OpenAndFindProject(@"TestData\Signatures.sln");
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenAndFindProject(@"TestData\Signatures.sln");
 
-            var item = project.ProjectItems.Item("sigs.py");
-            var window = item.Open();
-            window.Activate();
-            
-            var doc = app.GetDocument(item.Document.FullName);
+                var item = project.ProjectItems.Item("sigs.py");
+                var window = item.Open();
+                window.Activate();
+
+                var doc = app.GetDocument(item.Document.FullName);
 
 
-            ((UIElement)doc.TextView).Dispatcher.Invoke((Action)(() => {
-                doc.TextView.Caret.MoveTo(new SnapshotPoint(doc.TextView.TextBuffer.CurrentSnapshot, doc.TextView.TextBuffer.CurrentSnapshot.Length));
-            }));
+                ((UIElement)doc.TextView).Dispatcher.Invoke((Action)(() => {
+                    doc.TextView.Caret.MoveTo(new SnapshotPoint(doc.TextView.TextBuffer.CurrentSnapshot, doc.TextView.TextBuffer.CurrentSnapshot.Length));
+                }));
 
-            Keyboard.Type("f(");
+                Keyboard.Type("f(");
 
-            var session = doc.WaitForSession<ISignatureHelpSession>();
-            Assert.AreEqual("a", session.SelectedSignature.CurrentParameter.Name);
+                using (var sh = doc.WaitForSession<ISignatureHelpSession>()) {
+                    var session = sh.Session;
+                    Assert.AreEqual("a", session.SelectedSignature.CurrentParameter.Name);
 
-            Keyboard.Type("b=");
+                    Keyboard.Type("b=");
 
-            WaitForCurrentParameter(session, "b");
-            Assert.AreEqual("b", session.SelectedSignature.CurrentParameter.Name);
-            window.Activate();
-            
-            Keyboard.Type("42,");
+                    WaitForCurrentParameter(session, "b");
+                    Assert.AreEqual("b", session.SelectedSignature.CurrentParameter.Name);
+                    window.Activate();
 
-            WaitForNoCurrentParameter(session);
-            Assert.AreEqual(null, session.SelectedSignature.CurrentParameter);
+                    Keyboard.Type("42,");
 
-            Keyboard.Backspace();
-            WaitForCurrentParameter(session);
-            Assert.AreEqual("b", session.SelectedSignature.CurrentParameter.Name);
+                    WaitForNoCurrentParameter(session);
+                    Assert.AreEqual(null, session.SelectedSignature.CurrentParameter);
+
+                    Keyboard.Backspace();
+                    WaitForCurrentParameter(session);
+                    Assert.AreEqual("b", session.SelectedSignature.CurrentParameter.Name);
+                }
+            }
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void MultiLineSignaturesTest() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            var project = app.OpenAndFindProject(@"TestData\Signatures.sln");
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenAndFindProject(@"TestData\Signatures.sln");
 
-            var item = project.ProjectItems.Item("multilinesigs.py");
-            var window = item.Open();
-            window.Activate();
+                var item = project.ProjectItems.Item("multilinesigs.py");
+                var window = item.Open();
+                window.Activate();
 
-            var doc = app.GetDocument(item.Document.FullName);
+                var doc = app.GetDocument(item.Document.FullName);
 
-            ((UIElement)doc.TextView).Dispatcher.Invoke((Action)(() => {
-                var point = doc.TextView.TextBuffer.CurrentSnapshot.GetLineFromLineNumber(5 - 1).Start;
-                doc.TextView.Caret.MoveTo(point);
-            }));
+                ((UIElement)doc.TextView).Dispatcher.Invoke((Action)(() => {
+                    var point = doc.TextView.TextBuffer.CurrentSnapshot.GetLineFromLineNumber(5 - 1).Start;
+                    doc.TextView.Caret.MoveTo(point);
+                }));
 
-            ThreadPool.QueueUserWorkItem(x => VsIdeTestHostContext.Dte.ExecuteCommand("Edit.ParameterInfo"));
-            
+                ThreadPool.QueueUserWorkItem(x => VsIdeTestHostContext.Dte.ExecuteCommand("Edit.ParameterInfo"));
 
-            var session = doc.WaitForSession<ISignatureHelpSession>();
-            Assert.AreEqual("b", session.SelectedSignature.CurrentParameter.Name);
+
+                using (var sh = doc.WaitForSession<ISignatureHelpSession>()) {
+                    Assert.AreEqual("b", sh.Session.SelectedSignature.CurrentParameter.Name);
+                }
+            }
         }
 
         private static void WaitForCurrentParameter(ISignatureHelpSession session, string name) {
@@ -260,58 +262,59 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CompletionsCaseSensitive() {
             // http://pytools.codeplex.com/workitem/457
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            var project = app.OpenAndFindProject(@"TestData\Completions.sln");
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenAndFindProject(@"TestData\Completions.sln");
 
-            var item = project.ProjectItems.Item("bar.py");
-            var window = item.Open();
-            window.Activate();
+                var item = project.ProjectItems.Item("bar.py");
+                var window = item.Open();
+                window.Activate();
 
-            Keyboard.Type("from foo import ba\r");
+                Keyboard.Type("from foo import ba\r");
 
-            var doc = app.GetDocument(item.Document.FullName);
+                var doc = app.GetDocument(item.Document.FullName);
 
-            doc.WaitForText("from foo import baz");
-            Keyboard.Type("\r");
-            
-            Keyboard.Type("from foo import Ba\r");
-            doc.WaitForText("from foo import baz\r\nfrom foo import Baz");
+                doc.WaitForText("from foo import baz");
+                Keyboard.Type("\r");
+
+                Keyboard.Type("from foo import Ba\r");
+                doc.WaitForText("from foo import baz\r\nfrom foo import Baz");
+            }
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void AutoIndent() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            var project = app.OpenAndFindProject(@"TestData\AutoIndent.sln");            
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenAndFindProject(@"TestData\AutoIndent.sln");
 
 
-            // http://pytools.codeplex.com/workitem/116
-            AutoIndentTest(project, "def f():\rprint 'hi'\r\rdef inner(): pass←←←←←←←←←←←←←←←←←\r", @"def f():
+                // http://pytools.codeplex.com/workitem/116
+                AutoIndentTest(app, project, "def f():\rprint 'hi'\r\rdef inner(): pass←←←←←←←←←←←←←←←←←\r", @"def f():
     print 'hi'
 
     
     def inner(): pass");
 
-            // http://pytools.codeplex.com/workitem/121
-            AutoIndentTest(project, "x = {'a': [1, 2, 3],\r\r'b':42}", @"x = {'a': [1, 2, 3],
+                // http://pytools.codeplex.com/workitem/121
+                AutoIndentTest(app, project, "x = {'a': [1, 2, 3],\r\r'b':42}", @"x = {'a': [1, 2, 3],
 
      'b':42}");
 
-            AutoIndentTest(project, "if True:\rpass\r\r42\r\r", @"if True:
+                AutoIndentTest(app, project, "if True:\rpass\r\r42\r\r", @"if True:
     pass
 
 42
 
 ");
 
-            AutoIndentTest(project, "def f():\rreturn\r\r42\r\r", @"def f():
+                AutoIndentTest(app, project, "def f():\rreturn\r\r42\r\r", @"def f():
     return
 
 42
 
 ");
 
-            AutoIndentTest(project, "if True: #foo\rpass\relse: #bar\rpass\r\r42\r\r", @"if True: #foo
+                AutoIndentTest(app, project, "if True: #foo\rpass\relse: #bar\rpass\r\r42\r\r", @"if True: #foo
     pass
 else: #bar
     pass
@@ -320,107 +323,107 @@ else: #bar
 
 ");
 
-            AutoIndentTest(project, "if True:\rraise Exception()\r\r42\r\r", @"if True:
+                AutoIndentTest(app, project, "if True:\rraise Exception()\r\r42\r\r", @"if True:
     raise Exception()
 
 42
 
 ");
 
-            AutoIndentTest(project, "while True:\rcontinue\r\r42\r\r", @"while True:
+                AutoIndentTest(app, project, "while True:\rcontinue\r\r42\r\r", @"while True:
     continue
 
 42
 
 ");
 
-            AutoIndentTest(project, "while True:\rbreak\r\r42\r\r", @"while True:
+                AutoIndentTest(app, project, "while True:\rbreak\r\r42\r\r", @"while True:
     break
 
 42
 
 ");
-            // http://pytools.codeplex.com/workitem/127
-            AutoIndentTest(project, "print ('%s, %s' %\r(1, 2))", @"print ('%s, %s' %
+                // http://pytools.codeplex.com/workitem/127
+                AutoIndentTest(app, project, "print ('%s, %s' %\r(1, 2))", @"print ('%s, %s' %
        (1, 2))");
 
-            // http://pytools.codeplex.com/workitem/125
-            AutoIndentTest(project, "def f():\rx = (\r7)\rp", @"def f():
+                // http://pytools.codeplex.com/workitem/125
+                AutoIndentTest(app, project, "def f():\rx = (\r7)\rp", @"def f():
     x = (
          7)
     p");
 
-            AutoIndentTest(project, "def f():\rassert False, \\\r'A message'\rp", @"def f():
+                AutoIndentTest(app, project, "def f():\rassert False, \\\r'A message'\rp", @"def f():
     assert False, \
         'A message'
     p");
 
-            // other tests...
-            AutoIndentTest(project, "1 +\\\r2 +\\\r3 +\\\r4 + 5\r", @"1 +\
+                // other tests...
+                AutoIndentTest(app, project, "1 +\\\r2 +\\\r3 +\\\r4 + 5\r", @"1 +\
     2 +\
     3 +\
     4 + 5
 ");
 
 
-            AutoIndentTest(project, "x = {42 :\r42}\rp", @"x = {42 :
+                AutoIndentTest(app, project, "x = {42 :\r42}\rp", @"x = {42 :
      42}
 p");
 
-            AutoIndentTest(project, "def f():\rreturn (42,\r100)\r\rp", @"def f():
+                AutoIndentTest(app, project, "def f():\rreturn (42,\r100)\r\rp", @"def f():
     return (42,
             100)
 
 p");
 
-            AutoIndentTest(project, "print ('a',\r'b',\r'c')\rp", @"print ('a',
+                AutoIndentTest(app, project, "print ('a',\r'b',\r'c')\rp", @"print ('a',
        'b',
        'c')
 p");
 
-            AutoIndentTest(project, "foooo ('a',\r'b',\r'c')\rp", @"foooo ('a',
+                AutoIndentTest(app, project, "foooo ('a',\r'b',\r'c')\rp", @"foooo ('a',
        'b',
        'c')
 p");
 
-            // http://pytools.codeplex.com/workitem/157
-            AutoIndentTest(project, "def a():\rif b():\rif c():\rd()\rp", @"def a():
+                // http://pytools.codeplex.com/workitem/157
+                AutoIndentTest(app, project, "def a():\rif b():\rif c():\rd()\rp", @"def a():
     if b():
         if c():
             d()
             p");
 
-            AutoIndentTest(project, "a_list = [1, 2, 3]\rdef func():\rpass", @"a_list = [1, 2, 3]
+                AutoIndentTest(app, project, "a_list = [1, 2, 3]\rdef func():\rpass", @"a_list = [1, 2, 3]
 def func():
     pass");
 
-            AutoIndentTest(project, "class A:\rdef funcA(self, a):\rreturn a\r\rdef funcB(self):\rpass", @"class A:
+                AutoIndentTest(app, project, "class A:\rdef funcA(self, a):\rreturn a\r\rdef funcB(self):\rpass", @"class A:
     def funcA(self, a):
         return a
 
     def funcB(self):
         pass");
 
-            AutoIndentTest(project, "print('abc')\rimport sys\rpass", @"print('abc')
+                AutoIndentTest(app, project, "print('abc')\rimport sys\rpass", @"print('abc')
 import sys
 pass");
 
-            AutoIndentTest(project, "a_list = [1, 2, 3]\rimport os\rpass", @"a_list = [1, 2, 3]
+                AutoIndentTest(app, project, "a_list = [1, 2, 3]\rimport os\rpass", @"a_list = [1, 2, 3]
 import os
 pass");
 
-            AutoIndentTest(project, "class C:\rdef foo(self):\r'doc string'\rpass", @"class C:
+                AutoIndentTest(app, project, "class C:\rdef foo(self):\r'doc string'\rpass", @"class C:
     def foo(self):
         'doc string'
         pass");
 
-            AutoIndentTest(project, "def g():\rfoo(15)\r\r\bfoo(1)\rpass", @"def g():
+                AutoIndentTest(app, project, "def g():\rfoo(15)\r\r\bfoo(1)\rpass", @"def g():
     foo(15)
 
 foo(1)
 pass");
 
-            AutoIndentTest(project, "def m():\rif True:\rpass\relse:\rabc()\r\r\b\bm()\r\rm()\rpass", @"def m():
+                AutoIndentTest(app, project, "def m():\rif True:\rpass\relse:\rabc()\r\r\b\bm()\r\rm()\rpass", @"def m():
     if True:
         pass
     else:
@@ -430,16 +433,17 @@ m()
 
 m()
 pass");
+            }
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void AutoIndentExisting() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            var project = app.OpenAndFindProject(@"TestData\AutoIndent.sln");
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenAndFindProject(@"TestData\AutoIndent.sln");
 
-            // http://pytools.codeplex.com/workitem/138
-            AutoIndentExistingTest(project, "Decorator.py", 4, 4, @"class C:
+                // http://pytools.codeplex.com/workitem/138
+                AutoIndentExistingTest(app, project, "Decorator.py", 4, 4, @"class C:
     def f(self):
         pass
 
@@ -448,11 +452,12 @@ pass");
     def bar(self):
         pass");
 
-            // http://pytools.codeplex.com/workitem/299
-            AutoIndentExistingTest(project, "ClassAndFunc.py", 2, 4, @"class C:
+                // http://pytools.codeplex.com/workitem/299
+                AutoIndentExistingTest(app, project, "ClassAndFunc.py", 2, 4, @"class C:
     def f(self):
     
         pass");
+            }
         }
 
         /// <summary>
@@ -463,12 +468,11 @@ pass");
         /// <param name="line">zero-based line</param>
         /// <param name="column">zero based column</param>
         /// <param name="expectedText"></param>
-        private static void AutoIndentExistingTest(Project project, string filename, int line, int column, string expectedText) {
+        private static void AutoIndentExistingTest(VisualStudioApp app, Project project, string filename, int line, int column, string expectedText) {
             var item = project.ProjectItems.Item(filename);
             var window = item.Open();
             window.Activate();
 
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
             var doc = app.GetDocument(item.Document.FullName);
             var textLine = doc.TextView.TextViewLines[line];
 
@@ -490,14 +494,13 @@ pass");
             Assert.AreEqual(actual, expectedText);
         }
 
-        private static void AutoIndentTest(Project project, string typedText, string expectedText) {
+        private static void AutoIndentTest(VisualStudioApp app, Project project, string typedText, string expectedText) {
             var item = project.ProjectItems.Item("Program.py");
             var window = item.Open();
             window.Activate();
 
             Keyboard.Type(typedText);
-            
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+
             var doc = app.GetDocument(item.Document.FullName);
 
             string actual = null;
@@ -517,11 +520,11 @@ pass");
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TypingTest() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            var project = app.OpenAndFindProject(@"TestData\EditorTests.sln");
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenAndFindProject(@"TestData\EditorTests.sln");
 
-            // http://pytools.codeplex.com/workitem/139
-            TypingTest(project, "DecoratorOnFunction.py", 0, 0, @"@classmethod
+                // http://pytools.codeplex.com/workitem/139
+                TypingTest(project, "DecoratorOnFunction.py", 0, 0, @"@classmethod
 def f(): pass
 ", () => {
      Keyboard.Type("\r");
@@ -533,8 +536,8 @@ def f(): pass
      System.Threading.Thread.Sleep(5000);
  });
 
-            // http://pytools.codeplex.com/workitem/151
-            TypingTest(project, "DecoratorInClass.py", 1, 4, @"class C:
+                // http://pytools.codeplex.com/workitem/151
+                TypingTest(project, "DecoratorInClass.py", 1, 4, @"class C:
     @classmethod
     def f(self):
         pass
@@ -548,19 +551,21 @@ def f(): pass
      // 72635 Exception occurrs and you're not prompted to save file when you close it while completion list is up. 
      Keyboard.Type(System.Windows.Input.Key.Escape);
  });
+            }
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CompletionTests() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            var project = app.OpenAndFindProject(@"TestData\EditorTests.sln");
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenAndFindProject(@"TestData\EditorTests.sln");
 
-            TypingTest(project, "BackslashCompletion.py", 2, 0, @"x = 42
+                TypingTest(project, "BackslashCompletion.py", 2, 0, @"x = 42
 x\
 .conjugate", () => {
-     Keyboard.Type(".con\t");     
- });
+               Keyboard.Type(".con\t");
+           });
+            }
         }
 
         /// <summary>
@@ -576,52 +581,54 @@ x\
             var window = item.Open();
             window.Activate();
 
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            var doc = app.GetDocument(item.Document.FullName);
-            var textLine = doc.TextView.TextViewLines[line];
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var doc = app.GetDocument(item.Document.FullName);
+                var textLine = doc.TextView.TextViewLines[line];
 
-            ((UIElement)doc.TextView).Dispatcher.Invoke((Action)(() => {
-                try {
-                    doc.TextView.Caret.MoveTo(textLine.Start + column);
-                } catch(Exception) {
-                    Debug.Fail("Bad position for moving caret");
+                ((UIElement)doc.TextView).Dispatcher.Invoke((Action)(() => {
+                    try {
+                        doc.TextView.Caret.MoveTo(textLine.Start + column);
+                    } catch (Exception) {
+                        Debug.Fail("Bad position for moving caret");
+                    }
+                }));
+
+                typing();
+
+                string actual = null;
+                for (int i = 0; i < 100; i++) {
+                    actual = doc.TextView.TextBuffer.CurrentSnapshot.GetText();
+
+                    if (expectedText == actual) {
+                        break;
+                    }
+                    System.Threading.Thread.Sleep(100);
                 }
-            }));
-
-            typing();
-
-            string actual = null;
-            for (int i = 0; i < 100; i++) {
-                actual = doc.TextView.TextBuffer.CurrentSnapshot.GetText();
-
-                if (expectedText == actual) {
-                    break;
-                }
-                System.Threading.Thread.Sleep(100);
+                Assert.AreEqual(actual, expectedText);
             }
-            Assert.AreEqual(actual, expectedText);
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void OpenInvalidUnicodeFile() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            var project = app.OpenAndFindProject(@"TestData\ErrorProjectUnicode.sln");
-            var item = project.ProjectItems.Item("Program.py");
-            EnvDTE.Window window = null;
-            ThreadPool.QueueUserWorkItem(x => { window = item.Open(); });
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenAndFindProject(@"TestData\ErrorProjectUnicode.sln");
+                var item = project.ProjectItems.Item("Program.py");
+                EnvDTE.Window window = null;
+                ThreadPool.QueueUserWorkItem(x => { window = item.Open(); });
 
-            var dialog = app.WaitForDialog();
+                var dialog = app.WaitForDialog();
 
-            VisualStudioApp.CheckMessageBox(TestUtilities.UI.MessageBoxButton.Ok, "File Load", "Program.py", "ascii encoding");
-            while (window == null) {
-                System.Threading.Thread.Sleep(1000);
+                VisualStudioApp.CheckMessageBox(TestUtilities.UI.MessageBoxButton.Ok, "File Load", "Program.py", "ascii encoding");
+                while (window == null) {
+                    System.Threading.Thread.Sleep(1000);
+                }
+
+                window.Activate();
+                var doc = app.GetDocument(item.Document.FullName);
+                var text = doc.TextView.TextBuffer.CurrentSnapshot.GetText();
+                Assert.AreNotEqual(text.IndexOf("????"), -1);
             }
-
-            window.Activate();
-            var doc = app.GetDocument(item.Document.FullName);
-            var text = doc.TextView.TextBuffer.CurrentSnapshot.GetText();
-            Assert.AreNotEqual(text.IndexOf("????"), -1);
         }
 
         #endregion
@@ -664,23 +671,24 @@ x\
         }
 
         private static IList<ClassificationSpan> GetClassifications(string filename) {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            var project = app.OpenAndFindProject(@"TestData\Classification.sln");
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenAndFindProject(@"TestData\Classification.sln");
 
-            var item = project.ProjectItems.Item(filename);
-            var window = item.Open();
-            window.Activate();
+                var item = project.ProjectItems.Item(filename);
+                var window = item.Open();
+                window.Activate();
 
-            var doc = app.GetDocument(item.Document.FullName);
+                var doc = app.GetDocument(item.Document.FullName);
 
-            var snapshot = doc.TextView.TextBuffer.CurrentSnapshot;
-            var classifier = doc.Classifier;
-            var spans = classifier.GetClassificationSpans(new SnapshotSpan(snapshot, 0, snapshot.Length));
-            return spans;
-        }
+                var snapshot = doc.TextView.TextBuffer.CurrentSnapshot;
+                var classifier = doc.Classifier;
+                var spans = classifier.GetClassificationSpans(new SnapshotSpan(snapshot, 0, snapshot.Length));
+                return spans;
+            }
 
         #endregion
 
-    }
+        }
 
+    }
 }

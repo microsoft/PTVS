@@ -13,7 +13,6 @@
     <AssemblyAttributeClsCompliant>true</AssemblyAttributeClsCompliant>
     <SignAssemblyAttribute>false</SignAssemblyAttribute>
     <SignAssembly>false</SignAssembly>
-    <TargetFrameworkVersion Condition=" '$(VisualStudioVersion)' == '10.0' ">v4.0</TargetFrameworkVersion>
     <TargetFrameworkVersion Condition="'$(TargetFrameworkVersion)' == ''">v4.5</TargetFrameworkVersion>
     <FileUpgradeFlags>
     </FileUpgradeFlags>

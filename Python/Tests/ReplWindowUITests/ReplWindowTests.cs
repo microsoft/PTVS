@@ -147,51 +147,54 @@ g()",
         /// Opens the interactive window, clears the screen.
         /// </summary>
         internal InteractiveWindow Prepare(bool reopenOnly = false, string description = null) {
-            var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte);
+            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
+                app.SuppressCloseAllOnDispose();
 
-            if (!reopenOnly) {
-                ConfigurePrompts();
-            }
+                if (!reopenOnly) {
+                    ConfigurePrompts();
+                }
 
-            description = description ?? InterpreterDescription;
+                description = description ?? InterpreterDescription;
 
-            try {
-                GetPythonAutomation().OpenInteractive(description);
-            } catch (KeyNotFoundException) {
-                // Can't open it, but may still be able to find it.
-            }
-            var interactive = app.GetInteractiveWindow(description);
-            if (interactive == null) {
-                Assert.Inconclusive("Need " + description);
-            }
+                try {
+                    GetPythonAutomation().OpenInteractive(description);
+                } catch (KeyNotFoundException) {
+                    // Can't open it, but may still be able to find it.
+                }
+                var interactive = app.GetInteractiveWindow(description);
+                if (interactive == null) {
+                    Assert.Inconclusive("Need " + description);
+                }
 
-            interactive.WaitForIdleState();
-            app.Element.SetFocus();
-            interactive.Element.SetFocus();
+                interactive.WaitForIdleState();
+                app.Element.SetFocus();
+                interactive.Element.SetFocus();
 
-            if (!reopenOnly) {
-                interactive.ClearScreen();
-                interactive.ReplWindow.ClearHistory();
+                if (!reopenOnly) {
+                    interactive.ClearScreen();
+                    interactive.ReplWindow.ClearHistory();
+                    interactive.WaitForReadyState();
+
+                    interactive.Reset();
+                    var task = interactive.ReplWindow.Evaluator.ExecuteText("print('READY')");
+                    Assert.IsTrue(task.Wait(10000), "ReplWindow did not initialize in time");
+                    Assert.AreEqual(ExecutionResult.Success, task.Result);
+                    interactive.WaitForTextEnd("READY", ReplPrompt);
+
+                    interactive.ClearScreen();
+                    interactive.ReplWindow.ClearHistory();
+                }
                 interactive.WaitForReadyState();
-
-                interactive.Reset();
-                var task = interactive.ReplWindow.Evaluator.ExecuteText("print('READY')");
-                Assert.IsTrue(task.Wait(10000), "ReplWindow did not initialize in time");
-                Assert.AreEqual(ExecutionResult.Success, task.Result);
-                interactive.WaitForTextEnd("READY", ReplPrompt);
-
-                interactive.ClearScreen();
-                interactive.ReplWindow.ClearHistory();
+                return interactive;
             }
-            interactive.WaitForReadyState();
-            return interactive;
         }
 
         protected void ForceReset() {
-            var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte);
-
-            var interactive = app.GetInteractiveWindow(InterpreterDescription);
-            interactive.Reset();
+            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
+                app.SuppressCloseAllOnDispose();
+                var interactive = app.GetInteractiveWindow(InterpreterDescription);
+                interactive.Reset();
+            }
         }
 
         protected virtual void ConfigurePrompts() {
@@ -279,9 +282,14 @@ g()",
     }
 
     [TestClass]
-    public abstract class Python26ReplWindowTests : ReplWindowTestHelperBase {
+    public class Python26ReplWindowTests : ReplWindowTestHelperBase {
         [TestInitialize]
         public void Initialize() {
+#if !(PY_ALL || PY_26)
+            // Because this is the base class, we can't exclude it from the
+            // other builds. Instead, we'll simply skip all the tests.
+            Assert.Inconclusive("Test not part of this run");
+#endif
             TestInitialize();
         }
 
@@ -301,17 +309,21 @@ g()",
             Keyboard.Type(code + "\r\r");
 
             interactive.WaitForText(ReplPrompt + code, SecondPrompt, ReplPrompt);
-            interactive.TextView.GetAnalyzer().WaitForCompleteAnalysis(_ => true);
+            var stopAt = DateTime.Now.AddSeconds(20.0);
+            interactive.TextView.GetAnalyzer().WaitForCompleteAnalysis(_ => DateTime.Now < stopAt);
+            if (DateTime.Now >= stopAt) {
+                Assert.Fail("Timeout waiting for complete analysis");
+            }
 
             Keyboard.Type("f(");
 
             interactive.WaitForText(ReplPrompt + code, SecondPrompt, ReplPrompt + "f(");
 
-            interactive.WaitForSession<ISignatureHelpSession>();
+            using (interactive.WaitForSession<ISignatureHelpSession>()) {
+                Keyboard.PressAndRelease(Key.Escape);
 
-            Keyboard.PressAndRelease(Key.Escape);
-
-            interactive.WaitForSessionDismissed();
+                interactive.WaitForSessionDismissed();
+            }
         }
 
         /// <summary>
@@ -332,17 +344,16 @@ g()",
 
             interactive.WaitForText(ReplPrompt + code, ReplPrompt + "x.");
 
-            var session = interactive.WaitForSession<ICompletionSession>();
-            Assert.IsNotNull(session.SelectedCompletionSet);
+            using (var sh = interactive.WaitForSession<ICompletionSession>()) {
+                Assert.IsNotNull(sh.Session.SelectedCompletionSet);
 
-            StringBuilder completions = new StringBuilder();
-            completions.AppendLine(session.SelectedCompletionSet.DisplayName);
+                StringBuilder completions = new StringBuilder();
+                completions.AppendLine(sh.Session.SelectedCompletionSet.DisplayName);
 
-            foreach (var completion in session.SelectedCompletionSet.Completions) {
-                completions.Append(completion.InsertionText);
+                foreach (var completion in sh.Session.SelectedCompletionSet.Completions) {
+                    completions.Append(completion.InsertionText);
+                }
             }
-
-            string x = completions.ToString();
 
             // commit entry
             Keyboard.PressAndRelease(Key.Tab);
@@ -354,11 +365,7 @@ g()",
 
             // try it again, and dismiss the session
             Keyboard.Type("x.");
-            interactive.WaitForSession<ICompletionSession>();
-
-            Keyboard.PressAndRelease(Key.Escape);
-
-            interactive.WaitForSessionDismissed();
+            using (interactive.WaitForSession<ICompletionSession>()) { }
         }
 
         /// <summary>
@@ -1132,14 +1139,12 @@ g()",
 
             Keyboard.Type("import ");
 
-            var session = interactive.WaitForSession<ICompletionSession>();
+            using (var sh = interactive.WaitForSession<ICompletionSession>()) {
+                var names = sh.Session.SelectedCompletionSet.Completions.Select(c => c.DisplayText).ToList();
+                var nameset = new HashSet<string>(names);
 
-            var names = session.SelectedCompletionSet.Completions.Select(c => c.DisplayText).ToList();
-            var nameset = new HashSet<string>(names);
-
-            Assert.AreEqual(names.Count, nameset.Count, "Module names were duplicated");
-
-            session.Dismiss();
+                Assert.AreEqual(names.Count, nameset.Count, "Module names were duplicated");
+            }
         }
 
         /// <summary>
@@ -2351,32 +2356,31 @@ $cls
 
                 interactive.WaitForText(ReplPrompt + code, ReplPrompt + "x.");
 
-                var session = interactive.WaitForSession<ICompletionSession>();
+                using (var sh = interactive.WaitForSession<ICompletionSession>()) {
+                    StringBuilder completions = new StringBuilder();
+                    completions.AppendLine(sh.Session.SelectedCompletionSet.DisplayName);
 
-                StringBuilder completions = new StringBuilder();
-                completions.AppendLine(session.SelectedCompletionSet.DisplayName);
+                    foreach (var completion in sh.Session.SelectedCompletionSet.Completions) {
+                        completions.Append(completion.InsertionText);
+                    }
 
-                foreach (var completion in session.SelectedCompletionSet.Completions) {
-                    completions.Append(completion.InsertionText);
+                    string x = completions.ToString();
+
+                    // commit entry
+                    Keyboard.PressAndRelease(Key.Tab);
+                    interactive.WaitForText(ReplPrompt + code, ReplPrompt + "x." + IntFirstMember);
+                    interactive.WaitForSessionDismissed();
                 }
-
-                string x = completions.ToString();
-
-                // commit entry
-                Keyboard.PressAndRelease(Key.Tab);
-                interactive.WaitForText(ReplPrompt + code, ReplPrompt + "x." + IntFirstMember);
-                interactive.WaitForSessionDismissed();
 
                 // clear input at repl
                 Keyboard.PressAndRelease(Key.Escape);
 
                 // try it again, and dismiss the session
                 Keyboard.Type("x.");
-                interactive.WaitForSession<ICompletionSession>();
-
-                Keyboard.PressAndRelease(Key.Escape);
-
-                interactive.WaitForSessionDismissed();
+                using (interactive.WaitForSession<ICompletionSession>()) {
+                    Keyboard.PressAndRelease(Key.Escape);
+                    interactive.WaitForSessionDismissed();
+                }
             } finally {
                 GetInteractiveOptions().ExecutionMode = "Standard";
                 ForceReset();
@@ -2413,12 +2417,13 @@ $cls
 
                 interactive.WaitForText(ReplPrompt + code, SecondPrompt, ReplPrompt + "f(");
 
-                var helpSession = interactive.WaitForSession<ISignatureHelpSession>();
-                Assert.AreEqual(helpSession.SelectedSignature.Documentation, "<no docstring>");
+                using (var sh = interactive.WaitForSession<ISignatureHelpSession>()) {
+                    Assert.AreEqual(sh.Session.SelectedSignature.Documentation, "<no docstring>");
 
-                Keyboard.PressAndRelease(Key.Escape);
+                    Keyboard.PressAndRelease(Key.Escape);
 
-                interactive.WaitForSessionDismissed();
+                    interactive.WaitForSessionDismissed();
+                }
             } finally {
                 GetInteractiveOptions().ExecutionMode = "Standard";
                 ForceReset();
@@ -2478,8 +2483,8 @@ $cls
             InteractiveWindow interactive = null;
             try {
                 interactive = Prepare();
-                using (new DefaultInterpreterSetter(interactive.TextView.GetAnalyzer().InterpreterFactory)) {
-                    var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+                using (new DefaultInterpreterSetter(interactive.TextView.GetAnalyzer().InterpreterFactory))
+                using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
                     var project = app.OpenAndFindProject(@"TestData\InteractiveFile.sln");
 
                     VsIdeTestHostContext.Dte.ExecuteCommand("Debug.ExecuteFileinPythonInteractive");
@@ -2497,8 +2502,8 @@ $cls
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ExecuteInReplSysArgv() {
             var interactive = Prepare();
-            using (new DefaultInterpreterSetter(interactive.TextView.GetAnalyzer().InterpreterFactory)) {
-                var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            using (new DefaultInterpreterSetter(interactive.TextView.GetAnalyzer().InterpreterFactory))
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
                 var project = app.OpenAndFindProject(@"TestData\SysArgvRepl.sln");
 
                 VsIdeTestHostContext.Dte.ExecuteCommand("Debug.ExecuteFileinPythonInteractive");
@@ -2512,8 +2517,8 @@ $cls
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ExecuteInReplSysArgvScriptArgs() {
             var interactive = Prepare();
-            using (new DefaultInterpreterSetter(interactive.TextView.GetAnalyzer().InterpreterFactory)) {
-                var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            using (new DefaultInterpreterSetter(interactive.TextView.GetAnalyzer().InterpreterFactory))
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
                 var project = app.OpenAndFindProject(@"TestData\SysArgvScriptArgsRepl.sln");
 
                 VsIdeTestHostContext.Dte.ExecuteCommand("Debug.ExecuteFileinPythonInteractive");
@@ -2535,8 +2540,8 @@ $cls
             InteractiveWindow interactive;
             try {
                 interactive = Prepare();
-                using (new DefaultInterpreterSetter(interactive.TextView.GetAnalyzer().InterpreterFactory)) {
-                    var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+                using (new DefaultInterpreterSetter(interactive.TextView.GetAnalyzer().InterpreterFactory))
+                using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
                     var project = app.OpenAndFindProject(@"TestData\SysArgvRepl.sln");
 
                     VsIdeTestHostContext.Dte.ExecuteCommand("Debug.ExecuteFileinPythonInteractive");
@@ -2562,8 +2567,8 @@ $cls
             InteractiveWindow interactive;
             try {
                 interactive = Prepare();
-                using (new DefaultInterpreterSetter(interactive.TextView.GetAnalyzer().InterpreterFactory)) {
-                    var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+                using (new DefaultInterpreterSetter(interactive.TextView.GetAnalyzer().InterpreterFactory))
+                using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
                     var project = app.OpenAndFindProject(@"TestData\SysArgvScriptArgsRepl.sln");
 
                     VsIdeTestHostContext.Dte.ExecuteCommand("Debug.ExecuteFileinPythonInteractive");
@@ -2581,8 +2586,8 @@ $cls
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ExecuteInReplUnicodeFilename() {
             var interactive = Prepare();
-            using (new DefaultInterpreterSetter(interactive.TextView.GetAnalyzer().InterpreterFactory)) {
-                var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            using (new DefaultInterpreterSetter(interactive.TextView.GetAnalyzer().InterpreterFactory))
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
                 var project = app.OpenAndFindProject(@"TestData\UnicodePathä.sln");
 
                 VsIdeTestHostContext.Dte.ExecuteCommand("Debug.ExecuteFileinPythonInteractive");
@@ -2595,42 +2600,42 @@ $cls
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void AttachReplTest() {
-            var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte);
-            var project = app.OpenAndFindProject(@"TestData\DebuggerProject.sln");
-            PythonToolsPackage.Instance.AdvancedEditorOptionsPage.AddNewLineAtEndOfFullyTypedWord = true;
-            GetInteractiveOptions().EnableAttach = true;
-            try {
-                var interactive = Prepare();
+            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenAndFindProject(@"TestData\DebuggerProject.sln");
+                PythonToolsPackage.Instance.AdvancedEditorOptionsPage.AddNewLineAtEndOfFullyTypedWord = true;
+                GetInteractiveOptions().EnableAttach = true;
+                try {
+                    var interactive = Prepare();
 
-                using (new DefaultInterpreterSetter(interactive.TextView.GetAnalyzer().InterpreterFactory)) {
-                    const string attachCmd = "$attach";
-                    Keyboard.Type(attachCmd + "\r");
+                    using (new DefaultInterpreterSetter(interactive.TextView.GetAnalyzer().InterpreterFactory)) {
+                        const string attachCmd = "$attach";
+                        Keyboard.Type(attachCmd + "\r");
 
-                    VsIdeTestHostContext.Dte.Debugger.Breakpoints.Add(File: "BreakpointTest.py", Line: 1);
-                    interactive.WaitForText(ReplPrompt + attachCmd, ReplPrompt);
+                        VsIdeTestHostContext.Dte.Debugger.Breakpoints.Add(File: "BreakpointTest.py", Line: 1);
+                        interactive.WaitForText(ReplPrompt + attachCmd, ReplPrompt);
 
-                    DebuggerUITests.DebugProject.WaitForMode(EnvDTE.dbgDebugMode.dbgRunMode);
+                        DebuggerUITests.DebugProject.WaitForMode(EnvDTE.dbgDebugMode.dbgRunMode);
 
-                    interactive = Prepare(reopenOnly: true);
+                        interactive = Prepare(reopenOnly: true);
 
-                    const string import = "import BreakpointTest";
-                    Keyboard.Type(import + "\r");
-                    interactive.WaitForText(ReplPrompt + attachCmd, ReplPrompt + import, "");
+                        const string import = "import BreakpointTest";
+                        Keyboard.Type(import + "\r");
+                        interactive.WaitForText(ReplPrompt + attachCmd, ReplPrompt + import, "");
 
-                    DebuggerUITests.DebugProject.WaitForMode(EnvDTE.dbgDebugMode.dbgBreakMode);
+                        DebuggerUITests.DebugProject.WaitForMode(EnvDTE.dbgDebugMode.dbgBreakMode);
 
-                    Assert.AreEqual(VsIdeTestHostContext.Dte.Debugger.BreakpointLastHit.FileLine, 1);
+                        Assert.AreEqual(VsIdeTestHostContext.Dte.Debugger.BreakpointLastHit.FileLine, 1);
 
-                    VsIdeTestHostContext.Dte.ExecuteCommand("Debug.DetachAll");
+                        VsIdeTestHostContext.Dte.ExecuteCommand("Debug.DetachAll");
 
-                    DebuggerUITests.DebugProject.WaitForMode(EnvDTE.dbgDebugMode.dbgDesignMode);
+                        DebuggerUITests.DebugProject.WaitForMode(EnvDTE.dbgDebugMode.dbgDesignMode);
 
-                    interactive.WaitForText(ReplPrompt + attachCmd, ReplPrompt + import, "hello", ReplPrompt);
+                        interactive.WaitForText(ReplPrompt + attachCmd, ReplPrompt + import, "hello", ReplPrompt);
+                    }
+                } finally {
+                    PythonToolsPackage.Instance.AdvancedEditorOptionsPage.AddNewLineAtEndOfFullyTypedWord = false;
+                    GetInteractiveOptions().EnableAttach = false;
                 }
-            } finally {
-                PythonToolsPackage.Instance.AdvancedEditorOptionsPage.AddNewLineAtEndOfFullyTypedWord = false;
-                VsIdeTestHostContext.Dte.Solution.Close(false);
-                GetInteractiveOptions().EnableAttach = false;
             }
         }
 
@@ -2743,26 +2748,29 @@ def g(): pass
         public void ImportCompletions() {
             var interactive = Prepare();
 
+#if PY_ALL || PY_IRON27
             if (this is IronPythonReplTests) {
                 Keyboard.Type("import clr \n");
             }
-            
+#endif
+
             Keyboard.Type("import ");
-            var session = interactive.WaitForSession<ICompletionSession>();
+            using (var sh = interactive.WaitForSession<ICompletionSession>()) {
+                var names = sh.Session.SelectedCompletionSet.Completions.Select(c => c.DisplayText).ToList();
 
-            var names = session.SelectedCompletionSet.Completions.Select(c => c.DisplayText).ToList();
-
-            foreach (var name in names) {
-                Console.WriteLine(name);
-            }
-            foreach (var name in names) {
-                Assert.IsFalse(name.Contains('.'), name + " contained a dot");
+                foreach (var name in names) {
+                    Console.WriteLine(name);
+                }
+                foreach (var name in names) {
+                    Assert.IsFalse(name.Contains('.'), name + " contained a dot");
+                }
             }
 
             Keyboard.Type("os.");
-            session = interactive.WaitForSession<ICompletionSession>();
-            names = session.SelectedCompletionSet.Completions.Select(c => c.DisplayText).ToList();
-            AssertUtil.ContainsExactly(names, "path");
+            using (var sh = interactive.WaitForSession<ICompletionSession>()) {
+                var names = sh.Session.SelectedCompletionSet.Completions.Select(c => c.DisplayText).ToList();
+                AssertUtil.ContainsExactly(names, "path");
+            }
 
             interactive.ClearScreen();
         }
@@ -2791,10 +2799,16 @@ def g(): pass
 
 
 
+#if PY_ALL || PY_27 || PY_IRON27
     [TestClass]
     public class Python27ReplWindowTests : Python26ReplWindowTests {
         [TestInitialize]
         public new void Initialize() {
+#if !(PY_ALL || PY_27)
+            // Because this is the base class for the IronPython tests, we
+            // can't exclude it from that build. We'll just skip all the tests.
+            Assert.Inconclusive("Test not part of this run");
+#endif
             TestInitialize();
         }
 
@@ -2828,13 +2842,53 @@ def g(): pass
 
             GetInteractiveOptions().ExecutionMode = "IPython";
             InteractiveWindow interactive = null;
-            try {
-                var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-                var project = app.OpenAndFindProject(@"TestData\Repl.sln");
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                try {
+                    var project = app.OpenAndFindProject(@"TestData\Repl.sln");
+
+                    var program = project.ProjectItems.Item("Program.py");
+
+                    interactive = Prepare();
+
+                    var window = program.Open();
+                    window.Activate();
+                    var doc = app.GetDocument(program.Document.FullName);
+                    doc.Invoke(() =>
+                        doc.TextView.Selection.Select(
+                            new SnapshotSpan(
+                                doc.TextView.TextBuffer.CurrentSnapshot,
+                                0,
+                                doc.TextView.TextBuffer.CurrentSnapshot.Length
+                            ),
+                            false
+                        )
+                    );
+
+                    VsIdeTestHostContext.Dte.ExecuteCommand("Edit.SendtoInteractive");
+
+                    interactive.WaitForText(
+                        ReplPrompt + "def f():",
+                        SecondPrompt + "    return 42",
+                        SecondPrompt,
+                        SecondPrompt + "100",
+                        SecondPrompt,
+                        "Out[2]: 100",
+                        ReplPrompt
+                    );
+                } finally {
+                    GetInteractiveOptions().ExecutionMode = "Standard";
+                    ForceReset();
+                }
+            }
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void VirtualEnvironmentSendToInteractive() {
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenAndFindProject(@"TestData\VirtualEnv.sln");
 
                 var program = project.ProjectItems.Item("Program.py");
-
-                interactive = Prepare();
 
                 var window = program.Open();
                 window.Activate();
@@ -2850,64 +2904,26 @@ def g(): pass
                     )
                 );
 
+                // This is required to open the window, since VS automation is
+                // currently unable to find virtual environments. Once the window
+                // is open, UI automation will find it by the description.
                 VsIdeTestHostContext.Dte.ExecuteCommand("Edit.SendtoInteractive");
 
-                interactive.WaitForText(
-                    ReplPrompt + "def f():",
-                    SecondPrompt + "    return 42",
-                    SecondPrompt,
-                    SecondPrompt + "100",
-                    SecondPrompt,
-                    "Out[2]: 100",
-                    ReplPrompt
-                );
-            } finally {
-                GetInteractiveOptions().ExecutionMode = "Standard";
-                ForceReset();
-            }
-        }
+                var interactive = Prepare(description: "env (Python 2.7) Interactive");
+                VsIdeTestHostContext.Dte.ExecuteCommand("Edit.SendtoInteractive");
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
-        public void VirtualEnvironmentSendToInteractive() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            var project = app.OpenAndFindProject(@"TestData\VirtualEnv.sln");
+                var expectedText = new List<string>();
 
-            var program = project.ProjectItems.Item("Program.py");
-
-            var window = program.Open();
-            window.Activate();
-            var doc = app.GetDocument(program.Document.FullName);
-            doc.Invoke(() =>
-                doc.TextView.Selection.Select(
-                    new SnapshotSpan(
-                        doc.TextView.TextBuffer.CurrentSnapshot,
-                        0,
-                        doc.TextView.TextBuffer.CurrentSnapshot.Length
-                    ),
-                    false
-                )
-            );
-
-            // This is required to open the window, since VS automation is
-            // currently unable to find virtual environments. Once the window
-            // is open, UI automation will find it by the description.
-            VsIdeTestHostContext.Dte.ExecuteCommand("Edit.SendtoInteractive");
-
-            var interactive = Prepare(description: "env (Python 2.7) Interactive");
-            VsIdeTestHostContext.Dte.ExecuteCommand("Edit.SendtoInteractive");
-
-            var expectedText = new List<string>();
-
-            using (var reader = TestData.Read(@"TestData\VirtualEnv\Program.py")) {
-                for (var line = reader.ReadLine(); line != null; line = reader.ReadLine()) {
-                    expectedText.Add(ReplPrompt + line);
+                using (var reader = TestData.Read(@"TestData\VirtualEnv\Program.py")) {
+                    for (var line = reader.ReadLine(); line != null; line = reader.ReadLine()) {
+                        expectedText.Add(ReplPrompt + line);
+                    }
                 }
-            }
-            expectedText.Add(TestData.GetPath(@"TestData\VirtualEnv\env\Scripts\python.exe"));
-            expectedText.Add(ReplPrompt);
+                expectedText.Add(TestData.GetPath(@"TestData\VirtualEnv\env\Scripts\python.exe"));
+                expectedText.Add(ReplPrompt);
 
-            interactive.WaitForText(expectedText);
+                interactive.WaitForText(expectedText);
+            }
         }
 
         protected override string InterpreterDescription {
@@ -2929,7 +2945,7 @@ def g(): pass
             }
         }
     }
-
+#endif
 
     public abstract class Python3kReplWindowTests : Python26ReplWindowTests {
         protected override string RawInput {
@@ -2982,7 +2998,7 @@ def g(): pass
 
 
 
-
+#if PY_ALL || PY_30
     [TestClass]
     public class Python30ReplWindowTests : Python3kReplWindowTests {
         [TestInitialize]
@@ -3008,7 +3024,9 @@ def g(): pass
             }
         }
     }
+#endif
 
+#if PY_ALL || PY_31
     [TestClass]
     public class Python31ReplWindowTests : Python3kReplWindowTests {
         [TestInitialize]
@@ -3038,20 +3056,20 @@ def g(): pass
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ExecuteProjectUnicodeFile() {
             var interactive = Prepare();
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            var project = app.OpenAndFindProject(@"TestData\UnicodeRepl.sln");
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenAndFindProject(@"TestData\UnicodeRepl.sln");
 
-            VsIdeTestHostContext.Dte.ExecuteCommand("Debug.ExecuteFileinPythonInteractive");
-            Assert.AreNotEqual(null, interactive);
+                VsIdeTestHostContext.Dte.ExecuteCommand("Debug.ExecuteFileinPythonInteractive");
+                Assert.AreNotEqual(null, interactive);
 
-            interactive.WaitForTextEnd("Hello, world!", ReplPrompt);
+                interactive.WaitForTextEnd("Hello, world!", ReplPrompt);
+            }
         }
     }
+#endif
 
 
-
-
-
+#if PY_ALL || PY_32
     [TestClass]
     public class Python32ReplWindowTests : Python3kReplWindowTests {
         [TestInitialize]
@@ -3071,7 +3089,9 @@ def g(): pass
             }
         }
     }
+#endif
 
+#if PY_ALL || PY_33
     [TestClass]
     public class Python33ReplWindowTests : Python3kReplWindowTests {
         [TestInitialize]
@@ -3091,7 +3111,9 @@ def g(): pass
             }
         }
     }
+#endif
 
+#if PY_ALL || PY_34
     [TestClass]
     public class Python34ReplWindowTests : Python3kReplWindowTests {
         [TestInitialize]
@@ -3111,11 +3133,11 @@ def g(): pass
             }
         }
     }
+#endif
 
 
 
-
-
+#if PY_ALL || PY_26
     [TestClass]
     public class Python26x64ReplWindowTests : Python26ReplWindowTests {
         [TestInitialize]
@@ -3135,7 +3157,9 @@ def g(): pass
             }
         }
     }
+#endif
 
+#if PY_ALL || PY_27
     [TestClass]
     public class Python27x64ReplWindowTests : Python27ReplWindowTests {
         [TestInitialize]
@@ -3155,7 +3179,9 @@ def g(): pass
             }
         }
     }
+#endif
 
+#if PY_ALL || PY_30
     [TestClass]
     public class Python30x64ReplWindowTests : Python30ReplWindowTests {
         [TestInitialize]
@@ -3175,7 +3201,9 @@ def g(): pass
             }
         }
     }
+#endif
 
+#if PY_ALL || PY_31
     [TestClass]
     public class Python31x64ReplWindowTests : Python31ReplWindowTests {
         [TestInitialize]
@@ -3195,7 +3223,9 @@ def g(): pass
             }
         }
     }
+#endif
 
+#if PY_ALL || PY_32
     [TestClass]
     public class Python32x64ReplWindowTests : Python32ReplWindowTests {
         [TestInitialize]
@@ -3215,7 +3245,9 @@ def g(): pass
             }
         }
     }
+#endif
 
+#if PY_ALL || PY_33
     [TestClass]
     public class Python33x64ReplWindowTests : Python33ReplWindowTests {
         [TestInitialize]
@@ -3235,7 +3267,9 @@ def g(): pass
             }
         }
     }
+#endif
 
+#if PY_ALL || PY_34
     [TestClass]
     public class Python34x64ReplWindowTests : Python34ReplWindowTests {
         [TestInitialize]
@@ -3255,7 +3289,9 @@ def g(): pass
             }
         }
     }
+#endif
 
+#if PY_ALL || PY_27
     [TestClass]
     public class PrimaryPromptOnlyPython27ReplWindowTests : Python27ReplWindowTests {
         [TestInitialize]
@@ -3317,7 +3353,9 @@ def g(): pass
             options.SecondaryPrompt = "*";
         }
     }
+#endif
 
+#if PY_ALL || PY_33
     [TestClass]
     public class PrimaryPromptOnlyPython33ReplWindowTests : Python33ReplWindowTests {
         [TestInitialize]
@@ -3379,6 +3417,5 @@ def g(): pass
             options.SecondaryPrompt = "*";
         }
     }
-
+#endif
 }
-

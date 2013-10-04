@@ -119,6 +119,11 @@ namespace TestUtilities
         /// <param name="testContext">The Test conext for this test invocation</param>
         void IBaseAdapter.Run(ITestElement testElement, ITestContext testContext)
         {
+            if (testElement.TestCategories.Contains(new TestCategoryItem("RestartVS"))) {
+                CleanupHostSide();
+                InitHostSide();
+            }
+
             _hostSide.Run(testElement, testContext);
         }
 

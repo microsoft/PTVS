@@ -32,7 +32,14 @@ namespace DjangoUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void DebugDjangoProject() {
-            DebuggerUITests.DebugProject.OpenProjectAndBreak(TestData.GetPath(@"TestData\DjangoDebugProject.sln"), @"TestApp\views.py", 5, false);
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                DebuggerUITests.DebugProject.OpenProjectAndBreak(
+                    app,
+                    TestData.GetPath(@"TestData\DjangoDebugProject.sln"),
+                    @"TestApp\views.py",
+                    5,
+                    false);
+            }
         }
     }
 }

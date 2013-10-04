@@ -18,6 +18,7 @@ using System.Text;
 using System.Threading;
 using System.Windows;
 using System.Windows.Automation;
+using System.Windows.Threading;
 using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Editor;
@@ -187,12 +188,29 @@ namespace TestUtilities.UI {
             }
         }
 
-        public ISmartTagSession StartSmartTagSession() {
+        public SessionHolder<ISmartTagSession> StartSmartTagSession() {
             ShowSmartTag();
             return WaitForSession<ISmartTagSession>();
         }
 
-        public T WaitForSession<T>() where T : IIntellisenseSession {
+        public class SessionHolder<T> : IDisposable where T : IIntellisenseSession {
+            public readonly T Session;
+            private readonly EditorWindow _owner;
+
+            public SessionHolder(T session, EditorWindow owner) {
+                Assert.IsNotNull(session);
+                Session = session;
+                _owner = owner;
+            }
+
+            void IDisposable.Dispose() {
+                if (!Session.IsDismissed) {
+                    _owner.Invoke(() => { Session.Dismiss(); });
+                }
+            }
+        }
+
+        public SessionHolder<T> WaitForSession<T>() where T : IIntellisenseSession {
             var sessionStack = IntellisenseSessionStack;
             for (int i = 0; i < 40; i++) {
                 if (sessionStack.TopSession is T) {
@@ -202,7 +220,7 @@ namespace TestUtilities.UI {
             }
 
             Assert.IsTrue(sessionStack.TopSession is T);
-            return (T)sessionStack.TopSession;
+            return new SessionHolder<T>((T)sessionStack.TopSession, this);
         }
 
         public IIntellisenseSessionStack IntellisenseSessionStack {

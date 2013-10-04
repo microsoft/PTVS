@@ -28,11 +28,6 @@ namespace PythonToolsUITests {
             TestData.Deploy();
         }
 
-        [TestCleanup]
-        public void MyTestCleanup() {
-            VsIdeTestHostContext.Dte.Solution.Close(false);
-        }
-
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void FromImport1() {
@@ -333,28 +328,27 @@ def f():
         }
 
         private static void RemoveSmartTagTest(string filename, int line, int column, bool allScopes, string expectedText) {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            var project = app.OpenAndFindProject(@"TestData\RemoveImport.sln");
-            var item = project.ProjectItems.Item(filename);
-            var window = item.Open();
-            window.Activate();
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenAndFindProject(@"TestData\RemoveImport.sln");
+                var item = project.ProjectItems.Item(filename);
+                var window = item.Open();
+                window.Activate();
 
-            var doc = app.GetDocument(item.Document.FullName);
+                var doc = app.GetDocument(item.Document.FullName);
 
-            doc.Invoke(() => {
-                var point = doc.TextView.TextBuffer.CurrentSnapshot.GetLineFromLineNumber(line - 1).Start.Add(column - 1);
-                doc.TextView.Caret.MoveTo(point);
-            });
+                doc.Invoke(() => {
+                    var point = doc.TextView.TextBuffer.CurrentSnapshot.GetLineFromLineNumber(line - 1).Start.Add(column - 1);
+                    doc.TextView.Caret.MoveTo(point);
+                });
 
-            if (allScopes) {
-                ThreadPool.QueueUserWorkItem(x => VsIdeTestHostContext.Dte.ExecuteCommand("EditorContextMenus.CodeWindow.RemoveImports.AllScopes"));
-            } else {
-                ThreadPool.QueueUserWorkItem(x => VsIdeTestHostContext.Dte.ExecuteCommand("EditorContextMenus.CodeWindow.RemoveImports.CurrentScope"));
+                if (allScopes) {
+                    ThreadPool.QueueUserWorkItem(x => VsIdeTestHostContext.Dte.ExecuteCommand("EditorContextMenus.CodeWindow.RemoveImports.AllScopes"));
+                } else {
+                    ThreadPool.QueueUserWorkItem(x => VsIdeTestHostContext.Dte.ExecuteCommand("EditorContextMenus.CodeWindow.RemoveImports.CurrentScope"));
+                }
+
+                doc.WaitForText(expectedText);
             }
-
-            doc.WaitForText(expectedText);
-
-            VsIdeTestHostContext.Dte.Documents.CloseAll(vsSaveChanges.vsSaveChangesNo);
         }
     }
 }

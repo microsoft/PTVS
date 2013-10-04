@@ -56,8 +56,6 @@ namespace DebuggerUITests {
         [TestCleanup]
         public void MyTestCleanup() {
             GetOptions().WaitOnNormalExit = PrevWaitOnNormalExit;
-
-            VsIdeTestHostContext.Dte.Solution.Close(false);
         }
 
         #region Test Cases
@@ -68,10 +66,12 @@ namespace DebuggerUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void DebugPythonProject() {
-            StartHelloWorldAndBreak();
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                StartHelloWorldAndBreak(app);
 
-            VsIdeTestHostContext.Dte.Debugger.Go(WaitForBreakOrEnd: true);
-            Assert.AreEqual(dbgDebugMode.dbgDesignMode, VsIdeTestHostContext.Dte.Debugger.CurrentMode);
+                VsIdeTestHostContext.Dte.Debugger.Go(WaitForBreakOrEnd: true);
+                Assert.AreEqual(dbgDebugMode.dbgDesignMode, VsIdeTestHostContext.Dte.Debugger.CurrentMode);
+            }
         }
 
         /// <summary>
@@ -80,17 +80,18 @@ namespace DebuggerUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void DebugPythonProjectSubFolderStartupFileSysPath() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            app.OpenAndFindProject(TestData.GetPath(@"TestData\SysPath.sln"));
-            
-            VsIdeTestHostContext.Dte.ExecuteCommand("Debug.Start");
-            WaitForMode(dbgDebugMode.dbgDesignMode);
-            
-            // sys.path should point to the startup file directory, not the project directory.
-            // this matches the behavior of start without debugging.
-            // Note: backslashes are escaped in the output
-            string testDataPath = TestData.GetPath("TestData\\SysPath\\Sub'").Replace("\\", "\\\\");
-            WaitForDebugOutput(text => text.Contains(testDataPath));
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                app.OpenAndFindProject(TestData.GetPath(@"TestData\SysPath.sln"));
+
+                VsIdeTestHostContext.Dte.ExecuteCommand("Debug.Start");
+                WaitForMode(dbgDebugMode.dbgDesignMode);
+
+                // sys.path should point to the startup file directory, not the project directory.
+                // this matches the behavior of start without debugging.
+                // Note: backslashes are escaped in the output
+                string testDataPath = TestData.GetPath("TestData\\SysPath\\Sub'").Replace("\\", "\\\\");
+                WaitForDebugOutput(text => text.Contains(testDataPath));
+            }
         }
 
         /// <summary>
@@ -100,122 +101,132 @@ namespace DebuggerUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void DebugPythonCustomInterpreter() {
             // try once when the interpreter doesn't exist...
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            var project = app.OpenAndFindProject(TestData.GetPath(@"TestData\RelativeInterpreterPath.sln"), "Program.py");
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenAndFindProject(TestData.GetPath(@"TestData\RelativeInterpreterPath.sln"), "Program.py");
 
-            VsIdeTestHostContext.Dte.ExecuteCommand("Debug.Start");
+                VsIdeTestHostContext.Dte.ExecuteCommand("Debug.Start");
 
-            var dialog = app.WaitForDialog();
-            VisualStudioApp.CheckMessageBox(TestUtilities.UI.MessageBoxButton.Ok, "Interpreter specified in the project does not exist:",  "Interpreter.exe'");
+                var dialog = app.WaitForDialog();
+                VisualStudioApp.CheckMessageBox(TestUtilities.UI.MessageBoxButton.Ok, "Interpreter specified in the project does not exist:", "Interpreter.exe'");
 
-            VsIdeTestHostContext.Dte.Solution.Close(false);
+                VsIdeTestHostContext.Dte.Solution.Close(false);
 
-            // copy an interpreter over and try again
-            File.Copy(PythonPaths.Python27.Path, TestData.GetPath(@"TestData\Interpreter.exe"));
-            try {
-                OpenProjectAndBreak(TestData.GetPath(@"TestData\RelativeInterpreterPath.sln"), "Program.py", 1);
-                VsIdeTestHostContext.Dte.Debugger.Go(WaitForBreakOrEnd: true);
-                Assert.AreEqual(dbgDebugMode.dbgDesignMode, VsIdeTestHostContext.Dte.Debugger.CurrentMode);
-            } finally {
-                File.Delete(TestData.GetPath(@"TestData\Interpreter.exe"));
+                // copy an interpreter over and try again
+                File.Copy(PythonPaths.Python27.Path, TestData.GetPath(@"TestData\Interpreter.exe"));
+                try {
+                    OpenProjectAndBreak(app, TestData.GetPath(@"TestData\RelativeInterpreterPath.sln"), "Program.py", 1);
+                    VsIdeTestHostContext.Dte.Debugger.Go(WaitForBreakOrEnd: true);
+                    Assert.AreEqual(dbgDebugMode.dbgDesignMode, VsIdeTestHostContext.Dte.Debugger.CurrentMode);
+                } finally {
+                    File.Delete(TestData.GetPath(@"TestData\Interpreter.exe"));
+                }
             }
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestPendingBreakPointLocation() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);            
-            var project = app.OpenAndFindProject(@"TestData\DebuggerProject.sln", "BreakpointInfo.py");
-            var bpInfo = project.ProjectItems.Item("BreakpointInfo.py");
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenAndFindProject(@"TestData\DebuggerProject.sln", "BreakpointInfo.py");
+                var bpInfo = project.ProjectItems.Item("BreakpointInfo.py");
 
-            project.GetPythonProject().GetAnalyzer().WaitForCompleteAnalysis(x => true);
+                project.GetPythonProject().GetAnalyzer().WaitForCompleteAnalysis(x => true);
 
-            var bp = VsIdeTestHostContext.Dte.Debugger.Breakpoints.Add(File: "BreakpointInfo.py", Line: 2);
-            Assert.AreEqual("Python", bp.Item(1).Language);
-            // FunctionName doesn't get queried for when adding the BP via EnvDTE, so we can't assert here :(
-            //Assert.AreEqual("BreakpointInfo.C", bp.Item(1).FunctionName);
-            bp = VsIdeTestHostContext.Dte.Debugger.Breakpoints.Add(File: "BreakpointInfo.py", Line: 3);
-            Assert.AreEqual("Python", bp.Item(1).Language);
-            //Assert.AreEqual("BreakpointInfo.C.f", bp.Item(1).FunctionName);
-            bp = VsIdeTestHostContext.Dte.Debugger.Breakpoints.Add(File: "BreakpointInfo.py", Line: 6);
-            Assert.AreEqual("Python", bp.Item(1).Language);
-            //Assert.AreEqual("BreakpointInfo", bp.Item(1).FunctionName);
-            bp = VsIdeTestHostContext.Dte.Debugger.Breakpoints.Add(File: "BreakpointInfo.py", Line: 7);
-            Assert.AreEqual("Python", bp.Item(1).Language);
-            //Assert.AreEqual("BreakpointInfo.f", bp.Item(1).FunctionName);
+                var bp = VsIdeTestHostContext.Dte.Debugger.Breakpoints.Add(File: "BreakpointInfo.py", Line: 2);
+                Assert.AreEqual("Python", bp.Item(1).Language);
+                // FunctionName doesn't get queried for when adding the BP via EnvDTE, so we can't assert here :(
+                //Assert.AreEqual("BreakpointInfo.C", bp.Item(1).FunctionName);
+                bp = VsIdeTestHostContext.Dte.Debugger.Breakpoints.Add(File: "BreakpointInfo.py", Line: 3);
+                Assert.AreEqual("Python", bp.Item(1).Language);
+                //Assert.AreEqual("BreakpointInfo.C.f", bp.Item(1).FunctionName);
+                bp = VsIdeTestHostContext.Dte.Debugger.Breakpoints.Add(File: "BreakpointInfo.py", Line: 6);
+                Assert.AreEqual("Python", bp.Item(1).Language);
+                //Assert.AreEqual("BreakpointInfo", bp.Item(1).FunctionName);
+                bp = VsIdeTestHostContext.Dte.Debugger.Breakpoints.Add(File: "BreakpointInfo.py", Line: 7);
+                Assert.AreEqual("Python", bp.Item(1).Language);
+                //Assert.AreEqual("BreakpointInfo.f", bp.Item(1).FunctionName);
+            }
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestStep() {
-            var project = OpenDebuggerProjectAndBreak("SteppingTest.py", 1);
-            VsIdeTestHostContext.Dte.Debugger.StepOver(true);
-            WaitForMode(dbgDebugMode.dbgBreakMode);
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = OpenDebuggerProjectAndBreak(app, "SteppingTest.py", 1);
+                VsIdeTestHostContext.Dte.Debugger.StepOver(true);
+                WaitForMode(dbgDebugMode.dbgBreakMode);
 
-            Assert.AreEqual((uint)2, ((StackFrame2)VsIdeTestHostContext.Dte.Debugger.CurrentStackFrame).LineNumber);
+                Assert.AreEqual((uint)2, ((StackFrame2)VsIdeTestHostContext.Dte.Debugger.CurrentStackFrame).LineNumber);
 
-            VsIdeTestHostContext.Dte.Debugger.TerminateAll();
+                VsIdeTestHostContext.Dte.Debugger.TerminateAll();
 
-            WaitForMode(dbgDebugMode.dbgDesignMode);
+                WaitForMode(dbgDebugMode.dbgDesignMode);
+            }
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestStep3() {
-            var project = OpenDebuggerProjectAndBreak("SteppingTest3.py", 2);
-            VsIdeTestHostContext.Dte.Debugger.StepOut(true);
-            WaitForMode(dbgDebugMode.dbgBreakMode);
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = OpenDebuggerProjectAndBreak(app, "SteppingTest3.py", 2);
+                VsIdeTestHostContext.Dte.Debugger.StepOut(true);
+                WaitForMode(dbgDebugMode.dbgBreakMode);
 
-            Assert.AreEqual((uint)5, ((StackFrame2)VsIdeTestHostContext.Dte.Debugger.CurrentStackFrame).LineNumber);
+                Assert.AreEqual((uint)5, ((StackFrame2)VsIdeTestHostContext.Dte.Debugger.CurrentStackFrame).LineNumber);
 
-            VsIdeTestHostContext.Dte.Debugger.TerminateAll();
+                VsIdeTestHostContext.Dte.Debugger.TerminateAll();
 
-            WaitForMode(dbgDebugMode.dbgDesignMode);
+                WaitForMode(dbgDebugMode.dbgDesignMode);
+            }
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestStep5() {
-            var project = OpenDebuggerProjectAndBreak("SteppingTest5.py", 5);
-            VsIdeTestHostContext.Dte.Debugger.StepInto(true);
-            WaitForMode(dbgDebugMode.dbgBreakMode);
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = OpenDebuggerProjectAndBreak(app, "SteppingTest5.py", 5);
+                VsIdeTestHostContext.Dte.Debugger.StepInto(true);
+                WaitForMode(dbgDebugMode.dbgBreakMode);
 
-            Assert.AreEqual((uint)2, ((StackFrame2)VsIdeTestHostContext.Dte.Debugger.CurrentStackFrame).LineNumber);
+                Assert.AreEqual((uint)2, ((StackFrame2)VsIdeTestHostContext.Dte.Debugger.CurrentStackFrame).LineNumber);
 
-            VsIdeTestHostContext.Dte.Debugger.TerminateAll();
+                VsIdeTestHostContext.Dte.Debugger.TerminateAll();
 
-            WaitForMode(dbgDebugMode.dbgDesignMode);
+                WaitForMode(dbgDebugMode.dbgDesignMode);
+            }
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestSetNextLine() {
-            var project = OpenDebuggerProjectAndBreak("SetNextLine.py", 7);
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = OpenDebuggerProjectAndBreak(app, "SetNextLine.py", 7);
 
-            var doc = VsIdeTestHostContext.Dte.Documents.Item("SetNextLine.py");
-            ((TextSelection)doc.Selection).GotoLine(8);
-            ((TextSelection)doc.Selection).EndOfLine(false);
-            //((TextSelection)doc.Selection).CharRight(false, 5);
-            //((TextSelection)doc.Selection).CharRight(true, 1);
-            var curLine = ((TextSelection)doc.Selection).CurrentLine;
+                var doc = VsIdeTestHostContext.Dte.Documents.Item("SetNextLine.py");
+                ((TextSelection)doc.Selection).GotoLine(8);
+                ((TextSelection)doc.Selection).EndOfLine(false);
+                //((TextSelection)doc.Selection).CharRight(false, 5);
+                //((TextSelection)doc.Selection).CharRight(true, 1);
+                var curLine = ((TextSelection)doc.Selection).CurrentLine;
 
-            VsIdeTestHostContext.Dte.Debugger.SetNextStatement();
-            VsIdeTestHostContext.Dte.Debugger.StepOver(true);
-            WaitForMode(dbgDebugMode.dbgBreakMode);
+                VsIdeTestHostContext.Dte.Debugger.SetNextStatement();
+                VsIdeTestHostContext.Dte.Debugger.StepOver(true);
+                WaitForMode(dbgDebugMode.dbgBreakMode);
 
-            var curFrame = VsIdeTestHostContext.Dte.Debugger.CurrentStackFrame;
-            var local = curFrame.Locals.Item("y");
-            Assert.AreEqual("100", local.Value);
+                var curFrame = VsIdeTestHostContext.Dte.Debugger.CurrentStackFrame;
+                var local = curFrame.Locals.Item("y");
+                Assert.AreEqual("100", local.Value);
 
-            try {
-                curFrame.Locals.Item("x");
-                Assert.Fail("Expected exception, x should not be defined");
-            } catch {
+                try {
+                    curFrame.Locals.Item("x");
+                    Assert.Fail("Expected exception, x should not be defined");
+                } catch {
+                }
+
+                VsIdeTestHostContext.Dte.Debugger.TerminateAll();
+
+                WaitForMode(dbgDebugMode.dbgDesignMode);
             }
-
-            VsIdeTestHostContext.Dte.Debugger.TerminateAll();
-
-            WaitForMode(dbgDebugMode.dbgDesignMode);
         }
 
         /*
@@ -246,21 +257,23 @@ namespace DebuggerUITests {
 
             WaitForMode(dbgDebugMode.dbgDesignMode);
         }*/
-        
+
         /// <summary>
         /// Loads the simple project and then terminates the process while we're at a breakpoint.
         /// </summary>
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestTerminateProcess() {
-            StartHelloWorldAndBreak();
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                StartHelloWorldAndBreak(app);
 
-            Assert.AreEqual(dbgDebugMode.dbgBreakMode, VsIdeTestHostContext.Dte.Debugger.CurrentMode);
-            Assert.AreEqual(1, VsIdeTestHostContext.Dte.Debugger.BreakpointLastHit.FileLine);
+                Assert.AreEqual(dbgDebugMode.dbgBreakMode, VsIdeTestHostContext.Dte.Debugger.CurrentMode);
+                Assert.AreEqual(1, VsIdeTestHostContext.Dte.Debugger.BreakpointLastHit.FileLine);
 
-            VsIdeTestHostContext.Dte.Debugger.TerminateAll();
+                VsIdeTestHostContext.Dte.Debugger.TerminateAll();
 
-            WaitForMode(dbgDebugMode.dbgDesignMode);
+                WaitForMode(dbgDebugMode.dbgDesignMode);
+            }
         }
 
         /// <summary>
@@ -269,82 +282,88 @@ namespace DebuggerUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestEnumModules() {
-            StartHelloWorldAndBreak();
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                StartHelloWorldAndBreak(app);
 
-            var modules = ((Process3)VsIdeTestHostContext.Dte.Debugger.CurrentProcess).Modules;
-            Assert.AreEqual(1, modules.Count);
-            var module = modules.Item(1);
-            var modulePath = module.Path;
-            Assert.IsTrue(modulePath.EndsWith("Program.py"));
-            Assert.AreEqual("Program", module.Name);
-            Assert.AreNotEqual((uint)0, module.Order);
+                var modules = ((Process3)VsIdeTestHostContext.Dte.Debugger.CurrentProcess).Modules;
+                Assert.AreEqual(1, modules.Count);
+                var module = modules.Item(1);
+                var modulePath = module.Path;
+                Assert.IsTrue(modulePath.EndsWith("Program.py"));
+                Assert.AreEqual("Program", module.Name);
+                Assert.AreNotEqual((uint)0, module.Order);
 
-            VsIdeTestHostContext.Dte.Debugger.TerminateAll();
-            WaitForMode(dbgDebugMode.dbgDesignMode);
+                VsIdeTestHostContext.Dte.Debugger.TerminateAll();
+                WaitForMode(dbgDebugMode.dbgDesignMode);
+            }
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestThread() {
-            StartHelloWorldAndBreak();
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                StartHelloWorldAndBreak(app);
 
-            var thread = ((Thread2)VsIdeTestHostContext.Dte.Debugger.CurrentThread);
-            Assert.AreEqual("MainThread", thread.Name);
-            Assert.AreEqual(0, thread.SuspendCount);
-            Assert.AreEqual("Normal", thread.Priority);
-            Assert.AreEqual("MainThread", thread.DisplayName);
-            thread.DisplayName = "Hi";
-            Assert.AreEqual("Hi", thread.DisplayName);
+                var thread = ((Thread2)VsIdeTestHostContext.Dte.Debugger.CurrentThread);
+                Assert.AreEqual("MainThread", thread.Name);
+                Assert.AreEqual(0, thread.SuspendCount);
+                Assert.AreEqual("Normal", thread.Priority);
+                Assert.AreEqual("MainThread", thread.DisplayName);
+                thread.DisplayName = "Hi";
+                Assert.AreEqual("Hi", thread.DisplayName);
 
-            VsIdeTestHostContext.Dte.Debugger.TerminateAll();
-            WaitForMode(dbgDebugMode.dbgDesignMode);
+                VsIdeTestHostContext.Dte.Debugger.TerminateAll();
+                WaitForMode(dbgDebugMode.dbgDesignMode);
+            }
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ExpressionEvaluation() {
-            OpenDebuggerProject("Program.py");
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                OpenDebuggerProject(app, "Program.py");
 
-            VsIdeTestHostContext.Dte.Debugger.Breakpoints.Add(File: "Program.py", Line: 14);
-            VsIdeTestHostContext.Dte.ExecuteCommand("Debug.Start");
+                VsIdeTestHostContext.Dte.Debugger.Breakpoints.Add(File: "Program.py", Line: 14);
+                VsIdeTestHostContext.Dte.ExecuteCommand("Debug.Start");
 
-            WaitForMode(dbgDebugMode.dbgBreakMode);
+                WaitForMode(dbgDebugMode.dbgBreakMode);
 
-            Assert.AreEqual(14, VsIdeTestHostContext.Dte.Debugger.BreakpointLastHit.FileLine);
+                Assert.AreEqual(14, VsIdeTestHostContext.Dte.Debugger.BreakpointLastHit.FileLine);
 
-            Assert.AreEqual("i", VsIdeTestHostContext.Dte.Debugger.GetExpression("i").Name);
-            Assert.AreEqual("42", VsIdeTestHostContext.Dte.Debugger.GetExpression("i").Value);
-            Assert.AreEqual("int", VsIdeTestHostContext.Dte.Debugger.GetExpression("i").Type);
-            Assert.IsTrue(VsIdeTestHostContext.Dte.Debugger.GetExpression("i").IsValidValue);
-            Assert.AreEqual(0, VsIdeTestHostContext.Dte.Debugger.GetExpression("i").DataMembers.Count);
+                Assert.AreEqual("i", VsIdeTestHostContext.Dte.Debugger.GetExpression("i").Name);
+                Assert.AreEqual("42", VsIdeTestHostContext.Dte.Debugger.GetExpression("i").Value);
+                Assert.AreEqual("int", VsIdeTestHostContext.Dte.Debugger.GetExpression("i").Type);
+                Assert.IsTrue(VsIdeTestHostContext.Dte.Debugger.GetExpression("i").IsValidValue);
+                Assert.AreEqual(0, VsIdeTestHostContext.Dte.Debugger.GetExpression("i").DataMembers.Count);
 
-            var curFrame = VsIdeTestHostContext.Dte.Debugger.CurrentStackFrame;
-                        
-            var local = curFrame.Locals.Item("i");
-            Assert.AreEqual("42", local.Value);
-            Assert.AreEqual("f", curFrame.FunctionName);
-            Assert.IsTrue(((StackFrame2)curFrame).FileName.EndsWith("Program.py"));
-            Assert.AreEqual((uint)14, ((StackFrame2)curFrame).LineNumber);
-            Assert.AreEqual("Program", ((StackFrame2)curFrame).Module);
+                var curFrame = VsIdeTestHostContext.Dte.Debugger.CurrentStackFrame;
 
-            Assert.AreEqual(3, curFrame.Locals.Item("l").DataMembers.Count);
-            Assert.AreEqual("[0]", curFrame.Locals.Item("l").DataMembers.Item(1).Name);
+                var local = curFrame.Locals.Item("i");
+                Assert.AreEqual("42", local.Value);
+                Assert.AreEqual("f", curFrame.FunctionName);
+                Assert.IsTrue(((StackFrame2)curFrame).FileName.EndsWith("Program.py"));
+                Assert.AreEqual((uint)14, ((StackFrame2)curFrame).LineNumber);
+                Assert.AreEqual("Program", ((StackFrame2)curFrame).Module);
 
-            Assert.AreEqual(3, ((StackFrame2)curFrame).Arguments.Count);
-            Assert.AreEqual("a", ((StackFrame2)curFrame).Arguments.Item(1).Name);
-            Assert.AreEqual("2", ((StackFrame2)curFrame).Arguments.Item(1).Value);
+                Assert.AreEqual(3, curFrame.Locals.Item("l").DataMembers.Count);
+                Assert.AreEqual("[0]", curFrame.Locals.Item("l").DataMembers.Item(1).Name);
 
-            var expr = ((Debugger3)VsIdeTestHostContext.Dte.Debugger).GetExpression("l[0] + l[1]");
-            Assert.AreEqual("l[0] + l[1]", expr.Name);
-            Assert.AreEqual("5", expr.Value);
+                Assert.AreEqual(3, ((StackFrame2)curFrame).Arguments.Count);
+                Assert.AreEqual("a", ((StackFrame2)curFrame).Arguments.Item(1).Name);
+                Assert.AreEqual("2", ((StackFrame2)curFrame).Arguments.Item(1).Value);
 
-            expr = ((Debugger3)VsIdeTestHostContext.Dte.Debugger).GetExpression("invalid expression");
-            Assert.IsFalse(expr.IsValidValue);
+                var expr = ((Debugger3)VsIdeTestHostContext.Dte.Debugger).GetExpression("l[0] + l[1]");
+                Assert.AreEqual("l[0] + l[1]", expr.Name);
+                Assert.AreEqual("5", expr.Value);
 
-            VsIdeTestHostContext.Dte.Debugger.ExecuteStatement("x = 2");
+                expr = ((Debugger3)VsIdeTestHostContext.Dte.Debugger).GetExpression("invalid expression");
+                Assert.IsFalse(expr.IsValidValue);
 
-            VsIdeTestHostContext.Dte.Debugger.Go(WaitForBreakOrEnd: true);
-            Assert.AreEqual(dbgDebugMode.dbgDesignMode, VsIdeTestHostContext.Dte.Debugger.CurrentMode);
+                VsIdeTestHostContext.Dte.Debugger.ExecuteStatement("x = 2");
+
+                VsIdeTestHostContext.Dte.Debugger.Go(WaitForBreakOrEnd: true);
+                Assert.AreEqual(dbgDebugMode.dbgDesignMode, VsIdeTestHostContext.Dte.Debugger.CurrentMode);
+            }
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
@@ -372,141 +391,148 @@ namespace DebuggerUITests {
         }
 
         private static void ExceptionTest(string filename, string expectedTitle, string expectedDescription, string exceptionType, int expectedLine) {
-            OpenDebuggerProject(filename);
-            var debug3 = (Debugger3)VsIdeTestHostContext.Dte.Debugger;
-            var exceptionSettings = debug3.ExceptionGroups.Item("Python Exceptions");
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                OpenDebuggerProject(app, filename);
+                var debug3 = (Debugger3)VsIdeTestHostContext.Dte.Debugger;
+                var exceptionSettings = debug3.ExceptionGroups.Item("Python Exceptions");
 
-            exceptionSettings.SetBreakWhenThrown(true, exceptionSettings.Item(exceptionType));
+                exceptionSettings.SetBreakWhenThrown(true, exceptionSettings.Item(exceptionType));
 
-            VsIdeTestHostContext.Dte.ExecuteCommand("Debug.Start");
-            WaitForMode(dbgDebugMode.dbgBreakMode);
+                VsIdeTestHostContext.Dte.ExecuteCommand("Debug.Start");
+                WaitForMode(dbgDebugMode.dbgBreakMode);
 
-            exceptionSettings.SetBreakWhenThrown(false, exceptionSettings.Item(exceptionType));
-            exceptionSettings.SetBreakWhenThrown(true, exceptionSettings.Item(exceptionType));
-            debug3.ExceptionGroups.ResetAll();
+                exceptionSettings.SetBreakWhenThrown(false, exceptionSettings.Item(exceptionType));
+                exceptionSettings.SetBreakWhenThrown(true, exceptionSettings.Item(exceptionType));
+                debug3.ExceptionGroups.ResetAll();
 
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            var excepDialog = app.WaitForException();
-            AutomationWrapper.DumpElement(excepDialog.Element);
+                var excepDialog = app.WaitForException();
+                AutomationWrapper.DumpElement(excepDialog.Element);
 
-            Assert.AreEqual(expectedDescription, excepDialog.Description);
-            Assert.AreEqual(expectedTitle, excepDialog.Title);
+                Assert.AreEqual(expectedDescription, excepDialog.Description);
+                Assert.AreEqual(expectedTitle, excepDialog.Title);
 
-            excepDialog.Cancel();
+                excepDialog.Cancel();
 
-            Assert.AreEqual((uint)expectedLine, ((StackFrame2)debug3.CurrentThread.StackFrames.Item(1)).LineNumber);
+                Assert.AreEqual((uint)expectedLine, ((StackFrame2)debug3.CurrentThread.StackFrames.Item(1)).LineNumber);
 
-            VsIdeTestHostContext.Dte.Debugger.Go(WaitForBreakOrEnd: true);
+                VsIdeTestHostContext.Dte.Debugger.Go(WaitForBreakOrEnd: true);
 
-            WaitForMode(dbgDebugMode.dbgDesignMode);
+                WaitForMode(dbgDebugMode.dbgDesignMode);
+            }
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestBreakpoints() {
-            OpenDebuggerProjectAndBreak("BreakpointTest2.py", 3);
-            var debug3 = (Debugger3)VsIdeTestHostContext.Dte.Debugger;
-            Assert.AreEqual((uint)3, ((StackFrame2)debug3.CurrentThread.StackFrames.Item(1)).LineNumber);
-            debug3.Go(true);
-            Assert.AreEqual((uint)3, ((StackFrame2)debug3.CurrentThread.StackFrames.Item(1)).LineNumber);
-            Assert.IsTrue(debug3.Breakpoints.Item(1).Enabled);            
-            debug3.Breakpoints.Item(1).Delete();
-            debug3.Go(true);
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                OpenDebuggerProjectAndBreak(app, "BreakpointTest2.py", 3);
+                var debug3 = (Debugger3)VsIdeTestHostContext.Dte.Debugger;
+                Assert.AreEqual((uint)3, ((StackFrame2)debug3.CurrentThread.StackFrames.Item(1)).LineNumber);
+                debug3.Go(true);
+                Assert.AreEqual((uint)3, ((StackFrame2)debug3.CurrentThread.StackFrames.Item(1)).LineNumber);
+                Assert.IsTrue(debug3.Breakpoints.Item(1).Enabled);
+                debug3.Breakpoints.Item(1).Delete();
+                debug3.Go(true);
 
-            WaitForMode(dbgDebugMode.dbgDesignMode);
+                WaitForMode(dbgDebugMode.dbgDesignMode);
+            }
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestBreakpointsDisable() {
-            OpenDebuggerProjectAndBreak("BreakpointTest4.py", 2);
-            var debug3 = (Debugger3)VsIdeTestHostContext.Dte.Debugger;
-            Assert.AreEqual((uint)2, ((StackFrame2)debug3.CurrentThread.StackFrames.Item(1)).LineNumber);
-            debug3.Go(true);
-            Assert.AreEqual((uint)2, ((StackFrame2)debug3.CurrentThread.StackFrames.Item(1)).LineNumber);
-            Assert.IsTrue(debug3.Breakpoints.Item(1).Enabled);
-            debug3.Breakpoints.Item(1).Enabled = false;            
-            debug3.Go(true);
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                OpenDebuggerProjectAndBreak(app, "BreakpointTest4.py", 2);
+                var debug3 = (Debugger3)VsIdeTestHostContext.Dte.Debugger;
+                Assert.AreEqual((uint)2, ((StackFrame2)debug3.CurrentThread.StackFrames.Item(1)).LineNumber);
+                debug3.Go(true);
+                Assert.AreEqual((uint)2, ((StackFrame2)debug3.CurrentThread.StackFrames.Item(1)).LineNumber);
+                Assert.IsTrue(debug3.Breakpoints.Item(1).Enabled);
+                debug3.Breakpoints.Item(1).Enabled = false;
+                debug3.Go(true);
 
-            WaitForMode(dbgDebugMode.dbgDesignMode);
+                WaitForMode(dbgDebugMode.dbgDesignMode);
+            }
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestBreakpointsDisableReenable() {
             var debug3 = (Debugger3)VsIdeTestHostContext.Dte.Debugger;
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                OpenDebuggerProjectAndBreak(app, "BreakpointTest4.py", 2);
+                Assert.AreEqual((uint)2, ((StackFrame2)debug3.CurrentThread.StackFrames.Item(1)).LineNumber);
+                debug3.Go(true);
+                Assert.AreEqual((uint)2, ((StackFrame2)debug3.CurrentThread.StackFrames.Item(1)).LineNumber);
+                int bpCount = debug3.Breakpoints.Count;
 
-            OpenDebuggerProjectAndBreak("BreakpointTest4.py", 2);
-            Assert.AreEqual((uint)2, ((StackFrame2)debug3.CurrentThread.StackFrames.Item(1)).LineNumber);
-            debug3.Go(true);
-            Assert.AreEqual((uint)2, ((StackFrame2)debug3.CurrentThread.StackFrames.Item(1)).LineNumber);
-            int bpCount = debug3.Breakpoints.Count;
-            
-            Assert.AreEqual(1, bpCount);
-            Assert.IsTrue(debug3.Breakpoints.Item(1).Enabled);
-            Assert.AreEqual(2, debug3.Breakpoints.Item(1).FileLine);
-            debug3.Breakpoints.Item(1).Enabled = false;
+                Assert.AreEqual(1, bpCount);
+                Assert.IsTrue(debug3.Breakpoints.Item(1).Enabled);
+                Assert.AreEqual(2, debug3.Breakpoints.Item(1).FileLine);
+                debug3.Breakpoints.Item(1).Enabled = false;
 
-            debug3.Breakpoints.Add(File: "BreakpointTest4.py", Line: 4);
-            debug3.Breakpoints.Add(File: "BreakpointTest4.py", Line: 5);
-            Assert.AreEqual(4, debug3.Breakpoints.Item(2).FileLine);
-            Assert.AreEqual(5, debug3.Breakpoints.Item(3).FileLine);
-            
-            // line 4
-            debug3.Go(true);
-            WaitForMode(dbgDebugMode.dbgBreakMode);
-            Assert.AreEqual((uint)4, ((StackFrame2)debug3.CurrentThread.StackFrames.Item(1)).LineNumber);
+                debug3.Breakpoints.Add(File: "BreakpointTest4.py", Line: 4);
+                debug3.Breakpoints.Add(File: "BreakpointTest4.py", Line: 5);
+                Assert.AreEqual(4, debug3.Breakpoints.Item(2).FileLine);
+                Assert.AreEqual(5, debug3.Breakpoints.Item(3).FileLine);
 
-            // line 5
-            debug3.Go(true);
-            WaitForMode(dbgDebugMode.dbgBreakMode);
-            Assert.AreEqual((uint)5, ((StackFrame2)debug3.CurrentThread.StackFrames.Item(1)).LineNumber);
-            debug3.Breakpoints.Item(3).Enabled = false;
+                // line 4
+                debug3.Go(true);
+                WaitForMode(dbgDebugMode.dbgBreakMode);
+                Assert.AreEqual((uint)4, ((StackFrame2)debug3.CurrentThread.StackFrames.Item(1)).LineNumber);
 
-            // back to line 4
-            debug3.Go(true);
-            WaitForMode(dbgDebugMode.dbgBreakMode);
-            Assert.AreEqual((uint)4, ((StackFrame2)debug3.CurrentThread.StackFrames.Item(1)).LineNumber);
+                // line 5
+                debug3.Go(true);
+                WaitForMode(dbgDebugMode.dbgBreakMode);
+                Assert.AreEqual((uint)5, ((StackFrame2)debug3.CurrentThread.StackFrames.Item(1)).LineNumber);
+                debug3.Breakpoints.Item(3).Enabled = false;
 
-            debug3.Go(true);
-            WaitForMode(dbgDebugMode.dbgBreakMode);
-            Assert.AreEqual((uint)4, ((StackFrame2)debug3.CurrentThread.StackFrames.Item(1)).LineNumber);
-            
-            debug3.Breakpoints.Item(2).Enabled = false;
-            debug3.Breakpoints.Item(3).Enabled = true;
+                // back to line 4
+                debug3.Go(true);
+                WaitForMode(dbgDebugMode.dbgBreakMode);
+                Assert.AreEqual((uint)4, ((StackFrame2)debug3.CurrentThread.StackFrames.Item(1)).LineNumber);
 
-            // back to line 5
-            debug3.Go(true);
-            WaitForMode(dbgDebugMode.dbgBreakMode);
-            Assert.AreEqual((uint)5, ((StackFrame2)debug3.CurrentThread.StackFrames.Item(1)).LineNumber);
-            debug3.Breakpoints.Item(3).Enabled = false;
+                debug3.Go(true);
+                WaitForMode(dbgDebugMode.dbgBreakMode);
+                Assert.AreEqual((uint)4, ((StackFrame2)debug3.CurrentThread.StackFrames.Item(1)).LineNumber);
 
-            // all disabled, run to completion
-            debug3.Go(true);
-            WaitForMode(dbgDebugMode.dbgDesignMode);
+                debug3.Breakpoints.Item(2).Enabled = false;
+                debug3.Breakpoints.Item(3).Enabled = true;
+
+                // back to line 5
+                debug3.Go(true);
+                WaitForMode(dbgDebugMode.dbgBreakMode);
+                Assert.AreEqual((uint)5, ((StackFrame2)debug3.CurrentThread.StackFrames.Item(1)).LineNumber);
+                debug3.Breakpoints.Item(3).Enabled = false;
+
+                // all disabled, run to completion
+                debug3.Go(true);
+                WaitForMode(dbgDebugMode.dbgDesignMode);
+            }
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestLaunchWithErrorsDontRun() {
-            var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte);
-            var project = app.OpenAndFindProject(@"TestData\ErrorProject.sln");
+            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenAndFindProject(@"TestData\ErrorProject.sln");
 
-            GetOptions().PromptBeforeRunningWithBuildErrorSetting = true;
+                GetOptions().PromptBeforeRunningWithBuildErrorSetting = true;
 
-            var debug3 = (Debugger3)VsIdeTestHostContext.Dte.Debugger;
-            ThreadPool.QueueUserWorkItem(x => debug3.Go(true));
+                var debug3 = (Debugger3)VsIdeTestHostContext.Dte.Debugger;
+                ThreadPool.QueueUserWorkItem(x => debug3.Go(true));
 
-            var dialog = new PythonLaunchWithErrorsDialog(app.WaitForDialog());
-            dialog.No();
+                var dialog = new PythonLaunchWithErrorsDialog(app.WaitForDialog());
+                dialog.No();
 
-            // make sure we don't go into debug mode
-            for (int i = 0; i < 10; i++) {
-                Assert.AreEqual(dbgDebugMode.dbgDesignMode, VsIdeTestHostContext.Dte.Debugger.CurrentMode);
-                System.Threading.Thread.Sleep(100);
+                // make sure we don't go into debug mode
+                for (int i = 0; i < 10; i++) {
+                    Assert.AreEqual(dbgDebugMode.dbgDesignMode, VsIdeTestHostContext.Dte.Debugger.CurrentMode);
+                    System.Threading.Thread.Sleep(100);
+                }
+
+                WaitForMode(dbgDebugMode.dbgDesignMode);
             }
-
-            WaitForMode(dbgDebugMode.dbgDesignMode);
         }
 
         /// <summary>
@@ -515,24 +541,25 @@ namespace DebuggerUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestLaunchWithErrorsRun() {
-            var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte);
-            var project = app.OpenAndFindProject(@"TestData\ErrorProject.sln");
+            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenAndFindProject(@"TestData\ErrorProject.sln");
 
-            GetOptions().PromptBeforeRunningWithBuildErrorSetting = true;
+                GetOptions().PromptBeforeRunningWithBuildErrorSetting = true;
 
-            var debug3 = (Debugger3)VsIdeTestHostContext.Dte.Debugger;
-            ThreadPool.QueueUserWorkItem(x => debug3.Go(true));
+                var debug3 = (Debugger3)VsIdeTestHostContext.Dte.Debugger;
+                ThreadPool.QueueUserWorkItem(x => debug3.Go(true));
 
-            var dialog = new PythonLaunchWithErrorsDialog(app.WaitForDialog());
-            dialog.No();
+                var dialog = new PythonLaunchWithErrorsDialog(app.WaitForDialog());
+                dialog.No();
 
-            // make sure we don't go into debug mode
-            for (int i = 0; i < 10; i++) {
-                Assert.AreEqual(dbgDebugMode.dbgDesignMode, VsIdeTestHostContext.Dte.Debugger.CurrentMode);
-                System.Threading.Thread.Sleep(100);
+                // make sure we don't go into debug mode
+                for (int i = 0; i < 10; i++) {
+                    Assert.AreEqual(dbgDebugMode.dbgDesignMode, VsIdeTestHostContext.Dte.Debugger.CurrentMode);
+                    System.Threading.Thread.Sleep(100);
+                }
+
+                WaitForMode(dbgDebugMode.dbgDesignMode);
             }
-
-            WaitForMode(dbgDebugMode.dbgDesignMode);
         }
 
         /// <summary>
@@ -541,14 +568,15 @@ namespace DebuggerUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestProjectWithErrors_ErrorList() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            var project = app.OpenAndFindProject(@"TestData\ErrorProject.sln");
-            
-            var errorList = (IVsErrorList)VsIdeTestHostContext.ServiceProvider.GetService(typeof(SVsErrorList));
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenAndFindProject(@"TestData\ErrorProject.sln");
 
-            const int expectedItems = 6;
-            List<IVsTaskItem> allItems = GetErrorListItems(errorList, expectedItems);
-            Assert.AreEqual(expectedItems, allItems.Count);
+                var errorList = (IVsErrorList)VsIdeTestHostContext.ServiceProvider.GetService(typeof(SVsErrorList));
+
+                const int expectedItems = 6;
+                List<IVsTaskItem> allItems = GetErrorListItems(errorList, expectedItems);
+                Assert.AreEqual(expectedItems, allItems.Count);
+            }
         }
 
         /// <summary>
@@ -557,19 +585,20 @@ namespace DebuggerUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestProjectWithErrorsDeleteProject() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            var project = app.OpenAndFindProject(@"TestData\ErrorProjectDelete.sln");
-            
-            var errorList = (IVsErrorList)VsIdeTestHostContext.ServiceProvider.GetService(typeof(SVsErrorList));
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenAndFindProject(@"TestData\ErrorProjectDelete.sln");
 
-            const int expectedItems = 6;
-            List<IVsTaskItem> allItems = GetErrorListItems(errorList, expectedItems);
-            Assert.AreEqual(expectedItems, allItems.Count);
+                var errorList = (IVsErrorList)VsIdeTestHostContext.ServiceProvider.GetService(typeof(SVsErrorList));
 
-            VsIdeTestHostContext.Dte.Solution.Remove(project);
+                const int expectedItems = 6;
+                List<IVsTaskItem> allItems = GetErrorListItems(errorList, expectedItems);
+                Assert.AreEqual(expectedItems, allItems.Count);
 
-            allItems = GetErrorListItems(errorList, 0);
-            Assert.AreEqual(0, allItems.Count);
+                VsIdeTestHostContext.Dte.Solution.Remove(project);
+
+                allItems = GetErrorListItems(errorList, 0);
+                Assert.AreEqual(0, allItems.Count);
+            }
         }
 
         /// <summary>
@@ -578,26 +607,27 @@ namespace DebuggerUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestProjectWithErrorsUnloadProject() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            var project = app.OpenAndFindProject(@"TestData\ErrorProjectDelete.sln");
-            
-            var errorList = (IVsErrorList)VsIdeTestHostContext.ServiceProvider.GetService(typeof(SVsErrorList));
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenAndFindProject(@"TestData\ErrorProjectDelete.sln");
 
-            const int expectedItems = 6;
-            List<IVsTaskItem> allItems = GetErrorListItems(errorList, expectedItems);
-            Assert.AreEqual(expectedItems, allItems.Count);
+                var errorList = (IVsErrorList)VsIdeTestHostContext.ServiceProvider.GetService(typeof(SVsErrorList));
 
-            IVsSolution solutionService = VsIdeTestHostContext.ServiceProvider.GetService(typeof(SVsSolution)) as IVsSolution;
-            Assert.IsNotNull(solutionService);
+                const int expectedItems = 6;
+                List<IVsTaskItem> allItems = GetErrorListItems(errorList, expectedItems);
+                Assert.AreEqual(expectedItems, allItems.Count);
 
-            IVsHierarchy selectedHierarchy;
-            ErrorHandler.ThrowOnFailure(solutionService.GetProjectOfUniqueName(project.UniqueName, out selectedHierarchy));
-            Assert.IsNotNull(selectedHierarchy);
+                IVsSolution solutionService = VsIdeTestHostContext.ServiceProvider.GetService(typeof(SVsSolution)) as IVsSolution;
+                Assert.IsNotNull(solutionService);
 
-            ErrorHandler.ThrowOnFailure(solutionService.CloseSolutionElement((uint)__VSSLNCLOSEOPTIONS.SLNCLOSEOPT_UnloadProject, selectedHierarchy, 0));
+                IVsHierarchy selectedHierarchy;
+                ErrorHandler.ThrowOnFailure(solutionService.GetProjectOfUniqueName(project.UniqueName, out selectedHierarchy));
+                Assert.IsNotNull(selectedHierarchy);
 
-            allItems = GetErrorListItems(errorList, 0);
-            Assert.AreEqual(0, allItems.Count);
+                ErrorHandler.ThrowOnFailure(solutionService.CloseSolutionElement((uint)__VSSLNCLOSEOPTIONS.SLNCLOSEOPT_UnloadProject, selectedHierarchy, 0));
+
+                allItems = GetErrorListItems(errorList, 0);
+                Assert.AreEqual(0, allItems.Count);
+            }
         }
 
         /// <summary>
@@ -608,26 +638,27 @@ namespace DebuggerUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestProjectWithErrorsMultipleFilesUnloadProject() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            var project = app.OpenAndFindProject(@"TestData\ErrorProjectMultipleFiles.sln");
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenAndFindProject(@"TestData\ErrorProjectMultipleFiles.sln");
 
-            var errorList = (IVsErrorList)VsIdeTestHostContext.ServiceProvider.GetService(typeof(SVsErrorList));
+                var errorList = (IVsErrorList)VsIdeTestHostContext.ServiceProvider.GetService(typeof(SVsErrorList));
 
-            const int expectedItems = 12;
-            List<IVsTaskItem> allItems = GetErrorListItems(errorList, expectedItems);
-            Assert.AreEqual(expectedItems, allItems.Count);
+                const int expectedItems = 12;
+                List<IVsTaskItem> allItems = GetErrorListItems(errorList, expectedItems);
+                Assert.AreEqual(expectedItems, allItems.Count);
 
-            IVsSolution solutionService = VsIdeTestHostContext.ServiceProvider.GetService(typeof(SVsSolution)) as IVsSolution;
-            Assert.IsNotNull(solutionService);
+                IVsSolution solutionService = VsIdeTestHostContext.ServiceProvider.GetService(typeof(SVsSolution)) as IVsSolution;
+                Assert.IsNotNull(solutionService);
 
-            IVsHierarchy selectedHierarchy;
-            ErrorHandler.ThrowOnFailure(solutionService.GetProjectOfUniqueName(project.UniqueName, out selectedHierarchy));
-            Assert.IsNotNull(selectedHierarchy);
+                IVsHierarchy selectedHierarchy;
+                ErrorHandler.ThrowOnFailure(solutionService.GetProjectOfUniqueName(project.UniqueName, out selectedHierarchy));
+                Assert.IsNotNull(selectedHierarchy);
 
-            ErrorHandler.ThrowOnFailure(solutionService.CloseSolutionElement((uint)__VSSLNCLOSEOPTIONS.SLNCLOSEOPT_UnloadProject, selectedHierarchy, 0));
+                ErrorHandler.ThrowOnFailure(solutionService.CloseSolutionElement((uint)__VSSLNCLOSEOPTIONS.SLNCLOSEOPT_UnloadProject, selectedHierarchy, 0));
 
-            allItems = GetErrorListItems(errorList, 0);
-            Assert.AreEqual(0, allItems.Count);
+                allItems = GetErrorListItems(errorList, 0);
+                Assert.AreEqual(0, allItems.Count);
+            }
         }
 
         /// <summary>
@@ -636,19 +667,20 @@ namespace DebuggerUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestProjectWithErrorsDeleteFile() {
-            var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte);
-            var project = app.OpenAndFindProject(@"TestData\ErrorProjectDeleteFile.sln");
-            
-            var errorList = (IVsErrorList)VsIdeTestHostContext.ServiceProvider.GetService(typeof(SVsErrorList));
+            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenAndFindProject(@"TestData\ErrorProjectDeleteFile.sln");
 
-            const int expectedItems = 6;
-            List<IVsTaskItem> allItems = GetErrorListItems(errorList, expectedItems);
-            Assert.AreEqual(expectedItems, allItems.Count);
+                var errorList = (IVsErrorList)VsIdeTestHostContext.ServiceProvider.GetService(typeof(SVsErrorList));
 
-            project.ProjectItems.Item("Program.py").Delete();
+                const int expectedItems = 6;
+                List<IVsTaskItem> allItems = GetErrorListItems(errorList, expectedItems);
+                Assert.AreEqual(expectedItems, allItems.Count);
 
-            allItems = GetErrorListItems(errorList, 0);
-            Assert.AreEqual(0, allItems.Count);
+                project.ProjectItems.Item("Program.py").Delete();
+
+                allItems = GetErrorListItems(errorList, 0);
+                Assert.AreEqual(0, allItems.Count);
+            }
         }
 
         /// <summary>
@@ -658,19 +690,20 @@ namespace DebuggerUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void IndentationInconsistencyWarning() {
             GetOptions().IndentationInconsistencySeverity = Severity.Warning;
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            var project = app.OpenAndFindProject(@"TestData\InconsistentIndentation.sln");
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenAndFindProject(@"TestData\InconsistentIndentation.sln");
 
-            System.Threading.Thread.Sleep(5000);
-            var errorList = (IVsErrorList)VsIdeTestHostContext.ServiceProvider.GetService(typeof(SVsErrorList));
+                System.Threading.Thread.Sleep(5000);
+                var errorList = (IVsErrorList)VsIdeTestHostContext.ServiceProvider.GetService(typeof(SVsErrorList));
 
-            const int expectedItems = 1;
-            List<IVsTaskItem> allItems = GetErrorListItems(errorList, expectedItems);
-            Assert.AreEqual(expectedItems, allItems.Count);
+                const int expectedItems = 1;
+                List<IVsTaskItem> allItems = GetErrorListItems(errorList, expectedItems);
+                Assert.AreEqual(expectedItems, allItems.Count);
 
-            VSTASKPRIORITY[] pri = new VSTASKPRIORITY[1];
-            ErrorHandler.ThrowOnFailure(allItems[0].get_Priority(pri));
-            Assert.AreEqual(VSTASKPRIORITY.TP_NORMAL, pri[0]);
+                VSTASKPRIORITY[] pri = new VSTASKPRIORITY[1];
+                ErrorHandler.ThrowOnFailure(allItems[0].get_Priority(pri));
+                Assert.AreEqual(VSTASKPRIORITY.TP_NORMAL, pri[0]);
+            }
         }
 
         /// <summary>
@@ -680,18 +713,19 @@ namespace DebuggerUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void IndentationInconsistencyError() {
             GetOptions().IndentationInconsistencySeverity = Severity.Error;
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            var project = app.OpenAndFindProject(@"TestData\InconsistentIndentation.sln");
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenAndFindProject(@"TestData\InconsistentIndentation.sln");
 
-            var errorList = (IVsErrorList)VsIdeTestHostContext.ServiceProvider.GetService(typeof(SVsErrorList));
+                var errorList = (IVsErrorList)VsIdeTestHostContext.ServiceProvider.GetService(typeof(SVsErrorList));
 
-            const int expectedItems = 1;
-            List<IVsTaskItem> allItems = GetErrorListItems(errorList, expectedItems);
-            Assert.AreEqual(expectedItems, allItems.Count);
+                const int expectedItems = 1;
+                List<IVsTaskItem> allItems = GetErrorListItems(errorList, expectedItems);
+                Assert.AreEqual(expectedItems, allItems.Count);
 
-            VSTASKPRIORITY[] pri = new VSTASKPRIORITY[1];
-            ErrorHandler.ThrowOnFailure(allItems[0].get_Priority(pri));
-            Assert.AreEqual(VSTASKPRIORITY.TP_HIGH, pri[0]);
+                VSTASKPRIORITY[] pri = new VSTASKPRIORITY[1];
+                ErrorHandler.ThrowOnFailure(allItems[0].get_Priority(pri));
+                Assert.AreEqual(VSTASKPRIORITY.TP_HIGH, pri[0]);
+            }
         }
 
         /// <summary>
@@ -702,14 +736,15 @@ namespace DebuggerUITests {
         public void IndentationInconsistencyIgnore() {
             GetOptions().IndentationInconsistencySeverity = Severity.Ignore;
 
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            var project = app.OpenAndFindProject(@"TestData\InconsistentIndentation.sln");
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenAndFindProject(@"TestData\InconsistentIndentation.sln");
 
-            var errorList = (IVsErrorList)VsIdeTestHostContext.ServiceProvider.GetService(typeof(SVsErrorList));
+                var errorList = (IVsErrorList)VsIdeTestHostContext.ServiceProvider.GetService(typeof(SVsErrorList));
 
-            const int expectedItems = 0;
-            List<IVsTaskItem> allItems = GetErrorListItems(errorList, expectedItems);
-            Assert.AreEqual(expectedItems, allItems.Count);
+                const int expectedItems = 0;
+                List<IVsTaskItem> allItems = GetErrorListItems(errorList, expectedItems);
+                Assert.AreEqual(expectedItems, allItems.Count);
+            }
         }
 
         /// <summary>
@@ -720,17 +755,18 @@ namespace DebuggerUITests {
         public void StartWithDebuggingNoProject() {
             string scriptFilePath = TestData.GetPath(@"TestData\HelloWorld\Program.py");
 
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            app.DeleteAllBreakPoints();
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                app.DeleteAllBreakPoints();
 
-            VsIdeTestHostContext.Dte.ItemOperations.OpenFile(scriptFilePath);
-            VsIdeTestHostContext.Dte.Debugger.Breakpoints.Add(File: scriptFilePath, Line: 1);
-            VsIdeTestHostContext.Dte.ExecuteCommand("Project.StartwithDebugging");
-            WaitForMode(dbgDebugMode.dbgBreakMode);
-            Assert.AreEqual(dbgDebugMode.dbgBreakMode, VsIdeTestHostContext.Dte.Debugger.CurrentMode);
-            Assert.AreEqual("Program.py, line 1", VsIdeTestHostContext.Dte.Debugger.BreakpointLastHit.Name);
-            VsIdeTestHostContext.Dte.Debugger.Go(WaitForBreakOrEnd: true);
-            Assert.AreEqual(dbgDebugMode.dbgDesignMode, VsIdeTestHostContext.Dte.Debugger.CurrentMode);
+                VsIdeTestHostContext.Dte.ItemOperations.OpenFile(scriptFilePath);
+                VsIdeTestHostContext.Dte.Debugger.Breakpoints.Add(File: scriptFilePath, Line: 1);
+                VsIdeTestHostContext.Dte.ExecuteCommand("Project.StartwithDebugging");
+                WaitForMode(dbgDebugMode.dbgBreakMode);
+                Assert.AreEqual(dbgDebugMode.dbgBreakMode, VsIdeTestHostContext.Dte.Debugger.CurrentMode);
+                Assert.AreEqual("Program.py, line 1", VsIdeTestHostContext.Dte.Debugger.BreakpointLastHit.Name);
+                VsIdeTestHostContext.Dte.Debugger.Go(WaitForBreakOrEnd: true);
+                Assert.AreEqual(dbgDebugMode.dbgDesignMode, VsIdeTestHostContext.Dte.Debugger.CurrentMode);
+            }
         }
 
         /// <summary>
@@ -741,14 +777,15 @@ namespace DebuggerUITests {
         public void StartWithoutDebuggingNoProject() {
             string scriptFilePath = TestData.GetPath(@"TestData\CreateFile1.py");
 
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            app.DeleteAllBreakPoints();
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                app.DeleteAllBreakPoints();
 
-            VsIdeTestHostContext.Dte.ItemOperations.OpenFile(scriptFilePath);
-            VsIdeTestHostContext.Dte.Debugger.Breakpoints.Add(File: scriptFilePath, Line: 1);
-            VsIdeTestHostContext.Dte.ExecuteCommand("Project.StartwithoutDebugging");
-            Assert.AreEqual(dbgDebugMode.dbgDesignMode, VsIdeTestHostContext.Dte.Debugger.CurrentMode);
-            WaitForFileCreatedByScript(TestData.GetPath(@"TestData\File1.txt"));
+                VsIdeTestHostContext.Dte.ItemOperations.OpenFile(scriptFilePath);
+                VsIdeTestHostContext.Dte.Debugger.Breakpoints.Add(File: scriptFilePath, Line: 1);
+                VsIdeTestHostContext.Dte.ExecuteCommand("Project.StartwithoutDebugging");
+                Assert.AreEqual(dbgDebugMode.dbgDesignMode, VsIdeTestHostContext.Dte.Debugger.CurrentMode);
+                WaitForFileCreatedByScript(TestData.GetPath(@"TestData\File1.txt"));
+            }
         }
 
         /// <summary>
@@ -759,16 +796,18 @@ namespace DebuggerUITests {
         public void StartWithDebuggingNotInProject() {
             string scriptFilePath = TestData.GetPath(@"TestData\HelloWorld\Program.py");
 
-            OpenDebuggerProject();
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                OpenDebuggerProject(app);
 
-            VsIdeTestHostContext.Dte.ItemOperations.OpenFile(scriptFilePath);
-            VsIdeTestHostContext.Dte.Debugger.Breakpoints.Add(File: scriptFilePath, Line: 1);
-            VsIdeTestHostContext.Dte.ExecuteCommand("Project.StartwithDebugging");
-            WaitForMode(dbgDebugMode.dbgBreakMode);
-            Assert.AreEqual(dbgDebugMode.dbgBreakMode, VsIdeTestHostContext.Dte.Debugger.CurrentMode);
-            Assert.AreEqual("Program.py, line 1", VsIdeTestHostContext.Dte.Debugger.BreakpointLastHit.Name);
-            VsIdeTestHostContext.Dte.Debugger.Go(WaitForBreakOrEnd: true);
-            Assert.AreEqual(dbgDebugMode.dbgDesignMode, VsIdeTestHostContext.Dte.Debugger.CurrentMode);
+                VsIdeTestHostContext.Dte.ItemOperations.OpenFile(scriptFilePath);
+                VsIdeTestHostContext.Dte.Debugger.Breakpoints.Add(File: scriptFilePath, Line: 1);
+                VsIdeTestHostContext.Dte.ExecuteCommand("Project.StartwithDebugging");
+                WaitForMode(dbgDebugMode.dbgBreakMode);
+                Assert.AreEqual(dbgDebugMode.dbgBreakMode, VsIdeTestHostContext.Dte.Debugger.CurrentMode);
+                Assert.AreEqual("Program.py, line 1", VsIdeTestHostContext.Dte.Debugger.BreakpointLastHit.Name);
+                VsIdeTestHostContext.Dte.Debugger.Go(WaitForBreakOrEnd: true);
+                Assert.AreEqual(dbgDebugMode.dbgDesignMode, VsIdeTestHostContext.Dte.Debugger.CurrentMode);
+            }
         }
 
         /// <summary>
@@ -779,13 +818,15 @@ namespace DebuggerUITests {
         public void StartWithoutDebuggingNotInProject() {
             string scriptFilePath = TestData.GetPath(@"TestData\CreateFile2.py");
 
-            OpenDebuggerProject();
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                OpenDebuggerProject(app);
 
-            VsIdeTestHostContext.Dte.ItemOperations.OpenFile(scriptFilePath);
-            VsIdeTestHostContext.Dte.Debugger.Breakpoints.Add(File: scriptFilePath, Line: 1);
-            VsIdeTestHostContext.Dte.ExecuteCommand("Project.StartwithoutDebugging");
-            Assert.AreEqual(dbgDebugMode.dbgDesignMode, VsIdeTestHostContext.Dte.Debugger.CurrentMode);
-            WaitForFileCreatedByScript(TestData.GetPath(@"TestData\File2.txt"));
+                VsIdeTestHostContext.Dte.ItemOperations.OpenFile(scriptFilePath);
+                VsIdeTestHostContext.Dte.Debugger.Breakpoints.Add(File: scriptFilePath, Line: 1);
+                VsIdeTestHostContext.Dte.ExecuteCommand("Project.StartwithoutDebugging");
+                Assert.AreEqual(dbgDebugMode.dbgDesignMode, VsIdeTestHostContext.Dte.Debugger.CurrentMode);
+                WaitForFileCreatedByScript(TestData.GetPath(@"TestData\File2.txt"));
+            }
         }
 
         /// <summary>
@@ -796,16 +837,18 @@ namespace DebuggerUITests {
         public void StartWithDebuggingInProject() {
             string scriptFilePath = TestData.GetPath(@"TestData\DebuggerProject\Program.py");
 
-            OpenDebuggerProject();
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                OpenDebuggerProject(app);
 
-            VsIdeTestHostContext.Dte.ItemOperations.OpenFile(scriptFilePath);
-            VsIdeTestHostContext.Dte.Debugger.Breakpoints.Add(File: scriptFilePath, Line: 1);
-            VsIdeTestHostContext.Dte.ExecuteCommand("Project.StartwithDebugging");
-            WaitForMode(dbgDebugMode.dbgBreakMode);
-            Assert.AreEqual(dbgDebugMode.dbgBreakMode, VsIdeTestHostContext.Dte.Debugger.CurrentMode);
-            Assert.AreEqual("Program.py, line 1", VsIdeTestHostContext.Dte.Debugger.BreakpointLastHit.Name);
-            VsIdeTestHostContext.Dte.Debugger.Go(WaitForBreakOrEnd: true);
-            Assert.AreEqual(dbgDebugMode.dbgDesignMode, VsIdeTestHostContext.Dte.Debugger.CurrentMode);
+                VsIdeTestHostContext.Dte.ItemOperations.OpenFile(scriptFilePath);
+                VsIdeTestHostContext.Dte.Debugger.Breakpoints.Add(File: scriptFilePath, Line: 1);
+                VsIdeTestHostContext.Dte.ExecuteCommand("Project.StartwithDebugging");
+                WaitForMode(dbgDebugMode.dbgBreakMode);
+                Assert.AreEqual(dbgDebugMode.dbgBreakMode, VsIdeTestHostContext.Dte.Debugger.CurrentMode);
+                Assert.AreEqual("Program.py, line 1", VsIdeTestHostContext.Dte.Debugger.BreakpointLastHit.Name);
+                VsIdeTestHostContext.Dte.Debugger.Go(WaitForBreakOrEnd: true);
+                Assert.AreEqual(dbgDebugMode.dbgDesignMode, VsIdeTestHostContext.Dte.Debugger.CurrentMode);
+            }
         }
 
         /// <summary>
@@ -816,13 +859,15 @@ namespace DebuggerUITests {
         public void StartWithoutDebuggingInProject() {
             string scriptFilePath = TestData.GetPath(@"TestData\DebuggerProject\CreateFile3.py");
 
-            OpenDebuggerProject();
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                OpenDebuggerProject(app);
 
-            VsIdeTestHostContext.Dte.ItemOperations.OpenFile(scriptFilePath);
-            VsIdeTestHostContext.Dte.Debugger.Breakpoints.Add(File: scriptFilePath, Line: 1);
-            VsIdeTestHostContext.Dte.ExecuteCommand("Project.StartwithoutDebugging");
-            Assert.AreEqual(dbgDebugMode.dbgDesignMode, VsIdeTestHostContext.Dte.Debugger.CurrentMode);
-            WaitForFileCreatedByScript(TestData.GetPath(@"TestData\DebuggerProject\File3.txt"));
+                VsIdeTestHostContext.Dte.ItemOperations.OpenFile(scriptFilePath);
+                VsIdeTestHostContext.Dte.Debugger.Breakpoints.Add(File: scriptFilePath, Line: 1);
+                VsIdeTestHostContext.Dte.ExecuteCommand("Project.StartwithoutDebugging");
+                Assert.AreEqual(dbgDebugMode.dbgDesignMode, VsIdeTestHostContext.Dte.Debugger.CurrentMode);
+                WaitForFileCreatedByScript(TestData.GetPath(@"TestData\DebuggerProject\File3.txt"));
+            }
         }
 
         /// <summary>
@@ -833,8 +878,7 @@ namespace DebuggerUITests {
         public void StartWithDebuggingNoScript() {
             try {
                 VsIdeTestHostContext.Dte.ExecuteCommand("Project.StartwithDebugging");
-            }
-            catch (COMException e) {
+            } catch (COMException e) {
                 // Requires an opened python file with focus
                 Assert.IsTrue(e.ToString().Contains("is not available"));
             }
@@ -878,7 +922,7 @@ namespace DebuggerUITests {
 
                 uint[] itemCnt = new uint[1];
 
-                while (ErrorHandler.Succeeded(items.Next(1, taskItems, itemCnt)) && itemCnt[0] == 1) {                    
+                while (ErrorHandler.Succeeded(items.Next(1, taskItems, itemCnt)) && itemCnt[0] == 1) {
                     allItems.Add(taskItems[0]);
                 }
                 if (allItems.Count == expectedItems) {
@@ -898,14 +942,13 @@ namespace DebuggerUITests {
 
         #region Helpers
 
-       
-        internal static Project OpenDebuggerProject(string startItem = null) {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+
+        internal static Project OpenDebuggerProject(VisualStudioApp app, string startItem = null) {
             return app.OpenAndFindProject(@"TestData\DebuggerProject.sln", startItem);
         }
 
-        private static Project OpenDebuggerProjectAndBreak(string startItem, int lineNo, bool setStartupItem = true) {
-            return OpenProjectAndBreak(@"TestData\DebuggerProject.sln", startItem, lineNo);
+        private static Project OpenDebuggerProjectAndBreak(VisualStudioApp app, string startItem, int lineNo, bool setStartupItem = true) {
+            return OpenProjectAndBreak(app, @"TestData\DebuggerProject.sln", startItem, lineNo);
         }
 
         private static string GetOutputWindowDebugPaneText() {
@@ -925,12 +968,11 @@ namespace DebuggerUITests {
             Assert.IsTrue(condition(GetOutputWindowDebugPaneText()));
         }
 
-        private static void StartHelloWorldAndBreak() {
-            OpenProjectAndBreak(@"TestData\HelloWorld.sln", "Program.py", 1);
+        private static void StartHelloWorldAndBreak(VisualStudioApp app) {
+            OpenProjectAndBreak(app, @"TestData\HelloWorld.sln", "Program.py", 1);
         }
 
-        internal static Project OpenProjectAndBreak(string projName, string filename, int lineNo, bool setStartupItem = true) {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+        internal static Project OpenProjectAndBreak(VisualStudioApp app, string projName, string filename, int lineNo, bool setStartupItem = true) {
             var project = app.OpenAndFindProject(projName, filename, setStartupItem: setStartupItem);
 
             VsIdeTestHostContext.Dte.Debugger.Breakpoints.Add(File: filename, Line: lineNo);
@@ -950,7 +992,7 @@ namespace DebuggerUITests {
 
             Assert.AreEqual(mode, VsIdeTestHostContext.Dte.Debugger.CurrentMode);
         }
-        
+
         #endregion
     }
 }

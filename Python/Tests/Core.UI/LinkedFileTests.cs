@@ -35,318 +35,323 @@ namespace PythonToolsUITests {
             TestData.Deploy();
         }
 
-        [TestCleanup]
-        public void MyTestCleanup() {
-            VsIdeTestHostContext.Dte.Solution.Close(false);
-        }
-
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void RenameLinkedNode() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            var project = app.OpenAndFindProject(@"TestData\LinkedFiles.sln");
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenAndFindProject(@"TestData\LinkedFiles.sln");
 
-            app.OpenSolutionExplorer();
-            var window = app.SolutionExplorerTreeView;
+                app.OpenSolutionExplorer();
+                var window = app.SolutionExplorerTreeView;
 
-            // implicitly linked node
-            var projectNode = window.FindItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "ImplicitLinkedFile.py");
-            Assert.IsNotNull(projectNode, "projectNode");
-            AutomationWrapper.Select(projectNode);
+                // implicitly linked node
+                var projectNode = window.FindItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "ImplicitLinkedFile.py");
+                Assert.IsNotNull(projectNode, "projectNode");
+                AutomationWrapper.Select(projectNode);
 
-            try {
-                app.Dte.ExecuteCommand("File.Rename");
-                Assert.Fail("Should have failed to rename");
-            } catch (Exception e) {
-                Debug.WriteLine(e.ToString());
-            }
+                try {
+                    app.Dte.ExecuteCommand("File.Rename");
+                    Assert.Fail("Should have failed to rename");
+                } catch (Exception e) {
+                    Debug.WriteLine(e.ToString());
+                }
 
 
-            // explicitly linked node
-            var explicitLinkedFile = window.FindItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "ExplicitDir","ExplicitLinkedFile.py");
-            Assert.IsNotNull(explicitLinkedFile, "explicitLinkedFile");
-            AutomationWrapper.Select(explicitLinkedFile);
+                // explicitly linked node
+                var explicitLinkedFile = window.FindItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "ExplicitDir", "ExplicitLinkedFile.py");
+                Assert.IsNotNull(explicitLinkedFile, "explicitLinkedFile");
+                AutomationWrapper.Select(explicitLinkedFile);
 
-            try {
-                app.Dte.ExecuteCommand("File.Rename");
-                Assert.Fail("Should have failed to rename");
-            } catch (Exception e) {
-                Debug.WriteLine(e.ToString());
-            }
+                try {
+                    app.Dte.ExecuteCommand("File.Rename");
+                    Assert.Fail("Should have failed to rename");
+                } catch (Exception e) {
+                    Debug.WriteLine(e.ToString());
+                }
 
-            var autoItem = project.ProjectItems.Item("ImplicitLinkedFile.py");
-            try {
-                autoItem.Properties.Item("FileName").Value = "Foo";
-                Assert.Fail("Should have failed to rename");
-            } catch (TargetInvocationException tie) {
-                Assert.AreEqual(tie.InnerException.GetType(), typeof(InvalidOperationException));
-            }
+                var autoItem = project.ProjectItems.Item("ImplicitLinkedFile.py");
+                try {
+                    autoItem.Properties.Item("FileName").Value = "Foo";
+                    Assert.Fail("Should have failed to rename");
+                } catch (TargetInvocationException tie) {
+                    Assert.AreEqual(tie.InnerException.GetType(), typeof(InvalidOperationException));
+                }
 
-            autoItem = project.ProjectItems.Item("ExplicitDir").Collection.Item("ExplicitLinkedFile.py");
-            try {
-                autoItem.Properties.Item("FileName").Value = "Foo";
-                Assert.Fail("Should have failed to rename");
-            } catch (TargetInvocationException tie) {
-                Assert.AreEqual(tie.InnerException.GetType(), typeof(InvalidOperationException));
+                autoItem = project.ProjectItems.Item("ExplicitDir").Collection.Item("ExplicitLinkedFile.py");
+                try {
+                    autoItem.Properties.Item("FileName").Value = "Foo";
+                    Assert.Fail("Should have failed to rename");
+                } catch (TargetInvocationException tie) {
+                    Assert.AreEqual(tie.InnerException.GetType(), typeof(InvalidOperationException));
+                }
             }
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void MoveLinkedNode() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            var project = app.OpenAndFindProject(@"TestData\LinkedFiles.sln");
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenAndFindProject(@"TestData\LinkedFiles.sln");
 
-            app.OpenSolutionExplorer();
-            var window = app.SolutionExplorerTreeView;
+                app.OpenSolutionExplorer();
+                var window = app.SolutionExplorerTreeView;
 
-            var projectNode = window.FindItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "MovedLinkedFile.py");
-            Assert.IsNotNull(projectNode, "projectNode");
-            AutomationWrapper.Select(projectNode);
+                var projectNode = window.FindItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "MovedLinkedFile.py");
+                Assert.IsNotNull(projectNode, "projectNode");
+                AutomationWrapper.Select(projectNode);
 
-            app.Dte.ExecuteCommand("Edit.Cut");
+                app.Dte.ExecuteCommand("Edit.Cut");
 
-            var folderNode = window.FindItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "MoveToFolder");
-            AutomationWrapper.Select(folderNode);
+                var folderNode = window.FindItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "MoveToFolder");
+                AutomationWrapper.Select(folderNode);
 
-            app.Dte.ExecuteCommand("Edit.Paste");
+                app.Dte.ExecuteCommand("Edit.Paste");
 
-            // item should have moved
-            var movedLinkedFile = window.WaitForItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "MoveToFolder", "MovedLinkedFile.py");
-            Assert.IsNotNull(movedLinkedFile, "movedLinkedFile");
+                // item should have moved
+                var movedLinkedFile = window.WaitForItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "MoveToFolder", "MovedLinkedFile.py");
+                Assert.IsNotNull(movedLinkedFile, "movedLinkedFile");
 
-            // file should be at the same location
-            Assert.IsTrue(File.Exists(TestData.GetPath(@"TestData\\MovedLinkedFile.py")));
-            Assert.IsFalse(File.Exists(TestData.GetPath(@"TestData\\MoveToFolder\\MovedLinkedFile.py")));
+                // file should be at the same location
+                Assert.IsTrue(File.Exists(TestData.GetPath(@"TestData\\MovedLinkedFile.py")));
+                Assert.IsFalse(File.Exists(TestData.GetPath(@"TestData\\MoveToFolder\\MovedLinkedFile.py")));
 
-            // now move it back
-            AutomationWrapper.Select(movedLinkedFile);
-            app.Dte.ExecuteCommand("Edit.Cut");
+                // now move it back
+                AutomationWrapper.Select(movedLinkedFile);
+                app.Dte.ExecuteCommand("Edit.Cut");
 
-            var originalFolder = window.FindItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles");
-            AutomationWrapper.Select(originalFolder);
-            app.Dte.ExecuteCommand("Edit.Paste");
+                var originalFolder = window.FindItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles");
+                AutomationWrapper.Select(originalFolder);
+                app.Dte.ExecuteCommand("Edit.Paste");
 
-            var movedLinkedFilePaste = window.WaitForItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "MovedLinkedFile.py");
-            Assert.IsNotNull(movedLinkedFilePaste, "movedLinkedFilePaste");
+                var movedLinkedFilePaste = window.WaitForItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "MovedLinkedFile.py");
+                Assert.IsNotNull(movedLinkedFilePaste, "movedLinkedFilePaste");
 
-            // and make sure we didn't mess up the path in the project file
-            MSBuild.Project buildProject = new MSBuild.Project(TestData.GetPath(@"TestData\LinkedFiles\LinkedFiles.pyproj"));
-            bool found = false;
-            foreach (var item in buildProject.GetItems("Compile")) {
-                if (item.UnevaluatedInclude == "..\\MovedLinkedFile.py") {
-                    found = true;
-                    break;
+                // and make sure we didn't mess up the path in the project file
+                MSBuild.Project buildProject = new MSBuild.Project(TestData.GetPath(@"TestData\LinkedFiles\LinkedFiles.pyproj"));
+                bool found = false;
+                foreach (var item in buildProject.GetItems("Compile")) {
+                    if (item.UnevaluatedInclude == "..\\MovedLinkedFile.py") {
+                        found = true;
+                        break;
+                    }
                 }
-            }
 
-            Assert.IsTrue(found);
+                Assert.IsTrue(found);
+            }
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void MoveLinkedNodeOpen() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            var project = app.OpenAndFindProject(@"TestData\LinkedFiles.sln");
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenAndFindProject(@"TestData\LinkedFiles.sln");
 
-            app.OpenSolutionExplorer();
-            var window = app.SolutionExplorerTreeView;
+                app.OpenSolutionExplorer();
+                var window = app.SolutionExplorerTreeView;
 
-            var openWindow = project.ProjectItems.Item("MovedLinkedFileOpen.py").Open();
-            Assert.IsNotNull(openWindow, "openWindow");
+                var openWindow = project.ProjectItems.Item("MovedLinkedFileOpen.py").Open();
+                Assert.IsNotNull(openWindow, "openWindow");
 
-            var projectNode = window.FindItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "MovedLinkedFileOpen.py");
-            
-            Assert.IsNotNull(projectNode, "projectNode");
-            AutomationWrapper.Select(projectNode);
+                var projectNode = window.FindItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "MovedLinkedFileOpen.py");
 
-            app.Dte.ExecuteCommand("Edit.Cut");
+                Assert.IsNotNull(projectNode, "projectNode");
+                AutomationWrapper.Select(projectNode);
 
-            var folderNode = window.FindItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "MoveToFolder");
-            AutomationWrapper.Select(folderNode);
+                app.Dte.ExecuteCommand("Edit.Cut");
 
-            app.Dte.ExecuteCommand("Edit.Paste");
+                var folderNode = window.FindItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "MoveToFolder");
+                AutomationWrapper.Select(folderNode);
 
-            var movedLinkedFileOpen = window.WaitForItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "MoveToFolder", "MovedLinkedFileOpen.py");
-            Assert.IsNotNull(movedLinkedFileOpen, "movedLinkedFileOpen");
+                app.Dte.ExecuteCommand("Edit.Paste");
 
-            Assert.IsTrue(File.Exists(TestData.GetPath(@"TestData\\MovedLinkedFileOpen.py")));
-            Assert.IsFalse(File.Exists(TestData.GetPath(@"TestData\\MoveToFolder\\MovedLinkedFileOpen.py")));
+                var movedLinkedFileOpen = window.WaitForItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "MoveToFolder", "MovedLinkedFileOpen.py");
+                Assert.IsNotNull(movedLinkedFileOpen, "movedLinkedFileOpen");
 
-            // window sholudn't have changed.
-            Assert.AreEqual(app.Dte.Windows.Item("MovedLinkedFileOpen.py"), openWindow);
+                Assert.IsTrue(File.Exists(TestData.GetPath(@"TestData\\MovedLinkedFileOpen.py")));
+                Assert.IsFalse(File.Exists(TestData.GetPath(@"TestData\\MoveToFolder\\MovedLinkedFileOpen.py")));
+
+                // window sholudn't have changed.
+                Assert.AreEqual(app.Dte.Windows.Item("MovedLinkedFileOpen.py"), openWindow);
+            }
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void MoveLinkedNodeOpenEdited() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            var project = app.OpenAndFindProject(@"TestData\LinkedFiles.sln");
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenAndFindProject(@"TestData\LinkedFiles.sln");
 
-            app.OpenSolutionExplorer();
-            var window = app.SolutionExplorerTreeView;
+                app.OpenSolutionExplorer();
+                var window = app.SolutionExplorerTreeView;
 
-            var openWindow = project.ProjectItems.Item("MovedLinkedFileOpenEdit.py").Open();
-            Assert.IsNotNull(openWindow, "openWindow");
+                var openWindow = project.ProjectItems.Item("MovedLinkedFileOpenEdit.py").Open();
+                Assert.IsNotNull(openWindow, "openWindow");
 
-            var selection = ((TextSelection)openWindow.Selection);
-            selection.SelectAll();
-            selection.Delete();
+                var selection = ((TextSelection)openWindow.Selection);
+                selection.SelectAll();
+                selection.Delete();
 
-            var projectNode = window.FindItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "MovedLinkedFileOpenEdit.py");
+                var projectNode = window.FindItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "MovedLinkedFileOpenEdit.py");
 
-            Assert.IsNotNull(projectNode, "projectNode");
-            AutomationWrapper.Select(projectNode);
+                Assert.IsNotNull(projectNode, "projectNode");
+                AutomationWrapper.Select(projectNode);
 
-            app.Dte.ExecuteCommand("Edit.Cut");
+                app.Dte.ExecuteCommand("Edit.Cut");
 
-            var folderNode = window.FindItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "MoveToFolder");
-            AutomationWrapper.Select(folderNode);
+                var folderNode = window.FindItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "MoveToFolder");
+                AutomationWrapper.Select(folderNode);
 
-            app.Dte.ExecuteCommand("Edit.Paste");
+                app.Dte.ExecuteCommand("Edit.Paste");
 
-            var movedLinkedFileOpenEdit = window.WaitForItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "MoveToFolder", "MovedLinkedFileOpenEdit.py");
-            Assert.IsNotNull(movedLinkedFileOpenEdit, "movedLinkedFileOpenEdit");
+                var movedLinkedFileOpenEdit = window.WaitForItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "MoveToFolder", "MovedLinkedFileOpenEdit.py");
+                Assert.IsNotNull(movedLinkedFileOpenEdit, "movedLinkedFileOpenEdit");
 
-            Assert.IsTrue(File.Exists(TestData.GetPath(@"TestData\\MovedLinkedFileOpenEdit.py")));
-            Assert.IsFalse(File.Exists(TestData.GetPath(@"TestData\\MoveToFolder\\MovedLinkedFileOpenEdit.py")));
+                Assert.IsTrue(File.Exists(TestData.GetPath(@"TestData\\MovedLinkedFileOpenEdit.py")));
+                Assert.IsFalse(File.Exists(TestData.GetPath(@"TestData\\MoveToFolder\\MovedLinkedFileOpenEdit.py")));
 
-            // window sholudn't have changed.
-            Assert.AreEqual(app.Dte.Windows.Item("MovedLinkedFileOpenEdit.py"), openWindow);
+                // window sholudn't have changed.
+                Assert.AreEqual(app.Dte.Windows.Item("MovedLinkedFileOpenEdit.py"), openWindow);
 
-            Assert.AreEqual(openWindow.Document.Saved, false);
-            openWindow.Document.Save();
+                Assert.AreEqual(openWindow.Document.Saved, false);
+                openWindow.Document.Save();
 
-            Assert.AreEqual(new FileInfo(TestData.GetPath(@"TestData\\MovedLinkedFileOpenEdit.py")).Length, (long)0);
+                Assert.AreEqual(new FileInfo(TestData.GetPath(@"TestData\\MovedLinkedFileOpenEdit.py")).Length, (long)0);
+            }
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void MoveLinkedNodeFileExistsButNotInProject() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            var project = app.OpenAndFindProject(@"TestData\LinkedFiles.sln");
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenAndFindProject(@"TestData\LinkedFiles.sln");
 
-            app.OpenSolutionExplorer();
-            var window = app.SolutionExplorerTreeView;
+                app.OpenSolutionExplorer();
+                var window = app.SolutionExplorerTreeView;
 
-            var projectNode = window.FindItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "FileNotInProject.py");
-            Assert.IsNotNull(projectNode, "projectNode");
-            AutomationWrapper.Select(projectNode);
+                var projectNode = window.FindItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "FileNotInProject.py");
+                Assert.IsNotNull(projectNode, "projectNode");
+                AutomationWrapper.Select(projectNode);
 
-            app.Dte.ExecuteCommand("Edit.Cut");
+                app.Dte.ExecuteCommand("Edit.Cut");
 
-            var folderNode = window.FindItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "FolderWithAFile");
-            AutomationWrapper.Select(folderNode);
+                var folderNode = window.FindItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "FolderWithAFile");
+                AutomationWrapper.Select(folderNode);
 
-            app.Dte.ExecuteCommand("Edit.Paste");
+                app.Dte.ExecuteCommand("Edit.Paste");
 
-            // item should have moved
-            var fileNotInProject = window.WaitForItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "FolderWithAFile", "FileNotInProject.py");
-            Assert.IsNotNull(fileNotInProject, "fileNotInProject");
+                // item should have moved
+                var fileNotInProject = window.WaitForItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "FolderWithAFile", "FileNotInProject.py");
+                Assert.IsNotNull(fileNotInProject, "fileNotInProject");
 
-            // but it should be the linked file on disk outside of our project, not the file that exists on disk at the same location.
-            var autoItem = project.ProjectItems.Item("FolderWithAFile").Collection.Item("FileNotInProject.py");
-            Assert.AreEqual(TestData.GetPath(@"TestData\FileNotInProject.py"), autoItem.Properties.Item("FullPath").Value);
+                // but it should be the linked file on disk outside of our project, not the file that exists on disk at the same location.
+                var autoItem = project.ProjectItems.Item("FolderWithAFile").Collection.Item("FileNotInProject.py");
+                Assert.AreEqual(TestData.GetPath(@"TestData\FileNotInProject.py"), autoItem.Properties.Item("FullPath").Value);
+            }
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void DeleteLinkedNode() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            var project = app.OpenAndFindProject(@"TestData\LinkedFiles.sln");
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenAndFindProject(@"TestData\LinkedFiles.sln");
 
-            app.OpenSolutionExplorer();
-            var window = app.SolutionExplorerTreeView;
+                app.OpenSolutionExplorer();
+                var window = app.SolutionExplorerTreeView;
 
-            var projectNode = window.FindItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "DeletedLinkedFile.py");
-            Assert.IsNotNull(projectNode, "projectNode");
-            AutomationWrapper.Select(projectNode);
+                var projectNode = window.FindItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "DeletedLinkedFile.py");
+                Assert.IsNotNull(projectNode, "projectNode");
+                AutomationWrapper.Select(projectNode);
 
-            app.Dte.ExecuteCommand("Edit.Delete");
+                app.Dte.ExecuteCommand("Edit.Delete");
 
-            projectNode = window.FindItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "DeletedLinkedFile.py");
-            Assert.AreEqual(null, projectNode);
-            Assert.IsTrue(File.Exists(TestData.GetPath(@"TestData\\DeletedLinkedFile.py")));
+                projectNode = window.FindItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "DeletedLinkedFile.py");
+                Assert.AreEqual(null, projectNode);
+                Assert.IsTrue(File.Exists(TestData.GetPath(@"TestData\\DeletedLinkedFile.py")));
+            }
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void LinkedFileInProjectIgnored() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            var project = app.OpenAndFindProject(@"TestData\LinkedFiles.sln");
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenAndFindProject(@"TestData\LinkedFiles.sln");
 
-            app.OpenSolutionExplorer();
-            var window = app.SolutionExplorerTreeView;
+                app.OpenSolutionExplorer();
+                var window = app.SolutionExplorerTreeView;
 
-            var projectNode = window.FindItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "Foo", "LinkedInModule.py");
+                var projectNode = window.FindItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "Foo", "LinkedInModule.py");
 
-            Assert.IsNull(projectNode);
+                Assert.IsNull(projectNode);
+            }
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void SaveAsCreateLink() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            var project = app.OpenAndFindProject(@"TestData\LinkedFiles.sln");
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenAndFindProject(@"TestData\LinkedFiles.sln");
 
-            app.OpenSolutionExplorer();
+                app.OpenSolutionExplorer();
 
-            var autoItem = project.ProjectItems.Item("SaveAsCreateLink.py");
-            var node = (HierarchyNode)autoItem.Properties.Item("Node").Value;
-            Assert.AreEqual(node.IsLinkFile, false);
+                var autoItem = project.ProjectItems.Item("SaveAsCreateLink.py");
+                var node = (HierarchyNode)autoItem.Properties.Item("Node").Value;
+                Assert.AreEqual(node.IsLinkFile, false);
 
-            var itemWindow = autoItem.Open();
+                var itemWindow = autoItem.Open();
 
-            autoItem.SaveAs("..\\SaveAsCreateLink.py");
+                autoItem.SaveAs("..\\SaveAsCreateLink.py");
 
 
-            autoItem = project.ProjectItems.Item("SaveAsCreateLink.py");
-            node = (HierarchyNode)autoItem.Properties.Item("Node").Value;
-            Assert.AreEqual(node.IsLinkFile, true);
+                autoItem = project.ProjectItems.Item("SaveAsCreateLink.py");
+                node = (HierarchyNode)autoItem.Properties.Item("Node").Value;
+                Assert.AreEqual(node.IsLinkFile, true);
+            }
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void SaveAsCreateFile() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            var project = app.OpenAndFindProject(@"TestData\LinkedFiles.sln");
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenAndFindProject(@"TestData\LinkedFiles.sln");
 
-            app.OpenSolutionExplorer();
+                app.OpenSolutionExplorer();
 
-            var autoItem = project.ProjectItems.Item("SaveAsCreateFile.py");
-            var node = (HierarchyNode)autoItem.Properties.Item("Node").Value;
-            Assert.AreEqual(node.IsLinkFile, true);
+                var autoItem = project.ProjectItems.Item("SaveAsCreateFile.py");
+                var node = (HierarchyNode)autoItem.Properties.Item("Node").Value;
+                Assert.AreEqual(node.IsLinkFile, true);
 
-            var itemWindow = autoItem.Open();
+                var itemWindow = autoItem.Open();
 
-            autoItem.SaveAs(TestData.GetPath(@"TestData\LinkedFiles\SaveAsCreateFile.py"));
+                autoItem.SaveAs(TestData.GetPath(@"TestData\LinkedFiles\SaveAsCreateFile.py"));
 
-            autoItem = project.ProjectItems.Item("SaveAsCreateFile.py");
-            node = (HierarchyNode)autoItem.Properties.Item("Node").Value;
-            Assert.AreEqual(node.IsLinkFile, false);
+                autoItem = project.ProjectItems.Item("SaveAsCreateFile.py");
+                node = (HierarchyNode)autoItem.Properties.Item("Node").Value;
+                Assert.AreEqual(node.IsLinkFile, false);
+            }
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void SaveAsCreateFileNewDirectory() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            var project = app.OpenAndFindProject(@"TestData\LinkedFiles.sln");
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenAndFindProject(@"TestData\LinkedFiles.sln");
 
-            app.OpenSolutionExplorer();
+                app.OpenSolutionExplorer();
 
-            var autoItem = project.ProjectItems.Item("SaveAsCreateFileNewDirectory.py");
-            var node = (HierarchyNode)autoItem.Properties.Item("Node").Value;
-            Assert.AreEqual(node.IsLinkFile, true);
+                var autoItem = project.ProjectItems.Item("SaveAsCreateFileNewDirectory.py");
+                var node = (HierarchyNode)autoItem.Properties.Item("Node").Value;
+                Assert.AreEqual(node.IsLinkFile, true);
 
-            var itemWindow = autoItem.Open();
+                var itemWindow = autoItem.Open();
 
-            Directory.CreateDirectory(TestData.GetPath(@"TestData\LinkedFiles\CreatedDirectory"));
-            autoItem.SaveAs(TestData.GetPath(@"TestData\LinkedFiles\CreatedDirectory\SaveAsCreateFileNewDirectory.py"));
+                Directory.CreateDirectory(TestData.GetPath(@"TestData\LinkedFiles\CreatedDirectory"));
+                autoItem.SaveAs(TestData.GetPath(@"TestData\LinkedFiles\CreatedDirectory\SaveAsCreateFileNewDirectory.py"));
 
 
-            autoItem = project.ProjectItems.Item("CreatedDirectory").Collection.Item("SaveAsCreateFileNewDirectory.py");
-            node = (HierarchyNode)autoItem.Properties.Item("Node").Value;
-            Assert.AreEqual(node.IsLinkFile, false);
+                autoItem = project.ProjectItems.Item("CreatedDirectory").Collection.Item("SaveAsCreateFileNewDirectory.py");
+                node = (HierarchyNode)autoItem.Properties.Item("Node").Value;
+                Assert.AreEqual(node.IsLinkFile, false);
+            }
         }
 
         /// <summary>
@@ -355,28 +360,26 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void AddExistingItem() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            var project = app.OpenAndFindProject(@"TestData\LinkedFiles.sln");
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenAndFindProject(@"TestData\LinkedFiles.sln");
 
-            app.OpenSolutionExplorer();
-            var window = app.SolutionExplorerTreeView;
+                app.OpenSolutionExplorer();
+                var window = app.SolutionExplorerTreeView;
 
-            var projectNode = window.FindItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "FolderWithAFile");
-            Assert.IsNotNull(projectNode, "projectNode");
-            AutomationWrapper.Select(projectNode);
+                var projectNode = window.FindItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "FolderWithAFile");
+                Assert.IsNotNull(projectNode, "projectNode");
+                AutomationWrapper.Select(projectNode);
 
-            ThreadPool.QueueUserWorkItem(x => app.Dte.ExecuteCommand("Project.AddExistingItem"));
+                var addExistingDlg = new AddExistingItemDialog(app.OpenDialogWithDteExecuteCommand("Project.AddExistingItem"));
+                addExistingDlg.FileName = TestData.GetPath(@"TestData\ExistingItem.py");
+                addExistingDlg.AddLink();
 
-            var dialog = app.WaitForDialog();
-            var addExistingDlg = new AddExistingItemDialog(dialog);
-            addExistingDlg.FileName = TestData.GetPath(@"TestData\ExistingItem.py");
-            addExistingDlg.AddLink();
+                var existingItem = window.WaitForItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "FolderWithAFile", "ExistingItem.py");
+                Assert.IsNotNull(existingItem, "existingItem");
 
-            var existingItem = window.WaitForItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "FolderWithAFile", "ExistingItem.py");
-            Assert.IsNotNull(existingItem, "existingItem");
-
-            var searchPathNode = window.WaitForItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "Search Path", "..");
-            Assert.IsNotNull(searchPathNode, "searchPathNode");
+                var searchPathNode = window.WaitForItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "Search Path", "..");
+                Assert.IsNotNull(searchPathNode, "searchPathNode");
+            }
         }
 
         /// <summary>
@@ -385,26 +388,24 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void AddExistingItemAndItemIsAlreadyLinked() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            var project = app.OpenAndFindProject(@"TestData\LinkedFiles.sln");
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenAndFindProject(@"TestData\LinkedFiles.sln");
 
-            app.OpenSolutionExplorer();
-            var window = app.SolutionExplorerTreeView;
+                app.OpenSolutionExplorer();
+                var window = app.SolutionExplorerTreeView;
 
-            var projectNode = window.FindItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "FolderWithAFile");
-            Assert.IsNotNull(projectNode, "projectNode");
-            AutomationWrapper.Select(projectNode);
+                var projectNode = window.FindItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "FolderWithAFile");
+                Assert.IsNotNull(projectNode, "projectNode");
+                AutomationWrapper.Select(projectNode);
 
 
-            ThreadPool.QueueUserWorkItem(x => app.Dte.ExecuteCommand("Project.AddExistingItem"));
+                var addExistingDlg = new AddExistingItemDialog(app.OpenDialogWithDteExecuteCommand("Project.AddExistingItem"));
+                addExistingDlg.FileName = TestData.GetPath(@"TestData\FileNotInProject.py");
+                addExistingDlg.AddLink();
 
-            var dialog = app.WaitForDialog();
-            var addExistingDlg = new AddExistingItemDialog(dialog);
-            addExistingDlg.FileName = TestData.GetPath(@"TestData\FileNotInProject.py");
-            addExistingDlg.AddLink();
-
-            app.WaitForDialog();
-            VisualStudioApp.CheckMessageBox(MessageBoxButton.Ok, "There is already a link to", "A project cannot have more than one link to the same file.", TestData.GetPath(@"TestData\FileNotInProject.py"));
+                app.WaitForDialog();
+                VisualStudioApp.CheckMessageBox(MessageBoxButton.Ok, "There is already a link to", "A project cannot have more than one link to the same file.", TestData.GetPath(@"TestData\FileNotInProject.py"));
+            }
         }
 
         /// <summary>
@@ -417,25 +418,23 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void AddExistingItemAndLinkAlreadyExists() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            var project = app.OpenAndFindProject(@"TestData\LinkedFiles.sln");
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenAndFindProject(@"TestData\LinkedFiles.sln");
 
-            app.OpenSolutionExplorer();
-            var window = app.SolutionExplorerTreeView;
+                app.OpenSolutionExplorer();
+                var window = app.SolutionExplorerTreeView;
 
-            var projectNode = window.FindItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "Bar");
-            Assert.IsNotNull(projectNode, "projectNode");
-            AutomationWrapper.Select(projectNode);
+                var projectNode = window.FindItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "Bar");
+                Assert.IsNotNull(projectNode, "projectNode");
+                AutomationWrapper.Select(projectNode);
 
-            ThreadPool.QueueUserWorkItem(x => app.Dte.ExecuteCommand("Project.AddExistingItem"));
+                var addExistingDlg = new AddExistingItemDialog(app.OpenDialogWithDteExecuteCommand("Project.AddExistingItem"));
+                addExistingDlg.FileName = TestData.GetPath(@"TestData\LinkedFilesDir\SomeLinkedFile.py");
+                addExistingDlg.AddLink();
 
-            var dialog = app.WaitForDialog();
-            var addExistingDlg = new AddExistingItemDialog(dialog);
-            addExistingDlg.FileName = TestData.GetPath(@"TestData\LinkedFilesDir\SomeLinkedFile.py");
-            addExistingDlg.AddLink();
-
-            app.WaitForDialog();
-            VisualStudioApp.CheckMessageBox(MessageBoxButton.Ok, "There is already a link to", "SomeLinkedFile.py");
+                app.WaitForDialog();
+                VisualStudioApp.CheckMessageBox(MessageBoxButton.Ok, "There is already a link to", "SomeLinkedFile.py");
+            }
         }
 
         /// <summary>
@@ -444,26 +443,24 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void AddExistingItemAndFileByNameExistsOnDiskButNotInProject() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            var project = app.OpenAndFindProject(@"TestData\LinkedFiles.sln");
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenAndFindProject(@"TestData\LinkedFiles.sln");
 
-            app.OpenSolutionExplorer();
-            var window = app.SolutionExplorerTreeView;
+                app.OpenSolutionExplorer();
+                var window = app.SolutionExplorerTreeView;
 
-            var projectNode = window.FindItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "FolderWithAFile");
-            Assert.IsNotNull(projectNode, "projectNode");
-            AutomationWrapper.Select(projectNode);
+                var projectNode = window.FindItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "FolderWithAFile");
+                Assert.IsNotNull(projectNode, "projectNode");
+                AutomationWrapper.Select(projectNode);
 
 
-            ThreadPool.QueueUserWorkItem(x => app.Dte.ExecuteCommand("Project.AddExistingItem"));
+                var addExistingDlg = new AddExistingItemDialog(app.OpenDialogWithDteExecuteCommand("Project.AddExistingItem"));
+                addExistingDlg.FileName = TestData.GetPath(@"TestData\ExistsOnDiskButNotInProject.py");
+                addExistingDlg.AddLink();
 
-            var dialog = app.WaitForDialog();
-            var addExistingDlg = new AddExistingItemDialog(dialog);
-            addExistingDlg.FileName = TestData.GetPath(@"TestData\ExistsOnDiskButNotInProject.py");
-            addExistingDlg.AddLink();
-
-            app.WaitForDialog();
-            VisualStudioApp.CheckMessageBox(MessageBoxButton.Ok, "There is already a file of the same name in this folder.");
+                app.WaitForDialog();
+                VisualStudioApp.CheckMessageBox(MessageBoxButton.Ok, "There is already a file of the same name in this folder.");
+            }
         }
 
         /// <summary>
@@ -472,26 +469,24 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void AddExistingItemAndFileByNameExistsOnDiskAndInProject() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            var project = app.OpenAndFindProject(@"TestData\LinkedFiles.sln");
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenAndFindProject(@"TestData\LinkedFiles.sln");
 
-            app.OpenSolutionExplorer();
-            var window = app.SolutionExplorerTreeView;
+                app.OpenSolutionExplorer();
+                var window = app.SolutionExplorerTreeView;
 
-            var projectNode = window.FindItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "FolderWithAFile");
-            Assert.IsNotNull(projectNode, "projectNode");
-            AutomationWrapper.Select(projectNode);
+                var projectNode = window.FindItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "FolderWithAFile");
+                Assert.IsNotNull(projectNode, "projectNode");
+                AutomationWrapper.Select(projectNode);
 
 
-            ThreadPool.QueueUserWorkItem(x => app.Dte.ExecuteCommand("Project.AddExistingItem"));
+                var addExistingDlg = new AddExistingItemDialog(app.OpenDialogWithDteExecuteCommand("Project.AddExistingItem"));
+                addExistingDlg.FileName = TestData.GetPath(@"TestData\ExistsOnDiskAndInProject.py");
+                addExistingDlg.AddLink();
 
-            var dialog = app.WaitForDialog();
-            var addExistingDlg = new AddExistingItemDialog(dialog);
-            addExistingDlg.FileName = TestData.GetPath(@"TestData\ExistsOnDiskAndInProject.py");
-            addExistingDlg.AddLink();
-
-            app.WaitForDialog();
-            VisualStudioApp.CheckMessageBox(MessageBoxButton.Ok, "There is already a file of the same name in this folder.");
+                app.WaitForDialog();
+                VisualStudioApp.CheckMessageBox(MessageBoxButton.Ok, "There is already a file of the same name in this folder.");
+            }
         }
 
         /// <summary>
@@ -500,26 +495,24 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void AddExistingItemAndFileByNameExistsInProjectButNotOnDisk() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            var project = app.OpenAndFindProject(@"TestData\LinkedFiles.sln");
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenAndFindProject(@"TestData\LinkedFiles.sln");
 
-            app.OpenSolutionExplorer();
-            var window = app.SolutionExplorerTreeView;
+                app.OpenSolutionExplorer();
+                var window = app.SolutionExplorerTreeView;
 
-            var projectNode = window.FindItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "FolderWithAFile");
-            Assert.IsNotNull(projectNode, "projectNode");
-            AutomationWrapper.Select(projectNode);
+                var projectNode = window.FindItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "FolderWithAFile");
+                Assert.IsNotNull(projectNode, "projectNode");
+                AutomationWrapper.Select(projectNode);
 
 
-            ThreadPool.QueueUserWorkItem(x => app.Dte.ExecuteCommand("Project.AddExistingItem"));
+                var addExistingDlg = new AddExistingItemDialog(app.OpenDialogWithDteExecuteCommand("Project.AddExistingItem"));
+                addExistingDlg.FileName = TestData.GetPath(@"TestData\ExistsInProjectButNotOnDisk.py");
+                addExistingDlg.AddLink();
 
-            var dialog = app.WaitForDialog();
-            var addExistingDlg = new AddExistingItemDialog(dialog);
-            addExistingDlg.FileName = TestData.GetPath(@"TestData\ExistsInProjectButNotOnDisk.py");
-            addExistingDlg.AddLink();
-
-            app.WaitForDialog();
-            VisualStudioApp.CheckMessageBox(MessageBoxButton.Ok, "There is already a file of the same name in this folder.");
+                app.WaitForDialog();
+                VisualStudioApp.CheckMessageBox(MessageBoxButton.Ok, "There is already a file of the same name in this folder.");
+            }
         }
 
         /// <summary>
@@ -529,25 +522,23 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void AddExistingItemAsLinkButFileExistsInProjectDirectory() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            var project = app.OpenAndFindProject(@"TestData\LinkedFiles.sln");
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenAndFindProject(@"TestData\LinkedFiles.sln");
 
-            app.OpenSolutionExplorer();
-            var window = app.SolutionExplorerTreeView;
+                app.OpenSolutionExplorer();
+                var window = app.SolutionExplorerTreeView;
 
-            var projectNode = window.FindItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "Foo");
-            Assert.IsNotNull(projectNode, "projectNode");
-            AutomationWrapper.Select(projectNode);
+                var projectNode = window.FindItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "Foo");
+                Assert.IsNotNull(projectNode, "projectNode");
+                AutomationWrapper.Select(projectNode);
 
-            ThreadPool.QueueUserWorkItem(x => app.Dte.ExecuteCommand("Project.AddExistingItem"));
+                var addExistingDlg = new AddExistingItemDialog(app.OpenDialogWithDteExecuteCommand("Project.AddExistingItem"));
+                addExistingDlg.FileName = TestData.GetPath(@"TestData\LinkedFiles\Foo\AddExistingInProjectDirButNotInProject.py");
+                addExistingDlg.AddLink();
 
-            var dialog = app.WaitForDialog();
-            var addExistingDlg = new AddExistingItemDialog(dialog);
-            addExistingDlg.FileName = TestData.GetPath(@"TestData\LinkedFiles\Foo\AddExistingInProjectDirButNotInProject.py");
-            addExistingDlg.AddLink();
-
-            var addExistingInProjectDirButNotInProject = window.WaitForItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "Foo", "AddExistingInProjectDirButNotInProject.py");
-            Assert.IsNotNull(addExistingInProjectDirButNotInProject, "addExistingInProjectDirButNotInProject");
+                var addExistingInProjectDirButNotInProject = window.WaitForItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "Foo", "AddExistingInProjectDirButNotInProject.py");
+                Assert.IsNotNull(addExistingInProjectDirButNotInProject, "addExistingInProjectDirButNotInProject");
+            }
         }
 
         /// <summary>
@@ -556,36 +547,38 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void RenamedLinkedFile() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            var project = app.OpenAndFindProject(@"TestData\LinkedFiles.sln");
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenAndFindProject(@"TestData\LinkedFiles.sln");
 
-            app.OpenSolutionExplorer();
-            var window = app.SolutionExplorerTreeView;
+                app.OpenSolutionExplorer();
+                var window = app.SolutionExplorerTreeView;
 
-            var projectNode = window.FindItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "Foo", "NewNameForLinkFile.py");
-            Assert.IsNull(projectNode);
+                var projectNode = window.FindItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "Foo", "NewNameForLinkFile.py");
+                Assert.IsNull(projectNode);
 
-            var renamedLinkFile = window.FindItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "Foo", "RenamedLinkFile.py");
-            Assert.IsNotNull(renamedLinkFile, "renamedLinkFile");
+                var renamedLinkFile = window.FindItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "Foo", "RenamedLinkFile.py");
+                Assert.IsNotNull(renamedLinkFile, "renamedLinkFile");
+            }
         }
-        
+
         /// <summary>
         /// A link path outside of our project dir will result in the link being ignored.
         /// </summary>
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void BadLinkPath() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            var project = app.OpenAndFindProject(@"TestData\LinkedFiles.sln");
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenAndFindProject(@"TestData\LinkedFiles.sln");
 
-            app.OpenSolutionExplorer();
-            var window = app.SolutionExplorerTreeView;
+                app.OpenSolutionExplorer();
+                var window = app.SolutionExplorerTreeView;
 
-            var projectNode = window.FindItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "..");
-            Assert.IsNull(projectNode);
+                var projectNode = window.FindItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "..");
+                Assert.IsNull(projectNode);
 
-            projectNode = window.FindItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "BadLinkPathFolder");
-            Assert.IsNull(projectNode);
+                projectNode = window.FindItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "BadLinkPathFolder");
+                Assert.IsNull(projectNode);
+            }
         }
 
         /// <summary>
@@ -594,14 +587,15 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void RootedLinkIgnored() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            var project = app.OpenAndFindProject(@"TestData\LinkedFiles.sln");
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenAndFindProject(@"TestData\LinkedFiles.sln");
 
-            app.OpenSolutionExplorer();
-            var window = app.SolutionExplorerTreeView;
+                app.OpenSolutionExplorer();
+                var window = app.SolutionExplorerTreeView;
 
-            var projectNode = window.FindItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "RootedLinkIgnored.py");
-            Assert.IsNull(projectNode);
+                var projectNode = window.FindItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "RootedLinkIgnored.py");
+                Assert.IsNull(projectNode);
+            }
         }
 
         /// <summary>
@@ -610,14 +604,15 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void RootedIncludeIgnored() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            var project = app.OpenAndFindProject(@"TestData\LinkedFiles.sln");
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenAndFindProject(@"TestData\LinkedFiles.sln");
 
-            app.OpenSolutionExplorer();
-            var window = app.SolutionExplorerTreeView;
+                app.OpenSolutionExplorer();
+                var window = app.SolutionExplorerTreeView;
 
-            var rootedIncludeIgnored = window.FindItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "RootedIncludeIgnored.py");
-            Assert.IsNotNull(rootedIncludeIgnored, "rootedIncludeIgnored");
+                var rootedIncludeIgnored = window.FindItem("Solution 'LinkedFiles' (1 project)", "LinkedFiles", "RootedIncludeIgnored.py");
+                Assert.IsNotNull(rootedIncludeIgnored, "rootedIncludeIgnored");
+            }
         }
     }
 }

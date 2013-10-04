@@ -22,6 +22,10 @@ namespace TestUtilities.UI {
     class NewItemDialog  : AutomationWrapper {
         private Table _projectTypesTable;
 
+        public NewItemDialog(IntPtr dialog)
+            : this(AutomationElement.FromHandle(dialog)) {
+        }
+
         public NewItemDialog(AutomationElement element)
             : base(element) {
         }

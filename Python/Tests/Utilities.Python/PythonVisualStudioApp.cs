@@ -31,7 +31,15 @@ namespace TestUtilities.UI.Python {
         /// Opens and activates the solution explorer window.
         /// </summary>
         public void OpenPythonPerformance() {
-            Dte.ExecuteCommand("View.PythonPerformanceExplorer");
+            try {
+                Dte.ExecuteCommand("View.PythonPerformanceExplorer");
+            } catch {
+                // If the package is not loaded yet then the command may not
+                // work. Force load the package by opening the Launch dialog.
+                var dialog = new PythonPerfTarget(OpenDialogWithDteExecuteCommand("Analyze.LaunchPythonProfiling"));
+                dialog.Cancel();
+                Dte.ExecuteCommand("View.PythonPerformanceExplorer");
+            }
         }
 
         /// <summary>
@@ -134,17 +142,14 @@ namespace TestUtilities.UI.Python {
             throw new InvalidOperationException("Document not opened: " + docName);
         }
 
-        public FormattingOptionsTreeView GetFormattingOptions(string page) {
+        public FormattingOptionsTreeView GetFormattingOptions(string page, out AutomationElement optionsDialog) {
             Element.SetFocus();
 
             // bring up Tools->Options
-            ThreadPool.QueueUserWorkItem(x => Dte.ExecuteCommand("Tools.Options"));
-
-            // wait for it...
-            IntPtr dialog = WaitForDialog();
+            optionsDialog = AutomationElement.FromHandle(OpenDialogWithDteExecuteCommand("Tools.Options"));
 
             // go to the tree view which lets us select a set of options...
-            var treeView = new TreeView(AutomationElement.FromHandle(dialog).FindFirst(TreeScope.Descendants,
+            var treeView = new TreeView(optionsDialog.FindFirst(TreeScope.Descendants,
                 new PropertyCondition(
                     AutomationElement.ClassNameProperty,
                     "SysTreeView32")
@@ -153,7 +158,7 @@ namespace TestUtilities.UI.Python {
             treeView.FindItem("Text Editor", "Python", "Formatting", page).SetFocus();
 
             for (int i = 0; i < 10; i++) {
-                var optionsTree = AutomationElement.FromHandle(dialog).FindFirst(
+                var optionsTree = optionsDialog.FindFirst(
                     TreeScope.Descendants,
                     new PropertyCondition(
                         AutomationElement.AutomationIdProperty,
@@ -167,7 +172,7 @@ namespace TestUtilities.UI.Python {
                 System.Threading.Thread.Sleep(1000);
             }
 
-            AutomationWrapper.DumpElement(AutomationElement.FromHandle(dialog));
+            AutomationWrapper.DumpElement(optionsDialog);
             Assert.Fail("failed to find _optionsTree page");
             return null;
         }

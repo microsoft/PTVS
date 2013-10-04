@@ -12,7 +12,6 @@
     <AssemblyAttributeClsCompliant>true</AssemblyAttributeClsCompliant>
     <SignAssembly>false</SignAssembly>
     <UICulture>en-US</UICulture>
-    <TargetFrameworkVersion Condition=" '$(VisualStudioVersion)' == '10.0' ">v4.0</TargetFrameworkVersion>
     <TargetFrameworkVersion Condition="'$(TargetFrameworkVersion)' == ''">v4.5</TargetFrameworkVersion>
     <FileUpgradeFlags>
     </FileUpgradeFlags>
@@ -93,7 +92,7 @@
     <Reference Include="EnvDTE" />
     <Reference Include="EnvDTE80" />
     <Reference Include="Extensibility" />
-    <Reference Include="Microsoft.VisualStudio.Shell.10.0" />
+    <Reference Include="Microsoft.VisualStudio.Shell.$(VisualStudioVersion)" />
     <Reference Include="Microsoft.VisualStudio.Shell.Immutable.10.0" />
     <Reference Include="Microsoft.VisualStudio.OLE.Interop" />
     <Reference Include="Microsoft.VisualStudio.Shell.Interop" />

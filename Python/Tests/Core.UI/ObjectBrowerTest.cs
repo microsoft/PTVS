@@ -75,716 +75,716 @@ namespace PythonToolsUITests {
             TestData.Deploy();
         }
 
-        [TestCleanup]
-        public void MyTestCleanup() {
-            for (int i = 0; i < 100; i++) {
-                try {
-                    VsIdeTestHostContext.Dte.Solution.Close(false);
-                    break;
-                } catch {
-                    VsIdeTestHostContext.Dte.Documents.CloseAll(EnvDTE.vsSaveChanges.vsSaveChangesNo);
-                    System.Threading.Thread.Sleep(200);
-                }
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void ObjectBrowserBasicTest() {
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenAndFindProject(@"TestData\Outlining.sln");
+                System.Threading.Thread.Sleep(1000);
+
+                app.OpenObjectBrowser();
+                var objectBrowser = app.ObjectBrowser;
+                System.Threading.Thread.Sleep(1000);
+
+                int nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
+                Assert.AreEqual(1, nodeCount, "Node count: " + nodeCount.ToString());
+
+                objectBrowser.TypeBrowserPane.Nodes[0].ExpandCollapse();
+                System.Threading.Thread.Sleep(1000);
+
+                nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
+                Assert.AreEqual(4, nodeCount, "Node count: " + nodeCount.ToString());
+
+                AssertNodes(objectBrowser,
+                    new NodeInfo("Outlining", "Outlining"),
+                    new NodeInfo("BadForStatement.py", "BadForStatement.py"),
+                    new NodeInfo("NestedFuncDef.py", "NestedFuncDef.py", new[] { "f()" }),
+                    new NodeInfo("Program.py", "Program.py", new[] { "f()" }));
+
+                VsIdeTestHostContext.Dte.Solution.Close(false);
+
+                System.Threading.Thread.Sleep(1000);
+                nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
+                Assert.AreEqual(1, nodeCount, "Node count: " + nodeCount.ToString());
             }
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
-        public void ObjectBrowserBasicTest() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            var project = app.OpenAndFindProject(@"TestData\Outlining.sln");
-            System.Threading.Thread.Sleep(1000);
-
-            app.OpenObjectBrowser();
-            var objectBrowser = app.ObjectBrowser;
-            System.Threading.Thread.Sleep(1000);
-
-            int nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
-            Assert.AreEqual(1, nodeCount, "Node count: " + nodeCount.ToString());
-
-            objectBrowser.TypeBrowserPane.Nodes[0].ExpandCollapse();
-            System.Threading.Thread.Sleep(1000);
-
-            nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
-            Assert.AreEqual(4, nodeCount, "Node count: " + nodeCount.ToString());
-
-            AssertNodes(objectBrowser,
-                new NodeInfo("Outlining", "Outlining"),
-                new NodeInfo("BadForStatement.py", "BadForStatement.py"),
-                new NodeInfo("NestedFuncDef.py", "NestedFuncDef.py", new[] { "f()" }),
-                new NodeInfo("Program.py", "Program.py", new[] { "f()" }));
-
-            VsIdeTestHostContext.Dte.Solution.Close(false);
-
-            System.Threading.Thread.Sleep(1000);
-            nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
-            Assert.AreEqual(1, nodeCount, "Node count: " + nodeCount.ToString());
-        }
-
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ObjectBrowserSearchTextTest() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            var project = app.OpenAndFindProject(@"TestData\ObjectBrowser.sln");
-            System.Threading.Thread.Sleep(1000);
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenAndFindProject(@"TestData\ObjectBrowser.sln");
+                System.Threading.Thread.Sleep(1000);
 
-            app.OpenObjectBrowser();
-            var objectBrowser = app.ObjectBrowser;
-            objectBrowser.EnsureLoaded();
+                app.OpenObjectBrowser();
+                var objectBrowser = app.ObjectBrowser;
+                objectBrowser.EnsureLoaded();
 
-            // Initially, we should have only the top-level collapsed node for the project
+                // Initially, we should have only the top-level collapsed node for the project
 
-            int nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
-            Assert.AreEqual(1, nodeCount, "Node count: " + nodeCount.ToString());
+                int nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
+                Assert.AreEqual(1, nodeCount, "Node count: " + nodeCount.ToString());
 
-            objectBrowser.TypeBrowserPane.Nodes[0].ExpandCollapse();
-            System.Threading.Thread.Sleep(1000);
+                objectBrowser.TypeBrowserPane.Nodes[0].ExpandCollapse();
+                System.Threading.Thread.Sleep(1000);
 
-            // Now that it is expanded, we should also get a node for Program.py
+                // Now that it is expanded, we should also get a node for Program.py
 
-            nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
-            Assert.AreEqual(2, nodeCount, "Node count: " + nodeCount.ToString());
+                nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
+                Assert.AreEqual(2, nodeCount, "Node count: " + nodeCount.ToString());
 
-            objectBrowser.TypeBrowserPane.Nodes[1].ExpandCollapse();
-            System.Threading.Thread.Sleep(1000);
+                objectBrowser.TypeBrowserPane.Nodes[1].ExpandCollapse();
+                System.Threading.Thread.Sleep(1000);
 
-            // Sanity-check the starting view with all nodes expanded.
+                // Sanity-check the starting view with all nodes expanded.
 
-            var expectedNodesBeforeSearch = new[] {
+                var expectedNodesBeforeSearch = new[] {
                 new NodeInfo("ObjectBrowser", "ObjectBrowser"),
                 new NodeInfo("Program.py", "Program.py", new[] { "frob()" }),
                 new NodeInfo("Bar", "class Bar", new[] { "bar(self)" }),
                 new NodeInfo("Foo", "class Foo"),
                 new NodeInfo("FooBarBaz", "class FooBarBaz", new[] { "frob(self)" }),
             };
-            AssertNodes(objectBrowser, expectedNodesBeforeSearch);
+                AssertNodes(objectBrowser, expectedNodesBeforeSearch);
 
-            // Do the search and check results
+                // Do the search and check results
 
-            objectBrowser.SearchText.SetValue("bar");
-            System.Threading.Thread.Sleep(1000);
+                objectBrowser.SearchText.SetValue("bar");
+                System.Threading.Thread.Sleep(1000);
 
-            objectBrowser.SearchButton.Click();
-            System.Threading.Thread.Sleep(1000);
+                objectBrowser.SearchButton.Click();
+                System.Threading.Thread.Sleep(1000);
 
-            var expectedNodesAfterSearch = new[] {
+                var expectedNodesAfterSearch = new[] {
                 new NodeInfo("bar", "def bar(self)"),
                 new NodeInfo("Bar", "class Bar", new[] { "bar(self)" }),
                 new NodeInfo("FooBarBaz", "class FooBarBaz", new[] { "frob(self)" }),
             };
-            AssertNodes(objectBrowser, expectedNodesAfterSearch);
+                AssertNodes(objectBrowser, expectedNodesAfterSearch);
 
-            // Clear the search and check that we get back to the starting view.
+                // Clear the search and check that we get back to the starting view.
 
-            objectBrowser.ClearSearchButton.Click();
-            System.Threading.Thread.Sleep(1000);
+                objectBrowser.ClearSearchButton.Click();
+                System.Threading.Thread.Sleep(1000);
 
-            AssertNodes(objectBrowser, expectedNodesBeforeSearch);
+                AssertNodes(objectBrowser, expectedNodesBeforeSearch);
+            }
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ObjectBrowserExpandTypeBrowserTest() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            var project = app.OpenAndFindProject(@"TestData\Inheritance.sln");
-            System.Threading.Thread.Sleep(1000);
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenAndFindProject(@"TestData\Inheritance.sln");
+                System.Threading.Thread.Sleep(1000);
 
-            app.OpenObjectBrowser();
-            var objectBrowser = app.ObjectBrowser;
-            objectBrowser.EnsureLoaded();
+                app.OpenObjectBrowser();
+                var objectBrowser = app.ObjectBrowser;
+                objectBrowser.EnsureLoaded();
 
-            int nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
-            Assert.AreEqual(1, nodeCount, "Node count: " + nodeCount.ToString());
+                int nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
+                Assert.AreEqual(1, nodeCount, "Node count: " + nodeCount.ToString());
 
-            string str = objectBrowser.TypeBrowserPane.Nodes[0].Value;
-            Assert.AreEqual("Inheritance", str, "");
-            objectBrowser.TypeBrowserPane.Nodes[0].ExpandCollapse();
-            System.Threading.Thread.Sleep(1000);
-            nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
-            Assert.AreEqual(2, nodeCount, "Node count: " + nodeCount.ToString());
+                string str = objectBrowser.TypeBrowserPane.Nodes[0].Value;
+                Assert.AreEqual("Inheritance", str, "");
+                objectBrowser.TypeBrowserPane.Nodes[0].ExpandCollapse();
+                System.Threading.Thread.Sleep(1000);
+                nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
+                Assert.AreEqual(2, nodeCount, "Node count: " + nodeCount.ToString());
 
-            str = objectBrowser.TypeBrowserPane.Nodes[1].Value;
-            Assert.AreEqual("Program.py", str, "");
+                str = objectBrowser.TypeBrowserPane.Nodes[1].Value;
+                Assert.AreEqual("Program.py", str, "");
 
-            objectBrowser.TypeBrowserPane.Nodes[1].ExpandCollapse();
-            System.Threading.Thread.Sleep(1000);
+                objectBrowser.TypeBrowserPane.Nodes[1].ExpandCollapse();
+                System.Threading.Thread.Sleep(1000);
 
-            nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
-            Assert.AreEqual(5, nodeCount, "Node count: " + nodeCount.ToString());
+                nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
+                Assert.AreEqual(5, nodeCount, "Node count: " + nodeCount.ToString());
 
-            objectBrowser.TypeBrowserPane.Nodes[0].ExpandCollapse();
-            System.Threading.Thread.Sleep(1000);
+                objectBrowser.TypeBrowserPane.Nodes[0].ExpandCollapse();
+                System.Threading.Thread.Sleep(1000);
 
-            nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
-            Assert.AreEqual(1, nodeCount, "Node count: " + nodeCount.ToString());
+                nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
+                Assert.AreEqual(1, nodeCount, "Node count: " + nodeCount.ToString());
+            }
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ObjectBrowserCommentsTest() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            var project = app.OpenAndFindProject(@"TestData\Inheritance.sln");
-            System.Threading.Thread.Sleep(1000);
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenAndFindProject(@"TestData\Inheritance.sln");
+                System.Threading.Thread.Sleep(1000);
 
-            app.OpenObjectBrowser();
-            var objectBrowser = app.ObjectBrowser;
-            System.Threading.Thread.Sleep(1000);
+                app.OpenObjectBrowser();
+                var objectBrowser = app.ObjectBrowser;
+                System.Threading.Thread.Sleep(1000);
 
-            int nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
-            Assert.AreEqual(1, nodeCount, "Node count: " + nodeCount.ToString());
+                int nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
+                Assert.AreEqual(1, nodeCount, "Node count: " + nodeCount.ToString());
 
-            objectBrowser.TypeBrowserPane.Nodes[0].ExpandCollapse();
-            System.Threading.Thread.Sleep(1000);
+                objectBrowser.TypeBrowserPane.Nodes[0].ExpandCollapse();
+                System.Threading.Thread.Sleep(1000);
 
-            string str = objectBrowser.TypeBrowserPane.Nodes[1].Value;
-            Assert.AreEqual("Program.py", str, "");
-            objectBrowser.TypeBrowserPane.Nodes[1].Select();
-            nodeCount = objectBrowser.TypeNavigatorPane.Nodes.Count;
-            Assert.AreEqual(3, nodeCount, "Node Count: " + nodeCount.ToString());
-            str = objectBrowser.TypeNavigatorPane.Nodes[0].Value;
-            Assert.AreEqual("members", str.Trim(), "");
-            str = objectBrowser.TypeNavigatorPane.Nodes[1].Value;
-            Assert.AreEqual("s", str.Trim(), "");
-            str = objectBrowser.TypeNavigatorPane.Nodes[2].Value;
-            Assert.AreEqual("t", str.Trim(), "");
+                string str = objectBrowser.TypeBrowserPane.Nodes[1].Value;
+                Assert.AreEqual("Program.py", str, "");
+                objectBrowser.TypeBrowserPane.Nodes[1].Select();
+                nodeCount = objectBrowser.TypeNavigatorPane.Nodes.Count;
+                Assert.AreEqual(3, nodeCount, "Node Count: " + nodeCount.ToString());
+                str = objectBrowser.TypeNavigatorPane.Nodes[0].Value;
+                Assert.AreEqual("members", str.Trim(), "");
+                str = objectBrowser.TypeNavigatorPane.Nodes[1].Value;
+                Assert.AreEqual("s", str.Trim(), "");
+                str = objectBrowser.TypeNavigatorPane.Nodes[2].Value;
+                Assert.AreEqual("t", str.Trim(), "");
 
-            objectBrowser.TypeBrowserPane.Nodes[1].ExpandCollapse();
-            System.Threading.Thread.Sleep(1000);
+                objectBrowser.TypeBrowserPane.Nodes[1].ExpandCollapse();
+                System.Threading.Thread.Sleep(1000);
 
-            nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
-            Assert.AreEqual(5, nodeCount, "Node count: " + nodeCount.ToString());
+                nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
+                Assert.AreEqual(5, nodeCount, "Node count: " + nodeCount.ToString());
 
-            objectBrowser.TypeBrowserPane.Nodes[2].Select();
-            System.Threading.Thread.Sleep(1000);
+                objectBrowser.TypeBrowserPane.Nodes[2].Select();
+                System.Threading.Thread.Sleep(1000);
 
-            nodeCount = objectBrowser.TypeNavigatorPane.Nodes.Count;
-            Assert.AreEqual(2, nodeCount, "Node Count: " + nodeCount.ToString());
-            str = objectBrowser.TypeNavigatorPane.Nodes[0].Value;
-            Assert.IsTrue(str.Trim().StartsWith("__init__(self"), str);
-            str = objectBrowser.TypeNavigatorPane.Nodes[1].Value;
-            Assert.AreEqual("tell(self)", str.Trim(), "");
+                nodeCount = objectBrowser.TypeNavigatorPane.Nodes.Count;
+                Assert.AreEqual(2, nodeCount, "Node Count: " + nodeCount.ToString());
+                str = objectBrowser.TypeNavigatorPane.Nodes[0].Value;
+                Assert.IsTrue(str.Trim().StartsWith("__init__(self"), str);
+                str = objectBrowser.TypeNavigatorPane.Nodes[1].Value;
+                Assert.AreEqual("tell(self)", str.Trim(), "");
 
-            str = objectBrowser.DetailPane.Value;
-            Assert.IsTrue(str.Trim().Contains("SchoolMember"), str);
-            Assert.IsTrue(str.Trim().Contains("Represents any school member."), str);
+                str = objectBrowser.DetailPane.Value;
+                Assert.IsTrue(str.Trim().Contains("SchoolMember"), str);
+                Assert.IsTrue(str.Trim().Contains("Represents any school member."), str);
 
-            objectBrowser.TypeNavigatorPane.Nodes[1].Select();
-            System.Threading.Thread.Sleep(1000);
+                objectBrowser.TypeNavigatorPane.Nodes[1].Select();
+                System.Threading.Thread.Sleep(1000);
 
-            str = objectBrowser.DetailPane.Value;
-            Assert.IsTrue(str.Trim().Contains("def tell(self)"), str);
-            Assert.IsTrue(str.Trim().Contains("Tell my detail."), str);
+                str = objectBrowser.DetailPane.Value;
+                Assert.IsTrue(str.Trim().Contains("def tell(self)"), str);
+                Assert.IsTrue(str.Trim().Contains("Tell my detail."), str);
 
-            objectBrowser.TypeBrowserPane.Nodes[0].ExpandCollapse();
-            System.Threading.Thread.Sleep(1000);
+                objectBrowser.TypeBrowserPane.Nodes[0].ExpandCollapse();
+                System.Threading.Thread.Sleep(1000);
+            }
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ObjectBrowserInheritanceRelationshipTest() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            var project = app.OpenAndFindProject(@"TestData\Inheritance.sln");
-            System.Threading.Thread.Sleep(1000);
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenAndFindProject(@"TestData\Inheritance.sln");
+                System.Threading.Thread.Sleep(1000);
 
-            app.OpenObjectBrowser();
-            var objectBrowser = app.ObjectBrowser;
-            System.Threading.Thread.Sleep(1000);
+                app.OpenObjectBrowser();
+                var objectBrowser = app.ObjectBrowser;
+                System.Threading.Thread.Sleep(1000);
 
-            int nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
-            Assert.AreEqual(1, nodeCount, "Node count: " + nodeCount.ToString());
+                int nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
+                Assert.AreEqual(1, nodeCount, "Node count: " + nodeCount.ToString());
 
-            objectBrowser.TypeBrowserPane.Nodes[0].ExpandCollapse();
-            System.Threading.Thread.Sleep(1000);
-            nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
-            Assert.AreEqual(2, nodeCount, "Node count: " + nodeCount.ToString());
+                objectBrowser.TypeBrowserPane.Nodes[0].ExpandCollapse();
+                System.Threading.Thread.Sleep(1000);
+                nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
+                Assert.AreEqual(2, nodeCount, "Node count: " + nodeCount.ToString());
 
-            string str = objectBrowser.TypeBrowserPane.Nodes[1].Value;
-            Assert.AreEqual("Program.py", str, "");
+                string str = objectBrowser.TypeBrowserPane.Nodes[1].Value;
+                Assert.AreEqual("Program.py", str, "");
 
-            objectBrowser.TypeBrowserPane.Nodes[1].ExpandCollapse();
-            System.Threading.Thread.Sleep(1000);
+                objectBrowser.TypeBrowserPane.Nodes[1].ExpandCollapse();
+                System.Threading.Thread.Sleep(1000);
 
-            nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
-            Assert.AreEqual(5, nodeCount, "Node count: " + nodeCount.ToString());
+                nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
+                Assert.AreEqual(5, nodeCount, "Node count: " + nodeCount.ToString());
 
-            objectBrowser.TypeBrowserPane.Nodes[3].Select();
-            System.Threading.Thread.Sleep(1000);
+                objectBrowser.TypeBrowserPane.Nodes[3].Select();
+                System.Threading.Thread.Sleep(1000);
 
-            nodeCount = objectBrowser.TypeNavigatorPane.Nodes.Count;
-            Assert.AreEqual(2, nodeCount, "Node Count: " + nodeCount.ToString());
-            str = objectBrowser.TypeNavigatorPane.Nodes[0].Value;
-            Assert.IsTrue(str.Trim().StartsWith("__init__(self"), str);
-            str = objectBrowser.TypeNavigatorPane.Nodes[1].Value;
-            Assert.AreEqual("tell(self)", str.Trim(), "");
+                nodeCount = objectBrowser.TypeNavigatorPane.Nodes.Count;
+                Assert.AreEqual(2, nodeCount, "Node Count: " + nodeCount.ToString());
+                str = objectBrowser.TypeNavigatorPane.Nodes[0].Value;
+                Assert.IsTrue(str.Trim().StartsWith("__init__(self"), str);
+                str = objectBrowser.TypeNavigatorPane.Nodes[1].Value;
+                Assert.AreEqual("tell(self)", str.Trim(), "");
 
-            str = objectBrowser.DetailPane.Value;
-            Assert.IsTrue(str.Trim().Contains("Student(SchoolMember)"), str);
-            Assert.IsTrue(str.Trim().Contains("Represents a student."), str);
+                str = objectBrowser.DetailPane.Value;
+                Assert.IsTrue(str.Trim().Contains("Student(SchoolMember)"), str);
+                Assert.IsTrue(str.Trim().Contains("Represents a student."), str);
 
-            objectBrowser.TypeNavigatorPane.Nodes[1].Select();
-            System.Threading.Thread.Sleep(1000);
+                objectBrowser.TypeNavigatorPane.Nodes[1].Select();
+                System.Threading.Thread.Sleep(1000);
 
-            str = objectBrowser.DetailPane.Value;
-            Assert.IsTrue(str.Trim().Contains("def tell(self)"), str);
+                str = objectBrowser.DetailPane.Value;
+                Assert.IsTrue(str.Trim().Contains("def tell(self)"), str);
 
-            objectBrowser.TypeBrowserPane.Nodes[0].ExpandCollapse();
-            System.Threading.Thread.Sleep(1000);
+                objectBrowser.TypeBrowserPane.Nodes[0].ExpandCollapse();
+                System.Threading.Thread.Sleep(1000);
+            }
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ObjectBrowserNavigationTest() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            var project = app.OpenAndFindProject(@"TestData\MultiModule.sln");
-            System.Threading.Thread.Sleep(1000);
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenAndFindProject(@"TestData\MultiModule.sln");
+                System.Threading.Thread.Sleep(1000);
 
-            app.OpenObjectBrowser();
-            var objectBrowser = app.ObjectBrowser;
-            objectBrowser.EnsureLoaded();
+                app.OpenObjectBrowser();
+                var objectBrowser = app.ObjectBrowser;
+                objectBrowser.EnsureLoaded();
 
-            int nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
-            Assert.AreEqual(1, nodeCount, "Node count: " + nodeCount.ToString());
+                int nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
+                Assert.AreEqual(1, nodeCount, "Node count: " + nodeCount.ToString());
 
-            objectBrowser.TypeBrowserPane.Nodes[0].ExpandCollapse();
-            System.Threading.Thread.Sleep(1000);
+                objectBrowser.TypeBrowserPane.Nodes[0].ExpandCollapse();
+                System.Threading.Thread.Sleep(1000);
 
-            nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
-            Assert.AreEqual(3, nodeCount, "Node count: " + nodeCount.ToString());
+                nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
+                Assert.AreEqual(3, nodeCount, "Node count: " + nodeCount.ToString());
 
-            string str = objectBrowser.TypeBrowserPane.Nodes[1].Value;
-            Assert.AreEqual("MyModule.py", str, "");
-            str = objectBrowser.TypeBrowserPane.Nodes[2].Value;
-            Assert.AreEqual("Program.py", str, "");
+                string str = objectBrowser.TypeBrowserPane.Nodes[1].Value;
+                Assert.AreEqual("MyModule.py", str, "");
+                str = objectBrowser.TypeBrowserPane.Nodes[2].Value;
+                Assert.AreEqual("Program.py", str, "");
 
-            objectBrowser.TypeBrowserPane.Nodes[2].ExpandCollapse();
-            System.Threading.Thread.Sleep(1000);
-            objectBrowser.TypeBrowserPane.Nodes[1].ExpandCollapse();
-            System.Threading.Thread.Sleep(1000);
+                objectBrowser.TypeBrowserPane.Nodes[2].ExpandCollapse();
+                System.Threading.Thread.Sleep(1000);
+                objectBrowser.TypeBrowserPane.Nodes[1].ExpandCollapse();
+                System.Threading.Thread.Sleep(1000);
 
-            nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
-            Assert.AreEqual(6, nodeCount, "Node count: " + nodeCount.ToString());
+                nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
+                Assert.AreEqual(6, nodeCount, "Node count: " + nodeCount.ToString());
 
-            objectBrowser.TypeBrowserPane.Nodes[4].Select();
-            System.Threading.Thread.Sleep(1000);
-            objectBrowser.TypeBrowserPane.Nodes[4].DoubleClick();
-            System.Threading.Thread.Sleep(1000);
+                objectBrowser.TypeBrowserPane.Nodes[4].Select();
+                System.Threading.Thread.Sleep(1000);
+                objectBrowser.TypeBrowserPane.Nodes[4].DoubleClick();
+                System.Threading.Thread.Sleep(1000);
 
-            str = app.Dte.ActiveDocument.Name;
-            Assert.AreEqual("Program.py", str, "");
+                str = app.Dte.ActiveDocument.Name;
+                Assert.AreEqual("Program.py", str, "");
 
-            int lineNo = ((TextSelection)app.Dte.ActiveDocument.Selection).ActivePoint.Line;
-            Assert.AreEqual(14, lineNo, "Line number: " + lineNo.ToString());
+                int lineNo = ((TextSelection)app.Dte.ActiveDocument.Selection).ActivePoint.Line;
+                Assert.AreEqual(14, lineNo, "Line number: " + lineNo.ToString());
 
-            app.OpenObjectBrowser();
-            objectBrowser.TypeBrowserPane.Nodes[2].Select();
-            System.Threading.Thread.Sleep(1000);
-            objectBrowser.TypeBrowserPane.Nodes[2].DoubleClick();
-            System.Threading.Thread.Sleep(1000);
+                app.OpenObjectBrowser();
+                objectBrowser.TypeBrowserPane.Nodes[2].Select();
+                System.Threading.Thread.Sleep(1000);
+                objectBrowser.TypeBrowserPane.Nodes[2].DoubleClick();
+                System.Threading.Thread.Sleep(1000);
 
-            str = app.Dte.ActiveDocument.Name;
-            Assert.AreEqual("MyModule.py", str, "");
+                str = app.Dte.ActiveDocument.Name;
+                Assert.AreEqual("MyModule.py", str, "");
 
-            lineNo = ((TextSelection)app.Dte.ActiveDocument.Selection).ActivePoint.Line;
-            Assert.AreEqual(1, lineNo, "Line number: " + lineNo.ToString());
+                lineNo = ((TextSelection)app.Dte.ActiveDocument.Selection).ActivePoint.Line;
+                Assert.AreEqual(1, lineNo, "Line number: " + lineNo.ToString());
 
-            objectBrowser.TypeBrowserPane.Nodes[3].ExpandCollapse();
-            System.Threading.Thread.Sleep(1000);
-            objectBrowser.TypeBrowserPane.Nodes[1].ExpandCollapse();
-            System.Threading.Thread.Sleep(1000);
+                objectBrowser.TypeBrowserPane.Nodes[3].ExpandCollapse();
+                System.Threading.Thread.Sleep(1000);
+                objectBrowser.TypeBrowserPane.Nodes[1].ExpandCollapse();
+                System.Threading.Thread.Sleep(1000);
+            }
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ObjectBrowserContextMenuBasicTest() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            var project = app.OpenAndFindProject(@"TestData\MultiModule.sln");
-            System.Threading.Thread.Sleep(1000);
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenAndFindProject(@"TestData\MultiModule.sln");
+                System.Threading.Thread.Sleep(1000);
 
-            app.OpenObjectBrowser();
-            var objectBrowser = app.ObjectBrowser;
-            System.Threading.Thread.Sleep(1000);
+                app.OpenObjectBrowser();
+                var objectBrowser = app.ObjectBrowser;
+                System.Threading.Thread.Sleep(1000);
 
-            int nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
-            Assert.AreEqual(1, nodeCount, "Node count: " + nodeCount.ToString());
+                int nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
+                Assert.AreEqual(1, nodeCount, "Node count: " + nodeCount.ToString());
 
-            objectBrowser.TypeBrowserPane.Nodes[0].ExpandCollapse();
-            System.Threading.Thread.Sleep(1000);
+                objectBrowser.TypeBrowserPane.Nodes[0].ExpandCollapse();
+                System.Threading.Thread.Sleep(1000);
 
-            nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
-            Assert.AreEqual(3, nodeCount, "Node count: " + nodeCount.ToString());
+                nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
+                Assert.AreEqual(3, nodeCount, "Node count: " + nodeCount.ToString());
 
-            string str = objectBrowser.TypeBrowserPane.Nodes[1].Value;
-            Assert.AreEqual("MyModule.py", str, "");
-            str = objectBrowser.TypeBrowserPane.Nodes[2].Value;
-            Assert.AreEqual("Program.py", str, "");
+                string str = objectBrowser.TypeBrowserPane.Nodes[1].Value;
+                Assert.AreEqual("MyModule.py", str, "");
+                str = objectBrowser.TypeBrowserPane.Nodes[2].Value;
+                Assert.AreEqual("Program.py", str, "");
 
-            objectBrowser.TypeBrowserPane.Nodes[2].ExpandCollapse();
-            System.Threading.Thread.Sleep(1000);
-            objectBrowser.TypeBrowserPane.Nodes[1].ExpandCollapse();
-            System.Threading.Thread.Sleep(1000);
+                objectBrowser.TypeBrowserPane.Nodes[2].ExpandCollapse();
+                System.Threading.Thread.Sleep(1000);
+                objectBrowser.TypeBrowserPane.Nodes[1].ExpandCollapse();
+                System.Threading.Thread.Sleep(1000);
 
-            nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
-            Assert.AreEqual(6, nodeCount, "Node count: " + nodeCount.ToString());
+                nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
+                Assert.AreEqual(6, nodeCount, "Node count: " + nodeCount.ToString());
 
-            objectBrowser.TypeBrowserPane.Nodes[1].ShowContextMenu();
-            System.Threading.Thread.Sleep(1000);
-            Condition con = new PropertyCondition(
-                                    AutomationElement.ClassNameProperty,
-                                    "ContextMenu"
-                                );
-            AutomationElement el = AutomationElement.RootElement.FindFirst(TreeScope.Descendants, con);
-            Assert.IsNotNull(el);
-            Menu menu = new Menu(el);
-            int itemCount = menu.Items.Count;
-            Assert.AreEqual(7, itemCount, "Item count: " + itemCount.ToString());
-            Assert.AreEqual("Copy", menu.Items[0].Value.Trim(), "");
-            Assert.AreEqual("View Namespaces", menu.Items[1].Value.Trim(), "");
-            Assert.AreEqual("View Containers", menu.Items[2].Value.Trim(), "");
-            Assert.AreEqual("Sort Alphabetically", menu.Items[3].Value.Trim(), "");
-            Assert.AreEqual("Sort By Object Type", menu.Items[4].Value.Trim(), "");
-            Assert.AreEqual("Sort By Object Access", menu.Items[5].Value.Trim(), "");
-            Assert.AreEqual("Group By Object Type", menu.Items[6].Value.Trim(), "");
-            Keyboard.PressAndRelease(System.Windows.Input.Key.Escape);
+                objectBrowser.TypeBrowserPane.Nodes[1].ShowContextMenu();
+                System.Threading.Thread.Sleep(1000);
+                Condition con = new PropertyCondition(
+                                        AutomationElement.ClassNameProperty,
+                                        "ContextMenu"
+                                    );
+                AutomationElement el = AutomationElement.RootElement.FindFirst(TreeScope.Descendants, con);
+                Assert.IsNotNull(el);
+                Menu menu = new Menu(el);
+                int itemCount = menu.Items.Count;
+                Assert.AreEqual(7, itemCount, "Item count: " + itemCount.ToString());
+                Assert.AreEqual("Copy", menu.Items[0].Value.Trim(), "");
+                Assert.AreEqual("View Namespaces", menu.Items[1].Value.Trim(), "");
+                Assert.AreEqual("View Containers", menu.Items[2].Value.Trim(), "");
+                Assert.AreEqual("Sort Alphabetically", menu.Items[3].Value.Trim(), "");
+                Assert.AreEqual("Sort By Object Type", menu.Items[4].Value.Trim(), "");
+                Assert.AreEqual("Sort By Object Access", menu.Items[5].Value.Trim(), "");
+                Assert.AreEqual("Group By Object Type", menu.Items[6].Value.Trim(), "");
+                Keyboard.PressAndRelease(System.Windows.Input.Key.Escape);
 
-            objectBrowser.TypeBrowserPane.Nodes[2].ShowContextMenu();
-            System.Threading.Thread.Sleep(1000);
-            el = AutomationElement.RootElement.FindFirst(TreeScope.Descendants, con);
-            Assert.IsNotNull(el);
-            menu = new Menu(el);
-            itemCount = menu.Items.Count;
-            Assert.AreEqual(13, itemCount, "Item count: " + itemCount.ToString());
-            Assert.AreEqual("Go To Definition", menu.Items[0].Value.Trim(), "");
-            Assert.AreEqual("Go To Declaration", menu.Items[1].Value.Trim(), "");
-            Assert.AreEqual("Go To Reference", menu.Items[2].Value.Trim(), "");
-            Assert.AreEqual("Browse Definition", menu.Items[3].Value.Trim(), "");
-            Assert.AreEqual("Find All References", menu.Items[4].Value.Trim(), "");
-            Assert.AreEqual("Filter To Type", menu.Items[5].Value.Trim(), "");
-            Assert.AreEqual("Copy", menu.Items[6].Value.Trim(), "");
-            Assert.AreEqual("View Namespaces", menu.Items[7].Value.Trim(), "");
-            Assert.AreEqual("View Containers", menu.Items[8].Value.Trim(), "");
-            Assert.AreEqual("Sort Alphabetically", menu.Items[9].Value.Trim(), "");
-            Assert.AreEqual("Sort By Object Type", menu.Items[10].Value.Trim(), "");
-            Assert.AreEqual("Sort By Object Access", menu.Items[11].Value.Trim(), "");
-            Assert.AreEqual("Group By Object Type", menu.Items[12].Value.Trim(), "");
-            Keyboard.PressAndRelease(System.Windows.Input.Key.Escape);
+                objectBrowser.TypeBrowserPane.Nodes[2].ShowContextMenu();
+                System.Threading.Thread.Sleep(1000);
+                el = AutomationElement.RootElement.FindFirst(TreeScope.Descendants, con);
+                Assert.IsNotNull(el);
+                menu = new Menu(el);
+                itemCount = menu.Items.Count;
+                Assert.AreEqual(13, itemCount, "Item count: " + itemCount.ToString());
+                Assert.AreEqual("Go To Definition", menu.Items[0].Value.Trim(), "");
+                Assert.AreEqual("Go To Declaration", menu.Items[1].Value.Trim(), "");
+                Assert.AreEqual("Go To Reference", menu.Items[2].Value.Trim(), "");
+                Assert.AreEqual("Browse Definition", menu.Items[3].Value.Trim(), "");
+                Assert.AreEqual("Find All References", menu.Items[4].Value.Trim(), "");
+                Assert.AreEqual("Filter To Type", menu.Items[5].Value.Trim(), "");
+                Assert.AreEqual("Copy", menu.Items[6].Value.Trim(), "");
+                Assert.AreEqual("View Namespaces", menu.Items[7].Value.Trim(), "");
+                Assert.AreEqual("View Containers", menu.Items[8].Value.Trim(), "");
+                Assert.AreEqual("Sort Alphabetically", menu.Items[9].Value.Trim(), "");
+                Assert.AreEqual("Sort By Object Type", menu.Items[10].Value.Trim(), "");
+                Assert.AreEqual("Sort By Object Access", menu.Items[11].Value.Trim(), "");
+                Assert.AreEqual("Group By Object Type", menu.Items[12].Value.Trim(), "");
+                Keyboard.PressAndRelease(System.Windows.Input.Key.Escape);
+            }
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ObjectBrowserTypeBrowserViewTest() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            var project = app.OpenAndFindProject(@"TestData\MultiModule.sln");
-            System.Threading.Thread.Sleep(1000);
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenAndFindProject(@"TestData\MultiModule.sln");
+                System.Threading.Thread.Sleep(1000);
 
-            app.OpenObjectBrowser();
-            var objectBrowser = app.ObjectBrowser;
-            System.Threading.Thread.Sleep(1000);
+                app.OpenObjectBrowser();
+                var objectBrowser = app.ObjectBrowser;
+                System.Threading.Thread.Sleep(1000);
 
-            int nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
-            Assert.AreEqual(1, nodeCount, "Node count: " + nodeCount.ToString());
+                int nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
+                Assert.AreEqual(1, nodeCount, "Node count: " + nodeCount.ToString());
 
-            objectBrowser.TypeBrowserPane.Nodes[0].ExpandCollapse();
-            System.Threading.Thread.Sleep(1000);
+                objectBrowser.TypeBrowserPane.Nodes[0].ExpandCollapse();
+                System.Threading.Thread.Sleep(1000);
 
-            nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
-            Assert.AreEqual(3, nodeCount, "Node count: " + nodeCount.ToString());
+                nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
+                Assert.AreEqual(3, nodeCount, "Node count: " + nodeCount.ToString());
 
-            string str = objectBrowser.TypeBrowserPane.Nodes[1].Value;
-            Assert.AreEqual("MyModule.py", str, "");
-            str = objectBrowser.TypeBrowserPane.Nodes[2].Value;
-            Assert.AreEqual("Program.py", str, "");
+                string str = objectBrowser.TypeBrowserPane.Nodes[1].Value;
+                Assert.AreEqual("MyModule.py", str, "");
+                str = objectBrowser.TypeBrowserPane.Nodes[2].Value;
+                Assert.AreEqual("Program.py", str, "");
 
-            objectBrowser.TypeBrowserPane.Nodes[1].ShowContextMenu();
-            System.Threading.Thread.Sleep(1000);
-            Condition con = new PropertyCondition(
-                                    AutomationElement.ClassNameProperty,
-                                    "ContextMenu"
-                                );
-            AutomationElement el = AutomationElement.RootElement.FindFirst(TreeScope.Descendants, con);
-            Assert.IsNotNull(el);
-            Menu menu = new Menu(el);
-            int itemCount = menu.Items.Count;
-            Assert.AreEqual(7, itemCount, "Item count: " + itemCount.ToString());
-            menu.Items[1].Check();
-            System.Threading.Thread.Sleep(1000);
+                objectBrowser.TypeBrowserPane.Nodes[1].ShowContextMenu();
+                System.Threading.Thread.Sleep(1000);
+                Condition con = new PropertyCondition(
+                                        AutomationElement.ClassNameProperty,
+                                        "ContextMenu"
+                                    );
+                AutomationElement el = AutomationElement.RootElement.FindFirst(TreeScope.Descendants, con);
+                Assert.IsNotNull(el);
+                Menu menu = new Menu(el);
+                int itemCount = menu.Items.Count;
+                Assert.AreEqual(7, itemCount, "Item count: " + itemCount.ToString());
+                menu.Items[1].Check();
+                System.Threading.Thread.Sleep(1000);
 
-            nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
-            Assert.AreEqual(2, nodeCount, "Node count: " + nodeCount.ToString());
+                nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
+                Assert.AreEqual(2, nodeCount, "Node count: " + nodeCount.ToString());
 
-            objectBrowser.TypeBrowserPane.Nodes[0].ShowContextMenu();
-            System.Threading.Thread.Sleep(1000);
-            el = AutomationElement.RootElement.FindFirst(TreeScope.Descendants, con);
-            Assert.IsNotNull(el);
-            menu = new Menu(el);
-            itemCount = menu.Items.Count;
-            Assert.AreEqual(7, itemCount, "Item count: " + itemCount.ToString());
-            Assert.IsTrue(menu.Items[1].ToggleStatus);
-            menu.Items[2].Check();
-            System.Threading.Thread.Sleep(1000);
+                objectBrowser.TypeBrowserPane.Nodes[0].ShowContextMenu();
+                System.Threading.Thread.Sleep(1000);
+                el = AutomationElement.RootElement.FindFirst(TreeScope.Descendants, con);
+                Assert.IsNotNull(el);
+                menu = new Menu(el);
+                itemCount = menu.Items.Count;
+                Assert.AreEqual(7, itemCount, "Item count: " + itemCount.ToString());
+                Assert.IsTrue(menu.Items[1].ToggleStatus);
+                menu.Items[2].Check();
+                System.Threading.Thread.Sleep(1000);
 
-            nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
-            Assert.AreEqual(3, nodeCount, "Node count: " + nodeCount.ToString());
+                nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
+                Assert.AreEqual(3, nodeCount, "Node count: " + nodeCount.ToString());
+            }
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ObjectBrowserTypeBrowserSortTest() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            var project = app.OpenAndFindProject(@"TestData\MultiModule.sln");
-            System.Threading.Thread.Sleep(1000);
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenAndFindProject(@"TestData\MultiModule.sln");
+                System.Threading.Thread.Sleep(1000);
 
-            app.OpenObjectBrowser();
-            var objectBrowser = app.ObjectBrowser;
-            System.Threading.Thread.Sleep(1000);
+                app.OpenObjectBrowser();
+                var objectBrowser = app.ObjectBrowser;
+                System.Threading.Thread.Sleep(1000);
 
-            int nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
-            Assert.AreEqual(1, nodeCount, "Node count: " + nodeCount.ToString());
+                int nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
+                Assert.AreEqual(1, nodeCount, "Node count: " + nodeCount.ToString());
 
-            objectBrowser.TypeBrowserPane.Nodes[0].ExpandCollapse();
-            System.Threading.Thread.Sleep(1000);
+                objectBrowser.TypeBrowserPane.Nodes[0].ExpandCollapse();
+                System.Threading.Thread.Sleep(1000);
 
-            nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
-            Assert.AreEqual(3, nodeCount, "Node count: " + nodeCount.ToString());
+                nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
+                Assert.AreEqual(3, nodeCount, "Node count: " + nodeCount.ToString());
 
-            string str = objectBrowser.TypeBrowserPane.Nodes[1].Value;
-            Assert.AreEqual("MyModule.py", str, "");
-            str = objectBrowser.TypeBrowserPane.Nodes[2].Value;
-            Assert.AreEqual("Program.py", str, "");
+                string str = objectBrowser.TypeBrowserPane.Nodes[1].Value;
+                Assert.AreEqual("MyModule.py", str, "");
+                str = objectBrowser.TypeBrowserPane.Nodes[2].Value;
+                Assert.AreEqual("Program.py", str, "");
 
-            objectBrowser.TypeBrowserPane.Nodes[1].ShowContextMenu();
-            System.Threading.Thread.Sleep(1000);
-            Condition con = new PropertyCondition(
-                                    AutomationElement.ClassNameProperty,
-                                    "ContextMenu"
-                                );
-            AutomationElement el = AutomationElement.RootElement.FindFirst(TreeScope.Descendants, con);
-            Assert.IsNotNull(el);
-            Menu menu = new Menu(el);
-            int itemCount = menu.Items.Count;
-            Assert.AreEqual(7, itemCount, "Item count: " + itemCount.ToString());
-            menu.Items[6].Check();
-            System.Threading.Thread.Sleep(1000);
+                objectBrowser.TypeBrowserPane.Nodes[1].ShowContextMenu();
+                System.Threading.Thread.Sleep(1000);
+                Condition con = new PropertyCondition(
+                                        AutomationElement.ClassNameProperty,
+                                        "ContextMenu"
+                                    );
+                AutomationElement el = AutomationElement.RootElement.FindFirst(TreeScope.Descendants, con);
+                Assert.IsNotNull(el);
+                Menu menu = new Menu(el);
+                int itemCount = menu.Items.Count;
+                Assert.AreEqual(7, itemCount, "Item count: " + itemCount.ToString());
+                menu.Items[6].Check();
+                System.Threading.Thread.Sleep(1000);
 
-            nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
-            Assert.AreEqual(4, nodeCount, "Node count: " + nodeCount.ToString());
-            objectBrowser.TypeBrowserPane.Nodes[2].ExpandCollapse();
-            System.Threading.Thread.Sleep(1000);
+                nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
+                Assert.AreEqual(4, nodeCount, "Node count: " + nodeCount.ToString());
+                objectBrowser.TypeBrowserPane.Nodes[2].ExpandCollapse();
+                System.Threading.Thread.Sleep(1000);
 
-            nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
-            Assert.AreEqual(5, nodeCount, "Node count: " + nodeCount.ToString());
-            Assert.AreEqual("Namespaces", objectBrowser.TypeBrowserPane.Nodes[3].Value, "");
-            Assert.AreEqual("Namespaces", objectBrowser.TypeBrowserPane.Nodes[1].Value, "");
-            objectBrowser.TypeBrowserPane.Nodes[3].ExpandCollapse();
-            System.Threading.Thread.Sleep(1000);
+                nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
+                Assert.AreEqual(5, nodeCount, "Node count: " + nodeCount.ToString());
+                Assert.AreEqual("Namespaces", objectBrowser.TypeBrowserPane.Nodes[3].Value, "");
+                Assert.AreEqual("Namespaces", objectBrowser.TypeBrowserPane.Nodes[1].Value, "");
+                objectBrowser.TypeBrowserPane.Nodes[3].ExpandCollapse();
+                System.Threading.Thread.Sleep(1000);
 
-            nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
-            Assert.AreEqual(6, nodeCount, "Node count: " + nodeCount.ToString());
+                nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
+                Assert.AreEqual(6, nodeCount, "Node count: " + nodeCount.ToString());
 
-            objectBrowser.TypeBrowserPane.Nodes[3].ExpandCollapse();
-            System.Threading.Thread.Sleep(1000);
+                objectBrowser.TypeBrowserPane.Nodes[3].ExpandCollapse();
+                System.Threading.Thread.Sleep(1000);
 
-            objectBrowser.TypeBrowserPane.Nodes[0].ShowContextMenu();
-            System.Threading.Thread.Sleep(1000);
-            el = AutomationElement.RootElement.FindFirst(TreeScope.Descendants, con);
-            Assert.IsNotNull(el);
-            menu = new Menu(el);
-            itemCount = menu.Items.Count;
-            Assert.AreEqual(7, itemCount, "Item count: " + itemCount.ToString());
-            Assert.IsTrue(menu.Items[6].ToggleStatus);
-            menu.Items[3].Check();
-            System.Threading.Thread.Sleep(1000);
+                objectBrowser.TypeBrowserPane.Nodes[0].ShowContextMenu();
+                System.Threading.Thread.Sleep(1000);
+                el = AutomationElement.RootElement.FindFirst(TreeScope.Descendants, con);
+                Assert.IsNotNull(el);
+                menu = new Menu(el);
+                itemCount = menu.Items.Count;
+                Assert.AreEqual(7, itemCount, "Item count: " + itemCount.ToString());
+                Assert.IsTrue(menu.Items[6].ToggleStatus);
+                menu.Items[3].Check();
+                System.Threading.Thread.Sleep(1000);
 
-            nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
-            Assert.AreEqual(4, nodeCount, "Node count: " + nodeCount.ToString());
+                nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
+                Assert.AreEqual(4, nodeCount, "Node count: " + nodeCount.ToString());
 
-            objectBrowser.TypeBrowserPane.Nodes[3].ExpandCollapse();
-            System.Threading.Thread.Sleep(1000);
+                objectBrowser.TypeBrowserPane.Nodes[3].ExpandCollapse();
+                System.Threading.Thread.Sleep(1000);
 
-            nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
-            Assert.AreEqual(6, nodeCount, "Node count: " + nodeCount.ToString());
+                nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
+                Assert.AreEqual(6, nodeCount, "Node count: " + nodeCount.ToString());
 
-            str = objectBrowser.TypeBrowserPane.Nodes[1].Value;
-            Assert.AreEqual("MyModule.py", str, "");
-            str = objectBrowser.TypeBrowserPane.Nodes[2].Value;
-            Assert.AreEqual("SchoolMember", str, "");
-            str = objectBrowser.TypeBrowserPane.Nodes[3].Value;
-            Assert.AreEqual("Program.py", str, "");
-            str = objectBrowser.TypeBrowserPane.Nodes[4].Value;
-            Assert.AreEqual("Student", str, "");
-            str = objectBrowser.TypeBrowserPane.Nodes[5].Value;
-            Assert.AreEqual("Teacher", str, "");
+                str = objectBrowser.TypeBrowserPane.Nodes[1].Value;
+                Assert.AreEqual("MyModule.py", str, "");
+                str = objectBrowser.TypeBrowserPane.Nodes[2].Value;
+                Assert.AreEqual("SchoolMember", str, "");
+                str = objectBrowser.TypeBrowserPane.Nodes[3].Value;
+                Assert.AreEqual("Program.py", str, "");
+                str = objectBrowser.TypeBrowserPane.Nodes[4].Value;
+                Assert.AreEqual("Student", str, "");
+                str = objectBrowser.TypeBrowserPane.Nodes[5].Value;
+                Assert.AreEqual("Teacher", str, "");
+            }
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ObjectBrowserNavigateVarContextMenuTest() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            var project = app.OpenAndFindProject(@"TestData\MultiModule.sln");
-            System.Threading.Thread.Sleep(1000);
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenAndFindProject(@"TestData\MultiModule.sln");
+                System.Threading.Thread.Sleep(1000);
 
-            app.OpenObjectBrowser();
-            var objectBrowser = app.ObjectBrowser;
-            objectBrowser.EnsureLoaded();
+                app.OpenObjectBrowser();
+                var objectBrowser = app.ObjectBrowser;
+                objectBrowser.EnsureLoaded();
 
-            int nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
-            Assert.AreEqual(1, nodeCount, "Node count: " + nodeCount.ToString());
+                int nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
+                Assert.AreEqual(1, nodeCount, "Node count: " + nodeCount.ToString());
 
-            objectBrowser.TypeBrowserPane.Nodes[0].ExpandCollapse();
-            System.Threading.Thread.Sleep(1000);
+                objectBrowser.TypeBrowserPane.Nodes[0].ExpandCollapse();
+                System.Threading.Thread.Sleep(1000);
 
-            nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
-            Assert.AreEqual(3, nodeCount, "Node count: " + nodeCount.ToString());
+                nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
+                Assert.AreEqual(3, nodeCount, "Node count: " + nodeCount.ToString());
 
-            string str = objectBrowser.TypeBrowserPane.Nodes[1].Value;
-            Assert.AreEqual("MyModule.py", str, "");
-            str = objectBrowser.TypeBrowserPane.Nodes[2].Value;
-            Assert.AreEqual("Program.py", str, "");
+                string str = objectBrowser.TypeBrowserPane.Nodes[1].Value;
+                Assert.AreEqual("MyModule.py", str, "");
+                str = objectBrowser.TypeBrowserPane.Nodes[2].Value;
+                Assert.AreEqual("Program.py", str, "");
 
-            objectBrowser.TypeBrowserPane.Nodes[2].ExpandCollapse();
-            System.Threading.Thread.Sleep(1000);
-            objectBrowser.TypeBrowserPane.Nodes[1].ExpandCollapse();
-            System.Threading.Thread.Sleep(1000);
+                objectBrowser.TypeBrowserPane.Nodes[2].ExpandCollapse();
+                System.Threading.Thread.Sleep(1000);
+                objectBrowser.TypeBrowserPane.Nodes[1].ExpandCollapse();
+                System.Threading.Thread.Sleep(1000);
 
-            nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
-            Assert.AreEqual(6, nodeCount, "Node count: " + nodeCount.ToString());
+                nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
+                Assert.AreEqual(6, nodeCount, "Node count: " + nodeCount.ToString());
 
-            objectBrowser.TypeBrowserPane.Nodes[4].ShowContextMenu();
-            System.Threading.Thread.Sleep(1000);
-            Condition con = new PropertyCondition(
-                                    AutomationElement.ClassNameProperty,
-                                    "ContextMenu"
-                                );
-            AutomationElement el = AutomationElement.RootElement.FindFirst(TreeScope.Descendants, con);
-            Assert.IsNotNull(el);
-            Menu menu = new Menu(el);
-            int itemCount = menu.Items.Count;
-            Assert.AreEqual(13, itemCount, "Item count: " + itemCount.ToString());
-            menu.Items[0].Check();
-            System.Threading.Thread.Sleep(1000);
+                objectBrowser.TypeBrowserPane.Nodes[4].ShowContextMenu();
+                System.Threading.Thread.Sleep(1000);
+                Condition con = new PropertyCondition(
+                                        AutomationElement.ClassNameProperty,
+                                        "ContextMenu"
+                                    );
+                AutomationElement el = AutomationElement.RootElement.FindFirst(TreeScope.Descendants, con);
+                Assert.IsNotNull(el);
+                Menu menu = new Menu(el);
+                int itemCount = menu.Items.Count;
+                Assert.AreEqual(13, itemCount, "Item count: " + itemCount.ToString());
+                menu.Items[0].Check();
+                System.Threading.Thread.Sleep(1000);
 
-            str = app.Dte.ActiveDocument.Name;
-            Assert.AreEqual("Program.py", str, "");
+                str = app.Dte.ActiveDocument.Name;
+                Assert.AreEqual("Program.py", str, "");
 
-            int lineNo = ((TextSelection)app.Dte.ActiveDocument.Selection).ActivePoint.Line;
-            Assert.AreEqual(14, lineNo, "Line number: " + lineNo.ToString());
+                int lineNo = ((TextSelection)app.Dte.ActiveDocument.Selection).ActivePoint.Line;
+                Assert.AreEqual(14, lineNo, "Line number: " + lineNo.ToString());
 
-            app.OpenObjectBrowser();
-            objectBrowser.TypeBrowserPane.Nodes[5].ShowContextMenu();
-            System.Threading.Thread.Sleep(1000);
-            el = AutomationElement.RootElement.FindFirst(TreeScope.Descendants, con);
-            Assert.IsNotNull(el);
-            menu = new Menu(el);
-            menu.Items[0].Check();
-            System.Threading.Thread.Sleep(1000);
+                app.OpenObjectBrowser();
+                objectBrowser.TypeBrowserPane.Nodes[5].ShowContextMenu();
+                System.Threading.Thread.Sleep(1000);
+                el = AutomationElement.RootElement.FindFirst(TreeScope.Descendants, con);
+                Assert.IsNotNull(el);
+                menu = new Menu(el);
+                menu.Items[0].Check();
+                System.Threading.Thread.Sleep(1000);
 
-            lineNo = ((TextSelection)app.Dte.ActiveDocument.Selection).ActivePoint.Line;
-            Assert.AreEqual(3, lineNo, "Line number: " + lineNo.ToString());
+                lineNo = ((TextSelection)app.Dte.ActiveDocument.Selection).ActivePoint.Line;
+                Assert.AreEqual(3, lineNo, "Line number: " + lineNo.ToString());
+            }
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ObjectBrowserFindAllReferencesTest() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            var project = app.OpenAndFindProject(@"TestData\MultiModule.sln");
-            System.Threading.Thread.Sleep(1000);
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenAndFindProject(@"TestData\MultiModule.sln");
+                System.Threading.Thread.Sleep(1000);
 
-            app.OpenObjectBrowser();
-            var objectBrowser = app.ObjectBrowser;
-            System.Threading.Thread.Sleep(1000);
+                app.OpenObjectBrowser();
+                var objectBrowser = app.ObjectBrowser;
+                System.Threading.Thread.Sleep(1000);
 
-            int nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
-            Assert.AreEqual(1, nodeCount, "Node count: " + nodeCount.ToString());
+                int nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
+                Assert.AreEqual(1, nodeCount, "Node count: " + nodeCount.ToString());
 
-            objectBrowser.TypeBrowserPane.Nodes[0].ExpandCollapse();
-            System.Threading.Thread.Sleep(1000);
+                objectBrowser.TypeBrowserPane.Nodes[0].ExpandCollapse();
+                System.Threading.Thread.Sleep(1000);
 
-            nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
-            Assert.AreEqual(3, nodeCount, "Node count: " + nodeCount.ToString());
+                nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
+                Assert.AreEqual(3, nodeCount, "Node count: " + nodeCount.ToString());
 
-            string str = objectBrowser.TypeBrowserPane.Nodes[1].Value;
-            Assert.AreEqual("MyModule.py", str, "");
-            str = objectBrowser.TypeBrowserPane.Nodes[2].Value;
-            Assert.AreEqual("Program.py", str, "");
+                string str = objectBrowser.TypeBrowserPane.Nodes[1].Value;
+                Assert.AreEqual("MyModule.py", str, "");
+                str = objectBrowser.TypeBrowserPane.Nodes[2].Value;
+                Assert.AreEqual("Program.py", str, "");
 
-            objectBrowser.TypeBrowserPane.Nodes[2].ExpandCollapse();
-            System.Threading.Thread.Sleep(1000);
-            objectBrowser.TypeBrowserPane.Nodes[1].ExpandCollapse();
-            System.Threading.Thread.Sleep(1000);
+                objectBrowser.TypeBrowserPane.Nodes[2].ExpandCollapse();
+                System.Threading.Thread.Sleep(1000);
+                objectBrowser.TypeBrowserPane.Nodes[1].ExpandCollapse();
+                System.Threading.Thread.Sleep(1000);
 
-            nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
-            Assert.AreEqual(6, nodeCount, "Node count: " + nodeCount.ToString());
+                nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
+                Assert.AreEqual(6, nodeCount, "Node count: " + nodeCount.ToString());
 
-            objectBrowser.TypeBrowserPane.Nodes[4].ShowContextMenu();
-            System.Threading.Thread.Sleep(1000);
-            Condition con = new PropertyCondition(
-                                    AutomationElement.ClassNameProperty,
-                                    "ContextMenu"
-                                );
-            AutomationElement el = AutomationElement.RootElement.FindFirst(TreeScope.Descendants, con);
-            Assert.IsNotNull(el);
-            Menu menu = new Menu(el);
-            int itemCount = menu.Items.Count;
-            Assert.AreEqual(13, itemCount, "Item count: " + itemCount.ToString());
-            menu.Items[4].Check();
-            System.Threading.Thread.Sleep(1000);
+                objectBrowser.TypeBrowserPane.Nodes[4].ShowContextMenu();
+                System.Threading.Thread.Sleep(1000);
+                Condition con = new PropertyCondition(
+                                        AutomationElement.ClassNameProperty,
+                                        "ContextMenu"
+                                    );
+                AutomationElement el = AutomationElement.RootElement.FindFirst(TreeScope.Descendants, con);
+                Assert.IsNotNull(el);
+                Menu menu = new Menu(el);
+                int itemCount = menu.Items.Count;
+                Assert.AreEqual(13, itemCount, "Item count: " + itemCount.ToString());
+                menu.Items[4].Check();
+                System.Threading.Thread.Sleep(1000);
 
-            //this needs to be updated for bug #4840
-            str = app.Dte.ActiveWindow.Caption;
-            Assert.IsTrue(str.Contains("2 matches found"), str);
+                //this needs to be updated for bug #4840
+                str = app.Dte.ActiveWindow.Caption;
+                Assert.IsTrue(str.Contains("2 matches found"), str);
 
-            objectBrowser.TypeBrowserPane.Nodes[2].ShowContextMenu();
-            System.Threading.Thread.Sleep(1000);
-            el = AutomationElement.RootElement.FindFirst(TreeScope.Descendants, con);
-            Assert.IsNotNull(el);
-            menu = new Menu(el);
-            menu.Items[4].Check();
-            System.Threading.Thread.Sleep(1000);
+                objectBrowser.TypeBrowserPane.Nodes[2].ShowContextMenu();
+                System.Threading.Thread.Sleep(1000);
+                el = AutomationElement.RootElement.FindFirst(TreeScope.Descendants, con);
+                Assert.IsNotNull(el);
+                menu = new Menu(el);
+                menu.Items[4].Check();
+                System.Threading.Thread.Sleep(1000);
 
-            str = app.Dte.ActiveWindow.Caption;
-            Assert.IsTrue(str.Contains("2 matches found"), str);
+                str = app.Dte.ActiveWindow.Caption;
+                Assert.IsTrue(str.Contains("2 matches found"), str);
+            }
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void NavigateTo() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            VsIdeTestHostContext.Dte.Solution.Open(TestData.GetPath(@"TestData\Navigation.sln"));
-            Assert.IsTrue(VsIdeTestHostContext.Dte.Solution.IsOpen, "The solution is not open");
-            var dialog = app.OpenNavigateTo();
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                VsIdeTestHostContext.Dte.Solution.Open(TestData.GetPath(@"TestData\Navigation.sln"));
+                Assert.IsTrue(VsIdeTestHostContext.Dte.Solution.IsOpen, "The solution is not open");
+                var dialog = app.OpenNavigateTo();
 
-            dialog.SearchTerm = "Class";
-            Assert.AreEqual(4, dialog.WaitForNumberOfResults(4));
-            dialog.Close();
+                dialog.SearchTerm = "Class";
+                Assert.AreEqual(4, dialog.WaitForNumberOfResults(4));
+                dialog.Close();
 
-            dialog = app.OpenNavigateTo();
-            dialog.SearchTerm = "cls";
-            Assert.AreEqual(4, dialog.WaitForNumberOfResults(4));
-            dialog.Close();
+                dialog = app.OpenNavigateTo();
+                dialog.SearchTerm = "cls";
+                Assert.AreEqual(4, dialog.WaitForNumberOfResults(4));
+                dialog.Close();
 
-            dialog = app.OpenNavigateTo();
-            dialog.SearchTerm = "func";
-            Assert.AreEqual(8, dialog.WaitForNumberOfResults(8));
-            dialog.Close();
+                dialog = app.OpenNavigateTo();
+                dialog.SearchTerm = "func";
+                Assert.AreEqual(8, dialog.WaitForNumberOfResults(8));
+                dialog.Close();
 
-            dialog = app.OpenNavigateTo();
-            dialog.SearchTerm = "fn";
-            Assert.AreEqual(8, dialog.WaitForNumberOfResults(8));
-            dialog.Close();
+                dialog = app.OpenNavigateTo();
+                dialog.SearchTerm = "fn";
+                Assert.AreEqual(8, dialog.WaitForNumberOfResults(8));
+                dialog.Close();
+            }
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ResourceViewIsDisabledTest() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            var project = app.OpenAndFindProject(@"TestData\Outlining.sln");
-            System.Threading.Thread.Sleep(1000);
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenAndFindProject(@"TestData\Outlining.sln");
+                System.Threading.Thread.Sleep(1000);
 
-            app.OpenResourceView();
-            var resourceView = app.ResourceView;
-            Assert.IsNotNull(resourceView);
-            System.Threading.Thread.Sleep(1000);
+                app.OpenResourceView();
+                var resourceView = app.ResourceView;
+                Assert.IsNotNull(resourceView);
+                System.Threading.Thread.Sleep(1000);
 
-            Assert.IsNull(resourceView.TypeBrowserPane);
+                Assert.IsNull(resourceView.TypeBrowserPane);
+            }
         }
     }
 }

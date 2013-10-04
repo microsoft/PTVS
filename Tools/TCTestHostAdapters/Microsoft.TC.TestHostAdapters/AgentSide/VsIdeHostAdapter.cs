@@ -115,7 +115,14 @@ namespace Microsoft.TC.TestHostAdapters
         /// <param name="testContext">The Test conext for this test invocation</param>
         void IBaseAdapter.Run(ITestElement testElement, ITestContext testContext)
         {
-            CheckRestartVs();
+            if (testElement.TestCategories.Contains(new TestCategoryItem("RestartVS"))) {
+                if (m_isHostSideDirty) {
+                    CleanupHostSide();
+                    InitHostSide();
+                }
+            } else {
+                CheckRestartVs();
+            }
 
             ((ITestAdapter)m_hostSide).Run(testElement, testContext);
 

@@ -35,12 +35,15 @@ namespace TestAdapterTests {
 
         [TestMethod, Priority(0)]
         public void TestRun() {
+            PythonPaths.Python27_x64.AssertInstalled();
+            PythonPaths.Python33_x64.AssertInstalled();
+
             var executor = new TestExecutor();
             var recorder = new MockTestExecutionRecorder();
             var runContext = new MockRunContext();
             var expectedTests = TestInfo.TestAdapterATests.Concat(TestInfo.TestAdapterBTests).ToArray();
             var testCases = expectedTests.Select(tr => tr.TestCase);
-            
+
             executor.RunTests(testCases, runContext, recorder);
             PrintTestResults(recorder.Results);
 
@@ -54,6 +57,9 @@ namespace TestAdapterTests {
 
         [TestMethod, Priority(0)]
         public void TestRunAll() {
+            PythonPaths.Python27_x64.AssertInstalled();
+            PythonPaths.Python33_x64.AssertInstalled();
+
             var executor = new TestExecutor();
             var recorder = new MockTestExecutionRecorder();
             var runContext = new MockRunContext();
@@ -72,6 +78,9 @@ namespace TestAdapterTests {
 
         [TestMethod, Priority(0)]
         public void TestCancel() {
+            PythonPaths.Python27_x64.AssertInstalled();
+            PythonPaths.Python33_x64.AssertInstalled();
+
             var executor = new TestExecutor();
             var recorder = new MockTestExecutionRecorder();
             var runContext = new MockRunContext();
