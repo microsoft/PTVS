@@ -3123,6 +3123,49 @@ f = x().g";
                 }
             }
         }
+
+        [TestMethod, Priority(0)]
+        public void KeywordSplat() {
+            var funcDef = @"def f(a, b, c, **d): 
+    pass";
+            var classWithInit = @"class f(object):
+    def __init__(self, a, b, c, **d):
+        pass";
+            var classWithNew = @"class f(object):
+    def __new__(cls, a, b, c, **d):
+        pass";
+            var method = @"class x(object):
+    def g(self, a, b, c, **d):
+        pass
+
+f = x().g";
+            var decls = new[] { funcDef, classWithInit, classWithNew, method };
+
+            foreach (var decl in decls) {
+                string[] testCalls = new[] { 
+                    "f(**{'a': 3j, 'b': 42, 'c': 'abc'})", 
+                    "f(**{'c': 'abc', 'b': 42, 'a': 3j})", 
+                    "f(**{'a': 3j, 'b': 42, 'c': 'abc', 'x': 4L})",  // extra argument
+                    "f(3j, **{'b': 42, 'c': 'abc'})",
+                    "f(3j, 42, **{'c': 'abc'})"
+                };
+
+                foreach (var testCall in testCalls) {
+                    var text = decl + Environment.NewLine + testCall;
+                    Console.WriteLine(testCall);
+                    var entry = ProcessText(text);
+
+                    AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("a", text.IndexOf("pass")), BuiltinTypeId.Complex);
+                    AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("b", text.IndexOf("pass")), BuiltinTypeId.Int);
+                    AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("c", text.IndexOf("pass")), BuiltinTypeId_Str);
+                    AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("d", text.IndexOf("pass")), BuiltinTypeId.Dict);
+                    if (testCall.Contains("4L")) {
+                        AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("d['x']", text.IndexOf("pass")), BuiltinTypeId.Long);
+                    }
+                }
+            }
+        }
+
         [TestMethod, Priority(0)]
         public void ForwardRef() {
             var text = @"
