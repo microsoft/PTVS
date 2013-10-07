@@ -17,14 +17,13 @@ using System.Drawing;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Interop;
 using System.Windows.Media.Imaging;
 using Microsoft.VisualStudio.Shell;
 
 namespace Microsoft.PythonTools.Wpf {
-    class Controls {
+    public static class Controls {
         public static readonly object BackgroundKey = VsBrushes.WindowKey;
         public static readonly object BackgroundAccentKey = VsBrushes.ButtonFaceKey;
         public static readonly object ForegroundKey = VsBrushes.WindowTextKey;
@@ -93,7 +92,7 @@ namespace Microsoft.PythonTools.Wpf {
     }
 
     [ValueConversion(typeof(bool), typeof(object))]
-    sealed class IfElseConverter : IValueConverter, IMultiValueConverter {
+    public sealed class IfElseConverter : IValueConverter, IMultiValueConverter {
         public object IfTrue {
             get;
             set;
