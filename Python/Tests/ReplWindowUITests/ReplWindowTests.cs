@@ -319,7 +319,42 @@ g()",
 
             interactive.WaitForText(ReplPrompt + code, SecondPrompt, ReplPrompt + "f(");
 
-            using (interactive.WaitForSession<ISignatureHelpSession>()) {
+            using (var sh = interactive.WaitForSession<ISignatureHelpSession>()) {
+                Assert.AreEqual("f()", sh.Session.SelectedSignature.Content);
+                Keyboard.PressAndRelease(Key.Escape);
+
+                interactive.WaitForSessionDismissed();
+            }
+        }
+
+        /// <summary>
+        /// “def f(a, b=1, c="d"): pass” + 2 ENTERS
+        /// f( should bring signature help up and show default values and types
+        /// 
+        /// </summary>
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void SignatureHelpDefaultValue() {
+            var interactive = Prepare();
+
+            Assert.AreNotEqual(null, interactive);
+
+            const string code = "def f(a, b=1, c=\"d\"): pass";
+            Keyboard.Type(code + "\r\r");
+
+            interactive.WaitForText(ReplPrompt + code, SecondPrompt, ReplPrompt);
+            var stopAt = DateTime.Now.AddSeconds(20.0);
+            interactive.TextView.GetAnalyzer().WaitForCompleteAnalysis(_ => DateTime.Now < stopAt);
+            if (DateTime.Now >= stopAt) {
+                Assert.Fail("Timeout waiting for complete analysis");
+            }
+
+            Keyboard.Type("f(");
+
+            interactive.WaitForText(ReplPrompt + code, SecondPrompt, ReplPrompt + "f(");
+
+            using (var sh = interactive.WaitForSession<ISignatureHelpSession>()) {
+                Assert.AreEqual("f(a, b: int = 1, c: str = 'd')", sh.Session.SelectedSignature.Content);
                 Keyboard.PressAndRelease(Key.Escape);
 
                 interactive.WaitForSessionDismissed();
@@ -2404,7 +2439,7 @@ $cls
             InteractiveWindow interactive = null;
             try {
                 interactive = Prepare();
-                Assert.AreNotEqual(null, interactive);
+                Assert.IsNotNull(interactive);
 
                 const string code = "def f(): pass";
                 Keyboard.Type(code + "\r\r");
@@ -2418,7 +2453,7 @@ $cls
                 interactive.WaitForText(ReplPrompt + code, SecondPrompt, ReplPrompt + "f(");
 
                 using (var sh = interactive.WaitForSession<ISignatureHelpSession>()) {
-                    Assert.AreEqual(sh.Session.SelectedSignature.Documentation, "<no docstring>");
+                    Assert.AreEqual("<no docstring>", sh.Session.SelectedSignature.Documentation);
 
                     Keyboard.PressAndRelease(Key.Escape);
 

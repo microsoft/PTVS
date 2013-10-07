@@ -282,11 +282,10 @@ actual inspection and introspection."""
                     write_string(self.conn, (doc or '')[:4096])
                     arg_count = len(args) + (vargs is not None) + (varkw is not None)
                     write_int(self.conn, arg_count)
-                    for arg in args:
-                        if arg is None:
-                            write_string(self.conn, '')
-                        else:
-                            write_string(self.conn, arg)
+                    
+                    def_values = [''] * (len(args) - len(defaults)) + ['=' + d for d in defaults]
+                    for arg, def_value in zip(args, def_values):
+                        write_string(self.conn, (arg or '') + def_value)
                     if vargs is not None:
                         write_string(self.conn, '*' + vargs)
                     if varkw is not None:
@@ -891,6 +890,8 @@ due to the exec, so we do it here"""
             
         if defaults is not None:
             defaults = [repr(default) for default in defaults]
+        else:
+            defaults = []
         return [(doc, args, vargs, varkw, defaults)]
 
     def set_current_module(self, module):

@@ -532,8 +532,24 @@ namespace Microsoft.PythonTools.Repl {
                     ParameterResult[] parameters = new ParameterResult[paramCount];
                     for (int curParam = 0; curParam < paramCount; curParam++) {
                         string name = Stream.ReadString();
-                        parameters[curParam] = new ParameterResult(name);
+                        int equals = name.IndexOf('=');
+                        if (equals < 0) {
+                            parameters[curParam] = new ParameterResult(name);
+                        } else {
+                            parameters[curParam] = new ParameterResult(
+                                name.Remove(equals),
+                                null,
+                                null,
+                                // Even though it has a default, don't mark the
+                                // parameter as optional (for consistency with
+                                // signature help from the database)
+                                false,
+                                null,
+                                name.Substring(equals + 1)
+                            );
+                        }
                     }
+
                     docs[i] = new OverloadDoc(doc, parameters);
                 }
                 _overloads = docs;
