@@ -129,6 +129,9 @@ namespace Microsoft.VisualStudioTools.Navigation {
             }
 
             public int OnPropertyChanged(uint itemid, int propid, uint flags) {
+                if ((null == _hierarchy) || (0 == _cookie)) {
+                    return VSConstants.S_OK;
+                }
                 string name;
                 if (!IsAnalyzableSource(itemid, out name)) {
                     return VSConstants.S_OK;
@@ -141,7 +144,7 @@ namespace Microsoft.VisualStudioTools.Navigation {
             #endregion
 
             private bool InternalStopListening(bool throwOnError) {
-                if ((null != _hierarchy) || (0 == _cookie)) {
+                if ((null == _hierarchy) || (0 == _cookie)) {
                     return false;
                 }
                 int hr = _hierarchy.UnadviseHierarchyEvents(_cookie);
