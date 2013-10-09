@@ -826,9 +826,20 @@ namespace Microsoft.PythonTools.Analysis {
                         }
                     }
 
-                    using (var output = ProcessOutput.RunHiddenAndCapture(_interpreter, ExtensionScraperPath, "scrape", file.ModuleName, scrapePath, destFile)) {
+                    var prefixDir = Path.GetDirectoryName(_interpreter);
+                    var pathVar = string.Format("{0};{1}", Environment.GetEnvironmentVariable("PATH"), prefixDir);
+
+                    using (var output = ProcessOutput.Run(
+                        _interpreter,
+                        new [] { ExtensionScraperPath, "scrape", file.ModuleName, scrapePath, destFile },
+                        prefixDir,
+                        new[] { new KeyValuePair<string, string>("PATH", pathVar) },
+                        false,
+                        null
+                    )) {
                         TraceInformation("Scraping {0}", file.ModuleName);
                         TraceInformation("Command: {0}", output.Arguments);
+                        TraceInformation("environ['Path'] = {0}", pathVar);
                         output.Wait();
 
                         if (output.StandardOutputLines.Any()) {
