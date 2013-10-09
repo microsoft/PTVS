@@ -48,12 +48,14 @@ namespace PythonToolsUITests {
                 var server = window.WaitForItem("Solution 'MultiPaste' (1 project)", "HelloWorld", "python.py");
                 var server2 = window.WaitForItem("Solution 'MultiPaste' (1 project)", "HelloWorld", "python2.py");
 
+                window.CenterInView(server);
                 var point = server.GetClickablePoint();
                 Mouse.MoveTo(point);
                 Mouse.Click(MouseButton.Left);
 
                 Keyboard.Press(Key.LeftShift);
                 try {
+                    window.CenterInView(server2);
                     point = server2.GetClickablePoint();
                     Mouse.MoveTo(point);
                     Mouse.Click(MouseButton.Left);
@@ -349,8 +351,10 @@ namespace PythonToolsUITests {
 
                 AutomationWrapper.Select(draggedFile);
 
+                window.CenterInView(draggedFile);
                 Mouse.MoveTo(draggedFile.GetClickablePoint());
                 Mouse.Down(MouseButton.Left);
+                window.CenterInView(dragFolder);
                 Mouse.MoveTo(dragFolder.GetClickablePoint());
                 Mouse.Up(MouseButton.Left);
 
@@ -379,10 +383,14 @@ namespace PythonToolsUITests {
                 var destProject = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "ConsoleApplication1");
                 AutomationWrapper.Select(draggedFile);
 
+                window.CenterInView(draggedFile);
                 var point = draggedFile.GetClickablePoint();
                 Mouse.MoveTo(point);
                 Mouse.Down(MouseButton.Left);
+                // Ensure the drag has started
+                Mouse.MoveTo(new Point(point.X + 20, point.Y));
 
+                window.CenterInView(destProject);
                 Mouse.MoveTo(destProject.GetClickablePoint());
                 Mouse.Up(MouseButton.Left);
 
@@ -431,10 +439,12 @@ namespace PythonToolsUITests {
                 var draggedFolder = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "DragFolderOntoSelf");
                 AutomationWrapper.Select(draggedFolder);
 
+                window.CenterInView(draggedFolder);
                 var point = draggedFolder.GetClickablePoint();
                 Mouse.MoveTo(point);
                 Mouse.Down(MouseButton.Left);
-                Mouse.MoveTo(new Point(point.X + 1, point.Y + 1));
+                Mouse.MoveTo(new Point(point.X + 20, point.Y));
+                Mouse.MoveTo(point);
 
                 Mouse.Up(MouseButton.Left);
 
@@ -461,9 +471,12 @@ namespace PythonToolsUITests {
                 var childFolder = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "ParentFolder", "ChildFolder");
                 AutomationWrapper.Select(draggedFolder);
 
+                window.CenterInView(draggedFolder);
                 var point = draggedFolder.GetClickablePoint();
                 Mouse.MoveTo(point);
                 Mouse.Down(MouseButton.Left);
+
+                window.CenterInView(childFolder);
                 Mouse.MoveTo(childFolder.GetClickablePoint());
 
                 Mouse.Up(MouseButton.Left);
