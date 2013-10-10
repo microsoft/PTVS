@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -51,7 +52,7 @@ namespace TestAdapterTests {
             Assert.AreEqual(expectedTests.Length, sink.Tests.Count);
 
             foreach (var expectedTest in expectedTests) {
-                var expectedFullyQualifiedName = TestDiscoverer.MakeFullyQualifiedTestName(expectedTest.RelativeClassFilePath, expectedTest.ClassName, expectedTest.MethodName);
+                var expectedFullyQualifiedName = TestAnalyzer.MakeFullyQualifiedTestName(expectedTest.RelativeClassFilePath, expectedTest.ClassName, expectedTest.MethodName);
                 var actualTestCase = sink.Tests.SingleOrDefault(tc => tc.FullyQualifiedName == expectedFullyQualifiedName);
                 Assert.IsNotNull(actualTestCase, expectedFullyQualifiedName);
                 Assert.AreEqual(expectedTest.MethodName, actualTestCase.DisplayName, expectedFullyQualifiedName);
@@ -69,6 +70,48 @@ namespace TestAdapterTests {
             Debug.WriteLine("");
 
             PrintTestCases(sink.Tests);
+        }
+
+        [TestMethod, Priority(0)]
+        public void DecoratedTests() {
+            using (var analyzer = MakeTestAnalyzer()) {
+                AddModule(analyzer, "Foo", @"import unittest
+
+def decorator(fn):
+    def wrapped(*args, **kwargs):
+        return fn(*args, **kwargs)
+    return wrapped
+
+class MyTest(unittest.TestCase):
+    @decorator
+    def testAbc(self):
+        pass
+");
+
+                var test = analyzer.GetTestCases().Single();
+                Assert.AreEqual("testAbc", test.DisplayName);
+                Assert.AreEqual(10, test.LineNumber);
+            }
+        }
+
+        private TestAnalyzer MakeTestAnalyzer() {
+            return new TestAnalyzer(
+                InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(new Version(2, 7)),
+                // Not real files/directories, but not an entirely fake path
+                TestData.GetPath("Foo.pyproj"),
+                TestData.GetPath("Foo"),
+                new Uri("executor://TestOnly/v1")
+            );
+        }
+
+        private void AddModule(TestAnalyzer analyzer, string moduleName, string code) {
+            using (var source = new StringReader(code)) {
+                analyzer.AddModule(
+                    moduleName,
+                    TestData.GetPath("Foo\\" + moduleName.Replace('.', '\\') + ".py"),
+                    source
+                );
+            }
         }
 
         private static bool IsSameFile(string a, string b) {

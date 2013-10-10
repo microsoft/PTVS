@@ -13,14 +13,9 @@
  * ***************************************************************************/
 
 using System;
-using System.Collections.Generic;
 using System.ComponentModel.Composition;
-using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
@@ -29,6 +24,7 @@ using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestWindow.Extensibility;
+using Microsoft.VisualStudioTools;
 using MSBuild = Microsoft.Build.Evaluation;
 
 namespace Microsoft.PythonTools.TestAdapter {
@@ -78,8 +74,8 @@ namespace Microsoft.PythonTools.TestAdapter {
                     var projHome = Path.GetFullPath(Path.Combine(proj.DirectoryPath, proj.GetPropertyValue(PythonConstants.ProjectHomeSetting) ?? "."));
 
                     if (walker.ClassName != null && walker.FunctionName != null) {
-                        return TestDiscoverer.MakeFullyQualifiedTestName(
-                            Microsoft.VisualStudioTools.CommonUtils.CreateFriendlyFilePath(projHome, filePath),
+                        return TestAnalyzer.MakeFullyQualifiedTestName(
+                            CommonUtils.CreateFriendlyFilePath(projHome, filePath),
                             walker.ClassName,
                             walker.FunctionName
                         );
