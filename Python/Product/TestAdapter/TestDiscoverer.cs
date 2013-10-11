@@ -78,7 +78,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                                 string fullName;
 
                                 try {
-                                    fullName = ModulePath.FromFullPath(fileAbsolutePath).FullName;
+                                    fullName = ModulePath.FromFullPath(fileAbsolutePath).ModuleName;
                                 } catch (ArgumentException) {
                                     logger.SendMessage(TestMessageLevel.Warning, "File has an invalid module name: " + fileAbsolutePath);
                                     continue;

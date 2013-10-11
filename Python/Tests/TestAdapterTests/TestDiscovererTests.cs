@@ -94,6 +94,44 @@ class MyTest(unittest.TestCase):
             }
         }
 
+        [TestMethod, Priority(0)]
+        public void TestCaseSubclasses() {
+            using (var analyzer = MakeTestAnalyzer()) {
+                AddModule(analyzer, "Pkg.SubPkg", @"import unittest
+
+class TestBase(unittest.TestCase):
+    pass
+");
+
+                AddModule(
+                    analyzer,
+                    "Pkg",
+                    moduleFile: "Pkg\\__init__.py",
+                    code: @"from .SubPkg import TestBase"
+                );
+
+                AddModule(analyzer, "__main__", @"from Pkg.SubPkg import TestBase as TB1
+from Pkg import TestBase as TB2
+from Pkg import *
+
+class MyTest1(TB1):
+    def test1(self):
+        pass
+
+class MyTest2(TB2):
+    def test2(self):
+        pass
+
+class MyTest3(TestBase):
+    def test3(self):
+        pass
+");
+
+                var test = analyzer.GetTestCases().ToList();
+                AssertUtil.ContainsExactly(test.Select(t => t.DisplayName), "test1", "test2", "test3");
+            }
+        }
+
         private TestAnalyzer MakeTestAnalyzer() {
             return new TestAnalyzer(
                 InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(new Version(2, 7)),
@@ -104,11 +142,11 @@ class MyTest(unittest.TestCase):
             );
         }
 
-        private void AddModule(TestAnalyzer analyzer, string moduleName, string code) {
+        private void AddModule(TestAnalyzer analyzer, string moduleName, string code, string moduleFile = null) {
             using (var source = new StringReader(code)) {
                 analyzer.AddModule(
                     moduleName,
-                    TestData.GetPath("Foo\\" + moduleName.Replace('.', '\\') + ".py"),
+                    TestData.GetPath("Foo\\" + (moduleFile ?? moduleName.Replace('.', '\\') + ".py")),
                     source
                 );
             }
