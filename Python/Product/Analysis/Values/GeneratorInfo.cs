@@ -23,8 +23,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
     /// by calling a function definition which contains yield expressions.
     /// </summary>
     internal class GeneratorInfo : BuiltinInstanceInfo {
-        private GeneratorNextBoundBuiltinMethodInfo _nextMethod;
-        private GeneratorSendBoundBuiltinMethodInfo _sendMethod;
+        private AnalysisValue _nextMethod;
+        private AnalysisValue _sendMethod;
         private readonly Node _node;
         public readonly VariableDef Yields;
         public readonly VariableDef Sends;
@@ -38,51 +38,47 @@ namespace Microsoft.PythonTools.Analysis.Values {
             Returns = new VariableDef();
         }
 
-        private GeneratorNextBoundBuiltinMethodInfo NextMethod {
-            get {
-                if (_nextMethod == null) {
-                    IAnalysisSet nextMeth;
-                    string nextName = (ProjectState.LanguageVersion.Is3x()) ? "__next__" : "next";
-                    if (TryGetMember(nextName, out nextMeth)) {
-                        _nextMethod = new GeneratorNextBoundBuiltinMethodInfo(this, (BuiltinMethodInfo)nextMeth.First());
-                    }
-                }
-                return _nextMethod;
-            }
+
+        private IAnalysisSet GeneratorNext(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
+            return GetEnumeratorTypes(node, unit);
         }
 
-        private GeneratorSendBoundBuiltinMethodInfo SendMethod {
-            get {
-                if (_sendMethod == null) {
-                    IAnalysisSet sendMeth;
-                    if (TryGetMember("send", out sendMeth)) {
-                        _sendMethod = new GeneratorSendBoundBuiltinMethodInfo(this, (BuiltinMethodInfo)sendMeth.First());
-                    }
-                }
-                return _sendMethod;
+        private IAnalysisSet GeneratorSend(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
+            if (args.Length > 0) {
+                AddSend(node, unit, args[0]);
             }
+            return GetEnumeratorTypes(node, unit);
         }
 
 
         public override IAnalysisSet GetMember(Node node, AnalysisUnit unit, string name) {
             switch(name) {
                 case "next":
-                    if (NextMethod != null && unit.ProjectState.LanguageVersion.Is2x()) {
-                        return NextMethod.SelfSet;
+                    if (unit.ProjectState.LanguageVersion.Is2x()) {
+                        return _nextMethod = _nextMethod ?? new SpecializedCallable(
+                            base.GetMember(node, unit, name).OfType<BuiltinNamespace<IPythonType>>().FirstOrDefault(),
+                            GeneratorNext,
+                            false
+                        );
                     }
                     break;
                 case "__next__":
-                    if (NextMethod != null && unit.ProjectState.LanguageVersion.Is3x()) {
-                        return NextMethod.SelfSet;
+                    if (unit.ProjectState.LanguageVersion.Is3x()) {
+                        return _nextMethod = _nextMethod ?? new SpecializedCallable(
+                            base.GetMember(node, unit, name).OfType<BuiltinNamespace<IPythonType>>().FirstOrDefault(),
+                            GeneratorNext,
+                            false
+                        );
                     }
                     break;
                 case "send":
-                    if (SendMethod != null) {
-                        return SendMethod.SelfSet;
-                    }
-                    break;
+                    return _sendMethod = _sendMethod ?? new SpecializedCallable(
+                        base.GetMember(node, unit, name).OfType<BuiltinNamespace<IPythonType>>().FirstOrDefault(),
+                        GeneratorSend,
+                        false
+                    );
             }
-            
+
             return base.GetMember(node, unit, name);
         }
 

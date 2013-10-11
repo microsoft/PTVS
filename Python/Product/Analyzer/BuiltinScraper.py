@@ -21,6 +21,14 @@ try:
 except:
     import _thread as thread
 
+try:
+    __builtins__
+except NameError:
+    try:
+        import __builtin__ as __builtins__
+    except ImportError:
+        import builtins as __builtins__
+
 def safe_dir(obj):
     try:
         return frozenset(obj.__dict__) | frozenset(dir(obj))

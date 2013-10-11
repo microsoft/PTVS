@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System.Linq;
+using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Values {
@@ -23,7 +24,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         internal readonly Node _node;
         private IAnalysisSet _unionType;        // all types that have been seen
         private VariableDef[] _indexTypes;     // types for known indices
-        private IterBoundBuiltinMethodInfo _iterMethod;
+        private AnalysisValue _iterMethod;
 
         public IterableInfo(VariableDef[] indexTypes, BuiltinClassInfo seqType, Node node)
             : base(seqType) {
@@ -59,14 +60,28 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public override IAnalysisSet GetMember(Node node, AnalysisUnit unit, string name) {
             if (name == "__iter__") {
-                if (_iterMethod == null) {
-                    var iterImpl = (base.GetMember(node, unit, name).FirstOrDefault() as BuiltinMethodInfo) ?? new IterBuiltinMethodInfo(PythonType, ProjectState);
-                    _iterMethod = new IterBoundBuiltinMethodInfo(this, iterImpl);
-                }
-                return _iterMethod;
+                return _iterMethod = _iterMethod ?? new SpecializedCallable(
+                    base.GetMember(node, unit, name).OfType<BuiltinNamespace<IPythonType>>().FirstOrDefault(),
+                    IterableIter,
+                    false
+                );
             }
 
             return base.GetMember(node, unit, name);
+        }
+
+        private IAnalysisSet IterableIter(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
+            if (args.Length == 0) {
+                return unit.Scope.GetOrMakeNodeValue(
+                    node,
+                    n => new IteratorInfo(
+                        _indexTypes,
+                        IteratorInfo.GetIteratorTypeFromType(ClassInfo, unit),
+                        n
+                    )
+                );
+            }
+            return AnalysisSet.Empty;
         }
 
         internal bool AddTypes(AnalysisUnit unit, IAnalysisSet[] types) {

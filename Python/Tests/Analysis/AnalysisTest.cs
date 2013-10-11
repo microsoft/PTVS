@@ -2821,13 +2821,9 @@ for abc in x:
 
         [TestMethod, Priority(0)]
         public void GetVariablesDictionaryGet() {
-            var entry = ProcessText(@"
-x = {42:'abc'}
-            ");
+            var entry = ProcessText(@"x = {42:'abc'}");
 
-            foreach (var varRef in entry.GetValuesByIndex("x.get", 1)) {
-                Assert.AreEqual("bound built-in method get", varRef.Description);
-            }
+            AssertUtil.ContainsExactly(entry.GetDescriptionsByIndex("x.get", 0), "bound built-in method get");
         }
 
         [TestMethod, Priority(0)]
@@ -5692,6 +5688,50 @@ class Derived3(object):
             }
         }
 
+        [TestMethod, Priority(0)]
+        public void ParameterAnnotation() {
+            var text = @"
+s = None
+def f(s: s = 123):
+    return s
+";
+            var entry = ProcessText(text, PythonLanguageVersion.V33);
+
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("s", text.IndexOf("s:")), BuiltinTypeId.Int);
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("s", text.IndexOf("s =")), BuiltinTypeId.NoneType);
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("s", text.IndexOf("return s")), BuiltinTypeId.Int);
+        }
+
+        [TestMethod, Priority(0)]
+        public void ParameterAnnotationLambda() {
+            var text = @"
+s = None
+def f(s: lambda s: s > 0 = 123):
+    return s
+";
+            var entry = ProcessText(text, PythonLanguageVersion.V33);
+
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("s", text.IndexOf("s:")), BuiltinTypeId.Int);
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("s", text.IndexOf("s >")));
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("s", text.IndexOf("return s")), BuiltinTypeId.Int);
+        }
+
+        [TestMethod, Priority(0)]
+        public void ReturnAnnotation() {
+            var text = @"
+s = None
+def f(s = 123) -> s:
+    return s
+";
+            var entry = ProcessText(text, PythonLanguageVersion.V33);
+
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("s", text.IndexOf("(s =") + 1), BuiltinTypeId.Int);
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("s", text.IndexOf("s:")), BuiltinTypeId.NoneType);
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("s", text.IndexOf("return s")), BuiltinTypeId.Int);
+        }
+
+        #region Helpers
+
         protected IEnumerable<IAnalysisVariable> UniqifyVariables(IEnumerable<IAnalysisVariable> vars) {
             Dictionary<LocationInfo, IAnalysisVariable> res = new Dictionary<LocationInfo, IAnalysisVariable>();
             foreach (var v in vars) {
@@ -5705,9 +5745,6 @@ class Derived3(object):
         }
 
         #endregion
-
-        #region Helpers
-
         private static string[] GetMembers(object obj, bool showClr) {
             var dir = showClr ? ClrModule.DirClr(obj) : ClrModule.Dir(obj);
             int len = dir.__len__();

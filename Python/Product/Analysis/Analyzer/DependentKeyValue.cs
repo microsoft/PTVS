@@ -213,7 +213,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         /// <summary>
         /// Copies all of our key types into the provided VariableDef.
         /// </summary>
-        internal void CopyKeysTo(VariableDef to) {
+        internal bool CopyKeysTo(VariableDef to) {
             bool added = false;
             foreach (var dependency in _dependencies) {
                 added |= to.AddTypes(dependency.Key, dependency.Value.KeyValues.Keys);
@@ -222,12 +222,14 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             if (added) {
                 EnqueueDependents();
             }
+
+            return added;
         }
 
         /// <summary>
         /// Copies all of our value types into the provided VariableDef.
         /// </summary>
-        internal void CopyValuesTo(VariableDef to) {
+        internal bool CopyValuesTo(VariableDef to) {
             bool added = false;
             foreach (var dependency in _dependencies) {
                 foreach (var value in dependency.Value.KeyValues) {
@@ -238,6 +240,8 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             if (added) {
                 EnqueueDependents();
             }
+
+            return added;
         }
     }
 

@@ -120,4 +120,11 @@ namespace AnalysisTests {
             get { return PythonPaths.Python33; }
         }
     }
+
+    [TestClass]
+    public class Mutate34 : MutateStdLibTest {
+        public override PythonVersion Version {
+            get { return PythonPaths.Python34; }
+        }
+    }
 }

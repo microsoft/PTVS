@@ -300,7 +300,6 @@
     <Compile Include="Values\BuiltinPropertyInfo.cs" />
     <Compile Include="Values\ClassInfo.cs" />
     <Compile Include="Values\ConstantInfo.cs" />
-    <Compile Include="Values\IterBoundBuiltinMethod.cs" />
     <Compile Include="Values\SequenceBuiltinInstanceInfo.cs" />
     <Compile Include="Values\IteratorInfo.cs" />
     <Compile Include="Values\IterableInfo.cs" />
@@ -309,17 +308,11 @@
     <Compile Include="Values\EnumInstanceInfo.cs" />
     <Compile Include="Values\FunctionInfo.cs" />
     <Compile Include="Values\GeneratorInfo.cs" />
-    <Compile Include="Values\GeneratorNextBoundBuiltinMethodInfo.cs" />
-    <Compile Include="Values\GeneratorSendBoundBuiltinMethodInfo.cs" />
     <Compile Include="Values\IModule.cs" />
     <Compile Include="Values\InstanceInfo.cs" />
     <Compile Include="Analyzer\IReferenceable.cs" />
-    <Compile Include="Values\ListAppendBoundBuiltinMethodInfo.cs" />
     <Compile Include="Values\ListBuiltinClassInfo.cs" />
-    <Compile Include="Values\ListExtendBoundBuiltinFunction.cs" />
     <Compile Include="Values\ListInfo.cs" />
-    <Compile Include="Values\ListInsertBoundBuiltinFunction.cs" />
-    <Compile Include="Values\ListPopBoundBuiltinMethodInfo.cs" />
     <Compile Include="Values\MemberReferences.cs" />
     <Compile Include="Values\BoundMethodInfo.cs" />
     <Compile Include="Values\ModuleInfo.cs" />

@@ -17,11 +17,12 @@ using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Values {
-    class BoundBuiltinMethodInfo : AnalysisValue {
+    class BoundBuiltinMethodInfo : BuiltinNamespace<IPythonType> {
         private readonly BuiltinMethodInfo _method;
         private OverloadResult[] _overloads;
 
-        public BoundBuiltinMethodInfo(BuiltinMethodInfo method) {
+        public BoundBuiltinMethodInfo(BuiltinMethodInfo method)
+            : base(method.PythonType, method.ProjectState) {
             _method = method;
         }
 
@@ -40,12 +41,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public override string Documentation {
             get {
                 return _method.Documentation;
-            }
-        }
-
-        public PythonAnalyzer ProjectState {
-            get {
-                return _method.ProjectState;
             }
         }
 
