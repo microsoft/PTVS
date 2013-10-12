@@ -317,6 +317,8 @@ namespace Microsoft.VisualStudioTools.Project
         /// </summary>
         private FolderNode _folderBeingCreated;
 
+        private readonly ExtensibilityEventsDispatcher extensibilityEventsHelper;
+
         #endregion
 
         #region abstract properties
@@ -415,6 +417,18 @@ namespace Microsoft.VisualStudioTools.Project
         #endregion
 
         #region properties
+
+        internal bool IsProjectOpened {
+            get {
+                return projectOpened;
+            }
+        }
+
+        internal ExtensibilityEventsDispatcher ExtensibilityEventsHelper {
+            get {
+                return extensibilityEventsHelper; 
+            }
+        }
 
         /// <summary>
         /// Gets the folder node which is currently being added to the project via
@@ -919,6 +933,7 @@ namespace Microsoft.VisualStudioTools.Project
 
         protected ProjectNode()
         {
+            this.extensibilityEventsHelper = new ExtensibilityEventsDispatcher(this);
             this.Initialize();
         }
 
@@ -5582,10 +5597,6 @@ If the files in the existing folder have the same names as files in the folder y
 
         private MSBuildExecution.ProjectPropertyInstance GetMsBuildProperty(string propertyName, bool resetCache)
         {
-            if (isDisposed) {
-                throw new ObjectDisposedException(null);
-            }
-
             if (resetCache || this.currentConfig == null)
             {
                 // Get properties from project file and cache it
@@ -6267,6 +6278,8 @@ If the files in the existing folder have the same names as files in the folder y
                 return;
             }
 
+            this.ExtensibilityEventsHelper.FireItemAdded(child);
+
             HierarchyNode prev = child.PreviousVisibleSibling;
             uint prevId = (prev != null) ? prev.HierarchyId : VSConstants.VSITEMID_NIL;
             foreach (IVsHierarchyEvents sink in _hierarchyEventSinks) {
@@ -6286,6 +6299,8 @@ If the files in the existing folder have the same names as files in the folder y
             if ((EventTriggeringFlag & ProjectNode.EventTriggering.DoNotTriggerHierarchyEvents) != 0) {
                 return;
             }
+
+            this.ExtensibilityEventsHelper.FireItemRemoved(deletedItem);
 
             if (_hierarchyEventSinks.Count > 0) {
                 // Note that in some cases (deletion of project node for example), an Advise
