@@ -384,7 +384,7 @@ namespace DebuggerTests {
                 };
 
                 // let loop run
-                for (int i = 0; i < 100; i++) {
+                for (int i = 0; i < 20; i++) {
                     Thread.Sleep(50);
 
                     Debug.WriteLine(String.Format("Breaking {0}", i));

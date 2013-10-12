@@ -544,35 +544,36 @@ namespace PythonToolsUITests {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
                 var project = app.OpenAndFindProject(@"TestData\HelloWorld.sln");
 
-                Assert.AreEqual("{888888a0-9f3d-457c-b088-3a5042f75d52}", project.Kind);
+                Assert.AreEqual("{888888a0-9f3d-457c-b088-3a5042f75d52}", project.Kind, "project.Kind");
                 // we don't yet expose a VSProject interface here, if we did we'd need tests for it, but it doesn't support
                 // any functionality we care about/implement yet.
-                Assert.AreEqual(null, project.Object);
+                Assert.IsNotNull(project.Object, "project.Object");
+                Assert.IsInstanceOfType(project.Object, typeof(OAVSProject), "project.Object");
 
-                Assert.AreEqual(true, project.Saved);
+                Assert.IsTrue(project.Saved, "project.Saved");
                 project.Saved = false;
-                Assert.AreEqual(false, project.Saved);
+                Assert.IsFalse(project.Saved, "project.Saved");
                 project.Saved = true;
 
-                Assert.AreEqual(null, project.Globals);
-                Assert.AreEqual("{c0000016-9ab0-4d58-80e6-54f29e8d3144}", project.ExtenderCATID);
+                Assert.IsNull(project.Globals, "project.Globals");
+                Assert.AreEqual("{c0000016-9ab0-4d58-80e6-54f29e8d3144}", project.ExtenderCATID, "project.ExetenderCATID");
                 var extNames = project.ExtenderNames;
-                Assert.AreEqual(typeof(string[]), extNames.GetType());
-                Assert.AreEqual(0, ((string[])extNames).Length);
-                Assert.AreEqual(null, project.ParentProjectItem);
-                Assert.AreEqual(null, project.CodeModel);
+                Assert.IsInstanceOfType(extNames, typeof(string[]), "project.ExtenderNames");
+                Assert.AreEqual(0, ((string[])extNames).Length, "len(projectExtenderNames)");
+                Assert.IsNull(project.ParentProjectItem, "project.ParentProjectItem");
+                Assert.IsNull(project.CodeModel, "project.CodeModel");
                 AssertError<ArgumentNullException>(() => project.get_Extender(null));
                 AssertError<COMException>(() => project.get_Extender("DoesNotExist"));
-                Assert.AreEqual(null, project.Collection);
+                Assert.IsNull(project.Collection, "project.Collection");
 
                 foreach (ProjectItem item in project.ProjectItems) {
                     Assert.AreEqual(item.Name, project.ProjectItems.Item(1).Name);
                     break;
                 }
 
-                Assert.AreEqual(VsIdeTestHostContext.Dte, project.ProjectItems.DTE);
-                Assert.AreEqual(project, project.ProjectItems.Parent);
-                Assert.AreEqual(null, project.ProjectItems.Kind);
+                Assert.AreEqual(VsIdeTestHostContext.Dte, project.ProjectItems.DTE, "project.ProjectItems.DTE");
+                Assert.AreEqual(project, project.ProjectItems.Parent, "project.ProjectItems.Parent");
+                Assert.IsNull(project.ProjectItems.Kind, "project.ProjectItems.Kind");
 
                 AssertError<ArgumentException>(() => project.ProjectItems.Item(-1));
                 AssertError<ArgumentException>(() => project.ProjectItems.Item(0));

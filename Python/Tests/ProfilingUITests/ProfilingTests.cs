@@ -464,9 +464,11 @@ namespace ProfilingUITests {
                     }
 
                     var pyPerf = app.PythonPerformanceExplorerTreeView;
-                    var item = pyPerf.FindItem("HelloWorld *", "Reports");
-                    var child = item.FindFirst(System.Windows.Automation.TreeScope.Descendants, Condition.TrueCondition);
+                    
+                    var baselineFile = session.GetReport(1).Filename;
+                    var comparisonFile = session.GetReport(2).Filename;
 
+                    var child = pyPerf.FindItem("HelloWorld *", "Reports", Path.GetFileNameWithoutExtension(baselineFile));
                     AutomationWrapper.EnsureExpanded(child);
                     child.SetFocus();
 
@@ -475,8 +477,9 @@ namespace ProfilingUITests {
                     Keyboard.PressAndRelease(System.Windows.Input.Key.C);
 
                     var cmpReports = new ComparePerfReports(app.WaitForDialog());
-                    cmpReports.ComparisonFile = session.GetReport(2).Filename;
                     try {
+                        cmpReports.BaselineFile = baselineFile;
+                        cmpReports.ComparisonFile = comparisonFile;
                         cmpReports.Ok();
                         cmpReports = null;
                     } catch (ElementNotEnabledException) {

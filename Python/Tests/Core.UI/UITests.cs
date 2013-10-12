@@ -702,10 +702,10 @@ namespace PythonToolsUITests {
                 selectedHierarchy.AdviseHierarchyEvents(events, out cookie);
 
                 var newItem = new NewItemDialog(app.OpenDialogWithDteExecuteCommand("Project.AddNewItem"));
-                AutomationWrapper.Select(newItem.ProjectTypes.FindItem("Python Unit Test"));
+                AutomationWrapper.Select(newItem.ProjectTypes.FindItem("Empty Python File"));
                 newItem.ClickOK();
 
-                var test2 = window.WaitForItem("Solution 'AddItemPreviousSiblingNotVisible' (1 project)", "HelloWorld", "test2.py");
+                var test2 = window.WaitForItem("Solution 'AddItemPreviousSiblingNotVisible' (1 project)", "HelloWorld", "module1.py");
                 Assert.IsNotNull(test2);
 
                 selectedHierarchy.UnadviseHierarchyEvents(cookie);
