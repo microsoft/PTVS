@@ -404,8 +404,6 @@ namespace Microsoft.VisualStudioTools.Project {
             _watcher = CreateFileSystemWatcher(ProjectHome);
             _attributesWatcher = CreateAttributesWatcher(ProjectHome);
 
-            // add everything that's on disk that we don't have in the project
-            MergeDiskNodes(this, ProjectHome);
         }
 
         private void BoldStartupItem() {
