@@ -20,8 +20,6 @@ namespace Microsoft.TC.TestHostAdapters
 
         public const string MtaHostAdapterName = "TC MTA";
 
-        public const string VsIdeHostAdapterName = "TC VS IDE";
-
         public const string VsAddinName = "TcVsIdeTestHost";
 
         public const string IVsIdeTestHostAddinGuidString = "C525A97C-241C-45EF-BE9C-CF95650D9F00";

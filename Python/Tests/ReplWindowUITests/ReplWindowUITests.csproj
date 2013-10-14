@@ -34,10 +34,10 @@
       <EmbedInteropTypes>False</EmbedInteropTypes>
     </Reference>
     <Reference Include="Microsoft.TC.TestHostAdapters, Version=1.0.0.0, Culture=neutral, PublicKeyToken=aa09a9889eb008f7, processorArchitecture=MSIL">
-      <HintPath>..\..\Public\TCTestHostAdapters\$(VSTarget)\Microsoft.TC.TestHostAdapters.dll</HintPath>
+      <HintPath>$(BuildRoot)\Common\Tests\TCTestHostAdapters\$(VSTarget)\Microsoft.TC.TestHostAdapters.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.TC.TestHostAdaptersFramework, Version=1.0.0.0, Culture=neutral, PublicKeyToken=aa09a9889eb008f7, processorArchitecture=MSIL">
-      <HintPath>..\..\Public\TCTestHostAdapters\$(VSTarget)\Microsoft.TC.TestHostAdaptersFramework.dll</HintPath>
+      <HintPath>$(BuildRoot)\Common\Tests\TCTestHostAdapters\$(VSTarget)\Microsoft.TC.TestHostAdaptersFramework.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.ComponentModelHost, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.CoreUtility, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />

@@ -1142,21 +1142,10 @@ namespace TestUtilities
 
             internal static bool UserSettingsArchiveExists(string registryHive)
             {
-                // This must be a key that does not get set if you start up, hit the no settings prompt and select 
-                // "Exit Visual Studio", but does get set if you select a default
-                const string SettingsMarkerKey = @"StartPage";
-
                 string versionKeyName = VSRegistryRoot + @"\" + registryHive;
                 using (RegistryKey hive = Registry.CurrentUser.OpenSubKey(versionKeyName))
                 {
-                    if (hive == null)
-                    {
-                        return false;
-                    }
-                    using (RegistryKey settingsMarker = hive.OpenSubKey(SettingsMarkerKey))
-                    {
-                        return settingsMarker != null;
-                    }
+                    return hive != null;
                 }
             }
 

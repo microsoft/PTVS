@@ -106,17 +106,9 @@
     <Compile Include="Common\NativeMethods.cs" />
     <Compile Include="Common\VsIdeTestHostException.cs" />
     <Compile Include="Common\RegistrySettings.cs" />
-    <Compile Include="AgentSide\VsIdeHostAdapter.cs" />
-    <Compile Include="AgentSide\VisualStudioIde.cs" />
-    <Compile Include="AgentSide\RetryMessageFilter.cs" />
     <Compile Include="DynamicHostAdapter.cs\DynamicHostAdapter.cs" />
     <Compile Include="HostSide\HostAdapterHostSide.cs" />
-    <Compile Include="HostSide\RunConfigControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="HostSide\RunConfigControl.Designer.cs" />
     <Compile Include="HostSide\VsIdeTestHostAddin.cs" />
-    <Compile Include="HostSide\RunConfigData.cs" />
     <Compile Include="MtaHostAdapter\MtaHostAdapter.cs" />
     <Compile Include="Properties\AssemblyAttributes.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
