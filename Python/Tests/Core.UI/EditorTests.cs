@@ -300,6 +300,16 @@ namespace PythonToolsUITests {
 
      'b':42}");
 
+                AutoIndentTest(app, project, "x = {  #comment\r'a': [\r1,\r2,\r3\r],\r\r'b':42\r}", @"x = {  #comment
+    'a': [
+        1,
+        2,
+        3
+        ],
+
+    'b':42
+    }");
+
                 AutoIndentTest(app, project, "if True:\rpass\r\r42\r\r", @"if True:
     pass
 
@@ -350,7 +360,7 @@ else: #bar
                 // http://pytools.codeplex.com/workitem/125
                 AutoIndentTest(app, project, "def f():\rx = (\r7)\rp", @"def f():
     x = (
-         7)
+        7)
     p");
 
                 AutoIndentTest(app, project, "def f():\rassert False, \\\r'A message'\rp", @"def f():

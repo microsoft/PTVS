@@ -131,9 +131,17 @@ namespace Microsoft.PythonTools.Editor {
                     } else if (token.IsOpenGrouping()) {
                         indentStack.Push(current);
                         var start = token.Span.Start;
-                        current = new LineInfo { 
-                            Indentation = start.Position - start.GetContainingLine().Start.Position + 1 
-                        };
+                        var line2 = start.GetContainingLine();
+                        var next = tokenStack.Count > 0 ? tokenStack.Peek() : null;
+                        if (next != null && next.Span.End <= line2.End) {
+                            current = new LineInfo {
+                                Indentation = start.Position - line2.Start.Position + 1
+                            };
+                        } else {
+                            current = new LineInfo {
+                                Indentation = GetIndentation(line2.GetText(), tabSize) + tabSize
+                            };
+                        }
                     } else if (token.IsCloseGrouping()) {
                         if (indentStack.Count > 0) {
                             current = indentStack.Pop();
