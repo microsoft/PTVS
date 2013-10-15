@@ -317,7 +317,7 @@ namespace Microsoft.VisualStudioTools.Project
         /// </summary>
         private FolderNode _folderBeingCreated;
 
-        private readonly ExtensibilityEventsDispatcher extensibilityEventsHelper;
+        private readonly ExtensibilityEventsDispatcher extensibilityEventsDispatcher;
 
         #endregion
 
@@ -424,9 +424,9 @@ namespace Microsoft.VisualStudioTools.Project
             }
         }
 
-        internal ExtensibilityEventsDispatcher ExtensibilityEventsHelper {
+        internal ExtensibilityEventsDispatcher ExtensibilityEventsDispatcher {
             get {
-                return extensibilityEventsHelper; 
+                return extensibilityEventsDispatcher; 
             }
         }
 
@@ -933,7 +933,7 @@ namespace Microsoft.VisualStudioTools.Project
 
         protected ProjectNode()
         {
-            this.extensibilityEventsHelper = new ExtensibilityEventsDispatcher(this);
+            this.extensibilityEventsDispatcher = new ExtensibilityEventsDispatcher(this);
             this.Initialize();
         }
 
@@ -6283,7 +6283,7 @@ If the files in the existing folder have the same names as files in the folder y
                 return;
             }
 
-            this.ExtensibilityEventsHelper.FireItemAdded(child);
+            ExtensibilityEventsDispatcher.FireItemAdded(child);
 
             HierarchyNode prev = child.PreviousVisibleSibling;
             uint prevId = (prev != null) ? prev.HierarchyId : VSConstants.VSITEMID_NIL;
@@ -6305,7 +6305,7 @@ If the files in the existing folder have the same names as files in the folder y
                 return;
             }
 
-            this.ExtensibilityEventsHelper.FireItemRemoved(deletedItem);
+            ExtensibilityEventsDispatcher.FireItemRemoved(deletedItem);
 
             if (_hierarchyEventSinks.Count > 0) {
                 // Note that in some cases (deletion of project node for example), an Advise
