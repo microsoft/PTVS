@@ -346,6 +346,20 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
             throw new NotImplementedException();
         }
 
+        // We're managed and we don't use COM’s IDispatch which would resolve parametrized property FileNames and IsOpen correctly. 
+        // Powershell scripts are using reflection to find (or rather, not find) the methodss. Thus FileNames call ends with exception: method's not defined.
+        // Implementing these as regular methods satisfies the situation.
+        // This is required for Nuget support.
+
+        public string FileNames(short index) {
+            return get_FileNames(index);
+        }
+
+        public bool IsOpen(string viewKind) {
+            return get_IsOpen(viewKind);
+        }
+
         #endregion
+
     }
 }
