@@ -274,6 +274,10 @@
       <Link>SharedProject\EnumDependencies.cs</Link>
       <Visible>true</Visible>
     </Compile>
+    <Compile Include="$(_ProjectSystemFilesLocation)\ExtensibilityEventsDispatcher.cs">
+      <Link>SharedProject\ExtensibilityEventsDispatcher.cs</Link>
+      <Visible>true</Visible>
+    </Compile>
     <Compile Include="$(_ProjectSystemFilesLocation)\FileChangeManager.cs">
       <Link>SharedProject\FileChangeManager.cs</Link>
       <Visible>true</Visible>

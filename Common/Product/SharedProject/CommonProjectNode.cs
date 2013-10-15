@@ -65,11 +65,12 @@ namespace Microsoft.VisualStudioTools.Project {
         private Queue<FileSystemChange> _fileSystemChanges = new Queue<FileSystemChange>();
         private object _fileSystemChangesLock = new object();
         internal UIThreadSynchronizer _uiSync;
-        private MSBuild.Project userBuildProject;
+        private MSBuild.Project _userBuildProject;
         private readonly Dictionary<string, FileSystemWatcher> _symlinkWatchers = new Dictionary<string, FileSystemWatcher>();
         private DiskMerger _currentMerger;
         private readonly HashSet<HierarchyNode> _needBolding = new HashSet<HierarchyNode>();
         private int _idleTriggered;
+        private bool _isUserFileDirty;
 
         public CommonProjectNode(CommonProjectPackage/*!*/ package, ImageList/*!*/ imageList) {
             Contract.Assert(package != null);
@@ -166,6 +167,24 @@ namespace Microsoft.VisualStudioTools.Project {
         public CommonPropertyPage PropertyPage {
             get { return _propPage; }
             set { _propPage = value; }
+        }
+
+        protected internal MSBuild.Project UserBuildProject {
+            get {
+                return _userBuildProject;
+            }
+        }
+
+        protected bool IsUserProjectFileDirty {
+            get {
+                string document = this.GetMkDocument();
+
+                if (String.IsNullOrEmpty(document)) {
+                    return _isUserFileDirty;
+                }
+
+                return (_isUserFileDirty || !File.Exists(document + PerUserFileExtension));
+            }
         }
 
         #endregion
@@ -387,14 +406,14 @@ namespace Microsoft.VisualStudioTools.Project {
                 _watcher.Dispose();
             }
 
-            string userProjectFilename = FileName + ".user";
+            string userProjectFilename = FileName + PerUserFileExtension;
             if (File.Exists(userProjectFilename)) {
-                userBuildProject = BuildProject.ProjectCollection.LoadProject(userProjectFilename);
+                _userBuildProject = BuildProject.ProjectCollection.LoadProject(userProjectFilename);
             }
 
             bool? showAllFiles = null;
-            if (userBuildProject != null) {
-                showAllFiles = GetShowAllFilesSetting(userBuildProject.GetPropertyValue(CommonConstants.ProjectView));
+            if (_userBuildProject != null) {
+                showAllFiles = GetShowAllFilesSetting(_userBuildProject.GetPropertyValue(CommonConstants.ProjectView));
             }
 
             _showingAllFiles = showAllFiles ??
@@ -404,8 +423,6 @@ namespace Microsoft.VisualStudioTools.Project {
             _watcher = CreateFileSystemWatcher(ProjectHome);
             _attributesWatcher = CreateAttributesWatcher(ProjectHome);
 
-            // add everything that's on disk that we don't have in the project
-            MergeDiskNodes(this, ProjectHome);
         }
 
         private void BoldStartupItem() {
@@ -458,23 +475,25 @@ namespace Microsoft.VisualStudioTools.Project {
         protected override void SaveMSBuildProjectFileAs(string newFileName) {
             base.SaveMSBuildProjectFileAs(newFileName);
 
-            if (userBuildProject != null) {
-                userBuildProject.Save(FileName + ".user");
+            if (_userBuildProject != null) {
+                _userBuildProject.Save(FileName + PerUserFileExtension);
+                _isUserFileDirty = false;
             }
         }
 
         protected override void SaveMSBuildProjectFile(string filename) {
             base.SaveMSBuildProjectFile(filename);
 
-            if (userBuildProject != null) {
-                userBuildProject.Save(filename + ".user");
+            if (_userBuildProject != null) {
+                _userBuildProject.Save(filename + PerUserFileExtension);
+                _isUserFileDirty = false;
             }
         }
 
         protected override void Dispose(bool disposing) {
             base.Dispose(disposing);
-            if (this.userBuildProject != null) {
-                userBuildProject.ProjectCollection.UnloadProject(userBuildProject);
+            if (this._userBuildProject != null) {
+                _userBuildProject.ProjectCollection.UnloadProject(_userBuildProject);
             }
             _package.OnIdle -= OnIdle;
         }
@@ -505,12 +524,7 @@ namespace Microsoft.VisualStudioTools.Project {
                 BuildProject.SetProperty(CommonConstants.ProjectView, newPropValue);
             } else {
                 // save setting in user project file
-                if (userBuildProject == null) {
-                    // user project file doesn't exist yet, create it.
-                    userBuildProject = new MSBuild.Project(BuildProject.ProjectCollection);
-                    userBuildProject.FullPath = FileName + ".user";
-                }
-                userBuildProject.SetProperty(CommonConstants.ProjectView, newPropValue);
+                SetUserProjectProperty(CommonConstants.ProjectView, newPropValue);
                 
             }
             SetProjectFileDirty(true);
@@ -1353,7 +1367,7 @@ namespace Microsoft.VisualStudioTools.Project {
 
         public override int IsDirty(out int isDirty) {
             isDirty = 0;
-            if (IsProjectFileDirty) {
+            if (IsProjectFileDirty || IsUserProjectFileDirty) {
                 isDirty = 1;
                 return VSConstants.S_OK;
             }
@@ -1642,6 +1656,37 @@ namespace Microsoft.VisualStudioTools.Project {
                     Marshal.FreeCoTaskMem(pDirName);
                 }
             }
+        }
+
+        /// <summary>
+        /// Set value of user project property
+        /// </summary>
+        /// <param name="propertyName">Name of property</param>
+        /// <param name="propertyValue">Value of property</param>
+        public virtual void SetUserProjectProperty(string propertyName, string propertyValue) {
+            Utilities.ArgumentNotNull("propertyName", propertyName);
+
+            if (_userBuildProject == null) {
+                // user project file doesn't exist yet, create it.
+                _userBuildProject = new MSBuild.Project(BuildProject.ProjectCollection);
+                _userBuildProject.FullPath = FileName + PerUserFileExtension;
+            }
+            _userBuildProject.SetProperty(propertyName, propertyValue ?? String.Empty);
+            _isUserFileDirty = true;
+        }
+
+        /// <summary>
+        /// Get value of user project property
+        /// </summary>
+        /// <param name="propertyName">Name of property</param>
+        public virtual string GetUserProjectProperty(string propertyName) {
+            Utilities.ArgumentNotNull("propertyName", propertyName);
+
+            if (_userBuildProject == null)
+                return null;
+
+            // If user project file exists during project load/reload userBuildProject is initiated 
+            return _userBuildProject.GetPropertyValue(propertyName);
         }
 
         #endregion
