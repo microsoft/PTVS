@@ -6,11 +6,11 @@ def handler(environment, start_response):
         f = file('progress.txt', 'w')
         f.close()
         start_response('200', [])
-        yield 'Hello world!\r\n'
+        yield b'Hello world!\r\n'
         return
       
     start_response('200', [])
-    yield 'Hello world!\r\n'
+    yield b'Hello world!\r\n'
 
     while 1:
       try:
@@ -19,4 +19,4 @@ def handler(environment, start_response):
       except:
         time.sleep(1)
       
-    yield 'goodbye world!\r\n'
+    yield b'goodbye world!\r\n'

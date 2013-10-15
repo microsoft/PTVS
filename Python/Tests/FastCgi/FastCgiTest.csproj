@@ -58,6 +58,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="FastCgiTests.cs" />
+    <Compile Include="FastCgiTests33.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="..\TestProjectAfter.settings" />

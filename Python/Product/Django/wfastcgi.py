@@ -14,7 +14,11 @@
 
 import sys
 import struct
-import cStringIO
+try:
+    import cStringIO
+except ImportError:
+    import io as cStringIO
+
 import os
 import traceback
 import ctypes
@@ -22,7 +26,10 @@ from os import path
 from xml.dom import minidom
 import re
 import datetime
-import thread
+try:
+    import thread
+except ImportError:
+    import _thread as thread
 
 __version__ = '2.0.0'
 
@@ -93,6 +100,21 @@ onto the params which we will receive and update later."""
 class _ExitException(Exception):
     pass
 
+if sys.version_info[0] >= 3:
+    # indexing into byte strings gives us an int, so
+    # ord is unnecessary on Python 3
+    def ord(x): return x
+    def chr(x): return bytes((x, ))
+    def wsgi_decode(x):
+        return x.decode('iso-8859-1')
+    def wsgi_encode(x):
+        return x.encode('iso-8859-1')
+else:
+    def wsgi_decode(x):
+        return x
+    def wsgi_encode(x):
+        return x
+
 def read_fastcgi_record(input):
     """reads the main fast cgi record"""
     data = input.read(8)     # read record
@@ -161,10 +183,10 @@ def read_fastcgi_keyvalue_pairs(content, offset):
     else:
         offset += 1
 
-    name = content[offset:offset+name_len]
+    name = wsgi_decode(content[offset:offset+name_len])
     offset += name_len
     
-    value = content[offset:offset+value_len]
+    value = wsgi_decode(content[offset:offset+value_len])
     offset += value_len
 
     return offset, name, value
@@ -208,9 +230,9 @@ def read_fastcgi_input(req_id, content):
 wsgi environment array"""
     res = _REQUESTS[req_id].params
     if 'wsgi.input' not in res:
-        res['wsgi.input'] = content
+        res['wsgi.input'] = wsgi_decode(content)
     else:
-        res['wsgi.input'] += content
+        res['wsgi.input'] += wsgi_decode(content)
 
     if not content:
         # we've hit the end of the input stream, time to process input...
@@ -221,9 +243,9 @@ def read_fastcgi_data(req_id, content):
     """reads FastCGI data stream and publishes it as wsgi.data"""
     res = _REQUESTS[req_id].params
     if 'wsgi.data' not in res:
-        res['wsgi.data'] = content
+        res['wsgi.data'] = wsgi_decode(content)
     else:
-        res['wsgi.data'] += content
+        res['wsgi.data'] += wsgi_decode(content)
 
 
 def read_fastcgi_abort_request(req_id, content):
@@ -273,13 +295,13 @@ def log(txt):
     """Logs fatal errors to a log file if WSGI_LOG env var is defined"""
     log_file = os.environ.get('WSGI_LOG')
     if log_file:
-        f = file(log_file, 'a+')
+        f = open(log_file, 'a+')
         try:
             f.write(str(datetime.datetime.now()))
             f.write(': ')
             f.write(txt)
         finally:
-          f.close()
+            f.close()
 
 
 def send_response(id, resp_type, content, streaming = True):
@@ -308,7 +330,7 @@ terminate the stream"""
             content_str = content[offset:]
             offset += len_remaining
 
-        data = '%c%c%c%c%c%c%c%c%s' % (
+        data = wsgi_encode('%c%c%c%c%c%c%c%c%s' % (
                 FCGI_VERSION_1,     # version
                 resp_type,          # type
                 id_0,               # requestIdB1
@@ -317,7 +339,7 @@ terminate the stream"""
                 len_1,              # contentLengthB0
                 0,                  # paddingLength
                 0,                  # reserved
-                content_str)
+                content_str))
 
         os.write(stdout, data)
         if len_remaining == 0 or not streaming:
@@ -331,7 +353,7 @@ def get_environment(dir):
 
     if os.path.exists(web_config):
         try:
-            wc = file(web_config) 
+            wc = open(web_config) 
             try:
                 doc = minidom.parse(wc)
                 config = doc.getElementsByTagName('configuration')
@@ -447,11 +469,15 @@ def get_wsgi_handler(handler_name):
         if not module:
             raise Exception('WSGI_HANDLER must be set to module_name.wsgi_handler, got %s' % handler_name)
     
-        if isinstance(callable, unicode):
-            callable = callable.encode('ascii')
+        if sys.version_info[0] == 2:
+            if isinstance(callable, unicode):
+                callable = callable.encode('ascii')
+        else:
+            if isinstance(callable, bytes):
+                callable = callable.decode('ascii')
 
         if callable.endswith('()'):
-            callable = callable.rstrip('()')
+            callable = callable[:-2]
             handler = getattr(__import__(module, fromlist=[callable]), callable)()
         else:
             handler = getattr(__import__(module, fromlist=[callable]), callable)
@@ -495,19 +521,23 @@ if __name__ == '__main__':
         msvcrt.setmode(sys.stdin.fileno(), os.O_BINARY)
     except ImportError:
         pass
-
+    
     _REQUESTS = {}
     
     initialized = False
     fatal_error = False
     log('wfastcgi.py ' + __version__ + ' started\n')
+    if sys.version_info[0] == 2:
+        input_src = sys.stdin
+    else:
+        input_src = sys.stdin.buffer.raw
     while fatal_error is False:
         try:
-            record = read_fastcgi_record(sys.stdin)
+            record = read_fastcgi_record(input_src)
             if record:
                 record.params['wsgi.input'] = cStringIO.StringIO(record.params['wsgi.input'])
                 record.params['wsgi.version'] = (1,0)
-                record.params['wsgi.url_scheme'] = 'https' if record.params.has_key('HTTPS') and record.params['HTTPS'].lower() == 'on' else 'http'
+                record.params['wsgi.url_scheme'] = 'https' if record.params.get('HTTPS', '').lower() == 'on' else 'http'
                 record.params['wsgi.multiprocess'] = True
                 record.params['wsgi.multithread'] = False
                 record.params['wsgi.run_once'] = False
@@ -558,7 +588,7 @@ if __name__ == '__main__':
                     try: 
                         for part in handler(record.params, start_response):
                             if part:
-                                send_response(record.req_id, FCGI_STDOUT, part)
+                                send_response(record.req_id, FCGI_STDOUT, wsgi_decode(part))
                     except:
                         log('Exception from handler: ' + traceback.format_exc())
                         send_response(record.req_id, FCGI_STDERR, errors.getvalue() + '\n\n' + traceback.format_exc())

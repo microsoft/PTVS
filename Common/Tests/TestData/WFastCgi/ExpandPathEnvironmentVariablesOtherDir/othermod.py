@@ -1,1 +1,1 @@
-x = 'hello world!'
+x = b'hello world!'
