@@ -120,6 +120,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RunFromContextFileExtensions.cs" />
     <Compile Include="ServiceProviderExtension.cs" />
+    <Compile Include="TestAnalyzer.cs" />
     <Compile Include="TestContainer.cs" />
     <Compile Include="TestContainerDiscoverer.cs" />
     <Compile Include="TestDiscoverer.cs" />

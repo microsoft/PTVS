@@ -165,57 +165,60 @@ namespace DebuggerTests {
                 brkHit.Set();
             };
 
-            process.Start();
+            try {
+                process.Start();
 
-            AssertWaited(brkHit);
+                AssertWaited(brkHit);
 
-            var frames = thread.Frames;
+                var frames = thread.Frames;
 
-            AutoResetEvent evalComplete = new AutoResetEvent(false);
-            PythonEvaluationResult evalRes = null;
-            frames[frame].ExecuteText(text, (completion) => {
-                evalRes = completion;
-                evalComplete.Set();
-            });
+                AutoResetEvent evalComplete = new AutoResetEvent(false);
+                PythonEvaluationResult evalRes = null;
+                frames[frame].ExecuteText(text, (completion) => {
+                    evalRes = completion;
+                    evalComplete.Set();
+                });
 
-            AssertWaited(evalComplete);
-            Assert.IsTrue(evalRes != null, "didn't get evaluation result");
+                AssertWaited(evalComplete);
+                Assert.IsNotNull(evalRes, "didn't get evaluation result");
 
 
-            if (children == null) {
-                Assert.IsTrue(!evalRes.IsExpandable);
-                Assert.IsTrue(evalRes.GetChildren(Int32.MaxValue) == null);
-            } else {
-                Assert.IsTrue(evalRes.IsExpandable);
-                var childrenReceived = new List<PythonEvaluationResult>(evalRes.GetChildren(Int32.MaxValue));
+                if (children == null) {
+                    Assert.IsFalse(evalRes.IsExpandable, "result should not be expandable");
+                    Assert.IsNull(evalRes.GetChildren(Int32.MaxValue), "result should not have children");
+                } else {
+                    Assert.IsTrue(evalRes.IsExpandable, "result is not expandable");
+                    var childrenReceived = new List<PythonEvaluationResult>(evalRes.GetChildren(Int32.MaxValue));
 
-                Assert.AreEqual(children.Length, childrenReceived.Count, String.Format("received incorrect number of children: {0} expected, received {1}", children.Length, childrenReceived.Count));
-                for (int i = 0; i < children.Length; i++) {
-                    var curChild = children[i];
-                    bool foundChild = false;
-                    for (int j = 0; j < childrenReceived.Count; j++) {
-                        var curReceived = childrenReceived[j];
-                        if (ChildrenMatch(curChild, curReceived)) {
-                            foundChild = true;
+                    Assert.AreEqual(children.Length, childrenReceived.Count, "received incorrect number of children");
+                    for (int i = 0; i < children.Length; i++) {
+                        var curChild = children[i];
+                        bool foundChild = false;
+                        for (int j = 0; j < childrenReceived.Count; j++) {
+                            var curReceived = childrenReceived[j];
+                            if (ChildrenMatch(curChild, curReceived)) {
+                                foundChild = true;
 
-                            if (children[i].ChildText.StartsWith("[")) {
-                                Assert.AreEqual(childrenReceived[j].Expression, text + children[i].ChildText);
-                            } else {
-                                Assert.AreEqual(childrenReceived[j].Expression, text + "." + children[i].ChildText);
+                                if (children[i].ChildText.StartsWith("[")) {
+                                    Assert.AreEqual(text + children[i].ChildText, childrenReceived[j].Expression);
+                                } else {
+                                    Assert.AreEqual(text + "." + children[i].ChildText, childrenReceived[j].Expression);
+                                }
+
+                                Assert.AreEqual(frames[frame], childrenReceived[j].Frame);
+                                childrenReceived.RemoveAt(j);
+                                break;
                             }
-
-                            Assert.AreEqual(childrenReceived[j].Frame, frames[frame]);
-                            childrenReceived.RemoveAt(j);
-                            break;
                         }
+                        Assert.IsTrue(foundChild, "failed to find " + children[i].ChildText + " found " + String.Join(", ", childrenReceived.Select(x => x.Expression)));
                     }
-                    Assert.IsTrue(foundChild, "failed to find " + children[i].ChildText + " found " + String.Join(", ", childrenReceived.Select(x => x.Expression)));
+                    Assert.AreEqual(0, childrenReceived.Count, "there's still some children left over which we didn't find");
                 }
-                Assert.IsTrue(childrenReceived.Count == 0, "there's still some children left over which we didn't find");
-            }
 
-            process.Continue();
-            WaitForExit(process);
+                process.Continue();
+            } finally {
+                WaitForExit(process);
+            }
         }
 
         private bool ChildrenMatch(ChildInfo curChild, PythonEvaluationResult curReceived) {
@@ -270,51 +273,54 @@ namespace DebuggerTests {
                 stepDone.Set();
             };
 
-            process.Start();
+            try {
+                process.Start();
 
-            AssertWaited(processLoaded);
+                AssertWaited(processLoaded);
 
-            var moduleFrame = thread.Frames[0];
-            Assert.AreEqual(moduleFrame.StartLine, 1);
-            if (GetType() != typeof(DebuggerTestsIpy)) {
-                Assert.AreEqual(moduleFrame.EndLine, 13);
+                var moduleFrame = thread.Frames[0];
+                Assert.AreEqual(1, moduleFrame.StartLine);
+                if (GetType() != typeof(DebuggerTestsIpy)) {
+                    Assert.AreEqual(13, moduleFrame.EndLine);
+                }
+
+                // skip over def f()
+                Assert.IsTrue(moduleFrame.SetLineNumber(6), "failed to set line number to 6");
+
+                // set break point in g, run until we hit it.
+                var newBp = process.AddBreakPoint("SetNextLine.py", 7);
+                newBp.Add();
+
+                process.Resume();
+                AssertWaited(brkHit);
+
+                thread.StepOver(); // step over x = 42
+                AssertWaited(stepDone);
+
+                // skip y = 100
+                Assert.IsTrue(moduleFrame.SetLineNumber(9), "failed to set line number to 9");
+
+                thread.StepOver(); // step over z = 200
+                AssertWaited(stepDone);
+
+                // z shouldn't be defined
+                var frames = thread.Frames;
+                new HashSet<string>(new[] { "x", "z" }).ContainsExactly(frames[0].Locals.Select(x => x.Expression));
+
+                // set break point in module, run until we hit it.
+                newBp = process.AddBreakPoint("SetNextLine.py", 13);
+                newBp.Add();
+                thread.Resume();
+                AssertWaited(brkHit);
+
+                // f shouldn't be defined.
+                frames = thread.Frames;
+                new HashSet<string>(new[] { "sys", "g" }).ContainsExactly(frames[0].Locals.Select(x => x.Expression));
+
+                process.Continue();
+            } finally {
+                WaitForExit(process);
             }
-
-            // skip over def f()
-            Assert.IsTrue(moduleFrame.SetLineNumber(6));
-
-            // set break point in g, run until we hit it.
-            var newBp = process.AddBreakPoint("SetNextLine.py", 7);
-            newBp.Add();
-
-            process.Resume();
-            AssertWaited(brkHit);
-
-            thread.StepOver(); // step over x = 42
-            AssertWaited(stepDone);
-
-            // skip y = 100
-            Assert.IsTrue(moduleFrame.SetLineNumber(9));
-
-            thread.StepOver(); // step over z = 200
-            AssertWaited(stepDone);
-
-            // z shouldn't be defined
-            var frames = thread.Frames;
-            new HashSet<string>(new[] { "x", "z" }).ContainsExactly(frames[0].Locals.Select(x => x.Expression));
-
-            // set break point in module, run until we hit it.
-            newBp = process.AddBreakPoint("SetNextLine.py", 13);
-            newBp.Add();
-            thread.Resume();
-            AssertWaited(brkHit);
-
-            // f shouldn't be defined.
-            frames = thread.Frames;
-            new HashSet<string>(new[] { "sys", "g" }).ContainsExactly(frames[0].Locals.Select(x => x.Expression));
-
-            process.Continue();
-            WaitForExit(process);
         }
 
         #endregion
@@ -333,26 +339,28 @@ namespace DebuggerTests {
                 thread = newthread;
             });
 
-            process.Start();
-            AssertWaited(loaded);
+            try {
+                process.Start();
+                AssertWaited(loaded);
 
-            // let loop run
-            Thread.Sleep(500);
-            AutoResetEvent breakComplete = new AutoResetEvent(false);
-            PythonThread breakThread = null;
-            process.AsyncBreakComplete += (sender, args) => {
-                breakThread = args.Thread;
-                breakComplete.Set();
-            };
+                // let loop run
+                Thread.Sleep(500);
+                AutoResetEvent breakComplete = new AutoResetEvent(false);
+                PythonThread breakThread = null;
+                process.AsyncBreakComplete += (sender, args) => {
+                    breakThread = args.Thread;
+                    breakComplete.Set();
+                };
 
-            process.Break();
-            AssertWaited(breakComplete);
+                process.Break();
+                AssertWaited(breakComplete);
 
-            Assert.AreEqual(breakThread, thread);
+                Assert.AreEqual(thread, breakThread);
 
-            process.Resume();
-
-            process.Terminate();
+                process.Resume();
+            } finally {
+                TerminateProcess(process);
+            }
         }
 
         [TestMethod, Priority(0)]
@@ -366,28 +374,30 @@ namespace DebuggerTests {
                 thread = newthread;
             });
 
-            process.Start();
-            AssertWaited(loaded);
+            try {
+                process.Start();
+                AssertWaited(loaded);
 
-            AutoResetEvent breakComplete = new AutoResetEvent(false);
-            process.AsyncBreakComplete += (sender, args) => {
-                breakComplete.Set();
-            };
+                AutoResetEvent breakComplete = new AutoResetEvent(false);
+                process.AsyncBreakComplete += (sender, args) => {
+                    breakComplete.Set();
+                };
 
-            // let loop run
-            for (int i = 0; i < 100; i++) {
-                Thread.Sleep(50);
+                // let loop run
+                for (int i = 0; i < 20; i++) {
+                    Thread.Sleep(50);
 
-                Debug.WriteLine(String.Format("Breaking {0}", i));
-                process.Break();
-                if (!breakComplete.WaitOne(10000)) {
-                    Console.WriteLine("Failed to break");
+                    Debug.WriteLine(String.Format("Breaking {0}", i));
+                    process.Break();
+                    if (!breakComplete.WaitOne(10000)) {
+                        Console.WriteLine("Failed to break");
+                    }
+                    process.Resume();
+                    Debug.WriteLine(String.Format("Resumed {0}", i));
                 }
-                process.Resume();
-                Debug.WriteLine(String.Format("Resumed {0}", i));
+            } finally {
+                TerminateProcess(process);
             }
-
-            process.Terminate();
         }
 
         #endregion
@@ -433,10 +443,10 @@ namespace DebuggerTests {
 
             public void Validate(PythonEvaluationResult result) {
                 if (ExceptionText != null) {
-                    Assert.AreEqual(result.ExceptionText, ExceptionText);
+                    Assert.AreEqual(ExceptionText, result.ExceptionText);
                 } else {
-                    Assert.AreEqual(result.TypeName, _typeName);
-                    Assert.AreEqual(result.StringRepr, _repr);
+                    Assert.AreEqual(_typeName, result.TypeName);
+                    Assert.AreEqual(_repr, result.StringRepr);
                 }
             }
         }
@@ -455,34 +465,36 @@ namespace DebuggerTests {
                 brkHit.Set();
             };
 
-            process.Start();
+            try {
+                process.Start();
+                AssertWaited(brkHit);
 
-            AssertWaited(brkHit);
+                var frames = thread.Frames;
 
-            var frames = thread.Frames;
+                PythonEvaluationResult obj = null;
+                string errorMsg;
+                if (eval.IsError) {
+                    Assert.IsFalse(frames[frameIndex].TryParseText(eval.Expression, out errorMsg), "should not have been able to parse expression");
+                    Assert.AreEqual(eval.ExceptionText, errorMsg);
+                } else {
+                    Assert.IsTrue(frames[frameIndex].TryParseText(eval.Expression, out errorMsg), "failed to parse expression");
+                    Assert.IsNull(errorMsg);
 
-            PythonEvaluationResult obj = null;
-            string errorMsg;
-            if (eval.IsError) {
-                Assert.IsTrue(!frames[frameIndex].TryParseText(eval.Expression, out errorMsg));
-                Assert.AreEqual(errorMsg, eval.ExceptionText);
-            } else {
-                Assert.IsTrue(frames[frameIndex].TryParseText(eval.Expression, out errorMsg));
-                Assert.AreEqual(errorMsg, null);
-
-                AutoResetEvent textExecuted = new AutoResetEvent(false);
-                Assert.AreEqual(frameName, frames[frameIndex].FunctionName);
-                frames[frameIndex].ExecuteText(eval.Expression, (completion) => {
-                    obj = completion;
-                    textExecuted.Set();
+                    AutoResetEvent textExecuted = new AutoResetEvent(false);
+                    Assert.AreEqual(frameName, frames[frameIndex].FunctionName);
+                    frames[frameIndex].ExecuteText(eval.Expression, (completion) => {
+                        obj = completion;
+                        textExecuted.Set();
+                    }
+                    );
+                    AssertWaited(textExecuted);
+                    eval.Validate(obj);
                 }
-                );
-                AssertWaited(textExecuted);
-                eval.Validate(obj);
-            }
 
-            process.Continue();
-            WaitForExit(process);
+                process.Continue();
+            } finally {
+                WaitForExit(process);
+            }
         }
 
 
@@ -496,22 +508,25 @@ namespace DebuggerTests {
         [TestMethod, Priority(0)]
         public void CloseToDictExpansionBug484() {
             PythonThread thread = RunAndBreak("LocalsTestBug484.py", 7);
+            var process = thread.Process;
+            try {
+                var frames = thread.Frames;
 
-            var frames = thread.Frames;
+                var obj = frames[0].Locals.First(x => x.Expression == "x");
+                var children = obj.GetChildren(2000);
+                int extraCount = 0;
+                if (this is DebuggerTestsIpy) {
+                    extraCount += 2;
+                }
+                Assert.AreEqual(extraCount + 3, children.Length);
+                Assert.AreEqual("2", children[0 + extraCount].StringRepr);
+                Assert.AreEqual("3", children[1 + extraCount].StringRepr);
+                Assert.AreEqual("4", children[2 + extraCount].StringRepr);
 
-            var obj = frames[0].Locals.First(x => x.Expression == "x");
-            var children = obj.GetChildren(2000);
-            int extraCount = 0;
-            if (this is DebuggerTestsIpy) {
-                extraCount += 2;
+                process.Continue();
+            } finally {
+                WaitForExit(process);
             }
-            Assert.AreEqual(children.Length, extraCount + 3);
-            Assert.AreEqual(children[0 + extraCount].StringRepr, "2");
-            Assert.AreEqual(children[1 + extraCount].StringRepr, "3");
-            Assert.AreEqual(children[2 + extraCount].StringRepr, "4");
-
-            thread.Process.Continue();
-            WaitForExit(thread.Process);
         }
 
         [TestMethod, Priority(0)]
@@ -605,22 +620,25 @@ namespace DebuggerTests {
             };
 
             process.Start();
-            AssertWaited(breakpointHit);
+            try {
+                AssertWaited(breakpointHit);
 
-            // Null hex representation flags AD7 to substitute string representation
-            var parms = thread.Frames[0].Parameters;
-            Assert.IsNull(parms[0].HexRepr);
-            Assert.IsNull(parms[1].HexRepr);
+                // Null hex representation flags AD7 to substitute string representation
+                var parms = thread.Frames[0].Parameters;
+                Assert.IsNull(parms[0].HexRepr);
+                Assert.IsNull(parms[1].HexRepr);
 
-            // Handle order inconsitencies accross interpreters
-            foreach (var parm in parms) {
-                if (parm.Expression == "x") {
-                    Assert.AreEqual("True", parm.StringRepr);
-                } else {
-                    Assert.AreEqual("False", parm.StringRepr);
+                // Handle order inconsitencies accross interpreters
+                foreach (var parm in parms) {
+                    if (parm.Expression == "x") {
+                        Assert.AreEqual("True", parm.StringRepr);
+                    } else {
+                        Assert.AreEqual("False", parm.StringRepr);
+                    }
                 }
+            } finally {
+                TerminateProcess(process);
             }
-            process.Terminate();
         }
 
         [TestMethod, Priority(0)]
@@ -730,7 +748,7 @@ namespace DebuggerTests {
                     }
                 }
             } finally {
-                process.Terminate();
+                TerminateProcess(process);
             }
         }
 
@@ -942,27 +960,31 @@ namespace DebuggerTests {
                 };
 
                 process.Start();
-                AssertWaited(processEvent);
-                Assert.IsTrue(processLoad);
-                Assert.IsFalse(stepComplete);
-                process.Resume();
+                try {
+                    AssertWaited(processEvent);
+                    Assert.IsTrue(processLoad, "process did not load");
+                    Assert.IsFalse(stepComplete, "step should not have completed");
+                    process.Resume();
 
-                AssertWaited(processEvent);
-                Assert.IsTrue(breakHit);
+                    AssertWaited(processEvent);
+                    Assert.IsTrue(breakHit, "breakpoint was not hit");
 
-                thread.StepInto();
-                AssertWaited(processEvent);
-                Assert.IsTrue(stepComplete);
+                    thread.StepInto();
+                    AssertWaited(processEvent);
+                    Assert.IsTrue(stepComplete, "step was not completed");
 
-                Debug.WriteLine(thread.Frames[thread.Frames.Count - 1].FileName);
+                    Debug.WriteLine(thread.Frames[thread.Frames.Count - 1].FileName);
 
-                if (steppingStdLib) {
-                    Assert.IsTrue(thread.Frames[0].FileName.EndsWith("\\os.py"));
-                } else {
-                    Assert.IsTrue(thread.Frames[0].FileName.EndsWith("\\StepStdLib.py"));
+                    if (steppingStdLib) {
+                        Assert.IsTrue(thread.Frames[0].FileName.EndsWith("\\os.py"), "did not break in os.py; instead, " + thread.Frames[0].FileName);
+                    } else {
+                        Assert.IsTrue(thread.Frames[0].FileName.EndsWith("\\StepStdLib.py"), "did not break in StepStdLib.py; instead, " + thread.Frames[0].FileName);
+                    }
+
+                    process.Resume();
+                } finally {
+                    WaitForExit(process);
                 }
-
-                process.Resume();
             }
         }
 
@@ -979,10 +1001,13 @@ namespace DebuggerTests {
             });
 
             process.Start();
-            AssertWaited(loaded);
-            Assert.IsTrue(thread.Frames[0].FileName.EndsWith("SteppingTest.py"));
-            Assert.AreEqual(1, thread.Frames[0].StartLine);
-            process.Terminate();
+            try {
+                AssertWaited(loaded);
+                Assert.IsTrue(thread.Frames[0].FileName.EndsWith("SteppingTest.py"), "did not break in SteppingTest.py; instead, " + thread.Frames[0].FileName);
+                Assert.AreEqual(1, thread.Frames[0].StartLine);
+            } finally {
+                TerminateProcess(process);
+            }
         }
 
         #endregion
@@ -1022,8 +1047,7 @@ namespace DebuggerTests {
                     sentStep = true;
                 }
             };
-            process.Start();
-            WaitForExit(process);
+            StartAndWaitForExit(process);
         }
 
         [TestMethod, Priority(0)]
@@ -1119,22 +1143,24 @@ namespace DebuggerTests {
             process.BreakpointHit += (sender, args) => {
                 Assert.AreNotEqual(args.Thread, thread, "breakpoint shouldn't be on main thread");
 
-                Assert.IsTrue(thread.Frames.Count > 1);
                 foreach (var frame in thread.Frames) {
                     Console.WriteLine(frame.FileName);
                     Console.WriteLine(frame.LineNo);
                 }
+                Assert.IsTrue(thread.Frames.Count > 1, "expected more than one frame");
                 process.Continue();
                 bpHit.Set();
             };
 
             process.Start();
 
-            if (!bpHit.WaitOne(10000)) {
-                Assert.Fail("Failed to hit breakpoint");
+            try {
+                if (!bpHit.WaitOne(10000)) {
+                    Assert.Fail("Failed to hit breakpoint");
+                }
+            } finally {
+                TerminateProcess(process);
             }
-
-            process.Terminate();
         }
 
         [TestMethod, Priority(0)]
@@ -1182,13 +1208,12 @@ namespace DebuggerTests {
             bool bindFailed = false;
             process.BreakpointBindFailed += (sender, args) => {
                 bindFailed = true;
-                Assert.AreEqual(args.Breakpoint, breakPoint);
+                Assert.AreEqual(breakPoint, args.Breakpoint);
             };
 
-            process.Start();
-            WaitForExit(process);
+            StartAndWaitForExit(process);
 
-            Assert.AreEqual(bindFailed, true);
+            Assert.IsTrue(bindFailed, "Should not have bound the breakpoint");
         }
 
         #endregion
@@ -1328,7 +1353,7 @@ namespace DebuggerTests {
                 // V30 raises an exception as the process shuts down.
                 if (loaded && ((Version.Version == PythonLanguageVersion.V30 && curException < exceptions.Length) || Version.Version != PythonLanguageVersion.V30)) {
                     if (GetType() != typeof(DebuggerTestsIpy) || curException < exceptions.Length) {    // Ipy over reports
-                        Assert.AreEqual(args.Exception.TypeName, exceptions[curException].TypeName);
+                        Assert.AreEqual(exceptions[curException].TypeName, args.Exception.TypeName);
                     }
 
                     if (GetType() != typeof(DebuggerTestsIpy) || curException < exceptions.Length) {    // Ipy over reports
@@ -1344,8 +1369,7 @@ namespace DebuggerTests {
                 }
             };
 
-            process.Start();
-            WaitForExit(process);
+            StartAndWaitForExit(process);
 
             Assert.AreEqual(exceptions.Length, curException);
         }
@@ -1455,18 +1479,15 @@ namespace DebuggerTests {
                 receivedFilenames.Add(args.Module.Filename);
             };
 
-            process.Start();
-            WaitForExit(process);
+            StartAndWaitForExit(process);
 
-            Assert.IsTrue(receivedFilenames.Count >= expectedModulesLoaded.Length);
+            Assert.IsTrue(receivedFilenames.Count >= expectedModulesLoaded.Length, "did not receive enough module names");
             var set = new HashSet<string>();
             foreach (var received in receivedFilenames) {
                 set.Add(Path.GetFileName(received));
             }
 
-            foreach (var file in expectedModulesLoaded) {
-                Assert.IsTrue(set.Contains(file));
-            }
+            AssertUtil.ContainsAtLeast(set, expectedModulesLoaded);
         }
 
         #endregion
@@ -1539,11 +1560,7 @@ namespace DebuggerTests {
                 }
             };
 
-            process.Start();
-            if (!hasExited.WaitOne(DefaultWaitForExitTimeout)) {
-                Assert.Fail("Process didn't exit");
-                process.Terminate();
-            }
+            StartAndWaitForExit(process);
 
             Console.WriteLine("Output from process:");
             Console.Write(output.ToString());
@@ -1602,59 +1619,64 @@ namespace DebuggerTests {
                 psi.EnvironmentVariables["PYTHONPATH"] = @"..\..";
                 psi.UseShellExecute = false;
                 Process p = Process.Start(psi);
-                System.Threading.Thread.Sleep(1000);
+                try {
+                    System.Threading.Thread.Sleep(1000);
 
-                AutoResetEvent attached = new AutoResetEvent(false);
-                AutoResetEvent breakpointHit = new AutoResetEvent(false);
+                    AutoResetEvent attached = new AutoResetEvent(false);
+                    AutoResetEvent breakpointHit = new AutoResetEvent(false);
 
-                PythonProcess proc;
-                ConnErrorMessages errReason;
-                if ((errReason = PythonProcess.TryAttach(p.Id, out proc)) != ConnErrorMessages.None) {
-                    Assert.Fail("Failed to attach {0}", errReason);
-                }
-
-                proc.ProcessLoaded += (sender, args) => {
-                    attached.Set();
-                    var bp = proc.AddBreakPoint("ThreadingStartNewThread.py", 9);
-                    bp.Add();
-
-                    bp = proc.AddBreakPoint("ThreadingStartNewThread.py", 5);
-                    bp.Add();
-
-                    proc.Resume();
-                };
-                PythonThread mainThread = null;
-                PythonThread bpThread = null;
-                bool wrongLine = false;
-                proc.BreakpointHit += (sender, args) => {
-                    if (args.Breakpoint.LineNo == 9) {
-                        // stop running the infinite loop
-                        Debug.WriteLine(String.Format("First BP hit {0}", args.Thread.Id));
-                        args.Thread.Frames[0].ExecuteText("x = False", (x) => { });
-                        mainThread = args.Thread;
-                    } else if (args.Breakpoint.LineNo == 5) {
-                        // we hit the breakpoint on the new thread
-                        Debug.WriteLine(String.Format("Second BP hit {0}", args.Thread.Id));
-                        breakpointHit.Set();
-                        bpThread = args.Thread;
-                    } else {
-                        Debug.WriteLine(String.Format("Hit breakpoint on wrong line number: {0}", args.Breakpoint.LineNo));
-                        wrongLine = true;
-                        attached.Set();
-                        breakpointHit.Set();
+                    PythonProcess proc;
+                    ConnErrorMessages errReason;
+                    if ((errReason = PythonProcess.TryAttach(p.Id, out proc)) != ConnErrorMessages.None) {
+                        Assert.Fail("Failed to attach {0}", errReason);
                     }
-                    proc.Continue();
-                };
-                proc.StartListening();
 
-                Assert.IsTrue(attached.WaitOne(10000));
-                Assert.IsTrue(breakpointHit.WaitOne(20000));
-                Assert.IsFalse(wrongLine);
+                    try {
+                        proc.ProcessLoaded += (sender, args) => {
+                            attached.Set();
+                            var bp = proc.AddBreakPoint("ThreadingStartNewThread.py", 9);
+                            bp.Add();
 
-                Assert.AreNotEqual(mainThread, bpThread);
-                proc.Detach();
+                            bp = proc.AddBreakPoint("ThreadingStartNewThread.py", 5);
+                            bp.Add();
 
-                p.Kill();
+                            proc.Resume();
+                        };
+                        PythonThread mainThread = null;
+                        PythonThread bpThread = null;
+                        bool wrongLine = false;
+                        proc.BreakpointHit += (sender, args) => {
+                            if (args.Breakpoint.LineNo == 9) {
+                                // stop running the infinite loop
+                                Debug.WriteLine(String.Format("First BP hit {0}", args.Thread.Id));
+                                args.Thread.Frames[0].ExecuteText("x = False", (x) => { });
+                                mainThread = args.Thread;
+                            } else if (args.Breakpoint.LineNo == 5) {
+                                // we hit the breakpoint on the new thread
+                                Debug.WriteLine(String.Format("Second BP hit {0}", args.Thread.Id));
+                                breakpointHit.Set();
+                                bpThread = args.Thread;
+                            } else {
+                                Debug.WriteLine(String.Format("Hit breakpoint on wrong line number: {0}", args.Breakpoint.LineNo));
+                                wrongLine = true;
+                                attached.Set();
+                                breakpointHit.Set();
+                            }
+                            proc.Continue();
+                        };
+                        proc.StartListening();
+
+                        Assert.IsTrue(attached.WaitOne(10000), "Failed to attach within 10s");
+                        Assert.IsTrue(breakpointHit.WaitOne(20000), "Failed to hit breakpoint within 20s of attaching");
+                        Assert.IsFalse(wrongLine, "Breakpoint broke on the wrong line");
+
+                        Assert.AreNotEqual(mainThread, bpThread);
+                    } finally {
+                        DetachProcess(proc);
+                    }
+                } finally {
+                    DisposeProcess(p);
+                }
             }
         }
 
@@ -1663,33 +1685,35 @@ namespace DebuggerTests {
         public void AttachReattach() {
             if (GetType() != typeof(DebuggerTestsIpy)) {    // IronPython doesn't support attach
                 Process p = Process.Start(Version.Path, "\"" + TestData.GetPath(@"TestData\DebuggerProject\InfiniteRun.py") + "\"");
-                System.Threading.Thread.Sleep(1000);
+                try {
+                    System.Threading.Thread.Sleep(1000);
 
-                AutoResetEvent attached = new AutoResetEvent(false);
-                AutoResetEvent detached = new AutoResetEvent(false);
-                for (int i = 0; i < 10; i++) {
-                    Console.WriteLine(i);
+                    AutoResetEvent attached = new AutoResetEvent(false);
+                    AutoResetEvent detached = new AutoResetEvent(false);
+                    for (int i = 0; i < 10; i++) {
+                        Console.WriteLine(i);
 
-                    PythonProcess proc;
-                    ConnErrorMessages errReason;
-                    if ((errReason = PythonProcess.TryAttach(p.Id, out proc)) != ConnErrorMessages.None) {
-                        Assert.Fail("Failed to attach {0}", errReason);
+                        PythonProcess proc;
+                        ConnErrorMessages errReason;
+                        if ((errReason = PythonProcess.TryAttach(p.Id, out proc)) != ConnErrorMessages.None) {
+                            Assert.Fail("Failed to attach {0}", errReason);
+                        }
+
+                        proc.ProcessLoaded += (sender, args) => {
+                            attached.Set();
+                        };
+                        proc.ProcessExited += (sender, args) => {
+                            detached.Set();
+                        };
+                        proc.StartListening();
+
+                        Assert.IsTrue(attached.WaitOne(10000), "Failed to attach within 10s");
+                        proc.Detach();
+                        Assert.IsTrue(detached.WaitOne(10000), "Failed to detach within 10s");
                     }
-
-                    proc.ProcessLoaded += (sender, args) => {
-                        attached.Set();
-                    };
-                    proc.ProcessExited += (sender, args) => {
-                        detached.Set();
-                    };
-                    proc.StartListening();
-
-                    Assert.IsTrue(attached.WaitOne(10000));
-                    proc.Detach();
-                    Assert.IsTrue(detached.WaitOne(10000));
+                } finally {
+                    DisposeProcess(p);
                 }
-
-                p.Kill();
             }
         }
 
@@ -1710,25 +1734,32 @@ namespace DebuggerTests {
             if (GetType() != typeof(DebuggerTestsIpy)) {    // IronPython doesn't support attach
                 // http://pytools.codeplex.com/discussions/285741 1/12/2012 6:20 PM
                 Process p = Process.Start(Version.Path, "\"" + TestData.GetPath(@"TestData\DebuggerProject\AttachMultithreadedSleeper.py") + "\"");
-                System.Threading.Thread.Sleep(1000);
+                try {
+                    System.Threading.Thread.Sleep(1000);
 
-                AutoResetEvent attached = new AutoResetEvent(false);
+                    AutoResetEvent attached = new AutoResetEvent(false);
 
-                PythonProcess proc;
-                ConnErrorMessages errReason;
-                if ((errReason = PythonProcess.TryAttach(p.Id, out proc)) != ConnErrorMessages.None) {
-                    Assert.Fail("Failed to attach {0}", errReason);
+                    PythonProcess proc;
+                    ConnErrorMessages errReason;
+                    if ((errReason = PythonProcess.TryAttach(p.Id, out proc)) != ConnErrorMessages.None) {
+                        Assert.Fail("Failed to attach {0}", errReason);
+                    }
+
+                    try {
+                        proc.ProcessLoaded += (sender, args) => {
+                            attached.Set();
+                        };
+                        proc.StartListening();
+
+                        Assert.IsTrue(attached.WaitOne(10000), "Failed to attach within 10s");
+                        proc.Resume();
+                        Debug.WriteLine("Waiting for exit");
+                    } finally {
+                        WaitForExit(proc);
+                    }
+                } finally {
+                    DisposeProcess(p);
                 }
-
-                proc.ProcessLoaded += (sender, args) => {
-                    attached.Set();
-                };
-                proc.StartListening();
-
-                Assert.IsTrue(attached.WaitOne(10000));
-                proc.Resume();
-                Debug.WriteLine("Waiting for exit");
-                WaitForExit(proc);
             }
         }
 
@@ -1742,25 +1773,31 @@ namespace DebuggerTests {
             if (GetType() != typeof(DebuggerTestsIpy)) {    // IronPython doesn't support attach
                 // http://pytools.codeplex.com/discussions/285741 1/12/2012 6:20 PM
                 Process p = Process.Start(Version.Path, "\"" + TestData.GetPath(@"TestData\DebuggerProject\AttachSingleThreadedSleeper.py") + "\"");
-                System.Threading.Thread.Sleep(1000);
+                try {
+                    System.Threading.Thread.Sleep(1000);
 
-                AutoResetEvent attached = new AutoResetEvent(false);
+                    AutoResetEvent attached = new AutoResetEvent(false);
 
-                PythonProcess proc;
-                ConnErrorMessages errReason;
-                if ((errReason = PythonProcess.TryAttach(p.Id, out proc)) != ConnErrorMessages.None) {
-                    Assert.Fail("Failed to attach {0}", errReason);
+                    PythonProcess proc;
+                    ConnErrorMessages errReason;
+                    if ((errReason = PythonProcess.TryAttach(p.Id, out proc)) != ConnErrorMessages.None) {
+                        Assert.Fail("Failed to attach {0}", errReason);
+                    }
+                    try {
+                        proc.ProcessLoaded += (sender, args) => {
+                            attached.Set();
+                        };
+                        proc.StartListening();
+
+                        Assert.IsTrue(attached.WaitOne(10000), "Failed to attach within 10s");
+                        proc.Resume();
+                        Debug.WriteLine("Waiting for exit");
+                    } finally {
+                        TerminateProcess(proc);
+                    }
+                } finally {
+                    DisposeProcess(p);
                 }
-
-                proc.ProcessLoaded += (sender, args) => {
-                    attached.Set();
-                };
-                proc.StartListening();
-
-                Assert.IsTrue(attached.WaitOne(10000));
-                proc.Resume();
-                Debug.WriteLine("Waiting for exit");
-                proc.Terminate();
             }
         }
 
@@ -1768,31 +1805,9 @@ namespace DebuggerTests {
         [TestMethod, Priority(0)]
         public void AttachReattach64() {
             Process p = Process.Start("C:\\Python27_x64\\python.exe", "\"" + TestData.GetPath(@"TestData\DebuggerProject\InfiniteRun.py") + "\"");
-            System.Threading.Thread.Sleep(1000);
-
-            for (int i = 0; i < 10; i++) {
-                Console.WriteLine(i);
-
-                PythonProcess proc;
-                ConnErrorMessages errReason;
-                if ((errReason = PythonProcess.TryAttach(p.Id, out proc)) != ConnErrorMessages.None) {
-                    Assert.Fail("Failed to attach {0}", errReason);
-                }
-
-                proc.Detach();
-            }
-
-            p.Kill();
-        }*/
-
-        [TestMethod, Priority(0)]
-        public void AttachReattachThreadingInited() {
-            if (GetType() != typeof(DebuggerTestsIpy)) {    // IronPython shouldn't support attach
-                Process p = Process.Start(Version.Path, "\"" + TestData.GetPath(@"TestData\DebuggerProject\InfiniteRunThreadingInited.py") + "\"");
+            try {
                 System.Threading.Thread.Sleep(1000);
 
-                AutoResetEvent attached = new AutoResetEvent(false);
-                AutoResetEvent detached = new AutoResetEvent(false);
                 for (int i = 0; i < 10; i++) {
                     Console.WriteLine(i);
 
@@ -1802,20 +1817,46 @@ namespace DebuggerTests {
                         Assert.Fail("Failed to attach {0}", errReason);
                     }
 
-                    proc.ProcessLoaded += (sender, args) => {
-                        attached.Set();
-                    };
-                    proc.ProcessExited += (sender, args) => {
-                        detached.Set();
-                    };
-                    proc.StartListening();
-
-                    Assert.IsTrue(attached.WaitOne(10000));
                     proc.Detach();
-                    Assert.IsTrue(detached.WaitOne(10000));
                 }
+            } finally {
+                DisposeProcess(p);
+            }
+        }*/
 
-                p.Kill();
+        [TestMethod, Priority(0)]
+        public void AttachReattachThreadingInited() {
+            if (GetType() != typeof(DebuggerTestsIpy)) {    // IronPython shouldn't support attach
+                Process p = Process.Start(Version.Path, "\"" + TestData.GetPath(@"TestData\DebuggerProject\InfiniteRunThreadingInited.py") + "\"");
+                try {
+                    System.Threading.Thread.Sleep(1000);
+
+                    AutoResetEvent attached = new AutoResetEvent(false);
+                    AutoResetEvent detached = new AutoResetEvent(false);
+                    for (int i = 0; i < 10; i++) {
+                        Console.WriteLine(i);
+
+                        PythonProcess proc;
+                        ConnErrorMessages errReason;
+                        if ((errReason = PythonProcess.TryAttach(p.Id, out proc)) != ConnErrorMessages.None) {
+                            Assert.Fail("Failed to attach {0}", errReason);
+                        }
+
+                        proc.ProcessLoaded += (sender, args) => {
+                            attached.Set();
+                        };
+                        proc.ProcessExited += (sender, args) => {
+                            detached.Set();
+                        };
+                        proc.StartListening();
+
+                        Assert.IsTrue(attached.WaitOne(10000), "Failed to attach within 10s");
+                        proc.Detach();
+                        Assert.IsTrue(detached.WaitOne(10000), "Failed to detach within 10s");
+                    }
+                } finally {
+                    DisposeProcess(p);
+                }
             }
         }
 
@@ -1823,34 +1864,36 @@ namespace DebuggerTests {
         public void AttachReattachInfiniteThreads() {
             if (GetType() != typeof(DebuggerTestsIpy)) {    // IronPython shouldn't support attach
                 Process p = Process.Start(Version.Path, "\"" + TestData.GetPath(@"TestData\DebuggerProject\InfiniteThreads.py") + "\"");
-                System.Threading.Thread.Sleep(1000);
+                try {
+                    System.Threading.Thread.Sleep(1000);
 
-                AutoResetEvent attached = new AutoResetEvent(false);
-                AutoResetEvent detached = new AutoResetEvent(false);
-                for (int i = 0; i < 10; i++) {
-                    Console.WriteLine(i);
+                    AutoResetEvent attached = new AutoResetEvent(false);
+                    AutoResetEvent detached = new AutoResetEvent(false);
+                    for (int i = 0; i < 10; i++) {
+                        Console.WriteLine(i);
 
-                    PythonProcess proc;
-                    ConnErrorMessages errReason;
-                    if ((errReason = PythonProcess.TryAttach(p.Id, out proc)) != ConnErrorMessages.None) {
-                        Assert.Fail("Failed to attach {0}", errReason);
+                        PythonProcess proc;
+                        ConnErrorMessages errReason;
+                        if ((errReason = PythonProcess.TryAttach(p.Id, out proc)) != ConnErrorMessages.None) {
+                            Assert.Fail("Failed to attach {0}", errReason);
+                        }
+
+                        proc.ProcessLoaded += (sender, args) => {
+                            attached.Set();
+                        };
+                        proc.ProcessExited += (sender, args) => {
+                            detached.Set();
+                        };
+                        proc.StartListening();
+
+                        Assert.IsTrue(attached.WaitOne(20000), "Failed to attach within 20s");
+                        proc.Detach();
+                        Assert.IsTrue(detached.WaitOne(20000), "Failed to detach within 20s");
+
                     }
-
-                    proc.ProcessLoaded += (sender, args) => {
-                        attached.Set();
-                    };
-                    proc.ProcessExited += (sender, args) => {
-                        detached.Set();
-                    };
-                    proc.StartListening();
-
-                    Assert.IsTrue(attached.WaitOne(20000));
-                    proc.Detach();
-                    Assert.IsTrue(detached.WaitOne(20000));
-
+                } finally {
+                    DisposeProcess(p);
                 }
-
-                p.Kill();
             }
         }
 
@@ -1981,39 +2024,43 @@ void main()
 
                 // start the test process w/ our handle
                 Process p = RunHost("test.exe");
+                try {
+                    System.Threading.Thread.Sleep(1500);
 
-                System.Threading.Thread.Sleep(1500);
+                    AutoResetEvent attached = new AutoResetEvent(false);
+                    AutoResetEvent bpHit = new AutoResetEvent(false);
+                    PythonProcess proc;
+                    ConnErrorMessages errReason;
+                    if ((errReason = PythonProcess.TryAttach(p.Id, out proc)) != ConnErrorMessages.None) {
+                        Assert.Fail("Failed to attach {0}", errReason);
+                    } else {
+                        Console.WriteLine("Attached");
+                    }
 
-                AutoResetEvent attached = new AutoResetEvent(false);
-                AutoResetEvent bpHit = new AutoResetEvent(false);
-                PythonProcess proc;
-                ConnErrorMessages errReason;
-                if ((errReason = PythonProcess.TryAttach(p.Id, out proc)) != ConnErrorMessages.None) {
-                    Assert.Fail("Failed to attach {0}", errReason);
-                } else {
-                    Console.WriteLine("Attached");
+                    try {
+                        proc.ProcessLoaded += (sender, args) => {
+                            Console.WriteLine("Process loaded");
+                            attached.Set();
+                        };
+                        proc.StartListening();
+
+                        Assert.IsTrue(attached.WaitOne(20000), "Failed to attach within 20s");
+
+                        proc.BreakpointHit += (sender, args) => {
+                            Console.WriteLine("Breakpoint hit");
+                            bpHit.Set();
+                        };
+
+                        var bp = proc.AddBreakPoint("gilstate_attach.py", 3);
+                        bp.Add();
+
+                        Assert.IsTrue(bpHit.WaitOne(20000), "Failed to hit breakpoint within 20s");
+                    } finally {
+                        DetachProcess(proc);
+                    }
+                } finally {
+                    DisposeProcess(p);
                 }
-
-                proc.ProcessLoaded += (sender, args) => {
-                    Console.WriteLine("Process loaded");
-                    attached.Set();
-                };
-                proc.StartListening();
-
-                Assert.IsTrue(attached.WaitOne(20000));
-
-                proc.BreakpointHit += (sender, args) => {
-                    Console.WriteLine("Breakpoint hit");
-                    bpHit.Set();
-                };
-
-                var bp = proc.AddBreakPoint("gilstate_attach.py", 3);
-                bp.Add();
-
-                Assert.IsTrue(bpHit.WaitOne(20000));
-                proc.Detach();
-
-                p.Kill();
             }
         }
 
@@ -2112,39 +2159,43 @@ void main()
 
                 // start the test process w/ our handle
                 Process p = RunHost("test.exe");
+                try {
+                    System.Threading.Thread.Sleep(1500);
 
-                System.Threading.Thread.Sleep(1500);
+                    AutoResetEvent attached = new AutoResetEvent(false);
+                    AutoResetEvent bpHit = new AutoResetEvent(false);
+                    PythonProcess proc;
+                    ConnErrorMessages errReason;
+                    if ((errReason = PythonProcess.TryAttach(p.Id, out proc)) != ConnErrorMessages.None) {
+                        Assert.Fail("Failed to attach {0}", errReason);
+                    } else {
+                        Console.WriteLine("Attached");
+                    }
 
-                AutoResetEvent attached = new AutoResetEvent(false);
-                AutoResetEvent bpHit = new AutoResetEvent(false);
-                PythonProcess proc;
-                ConnErrorMessages errReason;
-                if ((errReason = PythonProcess.TryAttach(p.Id, out proc)) != ConnErrorMessages.None) {
-                    Assert.Fail("Failed to attach {0}", errReason);
-                } else {
-                    Console.WriteLine("Attached");
+                    try {
+                        proc.ProcessLoaded += (sender, args) => {
+                            Console.WriteLine("Process loaded");
+                            attached.Set();
+                        };
+                        proc.StartListening();
+
+                        Assert.IsTrue(attached.WaitOne(20000), "Failed to attach within 20s");
+
+                        proc.BreakpointHit += (sender, args) => {
+                            Console.WriteLine("Breakpoint hit");
+                            bpHit.Set();
+                        };
+
+                        var bp = proc.AddBreakPoint("gilstate_attach.py", 3);
+                        bp.Add();
+
+                        Assert.IsTrue(bpHit.WaitOne(20000), "Failed to hit breakpoint within 20s");
+                    } finally {
+                        DetachProcess(proc);
+                    }
+                } finally {
+                    DisposeProcess(p);
                 }
-
-                proc.ProcessLoaded += (sender, args) => {
-                    Console.WriteLine("Process loaded");
-                    attached.Set();
-                };
-                proc.StartListening();
-
-                Assert.IsTrue(attached.WaitOne(20000));
-
-                proc.BreakpointHit += (sender, args) => {
-                    Console.WriteLine("Breakpoint hit");
-                    bpHit.Set();
-                };
-
-                var bp = proc.AddBreakPoint("gilstate_attach.py", 3);
-                bp.Add();
-
-                Assert.IsTrue(bpHit.WaitOne(20000));
-                proc.Detach();
-
-                p.Kill();
             }
         }
 
@@ -2220,22 +2271,24 @@ int main(int argc, char* argv[]) {
                     Assert.Fail("Failed to attach {0}", errReason);
                 }
 
-                bool isAttached = false;
-                proc.ProcessLoaded += (sender, args) => {
-                    attached.Set();
-                    isAttached = false;
-                };
-                proc.StartListening();
+                try {
+                    bool isAttached = false;
+                    proc.ProcessLoaded += (sender, args) => {
+                        attached.Set();
+                        isAttached = false;
+                    };
+                    proc.StartListening();
 
-                Assert.AreEqual(false, isAttached); // we shouldn't have attached yet, we should be blocked
-                handle.Set();   // let the code start running
+                    Assert.IsFalse(isAttached, "should not have attached yet"); // we should be blocked
+                    handle.Set();   // let the code start running
 
-                Assert.IsTrue(attached.WaitOne(20000));
-                proc.Detach();
-
-                p.Kill();
+                    Assert.IsTrue(attached.WaitOne(20000), "Failed to attach within 20s");
+                } finally {
+                    DetachProcess(proc);
+                }
             } finally {
                 Debug.WriteLine(String.Format("Process output: {0}", outRecv.Output.ToString()));
+                DisposeProcess(p);
             }
         }
 
@@ -2279,18 +2332,24 @@ int main(int argc, char* argv[]) {
             startInfo.RedirectStandardOutput = true;
             startInfo.CreateNoWindow = true;
             var compileProcess = Process.Start(startInfo);
+            try {
+                var outputReceiver = new OutputReceiver();
+                compileProcess.OutputDataReceived += outputReceiver.OutputDataReceived; // for debugging if you change the code...
+                compileProcess.ErrorDataReceived += outputReceiver.OutputDataReceived;
+                compileProcess.BeginErrorReadLine();
+                compileProcess.BeginOutputReadLine();
+                Assert.IsTrue(compileProcess.WaitForExit(DefaultWaitForExitTimeout), "Timeout while waiting for compiler process to exit.");
 
-            var outputReceiver = new OutputReceiver();
-            compileProcess.OutputDataReceived += outputReceiver.OutputDataReceived; // for debugging if you change the code...
-            compileProcess.ErrorDataReceived += outputReceiver.OutputDataReceived;
-            compileProcess.BeginErrorReadLine();
-            compileProcess.BeginOutputReadLine();
-            Assert.IsTrue(compileProcess.WaitForExit(DefaultWaitForExitTimeout), "Timeout while waiting for compiler process to exit.");
-
-            Assert.AreEqual(0, compileProcess.ExitCode,
-                "Incorrect exit code: " + compileProcess.ExitCode + Environment.NewLine +
-                outputReceiver.Output.ToString()
-            );
+                Assert.AreEqual(0, compileProcess.ExitCode,
+                    "Incorrect exit code: " + compileProcess.ExitCode + Environment.NewLine +
+                    outputReceiver.Output.ToString()
+                );
+            } finally {
+                if (!compileProcess.HasExited) {
+                    compileProcess.Kill();
+                }
+                compileProcess.Dispose();
+            }
         }
 
         private Process RunHost(string hostExe) {
@@ -2346,8 +2405,11 @@ int main(int argc, char* argv[]) {
 
             //No Windows SDKs installations found
             //  As a last resort lets check some known locations
-            string[] wellKnownLocations = new[] { "C:\\Program Files\\Microsoft SDKs\\Windows\\!<version>!",
-                                                  "C:\\Program Files (x86)\\Microsoft SDKs\\Windows\\!<version>!" };
+
+            string[] wellKnownLocations = new[] {
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Microsoft SDKs", "Windows", "!<version>!"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "Microsoft SDKs", "Windows", "!<version>!")
+            };
 
             if (regValue == null) {
                 foreach (var sdkVersion in sdkVersions) {
@@ -2380,14 +2442,13 @@ int main(int argc, char* argv[]) {
                 bool gotOutput = false;
                 var process = DebugProcess(debugger, DebuggerTestPath + @"StdoutBuffer3x.py", (processObj, threadObj) => {
                     processObj.DebuggerOutput += (sender, args) => {
-                        Assert.IsTrue(!gotOutput, "got output more than once");
+                        Assert.IsFalse(gotOutput, "got output more than once");
                         gotOutput = true;
                         Assert.AreEqual("foo", args.Output);
                     };
                 }, debugOptions: PythonDebugOptions.RedirectOutput);
 
-                process.Start();
-                WaitForExit(process);
+                StartAndWaitForExit(process);
 
                 Assert.IsTrue(gotOutput, "failed to get output");
             }
@@ -2410,10 +2471,13 @@ int main(int argc, char* argv[]) {
                 };
             }, debugOptions: PythonDebugOptions.RedirectOutput | PythonDebugOptions.RedirectInput);
 
-            process.Start();
-            Thread.Sleep(1000);
-            process.SendStringToStdInput("foo\n");
-            WaitForExit(process);
+            try {
+                process.Start();
+                Thread.Sleep(1000);
+                process.SendStringToStdInput("foo\n");
+            } finally {
+                WaitForExit(process);
+            }
 
             Assert.AreEqual(expectedOutput, actualOutput);
         }

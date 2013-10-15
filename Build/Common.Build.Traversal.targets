@@ -9,20 +9,20 @@
   </PropertyGroup>
 
   <Target Name="Rebuild">
-    <MSBuild Projects="@(ProjectFile)" Targets="Clean"/>
-    <MSBuild Projects="@(SequencedProjectFile)" Targets="Clean"/>
-    <MSBuild Projects="@(ProjectFile)" Targets="Build"/>
-    <MSBuild Projects="@(SequencedProjectFile)" Targets="Build"/>
+    <MSBuild Projects="@(ProjectFile)" Properties="%(ProjectFile.Properties)" Targets="Clean"/>
+    <MSBuild Projects="@(SequencedProjectFile)" Properties="%(SequencedProjectFile.Properties)" Targets="Clean"/>
+    <MSBuild Projects="@(ProjectFile)" Properties="%(ProjectFile.Properties)" Targets="Build"/>
+    <MSBuild Projects="@(SequencedProjectFile)" Properties="%(SequencedProjectFile.Properties)" Targets="Build"/>
   </Target>
 
   <Target Name="Build">
-    <MSBuild Projects="@(ProjectFile)" Targets="Build"/>
-    <MSBuild Projects="@(SequencedProjectFile)" Targets="Build"/>
+    <MSBuild Projects="@(ProjectFile)" Properties="%(ProjectFile.Properties)" Targets="Build"/>
+    <MSBuild Projects="@(SequencedProjectFile)" Properties="%(SequencedProjectFile.Properties)" Targets="Build"/>
   </Target>
 
   <Target Name="Clean">
-    <MSBuild Projects="@(ProjectFile)" Targets="Clean"/>
-    <MSBuild Projects="@(SequencedProjectFile)" Targets="Clean"/>
+    <MSBuild Projects="@(ProjectFile)" Properties="%(ProjectFile.Properties)" Targets="Clean"/>
+    <MSBuild Projects="@(SequencedProjectFile)" Properties="%(SequencedProjectFile.Properties)" Targets="Clean"/>
   </Target>
 
 </Project>

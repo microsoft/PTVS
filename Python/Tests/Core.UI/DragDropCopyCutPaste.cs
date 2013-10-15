@@ -33,100 +33,91 @@ namespace PythonToolsUITests {
             TestData.Deploy();
         }
 
-        [TestCleanup]
-        public void MyTestCleanup() {
-            for (int i = 0; i < 20; i++) {
-                try {
-                    VsIdeTestHostContext.Dte.Solution.Close(false);
-                    break;
-                } catch {
-                    VsIdeTestHostContext.Dte.Documents.CloseAll(EnvDTE.vsSaveChanges.vsSaveChangesNo);
-                    System.Threading.Thread.Sleep(500);
-                }
-            }
-        }
-        
         /// <summary>
         /// Cut item, paste into folder, paste into top-level, 2nd paste shouldn’t do anything
         /// </summary>
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void MultiPaste() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            app.OpenAndFindProject(@"TestData\MultiPaste.sln");
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                app.OpenAndFindProject(@"TestData\MultiPaste.sln");
 
-            app.OpenSolutionExplorer();
-            var window = app.SolutionExplorerTreeView;
+                app.OpenSolutionExplorer();
+                var window = app.SolutionExplorerTreeView;
 
-            var server = window.WaitForItem("Solution 'MultiPaste' (1 project)", "HelloWorld", "python.py");
-            var server2 = window.WaitForItem("Solution 'MultiPaste' (1 project)", "HelloWorld", "python2.py");
+                var server = window.WaitForItem("Solution 'MultiPaste' (1 project)", "HelloWorld", "python.py");
+                var server2 = window.WaitForItem("Solution 'MultiPaste' (1 project)", "HelloWorld", "python2.py");
 
-            var point = server.GetClickablePoint();
-            Mouse.MoveTo(point);
-            Mouse.Click(MouseButton.Left);
-
-            Keyboard.Press(Key.LeftShift);
-            try {
-                point = server2.GetClickablePoint();
+                window.CenterInView(server);
+                var point = server.GetClickablePoint();
                 Mouse.MoveTo(point);
                 Mouse.Click(MouseButton.Left);
-            } finally {
-                Keyboard.Release(Key.LeftShift);
+
+                Keyboard.Press(Key.LeftShift);
+                try {
+                    window.CenterInView(server2);
+                    point = server2.GetClickablePoint();
+                    Mouse.MoveTo(point);
+                    Mouse.Click(MouseButton.Left);
+                } finally {
+                    Keyboard.Release(Key.LeftShift);
+                }
+
+                Keyboard.ControlC();
+
+                // https://pytools.codeplex.com/workitem/1144
+                var folder = window.WaitForItem("Solution 'MultiPaste' (1 project)", "HelloWorld", "SubFolder");
+                AutomationWrapper.Select(folder);
+                Keyboard.ControlV();
+
+                // paste once, multiple items should be pasted
+                Assert.IsNotNull(window.WaitForItem("Solution 'MultiPaste' (1 project)", "HelloWorld", "SubFolder", "python.py"));
+                Assert.IsNotNull(window.WaitForItem("Solution 'MultiPaste' (1 project)", "HelloWorld", "SubFolder", "python2.py"));
+
+                AutomationWrapper.Select(folder);
+                Keyboard.ControlV();
+
+                // paste again, we should get the replace prompts...
+
+                var dialog = new OverwriteFileDialog(app.WaitForDialog());
+                dialog.Cancel();
+
+                // https://pytools.codeplex.com/workitem/1154
+                // and we shouldn't get a second dialog after cancelling...
+                app.WaitForDialogDismissed();
             }
-
-            Keyboard.ControlC();
-
-            // https://pytools.codeplex.com/workitem/1144
-            var folder = window.WaitForItem("Solution 'MultiPaste' (1 project)", "HelloWorld", "SubFolder");
-            AutomationWrapper.Select(folder);
-            Keyboard.ControlV();
-
-            // paste once, multiple items should be pasted
-            Assert.IsNotNull(window.WaitForItem("Solution 'MultiPaste' (1 project)", "HelloWorld", "SubFolder", "python.py"));
-            Assert.IsNotNull(window.WaitForItem("Solution 'MultiPaste' (1 project)", "HelloWorld", "SubFolder", "python2.py"));
-
-            AutomationWrapper.Select(folder);
-            Keyboard.ControlV();
-
-            // paste again, we should get the replace prompts...
-
-            var dialog = new OverwriteFileDialog(app.WaitForDialog());
-            dialog.Cancel();
-
-            // https://pytools.codeplex.com/workitem/1154
-            // and we shouldn't get a second dialog after cancelling...
-            app.WaitForDialogDismissed();
         }
-        
+
         /// <summary>
         /// Cut item, paste into folder, paste into top-level, 2nd paste shouldn’t do anything
         /// </summary>
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CutPastePasteItem() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            app.OpenAndFindProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                app.OpenAndFindProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
 
-            app.OpenSolutionExplorer();
-            var window = app.SolutionExplorerTreeView;
+                app.OpenSolutionExplorer();
+                var window = app.SolutionExplorerTreeView;
 
-            var project = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste");
-            var folder = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "PasteFolder");
-            var file = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "CutPastePasteItem.py");
-            AutomationWrapper.Select(file);
+                var project = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste");
+                var folder = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "PasteFolder");
+                var file = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "CutPastePasteItem.py");
+                AutomationWrapper.Select(file);
 
-            Keyboard.ControlX();
+                Keyboard.ControlX();
 
-            AutomationWrapper.Select(folder);
-            Keyboard.ControlV();
-            AssertFileExists(window, "Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "PasteFolder", "CutPastePasteItem.py");
+                AutomationWrapper.Select(folder);
+                Keyboard.ControlV();
+                AssertFileExists(window, "Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "PasteFolder", "CutPastePasteItem.py");
 
-            AutomationWrapper.Select(project);
-            Keyboard.ControlV();
+                AutomationWrapper.Select(project);
+                Keyboard.ControlV();
 
-            System.Threading.Thread.Sleep(1000);
+                System.Threading.Thread.Sleep(1000);
 
-            AssertFileDoesntExist(window, "Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "CutPastePasteItem.py");
+                AssertFileDoesntExist(window, "Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "CutPastePasteItem.py");
+            }
         }
 
         /// <summary>
@@ -135,28 +126,29 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CutRenamePaste() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            app.OpenAndFindProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                app.OpenAndFindProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
 
-            app.OpenSolutionExplorer();
-            var window = app.SolutionExplorerTreeView;
+                app.OpenSolutionExplorer();
+                var window = app.SolutionExplorerTreeView;
 
-            var project = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste");
-            var file = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "CutRenamePaste", "CutRenamePaste.py");
+                var project = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste");
+                var file = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "CutRenamePaste", "CutRenamePaste.py");
 
-            AutomationWrapper.Select(file);
-            Keyboard.ControlX();
+                AutomationWrapper.Select(file);
+                Keyboard.ControlX();
 
-            AutomationWrapper.Select(file);
-            Keyboard.Type(Key.F2);
-            Keyboard.Type("CutRenamePasteNewName");
-            Keyboard.Type(Key.Enter);
+                AutomationWrapper.Select(file);
+                Keyboard.Type(Key.F2);
+                Keyboard.Type("CutRenamePasteNewName");
+                Keyboard.Type(Key.Enter);
 
-            System.Threading.Thread.Sleep(1000);
-            AutomationWrapper.Select(project);
-            Keyboard.ControlV();
+                System.Threading.Thread.Sleep(1000);
+                AutomationWrapper.Select(project);
+                Keyboard.ControlV();
 
-            VisualStudioApp.CheckMessageBox("The source URL 'CutRenamePaste.py' could not be found.");
+                VisualStudioApp.CheckMessageBox("The source URL 'CutRenamePaste.py' could not be found.");
+            }
         }
 
         /// <summary>
@@ -165,69 +157,70 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CutDeletePaste() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            app.OpenAndFindProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                app.OpenAndFindProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
 
-            app.OpenSolutionExplorer();
-            var window = app.SolutionExplorerTreeView;
+                app.OpenSolutionExplorer();
+                var window = app.SolutionExplorerTreeView;
 
-            var project = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste");
-            var file = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "CutDeletePaste", "CutDeletePaste.py");
+                var project = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste");
+                var file = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "CutDeletePaste", "CutDeletePaste.py");
 
-            AutomationWrapper.Select(file);
-            Keyboard.ControlX();
+                AutomationWrapper.Select(file);
+                Keyboard.ControlX();
 
-            File.Delete(@"TestData\DragDropCopyCutPaste\CutDeletePaste\CutDeletePaste.py");
+                File.Delete(@"TestData\DragDropCopyCutPaste\CutDeletePaste\CutDeletePaste.py");
 
-            AutomationWrapper.Select(project);
-            Keyboard.ControlV();
+                AutomationWrapper.Select(project);
+                Keyboard.ControlV();
 
-            VisualStudioApp.CheckMessageBox("The item 'CutDeletePaste.py' does not exist in the project directory. It may have been moved, renamed or deleted.");
+                VisualStudioApp.CheckMessageBox("The item 'CutDeletePaste.py' does not exist in the project directory. It may have been moved, renamed or deleted.");
 
-            Assert.IsNotNull(window.FindItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "CutDeletePaste", "CutDeletePaste.py"));
+                Assert.IsNotNull(window.FindItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "CutDeletePaste", "CutDeletePaste.py"));
+            }
         }
-        
+
         /// <summary>
         /// Adds a new folder which fits exactly w/ no space left in the path name
         /// </summary>
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CopyFileToFolderTooLong() {
-            var project = OpenLongFileNameProject(24);
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = OpenLongFileNameProject(app, 24);
+                app.OpenSolutionExplorer();
+                var window = app.SolutionExplorerTreeView;
 
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            app.OpenSolutionExplorer();
-            var window = app.SolutionExplorerTreeView;
+                // find server.py, send copy & paste, verify copy of file is there
+                var projectNode = window.WaitForItem("Solution 'LongFileNames' (1 project)", "LFN");
+                AutomationWrapper.Select(projectNode);
 
-            // find server.py, send copy & paste, verify copy of file is there
-            var projectNode = window.WaitForItem("Solution 'LongFileNames' (1 project)", "LFN");
-            AutomationWrapper.Select(projectNode);
+                Keyboard.PressAndRelease(Key.F10, Key.LeftCtrl, Key.LeftShift);
+                Keyboard.PressAndRelease(Key.D);
+                Keyboard.PressAndRelease(Key.Right);
+                Keyboard.PressAndRelease(Key.D);
+                Keyboard.Type("01234567891");
+                Keyboard.PressAndRelease(Key.Enter);
 
-            Keyboard.PressAndRelease(Key.F10, Key.LeftCtrl, Key.LeftShift);
-            Keyboard.PressAndRelease(Key.D);
-            Keyboard.PressAndRelease(Key.Right);
-            Keyboard.PressAndRelease(Key.D);
-            Keyboard.Type("01234567891");
-            Keyboard.PressAndRelease(Key.Enter);
+                var folderNode = window.WaitForItem("Solution 'LongFileNames' (1 project)", "LFN", "01234567891");
+                Assert.IsNotNull(folderNode);
 
-            var folderNode = window.WaitForItem("Solution 'LongFileNames' (1 project)", "LFN", "01234567891");
-            Assert.IsNotNull(folderNode);
+                var serverNode = window.WaitForItem("Solution 'LongFileNames' (1 project)", "LFN", "python.py");
+                AutomationWrapper.Select(serverNode);
+                Keyboard.ControlC();
+                Keyboard.ControlV();
 
-            var serverNode = window.WaitForItem("Solution 'LongFileNames' (1 project)", "LFN", "python.py");
-            AutomationWrapper.Select(serverNode);
-            Keyboard.ControlC();
-            Keyboard.ControlV();
+                var serverCopy = window.WaitForItem("Solution 'LongFileNames' (1 project)", "LFN", "python - Copy.py");
+                Assert.IsNotNull(serverCopy);
 
-            var serverCopy = window.WaitForItem("Solution 'LongFileNames' (1 project)", "LFN", "python - Copy.py");
-            Assert.IsNotNull(serverCopy);
+                AutomationWrapper.Select(serverCopy);
+                Keyboard.ControlC();
 
-            AutomationWrapper.Select(serverCopy);
-            Keyboard.ControlC();
+                AutomationWrapper.Select(folderNode);
+                Keyboard.ControlV();
 
-            AutomationWrapper.Select(folderNode);
-            Keyboard.ControlV();
-
-            VisualStudioApp.CheckMessageBox("The filename is too long.");
+                VisualStudioApp.CheckMessageBox("The filename is too long.");
+            }
         }
 
         /// <summary>
@@ -236,56 +229,55 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CutFileToFolderTooLong() {
-            var project = OpenLongFileNameProject(24);
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = OpenLongFileNameProject(app, 24);
+                app.OpenSolutionExplorer();
+                var window = app.SolutionExplorerTreeView;
 
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            app.OpenSolutionExplorer();
-            var window = app.SolutionExplorerTreeView;
+                // find server.py, send copy & paste, verify copy of file is there
+                var projectNode = window.WaitForItem("Solution 'LongFileNames' (1 project)", "LFN");
+                AutomationWrapper.Select(projectNode);
 
-            // find server.py, send copy & paste, verify copy of file is there
-            var projectNode = window.WaitForItem("Solution 'LongFileNames' (1 project)", "LFN");
-            AutomationWrapper.Select(projectNode);
+                Keyboard.PressAndRelease(Key.F10, Key.LeftCtrl, Key.LeftShift);
+                Keyboard.PressAndRelease(Key.D);
+                Keyboard.PressAndRelease(Key.Right);
+                Keyboard.PressAndRelease(Key.D);
+                Keyboard.Type("01234567891");
+                Keyboard.PressAndRelease(Key.Enter);
 
-            Keyboard.PressAndRelease(Key.F10, Key.LeftCtrl, Key.LeftShift);
-            Keyboard.PressAndRelease(Key.D);
-            Keyboard.PressAndRelease(Key.Right);
-            Keyboard.PressAndRelease(Key.D);
-            Keyboard.Type("01234567891");
-            Keyboard.PressAndRelease(Key.Enter);
+                var folderNode = window.WaitForItem("Solution 'LongFileNames' (1 project)", "LFN", "01234567891");
+                Assert.IsNotNull(folderNode);
 
-            var folderNode = window.WaitForItem("Solution 'LongFileNames' (1 project)", "LFN", "01234567891");
-            Assert.IsNotNull(folderNode);
+                var serverNode = window.FindItem("Solution 'LongFileNames' (1 project)", "LFN", "python.py");
+                AutomationWrapper.Select(serverNode);
+                Keyboard.ControlC();
+                Keyboard.ControlV();
 
-            var serverNode = window.FindItem("Solution 'LongFileNames' (1 project)", "LFN", "python.py");
-            AutomationWrapper.Select(serverNode);
-            Keyboard.ControlC();
-            Keyboard.ControlV();
+                var serverCopy = window.WaitForItem("Solution 'LongFileNames' (1 project)", "LFN", "python - Copy.py");
+                Assert.IsNotNull(serverCopy);
 
-            var serverCopy = window.WaitForItem("Solution 'LongFileNames' (1 project)", "LFN", "python - Copy.py");
-            Assert.IsNotNull(serverCopy);
+                AutomationWrapper.Select(serverCopy);
+                Keyboard.ControlX();
 
-            AutomationWrapper.Select(serverCopy);
-            Keyboard.ControlX();
+                AutomationWrapper.Select(folderNode);
+                Keyboard.ControlV();
 
-            AutomationWrapper.Select(folderNode);
-            Keyboard.ControlV();
-
-            VisualStudioApp.CheckMessageBox("The filename is too long.");
+                VisualStudioApp.CheckMessageBox("The filename is too long.");
+            }
         }
 
-        internal static Project OpenLongFileNameProject(int spaceRemaining = 30) {
-            string testDir = Path.Combine(Environment.CurrentDirectory, Guid.NewGuid().ToString());
+        internal static Project OpenLongFileNameProject(VisualStudioApp app, int spaceRemaining = 30) {
+            string testDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
             int targetPathLength = 260 - spaceRemaining - "\\LongFileNames\\".Length;
             testDir = testDir + new string('X', targetPathLength - testDir.Length);
             Console.WriteLine("Creating long file name project ({0}) at: {1}", testDir.Length, testDir);
 
             Directory.CreateDirectory(testDir);
-            File.Copy(@"TestData\LongFileNames.sln", Path.Combine(testDir, "LongFileNames.sln"));
-            File.Copy(@"TestData\LFN.pyproj", Path.Combine(testDir, "LFN.pyproj"));
+            File.Copy(TestData.GetPath(@"TestData\LongFileNames.sln"), Path.Combine(testDir, "LongFileNames.sln"));
+            File.Copy(TestData.GetPath(@"TestData\LFN.pyproj"), Path.Combine(testDir, "LFN.pyproj"));
 
-            CopyDirectory(@"TestData\LongFileNames", Path.Combine(testDir, "LongFileNames"));
+            CopyDirectory(TestData.GetPath(@"TestData\LongFileNames"), Path.Combine(testDir, "LongFileNames"));
 
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
             return app.OpenAndFindProject(Path.Combine(testDir, "LongFileNames.sln"));
         }
 
@@ -310,64 +302,69 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CutRenamePasteFolder() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            app.OpenAndFindProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                app.OpenAndFindProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
 
-            app.OpenSolutionExplorer();
-            var window = app.SolutionExplorerTreeView;
+                app.OpenSolutionExplorer();
+                var window = app.SolutionExplorerTreeView;
 
-            var project = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste");
-            var file = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "CutRenamePaste", "CutRenamePasteFolder");
-            AutomationWrapper.Select(file);
-            Keyboard.ControlX();
+                var project = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste");
+                var file = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "CutRenamePaste", "CutRenamePasteFolder");
+                AutomationWrapper.Select(file);
+                Keyboard.ControlX();
 
-            Keyboard.Type(Key.F2);
-            Keyboard.Type("CutRenamePasteFolderNewName");
-            Keyboard.Type(Key.Enter);
-            System.Threading.Thread.Sleep(1000);
+                Keyboard.Type(Key.F2);
+                Keyboard.Type("CutRenamePasteFolderNewName");
+                Keyboard.Type(Key.Enter);
+                System.Threading.Thread.Sleep(1000);
 
-            AutomationWrapper.Select(project);
-            Keyboard.ControlV();
+                AutomationWrapper.Select(project);
+                Keyboard.ControlV();
 
-            VisualStudioApp.CheckMessageBox("The source URL 'CutRenamePasteFolder' could not be found.");
+                VisualStudioApp.CheckMessageBox("The source URL 'CutRenamePasteFolder' could not be found.");
+            }
         }
+
         /// <summary>
         /// Copy a file node, drag and drop a different file, paste the node, should succeed
         /// </summary>
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CopiedBeforeDragPastedAfterDrop() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            app.OpenAndFindProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                app.OpenAndFindProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
 
-            app.OpenSolutionExplorer();
-            var window = app.SolutionExplorerTreeView;
+                app.OpenSolutionExplorer();
+                var window = app.SolutionExplorerTreeView;
 
-            var project = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste");
-            Assert.AreNotEqual(null, project);
-            var file = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "CopiedBeforeDragPastedAfterDrop.py");
-            Assert.AreNotEqual(null, file);
-            var draggedFile = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "DragAndDroppedDuringCopy.py");
-            Assert.AreNotEqual(null, draggedFile);
-            var dragFolder = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "DragDuringCopyDestination");
-            Assert.AreNotEqual(null, dragFolder);
+                var project = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste");
+                Assert.AreNotEqual(null, project);
+                var file = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "CopiedBeforeDragPastedAfterDrop.py");
+                Assert.AreNotEqual(null, file);
+                var draggedFile = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "DragAndDroppedDuringCopy.py");
+                Assert.AreNotEqual(null, draggedFile);
+                var dragFolder = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "DragDuringCopyDestination");
+                Assert.AreNotEqual(null, dragFolder);
 
-            AutomationWrapper.Select(file);
-            Keyboard.ControlC();
+                AutomationWrapper.Select(file);
+                Keyboard.ControlC();
 
-            AutomationWrapper.Select(draggedFile);
+                AutomationWrapper.Select(draggedFile);
 
-            Mouse.MoveTo(draggedFile.GetClickablePoint());
-            Mouse.Down(MouseButton.Left);
-            Mouse.MoveTo(dragFolder.GetClickablePoint());
-            Mouse.Up(MouseButton.Left);
+                window.CenterInView(draggedFile);
+                Mouse.MoveTo(draggedFile.GetClickablePoint());
+                Mouse.Down(MouseButton.Left);
+                window.CenterInView(dragFolder);
+                Mouse.MoveTo(dragFolder.GetClickablePoint());
+                Mouse.Up(MouseButton.Left);
 
-            var folder = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "PasteFolder");
-            AutomationWrapper.Select(folder);
-            Keyboard.ControlV();
+                var folder = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "PasteFolder");
+                AutomationWrapper.Select(folder);
+                Keyboard.ControlV();
 
-            AssertFileExists(window, "Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "PasteFolder", "CopiedBeforeDragPastedAfterDrop.py");
-            AssertFileExists(window, "Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "CopiedBeforeDragPastedAfterDrop.py");
+                AssertFileExists(window, "Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "PasteFolder", "CopiedBeforeDragPastedAfterDrop.py");
+                AssertFileExists(window, "Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "CopiedBeforeDragPastedAfterDrop.py");
+            }
         }
 
         /// <summary>
@@ -376,25 +373,30 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void DragToAnotherProject() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            app.OpenAndFindProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                app.OpenAndFindProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
 
-            app.OpenSolutionExplorer();
-            var window = app.SolutionExplorerTreeView;
+                app.OpenSolutionExplorer();
+                var window = app.SolutionExplorerTreeView;
 
-            var draggedFile = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "!Source", "DraggedToOtherProject.py");
-            var destProject = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "ConsoleApplication1");
-            AutomationWrapper.Select(draggedFile);
+                var draggedFile = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "!Source", "DraggedToOtherProject.py");
+                var destProject = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "ConsoleApplication1");
+                AutomationWrapper.Select(draggedFile);
 
-            var point = draggedFile.GetClickablePoint();
-            Mouse.MoveTo(point);
-            Mouse.Down(MouseButton.Left);
+                window.CenterInView(draggedFile);
+                var point = draggedFile.GetClickablePoint();
+                Mouse.MoveTo(point);
+                Mouse.Down(MouseButton.Left);
+                // Ensure the drag has started
+                Mouse.MoveTo(new Point(point.X + 20, point.Y));
 
-            Mouse.MoveTo(destProject.GetClickablePoint());
-            Mouse.Up(MouseButton.Left);
+                window.CenterInView(destProject);
+                Mouse.MoveTo(destProject.GetClickablePoint());
+                Mouse.Up(MouseButton.Left);
 
-            AssertFileExists(window, "Solution 'DragDropCopyCutPaste' (2 projects)", "ConsoleApplication1", "DraggedToOtherProject.py");
-            AssertFileExists(window, "Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "!Source", "DraggedToOtherProject.py");
+                AssertFileExists(window, "Solution 'DragDropCopyCutPaste' (2 projects)", "ConsoleApplication1", "DraggedToOtherProject.py");
+                AssertFileExists(window, "Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "!Source", "DraggedToOtherProject.py");
+            }
         }
 
         /// <summary>
@@ -404,21 +406,22 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CutFolderPasteOnSelf() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            app.OpenAndFindProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                app.OpenAndFindProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
 
-            app.OpenSolutionExplorer();
-            var window = app.SolutionExplorerTreeView;
+                app.OpenSolutionExplorer();
+                var window = app.SolutionExplorerTreeView;
 
-            var cutFolder = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "CutFolderPasteOnSelf");
-            AutomationWrapper.Select(cutFolder);
+                var cutFolder = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "CutFolderPasteOnSelf");
+                AutomationWrapper.Select(cutFolder);
 
-            Keyboard.ControlX();
-            Keyboard.ControlV();
-            VisualStudioApp.CheckMessageBox("Cannot move 'CutFolderPasteOnSelf'. The destination folder is the same as the source folder.");
+                Keyboard.ControlX();
+                Keyboard.ControlV();
+                VisualStudioApp.CheckMessageBox("Cannot move 'CutFolderPasteOnSelf'. The destination folder is the same as the source folder.");
 
-            AssertFolderExists(window, "Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "CutFolderPasteOnSelf");
-            AssertFolderDoesntExist(window, "Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "CutFolderPasteOnSelf - Copy");
+                AssertFolderExists(window, "Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "CutFolderPasteOnSelf");
+                AssertFolderDoesntExist(window, "Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "CutFolderPasteOnSelf - Copy");
+            }
         }
 
         /// <summary>
@@ -427,26 +430,29 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void DragFolderOntoSelf() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            app.OpenAndFindProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                app.OpenAndFindProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
 
-            app.OpenSolutionExplorer();
-            var window = app.SolutionExplorerTreeView;
+                app.OpenSolutionExplorer();
+                var window = app.SolutionExplorerTreeView;
 
-            var draggedFolder = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "DragFolderOntoSelf");
-            AutomationWrapper.Select(draggedFolder);
+                var draggedFolder = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "DragFolderOntoSelf");
+                AutomationWrapper.Select(draggedFolder);
 
-            var point = draggedFolder.GetClickablePoint();
-            Mouse.MoveTo(point);
-            Mouse.Down(MouseButton.Left);
-            Mouse.MoveTo(new Point(point.X + 1, point.Y + 1));
+                window.CenterInView(draggedFolder);
+                var point = draggedFolder.GetClickablePoint();
+                Mouse.MoveTo(point);
+                Mouse.Down(MouseButton.Left);
+                Mouse.MoveTo(new Point(point.X + 20, point.Y));
+                Mouse.MoveTo(point);
 
-            Mouse.Up(MouseButton.Left);
+                Mouse.Up(MouseButton.Left);
 
-            AssertFolderExists(window, "Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "DragFolderOntoSelf");
-            AssertFileExists(window, "Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "DragFolderOntoSelf", "File.py");
-            AssertFolderDoesntExist(window, "Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "DragFolderOntoSelf - Copy");
-            AssertFileDoesntExist(window, "Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "DragFolderOntoSelf", "File - Copy.py");
+                AssertFolderExists(window, "Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "DragFolderOntoSelf");
+                AssertFileExists(window, "Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "DragFolderOntoSelf", "File.py");
+                AssertFolderDoesntExist(window, "Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "DragFolderOntoSelf - Copy");
+                AssertFileDoesntExist(window, "Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "DragFolderOntoSelf", "File - Copy.py");
+            }
         }
 
         /// <summary>
@@ -455,32 +461,36 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void DragFolderOntoChild() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            app.OpenAndFindProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                app.OpenAndFindProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
 
-            app.OpenSolutionExplorer();
-            var window = app.SolutionExplorerTreeView;
+                app.OpenSolutionExplorer();
+                var window = app.SolutionExplorerTreeView;
 
-            var draggedFolder = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "ParentFolder");
-            var childFolder = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "ParentFolder", "ChildFolder");
-            AutomationWrapper.Select(draggedFolder);
+                var draggedFolder = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "ParentFolder");
+                var childFolder = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "ParentFolder", "ChildFolder");
+                AutomationWrapper.Select(draggedFolder);
 
-            var point = draggedFolder.GetClickablePoint();
-            Mouse.MoveTo(point);
-            Mouse.Down(MouseButton.Left);
-            Mouse.MoveTo(childFolder.GetClickablePoint());
+                window.CenterInView(draggedFolder);
+                var point = draggedFolder.GetClickablePoint();
+                Mouse.MoveTo(point);
+                Mouse.Down(MouseButton.Left);
 
-            Mouse.Up(MouseButton.Left);
+                window.CenterInView(childFolder);
+                Mouse.MoveTo(childFolder.GetClickablePoint());
 
-            VisualStudioApp.CheckMessageBox("Cannot move 'ParentFolder'. The destination folder is a subfolder of the source folder.");
-            app.WaitForDialogDismissed();
+                Mouse.Up(MouseButton.Left);
 
-            draggedFolder = window.FindItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "ParentFolder");
-            Assert.IsNotNull(draggedFolder);
-            childFolder = window.FindItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "ParentFolder", "ChildFolder");
-            Assert.IsNotNull(childFolder);
-            var parentInChildFolder = window.FindItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "ParentFolder", "ChildFolder", "ParentFolder");
-            Assert.IsNull(parentInChildFolder);
+                VisualStudioApp.CheckMessageBox("Cannot move 'ParentFolder'. The destination folder is a subfolder of the source folder.");
+                app.WaitForDialogDismissed();
+
+                draggedFolder = window.FindItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "ParentFolder");
+                Assert.IsNotNull(draggedFolder);
+                childFolder = window.FindItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "ParentFolder", "ChildFolder");
+                Assert.IsNotNull(childFolder);
+                var parentInChildFolder = window.FindItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "ParentFolder", "ChildFolder", "ParentFolder");
+                Assert.IsNull(parentInChildFolder);
+            }
         }
 
         /// <summary>
@@ -490,60 +500,62 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CutFileReplace() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            app.OpenAndFindProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                app.OpenAndFindProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
 
-            app.OpenSolutionExplorer();
-            var window = app.SolutionExplorerTreeView;
+                app.OpenSolutionExplorer();
+                var window = app.SolutionExplorerTreeView;
 
-            var file = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "MoveDupFilename", "Foo", "Python1.py");
-            Assert.AreNotEqual(null, file);
-            var dest = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "MoveDupFilename");
-            Assert.AreNotEqual(null, dest);
+                var file = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "MoveDupFilename", "Foo", "Python1.py");
+                Assert.AreNotEqual(null, file);
+                var dest = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "MoveDupFilename");
+                Assert.AreNotEqual(null, dest);
 
-            AutomationWrapper.Select(file);
+                AutomationWrapper.Select(file);
 
-            Keyboard.ControlX();
-            AutomationWrapper.Select(dest);
+                Keyboard.ControlX();
+                AutomationWrapper.Select(dest);
 
-            Keyboard.ControlV();
+                Keyboard.ControlV();
 
-            var dialog = new OverwriteFileDialog(app.WaitForDialog());
-            dialog.Yes();
+                var dialog = new OverwriteFileDialog(app.WaitForDialog());
+                dialog.Yes();
 
-            AssertFileExists(window, "Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "MoveDupFilename", "Python1.py");
-            AssertFileDoesntExist(window, "Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "MoveDupFilename", "Foo", "Python1.py");
+                AssertFileExists(window, "Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "MoveDupFilename", "Python1.py");
+                AssertFileDoesntExist(window, "Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "MoveDupFilename", "Foo", "Python1.py");
+            }
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CutFolderAndFile() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            app.OpenAndFindProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                app.OpenAndFindProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
 
-            app.OpenSolutionExplorer();
-            var window = app.SolutionExplorerTreeView;
+                app.OpenSolutionExplorer();
+                var window = app.SolutionExplorerTreeView;
 
-            var folder = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "CutFolderAndFile", "CutFolder");
-            var file = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "CutFolderAndFile", "CutFolder", "CutFolderAndFile.py");
-            var dest = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste");
+                var folder = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "CutFolderAndFile", "CutFolder");
+                var file = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "CutFolderAndFile", "CutFolder", "CutFolderAndFile.py");
+                var dest = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste");
 
-            Mouse.MoveTo(folder.GetClickablePoint());
-            Mouse.Click(MouseButton.Left);
-            try {
-                Keyboard.Press(Key.LeftShift);
-                Mouse.MoveTo(file.GetClickablePoint());
+                Mouse.MoveTo(folder.GetClickablePoint());
                 Mouse.Click(MouseButton.Left);
-            } finally {
-                Keyboard.Release(Key.LeftShift);
+                try {
+                    Keyboard.Press(Key.LeftShift);
+                    Mouse.MoveTo(file.GetClickablePoint());
+                    Mouse.Click(MouseButton.Left);
+                } finally {
+                    Keyboard.Release(Key.LeftShift);
+                }
+
+                Keyboard.ControlX();
+                AutomationWrapper.Select(dest);
+                Keyboard.ControlV();
+
+                AssertFileExists(window, "Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "CutFolder", "CutFolderAndFile.py");
+                AssertFileDoesntExist(window, "Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "CutFolderAndFile", "CutFolder");
             }
-
-            Keyboard.ControlX();
-            AutomationWrapper.Select(dest);
-            Keyboard.ControlV();
-
-            AssertFileExists(window, "Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "CutFolder", "CutFolderAndFile.py");
-            AssertFileDoesntExist(window, "Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "CutFolderAndFile", "CutFolder");
         }
 
         /// <summary>
@@ -553,24 +565,25 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CutFilePasteSameLocation() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            app.OpenAndFindProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                app.OpenAndFindProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
 
-            app.OpenSolutionExplorer();
-            var window = app.SolutionExplorerTreeView;
+                app.OpenSolutionExplorer();
+                var window = app.SolutionExplorerTreeView;
 
-            var project = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste");
-            var cutFile = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "CutFilePasteSameLocation.py");
-            AutomationWrapper.Select(cutFile);
+                var project = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste");
+                var cutFile = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "CutFilePasteSameLocation.py");
+                AutomationWrapper.Select(cutFile);
 
-            Keyboard.ControlX();
-            AutomationWrapper.Select(project);
+                Keyboard.ControlX();
+                AutomationWrapper.Select(project);
 
-            Keyboard.ControlV();
-            VisualStudioApp.CheckMessageBox("Cannot move 'CutFilePasteSameLocation.py'. The destination folder is the same as the source folder.");
+                Keyboard.ControlV();
+                VisualStudioApp.CheckMessageBox("Cannot move 'CutFilePasteSameLocation.py'. The destination folder is the same as the source folder.");
 
-            AssertFileExists(window, "Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "CutFilePasteSameLocation.py");
-            AssertFileDoesntExist(window, "Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "CutFilePasteSameLocation - Copy.py");
+                AssertFileExists(window, "Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "CutFilePasteSameLocation.py");
+                AssertFileDoesntExist(window, "Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "CutFilePasteSameLocation - Copy.py");
+            }
         }
 
         /// <summary>
@@ -580,31 +593,32 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void DragFolderAndFileOntoSelf() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            app.OpenAndFindProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                app.OpenAndFindProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
 
-            app.OpenSolutionExplorer();
-            var window = app.SolutionExplorerTreeView;
+                app.OpenSolutionExplorer();
+                var window = app.SolutionExplorerTreeView;
 
-            var folder = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "DragFolderAndFileOntoSelf");
-            var file = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "DragFolderAndFileOntoSelf", "File.py");
+                var folder = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "DragFolderAndFileOntoSelf");
+                var file = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "DragFolderAndFileOntoSelf", "File.py");
 
-            Mouse.MoveTo(folder.GetClickablePoint());
-            Mouse.Click(MouseButton.Left);
-            try {
-                Keyboard.Press(Key.LeftShift);
-                Mouse.MoveTo(file.GetClickablePoint());
+                Mouse.MoveTo(folder.GetClickablePoint());
                 Mouse.Click(MouseButton.Left);
-            } finally {
-                Keyboard.Release(Key.LeftShift);
+                try {
+                    Keyboard.Press(Key.LeftShift);
+                    Mouse.MoveTo(file.GetClickablePoint());
+                    Mouse.Click(MouseButton.Left);
+                } finally {
+                    Keyboard.Release(Key.LeftShift);
+                }
+
+                Mouse.MoveTo(file.GetClickablePoint());
+                Mouse.Down(MouseButton.Left);
+                Mouse.MoveTo(folder.GetClickablePoint());
+                Mouse.Up(MouseButton.Left);
+
+                VisualStudioApp.CheckMessageBox("Cannot move 'DragFolderAndFileOntoSelf'. The destination folder is the same as the source folder.");
             }
-
-            Mouse.MoveTo(file.GetClickablePoint());
-            Mouse.Down(MouseButton.Left);
-            Mouse.MoveTo(folder.GetClickablePoint());
-            Mouse.Up(MouseButton.Left);
-
-            VisualStudioApp.CheckMessageBox("Cannot move 'DragFolderAndFileOntoSelf'. The destination folder is the same as the source folder.");
         }
 
         /// <summary>
@@ -613,53 +627,55 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CopyFolderFromAnotherHierarchy() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            app.OpenAndFindProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                app.OpenAndFindProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
 
-            app.OpenSolutionExplorer();
-            var window = app.SolutionExplorerTreeView;
+                app.OpenSolutionExplorer();
+                var window = app.SolutionExplorerTreeView;
 
-            var folder = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "ConsoleApplication1", "CopiedFolderWithItemsNotInProject");
-            var project = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste");
+                var folder = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "ConsoleApplication1", "CopiedFolderWithItemsNotInProject");
+                var project = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste");
 
-            AutomationWrapper.Select(folder);
-            Keyboard.ControlC();
+                AutomationWrapper.Select(folder);
+                Keyboard.ControlC();
 
-            AutomationWrapper.Select(project);
-            Keyboard.ControlV();
+                AutomationWrapper.Select(project);
+                Keyboard.ControlV();
 
-            window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "CopiedFolderWithItemsNotInProject", "Class.cs");
+                window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "CopiedFolderWithItemsNotInProject", "Class.cs");
 
-            AssertFolderExists(window, "Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "CopiedFolderWithItemsNotInProject");
-            AssertFileExists(window, "Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "CopiedFolderWithItemsNotInProject", "Class.cs");
-            AssertFileDoesntExist(window, "Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "CopiedFolderWithItemsNotInProject", "Text.txt");
+                AssertFolderExists(window, "Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "CopiedFolderWithItemsNotInProject");
+                AssertFileExists(window, "Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "CopiedFolderWithItemsNotInProject", "Class.cs");
+                AssertFileDoesntExist(window, "Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "CopiedFolderWithItemsNotInProject", "Text.txt");
+            }
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CopyDeletePaste() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            app.OpenAndFindProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                app.OpenAndFindProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
 
-            app.OpenSolutionExplorer();
-            var window = app.SolutionExplorerTreeView;
+                app.OpenSolutionExplorer();
+                var window = app.SolutionExplorerTreeView;
 
-            var file = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "CopyDeletePaste", "CopyDeletePaste.py");
-            var project = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste");
+                var file = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "CopyDeletePaste", "CopyDeletePaste.py");
+                var project = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste");
 
-            AutomationWrapper.Select(file);
-            Keyboard.ControlC();
+                AutomationWrapper.Select(file);
+                Keyboard.ControlC();
 
-            AutomationWrapper.Select(file);
-            Keyboard.Type(Key.Delete);
-            app.WaitForDialog();
+                AutomationWrapper.Select(file);
+                Keyboard.Type(Key.Delete);
+                app.WaitForDialog();
 
-            Keyboard.Type("\r");
+                Keyboard.Type("\r");
 
-            AutomationWrapper.Select(project);
-            Keyboard.ControlV();
+                AutomationWrapper.Select(project);
+                Keyboard.ControlV();
 
-            VisualStudioApp.CheckMessageBox("The source URL 'CopyDeletePaste.py' could not be found.");
+                VisualStudioApp.CheckMessageBox("The source URL 'CopyDeletePaste.py' could not be found.");
+            }
         }
 
         /// <summary>
@@ -668,21 +684,22 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CrossHierarchyFileDragAndDrop() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            app.OpenAndFindProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                app.OpenAndFindProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
 
-            app.OpenSolutionExplorer();
-            var window = app.SolutionExplorerTreeView;
+                app.OpenSolutionExplorer();
+                var window = app.SolutionExplorerTreeView;
 
-            var folder = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "ConsoleApplication1", "CrossHierarchyFileDragAndDrop.cs");
-            var destFolder = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "DropFolder");
+                var folder = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "ConsoleApplication1", "CrossHierarchyFileDragAndDrop.cs");
+                var destFolder = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "DropFolder");
 
-            Mouse.MoveTo(folder.GetClickablePoint());
-            Mouse.Down(MouseButton.Left);
-            Mouse.MoveTo(destFolder.GetClickablePoint());
-            Mouse.Up(MouseButton.Left);
+                Mouse.MoveTo(folder.GetClickablePoint());
+                Mouse.Down(MouseButton.Left);
+                Mouse.MoveTo(destFolder.GetClickablePoint());
+                Mouse.Up(MouseButton.Left);
 
-            AssertFileExists(window, "Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "DropFolder", "CrossHierarchyFileDragAndDrop.cs");
+                AssertFileExists(window, "Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "DropFolder", "CrossHierarchyFileDragAndDrop.cs");
+            }
         }
 
         /// <summary>
@@ -692,30 +709,31 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void DuplicateFolderName() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            app.OpenAndFindProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                app.OpenAndFindProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
 
-            app.OpenSolutionExplorer();
-            var window = app.SolutionExplorerTreeView;
+                app.OpenSolutionExplorer();
+                var window = app.SolutionExplorerTreeView;
 
-            var folder = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "DuplicateFolderName");
-            var destFolder = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "DuplicateFolderNameTarget");
+                var folder = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "DuplicateFolderName");
+                var destFolder = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "DuplicateFolderNameTarget");
 
-            AutomationWrapper.Select(folder);
-            Keyboard.ControlX();
+                AutomationWrapper.Select(folder);
+                Keyboard.ControlX();
 
-            AutomationWrapper.Select(destFolder);
-            Keyboard.ControlV();
+                AutomationWrapper.Select(destFolder);
+                Keyboard.ControlV();
 
-            VisualStudioApp.CheckMessageBox("Cannot move the folder 'DuplicateFolderName'. A folder with that name already exists in the destination directory.");
+                VisualStudioApp.CheckMessageBox("Cannot move the folder 'DuplicateFolderName'. A folder with that name already exists in the destination directory.");
 
-            // try again with drag and drop, which defaults to move
-            Mouse.MoveTo(folder.GetClickablePoint());
-            Mouse.Down(MouseButton.Left);
-            Mouse.MoveTo(destFolder.GetClickablePoint());
-            Mouse.Up(MouseButton.Left);
+                // try again with drag and drop, which defaults to move
+                Mouse.MoveTo(folder.GetClickablePoint());
+                Mouse.Down(MouseButton.Left);
+                Mouse.MoveTo(destFolder.GetClickablePoint());
+                Mouse.Up(MouseButton.Left);
 
-            VisualStudioApp.CheckMessageBox("Cannot move the folder 'DuplicateFolderName'. A folder with that name already exists in the destination directory.");
+                VisualStudioApp.CheckMessageBox("Cannot move the folder 'DuplicateFolderName'. A folder with that name already exists in the destination directory.");
+            }
         }
 
         /// <summary>
@@ -725,26 +743,31 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CopyDuplicateFolderName() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            app.OpenAndFindProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                app.OpenAndFindProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
 
-            app.OpenSolutionExplorer();
-            var window = app.SolutionExplorerTreeView;
+                app.OpenSolutionExplorer();
+                var window = app.SolutionExplorerTreeView;
 
-            var folder = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "CopyDuplicateFolderName");
-            var destFolder = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "CopyDuplicateFolderNameTarget");
+                var folder = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "CopyDuplicateFolderName");
+                var destFolder = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "CopyDuplicateFolderNameTarget");
 
-            AutomationWrapper.Select(folder);
-            Keyboard.ControlC();
+                AutomationWrapper.Select(folder);
+                Keyboard.ControlC();
 
-            AutomationWrapper.Select(destFolder);
-            Keyboard.ControlV();
+                AutomationWrapper.Select(destFolder);
+                Keyboard.ControlV();
 
-            var dialog = new OverwriteFileDialog(app.WaitForDialog());
-            Assert.IsTrue(dialog.Text.Contains("This folder already contains a folder called 'CopyDuplicateFolderName'"), "wrong text in overwrite dialog");
-            dialog.No();
+                try {
+                    var dialog = new OverwriteFileDialog(app.WaitForDialog());
+                    Assert.IsTrue(dialog.Text.Contains("This folder already contains a folder called 'CopyDuplicateFolderName'"), "wrong text in overwrite dialog");
+                    dialog.No();
+                } finally {
+                    app.DismissAllDialogs();
+                }
 
-            AssertFileDoesntExist(window, "Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "CopyDuplicateFolderNameTarget", "CopyDuplicateFolderName", "Python1.py");
+                AssertFileDoesntExist(window, "Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "CopyDuplicateFolderNameTarget", "CopyDuplicateFolderName", "Python1.py");
+            }
         }
 
         /// <summary>
@@ -753,23 +776,24 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CrossHierarchyCut() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            app.OpenAndFindProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                app.OpenAndFindProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
 
-            app.OpenSolutionExplorer();
-            var window = app.SolutionExplorerTreeView;
+                app.OpenSolutionExplorer();
+                var window = app.SolutionExplorerTreeView;
 
-            var file = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "ConsoleApplication1", "CrossHierarchyCut.cs");
-            var destFolder = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste");
+                var file = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "ConsoleApplication1", "CrossHierarchyCut.cs");
+                var destFolder = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste");
 
-            AutomationWrapper.Select(file);
-            Keyboard.ControlX();
+                AutomationWrapper.Select(file);
+                Keyboard.ControlX();
 
-            AutomationWrapper.Select(destFolder);
-            Keyboard.ControlV();
+                AutomationWrapper.Select(destFolder);
+                Keyboard.ControlV();
 
-            AssertFileExists(window, "Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "CrossHierarchyCut.cs");
-            AssertFileDoesntExist(window, "Solution 'DragDropCopyCutPaste' (2 projects)", "ConsoleApplication1", "CrossHierarchyCut.cs");
+                AssertFileExists(window, "Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "CrossHierarchyCut.cs");
+                AssertFileDoesntExist(window, "Solution 'DragDropCopyCutPaste' (2 projects)", "ConsoleApplication1", "CrossHierarchyCut.cs");
+            }
         }
 
         /// <summary>
@@ -778,23 +802,24 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CrossHierarchyCopy() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            app.OpenAndFindProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                app.OpenAndFindProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
 
-            app.OpenSolutionExplorer();
-            var window = app.SolutionExplorerTreeView;
+                app.OpenSolutionExplorer();
+                var window = app.SolutionExplorerTreeView;
 
-            var file = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "ConsoleApplication1", "CrossHierarchyCopy.cs");
-            var destFolder = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste");
+                var file = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "ConsoleApplication1", "CrossHierarchyCopy.cs");
+                var destFolder = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste");
 
-            AutomationWrapper.Select(file);
-            Keyboard.ControlC();
+                AutomationWrapper.Select(file);
+                Keyboard.ControlC();
 
-            AutomationWrapper.Select(destFolder);
-            Keyboard.ControlV();
+                AutomationWrapper.Select(destFolder);
+                Keyboard.ControlV();
 
-            AssertFileExists(window, "Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "CrossHierarchyCopy.cs");
-            AssertFileExists(window, "Solution 'DragDropCopyCutPaste' (2 projects)", "ConsoleApplication1", "CrossHierarchyCopy.cs");
+                AssertFileExists(window, "Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "CrossHierarchyCopy.cs");
+                AssertFileExists(window, "Solution 'DragDropCopyCutPaste' (2 projects)", "ConsoleApplication1", "CrossHierarchyCopy.cs");
+            }
         }
 
         /// <summary>
@@ -803,23 +828,24 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ReverseCrossHierarchyCut() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            app.OpenAndFindProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                app.OpenAndFindProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
 
-            app.OpenSolutionExplorer();
-            var window = app.SolutionExplorerTreeView;
+                app.OpenSolutionExplorer();
+                var window = app.SolutionExplorerTreeView;
 
-            var file = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "CrossHierarchyCut.py");
-            var destFolder = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "ConsoleApplication1");
+                var file = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "CrossHierarchyCut.py");
+                var destFolder = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "ConsoleApplication1");
 
-            AutomationWrapper.Select(file);
-            Keyboard.ControlX();
+                AutomationWrapper.Select(file);
+                Keyboard.ControlX();
 
-            AutomationWrapper.Select(destFolder);
-            Keyboard.ControlV();
+                AutomationWrapper.Select(destFolder);
+                Keyboard.ControlV();
 
-            AssertFileExists(window, "Solution 'DragDropCopyCutPaste' (2 projects)", "ConsoleApplication1", "CrossHierarchyCut.py");
-            AssertFileDoesntExist(window, "Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "CrossHierarchyCut.py");
+                AssertFileExists(window, "Solution 'DragDropCopyCutPaste' (2 projects)", "ConsoleApplication1", "CrossHierarchyCut.py");
+                AssertFileDoesntExist(window, "Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "CrossHierarchyCut.py");
+            }
         }
 
         /// <summary>
@@ -828,23 +854,24 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ReverseCrossHierarchyCopy() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            app.OpenAndFindProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                app.OpenAndFindProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
 
-            app.OpenSolutionExplorer();
-            var window = app.SolutionExplorerTreeView;
+                app.OpenSolutionExplorer();
+                var window = app.SolutionExplorerTreeView;
 
-            var file = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "CrossHierarchyCopy.py");
-            var destFolder = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "ConsoleApplication1");
+                var file = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "CrossHierarchyCopy.py");
+                var destFolder = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "ConsoleApplication1");
 
-            AutomationWrapper.Select(file);
-            Keyboard.ControlC();
+                AutomationWrapper.Select(file);
+                Keyboard.ControlC();
 
-            AutomationWrapper.Select(destFolder);
-            Keyboard.ControlV();
+                AutomationWrapper.Select(destFolder);
+                Keyboard.ControlV();
 
-            AssertFileExists(window, "Solution 'DragDropCopyCutPaste' (2 projects)", "ConsoleApplication1", "CrossHierarchyCopy.py");
-            AssertFileExists(window, "Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "CrossHierarchyCopy.py");
+                AssertFileExists(window, "Solution 'DragDropCopyCutPaste' (2 projects)", "ConsoleApplication1", "CrossHierarchyCopy.py");
+                AssertFileExists(window, "Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "CrossHierarchyCopy.py");
+            }
         }
 
         /// <summary>
@@ -855,26 +882,27 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CrossHierarchyDragDropAfterCut() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            app.OpenAndFindProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                app.OpenAndFindProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
 
-            app.OpenSolutionExplorer();
-            var window = app.SolutionExplorerTreeView;
+                app.OpenSolutionExplorer();
+                var window = app.SolutionExplorerTreeView;
 
-            var cutFile = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "CrossHierarchyDragDropAfterCut.py");
-            var draggedFile = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "ConsoleApplication1", "CrossHierarchyDragDropAfterCut.cs");
-            var destFolder = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste");
+                var cutFile = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "CrossHierarchyDragDropAfterCut.py");
+                var draggedFile = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "ConsoleApplication1", "CrossHierarchyDragDropAfterCut.cs");
+                var destFolder = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste");
 
-            AutomationWrapper.Select(cutFile);
-            Keyboard.ControlX();
+                AutomationWrapper.Select(cutFile);
+                Keyboard.ControlX();
 
-            Mouse.MoveTo(draggedFile.GetClickablePoint());
-            Mouse.Down(MouseButton.Left);
-            Mouse.MoveTo(destFolder.GetClickablePoint());
-            Mouse.Up(MouseButton.Left);
+                Mouse.MoveTo(draggedFile.GetClickablePoint());
+                Mouse.Down(MouseButton.Left);
+                Mouse.MoveTo(destFolder.GetClickablePoint());
+                Mouse.Up(MouseButton.Left);
 
-            AssertFileExists(window, "Solution 'DragDropCopyCutPaste' (2 projects)", "ConsoleApplication1", "CrossHierarchyDragDropAfterCut.cs");
-            AssertFileExists(window, "Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "CrossHierarchyDragDropAfterCut.cs");
+                AssertFileExists(window, "Solution 'DragDropCopyCutPaste' (2 projects)", "ConsoleApplication1", "CrossHierarchyDragDropAfterCut.cs");
+                AssertFileExists(window, "Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "CrossHierarchyDragDropAfterCut.cs");
+            }
         }
 
         /// <summary>
@@ -884,34 +912,35 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void DoubleCrossHierarchyMove() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            app.OpenAndFindProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                app.OpenAndFindProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
 
-            app.OpenSolutionExplorer();
-            var window = app.SolutionExplorerTreeView;
+                app.OpenSolutionExplorer();
+                var window = app.SolutionExplorerTreeView;
 
-            var file = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "!Source", "DoubleCrossHierarchy.py");
-            var destFolder = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "ConsoleApplication1");
+                var file = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "!Source", "DoubleCrossHierarchy.py");
+                var destFolder = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "ConsoleApplication1");
 
-            AutomationWrapper.Select(file);
-            Mouse.MoveTo(file.GetClickablePoint());
-            Mouse.Down(MouseButton.Left);
-            Mouse.MoveTo(destFolder.GetClickablePoint());
-            Mouse.Up(MouseButton.Left);
+                AutomationWrapper.Select(file);
+                Mouse.MoveTo(file.GetClickablePoint());
+                Mouse.Down(MouseButton.Left);
+                Mouse.MoveTo(destFolder.GetClickablePoint());
+                Mouse.Up(MouseButton.Left);
 
-            AssertFileExists(window, "Solution 'DragDropCopyCutPaste' (2 projects)", "ConsoleApplication1", "DoubleCrossHierarchy.py");
-            AssertFileExists(window, "Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "!Source", "DoubleCrossHierarchy.py");
+                AssertFileExists(window, "Solution 'DragDropCopyCutPaste' (2 projects)", "ConsoleApplication1", "DoubleCrossHierarchy.py");
+                AssertFileExists(window, "Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "!Source", "DoubleCrossHierarchy.py");
 
-            file = window.FindItem("Solution 'DragDropCopyCutPaste' (2 projects)", "ConsoleApplication1", "DoubleCrossHierarchy.cs");
-            destFolder = window.FindItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste");
+                file = window.FindItem("Solution 'DragDropCopyCutPaste' (2 projects)", "ConsoleApplication1", "DoubleCrossHierarchy.cs");
+                destFolder = window.FindItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste");
 
-            Mouse.MoveTo(file.GetClickablePoint());
-            Mouse.Down(MouseButton.Left);
-            Mouse.MoveTo(destFolder.GetClickablePoint());
-            Mouse.Up(MouseButton.Left);
+                Mouse.MoveTo(file.GetClickablePoint());
+                Mouse.Down(MouseButton.Left);
+                Mouse.MoveTo(destFolder.GetClickablePoint());
+                Mouse.Up(MouseButton.Left);
 
-            AssertFileExists(window, "Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "DoubleCrossHierarchy.cs");
-            AssertFileExists(window, "Solution 'DragDropCopyCutPaste' (2 projects)", "ConsoleApplication1", "DoubleCrossHierarchy.cs");
+                AssertFileExists(window, "Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "DoubleCrossHierarchy.cs");
+                AssertFileExists(window, "Solution 'DragDropCopyCutPaste' (2 projects)", "ConsoleApplication1", "DoubleCrossHierarchy.cs");
+            }
         }
 
         /// <summary>
@@ -920,28 +949,29 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void DragTwiceAndOverwrite() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            app.OpenAndFindProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                app.OpenAndFindProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
 
-            app.OpenSolutionExplorer();
-            var window = app.SolutionExplorerTreeView;
+                app.OpenSolutionExplorer();
+                var window = app.SolutionExplorerTreeView;
 
-            for (int i = 0; i < 2; i++) {
-                var file = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "ConsoleApplication1", "DragTwiceAndOverwrite.cs");
-                var destFolder = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste");
+                for (int i = 0; i < 2; i++) {
+                    var file = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "ConsoleApplication1", "DragTwiceAndOverwrite.cs");
+                    var destFolder = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste");
 
-                Mouse.MoveTo(file.GetClickablePoint());
-                Mouse.Down(MouseButton.Left);
-                Mouse.MoveTo(destFolder.GetClickablePoint());
-                Mouse.Up(MouseButton.Left);
+                    Mouse.MoveTo(file.GetClickablePoint());
+                    Mouse.Down(MouseButton.Left);
+                    Mouse.MoveTo(destFolder.GetClickablePoint());
+                    Mouse.Up(MouseButton.Left);
+                }
+
+                var dialog = new OverwriteFileDialog(app.WaitForDialog());
+                Assert.IsTrue(dialog.Text.Contains("A file with the name 'DragTwiceAndOverwrite.cs' already exists."), "wrong text");
+                dialog.Yes();
+
+                AssertFileExists(window, "Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "DragTwiceAndOverwrite.cs");
+                AssertFileDoesntExist(window, "Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "DragTwiceAndOverwrite - Copy.cs");
             }
-
-            var dialog = new OverwriteFileDialog(app.WaitForDialog());
-            Assert.IsTrue(dialog.Text.Contains("A file with the name 'DragTwiceAndOverwrite.cs' already exists."), "wrong text");
-            dialog.Yes();
-
-            AssertFileExists(window, "Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "DragTwiceAndOverwrite.cs");
-            AssertFileDoesntExist(window, "Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "DragTwiceAndOverwrite - Copy.cs");
         }
 
         /// <summary>
@@ -950,26 +980,27 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CopyFolderMissingItem() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            app.OpenAndFindProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                app.OpenAndFindProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
 
-            app.OpenSolutionExplorer();
-            var window = app.SolutionExplorerTreeView;
+                app.OpenSolutionExplorer();
+                var window = app.SolutionExplorerTreeView;
 
-            var folder = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "CopyFolderMissingItem");
-            var destFolder = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "PasteFolder");
+                var folder = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "CopyFolderMissingItem");
+                var destFolder = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "PasteFolder");
 
-            AutomationWrapper.Select(folder);
-            Keyboard.ControlC();
-            AutomationWrapper.Select(destFolder);
-            Keyboard.ControlV();
+                AutomationWrapper.Select(folder);
+                Keyboard.ControlC();
+                AutomationWrapper.Select(destFolder);
+                Keyboard.ControlV();
 
-            // make sure no dialogs pop up
-            VisualStudioApp.CheckMessageBox("The item 'Python1.py' does not exist in the project directory. It may have been moved, renamed or deleted.");
+                // make sure no dialogs pop up
+                VisualStudioApp.CheckMessageBox("The item 'Python1.py' does not exist in the project directory. It may have been moved, renamed or deleted.");
 
-            AssertFolderExists(window, "Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "CopyFolderMissingItem");
-            AssertFolderDoesntExist(window, "Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "PasteFolder", "CopyFolderMissingItem");
-            AssertFileDoesntExist(window, "Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "PasteFolder", "Python1.py");
+                AssertFolderExists(window, "Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "CopyFolderMissingItem");
+                AssertFolderDoesntExist(window, "Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "PasteFolder", "CopyFolderMissingItem");
+                AssertFileDoesntExist(window, "Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "PasteFolder", "Python1.py");
+            }
         }
 
         /// <summary>
@@ -980,21 +1011,22 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CopyPasteMissingFile() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            app.OpenAndFindProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                app.OpenAndFindProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
 
-            app.OpenSolutionExplorer();
-            var window = app.SolutionExplorerTreeView;
+                app.OpenSolutionExplorer();
+                var window = app.SolutionExplorerTreeView;
 
-            var folder = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "MissingFile.py");
-            var destFolder = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "PasteFolder");
+                var folder = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "MissingFile.py");
+                var destFolder = window.WaitForItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "PasteFolder");
 
-            AutomationWrapper.Select(folder);
-            Keyboard.ControlC();
-            AutomationWrapper.Select(destFolder);
-            Keyboard.ControlV();
+                AutomationWrapper.Select(folder);
+                Keyboard.ControlC();
+                AutomationWrapper.Select(destFolder);
+                Keyboard.ControlV();
 
-            VisualStudioApp.CheckMessageBox("The item 'MissingFile.py' does not exist in the project directory. It may have been moved, renamed or deleted.");
+                VisualStudioApp.CheckMessageBox("The item 'MissingFile.py' does not exist in the project directory. It may have been moved, renamed or deleted.");
+            }
         }
 
         /// <summary>
@@ -1003,21 +1035,22 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void MoveFolderExistingFile() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            app.OpenAndFindProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                app.OpenAndFindProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
 
-            app.OpenSolutionExplorer();
-            var window = app.SolutionExplorerTreeView;
+                app.OpenSolutionExplorer();
+                var window = app.SolutionExplorerTreeView;
 
-            var folder = window.FindItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "FolderCollision");
-            var destFolder = window.FindItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "PasteFolder");
+                var folder = window.FindItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "FolderCollision");
+                var destFolder = window.FindItem("Solution 'DragDropCopyCutPaste' (2 projects)", "DragDropCopyCutPaste", "PasteFolder");
 
-            AutomationWrapper.Select(folder);
-            Keyboard.ControlX();
-            AutomationWrapper.Select(destFolder);
-            Keyboard.ControlV();
+                AutomationWrapper.Select(folder);
+                Keyboard.ControlX();
+                AutomationWrapper.Select(destFolder);
+                Keyboard.ControlV();
 
-            VisualStudioApp.CheckMessageBox("Unable to add 'FolderCollision'. A file with that name already exists.");
+                VisualStudioApp.CheckMessageBox("Unable to add 'FolderCollision'. A file with that name already exists.");
+            }
         }
 
         private static void AssertFileExists(SolutionExplorerTree window, params string[] path) {

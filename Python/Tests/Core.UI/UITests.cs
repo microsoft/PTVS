@@ -18,6 +18,7 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Automation;
 using System.Windows.Input;
 using EnvDTE;
@@ -43,11 +44,6 @@ namespace PythonToolsUITests {
             TestData.Deploy();
         }
 
-        [TestCleanup]
-        public void MyTestCleanup() {
-            VsIdeTestHostContext.Dte.Solution.Close(false);
-        }
-
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void DeferredSaveWithDot() {
@@ -59,31 +55,29 @@ namespace PythonToolsUITests {
 
             try {
                 // now run the test
-                var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-                var newProjDialog = app.FileNewProject();
+                string fullname;
+                using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                    var newProjDialog = app.FileNewProject();
 
-                newProjDialog.FocusLanguageNode();
+                    newProjDialog.FocusLanguageNode();
 
-                var consoleApp = newProjDialog.ProjectTypes.FindItem("Python Application");
-                consoleApp.Select();
-                newProjDialog.ProjectName = "Foo.Bar";
-                newProjDialog.ClickOK();
+                    var consoleApp = newProjDialog.ProjectTypes.FindItem("Python Application");
+                    consoleApp.Select();
+                    newProjDialog.ProjectName = "Foo.Bar";
+                    newProjDialog.ClickOK();
 
-                // wait for new solution to load...
-                for (int i = 0; i < 100 && app.Dte.Solution.Projects.Count == 0; i++) {
-                    System.Threading.Thread.Sleep(1000);
+                    // wait for new solution to load...
+                    for (int i = 0; i < 100 && app.Dte.Solution.Projects.Count == 0; i++) {
+                        System.Threading.Thread.Sleep(1000);
+                    }
+
+                    var saveProjDialog = new SaveProjectDialog(app.OpenDialogWithDteExecuteCommand("File.SaveAll"));
+                    saveProjDialog.Save();
+
+                    app.WaitForDialogDismissed();
+
+                    fullname = app.Dte.Solution.FullName;
                 }
-
-                ThreadPool.QueueUserWorkItem(x => app.Dte.ExecuteCommand("File.SaveAll"));
-
-                var saveProjDialog = new SaveProjectDialog(app.WaitForDialog());
-                saveProjDialog.Save();
-
-                app.WaitForDialogDismissed();
-
-                var fullname = app.Dte.Solution.FullName;
-                app.Dte.Solution.Close(false);
-
                 Directory.Delete(Path.GetDirectoryName(fullname), true);
             } finally {
                 props.Item("SaveNewProjects").Value = prevValue;
@@ -97,359 +91,372 @@ namespace PythonToolsUITests {
             proj = proj.Replace("[ABSPATH]", TestData.GetPath(@"TestData\AbsolutePath"));
             File.WriteAllText(TestData.GetPath(@"TestData\AbsolutePath\AbsolutePath.pyproj"), proj);
 
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            var project = app.OpenAndFindProject(@"TestData\AbsolutePath.sln");
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenAndFindProject(@"TestData\AbsolutePath.sln");
 
-            app.OpenSolutionExplorer();
-            var window = app.SolutionExplorerTreeView;
+                app.OpenSolutionExplorer();
+                var window = app.SolutionExplorerTreeView;
 
-            // find Program.py, send copy & paste, verify copy of file is there
-            var programPy = window.WaitForItem("Solution 'AbsolutePath' (1 project)", "AbsolutePath", "Program.py");
-            Assert.AreNotEqual(null, programPy);
+                // find Program.py, send copy & paste, verify copy of file is there
+                var programPy = window.WaitForItem("Solution 'AbsolutePath' (1 project)", "AbsolutePath", "Program.py");
+                Assert.AreNotEqual(null, programPy);
+            }
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CopyPasteFile() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            var project = app.OpenAndFindProject(@"TestData\HelloWorld.sln");
-            
-            app.OpenSolutionExplorer();
-            var window = app.SolutionExplorerTreeView;
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenAndFindProject(@"TestData\HelloWorld.sln");
 
-            // find Program.py, send copy & paste, verify copy of file is there
-            var programPy = window.FindItem("Solution 'HelloWorld' (1 project)", "HelloWorld", "Program.py");
+                app.OpenSolutionExplorer();
+                var window = app.SolutionExplorerTreeView;
 
-            AutomationWrapper.Select(programPy);
+                // find Program.py, send copy & paste, verify copy of file is there
+                var programPy = window.FindItem("Solution 'HelloWorld' (1 project)", "HelloWorld", "Program.py");
 
-            Keyboard.ControlC();
-            Keyboard.ControlV();
+                AutomationWrapper.Select(programPy);
 
-            Assert.AreNotEqual(null, window.WaitForItem("Solution 'HelloWorld' (1 project)", "HelloWorld", "Program - Copy.py"));
+                Keyboard.ControlC();
+                Keyboard.ControlV();
 
-            AutomationWrapper.Select(programPy);
-            Keyboard.ControlC();
-            Keyboard.ControlV();
-            
-            Assert.AreNotEqual(null, window.WaitForItem("Solution 'HelloWorld' (1 project)", "HelloWorld", "Program - Copy (2).py"));
+                Assert.AreNotEqual(null, window.WaitForItem("Solution 'HelloWorld' (1 project)", "HelloWorld", "Program - Copy.py"));
+
+                AutomationWrapper.Select(programPy);
+                Keyboard.ControlC();
+                Keyboard.ControlV();
+
+                Assert.AreNotEqual(null, window.WaitForItem("Solution 'HelloWorld' (1 project)", "HelloWorld", "Program - Copy (2).py"));
+            }
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void AddNewFolder() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            var project = app.OpenAndFindProject(@"TestData\HelloWorld.sln");
-            
-            app.OpenSolutionExplorer();
-            var window = app.SolutionExplorerTreeView;
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenAndFindProject(@"TestData\HelloWorld.sln");
 
-            // find Program.py, send copy & paste, verify copy of file is there
-            var projectNode = window.FindItem("Solution 'HelloWorld' (1 project)", "HelloWorld");
-            AutomationWrapper.Select(projectNode);
+                app.OpenSolutionExplorer();
+                var window = app.SolutionExplorerTreeView;
 
-            Keyboard.PressAndRelease(Key.F10, Key.LeftCtrl, Key.LeftShift);
-            Keyboard.PressAndRelease(Key.D);
-            Keyboard.PressAndRelease(Key.Right);
-            Keyboard.PressAndRelease(Key.D);
-            Keyboard.Type("MyNewFolder");
-            Keyboard.PressAndRelease(Key.Enter);
+                // find Program.py, send copy & paste, verify copy of file is there
+                var projectNode = window.FindItem("Solution 'HelloWorld' (1 project)", "HelloWorld");
+                AutomationWrapper.Select(projectNode);
 
-            Assert.AreNotEqual(null, window.WaitForItem("Solution 'HelloWorld' (1 project)", "HelloWorld", "MyNewFolder"));
+                Keyboard.PressAndRelease(Key.F10, Key.LeftCtrl, Key.LeftShift);
+                Keyboard.PressAndRelease(Key.D);
+                Keyboard.PressAndRelease(Key.Right);
+                Keyboard.PressAndRelease(Key.D);
+                Keyboard.Type("MyNewFolder");
+                Keyboard.PressAndRelease(Key.Enter);
+
+                Assert.AreNotEqual(null, window.WaitForItem("Solution 'HelloWorld' (1 project)", "HelloWorld", "MyNewFolder"));
+            }
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void AddSearchPathRelativePath() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            var project = app.OpenAndFindProject(@"TestData\AddSearchPaths.sln");
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenAndFindProject(@"TestData\AddSearchPaths.sln");
 
-            app.OpenSolutionExplorer();
-            var window = app.SolutionExplorerTreeView;
+                app.OpenSolutionExplorer();
+                var window = app.SolutionExplorerTreeView;
 
-            // find Program.py, send copy & paste, verify copy of file is there
-            var projectNode = window.FindItem("Solution 'AddSearchPaths' (1 project)", "AddSearchPaths", SR.GetString(SR.SearchPaths));
-            AutomationWrapper.Select(projectNode);
+                // find Program.py, send copy & paste, verify copy of file is there
+                var projectNode = window.FindItem("Solution 'AddSearchPaths' (1 project)", "AddSearchPaths", SR.GetString(SR.SearchPaths));
+                AutomationWrapper.Select(projectNode);
 
-            // Need to lock inside the worker and around the SaveAll command to ensure that AddSearchPath
-            // has a chance to complete before saving the project. Otherwise, the search paths will never
-            // show up.
-            ThreadPool.QueueUserWorkItem(x => { lock(app) app.Dte.ExecuteCommand("Project.AddFolderToSearchPath"); });
+                // Using a task to ensure exceptions are raised on the main thread
+                // when we wait for it to complete.
+                var task = Task.Factory.StartNew(() => app.Dte.ExecuteCommand("Project.AddFolderToSearchPath"));
 
-            var dialog = new SelectFolderDialog(app.WaitForDialog());
-            dialog.FolderName = TestData.GetPath(@"TestData\Outlining");
-            dialog.SelectFolder();
+                var dialog = new SelectFolderDialog(app.WaitForDialog());
+                dialog.FolderName = TestData.GetPath(@"TestData\Outlining");
+                dialog.SelectFolder();
 
-            lock (app) app.Dte.ExecuteCommand("File.SaveAll");
+                task.Wait();
+                app.Dte.ExecuteCommand("File.SaveAll");
 
-            var text = File.ReadAllText(TestData.GetPath(@"TestData\AddSearchPaths\AddSearchPaths.pyproj"));
-            string actual = Regex.Match(text, @"<SearchPath>.*</SearchPath>", RegexOptions.Singleline).Value;
-            Assert.AreEqual("<SearchPath>..\\Outlining</SearchPath>", actual);
+                var text = File.ReadAllText(TestData.GetPath(@"TestData\AddSearchPaths\AddSearchPaths.pyproj"));
+                string actual = Regex.Match(text, @"<SearchPath>.*</SearchPath>", RegexOptions.Singleline).Value;
+                Assert.AreEqual("<SearchPath>..\\Outlining</SearchPath>", actual);
+            }
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void LoadSearchPath() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            var project = app.OpenAndFindProject(@"TestData\LoadSearchPaths.sln");
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenAndFindProject(@"TestData\LoadSearchPaths.sln");
 
-            app.OpenSolutionExplorer();
-            var window = app.SolutionExplorerTreeView;
+                app.OpenSolutionExplorer();
+                var window = app.SolutionExplorerTreeView;
 
-            // Entered in file as ..\AddSearchPaths\
-            var path1 = window.FindItem("Solution 'LoadSearchPaths' (1 project)", "LoadSearchPaths", SR.GetString(SR.SearchPaths), "..\\AddSearchPaths");
-            Assert.IsNotNull(path1, "Could not find ..\\AddSearchPaths");
+                // Entered in file as ..\AddSearchPaths\
+                var path1 = window.FindItem("Solution 'LoadSearchPaths' (1 project)", "LoadSearchPaths", SR.GetString(SR.SearchPaths), "..\\AddSearchPaths");
+                Assert.IsNotNull(path1, "Could not find ..\\AddSearchPaths");
 
-            // Entered in file as ..\HelloWorld
-            var path2 = window.FindItem("Solution 'LoadSearchPaths' (1 project)", "LoadSearchPaths", SR.GetString(SR.SearchPaths), "..\\HelloWorld");
-            Assert.IsNotNull(path2, "Could not find ..\\HelloWorld");
+                // Entered in file as ..\HelloWorld
+                var path2 = window.FindItem("Solution 'LoadSearchPaths' (1 project)", "LoadSearchPaths", SR.GetString(SR.SearchPaths), "..\\HelloWorld");
+                Assert.IsNotNull(path2, "Could not find ..\\HelloWorld");
 
-            // Entered in file as ..\LoadSearchPaths\NotHere\..\ - resolves to .\
-            var path3 = window.FindItem("Solution 'LoadSearchPaths' (1 project)", "LoadSearchPaths", SR.GetString(SR.SearchPaths), ".");
-            Assert.IsNotNull(path3, "Could not find .");
-            
-            // Entered in file as .\NotHere\
-            var path4 = window.FindItem("Solution 'LoadSearchPaths' (1 project)", "LoadSearchPaths", SR.GetString(SR.SearchPaths), "NotHere");
-            Assert.IsNotNull(path4, "Could not find NotHere");
+                // Entered in file as ..\LoadSearchPaths\NotHere\..\ - resolves to .\
+                var path3 = window.FindItem("Solution 'LoadSearchPaths' (1 project)", "LoadSearchPaths", SR.GetString(SR.SearchPaths), ".");
+                Assert.IsNotNull(path3, "Could not find .");
 
-            // Entered in file as .\NotHere\
-            AutomationWrapper.Select(path4);
-            Keyboard.Type(Key.Delete);  // should not prompt, https://pytools.codeplex.com/workitem/1233
-            Assert.IsNull(window.WaitForItemRemoved("Solution 'LoadSearchPaths' (1 project)", "LoadSearchPaths", SR.GetString(SR.SearchPaths), "NotHere"));
+                // Entered in file as .\NotHere\
+                var path4 = window.FindItem("Solution 'LoadSearchPaths' (1 project)", "LoadSearchPaths", SR.GetString(SR.SearchPaths), "NotHere");
+                Assert.IsNotNull(path4, "Could not find NotHere");
+
+                // Entered in file as .\NotHere\
+                AutomationWrapper.Select(path4);
+                Keyboard.Type(Key.Delete);  // should not prompt, https://pytools.codeplex.com/workitem/1233
+                Assert.IsNull(window.WaitForItemRemoved("Solution 'LoadSearchPaths' (1 project)", "LoadSearchPaths", SR.GetString(SR.SearchPaths), "NotHere"));
+            }
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void AddNewFolderNested() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            var project = app.OpenAndFindProject(@"TestData\HelloWorld.sln");
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenAndFindProject(@"TestData\HelloWorld.sln");
 
-            app.OpenSolutionExplorer();
-            var window = app.SolutionExplorerTreeView;
+                app.OpenSolutionExplorer();
+                var window = app.SolutionExplorerTreeView;
 
-            // find Program.py, send copy & paste, verify copy of file is there
-            var projectNode = window.FindItem("Solution 'HelloWorld' (1 project)", "HelloWorld");
-            AutomationWrapper.Select(projectNode);
+                // find Program.py, send copy & paste, verify copy of file is there
+                var projectNode = window.FindItem("Solution 'HelloWorld' (1 project)", "HelloWorld");
+                AutomationWrapper.Select(projectNode);
 
-            Keyboard.PressAndRelease(Key.F10, Key.LeftCtrl, Key.LeftShift);
-            Keyboard.PressAndRelease(Key.D);
-            Keyboard.PressAndRelease(Key.Right);
-            Keyboard.PressAndRelease(Key.D);
-            Keyboard.Type("FolderX");
-            Keyboard.PressAndRelease(Key.Enter);
+                Keyboard.PressAndRelease(Key.F10, Key.LeftCtrl, Key.LeftShift);
+                Keyboard.PressAndRelease(Key.D);
+                Keyboard.PressAndRelease(Key.Right);
+                Keyboard.PressAndRelease(Key.D);
+                Keyboard.Type("FolderX");
+                Keyboard.PressAndRelease(Key.Enter);
 
-            Assert.AreNotEqual(null, window.WaitForItem("Solution 'HelloWorld' (1 project)", "HelloWorld", "FolderX"));
+                Assert.AreNotEqual(null, window.WaitForItem("Solution 'HelloWorld' (1 project)", "HelloWorld", "FolderX"));
 
-            var folderNode = window.FindItem("Solution 'HelloWorld' (1 project)", "HelloWorld", "FolderX");
-            AutomationWrapper.Select(folderNode);
+                var folderNode = window.FindItem("Solution 'HelloWorld' (1 project)", "HelloWorld", "FolderX");
+                AutomationWrapper.Select(folderNode);
 
-            Keyboard.PressAndRelease(Key.F10, Key.LeftCtrl, Key.LeftShift);
-            Keyboard.PressAndRelease(Key.D);
-            Keyboard.PressAndRelease(Key.Right);
-            Keyboard.PressAndRelease(Key.D);
-            Keyboard.Type("FolderY");
-            Keyboard.PressAndRelease(Key.Enter);
+                Keyboard.PressAndRelease(Key.F10, Key.LeftCtrl, Key.LeftShift);
+                Keyboard.PressAndRelease(Key.D);
+                Keyboard.PressAndRelease(Key.Right);
+                Keyboard.PressAndRelease(Key.D);
+                Keyboard.Type("FolderY");
+                Keyboard.PressAndRelease(Key.Enter);
 
-            Assert.AreNotEqual(null, window.WaitForItem("Solution 'HelloWorld' (1 project)", "HelloWorld", "FolderX", "FolderY"));
-            var innerFolderNode = window.FindItem("Solution 'HelloWorld' (1 project)", "HelloWorld", "FolderX", "FolderY");
-            AutomationWrapper.Select(innerFolderNode);
+                Assert.AreNotEqual(null, window.WaitForItem("Solution 'HelloWorld' (1 project)", "HelloWorld", "FolderX", "FolderY"));
+                var innerFolderNode = window.FindItem("Solution 'HelloWorld' (1 project)", "HelloWorld", "FolderX", "FolderY");
+                AutomationWrapper.Select(innerFolderNode);
 
-            var newItem = project.ProjectItems.Item("FolderX").Collection.Item("FolderY").Collection.AddFromFile(
-                TestData.GetPath(@"TestData\DebuggerProject\BreakpointTest.py")
-            );
+                var newItem = project.ProjectItems.Item("FolderX").Collection.Item("FolderY").Collection.AddFromFile(
+                    TestData.GetPath(@"TestData\DebuggerProject\BreakpointTest.py")
+                );
 
-            Assert.AreNotEqual(null, window.WaitForItem("Solution 'HelloWorld' (1 project)", "HelloWorld", "FolderX", "FolderY", "BreakpointTest.py"));
+                Assert.AreNotEqual(null, window.WaitForItem("Solution 'HelloWorld' (1 project)", "HelloWorld", "FolderX", "FolderY", "BreakpointTest.py"));
+            }
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void RenameProjectToExisting() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            var project = app.OpenAndFindProject(@"TestData\RenameProjectTestUI.sln");
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenAndFindProject(@"TestData\RenameProjectTestUI.sln");
 
-            app.OpenSolutionExplorer();
-            var window = app.SolutionExplorerTreeView;
+                app.OpenSolutionExplorer();
+                var window = app.SolutionExplorerTreeView;
 
-            // find Program.py, send copy & paste, verify copy of file is there
-            var projectNode = window.FindItem("Solution 'RenameProjectTestUI' (1 project)", "HelloWorld");
-            
-            // rename once, cancel renaming to existing file....
-            AutomationWrapper.Select(projectNode);
-            Keyboard.PressAndRelease(Key.F2);
-            System.Threading.Thread.Sleep(100);
+                // find Program.py, send copy & paste, verify copy of file is there
+                var projectNode = window.FindItem("Solution 'RenameProjectTestUI' (1 project)", "HelloWorld");
 
-            Keyboard.Type("HelloWorldExisting");
-            System.Threading.Thread.Sleep(100);
-            Keyboard.PressAndRelease(Key.Enter);
+                // rename once, cancel renaming to existing file....
+                AutomationWrapper.Select(projectNode);
+                Keyboard.PressAndRelease(Key.F2);
+                System.Threading.Thread.Sleep(100);
 
-            IntPtr dialog = app.WaitForDialog();
+                Keyboard.Type("HelloWorldExisting");
+                System.Threading.Thread.Sleep(100);
+                Keyboard.PressAndRelease(Key.Enter);
 
-            VisualStudioApp.CheckMessageBox("HelloWorldExisting.pyproj", "overwrite");
+                IntPtr dialog = app.WaitForDialog();
 
-            // rename again, don't cancel...
-            AutomationWrapper.Select(projectNode);
-            Keyboard.PressAndRelease(Key.F2);
-            System.Threading.Thread.Sleep(100);
+                VisualStudioApp.CheckMessageBox("HelloWorldExisting.pyproj", "overwrite");
 
-            Keyboard.Type("HelloWorldExisting");
-            System.Threading.Thread.Sleep(100);
-            Keyboard.PressAndRelease(Key.Enter);
+                // rename again, don't cancel...
+                AutomationWrapper.Select(projectNode);
+                Keyboard.PressAndRelease(Key.F2);
+                System.Threading.Thread.Sleep(100);
 
-            dialog = app.WaitForDialog();
+                Keyboard.Type("HelloWorldExisting");
+                System.Threading.Thread.Sleep(100);
+                Keyboard.PressAndRelease(Key.Enter);
 
-            VisualStudioApp.CheckMessageBox(MessageBoxButton.Yes, "HelloWorldExisting.pyproj", "overwrite");
+                dialog = app.WaitForDialog();
 
-            Assert.AreNotEqual(null, window.WaitForItem("Solution 'RenameProjectTestUI' (1 project)", "HelloWorldExisting"));
+                VisualStudioApp.CheckMessageBox(MessageBoxButton.Yes, "HelloWorldExisting.pyproj", "overwrite");
+
+                Assert.AreNotEqual(null, window.WaitForItem("Solution 'RenameProjectTestUI' (1 project)", "HelloWorldExisting"));
+            }
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void RenameItemsTest() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            var project = app.OpenAndFindProject(@"TestData\RenameItemsTestUI.sln");
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenAndFindProject(@"TestData\RenameItemsTestUI.sln");
 
-            app.OpenSolutionExplorer();
-            var window = app.SolutionExplorerTreeView;
+                app.OpenSolutionExplorer();
+                var window = app.SolutionExplorerTreeView;
 
-            // find Program.py, send copy & paste, verify copy of file is there
-            var projectNode = window.FindItem("Solution 'RenameItemsTestUI' (1 project)", "HelloWorld", "Program.py");
+                // find Program.py, send copy & paste, verify copy of file is there
+                var projectNode = window.FindItem("Solution 'RenameItemsTestUI' (1 project)", "HelloWorld", "Program.py");
 
-            // rename once, cancel renaming to existing file....
-            AutomationWrapper.Select(projectNode);
-            Keyboard.PressAndRelease(Key.F2);
-            System.Threading.Thread.Sleep(100);
+                // rename once, cancel renaming to existing file....
+                AutomationWrapper.Select(projectNode);
+                Keyboard.PressAndRelease(Key.F2);
+                System.Threading.Thread.Sleep(100);
 
-            Keyboard.Type("NewName.txt");
-            System.Threading.Thread.Sleep(100);
-            Keyboard.PressAndRelease(Key.Enter);
+                Keyboard.Type("NewName.txt");
+                System.Threading.Thread.Sleep(100);
+                Keyboard.PressAndRelease(Key.Enter);
 
-            IntPtr dialog = app.WaitForDialog();
+                IntPtr dialog = app.WaitForDialog();
 
-            VisualStudioApp.CheckMessageBox(MessageBoxButton.Cancel, "file name extension");
+                VisualStudioApp.CheckMessageBox(MessageBoxButton.Cancel, "file name extension");
 
-            // rename again, don't cancel...
-            AutomationWrapper.Select(projectNode);
-            Keyboard.PressAndRelease(Key.F2);
-            System.Threading.Thread.Sleep(100);
+                // rename again, don't cancel...
+                AutomationWrapper.Select(projectNode);
+                Keyboard.PressAndRelease(Key.F2);
+                System.Threading.Thread.Sleep(100);
 
-            Keyboard.Type("NewName.txt");
-            System.Threading.Thread.Sleep(100);
-            Keyboard.PressAndRelease(Key.Enter);
+                Keyboard.Type("NewName.txt");
+                System.Threading.Thread.Sleep(100);
+                Keyboard.PressAndRelease(Key.Enter);
 
-            dialog = app.WaitForDialog();
+                dialog = app.WaitForDialog();
 
-            VisualStudioApp.CheckMessageBox(MessageBoxButton.Yes, "file name extension");
+                VisualStudioApp.CheckMessageBox(MessageBoxButton.Yes, "file name extension");
 
-            Assert.AreNotEqual(null, window.WaitForItem("Solution 'RenameItemsTestUI' (1 project)", "HelloWorld", "NewName.txt"));
+                Assert.AreNotEqual(null, window.WaitForItem("Solution 'RenameItemsTestUI' (1 project)", "HelloWorld", "NewName.txt"));
+            }
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CrossProjectCopy() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            app.OpenAndFindProject(@"TestData\HelloWorld2.sln", expectedProjects: 2);
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                app.OpenAndFindProject(@"TestData\HelloWorld2.sln", expectedProjects: 2);
 
-            app.OpenSolutionExplorer();
-            var window = app.SolutionExplorerTreeView;
+                app.OpenSolutionExplorer();
+                var window = app.SolutionExplorerTreeView;
 
-            var folderNode = window.FindItem("Solution 'HelloWorld2' (2 projects)", "HelloWorld2", "TestFolder3");
-            AutomationWrapper.Select(folderNode);
-            
-            Keyboard.ControlC();
+                var folderNode = window.FindItem("Solution 'HelloWorld2' (2 projects)", "HelloWorld2", "TestFolder3");
+                AutomationWrapper.Select(folderNode);
 
-            var projectNode = window.FindItem("Solution 'HelloWorld2' (2 projects)", "HelloWorld");
+                Keyboard.ControlC();
 
-            AutomationWrapper.Select(projectNode);
-            Keyboard.ControlV();
+                var projectNode = window.FindItem("Solution 'HelloWorld2' (2 projects)", "HelloWorld");
 
-            Assert.AreNotEqual(null, window.WaitForItem("Solution 'HelloWorld2' (2 projects)", "HelloWorld", "TestFolder3"));
+                AutomationWrapper.Select(projectNode);
+                Keyboard.ControlV();
+
+                Assert.AreNotEqual(null, window.WaitForItem("Solution 'HelloWorld2' (2 projects)", "HelloWorld", "TestFolder3"));
+            }
         }
-        
+
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CrossProjectCutPaste() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            app.OpenAndFindProject(@"TestData\HelloWorld2.sln", expectedProjects: 2);
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                app.OpenAndFindProject(@"TestData\HelloWorld2.sln", expectedProjects: 2);
 
-            app.OpenSolutionExplorer();
-            var window = app.SolutionExplorerTreeView;
+                app.OpenSolutionExplorer();
+                var window = app.SolutionExplorerTreeView;
 
-            var folderNode = window.FindItem("Solution 'HelloWorld2' (2 projects)", "HelloWorld2", "TestFolder2");
-            AutomationWrapper.Select(folderNode);
+                var folderNode = window.FindItem("Solution 'HelloWorld2' (2 projects)", "HelloWorld2", "TestFolder2");
+                AutomationWrapper.Select(folderNode);
 
-            Keyboard.ControlX();
+                Keyboard.ControlX();
 
-            var projectNode = window.FindItem("Solution 'HelloWorld2' (2 projects)", "HelloWorld");
+                var projectNode = window.FindItem("Solution 'HelloWorld2' (2 projects)", "HelloWorld");
 
-            AutomationWrapper.Select(projectNode);
-            Keyboard.ControlV();
+                AutomationWrapper.Select(projectNode);
+                Keyboard.ControlV();
 
-            Assert.AreNotEqual(null, window.WaitForItem("Solution 'HelloWorld2' (2 projects)", "HelloWorld", "TestFolder2"));
-            Assert.AreEqual(null, window.WaitForItemRemoved("Solution 'HelloWorld2' (2 projects)", "HelloWorld2", "TestFolder2"));
+                Assert.AreNotEqual(null, window.WaitForItem("Solution 'HelloWorld2' (2 projects)", "HelloWorld", "TestFolder2"));
+                Assert.AreEqual(null, window.WaitForItemRemoved("Solution 'HelloWorld2' (2 projects)", "HelloWorld2", "TestFolder2"));
+            }
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CutPaste() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            app.OpenAndFindProject(@"TestData\HelloWorld2.sln", expectedProjects: 2);
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                app.OpenAndFindProject(@"TestData\HelloWorld2.sln", expectedProjects: 2);
 
-            app.OpenSolutionExplorer();
-            var window = app.SolutionExplorerTreeView;
+                app.OpenSolutionExplorer();
+                var window = app.SolutionExplorerTreeView;
 
-            var subItem = window.FindItem("Solution 'HelloWorld2' (2 projects)", "HelloWorld2", "TestFolder", "SubItem.py");
-            AutomationWrapper.Select(subItem);
+                var subItem = window.FindItem("Solution 'HelloWorld2' (2 projects)", "HelloWorld2", "TestFolder", "SubItem.py");
+                AutomationWrapper.Select(subItem);
 
-            Keyboard.ControlX();
+                Keyboard.ControlX();
 
-            var projectNode = window.FindItem("Solution 'HelloWorld2' (2 projects)", "HelloWorld2");
+                var projectNode = window.FindItem("Solution 'HelloWorld2' (2 projects)", "HelloWorld2");
 
-            AutomationWrapper.Select(projectNode);
-            Keyboard.ControlV();
+                AutomationWrapper.Select(projectNode);
+                Keyboard.ControlV();
 
-            Assert.AreNotEqual(null, window.WaitForItem("Solution 'HelloWorld2' (2 projects)", "HelloWorld2", "SubItem.py"));
-            Assert.AreEqual(null, window.WaitForItemRemoved("Solution 'HelloWorld2' (2 projects)", "HelloWorld2", "TestFolder", "SubItem.py"));
+                Assert.AreNotEqual(null, window.WaitForItem("Solution 'HelloWorld2' (2 projects)", "HelloWorld2", "SubItem.py"));
+                Assert.AreEqual(null, window.WaitForItemRemoved("Solution 'HelloWorld2' (2 projects)", "HelloWorld2", "TestFolder", "SubItem.py"));
+            }
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CopyFolderOnToSelf() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            app.OpenAndFindProject(@"TestData\HelloWorld2.sln", expectedProjects: 2);
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                app.OpenAndFindProject(@"TestData\HelloWorld2.sln", expectedProjects: 2);
 
-            app.OpenSolutionExplorer();
-            var window = app.SolutionExplorerTreeView;
+                app.OpenSolutionExplorer();
+                var window = app.SolutionExplorerTreeView;
 
-            var folder = window.FindItem("Solution 'HelloWorld2' (2 projects)", "HelloWorld2", "TestFolder");
-            AutomationWrapper.Select(folder);
+                var folder = window.FindItem("Solution 'HelloWorld2' (2 projects)", "HelloWorld2", "TestFolder");
+                AutomationWrapper.Select(folder);
 
-            Keyboard.ControlC();
+                Keyboard.ControlC();
 
-            AutomationWrapper.Select(folder);
-            Keyboard.ControlV();
+                AutomationWrapper.Select(folder);
+                Keyboard.ControlV();
 
-            Assert.AreNotEqual(null, window.WaitForItem("Solution 'HelloWorld2' (2 projects)", "HelloWorld2", "TestFolder - Copy"));
+                Assert.AreNotEqual(null, window.WaitForItem("Solution 'HelloWorld2' (2 projects)", "HelloWorld2", "TestFolder - Copy"));
+            }
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void DragDropTest() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            app.OpenAndFindProject(@"TestData\DragDropTest.sln");
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                app.OpenAndFindProject(@"TestData\DragDropTest.sln");
 
-            app.OpenSolutionExplorer();
-            var window = app.SolutionExplorerTreeView;
+                app.OpenSolutionExplorer();
+                var window = app.SolutionExplorerTreeView;
 
-            var folder = window.FindItem("Solution 'DragDropTest' (1 project)", "DragDropTest", "TestFolder", "SubItem.py");
-            var point = folder.GetClickablePoint();
-            Mouse.MoveTo(point);
-            Mouse.Down(MouseButton.Left);
+                var folder = window.FindItem("Solution 'DragDropTest' (1 project)", "DragDropTest", "TestFolder", "SubItem.py");
+                var point = folder.GetClickablePoint();
+                Mouse.MoveTo(point);
+                Mouse.Down(MouseButton.Left);
 
-            var project = window.FindItem("Solution 'DragDropTest' (1 project)", "DragDropTest");
-            point = project.GetClickablePoint();
-            Mouse.MoveTo(point);
-            Mouse.Up(MouseButton.Left);
+                var project = window.FindItem("Solution 'DragDropTest' (1 project)", "DragDropTest");
+                point = project.GetClickablePoint();
+                Mouse.MoveTo(point);
+                Mouse.Up(MouseButton.Left);
 
-            Assert.AreNotEqual(null, window.WaitForItem("Solution 'DragDropTest' (1 project)", "DragDropTest", "SubItem.py"));
+                Assert.AreNotEqual(null, window.WaitForItem("Solution 'DragDropTest' (1 project)", "DragDropTest", "SubItem.py"));
+            }
         }
 
         /// <summary>
@@ -458,24 +465,25 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void DragDropFileToFileTest() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            app.OpenAndFindProject(@"TestData\DragDropTest.sln");
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                app.OpenAndFindProject(@"TestData\DragDropTest.sln");
 
-            app.OpenSolutionExplorer();
-            var window = app.SolutionExplorerTreeView;
+                app.OpenSolutionExplorer();
+                var window = app.SolutionExplorerTreeView;
 
-            var folder = window.FindItem("Solution 'DragDropTest' (1 project)", "DragDropTest", "TestFolder", "SubItem2.py");
-            var point = folder.GetClickablePoint();
-            Mouse.MoveTo(point);
-            Mouse.Down(MouseButton.Left);
+                var folder = window.FindItem("Solution 'DragDropTest' (1 project)", "DragDropTest", "TestFolder", "SubItem2.py");
+                var point = folder.GetClickablePoint();
+                Mouse.MoveTo(point);
+                Mouse.Down(MouseButton.Left);
 
-            var project = window.FindItem("Solution 'DragDropTest' (1 project)", "DragDropTest", "TestFolder", "SubItem3.py");
-            point = project.GetClickablePoint();
-            Mouse.MoveTo(point);
-            Mouse.Up(MouseButton.Left);
+                var project = window.FindItem("Solution 'DragDropTest' (1 project)", "DragDropTest", "TestFolder", "SubItem3.py");
+                point = project.GetClickablePoint();
+                Mouse.MoveTo(point);
+                Mouse.Up(MouseButton.Left);
 
-            Assert.AreNotEqual(null, window.WaitForItem("Solution 'DragDropTest' (1 project)", "DragDropTest", "TestFolder", "SubItem2.py"));
-            Assert.AreNotEqual(null, window.WaitForItem("Solution 'DragDropTest' (1 project)", "DragDropTest", "TestFolder", "SubItem3.py"));
+                Assert.AreNotEqual(null, window.WaitForItem("Solution 'DragDropTest' (1 project)", "DragDropTest", "TestFolder", "SubItem2.py"));
+                Assert.AreNotEqual(null, window.WaitForItem("Solution 'DragDropTest' (1 project)", "DragDropTest", "TestFolder", "SubItem3.py"));
+            }
         }
 
         /// <summary>
@@ -484,128 +492,133 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void DragDropFileToContainingFolderTest() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            app.OpenAndFindProject(@"TestData\DragDropTest.sln");
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                app.OpenAndFindProject(@"TestData\DragDropTest.sln");
 
-            app.OpenSolutionExplorer();
-            var window = app.SolutionExplorerTreeView;
+                app.OpenSolutionExplorer();
+                var window = app.SolutionExplorerTreeView;
 
-            var folder = window.FindItem("Solution 'DragDropTest' (1 project)", "DragDropTest", "TestFolder", "SubItem2.py");
-            var point = folder.GetClickablePoint();
-            Mouse.MoveTo(point);
-            Mouse.Down(MouseButton.Left);
+                var folder = window.FindItem("Solution 'DragDropTest' (1 project)", "DragDropTest", "TestFolder", "SubItem2.py");
+                var point = folder.GetClickablePoint();
+                Mouse.MoveTo(point);
+                Mouse.Down(MouseButton.Left);
 
-            var project = window.FindItem("Solution 'DragDropTest' (1 project)", "DragDropTest", "TestFolder");
-            point = project.GetClickablePoint();
-            Mouse.MoveTo(point);
-            Mouse.Up(MouseButton.Left);
+                var project = window.FindItem("Solution 'DragDropTest' (1 project)", "DragDropTest", "TestFolder");
+                point = project.GetClickablePoint();
+                Mouse.MoveTo(point);
+                Mouse.Up(MouseButton.Left);
 
-            Assert.AreNotEqual(null, window.WaitForItem("Solution 'DragDropTest' (1 project)", "DragDropTest", "TestFolder", "SubItem2.py"));
+                Assert.AreNotEqual(null, window.WaitForItem("Solution 'DragDropTest' (1 project)", "DragDropTest", "TestFolder", "SubItem2.py"));
+            }
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void DragLeaveTest() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            app.OpenAndFindProject(@"TestData\DragDropTest.sln");
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                app.OpenAndFindProject(@"TestData\DragDropTest.sln");
 
-            app.OpenSolutionExplorer();
-            var window = app.SolutionExplorerTreeView;
+                app.OpenSolutionExplorer();
+                var window = app.SolutionExplorerTreeView;
 
-            var item = window.FindItem("Solution 'DragDropTest' (1 project)", "DragDropTest", "TestFolder2", "SubItem.py");
-            var project = window.FindItem("Solution 'DragDropTest' (1 project)", "DragDropTest");
+                var item = window.FindItem("Solution 'DragDropTest' (1 project)", "DragDropTest", "TestFolder2", "SubItem.py");
+                var project = window.FindItem("Solution 'DragDropTest' (1 project)", "DragDropTest");
 
-            // click on SubItem.py
-            var point = item.GetClickablePoint();
-            Mouse.MoveTo(point);
-            Mouse.Down(MouseButton.Left);
+                // click on SubItem.py
+                var point = item.GetClickablePoint();
+                Mouse.MoveTo(point);
+                Mouse.Down(MouseButton.Left);
 
-            // move to project and hover
-            var projectPoint = project.GetClickablePoint();
-            Mouse.MoveTo(projectPoint);
-            System.Threading.Thread.Sleep(500);
+                // move to project and hover
+                var projectPoint = project.GetClickablePoint();
+                Mouse.MoveTo(projectPoint);
+                System.Threading.Thread.Sleep(500);
 
-            // move back and release
-            Mouse.MoveTo(point);
-            Mouse.Up(MouseButton.Left);
+                // move back and release
+                Mouse.MoveTo(point);
+                Mouse.Up(MouseButton.Left);
 
-            Assert.AreNotEqual(null, window.FindItem("Solution 'DragDropTest' (1 project)", "DragDropTest", "TestFolder2", "SubItem.py"));
+                Assert.AreNotEqual(null, window.FindItem("Solution 'DragDropTest' (1 project)", "DragDropTest", "TestFolder2", "SubItem.py"));
+            }
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void DragLeaveFolderTest() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            app.OpenAndFindProject(@"TestData\DragDropTest.sln");
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                app.OpenAndFindProject(@"TestData\DragDropTest.sln");
 
-            app.OpenSolutionExplorer();
-            var window = app.SolutionExplorerTreeView;
+                app.OpenSolutionExplorer();
+                var window = app.SolutionExplorerTreeView;
 
-            var folder = window.FindItem("Solution 'DragDropTest' (1 project)", "DragDropTest", "TestFolder2", "SubFolder");
-            var project = window.FindItem("Solution 'DragDropTest' (1 project)", "DragDropTest");
+                var folder = window.FindItem("Solution 'DragDropTest' (1 project)", "DragDropTest", "TestFolder2", "SubFolder");
+                var project = window.FindItem("Solution 'DragDropTest' (1 project)", "DragDropTest");
 
-            // click on SubItem.py
-            var point = folder.GetClickablePoint();
-            Mouse.MoveTo(point);
-            Mouse.Down(MouseButton.Left);
+                // click on SubItem.py
+                var point = folder.GetClickablePoint();
+                Mouse.MoveTo(point);
+                Mouse.Down(MouseButton.Left);
 
-            // move to project and hover
-            var projectPoint = project.GetClickablePoint();
-            Mouse.MoveTo(projectPoint);
-            System.Threading.Thread.Sleep(500);
+                // move to project and hover
+                var projectPoint = project.GetClickablePoint();
+                Mouse.MoveTo(projectPoint);
+                System.Threading.Thread.Sleep(500);
 
-            // move back and release
-            Mouse.MoveTo(point);
-            Mouse.Up(MouseButton.Left);
+                // move back and release
+                Mouse.MoveTo(point);
+                Mouse.Up(MouseButton.Left);
 
-            Assert.AreNotEqual(null, window.FindItem("Solution 'DragDropTest' (1 project)", "DragDropTest", "TestFolder2", "SubFolder"));
+                Assert.AreNotEqual(null, window.FindItem("Solution 'DragDropTest' (1 project)", "DragDropTest", "TestFolder2", "SubFolder"));
+            }
         }
-        
+
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CopyFolderInToSelf() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            app.OpenAndFindProject(@"TestData\HelloWorld2.sln", expectedProjects: 2);
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                app.OpenAndFindProject(@"TestData\HelloWorld2.sln", expectedProjects: 2);
 
-            app.OpenSolutionExplorer();
-            var window = app.SolutionExplorerTreeView;
+                app.OpenSolutionExplorer();
+                var window = app.SolutionExplorerTreeView;
 
-            var folder = window.FindItem("Solution 'HelloWorld2' (2 projects)", "HelloWorld2", "TestFolder");
-            AutomationWrapper.Select(folder);
-            Keyboard.ControlC();
+                var folder = window.FindItem("Solution 'HelloWorld2' (2 projects)", "HelloWorld2", "TestFolder");
+                AutomationWrapper.Select(folder);
+                Keyboard.ControlC();
 
-            var subItem = window.FindItem("Solution 'HelloWorld2' (2 projects)", "HelloWorld2", "TestFolder", "SubItem.py");
-            AutomationWrapper.Select(subItem);
-            Keyboard.ControlV();
-            VisualStudioApp.CheckMessageBox("Cannot copy 'TestFolder'. The destination folder is a subfolder of the source folder.");
+                var subItem = window.FindItem("Solution 'HelloWorld2' (2 projects)", "HelloWorld2", "TestFolder", "SubItem.py");
+                AutomationWrapper.Select(subItem);
+                Keyboard.ControlV();
+                VisualStudioApp.CheckMessageBox("Cannot copy 'TestFolder'. The destination folder is a subfolder of the source folder.");
+            }
         }
-        
+
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void MultiSelectCopyAndPaste() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            app.OpenAndFindProject(@"TestData\DebuggerProject.sln");
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                app.OpenAndFindProject(@"TestData\DebuggerProject.sln");
 
-            app.OpenSolutionExplorer();
-            var window = app.SolutionExplorerTreeView;
+                app.OpenSolutionExplorer();
+                var window = app.SolutionExplorerTreeView;
 
-            var folderNode = window.FindItem("Solution 'DebuggerProject' (1 project)", "DebuggerProject", "BreakAllTest.py");
-            AutomationWrapper.Select(folderNode);
+                var folderNode = window.FindItem("Solution 'DebuggerProject' (1 project)", "DebuggerProject", "BreakAllTest.py");
+                AutomationWrapper.Select(folderNode);
 
-            Keyboard.Press(Key.LeftShift);
-            Keyboard.PressAndRelease(Key.Down);
-            Keyboard.PressAndRelease(Key.Down);
-            Keyboard.Release(Key.LeftShift);
-            Keyboard.ControlC();
+                Keyboard.Press(Key.LeftShift);
+                Keyboard.PressAndRelease(Key.Down);
+                Keyboard.PressAndRelease(Key.Down);
+                Keyboard.Release(Key.LeftShift);
+                Keyboard.ControlC();
 
-            var projectNode = window.FindItem("Solution 'DebuggerProject' (1 project)", "DebuggerProject");
+                var projectNode = window.FindItem("Solution 'DebuggerProject' (1 project)", "DebuggerProject");
 
-            AutomationWrapper.Select(projectNode);
-            Keyboard.ControlV();
+                AutomationWrapper.Select(projectNode);
+                Keyboard.ControlV();
 
-            Assert.AreNotEqual(null, window.WaitForItem("Solution 'DebuggerProject' (1 project)", "DebuggerProject", "BreakAllTest - Copy.py"));
-            Assert.AreNotEqual(null, window.WaitForItem("Solution 'DebuggerProject' (1 project)", "DebuggerProject", "BreakpointTest - Copy.py"));
-            Assert.AreNotEqual(null, window.WaitForItem("Solution 'DebuggerProject' (1 project)", "DebuggerProject", "BreakpointTest2 - Copy.py"));
+                Assert.AreNotEqual(null, window.WaitForItem("Solution 'DebuggerProject' (1 project)", "DebuggerProject", "BreakAllTest - Copy.py"));
+                Assert.AreNotEqual(null, window.WaitForItem("Solution 'DebuggerProject' (1 project)", "DebuggerProject", "BreakpointTest - Copy.py"));
+                Assert.AreNotEqual(null, window.WaitForItem("Solution 'DebuggerProject' (1 project)", "DebuggerProject", "BreakpointTest2 - Copy.py"));
+            }
         }
 
         /// <summary>
@@ -614,25 +627,26 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void DjangoMultiSelectContextMenu() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            app.OpenAndFindProject(@"TestData\DjangoApplication.sln");
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                app.OpenAndFindProject(@"TestData\DjangoApplication.sln");
 
-            app.OpenSolutionExplorer();
-            var window = app.SolutionExplorerTreeView;
+                app.OpenSolutionExplorer();
+                var window = app.SolutionExplorerTreeView;
 
-            var manageNode = window.FindItem("Solution 'DjangoApplication' (1 project)", "DjangoApplication", "manage.py");
-            Mouse.MoveTo(manageNode.GetClickablePoint());
-            Mouse.Click(MouseButton.Left);
+                var manageNode = window.FindItem("Solution 'DjangoApplication' (1 project)", "DjangoApplication", "manage.py");
+                Mouse.MoveTo(manageNode.GetClickablePoint());
+                Mouse.Click(MouseButton.Left);
 
-            Keyboard.Press(Key.LeftShift);
-            Keyboard.PressAndRelease(Key.Down);
-            Keyboard.Release(Key.LeftShift);
+                Keyboard.Press(Key.LeftShift);
+                Keyboard.PressAndRelease(Key.Down);
+                Keyboard.Release(Key.LeftShift);
 
-            Mouse.MoveTo(manageNode.GetClickablePoint());
-            Mouse.Click(MouseButton.Right);
+                Mouse.MoveTo(manageNode.GetClickablePoint());
+                Mouse.Click(MouseButton.Right);
 
-            Keyboard.Type("j"); // Exclude from Project
-            Assert.IsNull(window.WaitForItemRemoved("Solution 'DjangoApplication' (1 project)", "DjangoApplication", "manage.py"));
+                Keyboard.Type("j"); // Exclude from Project
+                Assert.IsNull(window.WaitForItemRemoved("Solution 'DjangoApplication' (1 project)", "DjangoApplication", "manage.py"));
+            }
         }
 
         /// <summary>
@@ -641,23 +655,24 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void DjangoIncludeInProject() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            app.OpenAndFindProject(@"TestData\DjangoApplication.sln");
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                app.OpenAndFindProject(@"TestData\DjangoApplication.sln");
 
-            app.OpenSolutionExplorer();
-            var window = app.SolutionExplorerTreeView;
+                app.OpenSolutionExplorer();
+                var window = app.SolutionExplorerTreeView;
 
-            app.Dte.ExecuteCommand("Project.ShowAllFiles"); // start showing all
+                app.Dte.ExecuteCommand("Project.ShowAllFiles"); // start showing all
 
-            var folderNode = window.WaitForItem("Solution 'DjangoApplication' (1 project)", "DjangoApplication", "Folder");
-            Mouse.MoveTo(folderNode.GetClickablePoint());
-            Mouse.Click(MouseButton.Right);
+                var folderNode = window.WaitForItem("Solution 'DjangoApplication' (1 project)", "DjangoApplication", "Folder");
+                Mouse.MoveTo(folderNode.GetClickablePoint());
+                Mouse.Click(MouseButton.Right);
 
-            Keyboard.Type("j"); // Exclude from Project
-            app.Dte.ExecuteCommand("Project.ShowAllFiles"); // stop showing all
+                Keyboard.Type("j"); // Exclude from Project
+                app.Dte.ExecuteCommand("Project.ShowAllFiles"); // stop showing all
 
-            Assert.IsNull(window.WaitForItemRemoved("Solution 'DjangoApplication' (1 project)", "DjangoApplication", "notinproject.py"));
-            Assert.IsNotNull(window.WaitForItem("Solution 'DjangoApplication' (1 project)", "DjangoApplication", "Folder", "test.py"));
+                Assert.IsNull(window.WaitForItemRemoved("Solution 'DjangoApplication' (1 project)", "DjangoApplication", "notinproject.py"));
+                Assert.IsNotNull(window.WaitForItem("Solution 'DjangoApplication' (1 project)", "DjangoApplication", "Folder", "test.py"));
+            }
         }
 
         /// <summary>
@@ -666,45 +681,46 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void AddItemPreviousSiblingNotVisible() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            var project = app.OpenAndFindProject(@"TestData\AddItemPreviousSiblingNotVisible.sln");
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenAndFindProject(@"TestData\AddItemPreviousSiblingNotVisible.sln");
 
-            app.OpenSolutionExplorer();
-            var window = app.SolutionExplorerTreeView;
+                app.OpenSolutionExplorer();
+                var window = app.SolutionExplorerTreeView;
 
-            var projectNode = window.WaitForItem("Solution 'AddItemPreviousSiblingNotVisible' (1 project)", "HelloWorld");
-            Assert.IsNotNull(projectNode);
-            AutomationWrapper.Select(projectNode);
+                var projectNode = window.WaitForItem("Solution 'AddItemPreviousSiblingNotVisible' (1 project)", "HelloWorld");
+                Assert.IsNotNull(projectNode);
+                AutomationWrapper.Select(projectNode);
 
-            IVsSolution solutionService = VsIdeTestHostContext.ServiceProvider.GetService(typeof(SVsSolution)) as IVsSolution;
-            Assert.IsNotNull(solutionService);
+                var solutionService = app.GetService<IVsSolution>(typeof(SVsSolution));
+                Assert.IsNotNull(solutionService);
 
-            IVsHierarchy selectedHierarchy;
-            ErrorHandler.ThrowOnFailure(solutionService.GetProjectOfUniqueName(project.UniqueName, out selectedHierarchy));
-            Assert.IsNotNull(selectedHierarchy);
-            HierarchyEvents events = new HierarchyEvents();
-            uint cookie;
-            selectedHierarchy.AdviseHierarchyEvents(events, out cookie);
+                IVsHierarchy selectedHierarchy;
+                ErrorHandler.ThrowOnFailure(solutionService.GetProjectOfUniqueName(project.UniqueName, out selectedHierarchy));
+                Assert.IsNotNull(selectedHierarchy);
+                HierarchyEvents events = new HierarchyEvents();
+                uint cookie;
+                selectedHierarchy.AdviseHierarchyEvents(events, out cookie);
 
-            var newItem = new NewItemDialog(AutomationElement.FromHandle(app.OpenDialogWithDteExecuteCommand("Project.AddNewItem")));
-            AutomationWrapper.Select(newItem.ProjectTypes.FindItem("Python Unit Test"));
-            newItem.ClickOK();
+                var newItem = new NewItemDialog(app.OpenDialogWithDteExecuteCommand("Project.AddNewItem"));
+                AutomationWrapper.Select(newItem.ProjectTypes.FindItem("Empty Python File"));
+                newItem.ClickOK();
 
-            var test2 = window.WaitForItem("Solution 'AddItemPreviousSiblingNotVisible' (1 project)", "HelloWorld", "test2.py");
-            Assert.IsNotNull(test2);
+                var test2 = window.WaitForItem("Solution 'AddItemPreviousSiblingNotVisible' (1 project)", "HelloWorld", "module1.py");
+                Assert.IsNotNull(test2);
 
-            selectedHierarchy.UnadviseHierarchyEvents(cookie);
+                selectedHierarchy.UnadviseHierarchyEvents(cookie);
 
-            object caption;
-            ErrorHandler.ThrowOnFailure(
-                selectedHierarchy.GetProperty(
-                    events.SiblingPrev,
-                    (int)__VSHPROPID.VSHPROPID_Caption,
-                    out caption
-                )
-            );
+                object caption;
+                ErrorHandler.ThrowOnFailure(
+                    selectedHierarchy.GetProperty(
+                        events.SiblingPrev,
+                        (int)__VSHPROPID.VSHPROPID_Caption,
+                        out caption
+                    )
+                );
 
-            Assert.AreEqual("Program.py", caption);
+                Assert.AreEqual("Program.py", caption);
+            }
         }
 
         /// <summary>
@@ -713,20 +729,21 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void AddExistingItem() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            var project = app.OpenAndFindProject(@"TestData\AddExistingItem.sln");
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenAndFindProject(@"TestData\AddExistingItem.sln");
 
-            app.OpenSolutionExplorer();
-            var window = app.SolutionExplorerTreeView;
+                app.OpenSolutionExplorer();
+                var window = app.SolutionExplorerTreeView;
 
-            var projectNode = window.WaitForItem("Solution 'AddExistingItem' (1 project)", "HelloWorld");
-            Assert.IsNotNull(projectNode, "projectNode");
-            AutomationWrapper.Select(projectNode);
+                var projectNode = window.WaitForItem("Solution 'AddExistingItem' (1 project)", "HelloWorld");
+                Assert.IsNotNull(projectNode, "projectNode");
+                AutomationWrapper.Select(projectNode);
 
-            var addExistingDlg = new AddExistingItemDialog(app.OpenDialogWithDteExecuteCommand("Project.AddExistingItem"));
-            addExistingDlg.FileName = TestData.GetPath(@"TestData\AddExistingItem\Program2.py");
-            addExistingDlg.Add();
-            Assert.IsNotNull(window.WaitForItem("Solution 'AddExistingItem' (1 project)", "HelloWorld", "Program2.py"));
+                var addExistingDlg = new AddExistingItemDialog(app.OpenDialogWithDteExecuteCommand("Project.AddExistingItem"));
+                addExistingDlg.FileName = TestData.GetPath(@"TestData\AddExistingItem\Program2.py");
+                addExistingDlg.Add();
+                Assert.IsNotNull(window.WaitForItem("Solution 'AddExistingItem' (1 project)", "HelloWorld", "Program2.py"));
+            }
         }
 
         /// <summary>
@@ -735,27 +752,28 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void AddNewFileOverwritingExistingFileNotInProject() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            var project = app.OpenAndFindProject(@"TestData\AddExistingItem.sln");
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenAndFindProject(@"TestData\AddExistingItem.sln");
 
-            app.OpenSolutionExplorer();
-            var window = app.SolutionExplorerTreeView;
+                app.OpenSolutionExplorer();
+                var window = app.SolutionExplorerTreeView;
 
-            var projectNode = window.WaitForItem("Solution 'AddExistingItem' (1 project)", "HelloWorld");
-            Assert.IsNotNull(projectNode, "projectNode");
-            AutomationWrapper.Select(projectNode);
+                var projectNode = window.WaitForItem("Solution 'AddExistingItem' (1 project)", "HelloWorld");
+                Assert.IsNotNull(projectNode, "projectNode");
+                AutomationWrapper.Select(projectNode);
 
 
-            var addExistingDlg = new AddExistingItemDialog(app.OpenDialogWithDteExecuteCommand("Project.AddExistingItem"));
-            addExistingDlg.FileName = TestData.GetPath(@"TestData\AddExistingItem\Program2.py");
-            addExistingDlg.Add();
+                var addExistingDlg = new AddExistingItemDialog(app.OpenDialogWithDteExecuteCommand("Project.AddExistingItem"));
+                addExistingDlg.FileName = TestData.GetPath(@"TestData\AddExistingItem\Program2.py");
+                addExistingDlg.Add();
 
-            VisualStudioApp.CheckMessageBox(
-                MessageBoxButton.Yes,
-                "A file with the same name 'Program2.py' already exists. Do you want to overwrite it?"
-            );
+                VisualStudioApp.CheckMessageBox(
+                    MessageBoxButton.Yes,
+                    "A file with the same name 'Program2.py' already exists. Do you want to overwrite it?"
+                );
 
-            Assert.IsNotNull(window.WaitForItem("Solution 'AddExistingItem' (1 project)", "HelloWorld", "Program2.py"));
+                Assert.IsNotNull(window.WaitForItem("Solution 'AddExistingItem' (1 project)", "HelloWorld", "Program2.py"));
+            }
         }
 
 
@@ -886,23 +904,24 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void SourceControlRenameFolder() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
 
-            // close any projects before switching source control...
-            VsIdeTestHostContext.Dte.Solution.Close();
-
-            app.SelectSourceControlProvider("Test Source Provider");
-            try {
-                var project = app.OpenAndFindProject(@"TestData\SourceControl.sln");
-
-                using (var docEvents = new DocumentEvents()) {
-                    project.ProjectItems.Item("TestFolder").Name = "Renamed";
-
-                    Assert.AreEqual("OnQueryRenameFiles;OnAfterRenameFiles", String.Join(";", docEvents.Events));
-                }
+                // close any projects before switching source control...
                 app.Dte.Solution.Close();
-            } finally {
-                app.SelectSourceControlProvider("None");
+
+                app.SelectSourceControlProvider("Test Source Provider");
+                try {
+                    var project = app.OpenAndFindProject(@"TestData\SourceControl.sln");
+
+                    using (var docEvents = new DocumentEvents()) {
+                        project.ProjectItems.Item("TestFolder").Name = "Renamed";
+
+                        Assert.AreEqual("OnQueryRenameFiles;OnAfterRenameFiles", String.Join(";", docEvents.Events));
+                    }
+                    app.Dte.Solution.Close();
+                } finally {
+                    app.SelectSourceControlProvider("None");
+                }
             }
         }
 
@@ -912,42 +931,44 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void SourceControl() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
 
-            // close any projects before switching source control...
-            VsIdeTestHostContext.Dte.Solution.Close();
+                // close any projects before switching source control...
+                app.Dte.Solution.Close();
+                try {
+                    app.SelectSourceControlProvider("Test Source Provider");
 
-            app.SelectSourceControlProvider("Test Source Provider");
+                    TestSccProvider.ExpectedAuxPath = "AuxPath";
+                    TestSccProvider.ExpectedLocalPath = "LocalPath";
+                    TestSccProvider.ExpectedProvider = "TestProvider";
+                    TestSccProvider.ExpectedProjectName = "HelloWorld";
 
-            TestSccProvider.ExpectedAuxPath = "AuxPath";
-            TestSccProvider.ExpectedLocalPath = "LocalPath";
-            TestSccProvider.ExpectedProvider = "TestProvider";
-            TestSccProvider.ExpectedProjectName = "HelloWorld";
+                    var project = app.OpenAndFindProject(@"TestData\SourceControl.sln");
 
-            var project = app.OpenAndFindProject(@"TestData\SourceControl.sln");
+                    Assert.AreEqual(1, TestSccProvider.LoadedProjects.Count);
 
-            Assert.AreEqual(1, TestSccProvider.LoadedProjects.Count);
+                    TestSccProvider.ExpectedAuxPath = null;
+                    TestSccProvider.ExpectedLocalPath = null;
+                    TestSccProvider.ExpectedProvider = null;
+                    TestSccProvider.ExpectedProjectName = null;
 
-            TestSccProvider.ExpectedAuxPath = null;
-            TestSccProvider.ExpectedLocalPath = null;
-            TestSccProvider.ExpectedProvider = null;
-            TestSccProvider.ExpectedProjectName = null;
+                    TestSccProvider.LoadedProjects.First().SccProject.SetSccLocation(
+                        "NewProjectName",
+                        "NewAuxPath",
+                        "NewLocalPath",
+                        "NewProvider"
+                    );
 
-            TestSccProvider.LoadedProjects.First().SccProject.SetSccLocation(
-                "NewProjectName",
-                "NewAuxPath",
-                "NewLocalPath",
-                "NewProvider"
-            );
+                    app.Dte.Solution.Close();
 
-            app.Dte.Solution.Close();
-
-            Assert.AreEqual(0, TestSccProvider.LoadedProjects.Count);
-            if (TestSccProvider.Failures.Count != 0) {
-                Assert.Fail(String.Join(Environment.NewLine, TestSccProvider.Failures));
+                    Assert.AreEqual(0, TestSccProvider.LoadedProjects.Count);
+                    if (TestSccProvider.Failures.Count != 0) {
+                        Assert.Fail(String.Join(Environment.NewLine, TestSccProvider.Failures));
+                    }
+                } finally {
+                    app.SelectSourceControlProvider("None");
+                }
             }
-
-            app.SelectSourceControlProvider("None");
         }
 
         /// <summary>
@@ -958,22 +979,23 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void SourceControlExcludedFilesNotPresent() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
 
-            // close any projects before switching source control...
-            VsIdeTestHostContext.Dte.Solution.Close();
+                // close any projects before switching source control...
+                app.Dte.Solution.Close();
 
-            app.SelectSourceControlProvider("Test Source Provider");
+                app.SelectSourceControlProvider("Test Source Provider");
 
-            var project = app.OpenAndFindProject(@"TestData\SourceControl.sln");
+                var project = app.OpenAndFindProject(@"TestData\SourceControl.sln");
 
-            Assert.AreEqual(1, TestSccProvider.LoadedProjects.Count);
-            var sccProject = TestSccProvider.LoadedProjects.First();
-            foreach (var curFile in sccProject.Files) {
-                Assert.IsFalse(curFile.Key.EndsWith("ExcludedFile.py"), "found excluded file");
+                Assert.AreEqual(1, TestSccProvider.LoadedProjects.Count);
+                var sccProject = TestSccProvider.LoadedProjects.First();
+                foreach (var curFile in sccProject.Files) {
+                    Assert.IsFalse(curFile.Key.EndsWith("ExcludedFile.py"), "found excluded file");
+                }
+
+                app.SelectSourceControlProvider("None");
             }
-
-            app.SelectSourceControlProvider("None");
         }
 
         /// <summary>
@@ -982,44 +1004,46 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void SourceControlGlyphChanged() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
 
-            // close any projects before switching source control...
-            VsIdeTestHostContext.Dte.Solution.Close();
+                // close any projects before switching source control...
+                app.Dte.Solution.Close();
+                try {
+                    app.SelectSourceControlProvider("Test Source Provider");
 
-            app.SelectSourceControlProvider("Test Source Provider");
+                    var project = app.OpenAndFindProject(@"TestData\SourceControl.sln");
 
-            var project = app.OpenAndFindProject(@"TestData\SourceControl.sln");
+                    Assert.AreEqual(1, TestSccProvider.LoadedProjects.Count);
+                    var sccProject = TestSccProvider.LoadedProjects.First();
+                    Microsoft.TestSccPackage.FileInfo fileInfo = null;
+                    foreach (var curFile in sccProject.Files) {
+                        if (curFile.Key.EndsWith("Program.py")) {
+                            fileInfo = curFile.Value;
+                            break;
+                        }
+                    }
+                    Assert.AreNotEqual(null, fileInfo);
 
-            Assert.AreEqual(1, TestSccProvider.LoadedProjects.Count);
-            var sccProject = TestSccProvider.LoadedProjects.First();
-            Microsoft.TestSccPackage.FileInfo fileInfo = null;
-            foreach (var curFile in sccProject.Files) {
-                if (curFile.Key.EndsWith("Program.py")) {
-                   fileInfo = curFile.Value;
-                   break;
+                    fileInfo.GlyphChanged(VsStateIcon.STATEICON_CHECKEDOUTEXCLUSIVEOTHER);
+
+                    var programPy = project.ProjectItems.Item("Program.py");
+                    Assert.AreEqual(programPy.Properties.Item("SourceControlStatus").Value, "CHECKEDOUTEXCLUSIVEOTHER");
+
+                    fileInfo.StateIcon = VsStateIcon.STATEICON_READONLY;
+                    sccProject.AllGlyphsChanged();
+
+                    Assert.AreEqual(programPy.Properties.Item("SourceControlStatus").Value, "READONLY");
+
+                    app.Dte.Solution.Close();
+
+                    Assert.AreEqual(0, TestSccProvider.LoadedProjects.Count);
+                    if (TestSccProvider.Failures.Count != 0) {
+                        Assert.Fail(String.Join(Environment.NewLine, TestSccProvider.Failures));
+                    }
+                } finally {
+                    app.SelectSourceControlProvider("None");
                 }
             }
-            Assert.AreNotEqual(null, fileInfo);
-
-            fileInfo.GlyphChanged(VsStateIcon.STATEICON_CHECKEDOUTEXCLUSIVEOTHER);
-            
-            var programPy = project.ProjectItems.Item("Program.py");
-            Assert.AreEqual(programPy.Properties.Item("SourceControlStatus").Value, "CHECKEDOUTEXCLUSIVEOTHER");
-
-            fileInfo.StateIcon = VsStateIcon.STATEICON_READONLY;
-            sccProject.AllGlyphsChanged();
-
-            Assert.AreEqual(programPy.Properties.Item("SourceControlStatus").Value, "READONLY");
-
-            app.Dte.Solution.Close();
-
-            Assert.AreEqual(0, TestSccProvider.LoadedProjects.Count);
-            if (TestSccProvider.Failures.Count != 0) {
-                Assert.Fail(String.Join(Environment.NewLine, TestSccProvider.Failures));
-            }
-
-            app.SelectSourceControlProvider("None");
         }
 
         /// <summary>
@@ -1028,176 +1052,181 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void SourceControlNoControl() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
 
-            // close any projects before switching source control...
-            VsIdeTestHostContext.Dte.Solution.Close();
+                // close any projects before switching source control...
+                app.Dte.Solution.Close();
+                try {
+                    app.SelectSourceControlProvider("Test Source Provider");
 
-            app.SelectSourceControlProvider("Test Source Provider");
+                    var project = app.OpenAndFindProject(@"TestData\NoSourceControl.sln");
 
-            var project = app.OpenAndFindProject(@"TestData\NoSourceControl.sln");
+                    Assert.AreEqual(0, TestSccProvider.LoadedProjects.Count);
 
-            Assert.AreEqual(0, TestSccProvider.LoadedProjects.Count);
+                    app.Dte.Solution.Close();
 
-            app.Dte.Solution.Close();
-
-            Assert.AreEqual(0, TestSccProvider.LoadedProjects.Count);
-            if (TestSccProvider.Failures.Count != 0) {
-                Assert.Fail(String.Join(Environment.NewLine, TestSccProvider.Failures));
+                    Assert.AreEqual(0, TestSccProvider.LoadedProjects.Count);
+                    if (TestSccProvider.Failures.Count != 0) {
+                        Assert.Fail(String.Join(Environment.NewLine, TestSccProvider.Failures));
+                    }
+                } finally {
+                    app.SelectSourceControlProvider("None");
+                }
             }
-
-            app.SelectSourceControlProvider("None");
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void NewProject() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            var newProjDialog = app.FileNewProject();
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var newProjDialog = app.FileNewProject();
 
-            newProjDialog.FocusLanguageNode();
+                newProjDialog.FocusLanguageNode();
 
-            var consoleApp = newProjDialog.ProjectTypes.FindItem("Python Application");
-            consoleApp.Select();
+                var consoleApp = newProjDialog.ProjectTypes.FindItem("Python Application");
+                consoleApp.Select();
 
-            newProjDialog.ClickOK();
+                newProjDialog.ClickOK();
 
-            // wait for new solution to load...
-            for (int i = 0; i < 100 && app.Dte.Solution.Projects.Count == 0; i++) {
-                System.Threading.Thread.Sleep(1000);
+                // wait for new solution to load...
+                for (int i = 0; i < 100 && app.Dte.Solution.Projects.Count == 0; i++) {
+                    System.Threading.Thread.Sleep(1000);
+                }
+
+                Assert.AreEqual(1, app.Dte.Solution.Projects.Count);
+
+                Assert.AreNotEqual(null, app.Dte.Solution.Projects.Item(1).ProjectItems.Item(Path.GetFileNameWithoutExtension(app.Dte.Solution.FullName) + ".py"));
             }
-
-            Assert.AreEqual(1, app.Dte.Solution.Projects.Count);
-            
-            Assert.AreNotEqual(null, app.Dte.Solution.Projects.Item(1).ProjectItems.Item(Path.GetFileNameWithoutExtension(app.Dte.Solution.FullName) + ".py"));
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TransferItem() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            var project = app.OpenAndFindProject(@"TestData\HelloWorld.sln");
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenAndFindProject(@"TestData\HelloWorld.sln");
 
-            string filename, basename;
-            int i = 0;            
-            do {
-                i++;
-                basename = "test" + i + " .py";
-                filename = Path.Combine(Path.GetTempPath(), basename);
-            } while (System.IO.File.Exists(filename));
+                string filename, basename;
+                int i = 0;
+                do {
+                    i++;
+                    basename = "test" + i + " .py";
+                    filename = Path.Combine(Path.GetTempPath(), basename);
+                } while (System.IO.File.Exists(filename));
 
-            System.IO.File.WriteAllText(filename, "def f(): pass");
+                System.IO.File.WriteAllText(filename, "def f(): pass");
 
-            var fileWindow = app.Dte.ItemOperations.OpenFile(filename);
+                var fileWindow = app.Dte.ItemOperations.OpenFile(filename);
 
-            app.MoveCurrentFileToProject("HelloWorld");
+                app.MoveCurrentFileToProject("HelloWorld");
 
-            app.OpenSolutionExplorer();
-            var window = app.SolutionExplorerTreeView;
-            Assert.AreNotEqual(null, window.WaitForItem("Solution 'HelloWorld' (1 project)", "HelloWorld", basename));
+                app.OpenSolutionExplorer();
+                var window = app.SolutionExplorerTreeView;
+                Assert.AreNotEqual(null, window.WaitForItem("Solution 'HelloWorld' (1 project)", "HelloWorld", basename));
 
-            Assert.AreEqual(fileWindow.Caption, basename);
+                Assert.AreEqual(fileWindow.Caption, basename);
 
-            System.IO.File.Delete(filename);
+                System.IO.File.Delete(filename);
+            }
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void SaveAs() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            var project = app.OpenAndFindProject(@"TestData\SaveAsUI.sln");
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenAndFindProject(@"TestData\SaveAsUI.sln");
 
-            app.OpenSolutionExplorer();
-            var solutionTree = app.SolutionExplorerTreeView;
+                app.OpenSolutionExplorer();
+                var solutionTree = app.SolutionExplorerTreeView;
 
-            // open and edit the file
-            var folderNode = solutionTree.FindItem("Solution 'SaveAsUI' (1 project)", "HelloWorld", "Program.py");
-            folderNode.SetFocus();
-            Keyboard.PressAndRelease(Key.Enter);
-            
-            var item = project.ProjectItems.Item("Program.py");
-            var window = item.Open();
-                        
-            var selection = ((TextSelection)window.Selection);
-            selection.SelectAll();
-            selection.Delete();
-            
-            // save under a new file name
-            var saveDialog = app.SaveAs();
-            string oldName = saveDialog.FileName;
-            saveDialog.FileName = "Program2.py";
-            saveDialog.Save();
+                // open and edit the file
+                var folderNode = solutionTree.FindItem("Solution 'SaveAsUI' (1 project)", "HelloWorld", "Program.py");
+                folderNode.SetFocus();
+                Keyboard.PressAndRelease(Key.Enter);
 
-            Assert.AreNotEqual(null, solutionTree.WaitForItem("Solution 'SaveAsUI' (1 project)", "HelloWorld", "Program2.py"));
+                var item = project.ProjectItems.Item("Program.py");
+                var window = item.Open();
+
+                var selection = ((TextSelection)window.Selection);
+                selection.SelectAll();
+                selection.Delete();
+
+                // save under a new file name
+                var saveDialog = app.SaveAs();
+                string oldName = saveDialog.FileName;
+                saveDialog.FileName = "Program2.py";
+                saveDialog.Save();
+
+                Assert.AreNotEqual(null, solutionTree.WaitForItem("Solution 'SaveAsUI' (1 project)", "HelloWorld", "Program2.py"));
+            }
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ExtensionReference() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            var project = app.OpenAndFindProject(@"TestData\ExtensionReference.sln");
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenAndFindProject(@"TestData\ExtensionReference.sln");
 
-            app.OpenSolutionExplorer();
-            var solutionTree = app.SolutionExplorerTreeView;
+                app.OpenSolutionExplorer();
+                var solutionTree = app.SolutionExplorerTreeView;
 
-            // open the solution, add a reference to our spam.pyd Python extension module
-            var folderNode = solutionTree.FindItem("Solution 'ExtensionReference' (1 project)", "ExtensionReference", SR.GetString(SR.ReferencesNodeName));
-            Mouse.MoveTo(folderNode.GetClickablePoint());
-            Mouse.Click();
-            Keyboard.PressAndRelease(Key.Apps); // context menu
-            Keyboard.PressAndRelease(Key.R);    // Add Reference
+                // open the solution, add a reference to our spam.pyd Python extension module
+                var folderNode = solutionTree.FindItem("Solution 'ExtensionReference' (1 project)", "ExtensionReference", SR.GetString(SR.ReferencesNodeName));
+                Mouse.MoveTo(folderNode.GetClickablePoint());
+                Mouse.Click();
+                Keyboard.PressAndRelease(Key.Apps); // context menu
+                Keyboard.PressAndRelease(Key.R);    // Add Reference
 
-            var dialog = new AddReferenceDialog(AutomationElement.FromHandle(app.WaitForDialog()));
-            dialog.ActivateBrowseTab();
+                var dialog = new AddReferenceDialog(AutomationElement.FromHandle(app.WaitForDialog()));
+                dialog.ActivateBrowseTab();
 
-            dialog.BrowseFilename = TestData.GetPath(@"TestData\spam.pyd");
-            dialog.ClickOK();
+                dialog.BrowseFilename = TestData.GetPath(@"TestData\spam.pyd");
+                dialog.ClickOK();
 
-            app.WaitForDialogDismissed();
+                app.WaitForDialogDismissed();
 
-            System.Threading.Thread.Sleep(2000);
-            
-            // make sure the reference got added
-            var spamItem = solutionTree.FindItem("Solution 'ExtensionReference' (1 project)", "ExtensionReference", SR.GetString(SR.ReferencesNodeName), "spam.pyd");
-            Assert.IsNotNull(spamItem);
+                System.Threading.Thread.Sleep(2000);
 
-            // now open a file and make sure we get completions against the spam module
-            var item = project.ProjectItems.Item("Program.py");
-            var window = item.Open();
-            window.Activate();
+                // make sure the reference got added
+                var spamItem = solutionTree.FindItem("Solution 'ExtensionReference' (1 project)", "ExtensionReference", SR.GetString(SR.ReferencesNodeName), "spam.pyd");
+                Assert.IsNotNull(spamItem);
 
-            var doc = app.GetDocument(item.Document.FullName);
-            
-            doc.MoveCaret(doc.TextView.TextBuffer.CurrentSnapshot.GetLineFromLineNumber(1).Start);
+                // now open a file and make sure we get completions against the spam module
+                var item = project.ProjectItems.Item("Program.py");
+                var window = item.Open();
+                window.Activate();
 
-            Keyboard.Type("spam.");
-            
-            System.Threading.Thread.Sleep(1000);
-            var session = doc.WaitForSession<ICompletionSession>();
+                var doc = app.GetDocument(item.Document.FullName);
 
-            var completion = session.CompletionSets.First().Completions.Select(x => x.InsertionText).FirstOrDefault(x => x == "system");
-            Assert.IsNotNull(completion);
+                doc.MoveCaret(doc.TextView.TextBuffer.CurrentSnapshot.GetLineFromLineNumber(1).Start);
 
-            // now clear the text we just typed
-            Keyboard.Type(Key.Escape);
-            for (int i = 0; i < 5; i++) {
-                Keyboard.Type(Key.Back);
+                Keyboard.Type("spam.");
+
+                System.Threading.Thread.Sleep(1000);
+                using (var sh = doc.WaitForSession<ICompletionSession>()) {
+                    var completion = sh.Session.CompletionSets.First().Completions.Select(x => x.InsertionText).FirstOrDefault(x => x == "system");
+                    Assert.IsNotNull(completion);
+                }
+
+                // now clear the text we just typed
+                for (int i = 0; i < 5; i++) {
+                    Keyboard.Type(Key.Back);
+                }
+
+                // remove the extension
+                app.Dte.Solution.Projects.Item(1).ProjectItems.Item("References").ProjectItems.Item("spam.pyd").Remove();
+                System.Threading.Thread.Sleep(3000);
+
+                // make sure it got removed
+                spamItem = solutionTree.FindItem("Solution 'ExtensionReference' (1 project)", "ExtensionReference", SR.GetString(SR.ReferencesNodeName), "spam.pyd");
+                Assert.AreEqual(spamItem, null);
+
+                window.Activate();
+
+                // and make sure we no longer offer completions on the spam module.
+                Keyboard.Type("spam.");
+                System.Threading.Thread.Sleep(1000);
+                Assert.IsNull(doc.IntellisenseSessionStack.TopSession);
             }
-
-            // remove the extension
-            VsIdeTestHostContext.Dte.Solution.Projects.Item(1).ProjectItems.Item("References").ProjectItems.Item("spam.pyd").Remove();
-            System.Threading.Thread.Sleep(3000);
-
-            // make sure it got removed
-            spamItem = solutionTree.FindItem("Solution 'ExtensionReference' (1 project)", "ExtensionReference", SR.GetString(SR.ReferencesNodeName), "spam.pyd");
-            Assert.AreEqual(spamItem, null);
-
-            window.Activate();
-
-            // and make sure we no longer offer completions on the spam module.
-            Keyboard.Type("spam.");
-            System.Threading.Thread.Sleep(1000);
-            Assert.IsNull(doc.IntellisenseSessionStack.TopSession);
         }
 
         /// <summary>
@@ -1208,16 +1237,17 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestSearchExcludedFiles() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            var project = app.OpenAndFindProject(@"TestData\FindInAllFiles.sln");
-            Assert.IsNotNull(project);
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenAndFindProject(@"TestData\FindInAllFiles.sln");
+                Assert.IsNotNull(project);
 
-            var find = app.Dte.Find;
+                var find = app.Dte.Find;
 
-            find.Target = vsFindTarget.vsFindTargetSolution;
-            find.FindWhat = "THIS_TEXT_IS_NOT_ANYWHERE_ELSE";
-            var results = find.Execute();
-            Assert.AreEqual(results, vsFindResult.vsFindResultNotFound);
+                find.Target = vsFindTarget.vsFindTargetSolution;
+                find.FindWhat = "THIS_TEXT_IS_NOT_ANYWHERE_ELSE";
+                var results = find.Execute();
+                Assert.AreEqual(results, vsFindResult.vsFindResultNotFound);
+            }
         }
 
     }

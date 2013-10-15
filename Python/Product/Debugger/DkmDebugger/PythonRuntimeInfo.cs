@@ -66,6 +66,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
             switch (ver) {
                 case "27": return PythonLanguageVersion.V27;
                 case "33": return PythonLanguageVersion.V33;
+                case "34": return PythonLanguageVersion.V34;
                 default: return PythonLanguageVersion.None;
             }
         }

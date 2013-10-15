@@ -113,7 +113,6 @@ try:
     import cPickle as pickle
 except ImportError:
     import pickle # Py3k
-
 import datetime
 import os
 import subprocess
@@ -121,7 +120,8 @@ import sys
 import traceback
 import types
 
-# The version number should match the value of PythonTypeDatabase.CurrentVersion in
+# The version number should match the value of
+# PythonTypeDatabase.CurrentVersion in
 #  \Release\Product\Python\Analysis\Interpreter\PythonTypeDatabase.cs
 #
 # To update the baseline DB, see Python\Product\PythonTools\RefreshDefaultDB.py
@@ -130,7 +130,7 @@ CURRENT_DATABASE_VERSION = '24'
 
 
 # The values in KNOWN_METHOD_TYPES and KNOWN_FUNCTION_TYPES are used when
-# detecting the types of members. The names are ('module.name', 'type.name')
+# detecting the types of members.  The names are ('module.name', 'type.name')
 # pairs, matching the contents of a typeref.
 #
 # If the type's name matches an item in KNOWN_METHOD_TYPES, the object is
@@ -138,7 +138,6 @@ CURRENT_DATABASE_VERSION = '24'
 #
 # If the type's name matches an item in KNOWN_FUNCTION_TYPES, the object is
 # treated as a method if defined on a type or a function otherwise.
-
 KNOWN_METHOD_TYPES = frozenset(
     ('sip', 'methoddescriptor'),
 )
@@ -151,7 +150,6 @@ KNOWN_FUNCTION_TYPES = frozenset(
 # Safe member access methods because PyQt4 contains compiled types that crash
 # on operations that should be completely safe, such as getattr() and dir().
 # These should be used throughout when accessing members on type objects.
-
 def safe_getattr(obj, attr, default):
     try:
         return getattr(obj, attr, default)
@@ -171,7 +169,6 @@ def safe_isinstance(obj, types):
         return False
 
 # safe_dir is imported from BuiltinScraper/IronPythonScraper
-
 def safe_repr(obj):
     try:
         return repr(obj)
@@ -257,12 +254,13 @@ def generate_overload(ret_type, *args):
     return res
 
 if sys.platform == "cli":
-    # provides extra type info when generating against IronPython which can be used w/ CPython completions
+    # provides extra type info when generating against IronPython which can be
+    # used w/ CPython completions
     import IronPythonScraper as BuiltinScraper 
 else:
     import BuiltinScraper
 
-def generate_builtin_function(function, is_method = False):
+def generate_builtin_function(function, is_method=False):
     function_table = {}
     
     func_doc = safe_getattr(function, '__doc__', None)
@@ -293,12 +291,11 @@ try:
     getset_descriptor_type = type(file.closed)
 except NameError:
     getset_descriptor_type = type(Exception.args) # Py3k, no file
-
 class_method_descriptor_type = type(datetime.date.__dict__['today'])
 class OldStyleClass: pass
 OldStyleClassType = type(OldStyleClass)
 
-def generate_member_table(obj, is_hidden = False, from_type = False, extra_types = None):
+def generate_member_table(obj, is_hidden=False, from_type=False, extra_types=None):
     '''Generates a table of members of `obj`.
 
     `is_hidden` determines whether all the members are hidden from IntelliSense.
@@ -341,8 +338,8 @@ def generate_member_table(obj, is_hidden = False, from_type = False, extra_types
         def needs_type_info(other_mod, other_name):
             if obj_mod != other_mod:
                 if other_mod == builtin_name:
-                    # Never embed builtins (unless obj_mod is builtins, in which
-                    # case the first comparison failed)
+                    # Never embed builtins (unless obj_mod is builtins, in
+                    # which case the first comparison failed)
                     return False
                 
                 # Always embed external types
@@ -372,7 +369,7 @@ def generate_member_table(obj, is_hidden = False, from_type = False, extra_types
 
     return table
 
-def generate_member(obj, is_hidden = False, from_type = False):
+def generate_member(obj, is_hidden=False, from_type=False):
     try:
         # Already handling all exceptions here, so don't worry about using the
         # 'safe_*' functions.
@@ -492,15 +489,14 @@ def generate_type(type_obj, is_hidden=False):
             'value': { 'overloads': [generate_overload(object, ('cls', type))] }
         }
     elif '__new__' not in member_table:
-        member_table['__new__'] = generate_type_new(
-            type_obj, 
-            safe_getattr(type_obj, '__new__', object.__new__),
-        )
+        member_table['__new__'] = generate_type_new(type_obj, 
+            safe_getattr(type_obj, '__new__', object.__new__),)
     
     if ('__getattribute__' in member_table and 
-        type_obj is not object and
+        type_obj is not object and 
         safe_isinstance(safe_getattr(type_obj, '__getattribute__', None), slot_wrapper_type)):
-        # skip __getattribute__ on types other than object if it's just a slot wrapper.
+        # skip __getattribute__ on types other than object if it's just a slot
+        # wrapper.
         del member_table['__getattribute__']
 
     return type_table
@@ -526,18 +522,15 @@ def lookup_module(module_name):
     
     return module
 
-def generate_module(module, extra_types = None):
-    if not safe_isinstance(module, type(sys)):
-        return None
-    
+def generate_module(module, extra_types=None):
     module_table = {}
-
+    
     module_doc = safe_getattr(module, '__doc__', None)
     if safe_isinstance(module_doc, str):
         module_table['doc'] = module_doc
-
+    
     module_table['members'] = generate_member_table(module, extra_types = extra_types)
-
+    
     return module_table
 
 
@@ -582,8 +575,9 @@ def generate_builtin_module():
 
     res = generate_module(lookup_module(builtin_name), extra_types = extra_types.items())
 
-    assert res['members']['object']['kind'] == 'type', "Unexpected: " + repr(res['members']['object'])
-    res['members']['object']['value']['doc'] = "The most base type"
+    if res and 'members' in res and 'object' in res['members']:
+        assert res['members']['object']['kind'] == 'type', "Unexpected: " + repr(res['members']['object'])
+        res['members']['object']['value']['doc'] = "The most base type"
 
     return res
 
@@ -641,7 +635,6 @@ def merge_member_table(baseline_table, new_table):
         #elif base_member_table is not None:
         #    print('kinds differ', kind, base_member_table['kind'], name)
     
-
 InitMethodEntry = {
     'kind': 'method',
     'value': {
@@ -841,18 +834,14 @@ def _sre_post_fixer(mod):
                     'kind': 'method',
                     'value': {
                         'doc': 'findall(self: SRE_Pattern, string: object, pos: int, endpos: object) -> object\r\nfindall(self: SRE_Pattern, string: str, pos: int) -> object\r\nfindall(self: SRE_Pattern, string: str) -> object\r\n',
-                        'overloads': [
-                            generate_overload(bool, ('self', typename_to_typeref('_sre', 'SRE_Pattern')), ('string', str), ('pos', int, '', '0'), ('endpos', object, '', 'None')),
-                        ]
+                        'overloads': [generate_overload(bool, ('self', typename_to_typeref('_sre', 'SRE_Pattern')), ('string', str), ('pos', int, '', '0'), ('endpos', object, '', 'None'))]
                     }
                 },
                 'finditer': {
                     'kind': 'method',
                     'value': {
                         'doc': 'finditer(self: SRE_Pattern, string: object, pos: int, endpos: int) -> object\r\nfinditer(self: SRE_Pattern, string: object, pos: int) -> object\r\nfinditer(self: SRE_Pattern, string: object) -> object\r\n',
-                        'overloads': [
-                            generate_overload(object, ('self', typename_to_typeref('_sre', 'SRE_Pattern')), ('string', str), ('pos', int, '', '0'), ('endpos', int, '', 'None')),
-                        ]
+                        'overloads': [generate_overload(object, ('self', typename_to_typeref('_sre', 'SRE_Pattern')), ('string', str), ('pos', int, '', '0'), ('endpos', int, '', 'None'))]
                     }
                 },
                 'flags': {
@@ -880,9 +869,7 @@ def _sre_post_fixer(mod):
                     'kind': 'method',
                     'value': {
                         'doc': 'match(self: SRE_Pattern, text: object, pos: int, endpos: int) -> RE_Match\r\nmatch(self: SRE_Pattern, text: object, pos: int) -> RE_Match\r\nmatch(self: SRE_Pattern, text: object) -> RE_Match\r\n',
-                        'overloads': [
-                            generate_overload(object, ('self', typename_to_typeref('_sre', 'SRE_Pattern')), ('text', str), ('pos', int, '', '0'), ('endpos', int, '', 'None')),
-                        ],
+                        'overloads': [generate_overload(object, ('self', typename_to_typeref('_sre', 'SRE_Pattern')), ('text', str), ('pos', int, '', '0'), ('endpos', int, '', 'None'))],
                     }
                 },
                 'pattern': {
@@ -896,35 +883,27 @@ def _sre_post_fixer(mod):
                     'kind': 'method',
                     'value': {
                         'doc': 'search(self: SRE_Pattern, text: object, pos: int, endpos: int) -> RE_Match\r\nsearch(self: SRE_Pattern,text: object, pos: int) -> RE_Match\r\nsearch(self: SRE_Pattern, text: object) -> RE_Match\r\n',
-                        'overloads': [
-                            generate_overload(typename_to_typeref('_sre', 'RE_Match'), ('self', typename_to_typeref('_sre', 'SRE_Pattern')), ('text', str), ('pos', int, '', '0'), ('endpos', int, '', 'None')),
-                        ]
+                        'overloads': [generate_overload(typename_to_typeref('_sre', 'RE_Match'), ('self', typename_to_typeref('_sre', 'SRE_Pattern')), ('text', str), ('pos', int, '', '0'), ('endpos', int, '', 'None'))]
                     }
                 },
                 'split': {
                     'kind': 'method',
                     'value': {
                         'doc': 'split(self: SRE_Pattern, string: object, maxsplit: int) -> list (of str)\r\nsplit(self: SRE_Pattern, string: str) -> list (of str)\r\n',
-                        'overloads': [
-                            generate_overload(list, ('self', typename_to_typeref('_sre', 'SRE_Pattern')), ('string', str), ('maxsplit', int, '', 'None'))
-                        ]
+                        'overloads': [generate_overload(list, ('self', typename_to_typeref('_sre', 'SRE_Pattern')), ('string', str), ('maxsplit', int, '', 'None'))]
                     }
                 },
                 'sub': {
                     'kind': 'method',
                     'value': {
                         'doc': 'sub(self: SRE_Pattern, repl: object, string: object, count: int) -> str\r\nsub(self: SRE_Pattern, repl: object, string: object) -> str\r\n',
-                        'overloads': [
-                            generate_overload(str, ('self', typename_to_typeref('_sre', 'SRE_Pattern')), ('repl', object), ('string', str), ('count', int, '', 'None'))
-                        ]
+                        'overloads': [generate_overload(str, ('self', typename_to_typeref('_sre', 'SRE_Pattern')), ('repl', object), ('string', str), ('count', int, '', 'None'))]
                     }
                 },
                 'subn': {
                     'kind': 'method',
                     'value': {'doc': 'subn(self: SRE_Pattern, repl: object, string: object, count: int) -> object\r\nsubn(self: SRE_Pattern, repl: object, string: str) -> object\r\n',
-                        'overloads': [
-                            generate_overload(object, ('self', typename_to_typeref('_sre', 'SRE_Pattern')), ('repl', object), ('string', str), ('count', int, '', 'None'))
-                        ]
+                        'overloads': [generate_overload(object, ('self', typename_to_typeref('_sre', 'SRE_Pattern')), ('repl', object), ('string', str), ('count', int, '', 'None'))]
                     }
                 },
             },
@@ -1002,14 +981,17 @@ if __name__ == "__main__":
         baselinepath = None
     
     res = generate_builtin_module()
+    if not res:
+        raise RuntimeError("Unable to scrape builtins")
     res = merge_with_baseline(builtin_name, baselinepath, res)
     
     write_module(builtin_name, outpath, res)
     
     for mod_name in sys.builtin_module_names:
-        if (mod_name == builtin_name or 
+        if (mod_name == builtin_name or
             mod_name == '__main__' or
-            not BuiltinScraper.should_include_module(mod_name)): continue
+            not BuiltinScraper.should_include_module(mod_name)):
+            continue
         
         res = generate_module(lookup_module(mod_name))
         if res is not None:

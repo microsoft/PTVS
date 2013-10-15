@@ -87,8 +87,8 @@ VsPyProf* VsPyProf::Create(HMODULE pythonModule) {
                     minor = atoi(version);
                 }
 
-                if ((major == 2 && (minor == 4 || minor == 5 || minor == 6 || minor == 7)) ||
-                    (major == 3 && (minor == 0 || minor == 1 || minor == 2 || minor == 3))) {
+                if ((major == 2 && (minor >= 4 && minor <= 7)) ||
+                    (major == 3 && (minor >= 0 && minor <= 4))) {
                         return new VsPyProf(pythonModule,
                             major,
                             minor,
@@ -130,10 +130,10 @@ bool VsPyProf::GetUserToken(PyFrameObject* frameObj, DWORD_PTR& func, DWORD_PTR&
 
         if (MajorVersion == 2) {
             filename = ((PyCodeObject24_27*)codeObj)->co_filename;
-        } else if (MinorVersion < 3) {
-            filename = ((PyCodeObject3k*)codeObj)->co_filename;
+        } else if (MinorVersion <= 2) {
+            filename = ((PyCodeObject30_32*)codeObj)->co_filename;
         } else {
-            filename = ((PyCodeObject33*)codeObj)->co_filename;
+            filename = ((PyCodeObject33_34*)codeObj)->co_filename;
         }
         module = (DWORD_PTR)filename;
 
@@ -204,12 +204,12 @@ bool VsPyProf::GetUserToken(PyFrameObject* frameObj, DWORD_PTR& func, DWORD_PTR&
             if (MajorVersion == 2) {
                 RegisterName(func, ((PyCodeObject24_27*)codeObj)->co_name, &moduleName);
                 lineno = ((PyCodeObject24_27*)codeObj)->co_firstlineno;
-            } else if (MinorVersion < 3) {
-                RegisterName(func, ((PyCodeObject3k*)codeObj)->co_name, &moduleName);
-                lineno = ((PyCodeObject3k*)codeObj)->co_firstlineno;
+            } else if (MinorVersion <= 2) {
+                RegisterName(func, ((PyCodeObject30_32*)codeObj)->co_name, &moduleName);
+                lineno = ((PyCodeObject30_32*)codeObj)->co_firstlineno;
             } else {
-                RegisterName(func, ((PyCodeObject33*)codeObj)->co_name, &moduleName);
-                lineno = ((PyCodeObject33*)codeObj)->co_firstlineno;
+                RegisterName(func, ((PyCodeObject33_34*)codeObj)->co_name, &moduleName);
+                lineno = ((PyCodeObject33_34*)codeObj)->co_firstlineno;
             }
 
             // give the profiler the line number of this function
@@ -236,9 +236,12 @@ wstring VsPyProf::GetClassNameFromFrame(PyFrameObject* frameObj, PyObject *codeO
         if (MajorVersion == 2) {
             argCount = ((PyCodeObject24_27*)codeObj)->co_argcount;
             argNames = (PyTupleObject*)((PyCodeObject24_27*)codeObj)->co_varnames;
+        } else if (MinorVersion <= 2) {
+            argCount = ((PyCodeObject30_32*)codeObj)->co_argcount;
+            argNames = (PyTupleObject*)((PyCodeObject30_32*)codeObj)->co_varnames;
         } else {
-            argCount = ((PyCodeObject3k*)codeObj)->co_argcount;
-            argNames = (PyTupleObject*)((PyCodeObject3k*)codeObj)->co_varnames;
+            argCount = ((PyCodeObject33_34*)codeObj)->co_argcount;
+            argNames = (PyTupleObject*)((PyCodeObject33_34*)codeObj)->co_varnames;
         }
 
         if (argCount != 0 && argNames->ob_type == PyTuple_Type) {
@@ -250,7 +253,7 @@ wstring VsPyProf::GetClassNameFromFrame(PyFrameObject* frameObj, PyObject *codeO
                 if (MajorVersion == 2 && MinorVersion == 4) {
                     self = ((PyFrameObject24*)frameObj)->f_localsplus[0];
                 } else {
-                    self = ((PyFrameObject25_31*)frameObj)->f_localsplus[0];
+                    self = ((PyFrameObject25_34*)frameObj)->f_localsplus[0];
                 }
                 return GetClassNameFromSelf(self, codeObj);
             }
@@ -270,8 +273,10 @@ wstring VsPyProf::GetClassNameFromSelf(PyObject* self, PyObject *codeObj) {
         PyObject* nameObj;
         if (MajorVersion == 2) {
             nameObj = ((PyCodeObject24_27*)codeObj)->co_name;
+        } else if (MinorVersion <= 2) {
+            nameObj = ((PyCodeObject30_32*)codeObj)->co_name;
         } else {
-            nameObj = ((PyCodeObject3k*)codeObj)->co_name;
+            nameObj = ((PyCodeObject33_34*)codeObj)->co_name;
         }
         GetNameAscii(nameObj, codeName);
 
@@ -283,7 +288,7 @@ wstring VsPyProf::GetClassNameFromSelf(PyObject* self, PyObject *codeObj) {
                 auto function = _getItemStringFunc(curType->tp_dict, codeName.c_str());
                 if (function != nullptr) {
                     if (function->ob_type == PyFunction_Type && ((PyFunctionObject*)function)->func_code == codeObj) {
-                        // this is our method, and therefore our class!																	
+                        // this is our method, and therefore our class!
                         // append class name onto module name.
                         auto className = curType->tp_name;
                         while (*className) {

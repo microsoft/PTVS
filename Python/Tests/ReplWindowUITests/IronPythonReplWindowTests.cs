@@ -31,6 +31,7 @@ using TestUtilities.UI.Python;
 using Keyboard = TestUtilities.UI.Keyboard;
 
 namespace ReplWindowUITests {
+#if PY_ALL || PY_IRON27
     [TestClass]
     public class IronPythonReplTests : Python27ReplWindowTests {
         [TestInitialize]
@@ -88,35 +89,37 @@ namespace ReplWindowUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ResetRepl() {
-            var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte); 
-            var interactive = Prepare();
+            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var interactive = Prepare();
+                try {
+                    const string code = "x = 42";
+                    Keyboard.Type(code + "\r");
 
-            const string code = "x = 42";
-            Keyboard.Type(code + "\r");
+                    interactive.WaitForText(ReplPrompt + code, ReplPrompt);
 
-            interactive.WaitForText(ReplPrompt + code, ReplPrompt);
+                    Keyboard.Type("x.");
 
-            Keyboard.Type("x.");
+                    interactive.WaitForText(ReplPrompt + code, ReplPrompt + "x.");
 
-            interactive.WaitForText(ReplPrompt + code, ReplPrompt + "x.");
+                    using (var sh = interactive.WaitForSession<ICompletionSession>()) {
+                        Assert.IsNotNull(sh.Session.SelectedCompletionSet);
+                    }
+                    Keyboard.Type(Key.Back);
+                    Keyboard.Type(Key.Back);
 
-            var session = interactive.WaitForSession<ICompletionSession>();
-            Assert.IsNotNull(session.SelectedCompletionSet);
-            Keyboard.Type(Key.Escape);
-            Keyboard.Type(Key.Back);
-            Keyboard.Type(Key.Back);
+                    interactive.Reset();
 
-            interactive.Reset();
+                    Keyboard.Type("x.");
 
-            Keyboard.Type("x.");
+                    System.Threading.Thread.Sleep(1000);
 
-            System.Threading.Thread.Sleep(1000);
-            // make sure we didn't pop up an exception dialog
-            app.WaitForDialogDismissed();
-
-            // and make sure we have no completions for the old buffers
-            var sessionStack = interactive.IntellisenseSessionStack;
-            Assert.IsNull(sessionStack.TopSession);
+                    // and make sure we have no completions for the old buffers
+                    var sessionStack = interactive.IntellisenseSessionStack;
+                    Assert.IsNull(sessionStack.TopSession);
+                } finally {
+                    interactive.WaitForSessionDismissed();
+                }
+            }
         }
 
         [TestMethod, Priority(0)]
@@ -294,5 +297,6 @@ namespace ReplWindowUITests {
             }
         }
     }
+#endif
 }
 

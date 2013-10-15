@@ -132,6 +132,22 @@ namespace Microsoft.PythonTools.Analysis.Values {
                         }
                     }
                 } else if (name.Equals("**", StringComparison.Ordinal)) {
+                    foreach (var dict in args[i].OfType<DictionaryInfo>()) {
+                        foreach (var kv in dict._keysAndValues.KeyValueTypes) {
+                            var paramName = kv.Key.GetConstantValueAsString();
+                            if (string.IsNullOrEmpty(paramName)) {
+                                continue;
+                            }
+
+                            for (int j = 0; j < argCount; ++j) {
+                                if (node.Parameters[j].Name.Equals(paramName, StringComparison.Ordinal)) {
+                                    newArgs[j] = newArgs[j].Union(kv.Value);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
                     if (dictArgsIndex >= 0) {
                         foreach (var ns in args[i]) {
                             var sdict = ns as StarArgsDictionaryInfo;

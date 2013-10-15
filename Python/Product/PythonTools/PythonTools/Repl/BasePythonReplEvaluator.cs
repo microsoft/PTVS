@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Net;
@@ -32,7 +33,6 @@ using Microsoft.PythonTools.Debugger.DebugEngine;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Language;
-using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Repl;
@@ -532,8 +532,24 @@ namespace Microsoft.PythonTools.Repl {
                     ParameterResult[] parameters = new ParameterResult[paramCount];
                     for (int curParam = 0; curParam < paramCount; curParam++) {
                         string name = Stream.ReadString();
-                        parameters[curParam] = new ParameterResult(name);
+                        int equals = name.IndexOf('=');
+                        if (equals < 0) {
+                            parameters[curParam] = new ParameterResult(name);
+                        } else {
+                            parameters[curParam] = new ParameterResult(
+                                name.Remove(equals),
+                                null,
+                                null,
+                                // Even though it has a default, don't mark the
+                                // parameter as optional (for consistency with
+                                // signature help from the database)
+                                false,
+                                null,
+                                name.Substring(equals + 1)
+                            );
+                        }
                     }
+
                     docs[i] = new OverloadDoc(doc, parameters);
                 }
                 _overloads = docs;
@@ -848,6 +864,7 @@ namespace Microsoft.PythonTools.Repl {
                     try {
                         _process.Kill();
                     } catch (InvalidOperationException) {
+                    } catch (Win32Exception) {
                         // race w/ killing the process
                     }
                 }

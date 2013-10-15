@@ -120,9 +120,10 @@ namespace Microsoft.PythonTools.Project {
             var path = d.GetValue(VirtualEnvBasePathProperty) as string;
             if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(path)) {
                 d.SetValue(VirtualEnvPathPropertyKey, d.GetValue(VirtualEnvBasePathProperty));
+            } else {
+                name = name.TrimEnd('.', ' ');
+                d.SetValue(VirtualEnvPathPropertyKey, CommonUtils.GetAbsoluteDirectoryPath(path, name));
             }
-
-            d.SetValue(VirtualEnvPathPropertyKey, CommonUtils.GetAbsoluteDirectoryPath(path, name));
         }
 
 
@@ -158,13 +159,8 @@ namespace Microsoft.PythonTools.Project {
 
             var name = Path.GetFileName(path).Trim();
 
-            if (string.IsNullOrEmpty(name) ||
-                name.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0 ||
-                name.IndexOf('.') >= 0) {
-                return false;
-            }
-
-            return true;
+            return !string.IsNullOrEmpty(name) &&
+                name.IndexOfAny(Path.GetInvalidFileNameChars()) < 0;
         }
 
         private void RefreshCanCreateVirtualEnv(string path) {

@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System.Linq;
+using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Values {
@@ -20,48 +21,74 @@ namespace Microsoft.PythonTools.Analysis.Values {
     /// Represents a list object with tracked type information.
     /// </summary>
     class ListInfo : SequenceInfo {
-        private ListAppendBoundBuiltinMethodInfo _appendMethod;
-        private ListPopBoundBuiltinMethodInfo _popMethod;
-        private ListInsertBoundBuiltinMethodInfo _insertMethod;
-        private ListExtendBoundBuiltinMethodInfo _extendMethod;
+        private AnalysisValue _appendMethod, _popMethod, _insertMethod, _extendMethod;
 
         public ListInfo(VariableDef[] indexTypes, BuiltinClassInfo seqType, Node node, ProjectEntry entry)
             : base(indexTypes, seqType, node, entry) {
-            EnsureAppend();
         }
 
         public override IAnalysisSet GetMember(Node node, AnalysisUnit unit, string name) {
             switch (name) {
                 case "append":
-                    EnsureAppend();
-                    if (_appendMethod != null) {
-                        return _appendMethod.SelfSet;
-                    }
-                    break;
+                    return _appendMethod = _appendMethod ?? new SpecializedCallable(
+                        base.GetMember(node, unit, name).OfType<BuiltinNamespace<IPythonType>>().FirstOrDefault(),
+                        ListAppend,
+                        false
+                    );
                 case "pop":
-                    EnsurePop();
-                    if (_popMethod != null) {
-                        return _popMethod.SelfSet;
-                    }
-                    break;
+                    return _popMethod = _popMethod ?? new SpecializedCallable(
+                        base.GetMember(node, unit, name).OfType<BuiltinNamespace<IPythonType>>().FirstOrDefault(),
+                        ListPop,
+                        false
+                    );
                 case "insert":
-                    EnsureInsert();
-                    if (_insertMethod != null) {
-                        return _insertMethod.SelfSet;
-                    }
-                    break;
+                    return _insertMethod = _insertMethod ?? new SpecializedCallable(
+                        base.GetMember(node, unit, name).OfType<BuiltinNamespace<IPythonType>>().FirstOrDefault(),
+                        ListInsert,
+                        false
+                    );
                 case "extend":
-                    EnsureExtend();
-                    if (_extendMethod != null) {
-                        return _extendMethod.SelfSet;
-                    }
-                    break;
+                    return _extendMethod = _extendMethod ?? new SpecializedCallable(
+                        base.GetMember(node, unit, name).OfType<BuiltinNamespace<IPythonType>>().FirstOrDefault(),
+                        ListExtend,
+                        false
+                    );
             }
 
             return base.GetMember(node, unit, name);
         }
 
-        internal void AppendItem(Node node, AnalysisUnit unit, IAnalysisSet set) {
+        private IAnalysisSet ListAppend(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
+            if (args.Length == 1) {
+                AppendItem(node, unit, args[0]);
+            }
+
+            return unit.ProjectState._noneInst;
+        }
+
+        private IAnalysisSet ListPop(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
+            return UnionType;
+        }
+
+        private IAnalysisSet ListInsert(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
+            if (args.Length == 2) {
+                AppendItem(node, unit, args[1]);
+            }
+
+            return unit.ProjectState._noneInst;
+        }
+
+        private IAnalysisSet ListExtend(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
+            if (args.Length == 1) {
+                foreach (var type in args[0]) {
+                    AppendItem(node, unit, type.GetEnumeratorTypes(node, unit));
+                }
+            }
+
+            return unit.ProjectState._noneInst;
+        }
+
+        private void AppendItem(Node node, AnalysisUnit unit, IAnalysisSet set) {
             if (IndexTypes.Length == 0) {
                 IndexTypes = new[] { new VariableDef() };
             }
@@ -70,42 +97,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
             IndexTypes[0].AddTypes(unit, set);
 
             UnionType = null;
-        }
-
-        private void EnsureAppend() {
-            if (_appendMethod == null) {
-                IAnalysisSet value;
-                if (TryGetMember("append", out value)) {
-                    _appendMethod = new ListAppendBoundBuiltinMethodInfo(this, (BuiltinMethodInfo)value.First());
-                }
-            }
-        }
-
-        private void EnsurePop() {
-            if (_popMethod == null) {
-                IAnalysisSet value;
-                if (TryGetMember("pop", out value)) {
-                    _popMethod = new ListPopBoundBuiltinMethodInfo(this, (BuiltinMethodInfo)value.First());
-                }
-            }
-        }
-
-        private void EnsureInsert() {
-            if (_insertMethod == null) {
-                IAnalysisSet value;
-                if (TryGetMember("insert", out value)) {
-                    _insertMethod = new ListInsertBoundBuiltinMethodInfo(this, (BuiltinMethodInfo)value.First());
-                }
-            }
-        }
-
-        private void EnsureExtend() {
-            if (_extendMethod == null) {
-                IAnalysisSet value;
-                if (TryGetMember("extend", out value)) {
-                    _extendMethod = new ListExtendBoundBuiltinMethodInfo(this, (BuiltinMethodInfo)value.First());
-                }
-            }
         }
     }
 }

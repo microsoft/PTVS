@@ -12,6 +12,8 @@
  *
  * ***************************************************************************/
 
+using System.Diagnostics;
+using System.Linq;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
@@ -20,7 +22,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
     class SequenceBuiltinInstanceInfo : BuiltinInstanceInfo {
         private readonly bool _supportsMod;
         private readonly IAnalysisSet _indexTypes;
-        private IAnalysisSet _iterMethod;
+        private AnalysisValue _iterMethod, _iterator;
 
         public SequenceBuiltinInstanceInfo(BuiltinClassInfo klass, bool sequenceOfSelf, bool supportsMod)
             : base(klass) {
@@ -46,15 +48,23 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public override IAnalysisSet GetMember(Node node, AnalysisUnit unit, string name) {
             if (name == "__iter__") {
-                if (_iterMethod == null) {
-                    var indexTypes = new[] { new VariableDef() };
-                    indexTypes[0].AddTypes(unit, _indexTypes, false);
-                    _iterMethod = new IterBoundBuiltinMethodInfo(indexTypes, ClassInfo);
-                }
-                return _iterMethod;
+                return _iterMethod = _iterMethod ?? new SpecializedCallable(
+                    base.GetMember(node, unit, name).OfType<BuiltinNamespace<IPythonType>>().FirstOrDefault(),
+                    SequenceIter,
+                    false
+                );
             }
 
             return base.GetMember(node, unit, name);
+        }
+
+        private IAnalysisSet SequenceIter(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
+            if (_iterator == null) {
+                var types = new [] { new VariableDef() };
+                types[0].AddTypes(unit, _indexTypes, false);
+                _iterator = new IteratorInfo(types, IteratorInfo.GetIteratorTypeFromType(ClassInfo, unit), node);
+            }
+            return _iterator ?? AnalysisSet.Empty;
         }
 
         public override IAnalysisSet BinaryOperation(Node node, AnalysisUnit unit, Parsing.PythonOperator operation, IAnalysisSet rhs) {

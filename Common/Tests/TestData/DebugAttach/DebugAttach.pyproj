@@ -13,7 +13,7 @@
     <Name>DebugAttach</Name>
     <RootNamespace>DebugAttach</RootNamespace>
     <IsWindowsApplication>False</IsWindowsApplication>
-    <InterpreterId>2af0f10d-7135-4994-9156-5d01c9c11b7e</InterpreterId>
+    <InterpreterId>{2af0f10d-7135-4994-9156-5d01c9c11b7e}</InterpreterId>
     <InterpreterVersion>2.7</InterpreterVersion>
     <OutputPath>.</OutputPath>
   </PropertyGroup>
@@ -33,6 +33,9 @@
     <Compile Include="Simple.py" />
     <Compile Include="Program.py" />
     <Compile Include="VerySimple.py" />
+  </ItemGroup>
+  <ItemGroup>
+    <InterpreterReference Include="{2af0f10d-7135-4994-9156-5d01c9c11b7e}\2.7" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" />
 </Project>

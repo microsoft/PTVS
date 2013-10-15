@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -75,53 +76,54 @@ namespace AnalysisTests {
             }
         }
 
-        private static IPythonInterpreterFactory Factory {
+        private static IEnumerable<IPythonInterpreterFactory> Factories {
             get {
-                var interp = PythonPaths.Versions.Last(p => File.Exists(p.Path));
-                return new MockPythonInterpreterFactory(Guid.NewGuid(), "Test Interpreter",
-                    new InterpreterConfiguration(Path.GetDirectoryName(interp.Path), interp.Path, "", "", "",
-                        interp.Isx64 ? ProcessorArchitecture.Amd64 : ProcessorArchitecture.X86,
-                        interp.Version.ToVersion()
-                    )
-                );
+                foreach (var interp in PythonPaths.Versions.Where(p => File.Exists(p.Path))) {
+                    yield return new MockPythonInterpreterFactory(Guid.NewGuid(), "Test Interpreter",
+                        new InterpreterConfiguration(Path.GetDirectoryName(interp.Path), interp.Path, "", "", "",
+                            interp.Isx64 ? ProcessorArchitecture.Amd64 : ProcessorArchitecture.X86,
+                            interp.Version.ToVersion()
+                        )
+                    );
+                }
             }
         }
 
         [TestMethod, Priority(0)]
         public void RunInterpreterOutput() {
-            var fact = Factory;
+            foreach (var fact in Factories) {
+                using (var output = fact.Run("-c", "import sys; print(sys.version)")) {
+                    Assert.IsTrue(output.Wait(TimeSpan.FromSeconds(10)));
 
-            using (var output = fact.Run("-c", "import sys; print(sys.version)")) {
-                Assert.IsTrue(output.Wait(TimeSpan.FromSeconds(10)));
+                    foreach (var line in output.StandardOutputLines) {
+                        Console.WriteLine(line);
+                    }
+                    Console.WriteLine("END OF STDOUT");
 
-                foreach (var line in output.StandardOutputLines) {
-                    Console.WriteLine(line);
+                    foreach (var line in output.StandardErrorLines) {
+                        Console.WriteLine(line);
+                    }
+                    Console.WriteLine("END OF STDERR");
+
+                    Assert.AreEqual(0, output.StandardErrorLines.Count());
+                    Assert.AreEqual(1, output.StandardOutputLines.Count());
                 }
-                Console.WriteLine("END OF STDOUT");
-
-                foreach (var line in output.StandardErrorLines) {
-                    Console.WriteLine(line);
-                }
-                Console.WriteLine("END OF STDERR");
-
-                Assert.AreEqual(0, output.StandardErrorLines.Count());
-                Assert.AreEqual(1, output.StandardOutputLines.Count());
             }
         }
 
         [TestMethod, Priority(0)]
         public void RunInterpreterError() {
-            var fact = Factory;
+            foreach(var fact in Factories) {
+                using (var output = fact.Run("-c", "assert False")) {
+                    Assert.IsTrue(output.Wait(TimeSpan.FromSeconds(10)));
 
-            using (var output = fact.Run("-c", "assert False")) {
-                Assert.IsTrue(output.Wait(TimeSpan.FromSeconds(10)));
-
-                Assert.AreEqual(0, output.StandardOutputLines.Count());
-                var error = output.StandardErrorLines.ToList();
-                Assert.AreEqual(3, error.Count);
-                Assert.AreEqual("Traceback (most recent call last):", error[0]);
-                Assert.AreEqual("  File \"<string>\", line 1, in <module>", error[1]);
-                Assert.AreEqual("AssertionError", error[2]);
+                    Assert.AreEqual(0, output.StandardOutputLines.Count());
+                    var error = output.StandardErrorLines.ToList();
+                    Assert.AreEqual(3, error.Count);
+                    Assert.AreEqual("Traceback (most recent call last):", error[0]);
+                    Assert.AreEqual("  File \"<string>\", line 1, in <module>", error[1]);
+                    Assert.AreEqual("AssertionError", error[2]);
+                }
             }
         }
     }

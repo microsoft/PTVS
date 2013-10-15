@@ -12,12 +12,13 @@
  *
  * ***************************************************************************/
 
+using System.Linq;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Values {
     class ObjectBuiltinClassInfo : BuiltinClassInfo {
-        NewFunction _new;
+        private AnalysisValue _new;
 
         public ObjectBuiltinClassInfo(IPythonType classObj, PythonAnalyzer projectState)
             : base(classObj, projectState) {
@@ -25,40 +26,30 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public override IAnalysisSet GetMember(Parsing.Ast.Node node, AnalysisUnit unit, string name) {
             if (name == "__new__") {
-                if (_new == null) {
-                    var func = this._type.GetMember(unit.ProjectEntry.MyScope.InterpreterContext, name);
-                    if (func != null) {
-                        _new = new NewFunction((BuiltinFunctionInfo)unit.ProjectState.GetAnalysisValueFromObjects(func), ProjectState);
-                    }
-                }
-                if (_new != null) {
-                    return _new.SelfSet;
-                }
+                return _new = _new ?? new SpecializedCallable(
+                    base.GetMember(node, unit, name).OfType<BuiltinNamespace<IPythonType>>().FirstOrDefault(),
+                    ObjectNew,
+                    false
+                );
             }
             return base.GetMember(node, unit, name);
         }
 
-        class NewFunction : BuiltinFunctionInfo {
-            internal NewFunction(BuiltinFunctionInfo function, PythonAnalyzer projectState)
-                : base(function.Function, projectState) {
-            }
-
-            public override IAnalysisSet Call(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
-                if (args.Length >= 1) {
-                    var instance = AnalysisSet.Empty;
-                    foreach (var n in args[0]) {
-                        var bci = n as BuiltinClassInfo;
-                        var ci = n as ClassInfo;
-                        if (bci != null) {
-                            instance = instance.Union(bci.Instance);
-                        } else if (ci != null) {
-                            instance = instance.Union(ci.Instance);
-                        }
+        private IAnalysisSet ObjectNew(Node node, Analysis.AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
+            if (args.Length >= 1) {
+                var instance = AnalysisSet.Empty;
+                foreach (var n in args[0]) {
+                    var bci = n as BuiltinClassInfo;
+                    var ci = n as ClassInfo;
+                    if (bci != null) {
+                        instance = instance.Union(bci.Instance);
+                    } else if (ci != null) {
+                        instance = instance.Union(ci.Instance);
                     }
-                    return instance;
                 }
-                return ProjectState.ClassInfos[BuiltinTypeId.Object].Instance;
+                return instance;
             }
+            return ProjectState.ClassInfos[BuiltinTypeId.Object].Instance;
         }
     }
 }

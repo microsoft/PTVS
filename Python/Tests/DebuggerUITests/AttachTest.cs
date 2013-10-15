@@ -78,11 +78,6 @@ namespace DebuggerUITests {
         // [TestInitialize()]
         // public void MyTestInitialize() { }
 
-        [TestCleanup()]
-        public void MyTestCleanup() {
-            VsIdeTestHostContext.Dte.Solution.Close(false);
-        }
-
         #endregion
         #region Tests
         [TestMethod, Priority(0), TestCategory("Core")]
@@ -94,17 +89,17 @@ namespace DebuggerUITests {
 
             Debugger2 dbg2 = (Debugger2)VsIdeTestHostContext.Dte.Debugger;
 
-            SD.Process processToAttach = OpenSolutionAndLaunchFile(debugSolution, startFile, "", "");
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                SD.Process processToAttach = OpenSolutionAndLaunchFile(app, debugSolution, startFile, "", "");
 
-            try {
-                AttachAndWaitForMode(processToAttach, AD7Engine.DebugEngineName, dbgDebugMode.dbgRunMode);
-            } finally {
-                dbg2.DetachAll();
-                DebugProject.WaitForMode(dbgDebugMode.dbgDesignMode);
-                if (!processToAttach.HasExited) processToAttach.Kill();
+                try {
+                    AttachAndWaitForMode(processToAttach, AD7Engine.DebugEngineName, dbgDebugMode.dbgRunMode);
+                } finally {
+                    dbg2.DetachAll();
+                    DebugProject.WaitForMode(dbgDebugMode.dbgDesignMode);
+                    if (!processToAttach.HasExited) processToAttach.Kill();
+                }
             }
-            return;
-
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
@@ -117,19 +112,19 @@ namespace DebuggerUITests {
 
             Debugger2 dbg2 = (Debugger2)VsIdeTestHostContext.Dte.Debugger;
 
-            SD.Process processToAttach = OpenSolutionAndLaunchFile(debugSolution, startFile, "", "");
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                SD.Process processToAttach = OpenSolutionAndLaunchFile(app, debugSolution, startFile, "", "");
 
-            VsIdeTestHostContext.Dte.Debugger.Breakpoints.Add(File: startFile, Line: breakLine);
+                VsIdeTestHostContext.Dte.Debugger.Breakpoints.Add(File: startFile, Line: breakLine);
 
-            try {
-                AttachAndWaitForMode(processToAttach, AD7Engine.DebugEngineName, dbgDebugMode.dbgBreakMode);
-            } finally {
-                dbg2.DetachAll();
-                DebugProject.WaitForMode(dbgDebugMode.dbgDesignMode);
-                if (!processToAttach.HasExited) processToAttach.Kill();
+                try {
+                    AttachAndWaitForMode(processToAttach, AD7Engine.DebugEngineName, dbgDebugMode.dbgBreakMode);
+                } finally {
+                    dbg2.DetachAll();
+                    DebugProject.WaitForMode(dbgDebugMode.dbgDesignMode);
+                    if (!processToAttach.HasExited) processToAttach.Kill();
+                }
             }
-            return;
-
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
@@ -142,17 +137,19 @@ namespace DebuggerUITests {
 
             Debugger2 dbg2 = (Debugger2)VsIdeTestHostContext.Dte.Debugger;
 
-            SD.Process processToAttach = OpenSolutionAndLaunchFile(debugSolution, startFile, "", "");
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                SD.Process processToAttach = OpenSolutionAndLaunchFile(app, debugSolution, startFile, "", "");
 
-            try {
-                AttachAndWaitForMode(processToAttach, AD7Engine.DebugEngineName, dbgDebugMode.dbgRunMode);
-                dbg2.Breakpoints.Add(File: startFile, Line: breakLine);
-                DebugProject.WaitForMode(dbgDebugMode.dbgBreakMode);
+                try {
+                    AttachAndWaitForMode(processToAttach, AD7Engine.DebugEngineName, dbgDebugMode.dbgRunMode);
+                    dbg2.Breakpoints.Add(File: startFile, Line: breakLine);
+                    DebugProject.WaitForMode(dbgDebugMode.dbgBreakMode);
 
-            } finally {
-                dbg2.DetachAll();
-                DebugProject.WaitForMode(dbgDebugMode.dbgDesignMode);
-                if (!processToAttach.HasExited) processToAttach.Kill();
+                } finally {
+                    dbg2.DetachAll();
+                    DebugProject.WaitForMode(dbgDebugMode.dbgDesignMode);
+                    if (!processToAttach.HasExited) processToAttach.Kill();
+                }
             }
         }
 
@@ -164,28 +161,30 @@ namespace DebuggerUITests {
 
             Debugger2 dbg2 = (Debugger2)VsIdeTestHostContext.Dte.Debugger;
 
-            SD.Process processToAttach = OpenSolutionAndLaunchFile(debugSolution, startFile, "", "");
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                SD.Process processToAttach = OpenSolutionAndLaunchFile(app, debugSolution, startFile, "", "");
 
-            try {
-                Process2 proc = AttachAndWaitForMode(processToAttach, AD7Engine.DebugEngineName, dbgDebugMode.dbgRunMode);
-                dbg2.Break(WaitForBreakMode: false);
-                DebugProject.WaitForMode(dbgDebugMode.dbgBreakMode);
+                try {
+                    Process2 proc = AttachAndWaitForMode(processToAttach, AD7Engine.DebugEngineName, dbgDebugMode.dbgRunMode);
+                    dbg2.Break(WaitForBreakMode: false);
+                    DebugProject.WaitForMode(dbgDebugMode.dbgBreakMode);
 
-                var x = proc.Threads.Cast<Thread2>()
-                    .SelectMany<Thread2, StackFrame>(t => t.StackFrames.Cast<StackFrame>())
-                    .SelectMany<StackFrame, Expression>(f => f.Locals.Cast<Expression>())
-                    .Where(e => e.Name == "exit_flag")
-                    .First();
+                    var x = proc.Threads.Cast<Thread2>()
+                        .SelectMany<Thread2, StackFrame>(t => t.StackFrames.Cast<StackFrame>())
+                        .SelectMany<StackFrame, Expression>(f => f.Locals.Cast<Expression>())
+                        .Where(e => e.Name == "exit_flag")
+                        .First();
 
-                Assert.IsNotNull(x, "Couldn't find a frame with 'exit_flag' defined!");
+                    Assert.IsNotNull(x, "Couldn't find a frame with 'exit_flag' defined!");
 
-                x.Value = "True";
+                    x.Value = "True";
 
-                dbg2.Go(WaitForBreakOrEnd: false);
-                DebugProject.WaitForMode(dbgDebugMode.dbgDesignMode);
+                    dbg2.Go(WaitForBreakOrEnd: false);
+                    DebugProject.WaitForMode(dbgDebugMode.dbgDesignMode);
 
-            } finally {
-                if (!processToAttach.HasExited) processToAttach.Kill();
+                } finally {
+                    if (!processToAttach.HasExited) processToAttach.Kill();
+                }
             }
         }
 
@@ -198,29 +197,31 @@ namespace DebuggerUITests {
 
             Debugger2 dbg2 = (Debugger2)VsIdeTestHostContext.Dte.Debugger;
 
-            SD.Process processToAttach = OpenSolutionAndLaunchFile(debugSolution, startFile, "", "");
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                SD.Process processToAttach = OpenSolutionAndLaunchFile(app, debugSolution, startFile, "", "");
 
-            try {
-                Process2 proc = AttachAndWaitForMode(processToAttach, AD7Engine.DebugEngineName, dbgDebugMode.dbgRunMode);
-                dbg2.Breakpoints.Add(File: startFile, Line: breakLine);
-                DebugProject.WaitForMode(dbgDebugMode.dbgBreakMode);
-                dbg2.BreakpointLastHit.Delete();
+                try {
+                    Process2 proc = AttachAndWaitForMode(processToAttach, AD7Engine.DebugEngineName, dbgDebugMode.dbgRunMode);
+                    dbg2.Breakpoints.Add(File: startFile, Line: breakLine);
+                    DebugProject.WaitForMode(dbgDebugMode.dbgBreakMode);
+                    dbg2.BreakpointLastHit.Delete();
 
-                var x = proc.Threads.Cast<Thread2>()
-                    .SelectMany<Thread2, StackFrame>(t => t.StackFrames.Cast<StackFrame>())
-                    .SelectMany<StackFrame, Expression>(f => f.Locals.Cast<Expression>())
-                    .Where(e => e.Name == "exit_flag")
-                    .First();
+                    var x = proc.Threads.Cast<Thread2>()
+                        .SelectMany<Thread2, StackFrame>(t => t.StackFrames.Cast<StackFrame>())
+                        .SelectMany<StackFrame, Expression>(f => f.Locals.Cast<Expression>())
+                        .Where(e => e.Name == "exit_flag")
+                        .First();
 
-                Assert.IsNotNull(x, "Couldn't find a frame with 'exit_flag' defined!");
+                    Assert.IsNotNull(x, "Couldn't find a frame with 'exit_flag' defined!");
 
-                x.Value = "True";
+                    x.Value = "True";
 
-                dbg2.Go(WaitForBreakOrEnd: false);
-                DebugProject.WaitForMode(dbgDebugMode.dbgDesignMode);
+                    dbg2.Go(WaitForBreakOrEnd: false);
+                    DebugProject.WaitForMode(dbgDebugMode.dbgDesignMode);
 
-            } finally {
-                if (!processToAttach.HasExited) processToAttach.Kill();
+                } finally {
+                    if (!processToAttach.HasExited) processToAttach.Kill();
+                }
             }
         }
 
@@ -232,14 +233,16 @@ namespace DebuggerUITests {
 
             Debugger2 dbg2 = (Debugger2)VsIdeTestHostContext.Dte.Debugger;
 
-            SD.Process processToAttach = OpenSolutionAndLaunchFile(debugSolution, startFile, "", "");
-            System.Threading.Thread.Sleep(2000);
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                SD.Process processToAttach = OpenSolutionAndLaunchFile(app, debugSolution, startFile, "", "");
+                System.Threading.Thread.Sleep(2000);
 
-            try {
-                Process2 proc = AttachAndWaitForMode(processToAttach, AD7Engine.DebugEngineName, dbgDebugMode.dbgRunMode);
+                try {
+                    Process2 proc = AttachAndWaitForMode(processToAttach, AD7Engine.DebugEngineName, dbgDebugMode.dbgRunMode);
 
-            } finally {
-                if (!processToAttach.HasExited) processToAttach.Kill();
+                } finally {
+                    if (!processToAttach.HasExited) processToAttach.Kill();
+                }
             }
         }
 
@@ -256,8 +259,7 @@ namespace DebuggerUITests {
         #endregion
 
         #region Helper methods
-        private static SD.Process OpenSolutionAndLaunchFile(string debugSolution, string startFile, string interpreterArgs, string programArgs) {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
+        private static SD.Process OpenSolutionAndLaunchFile(VisualStudioApp app, string debugSolution, string startFile, string interpreterArgs, string programArgs) {
             var project = app.OpenAndFindProject(debugSolution, startFile);
             return LaunchFileFromProject(project, startFile, interpreterArgs, programArgs);
         }

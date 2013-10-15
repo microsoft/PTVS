@@ -870,15 +870,9 @@ namespace Microsoft.PythonTools.Intellisense {
             ISignature[] res = new ISignature[liveSigs.Count];
             int i = 0;
             foreach (var sig in liveSigs) {
-                var parameters = new ParameterResult[sig.Parameters.Length];
-                int j = 0;
-                foreach (var param in sig.Parameters) {
-                    parameters[j++] = new ParameterResult(param.Name);
-                }
-
                 res[i++] = new PythonSignature(
                     span,
-                    new LiveOverloadResult(text, sig.Documentation, parameters),
+                    new LiveOverloadResult(text, sig.Documentation, sig.Parameters),
                     paramIndex,
                     lastKeywordArg
                 );

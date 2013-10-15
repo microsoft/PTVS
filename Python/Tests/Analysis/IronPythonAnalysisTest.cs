@@ -390,7 +390,7 @@ def g():
             //AssertUtil.ContainsExactly(entry.GetVariableDescriptionsByIndex("\"abc\".Length", 1), "int");
             //AssertUtil.ContainsExactly(entry.GetVariableDescriptionsByIndex("c.Length", 1), "int");
             //AssertUtil.ContainsExactly(entry.GetVariableDescriptionsByIndex("System.StringSplitOptions.RemoveEmptyEntries", 0), "field of type StringSplitOptions");
-            AssertUtil.ContainsExactly(entry.GetDescriptionsByIndex("g", 1), "def g(...) -> built-in module System");    // return info could be better
+            AssertUtil.ContainsExactly(entry.GetDescriptionsByIndex("g", 1), "def g() -> built-in module System");    // return info could be better
             //AssertUtil.ContainsExactly(entry.GetVariableDescriptionsByIndex("System.AppDomain.DomainUnload", 1), "event of type System.EventHandler");
         }
 

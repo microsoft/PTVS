@@ -59,7 +59,7 @@ namespace TestAdapterTests {
 
         public TestCase TestCase {
             get {
-                var expectedFullyQualifiedName = TestDiscoverer.MakeFullyQualifiedTestName(RelativeClassFilePath, ClassName, MethodName);
+                var expectedFullyQualifiedName = TestAnalyzer.MakeFullyQualifiedTestName(RelativeClassFilePath, ClassName, MethodName);
                 var tc = new TestCase(expectedFullyQualifiedName, new Uri(TestExecutor.ExecutorUriString), this.ProjectFilePath);
                 tc.CodeFilePath = SourceCodeFilePath;
                 tc.LineNumber = SourceCodeLineNumber;

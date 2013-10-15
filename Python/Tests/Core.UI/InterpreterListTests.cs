@@ -144,6 +144,7 @@ namespace PythonToolsUITests {
                 Assert.AreEqual(0, allNames.Count);
 
                 // Remove the virtual environment
+                env.Select();
                 env.SetFocus();
 
                 var removeDeleteDlg = new AutomationWrapper(AutomationElement.FromHandle(
@@ -245,6 +246,7 @@ namespace PythonToolsUITests {
                     "Python Environments",
                     "Python 2.7"));
                 python27Env.Select();
+                python27Env.SetFocus();
                 app.Dte.ExecuteCommand("Project.ActivateEnvironment");
 
                 // Check that the activate button for the virtual environment is now enabled and the interpreter

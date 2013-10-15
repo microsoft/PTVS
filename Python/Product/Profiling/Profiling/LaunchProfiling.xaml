@@ -3,25 +3,62 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:ui="clr-namespace:Microsoft.PythonTools.Profiling"
+    xmlns:wpf="clr-namespace:Microsoft.PythonTools.Wpf;assembly=Microsoft.PythonTools"
     Title="Profiling Settings" 
     MinHeight="440" Width="700" 
     MinWidth="400"
     SizeToContent="Height"
     x:Name="LaunchProfilingWindow" 
-    xmlns:my="clr-namespace:Microsoft.PythonTools.Profiling" 
-    xmlns:my1="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Shell.10.0"
     WindowStartupLocation="CenterOwner"
-    Background="{x:Static SystemColors.ControlBrush}"
+    Background="{DynamicResource {x:Static wpf:Controls.BackgroundKey}}"
+    TextElement.Foreground="{DynamicResource {x:Static wpf:Controls.ForegroundKey}}"
     TextOptions.TextFormattingMode="Display"
     ResizeMode="CanResizeWithGrip">
+    <Window.Resources>
+        <ResourceDictionary Source="pack://application:,,,/Microsoft.PythonTools;component/Wpf/Controls.xaml" />
+    </Window.Resources>
     <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="12">
         <Grid.RowDefinitions>
             <RowDefinition Height="auto" />
-            <RowDefinition Height="*" />
+            <RowDefinition Height="auto" />
         </Grid.RowDefinitions>
-        <TabControl Grid.Row="0" Name="_tabControl">
-            <TabItem Header="Target" Name="_targetTab">
+        <Grid Grid.Row="0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="auto" />
+                <RowDefinition Height="auto" />
+                <RowDefinition Height="auto" />
+                <RowDefinition Height="auto" />
+                <RowDefinition Height="auto" />
+            </Grid.RowDefinitions>
+                    
+            <Label Grid.Row="0" Content="What would you like to profile?" Margin="6 12 6 0" FontWeight="Bold" />
+
+            <RadioButton Grid.Row="1" Margin="12 12 12 4"
+                         Content="_Open project"
+                         AutomationProperties.AutomationId="ProfileProject"
+                         GroupName="ProjectOrStandalone"
+                         IsEnabled="{Binding IsAnyAvailableProjects}"
+                         IsChecked="{Binding IsProjectSelected}" />
+            <ComboBox Grid.Row="2"
+                      IsEnabled="{Binding IsProjectSelected}"
+                      ItemsSource="{Binding AvailableProjects}"
+                      SelectedItem="{Binding Project}"
+                      Margin="8 4" Padding="4 6" VerticalContentAlignment="Center"
+                      DisplayMemberPath="Name"
+                      AutomationProperties.AutomationId="Project" />
+
+            <RadioButton Grid.Row="3" Margin="12 12 12 4"
+                         Content="S_tandalone script" 
+                         AutomationProperties.AutomationId="ProfileScript"
+                         GroupName="ProjectOrStandalone"
+                         IsChecked="{Binding IsStandaloneSelected}" />
+            <GroupBox Grid.Row="4" Header="Script Options"
+                      IsEnabled="{Binding IsStandaloneSelected}">
                 <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="auto" />
                         <RowDefinition Height="auto" />
@@ -29,108 +66,69 @@
                         <RowDefinition Height="auto" />
                         <RowDefinition Height="auto" />
                     </Grid.RowDefinitions>
-                    
-                    <Label Grid.Row="0" Content="What would you like to profile?" Margin="6 12 6 0" FontWeight="Bold" />
+                    <Label Grid.Row="0" Grid.Column="0" Content="Python _Interpreter:"
+                            Padding="0" VerticalAlignment="Center" />
+                    <ComboBox Grid.Row="0" Grid.Column="1" Margin="4 4"
+                                ItemsSource="{Binding Standalone.AvailableInterpreters}"
+                                SelectedItem="{Binding Standalone.Interpreter,UpdateSourceTrigger=PropertyChanged}"
+                                IsEditable="False"
+                                DisplayMemberPath="Name"
+                                AutomationProperties.AutomationId="Standalone.Interpreter" />
 
-                    <RadioButton Grid.Row="1" Margin="12 12 12 4"
-                                 Content="_Open project"
-                                 AutomationProperties.AutomationId="ProfileProject"
-                                 GroupName="ProjectOrStandalone"
-                                 IsEnabled="{Binding IsAnyAvailableProjects}"
-                                 IsChecked="{Binding IsProjectSelected}" />
-                    <ComboBox Grid.Row="2"
-                              IsEnabled="{Binding IsProjectSelected}"
-                              ItemsSource="{Binding AvailableProjects}"
-                              SelectedItem="{Binding Project}"
-                              Margin="8 4" Padding="4 6" VerticalContentAlignment="Center"
-                              DisplayMemberPath="Name"
-                              AutomationProperties.AutomationId="Project" />
+                    <Label Grid.Row="1" Grid.Column="0" Content="I_nterpreter Path:"
+                            Padding="0" VerticalAlignment="Center" />
+                    <Grid Grid.Row="1" Grid.Column="1" Margin="4"
+                            IsEnabled="{Binding Standalone.CanSpecifyInterpreterPath}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBox Grid.Column="0" 
+                                    Text="{Binding Standalone.InterpreterPath,UpdateSourceTrigger=PropertyChanged}"
+                                    AutomationProperties.AutomationId="Standalone.InterpreterPath" />
+                        <Button Grid.Column="1" Margin="4 0 0 0" Content="..."
+                                Click="FindInterpreterClick"
+                                Width="{Binding RelativeSource={RelativeSource Self},Path=ActualHeight}" />
+                    </Grid>
 
-                    <RadioButton Grid.Row="3" Margin="12 12 12 4"
-                                 Content="S_tandalone script" 
-                                 AutomationProperties.AutomationId="ProfileScript"
-                                 GroupName="ProjectOrStandalone"
-                                 IsChecked="{Binding IsStandaloneSelected}" />
-                    <GroupBox Grid.Row="4" Header="Script Options"
-                              Margin="8"
-                              IsEnabled="{Binding IsStandaloneSelected}">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="auto" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="auto" />
-                                <RowDefinition Height="auto" />
-                                <RowDefinition Height="auto" />
-                                <RowDefinition Height="auto" />
-                                <RowDefinition Height="auto" />
-                            </Grid.RowDefinitions>
-                            <Label Grid.Row="0" Grid.Column="0" Content="Python _Interpreter:"
-                                   Padding="0" VerticalAlignment="Center" />
-                            <ComboBox Grid.Row="0" Grid.Column="1" Margin="4 4"
-                                      ItemsSource="{Binding Standalone.AvailableInterpreters}"
-                                      SelectedItem="{Binding Standalone.Interpreter,UpdateSourceTrigger=PropertyChanged}"
-                                      IsEditable="False"
-                                      DisplayMemberPath="Name"
-                                      AutomationProperties.AutomationId="Standalone.Interpreter" />
+                    <Label Grid.Row="2" Grid.Column="0" Content="Sc_ript:"
+                            Padding="0" VerticalAlignment="Center" />
+                    <Grid Grid.Row="2" Grid.Column="1" Margin="4">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBox Grid.Column="0" 
+                                    Text="{Binding Standalone.ScriptPath,UpdateSourceTrigger=PropertyChanged}"
+                                    AutomationProperties.AutomationId="Standalone.ScriptPath" />
+                        <Button Grid.Column="1" Margin="4 0 0 0" Content="..."
+                                Click="FindScriptClick"
+                                Width="{Binding RelativeSource={RelativeSource Self},Path=ActualHeight}" />
+                    </Grid>
 
-                            <Label Grid.Row="1" Grid.Column="0" Content="I_nterpreter Path:"
-                                   Padding="0" VerticalAlignment="Center" />
-                            <Grid Grid.Row="1" Grid.Column="1" Margin="4"
-                                  IsEnabled="{Binding Standalone.CanSpecifyInterpreterPath}">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="auto" />
-                                </Grid.ColumnDefinitions>
-                                <TextBox Grid.Column="0" 
-                                         Text="{Binding Standalone.InterpreterPath,UpdateSourceTrigger=PropertyChanged}"
-                                         AutomationProperties.AutomationId="Standalone.InterpreterPath" />
-                                <Button Grid.Column="1" Margin="4 0 0 0" Content="..."
-                                        Click="FindInterpreterClick"
-                                        Width="{Binding RelativeSource={RelativeSource Self},Path=ActualHeight}" />
-                            </Grid>
+                    <Label Grid.Row="3" Grid.Column="0" Content="_Working Directory:"
+                            Padding="0" VerticalAlignment="Center" />
+                    <Grid Grid.Row="3" Grid.Column="1" Margin="4">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBox Grid.Column="0" 
+                                    Text="{Binding Standalone.WorkingDirectory,UpdateSourceTrigger=PropertyChanged}" 
+                                    AutomationProperties.AutomationId="Standalone.WorkingDirectory" />
+                        <Button Grid.Column="1" Margin="4 0 0 0" Content="..." 
+                                Click="FindWorkingDirectoryClick"
+                                Width="{Binding RelativeSource={RelativeSource Self},Path=ActualHeight}" />
+                    </Grid>
 
-                            <Label Grid.Row="2" Grid.Column="0" Content="Sc_ript:"
-                                   Padding="0" VerticalAlignment="Center" />
-                            <Grid Grid.Row="2" Grid.Column="1" Margin="4">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="auto" />
-                                </Grid.ColumnDefinitions>
-                                <TextBox Grid.Column="0" 
-                                         Text="{Binding Standalone.ScriptPath,UpdateSourceTrigger=PropertyChanged}"
-                                         AutomationProperties.AutomationId="Standalone.ScriptPath" />
-                                <Button Grid.Column="1" Margin="4 0 0 0" Content="..."
-                                        Click="FindScriptClick"
-                                        Width="{Binding RelativeSource={RelativeSource Self},Path=ActualHeight}" />
-                            </Grid>
-
-                            <Label Grid.Row="3" Grid.Column="0" Content="_Working Directory:"
-                                   Padding="0" VerticalAlignment="Center" />
-                            <Grid Grid.Row="3" Grid.Column="1" Margin="4">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="auto" />
-                                </Grid.ColumnDefinitions>
-                                <TextBox Grid.Column="0" 
-                                         Text="{Binding Standalone.WorkingDirectory,UpdateSourceTrigger=PropertyChanged}" 
-                                         AutomationProperties.AutomationId="Standalone.WorkingDirectory" />
-                                <Button Grid.Column="1" Margin="4 0 0 0" Content="..." 
-                                        Click="FindWorkingDirectoryClick"
-                                        Width="{Binding RelativeSource={RelativeSource Self},Path=ActualHeight}" />
-                            </Grid>
-
-                            <Label Grid.Row="4" Grid.Column="0" Content="Command Line _Arguments:"
-                                   Padding="0" VerticalAlignment="Center" />
-                            <TextBox Grid.Row="4" Grid.Column="1" Margin="4"
-                                     Text="{Binding Standalone.Arguments,UpdateSourceTrigger=PropertyChanged}"
-                                     AutomationProperties.AutomationId="Standalone.Arguments" />
-                        </Grid>
-                    </GroupBox>
+                    <Label Grid.Row="4" Grid.Column="0" Content="Command Line _Arguments:"
+                            Padding="0" VerticalAlignment="Center" />
+                    <TextBox Grid.Row="4" Grid.Column="1" Margin="4"
+                                Text="{Binding Standalone.Arguments,UpdateSourceTrigger=PropertyChanged}"
+                                AutomationProperties.AutomationId="Standalone.Arguments" />
                 </Grid>
-            </TabItem>
-        </TabControl>
+            </GroupBox>
+        </Grid>
         <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Bottom">
             <Button IsDefault="True" Click="OkClick" IsEnabled="{Binding IsValid}"
                     MinWidth="86" MinHeight="24" Margin="0 0 9 0"

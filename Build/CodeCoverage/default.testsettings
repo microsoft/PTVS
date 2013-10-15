@@ -2,7 +2,7 @@
 <TestSettings name="default" id="e4a89088-cf93-404a-8b36-f4bd08faccc4" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
   <Description>These are default test settings for a local test run</Description>
   <Execution>
-    <Timeouts runTimeout="1800000" testTimeout="300000" />
+    <Timeouts runTimeout="3600000" testTimeout="300000" />
     <TestTypeSpecific>
       <UnitTestRunConfig testTypeId="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b">
         <AssemblyResolution>

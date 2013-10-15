@@ -18,7 +18,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.NetworkInformation;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
@@ -107,7 +106,7 @@ namespace Microsoft.PythonTools.TestAdapter {
             string testFile;
             string testClass;
             string testMethod;
-            TestDiscoverer.ParseFullyQualifiedTestName(test.FullyQualifiedName, out testFile, out testClass, out testMethod);
+            TestAnalyzer.ParseFullyQualifiedTestName(test.FullyQualifiedName, out testFile, out testClass, out testMethod);
 
             return Path.GetDirectoryName(CommonUtils.GetAbsoluteFilePath(settings.WorkingDir, testFile));
         }
@@ -116,7 +115,7 @@ namespace Microsoft.PythonTools.TestAdapter {
             string testFile;
             string testClass;
             string testMethod;
-            TestDiscoverer.ParseFullyQualifiedTestName(test.FullyQualifiedName, out testFile, out testClass, out testMethod);
+            TestAnalyzer.ParseFullyQualifiedTestName(test.FullyQualifiedName, out testFile, out testClass, out testMethod);
 
             var moduleName = Path.GetFileNameWithoutExtension(testFile);
 

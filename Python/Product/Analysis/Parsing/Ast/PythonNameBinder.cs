@@ -403,10 +403,14 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 node.AddVariableReference(_globalScope, _bindRefs, Reference(node.Name));
             }
             
-            // process the default arg values in the outer context
+            // process the default arg values and annotations in the outer
+            // context
             foreach (Parameter p in node.Parameters) {
                 if (p.DefaultValue != null) {
                     p.DefaultValue.Walk(this);
+                }
+                if (p.Annotation != null) {
+                    p.Annotation.Walk(this);
                 }
             }
             // process the decorators in the outer context
@@ -416,6 +420,10 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                         dec.Walk(this);
                     }
                 }
+            }
+            // process the return annotation in the outer context
+            if (node.ReturnAnnotation != null) {
+                node.ReturnAnnotation.Walk(this);
             }
 
             PushScope(node);

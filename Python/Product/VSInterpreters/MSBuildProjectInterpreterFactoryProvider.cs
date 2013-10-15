@@ -25,7 +25,7 @@ using Microsoft.VisualStudioTools;
 using MSBuild = Microsoft.Build.Evaluation;
 
 namespace Microsoft.PythonTools.Interpreter {
-    public class MSBuildProjectInterpreterFactoryProvider : IPythonInterpreterFactoryProvider, IDisposable {
+    public sealed class MSBuildProjectInterpreterFactoryProvider : IPythonInterpreterFactoryProvider, IDisposable {
         readonly IInterpreterOptionsService _service;
         readonly MSBuild.Project _project;
         readonly Dictionary<Guid, string> _rootPaths;
@@ -763,6 +763,8 @@ namespace Microsoft.PythonTools.Interpreter {
         #region IDisposable Members
 
         public void Dispose() {
+            _service.DefaultInterpreterChanged -= GlobalDefaultInterpreterChanged;
+
             if (_factories != null) {
                 foreach (var keyValue in _factories) {
                     if (keyValue.Value.Owned) {

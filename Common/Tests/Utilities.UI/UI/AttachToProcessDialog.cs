@@ -26,10 +26,6 @@ namespace TestUtilities.UI {
 
         public AttachToProcessDialog(IntPtr hwnd) : this(AutomationElement.FromHandle(hwnd)) { _hwnd = (int)hwnd; }
 
-        public IntPtr WaitForDialog() {
-            return VisualStudioApp.WaitForDialogToReplace(_hwnd);
-        }
-
         public SelectCodeTypeDialog SelectCodeTypeForDebugging() {
             ThreadPool.QueueUserWorkItem(x => {
                 try {

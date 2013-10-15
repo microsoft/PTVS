@@ -87,7 +87,7 @@
             </Component>
 
             <Component Id="cmp5D4D4389AA804F3F9A2E6B46F7582F40" Directory="dirEB615C5BD073420189EF582A99D7486B" Guid="{528B6F3B-9349-44F4-AFD9-6DD07CAE45DC}">
-                <File Id="filA5A0360445134AE19E53C06238F35DE2" KeyPath="yes" Source="$(var.PyKinectDir)\LICENSE.txt" />
+                <File Id="filA5A0360445134AE19E53C06238F35DE2" KeyPath="yes" Source="$(var.PyKinectDir)\license.html" />
             </Component>
 
 

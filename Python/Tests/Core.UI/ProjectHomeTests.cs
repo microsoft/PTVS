@@ -39,11 +39,6 @@ namespace PythonToolsUITests {
             TestData.Deploy();
         }
 
-        [TestCleanup]
-        public void MyTestCleanup() {
-            VsIdeTestHostContext.Dte.Solution.Close(false);
-        }
-
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void LoadRelativeProjects() {
@@ -113,7 +108,7 @@ namespace PythonToolsUITests {
             try {
                 var project = VsIdeTestHostContext.Dte.Solution.Projects.OfType<Project>().Single();
                 Assert.AreEqual("ProjectSingle.pyproj", Path.GetFileName(project.FileName));
-                
+
                 project.ProjectItems.AddFromTemplate(((Solution2)VsIdeTestHostContext.Dte.Solution).GetProjectItemTemplate("PyClass.zip", "pyproj"), "TemplateItem.py");
 
                 var newItem = project.ProjectItems.Item("TemplateItem.py");
@@ -222,101 +217,101 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void SaveProjectAs() {
-            try {
-                var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-                var project = app.OpenAndFindProject(@"TestData\HelloWorld.sln");
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                try {
+                    var project = app.OpenAndFindProject(@"TestData\HelloWorld.sln");
 
-                project.SaveAs(TestData.GetPath(@"TestData\ProjectHomeProjects\TempFile.pyproj"));
+                    project.SaveAs(TestData.GetPath(@"TestData\ProjectHomeProjects\TempFile.pyproj"));
 
-                Assert.AreEqual(TestData.GetPath(@"TestData\HelloWorld\"),
-                    ((OAProject)project).ProjectNode.ProjectHome);
+                    Assert.AreEqual(TestData.GetPath(@"TestData\HelloWorld\"),
+                        ((OAProject)project).ProjectNode.ProjectHome);
 
-                VsIdeTestHostContext.Dte.Solution.SaveAs("HelloWorldRelocated.sln");
-            } finally {
-                VsIdeTestHostContext.Dte.Solution.Close();
-                GC.Collect();
-                GC.WaitForPendingFinalizers();
-            }
-            try {
-                var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-                var project = app.OpenAndFindProject(@"TestData\HelloWorldRelocated.sln");
+                    VsIdeTestHostContext.Dte.Solution.SaveAs("HelloWorldRelocated.sln");
+                } finally {
+                    VsIdeTestHostContext.Dte.Solution.Close();
+                    GC.Collect();
+                    GC.WaitForPendingFinalizers();
+                }
+                try {
+                    var project = app.OpenAndFindProject(@"TestData\HelloWorldRelocated.sln");
 
-                Assert.AreEqual("TempFile.pyproj", project.FileName);
+                    Assert.AreEqual("TempFile.pyproj", project.FileName);
 
-                Assert.AreEqual(TestData.GetPath(@"TestData\HelloWorld\"),
-                    ((OAProject)project).ProjectNode.ProjectHome);
-            } finally {
-                VsIdeTestHostContext.Dte.Solution.Close();
-                GC.Collect();
-                GC.WaitForPendingFinalizers();
+                    Assert.AreEqual(TestData.GetPath(@"TestData\HelloWorld\"),
+                        ((OAProject)project).ProjectNode.ProjectHome);
+                } finally {
+                    VsIdeTestHostContext.Dte.Solution.Close();
+                    GC.Collect();
+                    GC.WaitForPendingFinalizers();
+                }
             }
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void DragDropTest() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            app.OpenAndFindProject(@"TestData\DragDropRelocatedTest.sln");
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                app.OpenAndFindProject(@"TestData\DragDropRelocatedTest.sln");
 
-            app.OpenSolutionExplorer();
-            var window = app.SolutionExplorerTreeView;
+                app.OpenSolutionExplorer();
+                var window = app.SolutionExplorerTreeView;
 
-            var folder = window.FindItem("Solution 'DragDropRelocatedTest' (1 project)", "DragDropTest", "TestFolder", "SubItem.py");
-            var point = folder.GetClickablePoint();
-            Mouse.MoveTo(point);
-            Mouse.Down(MouseButton.Left);
+                var folder = window.FindItem("Solution 'DragDropRelocatedTest' (1 project)", "DragDropTest", "TestFolder", "SubItem.py");
+                var point = folder.GetClickablePoint();
+                Mouse.MoveTo(point);
+                Mouse.Down(MouseButton.Left);
 
-            var projectItem = window.FindItem("Solution 'DragDropRelocatedTest' (1 project)", "DragDropTest");
-            point = projectItem.GetClickablePoint();
-            Mouse.MoveTo(point);
-            Mouse.Up(MouseButton.Left);
+                var projectItem = window.FindItem("Solution 'DragDropRelocatedTest' (1 project)", "DragDropTest");
+                point = projectItem.GetClickablePoint();
+                Mouse.MoveTo(point);
+                Mouse.Up(MouseButton.Left);
 
-            Assert.AreNotEqual(null, window.WaitForItem("Solution 'DragDropRelocatedTest' (1 project)", "DragDropTest", "SubItem.py"));
+                Assert.AreNotEqual(null, window.WaitForItem("Solution 'DragDropRelocatedTest' (1 project)", "DragDropTest", "SubItem.py"));
 
-            app.Dte.Solution.Close(true);
-            try {
-                // Ensure file was moved and the path was updated correctly.
-                var project = app.OpenAndFindProject(@"TestData\DragDropRelocatedTest.sln");
-                foreach (var item in project.ProjectItems.OfType<OAFileItem>()) {
-                    Assert.IsTrue(File.Exists((string)item.Properties.Item("FullPath").Value), (string)item.Properties.Item("FullPath").Value);
+                app.Dte.Solution.Close(true);
+                try {
+                    // Ensure file was moved and the path was updated correctly.
+                    var project = app.OpenAndFindProject(@"TestData\DragDropRelocatedTest.sln");
+                    foreach (var item in project.ProjectItems.OfType<OAFileItem>()) {
+                        Assert.IsTrue(File.Exists((string)item.Properties.Item("FullPath").Value), (string)item.Properties.Item("FullPath").Value);
+                    }
+                } finally {
+                    GC.Collect();
+                    GC.WaitForPendingFinalizers();
                 }
-            } finally {
-                VsIdeTestHostContext.Dte.Solution.Close();
-                GC.Collect();
-                GC.WaitForPendingFinalizers();
             }
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CutPasteTest() {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            app.OpenAndFindProject(@"TestData\CutPasteRelocatedTest.sln");
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                app.OpenAndFindProject(@"TestData\CutPasteRelocatedTest.sln");
 
-            app.OpenSolutionExplorer();
-            var window = app.SolutionExplorerTreeView;
+                app.OpenSolutionExplorer();
+                var window = app.SolutionExplorerTreeView;
 
-            var folder = window.FindItem("Solution 'CutPasteRelocatedTest' (1 project)", "CutPasteTest", "TestFolder", "SubItem.py");
-            AutomationWrapper.Select(folder);
-            Keyboard.ControlX();
+                var folder = window.FindItem("Solution 'CutPasteRelocatedTest' (1 project)", "CutPasteTest", "TestFolder", "SubItem.py");
+                AutomationWrapper.Select(folder);
+                Keyboard.ControlX();
 
-            var projectItem = window.FindItem("Solution 'CutPasteRelocatedTest' (1 project)", "CutPasteTest");
-            AutomationWrapper.Select(projectItem);
-            Keyboard.ControlV();
+                var projectItem = window.FindItem("Solution 'CutPasteRelocatedTest' (1 project)", "CutPasteTest");
+                AutomationWrapper.Select(projectItem);
+                Keyboard.ControlV();
 
-            Assert.AreNotEqual(null, window.WaitForItem("Solution 'CutPasteRelocatedTest' (1 project)", "CutPasteTest", "SubItem.py"));
+                Assert.AreNotEqual(null, window.WaitForItem("Solution 'CutPasteRelocatedTest' (1 project)", "CutPasteTest", "SubItem.py"));
 
-            app.Dte.Solution.Close(true);
-            try {
-                // Ensure file was moved and the path was updated correctly.
-                var project = app.OpenAndFindProject(@"TestData\CutPasteRelocatedTest.sln");
-                foreach (var item in project.ProjectItems.OfType<OAFileItem>()) {
-                    Assert.IsTrue(File.Exists((string)item.Properties.Item("FullPath").Value), (string)item.Properties.Item("FullPath").Value);
+                app.Dte.Solution.Close(true);
+                try {
+                    // Ensure file was moved and the path was updated correctly.
+                    var project = app.OpenAndFindProject(@"TestData\CutPasteRelocatedTest.sln");
+                    foreach (var item in project.ProjectItems.OfType<OAFileItem>()) {
+                        Assert.IsTrue(File.Exists((string)item.Properties.Item("FullPath").Value), (string)item.Properties.Item("FullPath").Value);
+                    }
+                } finally {
+                    GC.Collect();
+                    GC.WaitForPendingFinalizers();
                 }
-            } finally {
-                VsIdeTestHostContext.Dte.Solution.Close();
-                GC.Collect();
-                GC.WaitForPendingFinalizers();
             }
         }
     }

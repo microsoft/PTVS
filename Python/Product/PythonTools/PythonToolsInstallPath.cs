@@ -34,16 +34,20 @@ namespace Microsoft.PythonTools {
         private static string GetFromRegistry(string filename) {
             const string ROOT_KEY = "Software\\Microsoft\\PythonTools\\" + AssemblyVersionInfo.VSVersion;
 
-            string installDir;
+            string installDir = null;
             using (var baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32))
             using (var configKey = baseKey.OpenSubKey(ROOT_KEY)) {
-                installDir = configKey.GetValue("InstallDir") as string;
+                if (configKey != null) {
+                    installDir = configKey.GetValue("InstallDir") as string;
+                }
             }
 
             if (string.IsNullOrEmpty(installDir)) {
                 using (var baseKey = RegistryKey.OpenBaseKey(RegistryHive.CurrentUser, RegistryView.Registry32))
                 using (var configKey = baseKey.OpenSubKey(ROOT_KEY)) {
-                    installDir = configKey.GetValue("InstallDir") as string;
+                    if (configKey != null) {
+                        installDir = configKey.GetValue("InstallDir") as string;
+                    }
                 }
             }
 

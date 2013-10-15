@@ -42,8 +42,8 @@ namespace DebuggerTests {
         /// in lineHits as break points in the order provided in lineHits.  If lineHits is negative
         /// expects to hit the positive number and then removes the break point.
         /// </summary>
-        internal void BreakpointTest(string filename, int[] linenos, int[] lineHits, string[] conditions = null, bool[] breakWhenChanged = null, 
-                                     string cwd = null, string breakFilename = null, bool checkBound = true, bool checkThread = true, string arguments = "", 
+        internal void BreakpointTest(string filename, int[] linenos, int[] lineHits, string[] conditions = null, bool[] breakWhenChanged = null,
+                                     string cwd = null, string breakFilename = null, bool checkBound = true, bool checkThread = true, string arguments = "",
                                      Action onProcessLoaded = null, PythonDebugOptions debugOptions = PythonDebugOptions.RedirectOutput,
                                     bool waitForExit = true) {
             var debugger = new PythonDebugger();
@@ -54,106 +54,107 @@ namespace DebuggerTests {
             }
 
             AutoResetEvent processLoaded = new AutoResetEvent(false);
-            var process =
-                DebugProcess(
-                    debugger,
-                    rootedFilename,
-                    cwd: cwd,
-                    arguments: arguments,
-                    resumeOnProcessLoaded: false,
-                    onLoaded: (newproc, newthread) => {
-                        for (int i = 0; i < linenos.Length; i++) {
-                            var line = linenos[i];
+            var process = DebugProcess(
+                debugger,
+                rootedFilename,
+                cwd: cwd,
+                arguments: arguments,
+                resumeOnProcessLoaded: false,
+                onLoaded: (newproc, newthread) => {
+                    for (int i = 0; i < linenos.Length; i++) {
+                        var line = linenos[i];
 
-                            int finalLine = line;
-                            if (finalLine < 0) {
-                                finalLine = -finalLine;
-                            }
+                        int finalLine = line;
+                        if (finalLine < 0) {
+                            finalLine = -finalLine;
+                        }
 
-                            PythonBreakpoint breakPoint;
-                            var finalBreakFilename = breakFilename ?? rootedFilename;
+                        PythonBreakpoint breakPoint;
+                        var finalBreakFilename = breakFilename ?? rootedFilename;
 
-                            if (conditions != null) {
-                                if (breakWhenChanged != null) {
-                                    breakPoint = newproc.AddBreakPoint(finalBreakFilename, line, conditions[i], breakWhenChanged[i]);
-                                } else {
-                                    breakPoint = newproc.AddBreakPoint(finalBreakFilename, line, conditions[i]);
-                                }
+                        if (conditions != null) {
+                            if (breakWhenChanged != null) {
+                                breakPoint = newproc.AddBreakPoint(finalBreakFilename, line, conditions[i], breakWhenChanged[i]);
                             } else {
-                                breakPoint = newproc.AddBreakPointByFileExtension(line, finalBreakFilename);
+                                breakPoint = newproc.AddBreakPoint(finalBreakFilename, line, conditions[i]);
                             }
-
-                            breakPoint.Add();
+                        } else {
+                            breakPoint = newproc.AddBreakPointByFileExtension(line, finalBreakFilename);
                         }
-                        thread = newthread;
 
-                        if (onProcessLoaded != null) {
-                            onProcessLoaded();
-                        }
-                        processLoaded.Set();
+                        breakPoint.Add();
                     }
-                );
+                    thread = newthread;
+
+                    if (onProcessLoaded != null) {
+                        onProcessLoaded();
+                    }
+                    processLoaded.Set();
+                }
+            );
 
             var lineList = new List<int>(linenos);
             var breakpointsToBeBound = lineList.Count;
             int breakpointsBound = 0;
             int breakpointsNotBound = 0;
             AutoResetEvent allBreakpointBindResults = new AutoResetEvent(breakpointsToBeBound == 0);
-            process.BreakpointBindFailed += (sender, args) => {
-                if (checkBound) {
-                    Assert.Fail("unexpected bind failure");
-                }
-                ++breakpointsNotBound;
-                if (breakpointsBound + breakpointsNotBound == breakpointsToBeBound) {
-                    allBreakpointBindResults.Set();
-                }
-            };
-
-            process.BreakpointBindSucceeded += (sender, args) => {
-                Assert.AreEqual(args.Breakpoint.Filename, breakFilename ?? rootedFilename);
-                int index = lineList.IndexOf(args.Breakpoint.LineNo);
-                Assert.IsTrue(index != -1);
-                lineList[index] = -1;
-                breakpointsBound++;
-                if (breakpointsBound + breakpointsNotBound == breakpointsToBeBound) {
-                    allBreakpointBindResults.Set();
-                }
-            };
-
             int breakpointHit = 0;
             AutoResetEvent allBreakpointsHit = new AutoResetEvent(false);
-            process.BreakpointHit += (sender, args) => {
-                if (lineHits[breakpointHit] < 0) {
-                    Assert.AreEqual(args.Breakpoint.LineNo, -lineHits[breakpointHit++]);
-                    try {
-                        args.Breakpoint.Remove();
-                    } catch {
-                        Debug.Assert(false);
+
+            try {
+                process.BreakpointBindFailed += (sender, args) => {
+                    if (checkBound) {
+                        Assert.Fail("unexpected bind failure");
                     }
+                    ++breakpointsNotBound;
+                    if (breakpointsBound + breakpointsNotBound == breakpointsToBeBound) {
+                        allBreakpointBindResults.Set();
+                    }
+                };
+
+                process.BreakpointBindSucceeded += (sender, args) => {
+                    Assert.AreEqual(args.Breakpoint.Filename, breakFilename ?? rootedFilename);
+                    int index = lineList.IndexOf(args.Breakpoint.LineNo);
+                    Assert.IsTrue(index != -1);
+                    lineList[index] = -1;
+                    breakpointsBound++;
+                    if (breakpointsBound + breakpointsNotBound == breakpointsToBeBound) {
+                        allBreakpointBindResults.Set();
+                    }
+                };
+
+                process.BreakpointHit += (sender, args) => {
+                    if (lineHits[breakpointHit] < 0) {
+                        Assert.AreEqual(args.Breakpoint.LineNo, -lineHits[breakpointHit++]);
+                        try {
+                            args.Breakpoint.Remove();
+                        } catch {
+                            Debug.Assert(false);
+                        }
+                    } else {
+                        Assert.AreEqual(args.Breakpoint.LineNo, lineHits[breakpointHit++]);
+                    }
+                    if (checkThread) {
+                        Assert.AreEqual(args.Thread, thread);
+                    }
+                    if (breakpointHit == lineHits.Length) {
+                        allBreakpointsHit.Set();
+                    }
+                    process.Continue();
+                };
+
+                process.Start();
+                AssertWaited(processLoaded);
+                AssertWaited(allBreakpointBindResults);
+                process.AutoResumeThread(thread.Id);
+            } finally {
+                if (waitForExit) {
+                    WaitForExit(process);
                 } else {
-                    Assert.AreEqual(args.Breakpoint.LineNo, lineHits[breakpointHit++]);
+                    allBreakpointsHit.WaitOne(20000);
+                    process.Terminate();
                 }
-                if (checkThread) {
-                    Assert.AreEqual(args.Thread, thread);
-                }
-                if (breakpointHit == lineHits.Length) {
-                    allBreakpointsHit.Set();
-                }
-                process.Continue();
-            };
-
-            process.Start();
-            AssertWaited(processLoaded);
-            AssertWaited(allBreakpointBindResults);
-            process.AutoResumeThread(thread.Id);
-
-            if (waitForExit) {
-                WaitForExit(process);
-            } else {
-                allBreakpointsHit.WaitOne(20000);
-                process.Terminate();
             }
-
             Assert.AreEqual(breakpointHit, lineHits.Length);
             if (checkBound) {
                 Assert.AreEqual(breakpointsBound, linenos.Length);
@@ -183,11 +184,7 @@ namespace DebuggerTests {
                 }
             } finally {
                 if (!process.HasExited) {
-                    try {
-                        process.Terminate();
-                    } catch (Win32Exception wex) {
-                        Debug.WriteLine("Failed to kill process: {0}", wex);
-                    }
+                    process.Terminate();
                 }
             }
         }
@@ -211,12 +208,21 @@ namespace DebuggerTests {
             AutoResetEvent brkHit = new AutoResetEvent(false);
             process.BreakpointHit += (sender, args) => {
                 thread = args.Thread;
-                brkHit.Set();                
+                brkHit.Set();
             };
 
-            process.Start();
+            bool ready = false;
+            try {
+                process.Start();
 
-            AssertWaited(brkHit);
+                AssertWaited(brkHit);
+                ready = true;
+            } finally {
+                if (!ready) {
+                    process.Terminate();
+                }
+            }
+
             return thread;
         }
 
@@ -267,46 +273,46 @@ namespace DebuggerTests {
             string fullPath = Path.GetFullPath(filename);
             string dir = Path.GetDirectoryName(filename);
             var process = debugger.CreateProcess(Version.Version, Version.Path, "\"" + fullPath + "\" " + (arguments ?? ""), dir, "", null, options);
-            PythonThread thread = null;
-            process.ThreadCreated += (sender, args) => {
-                thread = args.Thread;
-            };
-
-
-            AutoResetEvent processEvent = new AutoResetEvent(false);
-
-            bool processLoad = false, stepComplete = false;
-            process.ProcessLoaded += (sender, args) => {
-                foreach (var breakLine in breakLines) {
-                    var bp = process.AddBreakPointByFileExtension(breakLine, breakFile);
-                    bp.Add();
-                }
-
-                processLoad = true;
-                processEvent.Set();
-
-                if (processLoaded != null) {
-                    processLoaded();
-                }
-            };
-
-            process.StepComplete += (sender, args) => {
-                stepComplete = true;
-                processEvent.Set();
-            };
-
-            int breakHits = 0;
-            process.BreakpointHit += (sender, args) => {
-                Console.WriteLine("Breakpoint hit");
-                if (breakAction != null) {
-                    breakAction[breakHits++](process);
-                }
-                stepComplete = true;
-                processEvent.Set();
-            };
-
-            process.Start();
             try {
+                PythonThread thread = null;
+                process.ThreadCreated += (sender, args) => {
+                    thread = args.Thread;
+                };
+
+
+                AutoResetEvent processEvent = new AutoResetEvent(false);
+
+                bool processLoad = false, stepComplete = false;
+                process.ProcessLoaded += (sender, args) => {
+                    foreach (var breakLine in breakLines) {
+                        var bp = process.AddBreakPointByFileExtension(breakLine, breakFile);
+                        bp.Add();
+                    }
+
+                    processLoad = true;
+                    processEvent.Set();
+
+                    if (processLoaded != null) {
+                        processLoaded();
+                    }
+                };
+
+                process.StepComplete += (sender, args) => {
+                    stepComplete = true;
+                    processEvent.Set();
+                };
+
+                int breakHits = 0;
+                process.BreakpointHit += (sender, args) => {
+                    Console.WriteLine("Breakpoint hit");
+                    if (breakAction != null) {
+                        breakAction[breakHits++](process);
+                    }
+                    stepComplete = true;
+                    processEvent.Set();
+                };
+
+                process.Start();
                 for (int curStep = 0; curStep < kinds.Length; curStep++) {
                     Console.WriteLine("Step {0} {1}", curStep, kinds[curStep].Kind);
                     // process the stepping events as they occur, we cannot callback during the
@@ -353,6 +359,49 @@ namespace DebuggerTests {
                 process.Terminate();
                 Assert.Fail("Timeout while waiting for Python process to exit.");
             }
+        }
+
+        internal void StartAndWaitForExit(PythonProcess process) {
+            bool exited = false;
+            try {
+                process.Start();
+                exited = process.WaitForExit(DefaultWaitForExitTimeout);
+            } finally {
+                if (!exited && !process.HasExited) {
+                    process.Terminate();
+                    Assert.Fail("Timeout while waiting for Python process to exit.");
+                }
+            }
+        }
+
+        internal void DetachProcess(PythonProcess p) {
+            try {
+                p.Detach();
+            } catch (Exception ex) {
+                Console.WriteLine("Failed to detach process");
+                Console.WriteLine(ex);
+            }
+        }
+
+        internal void TerminateProcess(PythonProcess p) {
+            try {
+                p.Terminate();
+            } catch (Exception ex) {
+                Console.WriteLine("Failed to detach process");
+                Console.WriteLine(ex);
+            }
+        }
+
+        internal void DisposeProcess(Process p) {
+            try {
+                if (!p.HasExited) {
+                    p.Kill();
+                }
+            } catch (Exception ex) {
+                Console.WriteLine("Failed to kill process");
+                Console.WriteLine(ex);
+            }
+            p.Dispose();
         }
     }
 }

@@ -12,6 +12,7 @@
  *
  * ***************************************************************************/
 
+using System.Linq;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
@@ -21,8 +22,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
     /// Specialized built-in instance for sequences (lists, tuples)
     /// </summary>
     internal class IteratorInfo : IterableInfo {
-        private IterBoundBuiltinMethodInfo _iter;
-        private NextBoundMethod _next;
+        private AnalysisValue _iter;
+        private AnalysisValue _next;
 
         internal static BuiltinClassInfo GetIteratorTypeFromType(BuiltinClassInfo klass, AnalysisUnit unit) {
             switch (klass.PythonType.TypeId) {
@@ -66,43 +67,27 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public override IAnalysisSet GetMember(Node node, AnalysisUnit unit, string name) {
             if (unit.ProjectState.LanguageVersion.Is2x() && name == "next" ||
                 unit.ProjectState.LanguageVersion.Is3x() && name == "__next__") {
-                if (_next == null) {
-                    var next = this._type.GetMember(unit.ProjectEntry.MyScope.InterpreterContext, name);
-                    if (next != null) {
-                        _next = new NextBoundMethod((BuiltinMethodInfo)unit.ProjectState.GetAnalysisValueFromObjects(next), this);
-                    }
-                }
-
-                if (_next != null) {
-                    return _next.SelfSet;
-                }
+                return _next = _next ?? new SpecializedCallable(
+                    base.GetMember(node, unit, name).OfType<BuiltinNamespace<IPythonType>>().FirstOrDefault(),
+                    IteratorNext,
+                    false
+                );
             } else if (name == "__iter__") {
-                if (_iter == null) {
-                    var iter = this._type.GetMember(unit.ProjectEntry.MyScope.InterpreterContext, name);
-                    if (iter != null) {
-                        _iter = new IterBoundBuiltinMethodInfo((BuiltinMethodInfo)unit.ProjectState.GetAnalysisValueFromObjects(iter), this);
-                    }
-                }
-
-                if (_iter != null) {
-                    return _iter.SelfSet;
-                }
+                return _iter = _iter ?? new SpecializedCallable(
+                    base.GetMember(node, unit, name).OfType<BuiltinNamespace<IPythonType>>().FirstOrDefault(),
+                    IteratorIter,
+                    false
+                );
             }
             return base.GetMember(node, unit, name);
         }
 
-        class NextBoundMethod : BoundBuiltinMethodInfo {
-            private readonly IteratorInfo _myIter;
-
-            internal NextBoundMethod(BuiltinMethodInfo method, IteratorInfo myDict)
-                : base(method) {
-                _myIter = myDict;
-            }
-
-            public override IAnalysisSet Call(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
-                return _myIter.UnionType;
-            }
+        private IAnalysisSet IteratorIter(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
+            return this;
         }
 
+        private IAnalysisSet IteratorNext(Node node, Analysis.AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
+            return UnionType;
+        }
     }
 }

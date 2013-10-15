@@ -14,7 +14,33 @@
     <ProjectFile Include="ProfilingUITests\ProfilingUITests.csproj" />
     <ProjectFile Include="Core\PythonToolsTests.csproj" />
     <ProjectFile Include="Core.UI\PythonToolsUITests.csproj" />
-    <ProjectFile Include="ReplWindowUITests\ReplWindowUITests.csproj" />
+    <ProjectFile Include="ReplWindowUITests\ReplWindowUITests.csproj">
+      <Properties>ReplWindowUITestsPythonVersion=25</Properties>
+    </ProjectFile>
+    <ProjectFile Include="ReplWindowUITests\ReplWindowUITests.csproj">
+      <Properties>ReplWindowUITestsPythonVersion=26</Properties>
+    </ProjectFile>
+    <ProjectFile Include="ReplWindowUITests\ReplWindowUITests.csproj">
+      <Properties>ReplWindowUITestsPythonVersion=27</Properties>
+    </ProjectFile>
+    <ProjectFile Include="ReplWindowUITests\ReplWindowUITests.csproj">
+      <Properties>ReplWindowUITestsPythonVersion=IRON27</Properties>
+    </ProjectFile>
+    <ProjectFile Include="ReplWindowUITests\ReplWindowUITests.csproj">
+      <Properties>ReplWindowUITestsPythonVersion=30</Properties>
+    </ProjectFile>
+    <ProjectFile Include="ReplWindowUITests\ReplWindowUITests.csproj">
+      <Properties>ReplWindowUITestsPythonVersion=31</Properties>
+    </ProjectFile>
+    <ProjectFile Include="ReplWindowUITests\ReplWindowUITests.csproj">
+      <Properties>ReplWindowUITestsPythonVersion=32</Properties>
+    </ProjectFile>
+    <ProjectFile Include="ReplWindowUITests\ReplWindowUITests.csproj">
+      <Properties>ReplWindowUITestsPythonVersion=33</Properties>
+    </ProjectFile>
+    <ProjectFile Include="ReplWindowUITests\ReplWindowUITests.csproj">
+      <Properties>ReplWindowUITestsPythonVersion=34</Properties>
+    </ProjectFile>
     <ProjectFile Include="SccPackage\TestSccPackage.csproj" />
     <ProjectFile Include="Utilities.Python\TestUtilities.Python.csproj" />
   </ItemGroup>

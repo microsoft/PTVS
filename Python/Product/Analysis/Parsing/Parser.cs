@@ -1703,24 +1703,27 @@ namespace Microsoft.PythonTools.Parsing {
                 return ret;
             }
 
+            string arrowWhiteSpace = null;
+            Expression returnAnnotation = null;
+            if (MaybeEat(TokenKind.Arrow)) {
+                arrowWhiteSpace = _tokenWhiteSpace;
+                returnAnnotation = ParseExpression();
+            }
+
             var rStart = GetStart();
             var rEnd = GetEnd();
 
             ret = new FunctionDefinition(nameExpr, parameters);
             AddVerbatimName(name, ret);
-            PushFunction(ret);
 
-            string arrowWhiteSpace = null;
-            if (MaybeEat(TokenKind.Arrow)) {
-                arrowWhiteSpace = _tokenWhiteSpace;
-                ret.ReturnAnnotation = ParseExpression();
-            }
+            PushFunction(ret);
 
             Statement body = ParseClassOrFuncBody();
             FunctionDefinition ret2 = PopFunction();
             System.Diagnostics.Debug.Assert(ret == ret2);
 
             ret.SetBody(body);
+            ret.ReturnAnnotation = returnAnnotation;
             ret.HeaderIndex = rEnd;
             if (_verbatim) {
                 AddPreceedingWhiteSpace(ret, defWhitespace);

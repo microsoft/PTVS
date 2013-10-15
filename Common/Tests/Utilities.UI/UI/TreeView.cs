@@ -104,5 +104,31 @@ namespace TestUtilities.UI {
                 return nodes;
             }
         }
+
+        public void CenterInView(AutomationElement node) {
+            var treeBounds = (System.Windows.Rect)Element.GetCurrentPropertyValue(AutomationElement.BoundingRectangleProperty);
+            var lowHeight = treeBounds.Height / 2 - 10;
+            var highHeight = treeBounds.Height / 2 + 10;
+
+            var scroll = (ScrollPattern)Element.GetCurrentPattern(ScrollPattern.Pattern);
+            if (!scroll.Current.VerticallyScrollable) {
+                return;
+            }
+            scroll.SetScrollPercent(ScrollPattern.NoScroll, 0);
+
+            while (true) {
+                var nodeBounds = (System.Windows.Rect)node.GetCurrentPropertyValue(AutomationElement.BoundingRectangleProperty);
+                var heightFromTop = nodeBounds.Top - treeBounds.Top;
+                if (lowHeight < heightFromTop && heightFromTop < highHeight) {
+                    break;
+                } else if (heightFromTop >= 0 && heightFromTop < lowHeight) {
+                    break;
+                } else if (scroll.Current.VerticalScrollPercent == 100.0) {
+                    break;
+                }
+
+                scroll.ScrollVertical(ScrollAmount.SmallIncrement);
+            }
+        }
     }
 }

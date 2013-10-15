@@ -11,7 +11,10 @@
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>ReplWindowUITests</RootNamespace>
-    <AssemblyName>ReplWindowUITests</AssemblyName>
+    <DefineConstants Condition=" '$(ReplWindowUITestsPythonVersion)' != '' ">PY_$(ReplWindowUITestsPythonVersion);$(DefineConstants)</DefineConstants>
+    <DefineConstants Condition=" '$(ReplWindowUITestsPythonVersion)' == '' ">PY_ALL;$(DefineConstants)</DefineConstants>
+    <IntermediateOutputPath>obj\Dev$(VSTarget)\$(Configuration)$(ReplWindowUITestsPythonVersion)</IntermediateOutputPath>
+    <AssemblyName>ReplWindowUITests$(ReplWindowUITestsPythonVersion)</AssemblyName>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <SccProjectName>SAK</SccProjectName>
@@ -31,10 +34,10 @@
       <EmbedInteropTypes>False</EmbedInteropTypes>
     </Reference>
     <Reference Include="Microsoft.TC.TestHostAdapters, Version=1.0.0.0, Culture=neutral, PublicKeyToken=aa09a9889eb008f7, processorArchitecture=MSIL">
-      <HintPath>..\..\Public\TCTestHostAdapters\$(VSTarget)\Microsoft.TC.TestHostAdapters.dll</HintPath>
+      <HintPath>$(BuildRoot)\Common\Tests\TCTestHostAdapters\$(VSTarget)\Microsoft.TC.TestHostAdapters.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.TC.TestHostAdaptersFramework, Version=1.0.0.0, Culture=neutral, PublicKeyToken=aa09a9889eb008f7, processorArchitecture=MSIL">
-      <HintPath>..\..\Public\TCTestHostAdapters\$(VSTarget)\Microsoft.TC.TestHostAdaptersFramework.dll</HintPath>
+      <HintPath>$(BuildRoot)\Common\Tests\TCTestHostAdapters\$(VSTarget)\Microsoft.TC.TestHostAdaptersFramework.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.ComponentModelHost, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.CoreUtility, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />

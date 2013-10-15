@@ -32,6 +32,9 @@ namespace TestUtilities {
         public static readonly Guid IronPythonGuid = new Guid("{80659AB7-4D53-4E0C-8588-A766116CBD46}");
         public static readonly Guid IronPython64Guid = new Guid("{FCC291AA-427C-498C-A4D7-4502D6449B8C}");
 
+        // Not currently used for auto-detection
+        public static readonly Guid JythonGuid = new Guid("{844BA471-72F7-431B-AA3F-675AFD18E230}");
+
         public static readonly PythonVersion Python25 = GetCPythonVersion(PythonLanguageVersion.V25);
         public static readonly PythonVersion Python26 = GetCPythonVersion(PythonLanguageVersion.V26);
         public static readonly PythonVersion Python27 = GetCPythonVersion(PythonLanguageVersion.V27);
@@ -50,6 +53,8 @@ namespace TestUtilities {
         public static readonly PythonVersion Python33_x64 = GetCPythonVersion(PythonLanguageVersion.V33, true);
         public static readonly PythonVersion Python34_x64 = GetCPythonVersion(PythonLanguageVersion.V34, true);
         public static readonly PythonVersion IronPython27_x64 = GetIronPythonVersion(true);
+
+        public static readonly PythonVersion Jython27 = GetJythonVersion(PythonLanguageVersion.V27);
 
         private static PythonVersion GetIronPythonVersion(bool x64) {
             var exeName = x64 ? "ipy64.exe" : "ipy.exe";
@@ -143,6 +148,37 @@ namespace TestUtilities {
             return null;
         }
 
+        private static PythonVersion GetJythonVersion(PythonLanguageVersion version) {
+            var candidates = new List<DirectoryInfo>();
+            var ver = version.ToVersion();
+            var path1 = string.Format("jython{0}{1}*", ver.Major, ver.Minor);
+            var path2 = string.Format("jython{0}.{1}*", ver.Major, ver.Minor);
+            foreach (var drive in DriveInfo.GetDrives()) {
+                if (drive.DriveType != DriveType.Fixed) {
+                    continue;
+                }
+
+                try {
+                    candidates.AddRange(drive.RootDirectory.EnumerateDirectories(path1));
+                    candidates.AddRange(drive.RootDirectory.EnumerateDirectories(path2));
+                } catch {
+                }
+            }
+
+            foreach (var dir in candidates) {
+                var interpreter = dir.EnumerateFiles("jython.bat").FirstOrDefault();
+                if (interpreter == null) {
+                    continue;
+                }
+                var libPath = dir.EnumerateDirectories("Lib").FirstOrDefault();
+                if (libPath == null || !libPath.EnumerateFiles("site.py").Any()) {
+                    continue;
+                }
+                return new PythonVersion(interpreter.FullName, version, JythonGuid);
+            }
+            return null;
+        }
+
         public static IEnumerable<PythonVersion> Versions {
             get {
                 if (Python25 != null) yield return Python25;
@@ -163,6 +199,7 @@ namespace TestUtilities {
                 if (Python33_x64 != null) yield return Python33_x64;
                 if (Python34_x64 != null) yield return Python34_x64;
                 if (IronPython27_x64 != null) yield return IronPython27_x64;
+                if (Jython27 != null) yield return Jython27;
             }
         }
 

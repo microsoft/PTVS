@@ -374,11 +374,21 @@ namespace Microsoft.PythonTools.Interpreter {
         public const int AlreadyGeneratingExitCode = -3;
         
         /// <summary>
+        /// The exit code returned when a database cannot be created for the
+        /// interpreter factory.
+        /// </summary>
+        public const int NotSupportedExitCode = -4;
+
+        /// <summary>
         /// Invokes Analyzer.exe for the specified factory.
         /// </summary>
         public static void Generate(PythonTypeDatabaseCreationRequest request) {
             var fact = request.Factory;
+            var evt = request.OnExit;
             if (fact == null || !Directory.Exists(fact.Configuration.LibraryPath)) {
+                if (evt != null) {
+                    evt(NotSupportedExitCode);
+                }
                 return;
             }
             var outPath = request.OutputPath;
@@ -425,7 +435,6 @@ namespace Microsoft.PythonTools.Interpreter {
                         }
                     }
 
-                    var evt = request.OnExit;
                     if (evt != null) {
                         evt(output.ExitCode ?? InvalidOperationExitCode);
                     }

@@ -67,8 +67,17 @@ namespace PythonToolsTests {
 
         [TestCleanup]
         public void TestClean() {
-            _processes.ForEach(proc => proc.Continue());
-            _processes.ForEach(proc => proc.WaitForExit(5000));
+            foreach (var proc in _processes) {
+                proc.Continue();
+                if (!proc.WaitForExit(5000)) {
+                    try {
+                        proc.Terminate();
+                    } catch (Exception ex) {
+                        Console.WriteLine("Failed to terminate process");
+                        Console.WriteLine(ex);
+                    }
+                }
+            }
         }
 
         [TestMethod, Priority(0)]

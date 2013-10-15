@@ -272,7 +272,9 @@ namespace Microsoft.PythonTools.Debugger {
             _stoppedForException = false;
             DebugWriteCommand("ResumeAll");
             lock (_socketLock) {
-                _stream.Write(ResumeAllCommandBytes);
+                if (_stream != null) {
+                    _stream.Write(ResumeAllCommandBytes);
+                }
             }
         }
 
@@ -1065,6 +1067,10 @@ namespace Microsoft.PythonTools.Debugger {
         internal void DisconnectRepl() {
             DebugWriteCommand("Disconnect Repl");
             lock (_socketLock) {
+                if (_stream == null) {
+                    return;
+                }
+
                 try {
                     _stream.Write(DisconnectReplCommandBytes);
                 } catch (IOException) {

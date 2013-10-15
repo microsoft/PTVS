@@ -14,6 +14,7 @@
 
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.Debugger;
 using Microsoft.VisualStudio.Debugger.Evaluation;
 
@@ -40,7 +41,11 @@ namespace Microsoft.PythonTools.DkmDebugger.Proxies.Structs {
             public readonly PointerProxy<PyObject> Dummy;
 
             public DummyHolder(DkmProcess process) {
-                Dummy = process.GetPythonRuntimeInfo().DLLs.Python.GetStaticVariable<PointerProxy<PyObject>>("dummy", "setobject.obj");
+                var pyrtInfo = process.GetPythonRuntimeInfo();
+                Dummy = 
+                    pyrtInfo.LanguageVersion >= PythonLanguageVersion.V34 ? 
+                    pyrtInfo.DLLs.Python.GetStaticVariable<PointerProxy<PyObject>>("_PySet_Dummy") :
+                    pyrtInfo.DLLs.Python.GetStaticVariable<PointerProxy<PyObject>>("dummy", "setobject.obj");
             }
         }
 

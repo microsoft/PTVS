@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Tasks;
 using EnvDTE;
 using Microsoft.PythonTools;
 using Microsoft.TC.TestHostAdapters;
@@ -39,31 +40,33 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ToggableOptionTest() {
-            var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte);
+            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
+                PythonToolsPackage.Instance.SetFormattingOption("SpaceBeforeClassDeclarationParen", true);
+                bool first = true;
+                foreach (var expectedResult in new bool?[] { false, null, true }) {
+                    System.Windows.Automation.AutomationElement dialog;
+                    var spacingView = app.GetFormattingOptions("Spacing", out dialog);
+                    var value = spacingView.WaitForItem("Class Definitions", "Insert space between a class declaration's name and bases list");
+                    Assert.IsNotNull(value, "Did not find item");
 
-            PythonToolsPackage.Instance.SetFormattingOption("SpaceBeforeClassDeclarationParen", true);
-            bool first = true;
-            foreach (var expectedResult in new bool?[] { false, null, true }) {
-                var spacingView = app.GetFormattingOptions("Spacing");
-                var value = spacingView.WaitForItem("Class Definitions", "Space before the parenthesis in a class declaration");
+                    Mouse.MoveTo(value.GetClickablePoint());
+                    if (first) {
+                        // first click selects node, but on subsequently bringing up the dialog
+                        // the node will still have focus.
+                        Mouse.Click(System.Windows.Input.MouseButton.Left);
+                        first = false;
+                    }
+                    Mouse.Click(System.Windows.Input.MouseButton.Left); // second click changes value
 
-                Mouse.MoveTo(value.GetClickablePoint());
-                if (first) {
-                    // first click selects node, but on subsequently bringing up the dialog
-                    // the node will still have focus.
-                    Mouse.Click(System.Windows.Input.MouseButton.Left); 
-                    first = false;
+                    new AutomationWrapper(dialog).ClickButtonByName("OK");  // commit result
+
+                    app.WaitForDialogDismissed();
+
+                    Assert.AreEqual(
+                        expectedResult,
+                        PythonToolsPackage.Instance.GetFormattingOption("SpaceBeforeClassDeclarationParen")
+                    );
                 }
-                Mouse.Click(System.Windows.Input.MouseButton.Left); // second click changes value
-
-                Keyboard.Type(System.Windows.Input.Key.Enter);  // commit result
-
-                app.WaitForDialogDismissed();
-
-                Assert.AreEqual(
-                    expectedResult,
-                    PythonToolsPackage.Instance.GetFormattingOption("SpaceBeforeClassDeclarationParen")
-                );
             }
         }
 
@@ -91,7 +94,7 @@ def f():
 
 # short comment
 def g():
-    pass", new [] { new Span(0, 104) });
+    pass", new[] { new Span(0, 104) });
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
@@ -120,12 +123,11 @@ z=3", new Span[0]);
         /// <param name="expectedText">The expected source code after the formatting</param>
         /// <param name="changedSpans">The spans which should be marked as changed in the buffer after formatting</param>
         private static void FormattingTest(string filename, Span? selection, string expectedText, Span[] changedSpans) {
-            var app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            var project = app.OpenAndFindProject(@"TestData\FormattingTests\FormattingTests.sln");
-            var item = project.ProjectItems.Item(filename);
-            var window = item.Open();
-            window.Activate();
-            try {
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenAndFindProject(@"TestData\FormattingTests\FormattingTests.sln");
+                var item = project.ProjectItems.Item(filename);
+                var window = item.Open();
+                window.Activate();
                 var doc = app.GetDocument(item.Document.FullName);
 
                 var aggFact = app.ComponentModel.GetService<IViewTagAggregatorFactoryService>();
@@ -178,43 +180,45 @@ z=3", new Span[0]);
                 for (int i = 0; i < result.Count; i++) {
                     Assert.AreEqual(result[i], changedSpans[i]);
                 }
-            } finally {
-                window.Document.Close(vsSaveChanges.vsSaveChangesNo);
             }
         }
 
         private static void DoFormatSelection() {
-            ThreadPool.QueueUserWorkItem(x => {
-                bool succeeded = false;
-                for (int i = 0; i < 3; i++) {
-                    try {
-                        // wait for the command to become available if it's not already
-                        VsIdeTestHostContext.Dte.ExecuteCommand("Edit.FormatSelection");
-                        succeeded = true;
-                        break;
-                    } catch {
-                        System.Threading.Thread.Sleep(1000);
+            try {
+                Task.Factory.StartNew(() => {
+                    for (int i = 0; i < 3; i++) {
+                        try {
+                            // wait for the command to become available if it's not already
+                            VsIdeTestHostContext.Dte.ExecuteCommand("Edit.FormatSelection");
+                            return;
+                        } catch {
+                            System.Threading.Thread.Sleep(1000);
+                        }
                     }
-                }
-                Assert.IsTrue(succeeded);
-            });
+                    throw new Exception();
+                }).Wait();
+            } catch {
+                Assert.Fail("Failed to format selection");
+            }
         }
 
         private static void DoFormatDocument() {
-            ThreadPool.QueueUserWorkItem(x => {
-                bool succeeded = false;
-                for (int i = 0; i < 3; i++) {
-                    try {
-                        // wait for the command to become available if it's not already
-                        VsIdeTestHostContext.Dte.ExecuteCommand("Edit.FormatDocument");
-                        succeeded = true;
-                        break;
-                    } catch {
-                        System.Threading.Thread.Sleep(1000);
+            try {
+                Task.Factory.StartNew(() => {
+                    for (int i = 0; i < 3; i++) {
+                        try {
+                            // wait for the command to become available if it's not already
+                            VsIdeTestHostContext.Dte.ExecuteCommand("Edit.FormatDocument");
+                            return;
+                        } catch {
+                            System.Threading.Thread.Sleep(1000);
+                        }
                     }
-                }
-                Assert.IsTrue(succeeded);
-            });
+                    throw new Exception();
+                }).Wait();
+            } catch {
+                Assert.Fail("Failed to format document");
+            }
         }
     }
 }
