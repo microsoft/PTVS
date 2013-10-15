@@ -724,8 +724,7 @@ namespace Microsoft.VisualStudioTools.Project
             if (newParent.IsNonMemberItem) {
                 ErrorHandler.ThrowOnFailure(newParent.IncludeInProject(false));
             }
-            using (this.ProjectMgr.ExtensibilityEventsHelper.Suspend())
-            {
+            using (this.ProjectMgr.ExtensibilityEventsDispatcher.Suspend()) {
                 ProjectMgr.OnItemDeleted(this);
                 this.Parent.RemoveChild(this);
                 this.ID = this.ProjectMgr.ItemIdMap.Add(this);
@@ -738,7 +737,7 @@ namespace Microsoft.VisualStudioTools.Project
 
             ProjectMgr.ReDrawNode(this, UIHierarchyElement.Caption);
 
-            this.ProjectMgr.ExtensibilityEventsHelper.FireItemRenamed(this, Path.GetFileName(newFileName));
+            this.ProjectMgr.ExtensibilityEventsDispatcher.FireItemRenamed(this, Path.GetFileName(newFileName));
 
             //Update the new document in the RDT.
             DocumentManager.RenameDocument(this.ProjectMgr.Site, oldFileName, newFileName, ID);

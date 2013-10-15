@@ -65,7 +65,7 @@ namespace Microsoft.VisualStudioTools.Project {
         private Queue<FileSystemChange> _fileSystemChanges = new Queue<FileSystemChange>();
         private object _fileSystemChangesLock = new object();
         internal UIThreadSynchronizer _uiSync;
-        private MSBuild.Project userBuildProject;
+        private MSBuild.Project _userBuildProject;
         private readonly Dictionary<string, FileSystemWatcher> _symlinkWatchers = new Dictionary<string, FileSystemWatcher>();
         private DiskMerger _currentMerger;
         private readonly HashSet<HierarchyNode> _needBolding = new HashSet<HierarchyNode>();
@@ -171,7 +171,7 @@ namespace Microsoft.VisualStudioTools.Project {
 
         protected internal MSBuild.Project UserBuildProject {
             get {
-                return userBuildProject;
+                return _userBuildProject;
             }
         }
 
@@ -180,10 +180,10 @@ namespace Microsoft.VisualStudioTools.Project {
                 string document = this.GetMkDocument();
 
                 if (String.IsNullOrEmpty(document)) {
-                    return this._isUserFileDirty;
+                    return _isUserFileDirty;
                 }
 
-                return (this._isUserFileDirty || !File.Exists(document + PerUserFileExtension));
+                return (_isUserFileDirty || !File.Exists(document + PerUserFileExtension));
             }
         }
 
@@ -408,12 +408,12 @@ namespace Microsoft.VisualStudioTools.Project {
 
             string userProjectFilename = FileName + PerUserFileExtension;
             if (File.Exists(userProjectFilename)) {
-                userBuildProject = BuildProject.ProjectCollection.LoadProject(userProjectFilename);
+                _userBuildProject = BuildProject.ProjectCollection.LoadProject(userProjectFilename);
             }
 
             bool? showAllFiles = null;
-            if (userBuildProject != null) {
-                showAllFiles = GetShowAllFilesSetting(userBuildProject.GetPropertyValue(CommonConstants.ProjectView));
+            if (_userBuildProject != null) {
+                showAllFiles = GetShowAllFilesSetting(_userBuildProject.GetPropertyValue(CommonConstants.ProjectView));
             }
 
             _showingAllFiles = showAllFiles ??
@@ -475,25 +475,25 @@ namespace Microsoft.VisualStudioTools.Project {
         protected override void SaveMSBuildProjectFileAs(string newFileName) {
             base.SaveMSBuildProjectFileAs(newFileName);
 
-            if (userBuildProject != null) {
-                userBuildProject.Save(FileName + PerUserFileExtension);
-                this._isUserFileDirty = false;
+            if (_userBuildProject != null) {
+                _userBuildProject.Save(FileName + PerUserFileExtension);
+                _isUserFileDirty = false;
             }
         }
 
         protected override void SaveMSBuildProjectFile(string filename) {
             base.SaveMSBuildProjectFile(filename);
 
-            if (userBuildProject != null) {
-                userBuildProject.Save(filename + PerUserFileExtension);
-                this._isUserFileDirty = false;
+            if (_userBuildProject != null) {
+                _userBuildProject.Save(filename + PerUserFileExtension);
+                _isUserFileDirty = false;
             }
         }
 
         protected override void Dispose(bool disposing) {
             base.Dispose(disposing);
-            if (this.userBuildProject != null) {
-                userBuildProject.ProjectCollection.UnloadProject(userBuildProject);
+            if (this._userBuildProject != null) {
+                _userBuildProject.ProjectCollection.UnloadProject(_userBuildProject);
             }
             _package.OnIdle -= OnIdle;
         }
@@ -1666,13 +1666,13 @@ namespace Microsoft.VisualStudioTools.Project {
         public virtual void SetUserProjectProperty(string propertyName, string propertyValue) {
             Utilities.ArgumentNotNull("propertyName", propertyName);
 
-            if (userBuildProject == null) {
+            if (_userBuildProject == null) {
                 // user project file doesn't exist yet, create it.
-                userBuildProject = new MSBuild.Project(BuildProject.ProjectCollection);
-                userBuildProject.FullPath = FileName + PerUserFileExtension;
+                _userBuildProject = new MSBuild.Project(BuildProject.ProjectCollection);
+                _userBuildProject.FullPath = FileName + PerUserFileExtension;
             }
-            userBuildProject.SetProperty(propertyName, propertyValue ?? String.Empty);
-            this._isUserFileDirty = true;
+            _userBuildProject.SetProperty(propertyName, propertyValue ?? String.Empty);
+            _isUserFileDirty = true;
         }
 
         /// <summary>
@@ -1682,11 +1682,11 @@ namespace Microsoft.VisualStudioTools.Project {
         public virtual string GetUserProjectProperty(string propertyName) {
             Utilities.ArgumentNotNull("propertyName", propertyName);
 
-            if (userBuildProject == null)
+            if (_userBuildProject == null)
                 return null;
 
             // If user project file exists during project load/reload userBuildProject is initiated 
-            return userBuildProject.GetPropertyValue(propertyName);
+            return _userBuildProject.GetPropertyValue(propertyName);
         }
 
         #endregion
