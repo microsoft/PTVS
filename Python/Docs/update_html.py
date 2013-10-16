@@ -29,24 +29,7 @@ EXTRAS = {
 }
 LINK_PATTERNS = None
 
-HEADER = '''<style type="text/css">
-    .hll { background-color: #ffffcc }
-    .c { color: #008000 } 
-    .err { border: 1px solid #FF0000 } 
-    .cm, .c1, .cs { color: #008000 } 
-    .ge { font-style: italic } 
-    .gh, .gp, .gs, .gu { font-weight: bold } 
-    .k, .cp, .kc, .kd, .kn, .kp, .kr, .ow { color: #0000ff } 
-    .kt { color: #2b91af } 
-    .s { color: #a31515 } 
-    .nc { color: #2b91af } 
-    .sb, .sc, .sd, .s2, .se, .sh, .si, .sx, .sr, .s1, .ss { color: #a31515 }
-
-    pre { border: 2px solid #a0a0a0; padding: 1em; }
-    table { border-spacing: 0; border-collapse: collapse; }
-    td { padding: 0.2em 0.5em; border: 1px solid #a0a0a0; }
-</style>
-'''
+HEADER = ''''''
 
 FOOTER = '''
 '''
@@ -56,92 +39,140 @@ def get_build_root(start):
         start = os.path.split(start)[0]
     return start
 
-def get_file_maps(source_root):
-    try:
-        with open('maps.cache', 'rb') as f:
-            result = pickle.load(f)
-        return result
-    except:
-        pass
+class LinkMapper:
+    def __init__(self, source_root):
+        try:
+            with open('maps.cache', 'rb') as f:
+                self.file_map, self.type_map = pickle.load(f)
+            return
+        except:
+            pass
 
-    file_map = {}
-    type_map = {}
-    for dirname, dirnames, filenames in os.walk(source_root):
-        for filename in filenames:
-            fullpath = os.path.join(source_root, dirname, filename)
-            urlpath = fullpath[len(source_root):].lstrip('\\').replace('\\', '/')
+        print('Creating file maps')
+        file_map = {}
+        type_map = {}
+        for dirname, dirnames, filenames in os.walk(source_root):
+            for filename in filenames:
+                fullpath = os.path.join(source_root, dirname, filename)
+                urlpath = fullpath[len(source_root):].lstrip('\\').replace('\\', '/')
 
-            nameonly = os.path.split(fullpath)[1]
-            if nameonly in file_map:
-                file_map[nameonly] = None
-            else:
-                file_map[nameonly] = urlpath
+                nameonly = os.path.split(fullpath)[1]
+                if nameonly in file_map:
+                    file_map[nameonly] = None
+                else:
+                    file_map[nameonly] = urlpath
 
-            if not filename.upper().endswith(('.PY', '.CS')):
-                continue
+                if not filename.upper().endswith(('.PY', '.CS')):
+                    continue
 
-            try:
-                with open(fullpath, 'r', encoding='utf-8-sig') as f:
-                    content = f.read()
-            except UnicodeDecodeError:
-                #print('Cannot read {}'.format(filename))
-                continue
-            
-            nsname = None
-            if filename.upper().endswith('.PY'):
-                nsname = os.path.splitext(filename)[0]
+                try:
+                    with open(fullpath, 'r', encoding='utf-8-sig') as f:
+                        content = f.read()
+                except UnicodeDecodeError:
+                    #print('Cannot read {}'.format(filename))
+                    continue
+                
+                nsname = None
+                if filename.upper().endswith('.PY'):
+                    nsname = os.path.splitext(filename)[0]
 
-            for match in re.finditer(r'(namespace|class|struct|enum|interface) ([\w\.]+)', content):
-                kind, name = match.groups()
-                if kind == 'namespace':
-                    nsname = name
-                elif nsname:
-                    type_map[nsname + '.' + name] = urlpath
+                for match in re.finditer(r'(namespace|class|struct|enum|interface) ([\w\.]+)', content):
+                    kind, name = match.groups()
+                    if kind == 'namespace':
+                        nsname = name
+                    elif nsname:
+                        type_map[nsname + '.' + name] = urlpath
+        
+        try:
+            with open('maps.cache', 'wb') as f:
+                pickle.dump((file_map, type_map), f, pickle.HIGHEST_PROTOCOL)
+        except:
+            pass
+        self.file_map = file_map
+        self.type_map = type_map
     
-    try:
-        with open('maps.cache', 'wb') as f:
-            pickle.dump((file_map, type_map), f, pickle.HIGHEST_PROTOCOL)
-    except:
-        pass
-    return file_map, type_map
+    def replace_source_links(self, matchobj):
+        typename = matchobj.group(1)
+        
+        url = self.type_map.get(typename, None)
+        if url:
+            return '[{}]({} "{}")'.format(typename.rpartition('.')[-1], SOURCE_URL_BASE + url, typename)
+        else:
+            return '`{}`'.format(typename)
 
-def replace_source_links(matchobj):
-    typename = matchobj.group(1)
+    def replace_file_links(self, matchobj):
+        filename = matchobj.group(1)
+
+        url = self.file_map.get(filename) or filename.replace('\\', '/')
+        return '[{}]({} "{}")'.format(os.path.split(filename)[-1], SOURCE_URL_BASE + url, filename)
+
+    def replace_wiki_links(self, matchobj):
+        path = matchobj.group(3)
+        title = matchobj.group(2) or matchobj.group(3)
+
+        p1, p2, p3 = path.partition('#')
+        return '[{}]({})'.format(title, WIKI_URL_BASE + urllib.parse.quote(p1) + p2 + p3)
+
+    def replace_issue_links(self, matchobj):
+        number = matchobj.group(3)
+        title = matchobj.group(2) or matchobj.group(3)
+
+        return '[{}]({})'.format(title, ISSUE_URL_BASE + number)
+
+    @property
+    def patterns(self):
+        return [
+            (r'(?<!`)\[src\:([^\]]+)\]', self.replace_source_links),
+            (r'(?<!`)\[file\:([^\]]+)\]', self.replace_file_links),
+            (r'(?<!`)\[wiki\:("([^"]+)"\s*)?([^\]]+)\]', self.replace_wiki_links),
+            (r'(?<!`)\[issue\:("([^"]+)"\s*)?([0-9]+)\]', self.replace_issue_links),
+        ]
+
+
+SPAN_STYLES = {
+    'c': 'color: #008000', 
+    'cp': 'color: #0000ff',
+    'err': 'border: 1px solid #FF0000', 
+    'g': 'font-weight: bold',
+    'ge': 'font-style: italic', 
+    'hll': 'background-color: #ffffcc',
+    'k': 'color: #0000ff',
+    'kt': 'color: #2b91af', 
+    'nc': 'color: #2b91af', 
+    'ow': 'color: #0000ff', 
+    's': 'color: #a31515', 
+}
+
+def replace_span_style(matchobj):
+    key = matchobj.group(1)
+    style = None
+    while key and not style:
+        style = SPAN_STYLES.get(key)
+        key = key[:-1]
     
-    url = NAMESPACE_FILE_MAP.get(typename, None)
-    if url:
-        return '[{}]({} "{}")'.format(typename.rpartition('.')[-1], SOURCE_URL_BASE + url, typename)
-    else:
-        return '`{}`'.format(typename)
-
-def replace_file_links(matchobj):
-    filename = matchobj.group(1)
-
-    url = FILENAME_MAP.get(filename) or filename.replace('\\', '/')
-    return '[{}]({} "{}")'.format(os.path.split(filename)[-1], SOURCE_URL_BASE + url, filename)
-
-def replace_wiki_links(matchobj):
-    path = matchobj.group(3)
-    title = matchobj.group(2) or matchobj.group(3)
-
-    return '[{}]({})'.format(title, WIKI_URL_BASE + urllib.parse.quote(path))
-
-def replace_issue_links(matchobj):
-    number = matchobj.group(3)
-    title = matchobj.group(2) or matchobj.group(3)
-
-    return '[{}]({})'.format(title, ISSUE_URL_BASE + number)
-
-LINK_PATTERNS = [
-    (r'(?<!`)\[src\:([^\]]+)\]', replace_source_links),
-    (r'(?<!`)\[file\:([^\]]+)\]', replace_file_links),
-    (r'(?<!`)\[wiki\:("([^"]+)"\s*)?([^\]]+)\]', replace_wiki_links),
-    (r'(?<!`)\[issue\:("([^"]+)"\s*)?([0-9]+)\]', replace_issue_links),
-]
+    return '<span style="{}">'.format(style) if style else '<span>'
 
 HTML_PATTERNS = [
+    # Provide --( --) syntax for divs that keep floats and text together
     (r'\<p\>--\(\<\/p\>', '<div style="overflow: auto">'),
-    (r'\<p\>--\)\<\/p\>', '</div>')
+    (r'\<p\>--\)\<\/p\>', '</div>'),
+    
+    # Provide >> syntax for a div floated to the right
+    (r' *<blockquote>\s+<blockquote>', '<div style="float: right; padding: 0.5em">'),
+    (r' *</blockquote>\s+</blockquote>', '</div>'),
+    
+    # Remove p tags when the entire contents is an img, an empty anchor, or an empty p tag
+    (r'\<p\>(?P<img>\<img.+?\/\s*\>)\<\/p\>', r'\g<img>'),
+    (r'\<p\>(?P<tag>\<[ap][^>]+?\/\s*\>)\<\/p\>', r'\g<tag>'),
+    
+    # Add inline styles for some elements
+    (r'\<pre\>', '<pre style="border: 2px solid #a0a0a0; padding: 1em;">'),
+    (r'\<table\>', '<table style="border-spacing: 0; border-collapse: collapse;">'),
+    (r'\<td\>', '<td style="padding: 0.2em 0.5em; border: 1px solid #a0a0a0;">'),
+    (r'\<span class="(.+?)"\>', replace_span_style),
+    
+    # Remove unnecessary spans
+    (r'\<span\>([^<]+)\<\/span\>', r'\g<1>'),
 ]
 
 markdown = markdown2.Markdown(
@@ -153,10 +184,9 @@ markdown = markdown2.Markdown(
 # and the indented ones cause formatting conflicts.
 markdown._do_code_blocks = lambda t: t
 
-if __name__ == '__main__':
-    BUILD_ROOT = get_build_root(os.getcwd())
-    print('Creating/loading file maps')
-    FILENAME_MAP, NAMESPACE_FILE_MAP = get_file_maps(BUILD_ROOT)
+def main(start_dir):
+    BUILD_ROOT = get_build_root(start_dir)
+    link_mapper = LinkMapper(BUILD_ROOT)
     
     sources = os.path.join(BUILD_ROOT, DOC_ROOT)
     print('Reading from ' + sources)
@@ -168,7 +198,7 @@ if __name__ == '__main__':
                 text = src.read()
             
             # Do our own link replacements, rather than markdown2's
-            for pattern, repl in LINK_PATTERNS:
+            for pattern, repl in link_mapper.patterns:
                 text = re.sub(pattern, repl, text)
             
             html = markdown.convert(text)
@@ -181,3 +211,6 @@ if __name__ == '__main__':
                 dest.write(HEADER)
                 dest.write(html)
                 dest.write(FOOTER)
+
+if __name__ == '__main__':
+    sys.exit(main(os.getcwd()) or 0)

@@ -77,7 +77,10 @@ We have some special link formats:
 
 Other special conversions include:
 
+>> ![Floated to the right](Images\EditHTML.png)
+
 * `--(` and `--)` to delimit a layout block. These get converted into a div that does not allow floats to escape.
+* `>>` floats the line to the right, like the image.
 
 Converting to HTML
 ------------------
@@ -102,10 +105,15 @@ The first time the script is run, it will generate a file `maps.cache`, which co
 Uploading to CodePlex
 ---------------------
 
-To upload to CodePlex, start editing a wiki page using the rich editor, but then click on the Edit HTML Source button (<img src="Images\EditHTML.png" style="vertical-align: middle" />).
+Generated documentation can be uploaded to CodePlex using the [file:upload_to_codeplex.py] script. This script requires a CodePlex username and password with permissions to edit the wiki. It must be run after [file:update_html.py] has been run.
 
-In the new text box, replace the entire contents with the source from the generated HTML file.
+Running the script looks like:
 
-Manual fixes will be required for:
+```
+cd Python\Docs
+py update_html.py
+tf edit User\codeplex.map
+py upload_to_codeplex.py --dir User --user MyName --password "MyPassword123"
+```
 
-* Images (upload each image and replace the `src` attribute values)
+The `codeplex.map` file in the uploaded directory may be modified and needs to be writable before running the script. If it is not writable, an error will be displayed. The contents of the file include URLs for images and hashes for files that have been uploaded before. These will be used to determine whether the file has changes since it was last published to CodePlex, and to skip unchanged files.

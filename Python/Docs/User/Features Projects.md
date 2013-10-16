@@ -3,7 +3,7 @@ Projects
 
 --(
 
-<img style="padding-left: 0.5em; float: right;" title="Solution Explorer" src="Images/SolutionExplorer.png" alt="Solution Explorer" />
+>>![Solution Explorer](Images/SolutionExplorer.png)
 
 Python Tools allows you to create projects using the Visual Studio project system. Project files (.pyproj) reference all the source and content files associated with your project, showing them all in the Solution Explorer window and enabling PTVS to most efficiently work with your files.
 
@@ -48,7 +48,7 @@ This is an IronPython application which will run in the web browser using Silver
 
 Windows Forms applications use an older windowing framework, where controls are created and positioned using code. PTVS does not include a designer for Windows Forms applications, and so all UI must be written in Python. By default, this project will use a 32-bit IronPython interpreter, mixed-mode IronPython/managed debugging, and run without displaying a console (`ipyw.exe`).
 
-<a id="ProjectFree" />
+<p id="ProjectFree" />
 Lightweight Usage Project-free
 ------------------------------
 
@@ -60,7 +60,7 @@ Python Tools also supports editing your code without a project system. You can o
 
 To quickly create a project from a directory of existing code, see [Create Project from Existing Files](#create-project-from-existing-files).
 
-<a id="NewProjectFromExisting">
+<p id="NewProjectFromExisting" />
 Create Project from Existing Files
 ----------------------------------
 
@@ -82,31 +82,12 @@ On the final page, you can select the location to save the project file. Choosin
 
 Click Finish and your project will be created. If you want to move the .pyproj file somewhere else at this point, select it in Solution Explorer and choose 'File->Save As'. Moving the .pyproj this way will update the file references, so we don't have to copy any code files around, but adds, deletes, and renames will affect the original files.
 
-Project Features
-----------------
-
-### Show All Files
-
-When using the Solution Explorer UI to view project files you have the option to view files only in the project and all files on disk. This behavior is controlled by the 'Show All Files' button on the Solution Explorer UI. Enabling 'Show All Files' gives a view of the files on disk. Disabling 'Show All Files' shows only those files and folders included in the project. In 'Show All Files' mode the files on disk are not part of the project and will not be scanned by the analysis engine. The files not included in the project show as a dotted line icon. To add a file or folder on disk to the project, right click on it and select Add to Project. Adding or removing folders in the project adds or removes the folder and all children.
+Linked Files
+------------
 
 --(
 
-<div style="float: left; padding: 1em">
-<img src="Images/ShowAllFilesDisabled.png" title="Show All Files disabled" alt="Show All Files disabled" />
-<p style="text-align: center"><strong>Disabled</strong></p>
-</div>
-<div style="float: left; padding: 1em;">
-<img src="Images/ShowAllFilesEnabled.png" title="Show All Files enabled" alt="Show All Files enabled" />
-<p style="text-align: center"><strong>Enabled</strong></p>
-</div>
-
---)
-
-### Linked Files
-
---(
-
-<img style="float: right;" src="Images/LinkedFileIcon.png" alt="Linked file icon" />
+>>![Linked file icon](Images/LinkedFileIcon.png)
 
 Linked files appear in Solution Explorer as normal files with a shortcut icon overlayed on top of them. Linked files can exist either at the top-level of the project or embedded within an arbitrary folder structure.
 
@@ -127,7 +108,7 @@ Linked files specified in a project file will be ignored under the following con
 * The linked file contains Link metadata and the Link path is a relative path outside of the project hierarchy, or
 * The link path is rooted
 
-#### Working with Linked Files
+### Working with Linked Files
 
 To add an existing item as a link, use the Project->Add Existing Item menu (or the context menu), select a file, and choose "Add as Link" from the drop down on the Add button. As long as there are no conflicting files, this will create a link in the folder selected in Solution Explorer. If there is already a file with the same name, or if a link to the file is already in the project, the link will not be added.
 
@@ -136,6 +117,28 @@ Because you can't add a link to a file that is already within the project hierar
 To convert a file into a link, use File->Save As to save the file to a location outside of the project hierarchy. It will be automatically converted to a link. Similarly, a link can be converted back by using File->Save As to save the file somewhere within the project hierarchy. The file will appear in Solution Explorer in the same location it exists on disk; files in a project must match their actual location.
 
 If you move a linked file in Solution Explorer, the link will be moved but the actual file is unaffected. Similarly, deleting a link will remove the link without affecting the file. Linked files cannot be renamed.
+
+Search Paths
+------------
+
+--(
+
+>>![Search paths](Images/SearchPath.png)
+
+It is often surprising that the value of `PYTHONPATH` (or `IRONPYTHONPATH`, etc.) is ignored by PTVS, even when it has been set for the entire system. This is deliberate, and is primarily *because* it has been set for the entire system. Are the referenced modules meant for Python 2.7 or Python 3.3? Are they going to override standard library modules? Is the developer aware of this or is it a malicious hijacking attempt? Because these questions cannot be answered automatically, the system-wide value is ignored.
+
+The equivalent behavior can be obtained in PTVS using Search Paths. These are project-specific, and will be passed as the value of `PYTHONPATH` (or equivalent) when you debug or execute your script from Visual Studio. Further, by adding the path to Search Paths, PTVS will inspect the available code and provide editor completions.
+
+
+To add a search path, right-click on the Search Paths item in Solution Explorer and select "Add Folder to Search Path...". Select the folder to include and you are done. 
+
+Files with a `.zip` or `.egg` extension can also be added as search paths by selecting "Add Zip Archive to Search Path...". As with folders, the contents of these files will be scanned and made available in the editor.
+
+Note that any search paths added will be used for any environment associated with the project. It is possible to add a search path to Python 2.7 modules while you are using Python 3.3, and you may see errors as a result.
+
+Depending on the number of files in the folder or file, it may take some time before completions become available. If you are regularly using the same search paths and the contents does not often change, it may be more efficient to install it into your site-packages folder. Then it will be analyzed and stored in your completion DB, will always be associated with the intended environment, and will not require a search path to be added for each project.
+
+--)
 
 References
 ----------
