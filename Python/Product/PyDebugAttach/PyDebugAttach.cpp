@@ -700,13 +700,13 @@ public:
 };
 
 long GetPythonThreadId(PythonVersion version, PyThreadState* curThread) {
-    long threadId;
-    if (version >= PythonVersion_34) {
-        threadId = curThread->_34.thread_id;
-    } else if (version >= PythonVersion_30) {
-        threadId = curThread->_30_33.thread_id;
-    } else {
-        threadId = curThread->_25_27.thread_id;
+    long threadId = 0;
+    if (PyThreadState_25_27::IsFor(version)) {
+        threadId = ((PyThreadState_25_27*)curThread)->thread_id;
+    } else if (PyThreadState_30_33::IsFor(version)) {
+        threadId = ((PyThreadState_30_33*)curThread)->thread_id;
+    } else if (PyThreadState_34::IsFor(version)) {
+        threadId = ((PyThreadState_34*)curThread)->thread_id;
     }
     return threadId;
 }
@@ -1114,12 +1114,12 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
                         auto pyThreadId = PyObjectHolder(isDebug, intFromLong(threadId));
                         PyFrameObject* frame;
                         // update all of the frames so they have our trace func
-                        if (version >= PythonVersion_34) {
-                            frame = curThread->_34.frame;
-                        } else if (version >= PythonVersion_30) {
-                            frame = curThread->_30_33.frame;
-                        } else {
-                            frame = curThread->_25_27.frame;
+                        if (PyThreadState_25_27::IsFor(version)) {
+                            frame = ((PyThreadState_25_27*)curThread)->frame;
+                        } else if (PyThreadState_30_33::IsFor(version)) {
+                            frame = ((PyThreadState_30_33*)curThread)->frame;
+                        } else if (PyThreadState_34::IsFor(version)) {
+                            frame = ((PyThreadState_34*)curThread)->frame;
                         }
 
                         auto threadObj = PyObjectHolder(isDebug, call(new_thread.ToPython(), pyThreadId.ToPython(), pyTrue, frame, NULL));
@@ -1310,21 +1310,13 @@ int TraceGeneral(int interpreterId, PyObject *obj, PyFrameObject *frame, int wha
             );
 
         // now deliver the event we received to our trace object which just got installed.
-        switch (curInterpreter->GetVersion()) {
-        case PythonVersion_25:
-        case PythonVersion_26:
-        case PythonVersion_27:
-            curThread->_25_27.c_tracefunc(curThread->_25_27.c_traceobj, frame, what, arg);
-            break;
-        case PythonVersion_30:
-        case PythonVersion_31:
-        case PythonVersion_32:
-        case PythonVersion_33:
-            curThread->_30_33.c_tracefunc(curThread->_30_33.c_traceobj, frame, what, arg);
-            break;
-        case PythonVersion_34:
-            curThread->_34.c_tracefunc(curThread->_34.c_traceobj, frame, what, arg);
-            break;
+        auto version = curInterpreter->GetVersion();
+        if (PyThreadState_25_27::IsFor(version)) {
+            ((PyThreadState_25_27*)curThread)->c_tracefunc(((PyThreadState_25_27*)curThread)->c_traceobj, frame, what, arg);
+        } else if (PyThreadState_30_33::IsFor(version)) {
+            ((PyThreadState_30_33*)curThread)->c_tracefunc(((PyThreadState_30_33*)curThread)->c_traceobj, frame, what, arg);
+        } else if (PyThreadState_34::IsFor(version)) {
+            ((PyThreadState_34*)curThread)->c_tracefunc(((PyThreadState_34*)curThread)->c_traceobj, frame, what, arg);
         }
     }
     return 0;
@@ -1363,13 +1355,13 @@ void SetInitialTraceFunc(DWORD interpreterId, PyThreadState *thread) {
     auto curInterpreter = _interpreterInfo[interpreterId];
 
     auto version = curInterpreter->GetVersion();
-    int gilstate_counter;
-    if (version >= PythonVersion_34) {
-        gilstate_counter = thread->_34.gilstate_counter;
-    } else if (version >= PythonVersion_30) {
-        gilstate_counter = thread->_30_33.gilstate_counter;
-    } else {
-        gilstate_counter = thread->_25_27.gilstate_counter;
+    int gilstate_counter = 0;
+    if (PyThreadState_25_27::IsFor(version)) {
+        gilstate_counter = ((PyThreadState_25_27*)thread)->gilstate_counter;
+    } else if (PyThreadState_30_33::IsFor(version)) {
+        gilstate_counter = ((PyThreadState_30_33*)thread)->gilstate_counter;
+    } else if (PyThreadState_34::IsFor(version)) {
+        gilstate_counter = ((PyThreadState_34*)thread)->gilstate_counter;
     }
 
     if (gilstate_counter == 1) {
