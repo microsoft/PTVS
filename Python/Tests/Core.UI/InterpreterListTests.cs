@@ -61,40 +61,39 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("InterpreterList")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void InterpreterListInVS() {
-            var dte = VsIdeTestHostContext.Dte;
-            var model = (IComponentModel)VsIdeTestHostContext.ServiceProvider.GetService(typeof(SComponentModel));
-            var service = model.GetService<IInterpreterOptionsService>();
-            Assert.IsNotNull(service);
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var model = app.GetService<IComponentModel>(typeof(SComponentModel));
+                var service = model.GetService<IInterpreterOptionsService>();
+                Assert.IsNotNull(service);
 
-            dte.ExecuteCommand("View.PythonEnvironments");
-            var list = new VisualStudioApp(dte).FindByAutomationId("PythonTools.InterpreterList");
-            Assert.IsNotNull(list);
+                app.Dte.ExecuteCommand("View.PythonEnvironments");
+                var list = app.FindByAutomationId("PythonTools.InterpreterList");
+                Assert.IsNotNull(list);
 
-            var allNames = new HashSet<string>(service.Interpreters.Select(i => i.Description));
-            var names = list.FindAll(TreeScope.Descendants, new PropertyCondition(AutomationElement.AutomationIdProperty, "InterpreterName"));
-            foreach (var obj in names.Cast<AutomationElement>()) {
-                var name = (string)obj.GetCurrentPropertyValue(AutomationElement.NameProperty);
-                Assert.IsTrue(allNames.Remove(name));
+                var allNames = new HashSet<string>(service.Interpreters.Select(i => i.Description));
+                var names = list.FindAll(TreeScope.Descendants, new PropertyCondition(AutomationElement.AutomationIdProperty, "InterpreterName"));
+                foreach (var obj in names.Cast<AutomationElement>()) {
+                    var name = (string)obj.GetCurrentPropertyValue(AutomationElement.NameProperty);
+                    Assert.IsTrue(allNames.Remove(name));
+                }
+                Assert.AreEqual(0, allNames.Count);
             }
-            Assert.AreEqual(0, allNames.Count);
         }
 
         [TestMethod, Priority(0), TestCategory("InterpreterList")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CreateRemoveVirtualEnvInInterpreterListInVS() {
-            var dte = VsIdeTestHostContext.Dte;
-            var app = new VisualStudioApp(dte);
-            var newProjDialog = app.FileNewProject();
-            newProjDialog.Location = Path.GetTempPath();
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var newProjDialog = app.FileNewProject();
+                newProjDialog.Location = Path.GetTempPath();
 
-            newProjDialog.FocusLanguageNode();
+                newProjDialog.FocusLanguageNode();
 
-            var consoleApp = newProjDialog.ProjectTypes.FindItem("Python Application");
-            consoleApp.Select();
+                var consoleApp = newProjDialog.ProjectTypes.FindItem("Python Application");
+                consoleApp.Select();
 
-            newProjDialog.ClickOK();
+                newProjDialog.ClickOK();
 
-            try {
                 // wait for new solution to load...
                 for (int i = 0; i < 100 && app.Dte.Solution.Projects.Count == 0; i++) {
                     System.Threading.Thread.Sleep(1000);
@@ -109,7 +108,7 @@ namespace PythonToolsUITests {
                 var service = model.GetService<IInterpreterOptionsService>();
                 Assert.IsNotNull(service);
 
-                dte.ExecuteCommand("View.PythonEnvironments");
+                app.Dte.ExecuteCommand("View.PythonEnvironments");
                 var list = app.FindByAutomationId("PythonTools.InterpreterList");
                 Assert.IsNotNull(list);
 
@@ -128,7 +127,7 @@ namespace PythonToolsUITests {
                 var env = VirtualEnvTests.CreateVirtualEnvironment(app, out envName);
                 env.Select();
 
-                dte.ExecuteCommand("View.PythonEnvironments");
+                app.Dte.ExecuteCommand("View.PythonEnvironments");
                 list = app.FindByAutomationId("PythonTools.InterpreterList");
                 Assert.IsNotNull(list);
 
@@ -161,7 +160,7 @@ namespace PythonToolsUITests {
                 // Check that only global environments are in the list
                 allNames = new HashSet<string>(service.Interpreters.Select(i => i.Description));
 
-                dte.ExecuteCommand("View.PythonEnvironments");
+                app.Dte.ExecuteCommand("View.PythonEnvironments");
                 list = app.FindByAutomationId("PythonTools.InterpreterList");
                 Assert.IsNotNull(list);
                 names = list.FindAll(TreeScope.Descendants, new PropertyCondition(AutomationElement.AutomationIdProperty, "InterpreterName"));
@@ -170,27 +169,21 @@ namespace PythonToolsUITests {
                     Assert.IsTrue(allNames.Remove(name), name + " should not have been in UI");
                 }
                 Assert.AreEqual(0, allNames.Count);
-
-                dte.Solution.Close(SaveFirst: false);
-            } finally {
-                dte.Solution.Close();
             }
         }
 
         [TestMethod, Priority(0), TestCategory("InterpreterList")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void LoadUnloadVirtualEnvInInterpreterListInVS() {
-            var dte = VsIdeTestHostContext.Dte;
-            var app = new VisualStudioApp(dte);
-            var proj = app.OpenAndFindProject(@"TestData\VirtualEnv.sln");
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var proj = app.OpenAndFindProject(@"TestData\VirtualEnv.sln");
 
-            try {
-                var model = (IComponentModel)VsIdeTestHostContext.ServiceProvider.GetService(typeof(SComponentModel));
+                var model = app.GetService<IComponentModel>(typeof(SComponentModel));
                 var service = model.GetService<IInterpreterOptionsService>();
                 Assert.IsNotNull(service);
 
-                dte.ExecuteCommand("View.PythonEnvironments");
-                var list = new VisualStudioApp(dte).FindByAutomationId("PythonTools.InterpreterList");
+                app.Dte.ExecuteCommand("View.PythonEnvironments");
+                var list = app.FindByAutomationId("PythonTools.InterpreterList");
                 Assert.IsNotNull(list);
 
                 var allNames = new HashSet<string>(service.Interpreters.Select(i => i.Description));
@@ -213,21 +206,17 @@ namespace PythonToolsUITests {
                     Assert.IsTrue(allNames.Remove(name), name + " should not have been in UI");
                 }
                 Assert.AreEqual(0, allNames.Count);
-            } finally {
-                dte.Solution.Close(SaveFirst: false);
             }
         }
 
         [TestMethod, Priority(0), TestCategory("InterpreterList")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ActivateVirtualEnvInInterpreterListInVS() {
-            var dte = VsIdeTestHostContext.Dte;
-            var app = new VisualStudioApp(dte);
-            var proj = app.OpenAndFindProject(@"TestData\VirtualEnv.sln");
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var proj = app.OpenAndFindProject(@"TestData\VirtualEnv.sln");
 
-            try {
-                dte.ExecuteCommand("View.PythonEnvironments");
-                var list = new VisualStudioApp(dte).FindByAutomationId("PythonTools.InterpreterList");
+                app.Dte.ExecuteCommand("View.PythonEnvironments");
+                var list = app.FindByAutomationId("PythonTools.InterpreterList");
                 Assert.IsNotNull(list, "interpreter list is null");
 
                 // Check that the current environment is the virtual environment
@@ -266,226 +255,220 @@ namespace PythonToolsUITests {
                 // Check that the virtual environment is now selected
                 interpreterId = Guid.Parse((string)proj.Properties.Item("InterpreterId").Value);
                 Assert.IsTrue(interpreterId == venvId, "The active interpreter hasn't been set back to the virtual environment");
-            } finally {
-                dte.Solution.Close(SaveFirst: false);
             }
         }
 
         [TestMethod, Priority(0), TestCategory("InterpreterList")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ChangeDefaultInVS() {
-            var dte = VsIdeTestHostContext.Dte;
-            var model = (IComponentModel)VsIdeTestHostContext.ServiceProvider.GetService(typeof(SComponentModel));
-            var service = model.GetService<IInterpreterOptionsService>();
-            Assert.IsNotNull(service);
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var model = app.GetService<IComponentModel>(typeof(SComponentModel));
+                var service = model.GetService<IInterpreterOptionsService>();
+                Assert.IsNotNull(service);
 
-            var originalDefault = service.DefaultInterpreter;
+                app.Dte.ExecuteCommand("View.PythonEnvironments");
+                var list = app.FindByAutomationId("PythonTools.InterpreterList");
+                Assert.IsNotNull(list);
 
-            dte.ExecuteCommand("View.PythonEnvironments");
-            var list = new VisualStudioApp(dte).FindByAutomationId("PythonTools.InterpreterList");
-            Assert.IsNotNull(list);
+                var buttons = list.FindAll(TreeScope.Descendants, new PropertyCondition(AutomationElement.AutomationIdProperty, "MakeDefault")).Cast<AutomationElement>().ToList();
+                Assert.AreEqual(service.Interpreters.Count(), buttons.Count);
+                Assert.AreEqual(1, buttons.Count(b => !(bool)b.GetCurrentPropertyValue(AutomationElement.IsEnabledProperty)));
 
-            var buttons = list.FindAll(TreeScope.Descendants, new PropertyCondition(AutomationElement.AutomationIdProperty, "MakeDefault")).Cast<AutomationElement>().ToList();
-            Assert.AreEqual(service.Interpreters.Count(), buttons.Count);
-            Assert.AreEqual(1, buttons.Count(b => !(bool)b.GetCurrentPropertyValue(AutomationElement.IsEnabledProperty)));
+                using (new DefaultInterpreterSetter(null)) {
+                    // Now the last button is disabled. Assume we have more than one
+                    // button available
+                    foreach (var button in buttons) {
+                        var prev = service.DefaultInterpreter;
 
-            service.DefaultInterpreter = null;
-            // Now the last button is disabled. Assume we have more than one
-            // button available
-            try {
-                foreach (var button in buttons) {
-                    var prev = service.DefaultInterpreter;
-
-                    Assert.IsTrue((bool)button.GetCurrentPropertyValue(AutomationElement.IsEnabledProperty));
-                    ((InvokePattern)button.GetCurrentPattern(InvokePattern.Pattern)).Invoke();
-                    // 'Clicking' the button does not immediately disable it,
-                    // and the VS machinery may take some time to catch up.
-                    // After the first change, things should be much quicker.
-                    for (int retries = 10; retries > 0; --retries) {
-                        Thread.Sleep(100);
-                        if (!(bool)button.GetCurrentPropertyValue(AutomationElement.IsEnabledProperty)) {
-                            break;
+                        Assert.IsTrue((bool)button.GetCurrentPropertyValue(AutomationElement.IsEnabledProperty));
+                        ((InvokePattern)button.GetCurrentPattern(InvokePattern.Pattern)).Invoke();
+                        // 'Clicking' the button does not immediately disable it,
+                        // and the VS machinery may take some time to catch up.
+                        // After the first change, things should be much quicker.
+                        for (int retries = 10; retries > 0; --retries) {
+                            Thread.Sleep(100);
+                            if (!(bool)button.GetCurrentPropertyValue(AutomationElement.IsEnabledProperty)) {
+                                break;
+                            }
                         }
-                    }
-                    Assert.IsFalse((bool)button.GetCurrentPropertyValue(AutomationElement.IsEnabledProperty));
+                        Assert.IsFalse((bool)button.GetCurrentPropertyValue(AutomationElement.IsEnabledProperty));
 
-                    Assert.AreNotEqual(prev, service.DefaultInterpreter);
+                        Assert.AreNotEqual(prev, service.DefaultInterpreter);
+                    }
                 }
-            } finally {
-                service.DefaultInterpreter = originalDefault;
             }
         }
 
         [TestMethod, Priority(0), TestCategory("InterpreterList")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void InvalidCustomInterpreterInVS() {
-            var model = (IComponentModel)VsIdeTestHostContext.ServiceProvider.GetService(typeof(SComponentModel));
-            var service = model.GetService<IInterpreterOptionsService>();
-            Assert.IsNotNull(service);
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var model = app.GetService<IComponentModel>(typeof(SComponentModel));
+                var service = model.GetService<IInterpreterOptionsService>();
+                Assert.IsNotNull(service);
 
-            var countBefore = service.Interpreters.Count();
+                var countBefore = service.Interpreters.Count();
 
-            var configurable = service.KnownProviders.OfType<ConfigurablePythonInterpreterFactoryProvider>().Single();
-            var fake = configurable.SetOptions(new InterpreterFactoryCreationOptions {
-                Id = Guid.NewGuid(),
-                InterpreterPath = @"C:\Path\That\Probably\Does\Not\Exist",
-                WindowInterpreterPath = "",
-                Architecture = ProcessorArchitecture.None,
-                LanguageVersion = new Version(2, 7),
-                PathEnvironmentVariableName = "PYTHONPATH",
-                Description = "Invalid"
-            });
+                var configurable = service.KnownProviders.OfType<ConfigurablePythonInterpreterFactoryProvider>().Single();
+                var fake = configurable.SetOptions(new InterpreterFactoryCreationOptions {
+                    Id = Guid.NewGuid(),
+                    InterpreterPath = @"C:\Path\That\Probably\Does\Not\Exist",
+                    WindowInterpreterPath = "",
+                    Architecture = ProcessorArchitecture.None,
+                    LanguageVersion = new Version(2, 7),
+                    PathEnvironmentVariableName = "PYTHONPATH",
+                    Description = "Invalid"
+                });
 
-            var dte = VsIdeTestHostContext.Dte;
-            dte.ExecuteCommand("View.PythonEnvironments");
-            var list = new VisualStudioApp(dte).FindByAutomationId("PythonTools.InterpreterList");
+                app.Dte.ExecuteCommand("View.PythonEnvironments");
+                var list = app.FindByAutomationId("PythonTools.InterpreterList");
 
-            bool testFailed = true;
-            try {
-                Assert.AreEqual(countBefore + 1, service.Interpreters.Count());
-                Assert.IsNotNull(list);
+                int rowCount;
 
-                var rowCount = (int)list.GetCurrentPropertyValue(GridPattern.RowCountProperty);
-                Assert.AreEqual(service.Interpreters.Count(), rowCount);
-                // Until WPF ListView is fixed, we can't run the rest of the test.
-                // The problem is that newly added list items are not visible to
-                // automation. This is probably due to the virtualization issues
-                // mentioned at http://social.msdn.microsoft.com/Forums/en-US/windowsaccessibilityandautomation/thread/e33e0de5-61e1-46e7-85a0-586d3f7c244c
+                try {
+                    Assert.AreEqual(countBefore + 1, service.Interpreters.Count());
+                    Assert.IsNotNull(list);
 
-                //var grid = (GridPattern)list.GetCurrentPattern(GridPattern.Pattern);
-                //bool foundIt = false;
-                //for (int row = 0; row < rowCount; ++row) {
-                //    var label = grid.GetItem(row, 0).FindFirst(TreeScope.Descendants, new PropertyCondition(AutomationElement.AutomationIdProperty, "InterpreterName"));
-                //    var name = (string)label.GetCurrentPropertyValue(AutomationElement.NameProperty);
-                //    Console.WriteLine(name);
-                //    if (!name.StartsWith("Invalid")) {
-                //        continue;
-                //    }
-                //    foundIt = true;
-
-                //    var button = grid.GetItem(row, 1).FindFirst(TreeScope.Descendants, new PropertyCondition(AutomationElement.AutomationIdProperty, "OpenInteractive"));
-                //    Assert.IsFalse((bool)button.GetCurrentPropertyValue(AutomationElement.IsEnabledProperty));
-
-                //    var message = grid.GetItem(row, 4).FindFirst(TreeScope.Descendants, new PropertyCondition(AutomationElement.AutomationIdProperty, "NoDatabase"));
-                //    Assert.IsFalse((bool)message.GetCurrentPropertyValue(AutomationElement.IsOffscreenProperty));
-                //}
-                //Assert.IsTrue(foundIt, "Fake interpreter was not found");
-
-                testFailed = false;
-            } finally {
-                configurable.RemoveInterpreter(fake.Id);
-                if (!testFailed) {
-                    // Don't bother doing more checks if we've already failed
-                    var rowCount = (int)list.GetCurrentPropertyValue(GridPattern.RowCountProperty);
+                    rowCount = (int)list.GetCurrentPropertyValue(GridPattern.RowCountProperty);
                     Assert.AreEqual(service.Interpreters.Count(), rowCount);
+                    // Until WPF ListView is fixed, we can't run the rest of the test.
+                    // The problem is that newly added list items are not visible to
+                    // automation. This is probably due to the virtualization issues
+                    // mentioned at http://social.msdn.microsoft.com/Forums/en-US/windowsaccessibilityandautomation/thread/e33e0de5-61e1-46e7-85a0-586d3f7c244c
+
+                    //var grid = (GridPattern)list.GetCurrentPattern(GridPattern.Pattern);
+                    //bool foundIt = false;
+                    //for (int row = 0; row < rowCount; ++row) {
+                    //    var label = grid.GetItem(row, 0).FindFirst(TreeScope.Descendants, new PropertyCondition(AutomationElement.AutomationIdProperty, "InterpreterName"));
+                    //    var name = (string)label.GetCurrentPropertyValue(AutomationElement.NameProperty);
+                    //    Console.WriteLine(name);
+                    //    if (!name.StartsWith("Invalid")) {
+                    //        continue;
+                    //    }
+                    //    foundIt = true;
+
+                    //    var button = grid.GetItem(row, 1).FindFirst(TreeScope.Descendants, new PropertyCondition(AutomationElement.AutomationIdProperty, "OpenInteractive"));
+                    //    Assert.IsFalse((bool)button.GetCurrentPropertyValue(AutomationElement.IsEnabledProperty));
+
+                    //    var message = grid.GetItem(row, 4).FindFirst(TreeScope.Descendants, new PropertyCondition(AutomationElement.AutomationIdProperty, "NoDatabase"));
+                    //    Assert.IsFalse((bool)message.GetCurrentPropertyValue(AutomationElement.IsOffscreenProperty));
+                    //}
+                    //Assert.IsTrue(foundIt, "Fake interpreter was not found");
+                } finally {
+                    configurable.RemoveInterpreter(fake.Id);
                 }
+                rowCount = (int)list.GetCurrentPropertyValue(GridPattern.RowCountProperty);
+                Assert.AreEqual(service.Interpreters.Count(), rowCount);
             }
         }
 
         [TestMethod, Priority(0), TestCategory("InterpreterList")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void RefreshDBStatesInVS() {
-            var dte = VsIdeTestHostContext.Dte;
-            var model = (IComponentModel)VsIdeTestHostContext.ServiceProvider.GetService(typeof(SComponentModel));
-            var service = model.GetService<IInterpreterOptionsService>();
-            Assert.IsNotNull(service);
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var model = app.GetService<IComponentModel>(typeof(SComponentModel));
+                var service = model.GetService<IInterpreterOptionsService>();
+                Assert.IsNotNull(service);
 
-            var fact = new MockPythonInterpreterFactory(Guid.NewGuid(), "Test Factory 1", PythonPaths.Versions.First().Configuration);
-            var identifier = AnalyzerStatusUpdater.GetIdentifier(fact);
+                var fact = new MockPythonInterpreterFactory(Guid.NewGuid(), "Test Factory 1", PythonPaths.Versions.First().Configuration);
+                var identifier = AnalyzerStatusUpdater.GetIdentifier(fact);
 
-            var oldProviders = ((InterpreterOptionsService)service).SetProviders(new[] { new MockPythonInterpreterFactoryProvider("Test Provider 1", fact) });
-            try {
-                Assert.AreEqual(1, service.Interpreters.Count());
+                var oldProviders = ((InterpreterOptionsService)service).SetProviders(new[] { new MockPythonInterpreterFactoryProvider("Test Provider 1", fact) });
+                try {
+                    Assert.AreEqual(1, service.Interpreters.Count());
 
-                dte.ExecuteCommand("View.PythonEnvironments");
-                var list = new AutomationWrapper(new VisualStudioApp(dte).FindByAutomationId("PythonTools.InterpreterList"));
-                Assert.IsNotNull(list);
+                    app.Dte.ExecuteCommand("View.PythonEnvironments");
+                    var list = new AutomationWrapper(app.FindByAutomationId("PythonTools.InterpreterList"));
+                    Assert.IsNotNull(list);
 
-                var rowCount = (int)list.Element.GetCurrentPropertyValue(GridPattern.RowCountProperty);
-                Assert.AreEqual(service.Interpreters.Count(), rowCount);
+                    var rowCount = (int)list.Element.GetCurrentPropertyValue(GridPattern.RowCountProperty);
+                    Assert.AreEqual(service.Interpreters.Count(), rowCount);
 
-                var window = PythonToolsPackage.Instance.FindWindowPane(typeof(InterpreterListToolWindow), 0, true) as WindowPane;
-                var interpreterList = window.Content as InterpreterList;
+                    var window = PythonToolsPackage.Instance.FindWindowPane(typeof(InterpreterListToolWindow), 0, true) as WindowPane;
+                    var interpreterList = window.Content as InterpreterList;
 
-                var label = list.FindByAutomationId("InterpreterName");
-                var name = (string)label.GetCurrentPropertyValue(AutomationElement.NameProperty);
-                Assert.AreEqual(fact.Description, name);
+                    var label = list.FindByAutomationId("InterpreterName");
+                    var name = (string)label.GetCurrentPropertyValue(AutomationElement.NameProperty);
+                    Assert.AreEqual(fact.Description, name);
 
-                var button = list.FindButton("Regenerate");
-                Assert.IsNotNull(button);
-                var buttonClick = (InvokePattern)button.GetCurrentPattern(InvokePattern.Pattern);
-                Assert.IsNotNull(buttonClick);
-                var notRequired = list.FindByAutomationId("RegenerateNotRequired");
-                Assert.IsNotNull(notRequired);
-                var required = list.FindByAutomationId("RegenerateRequired");
-                Assert.IsNotNull(required);
-                var progress = list.FindByAutomationId("Progress");
-                Assert.IsNotNull(progress);
+                    var button = list.FindButton("Regenerate");
+                    Assert.IsNotNull(button);
+                    var buttonClick = (InvokePattern)button.GetCurrentPattern(InvokePattern.Pattern);
+                    Assert.IsNotNull(buttonClick);
+                    var notRequired = list.FindByAutomationId("RegenerateNotRequired");
+                    Assert.IsNotNull(notRequired);
+                    var required = list.FindByAutomationId("RegenerateRequired");
+                    Assert.IsNotNull(required);
+                    var progress = list.FindByAutomationId("Progress");
+                    Assert.IsNotNull(progress);
 
-                Assert.IsFalse((bool)required.GetCurrentPropertyValue(AutomationElement.IsOffscreenProperty));
-                Assert.IsTrue((bool)button.GetCurrentPropertyValue(AutomationElement.IsEnabledProperty));
-                Assert.IsTrue((bool)progress.GetCurrentPropertyValue(AutomationElement.IsOffscreenProperty));
+                    Assert.IsFalse((bool)required.GetCurrentPropertyValue(AutomationElement.IsOffscreenProperty));
+                    Assert.IsTrue((bool)button.GetCurrentPropertyValue(AutomationElement.IsEnabledProperty));
+                    Assert.IsTrue((bool)progress.GetCurrentPropertyValue(AutomationElement.IsOffscreenProperty));
 
-                buttonClick.Invoke();
-                Thread.Sleep(1000);
+                    buttonClick.Invoke();
+                    Thread.Sleep(1000);
 
-                Assert.IsTrue((bool)required.GetCurrentPropertyValue(AutomationElement.IsOffscreenProperty));
-                Assert.IsTrue((bool)button.GetCurrentPropertyValue(AutomationElement.IsOffscreenProperty));
-                Assert.IsFalse((bool)progress.GetCurrentPropertyValue(AutomationElement.IsOffscreenProperty));
+                    Assert.IsTrue((bool)required.GetCurrentPropertyValue(AutomationElement.IsOffscreenProperty));
+                    Assert.IsTrue((bool)button.GetCurrentPropertyValue(AutomationElement.IsOffscreenProperty));
+                    Assert.IsFalse((bool)progress.GetCurrentPropertyValue(AutomationElement.IsOffscreenProperty));
 
-                fact.EndGenerateCompletionDatabase(identifier, false);
-                interpreterList.Dispatcher.Invoke((Action)(() => { CommandManager.InvalidateRequerySuggested(); }));
-                Thread.Sleep(1000);
+                    fact.EndGenerateCompletionDatabase(identifier, false);
+                    interpreterList.Dispatcher.Invoke((Action)(() => { CommandManager.InvalidateRequerySuggested(); }));
+                    Thread.Sleep(1000);
 
-                Assert.IsFalse((bool)required.GetCurrentPropertyValue(AutomationElement.IsOffscreenProperty));
-                Assert.IsTrue((bool)button.GetCurrentPropertyValue(AutomationElement.IsEnabledProperty));
-                Assert.IsTrue((bool)progress.GetCurrentPropertyValue(AutomationElement.IsOffscreenProperty));
+                    Assert.IsFalse((bool)required.GetCurrentPropertyValue(AutomationElement.IsOffscreenProperty));
+                    Assert.IsTrue((bool)button.GetCurrentPropertyValue(AutomationElement.IsEnabledProperty));
+                    Assert.IsTrue((bool)progress.GetCurrentPropertyValue(AutomationElement.IsOffscreenProperty));
 
-                buttonClick.Invoke();
-                Thread.Sleep(500);
+                    buttonClick.Invoke();
+                    Thread.Sleep(500);
 
-                Assert.IsTrue((bool)required.GetCurrentPropertyValue(AutomationElement.IsOffscreenProperty));
-                Assert.IsTrue((bool)button.GetCurrentPropertyValue(AutomationElement.IsOffscreenProperty));
-                Assert.IsFalse((bool)progress.GetCurrentPropertyValue(AutomationElement.IsOffscreenProperty));
+                    Assert.IsTrue((bool)required.GetCurrentPropertyValue(AutomationElement.IsOffscreenProperty));
+                    Assert.IsTrue((bool)button.GetCurrentPropertyValue(AutomationElement.IsOffscreenProperty));
+                    Assert.IsFalse((bool)progress.GetCurrentPropertyValue(AutomationElement.IsOffscreenProperty));
 
-                fact.EndGenerateCompletionDatabase(identifier, true);
-                interpreterList.Dispatcher.Invoke((Action)(() => { CommandManager.InvalidateRequerySuggested(); }));
-                Thread.Sleep(1000);
+                    fact.EndGenerateCompletionDatabase(identifier, true);
+                    interpreterList.Dispatcher.Invoke((Action)(() => { CommandManager.InvalidateRequerySuggested(); }));
+                    Thread.Sleep(1000);
 
-                Assert.IsTrue((bool)required.GetCurrentPropertyValue(AutomationElement.IsOffscreenProperty));
-                Assert.IsFalse((bool)notRequired.GetCurrentPropertyValue(AutomationElement.IsOffscreenProperty));
-                Assert.IsTrue((bool)button.GetCurrentPropertyValue(AutomationElement.IsEnabledProperty));
-                Assert.IsTrue((bool)progress.GetCurrentPropertyValue(AutomationElement.IsOffscreenProperty));
-            } finally {
-                ((InterpreterOptionsService)service).SetProviders(oldProviders);
+                    Assert.IsTrue((bool)required.GetCurrentPropertyValue(AutomationElement.IsOffscreenProperty));
+                    Assert.IsFalse((bool)notRequired.GetCurrentPropertyValue(AutomationElement.IsOffscreenProperty));
+                    Assert.IsTrue((bool)button.GetCurrentPropertyValue(AutomationElement.IsEnabledProperty));
+                    Assert.IsTrue((bool)progress.GetCurrentPropertyValue(AutomationElement.IsOffscreenProperty));
+                } finally {
+                    ((InterpreterOptionsService)service).SetProviders(oldProviders);
+                }
             }
         }
 
         [TestMethod, Priority(0), TestCategory("InterpreterList")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void InvalidCustomInterpreterDoesNotCrashInVS() {
-            var model = (IComponentModel)VsIdeTestHostContext.ServiceProvider.GetService(typeof(SComponentModel));
-            var service = model.GetService<IInterpreterOptionsService>();
-            Assert.IsNotNull(service);
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var model = app.GetService<IComponentModel>(typeof(SComponentModel));
+                var service = model.GetService<IInterpreterOptionsService>();
+                Assert.IsNotNull(service);
 
-            var configurable = service.KnownProviders.OfType<ConfigurablePythonInterpreterFactoryProvider>().Single();
-            var fake = configurable.SetOptions(new InterpreterFactoryCreationOptions {
-                Id = Guid.NewGuid(),
-                InterpreterPath = @"C:\Path\That\Probably\Does\Not\Exist",
-                WindowInterpreterPath = "",
-                Architecture = ProcessorArchitecture.None,
-                LanguageVersion = new Version(2, 7),
-                PathEnvironmentVariableName = "PYTHONPATH",
-                Description = "Invalid"
-            });
+                var configurable = service.KnownProviders.OfType<ConfigurablePythonInterpreterFactoryProvider>().Single();
+                var fake = configurable.SetOptions(new InterpreterFactoryCreationOptions {
+                    Id = Guid.NewGuid(),
+                    InterpreterPath = @"C:\Path\That\Probably\Does\Not\Exist",
+                    WindowInterpreterPath = "",
+                    Architecture = ProcessorArchitecture.None,
+                    LanguageVersion = new Version(2, 7),
+                    PathEnvironmentVariableName = "PYTHONPATH",
+                    Description = "Invalid"
+                });
 
-            try {
-                // Not crashing is sufficient to ensure that
-                // https://pytools.codeplex.com/workitem/1199 is fixed.
-                var withDb = (IPythonInterpreterFactoryWithDatabase)fake;
-                withDb.GenerateDatabase(GenerateDatabaseOptions.None);
-            } finally {
-                configurable.RemoveInterpreter(fake.Id);
+                try {
+                    // Not crashing is sufficient to ensure that
+                    // https://pytools.codeplex.com/workitem/1199 is fixed.
+                    var withDb = (IPythonInterpreterFactoryWithDatabase)fake;
+                    withDb.GenerateDatabase(GenerateDatabaseOptions.None);
+                } finally {
+                    configurable.RemoveInterpreter(fake.Id);
+                }
             }
         }
 
