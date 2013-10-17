@@ -53,7 +53,8 @@ def get_posts(server, site, user, password):
     existing_posts = server.getRecentPosts(SITE_NAME, user, password, post_count)
     while len(existing_posts) == post_count:
         post_count += 50
-        existing_posts.extend(server.getRecentPosts(SITE_NAME, user, password, 50))
+        existing_posts = server.getRecentPosts(SITE_NAME, user, password, post_count)
+    print('Found {} posts'.format(len(existing_posts)))
     return existing_posts
 
 
