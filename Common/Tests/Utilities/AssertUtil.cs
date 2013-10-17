@@ -17,6 +17,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -235,5 +236,11 @@ namespace TestUtilities
             return sb.ToString();
         }
 
+
+        public static void AreEqual(Regex expected, string actual, string message = null) {
+            if (!expected.IsMatch(actual)) {
+                Assert.Fail(string.Format("Expected <{0}>. Actual <{1}>. {2}", expected, actual, message ?? ""));
+            }
+        }
     }
 }

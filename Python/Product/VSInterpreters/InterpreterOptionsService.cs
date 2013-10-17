@@ -16,9 +16,12 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.ComponentModel.Composition.Hosting;
+using System.ComponentModel.Composition.Primitives;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Security;
 using Microsoft.VisualStudio.Settings;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -46,6 +49,7 @@ namespace Microsoft.PythonTools.Interpreter {
         private const string DefaultInterpreterVersionSetting = "DefaultInterpreterVersion";
 
         private readonly SettingsManager _settings;
+        private readonly IVsActivityLog _activityLog;
 
         private IPythonInterpreterFactoryProvider[] _providers;
 
@@ -60,6 +64,11 @@ namespace Microsoft.PythonTools.Interpreter {
         [ImportingConstructor]
         public InterpreterOptionsService([Import(typeof(SVsServiceProvider), AllowDefault = true)] IServiceProvider provider) {
             _settings = SettingsManagerCreator.GetSettingsManager(provider);
+            if (provider != null) {
+                _activityLog = provider.GetService(typeof(SVsActivityLog)) as IVsActivityLog;
+            } else if (ServiceProvider.GlobalProvider != null) {
+                _activityLog = ServiceProvider.GlobalProvider.GetService(typeof(SVsActivityLog)) as IVsActivityLog;
+            }
             Initialize();
 
             InitializeDefaultInterpreterWatcher(provider);
@@ -98,7 +107,7 @@ namespace Microsoft.PythonTools.Interpreter {
             BeginSuppressInterpretersChangedEvent();
             try {
                 var store = _settings.GetReadOnlySettingsStore(SettingsScope.Configuration);
-                _providers = LoadProviders(store).Where(provider => provider != null).ToArray();
+                _providers = LoadProviders(store);
             } finally {
                 EndSuppressInterpretersChangedEvent();
             }
@@ -129,17 +138,96 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
-        private static IEnumerable<IPythonInterpreterFactoryProvider> LoadProviders(SettingsStore store) {
+        private static void LogException(
+            IVsActivityLog log,
+            string message,
+            string path,
+            Exception ex,
+            IEnumerable<object> data = null
+        ) {
+            if (log == null) {
+                return;
+            }
+
+            var fullMessage = string.Format("{1}:{0}{2}{0}{3}",
+                Environment.NewLine,
+                message,
+                ex,
+                data == null ? string.Empty : string.Join(Environment.NewLine, data)
+            ).Trim();
+
+            if (string.IsNullOrEmpty(path)) {
+                log.LogEntry(
+                    (uint)__ACTIVITYLOG_ENTRYTYPE.ALE_ERROR,
+                    "Python Tools",
+                    fullMessage
+                );
+            } else {
+                log.LogEntryPath(
+                    (uint)__ACTIVITYLOG_ENTRYTYPE.ALE_ERROR,
+                    "Python Tools",
+                    fullMessage,
+                    path
+                );
+            }
+        }
+
+        private static void LoadOneProvider(
+            string codebase,
+            HashSet<string> seen,
+            List<ComposablePartCatalog> catalog,
+            IVsActivityLog log) {
+            if (string.IsNullOrEmpty(codebase)) {
+                return;
+            }
+            
+            if (!seen.Add(codebase)) {
+                return;
+            }
+
+            if (log != null) {
+                log.LogEntryPath(
+                    (uint)__ACTIVITYLOG_ENTRYTYPE.ALE_INFORMATION,
+                    "Python Tools",
+                    "Loading interpreter provider assembly",
+                    codebase
+                );
+            }
+
+            AssemblyCatalog assemblyCatalog = null;
+
+            const string FailedToLoadAssemblyMessage = "Failed to load interpreter provider assembly";
+            try {
+                assemblyCatalog = new AssemblyCatalog(codebase);
+            } catch (Exception ex) {
+                LogException(log, FailedToLoadAssemblyMessage, codebase, ex);
+            }
+
+            if (assemblyCatalog == null) {
+                return;
+            }
+
+            const string FailedToLoadMessage = "Failed to load interpreter provider";
+            try {
+                catalog.Add(assemblyCatalog);
+            } catch (Exception ex) {
+                LogException(log, FailedToLoadMessage, codebase, ex);
+            }
+        }
+
+        private IPythonInterpreterFactoryProvider[] LoadProviders(SettingsStore store) {
             var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            var catalog = new AggregateCatalog();
+            var catalog = new List<ComposablePartCatalog>();
 
             if (store.CollectionExists(FactoryProvidersCollection)) {
                 foreach (var idStr in store.GetSubCollectionNames(FactoryProvidersCollection)) {
                     var key = FactoryProvidersCollection + "\\" + idStr;
-                    var codebase = store.GetString(key, FactoryProviderCodeBaseSetting, "");
-                    if (!string.IsNullOrEmpty(codebase) && seen.Add(codebase)) {
-                        catalog.Catalogs.Add(new AssemblyCatalog(codebase));
-                    }
+                    LoadOneProvider(
+                        store.GetString(key, FactoryProviderCodeBaseSetting, ""),
+                        seen,
+                        catalog,
+                        _activityLog
+                    );
                 }
             }
 
@@ -148,9 +236,13 @@ namespace Microsoft.PythonTools.Interpreter {
                     if (key != null) {
                         foreach (var idStr in key.GetSubKeyNames()) {
                             using (var subkey = key.OpenSubKey(idStr)) {
-                                var codebase = subkey.GetValue(FactoryProviderCodeBaseSetting, "") as string;
-                                if (!string.IsNullOrEmpty(codebase) && seen.Add(codebase)) {
-                                    catalog.Catalogs.Add(new AssemblyCatalog(codebase));
+                                if (subkey != null) {
+                                    LoadOneProvider(
+                                        subkey.GetValue(FactoryProviderCodeBaseSetting, "") as string,
+                                        seen,
+                                        catalog,
+                                        _activityLog
+                                    );
                                 }
                             }
                         }
@@ -158,19 +250,26 @@ namespace Microsoft.PythonTools.Interpreter {
                 }
             }
 
-            var container = new CompositionContainer(catalog);
-            try {
-                return container.GetExportedValues<IPythonInterpreterFactoryProvider>();
-            } catch (ReflectionTypeLoadException ex) {
-                Console.Error.WriteLine(ex);
-                foreach (var err in ex.LoaderExceptions) {
-                    Console.Error.WriteLine();
-                    Console.Error.WriteLine(err);
+            const string FailedToImportMessage = "Failed to import factory providers";
+            var providers = new List<IPythonInterpreterFactoryProvider>();
+            foreach (var part in catalog) {
+                var container = new CompositionContainer(part);
+                try {
+                    foreach (var provider in container.GetExportedValues<IPythonInterpreterFactoryProvider>()) {
+                        if (provider != null) {
+                            providers.Add(provider);
+                        }
+                    }
+                } catch (CompositionException ex) {
+                    LogException(_activityLog, FailedToImportMessage, null, ex, ex.Errors);
+                } catch (ReflectionTypeLoadException ex) {
+                    LogException(_activityLog, FailedToImportMessage, null, ex, ex.LoaderExceptions);
+                } catch (Exception ex) {
+                    LogException(_activityLog, FailedToImportMessage, null, ex);
                 }
-                Console.Error.WriteLine();
-                Console.Error.WriteLine();
-                throw;
             }
+
+            return providers.ToArray();
         }
 
         // Used for testing.

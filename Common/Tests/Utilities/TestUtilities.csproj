@@ -40,6 +40,10 @@
     <Reference Include="Microsoft.VisualStudio.QualityTools.Common, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.QualityTools.ExecutionCommon, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+    <Reference Include="Microsoft.VisualStudio.Shell.Interop.10.0, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.Shell.Interop.8.0, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="Microsoft.VisualStudio.Text.Data, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.Text.Logic, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.Text.UI, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
@@ -60,6 +64,18 @@
     <Reference Include="System.Xml.Linq" />
     <Reference Include="WindowsBase" />
   </ItemGroup>
+  <Choose>
+    <When Condition="'$(VSTarget)' == '10.0'">
+      <ItemGroup>
+        <Reference Include="Microsoft.VisualStudio.Settings, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=x86" />
+      </ItemGroup>
+    </When>
+    <Otherwise>
+      <ItemGroup>
+        <Reference Include="Microsoft.VisualStudio.Settings.$(VSTarget), Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=x86" />
+      </ItemGroup>
+    </Otherwise>
+  </Choose>
   <ItemGroup>
     <Reference Include="Microsoft.Office.Tools.v4.0.Framework, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.Tools.Applications.Runtime, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
@@ -83,6 +99,7 @@
     <Compile Include="GlobalSuppressions.cs">
       <ExcludeFromStyleCop>true</ExcludeFromStyleCop>
     </Compile>
+    <Compile Include="Mocks\MockActivityLog.cs" />
     <Compile Include="Mocks\MockBufferGraph.cs" />
     <Compile Include="Mocks\MockClassificationType.cs" />
     <Compile Include="Mocks\MockComponentModel.cs" />
@@ -92,6 +109,9 @@
     <Compile Include="Mocks\MockGlyphService.cs" />
     <Compile Include="Mocks\MockMappingPoint.cs" />
     <Compile Include="Mocks\MockNormalizedTextChangeCollection.cs" />
+    <Compile Include="Mocks\MockServiceProvider.cs" />
+    <Compile Include="Mocks\MockSettingsManager.cs" />
+    <Compile Include="Mocks\MockSettingsStore.cs" />
     <Compile Include="Mocks\MockTextBuffer.cs" />
     <Compile Include="Mocks\MockTextCaret.cs" />
     <Compile Include="Mocks\MockTextChange.cs" />
