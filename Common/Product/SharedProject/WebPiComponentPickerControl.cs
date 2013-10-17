@@ -122,7 +122,11 @@ namespace Microsoft.VisualStudioTools.Project {
 
                     _packages.Add(newPackage);
 
-                    BeginInvoke(new Action<object>(AddPackage), newPackage);
+                    try {
+                        BeginInvoke(new Action<object>(AddPackage), newPackage);
+                    } catch (InvalidOperationException) {
+                        break;
+                    }
                 }
             }
         }
