@@ -262,6 +262,7 @@ namespace Microsoft.VisualStudioTools.Project {
                 ProjectMgr.ReDrawNode(this, UIHierarchyElement.Icon);
                 ProjectMgr.OnPropertyChanged(this, (int)__VSHPROPID.VSHPROPID_IsNonMemberItem, 0);
             }
+            ((IVsUIShell)GetService(typeof(SVsUIShell))).RefreshPropertyBrowser(0);
             return VSConstants.S_OK;
         }
 
@@ -285,14 +286,16 @@ namespace Microsoft.VisualStudioTools.Project {
                 ProjectMgr.IsCodeFile(Url) ? ProjectFileConstants.Compile : ProjectFileConstants.Content
             );
             IsVisible = true;
-            ProjectMgr.OnInvalidateItems(Parent);
             ProjectMgr.ReDrawNode(this, UIHierarchyElement.Icon);
             ProjectMgr.OnPropertyChanged(this, (int)__VSHPROPID.VSHPROPID_IsNonMemberItem, 0);
+
+            // https://nodejstools.codeplex.com/workitem/273, refresh the property browser...
+            ((IVsUIShell)GetService(typeof(SVsUIShell))).RefreshPropertyBrowser(0);
 
             if (CommonUtils.IsSamePath(ProjectMgr.GetStartupFile(), Url)) {
                 ProjectMgr.BoldItem(this, true);
             }
-            
+
             return VSConstants.S_OK;
         }
 

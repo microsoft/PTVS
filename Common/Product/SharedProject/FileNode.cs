@@ -18,6 +18,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
@@ -33,13 +34,49 @@ namespace Microsoft.VisualStudioTools.Project
     {
         private bool _isLinkFile;
         private uint _docCookie;
+        private static readonly string[] _defaultOpensWithDesignViewExtensions = new[] { ".aspx", ".ascx", ".asax", ".asmx", ".xsd", ".resource", ".xaml" };
+        private static readonly string[] _supportsDesignViewExtensions = new[] { ".aspx", ".ascx", ".asax", ".asmx" };
+        private static readonly string[] _supportsDesignViewSubTypes = new[] { ProjectFileAttributeValue.Code, ProjectFileAttributeValue.Form, ProjectFileAttributeValue.UserControl, ProjectFileAttributeValue.Component, ProjectFileAttributeValue.Designer };
 
         #region static fields
         private static Dictionary<string, int> extensionIcons;
         #endregion
 
         #region overriden Properties
-        
+
+        public override bool DefaultOpensWithDesignView {
+            get {
+                // ASPX\ASCX files support design view but should be opened by default with
+                // LOGVIEWID_Primary - this is because they support design and html view which
+                // is a tools option setting for them. If we force designview this option
+                // gets bypassed. We do a similar thing for asax/asmx/xsd. By doing so, we don't force
+                // the designer to be invoked when double-clicking on the - it will now go through the
+                // shell's standard open mechanism.
+                string extension = Path.GetExtension(Url);
+                return !_defaultOpensWithDesignViewExtensions.Contains(extension, StringComparer.OrdinalIgnoreCase) &&
+                    !IsCodeBehindFile &&
+                    SupportsDesignView;
+            }
+        }
+
+        public override bool SupportsDesignView {
+            get {
+                if (ItemNode != null && !ItemNode.IsExcluded) {
+                    string extension = Path.GetExtension(Url);
+                    if (_supportsDesignViewExtensions.Contains(extension, StringComparer.OrdinalIgnoreCase) ||
+                        IsCodeBehindFile) {
+                        return true;
+                    } else {
+                        var subType = ItemNode.GetMetadata("SubType");
+                        if (subType != null && _supportsDesignViewExtensions.Contains(subType, StringComparer.OrdinalIgnoreCase)) {
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            }
+        }
+
         public override bool IsNonMemberItem {
             get {
                 return ItemNode is AllFilesProjectElement;

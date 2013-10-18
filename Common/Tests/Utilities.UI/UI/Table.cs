@@ -15,7 +15,7 @@
 using System.Windows.Automation;
 
 namespace TestUtilities.UI {
-    class Table : AutomationWrapper {
+    public class Table : AutomationWrapper {
         private readonly GridPattern _pattern;
 
         public Table(AutomationElement element)

@@ -27,6 +27,7 @@
     <DefineConstants>$(DefineConstants);TRACE</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Microsoft.Build" />
     <Reference Include="Microsoft.TC.RemoteTest">
       <HintPath>$(BuildRoot)\Common\Tests\TCTestHostAdapters\$(VSTarget)\Microsoft.TC.RemoteTest.dll</HintPath>
     </Reference>
@@ -133,6 +134,24 @@
     <Compile Include="Properties\AssemblyInfo.cs">
       <ExcludeFromStyleCop>true</ExcludeFromStyleCop>
     </Compile>
+    <Compile Include="SharedProject\CodeExtensionAttribute.cs" />
+    <Compile Include="SharedProject\CompileItem.cs" />
+    <Compile Include="SharedProject\ContentItem.cs" />
+    <Compile Include="SharedProject\FolderItem.cs" />
+    <Compile Include="SharedProject\ProjectContentGenerator.cs" />
+    <Compile Include="SharedProject\IProjectProcessor.cs" />
+    <Compile Include="SharedProject\IProjectProcessorMetadata.cs" />
+    <Compile Include="SharedProject\IProjectTypeDefinitionMetadata.cs" />
+    <Compile Include="SharedProject\ProjectContentGroup.cs" />
+    <Compile Include="SharedProject\ProjectDefinition.cs" />
+    <Compile Include="SharedProject\ProjectExtensionAttribute.cs" />
+    <Compile Include="SharedProject\ProjectProperty.cs" />
+    <Compile Include="SharedProject\ProjectType.cs" />
+    <Compile Include="SharedProject\ProjectTypeDefinition.cs" />
+    <Compile Include="SharedProject\ProjectTypeGuidAttribute.cs" />
+    <Compile Include="SharedProject\SampleCodeAttribute.cs" />
+    <Compile Include="SharedProject\SharedProjectTest.cs" />
+    <Compile Include="SharedProject\SolutionFile.cs" />
     <Compile Include="TestData.cs" />
     <Compile Include="TestExtensions.cs" />
     <Compile Include="TestMethod.cs" />

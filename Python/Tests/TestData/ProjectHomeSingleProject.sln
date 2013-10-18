@@ -1,0 +1,18 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "ProjectB", "ProjectHomeProjects\Subfolder\ProjectSingle.pyproj", "{585ee5b6-0184-4a8b-82b3-7da10fe9bae3}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{585ee5b6-0184-4a8b-82b3-7da10fe9bae3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{585ee5b6-0184-4a8b-82b3-7da10fe9bae3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

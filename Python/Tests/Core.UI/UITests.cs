@@ -30,6 +30,7 @@ using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
+using TestUtilities.Python;
 using TestUtilities.UI;
 using Keyboard = TestUtilities.UI.Keyboard;
 using Mouse = TestUtilities.UI.Mouse;
@@ -41,7 +42,7 @@ namespace PythonToolsUITests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
-            TestData.Deploy();
+            PythonTestData.Deploy();
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
@@ -92,7 +93,7 @@ namespace PythonToolsUITests {
             File.WriteAllText(TestData.GetPath(@"TestData\AbsolutePath\AbsolutePath.pyproj"), proj);
 
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenAndFindProject(@"TestData\AbsolutePath.sln");
+                var project = app.OpenProject(@"TestData\AbsolutePath.sln");
 
                 app.OpenSolutionExplorer();
                 var window = app.SolutionExplorerTreeView;
@@ -107,7 +108,7 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CopyPasteFile() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenAndFindProject(@"TestData\HelloWorld.sln");
+                var project = app.OpenProject(@"TestData\HelloWorld.sln");
 
                 app.OpenSolutionExplorer();
                 var window = app.SolutionExplorerTreeView;
@@ -134,7 +135,7 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void AddNewFolder() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenAndFindProject(@"TestData\HelloWorld.sln");
+                var project = app.OpenProject(@"TestData\HelloWorld.sln");
 
                 app.OpenSolutionExplorer();
                 var window = app.SolutionExplorerTreeView;
@@ -158,7 +159,7 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void AddSearchPathRelativePath() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenAndFindProject(@"TestData\AddSearchPaths.sln");
+                var project = app.OpenProject(@"TestData\AddSearchPaths.sln");
 
                 app.OpenSolutionExplorer();
                 var window = app.SolutionExplorerTreeView;
@@ -188,7 +189,7 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void LoadSearchPath() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenAndFindProject(@"TestData\LoadSearchPaths.sln");
+                var project = app.OpenProject(@"TestData\LoadSearchPaths.sln");
 
                 app.OpenSolutionExplorer();
                 var window = app.SolutionExplorerTreeView;
@@ -220,7 +221,7 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void AddNewFolderNested() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenAndFindProject(@"TestData\HelloWorld.sln");
+                var project = app.OpenProject(@"TestData\HelloWorld.sln");
 
                 app.OpenSolutionExplorer();
                 var window = app.SolutionExplorerTreeView;
@@ -264,7 +265,7 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void RenameProjectToExisting() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenAndFindProject(@"TestData\RenameProjectTestUI.sln");
+                var project = app.OpenProject(@"TestData\RenameProjectTestUI.sln");
 
                 app.OpenSolutionExplorer();
                 var window = app.SolutionExplorerTreeView;
@@ -306,7 +307,7 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void RenameItemsTest() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenAndFindProject(@"TestData\RenameItemsTestUI.sln");
+                var project = app.OpenProject(@"TestData\RenameItemsTestUI.sln");
 
                 app.OpenSolutionExplorer();
                 var window = app.SolutionExplorerTreeView;
@@ -348,7 +349,7 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CrossProjectCopy() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                app.OpenAndFindProject(@"TestData\HelloWorld2.sln", expectedProjects: 2);
+                app.OpenProject(@"TestData\HelloWorld2.sln", expectedProjects: 2);
 
                 app.OpenSolutionExplorer();
                 var window = app.SolutionExplorerTreeView;
@@ -371,7 +372,7 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CrossProjectCutPaste() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                app.OpenAndFindProject(@"TestData\HelloWorld2.sln", expectedProjects: 2);
+                app.OpenProject(@"TestData\HelloWorld2.sln", expectedProjects: 2);
 
                 app.OpenSolutionExplorer();
                 var window = app.SolutionExplorerTreeView;
@@ -395,7 +396,7 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CutPaste() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                app.OpenAndFindProject(@"TestData\HelloWorld2.sln", expectedProjects: 2);
+                app.OpenProject(@"TestData\HelloWorld2.sln", expectedProjects: 2);
 
                 app.OpenSolutionExplorer();
                 var window = app.SolutionExplorerTreeView;
@@ -419,7 +420,7 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CopyFolderOnToSelf() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                app.OpenAndFindProject(@"TestData\HelloWorld2.sln", expectedProjects: 2);
+                app.OpenProject(@"TestData\HelloWorld2.sln", expectedProjects: 2);
 
                 app.OpenSolutionExplorer();
                 var window = app.SolutionExplorerTreeView;
@@ -440,7 +441,7 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void DragDropTest() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                app.OpenAndFindProject(@"TestData\DragDropTest.sln");
+                app.OpenProject(@"TestData\DragDropTest.sln");
 
                 app.OpenSolutionExplorer();
                 var window = app.SolutionExplorerTreeView;
@@ -466,7 +467,7 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void DragDropFileToFileTest() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                app.OpenAndFindProject(@"TestData\DragDropTest.sln");
+                app.OpenProject(@"TestData\DragDropTest.sln");
 
                 app.OpenSolutionExplorer();
                 var window = app.SolutionExplorerTreeView;
@@ -493,7 +494,7 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void DragDropFileToContainingFolderTest() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                app.OpenAndFindProject(@"TestData\DragDropTest.sln");
+                app.OpenProject(@"TestData\DragDropTest.sln");
 
                 app.OpenSolutionExplorer();
                 var window = app.SolutionExplorerTreeView;
@@ -516,7 +517,7 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void DragLeaveTest() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                app.OpenAndFindProject(@"TestData\DragDropTest.sln");
+                app.OpenProject(@"TestData\DragDropTest.sln");
 
                 app.OpenSolutionExplorer();
                 var window = app.SolutionExplorerTreeView;
@@ -546,7 +547,7 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void DragLeaveFolderTest() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                app.OpenAndFindProject(@"TestData\DragDropTest.sln");
+                app.OpenProject(@"TestData\DragDropTest.sln");
 
                 app.OpenSolutionExplorer();
                 var window = app.SolutionExplorerTreeView;
@@ -576,7 +577,7 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CopyFolderInToSelf() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                app.OpenAndFindProject(@"TestData\HelloWorld2.sln", expectedProjects: 2);
+                app.OpenProject(@"TestData\HelloWorld2.sln", expectedProjects: 2);
 
                 app.OpenSolutionExplorer();
                 var window = app.SolutionExplorerTreeView;
@@ -596,7 +597,7 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void MultiSelectCopyAndPaste() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                app.OpenAndFindProject(@"TestData\DebuggerProject.sln");
+                app.OpenProject(@"TestData\DebuggerProject.sln");
 
                 app.OpenSolutionExplorer();
                 var window = app.SolutionExplorerTreeView;
@@ -628,7 +629,7 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void DjangoMultiSelectContextMenu() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                app.OpenAndFindProject(@"TestData\DjangoApplication.sln");
+                app.OpenProject(@"TestData\DjangoApplication.sln");
 
                 app.OpenSolutionExplorer();
                 var window = app.SolutionExplorerTreeView;
@@ -656,7 +657,7 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void DjangoIncludeInProject() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                app.OpenAndFindProject(@"TestData\DjangoApplication.sln");
+                app.OpenProject(@"TestData\DjangoApplication.sln");
 
                 app.OpenSolutionExplorer();
                 var window = app.SolutionExplorerTreeView;
@@ -682,7 +683,7 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void AddItemPreviousSiblingNotVisible() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenAndFindProject(@"TestData\AddItemPreviousSiblingNotVisible.sln");
+                var project = app.OpenProject(@"TestData\AddItemPreviousSiblingNotVisible.sln");
 
                 app.OpenSolutionExplorer();
                 var window = app.SolutionExplorerTreeView;
@@ -730,7 +731,7 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void AddExistingItem() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenAndFindProject(@"TestData\AddExistingItem.sln");
+                var project = app.OpenProject(@"TestData\AddExistingItem.sln");
 
                 app.OpenSolutionExplorer();
                 var window = app.SolutionExplorerTreeView;
@@ -753,7 +754,7 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void AddNewFileOverwritingExistingFileNotInProject() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenAndFindProject(@"TestData\AddExistingItem.sln");
+                var project = app.OpenProject(@"TestData\AddExistingItem.sln");
 
                 app.OpenSolutionExplorer();
                 var window = app.SolutionExplorerTreeView;
@@ -911,7 +912,7 @@ namespace PythonToolsUITests {
 
                 app.SelectSourceControlProvider("Test Source Provider");
                 try {
-                    var project = app.OpenAndFindProject(@"TestData\SourceControl.sln");
+                    var project = app.OpenProject(@"TestData\SourceControl.sln");
 
                     using (var docEvents = new DocumentEvents()) {
                         project.ProjectItems.Item("TestFolder").Name = "Renamed";
@@ -943,7 +944,7 @@ namespace PythonToolsUITests {
                     TestSccProvider.ExpectedProvider = "TestProvider";
                     TestSccProvider.ExpectedProjectName = "HelloWorld";
 
-                    var project = app.OpenAndFindProject(@"TestData\SourceControl.sln");
+                    var project = app.OpenProject(@"TestData\SourceControl.sln");
 
                     Assert.AreEqual(1, TestSccProvider.LoadedProjects.Count);
 
@@ -986,7 +987,7 @@ namespace PythonToolsUITests {
 
                 app.SelectSourceControlProvider("Test Source Provider");
 
-                var project = app.OpenAndFindProject(@"TestData\SourceControl.sln");
+                var project = app.OpenProject(@"TestData\SourceControl.sln");
 
                 Assert.AreEqual(1, TestSccProvider.LoadedProjects.Count);
                 var sccProject = TestSccProvider.LoadedProjects.First();
@@ -1011,7 +1012,7 @@ namespace PythonToolsUITests {
                 try {
                     app.SelectSourceControlProvider("Test Source Provider");
 
-                    var project = app.OpenAndFindProject(@"TestData\SourceControl.sln");
+                    var project = app.OpenProject(@"TestData\SourceControl.sln");
 
                     Assert.AreEqual(1, TestSccProvider.LoadedProjects.Count);
                     var sccProject = TestSccProvider.LoadedProjects.First();
@@ -1059,7 +1060,7 @@ namespace PythonToolsUITests {
                 try {
                     app.SelectSourceControlProvider("Test Source Provider");
 
-                    var project = app.OpenAndFindProject(@"TestData\NoSourceControl.sln");
+                    var project = app.OpenProject(@"TestData\NoSourceControl.sln");
 
                     Assert.AreEqual(0, TestSccProvider.LoadedProjects.Count);
 
@@ -1103,7 +1104,7 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TransferItem() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenAndFindProject(@"TestData\HelloWorld.sln");
+                var project = app.OpenProject(@"TestData\HelloWorld.sln");
 
                 string filename, basename;
                 int i = 0;
@@ -1133,7 +1134,7 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void SaveAs() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenAndFindProject(@"TestData\SaveAsUI.sln");
+                var project = app.OpenProject(@"TestData\SaveAsUI.sln");
 
                 app.OpenSolutionExplorer();
                 var solutionTree = app.SolutionExplorerTreeView;
@@ -1164,7 +1165,7 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ExtensionReference() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenAndFindProject(@"TestData\ExtensionReference.sln");
+                var project = app.OpenProject(@"TestData\ExtensionReference.sln");
 
                 app.OpenSolutionExplorer();
                 var solutionTree = app.SolutionExplorerTreeView;
@@ -1238,7 +1239,7 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestSearchExcludedFiles() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenAndFindProject(@"TestData\FindInAllFiles.sln");
+                var project = app.OpenProject(@"TestData\FindInAllFiles.sln");
                 Assert.IsNotNull(project);
 
                 var find = app.Dte.Find;

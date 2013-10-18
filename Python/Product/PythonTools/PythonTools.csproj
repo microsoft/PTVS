@@ -343,7 +343,6 @@
     <Compile Include="PythonTools\Project\InterpretersNodeProperties.cs" />
     <Compile Include="PythonTools\Project\InterpretersPackageNode.cs" />
     <Compile Include="PythonTools\Project\InterpretersPackageNodeProperties.cs" />
-    <Compile Include="PythonTools\Commands\Command.cs" />
     <Compile Include="PythonTools\Commands\OpenDebugReplCommand.cs" />
     <Compile Include="PythonTools\Commands\RemoveImportsCurrentScopeCommand.cs" />
     <Compile Include="PythonTools\Commands\RemoveImportsCommand.cs" />
@@ -906,6 +905,12 @@
       <CustomToolNamespace>Microsoft.PythonTools</CustomToolNamespace>
       <ManifestResourceName>Microsoft.VSPackage</ManifestResourceName>
     </ConditionalEmbeddedResource>
+    <Compile Include="Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+      <Visible>true</Visible>
+    </Compile>
     <EmbeddedResource Include="Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>

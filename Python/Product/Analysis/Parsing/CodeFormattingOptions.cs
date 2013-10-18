@@ -428,7 +428,6 @@ namespace Microsoft.PythonTools.Parsing {
                     while (newText.Length > 0 && newText[newText.Length - 1] == ' ') {
                         newText.Length = newText.Length - 1;
                     }
-
                     linesWritten++;
                     newText.Append(newLine);
                     columnCutoff = defaultColumnCutoff;

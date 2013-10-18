@@ -1,0 +1,2 @@
+﻿foo = True
+bar = False

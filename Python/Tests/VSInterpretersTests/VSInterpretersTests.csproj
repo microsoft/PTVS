@@ -62,6 +62,10 @@
       <Project>{815db0cd-c0dd-4997-b43c-abee4dbeffe7}</Project>
       <Name>VSInterpreters</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Utilities.Python.Analysis\TestUtilities.Python.Analysis.csproj">
+      <Project>{a731c4c3-3741-4080-a946-c47574c1f3bf}</Project>
+      <Name>TestUtilities.Python.Analysis</Name>
+    </ProjectReference>
   </ItemGroup>
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">

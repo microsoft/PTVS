@@ -18,6 +18,7 @@ using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Repl;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Commands {
 #if INTERACTIVE_WINDOW

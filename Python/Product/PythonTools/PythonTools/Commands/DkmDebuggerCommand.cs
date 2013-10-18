@@ -20,6 +20,7 @@ using Microsoft.VisualStudio.Debugger;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TextManager.Interop;
+using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Commands {
     internal abstract class DkmDebuggerCommand : Command {

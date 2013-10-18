@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "PythonApplication", "PythonApplication\PythonApplication.pyproj", "{1A537BFB-BCDC-454B-8C30-FDE4DBB72797}"
+EndProject
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "PythonLibrary", "PythonLibrary\PythonLibrary.pyproj", "{32326054-184D-4603-98B8-15BB3BAA5B9C}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1A537BFB-BCDC-454B-8C30-FDE4DBB72797}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1A537BFB-BCDC-454B-8C30-FDE4DBB72797}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{32326054-184D-4603-98B8-15BB3BAA5B9C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{32326054-184D-4603-98B8-15BB3BAA5B9C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

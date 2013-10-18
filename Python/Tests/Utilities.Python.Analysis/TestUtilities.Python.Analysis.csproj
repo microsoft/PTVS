@@ -38,6 +38,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PythonPaths.cs" />
     <Compile Include="MockCompletionDB.cs" />
+    <Compile Include="PythonTestData.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Product\Analysis\Analysis.csproj">

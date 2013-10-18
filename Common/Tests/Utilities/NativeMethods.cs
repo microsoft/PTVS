@@ -244,5 +244,71 @@ namespace TestUtilities
         public static extern short VkKeyScan(char ch);
 
         #endregion
+
+        /// <summary>
+        /// Recursively deletes a directory using the shell API which can 
+        /// handle long file names
+        /// </summary>
+        /// <param name="dir"></param>
+        public static void RecursivelyDeleteDirectory(string dir) {
+            SHFILEOPSTRUCT fileOp = new SHFILEOPSTRUCT();
+            fileOp.pFrom = dir + '\0';  // pFrom must be double null terminated
+            fileOp.wFunc = FO_Func.FO_DELETE;
+            fileOp.fFlags = FILEOP_FLAGS_ENUM.FOF_NOCONFIRMATION |
+                FILEOP_FLAGS_ENUM.FOF_NOERRORUI;
+            int res = SHFileOperation(ref fileOp);
+            if (res != 0) {
+                throw new System.IO.IOException("Failed to delete dir " + res);
+            }
+        }
+
+        [DllImport("shell32.dll", CharSet = CharSet.Unicode)]
+        static extern int SHFileOperation([In, Out] ref SHFILEOPSTRUCT lpFileOp);
+
+
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode, Pack = 2)]
+        struct SHFILEOPSTRUCT {
+            public IntPtr hwnd;
+            public FO_Func wFunc;
+            [MarshalAs(UnmanagedType.LPWStr)]
+            public string pFrom;
+            [MarshalAs(UnmanagedType.LPWStr)]
+            public string pTo;
+            public FILEOP_FLAGS_ENUM fFlags;
+            [MarshalAs(UnmanagedType.Bool)]
+            public bool fAnyOperationsAborted;
+            public IntPtr hNameMappings;
+            [MarshalAs(UnmanagedType.LPWStr)]
+            public string lpszProgressTitle;
+
+        }
+
+        [Flags]
+        private enum FILEOP_FLAGS_ENUM : ushort {
+            FOF_MULTIDESTFILES = 0x0001,
+            FOF_CONFIRMMOUSE = 0x0002,
+            FOF_SILENT = 0x0004,  // don't create progress/report
+            FOF_RENAMEONCOLLISION = 0x0008,
+            FOF_NOCONFIRMATION = 0x0010,  // Don't prompt the user.
+            FOF_WANTMAPPINGHANDLE = 0x0020,  // Fill in SHFILEOPSTRUCT.hNameMappings
+            // Must be freed using SHFreeNameMappings
+            FOF_ALLOWUNDO = 0x0040,
+            FOF_FILESONLY = 0x0080,  // on *.*, do only files
+            FOF_SIMPLEPROGRESS = 0x0100,  // means don't show names of files
+            FOF_NOCONFIRMMKDIR = 0x0200,  // don't confirm making any needed dirs
+            FOF_NOERRORUI = 0x0400,  // don't put up error UI
+            FOF_NOCOPYSECURITYATTRIBS = 0x0800,  // dont copy NT file Security Attributes
+            FOF_NORECURSION = 0x1000,  // don't recurse into directories.
+            FOF_NO_CONNECTED_ELEMENTS = 0x2000,  // don't operate on connected elements.
+            FOF_WANTNUKEWARNING = 0x4000,  // during delete operation, warn if nuking instead of recycling (partially overrides FOF_NOCONFIRMATION)
+            FOF_NORECURSEREPARSE = 0x8000,  // treat reparse points as objects, not containers
+        }
+
+        public enum FO_Func : uint {
+            FO_MOVE = 0x0001,
+            FO_COPY = 0x0002,
+            FO_DELETE = 0x0003,
+            FO_RENAME = 0x0004,
+        }
     }
 }

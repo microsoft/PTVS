@@ -25,12 +25,14 @@ using EnvDTE;
 using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.OLE.Interop;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.Execution;
 using Microsoft.VisualStudio.TestTools.TestAdapter;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.Win32;
 using TestUtilities;
+using Task = System.Threading.Tasks.Task;
 
 namespace TestUtilities.UI {
     /// <summary>
@@ -107,8 +109,9 @@ namespace TestUtilities.UI {
         /// <summary>
         /// Opens and activates the solution explorer window.
         /// </summary>
-        public void OpenSolutionExplorer() {
-            Dte.ExecuteCommand("View.SolutionExplorer");
+        public SolutionExplorerTree OpenSolutionExplorer() {
+            Dte.ExecuteCommand("View.SolutionExplorer");            
+            return SolutionExplorerTreeView;
         }
 
         /// <summary>
@@ -162,7 +165,7 @@ namespace TestUtilities.UI {
             Debug.Assert(Path.IsPathRooted(filename));
 
             string windowName = Path.GetFileName(filename);
-            var elem = Element.FindFirst(TreeScope.Descendants,
+            var elem = Element.FindFirst(TreeScope.Descendants, 
                 new AndCondition(
                     new PropertyCondition(
                         AutomationElement.ClassNameProperty,
@@ -210,34 +213,34 @@ namespace TestUtilities.UI {
             var dialog = AutomationElement.FromHandle(OpenDialogWithDteExecuteCommand("Tools.Options"));
 
             try {
-                // go to the tree view which lets us select a set of options...
+            // go to the tree view which lets us select a set of options...
                 var treeView = new TreeView(dialog.FindFirst(TreeScope.Descendants,
-                    new PropertyCondition(
-                        AutomationElement.ClassNameProperty,
-                        "SysTreeView32")
-                    ));
-
-                treeView.FindItem("Source Control", "Plug-in Selection").SetFocus();
+                new PropertyCondition(
+                    AutomationElement.ClassNameProperty,
+                    "SysTreeView32")
+                ));
+            
+            treeView.FindItem("Source Control", "Plug-in Selection").SetFocus();
 
                 var currentSourceControl = new ComboBox(dialog.FindFirst(
-                        TreeScope.Descendants,
-                        new AndCondition(
-                           new PropertyCondition(
-                               AutomationElement.NameProperty,
-                               "Current source control plug-in:"
-                           ),
-                           new PropertyCondition(
-                               AutomationElement.ClassNameProperty,
-                               "ComboBox"
-                           )
-                        )
+                    TreeScope.Descendants,
+                    new AndCondition(
+                       new PropertyCondition(
+                           AutomationElement.NameProperty,
+                           "Current source control plug-in:"
+                       ),
+                       new PropertyCondition(
+                           AutomationElement.ClassNameProperty,
+                           "ComboBox"
+                       )
                     )
-                );
+                )
+            );
 
-                currentSourceControl.SelectItem(providerName);
+            currentSourceControl.SelectItem(providerName);
 
                 new AutomationWrapper(dialog).ClickButtonByName("OK");
-                WaitForDialogDismissed();
+            WaitForDialogDismissed();
                 dialog = null;
             } finally {
                 if (dialog != null) {
@@ -275,7 +278,7 @@ namespace TestUtilities.UI {
                     foundWindow--;
                     continue;
                 }
-
+                                
                 //MessageBoxButton.Abort
                 //MessageBoxButton.Cancel
                 //MessageBoxButton.No
@@ -317,11 +320,11 @@ namespace TestUtilities.UI {
             Assert.Fail("Failed to find exception helper window");
             return null;
         }
-
+        
         /// <summary>
         /// Waits for a modal dialog to take over a given window and returns the HWND for the new dialog.
         /// </summary>
-        /// <returns>An IntPtr which should be interpreted as an HWND</returns>
+        /// <returns>An IntPtr which should be interpreted as an HWND</returns>        
         public IntPtr WaitForDialogToReplace(IntPtr originalHwnd) {
             return WaitForDialogToReplace(originalHwnd, null);
         }
@@ -336,7 +339,7 @@ namespace TestUtilities.UI {
                 System.Threading.Thread.Sleep(500);
                 uiShell.GetDialogOwnerHwnd(out hwnd);
                 if (task != null && task.IsFaulted) {
-                    return IntPtr.Zero;
+                    return IntPtr.Zero;                    
                 }
             }
 
@@ -388,11 +391,11 @@ namespace TestUtilities.UI {
             }
         }
 
-        internal static void CheckMessageBox(params string[] text) {
+        public static void CheckMessageBox(params string[] text) {
             CheckMessageBox(MessageBoxButton.Cancel, text);
         }
 
-        internal static void CheckMessageBox(MessageBoxButton button, params string[] text) {
+        public static void CheckMessageBox(MessageBoxButton button, params string[] text) {
             CheckAndDismissDialog(text, 65535, new IntPtr((int)button));
         }
 
@@ -555,7 +558,7 @@ namespace TestUtilities.UI {
 
         public void MoveCurrentFileToProject(string projectName) {
             var dialog = OpenDialogWithDteExecuteCommand("file.ProjectPickerMoveInto");
-
+            
             var chooseDialog = new ChooseLocationDialog(dialog);
             chooseDialog.FindProject(projectName);
             chooseDialog.ClickOK();
@@ -569,17 +572,7 @@ namespace TestUtilities.UI {
             }
         }
 
-        internal void OpenProject(string path) {
-            var hWnd = OpenDialogWithDteExecuteCommand("File.OpenProject");
-
-            var dialog = new OpenProjectDialog(hWnd);
-            dialog.ProjectName = path;
-            dialog.Open();
-
-            WaitForDialogDismissed();
-        }
-
-        internal void WaitForMode(dbgDebugMode mode) {
+        public void WaitForMode(dbgDebugMode mode) {
             for (int i = 0; i < 60 && Dte.Debugger.CurrentMode != mode; i++) {
                 System.Threading.Thread.Sleep(500);
             }
@@ -587,7 +580,7 @@ namespace TestUtilities.UI {
             Assert.AreEqual(VsIdeTestHostContext.Dte.Debugger.CurrentMode, mode);
         }
 
-        public Project OpenAndFindProject(string projName, string startItem = null, int expectedProjects = 1, string projectName = null, bool setStartupItem = true) {
+        public Project OpenProject(string projName, string startItem = null, int? expectedProjects = null, string projectName = null, bool setStartupItem = true) {
             string fullPath = TestData.GetPath(projName);
             Assert.IsTrue(File.Exists(fullPath), "Cannot find " + fullPath);
             Dte.Solution.Open(fullPath);
@@ -595,7 +588,7 @@ namespace TestUtilities.UI {
             Assert.IsTrue(Dte.Solution.IsOpen, "The solution is not open");
 
             int count = Dte.Solution.Projects.Count;
-            if (expectedProjects != count) {
+            if (expectedProjects != null && expectedProjects.Value != count) {
                 // if we have other files open we can end up with a bonus project...
                 int i = 0;
                 foreach (EnvDTE.Project proj in Dte.Solution.Projects) {
@@ -622,6 +615,13 @@ namespace TestUtilities.UI {
 
             if (startItem != null && setStartupItem) {
                 project.SetStartupFile(startItem);
+                for (var i = 0; i < 20; i++) {
+                    //Wait for the startupItem to be set before returning from the project creation
+                    if (((string)project.Properties.Item("StartupFile").Value) == startItem) {
+                        break;
+                    }
+                    System.Threading.Thread.Sleep(250);
+                }
             }
 
             DeleteAllBreakPoints();
@@ -636,6 +636,10 @@ namespace TestUtilities.UI {
                     ((EnvDTE90a.Breakpoint3)bp).Delete();
                 }
             }
+        }
+
+        internal void Invoke(Action action) {
+            ThreadHelper.Generic.Invoke(action);
         }
     }
 }

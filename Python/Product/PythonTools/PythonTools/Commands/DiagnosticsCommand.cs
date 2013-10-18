@@ -23,6 +23,7 @@ using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Logging;
 using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio.ComponentModelHost;
+using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Commands {
     /// <summary>

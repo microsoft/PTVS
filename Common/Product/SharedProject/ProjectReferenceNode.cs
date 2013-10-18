@@ -468,7 +468,6 @@ namespace Microsoft.VisualStudioTools.Project
             {
                 return false;
             }
-            
 
             //If the Project is unloaded return false
             if (this.ReferencedProjectObject == null)

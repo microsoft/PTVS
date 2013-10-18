@@ -15,7 +15,7 @@
 
 namespace TestUtilities.UI {
     // http://msdn.microsoft.com/en-us/library/ms645505(VS.85).aspx
-    enum MessageBoxButton {
+    public enum MessageBoxButton {
         Abort = 3,
         Cancel = 2,
         Continue = 11,

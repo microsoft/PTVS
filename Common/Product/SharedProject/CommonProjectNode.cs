@@ -540,7 +540,12 @@ namespace Microsoft.VisualStudioTools.Project {
                 var allFiles = curNode.ItemNode as AllFilesProjectElement;
                 if (allFiles != null) {
                     curNode.IsVisible = enabled;
-                    OnInvalidateItems(node);
+
+                    if (enabled) {
+                        ProjectMgr.OnItemAdded(node, curNode);
+                    } else {
+                        ProjectMgr.OnItemDeleted(curNode);
+                    }
                 }
             }
         }
@@ -742,7 +747,9 @@ namespace Microsoft.VisualStudioTools.Project {
 
         private bool IsFileHidden(string path) {
             if (String.Equals(path, FileName, StringComparison.OrdinalIgnoreCase) ||
-                String.Equals(path, FileName + ".user", StringComparison.OrdinalIgnoreCase)) {
+                String.Equals(path, FileName + ".user", StringComparison.OrdinalIgnoreCase) ||
+                String.Equals(Path.GetExtension(path), ".sln") ||
+                String.Equals(Path.GetExtension(path), ".suo")) {
                 return true;
             }
 
@@ -1004,8 +1011,6 @@ namespace Microsoft.VisualStudioTools.Project {
             }
 
             private void RemoveAllFilesChildren(HierarchyNode parent) {
-                bool removed = false;
-
                 for (var current = parent.FirstChild; current != null; current = current.NextSibling) {
                     // remove our children first
                     RemoveAllFilesChildren(current);
@@ -1016,12 +1021,7 @@ namespace Microsoft.VisualStudioTools.Project {
                     if (current.ItemNode is AllFilesProjectElement) {
                         parent.RemoveChild(current);
                         _project.OnItemDeleted(current);
-                        removed = true;
                     }
-                }
-
-                if (removed) {
-                    _project.OnInvalidateItems(parent);
                 }
             }
 
@@ -1056,13 +1056,7 @@ namespace Microsoft.VisualStudioTools.Project {
                     }
 
                     // creating a new item, need to create the on all files node
-                    string parentDir = Path.GetDirectoryName(CommonUtils.TrimEndSeparator(_path)) + Path.DirectorySeparatorChar;
-                    HierarchyNode parent;
-                    if (CommonUtils.IsSamePath(parentDir, _project.ProjectHome)) {
-                        parent = _project;
-                    } else {
-                        parent = _project.FindNodeByFullPath(parentDir);
-                    }
+                    HierarchyNode parent = _project.GetParentFolderForPath(_path);
 
                     if (parent == null) {
                         // we've hit an error while adding too many files, the file system watcher
@@ -1075,6 +1069,7 @@ namespace Microsoft.VisualStudioTools.Project {
 
                     if (Directory.Exists(_path)) {
                         if (IsFileSymLink(_path)) {
+                            string parentDir = Path.GetDirectoryName(CommonUtils.TrimEndSeparator(_path)) + Path.DirectorySeparatorChar;
                             if (IsRecursiveSymLink(parentDir, _path)) {
                                 // don't add recusrive sym link directory
                                 return;
@@ -1089,13 +1084,11 @@ namespace Microsoft.VisualStudioTools.Project {
                         // and drop in explorer), in which case we also need to process the items
                         // which are in the folder that we won't receive create notifications for.
 
-                        if (_isRename) {
-                            // First, make sure we don't have any children
-                            RemoveAllFilesChildren(folderNode);
+                        // First, make sure we don't have any children
+                        RemoveAllFilesChildren(folderNode);
 
-                            // then add the folder nodes
-                            _project.MergeDiskNodes(folderNode, _path);
-                        }
+                        // then add the folder nodes
+                        _project.MergeDiskNodes(folderNode, _path);
 
                         _project.OnInvalidateItems(folderNode);
                     } else {

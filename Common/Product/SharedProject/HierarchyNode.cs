@@ -924,7 +924,7 @@ namespace Microsoft.VisualStudioTools.Project
             if (!String.IsNullOrWhiteSpace(documentToRemove)) 
             {
                 VSQUERYREMOVEFILEFLAGS[] queryRemoveFlags = this.GetQueryRemoveFileFlags(filesToBeDeleted);
-                if (!this.ProjectMgr.Tracker.CanRemoveItems(filesToBeDeleted, queryRemoveFlags)) 
+                if (!this.ProjectMgr.Tracker.CanRemoveItems(filesToBeDeleted, queryRemoveFlags))
                 {
                     return;
                 }
@@ -951,19 +951,56 @@ namespace Microsoft.VisualStudioTools.Project
             // Close the document window if opened.
             CloseDocumentWindow(this);
 
-            // Notify document tracker listeners that we have removed the item.
-            if (!String.IsNullOrWhiteSpace(documentToRemove)) 
-            {
-                VSREMOVEFILEFLAGS[] removeFlags = this.GetRemoveFileFlags(filesToBeDeleted);
-                Debug.Assert(removeFlags != null, "At least an empty array should be returned for the GetRemoveFileFlags");
-                this.ProjectMgr.Tracker.OnItemRemoved(documentToRemove, removeFlags[0]);
-            }
+            RaiseOnItemRemoved(documentToRemove, filesToBeDeleted);
 
             // Notify hierarchy event listeners that items have been invalidated
             ProjectMgr.OnInvalidateItems(this);
 
             // Dispose the node now that is deleted.
             this.Dispose(true);
+        }
+
+        /// <summary>
+        /// Determines if the node should open with the designer by default, or if we should
+        /// just open with the default editor.
+        /// </summary>
+        public virtual bool DefaultOpensWithDesignView {
+            get {
+                // ASPX\ASCX files support design view but should be opened by default with
+                // LOGVIEWID_Primary - this is because they support design and html view which
+                // is a tools option setting for them. If we force designview this option
+                // gets bypassed. We do a similar thing for asax/asmx/xsd. By doing so, we don't force
+                // the designer to be invoked when double-clicking on the node - it will now go through the
+                // shell's standard open mechanism.
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Returns true if the node supports a design view.
+        /// </summary>
+        public virtual bool SupportsDesignView {
+            get {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Returns true if the node represents a code behind file.
+        /// </summary>
+        public virtual bool IsCodeBehindFile {
+            get {
+                return false;
+            }
+        }
+
+        protected virtual void RaiseOnItemRemoved(string documentToRemove, string[] filesToBeDeleted) {
+            if (!String.IsNullOrWhiteSpace(documentToRemove)) {
+                // Notify document tracker listeners that we have removed the item.
+                VSREMOVEFILEFLAGS[] removeFlags = this.GetRemoveFileFlags(filesToBeDeleted);
+                Debug.Assert(removeFlags != null, "At least an empty array should be returned for the GetRemoveFileFlags");
+                this.ProjectMgr.Tracker.OnItemRemoved(documentToRemove, removeFlags[0]);
+            }
         }
 
         internal void RemoveNonDocument(bool removeFromStorage)
@@ -1187,12 +1224,29 @@ namespace Microsoft.VisualStudioTools.Project
         }
 
         /// <summary>
+        /// Handles the exclude from project command potentially displaying
+        /// a progress bar if the operation can take a long time.
+        /// </summary>
+        /// <returns></returns>
+        internal virtual int ExcludeFromProjectWithProgress() {
+            return ExcludeFromProject();
+        }
+             
+        /// <summary>
         /// Handles the include in project command.
         /// </summary>
         /// <returns></returns>
         internal virtual int IncludeInProject(bool includeChildren) 
         {
             return VSConstants.E_FAIL;
+        }
+
+        /// <summary>
+        /// Handles the include in project command showing a progress bar
+        /// if the operation can potentially take a long time.
+        /// </summary>
+        internal virtual int IncludeInProjectWithProgress(bool includeChildren) {
+            return IncludeInProject(includeChildren);
         }
 
         /// <summary>
@@ -1407,9 +1461,10 @@ namespace Microsoft.VisualStudioTools.Project
                 switch ((VsCommands2K)cmd)
                 {
                     case VsCommands2K.EXCLUDEFROMPROJECT:
-                        return this.ExcludeFromProject();
+                        return this.ExcludeFromProjectWithProgress();
                     case VsCommands2K.INCLUDEINPROJECT:
-                        return this.IncludeInProject(true);
+                        return this.IncludeInProjectWithProgress(true);
+
                 }
             }
 

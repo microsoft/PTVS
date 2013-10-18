@@ -23,6 +23,7 @@ using Microsoft.PythonTools.Interpreter;
 using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
+using TestUtilities.Python;
 using TestUtilities.UI;
 using TestUtilities.UI.Python;
 using Path = System.IO.Path;
@@ -38,7 +39,7 @@ namespace DebuggerUITests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
-            TestData.Deploy();
+            PythonTestData.Deploy();
         }
 
         public AttachTest() {
@@ -260,7 +261,7 @@ namespace DebuggerUITests {
 
         #region Helper methods
         private static SD.Process OpenSolutionAndLaunchFile(VisualStudioApp app, string debugSolution, string startFile, string interpreterArgs, string programArgs) {
-            var project = app.OpenAndFindProject(debugSolution, startFile);
+            var project = app.OpenProject(debugSolution, startFile);
             return LaunchFileFromProject(project, startFile, interpreterArgs, programArgs);
         }
 

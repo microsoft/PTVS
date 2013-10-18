@@ -53,7 +53,7 @@ namespace TestUtilities.UI {
                         _typeBrowserPane = new TypeBrowserPane(el);
                 }
                 return _typeBrowserPane;
-            }
+        }
         }
 
         /// <summary>
@@ -80,7 +80,7 @@ namespace TestUtilities.UI {
                         _typeNavigatorPane = new TypeNavigatorPane(el);
                 }
                 return _typeNavigatorPane;
-            }
+        }
         }
 
         /// <summary>
@@ -107,7 +107,7 @@ namespace TestUtilities.UI {
                         _detailPane = new DetailPane(el);
                 }
                 return _detailPane;
-            }
+        }
         }
 
         /// <summary>

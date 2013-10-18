@@ -177,7 +177,6 @@ namespace Microsoft.VisualStudioTools.Project {
                 returnValue = VSConstants.E_FAIL;
             }
 
-            ItemsDraggedOrCutOrCopied.Clear();
             _dragging = false;
 
             return returnValue;
@@ -501,11 +500,15 @@ namespace Microsoft.VisualStudioTools.Project {
                     }
                 }
 
+                bool result = true;
                 foreach (var addition in additions) {
                     addition.DoAddition();
+                    if (addition is SkipOverwriteAddition) {
+                        result = false;
+                    }
                 }
 
-                return true;
+                return result;
             }
 
             /// <summary>
@@ -585,7 +588,7 @@ folder you are copying, do you want to replace the existing files?", Path.GetFil
                         return null;
                     } else if (!dialog.ShouldOverwrite) {
                         // no, don't copy the folder
-                        return NopAddition.Instance;
+                        return SkipOverwriteAddition.Instance;
                     }
                     // otherwise yes, and we'll prompt about the files.
                 }
@@ -692,6 +695,13 @@ folder you are copying, do you want to replace the existing files?", Path.GetFil
                             return false;
                         }
 
+                        if (!Project.Tracker.CanRenameItem(
+                            source,
+                            newPath,
+                            VSRENAMEFILEFLAGS.VSRENAMEFILEFLAGS_Directory)) {
+                            return false;
+                        }
+
                         additions.Add(new FolderAddition(Project, Path.Combine(targetPath, name), source, DropEffect, nestedAdditions.ToArray()));
                     }
 
@@ -758,21 +768,45 @@ folder you are copying, do you want to replace the existing files?", Path.GetFil
                 }
 
                 public override void DoAddition() {
-                    var newNode = Project.CreateFolderNodes(NewFolderPath);
+                    bool wasExpanded = false;
+                    HierarchyNode newNode;
+                    var sourceFolder = Project.FindNodeByFullPath(SourceFolder) as FolderNode;
+                    if (sourceFolder == null || DropEffect != DropEffect.Move) {
+                        newNode = Project.CreateFolderNodes(NewFolderPath);
+                    } else {
+                        // Rename the folder & reparent our existing FolderNode w/ potentially w/ a new ID,
+                        // but don't update the children as we'll handle that w/ our file additions...
+                        wasExpanded = sourceFolder.GetIsExpanded();
+                        sourceFolder.ReparentFolder(NewFolderPath);
+                        Directory.CreateDirectory(NewFolderPath);
+                        newNode = sourceFolder;
+                    }
 
                     foreach (var addition in Additions) {
                         addition.DoAddition();
                     }
 
-                    var sourceFolder = Project.FindNodeByFullPath(SourceFolder);
                     if (sourceFolder != null) {
                         if (sourceFolder.IsNonMemberItem) {
                             // copying or moving an existing excluded folder, new folder
                             // is excluded too.
                             ErrorHandler.ThrowOnFailure(newNode.ExcludeFromProject());
-                        } else if (DropEffect == DropEffect.Move) {
-                            sourceFolder.Remove(true);
                         }
+
+                        if (DropEffect == DropEffect.Move) {
+                            Directory.Delete(SourceFolder);
+
+                            // we just handled the delete, the updated folder has the new filename,
+                            // and we don't want to delete where we just moved stuff...
+                            Project.ItemsDraggedOrCutOrCopied.Remove(sourceFolder);
+                        }
+                    }
+
+                    // Send OnItemRenamed for the folder now, after all of the children have been renamed
+                    Project.Tracker.OnItemRenamed(SourceFolder, NewFolderPath, VSRENAMEFILEFLAGS.VSRENAMEFILEFLAGS_Directory);
+                    
+                    if (wasExpanded) {
+                        sourceFolder.ExpandItem(EXPANDFLAGS.EXPF_ExpandFolder);
                     }
                 }
             }
@@ -907,7 +941,13 @@ folder you are copying, do you want to replace the existing files?", Path.GetFil
 
                 bool ok = false;
                 if (DropEffect == DropEffect.Move && Utilities.IsSameComObject(project, Project)) {
-                    ok = Project.Tracker.CanRenameItem(moniker, newPath, VSRENAMEFILEFLAGS.VSRENAMEFILEFLAGS_NoFlags);
+                    if (existingChild != null && existingChild.ItemNode != null && existingChild.ItemNode.IsExcluded) {
+                        // https://nodejstools.codeplex.com/workitem/271
+                        // The item is excluded, so we don't need to ask if we can rename it.
+                        ok = true;
+                    } else {
+                        ok = Project.Tracker.CanRenameItem(moniker, newPath, VSRENAMEFILEFLAGS.VSRENAMEFILEFLAGS_NoFlags);
+                    }
                 } else {
                     ok = Project.Tracker.CanAddItems(
                         new[] { newPath },
@@ -947,8 +987,17 @@ folder you are copying, do you want to replace the existing files?", Path.GetFil
                         if (overwrite.Value) {
                             return new OverwriteFileAddition(Project, targetFolder, DropEffect, moniker, Path.GetFileName(newPath), project);
                         } else {
-                            return NopAddition.Instance;
+                            return SkipOverwriteAddition.Instance;
                         }
+                    } else if (Directory.Exists(newPath)) {
+                        VsShellUtilities.ShowMessageBox(
+                            Project.Site,
+                            String.Format("A directory with the name '{0}' already exists.", Path.GetFileName(CommonUtils.TrimEndSeparator(newPath))),
+                            null,
+                            OLEMSGICON.OLEMSGICON_CRITICAL,
+                            OLEMSGBUTTON.OLEMSGBUTTON_OK,
+                            OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST);
+                        return null;
                     }
 
                     if (newPath.Length >= NativeMethods.MAX_PATH) {
@@ -1007,8 +1056,17 @@ folder you are copying, do you want to replace the existing files?", Path.GetFil
                 public abstract void DoAddition();
             }
 
-            class NopAddition : Addition {
-                internal static NopAddition Instance = new NopAddition();
+            /// <summary>
+            /// Addition which doesn't add anything.  It's used when the user answers no to
+            /// overwriting a file, which results in us reporting an overall failure to the 
+            /// copy and paste.  This causes the file not to be deleted if it was a move.
+            /// 
+            /// This also means that if you're moving multiple files and answer no to one 
+            /// of them but not the other that the files are not removed from the source
+            /// hierarchy.
+            /// </summary>
+            class SkipOverwriteAddition : Addition {
+                internal static SkipOverwriteAddition Instance = new SkipOverwriteAddition();
 
                 public override void DoAddition() {
                 }
@@ -1074,6 +1132,11 @@ folder you are copying, do you want to replace the existing files?", Path.GetFil
                     string newPath = Path.Combine(TargetFolder, NewFileName);
                     if (DropEffect == DropEffect.Move && Utilities.IsSameComObject(Project, SourceHierarchy)) {
                         // we are doing a move, we need to remove the old item, and add the new.
+                        // This also allows us to have better behavior if the user is selectively answering
+                        // no to files within the hierarchy.  We can do the rename of the individual items
+                        // which the user opts to move and not touch the ones they don't.  With a cross
+                        // hierarchy move if the user answers no to any of the items none of the items
+                        // are removed from the source hierarchy.
                         var fileNode = Project.FindNodeByFullPath(SourceMoniker);
                         Debug.Assert(fileNode is FileNode);
 
@@ -1101,6 +1164,7 @@ folder you are copying, do you want to replace the existing files?", Path.GetFil
 
                                 targetFolder.AddChild(fileNode);
                             }
+                            Project.tracker.OnItemAdded(fileNode.Url, VSADDFILEFLAGS.VSADDFILEFLAGS_NoFlags);
                         } else if (existing.IsNonMemberItem) {
                             // replacing item that already existed, just include it in the project.
                             existing.IncludeInProject(false);

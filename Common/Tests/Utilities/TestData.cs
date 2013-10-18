@@ -33,7 +33,6 @@ namespace TestUtilities {
         const string BinariesOutPath = "";
 
         const string DataAltSourcePath = @"TestData";
-        const string DataSourcePath = @"Common\Tests\TestData";
         const string DataOutPath = @"TestData";
 
         private static string GetSolutionDir() {
@@ -88,7 +87,22 @@ namespace TestUtilities {
             }
         }
 
-        public static void Deploy(string dataSourcePath = null, bool includeTestData = true) {
+        public static string BinarySourceLocation {
+            get {
+                var sourceRoot = GetSolutionDir();
+                var binSource = Path.Combine(sourceRoot, BinariesSourcePath);
+                if (!Directory.Exists(binSource)) {
+                    binSource = Path.Combine(sourceRoot, BinariesAltSourcePath);
+                    if (!Directory.Exists(binSource)) {
+                        Debug.Fail("Could not find location of test binaries." + Environment.NewLine + "    " + binSource);
+                    }
+                }
+                Console.WriteLine("Binary source location: {0}", binSource);
+                return binSource;
+            }
+        }
+
+        public static void Deploy(string dataSourcePath, bool includeTestData = true) {
             var sourceRoot = GetSolutionDir();
             var deployRoot = Path.GetDirectoryName((typeof(TestData)).Assembly.Location);
 
@@ -96,13 +110,7 @@ namespace TestUtilities {
                 Debug.Fail("Invalid deploy root", string.Format("sourceRoot={0}\ndeployRoot={1}", sourceRoot, deployRoot));
             }
 
-            var binSource = Path.Combine(sourceRoot, BinariesSourcePath);            
-            if (!Directory.Exists(binSource)) {
-                binSource = Path.Combine(sourceRoot, BinariesAltSourcePath);
-                if (!Directory.Exists(binSource)) {
-                    Debug.Fail("Could not find location of test binaries." + Environment.NewLine + "    " + binSource);
-                }
-            }
+            var binSource = BinarySourceLocation;
 
             var binDest = Path.Combine(deployRoot, BinariesOutPath);
             if (binSource == binDest) {
@@ -116,7 +124,7 @@ namespace TestUtilities {
             CopyFiles(binSource, binDest);
 
             if (includeTestData) {
-                var dataSource = Path.Combine(sourceRoot, dataSourcePath ?? DataSourcePath);
+                var dataSource = Path.Combine(sourceRoot, dataSourcePath);
                 if (!Directory.Exists(dataSource)) {
                     dataSource = Path.Combine(sourceRoot, DataAltSourcePath);
                     if (!Directory.Exists(dataSource)) {

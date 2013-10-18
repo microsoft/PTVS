@@ -147,6 +147,20 @@ namespace Microsoft.VisualStudioTools.Project
         }
 
         /// <summary>
+        /// Notify the environment about a file just removed
+        /// </summary>
+        internal void OnFolderRemoved(string folder, VSREMOVEDIRECTORYFLAGS flag) {
+            if ((this.projectMgr.EventTriggeringFlag & ProjectNode.EventTriggering.DoNotTriggerTrackerEvents) == 0) {
+                ErrorHandler.ThrowOnFailure(this.GetIVsTrackProjectDocuments2().OnAfterRemoveDirectories(
+                    projectMgr.GetOuterInterface<IVsProject>(), 
+                    1, 
+                    new string[1] { folder },
+                    new VSREMOVEDIRECTORYFLAGS[1] { flag }));
+            }
+        }
+
+
+        /// <summary>
         ///  Asks the environment for permission to rename files.
         /// </summary>
         /// <param name="oldFileName">Path to the file to be renamed.</param>
@@ -177,7 +191,6 @@ namespace Microsoft.VisualStudioTools.Project
                 ErrorHandler.ThrowOnFailure(this.GetIVsTrackProjectDocuments2().OnAfterRenameFile(projectMgr.GetOuterInterface<IVsProject>(), strOldName, strNewName, flag));
             }
         }
-
         #endregion
     }
 }

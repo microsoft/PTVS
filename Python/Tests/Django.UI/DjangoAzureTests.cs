@@ -18,6 +18,7 @@ using System.Threading;         // Ambiguous with EnvDTE.Thread.
 using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
+using TestUtilities.Python;
 using TestUtilities.UI;
 
 namespace DjangoUITests {
@@ -26,7 +27,7 @@ namespace DjangoUITests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
-            TestData.Deploy();
+            PythonTestData.Deploy();
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]

@@ -43,7 +43,7 @@ namespace PythonToolsUITests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
-            TestData.Deploy();
+            PythonTestData.Deploy();
         }
 
         #region Tests requiring VS
@@ -176,7 +176,7 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void LoadUnloadVirtualEnvInInterpreterListInVS() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var proj = app.OpenAndFindProject(@"TestData\VirtualEnv.sln");
+                var proj = app.OpenProject(@"TestData\VirtualEnv.sln");
 
                 var model = app.GetService<IComponentModel>(typeof(SComponentModel));
                 var service = model.GetService<IInterpreterOptionsService>();
@@ -213,7 +213,7 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ActivateVirtualEnvInInterpreterListInVS() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var proj = app.OpenAndFindProject(@"TestData\VirtualEnv.sln");
+                var proj = app.OpenProject(@"TestData\VirtualEnv.sln");
 
                 app.Dte.ExecuteCommand("View.PythonEnvironments");
                 var list = app.FindByAutomationId("PythonTools.InterpreterList");

@@ -23,6 +23,7 @@ using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.Win32;
 using TestUtilities;
+using TestUtilities.Python;
 using TestUtilities.UI;
 using TestUtilities.UI.Python;
 
@@ -32,7 +33,7 @@ namespace ProfilingUITests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
-            TestData.Deploy();
+            PythonTestData.Deploy();
             PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnNormalExit = false;
             PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnAbnormalExit = false;
         }
@@ -211,7 +212,7 @@ namespace ProfilingUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void NewProfilingSessionOpenSolution() {
             using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenAndFindProject(@"TestData\ProfileTest.sln");
+                var project = app.OpenProject(@"TestData\ProfileTest.sln");
 
                 app.OpenPythonPerformance();
                 app.PythonPerformanceExplorerToolBar.NewPerfSession();
@@ -263,7 +264,7 @@ namespace ProfilingUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void LaunchPythonProfilingWizard() {
             using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenAndFindProject(@"TestData\ProfileTest.sln");
+                var project = app.OpenProject(@"TestData\ProfileTest.sln");
 
                 app.LaunchPythonProfiling();
 
@@ -314,7 +315,7 @@ namespace ProfilingUITests {
             Assert.IsNull(profiling.GetSession(1));
 
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenAndFindProject(@"TestData\ProfileTest.sln");
+                var project = app.OpenProject(@"TestData\ProfileTest.sln");
 
                 var session = LaunchProject(app, profiling, project, TestData.GetPath(@"TestData\ProfileTest"), false);
                 try {
@@ -346,7 +347,7 @@ namespace ProfilingUITests {
             Assert.IsNull(profiling.GetSession(1));
 
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenAndFindProject(@"TestData\Profile Test.sln");
+                var project = app.OpenProject(@"TestData\Profile Test.sln");
 
                 var session = LaunchProject(app, profiling, project, TestData.GetPath(@"TestData\Profile Test"), false);
                 try {
@@ -379,7 +380,7 @@ namespace ProfilingUITests {
             Assert.IsNull(profiling.GetSession(1));
 
             using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenAndFindProject(@"TestData\ProfileTest.sln");
+                var project = app.OpenProject(@"TestData\ProfileTest.sln");
 
                 var session = LaunchProject(app, profiling, project, TestData.GetPath(@"TestData\ProfileTest"), false);
                 try {
@@ -423,7 +424,7 @@ namespace ProfilingUITests {
             Assert.IsNull(profiling.GetSession(1));
 
             using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenAndFindProject(@"TestData\ProfileTest.sln");
+                var project = app.OpenProject(@"TestData\ProfileTest.sln");
 
                 var session = LaunchProject(app, profiling, project, TestData.GetPath(@"TestData\ProfileTest"), false);
                 try {
@@ -450,7 +451,7 @@ namespace ProfilingUITests {
             Assert.IsNull(profiling.GetSession(1));
 
             using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenAndFindProject(@"TestData\ProfileTest.sln");
+                var project = app.OpenProject(@"TestData\ProfileTest.sln");
 
                 var session = LaunchProject(app, profiling, project, TestData.GetPath(@"TestData\ProfileTest"), false);
                 try {
@@ -527,7 +528,7 @@ namespace ProfilingUITests {
             Assert.IsNull(profiling.GetSession(1));
 
             using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenAndFindProject(@"TestData\ProfileTest.sln");
+                var project = app.OpenProject(@"TestData\ProfileTest.sln");
 
                 var session = LaunchProject(app, profiling, project, TestData.GetPath(@"TestData\ProfileTest"), false);
                 try {
@@ -554,7 +555,7 @@ namespace ProfilingUITests {
             Assert.IsNull(profiling.GetSession(1));
 
             using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenAndFindProject(@"TestData\ProfileTest.sln");
+                var project = app.OpenProject(@"TestData\ProfileTest.sln");
 
                 var session = LaunchProject(app, profiling, project, TestData.GetPath(@"TestData\ProfileTest"), false);
                 try {
@@ -606,7 +607,7 @@ namespace ProfilingUITests {
             Assert.IsNull(profiling.GetSession(1));
 
             using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenAndFindProject(@"TestData\ProfileTest.sln");
+                var project = app.OpenProject(@"TestData\ProfileTest.sln");
 
                 var session = LaunchProject(app, profiling, project, TestData.GetPath(@"TestData\ProfileTest"), false);
                 try {
@@ -635,7 +636,7 @@ namespace ProfilingUITests {
             Assert.IsNull(profiling.GetSession(1));
 
             using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenAndFindProject(@"TestData\ProfileTest.sln");
+                var project = app.OpenProject(@"TestData\ProfileTest.sln");
 
                 var session = LaunchProject(app, profiling, project, TestData.GetPath(@"TestData\ProfileTest"), false);
                 try {
@@ -837,7 +838,7 @@ namespace ProfilingUITests {
             Assert.IsNull(profiling.GetSession(1));
 
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenAndFindProject(@"TestData\ProfileTest.sln");
+                var project = app.OpenProject(@"TestData\ProfileTest.sln");
 
                 var session = LaunchProject(app, profiling, project, TestData.GetPath(@"TestData\ProfileTest"), false);
                 IPythonProfileSession session2 = null;
@@ -902,7 +903,7 @@ namespace ProfilingUITests {
             Assert.IsNull(profiling.GetSession(1));
 
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenAndFindProject(@"TestData\ProfileTest2.sln");
+                var project = app.OpenProject(@"TestData\ProfileTest2.sln");
 
                 var session = LaunchProject(app, profiling, project, TestData.GetPath(@"TestData\ProfileTest2"), false);
                 IPythonProfileSession session2 = null;
@@ -967,7 +968,7 @@ namespace ProfilingUITests {
             Assert.IsNull(profiling.GetSession(1));
 
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenAndFindProject(@"TestData\ProfileTest.sln");
+                var project = app.OpenProject(@"TestData\ProfileTest.sln");
 
                 var session = LaunchProject(app, profiling, project, TestData.GetPath(@"TestData\ProfileTest"), false);
                 try {

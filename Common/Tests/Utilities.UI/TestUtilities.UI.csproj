@@ -120,12 +120,14 @@
     <Compile Include="UI\SelectFolderDialog.cs" />
     <Compile Include="UI\SolutionExplorerTree.cs" />
     <Compile Include="UI\Table.cs" />
+    <Compile Include="UI\TestExtensions.cs" />
     <Compile Include="UI\TextBox.cs" />
     <Compile Include="UI\TreeNode.cs" />
     <Compile Include="UI\TreeView.cs" />
     <Compile Include="UI\TypeBrowserPane.cs" />
     <Compile Include="UI\TypeNavigatorPane.cs" />
     <Compile Include="UI\VisualStudioApp.cs" />
+    <Compile Include="UI\VisualStudioSolution.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Utilities\TestUtilities.csproj">

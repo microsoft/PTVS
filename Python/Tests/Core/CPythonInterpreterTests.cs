@@ -17,6 +17,7 @@ using System.Linq;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
+using TestUtilities.Python;
 
 namespace PythonToolsTests {
     [TestClass]
@@ -26,7 +27,7 @@ namespace PythonToolsTests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
-            TestData.Deploy();
+            PythonTestData.Deploy();
         }
         
         [TestMethod, Priority(0)]

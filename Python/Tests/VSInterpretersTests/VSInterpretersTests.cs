@@ -25,6 +25,7 @@ using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 using TestUtilities.Mocks;
+using TestUtilities.Python;
 
 namespace VSInterpretersTests {
     [TestClass]
@@ -32,7 +33,7 @@ namespace VSInterpretersTests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
-            TestData.Deploy(includeTestData: false);
+            PythonTestData.Deploy(includeTestData: false);
         }
 
         private static readonly List<string> _tempFiles = new List<string>();

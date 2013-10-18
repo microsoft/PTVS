@@ -4145,7 +4145,18 @@ namespace Microsoft.VisualStudioTools.Project
         {
             Guid empty = Guid.Empty;
 
-            return AddItemWithSpecific(itemIdLoc, op, itemName, filesToOpen, files, dlgOwner, 0, ref empty, null, ref empty, result);
+            return AddItemWithSpecific(
+                itemIdLoc, 
+                op, 
+                itemName, 
+                filesToOpen, 
+                files, 
+                dlgOwner, 
+                op == VSADDITEMOPERATION.VSADDITEMOP_CLONEFILE ? (uint)__VSSPECIFICEDITORFLAGS.VSSPECIFICEDITOR_DoOpen : 0, 
+                ref empty, 
+                null, 
+                ref empty, 
+                result);
         }
 
         /// <summary>
@@ -4530,7 +4541,7 @@ namespace Microsoft.VisualStudioTools.Project
                             IVsWindowFrame frame;
                             if (editorType == Guid.Empty)
                             {
-                                Guid view = Guid.Empty;
+                                Guid view = child.DefaultOpensWithDesignView ? VSConstants.LOGVIEWID.Designer_guid : Guid.Empty;
                                 ErrorHandler.ThrowOnFailure(this.OpenItem(child.ID, ref view, IntPtr.Zero, out frame));
                             }
                             else
@@ -4964,8 +4975,12 @@ If the files in the existing folder have the same names as files in the folder y
             //Change the caption if we are passed a window frame
             if (frame != null)
             {
-                string caption = ((HierarchyNode)pHier).Caption;
-                hr = frame.SetProperty((int)(__VSFPROPID.VSFPROPID_OwnerCaption), caption);
+                var newNode = FindNodeByFullPath(newMkDoc);
+
+                if (newNode != null) {
+                    string caption = newNode.Caption;
+                    hr = frame.SetProperty((int)(__VSFPROPID.VSFPROPID_OwnerCaption), caption);
+                }
             }
             return hr;
         }
@@ -5557,7 +5572,7 @@ If the files in the existing folder have the same names as files in the folder y
         /// </summary>
         /// <param name="item">msbuild item</param>
         /// <returns>parent node</returns>
-        private HierarchyNode GetItemParentNode(MSBuild.ProjectItem item)
+        internal HierarchyNode GetItemParentNode(MSBuild.ProjectItem item)
         {
             var link = item.GetMetadataValue(ProjectFileConstants.Link);
             HierarchyNode currentParent = this;
@@ -6070,6 +6085,23 @@ If the files in the existing folder have the same names as files in the folder y
             HierarchyNode res;
             _diskNodes.TryGetValue(name, out res);
             return res;
+        }
+
+        /// <summary>
+        /// Gets the parent folder if path were added to be added to the hierarchy
+        /// in it's default (non-linked item) location.  Returns null if the path
+        /// of parent folders to the item don't exist yet.
+        /// </summary>
+        /// <param name="path">The full path on disk to the item which is being queried about..</param>
+        internal HierarchyNode GetParentFolderForPath(string path) {
+            string parentDir = Path.GetDirectoryName(CommonUtils.TrimEndSeparator(path)) + Path.DirectorySeparatorChar;
+            HierarchyNode parent;
+            if (CommonUtils.IsSamePath(parentDir, ProjectHome)) {
+                parent = this;
+            } else {
+                parent = FindNodeByFullPath(parentDir);
+            }
+            return parent;
         }
 
         #region IVsUIHierarchy methods

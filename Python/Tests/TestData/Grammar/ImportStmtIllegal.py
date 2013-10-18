@@ -1,0 +1,1 @@
+﻿from sys import ((winver))

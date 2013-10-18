@@ -22,6 +22,7 @@ using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
+using TestUtilities.Python;
 
 namespace DjangoTests {
     [TestClass]
@@ -29,7 +30,7 @@ namespace DjangoTests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
-            TestData.Deploy();
+            PythonTestData.Deploy();
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]

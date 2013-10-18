@@ -25,6 +25,7 @@ using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
+using TestUtilities.Python;
 using TestUtilities.UI;
 
 namespace PythonToolsUITests {
@@ -43,7 +44,7 @@ namespace PythonToolsUITests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
-            TestData.Deploy();
+            PythonTestData.Deploy();
         }
 
         public TestContext TestContext { get; set; }
@@ -71,7 +72,7 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestPublishFiles() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenAndFindProject(@"TestData\HelloWorld.sln");
+                var project = app.OpenProject(@"TestData\HelloWorld.sln");
                 try {
                     string subDir = Guid.NewGuid().ToString();
                     project.Properties.Item("PublishUrl").Value = Path.Combine(TestSharePublic, subDir);
@@ -103,7 +104,7 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestPublishFilesControlled() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenAndFindProject(@"TestData\PublishTest.sln");
+                var project = app.OpenProject(@"TestData\PublishTest.sln");
                 try {
                     string subDir = Guid.NewGuid().ToString();
                     project.Properties.Item("PublishUrl").Value = Path.Combine(TestSharePublic, subDir);
@@ -164,7 +165,7 @@ namespace PythonToolsUITests {
             WNetCancelConnection2(TestSharePrivate, 0, true);
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
                 try {
-                    var project = app.OpenAndFindProject(@"TestData\HelloWorld.sln");
+                    var project = app.OpenProject(@"TestData\HelloWorld.sln");
                     try {
                         string subDir = Guid.NewGuid().ToString();
                         project.Properties.Item("PublishUrl").Value = Path.Combine(TestSharePrivate, subDir);
@@ -248,7 +249,7 @@ namespace PythonToolsUITests {
             WNetCancelConnection2(TestSharePrivate, 0, true);
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
                 try {
-                    var project = app.OpenAndFindProject(@"TestData\HelloWorld.sln");
+                    var project = app.OpenProject(@"TestData\HelloWorld.sln");
                     try {
                         string subDir = Guid.NewGuid().ToString();
                         project.Properties.Item("PublishUrl").Value = Path.Combine(TestSharePrivate, subDir);
@@ -291,7 +292,7 @@ namespace PythonToolsUITests {
             WNetCancelConnection2(TestSharePrivate, 0, true);
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
                 try {
-                    var project = app.OpenAndFindProject(@"TestData\HelloWorld.sln");
+                    var project = app.OpenProject(@"TestData\HelloWorld.sln");
                     try {
                         string subDir = Guid.NewGuid().ToString();
                         project.Properties.Item("PublishUrl").Value = Path.Combine(TestSharePrivate, subDir);
@@ -338,7 +339,7 @@ namespace PythonToolsUITests {
             WNetCancelConnection2(TestSharePrivate, 0, true);
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
                 try {
-                    var project = app.OpenAndFindProject(@"TestData\HelloWorld.sln");
+                    var project = app.OpenProject(@"TestData\HelloWorld.sln");
                     try {
                         string subDir = Guid.NewGuid().ToString();
                         project.Properties.Item("PublishUrl").Value = Path.Combine(TestSharePrivate, subDir);
@@ -384,7 +385,7 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestPublishFtp() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenAndFindProject(@"TestData\HelloWorld.sln");
+                var project = app.OpenProject(@"TestData\HelloWorld.sln");
                 try {
                     string subDir = Guid.NewGuid().ToString();
                     string url = TestFtpUrl + "/" + subDir;

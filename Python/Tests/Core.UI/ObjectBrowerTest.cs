@@ -18,6 +18,7 @@ using EnvDTE;
 using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
+using TestUtilities.Python;
 using TestUtilities.UI;
 
 namespace PythonToolsUITests {
@@ -72,14 +73,14 @@ namespace PythonToolsUITests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
-            TestData.Deploy();
+            PythonTestData.Deploy();
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ObjectBrowserBasicTest() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenAndFindProject(@"TestData\Outlining.sln");
+                var project = app.OpenProject(@"TestData\Outlining.sln");
                 System.Threading.Thread.Sleep(1000);
 
                 app.OpenObjectBrowser();
@@ -113,7 +114,7 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ObjectBrowserSearchTextTest() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenAndFindProject(@"TestData\ObjectBrowser.sln");
+                var project = app.OpenProject(@"TestData\ObjectBrowser.sln");
                 System.Threading.Thread.Sleep(1000);
 
                 app.OpenObjectBrowser();
@@ -175,7 +176,7 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ObjectBrowserExpandTypeBrowserTest() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenAndFindProject(@"TestData\Inheritance.sln");
+                var project = app.OpenProject(@"TestData\Inheritance.sln");
                 System.Threading.Thread.Sleep(1000);
 
                 app.OpenObjectBrowser();
@@ -213,7 +214,7 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ObjectBrowserCommentsTest() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenAndFindProject(@"TestData\Inheritance.sln");
+                var project = app.OpenProject(@"TestData\Inheritance.sln");
                 System.Threading.Thread.Sleep(1000);
 
                 app.OpenObjectBrowser();
@@ -274,7 +275,7 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ObjectBrowserInheritanceRelationshipTest() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenAndFindProject(@"TestData\Inheritance.sln");
+                var project = app.OpenProject(@"TestData\Inheritance.sln");
                 System.Threading.Thread.Sleep(1000);
 
                 app.OpenObjectBrowser();
@@ -327,7 +328,7 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ObjectBrowserNavigationTest() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenAndFindProject(@"TestData\MultiModule.sln");
+                var project = app.OpenProject(@"TestData\MultiModule.sln");
                 System.Threading.Thread.Sleep(1000);
 
                 app.OpenObjectBrowser();
@@ -390,7 +391,7 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ObjectBrowserContextMenuBasicTest() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenAndFindProject(@"TestData\MultiModule.sln");
+                var project = app.OpenProject(@"TestData\MultiModule.sln");
                 System.Threading.Thread.Sleep(1000);
 
                 app.OpenObjectBrowser();
@@ -467,7 +468,7 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ObjectBrowserTypeBrowserViewTest() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenAndFindProject(@"TestData\MultiModule.sln");
+                var project = app.OpenProject(@"TestData\MultiModule.sln");
                 System.Threading.Thread.Sleep(1000);
 
                 app.OpenObjectBrowser();
@@ -525,7 +526,7 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ObjectBrowserTypeBrowserSortTest() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenAndFindProject(@"TestData\MultiModule.sln");
+                var project = app.OpenProject(@"TestData\MultiModule.sln");
                 System.Threading.Thread.Sleep(1000);
 
                 app.OpenObjectBrowser();
@@ -615,7 +616,7 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ObjectBrowserNavigateVarContextMenuTest() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenAndFindProject(@"TestData\MultiModule.sln");
+                var project = app.OpenProject(@"TestData\MultiModule.sln");
                 System.Threading.Thread.Sleep(1000);
 
                 app.OpenObjectBrowser();
@@ -682,7 +683,7 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ObjectBrowserFindAllReferencesTest() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenAndFindProject(@"TestData\MultiModule.sln");
+                var project = app.OpenProject(@"TestData\MultiModule.sln");
                 System.Threading.Thread.Sleep(1000);
 
                 app.OpenObjectBrowser();
@@ -775,7 +776,7 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ResourceViewIsDisabledTest() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenAndFindProject(@"TestData\Outlining.sln");
+                var project = app.OpenProject(@"TestData\Outlining.sln");
                 System.Threading.Thread.Sleep(1000);
 
                 app.OpenResourceView();

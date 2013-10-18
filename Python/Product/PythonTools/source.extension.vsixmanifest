@@ -1,0 +1,63 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Vsix xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" Version="1.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2010">
+  <Identifier Id="96492FC7-7BC6-46F7-8559-66BB4E09FD1E">
+    <Name>Python Tools for Visual Studio</Name>
+    <Author>Microsoft</Author>
+    <Version>2.0</Version>
+    <Description xml:space="preserve">Provides support for editing and debugging Python programs.</Description>
+    <Locale>1033</Locale>
+    <MoreInfoUrl>http://pytools.codeplex.com</MoreInfoUrl>
+    <GettingStartedGuide>http://pytools.codeplex.com</GettingStartedGuide>
+    <InstalledByMsi>true</InstalledByMsi>
+    <Icon>PythonProject.ico</Icon>
+    <PreviewImage>PythonProjectBig.ico</PreviewImage>
+    <SupportedProducts>
+      <VisualStudio Version="10.0">
+        <Edition>Ultimate</Edition>
+        <Edition>Premium</Edition>
+        <Edition>Pro</Edition>
+        <Edition>IntegratedShell</Edition>
+        <Edition>VSTS</Edition>
+        <Edition>VSTD</Edition>
+      </VisualStudio>
+      <VisualStudio Version="11.0">
+        <Edition>Ultimate</Edition>
+        <Edition>Premium</Edition>
+        <Edition>Pro</Edition>
+        <Edition>IntegratedShell</Edition>
+        <Edition>VSTS</Edition>
+        <Edition>VSTD</Edition>
+      </VisualStudio>
+      <VisualStudio Version="12.0">
+        <Edition>Ultimate</Edition>
+        <Edition>Premium</Edition>
+        <Edition>Pro</Edition>
+        <Edition>IntegratedShell</Edition>
+        <Edition>VSTS</Edition>
+        <Edition>VSTD</Edition>
+      </VisualStudio>
+    </SupportedProducts>
+    <SupportedFrameworkRuntimeEdition MinVersion="4.0" />
+  </Identifier>
+  <References>
+    <Reference Id="ce8d8e55-ad29-423e-aca2-810d0b16cdc4" MinVersion="2.0">
+      <Name>Microsoft.VisualStudio.InteractiveWindow</Name>
+    </Reference>
+  </References>
+  <Content>
+    <VsPackage>|%CurrentProject%;PkgdefProjectOutputGroup|</VsPackage>
+    <Assembly AssemblyName="Microsoft.PythonTools">|%CurrentProject%|</Assembly>
+    <Assembly AssemblyName="|Microsoft.PythonTools.Analysis;AssemblyName|">|Microsoft.PythonTools.Analysis|</Assembly>
+    <Assembly AssemblyName="|Microsoft.PythonTools.Debugger;AssemblyName|">|Microsoft.PythonTools.Debugger|</Assembly>
+    <Assembly AssemblyName="|Microsoft.PythonTools.ImportWizard;AssemblyName|">|Microsoft.PythonTools.ImportWizard|</Assembly>
+    <MefComponent>|%CurrentProject%|</MefComponent>
+    <MefComponent>|Microsoft.PythonTools.Analysis|</MefComponent>
+    <MefComponent>|Microsoft.PythonTools.Debugger|</MefComponent>
+    <ProjectTemplate>Templates\Projects\ConsoleAppProject</ProjectTemplate>
+    <ProjectTemplate>Templates\Projects\FromExistingCode</ProjectTemplate>
+    <ItemTemplate>Templates\Files\EmptyPyFile</ItemTemplate>
+    <ItemTemplate>Templates\Files\PyClass</ItemTemplate>
+    <ItemTemplate>Templates\Files\TextFile</ItemTemplate>
+    <ItemTemplate>Templates\Files\WpfWindow</ItemTemplate>
+  </Content>
+</Vsix>

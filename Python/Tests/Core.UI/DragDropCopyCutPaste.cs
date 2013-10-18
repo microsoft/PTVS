@@ -20,6 +20,7 @@ using EnvDTE;
 using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
+using TestUtilities.Python;
 using TestUtilities.UI;
 using Keyboard = TestUtilities.UI.Keyboard;
 using Mouse = TestUtilities.UI.Mouse;
@@ -30,7 +31,7 @@ namespace PythonToolsUITests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
-            TestData.Deploy();
+            PythonTestData.Deploy();
         }
 
         /// <summary>
@@ -40,7 +41,7 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void MultiPaste() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                app.OpenAndFindProject(@"TestData\MultiPaste.sln");
+                app.OpenProject(@"TestData\MultiPaste.sln");
 
                 app.OpenSolutionExplorer();
                 var window = app.SolutionExplorerTreeView;
@@ -95,7 +96,7 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CutPastePasteItem() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                app.OpenAndFindProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
+                app.OpenProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
 
                 app.OpenSolutionExplorer();
                 var window = app.SolutionExplorerTreeView;
@@ -127,7 +128,7 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CutRenamePaste() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                app.OpenAndFindProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
+                app.OpenProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
 
                 app.OpenSolutionExplorer();
                 var window = app.SolutionExplorerTreeView;
@@ -158,7 +159,7 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CutDeletePaste() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                app.OpenAndFindProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
+                app.OpenProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
 
                 app.OpenSolutionExplorer();
                 var window = app.SolutionExplorerTreeView;
@@ -278,7 +279,7 @@ namespace PythonToolsUITests {
 
             CopyDirectory(TestData.GetPath(@"TestData\LongFileNames"), Path.Combine(testDir, "LongFileNames"));
 
-            return app.OpenAndFindProject(Path.Combine(testDir, "LongFileNames.sln"));
+            return app.OpenProject(Path.Combine(testDir, "LongFileNames.sln"));
         }
 
         private static void CopyDirectory(string source, string dest) {
@@ -303,7 +304,7 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CutRenamePasteFolder() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                app.OpenAndFindProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
+                app.OpenProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
 
                 app.OpenSolutionExplorer();
                 var window = app.SolutionExplorerTreeView;
@@ -332,7 +333,7 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CopiedBeforeDragPastedAfterDrop() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                app.OpenAndFindProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
+                app.OpenProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
 
                 app.OpenSolutionExplorer();
                 var window = app.SolutionExplorerTreeView;
@@ -374,7 +375,7 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void DragToAnotherProject() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                app.OpenAndFindProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
+                app.OpenProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
 
                 app.OpenSolutionExplorer();
                 var window = app.SolutionExplorerTreeView;
@@ -407,7 +408,7 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CutFolderPasteOnSelf() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                app.OpenAndFindProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
+                app.OpenProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
 
                 app.OpenSolutionExplorer();
                 var window = app.SolutionExplorerTreeView;
@@ -431,7 +432,7 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void DragFolderOntoSelf() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                app.OpenAndFindProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
+                app.OpenProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
 
                 app.OpenSolutionExplorer();
                 var window = app.SolutionExplorerTreeView;
@@ -462,7 +463,7 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void DragFolderOntoChild() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                app.OpenAndFindProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
+                app.OpenProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
 
                 app.OpenSolutionExplorer();
                 var window = app.SolutionExplorerTreeView;
@@ -501,7 +502,7 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CutFileReplace() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                app.OpenAndFindProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
+                app.OpenProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
 
                 app.OpenSolutionExplorer();
                 var window = app.SolutionExplorerTreeView;
@@ -530,7 +531,7 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CutFolderAndFile() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                app.OpenAndFindProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
+                app.OpenProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
 
                 app.OpenSolutionExplorer();
                 var window = app.SolutionExplorerTreeView;
@@ -566,7 +567,7 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CutFilePasteSameLocation() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                app.OpenAndFindProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
+                app.OpenProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
 
                 app.OpenSolutionExplorer();
                 var window = app.SolutionExplorerTreeView;
@@ -594,7 +595,7 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void DragFolderAndFileOntoSelf() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                app.OpenAndFindProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
+                app.OpenProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
 
                 app.OpenSolutionExplorer();
                 var window = app.SolutionExplorerTreeView;
@@ -628,7 +629,7 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CopyFolderFromAnotherHierarchy() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                app.OpenAndFindProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
+                app.OpenProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
 
                 app.OpenSolutionExplorer();
                 var window = app.SolutionExplorerTreeView;
@@ -654,7 +655,7 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CopyDeletePaste() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                app.OpenAndFindProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
+                app.OpenProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
 
                 app.OpenSolutionExplorer();
                 var window = app.SolutionExplorerTreeView;
@@ -685,7 +686,7 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CrossHierarchyFileDragAndDrop() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                app.OpenAndFindProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
+                app.OpenProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
 
                 app.OpenSolutionExplorer();
                 var window = app.SolutionExplorerTreeView;
@@ -710,7 +711,7 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void DuplicateFolderName() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                app.OpenAndFindProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
+                app.OpenProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
 
                 app.OpenSolutionExplorer();
                 var window = app.SolutionExplorerTreeView;
@@ -744,7 +745,7 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CopyDuplicateFolderName() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                app.OpenAndFindProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
+                app.OpenProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
 
                 app.OpenSolutionExplorer();
                 var window = app.SolutionExplorerTreeView;
@@ -777,7 +778,7 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CrossHierarchyCut() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                app.OpenAndFindProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
+                app.OpenProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
 
                 app.OpenSolutionExplorer();
                 var window = app.SolutionExplorerTreeView;
@@ -803,7 +804,7 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CrossHierarchyCopy() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                app.OpenAndFindProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
+                app.OpenProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
 
                 app.OpenSolutionExplorer();
                 var window = app.SolutionExplorerTreeView;
@@ -829,7 +830,7 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ReverseCrossHierarchyCut() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                app.OpenAndFindProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
+                app.OpenProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
 
                 app.OpenSolutionExplorer();
                 var window = app.SolutionExplorerTreeView;
@@ -855,7 +856,7 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ReverseCrossHierarchyCopy() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                app.OpenAndFindProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
+                app.OpenProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
 
                 app.OpenSolutionExplorer();
                 var window = app.SolutionExplorerTreeView;
@@ -883,7 +884,7 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CrossHierarchyDragDropAfterCut() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                app.OpenAndFindProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
+                app.OpenProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
 
                 app.OpenSolutionExplorer();
                 var window = app.SolutionExplorerTreeView;
@@ -913,7 +914,7 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void DoubleCrossHierarchyMove() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                app.OpenAndFindProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
+                app.OpenProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
 
                 app.OpenSolutionExplorer();
                 var window = app.SolutionExplorerTreeView;
@@ -950,7 +951,7 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void DragTwiceAndOverwrite() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                app.OpenAndFindProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
+                app.OpenProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
 
                 app.OpenSolutionExplorer();
                 var window = app.SolutionExplorerTreeView;
@@ -981,7 +982,7 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CopyFolderMissingItem() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                app.OpenAndFindProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
+                app.OpenProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
 
                 app.OpenSolutionExplorer();
                 var window = app.SolutionExplorerTreeView;
@@ -1012,7 +1013,7 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CopyPasteMissingFile() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                app.OpenAndFindProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
+                app.OpenProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
 
                 app.OpenSolutionExplorer();
                 var window = app.SolutionExplorerTreeView;
@@ -1036,7 +1037,7 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void MoveFolderExistingFile() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                app.OpenAndFindProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
+                app.OpenProject(@"TestData\DragDropCopyCutPaste.sln", expectedProjects: 2);
 
                 app.OpenSolutionExplorer();
                 var window = app.SolutionExplorerTreeView;
