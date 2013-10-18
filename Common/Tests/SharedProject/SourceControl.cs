@@ -317,6 +317,68 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             }
         }
 
+        /// <summary>
+        /// Verify non-member items don't get reported as source control files
+        /// 
+        /// https://pytools.codeplex.com/workitem/1417
+        /// </summary>
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void SourceControlExcludedFilesNotPresent() {
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                foreach (var projectType in ProjectTypes) {
+                    using (var solution = SourceControlProject(projectType).Generate()) {
+                        // close any projects before switching source control...
+                        app.Dte.Solution.Close();
+
+                        app.SelectSourceControlProvider("Test Source Provider");
+
+                        var project = app.OpenProject(solution.Filename);
+
+                        Assert.AreEqual(1, TestSccProvider.LoadedProjects.Count);
+                        var sccProject = TestSccProvider.LoadedProjects.First();
+                        foreach (var curFile in sccProject.Files) {
+                            Assert.IsFalse(curFile.Key.EndsWith("ExcludedFile" + projectType.CodeExtension), "found excluded file");
+                        }
+
+                        app.SelectSourceControlProvider("None");
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Verify we get called w/ a project which does have source control enabled.
+        /// </summary>
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void SourceControlRenameFolder() {
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                foreach (var projectType in ProjectTypes) {
+                    // close any projects before switching source control...
+                    app.Dte.Solution.Close();
+
+                    app.SelectSourceControlProvider("Test Source Provider");
+
+                    using (var solution = SourceControlProject(projectType).Generate()) {
+                        try {
+                            var project = app.OpenProject(solution.Filename);
+
+                            project.ProjectItems.Item("TestFolder").Name = "Renamed";
+
+                            AssertDocumentEvents(Path.GetDirectoryName(project.FullName),
+                                OnQueryRenameFiles("TestFolder\\", "Renamed\\", VSQUERYRENAMEFILEFLAGS_Directory),
+                                OnAfterRenameFiles("TestFolder\\", "Renamed", VSRENAMEFILEFLAGS_Directory)
+                            );
+                            app.Dte.Solution.Close();
+                        } finally {
+                            app.SelectSourceControlProvider("None");
+                        }
+                    }
+                }
+            }
+        }
+
         #region Helper Methods
 
         /// <summary>
@@ -463,7 +525,8 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                 ItemGroup(
                     Folder("TestFolder"),
                     Compile("Program"),
-                    Compile("TestFolder\\SubItem")
+                    Compile("TestFolder\\SubItem"),
+                    Compile("ExcludedFile", isExcluded:true)
                 )
             );
         }

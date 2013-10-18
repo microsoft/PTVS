@@ -1,9 +1,0 @@
-<html>
-<head><title></title></head>
-
-<body>
-{% for x in foo %}
-{% %}
-
-</body>
-</html>

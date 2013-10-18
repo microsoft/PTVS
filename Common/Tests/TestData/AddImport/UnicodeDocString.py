@@ -1,3 +1,0 @@
-u'''foo'''
-
-itertools

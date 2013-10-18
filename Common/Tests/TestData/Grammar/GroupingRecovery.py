@@ -1,3 +1,0 @@
-﻿foo = (
-def f():
-    pass
