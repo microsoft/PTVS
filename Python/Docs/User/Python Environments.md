@@ -38,7 +38,7 @@ Project Environments
 
 --(
 
-<img style="float: right;" src="Images/ProjectEnvironments.png" alt="Project environments displayed in Solution Explorer" />
+>>![Project environments displayed in Solution Explorer](Images/ProjectEnvironments.png)
 
 Global environments are limited in that only one can be made the default at any time, and this will be active for all projects. Depending on the project, not all environments may apply. For example, a project that requires IronPython might not work if the global default environment is CPython. By specifying project environments, you can ensure that your project will always be run in a supported environment - the global default is ignored.
 
@@ -48,7 +48,7 @@ Project environments are listed in Solution Explorer under the Python Environmen
 
 --(
 
-<img style="float: right;" src="Images/AddRemoveEnvironments.png" alt="Add/Remove Python Environments dialog" />
+>>![Add/Remove Python Environments dialog](Images/AddRemoveEnvironments.png)
 
 Any global environment can be added as a project environment by right-clicking the 'Python Environments' entry and selecting 'Add/Remove Python Environments...'. This will display a list of the known environments and let you select or deselect those that should be available in your project.
 

@@ -483,6 +483,10 @@
       <Link>SharedProject\IDiskBasedNode.cs</Link>
       <Visible>true</Visible>
     </Compile>
+    <Compile Include="$(_ProjectSystemFilesLocation)\Command.cs">
+      <Link>SharedProject\Command.cs</Link>
+      <Visible>true</Visible>
+    </Compile>
     <Compile Include="$(_ProjectSystemFilesLocation)\SharedCommands.cs">
       <Link>SharedProject\SharedCommands.cs</Link>
       <Visible>true</Visible>
@@ -527,6 +531,10 @@
       <Link>SharedProject\VSShellUtilities.cs</Link>
       <Visible>true</Visible>
     </Compile>
+    <Compile Include="$(_ProjectSystemFilesLocation)\WaitDialog.cs">
+      <Link>SharedProject\WaitDialog.cs</Link>
+      <Visible>true</Visible>
+    </Compile>
     <Compile Include="$(_ProjectSystemFilesLocation)\WebPiComponentPickerControl.cs">
       <Link>SharedProject\WebPiComponentPickerControl.cs</Link>
       <SubType>UserControl</SubType>
@@ -558,12 +566,6 @@
     </Compile>
     <Compile Include="$(_ProjectSystemFilesLocation)\SolutionEventsListener.cs">
       <Link>SharedProject\SolutionEventsListener.cs</Link>
-      <Visible>true</Visible>
-    </Compile>
-    <Compile Include="Resources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>Resources.resx</DependentUpon>
       <Visible>true</Visible>
     </Compile>
   </ItemGroup>

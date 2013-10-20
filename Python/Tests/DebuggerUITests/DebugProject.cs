@@ -30,6 +30,7 @@ using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
+using TestUtilities.Python;
 using TestUtilities.UI;
 using TestUtilities.UI.Python;
 using Assert = Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
@@ -41,7 +42,7 @@ namespace DebuggerUITests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
-            TestData.Deploy();
+            PythonTestData.Deploy();
         }
 
         bool PrevWaitOnNormalExit;
@@ -81,7 +82,7 @@ namespace DebuggerUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void DebugPythonProjectSubFolderStartupFileSysPath() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                app.OpenAndFindProject(TestData.GetPath(@"TestData\SysPath.sln"));
+                app.OpenProject(TestData.GetPath(@"TestData\SysPath.sln"));
 
                 VsIdeTestHostContext.Dte.ExecuteCommand("Debug.Start");
                 WaitForMode(dbgDebugMode.dbgDesignMode);
@@ -102,7 +103,7 @@ namespace DebuggerUITests {
         public void DebugPythonCustomInterpreter() {
             // try once when the interpreter doesn't exist...
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenAndFindProject(TestData.GetPath(@"TestData\RelativeInterpreterPath.sln"), "Program.py");
+                var project = app.OpenProject(TestData.GetPath(@"TestData\RelativeInterpreterPath.sln"), "Program.py");
 
                 VsIdeTestHostContext.Dte.ExecuteCommand("Debug.Start");
 
@@ -127,7 +128,7 @@ namespace DebuggerUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestPendingBreakPointLocation() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenAndFindProject(@"TestData\DebuggerProject.sln", "BreakpointInfo.py");
+                var project = app.OpenProject(@"TestData\DebuggerProject.sln", "BreakpointInfo.py");
                 var bpInfo = project.ProjectItems.Item("BreakpointInfo.py");
 
                 project.GetPythonProject().GetAnalyzer().WaitForCompleteAnalysis(x => true);
@@ -515,7 +516,7 @@ namespace DebuggerUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestLaunchWithErrorsDontRun() {
             using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenAndFindProject(@"TestData\ErrorProject.sln");
+                var project = app.OpenProject(@"TestData\ErrorProject.sln");
 
                 GetOptions().PromptBeforeRunningWithBuildErrorSetting = true;
 
@@ -542,7 +543,7 @@ namespace DebuggerUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestLaunchWithErrorsRun() {
             using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenAndFindProject(@"TestData\ErrorProject.sln");
+                var project = app.OpenProject(@"TestData\ErrorProject.sln");
 
                 GetOptions().PromptBeforeRunningWithBuildErrorSetting = true;
 
@@ -569,7 +570,7 @@ namespace DebuggerUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestProjectWithErrors_ErrorList() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenAndFindProject(@"TestData\ErrorProject.sln");
+                var project = app.OpenProject(@"TestData\ErrorProject.sln");
 
                 var errorList = (IVsErrorList)VsIdeTestHostContext.ServiceProvider.GetService(typeof(SVsErrorList));
 
@@ -586,7 +587,7 @@ namespace DebuggerUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestProjectWithErrorsDeleteProject() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenAndFindProject(@"TestData\ErrorProjectDelete.sln");
+                var project = app.OpenProject(@"TestData\ErrorProjectDelete.sln");
 
                 var errorList = (IVsErrorList)VsIdeTestHostContext.ServiceProvider.GetService(typeof(SVsErrorList));
 
@@ -608,7 +609,7 @@ namespace DebuggerUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestProjectWithErrorsUnloadProject() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenAndFindProject(@"TestData\ErrorProjectDelete.sln");
+                var project = app.OpenProject(@"TestData\ErrorProjectDelete.sln");
 
                 var errorList = (IVsErrorList)VsIdeTestHostContext.ServiceProvider.GetService(typeof(SVsErrorList));
 
@@ -639,7 +640,7 @@ namespace DebuggerUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestProjectWithErrorsMultipleFilesUnloadProject() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenAndFindProject(@"TestData\ErrorProjectMultipleFiles.sln");
+                var project = app.OpenProject(@"TestData\ErrorProjectMultipleFiles.sln");
 
                 var errorList = (IVsErrorList)VsIdeTestHostContext.ServiceProvider.GetService(typeof(SVsErrorList));
 
@@ -668,7 +669,7 @@ namespace DebuggerUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestProjectWithErrorsDeleteFile() {
             using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenAndFindProject(@"TestData\ErrorProjectDeleteFile.sln");
+                var project = app.OpenProject(@"TestData\ErrorProjectDeleteFile.sln");
 
                 var errorList = (IVsErrorList)VsIdeTestHostContext.ServiceProvider.GetService(typeof(SVsErrorList));
 
@@ -691,7 +692,7 @@ namespace DebuggerUITests {
         public void IndentationInconsistencyWarning() {
             GetOptions().IndentationInconsistencySeverity = Severity.Warning;
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenAndFindProject(@"TestData\InconsistentIndentation.sln");
+                var project = app.OpenProject(@"TestData\InconsistentIndentation.sln");
 
                 System.Threading.Thread.Sleep(5000);
                 var errorList = (IVsErrorList)VsIdeTestHostContext.ServiceProvider.GetService(typeof(SVsErrorList));
@@ -714,7 +715,7 @@ namespace DebuggerUITests {
         public void IndentationInconsistencyError() {
             GetOptions().IndentationInconsistencySeverity = Severity.Error;
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenAndFindProject(@"TestData\InconsistentIndentation.sln");
+                var project = app.OpenProject(@"TestData\InconsistentIndentation.sln");
 
                 var errorList = (IVsErrorList)VsIdeTestHostContext.ServiceProvider.GetService(typeof(SVsErrorList));
 
@@ -737,7 +738,7 @@ namespace DebuggerUITests {
             GetOptions().IndentationInconsistencySeverity = Severity.Ignore;
 
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenAndFindProject(@"TestData\InconsistentIndentation.sln");
+                var project = app.OpenProject(@"TestData\InconsistentIndentation.sln");
 
                 var errorList = (IVsErrorList)VsIdeTestHostContext.ServiceProvider.GetService(typeof(SVsErrorList));
 
@@ -944,7 +945,7 @@ namespace DebuggerUITests {
 
 
         internal static Project OpenDebuggerProject(VisualStudioApp app, string startItem = null) {
-            return app.OpenAndFindProject(@"TestData\DebuggerProject.sln", startItem);
+            return app.OpenProject(@"TestData\DebuggerProject.sln", startItem);
         }
 
         private static Project OpenDebuggerProjectAndBreak(VisualStudioApp app, string startItem, int lineNo, bool setStartupItem = true) {
@@ -973,7 +974,7 @@ namespace DebuggerUITests {
         }
 
         internal static Project OpenProjectAndBreak(VisualStudioApp app, string projName, string filename, int lineNo, bool setStartupItem = true) {
-            var project = app.OpenAndFindProject(projName, filename, setStartupItem: setStartupItem);
+            var project = app.OpenProject(projName, filename, setStartupItem: setStartupItem);
 
             VsIdeTestHostContext.Dte.Debugger.Breakpoints.Add(File: filename, Line: lineNo);
             VsIdeTestHostContext.Dte.ExecuteCommand("Debug.Start");

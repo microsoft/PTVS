@@ -27,6 +27,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
 using TestUtilities;
+using TestUtilities.Python;
 using TestUtilities.UI;
 
 namespace DjangoUITests {
@@ -35,7 +36,7 @@ namespace DjangoUITests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
-            TestData.Deploy();
+            PythonTestData.Deploy();
         }
 
         private IPythonInterpreterFactory PreviousDefault;
@@ -1810,7 +1811,7 @@ namespace DjangoUITests {
         }
 
         private static EditorWindow OpenDjangoProjectItem(VisualStudioApp app, string startItem, out Window window, string projectName = @"TestData\DjangoEditProject.sln", bool wait = false) {
-            var project = app.OpenAndFindProject(projectName, startItem);
+            var project = app.OpenProject(projectName, startItem);
             var pyProj = project.GetPythonProject();
 
             EnvDTE.ProjectItem item = null;

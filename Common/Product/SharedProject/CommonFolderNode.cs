@@ -125,7 +125,18 @@ namespace Microsoft.VisualStudioTools.Project {
                 ProjectMgr.ReDrawNode(this, UIHierarchyElement.Icon);
                 ProjectMgr.OnPropertyChanged(this, (int)__VSHPROPID.VSHPROPID_IsNonMemberItem, 0);
             }
+            ((IVsUIShell)GetService(typeof(SVsUIShell))).RefreshPropertyBrowser(0);
+
             return VSConstants.S_OK;
+        }
+
+        internal override int ExcludeFromProjectWithProgress() {
+            using(new WaitDialog(
+                "Excluding files and folders...",
+                "Excluding files and folders in your project, this may take several seconds...",
+                ProjectMgr.Site)) {
+                return ExcludeFromProject();
+            }
         }
 
         internal override int IncludeInProject(bool includeChildren) {
@@ -160,7 +171,19 @@ namespace Microsoft.VisualStudioTools.Project {
             }
             ProjectMgr.ReDrawNode(this, UIHierarchyElement.Icon);
             ProjectMgr.OnPropertyChanged(this, (int)__VSHPROPID.VSHPROPID_IsNonMemberItem, 0);
+            ((IVsUIShell)GetService(typeof(SVsUIShell))).RefreshPropertyBrowser(0);
+
             return VSConstants.S_OK;
+        }
+
+        internal override int IncludeInProjectWithProgress(bool includeChildren) {
+            using (new WaitDialog(
+                "Including files and folders...",
+                "Including files and folders to your project, this may take several seconds...",
+                ProjectMgr.Site)) {
+                
+                return IncludeInProject(includeChildren);
+            }
         }
 
         public override void RenameFolder(string newName) {

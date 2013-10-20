@@ -27,6 +27,7 @@ using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Text.Tagging;
 using TestUtilities;
+using TestUtilities.Python;
 using TestUtilities.UI;
 using TestUtilities.UI.Python;
 
@@ -36,7 +37,7 @@ namespace PythonToolsUITests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
-            TestData.Deploy();
+            PythonTestData.Deploy();
         }
 
         #region Test Cases
@@ -45,7 +46,7 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void UnregisteredFileExtensionEditor() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenAndFindProject(@"TestData\UnregisteredFileExtension.sln");
+                var project = app.OpenProject(@"TestData\UnregisteredFileExtension.sln");
 
                 var item = project.ProjectItems.Item("Foo.unregfileext");
                 var window = item.Open();
@@ -96,7 +97,7 @@ namespace PythonToolsUITests {
 
         private void OutlineTest(string filename, params ExpectedTag[] expected) {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenAndFindProject(@"TestData\Outlining.sln");
+                var project = app.OpenProject(@"TestData\Outlining.sln");
 
                 var item = project.ProjectItems.Item(filename);
                 var window = item.Open();
@@ -168,7 +169,7 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void SignaturesTest() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenAndFindProject(@"TestData\Signatures.sln");
+                var project = app.OpenProject(@"TestData\Signatures.sln");
 
                 var item = project.ProjectItems.Item("sigs.py");
                 var window = item.Open();
@@ -209,7 +210,7 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void MultiLineSignaturesTest() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenAndFindProject(@"TestData\Signatures.sln");
+                var project = app.OpenProject(@"TestData\Signatures.sln");
 
                 var item = project.ProjectItems.Item("multilinesigs.py");
                 var window = item.Open();
@@ -263,7 +264,7 @@ namespace PythonToolsUITests {
         public void CompletionsCaseSensitive() {
             // http://pytools.codeplex.com/workitem/457
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenAndFindProject(@"TestData\Completions.sln");
+                var project = app.OpenProject(@"TestData\Completions.sln");
 
                 var item = project.ProjectItems.Item("bar.py");
                 var window = item.Open();
@@ -285,7 +286,7 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void AutoIndent() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenAndFindProject(@"TestData\AutoIndent.sln");
+                var project = app.OpenProject(@"TestData\AutoIndent.sln");
 
 
                 // http://pytools.codeplex.com/workitem/116
@@ -450,7 +451,7 @@ pass");
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void AutoIndentExisting() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenAndFindProject(@"TestData\AutoIndent.sln");
+                var project = app.OpenProject(@"TestData\AutoIndent.sln");
 
                 // http://pytools.codeplex.com/workitem/138
                 AutoIndentExistingTest(app, project, "Decorator.py", 4, 4, @"class C:
@@ -531,7 +532,7 @@ pass");
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TypingTest() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenAndFindProject(@"TestData\EditorTests.sln");
+                var project = app.OpenProject(@"TestData\EditorTests.sln");
 
                 // http://pytools.codeplex.com/workitem/139
                 TypingTest(project, "DecoratorOnFunction.py", 0, 0, @"@classmethod
@@ -568,7 +569,7 @@ def f(): pass
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CompletionTests() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenAndFindProject(@"TestData\EditorTests.sln");
+                var project = app.OpenProject(@"TestData\EditorTests.sln");
 
                 TypingTest(project, "BackslashCompletion.py", 2, 0, @"x = 42
 x\
@@ -622,7 +623,7 @@ x\
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void OpenInvalidUnicodeFile() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenAndFindProject(@"TestData\ErrorProjectUnicode.sln");
+                var project = app.OpenProject(@"TestData\ErrorProjectUnicode.sln");
                 var item = project.ProjectItems.Item("Program.py");
                 EnvDTE.Window window = null;
                 ThreadPool.QueueUserWorkItem(x => { window = item.Open(); });
@@ -682,7 +683,7 @@ x\
 
         private static IList<ClassificationSpan> GetClassifications(string filename) {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenAndFindProject(@"TestData\Classification.sln");
+                var project = app.OpenProject(@"TestData\Classification.sln");
 
                 var item = project.ProjectItems.Item(filename);
                 var window = item.Open();

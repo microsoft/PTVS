@@ -274,7 +274,7 @@ namespace Microsoft.VisualStudio.Repl {
             // Create and inititalize text view adapter.
             // WARNING: This might trigger various services like IntelliSense, margins, taggers, etc.
             IVsTextView textViewAdapter = adapterFactory.CreateVsTextViewAdapter(provider, CreateRoleSet());
-
+            
             // make us a code window so we'll have the same colors as a normal code window.
             IVsTextEditorPropertyContainer propContainer;
             ErrorHandler.ThrowOnFailure(((IVsTextEditorPropertyCategoryContainer)textViewAdapter).GetPropertyCategory(Microsoft.VisualStudio.Editor.DefGuidList.guidEditPropCategoryViewMasterSettings, out propContainer));
@@ -1634,6 +1634,9 @@ namespace Microsoft.VisualStudio.Repl {
             } else if (pguidCmdGroup == VSConstants.GUID_VSStandardCommandSet97) {
                 switch ((VSConstants.VSStd97CmdID)nCmdID) {
                     case VSConstants.VSStd97CmdID.Paste:
+                        if (!(_stdInputStart != null ? CaretInStandardInputRegion : CaretInActiveCodeRegion)) {
+                            MoveCaretToCurrentInputEnd();
+                        }
                         PasteClipboard();
                         return VSConstants.S_OK;
 

@@ -24,6 +24,7 @@ using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 using TestUtilities.Mocks;
+using TestUtilities.Python;
 
 namespace PythonToolsTests {
 #if INTERACTIVE_WINDOW
@@ -37,7 +38,7 @@ namespace PythonToolsTests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
-            TestData.Deploy();
+            PythonTestData.Deploy();
         }
 
         [TestMethod, Priority(0)]

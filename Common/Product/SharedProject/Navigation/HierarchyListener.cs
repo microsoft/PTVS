@@ -66,7 +66,7 @@ namespace Microsoft.VisualStudioTools.Navigation {
             public void StartListening(bool doInitialScan) {
                 if (0 != _cookie) {
                     return;
-                }
+            }
                 ErrorHandler.ThrowOnFailure(
                     _hierarchy.AdviseHierarchyEvents(this, out _cookie));
                 if (doInitialScan) {
@@ -116,8 +116,8 @@ namespace Microsoft.VisualStudioTools.Navigation {
                 // Notify that the item is deleted only if it is my language file.
                 string name;
                 if (!IsAnalyzableSource(itemid, out name)) {
-                    return VSConstants.S_OK;
-                }
+                return VSConstants.S_OK;
+            }
                 HierarchyEventArgs args = new HierarchyEventArgs(itemid, name);
                 _manager.OnDeleteFile(_hierarchy, args);
                 return VSConstants.S_OK;
@@ -134,11 +134,11 @@ namespace Microsoft.VisualStudioTools.Navigation {
                 }
                 string name;
                 if (!IsAnalyzableSource(itemid, out name)) {
-                    return VSConstants.S_OK;
-                }
+                return VSConstants.S_OK;
+            }
                 if (propid == (int)__VSHPROPID.VSHPROPID_IsNonMemberItem) {
                     _manager.IsNonMemberItemChanged(_hierarchy, new HierarchyEventArgs(itemid, name));
-                }
+            }
                 return VSConstants.S_OK;
             }
             #endregion
@@ -167,7 +167,7 @@ namespace Microsoft.VisualStudioTools.Navigation {
                     if (IsAnalyzableSource(currentItem, out itemName)) {
                         HierarchyEventArgs args = new HierarchyEventArgs(currentItem, itemName);
                         _manager.OnNewFile(_hierarchy, args);
-                    }
+            }
 
                     // NOTE: At the moment we skip the nested hierarchies, so here  we look for the 
                     // children of this node.
@@ -198,7 +198,7 @@ namespace Microsoft.VisualStudioTools.Navigation {
                         currentItem = GetItemId(sibling);
                     }
                 }
-            }
+                }
 
             private bool IsAnalyzableSource(uint itemId, out string canonicalName) {
                 // Find out if this item is a physical file.
@@ -214,7 +214,7 @@ namespace Microsoft.VisualStudioTools.Navigation {
                     VSConstants.GUID_ItemType_PhysicalFile != typeGuid) {
                     // It is not a file, we can exit now.
                     return false;
-                }
+            }
 
                 // This item is a file; find if current language can recognize it.
                 hr = Hierarchy.GetCanonicalName(itemId, out canonicalName);

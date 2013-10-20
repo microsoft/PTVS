@@ -19,7 +19,7 @@ namespace TestUtilities.UI {
     /// <summary>
     /// Wrapps VS's Project->Add Item dialog.
     /// </summary>
-    class NewItemDialog  : AutomationWrapper {
+    public class NewItemDialog  : AutomationWrapper {
         private Table _projectTypesTable;
 
         public NewItemDialog(IntPtr dialog)

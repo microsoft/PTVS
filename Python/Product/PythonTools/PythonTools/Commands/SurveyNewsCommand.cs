@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System;
+using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Commands {
     /// <summary>

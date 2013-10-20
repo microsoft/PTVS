@@ -24,6 +24,7 @@ using Microsoft.PythonTools;
 using Microsoft.PythonTools.Debugger;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
+using TestUtilities.Python;
 
 namespace DjangoTests {
     [TestClass]
@@ -38,7 +39,7 @@ namespace DjangoTests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
-            TestData.Deploy();
+            PythonTestData.Deploy();
             
             var dbFile = Path.Combine(Environment.GetEnvironmentVariable("LOCALAPPDATA"), "DjangoProjectDatabase.db");
             if (File.Exists(dbFile)) {

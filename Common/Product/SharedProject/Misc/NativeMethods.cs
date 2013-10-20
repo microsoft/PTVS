@@ -390,7 +390,8 @@ namespace Microsoft.VisualStudioTools.Project {
         DWLP_MSGRESULT = 0,
         PSNRET_NOERROR = 0,
         PSNRET_INVALID = 1,
-        PSNRET_INVALID_NOCHANGEPAGE = 2;
+        PSNRET_INVALID_NOCHANGEPAGE = 2,
+        EM_SETCUEBANNER = 0x1501;
 
         public const int
         PSN_APPLY = ((0 - 200) - 2),
@@ -560,6 +561,9 @@ namespace Microsoft.VisualStudioTools.Project {
 
         [DllImport("user32", CallingConvention = CallingConvention.Winapi)]
         public static extern IntPtr SendMessage(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);
+
+        [DllImport("user32", CallingConvention = CallingConvention.Winapi, CharSet=CharSet.Unicode)]
+        public static extern IntPtr SendMessageW(IntPtr hWnd, uint msg, IntPtr wParam, string lParam);
 
         [DllImport("user32", CallingConvention = CallingConvention.Winapi)]
         public static extern int GetWindowLong(IntPtr hWnd, int nIndex);

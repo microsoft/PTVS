@@ -16,7 +16,7 @@ using System;
 using System.Windows.Automation;
 
 namespace TestUtilities.UI {
-    class OverwriteFileDialog : AutomationWrapper {
+    public class OverwriteFileDialog : AutomationWrapper {
         public OverwriteFileDialog(IntPtr hwnd)
             : base(AutomationElement.FromHandle(hwnd)) {
         }

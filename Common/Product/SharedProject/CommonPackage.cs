@@ -13,7 +13,9 @@
  * ***************************************************************************/
 
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.Design;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Microsoft.VisualStudioTools.Navigation;
 using Microsoft.VisualStudioTools.Project;
@@ -31,6 +33,8 @@ namespace Microsoft.VisualStudioTools {
         private uint _componentID;
         private LibraryManager _libraryManager;
         private IOleComponentManager _compMgr;
+        private static readonly object _commandsLock = new object();
+        private static readonly Dictionary<Command, MenuCommand> _commands = new Dictionary<Command, MenuCommand>();
 
         #region Language-specific abstracts
 
@@ -53,6 +57,18 @@ namespace Microsoft.VisualStudioTools {
             ServiceCreatorCallback callback = new ServiceCreatorCallback(CreateService);
             //container.AddService(GetLanguageServiceType(), callback, true);
             container.AddService(GetLibraryManagerType(), callback, true);
+        }
+
+        internal static Dictionary<Command, MenuCommand> Commands {
+            get {
+                return _commands;
+            }
+        }
+
+        internal static object CommandsLock {
+            get {
+                return _commandsLock;
+            }
         }
 
         protected override void Dispose(bool disposing) {
@@ -78,6 +94,28 @@ namespace Microsoft.VisualStudioTools {
                 return _libraryManager = CreateLibraryManager(this);
             }
             return null;
+        }
+
+        internal void RegisterCommands(IEnumerable<Command> commands, Guid cmdSet) {
+            OleMenuCommandService mcs = GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
+            if (null != mcs) {
+                lock (_commandsLock) {
+                    foreach (var command in commands) {
+                        var beforeQueryStatus = command.BeforeQueryStatus;
+                        CommandID toolwndCommandID = new CommandID(cmdSet, command.CommandId);
+                        if (beforeQueryStatus == null) {
+                            MenuCommand menuToolWin = new MenuCommand(command.DoCommand, toolwndCommandID);
+                            mcs.AddCommand(menuToolWin);
+                            _commands[command] = menuToolWin;
+                        } else {
+                            OleMenuCommand menuToolWin = new OleMenuCommand(command.DoCommand, toolwndCommandID);
+                            menuToolWin.BeforeQueryStatus += beforeQueryStatus;
+                            mcs.AddCommand(menuToolWin);
+                            _commands[command] = menuToolWin;
+                        }
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -147,6 +185,24 @@ namespace Microsoft.VisualStudioTools {
             ErrorHandler.ThrowOnFailure(componentManager.FRegisterComponent(this, crinfo, out _componentID));
 
             base.Initialize();
+        }
+
+        internal static void OpenWebBrowser(string url) {
+            var uri = new Uri(url);
+            Process.Start(new ProcessStartInfo(uri.AbsoluteUri));
+            return;
+        }
+
+        internal static void OpenVsWebBrowser(string url) {
+            var web = GetGlobalService(typeof(SVsWebBrowsingService)) as IVsWebBrowsingService;
+            if (web == null) {
+                OpenWebBrowser(url);
+                return;
+            }
+
+            IVsWindowFrame frame;
+            ErrorHandler.ThrowOnFailure(web.Navigate(url, (uint)__VSWBNAVIGATEFLAGS.VSNWB_ForceNew, out frame));
+            frame.Show();
         }
 
         #region IOleComponent Members

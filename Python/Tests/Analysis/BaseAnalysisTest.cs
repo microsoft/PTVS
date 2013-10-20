@@ -25,6 +25,7 @@ using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.PyAnalysis;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
+using TestUtilities.Python;
 
 namespace AnalysisTests {
     /// <summary>
@@ -41,7 +42,7 @@ namespace AnalysisTests {
             AnalysisLog.Reset();
             AnalysisLog.ResetTime();
             AssertListener.Initialize();
-            TestData.Deploy(includeTestData: false);
+            PythonTestData.Deploy(includeTestData: false);
         }
 
         public BaseAnalysisTest()

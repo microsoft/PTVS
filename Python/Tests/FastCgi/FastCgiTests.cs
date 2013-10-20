@@ -24,6 +24,7 @@ using Microsoft.PythonTools.Django;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.Win32;
 using TestUtilities;
+using TestUtilities.Python;
 
 namespace FastCgiTest {
     [TestClass]
@@ -31,7 +32,7 @@ namespace FastCgiTest {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
-            TestData.Deploy();
+            PythonTestData.Deploy();
         }
 
         [TestMethod, Priority(0)]

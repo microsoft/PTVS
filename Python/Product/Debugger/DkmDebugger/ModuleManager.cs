@@ -26,21 +26,32 @@ namespace Microsoft.PythonTools.DkmDebugger {
     internal class ModuleManager : DkmDataItem {
         public static DkmResolvedDocument[] FindDocuments(DkmModule module, DkmSourceFileId sourceFileId) {
             DkmDocumentMatchStrength matchStrength;
-            if (module.Name == sourceFileId.DocumentName) {
+            if (string.Equals(module.Name, sourceFileId.DocumentName, StringComparison.OrdinalIgnoreCase)) {
                 matchStrength = DkmDocumentMatchStrength.FullPath;
             } else {
-                string sourceFileName;
-                try {
-                    sourceFileName = Path.GetFileName(sourceFileId.DocumentName);
-                } catch (ArgumentException) {
-                    return new DkmResolvedDocument[0];
-                }
-
-                if (module.Name == sourceFileName) {
-                    matchStrength = DkmDocumentMatchStrength.FileName;
-                } else {
-                    return new DkmResolvedDocument[0];
-                }
+                // Either the module path is relative, or it's absolute but on a different filesystem (i.e. remote debugging).
+                // Walk the local filesystem up starting from source file path, matching it against the module path component
+                // by component, stopping once __init__.py is no longer seen on the same level. The intent is to approximate
+                // a match on module names by matching the tails of the two paths that contribute to the fully qualified names
+                // of the modules.
+                string sourcePath = sourceFileId.DocumentName;
+                string modulePath = module.Name;
+                int levels = 0;
+                do {
+                    try {
+                        string sourceFile = Path.GetFileName(sourcePath);
+                        string moduleFile = Path.GetFileName(modulePath);
+                        if (!string.Equals(sourceFile, moduleFile, StringComparison.OrdinalIgnoreCase)) {
+                            return new DkmResolvedDocument[0];
+                        }
+                        sourcePath = Path.GetDirectoryName(sourcePath);
+                        modulePath = Path.GetDirectoryName(modulePath);
+                    } catch (ArgumentException) {
+                        return new DkmResolvedDocument[0];
+                    }
+                    ++levels;
+                } while (File.Exists(Path.Combine(sourcePath, "__init__.py")));
+                matchStrength = (levels == 1) ? DkmDocumentMatchStrength.FileName : DkmDocumentMatchStrength.SubPath;
             }
 
             return new[] {

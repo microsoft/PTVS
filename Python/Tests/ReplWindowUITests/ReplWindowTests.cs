@@ -40,6 +40,7 @@ using Microsoft.VisualStudio.Text.Tagging;
 using PythonToolsTests;
 using TestUtilities;
 using TestUtilities.Mocks;
+using TestUtilities.Python;
 using TestUtilities.UI;
 using TestUtilities.UI.Python;
 using Keyboard = TestUtilities.UI.Keyboard;
@@ -132,7 +133,7 @@ g()",
     public abstract class ReplWindowTestHelperBase {
         static ReplWindowTestHelperBase() {
             AssertListener.Initialize();
-            TestData.Deploy();
+            PythonTestData.Deploy();
         }
 
         // Should be called from [TestInitialize] methods
@@ -2520,7 +2521,7 @@ $cls
                 interactive = Prepare();
                 using (new DefaultInterpreterSetter(interactive.TextView.GetAnalyzer().InterpreterFactory))
                 using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                    var project = app.OpenAndFindProject(@"TestData\InteractiveFile.sln");
+                    var project = app.OpenProject(@"TestData\InteractiveFile.sln");
 
                     VsIdeTestHostContext.Dte.ExecuteCommand("Debug.ExecuteFileinPythonInteractive");
                     Assert.AreNotEqual(null, interactive);
@@ -2539,7 +2540,7 @@ $cls
             var interactive = Prepare();
             using (new DefaultInterpreterSetter(interactive.TextView.GetAnalyzer().InterpreterFactory))
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenAndFindProject(@"TestData\SysArgvRepl.sln");
+                var project = app.OpenProject(@"TestData\SysArgvRepl.sln");
 
                 VsIdeTestHostContext.Dte.ExecuteCommand("Debug.ExecuteFileinPythonInteractive");
                 Assert.AreNotEqual(null, interactive);
@@ -2554,7 +2555,7 @@ $cls
             var interactive = Prepare();
             using (new DefaultInterpreterSetter(interactive.TextView.GetAnalyzer().InterpreterFactory))
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenAndFindProject(@"TestData\SysArgvScriptArgsRepl.sln");
+                var project = app.OpenProject(@"TestData\SysArgvScriptArgsRepl.sln");
 
                 VsIdeTestHostContext.Dte.ExecuteCommand("Debug.ExecuteFileinPythonInteractive");
                 Assert.AreNotEqual(null, interactive);
@@ -2577,7 +2578,7 @@ $cls
                 interactive = Prepare();
                 using (new DefaultInterpreterSetter(interactive.TextView.GetAnalyzer().InterpreterFactory))
                 using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                    var project = app.OpenAndFindProject(@"TestData\SysArgvRepl.sln");
+                    var project = app.OpenProject(@"TestData\SysArgvRepl.sln");
 
                     VsIdeTestHostContext.Dte.ExecuteCommand("Debug.ExecuteFileinPythonInteractive");
                     Assert.AreNotEqual(null, interactive);
@@ -2604,7 +2605,7 @@ $cls
                 interactive = Prepare();
                 using (new DefaultInterpreterSetter(interactive.TextView.GetAnalyzer().InterpreterFactory))
                 using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                    var project = app.OpenAndFindProject(@"TestData\SysArgvScriptArgsRepl.sln");
+                    var project = app.OpenProject(@"TestData\SysArgvScriptArgsRepl.sln");
 
                     VsIdeTestHostContext.Dte.ExecuteCommand("Debug.ExecuteFileinPythonInteractive");
                     Assert.AreNotEqual(null, interactive);
@@ -2623,7 +2624,7 @@ $cls
             var interactive = Prepare();
             using (new DefaultInterpreterSetter(interactive.TextView.GetAnalyzer().InterpreterFactory))
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenAndFindProject(@"TestData\UnicodePathä.sln");
+                var project = app.OpenProject(@"TestData\UnicodePathä.sln");
 
                 VsIdeTestHostContext.Dte.ExecuteCommand("Debug.ExecuteFileinPythonInteractive");
                 Assert.AreNotEqual(null, interactive);
@@ -2636,7 +2637,7 @@ $cls
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void AttachReplTest() {
             using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenAndFindProject(@"TestData\DebuggerProject.sln");
+                var project = app.OpenProject(@"TestData\DebuggerProject.sln");
                 PythonToolsPackage.Instance.AdvancedEditorOptionsPage.AddNewLineAtEndOfFullyTypedWord = true;
                 GetInteractiveOptions().EnableAttach = true;
                 try {
@@ -2879,7 +2880,7 @@ def g(): pass
             InteractiveWindow interactive = null;
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
                 try {
-                    var project = app.OpenAndFindProject(@"TestData\Repl.sln");
+                    var project = app.OpenProject(@"TestData\Repl.sln");
 
                     var program = project.ProjectItems.Item("Program.py");
 
@@ -2921,7 +2922,7 @@ def g(): pass
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void VirtualEnvironmentSendToInteractive() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenAndFindProject(@"TestData\VirtualEnv.sln");
+                var project = app.OpenProject(@"TestData\VirtualEnv.sln");
 
                 var program = project.ProjectItems.Item("Program.py");
 
@@ -3092,7 +3093,7 @@ def g(): pass
         public void ExecuteProjectUnicodeFile() {
             var interactive = Prepare();
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenAndFindProject(@"TestData\UnicodeRepl.sln");
+                var project = app.OpenProject(@"TestData\UnicodeRepl.sln");
 
                 VsIdeTestHostContext.Dte.ExecuteCommand("Debug.ExecuteFileinPythonInteractive");
                 Assert.AreNotEqual(null, interactive);

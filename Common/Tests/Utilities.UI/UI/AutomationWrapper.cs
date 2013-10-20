@@ -197,6 +197,15 @@ namespace TestUtilities.UI {
         /// <summary>
         /// Selects the selectable item.  The item must support the Selection item pattern.
         /// </summary>
+        /// <param name="selectionItem"></param>
+        public static void AddToSelection(AutomationElement selectionItem) {
+            var selectPattern = (SelectionItemPattern)selectionItem.GetCurrentPattern(SelectionItemPattern.Pattern);
+            selectPattern.AddToSelection();
+        }
+
+        /// <summary>
+        /// Selects the selectable item.  The item must support the Selection item pattern.
+        /// </summary>
         public void Select() {
             Select(Element);
         }

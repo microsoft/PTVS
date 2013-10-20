@@ -45,7 +45,13 @@ namespace Microsoft.VisualStudioTools.Project {
                 return res;
             }
             set {
-                this.Node.ProjectMgr.SetProjectProperty(CommonConstants.StartupFile, value);
+                this.Node.ProjectMgr.SetProjectProperty(
+                    CommonConstants.StartupFile,
+                    CommonUtils.GetRelativeFilePath(
+                        Node.ProjectMgr.ProjectHome, 
+                        Path.Combine(Node.ProjectMgr.ProjectHome, value)
+                    )
+                );
             }
         }
 
@@ -349,9 +355,12 @@ namespace Microsoft.VisualStudioTools.Project {
                 return Node.ProjectMgr.GetProjectProperty(CommonConstants.StartupFile);
             }
             set {
-                Node.ProjectMgr.SetProjectProperty(CommonConstants.StartupFile, value);
+                Node.ProjectMgr.SetProjectProperty(
+                    CommonConstants.StartupFile,
+                    CommonUtils.GetRelativeFilePath(Node.ProjectMgr.ProjectHome, value)
+                );
             }
-            }
+        }
 
         [Browsable(false)]
         public string URL {

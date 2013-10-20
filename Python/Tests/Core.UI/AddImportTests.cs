@@ -17,6 +17,7 @@ using EnvDTE;
 using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
+using TestUtilities.Python;
 using TestUtilities.UI;
 
 namespace PythonToolsUITests {
@@ -25,7 +26,7 @@ namespace PythonToolsUITests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
-            TestData.Deploy();
+            PythonTestData.Deploy();
         }
 
         /// <summary>
@@ -272,7 +273,7 @@ sub_package";
 
         private static void AddSmartTagTest(string filename, int line, int column, string[] expectedActions, int invokeAction = -1, string expectedText = null) {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenAndFindProject(@"TestData\AddImport.sln");
+                var project = app.OpenProject(@"TestData\AddImport.sln");
                 var item = project.ProjectItems.Item(filename);
                 var window = item.Open();
                 window.Activate();

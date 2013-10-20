@@ -27,6 +27,7 @@
     <DefineConstants>$(DefineConstants);TRACE</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Microsoft.Build" />
     <Reference Include="Microsoft.TC.RemoteTest">
       <HintPath>$(BuildRoot)\Common\Tests\TCTestHostAdapters\$(VSTarget)\Microsoft.TC.RemoteTest.dll</HintPath>
     </Reference>
@@ -40,6 +41,10 @@
     <Reference Include="Microsoft.VisualStudio.QualityTools.Common, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.QualityTools.ExecutionCommon, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+    <Reference Include="Microsoft.VisualStudio.Shell.Interop.10.0, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.Shell.Interop.8.0, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="Microsoft.VisualStudio.Text.Data, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.Text.Logic, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.Text.UI, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
@@ -60,6 +65,18 @@
     <Reference Include="System.Xml.Linq" />
     <Reference Include="WindowsBase" />
   </ItemGroup>
+  <Choose>
+    <When Condition="'$(VSTarget)' == '10.0'">
+      <ItemGroup>
+        <Reference Include="Microsoft.VisualStudio.Settings, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=x86" />
+      </ItemGroup>
+    </When>
+    <Otherwise>
+      <ItemGroup>
+        <Reference Include="Microsoft.VisualStudio.Settings.$(VSTarget), Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=x86" />
+      </ItemGroup>
+    </Otherwise>
+  </Choose>
   <ItemGroup>
     <Reference Include="Microsoft.Office.Tools.v4.0.Framework, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.Tools.Applications.Runtime, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
@@ -83,6 +100,7 @@
     <Compile Include="GlobalSuppressions.cs">
       <ExcludeFromStyleCop>true</ExcludeFromStyleCop>
     </Compile>
+    <Compile Include="Mocks\MockActivityLog.cs" />
     <Compile Include="Mocks\MockBufferGraph.cs" />
     <Compile Include="Mocks\MockClassificationType.cs" />
     <Compile Include="Mocks\MockComponentModel.cs" />
@@ -92,6 +110,9 @@
     <Compile Include="Mocks\MockGlyphService.cs" />
     <Compile Include="Mocks\MockMappingPoint.cs" />
     <Compile Include="Mocks\MockNormalizedTextChangeCollection.cs" />
+    <Compile Include="Mocks\MockServiceProvider.cs" />
+    <Compile Include="Mocks\MockSettingsManager.cs" />
+    <Compile Include="Mocks\MockSettingsStore.cs" />
     <Compile Include="Mocks\MockTextBuffer.cs" />
     <Compile Include="Mocks\MockTextCaret.cs" />
     <Compile Include="Mocks\MockTextChange.cs" />
@@ -113,6 +134,24 @@
     <Compile Include="Properties\AssemblyInfo.cs">
       <ExcludeFromStyleCop>true</ExcludeFromStyleCop>
     </Compile>
+    <Compile Include="SharedProject\CodeExtensionAttribute.cs" />
+    <Compile Include="SharedProject\CompileItem.cs" />
+    <Compile Include="SharedProject\ContentItem.cs" />
+    <Compile Include="SharedProject\FolderItem.cs" />
+    <Compile Include="SharedProject\ProjectContentGenerator.cs" />
+    <Compile Include="SharedProject\IProjectProcessor.cs" />
+    <Compile Include="SharedProject\IProjectProcessorMetadata.cs" />
+    <Compile Include="SharedProject\IProjectTypeDefinitionMetadata.cs" />
+    <Compile Include="SharedProject\ProjectContentGroup.cs" />
+    <Compile Include="SharedProject\ProjectDefinition.cs" />
+    <Compile Include="SharedProject\ProjectExtensionAttribute.cs" />
+    <Compile Include="SharedProject\ProjectProperty.cs" />
+    <Compile Include="SharedProject\ProjectType.cs" />
+    <Compile Include="SharedProject\ProjectTypeDefinition.cs" />
+    <Compile Include="SharedProject\ProjectTypeGuidAttribute.cs" />
+    <Compile Include="SharedProject\SampleCodeAttribute.cs" />
+    <Compile Include="SharedProject\SharedProjectTest.cs" />
+    <Compile Include="SharedProject\SolutionFile.cs" />
     <Compile Include="TestData.cs" />
     <Compile Include="TestExtensions.cs" />
     <Compile Include="TestMethod.cs" />

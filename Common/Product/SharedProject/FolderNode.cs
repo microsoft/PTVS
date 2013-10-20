@@ -460,15 +460,7 @@ namespace Microsoft.VisualStudioTools.Project
                 RenameDirectory(CommonUtils.GetAbsoluteDirectoryPath(ProjectMgr.ProjectHome, newPath));
             }
 
-            // Reparent the folder
-            ProjectMgr.OnItemDeleted(this);
-            Parent.RemoveChild(this);
-            ID = ProjectMgr.ItemIdMap.Add(this);
-
-            ItemNode.Rename(CommonUtils.GetRelativeDirectoryPath(ProjectMgr.ProjectHome, newPath));
-            ProjectMgr.SetProjectFileDirty(true);
-
-            Parent.AddChild(this);
+            ReparentFolder(newPath);
 
             var oldTriggerFlag = ProjectMgr.EventTriggeringFlag;
             ProjectMgr.EventTriggeringFlag |= ProjectNode.EventTriggering.DoNotTriggerTrackerEvents;
@@ -497,7 +489,30 @@ namespace Microsoft.VisualStudioTools.Project
             ProjectMgr.Tracker.OnItemRenamed(oldPath, newPath, VSRENAMEFILEFLAGS.VSRENAMEFILEFLAGS_Directory);
 
             // Some of the previous operation may have changed the selection so set it back to us
+            ExpandItem(EXPANDFLAGS.EXPF_CollapseFolder);
             ExpandItem(EXPANDFLAGS.EXPF_SelectItem);
+        }
+
+        /// <summary>
+        /// Moves the HierarchyNode from the old path to be a child of the
+        /// newly specified node.
+        /// 
+        /// This is a low-level operation that only updates the hierarchy and our MSBuild
+        /// state.  The parents of the node must already be created. 
+        /// 
+        /// To do a general rename, call RenameFolder instead.
+        /// </summary>
+        internal void ReparentFolder(string newPath) {
+            // Reparent the folder
+            ProjectMgr.OnItemDeleted(this);
+            Parent.RemoveChild(this);
+            ID = ProjectMgr.ItemIdMap.Add(this);
+
+            ItemNode.Rename(CommonUtils.GetRelativeDirectoryPath(ProjectMgr.ProjectHome, newPath));
+            ProjectMgr.SetProjectFileDirty(true);
+            var parent = ProjectMgr.GetParentFolderForPath(newPath);
+            Debug.Assert(parent != null, "ReparentFolder called without full path to parent being created");
+            parent.AddChild(this);
         }
 
         /// <summary>
@@ -551,5 +566,10 @@ namespace Microsoft.VisualStudioTools.Project
         }
 
         #endregion
+
+        protected override void RaiseOnItemRemoved(string documentToRemove, string[] filesToBeDeleted) {
+            VSREMOVEDIRECTORYFLAGS[] removeFlags = new VSREMOVEDIRECTORYFLAGS[1];
+            this.ProjectMgr.Tracker.OnFolderRemoved(documentToRemove, removeFlags[0]);
+        }
     }
 }

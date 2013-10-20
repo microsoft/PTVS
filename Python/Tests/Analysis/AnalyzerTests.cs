@@ -22,6 +22,7 @@ using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
+using TestUtilities.Python;
 
 namespace AnalysisTests {
     [TestClass]
@@ -29,7 +30,7 @@ namespace AnalysisTests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
-            TestData.Deploy(includeTestData: false);
+            PythonTestData.Deploy(includeTestData: false);
         }
 
         [TestMethod, Priority(0)]

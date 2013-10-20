@@ -26,6 +26,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.Win32;
 using TestUtilities;
 using System.Text;
+using TestUtilities.Python;
 
 namespace DebuggerTests {
     [TestClass]
@@ -33,7 +34,7 @@ namespace DebuggerTests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
-            TestData.Deploy();
+            PythonTestData.Deploy();
         }
 
         [TestInitialize]
@@ -2515,7 +2516,7 @@ int main(int argc, char* argv[]) {
         [ClassInitialize]
         public static new void DoDeployment(TestContext context) {
             AssertListener.Initialize();
-            TestData.Deploy();
+            PythonTestData.Deploy();
         }
 
         internal override PythonVersion Version {
@@ -2530,7 +2531,7 @@ int main(int argc, char* argv[]) {
         [ClassInitialize]
         public static new void DoDeployment(TestContext context) {
             AssertListener.Initialize();
-            TestData.Deploy();
+            PythonTestData.Deploy();
         }
 
         internal override PythonVersion Version {
@@ -2545,7 +2546,7 @@ int main(int argc, char* argv[]) {
         [ClassInitialize]
         public static new void DoDeployment(TestContext context) {
             AssertListener.Initialize();
-            TestData.Deploy();
+            PythonTestData.Deploy();
         }
 
         internal override PythonVersion Version {
@@ -2560,7 +2561,7 @@ int main(int argc, char* argv[]) {
         [ClassInitialize]
         public static new void DoDeployment(TestContext context) {
             AssertListener.Initialize();
-            TestData.Deploy();
+            PythonTestData.Deploy();
         }
 
         internal override PythonVersion Version {
@@ -2575,7 +2576,7 @@ int main(int argc, char* argv[]) {
         [ClassInitialize]
         public static new void DoDeployment(TestContext context) {
             AssertListener.Initialize();
-            TestData.Deploy();
+            PythonTestData.Deploy();
         }
 
         internal override PythonVersion Version {
@@ -2590,7 +2591,7 @@ int main(int argc, char* argv[]) {
         [ClassInitialize]
         public static new void DoDeployment(TestContext context) {
             AssertListener.Initialize();
-            TestData.Deploy();
+            PythonTestData.Deploy();
         }
 
         internal override PythonVersion Version {
@@ -2605,7 +2606,7 @@ int main(int argc, char* argv[]) {
         [ClassInitialize]
         public static new void DoDeployment(TestContext context) {
             AssertListener.Initialize();
-            TestData.Deploy();
+            PythonTestData.Deploy();
         }
 
         internal override PythonVersion Version {

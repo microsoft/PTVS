@@ -25,6 +25,7 @@ using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Document;
 using Microsoft.VisualStudio.Text.Tagging;
 using TestUtilities;
+using TestUtilities.Python;
 using TestUtilities.UI;
 using TestUtilities.UI.Python;
 
@@ -34,7 +35,7 @@ namespace PythonToolsUITests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
-            TestData.Deploy();
+            PythonTestData.Deploy();
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
@@ -124,7 +125,7 @@ z=3", new Span[0]);
         /// <param name="changedSpans">The spans which should be marked as changed in the buffer after formatting</param>
         private static void FormattingTest(string filename, Span? selection, string expectedText, Span[] changedSpans) {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenAndFindProject(@"TestData\FormattingTests\FormattingTests.sln");
+                var project = app.OpenProject(@"TestData\FormattingTests\FormattingTests.sln");
                 var item = project.ProjectItems.Item(filename);
                 var window = item.Open();
                 window.Activate();

@@ -104,7 +104,7 @@
       <Project>{D092D54E-FF29-4D32-9AEE-4EF704C92F67}</Project>
       <Name>TestUtilities</Name>
     </ProjectReference>
-    <ProjectReference Include="..\SccPackage\TestSccPackage.csproj">
+    <ProjectReference Include="..\..\..\Common\Tests\SccPackage\TestSccPackage.csproj">
       <Project>{E75E5DB1-0EA0-4247-A830-FE467C016816}</Project>
       <Name>TestSccPackage</Name>
     </ProjectReference>

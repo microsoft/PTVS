@@ -17,6 +17,7 @@ using EnvDTE;
 using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
+using TestUtilities.Python;
 using TestUtilities.UI;
 
 namespace PythonToolsUITests {
@@ -25,7 +26,7 @@ namespace PythonToolsUITests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
-            TestData.Deploy();
+            PythonTestData.Deploy();
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
@@ -329,7 +330,7 @@ def f():
 
         private static void RemoveSmartTagTest(string filename, int line, int column, bool allScopes, string expectedText) {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenAndFindProject(@"TestData\RemoveImport.sln");
+                var project = app.OpenProject(@"TestData\RemoveImport.sln");
                 var item = project.ProjectItems.Item(filename);
                 var window = item.Open();
                 window.Activate();

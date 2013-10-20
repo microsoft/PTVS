@@ -41,7 +41,6 @@
     <ProjectFile Include="ReplWindowUITests\ReplWindowUITests.csproj">
       <Properties>ReplWindowUITestsPythonVersion=34</Properties>
     </ProjectFile>
-    <ProjectFile Include="SccPackage\TestSccPackage.csproj" />
     <ProjectFile Include="Utilities.Python\TestUtilities.Python.csproj" />
   </ItemGroup>
 

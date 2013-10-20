@@ -18,6 +18,7 @@ using Microsoft.PythonTools.InterpreterList;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Commands {
     /// <summary>
