@@ -64,6 +64,10 @@ namespace Microsoft.PythonTools.DkmDebugger.Proxies.Structs {
 
         public override unsafe string ToString() {
             var length = this.length.Read();
+            if (length == 0) {
+                return "";
+            }
+
             var buf = new byte[length * sizeof(char)];
             Process.ReadMemory(str.Raw.Read(), DkmReadMemoryFlags.None, buf);
             fixed (byte* p = buf) {

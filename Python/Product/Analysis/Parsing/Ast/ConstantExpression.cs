@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Numerics;
 using System.Text;
@@ -69,6 +70,39 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             }
         }
 
+        private static bool IsNegativeZero(double value) {
+            return (value == 0.0) && double.IsNegativeInfinity(1.0 / value);
+        }
+
+        // ToString does not distinguish between negative zero and positive zero, but repr() does, and so should we.
+        private static string NegativeZeroAwareToString(double n) {
+            return IsNegativeZero(n) ? "-0" : n.ToString("g", nfi);
+        }
+
+        private void AppendEscapedString(StringBuilder res, string s, bool escape8bitStrings) {
+            res.Append("'");
+            foreach (var c in s) {
+                switch (c) {
+                    case '\n': res.Append("\\n"); break;
+                    case '\r': res.Append("\\r"); break;
+                    case '\t': res.Append("\\t"); break;
+                    case '\'': res.Append("\\'"); break;
+                    case '\\': res.Append("\\\\"); break;
+                    default:
+                        ushort cp = (ushort)c;
+                        if (cp > 0xFF) {
+                            res.AppendFormat("\\u{0:X04}", cp);
+                        } else if (cp < 0x20 || (escape8bitStrings && cp >= 0x7F)) {
+                            res.AppendFormat("\\x{0:X02}", cp);
+                        } else {
+                            res.Append(c);
+                        }
+                        break;
+                }
+            }
+            res.Append("'");
+        }
+
         public string GetConstantRepr(PythonLanguageVersion version, bool escape8bitStrings = false) {
             if (_value == null) {
                 return "None";
@@ -77,64 +111,26 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 if (version.Is3x()) {
                     res.Append("b");
                 }
-                res.Append("'");
-                var bytes = ((AsciiString)_value).String;
-                foreach (var b in bytes) {
-                    switch (b) {
-                        case '\a': res.Append("\\a"); break;
-                        case '\b': res.Append("\\b"); break;
-                        case '\f': res.Append("\\f"); break;
-                        case '\n': res.Append("\\n"); break;
-                        case '\r': res.Append("\\r"); break;
-                        case '\t': res.Append("\\t"); break;
-                        case '\v': res.Append("\\v"); break;
-                        case '\'': res.Append("\\'"); break;
-                        case '\\': res.Append("\\\\"); break;
-                        default:
-                            if ((int)b < 0x20 || (escape8bitStrings && (int)b >= 0x80)) {
-                                res.AppendFormat("\\x{0:X02}", (int)b);
-                            } else {
-                                res.Append(b);
-                            }
-                            break;
-                    }
-                }
-                res.Append("'");
+                AppendEscapedString(res, ((AsciiString)_value).String, escape8bitStrings);
                 return res.ToString();
             } else if (_value is string) {
                 StringBuilder res = new StringBuilder();
                 if (version.Is2x()) {
                     res.Append("u");
                 }
-
-                res.Append("'");
-                string str = (string)_value;
-                foreach (var c in str) {
-                    switch (c) {
-                        case '\a': res.Append("\\a"); break;
-                        case '\b': res.Append("\\b"); break;
-                        case '\f': res.Append("\\f"); break;
-                        case '\n': res.Append("\\n"); break;
-                        case '\r': res.Append("\\r"); break;
-                        case '\t': res.Append("\\t"); break;
-                        case '\v': res.Append("\\v"); break;
-                        case '\'': res.Append("\\'"); break;
-                        case '\\': res.Append("\\\\"); break;
-                        default: res.Append(c); break;
-                    }
-                }
-                res.Append("'");
+                AppendEscapedString(res, (string)_value, escape8bitStrings);
                 return res.ToString();
             } else if (_value is Complex) {
-                Complex x = (Complex)_value;
-                if (x.Real != 0) {
-                    if (x.Imaginary < 0 || IsNegativeZero(x.Imaginary)) {
-                        return string.Format(nfi, "({0:g}{1:g}j)", x.Real, x.Imaginary);
-                    } else /* x.Imaginary() is NaN or >= +0.0 */ {
-                        return string.Format(nfi, "({0:g}+{1:g}j)", x.Real, x.Imaginary);
+                Complex n = (Complex)_value;
+                string real = NegativeZeroAwareToString(n.Real);
+                string imag =  NegativeZeroAwareToString(n.Imaginary);
+                if (n.Real != 0) {
+                    if (!imag.StartsWith("-")) {
+                        imag = "+" + imag;
                     }
+                    return "(" + real + imag + "j)";
                 } else {
-                    return string.Format(nfi, "{0:g}j", x.Imaginary);
+                    return imag + "j";
                 }
             } else if (_value is BigInteger) {
                 if (!version.Is3x()) {
@@ -142,7 +138,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 }
             } else if (_value is double) {
                 double n = (double)_value;
-                string s = n.ToString("g", nfi);
+                string s = NegativeZeroAwareToString(n);
                 // If there's no fractional part, and this is not NaN or +-Inf, G format will not include the decimal
                 // point. This is okay if we're using scientific notation as this implies float, but if not, add the
                 // decimal point to indicate the type, just like Python repr() does.
@@ -173,10 +169,6 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 }
                 return _nfi;
             }
-        }
-
-        private static bool IsNegativeZero(double value) {
-            return (value == 0.0) && double.IsNegativeInfinity(1.0 / value);
         }
     }
 }

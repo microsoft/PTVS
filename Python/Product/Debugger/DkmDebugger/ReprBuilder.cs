@@ -99,14 +99,46 @@ namespace Microsoft.PythonTools.DkmDebugger {
             return this;
         }
 
-        private ReprBuilder AppendDecOrHex(object n) {
-            string format = Options.HexadecimalDisplay ? "0x{0:x}" : "{0}";
+        private ReprBuilder AppendDecOrHex<T>(T n, T negated = default(T)) where T : IComparable<T> {
+            string format;
+            if (Options.HexadecimalDisplay) {
+                // X format treats everything as unsigned, so we need to take care of the sign ourselves for negative numbers.
+                if (n.CompareTo(default(T)) < 0) {
+                    _sb.Append('-');
+                    n = negated;
+                }
+                format = "0x{0:x}";
+            } else {
+                format = "{0}";
+            }
             _sb.AppendFormat(CultureInfo.InvariantCulture, format, n);
             return this;
         }
 
+        private static readonly Dictionary<Type, Action<ReprBuilder, object>> appendDecOrHex = new Dictionary<Type, Action<ReprBuilder, object>>() {
+            { typeof(sbyte), (rb, x) => rb.AppendDecOrHex((sbyte)x, (sbyte)-(sbyte)x) },
+            { typeof(byte), (rb, x) => rb.AppendDecOrHex((byte)x) },
+            { typeof(short), (rb, x) => rb.AppendDecOrHex((short)x, (short)-(short)x) },
+            { typeof(ushort), (rb, x) => rb.AppendDecOrHex((ushort)x) },
+            { typeof(int), (rb, x) => rb.AppendDecOrHex((int)x, (int)-(int)x) },
+            { typeof(uint), (rb, x) => rb.AppendDecOrHex((uint)x) },
+            { typeof(long), (rb, x) => rb.AppendDecOrHex((long)x, (long)-(long)x) },
+            { typeof(ulong), (rb, x) => rb.AppendDecOrHex((ulong)x) },
+            { typeof(BigInteger), (rb, x) => rb.AppendDecOrHex((BigInteger)x, -(BigInteger)x) },
+        };
+
+        private bool TryAppendDecOrHex(object x) {
+            Action<ReprBuilder, object> impl;
+            if (appendDecOrHex.TryGetValue(x.GetType(), out impl)) {
+                impl(this, x);
+                return true;
+            } else {
+                return false;
+            }
+        }
+
         public ReprBuilder Append(sbyte n) {
-            return AppendDecOrHex(n);
+            return AppendDecOrHex(n, (sbyte)-n);
         }
 
         public ReprBuilder Append(byte n) {
@@ -114,7 +146,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
         }
 
         public ReprBuilder Append(short n) {
-            return AppendDecOrHex(n);
+            return AppendDecOrHex(n, (short)-n);
         }
 
         public ReprBuilder Append(ushort n) {
@@ -122,7 +154,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
         }
 
         public ReprBuilder Append(int n) {
-            return AppendDecOrHex(n);
+            return AppendDecOrHex(n, -n);
         }
 
         public ReprBuilder Append(uint n) {
@@ -130,7 +162,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
         }
 
         public ReprBuilder Append(long n) {
-            return AppendDecOrHex(n);
+            return AppendDecOrHex(n, -n);
         }
 
         public ReprBuilder Append(ulong n) {
@@ -138,7 +170,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
         }
 
         public ReprBuilder Append(BigInteger n) {
-            return AppendDecOrHex(n);
+            return AppendDecOrHex(n, -n);
         }
 
         public ReprBuilder Append(float n) {
@@ -179,6 +211,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
             return this;
         }
 
+
         /// <summary>
         /// Appends <paramref name="value"/> represented as a Python literal.
         /// </summary>
@@ -186,18 +219,14 @@ namespace Microsoft.PythonTools.DkmDebugger {
         /// Supports numeric types, booleans, and ASCII and Unicode strings. For integer types, representation depends on <see cref="HexadecimalDisplay"/>.
         /// </remarks>
         public ReprBuilder AppendLiteral(object value) {
-            if (value is sbyte || value is byte || value is short || value is ushort || value is int || value is uint || value is long || value is ulong) {
-                return AppendDecOrHex(value);
-            } else if (value is BigInteger) {
-                AppendDecOrHex(value);
-                if (Options.LanguageVersion <= PythonLanguageVersion.V27) {
+            if (TryAppendDecOrHex(value)) {
+                if (value is BigInteger && Options.LanguageVersion <= PythonLanguageVersion.V27) {
                     Append("L");
                 }
-                return this;
+            } else {
+                var constExpr = new ConstantExpression(value);
+                Append(constExpr.GetConstantRepr(Options.LanguageVersion, escape8bitStrings: true));
             }
-
-            var constExpr = new ConstantExpression(value);
-            Append(constExpr.GetConstantRepr(Options.LanguageVersion, escape8bitStrings: true));
             return this;
         }
 
@@ -282,9 +311,9 @@ namespace Microsoft.PythonTools.DkmDebugger {
                 return builder.ToString();
             } else if (format == "PTR") {
                 if (Options.Is64Bit) {
-                    return string.Format("0x{0:x16}", arg);
+                    return string.Format("0x{0:X16}", arg);
                 } else {
-                    return string.Format("0x{0:x8}", arg);
+                    return string.Format("0x{0:X8}", arg);
                 }
             } else {
                 var formattable = arg as IFormattable;

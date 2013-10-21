@@ -168,7 +168,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
             public Types(DkmProcess process, PythonRuntimeInfo pyrtInfo) {
                 PyBytes_Type = PyObject.GetPyType<PyBytesObject>(process).Address;
 
-                if (pyrtInfo.LanguageVersion <= PythonLanguageVersion.V27) { 
+                if (pyrtInfo.LanguageVersion <= PythonLanguageVersion.V27) {
                     PyUnicode_Type = PyObject.GetPyType<PyUnicodeObject27>(process).Address;
                 } else {
                     PyUnicode_Type = PyObject.GetPyType<PyUnicodeObject33>(process).Address;
@@ -179,11 +179,11 @@ namespace Microsoft.PythonTools.DkmDebugger {
         // Layout of this struct must always remain in sync with DebuggerHelper/trace.cpp.
         [StructLayout(LayoutKind.Sequential, Pack = 8)]
         private struct FunctionPointers {
-	        public ulong Py_DecRef;
-	        public ulong PyFrame_FastToLocals;
-	        public ulong PyRun_StringFlags;
-	        public ulong PyErr_Fetch;
-	        public ulong PyErr_Restore;
+            public ulong Py_DecRef;
+            public ulong PyFrame_FastToLocals;
+            public ulong PyRun_StringFlags;
+            public ulong PyErr_Fetch;
+            public ulong PyErr_Restore;
             public ulong PyErr_Occurred;
             public ulong PyObject_Str;
 
@@ -204,10 +204,34 @@ namespace Microsoft.PythonTools.DkmDebugger {
         private readonly DkmNativeInstructionAddress _traceFunc;
         private readonly UInt32Proxy _pyTracingPossible;
 
-        // Breakpoints corresponding to various Python functions that can potentially call out to native code.
-        // These are created once during initialization and do not change. They are initially disabled, and only
-        // get enabled when a step-in operation is initiated - and then disabled again once it completes.
-        private readonly List<DkmRuntimeBreakpoint> _stepInGateBreakpoints = new List<DkmRuntimeBreakpoint>();
+        // A step-in gate is a function inside the Python interpreter or one of the libaries that may call out
+        // to native user code such that it may be a potential target of a step-in operation. For every gate,
+        // we record its address in the process, and create a breakpoint. The breakpoints are initially disabled,
+        // and only get enabled when a step-in operation is initiated - and then disabled again once it completes.
+        private struct StepInGate {
+            public DkmRuntimeInstructionBreakpoint Breakpoint;
+            public StepInGateHandler Handler;
+            public bool HasMultipleExitPoints; // see StepInGateAttribute
+        }
+
+        /// <summary>
+        /// A handler for a step-in gate, run either when a breakpoint at the entry of the gate is hit, or
+        /// when a step-in is executed while the gate is the topmost frame on the stack. The handler should
+        /// compute any potential runtime exits and pass them to <see cref="OnPotentialRuntimeExit"/>.
+        /// </summary>
+        /// <param name="useRegisters">
+        /// If true, the handler cannot rely on symbolic expression evaluation to compute the values of any
+        /// parameters passed to the gate, and should instead retrieve them directly from the CPU registers.
+        /// <remarks>
+        /// This is currently only true on x64 when entry breakpoint is hit, because x64 uses registers for
+        /// argument passing (x86 cdecl uses the stack), and function prolog does not necessarily copy
+        /// values to the corresponding stack locations for them - so C++ expression evaluator will produce
+        /// incorrect results for arguments, or fail to evaluate them altogether.
+        /// </remarks>
+        /// </param>
+        public delegate void StepInGateHandler(DkmThread thread, ulong frameBase, ulong vframe, bool useRegisters);
+
+        private readonly List<StepInGate> _stepInGates = new List<StepInGate>();
 
         // Breakpoints corresponding to the native functions outside of Python runtime that can potentially
         // be called by Python. These lists are dynamically filled for every new step operation, when one of 
@@ -252,16 +276,14 @@ namespace Microsoft.PythonTools.DkmDebugger {
                     LocalComponent.CreateRuntimeDllFunctionExitBreakpoints(_pyrtInfo.DLLs.Python, "do_raise", _handlers.do_raise, enable: true);
                 }
 
-                _stepInGateBreakpoints = new List<DkmRuntimeBreakpoint>();
                 foreach (var methodInfo in _handlers.GetType().GetMethods()) {
                     var stepInAttr = (StepInGateAttribute)Attribute.GetCustomAttribute(methodInfo, typeof(StepInGateAttribute));
                     if (stepInAttr != null &&
                         (stepInAttr.MinVersion == PythonLanguageVersion.None || _pyrtInfo.LanguageVersion >= stepInAttr.MinVersion) &&
                         (stepInAttr.MaxVersion == PythonLanguageVersion.None || _pyrtInfo.LanguageVersion <= stepInAttr.MaxVersion)) {
 
-                        var handler = (LocalComponent.RuntimeDllBreakpointHandler)Delegate.CreateDelegate(typeof(LocalComponent.RuntimeDllBreakpointHandler), _handlers, methodInfo);
-                        var bp = LocalComponent.CreateRuntimeDllFunctionBreakpoint(_pyrtInfo.DLLs.Python, methodInfo.Name, handler);
-                        _stepInGateBreakpoints.Add(bp);
+                        var handler = (StepInGateHandler)Delegate.CreateDelegate(typeof(StepInGateHandler), _handlers, methodInfo);
+                        AddStepInGate(handler, _pyrtInfo.DLLs.Python, methodInfo.Name, stepInAttr.HasMultipleExitPoints);
                     }
                 }
 
@@ -271,8 +293,18 @@ namespace Microsoft.PythonTools.DkmDebugger {
             }
         }
 
+        private void AddStepInGate(StepInGateHandler handler, DkmNativeModuleInstance module, string funcName, bool hasMultipleExitPoints) {
+            var gate = new StepInGate {
+                Handler = handler,
+                HasMultipleExitPoints = hasMultipleExitPoints,
+                Breakpoint = LocalComponent.CreateRuntimeDllFunctionBreakpoint(module, funcName,
+                    (thread, frameBase, vframe) => handler(thread, frameBase, vframe, useRegisters: thread.Process.Is64Bit()))
+            };
+            _stepInGates.Add(gate);
+        }
+
         public void OnCTypesLoaded(DkmNativeModuleInstance moduleInstance) {
-            _stepInGateBreakpoints.Add(LocalComponent.CreateRuntimeDllFunctionBreakpoint(moduleInstance, "_call_function_pointer", _handlers._call_function_pointer));
+            AddStepInGate(_handlers._call_function_pointer, moduleInstance, "_call_function_pointer", hasMultipleExitPoints: false);
         }
 
         public unsafe void RegisterTracing(PyThreadState tstate) {
@@ -282,9 +314,28 @@ namespace Microsoft.PythonTools.DkmDebugger {
             _pyTracingPossible.Write(_pyTracingPossible.Read() + 1);
         }
 
-        public void OnBeginStepIn() {
-            foreach (var bp in _stepInGateBreakpoints) {
-                bp.Enable();
+        public void OnBeginStepIn(DkmThread thread) {
+            var frameInfo = new RemoteComponent.GetCurrentFrameInfoRequest { ThreadId = thread.UniqueId }.SendLower(thread.Process);
+
+            var workList = DkmWorkList.Create(null);
+            var topFrame = thread.GetTopStackFrame();
+            var curAddr = (topFrame != null) ? topFrame.InstructionAddress as DkmNativeInstructionAddress : null;
+
+            foreach (var gate in _stepInGates) {
+                gate.Breakpoint.Enable();
+
+                // A step-in may happen when we are stopped inside a step-in gate function. For example, when the gate function
+                // calls out to user code more than once, and the user then steps out from the first call; we're now inside the
+                // gate, but the runtime exit breakpoints for that gate have been cleared after the previous step-in completed. 
+                // To correctly handle this scenario, we need to check whether we're inside a gate with multiple exit points, and
+                // if so, call the associated gate handler (as it the entry breakpoint for the gate is hit) so that it re-enables
+                // the runtime exit breakpoints for that gate.
+                if (gate.HasMultipleExitPoints && curAddr != null) {
+                    var addr = (DkmNativeInstructionAddress)gate.Breakpoint.InstructionAddress;
+                    if (addr.IsInSameFunction(curAddr)) {
+                        gate.Handler(thread, frameInfo.FrameBase, frameInfo.VFrame, useRegisters: false);
+                    }
+                }
             }
         }
 
@@ -305,7 +356,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
             // can detect it via PyTrace_RETURN, but it doesn't actually know whether the return is to Python or to
             // native at the point where it's reported - and, in any case, we need to let PyEval_EvalFrameEx to return
             // before reporting the completion of that step-out (otherwise we will show the returning frame in call stack).
-            
+
             // Find the destination for step-out by walking the call stack and finding either the first native frame
             // outside of Python and helper DLLs, or the second Python frame.
             var inspectionSession = DkmInspectionSession.Create(_process, null);
@@ -354,8 +405,8 @@ namespace Microsoft.PythonTools.DkmDebugger {
         }
 
         public void OnStepComplete() {
-            foreach (var bp in _stepInGateBreakpoints) {
-                bp.Disable();
+            foreach (var gate in _stepInGates) {
+                gate.Breakpoint.Disable();
             }
 
             foreach (var bp in _stepInTargetBreakpoints) {
@@ -378,7 +429,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
 
             if (_pyrtInfo.DLLs.Python.ContainsAddress(funcPtr)) {
                 return;
-            } else  if (_pyrtInfo.DLLs.DebuggerHelper != null && _pyrtInfo.DLLs.DebuggerHelper.ContainsAddress(funcPtr)) {
+            } else if (_pyrtInfo.DLLs.DebuggerHelper != null && _pyrtInfo.DLLs.DebuggerHelper.ContainsAddress(funcPtr)) {
                 return;
             } else if (_pyrtInfo.DLLs.CTypes != null && _pyrtInfo.DLLs.CTypes.ContainsAddress(funcPtr)) {
                 return;
@@ -449,6 +500,13 @@ namespace Microsoft.PythonTools.DkmDebugger {
         private class StepInGateAttribute : Attribute {
             public PythonLanguageVersion MinVersion { get; set; }
             public PythonLanguageVersion MaxVersion { get; set; }
+
+            /// <summary>
+            /// If true, this step-in gate function has more than one runtime exit point that can be executed in
+            /// a single pass through the body of the function. For example, creating an instance of an object is
+            /// a single gate that invokes both tp_new and tp_init sequentially.
+            /// </summary>
+            public bool HasMultipleExitPoints { get; set; }
         }
 
         private class PythonDllBreakpointHandlers {
@@ -480,19 +538,18 @@ namespace Microsoft.PythonTools.DkmDebugger {
             }
 
             // This step-in gate is not marked [StepInGate] because it doesn't live in pythonXX.dll, and so we register it manually.
-            public void _call_function_pointer(DkmThread thread, ulong frameBase, ulong vframe) {
-                var process = thread.Process;
+            public void _call_function_pointer(DkmThread thread, ulong frameBase, ulong vframe, bool useRegisters) {
                 var cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
-                ulong pProc = cppEval.EvaluateUInt64(process.Is64Bit() ? "@rdx" : "pProc");
+                ulong pProc = cppEval.EvaluateUInt64(useRegisters ? "@rdx" : "pProc");
                 _owner.OnPotentialRuntimeExit(thread, pProc);
             }
 
             [StepInGate]
-            public void call_function(DkmThread thread, ulong frameBase, ulong vframe) {
+            public void call_function(DkmThread thread, ulong frameBase, ulong vframe, bool useRegisters) {
                 var process = thread.Process;
                 var cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
 
-                int oparg = cppEval.EvaluateInt32(process.Is64Bit() ? "@rdx" : "oparg");
+                int oparg = cppEval.EvaluateInt32(useRegisters ? "@rdx" : "oparg");
 
                 int na = oparg & 0xff;
                 int nk = (oparg >> 8) & 0xff;
@@ -500,7 +557,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
 
                 ulong func = cppEval.EvaluateUInt64(
                     "*((*(PyObject***){0}) - {1} - 1)",
-                    process.Is64Bit() ? "@rcx" : "pp_stack",
+                    useRegisters ? "@rcx" : "pp_stack",
                     n);
                 var obj = PyObject.FromAddress(process, func);
                 ulong ml_meth = cppEval.EvaluateUInt64(
@@ -511,44 +568,44 @@ namespace Microsoft.PythonTools.DkmDebugger {
             }
 
             [StepInGate]
-            public void PyCFunction_Call(DkmThread thread, ulong frameBase, ulong vframe) {
+            public void PyCFunction_Call(DkmThread thread, ulong frameBase, ulong vframe, bool useRegisters) {
                 var process = thread.Process;
                 var cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
 
                 ulong ml_meth = cppEval.EvaluateUInt64(
                     "((PyObject*){0})->ob_type == &PyCFunction_Type ? ((PyCFunctionObject*){0})->m_ml->ml_meth : 0",
-                    process.Is64Bit() ? "@rcx" : "func");
+                    useRegisters ? "@rcx" : "func");
                 _owner.OnPotentialRuntimeExit(thread, ml_meth);
             }
 
             [StepInGate]
-            public void getset_get(DkmThread thread, ulong frameBase, ulong vframe) {
+            public void getset_get(DkmThread thread, ulong frameBase, ulong vframe, bool useRegisters) {
                 var process = thread.Process;
                 var cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
 
-                string descrVar = process.Is64Bit() ? "((PyGetSetDescrObject*)@rcx)" : "descr";
+                string descrVar = useRegisters ? "((PyGetSetDescrObject*)@rcx)" : "descr";
 
                 ulong get = cppEval.EvaluateUInt64(descrVar + "->d_getset->get");
                 _owner.OnPotentialRuntimeExit(thread, get);
             }
 
             [StepInGate]
-            public void getset_set(DkmThread thread, ulong frameBase, ulong vframe) {
+            public void getset_set(DkmThread thread, ulong frameBase, ulong vframe, bool useRegisters) {
                 var process = thread.Process;
                 var cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
 
-                string descrVar = process.Is64Bit() ? "((PyGetSetDescrObject*)@rcx)" : "descr";
+                string descrVar = useRegisters ? "((PyGetSetDescrObject*)@rcx)" : "descr";
 
                 ulong set = cppEval.EvaluateUInt64(descrVar + "->d_getset->set");
                 _owner.OnPotentialRuntimeExit(thread, set);
             }
 
-            [StepInGate]
-            public void type_call(DkmThread thread, ulong frameBase, ulong vframe) {
+            [StepInGate(HasMultipleExitPoints = true)]
+            public void type_call(DkmThread thread, ulong frameBase, ulong vframe, bool useRegisters) {
                 var process = thread.Process;
                 var cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
 
-                string typeVar = process.Is64Bit() ? "((PyTypeObject*)@rcx)" : "type";
+                string typeVar = useRegisters ? "((PyTypeObject*)@rcx)" : "type";
 
                 ulong tp_new = cppEval.EvaluateUInt64(typeVar + "->tp_new");
                 _owner.OnPotentialRuntimeExit(thread, tp_new);
@@ -558,55 +615,55 @@ namespace Microsoft.PythonTools.DkmDebugger {
             }
 
             [StepInGate]
-            public void PyType_GenericNew(DkmThread thread, ulong frameBase, ulong vframe) {
+            public void PyType_GenericNew(DkmThread thread, ulong frameBase, ulong vframe, bool useRegisters) {
                 var process = thread.Process;
                 var cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
 
-                string typeVar = process.Is64Bit() ? "((PyTypeObject*)@rcx)" : "type";
+                string typeVar = useRegisters ? "((PyTypeObject*)@rcx)" : "type";
 
                 ulong tp_alloc = cppEval.EvaluateUInt64(typeVar + "->tp_alloc");
                 _owner.OnPotentialRuntimeExit(thread, tp_alloc);
             }
 
             [StepInGate]
-            public void PyObject_Print(DkmThread thread, ulong frameBase, ulong vframe) {
+            public void PyObject_Print(DkmThread thread, ulong frameBase, ulong vframe, bool useRegisters) {
                 var process = thread.Process;
                 var cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
 
-                string opVar = process.Is64Bit() ? "((PyObject*)@rcx)" : "op";
+                string opVar = useRegisters ? "((PyObject*)@rcx)" : "op";
 
                 ulong tp_print = cppEval.EvaluateUInt64(opVar + "->ob_type->tp_print");
                 _owner.OnPotentialRuntimeExit(thread, tp_print);
             }
 
             [StepInGate]
-            public void PyObject_GetAttrString(DkmThread thread, ulong frameBase, ulong vframe) {
+            public void PyObject_GetAttrString(DkmThread thread, ulong frameBase, ulong vframe, bool useRegisters) {
                 var process = thread.Process;
                 var cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
 
-                string vVar = process.Is64Bit() ? "((PyObject*)@rcx)" : "v";
+                string vVar = useRegisters ? "((PyObject*)@rcx)" : "v";
 
                 ulong tp_getattr = cppEval.EvaluateUInt64(vVar + "->ob_type->tp_getattr");
                 _owner.OnPotentialRuntimeExit(thread, tp_getattr);
             }
 
             [StepInGate]
-            public void PyObject_SetAttrString(DkmThread thread, ulong frameBase, ulong vframe) {
+            public void PyObject_SetAttrString(DkmThread thread, ulong frameBase, ulong vframe, bool useRegisters) {
                 var process = thread.Process;
                 var cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
 
-                string vVar = process.Is64Bit() ? "((PyObject*)@rcx)" : "v";
+                string vVar = useRegisters ? "((PyObject*)@rcx)" : "v";
 
                 ulong tp_setattr = cppEval.EvaluateUInt64(vVar + "->ob_type->tp_setattr");
                 _owner.OnPotentialRuntimeExit(thread, tp_setattr);
             }
 
             [StepInGate]
-            public void PyObject_GetAttr(DkmThread thread, ulong frameBase, ulong vframe) {
+            public void PyObject_GetAttr(DkmThread thread, ulong frameBase, ulong vframe, bool useRegisters) {
                 var process = thread.Process;
                 var cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
 
-                string vVar = process.Is64Bit() ? "((PyObject*)@rcx)" : "v";
+                string vVar = useRegisters ? "((PyObject*)@rcx)" : "v";
 
                 ulong tp_getattr = cppEval.EvaluateUInt64(vVar + "->ob_type->tp_getattr");
                 _owner.OnPotentialRuntimeExit(thread, tp_getattr);
@@ -616,11 +673,11 @@ namespace Microsoft.PythonTools.DkmDebugger {
             }
 
             [StepInGate]
-            public void PyObject_SetAttr(DkmThread thread, ulong frameBase, ulong vframe) {
+            public void PyObject_SetAttr(DkmThread thread, ulong frameBase, ulong vframe, bool useRegisters) {
                 var process = thread.Process;
                 var cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
 
-                string vVar = process.Is64Bit() ? "((PyObject*)@rcx)" : "v";
+                string vVar = useRegisters ? "((PyObject*)@rcx)" : "v";
 
                 ulong tp_setattr = cppEval.EvaluateUInt64(vVar + "->ob_type->tp_setattr");
                 _owner.OnPotentialRuntimeExit(thread, tp_setattr);
@@ -630,56 +687,56 @@ namespace Microsoft.PythonTools.DkmDebugger {
             }
 
             [StepInGate]
-            public void PyObject_Repr(DkmThread thread, ulong frameBase, ulong vframe) {
+            public void PyObject_Repr(DkmThread thread, ulong frameBase, ulong vframe, bool useRegisters) {
                 var process = thread.Process;
                 var cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
 
-                string vVar = process.Is64Bit() ? "((PyObject*)@rcx)" : "v";
+                string vVar = useRegisters ? "((PyObject*)@rcx)" : "v";
 
                 ulong tp_repr = cppEval.EvaluateUInt64(vVar + "->ob_type->tp_repr");
                 _owner.OnPotentialRuntimeExit(thread, tp_repr);
             }
 
             [StepInGate]
-            public void PyObject_Hash(DkmThread thread, ulong frameBase, ulong vframe) {
+            public void PyObject_Hash(DkmThread thread, ulong frameBase, ulong vframe, bool useRegisters) {
                 var process = thread.Process;
                 var cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
 
-                string vVar = process.Is64Bit() ? "((PyObject*)@rcx)" : "v";
+                string vVar = useRegisters ? "((PyObject*)@rcx)" : "v";
 
                 ulong tp_hash = cppEval.EvaluateUInt64(vVar + "->ob_type->tp_hash");
                 _owner.OnPotentialRuntimeExit(thread, tp_hash);
             }
 
             [StepInGate]
-            public void PyObject_Call(DkmThread thread, ulong frameBase, ulong vframe) {
+            public void PyObject_Call(DkmThread thread, ulong frameBase, ulong vframe, bool useRegisters) {
                 var process = thread.Process;
                 var cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
 
-                string funcVar = process.Is64Bit() ? "((PyObject*)@rcx)" : "func";
+                string funcVar = useRegisters ? "((PyObject*)@rcx)" : "func";
 
                 ulong tp_call = cppEval.EvaluateUInt64(funcVar + "->ob_type->tp_call");
                 _owner.OnPotentialRuntimeExit(thread, tp_call);
             }
 
             [StepInGate]
-            public void PyObject_Str(DkmThread thread, ulong frameBase, ulong vframe) {
+            public void PyObject_Str(DkmThread thread, ulong frameBase, ulong vframe, bool useRegisters) {
                 var process = thread.Process;
                 var cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
 
-                string vVar = process.Is64Bit() ? "((PyObject*)@rcx)" : "v";
+                string vVar = useRegisters ? "((PyObject*)@rcx)" : "v";
 
                 ulong tp_str = cppEval.EvaluateUInt64(vVar + "->ob_type->tp_str");
                 _owner.OnPotentialRuntimeExit(thread, tp_str);
             }
 
-            [StepInGate(MaxVersion = PythonLanguageVersion.V27)]
-            public void do_cmp(DkmThread thread, ulong frameBase, ulong vframe) {
+            [StepInGate(MaxVersion = PythonLanguageVersion.V27, HasMultipleExitPoints = true)]
+            public void do_cmp(DkmThread thread, ulong frameBase, ulong vframe, bool useRegisters) {
                 var process = thread.Process;
                 var cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
 
-                string vVar = process.Is64Bit() ? "((PyObject*)@rcx)" : "v";
-                string wVar = process.Is64Bit() ? "((PyObject*)@rdx)" : "w";
+                string vVar = useRegisters ? "((PyObject*)@rcx)" : "v";
+                string wVar = useRegisters ? "((PyObject*)@rdx)" : "w";
 
                 ulong tp_compare1 = cppEval.EvaluateUInt64(vVar + "->ob_type->tp_compare");
                 _owner.OnPotentialRuntimeExit(thread, tp_compare1);
@@ -694,13 +751,13 @@ namespace Microsoft.PythonTools.DkmDebugger {
                 _owner.OnPotentialRuntimeExit(thread, tp_richcompare2);
             }
 
-            [StepInGate(MaxVersion = PythonLanguageVersion.V27)]
-            public void PyObject_RichCompare(DkmThread thread, ulong frameBase, ulong vframe) {
+            [StepInGate(MaxVersion = PythonLanguageVersion.V27, HasMultipleExitPoints = true)]
+            public void PyObject_RichCompare(DkmThread thread, ulong frameBase, ulong vframe, bool useRegisters) {
                 var process = thread.Process;
                 var cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
 
-                string vVar = process.Is64Bit() ? "((PyObject*)@rcx)" : "v";
-                string wVar = process.Is64Bit() ? "((PyObject*)@rdx)" : "w";
+                string vVar = useRegisters ? "((PyObject*)@rcx)" : "v";
+                string wVar = useRegisters ? "((PyObject*)@rdx)" : "w";
 
                 ulong tp_compare1 = cppEval.EvaluateUInt64(vVar + "->ob_type->tp_compare");
                 _owner.OnPotentialRuntimeExit(thread, tp_compare1);
@@ -715,13 +772,13 @@ namespace Microsoft.PythonTools.DkmDebugger {
                 _owner.OnPotentialRuntimeExit(thread, tp_richcompare2);
             }
 
-            [StepInGate(MinVersion = PythonLanguageVersion.V33)]
-            public void do_richcompare(DkmThread thread, ulong frameBase, ulong vframe) {
+            [StepInGate(MinVersion = PythonLanguageVersion.V33, HasMultipleExitPoints = true)]
+            public void do_richcompare(DkmThread thread, ulong frameBase, ulong vframe, bool useRegisters) {
                 var process = thread.Process;
                 var cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
 
-                string vVar = process.Is64Bit() ? "((PyObject*)@rcx)" : "v";
-                string wVar = process.Is64Bit() ? "((PyObject*)@rdx)" : "w";
+                string vVar = useRegisters ? "((PyObject*)@rcx)" : "v";
+                string wVar = useRegisters ? "((PyObject*)@rdx)" : "w";
 
                 ulong tp_richcompare1 = cppEval.EvaluateUInt64(vVar + "->ob_type->tp_richcompare");
                 _owner.OnPotentialRuntimeExit(thread, tp_richcompare1);
@@ -731,33 +788,33 @@ namespace Microsoft.PythonTools.DkmDebugger {
             }
 
             [StepInGate]
-            public void PyObject_GetIter(DkmThread thread, ulong frameBase, ulong vframe) {
+            public void PyObject_GetIter(DkmThread thread, ulong frameBase, ulong vframe, bool useRegisters) {
                 var process = thread.Process;
                 var cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
 
-                string oVar = process.Is64Bit() ? "((PyObject*)@rcx)" : "o";
+                string oVar = useRegisters ? "((PyObject*)@rcx)" : "o";
 
                 ulong tp_iter = cppEval.EvaluateUInt64(oVar + "->ob_type->tp_iter");
                 _owner.OnPotentialRuntimeExit(thread, tp_iter);
             }
 
             [StepInGate]
-            public void PyIter_Next(DkmThread thread, ulong frameBase, ulong vframe) {
+            public void PyIter_Next(DkmThread thread, ulong frameBase, ulong vframe, bool useRegisters) {
                 var process = thread.Process;
                 var cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
 
-                string iterVar = process.Is64Bit() ? "((PyObject*)@rcx)" : "iter";
+                string iterVar = useRegisters ? "((PyObject*)@rcx)" : "iter";
 
                 ulong tp_iternext = cppEval.EvaluateUInt64(iterVar + "->ob_type->tp_iternext");
                 _owner.OnPotentialRuntimeExit(thread, tp_iternext);
             }
 
             [StepInGate]
-            public void builtin_next(DkmThread thread, ulong frameBase, ulong vframe) {
+            public void builtin_next(DkmThread thread, ulong frameBase, ulong vframe, bool useRegisters) {
                 var process = thread.Process;
                 var cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
 
-                string argsVar = process.Is64Bit() ? "((PyTupleObject*)@rdx)" : "((PyTupleObject*)args)";
+                string argsVar = useRegisters ? "((PyTupleObject*)@rdx)" : "((PyTupleObject*)args)";
 
                 ulong tp_iternext = cppEval.EvaluateUInt64(argsVar + "->ob_item[0]->ob_type->tp_iternext");
                 _owner.OnPotentialRuntimeExit(thread, tp_iternext);

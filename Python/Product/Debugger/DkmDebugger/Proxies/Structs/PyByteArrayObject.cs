@@ -16,6 +16,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Microsoft.PythonTools.Parsing;
+using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.VisualStudio.Debugger;
 using Microsoft.VisualStudio.Debugger.Evaluation;
 
@@ -58,8 +59,14 @@ namespace Microsoft.PythonTools.DkmDebugger.Proxies.Structs {
         }
 
         public override void Repr(ReprBuilder builder) {
+            // In Python 2.7, string literals in bytearray repr use the 3.x-style prefixed b'...' form.
+            var langVer =
+                builder.Options.LanguageVersion <= PythonLanguageVersion.V27 ?
+                PythonLanguageVersion.V33 :
+                builder.Options.LanguageVersion;
+            var constExpr = new ConstantExpression(new AsciiString(ToBytes(), ToString()));
             builder.Append("bytearray(");
-            builder.AppendLiteral(new AsciiString(ToBytes(), ToString()));
+            builder.Append(constExpr.GetConstantRepr(langVer, escape8bitStrings: true));
             builder.Append(")");
         }
 
@@ -69,8 +76,10 @@ namespace Microsoft.PythonTools.DkmDebugger.Proxies.Structs {
                 Category = DkmEvaluationResultCategory.Method
             };
 
-            foreach (var b in ob_bytes.Read().Take((int)count)) {
-                yield return new PythonEvaluationResult(b);
+            if (count > 0) {
+                foreach (var b in ob_bytes.Read().Take((int)count)) {
+                    yield return new PythonEvaluationResult(b);
+                }
             }
         }
     }

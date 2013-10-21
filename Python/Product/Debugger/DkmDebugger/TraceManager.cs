@@ -22,6 +22,7 @@ using System.Runtime.InteropServices;
 using Microsoft.PythonTools.DkmDebugger.Proxies;
 using Microsoft.VisualStudio.Debugger;
 using Microsoft.VisualStudio.Debugger.Breakpoints;
+using Microsoft.VisualStudio.Debugger.CallStack;
 using Microsoft.VisualStudio.Debugger.Stepping;
 
 namespace Microsoft.PythonTools.DkmDebugger {
@@ -261,7 +262,9 @@ namespace Microsoft.PythonTools.DkmDebugger {
             }
 
             if (stepper.StepKind == DkmStepKind.Into) {
-                new LocalComponent.BeginStepInNotification().SendHigher(process);
+                new LocalComponent.BeginStepInNotification {
+                    ThreadId = thread.UniqueId
+                }.SendHigher(process);
             }
 
             _stepper = stepper;

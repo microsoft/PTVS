@@ -30,28 +30,28 @@ namespace Microsoft.PythonTools.DkmDebugger {
 
         internal interface IMessage {
             int MessageCode { get; }
-            void Handle(DkmProcess process);
+            DkmCustomMessage Handle(DkmProcess process);
         }
 
         [DataContract]
-        internal abstract class MessageBase<T> : IMessage
-            where T : MessageBase<T> {
+        internal abstract class MessageBase<TInput> : IMessage
+            where TInput : MessageBase<TInput> {
 
             private static readonly Guid _sourceId;
             private static readonly int _messageCode;
             private static readonly DataContractJsonSerializer _serializer;
 
             static MessageBase() {
-                var msgAttr = (MessageToAttribute)typeof(T).GetCustomAttributes(typeof(MessageToAttribute), false).SingleOrDefault();
+                var msgAttr = (MessageToAttribute)typeof(TInput).GetCustomAttributes(typeof(MessageToAttribute), false).SingleOrDefault();
                 if (msgAttr == null) {
-                    Debug.Fail("Message type " + typeof(T).FullName + " has no [RequestTo] attribute");
+                    Debug.Fail("Message type " + typeof(TInput).FullName + " has no [RequestTo] attribute");
                     throw new InvalidDataContractException();
                 }
                 _sourceId = msgAttr.ComponentId;
 
                 lock (_messageSerializers) {
                     _messageCode = _messageSerializers.Count;
-                    _serializer = new DataContractJsonSerializer(typeof(T));
+                    _serializer = new DataContractJsonSerializer(typeof(TInput));
                     _messageSerializers.Add(_serializer);
                 }
             }
@@ -75,14 +75,77 @@ namespace Microsoft.PythonTools.DkmDebugger {
             }
 
             public abstract void Handle(DkmProcess process);
+
+            DkmCustomMessage IMessage.Handle(DkmProcess process) {
+                Handle(process);
+                return null;
+            }
+        }
+
+        [DataContract]
+        internal abstract class MessageBase<TInput, TOutput> : IMessage
+            where TInput : MessageBase<TInput, TOutput> {
+
+            private static readonly Guid _sourceId;
+            private static readonly int _messageCode;
+            private static readonly DataContractJsonSerializer _inputSerializer, _outputSerializer;
+
+            static MessageBase() {
+                var msgAttr = (MessageToAttribute)typeof(TInput).GetCustomAttributes(typeof(MessageToAttribute), false).SingleOrDefault();
+                if (msgAttr == null) {
+                    Debug.Fail("Message type " + typeof(TInput).FullName + " has no [RequestTo] attribute");
+                    throw new InvalidDataContractException();
+                }
+                _sourceId = msgAttr.ComponentId;
+
+                lock (_messageSerializers) {
+                    _messageCode = _messageSerializers.Count;
+                    _messageSerializers.Add(_inputSerializer = new DataContractJsonSerializer(typeof(TInput)));
+                    _messageSerializers.Add(_outputSerializer = new DataContractJsonSerializer(typeof(TOutput)));
+                }
+            }
+
+            public int MessageCode {
+                get { return _messageCode; }
+            }
+
+            public TOutput SendLower(DkmProcess process) {
+                var stream = new MemoryStream();
+                _inputSerializer.WriteObject(stream, this);
+                var message = DkmCustomMessage.Create(process.Connection, process, _sourceId, MessageCode, stream.ToArray(), null);
+                var response = message.SendLower();
+                stream = new MemoryStream((byte[])response.Parameter1);
+                return (TOutput)_outputSerializer.ReadObject(stream);
+            }
+
+            public TOutput SendHigher(DkmProcess process) {
+                var stream = new MemoryStream();
+                _inputSerializer.WriteObject(stream, this);
+                var message = DkmCustomMessage.Create(process.Connection, process, _sourceId, MessageCode, stream.ToArray(), null);
+                var response = message.SendHigher();
+                stream = new MemoryStream((byte[])response.Parameter1);
+                return (TOutput)_outputSerializer.ReadObject(stream);
+            }
+
+            public abstract TOutput Handle(DkmProcess process);
+
+            DkmCustomMessage IMessage.Handle(DkmProcess process) {
+                var response = Handle(process);
+                var stream = new MemoryStream();
+                _outputSerializer.WriteObject(stream, response);
+                return DkmCustomMessage.Create(process.Connection, process, Guid.Empty, -1, stream.ToArray(), null);
+            }
         }
 
         static ComponentBase() {
             // Register all known message types. 
             foreach (var type in typeof(ComponentBase).Assembly.GetTypes()) {
                 var baseType = type.BaseType;
-                if (baseType != null && baseType.IsGenericType && baseType.GetGenericTypeDefinition() == typeof(MessageBase<>)) {
-                    RuntimeHelpers.RunClassConstructor(baseType.TypeHandle);
+                if (baseType != null && baseType.IsGenericType) {
+                    var genTypeDef = baseType.GetGenericTypeDefinition();
+                    if (genTypeDef == typeof(MessageBase<>) || genTypeDef == typeof(MessageBase<,>)) {
+                        RuntimeHelpers.RunClassConstructor(baseType.TypeHandle);
+                    }
                 }
             }
         }
@@ -92,24 +155,18 @@ namespace Microsoft.PythonTools.DkmDebugger {
         }
 
         DkmCustomMessage IDkmCustomMessageForwardReceiver.SendLower(DkmCustomMessage customMessage) {
-            if (customMessage.SourceId == _sourceId) {
-                Handle(customMessage);
-            }
-            return null;
+            return (customMessage.SourceId == _sourceId) ? Handle(customMessage) : null;
         }
 
         DkmCustomMessage IDkmCustomMessageCallbackReceiver.SendHigher(DkmCustomMessage customMessage) {
-            if (customMessage.SourceId == _sourceId) {
-                Handle(customMessage);
-            }
-            return null;
+            return (customMessage.SourceId == _sourceId) ? Handle(customMessage) : null;
         }
 
-        private void Handle(DkmCustomMessage customMessage) {
-            var serializer = _messageSerializers[customMessage.MessageCode];
+        private DkmCustomMessage Handle(DkmCustomMessage customMessage) {
+            var requestSerializer = _messageSerializers[customMessage.MessageCode];
             var requestData = (byte[])customMessage.Parameter1;
-            var request = (IMessage)serializer.ReadObject(new MemoryStream(requestData, false));
-            request.Handle(customMessage.Process);
+            var request = (IMessage)requestSerializer.ReadObject(new MemoryStream(requestData, false));
+            return request.Handle(customMessage.Process);
         }
     }
 

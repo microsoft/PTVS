@@ -204,7 +204,7 @@
     <None Include="DkmDebugger\LocalComponent.vsdconfigxml">
       <SubType>Designer</SubType>
     </None>
-    <None Include="DkmDebugger\PythonDkm.natvis" />
+    <None Include="DkmDebugger\PythonDkm.natvis"/>
     <None Include="DkmDebugger\RemoteComponent.vsdconfigxml">
       <SubType>Designer</SubType>
     </None>
@@ -228,6 +228,11 @@
       <Visible>false</Visible>
     </VsdConfigXml>
   </ItemGroup>
+  <ItemGroup Condition="'$(VSTarget)' != '10.0'">
+    <NatVis Include="DkmDebugger\*.natvis">
+      <Visible>false</Visible>
+    </NatVis>
+  </ItemGroup>
   <PropertyGroup Condition="'$(VSTarget)' != '10.0'">
     <VsdConfigOutput>$(OutputPath)\DkmDebugger.vsdconfig</VsdConfigOutput>
   </PropertyGroup>
@@ -235,5 +240,7 @@
     <Exec Command="&quot;$(VSSDKDir)VisualStudioIntegration\Tools\Bin\vsdconfigtool.exe&quot; @(VsdConfigXml, ' ') &quot;$(TargetPath)&quot; &quot;$(VsdConfigOutput)&quot;" />
   </Target>
   <Import Project="..\ProjectAfter.settings" />
-  <Target Name="AfterBuild" DependsOnTargets="GenerateVsdConfig" Condition="'$(VSTarget)' != '10.0'" />
+  <Target Name="AfterBuild" DependsOnTargets="GenerateVsdConfig" Condition="'$(VSTarget)' != '10.0'">
+    <Copy SourceFiles="@(NatVis)" DestinationFolder="$(OutputPath)\Visualizers" SkipUnchangedFiles="True" />
+  </Target>
 </Project>

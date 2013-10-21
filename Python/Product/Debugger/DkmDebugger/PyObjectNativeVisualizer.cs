@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using Microsoft.Dia;
 using Microsoft.PythonTools.DkmDebugger.Proxies.Structs;
 using Microsoft.VisualStudio.Debugger;
@@ -27,11 +28,22 @@ namespace Microsoft.PythonTools.DkmDebugger {
     internal class PyObjectNativeVisualizer : DkmDataItem {
         private class RawEvaluationResultHolder : DkmDataItem {
             public DkmEvaluationResult RawResult { get; set; }
+
+            protected override void OnClose() {
+                base.OnClose();
+                RawResult.Close();
+            }
         }
 
         private class RawEnumContextData : DkmDataItem {
             public DkmEvaluationResultEnumContext RawContext { get; set; }
             public DkmChildVisualizedExpression PythonView { get; set; }
+
+            protected override void OnClose() {
+                base.OnClose();
+                RawContext.Close();
+                PythonView.Close();
+            }
         }
 
         public void EvaluateVisualizedExpression(DkmVisualizedExpression visualizedExpression, out DkmEvaluationResult resultObject) {
@@ -41,11 +53,13 @@ namespace Microsoft.PythonTools.DkmDebugger {
                 throw new NotSupportedException();
             }
 
-            var rawExpr = DkmLanguageExpression.Create(CppExpressionEvaluator.CppLanguage, DkmEvaluationFlags.ShowValueRaw, rootExpr.FullName + ",!", null);
             DkmEvaluationResult rawResult;
-            rootExpr.EvaluateExpressionCallback(rootExpr.InspectionContext, rawExpr, rootExpr.StackFrame, out rawResult);
-            var rawResultHolder = new RawEvaluationResultHolder { RawResult = rawResult };
-            rootExpr.SetDataItem(DkmDataCreationDisposition.CreateAlways, rawResultHolder);
+            RawEvaluationResultHolder rawResultHolder;
+            using (var rawExpr = DkmLanguageExpression.Create(CppExpressionEvaluator.CppLanguage, DkmEvaluationFlags.ShowValueRaw, rootExpr.FullName + ",!", null)) {
+                rootExpr.EvaluateExpressionCallback(rootExpr.InspectionContext, rawExpr, rootExpr.StackFrame, out rawResult);
+                rawResultHolder = new RawEvaluationResultHolder { RawResult = rawResult };
+                rootExpr.SetDataItem(DkmDataCreationDisposition.CreateAlways, rawResultHolder);
+            }
 
             var rawSuccessResult = rawResult as DkmSuccessEvaluationResult;
             if (rawSuccessResult != null) {
@@ -229,9 +243,11 @@ namespace Microsoft.PythonTools.DkmDebugger {
             } else {
                 object punkTypeSymbol;
                 visualizedExpression.GetSymbolInterface(typeof(IDiaSymbol).GUID, out punkTypeSymbol);
-                var typeSymbol = punkTypeSymbol as IDiaSymbol;
-                if (typeSymbol != null) {
-                    cppTypeName = typeSymbol.name;
+                using (ComPtr.Create(punkTypeSymbol)) {
+                    var typeSymbol = punkTypeSymbol as IDiaSymbol;
+                    if (typeSymbol != null) {
+                        cppTypeName = typeSymbol.name;
+                    }
                 }
             }
 

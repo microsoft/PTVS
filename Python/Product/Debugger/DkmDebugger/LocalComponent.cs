@@ -26,6 +26,7 @@ using Microsoft.VisualStudio.Debugger;
 using Microsoft.VisualStudio.Debugger.Breakpoints;
 using Microsoft.VisualStudio.Debugger.CallStack;
 using Microsoft.VisualStudio.Debugger.ComponentInterfaces;
+using Microsoft.VisualStudio.Debugger.DefaultPort;
 using Microsoft.VisualStudio.Debugger.Evaluation;
 using Microsoft.VisualStudio.Debugger.Native;
 using Microsoft.VisualStudio.Debugger.Symbols;
@@ -64,6 +65,63 @@ namespace Microsoft.PythonTools.DkmDebugger {
             }.SendLower(process);
         }
 
+        private class SuspendedThreadHolder : DkmDataItem {
+            public DkmThread Thread { get; set; }
+        }
+
+        private static void InjectHelperDll(DkmProcess process) {
+            var pyrtInfo = process.GetPythonRuntimeInfo();
+
+            // Loading the helper is done via CreateRemoteThread(LoadLibrary), which is inherently asynchronous.
+            // On the other hand, we will not handle breakpoints until it is loaded - they won't even be bound.
+            // If any Python code is running in the meantime, this may cause us to skip breakpoints, which is
+            // very surprising in the run (F5) scenario, as the user expects all preset breakpoints to be hit.
+            // To fix that, we need block the Python interpreter loop until the helper is fully loaded.
+            //
+            // Pausing all threads is not a good way to do this, because one of the threads may be holding the
+            // loader lock, which will prevent the helper from loading and result in a deadlock. So instead,
+            // block at a known location at the beginning of PyInitialize_Ex, and only freeze the thread that
+            // calls it - this is sufficient to prevent execution of Python code in run scenario before helper
+            // is loaded.
+            //
+            // For attach-to-running-process scenario, we do nothing because the attach itself is inherently
+            // asynchronous, and so there's no user expectation that breakpoints light up instantly.
+
+            // If Python is already initialized, this is attach-to-running-process - don't block.
+            var initialized = pyrtInfo.DLLs.Python.GetStaticVariable<Int32Proxy>("initialized", "pythonrun.obj");
+            if (initialized.Read() == 0) {
+                // When Py_InitializeEx is hit, suspend the thread.
+                DkmRuntimeBreakpoint makePendingCallsBP = null;
+                makePendingCallsBP = CreateRuntimeDllExportedFunctionBreakpoint(pyrtInfo.DLLs.Python, "Py_InitializeEx", (thread, frameBase, vFrame) => {
+                    makePendingCallsBP.Close();
+                    if (process.GetPythonRuntimeInstance() == null) {
+                        thread.Suspend(true);
+                        thread.Process.SetDataItem(DkmDataCreationDisposition.CreateNew, new SuspendedThreadHolder { Thread = thread });
+                    }
+                });
+                makePendingCallsBP.Enable();
+            }
+
+            // Inject the helper DLL; OnHelperDllInitialized will resume the thread once the DLL is loaded and initialized.
+            DebugAttach.AttachDkm(process.LivePart.Id);
+        }
+
+        private static void OnHelperDllInitialized(DkmNativeModuleInstance moduleInstance) {
+            var process = moduleInstance.Process;
+            var pyrtInfo = process.GetPythonRuntimeInfo();
+            pyrtInfo.DLLs.DebuggerHelper = moduleInstance;
+
+            if (pyrtInfo.DLLs.Python != null && pyrtInfo.DLLs.Python.HasSymbols()) {
+                CreatePythonRuntimeInstance(process);
+            }
+
+            // If there was a suspended thread, resume it.
+            var suspendedThreadHolder = process.GetDataItem<SuspendedThreadHolder>();
+            if (suspendedThreadHolder != null) {
+                suspendedThreadHolder.Thread.Resume(true);
+            }
+        }
+
         // Normally we would just want to handle IDkmModuleInstanceLoadNotification.OnModuleInstanceLoad. However, if we create Python runtime
         // in response to OnModuleInstanceLoad, this will happen before LocalStackWalkingComponent (being a higher-level component) has seen
         // the newly loaded module, and it will be unable to reference the Python & debugger helper DLLs in its initialization code. For this
@@ -77,7 +135,9 @@ namespace Microsoft.PythonTools.DkmDebugger {
 
             public override void Handle(DkmProcess process) {
                 if (process.LivePart == null) {
-                    // When debugging dumps, we don't need the helper, and don't care about it even if it's loaded in the dump.
+                    // When debugging dumps, there's no stepping or live expression evaluation. Hence, we don't
+                    // need the helper DLL nor _ctypes.pyd for anything, and even if they are loaded in the dump,
+                    // we don't care about them at all.
                     return;
                 }
 
@@ -119,7 +179,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
                                 if (pyrtInfo.DLLs.DebuggerHelper != null) {
                                     CreatePythonRuntimeInstance(process);
                                 } else {
-                                    DebugAttach.AttachDkm(process.LivePart.Id);
+                                    InjectHelperDll(process);
                                 }
                             }
                             return;
@@ -141,18 +201,12 @@ namespace Microsoft.PythonTools.DkmDebugger {
 
                     bool isInitialized = moduleInstance.GetExportedStaticVariable<ByteProxy>("isInitialized").Read() != 0;
                     if (isInitialized) {
-                        pyrtInfo.DLLs.DebuggerHelper = moduleInstance;
-                        if (pyrtInfo.DLLs.Python != null && pyrtInfo.DLLs.Python.HasSymbols()) {
-                            CreatePythonRuntimeInstance(process);
-                        }
+                        OnHelperDllInitialized(moduleInstance);
                     } else {
                         DkmRuntimeBreakpoint initBP = null;
                         initBP = CreateRuntimeDllExportedFunctionBreakpoint(moduleInstance, "OnInitialized", (thread, frameBase, vFrame) => {
                             initBP.Close();
-                            pyrtInfo.DLLs.DebuggerHelper = moduleInstance;
-                            if (pyrtInfo.DLLs.Python != null && pyrtInfo.DLLs.Python.HasSymbols()) {
-                                CreatePythonRuntimeInstance(process);
-                            }
+                            OnHelperDllInitialized(moduleInstance);
                         });
                         initBP.Enable();
                     }
@@ -197,7 +251,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
                 if (process.LivePart == null || pyrtInfo.DLLs.DebuggerHelper != null) {
                     CreatePythonRuntimeInstance(process);
                 } else {
-                    DebugAttach.AttachDkm(process.LivePart.Id);
+                    InjectHelperDll(process);
                 }
             }
         }
@@ -247,8 +301,14 @@ namespace Microsoft.PythonTools.DkmDebugger {
             process.SetDataItem(DkmDataCreationDisposition.CreateNew, new CallStackFilter(process));
             process.SetDataItem(DkmDataCreationDisposition.CreateNew, new ExpressionEvaluator(process));
             process.SetDataItem(DkmDataCreationDisposition.CreateNew, new PyObjectAllocator(process));
+
             if (process.LivePart != null) {
                 process.SetDataItem(DkmDataCreationDisposition.CreateNew, new TraceManagerLocalHelper(process, TraceManagerLocalHelper.Kind.StepIn));
+            }
+
+            // If both local and remote components are actually in the same process, they share the same DebuggerOptions, so no need to propagate it.
+            if (process.Connection.Flags.HasFlag(DkmTransportConnectionFlags.MarshallingRequired)) {
+                process.SetDataItem(DkmDataCreationDisposition.CreateNew, new DebuggerOptionsPropagator(process));
             }
         }
 
@@ -449,6 +509,9 @@ namespace Microsoft.PythonTools.DkmDebugger {
         [DataContract]
         [MessageTo(Guids.LocalComponentId)]
         internal class BeginStepInNotification : MessageBase<BeginStepInNotification> {
+            [DataMember]
+            public Guid ThreadId { get; set; }
+
             public override void Handle(DkmProcess process) {
                 var traceHelper = process.GetDataItem<TraceManagerLocalHelper>();
                 if (traceHelper == null) {
@@ -456,7 +519,8 @@ namespace Microsoft.PythonTools.DkmDebugger {
                     throw new InvalidOperationException();
                 }
 
-                traceHelper.OnBeginStepIn();
+                var thread = process.GetThreads().Single(t => t.UniqueId == ThreadId);
+                traceHelper.OnBeginStepIn(thread);
             }
         }
 
@@ -480,7 +544,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
             public readonly Dictionary<Guid, RuntimeDllBreakpointHandler> Handlers = new Dictionary<Guid, RuntimeDllBreakpointHandler>();
         }
 
-        public static DkmRuntimeBreakpoint CreateRuntimeDllFunctionBreakpoint(DkmNativeModuleInstance moduleInstance, string funcName, RuntimeDllBreakpointHandler handler, bool enable = false, bool debugStart = false) {
+        public static DkmRuntimeInstructionBreakpoint CreateRuntimeDllFunctionBreakpoint(DkmNativeModuleInstance moduleInstance, string funcName, RuntimeDllBreakpointHandler handler, bool enable = false, bool debugStart = false) {
             var process = moduleInstance.Process;
             var runtimeBreakpoints = process.GetOrCreateDataItem(() => new RuntimeDllBreakpoints());
 

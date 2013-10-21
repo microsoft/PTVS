@@ -97,8 +97,8 @@ namespace Microsoft.PythonTools.DkmDebugger {
                 }
             }
 
+            moduleSym.findChildren(SymTagEnum.SymTagTypedef, name, 1, out enumSymbols);
             using (ComPtr.Create(enumSymbols)) {
-                moduleSym.findChildren(SymTagEnum.SymTagTypedef, name, 1, out enumSymbols);
                 if (enumSymbols.count > 0) {
                     using (var item = ComPtr.Create(enumSymbols.Item(0))) {
                         return ComPtr.Create(item.Object.type);

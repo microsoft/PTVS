@@ -88,8 +88,13 @@ namespace Microsoft.PythonTools.DkmDebugger.Proxies.Structs {
         }
 
         public override void Repr(ReprBuilder builder) {
-            if (builder.IsTopLevel)  {
-                var count = ReadElements().Count();
+            var count = ReadElements().Count();
+            if (count == 0) {
+                builder.Append("set()");
+                return;
+            }
+
+            if (builder.IsTopLevel) {
                 if (count > ReprBuilder.MaxJoinedItems) {
                     builder.AppendFormat("<set, len() = {0}>", count);
                     return;

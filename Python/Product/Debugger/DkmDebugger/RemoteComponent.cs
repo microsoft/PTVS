@@ -322,5 +322,39 @@ namespace Microsoft.PythonTools.DkmDebugger {
         void IDkmAsyncBreakCompleteReceived.OnAsyncBreakCompleteReceived(DkmProcess process, DkmAsyncBreakStatus status, DkmThread thread, DkmEventDescriptorS eventDescriptor) {
             new LocalComponent.AsyncBreakReceivedNotification { ThreadId = thread.UniqueId }.SendHigher(process);
         }
+
+        [DataContract]
+        [MessageTo(Guids.RemoteComponentId)]
+        internal class GetCurrentFrameInfoRequest : MessageBase<GetCurrentFrameInfoRequest, GetCurrentFrameInfoResponse> {
+            [DataMember]
+            public Guid ThreadId { get; set; }
+
+            public override GetCurrentFrameInfoResponse Handle(DkmProcess process) {
+                var thread = process.GetThreads().Single(t => t.UniqueId == ThreadId);
+                var response = new GetCurrentFrameInfoResponse();
+                thread.GetCurrentFrameInfo(out response.RetAddr, out response.FrameBase, out response.VFrame);
+                return response;
+            }
+        }
+
+        [DataContract]
+        internal class GetCurrentFrameInfoResponse {
+            [DataMember]
+            public ulong RetAddr, FrameBase, VFrame;
+        }
+
+        [DataContract]
+        [MessageTo(Guids.RemoteComponentId)]
+        internal class SetDebuggerOptions : MessageBase<SetDebuggerOptions> {
+            [DataMember]
+            public bool ShowNativePythonFrames, UsePythonStepping, ShowCppViewNodes, ShowPythonViewNodes;
+
+            public override void Handle(DkmProcess process) {
+                DebuggerOptions.ShowNativePythonFrames = ShowNativePythonFrames;
+                DebuggerOptions.UsePythonStepping = UsePythonStepping;
+                DebuggerOptions.ShowCppViewNodes = ShowCppViewNodes;
+                DebuggerOptions.ShowPythonViewNodes = ShowPythonViewNodes;
+            }
+        }
     }
 }
