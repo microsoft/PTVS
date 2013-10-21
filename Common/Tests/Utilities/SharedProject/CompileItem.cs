@@ -12,6 +12,7 @@
  *
  * ***************************************************************************/
 
+using System.Collections.Generic;
 using System.IO;
 using MSBuild = Microsoft.Build.Evaluation;
 
@@ -23,9 +24,10 @@ namespace TestUtilities.SharedProject {
     /// The item is added to the project if not excluded.
     /// </summary>
     public sealed class CompileItem : ProjectContentGenerator {
-        public readonly string Name, Content;
+        public readonly string Name, Content, LinkFile;
         public readonly bool IsExcluded;
         public readonly bool IsMissing;
+        public readonly KeyValuePair<string, string>[] Metadata;
 
         /// <summary>
         /// Creates a new compile item.  The item will be generated with the 
@@ -36,11 +38,12 @@ namespace TestUtilities.SharedProject {
         /// If content is not provided or is null then the default sample code
         /// from the project type will be used.
         /// </summary>
-        public CompileItem(string name, string content = null, bool isExcluded = false, bool isMissing = false) {
+        public CompileItem(string name, string content = null, bool isExcluded = false, bool isMissing = false, string link = null) {
             Name = name;
             IsExcluded = isExcluded;
             IsMissing = isMissing;
             Content = content;
+            LinkFile = link;
         }
 
         public override void Generate(ProjectType projectType, MSBuild.Project project) {
@@ -50,8 +53,27 @@ namespace TestUtilities.SharedProject {
             }
 
             if (!IsExcluded) {
-                project.AddItem("Compile", Name + projectType.CodeExtension);
+                List<KeyValuePair<string, string>> metadata = new List<KeyValuePair<string, string>>();
+                if (LinkFile != null) {
+                    metadata.Add(new KeyValuePair<string, string>("Link", LinkFile + projectType.CodeExtension));
+                }
+
+                project.AddItem(
+                    "Compile",
+                    Name + projectType.CodeExtension,
+                    metadata
+                );
             }
+        }
+
+        public CompileItem Link(string link) {
+            return new CompileItem(
+                Name,
+                Content,
+                IsExcluded,
+                IsMissing,
+                link
+            );
         }
     }
 

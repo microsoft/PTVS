@@ -20,7 +20,7 @@ using System.Windows;
 
 
 namespace TestUtilities.UI {
-    class AddExistingItemDialog : AutomationWrapper {
+    public class AddExistingItemDialog : AutomationWrapper {
         public AddExistingItemDialog(IntPtr hwnd)
             : base(AutomationElement.FromHandle(hwnd)) {
         }

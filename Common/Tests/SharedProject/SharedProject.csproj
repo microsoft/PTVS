@@ -83,6 +83,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DragDropCopyCutPaste.cs" />
+    <Compile Include="LinkedFileTests.cs" />
     <Compile Include="ScriptProjectTests.cs" />
     <Compile Include="NewDragDropCopyCutPaste.cs" />
     <Compile Include="SourceControl.cs" />

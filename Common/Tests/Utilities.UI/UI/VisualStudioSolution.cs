@@ -30,12 +30,13 @@ namespace TestUtilities.UI {
         private readonly SolutionFile _solution;
         private readonly VisualStudioApp _app;
         private readonly SolutionExplorerTree _solutionExplorer;
+        public readonly EnvDTE.Project Project;
         private bool _disposed;
 
         public VisualStudioSolution(SolutionFile solution) {
             _solution = solution;
             _app = new VisualStudioApp(VsIdeTestHostContext.Dte);
-            _app.OpenProject(solution.Filename);
+            Project = _app.OpenProject(solution.Filename);
 
             App.Invoke(Keyboard.Reset);
             _solutionExplorer = _app.OpenSolutionExplorer();
@@ -129,7 +130,9 @@ namespace TestUtilities.UI {
         /// see the bad behavior.
         /// </summary>
         public void SelectSolutionNode() {
-            Mouse.MoveTo(_solutionExplorer.WaitForItem(SolutionNodeText).GetClickablePoint());
+            var item = _solutionExplorer.WaitForItem(SolutionNodeText);
+            _solutionExplorer.CenterInView(item);
+            Mouse.MoveTo(item.GetClickablePoint());
             Mouse.Click(MouseButton.Left);
         }
 

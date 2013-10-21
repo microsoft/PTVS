@@ -310,6 +310,15 @@ namespace Microsoft.VisualStudioTools.Project
             }
         }
 
+        [Browsable(false)]
+        public bool IsLinkFile 
+        {
+            get 
+            {
+                return HierarchyNode.IsLinkFile;
+            }
+        }
+
         #endregion
 
         #endregion

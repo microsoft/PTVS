@@ -87,7 +87,6 @@
     <Compile Include="EditorTests.cs" />
     <Compile Include="FormattingUITests.cs" />
     <Compile Include="InterpreterListTests.cs" />
-    <Compile Include="LinkedFileTests.cs" />
     <Compile Include="ObjectBrowerTest.cs" />
     <Compile Include="ProjectHomeTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
