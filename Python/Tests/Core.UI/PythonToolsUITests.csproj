@@ -67,6 +67,9 @@
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Management.Automation, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+    </Reference>
     <Reference Include="System.Xaml" />
     <Reference Include="System.Xml" />
     <Reference Include="UIAutomationClient" />
@@ -88,6 +91,7 @@
     <Compile Include="FormattingUITests.cs" />
     <Compile Include="InterpreterListTests.cs" />
     <Compile Include="LinkedFileTests.cs" />
+    <Compile Include="NugetTests.cs" />
     <Compile Include="ObjectBrowerTest.cs" />
     <Compile Include="ProjectHomeTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
