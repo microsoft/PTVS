@@ -177,7 +177,13 @@ namespace Microsoft.VisualStudioTools.Project {
 
         protected bool IsUserProjectFileDirty {
             get {
-                return _isUserFileDirty;
+                string document = this.GetMkDocument();
+
+                if (String.IsNullOrEmpty(document)) {
+                    return _isUserFileDirty;
+                }
+
+                return (_isUserFileDirty || !File.Exists(document + PerUserFileExtension));
             }
         }
 
