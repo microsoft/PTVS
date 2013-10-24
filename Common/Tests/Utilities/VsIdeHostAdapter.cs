@@ -1145,7 +1145,7 @@ namespace TestUtilities
                 // This must be a key that does not get set if you start up, hit the no settings prompt and select 
                 // "Exit Visual Studio", but does get set if you select a default
 #if DEV12_OR_LATER
-                const string SettingsMarkerKey = @"General\\StartPage";
+                const string SettingsMarkerKey = @"General\\ToolsOptions";
 #else
                 const string SettingsMarkerKey = @"StartPage";
 #endif
