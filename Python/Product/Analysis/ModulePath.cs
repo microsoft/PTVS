@@ -270,6 +270,10 @@ namespace Microsoft.PythonTools.Analysis {
                 sitePath = Path.Combine(libraryPath, "site-packages");
             }
             var pthDirs = ExpandPathFiles(sitePath);
+            var excludedPthDirs = new HashSet<string>() {
+                sitePath,
+                libraryPath
+            };
 
             // Get modules in stdlib
             var modulesInStdLib = GetModulesInPath(libraryPath, true, true, requireInitPy: requireInitPyFiles);
@@ -282,9 +286,6 @@ namespace Microsoft.PythonTools.Analysis {
             // gets its own library path.
             var packagesInSitePackages = GetModulesInPath(sitePath, false, true, requireInitPy: requireInitPyFiles);
 
-            // Get directories referenced by pth files
-            var modulesInPath = GetModulesInPath(pthDirs, true, true, requireInitPy: requireInitPyFiles);
-
             // Get modules in DLLs directory
             IEnumerable<ModulePath> modulesInDllsPath;
 
@@ -294,10 +295,20 @@ namespace Microsoft.PythonTools.Analysis {
             if (Directory.Exists(interpreterPath)) {
                 modulesInDllsPath = GetModulesInPath(Path.Combine(interpreterPath, "DLLs"), true, false);
                 modulesInExePath = GetModulesInPath(interpreterPath, true, false);
+                excludedPthDirs.Add(interpreterPath);
+                excludedPthDirs.Add(Path.Combine(interpreterPath, "DLLs"));
             } else {
                 modulesInDllsPath = Enumerable.Empty<ModulePath>();
                 modulesInExePath = Enumerable.Empty<ModulePath>();
             }
+
+            // Get directories referenced by pth files
+            var modulesInPath = GetModulesInPath(
+                pthDirs.Where(p1 => excludedPthDirs.All(p2 => !CommonUtils.IsSameDirectory(p1, p2))),
+                true,
+                true,
+                requireInitPy: requireInitPyFiles
+            );
 
             return modulesInPath
                 .Concat(modulesInDllsPath)

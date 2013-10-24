@@ -398,6 +398,28 @@ namespace AnalysisTests {
             }
         }
 
+        [TestMethod, Priority(0)]
+        public void SitePackagesInPthFile() {
+            var files = new[] {
+                "a.py",
+                "site-packages\\b.py",
+                "site-packages\\C\\__init__.py",
+                "site-packages\\D\\__init__.py"
+            };
+
+            using (var libDb = new TemporaryLibAndDB(files)) {
+                libDb.AddFileToLibrary("site-packages\\self.pth", ".");
+
+                using (var analyzer = libDb.Analyzer) {
+                    analyzer.Prepare();
+
+                    // Expect four groups, whereas if self.pth was allowed we'd
+                    // only see three.
+                    Assert.AreEqual(4, analyzer._analyzeFileGroups.Count);
+                }
+            }
+        }
+
         /// <summary>
         /// Creates a temporary 'library' and 'database' on disk for testing the
         /// analyzer's change detection.
@@ -552,6 +574,10 @@ namespace AnalysisTests {
                 }
 
                 PrintFiles();
+            }
+
+            public void AddFileToLibrary(string file, string contents) {
+                File.WriteAllText(Path.Combine(Library, file), contents);
             }
 
             public void Dispose() {
