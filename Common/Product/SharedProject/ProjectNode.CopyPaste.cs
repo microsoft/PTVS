@@ -1170,8 +1170,6 @@ folder you are copying, do you want to replace the existing files?", Path.GetFil
                             existing.IncludeInProject(false);
                         }
                     }
-
-                    Project.SetProjectFileDirty(true);
                 }
             }
 
@@ -1521,7 +1519,6 @@ folder you are copying, do you want to replace the existing files?", Path.GetFil
                     this.tracker.OnItemAdded(item.Value.Url, VSADDFILEFLAGS.VSADDFILEFLAGS_NoFlags);
                 }
                 OnInvalidateItems(node);
-                SetProjectFileDirty(true);
             }
         }
 

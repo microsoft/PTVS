@@ -185,14 +185,6 @@ namespace Microsoft.VisualStudioTools.Project
         private TrackDocumentsHelper tracker;
 
         /// <summary>
-        /// This property returns the time of the last change made to this project.
-        /// It is not the time of the last change on the project file, but actually of
-        /// the in memory project settings.  In other words, it is the last time that 
-        /// SetProjectDirty was called.
-        /// </summary>
-        private DateTime lastModifiedTime;
-
-        /// <summary>
         /// MSBuild engine we are going to use 
         /// </summary>
         private MSBuild.ProjectCollection buildEngine;
@@ -215,11 +207,12 @@ namespace Microsoft.VisualStudioTools.Project
 
         private string projectHome;
 
-        private bool isDirty;
+        /// <summary>
+        /// Used by OAProject to override the dirty state.
+        /// </summary>
+        internal bool isDirty;
 
         private bool projectOpened;
-
-        private bool buildIsPrepared;
 
         private string errorString;
 
@@ -1921,7 +1914,6 @@ namespace Microsoft.VisualStudioTools.Project
 
                 // property cache will need to be updated
                 this.currentConfig = null;
-                this.SetProjectFileDirty(true);
             }
             return;
         }
@@ -2410,33 +2402,33 @@ namespace Microsoft.VisualStudioTools.Project
 
             try
             {
-                this.disableQueryEdit = true;
+                disableQueryEdit = true;
 
-                this.isClosed = false;
-                this.eventTriggeringFlag = ProjectNode.EventTriggering.DoNotTriggerHierarchyEvents | ProjectNode.EventTriggering.DoNotTriggerTrackerEvents;
+                isClosed = false;
+                eventTriggeringFlag = ProjectNode.EventTriggering.DoNotTriggerHierarchyEvents | ProjectNode.EventTriggering.DoNotTriggerTrackerEvents;
 
-                SetBuildProject(Utilities.ReinitializeMsBuildProject(this.buildEngine, this.filename, this.buildProject));
+                SetBuildProject(Utilities.ReinitializeMsBuildProject(buildEngine, filename, buildProject));
 
                 // Load the guid
-                this.SetProjectGuidFromProjectFile();
+                SetProjectGuidFromProjectFile();
 
-                this.ProcessReferences();
+                ProcessReferences();
 
-                this.ProcessFolders();
+                ProcessFolders();
 
-                this.ProcessFiles();
+                ProcessFiles();
 
-                this.LoadNonBuildInformation();
+                LoadNonBuildInformation();
 
-                this.InitSccInfo();
+                InitSccInfo();
 
-                this.RegisterSccProject();
+                RegisterSccProject();
             }
             finally
             {
-                this.SetProjectFileDirty(false);
-                this.eventTriggeringFlag = ProjectNode.EventTriggering.TriggerAll;
-                this.disableQueryEdit = false;
+                isDirty = false;
+                eventTriggeringFlag = ProjectNode.EventTriggering.TriggerAll;
+                disableQueryEdit = false;
             }
         }
 
@@ -2446,15 +2438,15 @@ namespace Microsoft.VisualStudioTools.Project
         /// <param name="newFile">The full path of the new project file.</param>
         protected virtual void RenameProjectFile(string newFile)
         {
-            IVsUIShell shell = this.Site.GetService(typeof(SVsUIShell)) as IVsUIShell;
+            IVsUIShell shell = GetService(typeof(SVsUIShell)) as IVsUIShell;
             Utilities.CheckNotNull(shell, "Could not get the UI shell from the project");
 
             // Figure out what the new full name is
             string oldFile = this.Url;
 
             int canContinue = 0;
-            IVsSolution vsSolution = (IVsSolution)this.GetService(typeof(SVsSolution));
-            if (ErrorHandler.Succeeded(vsSolution.QueryRenameProject(this.GetOuterInterface<IVsProject>(), oldFile, newFile, 0, out canContinue))
+            IVsSolution vsSolution = (IVsSolution)GetService(typeof(SVsSolution));
+            if (ErrorHandler.Succeeded(vsSolution.QueryRenameProject(GetOuterInterface<IVsProject>(), oldFile, newFile, 0, out canContinue))
                 && canContinue != 0)
             {
                 bool isFileSame = CommonUtils.IsSamePath(oldFile, newFile);
@@ -2487,9 +2479,7 @@ namespace Microsoft.VisualStudioTools.Project
                 try
                 {
                     // Actual file rename
-                    this.SaveMSBuildProjectFileAs(newFile);
-
-                    this.SetProjectFileDirty(false);
+                    SaveMSBuildProjectFileAs(newFile);
 
                     if (!isFileSame)
                     {
@@ -2499,7 +2489,7 @@ namespace Microsoft.VisualStudioTools.Project
                         File.Delete(oldFile);
                     }
 
-                    this.OnPropertyChanged(this, (int)__VSHPROPID.VSHPROPID_Caption, 0);
+                    OnPropertyChanged(this, (int)__VSHPROPID.VSHPROPID_Caption, 0);
 
                     // Update solution
                     ErrorHandler.ThrowOnFailure(vsSolution.OnAfterRenameProject((IVsProject)this, oldFile, newFile, 0));
@@ -2805,8 +2795,6 @@ namespace Microsoft.VisualStudioTools.Project
                 // Save the project file and project file related properties.
                 this.SaveMSBuildProjectFileAs(newFileName);
 
-                this.SetProjectFileDirty(false);
-
                 // TODO: If source control is enabled check out the project file.
 
                 //Redraw.
@@ -2838,21 +2826,20 @@ namespace Microsoft.VisualStudioTools.Project
             Debug.Assert(!String.IsNullOrEmpty(newFileName), "Cannot save project file for an empty or null file name");
 
             string newProjectHome = CommonUtils.GetRelativeDirectoryPath(Path.GetDirectoryName(newFileName), ProjectHome);
-            this.buildProject.SetProperty(CommonConstants.ProjectHome, newProjectHome);
+            buildProject.SetProperty(CommonConstants.ProjectHome, newProjectHome);
 
-            this.buildProject.FullPath = newFileName;
+            buildProject.FullPath = newFileName;
 
 
-            this.filename = newFileName;
+            filename = newFileName;
 
             string newFileNameWithoutExtension = Path.GetFileNameWithoutExtension(newFileName);
 
             // Refresh solution explorer
-            this.SetProjectProperty(ProjectFileConstants.Name, newFileNameWithoutExtension);
+            SetProjectProperty(ProjectFileConstants.Name, newFileNameWithoutExtension);
 
             // Saves the project file on disk.
-            this.buildProject.Save(newFileName);
-
+            SaveMSBuildProjectFile(newFileName);
         }
 
         /// <summary>
@@ -3339,17 +3326,13 @@ namespace Microsoft.VisualStudioTools.Project
         ///  PrepareBuild mainly creates directories and cleans house if cleanBuild is true
         /// </summary>
         public virtual void PrepareBuild(string config, bool cleanBuild) {
-            if (this.buildIsPrepared && !cleanBuild) return;
-            
             string outputPath = Path.GetDirectoryName(GetProjectProperty("OutputPath"));
 
             if (cleanBuild && this.currentConfig.Targets.ContainsKey(MsBuildTarget.Clean)) {
-                this.InvokeMsBuild(MsBuildTarget.Clean);
+                InvokeMsBuild(MsBuildTarget.Clean);
             }
 
             PackageUtilities.EnsureOutputPath(outputPath);
-
-            this.buildIsPrepared = true;
         }
 
         /// <summary>
@@ -3392,20 +3375,6 @@ namespace Microsoft.VisualStudioTools.Project
         public string GetProjectProperty(string propertyName)
         {
             return this.GetProjectProperty(propertyName, true);
-        }
-
-        /// <summary>
-        /// Set dirty state of project
-        /// </summary>
-        /// <param name="value">boolean value indicating dirty state</param>
-        public void SetProjectFileDirty(bool value)
-        {
-            this.isDirty = value;
-            if (this.isDirty)
-            {
-                this.lastModifiedTime = DateTime.Now;
-                this.buildIsPrepared = false;
-            }
         }
 
         /// <summary>
@@ -3837,7 +3806,7 @@ namespace Microsoft.VisualStudioTools.Project
         [SuppressMessage("Microsoft.Naming", "CA1709:IdentifiersShouldBeCasedCorrectly", MessageId = "XML")]
         protected void PersistXMLFragments()
         {
-            if (this.IsFlavorDirty() != 0)
+            if (IsFlavorDirty())
             {
                 XmlDocument doc = new XmlDocument();
                 XmlElement root = doc.CreateElement("ROOT");
@@ -3956,15 +3925,12 @@ namespace Microsoft.VisualStudioTools.Project
 
         public virtual int IsDirty(out int isDirty)
         {
-            isDirty = 0;
-            if (this.buildProject.Xml.HasUnsavedChanges || this.IsProjectFileDirty)
-            {
+            if (BuildProject.Xml.HasUnsavedChanges || IsProjectFileDirty || IsFlavorDirty()) {
                 isDirty = 1;
-                return VSConstants.S_OK;
+            } else {
+                isDirty = 0;
             }
-
-            isDirty = IsFlavorDirty();
-
+            
             return VSConstants.S_OK;
         }
 
@@ -3990,7 +3956,7 @@ namespace Microsoft.VisualStudioTools.Project
             return GetOuterHierarchy() as T;
         }
 
-        protected int IsFlavorDirty()
+        private bool IsFlavorDirty()
         {
             int isDirty = 0;
             // See if one of our flavor consider us dirty
@@ -4023,7 +3989,7 @@ namespace Microsoft.VisualStudioTools.Project
                     }
                 }
             }
-            return isDirty;
+            return isDirty != 0;
         }
 
         public virtual int Load(string fileName, uint mode, int readOnly)
@@ -4047,10 +4013,10 @@ namespace Microsoft.VisualStudioTools.Project
                 throw new ArgumentException(SR.GetString(SR.InvalidParameter, CultureInfo.CurrentUICulture), "fileToBeSaved");
             }
 
-            bool setProjectFileDirtyAfterSave = false;
+            int setProjectFileDirtyAfterSave = 0;
             if (remember == 0)
             {
-                setProjectFileDirtyAfterSave = this.IsProjectFileDirty;
+                ErrorHandler.ThrowOnFailure(IsDirty(out setProjectFileDirtyAfterSave));
             }
 
             // Update the project with the latest flavor data (if needed)
@@ -4074,7 +4040,6 @@ namespace Microsoft.VisualStudioTools.Project
                         Directory.CreateDirectory(saveFolder);
                     // Save the project
                     SaveMSBuildProjectFile(tempFileToBeSaved);
-                    this.SetProjectFileDirty(false);
                 }
                 finally
                 {
@@ -4091,9 +4056,9 @@ namespace Microsoft.VisualStudioTools.Project
 
             }
 
-            if (setProjectFileDirtyAfterSave)
+            if (setProjectFileDirtyAfterSave != 0)
             {
-                this.SetProjectFileDirty(true);
+                isDirty = true;
             }
 
             return result;
@@ -4102,6 +4067,7 @@ namespace Microsoft.VisualStudioTools.Project
         protected virtual void SaveMSBuildProjectFile(string filename) 
         {
             buildProject.Save(filename);
+            isDirty = false;
         }
 
         public virtual int SaveCompleted(string filename)
@@ -4508,8 +4474,6 @@ namespace Microsoft.VisualStudioTools.Project
                     DocumentManager.RenameDocument(site, file, file, n.ID);
 
                     LinkFileAdded(file);
-
-                    SetProjectFileDirty(true);
                 }
                 else
                 {
@@ -5208,23 +5172,22 @@ If the files in the existing folder have the same names as files in the folder y
             Utilities.ArgumentNotNull("sccProvider", sccProvider);
 
             // Save our settings (returns true if something changed)
-            if (!this.SetSccSettings(sccProjectName, sccLocalPath, sccAuxPath, sccProvider))
+            if (!SetSccSettings(sccProjectName, sccLocalPath, sccAuxPath, sccProvider))
             {
                 return VSConstants.S_OK;
             }
 
             bool unbinding = (sccProjectName.Length == 0 && sccProvider.Length == 0);
 
-            if (unbinding || this.QueryEditProjectFile(false))
+            if (unbinding || QueryEditProjectFile(false))
             {
-                this.buildProject.SetProperty(ProjectFileConstants.SccProjectName, sccProjectName);
-                this.buildProject.SetProperty(ProjectFileConstants.SccProvider, sccProvider);
-                this.buildProject.SetProperty(ProjectFileConstants.SccAuxPath, sccAuxPath);
-                this.buildProject.SetProperty(ProjectFileConstants.SccLocalPath, sccLocalPath);
-                SetProjectFileDirty(true);
+                buildProject.SetProperty(ProjectFileConstants.SccProjectName, sccProjectName);
+                buildProject.SetProperty(ProjectFileConstants.SccProvider, sccProvider);
+                buildProject.SetProperty(ProjectFileConstants.SccAuxPath, sccAuxPath);
+                buildProject.SetProperty(ProjectFileConstants.SccLocalPath, sccLocalPath);
             }
 
-            this.isRegisteredWithScc = true;
+            isRegisteredWithScc = true;
 
             return VSConstants.S_OK;
         }

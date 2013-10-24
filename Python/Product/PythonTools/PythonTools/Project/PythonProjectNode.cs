@@ -76,9 +76,6 @@ namespace Microsoft.PythonTools.Project {
                 } catch (InvalidDataException ex) {
                     OutputWindowRedirector.GetGeneral(Site).WriteErrorLine(ex.Message);
                 }
-                if (project.IsDirty) {
-                    SetProjectFileDirty(true);
-                }
                 _interpreters.ActiveInterpreterChanged += ActiveInterpreterChanged;
                 _interpreters.InterpreterFactoriesChanged += InterpreterFactoriesChanged;
             } else {
@@ -270,7 +267,6 @@ namespace Microsoft.PythonTools.Project {
                         GetProjectProperty(MSBuildProjectInterpreterFactoryProvider.InterpreterVersionProperty));
                     if (existing != null && QueryEditProjectFile(false)) {
                         _interpreters.AddInterpreter(existing);
-                        SetProjectFileDirty(true);
                         Debug.Assert(_interpreters.ActiveInterpreter == existing);
                     }
                 }
@@ -581,7 +577,6 @@ namespace Microsoft.PythonTools.Project {
                 }
 
                 Interpreters.ActiveInterpreter = factory;
-                SetProjectFileDirty(true);
             }
             return VSConstants.S_OK;
         }
@@ -963,7 +958,6 @@ namespace Microsoft.PythonTools.Project {
                 foreach (var factory in toRemove) {
                     _interpreters.RemoveInterpreterFactory(factory);
                 }
-                SetProjectFileDirty(true);
             }
         }
 
@@ -1024,7 +1018,6 @@ namespace Microsoft.PythonTools.Project {
                     }
 
                     _interpreters.CreateInterpreterFactory(t.Result);
-                    SetProjectFileDirty(true);
                 }
             }, CancellationToken.None, TaskContinuationOptions.OnlyOnRanToCompletion, scheduler);
         }
@@ -1041,7 +1034,6 @@ namespace Microsoft.PythonTools.Project {
                 throw Marshal.GetExceptionForHR(VSConstants.OLE_E_PROMPTSAVECANCELLED);
             }
             _interpreters.RemoveInterpreterFactory(factory);
-            SetProjectFileDirty(true);
         }
 
         /// <summary>
@@ -1067,8 +1059,6 @@ namespace Microsoft.PythonTools.Project {
                         );
                     }, CancellationToken.None, TaskContinuationOptions.OnlyOnFaulted, TaskScheduler.FromCurrentSynchronizationContext());
                 }
-
-                SetProjectFileDirty(true);
             }
         }
 

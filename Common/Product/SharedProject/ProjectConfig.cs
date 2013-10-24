@@ -156,8 +156,6 @@ namespace Microsoft.VisualStudioTools.Project
             // property cache will need to be updated
             this.currentConfig = null;
 
-            this.project.SetProjectFileDirty(true);
-
             return;
         }
 

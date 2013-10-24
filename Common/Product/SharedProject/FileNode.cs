@@ -767,7 +767,6 @@ namespace Microsoft.VisualStudioTools.Project
                 this.ID = this.ProjectMgr.ItemIdMap.Add(this);
                 this.ItemNode.Rename(CommonUtils.GetRelativeFilePath(ProjectMgr.ProjectHome, newFileName));
                 this.ItemNode.RefreshProperties();
-                this.ProjectMgr.SetProjectFileDirty(true);
                 newParent.AddChild(this);
                 this.Parent = newParent;
             }
@@ -997,7 +996,6 @@ namespace Microsoft.VisualStudioTools.Project
 
             this.ItemNode.Rename(relName);
             this.ItemNode.RefreshProperties();
-            this.ProjectMgr.SetProjectFileDirty(true);
 
             ProjectMgr.ReDrawNode(this, UIHierarchyElement.Caption);
             this.RenameChildNodes(this);

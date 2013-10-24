@@ -85,7 +85,7 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
 
                 using (AutomationScope scope = new AutomationScope(this.project.Site)) {
                     UIThread.Instance.RunSync(() => {
-                        project.SetProjectFileDirty(value);
+                        project.isDirty = value;
                     });
                 }
             }

@@ -70,7 +70,6 @@ namespace Microsoft.VisualStudioTools.Project {
         private DiskMerger _currentMerger;
         private readonly HashSet<HierarchyNode> _needBolding = new HashSet<HierarchyNode>();
         private int _idleTriggered;
-        private bool _isUserFileDirty;
 
         public CommonProjectNode(CommonProjectPackage/*!*/ package, ImageList/*!*/ imageList) {
             Contract.Assert(package != null);
@@ -177,13 +176,7 @@ namespace Microsoft.VisualStudioTools.Project {
 
         protected bool IsUserProjectFileDirty {
             get {
-                string document = this.GetMkDocument();
-
-                if (String.IsNullOrEmpty(document)) {
-                    return _isUserFileDirty;
-                }
-
-                return (_isUserFileDirty || !File.Exists(document + PerUserFileExtension));
+                return _userBuildProject != null && _userBuildProject.Xml.HasUnsavedChanges;
             }
         }
 
@@ -477,7 +470,6 @@ namespace Microsoft.VisualStudioTools.Project {
 
             if (_userBuildProject != null) {
                 _userBuildProject.Save(FileName + PerUserFileExtension);
-                _isUserFileDirty = false;
             }
         }
 
@@ -486,7 +478,6 @@ namespace Microsoft.VisualStudioTools.Project {
 
             if (_userBuildProject != null) {
                 _userBuildProject.Save(filename + PerUserFileExtension);
-                _isUserFileDirty = false;
             }
         }
 
@@ -525,9 +516,7 @@ namespace Microsoft.VisualStudioTools.Project {
             } else {
                 // save setting in user project file
                 SetUserProjectProperty(CommonConstants.ProjectView, newPropValue);
-                
             }
-            SetProjectFileDirty(true);
 
             // update project state
             return VSConstants.S_OK;
@@ -1359,20 +1348,17 @@ namespace Microsoft.VisualStudioTools.Project {
         }
 
         public override int IsDirty(out int isDirty) {
-            isDirty = 0;
-            if (IsProjectFileDirty || IsUserProjectFileDirty) {
-                isDirty = 1;
-                return VSConstants.S_OK;
+            int hr = base.IsDirty(out isDirty);
+
+            if (ErrorHandler.Failed(hr)) {
+                return hr;
             }
 
-            isDirty = IsFlavorDirty();
+            if (isDirty == 0 && IsUserProjectFileDirty) {
+                isDirty = 1;
+            }
+
             return VSConstants.S_OK;
-        }
-
-        protected override void AddNewFileNodeToHierarchy(HierarchyNode parentNode, string fileName) {
-            base.AddNewFileNodeToHierarchy(parentNode, fileName);
-
-            SetProjectFileDirty(true);
         }
 
         public override DependentFileNode CreateDependentFileNode(MsBuildProjectElement item) {
@@ -1665,7 +1651,6 @@ namespace Microsoft.VisualStudioTools.Project {
                 _userBuildProject.FullPath = FileName + PerUserFileExtension;
             }
             _userBuildProject.SetProperty(propertyName, propertyValue ?? String.Empty);
-            _isUserFileDirty = true;
         }
 
         /// <summary>
@@ -1785,9 +1770,7 @@ namespace Microsoft.VisualStudioTools.Project {
                 BuildProjectLocationChanged();
             }
 
-            BuildProject.Save();
-
-            SetProjectFileDirty(false);
+            SaveMSBuildProjectFile(FileName);
 
             // update VS that we've changed the project
             this.OnPropertyChanged(this, (int)__VSHPROPID.VSHPROPID_Caption, 0);

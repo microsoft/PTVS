@@ -509,7 +509,6 @@ namespace Microsoft.VisualStudioTools.Project
             ID = ProjectMgr.ItemIdMap.Add(this);
 
             ItemNode.Rename(CommonUtils.GetRelativeDirectoryPath(ProjectMgr.ProjectHome, newPath));
-            ProjectMgr.SetProjectFileDirty(true);
             var parent = ProjectMgr.GetParentFolderForPath(newPath);
             Debug.Assert(parent != null, "ReparentFolder called without full path to parent being created");
             parent.AddChild(this);

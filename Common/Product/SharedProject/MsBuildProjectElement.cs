@@ -38,7 +38,6 @@ namespace Microsoft.VisualStudioTools.Project {
             // create and add the item to the project
 
             _item = project.BuildProject.AddItem(itemType, Microsoft.Build.Evaluation.ProjectCollection.Escape(itemPath))[0];
-            ItemProject.SetProjectFileDirty(true);
         }
 
         /// <summary>
@@ -90,8 +89,6 @@ namespace Microsoft.VisualStudioTools.Project {
             } else {
                 _item.SetMetadataValue(attributeName, attributeValue);
             }
-
-            ItemProject.SetProjectFileDirty(true);
         }
 
         /// <summary>
@@ -140,7 +137,6 @@ namespace Microsoft.VisualStudioTools.Project {
         public override void RemoveFromProjectFile() {
             if (!Deleted) {
                 ItemProject.BuildProject.RemoveItem(_item);
-                ItemProject.SetProjectFileDirty(true);
             }
 
             base.RemoveFromProjectFile();
