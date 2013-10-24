@@ -47,6 +47,7 @@ ASSEMBLIES = sorted([
     "ReplWindowUITests32",
     "ReplWindowUITests33",
     "ReplWindowUITests34",
+    "SharedProject",
     "TestAdapterTests",
     "TestSccPackage",
     "TestUtilities",
