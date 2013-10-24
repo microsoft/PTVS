@@ -12,19 +12,11 @@
  *
  * ***************************************************************************/
 
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Shapes;
 using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
-using TestUtilities.UI;
-using EnvDTE;
 using TestUtilities.Python;
+using TestUtilities.UI;
 
 namespace PythonToolsUITests {
     [TestClass]
