@@ -182,35 +182,20 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
         protected virtual EnvDTE.ProjectItem AddItem(string path, VSADDITEMOPERATION op) {
             CheckProjectIsValid();
             return UIThread.Instance.RunSync<EnvDTE.ProjectItem>(() => {
-                string ext = Path.GetExtension(path);
-                foreach (var extension in this.Project.ProjectNode.CodeFileExtensions) {
-                    // http://pytools.codeplex.com/workitem/617
-                    // We are currently in create project from existing code mode.  The wizard walks all of the top-level
-                    // files and adds them.  It then lets us handle any subdirectories by calling AddFromDirectory.
-                    // But we want to filter the files for both top-level and subdirectories.  Therefore we derive from
-                    // PageManager and track when we're running the wizard and adding files for the wizard.  If we are
-                    // currently adding them ignore anything other than a .py/.pyw files - returnning null is fine
-                    // here, the wizard doesn't care about the result.
-                    if (String.Compare(ext, extension, StringComparison.OrdinalIgnoreCase) == 0) {
-                        ProjectNode proj = this.Project.ProjectNode;
+                ProjectNode proj = this.Project.ProjectNode;
+                EnvDTE.ProjectItem itemAdded = null;
+                using (AutomationScope scope = new AutomationScope(this.Project.ProjectNode.Site)) {
+                    VSADDRESULT[] result = new VSADDRESULT[1];
+                    ErrorHandler.ThrowOnFailure(proj.AddItem(this.NodeWithItems.ID, op, path, 0, new string[1] { path }, IntPtr.Zero, result));
 
-                        EnvDTE.ProjectItem itemAdded = null;
-                        using (AutomationScope scope = new AutomationScope(this.Project.ProjectNode.Site)) {
-                            VSADDRESULT[] result = new VSADDRESULT[1];
-                            ErrorHandler.ThrowOnFailure(proj.AddItem(this.NodeWithItems.ID, op, path, 0, new string[1] { path }, IntPtr.Zero, result));
+                    string fileName = System.IO.Path.GetFileName(path);
+                    string fileDirectory = proj.GetBaseDirectoryForAddingFiles(this.NodeWithItems);
+                    string filePathInProject = System.IO.Path.Combine(fileDirectory, fileName);
 
-                            string fileName = System.IO.Path.GetFileName(path);
-                            string fileDirectory = proj.GetBaseDirectoryForAddingFiles(this.NodeWithItems);
-                            string filePathInProject = System.IO.Path.Combine(fileDirectory, fileName);
-
-                            itemAdded = this.EvaluateAddResult(result[0], filePathInProject);
-                    }
-
-                        return itemAdded;
-                    }
+                    itemAdded = this.EvaluateAddResult(result[0], filePathInProject);
                 }
 
-                return null;
+                return itemAdded;
             });
         }
 
