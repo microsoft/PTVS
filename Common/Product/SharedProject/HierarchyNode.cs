@@ -352,14 +352,20 @@ namespace Microsoft.VisualStudioTools.Project
                 HierarchyNode prev = null;
 
                 if (parentNode != null)
+                {
                     for (HierarchyNode child = parentNode.firstChild; child != null; child = child.nextSibling)
                     {
-                        if (child == this)
+                        if (child == this) 
+                        {
                             break;
+                        }
 
-                        if (child.IsVisible)
+                        if (child.IsVisible) 
+                        {
                             prev = child;
+                        }
                     }
+                }
 
                 return prev;
             }
