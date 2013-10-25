@@ -150,6 +150,13 @@ namespace Microsoft.PythonTools.DkmDebugger {
         }
 
         void IDkmRuntimeStepper.BeforeEnableNewStepper(DkmRuntimeInstance runtimeInstance, DkmStepper stepper) {
+            var traceManager = runtimeInstance.Process.GetDataItem<TraceManager>();
+            if (traceManager == null) {
+                Debug.Fail("OnNewControllingRuntimeInstance called before TraceMananger is initialized.");
+                throw new InvalidOperationException();
+            }
+
+            traceManager.BeforeEnableNewStepper(runtimeInstance, stepper);
         }
 
         void IDkmRuntimeStepper.NotifyStepComplete(DkmRuntimeInstance runtimeInstance, DkmStepper stepper) {
