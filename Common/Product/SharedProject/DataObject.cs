@@ -403,7 +403,7 @@ namespace Microsoft.VisualStudioTools.Project
             }
             finally
             {
-                if (data != null)
+                if (data != IntPtr.Zero)
                 {
                     UnsafeNativeMethods.GlobalUnLock(data);
                 }
