@@ -3144,7 +3144,7 @@ namespace Microsoft.VisualStudioTools.Project
         {
             List<String> subitemsKeys = new List<String>();
             Dictionary<String, MSBuild.ProjectItem> subitems = new Dictionary<String, MSBuild.ProjectItem>();
-
+            
             // Define a set for our build items. The value does not really matter here.
             Dictionary<String, MSBuild.ProjectItem> items = new Dictionary<String, MSBuild.ProjectItem>();
 
@@ -3207,18 +3207,9 @@ namespace Microsoft.VisualStudioTools.Project
                 if (!this.CanFileNodesHaveChilds || String.IsNullOrEmpty(dependentOf))
                 {
                     var parent = GetItemParentNode(item);
-                    string filename = Path.GetFileName(item.EvaluatedInclude);
-                    HierarchyNode existingChild = null;
-                    for (HierarchyNode child = parent.FirstChild; child != null; child = child.NextSibling)
-                    {
-                        if (String.Equals(Path.GetFileName(child.Url), filename, StringComparison.OrdinalIgnoreCase))
-                        {
-                            existingChild = child;
-                            break;
-                        }
-                    }
 
-                    if (existingChild != null)
+                    HierarchyNode existingChild = null;
+                    if (_diskNodes.TryGetValue(item.EvaluatedInclude, out existingChild))
                     {
                         if (existingChild.IsLinkFile)
                         {
@@ -3231,7 +3222,7 @@ namespace Microsoft.VisualStudioTools.Project
                             continue;
                         }
                     }
-
+                    
                     AddIndependentFileNode(item, parent);
                 }
                 else
