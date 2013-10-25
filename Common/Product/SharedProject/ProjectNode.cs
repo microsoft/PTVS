@@ -3208,8 +3208,9 @@ namespace Microsoft.VisualStudioTools.Project
                 {
                     var parent = GetItemParentNode(item);
 
-                    HierarchyNode existingChild = null;
-                    if (_diskNodes.TryGetValue(item.EvaluatedInclude, out existingChild))
+                    var itemPath = CommonUtils.GetAbsoluteFilePath(ProjectHome, item.EvaluatedInclude);
+                    var existingChild = FindNodeByFullPath(itemPath);
+                    if (existingChild != null)
                     {
                         if (existingChild.IsLinkFile)
                         {
