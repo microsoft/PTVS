@@ -166,8 +166,7 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
         /// <param name="fileName">The file name of the item to add as a project item. </param>
         /// <returns>A ProjectItem object. </returns>
         public override EnvDTE.ProjectItem AddFromFile(string fileName) {
-            // TODO: VSADDITEMOP_LINKTOFILE
-            return this.AddItem(fileName, VSADDITEMOPERATION.VSADDITEMOP_OPENFILE);
+            return this.AddItem(fileName, VSADDITEMOPERATION.VSADDITEMOP_LINKTOFILE);
         }
 
         #endregion
@@ -188,11 +187,17 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
                     VSADDRESULT[] result = new VSADDRESULT[1];
                     ErrorHandler.ThrowOnFailure(proj.AddItem(this.NodeWithItems.ID, op, path, 0, new string[1] { path }, IntPtr.Zero, result));
 
-                    string fileName = System.IO.Path.GetFileName(path);
-                    string fileDirectory = proj.GetBaseDirectoryForAddingFiles(this.NodeWithItems);
-                    string filePathInProject = System.IO.Path.Combine(fileDirectory, fileName);
+                    string realPath = null;
+                    if (op != VSADDITEMOPERATION.VSADDITEMOP_LINKTOFILE) {
+                        string fileName = System.IO.Path.GetFileName(path);
+                        string fileDirectory = proj.GetBaseDirectoryForAddingFiles(this.NodeWithItems);
+                        realPath = System.IO.Path.Combine(fileDirectory, fileName);
+                    }
+                    else {
+                        realPath = path;
+                    }
 
-                    itemAdded = this.EvaluateAddResult(result[0], filePathInProject);
+                    itemAdded = this.EvaluateAddResult(result[0], realPath);
                 }
 
                 return itemAdded;

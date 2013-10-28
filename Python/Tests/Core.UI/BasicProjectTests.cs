@@ -962,6 +962,44 @@ namespace PythonToolsUITests {
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void AddFromFileInSubDirectory() {
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenProject(@"TestData\AddExistingFolder.sln");
+                string fullPath = TestData.GetPath(@"TestData\AddExistingFolder.sln");
+
+                Assert.AreEqual(5, project.ProjectItems.Count);
+                var item = project.ProjectItems.AddFromFile(TestData.GetPath(@"TestData\AddExistingFolder\TestFolder\TestFile.txt"));
+
+                Assert.AreEqual("TestFile.txt", item.Properties.Item("FileName").Value);
+                Assert.AreEqual(Path.Combine(Path.GetDirectoryName(fullPath), "AddExistingFolder", "TestFolder", "TestFile.txt"), item.Properties.Item("FullPath").Value);
+
+                Assert.AreEqual(6, project.ProjectItems.Count);
+
+                var folder = project.ProjectItems.Item("TestFolder");
+                Assert.IsNotNull(folder);
+                Assert.IsNotNull(folder.ProjectItems.Item("TestFile.txt"));
+            }
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void AddFromFileOutsideOfProject() {
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenProject(@"TestData\HelloWorld.sln");
+                // "Python Environments", "References", "Search Paths", "Program.py"
+                Assert.AreEqual(4, project.ProjectItems.Count);
+                var item = project.ProjectItems.AddFromFile(TestData.GetPath(@"TestData\DebuggerProject\LocalsTest.py"));
+
+                Assert.AreEqual("LocalsTest.py", item.Properties.Item("FileName").Value);
+                
+                // TODO: Once we have IsLink use it
+                //Assert.AreEqual(true, item.Properties.Item("IsLink").Value);
+                Assert.AreEqual(TestData.GetPath(@"TestData\DebuggerProject\LocalsTest.py"), item.Properties.Item("FullPath").Value);
+            }
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CopyAndPasteFolder() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
                 var project = app.OpenProject(@"TestData\CopyAndPasteFolder.sln");
