@@ -416,6 +416,8 @@ namespace Microsoft.VisualStudioTools.Project {
             _watcher = CreateFileSystemWatcher(ProjectHome);
             _attributesWatcher = CreateAttributesWatcher(ProjectHome);
 
+            // Initialize _currentMerger so next OnIdle will add everything that's on disk that we don't have in the project
+            _currentMerger = new DiskMerger(this, this, ProjectHome);
         }
 
         private void BoldStartupItem() {
