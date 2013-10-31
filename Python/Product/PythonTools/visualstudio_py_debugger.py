@@ -234,10 +234,15 @@ class ExceptionBreakInfo(object):
         self.handler_cache = dict(self.BUILT_IN_HANDLERS)
         self.handler_lock = thread.allocate_lock()
         self.AddException('exceptions.IndexError', BREAK_MODE_NEVER)
+        self.AddException('builtins.IndexError', BREAK_MODE_NEVER)
         self.AddException('exceptions.KeyError', BREAK_MODE_NEVER)
+        self.AddException('builtins.KeyError', BREAK_MODE_NEVER)
         self.AddException('exceptions.AttributeError', BREAK_MODE_NEVER)
+        self.AddException('builtins.AttributeError', BREAK_MODE_NEVER)
         self.AddException('exceptions.StopIteration', BREAK_MODE_NEVER)
+        self.AddException('builtins.StopIteration', BREAK_MODE_NEVER)
         self.AddException('exceptions.GeneratorExit', BREAK_MODE_NEVER)
+        self.AddException('builtins.GeneratorExit', BREAK_MODE_NEVER)
 
     def Clear(self):
         self.default_mode = BREAK_MODE_UNHANDLED
