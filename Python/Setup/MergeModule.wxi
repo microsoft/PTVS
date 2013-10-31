@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Include>
     <Property Id="LocalAppDataFolder" SuppressModularization="yes"/> 
+    <Property Id="TARGETDIR" SuppressModularization="yes"/> 
+    <Property Id="VSINSTALLPATH" SuppressModularization="yes"/> 
+    <Property Id="EXTENSION_INSTALLPATH" SuppressModularization="yes"/> 
 </Include>
