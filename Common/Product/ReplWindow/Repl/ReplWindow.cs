@@ -668,8 +668,6 @@ namespace Microsoft.VisualStudio.Repl {
                 UIThread(CancelStandardInput);
             }
             
-            WriteLine("Resetting execution engine");
-
             return Evaluator.Reset().
                 ContinueWith(completed => {
                     // flush output produced by the process before it was killed:

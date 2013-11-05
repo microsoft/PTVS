@@ -77,6 +77,10 @@
       <Project>{F3A5829D-EE15-4BE7-828F-2519172C6671}</Project>
       <Name>AttacherX86</Name>
     </ProjectReference>
+    <ProjectReference Include="..\BuildTasks\BuildTasks.csproj">
+      <Project>{89d51398-a003-44ba-b1b2-cfc6f8396d7e}</Project>
+      <Name>BuildTasks</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Debugger\Debugger.csproj">
       <Project>{DECC7971-FA58-4DB0-9561-BFFADD393BBD}</Project>
       <Name>Microsoft.PythonTools.Debugger</Name>
@@ -311,6 +315,7 @@
       <DependentUpon>AddInterpreter.xaml</DependentUpon>
     </Compile>
     <Compile Include="PythonTools\Project\AddInterpreterView.cs" />
+    <Compile Include="PythonTools\Project\CustomCommand.cs" />
     <Compile Include="PythonTools\Project\EasyInstall.cs" />
     <Compile Include="PythonTools\Project\ImportWizard\SaveProjectPage.xaml.cs">
       <DependentUpon>SaveProjectPage.xaml</DependentUpon>

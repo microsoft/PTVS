@@ -393,6 +393,7 @@ try {
                     "Microsoft.PythonTools.Analyzer.exe", 
                     "Microsoft.PythonTools.Attacher.exe", 
                     "Microsoft.PythonTools.AttacherX86.exe", 
+                    "Microsoft.PythonTools.BuildTasks.dll", 
                     "Microsoft.PythonTools.Debugger.dll", 
                     "Microsoft.PythonTools.dll", 
                     "Microsoft.PythonTools.VSInterpreters.dll",

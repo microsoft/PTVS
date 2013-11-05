@@ -283,4 +283,20 @@ Continue?</value>
   <data name="SearchPathContainerProperties" xml:space="preserve">
     <value>Search Paths Properties</value>
   </data>
+  <data name="ErrorRunningCustomCommand" xml:space="preserve">
+    <value>An error occurred while running {0}.
+
+{1}</value>
+  </data>
+  <data name="ErrorBuildingCustomCommand" xml:space="preserve">
+    <value>Failed to get command {0} from project</value>
+  </data>
+  <data name="FailedToReadResource" xml:space="preserve">
+    <value>Could not get resource {1}.{2} from {0}.
+
+{3}</value>
+  </data>
+  <data name="CustomCommandReplTitle" xml:space="preserve">
+    <value>{0} Interactive Window</value>
+  </data>
 </root>

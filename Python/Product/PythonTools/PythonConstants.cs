@@ -61,6 +61,11 @@ namespace Microsoft.PythonTools {
         internal const int ActivateEnvironment = 0x4009;
         internal const int InstallPythonPackage = 0x400A;
 
+        //Custom (per-project) commands
+        internal const int FirstCustomCmdId = 0x4010;
+        internal const int LastCustomCmdId = 0x402F;
+        internal const int CustomProjectCommandsMenu = 0x2005;
+
         // Shows up before references
         internal const int InterpretersContainerNodeSortPriority = 200;
 

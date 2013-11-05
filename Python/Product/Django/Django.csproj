@@ -246,7 +246,6 @@
     <Compile Include="VsMenus.cs" />
     <Content Include="Microsoft.PythonTools.Django.targets">
       <IncludeInVSIX>true</IncludeInVSIX>
-      <TargetPath>Microsoft.PythonTools.Django.Developer.targets</TargetPath>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <SubType>Designer</SubType>
     </Content>

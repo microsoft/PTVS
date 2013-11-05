@@ -87,6 +87,7 @@
   <ItemGroup>
     <Compile Include="AddImportTests.cs" />
     <Compile Include="BasicProjectTests.cs" />
+    <Compile Include="BuildTasksUITests.cs" />
     <Compile Include="EditorTests.cs" />
     <Compile Include="FormattingUITests.cs" />
     <Compile Include="InterpreterListTests.cs" />
@@ -98,10 +99,19 @@
     <Compile Include="PythonProjectProcessor.cs" />
     <Compile Include="PythonTestDefinitions.cs" />
     <Compile Include="RemoveImportTests.cs" />
+    <Compile Include="Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
     <Compile Include="UITests.cs" />
     <Compile Include="VirtualEnvTests.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\..\Common\Product\ReplWindow\ReplWindow.csproj">
+      <Project>{20bb6fac-44d2-4d76-abfe-0c1e163a1a4f}</Project>
+      <Name>ReplWindow</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Product\Analysis\Analysis.csproj">
       <Project>{A85D479D-67A9-4BDB-904A-7D86DAF68A6F}</Project>
       <Name>Analysis</Name>
@@ -135,6 +145,12 @@
       <Project>{62641B47-1ABB-4638-A3D5-2A834D089667}</Project>
       <Name>TestUtilities.Python</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
   </ItemGroup>
   <Import Project="..\TestProjectAfter.settings" />
 </Project>

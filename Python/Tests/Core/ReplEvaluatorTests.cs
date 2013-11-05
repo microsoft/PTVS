@@ -228,6 +228,10 @@ namespace PythonToolsTests {
             get { return ""; }
         }
 
+        public override IDictionary<string, string> EnvironmentVariables {
+            get { return null; }
+        }
+
         public override string StartupScript {
             get { return null; }
         }

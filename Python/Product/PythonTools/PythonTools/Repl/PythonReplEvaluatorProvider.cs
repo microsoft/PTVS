@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Diagnostics;
 using System.Linq;
@@ -37,13 +38,15 @@ namespace Microsoft.PythonTools.Repl {
         readonly IServiceProvider _serviceProvider;
 
         private const string _replGuid = "FAEC7F47-85D8-4899-8D7B-0B855B732CC8";
-        internal const string _configurableGuid = "3C4CB167-E213-4377-8909-437139C3C553";
+        private const string _configurableGuid = "3C4CB167-E213-4377-8909-437139C3C553";
+        private const string _configurable2Guid = "EA3C9BAE-087A-44FA-A897-18A626EC3B5D";
 
         [ImportingConstructor]
         public PythonReplEvaluatorProvider(
             [Import] IInterpreterOptionsService interpreterService,
             [Import] IErrorProviderFactory errorProviderFactory,
-            [Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider) {
+            [Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider
+        ) {
             Debug.Assert(interpreterService != null);
             Debug.Assert(errorProviderFactory != null);
             _interpreterService = interpreterService;
@@ -54,7 +57,7 @@ namespace Microsoft.PythonTools.Repl {
         #region IReplEvaluatorProvider Members
 
         public IReplEvaluator GetEvaluator(string replId) {
-            if (replId.StartsWith(_replGuid)) {
+            if (replId.StartsWith(_replGuid, StringComparison.OrdinalIgnoreCase)) {
                 string[] components = replId.Split(new[] { ' ' }, 3);
                 if (components.Length == 3) {
                     var interpreter = _interpreterService.FindInterpreter(components[1], components[2]);
@@ -62,8 +65,15 @@ namespace Microsoft.PythonTools.Repl {
                         return new PythonReplEvaluator(interpreter, _errorProviderFactory, _interpreterService);
                     }
                 }
-            } else if (replId.StartsWith(_configurableGuid)) {
+            } else if (replId.StartsWith(_configurableGuid, StringComparison.OrdinalIgnoreCase)) {
                 return CreateConfigurableInterpreter(replId);
+            } else if (replId.StartsWith(_configurable2Guid, StringComparison.OrdinalIgnoreCase)) {
+                return new PythonReplEvaluatorDontPersist(
+                    null,
+                    _errorProviderFactory,
+                    new ConfigurablePythonReplOptions(),
+                    _interpreterService
+                );
             }
             return null;
         }
@@ -72,18 +82,20 @@ namespace Microsoft.PythonTools.Repl {
         /// Creates an interpreter which was created programmatically by some plugin
         /// </summary>
         private IReplEvaluator CreateConfigurableInterpreter(string replId) {
-            string[] components = replId.Split(new[] { '|' }, 7);
-            if (components.Length == 6 || components.Length == 7) {
-                string workingDir = components[1];
-                string interpreter = components[2];
-                string interpreterVersion = components[3];
-                string envVars = components[5];
-                // we don't care about the user identifier
+            string[] components = replId.Split(new[] { '|' }, 5);
+            if (components.Length == 5) {
+                string interpreter = components[1];
+                string interpreterVersion = components[2];
+                // string userId = components[3];
+                // We don't care about the user identifier - it is there to
+                // ensure that evaluators can be distinguished within a project
+                // and/or with the same interpreter.
+                string projectName = components[4];
 
-                var pyInterpreter = _interpreterService.FindInterpreter(interpreter, interpreterVersion);
+                var replOptions = new ConfigurablePythonReplOptions();
+                replOptions.InterpreterFactory = _interpreterService.FindInterpreter(interpreter, interpreterVersion);
 
-                if (pyInterpreter == null && components.Length == 7) {
-                    string projectName = components[6];
+                if (replOptions.InterpreterFactory == null) {
                     var solution = _serviceProvider.GetService(typeof(SVsSolution)) as IVsSolution;
                     if (solution != null) {
                         foreach (var proj in solution.EnumerateLoadedProjects()) {
@@ -94,18 +106,20 @@ namespace Microsoft.PythonTools.Repl {
                             if (pyProj == null) {
                                 continue;
                             }
-                            pyInterpreter = pyProj.Interpreters.FindInterpreter(interpreter, interpreterVersion);
+                            replOptions.InterpreterFactory = pyProj.Interpreters.FindInterpreter(interpreter, interpreterVersion);
+                            replOptions.Project = pyProj;
                             break;
                         }
                     }
                 }
 
-                if (pyInterpreter != null) {
-                    var replOptions = new ConfigurablePythonReplOptions(
-                        workingDir
+                if (replOptions.InterpreterFactory != null) {
+                    return new PythonReplEvaluatorDontPersist(
+                        replOptions.InterpreterFactory,
+                        _errorProviderFactory,
+                        replOptions,
+                        _interpreterService
                     );
-
-                    return new PythonReplEvaluatorDontPersist(pyInterpreter, _errorProviderFactory, replOptions, envVars, _interpreterService);
                 }
             }
             return null;
@@ -114,21 +128,36 @@ namespace Microsoft.PythonTools.Repl {
         #endregion
 
         internal static string GetReplId(IPythonInterpreterFactory interpreter, PythonProjectNode project = null) {
-            if (project != null && project.Interpreters.IsProjectSpecific(interpreter)) {
-                return String.Format("{0}|{1}|{2}|{3}|{4};{5}||{6}",
-                    PythonReplEvaluatorProvider._configurableGuid,
-                    project.GetWorkingDirectory(),
-                    interpreter.Id,
-                    interpreter.Configuration.Version,
-                    project.ProjectIDGuid,
-                    interpreter.Id,
-                    ((IVsProject)project).GetRootCanonicalName()
-                );
+            return GetReplId(interpreter, project, false);
+        }
+
+        internal static string GetReplId(IPythonInterpreterFactory interpreter, PythonProjectNode project, bool alwaysPerProject) {
+            if (alwaysPerProject || project != null && project.Interpreters.IsProjectSpecific(interpreter)) {
+                return GetConfigurableReplId(interpreter, (IVsHierarchy)project, "");
             } else {
-                return _replGuid + " " +
-                    interpreter.Id + " " +
-                    interpreter.Configuration.Version;
+                return String.Format("{0} {1} {2}",
+                    _replGuid,
+                    interpreter.Id,
+                    interpreter.Configuration.Version
+                );
             }
+        }
+
+        internal static string GetConfigurableReplId(string userId) {
+            return String.Format("{0}|{1}",
+                _configurable2Guid,
+                userId
+            );
+        }
+
+        internal static string GetConfigurableReplId(IPythonInterpreterFactory interpreter, IVsHierarchy project, string userId) {
+            return String.Format("{0}|{1}|{2}|{3}|{4}",
+                _configurableGuid,
+                interpreter.Id,
+                interpreter.Configuration.Version,
+                userId,
+                project != null ? project.GetRootCanonicalName() : ""
+            );
         }
     }
 

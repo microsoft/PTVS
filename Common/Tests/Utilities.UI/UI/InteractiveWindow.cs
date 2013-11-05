@@ -207,7 +207,7 @@ namespace TestUtilities.UI {
             WaitForReadyState(10000);
         }
 
-        internal ReplWindow ReplWindow {
+        internal IReplWindow ReplWindow {
             get {
                 return _replWindow;
             }
@@ -249,6 +249,36 @@ namespace TestUtilities.UI {
             } finally {
                 ReplWindow.SetOptionValue(ReplOptions.StandardInputPrompt, oldPrompt);
             }
+        }
+
+        internal virtual bool IsTabGroupContainer(AutomationElement element) {
+            var clsName = element.GetCurrentPropertyValue(AutomationElement.ClassNameProperty) as string;
+            return clsName == "ToolWindowTabGroupContainer" || clsName == "FloatingWindow";
+        }
+
+        public virtual void Close() {
+            var elem = Element;
+            while (elem != null && !IsTabGroupContainer(elem)) {
+                elem = TreeWalker.ControlViewWalker.GetParent(elem);
+            }
+
+            if (elem == null) {
+                Debug.WriteLine("Could not find window");
+                return;
+            }
+
+            var titleBar = elem.FindFirst(
+                TreeScope.Descendants,
+                new PropertyCondition(AutomationElement.AutomationIdProperty, "DragHeader")
+            );
+
+            if (titleBar == null) {
+                Debug.WriteLine("Could not find title bar");
+                AutomationWrapper.DumpElement(elem);
+                return;
+            }
+
+            titleBar.AsWrapper().ClickButtonByAutomationId("HideButton");
         }
     }
 }

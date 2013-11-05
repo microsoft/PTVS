@@ -389,12 +389,12 @@ g()",
                 foreach (var completion in sh.Session.SelectedCompletionSet.Completions) {
                     completions.Append(completion.InsertionText);
                 }
-            }
 
-            // commit entry
-            Keyboard.PressAndRelease(Key.Tab);
-            interactive.WaitForText(ReplPrompt + code, ReplPrompt + "x." + IntFirstMember);
-            interactive.WaitForSessionDismissed();
+                // commit entry
+                Keyboard.PressAndRelease(Key.Tab);
+                interactive.WaitForText(ReplPrompt + code, ReplPrompt + "x." + IntFirstMember);
+                interactive.WaitForSessionDismissed();
+            }
 
             // clear input at repl
             Keyboard.PressAndRelease(Key.Escape);
@@ -1833,7 +1833,9 @@ $cls
         }
 
         private void AssertContainingRegion(InteractiveWindow interactive, int position, string expectedText) {
-            SnapshotSpan? span = interactive.ReplWindow.GetContainingRegion(new SnapshotPoint(interactive.TextView.TextBuffer.CurrentSnapshot, position));
+            SnapshotSpan? span = ((ReplWindow)interactive.ReplWindow).GetContainingRegion(
+                new SnapshotPoint(interactive.TextView.TextBuffer.CurrentSnapshot, position)
+            );
             Assert.IsNotNull(span);
             Assert.AreEqual(expectedText, span.Value.GetText());
         }
@@ -2859,7 +2861,7 @@ def g(): pass
 
             Assert.AreNotEqual(null, interactive);
 
-            const string code = "def f():\rprint 42,\rimport time\rtime.sleep(1)\rprint 100,\r\rf()\r";
+            const string code = "def f():\rprint 42,\rimport time \rtime.sleep(1)\rprint 100,\r\rf()\r";
             Keyboard.Type(code);
 
             interactive.WaitForTextEnd("42 100", ReplPrompt);

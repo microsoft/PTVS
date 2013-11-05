@@ -1,0 +1,76 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
+    <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
+  </PropertyGroup>
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{b0e8091b-ec26-4264-b7ef-80a45fb3c470}</ProjectGuid>
+    <ProjectHome>.</ProjectHome>
+    <StartupFile>Program.py</StartupFile>
+    <SearchPath>
+    </SearchPath>
+    <WorkingDirectory>.</WorkingDirectory>
+    <AssemblyName>Environments1</AssemblyName>
+    <Name>Environments1</Name>
+    <RootNamespace>Environments1</RootNamespace>
+    <OutputPath>.</OutputPath>
+    <InterpreterId>{f7bb6716-ecef-4beb-87b9-2a60d1565ffe}</InterpreterId>
+    <InterpreterVersion>2.7</InterpreterVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <DebugSymbols>true</DebugSymbols>
+    <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <DebugSymbols>true</DebugSymbols>
+    <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
+  </PropertyGroup>
+  <ItemGroup>
+    <Interpreter Include="env\">
+      <Id>{f7bb6716-ecef-4beb-87b9-2a60d1565ffe}</Id>
+      <BaseInterpreter>{2af0f10d-7135-4994-9156-5d01c9c11b7e}</BaseInterpreter>
+      <Version>2.7</Version>
+      <Description>env (Python 2.7)</Description>
+      <InterpreterPath>Scripts\python.exe</InterpreterPath>
+      <WindowsInterpreterPath>Scripts\pythonw.exe</WindowsInterpreterPath>
+      <LibraryPath>Lib\</LibraryPath>
+      <PathEnvironmentVariable>PYTHONPATH</PathEnvironmentVariable>
+    </Interpreter>
+    <Interpreter Include="env2\">
+      <Id>{eb7f27e8-1110-4bfa-9678-8ec954a484fa}</Id>
+      <BaseInterpreter>{2af0f10d-7135-4994-9156-5d01c9c11b7e}</BaseInterpreter>
+      <Version>3.3</Version>
+      <Description>env2 (Python 3.3)</Description>
+      <InterpreterPath>Scripts2\python.exe</InterpreterPath>
+      <WindowsInterpreterPath>Scripts2\pythonw.exe</WindowsInterpreterPath>
+      <LibraryPath>Lib2\</LibraryPath>
+      <PathEnvironmentVariable>PYTHONPATH2</PathEnvironmentVariable>
+    </Interpreter>
+    <InterpreterReference Include="{2af0f10d-7135-4994-9156-5d01c9c11b7e}\2.7" />
+  </ItemGroup>
+  
+  <Import Project="$(VSToolsPath)\Python Tools\Microsoft.PythonTools.targets" />
+
+  <Target Name="TestResolveEnvironment">
+    <ResolveEnvironment>
+      <Output TaskParameter="PrefixPath" PropertyName="PrefixPath" />
+      <Output TaskParameter="InterpreterPath" PropertyName="InterpreterPath" />
+      <Output TaskParameter="WindowsInterpreterPath" PropertyName="WindowsInterpreterPath" />
+      <Output TaskParameter="LibraryPath" PropertyName="LibraryPath" />
+      <Output TaskParameter="Architecture" PropertyName="Architecture" />
+      <Output TaskParameter="PathEnvironmentVariable" PropertyName="PathEnvironmentVariable" />
+      <Output TaskParameter="Description" PropertyName="Description" />
+    </ResolveEnvironment>
+
+    <Error Condition="'$(MSBuildThisFileDirectory)env\' != '$(PrefixPath)'" Text="Incorrect PrefixPath: $(PrefixPath)" />
+    <Error Condition="'$(MSBuildThisFileDirectory)env\Scripts\python.exe' != '$(InterpreterPath)'" Text="Incorrect InterpreterPath: $(InterpreterPath)" />
+    <Error Condition="'$(MSBuildThisFileDirectory)env\Scripts\pythonw.exe' != '$(WindowsInterpreterPath)'" Text="Incorrect WindowsInterpreterPath: $(WindowsInterpreterPath)" />
+    <Error Condition="'$(MSBuildThisFileDirectory)env\Lib\' != '$(LibraryPath)'" Text="Incorrect LibraryPath: $(LibraryPath)" />
+    <Error Condition="'X86' != '$(Architecture)'" Text="Incorrect Architecture: $(Architecture)" />
+    <Error Condition="'PYTHONPATH' != '$(PathEnvironmentVariable)'" Text="Incorrect PathEnvironmentVariable: $(PathEnvironmentVariable)" />
+    <Error Condition="'env (Python 2.7)' != '$(Description)'" Text="Incorrect Description: $(Description)" />
+  </Target>
+</Project>

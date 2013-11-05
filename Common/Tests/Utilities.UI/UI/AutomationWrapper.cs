@@ -221,6 +221,17 @@ namespace TestUtilities.UI {
             }
         }
 
+        /// <summary>
+        /// Collapses the selected item.  The item must support the expand/collapse pattern.
+        /// </summary>
+        /// <param name="node"></param>
+        public static void Collapse(AutomationElement node) {
+            ExpandCollapsePattern pat = (ExpandCollapsePattern)node.GetCurrentPattern(ExpandCollapsePattern.Pattern);
+            if (pat.Current.ExpandCollapseState != ExpandCollapseState.Collapsed) {
+                pat.Collapse();
+            }
+        }
+
 
         /// <summary>
         /// Gets the specified value from this element.  The element must support the value pattern.
@@ -261,6 +272,27 @@ namespace TestUtilities.UI {
 
         public void SetFocus() {
             Element.SetFocus();
+        }
+    }
+
+    public static class AutomationElementExtensions {
+        public static AutomationWrapper AsWrapper(this AutomationElement element) {
+            if (element == null) {
+                return null;
+            }
+            return new AutomationWrapper(element);
+        }
+
+        public static void Select(this AutomationElement element) {
+            AutomationWrapper.Select(element);
+        }
+
+        public static void EnsureExpanded(this AutomationElement node) {
+            AutomationWrapper.EnsureExpanded(node);
+        }
+
+        public static void Collapse(this AutomationElement node) {
+            AutomationWrapper.Collapse(node);
         }
     }
 } 

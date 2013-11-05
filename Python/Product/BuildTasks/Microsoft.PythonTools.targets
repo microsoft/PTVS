@@ -1,0 +1,81 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <_PythonToolsPath Condition="!Exists($(_PythonToolsPath))">$(registry:HKEY_LOCAL_MACHINE\Software\Microsoft\PythonTools\$(VisualStudioVersion)@InstallDir)</_PythonToolsPath>
+    <_PythonToolsPath Condition="!Exists($(_PythonToolsPath))">$(LocalAppData)\Microsoft\VisualStudio\$(VisualStudioVersion)\Extensions\Microsoft\Python Tools for Visual Studio\2.0</_PythonToolsPath>
+  </PropertyGroup>
+
+  <UsingTask AssemblyFile="$(_PythonToolsPath)\Microsoft.PythonTools.BuildTasks.dll"
+             TaskName="PythonCommand"
+             TaskFactory="PythonCommandFactory">
+    <Task Evaluate="true">
+      <PropertyGroup>
+        <ProjectPath>$(MSBuildProjectFullPath)</ProjectPath>
+      </PropertyGroup>
+    </Task>
+  </UsingTask>
+  
+  <!--
+  <Target Name="Name1" Label="Display Name" Returns="@(Commands)">
+    <PythonCommand Target="filename or module name"
+                   TargetType="executable/script/module"
+                   Arguments="..."
+                   DeferExecution="$(BuildingInsideVisualStudio)"
+                   ExecuteIn="console/output/repl[:Display name]/Repl[:Display name]">
+      <Output TaskParameter="Command"
+              ItemName="Commands" />
+    </PythonCommand>
+  </Target>
+  -->
+  
+  <UsingTask AssemblyFile="$(_PythonToolsPath)\Microsoft.PythonTools.BuildTasks.dll"
+             TaskName="ResolveEnvironment"
+             TaskFactory="ResolveEnvironmentFactory">
+    <Task Evaluate="true">
+      <PropertyGroup>
+        <ProjectPath>$(MSBuildProjectFullPath)</ProjectPath>
+      </PropertyGroup>
+    </Task>
+  </UsingTask>
+
+  <!--
+  <ResolveEnvironment [InterpreterId="..." InterpreterVersion="..."]>
+    <Output TaskParameter="PrefixPath" PropertyName="PrefixPath" />
+    <Output TaskParameter="InterpreterPath" PropertyName="InterpreterPath" />
+    <Output TaskParameter="WindowsInterpreterPath" PropertyName="WindowsInterpreterPath" />
+    <Output TaskParameter="LibraryPath" PropertyName="LibraryPath" />
+    <Output TaskParameter="Architecture" PropertyName="Architecture" />
+    <Output TaskParameter="PathEnvironmentVariable" PropertyName="PathEnvironmentVariable" />
+    <Output TaskParameter="Description" PropertyName="Description" />
+    <Output TaskParameter="MajorVersion" PropertyName="MajorVersion" />
+    <Output TaskParameter="MinorVersion" PropertyName="MinorVersion" />
+  </ResolveEnvironment>
+  -->
+
+  <UsingTask AssemblyFile="$(_PythonToolsPath)\Microsoft.PythonTools.BuildTasks.dll" TaskName="ConvertPathToModuleName" />
+
+  <!--
+  <ConvertPathToModuleName Paths="...">
+    <Output TaskParameter="ModuleNames"
+            ItemName="Modules" />
+  </ConvertPathToModuleName>
+  -->
+
+  <Target Name="ResolveStartupPath"
+          AfterTargets="_CheckForInvalidConfigurationAndPlatform"
+          Condition="'$(StartupFile)' != ''"
+          Outputs="$(StartupPath);$(StartupModule)">
+    <CombinePath BasePath="$(ProjectDir)" Paths="$(ProjectHome)">
+      <Output TaskParameter="CombinedPaths" PropertyName="_ProjectHome" />
+    </CombinePath>
+    <CombinePath BasePath="$(_ProjectHome)" Paths="$(StartupFile)">
+      <Output TaskParameter="CombinedPaths" PropertyName="StartupPath" />
+    </CombinePath>
+
+    <ConvertPathToModuleName Paths="$(StartupPath)" PathLimit="$(_ProjectHome)">
+      <Output TaskParameter="ModuleNames" PropertyName="StartupModule" />
+    </ConvertPathToModuleName>
+  </Target>
+
+  <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" />
+</Project>

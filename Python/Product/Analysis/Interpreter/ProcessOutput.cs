@@ -18,7 +18,9 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.Win32.SafeHandles;
 
 namespace Microsoft.PythonTools {
@@ -457,6 +459,18 @@ namespace Microsoft.PythonTools {
                 return _process.WaitForExit((int)timeout.TotalMilliseconds);
             }
             return true;
+        }
+
+        /// <summary>
+        /// Enables using 'await' on this object.
+        /// </summary>
+        public TaskAwaiter<int> GetAwaiter() {
+            var tcs = new TaskCompletionSource<int>();
+            _process.Exited += (s, e) => tcs.TrySetResult(_process.ExitCode);
+            if (_process.HasExited) {
+                tcs.TrySetResult(_process.ExitCode);
+            }
+            return tcs.Task.GetAwaiter();
         }
 
         /// <summary>

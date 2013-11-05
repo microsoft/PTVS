@@ -110,7 +110,7 @@ namespace TestUtilities.UI {
         /// Opens and activates the solution explorer window.
         /// </summary>
         public SolutionExplorerTree OpenSolutionExplorer() {
-            Dte.ExecuteCommand("View.SolutionExplorer");            
+            Dte.ExecuteCommand("View.SolutionExplorer");
             return SolutionExplorerTreeView;
         }
 
@@ -165,7 +165,7 @@ namespace TestUtilities.UI {
             Debug.Assert(Path.IsPathRooted(filename));
 
             string windowName = Path.GetFileName(filename);
-            var elem = Element.FindFirst(TreeScope.Descendants, 
+            var elem = Element.FindFirst(TreeScope.Descendants,
                 new AndCondition(
                     new PropertyCondition(
                         AutomationElement.ClassNameProperty,
@@ -213,14 +213,14 @@ namespace TestUtilities.UI {
             var dialog = AutomationElement.FromHandle(OpenDialogWithDteExecuteCommand("Tools.Options"));
 
             try {
-            // go to the tree view which lets us select a set of options...
+                // go to the tree view which lets us select a set of options...
                 var treeView = new TreeView(dialog.FindFirst(TreeScope.Descendants,
                 new PropertyCondition(
                     AutomationElement.ClassNameProperty,
                     "SysTreeView32")
                 ));
-            
-            treeView.FindItem("Source Control", "Plug-in Selection").SetFocus();
+
+                treeView.FindItem("Source Control", "Plug-in Selection").SetFocus();
 
                 var currentSourceControl = new ComboBox(dialog.FindFirst(
                     TreeScope.Descendants,
@@ -237,10 +237,10 @@ namespace TestUtilities.UI {
                 )
             );
 
-            currentSourceControl.SelectItem(providerName);
+                currentSourceControl.SelectItem(providerName);
 
                 new AutomationWrapper(dialog).ClickButtonByName("OK");
-            WaitForDialogDismissed();
+                WaitForDialogDismissed();
                 dialog = null;
             } finally {
                 if (dialog != null) {
@@ -278,7 +278,7 @@ namespace TestUtilities.UI {
                     foundWindow--;
                     continue;
                 }
-                                
+
                 //MessageBoxButton.Abort
                 //MessageBoxButton.Cancel
                 //MessageBoxButton.No
@@ -320,7 +320,7 @@ namespace TestUtilities.UI {
             Assert.Fail("Failed to find exception helper window");
             return null;
         }
-        
+
         /// <summary>
         /// Waits for a modal dialog to take over a given window and returns the HWND for the new dialog.
         /// </summary>
@@ -339,7 +339,7 @@ namespace TestUtilities.UI {
                 System.Threading.Thread.Sleep(500);
                 uiShell.GetDialogOwnerHwnd(out hwnd);
                 if (task != null && task.IsFaulted) {
-                    return IntPtr.Zero;                    
+                    return IntPtr.Zero;
                 }
             }
 
@@ -558,7 +558,7 @@ namespace TestUtilities.UI {
 
         public void MoveCurrentFileToProject(string projectName) {
             var dialog = OpenDialogWithDteExecuteCommand("file.ProjectPickerMoveInto");
-            
+
             var chooseDialog = new ChooseLocationDialog(dialog);
             chooseDialog.FindProject(projectName);
             chooseDialog.ClickOK();
@@ -583,6 +583,7 @@ namespace TestUtilities.UI {
         public Project OpenProject(string projName, string startItem = null, int? expectedProjects = null, string projectName = null, bool setStartupItem = true) {
             string fullPath = TestData.GetPath(projName);
             Assert.IsTrue(File.Exists(fullPath), "Cannot find " + fullPath);
+            Console.WriteLine("Opening {0}", fullPath);
             Dte.Solution.Open(fullPath);
 
             Assert.IsTrue(Dte.Solution.IsOpen, "The solution is not open");

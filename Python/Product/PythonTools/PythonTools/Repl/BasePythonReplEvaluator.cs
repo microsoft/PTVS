@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
@@ -68,7 +69,12 @@ namespace Microsoft.PythonTools.Repl {
         private static readonly byte[] SetModuleCommandBytes = MakeCommand("setm");
         private static readonly byte[] InputLineCommandBytes = MakeCommand("inpl");
         private static readonly byte[] ExecuteFileCommandBytes = MakeCommand("excf");
+        private static readonly byte[] ExecuteFileExCommandBytes = MakeCommand("excx");
         private static readonly byte[] DebugAttachCommandBytes = MakeCommand("dbga");
+
+        const string ExecuteFileEx_Script = "script";
+        const string ExecuteFileEx_Module = "module";
+        const string ExecuteFileEx_Process = "process";
 
         protected BasePythonReplEvaluator(PythonReplEvaluatorOptions options) {
             _options = options;
@@ -162,11 +168,12 @@ namespace Microsoft.PythonTools.Repl {
             private Socket _socket;
             private Stream _stream;
             private TaskCompletionSource<ExecutionResult> _completion;
-            private string _executionText, _executionFile, _executionExtraArgs;
+            private string _executionText, _executionFile, _executionExtraArgs, _executionFileType;
             private AutoResetEvent _completionResultEvent = new AutoResetEvent(false);
             private OverloadDoc[] _overloads;
             private Dictionary<string, string> _fileToModuleName;
             private Dictionary<string, bool> _allModules;
+            internal bool _exitedIsExpected;
             private StringBuilder _preConnectionOutput;
             internal string _currentScope = "__main__";
             private MemberResults _memberResults;
@@ -198,13 +205,16 @@ namespace Microsoft.PythonTools.Repl {
             }
 
             private void ProcessExited(object sender, EventArgs e) {
-                Window.WriteError("The Python REPL process has exited\r\n");
                 _connected = false;
                 if (_preConnectionOutput != null) {
                     lock (_preConnectionOutput) {
                         Window.WriteError(FixNewLines(_preConnectionOutput.ToString()));
                     }
                 }
+                if (!_exitedIsExpected) {
+                    Window.WriteError("The Python REPL process has exited\r\n");
+                }
+                _exitedIsExpected = false;
             }
 
             private void StdErrReceived(object sender, DataReceivedEventArgs e) {
@@ -251,7 +261,7 @@ namespace Microsoft.PythonTools.Repl {
 
                     using (new SocketLock(this)) {
                         if (_executionFile != null) {
-                            SendExecuteFile(_executionFile, _executionExtraArgs);
+                            SendExecuteFile(_executionFile, _executionExtraArgs, _executionFileType);
                             _executionFile = null;
                             _executionExtraArgs = null;
                         }
@@ -673,12 +683,13 @@ namespace Microsoft.PythonTools.Repl {
                 }
             }
 
-            public Task<ExecutionResult> ExecuteFile(string filename, string extraArgs) {
+            public Task<ExecutionResult> ExecuteFile(string filename, string extraArgs, string fileType) {
                 using (new SocketLock(this)) {
                     if (!_connected) {
                         // delay executing the text until we're connected
                         _executionFile = filename;
                         _executionExtraArgs = extraArgs;
+                        _executionFileType = fileType;
                         _completion = new TaskCompletionSource<ExecutionResult>();
                         return _completion.Task;
                     } else if (!Socket.Connected) {
@@ -686,18 +697,23 @@ namespace Microsoft.PythonTools.Repl {
                         return ExecutionResult.Failed;
                     }
 
-                    SendExecuteFile(filename, extraArgs);
+                    SendExecuteFile(filename, extraArgs, fileType);
                     _completion = new TaskCompletionSource<ExecutionResult>();
                     return _completion.Task;
                 }
             }
 
-            private void SendExecuteFile(string filename, string extraArgs) {
+            private void SendExecuteFile(string filename, string extraArgs, string fileType) {
                 if (_process != null) {
                     AllowSetForegroundWindow(_process.Id);
                 }
 
-                Stream.Write(ExecuteFileCommandBytes);
+                if (fileType == ExecuteFileEx_Script) {
+                    Stream.Write(ExecuteFileCommandBytes);
+                } else {
+                    Stream.Write(ExecuteFileExCommandBytes);
+                    SendString(fileType);
+                }
                 SendString(filename);
                 SendString(extraArgs ?? String.Empty);
             }
@@ -1105,7 +1121,7 @@ namespace Microsoft.PythonTools.Repl {
             EnsureConnected();
 
             if (_curListener != null) {
-                return _curListener.ExecuteFile(filename, extraArgs);
+                return _curListener.ExecuteFile(filename, extraArgs, ExecuteFileEx_Script);
             } else {
                 _window.WriteError("Current interactive window is disconnected." + Environment.NewLine);
                 return ExecutionResult.Failed;
@@ -1125,9 +1141,31 @@ namespace Microsoft.PythonTools.Repl {
             }
 
             if (_curListener != null) {
-                _curListener.ExecuteFile(filename, extraArgs);
+                _curListener.ExecuteFile(filename, extraArgs, ExecuteFileEx_Script);
             } else {
                 _window.WriteError("Current interactive window is disconnected." + Environment.NewLine);
+            }
+        }
+
+        public Task<ExecutionResult> ExecuteModule(string moduleName, string arguments) {
+            EnsureConnected();
+
+            if (_curListener != null) {
+                return _curListener.ExecuteFile(moduleName, arguments, ExecuteFileEx_Module);
+            } else {
+                _window.WriteError("Current interactive window is disconnected." + Environment.NewLine);
+                return ExecutionResult.Failed;
+            }
+        }
+
+        public Task<ExecutionResult> ExecuteProcess(string filename, string arguments) {
+            EnsureConnected();
+
+            if (_curListener != null) {
+                return _curListener.ExecuteFile(filename, arguments, ExecuteFileEx_Process);
+            } else {
+                _window.WriteError("Current interactive window is disconnected." + Environment.NewLine);
+                return ExecutionResult.Failed;
             }
         }
 
@@ -1144,13 +1182,24 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         public Task<ExecutionResult> Reset() {
+            return Reset(false);
+        }
+
+        public Task<ExecutionResult> Reset(bool quiet) {
             // suppress reporting "failed to launch repl" process
             if (_curListener == null) {
-                _window.WriteError("Interactive window is not yet started." + Environment.NewLine);
+                if (!quiet) {
+                    _window.WriteError("Interactive window is not yet started." + Environment.NewLine);
+                }
                 return ExecutionResult.Succeeded;
             }
 
+            if (!quiet) {
+                _window.WriteLine("Resetting execution engine");
+            }
+
             _curListener._connected = true;
+            _curListener._exitedIsExpected = quiet;
 
             Close();
             Connect();
@@ -1235,15 +1284,17 @@ namespace Microsoft.PythonTools.Repl {
         #region IDisposable Members
 
         public virtual void Dispose() {
+            _window.TextView.BufferGraph.GraphBuffersChanged -= BufferGraphGraphBuffersChanged;
             try {
                 Close();
             } catch {
             }
         }
 
-        protected virtual void Close() {
+        public virtual void Close() {
             if (_curListener != null) {
                 _curListener.Close();
+                _curListener = null;
             }
             _attached = false;
         }

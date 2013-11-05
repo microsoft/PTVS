@@ -341,6 +341,14 @@
                 <File Id="fil7AED81D9701E48FA942D4591A0D81849" KeyPath="yes" Source="$(var.TargetDir)\PyDebugAttachX86.dll" />
             </Component>
 
+            <!-- Build targets and tasks -->
+            <Component Id="cmpCD5897C7E18F4AE4815B5E53BF4B9F28" Directory="INSTALLLOCATION" Guid="{3B556A00-075A-47CC-85D0-95B93AF2B990}">
+                <File Id="fil7CB4B0CA13FD4ED3BB412FFC3092155D" KeyPath="yes" Source="$(var.TargetDir)\Microsoft.PythonTools.BuildTasks.dll" />
+            </Component>
+            <Component Id="cmpD889F3C777FC4C319DB399C26C9FA90F" Directory="Dir_PythonToolsMsBuild" Guid="{C6C594C6-2A04-4601-BEF5-4967D813DB5B}">
+                <File Id="filBD5D8E2D9B4F477E952554A3C6ACF185" KeyPath="yes" Source="$(var.TargetDir)\Microsoft.PythonTools.targets" />
+            </Component>
+
             <!-- Mixed-mode debugging files -->
             <?if "$(var.VSTargetVersion)" != "10.0" ?>
             <Component Id="cmpB9D19167C9944EB1880D0B3E2EE2CD78" Directory="INSTALLLOCATION" Guid="{B2E65062-DD6B-4501-B8E0-34CC6BF47491}">

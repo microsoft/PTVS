@@ -20,6 +20,7 @@ ASSEMBLIES = sorted([
     "Microsoft.PythonTools.Attacher",
     "Microsoft.PythonTools.AttacherX86",
     "Microsoft.PythonTools.AzureSetup",
+    "Microsoft.PythonTools.BuildTasks",
     "Microsoft.PythonTools.Debugger",
     "Microsoft.PythonTools.Django",
     "Microsoft.PythonTools.Hpc",

@@ -373,7 +373,7 @@ namespace PythonToolsUITests {
 
         private static SelectFolderDialog AddExistingFolder(VisualStudioApp app) {
             try {
-                return new SelectFolderDialog(app.OpenDialogWithDteExecuteCommand("ProjectandSolutionContextMenus.Project.Add.Python.ExistingFolder"));
+                return new SelectFolderDialog(app.OpenDialogWithDteExecuteCommand("ProjectandSolutionContextMenus.Project.Add.ExistingFolder"));
             } catch (COMException ex) {
                 Console.WriteLine(ex);
                 Assert.Fail("Unable to execute AddExistingFolder command");

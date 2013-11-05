@@ -14,11 +14,14 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.Design;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -27,13 +30,19 @@ using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Interpreters;
 using Microsoft.PythonTools.Navigation;
+using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.Repl;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text.Adornments;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 using NativeMethods = Microsoft.VisualStudioTools.Project.NativeMethods;
+using OleConstants = Microsoft.VisualStudio.OLE.Interop.Constants;
+using Task = System.Threading.Tasks.Task;
 using VsCommands2K = Microsoft.VisualStudio.VSConstants.VSStd2KCmdID;
+using VsMenus = Microsoft.VisualStudioTools.Project.VsMenus;
 
 namespace Microsoft.PythonTools.Project {
     [Guid(PythonConstants.ProjectNodeGuid)]
@@ -52,6 +61,9 @@ namespace Microsoft.PythonTools.Project {
         private InterpretersContainerNode _interpretersContainer;
         private MSBuildProjectInterpreterFactoryProvider _interpreters;
 
+        internal List<CustomCommand> _customCommands;
+        private HashSet<IReplWindow> _associatedReplWindows;
+
         public PythonProjectNode(CommonProjectPackage package)
             : base(package, Utilities.GetImageList(typeof(PythonProjectNode).Assembly.GetManifestResourceStream(PythonConstants.ProjectImageList))) {
 
@@ -65,21 +77,39 @@ namespace Microsoft.PythonTools.Project {
             if (_interpreters != null) {
                 _interpreters.ActiveInterpreterChanged -= ActiveInterpreterChanged;
                 _interpreters.InterpreterFactoriesChanged -= InterpreterFactoriesChanged;
+                _interpreters.Dispose();
                 _interpreters = null;
             }
 
-            if (project != null) {
-                var interpreterService = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
-                _interpreters = new MSBuildProjectInterpreterFactoryProvider(interpreterService, project);
-                try {
-                    _interpreters.DiscoverInterpreters();
-                } catch (InvalidDataException ex) {
-                    OutputWindowRedirector.GetGeneral(Site).WriteErrorLine(ex.Message);
+            // Remove old custom commands
+            _customCommands = null;
+
+            // Project has been cleared, so nothing elso to do here
+            if (project == null) {
+                return;
+            }
+
+            // Hook up the interpreter factory provider
+            var interpreterService = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
+            _interpreters = new MSBuildProjectInterpreterFactoryProvider(interpreterService, project);
+            try {
+                _interpreters.DiscoverInterpreters();
+            } catch (InvalidDataException ex) {
+                OutputWindowRedirector.GetGeneral(Site).WriteErrorLine(ex.Message);
+            }
+            _interpreters.ActiveInterpreterChanged += ActiveInterpreterChanged;
+            _interpreters.InterpreterFactoriesChanged += InterpreterFactoriesChanged;
+
+            // Add any custom commands
+            var commandNames = project.GetPropertyValue("PythonCommands");
+            if (!string.IsNullOrEmpty(commandNames)) {
+                var targets = new List<Microsoft.Build.Construction.ProjectTargetElement>();
+                foreach (var name in commandNames.Split(';').Where(n => !string.IsNullOrEmpty(n))) {
+                    targets.Add(project.Xml.Targets
+                        .FirstOrDefault(target => name.Equals(target.Name, StringComparison.InvariantCultureIgnoreCase))
+                    );
                 }
-                _interpreters.ActiveInterpreterChanged += ActiveInterpreterChanged;
-                _interpreters.InterpreterFactoriesChanged += InterpreterFactoriesChanged;
-            } else {
-                _interpreters = null;
+                _customCommands = targets.Select(target => new CustomCommand(this, target.Name, target.Label)).ToList();
             }
         }
 
@@ -207,12 +237,12 @@ namespace Microsoft.PythonTools.Project {
 
             if (XamlDesignerSupport.DesignerContextType != null &&
                 newNode is CommonFileNode &&
-                !string.IsNullOrEmpty(include) && 
+                !string.IsNullOrEmpty(include) &&
                 Path.GetExtension(include).Equals(".xaml", StringComparison.OrdinalIgnoreCase)) {
                 //Create a DesignerContext for the XAML designer for this file
                 newNode.OleServiceProvider.AddService(XamlDesignerSupport.DesignerContextType, ((CommonFileNode)newNode).ServiceCreator, false);
             }
-            
+
             return newNode;
         }
 
@@ -237,8 +267,8 @@ namespace Microsoft.PythonTools.Project {
         protected override object CreateServices(Type serviceType) {
             if (XamlDesignerSupport.DesignerContextType == serviceType) {
                 return DesignerContext;
-            } 
-            
+            }
+
             var res = base.CreateServices(serviceType);
             return res;
         }
@@ -377,7 +407,7 @@ namespace Microsoft.PythonTools.Project {
                             Interpreters.GetProjectItem(fact),
                             fact,
                             isInterpreterReference: !interpreters.IsProjectSpecific(fact),
-                            canDelete: 
+                            canDelete:
                                 interpreters.IsProjectSpecific(fact) &&
                                 Directory.Exists(fact.Configuration.PrefixPath)
                         ));
@@ -541,8 +571,41 @@ namespace Microsoft.PythonTools.Project {
             return PythonToolsPackage.GetLauncher(this);
         }
 
+        internal void AddAssociatedReplWindow(IReplWindow window) {
+            Debug.Assert(window != null);
+            if (window == null) {
+                return;
+            }
+
+            if (_associatedReplWindows == null) {
+                _associatedReplWindows = new HashSet<IReplWindow>();
+            }
+            _associatedReplWindows.Add(window);
+        }
+
         protected override void Dispose(bool disposing) {
             if (disposing) {
+                var windows = _associatedReplWindows;
+                _associatedReplWindows = null;
+                if (windows != null) {
+                    foreach (var window in windows) {
+                        // Close backends when the project closes so we don't
+                        // leave Python processes hanging around.
+                        var pyEvaluator = window.Evaluator as BasePythonReplEvaluator;
+                        if (pyEvaluator != null) {
+                            pyEvaluator.Close();
+                        }
+
+                        // Close project-specific REPL windows when the project
+                        // closes.
+                        var pane = window as ToolWindowPane;
+                        var frame = pane != null ? pane.Frame as IVsWindowFrame : null;
+                        if (frame != null) {
+                            frame.CloseFrame((uint)__FRAMECLOSE.FRAMECLOSE_NoSave);
+                        }
+                    }
+                }
+
                 if (_analyzer != null) {
                     UnHookErrorsAndWarnings(_analyzer);
                     if (WarningFiles.Count > 0 || ErrorFiles.Count > 0) {
@@ -831,19 +894,84 @@ namespace Microsoft.PythonTools.Project {
 
         internal override int QueryStatusOnNode(Guid cmdGroup, uint cmd, IntPtr pCmdText, ref QueryStatusResult result) {
             if (cmdGroup == GuidList.guidPythonToolsCmdSet) {
-                switch ((int)cmd) {
-                    case CommonConstants.StartWithoutDebuggingCmdId:
+                // Display the custom menu only on the Project node.
+                if (cmd == PythonConstants.CustomProjectCommandsMenu) {
+                    if (_customCommands != null && _customCommands.Any()) {
                         result |= QueryStatusResult.SUPPORTED | QueryStatusResult.ENABLED;
-                        return VSConstants.S_OK;
+                    } else {
+                        result |= QueryStatusResult.INVISIBLE;
+                    }
+                    return VSConstants.S_OK;
                 }
             }
             return base.QueryStatusOnNode(cmdGroup, cmd, pCmdText, ref result);
         }
 
+        protected override QueryStatusResult QueryStatusSelectionOnNodes(IList<HierarchyNode> selectedNodes, Guid cmdGroup, uint cmd, IntPtr pCmdText) {
+            if (cmdGroup == GuidList.guidPythonToolsCmdSet) {
+                // Display these items in the Project menu, regardless of which
+                // items are selected.
+                if ((int)cmd >= PythonConstants.FirstCustomCmdId && (int)cmd <= PythonConstants.LastCustomCmdId) {
+                    int i = (int)cmd - PythonConstants.FirstCustomCmdId;
+
+                    if (_customCommands == null || i >= _customCommands.Count) {
+                        return QueryStatusResult.INVISIBLE | QueryStatusResult.NOTSUPPORTED;
+                    }
+
+                    if (pCmdText != IntPtr.Zero && NativeMethods.OLECMDTEXT.GetFlags(pCmdText) == NativeMethods.OLECMDTEXT.OLECMDTEXTF.OLECMDTEXTF_NAME) {
+                        NativeMethods.OLECMDTEXT.SetText(pCmdText, _customCommands[i].DisplayLabel);
+                    }
+                    var result = QueryStatusResult.SUPPORTED;
+                    if (_customCommands[i].CanExecute) {
+                        result |= QueryStatusResult.ENABLED;
+                    }
+                    return result;
+                }
+            }
+
+            return base.QueryStatusSelectionOnNodes(selectedNodes, cmdGroup, cmd, pCmdText);
+        }
+
+        protected override int ExecCommandIndependentOfSelection(Guid cmdGroup, uint cmdId, uint cmdExecOpt, IntPtr vaIn, IntPtr vaOut, CommandOrigin commandOrigin, out bool handled) {
+            if (cmdGroup == GuidList.guidPythonToolsCmdSet) {
+                if ((int)cmdId >= PythonConstants.FirstCustomCmdId && (int)cmdId <= PythonConstants.LastCustomCmdId) {
+                    handled = true;
+
+                    int i = (int)cmdId - PythonConstants.FirstCustomCmdId;
+                    if (_customCommands == null || i >= _customCommands.Count) {
+                        return (int)OleConstants.OLECMDERR_E_NOTSUPPORTED;
+                    }
+
+                    var command = _customCommands[i];
+                    if (command.CanExecute) {
+                        if (!Utilities.SaveDirtyFiles()) {
+                            return VSConstants.S_OK;
+                        }
+
+                        command.Execute(this).ContinueWith(t => {
+                            if (t.Exception != null) {
+                                MessageBox.Show(
+                                    SR.GetString(SR.ErrorRunningCustomCommand, command.DisplayLabelWithoutAccessKeys, t.Exception.Message),
+                                    SR.GetString(SR.PythonToolsForVisualStudio)
+                                );
+                            }
+                        },
+                            CancellationToken.None,
+                            TaskContinuationOptions.NotOnFaulted,
+                            TaskScheduler.FromCurrentSynchronizationContext()
+                        );
+                    }
+                    return VSConstants.S_OK;
+                }
+            }
+
+            return base.ExecCommandIndependentOfSelection(cmdGroup, cmdId, cmdExecOpt, vaIn, vaOut, commandOrigin, out handled);
+        }
+
         protected override bool DisableCmdInCurrentMode(Guid cmdGroup, uint cmd) {
             if (cmdGroup == GuidList.guidPythonToolsCmdSet) {
                 if (IsCurrentStateASuppressCommandsMode()) {
-                    switch((int)cmd) {
+                    switch ((int)cmd) {
                         case CommonConstants.AddSearchPathCommandId:
                         case CommonConstants.AddSearchPathZipCommandId:
                         case CommonConstants.StartDebuggingCmdId:
@@ -855,6 +983,11 @@ namespace Microsoft.PythonTools.Project {
                         case PythonConstants.AddVirtualEnv:
                         case PythonConstants.InstallPythonPackage:
                             return true;
+                        default:
+                            if (cmd >= PythonConstants.FirstCustomCmdId && cmd <= PythonConstants.LastCustomCmdId) {
+                                return true;
+                            }
+                            break;
                     }
                 }
             }
@@ -994,7 +1127,7 @@ namespace Microsoft.PythonTools.Project {
                 tcs.SetResult(null);
                 task = tcs.Task;
             }
-            
+
             return task.ContinueWith<InterpreterFactoryCreationOptions>(t => {
                 if (_interpreters.FindInterpreter(path) != null) {
                     return null;
