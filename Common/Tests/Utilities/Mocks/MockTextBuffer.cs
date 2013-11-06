@@ -24,7 +24,7 @@ namespace TestUtilities.Mocks {
         private MockTextEdit _edit;
         private PropertyCollection _properties;
 
-        public MockTextBuffer(string content, string filename = "C:\\foo.py", string contentType = "Python") {
+        public MockTextBuffer(string content, string filename = "C:\\fob.py", string contentType = "Python") {
             _snapshot = new MockTextSnapshot(this, content);
             _filename = filename;
             _contentType = contentType;

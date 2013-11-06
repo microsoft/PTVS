@@ -52,14 +52,14 @@ namespace PythonToolsUITests {
                 var ps = System.Management.Automation.PowerShell.Create();
                 ps.AddScript(@"
                         param($project)
-                        $folderProjectItem = $project.ProjectItems.Item(""Bar"")
+                        $folderProjectItem = $project.ProjectItems.Item(""Oar"")
                         $result =  $folderProjectItem.FileNames(1)
                 ");
                 ps.AddParameter("project", project);
                 ps.Invoke();
                 var result = ps.Runspace.SessionStateProxy.GetVariable("result");
 
-                var folder = project.ProjectItems.Item("Bar");
+                var folder = project.ProjectItems.Item("Oar");
                 string path = folder.get_FileNames(1);
                 
                 Assert.AreEqual(result, path);

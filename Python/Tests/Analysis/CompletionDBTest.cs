@@ -150,11 +150,11 @@ namespace PythonToolsTests {
             var typeDb = new PythonTypeDatabase(fact, paths);
             var module = typeDb.GetModule("SomeLib");
             Assert.IsNotNull(module, "Could not import SomeLib");
-            var fooMod = typeDb.GetModule("SomeLib.foo");
-            Assert.IsNotNull(fooMod, "Could not import SomeLib.foo");
+            var fobMod = typeDb.GetModule("SomeLib.fob");
+            Assert.IsNotNull(fobMod, "Could not import SomeLib.fob");
 
-            var cClass = ((IPythonModule)fooMod).GetMember(null, "C");
-            Assert.IsNotNull(cClass, "Could not get SomeLib.foo.C");
+            var cClass = ((IPythonModule)fobMod).GetMember(null, "C");
+            Assert.IsNotNull(cClass, "Could not get SomeLib.fob.C");
 
             Assert.AreEqual(PythonMemberType.Class, cClass.MemberType);
         }

@@ -8,17 +8,17 @@
 1[::4]
 1[...]
 1[:,]
-foo.bar
-foo = 1
-foo += 1
-foo -= 1
-foo *= 1
-foo /= 1
-foo //= 1
-foo %= 1
-foo &= 1
-foo |= 1
-foo ^= 1
-foo >>= 1
-foo <<= 1
-foo **= 1
+fob.oar
+fob = 1
+fob += 1
+fob -= 1
+fob *= 1
+fob /= 1
+fob //= 1
+fob %= 1
+fob &= 1
+fob |= 1
+fob ^= 1
+fob >>= 1
+fob <<= 1
+fob **= 1

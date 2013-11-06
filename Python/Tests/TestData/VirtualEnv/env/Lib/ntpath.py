@@ -391,7 +391,7 @@ def expandvars(path):
     return res
 
 
-# Normalize a path, e.g. A//B, A/./B and A/foo/../B all become A\B.
+# Normalize a path, e.g. A//B, A/./B and A/fob/../B all become A\B.
 # Previously, this function also truncated pathnames to 8+3 format,
 # but as this module is called "ntpath", that's obviously wrong!
 

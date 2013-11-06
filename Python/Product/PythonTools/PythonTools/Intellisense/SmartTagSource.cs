@@ -106,7 +106,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private int SmartTagComparer(ImportSmartTagAction left, ImportSmartTagAction right) {
             if (left.FromName == null) {
                 if (right.FromName != null) {
-                    // left is import <foo>, order it first
+                    // left is import <fob>, order it first
                     return -1;
                 }
 

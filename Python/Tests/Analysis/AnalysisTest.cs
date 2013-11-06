@@ -57,36 +57,36 @@ namespace AnalysisTests {
 
         [TestMethod, Priority(0)]
         public void SpecialArgTypes() {
-            var code = @"def f(*foo, **bar):
+            var code = @"def f(*fob, **oar):
     pass
 ";
             var entry = ProcessText(code);
 
-            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("foo", code.IndexOf("pass")), BuiltinTypeId.Tuple);
-            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("bar", code.IndexOf("pass")), BuiltinTypeId.Dict);
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("fob", code.IndexOf("pass")), BuiltinTypeId.Tuple);
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("oar", code.IndexOf("pass")), BuiltinTypeId.Dict);
 
-            code = @"def f(*foo):
+            code = @"def f(*fob):
     pass
 
 f(42)
 ";
             entry = ProcessText(code);
 
-            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("foo", code.IndexOf("pass")), BuiltinTypeId.Tuple);
-            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("foo[0]", code.IndexOf("pass")), BuiltinTypeId.Int);
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("fob", code.IndexOf("pass")), BuiltinTypeId.Tuple);
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("fob[0]", code.IndexOf("pass")), BuiltinTypeId.Int);
 
-            code = @"def f(*foo):
+            code = @"def f(*fob):
     pass
 
 f(42, 'abc')
 ";
             entry = ProcessText(code);
 
-            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("foo", code.IndexOf("pass")), BuiltinTypeId.Tuple);
-            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("foo[0]", code.IndexOf("pass")), BuiltinTypeId.Int, BuiltinTypeId_Str);
-            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("foo[1]", code.IndexOf("pass")), BuiltinTypeId.Int, BuiltinTypeId_Str);
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("fob", code.IndexOf("pass")), BuiltinTypeId.Tuple);
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("fob[0]", code.IndexOf("pass")), BuiltinTypeId.Int, BuiltinTypeId_Str);
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("fob[1]", code.IndexOf("pass")), BuiltinTypeId.Int, BuiltinTypeId_Str);
 
-            code = @"def f(*foo):
+            code = @"def f(*fob):
     pass
 
 f(42, 'abc')
@@ -94,57 +94,57 @@ f('abc', 42)
 ";
             entry = ProcessText(code);
 
-            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("foo", code.IndexOf("pass")), BuiltinTypeId.Tuple);
-            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("foo[0]", code.IndexOf("pass")), BuiltinTypeId.Int, BuiltinTypeId_Str);
-            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("foo[1]", code.IndexOf("pass")), BuiltinTypeId.Int, BuiltinTypeId_Str);
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("fob", code.IndexOf("pass")), BuiltinTypeId.Tuple);
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("fob[0]", code.IndexOf("pass")), BuiltinTypeId.Int, BuiltinTypeId_Str);
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("fob[1]", code.IndexOf("pass")), BuiltinTypeId.Int, BuiltinTypeId_Str);
 
-            code = @"def f(**bar):
-    y = bar['foo']
+            code = @"def f(**oar):
+    y = oar['fob']
     pass
 
 f(x=42)
 ";
             entry = ProcessText(code);
 
-            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("bar", code.IndexOf("pass")), BuiltinTypeId.Dict);
-            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("bar['foo']", code.IndexOf("pass")), BuiltinTypeId.Int);
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("oar", code.IndexOf("pass")), BuiltinTypeId.Dict);
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("oar['fob']", code.IndexOf("pass")), BuiltinTypeId.Int);
             AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("y", code.IndexOf("pass")), BuiltinTypeId.Int);
 
 
-            code = @"def f(**bar):
-    z = bar['foo']
+            code = @"def f(**oar):
+    z = oar['fob']
     pass
 
 f(x=42, y = 'abc')
 ";
             entry = ProcessText(code);
 
-            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("bar", code.IndexOf("pass")), BuiltinTypeId.Dict);
-            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("bar['foo']", code.IndexOf("pass")), BuiltinTypeId.Int, BuiltinTypeId_Str);
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("oar", code.IndexOf("pass")), BuiltinTypeId.Dict);
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("oar['fob']", code.IndexOf("pass")), BuiltinTypeId.Int, BuiltinTypeId_Str);
             AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("z", code.IndexOf("pass")), BuiltinTypeId.Int, BuiltinTypeId_Str);
         }
 
         [TestMethod, Priority(0)]
         public void TestPackageImportStar() {
-            var fooInit = GetSourceUnit("from bar import *", @"C:\\Test\\Lib\\foo\\__init__.py");
-            var barInit = GetSourceUnit("from baz import *", @"C:\\Test\\Lib\\foo\\bar\\__init__.py");
-            var baz = GetSourceUnit("import quox\r\nfunc = quox.func", @"C:\\Test\\Lib\\foo\\bar\\baz.py");
-            var quox = GetSourceUnit("def func(): return 42", @"C:\\Test\\Lib\\foo\\bar\\quox.py");
+            var fobInit = GetSourceUnit("from oar import *", @"C:\\Test\\Lib\\fob\\__init__.py");
+            var oarInit = GetSourceUnit("from baz import *", @"C:\\Test\\Lib\\fob\\oar\\__init__.py");
+            var baz = GetSourceUnit("import quox\r\nfunc = quox.func", @"C:\\Test\\Lib\\fob\\oar\\baz.py");
+            var quox = GetSourceUnit("def func(): return 42", @"C:\\Test\\Lib\\fob\\oar\\quox.py");
 
             var state = new PythonAnalyzer(InterpreterFactory, Interpreter);
 
-            var fooInitState = state.AddModule("foo", @"C:\\Test\\Lib\\foo\\__init__.py", EmptyAnalysisCookie.Instance);
-            var barInitState = state.AddModule("foo.bar", @"C:\\Test\\Lib\\foo\\bar\\__init__.py", EmptyAnalysisCookie.Instance);
-            var bazState = state.AddModule("foo.bar.baz", @"C:\\Test\\Lib\\foo\\bar\\baz.py", EmptyAnalysisCookie.Instance);
-            var quoxState = state.AddModule("foo.bar.quox", @"C:\\Test\\Lib\\foo\\bar\\quox.py", EmptyAnalysisCookie.Instance);
+            var fobInitState = state.AddModule("fob", @"C:\\Test\\Lib\\fob\\__init__.py", EmptyAnalysisCookie.Instance);
+            var oarInitState = state.AddModule("fob.oar", @"C:\\Test\\Lib\\fob\\oar\\__init__.py", EmptyAnalysisCookie.Instance);
+            var bazState = state.AddModule("fob.oar.baz", @"C:\\Test\\Lib\\fob\\oar\\baz.py", EmptyAnalysisCookie.Instance);
+            var quoxState = state.AddModule("fob.oar.quox", @"C:\\Test\\Lib\\fob\\oar\\quox.py", EmptyAnalysisCookie.Instance);
 
-            Prepare(fooInitState, fooInit);
-            Prepare(barInitState, barInit);
+            Prepare(fobInitState, fobInit);
+            Prepare(oarInitState, oarInit);
             Prepare(bazState, baz);
             Prepare(quoxState, quox);
 
-            fooInitState.Analyze(CancellationToken.None);
-            barInitState.Analyze(CancellationToken.None);
+            fobInitState.Analyze(CancellationToken.None);
+            oarInitState.Analyze(CancellationToken.None);
             bazState.Analyze(CancellationToken.None);
             quoxState.Analyze(CancellationToken.None);
             Assert.AreEqual(
@@ -156,12 +156,12 @@ f(x=42, y = 'abc')
                 "def func() -> int"
             );
             Assert.AreEqual(
-                barInitState.Analysis.GetValuesByIndex("func", 1).First().Description,
+                oarInitState.Analysis.GetValuesByIndex("func", 1).First().Description,
                 "def func() -> int"
             );
 
             Assert.AreEqual(
-                fooInitState.Analysis.GetValuesByIndex("func", 1).First().Description, 
+                fobInitState.Analysis.GetValuesByIndex("func", 1).First().Description, 
                 "def func() -> int"
             );
         }
@@ -178,7 +178,7 @@ f(x=42, y = 'abc')
             var code = @"import array
 
 slice = array.array('b', b'abcdef')[2:3]
-add = array.array('b', b'abcdef') + array.array('b', b'foo')
+add = array.array('b', b'abcdef') + array.array('b', b'fob')
 ";
             var entry = ProcessText(code);
 
@@ -243,8 +243,8 @@ def f(x):
         [TestMethod, Priority(0)]
         public void CartesianStarArgs() {
             var code = @"def f(a, **args):
-    args['foo'] = a
-    return args['foo']
+    args['fob'] = a
+    return args['fob']
 
 
 x = f(42)
@@ -259,9 +259,9 @@ y = f('abc')";
             code = @"def f(a, **args):
     for i in xrange(2):
         if i == 1:
-            return args['foo']
+            return args['fob']
         else:
-            args['foo'] = a
+            args['fob'] = a
 
 x = f(42)
 y = f('abc')";
@@ -293,7 +293,7 @@ x = f(42)";
 
 
 x = f(42)
-y = f('foo')";
+y = f('fob')";
 
             var entry = ProcessText(code);
 
@@ -310,7 +310,7 @@ y = f('foo')";
 
 
 x = f(42)
-y = f('foo')";
+y = f('fob')";
 
             var entry = ProcessText(code);
 
@@ -327,7 +327,7 @@ y = f('foo')";
 
 
 x = f(42)
-y = f('foo')";
+y = f('fob')";
 
             var entry = ProcessText(code);
 
@@ -365,8 +365,8 @@ b = list_fact(str)[0]
         return b
 
 
-x = f(42, 'bar')
-y = f('foo', 'bar')";
+x = f(42, 'oar')
+y = f('fob', 'oar')";
 
             var entry = ProcessText(code);
 
@@ -415,10 +415,10 @@ def h(c):
 
         [TestMethod, Priority(0)]
         public void DictionaryKeyValues() {
-            var code = @"x = {'abc': 42, 'bar': 'baz'}
+            var code = @"x = {'abc': 42, 'oar': 'baz'}
 
 i = x['abc']
-s = x['bar']
+s = x['oar']
 ";
             var entry = ProcessText(code);
 
@@ -450,12 +450,12 @@ y2 = f(y)
 
         [TestMethod, Priority(0)]
         public void RecursiveDictionaryKeyValues() {
-            var code = @"x = {'abc': 42, 'bar': 'baz'}
+            var code = @"x = {'abc': 42, 'oar': 'baz'}
 x['abc'] = x
 x[x] = 'abc'
 
 i = x['abc']
-s = x['abc']['abc']['abc']['bar']
+s = x['abc']['abc']['abc']['oar']
 t = x[x]
 ";
             var entry = ProcessText(code);
@@ -751,17 +751,17 @@ class D(C):
 
             code = @"
 class C(object):
-    __FOO = 42
+    __FOB = 42
 
     def f(self):
-        abc = C.__FOO  # Completion should work here
+        abc = C.__FOB  # Completion should work here
 
 
-xyz = C._C__FOO  # Advanced members completion should work here
+xyz = C._C__FOB  # Advanced members completion should work here
 ";
             entry = ProcessText(code);
-            AssertUtil.ContainsExactly(entry.GetMemberNamesByIndex("C", code.IndexOf("abc = ")), GetUnion(_objectMembers, "__FOO", "f"));
-            AssertUtil.ContainsExactly(entry.GetMemberNamesByIndex("C", code.IndexOf("xyz = ")), GetUnion(_objectMembers, "_C__FOO", "f"));
+            AssertUtil.ContainsExactly(entry.GetMemberNamesByIndex("C", code.IndexOf("abc = ")), GetUnion(_objectMembers, "__FOB", "f"));
+            AssertUtil.ContainsExactly(entry.GetMemberNamesByIndex("C", code.IndexOf("xyz = ")), GetUnion(_objectMembers, "_C__FOB", "f"));
 
         }
 
@@ -775,12 +775,12 @@ class C:
 
 class D(C):
     def __init__(self):        
-        self.foo = self.abc
+        self.fob = self.abc
 ";
 
             var entry = ProcessText(code);
-            AssertUtil.ContainsExactly(entry.GetMemberNamesByIndex("self.foo", code.IndexOf("self.foo")), _intMembers);
-            AssertUtil.Contains(entry.GetMemberNamesByIndex("self", code.IndexOf("self.foo")), "abc");
+            AssertUtil.ContainsExactly(entry.GetMemberNamesByIndex("self.fob", code.IndexOf("self.fob")), _intMembers);
+            AssertUtil.Contains(entry.GetMemberNamesByIndex("self", code.IndexOf("self.fob")), "abc");
         }
 
         [TestMethod, Priority(0)]
@@ -1445,8 +1445,8 @@ class x(object):
         
 a = x(42)
 b = getattr(a, 'value')
-c = getattr(a, 'dne', 'foo')
-d = getattr(a, 'value', 'foo')
+c = getattr(a, 'dne', 'fob')
+d = getattr(a, 'value', 'fob')
 ");
 
             AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("b", 1), BuiltinTypeId.Int);
@@ -1754,11 +1754,11 @@ constructed = list().append
         [TestMethod, Priority(0)]
         public void Del() {
             string text = @"
-del foo
-del foo[2]
-del foo.bar
-del (foo)
-del foo, bar
+del fob
+del fob[2]
+del fob.oar
+del (fob)
+del fob, oar
 ";
             var entry = ProcessText(text);
 
@@ -1851,17 +1851,17 @@ y = x + u'dEf'
 x1 = 'abc'
 y1 = x1 + 'def'
 
-foo = 'abc'.lower()
-bar = foo + 'Def'
+fob = 'abc'.lower()
+oar = fob + 'Def'
 
-foo2 = u'ab' + u'cd'
-bar2 = foo2 + u'ef'";
+fob2 = u'ab' + u'cd'
+bab2 = fob2 + u'ef'";
 
             var entry = ProcessText(text);
             AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("y", text.IndexOf("y =")), BuiltinTypeId.Unicode);
             AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("y1", text.IndexOf("y1 =")), BuiltinTypeId_Str);
-            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("bar", text.IndexOf("bar =")), BuiltinTypeId_Str);
-            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("bar2", text.IndexOf("bar2 =")), BuiltinTypeId.Unicode);
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("oar", text.IndexOf("oar =")), BuiltinTypeId_Str);
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("oar2", text.IndexOf("oar2 =")), BuiltinTypeId.Unicode);
         }
 
         [TestMethod, Priority(0)]
@@ -1874,17 +1874,17 @@ y = x % (42, )
 x1 = 'abc %d'
 y1 = x1 % (42, )
 
-foo = 'abc %d'.lower()
-bar = foo % (42, )
+fob = 'abc %d'.lower()
+oar = fob % (42, )
 
-foo2 = u'abc' + u'%d'
-bar2 = foo2 % (42, )";
+fob2 = u'abc' + u'%d'
+oar2 = fob2 % (42, )";
 
             var entry = ProcessText(text);
             AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("y", text.IndexOf("y =")), BuiltinTypeId.Unicode);
             AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("y1", text.IndexOf("y1 =")), BuiltinTypeId_Str);
-            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("bar", text.IndexOf("bar =")), BuiltinTypeId_Str);
-            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("bar2", text.IndexOf("bar2 =")), BuiltinTypeId.Unicode);
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("oar", text.IndexOf("oar =")), BuiltinTypeId_Str);
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("oar2", text.IndexOf("oar2 =")), BuiltinTypeId.Unicode);
         }
 
         public virtual BuiltinTypeId BuiltinTypeId_Str {
@@ -1910,18 +1910,18 @@ y = x * 100
 x1 = 'abc %d'
 y1 = x1 * 100
 
-foo = 'abc %d'.lower()
-bar = foo * 100
+fob = 'abc %d'.lower()
+oar = fob * 100
 
-foo2 = u'abc' + u'%d'
-bar2 = foo2 * 100";
+fob2 = u'abc' + u'%d'
+oar2 = fob2 * 100";
 
             var entry = ProcessText(text);
             AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("x", text.IndexOf("y =")), BuiltinTypeId.Unicode);
             AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("y", text.IndexOf("y =")), BuiltinTypeId.Unicode);
             AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("y1", text.IndexOf("y1 =")), BuiltinTypeId_Str);
-            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("bar", text.IndexOf("bar =")), BuiltinTypeId_Str);
-            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("bar2", text.IndexOf("bar2 =")), BuiltinTypeId.Unicode);
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("oar", text.IndexOf("oar =")), BuiltinTypeId_Str);
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("oar2", text.IndexOf("oar2 =")), BuiltinTypeId.Unicode);
 
             text = @"
 x = u'abc %d'
@@ -1931,17 +1931,17 @@ y = 100 * x
 x1 = 'abc %d'
 y1 = 100 * x1
 
-foo = 'abc %d'.lower()
-bar = 100 * foo
+fob = 'abc %d'.lower()
+oar = 100 * fob
 
-foo2 = u'abc' + u'%d'
-bar2 = 100 * foo2";
+fob2 = u'abc' + u'%d'
+oar2 = 100 * fob2";
 
             entry = ProcessText(text);
             AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("y", text.IndexOf("y =")), BuiltinTypeId.Unicode);
             AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("y1", text.IndexOf("y1 =")), BuiltinTypeId_Str);
-            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("bar", text.IndexOf("bar =")), BuiltinTypeId_Str);
-            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("bar2", text.IndexOf("bar2 =")), BuiltinTypeId.Unicode);
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("oar", text.IndexOf("oar =")), BuiltinTypeId_Str);
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("oar2", text.IndexOf("oar2 =")), BuiltinTypeId.Unicode);
         }
 
         [TestMethod, Priority(0)]
@@ -2017,17 +2017,17 @@ y = x * 100
 x1 = (1,2,3)
 y1 = x1 * 100
 
-foo = [1,2,3]
-bar = foo * 100
+fob = [1,2,3]
+oar = fob * 100
 
-foo2 = []
-bar2 = foo2 * 100";
+fob2 = []
+oar2 = fob2 * 100";
 
             var entry = ProcessText(text);
             AssertUtil.ContainsExactly(entry.GetShortDescriptionsByIndex("y", text.IndexOf("y =")), "tuple");
             AssertUtil.ContainsExactly(entry.GetShortDescriptionsByIndex("y1", text.IndexOf("y1 =")), "tuple");
-            AssertUtil.ContainsExactly(entry.GetShortDescriptionsByIndex("bar", text.IndexOf("bar =")), "list");
-            AssertUtil.ContainsExactly(entry.GetShortDescriptionsByIndex("bar2", text.IndexOf("bar2 =")), "list");
+            AssertUtil.ContainsExactly(entry.GetShortDescriptionsByIndex("oar", text.IndexOf("oar =")), "list");
+            AssertUtil.ContainsExactly(entry.GetShortDescriptionsByIndex("oar2", text.IndexOf("oar2 =")), "list");
 
             text = @"
 x = ()
@@ -2036,17 +2036,17 @@ y = 100 * x
 x1 = (1,2,3)
 y1 = 100 * x1
 
-foo = [1,2,3]
-bar = 100 * foo 
+fob = [1,2,3]
+oar = 100 * fob 
 
-foo2 = []
-bar2 = 100 * foo2";
+fob2 = []
+oar2 = 100 * fob2";
 
             entry = ProcessText(text);
             AssertUtil.ContainsExactly(entry.GetShortDescriptionsByIndex("y", text.IndexOf("y =")), "tuple");
             AssertUtil.ContainsExactly(entry.GetShortDescriptionsByIndex("y1", text.IndexOf("y1 =")), "tuple");
-            AssertUtil.ContainsExactly(entry.GetShortDescriptionsByIndex("bar", text.IndexOf("bar =")), "list");
-            AssertUtil.ContainsExactly(entry.GetShortDescriptionsByIndex("bar2", text.IndexOf("bar2 =")), "list");
+            AssertUtil.ContainsExactly(entry.GetShortDescriptionsByIndex("oar", text.IndexOf("oar =")), "list");
+            AssertUtil.ContainsExactly(entry.GetShortDescriptionsByIndex("oar2", text.IndexOf("oar2 =")), "list");
         }
 
         [TestMethod, Priority(0)]
@@ -2095,15 +2095,15 @@ class NoDescriptor:
        def nodesc_method(self): pass
 
  class SomeClass:
-    foo = NoDescriptor()
+    fob = NoDescriptor()
 
     def f(self):
-        self.foo
+        self.fob
         pass
 ";
 
             var entry = ProcessText(text);
-            AssertUtil.Contains(entry.GetMemberNamesByIndex("self.foo", text.IndexOf("self.foo")), "nodesc_method");
+            AssertUtil.Contains(entry.GetMemberNamesByIndex("self.fob", text.IndexOf("self.fob")), "nodesc_method");
         }
 
         /// <summary>
@@ -2120,8 +2120,8 @@ and our line info should remain correct'''
 
 # add ref w/o type info
 class C(object):
-    def __init__(self, foo):
-        self.abc = foo
+    def __init__(self, fob):
+        self.abc = fob
         del self.abc
         print self.abc
 
@@ -2131,7 +2131,7 @@ class C(object):
                 new VariableLocation(9, 14, VariableType.Definition),
                 new VariableLocation(10, 18, VariableType.Reference),
                 new VariableLocation(11, 20, VariableType.Reference));
-            VerifyReferences(entry.GetVariablesByIndex("foo", text.IndexOf("= foo")),
+            VerifyReferences(entry.GetVariablesByIndex("fob", text.IndexOf("= fob")),
                 new VariableLocation(8, 24, VariableType.Definition),
                 new VariableLocation(9, 20, VariableType.Reference));
         }
@@ -2142,8 +2142,8 @@ class C(object):
             var text = @"
 # add ref w/o type info
 class C(object):
-    def __init__(self, foo):
-        self.abc = foo
+    def __init__(self, fob):
+        self.abc = fob
         del self.abc
         print self.abc
 
@@ -2153,15 +2153,15 @@ class C(object):
                 new VariableLocation(5, 14, VariableType.Definition),
                 new VariableLocation(6, 18, VariableType.Reference),
                 new VariableLocation(7, 20, VariableType.Reference));
-            VerifyReferences(entry.GetVariablesByIndex("foo", text.IndexOf("= foo")),
+            VerifyReferences(entry.GetVariablesByIndex("fob", text.IndexOf("= fob")),
                 new VariableLocation(4, 24, VariableType.Definition),
                 new VariableLocation(5, 20, VariableType.Reference));
 
             text = @"
 # add ref w/ type info
 class D(object):
-    def __init__(self, foo):
-        self.abc = foo
+    def __init__(self, fob):
+        self.abc = fob
         del self.abc
         print self.abc
 
@@ -2172,7 +2172,7 @@ D(42)";
                 new VariableLocation(5, 14, VariableType.Definition),
                 new VariableLocation(6, 18, VariableType.Reference),
                 new VariableLocation(7, 20, VariableType.Reference));
-            VerifyReferences(entry.GetVariablesByIndex("foo", text.IndexOf("= foo")),
+            VerifyReferences(entry.GetVariablesByIndex("fob", text.IndexOf("= fob")),
                 new VariableLocation(4, 24, VariableType.Definition),
                 new VariableLocation(5, 20, VariableType.Reference));
             VerifyReferences(UniqifyVariables(entry.GetVariablesByIndex("D", text.IndexOf("D(42)"))),
@@ -2286,9 +2286,9 @@ def f(abc):
     try: pass
     except TypeError, abc: pass    
 
-    abc, bar = 42, 23
+    abc, oar = 42, 23
     abc[23] = 42
-    abc.foo = 42
+    abc.fob = 42
     abc += 2
 
     class D(abc): pass
@@ -2297,7 +2297,7 @@ def f(abc):
 
     import abc
     from xyz import abc
-    from xyz import bar as abc
+    from xyz import oar as abc
 
     if abc: print 'hi'
     elif abc: print 'bye'
@@ -2317,7 +2317,7 @@ def f(abc):
     else:
         abc
 
-    for x in foo: 
+    for x in fob: 
         print x
     else:
         print abc
@@ -2382,7 +2382,7 @@ def f(abc):
     x = 2 + abc
     x = l[abc]
     x = abc[l]
-    x = abc.foo
+    x = abc.fob
     
     g(abc)
 
@@ -2532,25 +2532,25 @@ def f(a):
         public void ReferencesCrossModule() {
             var state = new PythonAnalyzer(InterpreterFactory, Interpreter);
 
-            var fooText = @"
-from bar import abc
+            var fobText = @"
+from oar import abc
 
 abc()
 ";
-            var barText = "class abc(object): pass";
+            var oarText = "class abc(object): pass";
 
-            var fooMod = state.AddModule("foo", "foo", null);
-            Prepare(fooMod, GetSourceUnit(fooText, "mod1"));
-            var barMod = state.AddModule("bar", "bar", null);
-            Prepare(barMod, GetSourceUnit(barText, "mod2"));
+            var fobMod = state.AddModule("fob", "fob", null);
+            Prepare(fobMod, GetSourceUnit(fobText, "mod1"));
+            var oarMod = state.AddModule("oar", "oar", null);
+            Prepare(oarMod, GetSourceUnit(oarText, "mod2"));
 
-            fooMod.Analyze(CancellationToken.None);
-            barMod.Analyze(CancellationToken.None);
+            fobMod.Analyze(CancellationToken.None);
+            oarMod.Analyze(CancellationToken.None);
 
-            VerifyReferences(UniqifyVariables(barMod.Analysis.GetVariablesByIndex("abc", barText.IndexOf("abc"))),
-                new VariableLocation(1, 7, VariableType.Definition, "bar"),     // definition 
-                new VariableLocation(2, 17, VariableType.Reference, "foo"),     // import
-                new VariableLocation(4, 1, VariableType.Reference, "foo")       // call
+            VerifyReferences(UniqifyVariables(oarMod.Analysis.GetVariablesByIndex("abc", oarText.IndexOf("abc"))),
+                new VariableLocation(1, 7, VariableType.Definition, "oar"),     // definition 
+                new VariableLocation(2, 17, VariableType.Reference, "fob"),     // import
+                new VariableLocation(4, 1, VariableType.Reference, "fob")       // call
             );
         }
 
@@ -2558,35 +2558,35 @@ abc()
         public void ReferencesCrossMultiModule() {
             var state = new PythonAnalyzer(InterpreterFactory, Interpreter);
 
-            var fooText = @"
-from barbaz import abc
+            var fobText = @"
+from oarbaz import abc
 
 abc()
 ";
-            var barText = "class abc1(object): pass";
+            var oarText = "class abc1(object): pass";
             var bazText = "class abc2(object): pass";
-            var barBazText = @"from bar import abc1 as abc
+            var oarBazText = @"from oar import abc1 as abc
 from baz import abc2 as abc";
 
-            var fooMod = state.AddModule("foo", "foo", null);
-            Prepare(fooMod, GetSourceUnit(fooText, "mod1"));
-            var barMod = state.AddModule("bar", "bar", null);
-            Prepare(barMod, GetSourceUnit(barText, "mod2"));
+            var fobMod = state.AddModule("fob", "fob", null);
+            Prepare(fobMod, GetSourceUnit(fobText, "mod1"));
+            var oarMod = state.AddModule("oar", "oar", null);
+            Prepare(oarMod, GetSourceUnit(oarText, "mod2"));
             var bazMod = state.AddModule("baz", "baz", null);
             Prepare(bazMod, GetSourceUnit(bazText, "mod3"));
-            var barBazMod = state.AddModule("barbaz", "barbaz", null);
-            Prepare(barBazMod, GetSourceUnit(barBazText, "mod4"));
+            var oarBazMod = state.AddModule("oarbaz", "oarbaz", null);
+            Prepare(oarBazMod, GetSourceUnit(oarBazText, "mod4"));
 
-            fooMod.Analyze(CancellationToken.None, true);
-            barMod.Analyze(CancellationToken.None, true);
+            fobMod.Analyze(CancellationToken.None, true);
+            oarMod.Analyze(CancellationToken.None, true);
             bazMod.Analyze(CancellationToken.None, true);
-            barBazMod.Analyze(CancellationToken.None, true);
-            fooMod.AnalysisGroup.AnalyzeQueuedEntries(CancellationToken.None);
-            barMod.AnalysisGroup.AnalyzeQueuedEntries(CancellationToken.None);
+            oarBazMod.Analyze(CancellationToken.None, true);
+            fobMod.AnalysisGroup.AnalyzeQueuedEntries(CancellationToken.None);
+            oarMod.AnalysisGroup.AnalyzeQueuedEntries(CancellationToken.None);
             bazMod.AnalysisGroup.AnalyzeQueuedEntries(CancellationToken.None);
-            barBazMod.AnalysisGroup.AnalyzeQueuedEntries(CancellationToken.None);
+            oarBazMod.AnalysisGroup.AnalyzeQueuedEntries(CancellationToken.None);
 
-            VerifyReferences(UniqifyVariables(barMod.Analysis.GetVariablesByIndex("abc1", barText.IndexOf("abc1"))),
+            VerifyReferences(UniqifyVariables(oarMod.Analysis.GetVariablesByIndex("abc1", oarText.IndexOf("abc1"))),
                 new VariableLocation(1, 7, VariableType.Definition),
                 new VariableLocation(1, 25, VariableType.Reference)
             );
@@ -2594,12 +2594,12 @@ from baz import abc2 as abc";
                 new VariableLocation(1, 7, VariableType.Definition),
                 new VariableLocation(2, 25, VariableType.Reference)
             );
-            VerifyReferences(UniqifyVariables(fooMod.Analysis.GetVariablesByIndex("abc", 0)),
+            VerifyReferences(UniqifyVariables(fobMod.Analysis.GetVariablesByIndex("abc", 0)),
                 new VariableLocation(1, 7, VariableType.Value),         // possible value
                 //new VariableLocation(1, 7, VariableType.Value),       // appears twice for two modules, but cannot test that
                 new VariableLocation(2, 20, VariableType.Definition),   // import
                 new VariableLocation(4, 1, VariableType.Reference),     // call
-                new VariableLocation(1, 25, VariableType.Definition),   // import in bar
+                new VariableLocation(1, 25, VariableType.Definition),   // import in oar
                 new VariableLocation(2, 25, VariableType.Definition)    // import in baz
             );
         }
@@ -2668,11 +2668,11 @@ def f(z):
     z[42] = 100
 
 f(x)
-for foo in abc:
-    print(foo)";
+for fob in abc:
+    print(fob)";
 
                 var entry = ProcessText(code);
-                var values = entry.GetValuesByIndex("foo", code.IndexOf("print(foo)")).ToArray();
+                var values = entry.GetValuesByIndex("fob", code.IndexOf("print(fob)")).ToArray();
                 Assert.AreEqual(1, values.Length);
                 Assert.AreEqual(BuiltinTypeId.Int, values[0].PythonType.TypeId);
             }
@@ -2687,10 +2687,10 @@ def f(z):
     z[42] = 100
 
 f(x)
-foo = abc";
+fob = abc";
 
                 var entry = ProcessText(code);
-                var values = entry.GetValuesByIndex("foo", code.IndexOf("foo =")).ToArray();
+                var values = entry.GetValuesByIndex("fob", code.IndexOf("fob =")).ToArray();
                 Assert.AreEqual(1, values.Length);
                 Assert.AreEqual(BuiltinTypeId.Int, values[0].PythonType.TypeId);
             }
@@ -2706,10 +2706,10 @@ def f(z):
     z[42] = 100
 
 f(x)
-foo = abc";
+fob = abc";
 
                 var entry = ProcessText(code);
-                var values = entry.GetValuesByIndex("foo", code.IndexOf("foo =")).ToArray();
+                var values = entry.GetValuesByIndex("fob", code.IndexOf("fob =")).ToArray();
                 Assert.AreEqual(1, values.Length);
                 Assert.AreEqual("tuple of int", values[0].Description);
             }
@@ -2724,11 +2724,11 @@ def f(z):
     z[42] = 100
 
 f(x)
-for foo in abc:
-    print(foo)";
+for fob in abc:
+    print(fob)";
 
                 var entry = ProcessText(code);
-                var values = entry.GetValuesByIndex("foo", code.IndexOf("print(foo)")).ToArray();
+                var values = entry.GetValuesByIndex("fob", code.IndexOf("print(fob)")).ToArray();
                 Assert.AreEqual(1, values.Length);
                 Assert.AreEqual("tuple of int", values[0].Description);
             }
@@ -2784,19 +2784,19 @@ def f(z):
     z.append(100)
     
 f(x)
-for foo in x:
-    print(foo)
+for fob in x:
+    print(fob)
 
 
-bar = x.pop()
+oar = x.pop()
 ";
 
             var entry = ProcessText(code);
-            var values = entry.GetValuesByIndex("foo", code.IndexOf("print(foo)")).ToArray();
+            var values = entry.GetValuesByIndex("fob", code.IndexOf("print(fob)")).ToArray();
             Assert.AreEqual(1, values.Length);
             Assert.AreEqual(BuiltinTypeId.Int, values[0].PythonType.TypeId);
 
-            values = entry.GetValuesByIndex("bar", code.IndexOf("bar = ")).ToArray();
+            values = entry.GetValuesByIndex("oar", code.IndexOf("oar = ")).ToArray();
             Assert.AreEqual(1, values.Length);
             Assert.AreEqual(BuiltinTypeId.Int, values[0].PythonType.TypeId);
         }
@@ -3013,10 +3013,10 @@ class cls(object):
         return 42
 
 abc = cls()
-foo = abc.f()
+fob = abc.f()
 ");
 
-            AssertUtil.ContainsExactly(entry.GetMemberNamesByIndex("foo", 1), _intMembers);
+            AssertUtil.ContainsExactly(entry.GetMemberNamesByIndex("fob", 1), _intMembers);
             var sigs = entry.GetSignaturesByIndex("cls().f", 1).ToArray();
             Assert.AreEqual(1, sigs.Length);
             Assert.AreEqual("help", sigs[0].Documentation);
@@ -3167,34 +3167,34 @@ f = x().g";
             var text = @"
 
 class D(object):
-    def bar(self, x):
+    def oar(self, x):
         abc = C()
-        abc.foo(2)
-        a = abc.foo(2.0)
-        a.bar(('a', 'b', 'c', 'd'))
+        abc.fob(2)
+        a = abc.fob(2.0)
+        a.oar(('a', 'b', 'c', 'd'))
 
 class C(object):
-    def foo(self, x):
-        D().bar('abc')
-        D().bar(['a', 'b', 'c'])
+    def fob(self, x):
+        D().oar('abc')
+        D().oar(['a', 'b', 'c'])
         return D()
     def baz(self): pass
 ";
             var entry = ProcessText(text);
 
-            var fifty = entry.GetVariablesNoBuiltinsByIndex(text.IndexOf("abc.foo")).ToSet();
+            var fifty = entry.GetVariablesNoBuiltinsByIndex(text.IndexOf("abc.fob")).ToSet();
             AssertUtil.ContainsExactly(fifty, "C", "D", "a", "abc", "self", "x");
 
-            var three = entry.GetVariablesNoBuiltinsByIndex(text.IndexOf("def bar") + 1).ToSet();
-            AssertUtil.ContainsExactly(three, "C", "D", "bar");
+            var three = entry.GetVariablesNoBuiltinsByIndex(text.IndexOf("def oar") + 1).ToSet();
+            AssertUtil.ContainsExactly(three, "C", "D", "oar");
 
-            var allFifty = entry.GetMemberNamesByIndex("abc", text.IndexOf("abc.foo")).ToSet();
-            AssertUtil.ContainsExactly(allFifty, GetUnion(_objectMembers, "baz", "foo"));
+            var allFifty = entry.GetMemberNamesByIndex("abc", text.IndexOf("abc.fob")).ToSet();
+            AssertUtil.ContainsExactly(allFifty, GetUnion(_objectMembers, "baz", "fob"));
 
-            var xTypes = entry.GetTypeIdsByIndex("x", text.IndexOf("abc.foo")).ToSet();
+            var xTypes = entry.GetTypeIdsByIndex("x", text.IndexOf("abc.fob")).ToSet();
             AssertUtil.ContainsExactly(xTypes, BuiltinTypeId.List, BuiltinTypeId_Str, BuiltinTypeId.Tuple);
 
-            var xMembers = entry.GetMemberNamesByIndex("x", text.IndexOf("abc.foo")).ToSet();
+            var xMembers = entry.GetMemberNamesByIndex("x", text.IndexOf("abc.fob")).ToSet();
             AssertUtil.ContainsExactly(xMembers, GetIntersection(_strMembers, _listMembers));
         }
 
@@ -3222,8 +3222,8 @@ def f(a, b):
 def g(a, b):
     x, y = a, b
 
-x = {'foo': f, 'bar' : g}
-x['foo'](42, [])
+x = {'fob': f, 'oar' : g}
+x['fob'](42, [])
 ";
             var entry = ProcessText(text);
             AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("a", text.IndexOf("print")), BuiltinTypeId.Int);
@@ -3236,7 +3236,7 @@ x['foo'](42, [])
         public void DictionaryAssign() {
             var text = @"
 x = {'abc': 42}
-y = x['foo']
+y = x['fob']
 ";
             var entry = ProcessText(text);
             AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("y", 1), BuiltinTypeId.Int);
@@ -3251,8 +3251,8 @@ def f(a, b):
 def g(a, b):
     x, y = a, b
 
-x = {'foo': f, 'bar' : g}
-x.get('foo')(42, [])
+x = {'fob': f, 'oar' : g}
+x.get('fob')(42, [])
 ";
             var entry = ProcessText(text);
             AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("a", text.IndexOf("print")), BuiltinTypeId.Int);
@@ -3270,8 +3270,8 @@ def f(a, b):
 def g(a, b):
     x, y = a, b
 
-x = {'foo': f, 'bar' : g}
-y = x.get('foo', None)
+x = {'fob': f, 'oar' : g}
+y = x.get('fob', None)
 if y is not None:
     y(42, [])
 ";
@@ -3319,40 +3319,40 @@ class x(object):
     def x_method(self):
         pass
         
-with x() as foo:
-    print foo
+with x() as fob:
+    print fob
     
 with x():
     pass
 ";
             var entry = ProcessText(text);
-            var foo = entry.GetMemberNamesByIndex("foo", text.IndexOf("print foo"));
-            AssertUtil.ContainsExactly(foo, GetUnion(_objectMembers, "x_method"));
+            var fob = entry.GetMemberNamesByIndex("fob", text.IndexOf("print fob"));
+            AssertUtil.ContainsExactly(fob, GetUnion(_objectMembers, "x_method"));
         }
 
         [TestMethod, Priority(0)]
         public void OverrideFunction() {
             var text = @"
-class bar(object):
+class oar(object):
     def Call(self, xvar, yvar):
         pass
 
-class baz(bar):
+class baz(oar):
     def Call(self, xvar, yvar):
         x = 42
         pass
 
 class Cxxxx(object):
     def __init__(self):
-        self.foo = baz()
+        self.fob = baz()
         
     def Cmeth(self, avar, bvar):
-        self.foo.Call(avar, bvar)
+        self.fob.Call(avar, bvar)
         
 
 
 abc = Cxxxx()
-abc.Cmeth(['foo'], 'bar')
+abc.Cmeth(['fob'], 'oar')
 ";
             var entry = ProcessText(text);
             AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("xvar", text.IndexOf("x = 42")), BuiltinTypeId.List);
@@ -3420,7 +3420,7 @@ f('a', 'b', 1)
         [TestMethod, Priority(0)]
         public void OverrideCompletions() {
             var text = @"
-class bar(list):
+class oar(list):
     pass
 ";
             var entry = ProcessText(text);
@@ -3433,20 +3433,20 @@ class bar(list):
 
             // Ensure that nested classes are correctly resolved.
             text = @"
-class bar(int):
-    class foo(dict):
+class oar(int):
+    class fob(dict):
         pass
 ";
             entry = ProcessText(text);
-            var barItems = entry.GetOverrideableByIndex(text.IndexOf("    pass")).Select(x => x.Name).ToSet();
-            var fooItems = entry.GetOverrideableByIndex(text.IndexOf("pass")).Select(x => x.Name).ToSet();
-            Assert.IsFalse(barItems.Contains("keys"));
-            Assert.IsFalse(barItems.Contains("items"));
-            Assert.IsTrue(barItems.Contains("bit_length"));
+            var oarItems = entry.GetOverrideableByIndex(text.IndexOf("    pass")).Select(x => x.Name).ToSet();
+            var fobItems = entry.GetOverrideableByIndex(text.IndexOf("pass")).Select(x => x.Name).ToSet();
+            Assert.IsFalse(oarItems.Contains("keys"));
+            Assert.IsFalse(oarItems.Contains("items"));
+            Assert.IsTrue(oarItems.Contains("bit_length"));
 
-            Assert.IsTrue(fooItems.Contains("keys"));
-            Assert.IsTrue(fooItems.Contains("items"));
-            Assert.IsFalse(fooItems.Contains("bit_length"));
+            Assert.IsTrue(fobItems.Contains("keys"));
+            Assert.IsTrue(fobItems.Contains("items"));
+            Assert.IsFalse(fobItems.Contains("bit_length"));
         }
 
 
@@ -3454,14 +3454,14 @@ class bar(int):
         public void SimpleMethodCall() {
             var text = @"
 class x(object):
-    def abc(self, foo):
+    def abc(self, fob):
         pass
         
 a = x()
 a.abc('abc')
 ";
             var entry = ProcessText(text);
-            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("foo", text.IndexOf("pass")), BuiltinTypeId_Str);
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("fob", text.IndexOf("pass")), BuiltinTypeId_Str);
             AssertUtil.ContainsExactly(entry.GetMemberNamesByIndex("self", text.IndexOf("pass")), GetUnion(_objectMembers, "abc"));
         }
 
@@ -3699,11 +3699,11 @@ class C:
 
 a = C()
 a.func()
-foo = a.abc
+fob = a.abc
 ";
             var entry = ProcessText(text);
-            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("foo", 1), BuiltinTypeId.Int);
-            AssertUtil.ContainsExactly(entry.GetMemberNamesByIndex("foo", 1), _intMembers);
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("fob", 1), BuiltinTypeId.Int);
+            AssertUtil.ContainsExactly(entry.GetMemberNamesByIndex("fob", 1), _intMembers);
             AssertUtil.ContainsExactly(entry.GetMemberNamesByIndex("a", 1), "abc", "func", "__doc__", "__class__");
         }
 
@@ -3720,10 +3720,10 @@ class C:
     def func(self):
         self.abc = [2,3,4]
 
-foo = D().func2()
+fob = D().func2()
 ";
             var entry = ProcessText(text);
-            // TODO: AssertUtil.ContainsExactly(entry.GetTypesFromName("foo", 0), ListType);
+            // TODO: AssertUtil.ContainsExactly(entry.GetTypesFromName("fob", 0), ListType);
         }
 
         [TestMethod, Priority(0)]
@@ -3796,7 +3796,7 @@ class c:
             var text1 = @"
 from mod2 import c
 class x(object):
-    def Foo(self):
+    def Fob(self):
         y = c('abc').x
 ";
             var text2 = @"
@@ -3974,13 +3974,13 @@ class mydesc(object):
 class C(object):
     x = mydesc()
 
-foo = C.x
-bar = C().x
+fob = C.x
+oar = C().x
 ";
             var entry = ProcessText(text);
-            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("foo", text.IndexOf("foo = ")), BuiltinTypeId.Int);
-            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("bar", text.IndexOf("bar = ")), BuiltinTypeId.Int);
-            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("C.x", text.IndexOf("bar = ")), BuiltinTypeId.Int);
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("fob", text.IndexOf("fob = ")), BuiltinTypeId.Int);
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("oar", text.IndexOf("oar = ")), BuiltinTypeId.Int);
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("C.x", text.IndexOf("oar = ")), BuiltinTypeId.Int);
 
             AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("ctx", text.IndexOf("return 42")), BuiltinTypeId.Type);
             AssertUtil.ContainsExactly(entry.GetShortDescriptionsByIndex("inst", text.IndexOf("return 42")), "None", "C instance");
@@ -3995,7 +3995,7 @@ class C(object):
     def instfunc(self):
         pass
 
-bar = C().x
+oar = C().x
 ";
 
             entry = ProcessText(text);
@@ -4069,11 +4069,11 @@ t.x, t. =
         public void MemLeak() {
             var state = new PythonAnalyzer(InterpreterFactory, Interpreter);
 
-            var bar = state.AddModule("bar", @"bar.py", EmptyAnalysisCookie.Instance);
+            var oar = state.AddModule("oar", @"oar.py", EmptyAnalysisCookie.Instance);
             var baz = state.AddModule("baz", @"baz.py", EmptyAnalysisCookie.Instance);
 
             AnalyzeLeak(() => {
-                var barSrc = GetSourceUnit(@"
+                var oarSrc = GetSourceUnit(@"
 import sys
 from baz import D
 
@@ -4089,10 +4089,10 @@ a = C()
 z = a.f(D())
 min(a, D())
 
-", @"bar.py");
+", @"oar.py");
 
                 var bazSrc = GetSourceUnit(@"
-from bar import C
+from oar import C
 
 class D(object):
     def g(self, a):
@@ -4106,10 +4106,10 @@ min(a, D())
 ", @"baz.py");
 
 
-                Prepare(bar, barSrc);
+                Prepare(oar, oarSrc);
                 Prepare(baz, bazSrc);
 
-                bar.Analyze(CancellationToken.None);
+                oar.Analyze(CancellationToken.None);
                 baz.Analyze(CancellationToken.None);
             });
         }
@@ -4241,12 +4241,12 @@ min(a, D())
 
         [TestMethod, Priority(0)]
         public void MoveClass() {
-            var fooSrc = GetSourceUnit("from bar import C", @"foo.py");
+            var fobSrc = GetSourceUnit("from oar import C", @"fob.py");
 
-            var barSrc = GetSourceUnit(@"
+            var oarSrc = GetSourceUnit(@"
 class C(object):
     pass
-", @"bar.py");
+", @"oar.py");
 
             var bazSrc = GetSourceUnit(@"
 class C(object):
@@ -4255,58 +4255,58 @@ class C(object):
 
             var state = new PythonAnalyzer(InterpreterFactory, Interpreter);
 
-            var foo = state.AddModule("foo", @"foo.py", EmptyAnalysisCookie.Instance);
-            var bar = state.AddModule("bar", @"bar.py", EmptyAnalysisCookie.Instance);
+            var fob = state.AddModule("fob", @"fob.py", EmptyAnalysisCookie.Instance);
+            var oar = state.AddModule("oar", @"oar.py", EmptyAnalysisCookie.Instance);
             var baz = state.AddModule("baz", @"baz.py", EmptyAnalysisCookie.Instance);
 
-            Prepare(foo, fooSrc);
-            Prepare(bar, barSrc);
+            Prepare(fob, fobSrc);
+            Prepare(oar, oarSrc);
             Prepare(baz, bazSrc);
 
-            foo.Analyze(CancellationToken.None);
-            bar.Analyze(CancellationToken.None);
+            fob.Analyze(CancellationToken.None);
+            oar.Analyze(CancellationToken.None);
             baz.Analyze(CancellationToken.None);
 
-            Assert.AreEqual(foo.Analysis.GetValuesByIndex("C", 1).First().Description, "class C");
-            Assert.IsTrue(foo.Analysis.GetValuesByIndex("C", 1).First().Locations.Single().FilePath.EndsWith("bar.py"));
+            Assert.AreEqual(fob.Analysis.GetValuesByIndex("C", 1).First().Description, "class C");
+            Assert.IsTrue(fob.Analysis.GetValuesByIndex("C", 1).First().Locations.Single().FilePath.EndsWith("oar.py"));
 
-            barSrc = GetSourceUnit(@"
-", @"bar.py");
+            oarSrc = GetSourceUnit(@"
+", @"oar.py");
 
             // delete the class..
-            Prepare(bar, barSrc);
-            bar.Analyze(CancellationToken.None);
-            bar.AnalysisGroup.AnalyzeQueuedEntries(CancellationToken.None);
+            Prepare(oar, oarSrc);
+            oar.Analyze(CancellationToken.None);
+            oar.AnalysisGroup.AnalyzeQueuedEntries(CancellationToken.None);
 
-            Assert.AreEqual(foo.Analysis.GetValuesByIndex("C", 1).ToArray().Length, 0);
+            Assert.AreEqual(fob.Analysis.GetValuesByIndex("C", 1).ToArray().Length, 0);
 
-            fooSrc = GetSourceUnit("from baz import C", @"foo.py");
-            Prepare(foo, fooSrc);
+            fobSrc = GetSourceUnit("from baz import C", @"fob.py");
+            Prepare(fob, fobSrc);
 
-            foo.Analyze(CancellationToken.None);
+            fob.Analyze(CancellationToken.None);
 
-            Assert.AreEqual(foo.Analysis.GetValuesByIndex("C", 1).First().Description, "class C");
-            Assert.IsTrue(foo.Analysis.GetValuesByIndex("C", 1).First().Locations.Single().FilePath.EndsWith("baz.py"));
+            Assert.AreEqual(fob.Analysis.GetValuesByIndex("C", 1).First().Description, "class C");
+            Assert.IsTrue(fob.Analysis.GetValuesByIndex("C", 1).First().Locations.Single().FilePath.EndsWith("baz.py"));
         }
 
         [TestMethod, Priority(0)]
         public void Package() {
-            var src1 = GetSourceUnit("", @"C:\\Test\\Lib\\foo\\__init__.py");
+            var src1 = GetSourceUnit("", @"C:\\Test\\Lib\\fob\\__init__.py");
 
             var src2 = GetSourceUnit(@"
-from foo.y import abc
-import foo.y as y
-", @"C:\\Test\\Lib\\foo\\x.py");
+from fob.y import abc
+import fob.y as y
+", @"C:\\Test\\Lib\\fob\\x.py");
 
             var src3 = GetSourceUnit(@"
 abc = 42
-", @"C:\\Test\\Lib\\foo\\y.py");
+", @"C:\\Test\\Lib\\fob\\y.py");
 
             var state = new PythonAnalyzer(InterpreterFactory, Interpreter);
 
-            var package = state.AddModule("foo", @"C:\\Test\\Lib\\foo\\__init__.py", EmptyAnalysisCookie.Instance);
-            var x = state.AddModule("foo.x", @"C:\\Test\\Lib\\foo\\x.py", EmptyAnalysisCookie.Instance);
-            var y = state.AddModule("foo.y", @"C:\\Test\\Lib\\foo\\y.py", EmptyAnalysisCookie.Instance);
+            var package = state.AddModule("fob", @"C:\\Test\\Lib\\fob\\__init__.py", EmptyAnalysisCookie.Instance);
+            var x = state.AddModule("fob.x", @"C:\\Test\\Lib\\fob\\x.py", EmptyAnalysisCookie.Instance);
+            var y = state.AddModule("fob.y", @"C:\\Test\\Lib\\fob\\y.py", EmptyAnalysisCookie.Instance);
 
             Prepare(package, src1);
             Prepare(x, src2);
@@ -4316,19 +4316,19 @@ abc = 42
             x.Analyze(CancellationToken.None);
             y.Analyze(CancellationToken.None);
 
-            Assert.AreEqual(x.Analysis.GetValuesByIndex("y", 1).First().Description, "Python module foo.y");
+            Assert.AreEqual(x.Analysis.GetValuesByIndex("y", 1).First().Description, "Python module fob.y");
             AssertUtil.ContainsExactly(x.Analysis.GetTypeIdsByIndex("abc", 1), BuiltinTypeId.Int);
         }
 
         [TestMethod, Priority(0)]
         public void PackageRelativeImport() {
             string tempPath = Path.GetTempPath();
-            Directory.CreateDirectory(Path.Combine(tempPath, "foo"));
+            Directory.CreateDirectory(Path.Combine(tempPath, "fob"));
 
             var files = new[] { 
-                new { Content = "from .y import abc", FullPath = Path.Combine(tempPath, "foo\\__init__.py") },
-                new { Content = "from .y import abc", FullPath = Path.Combine(tempPath, "foo\\x.py") } ,
-                new { Content = "abc = 42",           FullPath = Path.Combine(tempPath, "foo\\y.py") } 
+                new { Content = "from .y import abc", FullPath = Path.Combine(tempPath, "fob\\__init__.py") },
+                new { Content = "from .y import abc", FullPath = Path.Combine(tempPath, "fob\\x.py") } ,
+                new { Content = "abc = 42",           FullPath = Path.Combine(tempPath, "fob\\y.py") } 
             };
 
             var srcs = new TextReader[files.Length];
@@ -4343,9 +4343,9 @@ abc = 42
 
             var state = new PythonAnalyzer(InterpreterFactory, Interpreter);
 
-            var package = state.AddModule("foo", files[0].FullPath, EmptyAnalysisCookie.Instance);
-            var x = state.AddModule("foo.x", files[1].FullPath, EmptyAnalysisCookie.Instance);
-            var y = state.AddModule("foo.y", files[2].FullPath, EmptyAnalysisCookie.Instance);
+            var package = state.AddModule("fob", files[0].FullPath, EmptyAnalysisCookie.Instance);
+            var x = state.AddModule("fob.x", files[1].FullPath, EmptyAnalysisCookie.Instance);
+            var y = state.AddModule("fob.y", files[2].FullPath, EmptyAnalysisCookie.Instance);
 
             Prepare(package, src1);
             Prepare(x, src2);
@@ -4364,11 +4364,11 @@ abc = 42
             // similar to unittest package which has unittest.main which contains a function called "main".
             // Make sure we see the function, not the module.
             string tempPath = Path.GetTempPath();
-            Directory.CreateDirectory(Path.Combine(tempPath, "foo"));
+            Directory.CreateDirectory(Path.Combine(tempPath, "fob"));
 
             var files = new[] { 
-                new { Content = "from .y import y", FullPath = Path.Combine(tempPath, "foo\\__init__.py") },
-                new { Content = "def y(): pass",    FullPath = Path.Combine(tempPath, "foo\\y.py") } 
+                new { Content = "from .y import y", FullPath = Path.Combine(tempPath, "fob\\__init__.py") },
+                new { Content = "def y(): pass",    FullPath = Path.Combine(tempPath, "fob\\y.py") } 
             };
 
             var srcs = new TextReader[files.Length];
@@ -4382,8 +4382,8 @@ abc = 42
 
             var state = new PythonAnalyzer(InterpreterFactory, Interpreter);
 
-            var package = state.AddModule("foo", files[0].FullPath, EmptyAnalysisCookie.Instance);
-            var y = state.AddModule("foo.y", files[1].FullPath, EmptyAnalysisCookie.Instance);
+            var package = state.AddModule("fob", files[0].FullPath, EmptyAnalysisCookie.Instance);
+            var y = state.AddModule("fob.y", files[1].FullPath, EmptyAnalysisCookie.Instance);
 
             Prepare(package, src1);
             Prepare(y, src2);
@@ -4458,7 +4458,7 @@ import mod2
 
 inst = mod2.MyClass()
 
-@inst.filter(foo=42)
+@inst.filter(fob=42)
 def f():
     return 42
     
@@ -4823,7 +4823,7 @@ else:
 
 
 if isinstance(x, tuple):
-    foo = 300
+    fob = 300
     pass
 ";
 
@@ -4834,7 +4834,7 @@ if isinstance(x, tuple):
             AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("x", text.IndexOf("y =")), BuiltinTypeId_Str);
             AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("x", text.IndexOf("y =") + 1), BuiltinTypeId_Str);
             AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("x", text.IndexOf("else:") + 7), BuiltinTypeId.NoneType, BuiltinTypeId.Int, BuiltinTypeId_Str, BuiltinTypeId.Tuple);
-            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("x", text.IndexOf("foo =")), BuiltinTypeId.Tuple);
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("x", text.IndexOf("fob =")), BuiltinTypeId.Tuple);
             AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("x", text.LastIndexOf("pass")), BuiltinTypeId.Tuple);
 
             VerifyReferences(
@@ -5004,7 +5004,7 @@ def fn(a, b, c):
     result.c = c
     return result
 
-r1 = fn('foo', (int, str), 'bar')
+r1 = fn('fob', (int, str), 'oar')
 r2 = fn(123, None, 4.5)
 
 # b1 and b2 will only be type (from the tuple), since indexing into 'type'
@@ -5027,19 +5027,19 @@ b2 = r2.b[0]
 
         [TestMethod, Priority(0)]
         public void IsInstanceReferences() {
-            var text = @"def foo():
-    bar = get_b()
-    assert isinstance(bar, float)
+            var text = @"def fob():
+    oar = get_b()
+    assert isinstance(oar, float)
 
-    if bar.complex:
+    if oar.complex:
         raise IndexError
 
-    return bar";
+    return oar";
 
             var entry = ProcessText(text);
 
-            for (int i = text.IndexOf("bar", 0); i >= 0; i = text.IndexOf("bar", i + 1)) {
-                VerifyReferences(UniqifyVariables(entry.GetVariablesByIndex("bar", i)),
+            for (int i = text.IndexOf("oar", 0); i >= 0; i = text.IndexOf("oar", i + 1)) {
+                VerifyReferences(UniqifyVariables(entry.GetVariablesByIndex("oar", i)),
                     new VariableLocation(2, 5, VariableType.Definition),
                     new VariableLocation(3, 23, VariableType.Reference),
                     new VariableLocation(5, 8, VariableType.Reference),
@@ -5059,13 +5059,13 @@ x = (2, 3, 4)
 y = [2, 3, 4]
 z = 43
 
-class foo(object):
+class fob(object):
     @property
     def f(self): pass
 
     def g(self): pass
     
-d = foo()
+d = fob()
 
 def f():
     print 'hello'
@@ -5117,7 +5117,7 @@ def with_params_default_starargs(*args, **kwargs):
 ";
             var entry = ProcessText(text);
 
-            AssertUtil.ContainsExactly(entry.GetDescriptionsByIndex("foo()", 1), "foo instance");
+            AssertUtil.ContainsExactly(entry.GetDescriptionsByIndex("fob()", 1), "fob instance");
             AssertUtil.ContainsExactly(entry.GetDescriptionsByIndex("int()", 1), "int");
             AssertUtil.ContainsExactly(entry.GetDescriptionsByIndex("a", 1), "float");
             AssertUtil.ContainsExactly(entry.GetDescriptionsByIndex("a", 1), "float");
@@ -5131,12 +5131,12 @@ def with_params_default_starargs(*args, **kwargs):
             AssertUtil.ContainsExactly(entry.GetDescriptionsByIndex("list.append", 1), "built-in method append");
             AssertUtil.ContainsExactly(entry.GetDescriptionsByIndex("\"abc\".Length", 1));
             AssertUtil.ContainsExactly(entry.GetDescriptionsByIndex("c.Length", 1));
-            AssertUtil.ContainsExactly(entry.GetDescriptionsByIndex("d", 1), "foo instance");
+            AssertUtil.ContainsExactly(entry.GetDescriptionsByIndex("d", 1), "fob instance");
             AssertUtil.ContainsExactly(entry.GetDescriptionsByIndex("sys", 1), "built-in module sys");
             AssertUtil.ContainsExactly(entry.GetDescriptionsByIndex("f", 1), "def f() -> str");
-            AssertUtil.ContainsExactly(entry.GetDescriptionsByIndex("foo.f", 1), "def f(self)\r\ndeclared in foo");
-            AssertUtil.ContainsExactly(entry.GetDescriptionsByIndex("foo().g", 1), "method g of foo objects ");
-            AssertUtil.ContainsExactly(entry.GetDescriptionsByIndex("foo", 1), "class foo");
+            AssertUtil.ContainsExactly(entry.GetDescriptionsByIndex("fob.f", 1), "def f(self)\r\ndeclared in fob");
+            AssertUtil.ContainsExactly(entry.GetDescriptionsByIndex("fob().g", 1), "method g of fob objects ");
+            AssertUtil.ContainsExactly(entry.GetDescriptionsByIndex("fob", 1), "class fob");
             //AssertUtil.ContainsExactly(entry.GetVariableDescriptionsByIndex("System.StringSplitOptions.RemoveEmptyEntries", 1), "field of type StringSplitOptions");
             AssertUtil.ContainsExactly(entry.GetDescriptionsByIndex("g", 1), "def g()");    // return info could be better
             //AssertUtil.ContainsExactly(entry.GetVariableDescriptionsByIndex("System.AppDomain.DomainUnload", 1), "event of type System.EventHandler");
@@ -5171,13 +5171,13 @@ x = (2, 3, 4)
 y = [2, 3, 4]
 z = 43
 
-class foo(object):
+class fob(object):
     @property
     def f(self): pass
 
     def g(self): pass
     
-d = foo()
+d = fob()
 
 def f():
     print 'hello'
@@ -5204,13 +5204,13 @@ x = (2, 3, 4)
 y = [2, 3, 4]
 z = 43
 
-class foo(object):
+class fob(object):
     @property
     def f(self): pass
 
     def g(self): pass
     
-d = foo()
+d = fob()
 
 def f():
     print 'hello'
@@ -5355,26 +5355,26 @@ pass
             string text = @"
 class Base(object):
     def __init__(self):
-        self.foo()
+        self.fob()
     
-    def foo(self): 
+    def fob(self): 
         pass
     
     
 class Derived(Base):
-    def foo(self): 
+    def fob(self): 
         'x'
 ";
 
             var entry = ProcessText(text);
 
-            var vars = entry.GetVariablesByIndex("self.foo", text.IndexOf("'x'"));
+            var vars = entry.GetVariablesByIndex("self.fob", text.IndexOf("'x'"));
             VerifyReferences(UniqifyVariables(vars), new VariableLocation(11, 9, VariableType.Definition), new VariableLocation(6, 9, VariableType.Definition), new VariableLocation(4, 14, VariableType.Reference));
 
-            vars = entry.GetVariablesByIndex("self.foo", text.IndexOf("pass"));
+            vars = entry.GetVariablesByIndex("self.fob", text.IndexOf("pass"));
             VerifyReferences(UniqifyVariables(vars), new VariableLocation(11, 9, VariableType.Definition), new VariableLocation(6, 9, VariableType.Definition), new VariableLocation(4, 14, VariableType.Reference));
 
-            vars = entry.GetVariablesByIndex("self.foo", text.IndexOf("self.foo"));
+            vars = entry.GetVariablesByIndex("self.fob", text.IndexOf("self.fob"));
             VerifyReferences(UniqifyVariables(vars), new VariableLocation(11, 9, VariableType.Definition), new VariableLocation(6, 9, VariableType.Definition), new VariableLocation(4, 14, VariableType.Reference));
         }
 
@@ -5393,48 +5393,48 @@ abc = f(())
 
             var entry = ProcessText(text);
 
-            //var vars = entry.GetVariables("foo", GetLineNumber(text, "'x'"));
+            //var vars = entry.GetVariables("fob", GetLineNumber(text, "'x'"));
 
         }
 
         [TestMethod, Priority(0)]
         public void TypeAtEndOfMethod() {
             string text = @"
-class Foo(object):
-    def bar(self, a):
+class Fob(object):
+    def oar(self, a):
         pass
         
         
-    def foo(self): 
+    def fob(self): 
         pass
 
-x = Foo()
-x.bar(100)
+x = Fob()
+x.oar(100)
 ";
 
             var entry = ProcessText(text);
 
-            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("a", text.IndexOf("foo") - 10), BuiltinTypeId.Int);
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("a", text.IndexOf("fob") - 10), BuiltinTypeId.Int);
         }
 
         [TestMethod, Priority(0)]
         public void TypeIntersectionUserDefinedTypes() {
             string text = @"
 class C1(object):
-    def foo(self): pass
+    def fob(self): pass
 
 class C2(object):
-    def bar(self): pass
+    def oar(self): pass
 
 c = C1()
-c.foo()
+c.fob()
 c = C2()
 
 ";
 
             var entry = ProcessText(text);
             var members = entry.GetMemberNamesByIndex("a", text.IndexOf("c = C2()"), GetMemberOptions.IntersectMultipleResults);
-            AssertUtil.DoesntContain(members, "foo");
+            AssertUtil.DoesntContain(members, "fob");
         }
 
         [TestMethod, Priority(0)]
@@ -5782,7 +5782,7 @@ def f(s = 123) -> s:
                 var result = new IPythonProjectEntry[code.Length];
                 var state = new PythonAnalyzer(InterpreterFactory, Interpreter);
                 for (int i = 0; i < code.Length; i++) {
-                    result[p[i]] = state.AddModule(prefix + (p[i] + 1).ToString(), "foo", null);
+                    result[p[i]] = state.AddModule(prefix + (p[i] + 1).ToString(), "fob", null);
                 }
                 for (int i = 0; i < code.Length; i++) {
                     Prepare(result[p[i]], GetSourceUnit(code[p[i]]));

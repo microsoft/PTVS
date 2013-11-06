@@ -1,3 +1,3 @@
-﻿{foo for foo in baz}
-{foo for foo in baz if quox}
-{foo for foo in baz for quox in Exception}
+﻿{fob for fob in baz}
+{fob for fob in baz if quox}
+{fob for fob in baz for quox in Exception}

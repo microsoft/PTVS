@@ -1,18 +1,18 @@
-﻿for foo in bar: pass
+﻿for fob in oar: pass
 
-for foo, bar in baz: pass
+for fob, oar in baz: pass
 
-for foo in bar: 
+for fob in oar: 
     pass
 else:
     pass
 
-for foo in bar:
+for fob in oar:
     break
 
-for foo in bar:
+for fob in oar:
     continue
 
-for [[foo], [bar]] in baz: pass
+for [[fob], [oar]] in baz: pass
 
-for ((foo), (bar)) in baz: pass
+for ((fob), (oar)) in baz: pass

@@ -1,9 +1,9 @@
-def foo():
+def fob():
   global x
   x = 1
   pass
 
-foo()
+fob()
 
 import LocalGlobalsTestImported
 

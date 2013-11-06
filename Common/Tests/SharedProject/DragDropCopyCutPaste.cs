@@ -542,8 +542,8 @@ namespace Microsoft.Nodejs.Tests.UI {
                     projectType,
                     ItemGroup(
                         Folder("MoveDupFilename"),
-                        Folder("MoveDupFilename\\Foo"),
-                        Compile("MoveDupFilename\\Foo\\server"),
+                        Folder("MoveDupFilename\\Fob"),
+                        Compile("MoveDupFilename\\Fob\\server"),
                         Compile("MoveDupFilename\\server")
                     )
                 );
@@ -551,14 +551,14 @@ namespace Microsoft.Nodejs.Tests.UI {
                 using (var solution = testDef.Generate().ToVs()) {
                     MoveByKeyboard(
                         solution.WaitForItem("DragDropCopyCutPaste", "MoveDupFilename"),
-                        solution.WaitForItem("DragDropCopyCutPaste", "MoveDupFilename", "Foo", "server" + projectType.CodeExtension)
+                        solution.WaitForItem("DragDropCopyCutPaste", "MoveDupFilename", "Fob", "server" + projectType.CodeExtension)
                     );
 
                     var dialog = new OverwriteFileDialog(solution.App.WaitForDialog());
                     dialog.Yes();
 
                     solution.AssertFileExists("DragDropCopyCutPaste", "MoveDupFilename", "server" + projectType.CodeExtension);
-                    solution.AssertFileDoesntExist("DragDropCopyCutPaste", "MoveDupFilename", "Foo", "server" + projectType.CodeExtension);
+                    solution.AssertFileDoesntExist("DragDropCopyCutPaste", "MoveDupFilename", "Fob", "server" + projectType.CodeExtension);
                 }
             }
         }

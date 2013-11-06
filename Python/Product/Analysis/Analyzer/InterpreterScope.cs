@@ -105,7 +105,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
 
         /// <summary>
         /// Gets the index in the file/buffer that this scope starts at.  This is the index which includes
-        /// the definition it's self (e.g. def foo(...) or class foo(...)).
+        /// the definition it's self (e.g. def fob(...) or class fob(...)).
         /// </summary>
         public virtual int GetStart(PythonAst ast) {
             if (_node == null) {

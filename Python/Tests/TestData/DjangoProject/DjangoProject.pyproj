@@ -24,11 +24,11 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Bar\admin.py" />
-    <Compile Include="Bar\models.py" />
-    <Compile Include="Bar\tests.py" />
-    <Compile Include="Bar\views.py" />
-    <Compile Include="Bar\__init__.py" />
+    <Compile Include="Oar\admin.py" />
+    <Compile Include="Oar\models.py" />
+    <Compile Include="Oar\tests.py" />
+    <Compile Include="Oar\views.py" />
+    <Compile Include="Oar\__init__.py" />
     <Compile Include="__init__.py" />
     <Compile Include="manage.py" />
     <Compile Include="settings.py" />
@@ -36,8 +36,8 @@
     <Compile Include="Templates\polls\index.html" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Bar\" />
-    <Folder Include="Foo\" />
+    <Folder Include="Oar\" />
+    <Folder Include="Fob\" />
     <Folder Include="Templates" />
     <Folder Include="Templates\admin" />
     <Folder Include="Templates\polls" />

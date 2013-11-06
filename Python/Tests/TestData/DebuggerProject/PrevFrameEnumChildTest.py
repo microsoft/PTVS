@@ -3,7 +3,7 @@
 
 def f():
     d1 = {42 : 100}
-    d2 = {'abc' : 'foo'}
+    d2 = {'abc' : 'fob'}
     u1 = u"привет мир"
     s = set([frozenset([2,3,4])])
     class C(object):

@@ -46,7 +46,7 @@ class SimpleTest(object):
     def test_complex(self):
         pass
 
-class Bar(object):
+class Oar(object):
     def say_hello(self):
         method_end";
 
@@ -61,7 +61,7 @@ class SimpleTest(object):
     def test_complex(self):
         pass
 
-class Bar(object):
+class Oar(object):
     def say_hello( self ):
         method_end";
 
@@ -84,7 +84,7 @@ class SimpleTest(object):
     def test_complex(self):
         pass
 
-class Bar(object):
+class Oar(object):
     def say_hello(self):
         method_end
 ";
@@ -108,7 +108,7 @@ class SimpleTest(object):
     def test_complex(self):
         pass
 
-class Bar(object):
+class Oar(object):
     def say_hello(self):
         method_end
 ";
@@ -132,7 +132,7 @@ class SimpleTest(object):
     def test_complex(self):
         pass
 
-class Bar(object):
+class Oar(object):
     def say_hello(self):
         method_end";
 
@@ -147,7 +147,7 @@ class SimpleTest(object):
     def test_complex(self):
         pass
 
-class Bar(object):
+class Oar(object):
     def say_hello( self ):
         method_end";
 
@@ -161,8 +161,8 @@ class Bar(object):
 
         [TestMethod, Priority(0)]
         public void FormatDocument() {
-            var input = @"foo('Hello World')";
-            var expected = @"foo( 'Hello World' )";
+            var input = @"fob('Hello World')";
+            var expected = @"fob( 'Hello World' )";
             var options = new CodeFormattingOptions() { SpaceWithinCallParens = true };
 
             CodeFormattingTest(input, new Span(0, input.Length), expected, null, options, false);

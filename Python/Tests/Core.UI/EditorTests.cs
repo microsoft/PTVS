@@ -48,7 +48,7 @@ namespace PythonToolsUITests {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
                 var project = app.OpenProject(@"TestData\UnregisteredFileExtension.sln");
 
-                var item = project.ProjectItems.Item("Foo.unregfileext");
+                var item = project.ProjectItems.Item("Fob.unregfileext");
                 var window = item.Open();
                 window.Activate();
 
@@ -131,7 +131,7 @@ namespace PythonToolsUITests {
                 new Classification("whitespace", 33, 35, "\r\n"),
                 new Classification("string", 35, 46, "'abc\\\r\ndef'"),
                 new Classification("whitespace", 46, 50, "\r\n\r\n"),
-                new Classification("identifier", 50, 53, "foo"),
+                new Classification("identifier", 50, 53, "fob"),
                 new Classification("Python operator", 54, 55, "="),
                 new Classification("string", 56, 72, "'ONE \\\r\n    ONE'"),
                 new Classification("Python operator", 73, 74, "+"),
@@ -159,7 +159,7 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ClassificationMultiLineStringTest2() {
             Classification.Verify(GetClassifications("MultiLineString2.py"),
-                new Classification("string", 0, 15, "'''\r\nfoo bar'''"),
+                new Classification("string", 0, 15, "'''\r\nfob oar'''"),
                 new Classification("Python operator", 40, 41, "+"),
                 new Classification("string", 45, 125, "''')\r\n\r\n__visualstudio_debugger_init()\r\ndel __visualstudio_debugger_init\r\naaa'''")
             );
@@ -266,19 +266,19 @@ namespace PythonToolsUITests {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
                 var project = app.OpenProject(@"TestData\Completions.sln");
 
-                var item = project.ProjectItems.Item("bar.py");
+                var item = project.ProjectItems.Item("oar.py");
                 var window = item.Open();
                 window.Activate();
 
-                Keyboard.Type("from foo import ba\r");
+                Keyboard.Type("from fob import ba\r");
 
                 var doc = app.GetDocument(item.Document.FullName);
 
-                doc.WaitForText("from foo import baz");
+                doc.WaitForText("from fob import baz");
                 Keyboard.Type("\r");
 
-                Keyboard.Type("from foo import Ba\r");
-                doc.WaitForText("from foo import baz\r\nfrom foo import Baz");
+                Keyboard.Type("from fob import Ba\r");
+                doc.WaitForText("from fob import baz\r\nfrom fob import Baz");
             }
         }
 
@@ -325,9 +325,9 @@ namespace PythonToolsUITests {
 
 ");
 
-                AutoIndentTest(app, project, "if True: #foo\rpass\relse: #bar\rpass\r\r42\r\r", @"if True: #foo
+                AutoIndentTest(app, project, "if True: #fob\rpass\relse: #oar\rpass\r\r42\r\r", @"if True: #fob
     pass
-else: #bar
+else: #oar
     pass
 
 42
@@ -423,15 +423,15 @@ pass");
 import os
 pass");
 
-                AutoIndentTest(app, project, "class C:\rdef foo(self):\r'doc string'\rpass", @"class C:
-    def foo(self):
+                AutoIndentTest(app, project, "class C:\rdef fob(self):\r'doc string'\rpass", @"class C:
+    def fob(self):
         'doc string'
         pass");
 
-                AutoIndentTest(app, project, "def g():\rfoo(15)\r\r\bfoo(1)\rpass", @"def g():
-    foo(15)
+                AutoIndentTest(app, project, "def g():\rfob(15)\r\r\bfob(1)\rpass", @"def g():
+    fob(15)
 
-foo(1)
+fob(1)
 pass");
 
                 AutoIndentTest(app, project, "def m():\rif True:\rpass\relse:\rabc()\r\r\b\bm()\r\rm()\rpass", @"def m():
@@ -460,7 +460,7 @@ pass");
 
     
     @property
-    def bar(self):
+    def oar(self):
         pass");
 
                 // http://pytools.codeplex.com/workitem/299

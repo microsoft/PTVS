@@ -1,4 +1,4 @@
 class C:
     def f(self):
-        import __foo
-        x = __foo
+        import __fob
+        x = __fob

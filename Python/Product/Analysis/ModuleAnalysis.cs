@@ -652,9 +652,9 @@ namespace Microsoft.PythonTools.Analysis {
         /// <summary>
         /// Gets the AST for the given text as if it appeared at the specified line number.
         /// 
-        /// If the expression is a member expression such as "foo.__bar" and the line number is
+        /// If the expression is a member expression such as "fob.__bar" and the line number is
         /// inside of a class definition this will return a MemberExpression with the mangled name
-        /// like "foo.__ClassName_Bar".
+        /// like "fob.__ClassName_Bar".
         /// 
         /// index is a 0-based absolute index into the file.
         /// 

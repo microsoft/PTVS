@@ -98,7 +98,7 @@ namespace Microsoft.PythonTools.Project {
             Debug.WriteLine("CopyingOneFile: " + destFile);
             string destDir = Path.GetDirectoryName(destFile);
             if (!Directory.Exists(destDir)) {
-                // don't create a file share (\\foo\bar)
+                // don't create a file share (\\fob\oar)
                 if (!Path.IsPathRooted(destDir) || Path.GetPathRoot(destDir) != destDir) {
                     Directory.CreateDirectory(destDir);
                     Debug.WriteLine("Created dir: " + destDir);

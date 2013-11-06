@@ -226,7 +226,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
                             if (childFullName.EndsWith("()")) { // len()
                                 childFullName = childFullName.Substring(0, childFullName.Length - 2) + "(" + FullName + ")";
                             } else {
-                                if (!childFullName.StartsWith("[")) { // [0], ['foo'] etc
+                                if (!childFullName.StartsWith("[")) { // [0], ['fob'] etc
                                     childFullName = "." + childFullName;
                                 }
                                 childFullName = FullName + childFullName;
@@ -553,7 +553,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
         }
 
         /// <summary>
-        /// Tries to evaluate the given expression by treating it as a chain of member access and indexing operations (e.g. <c>foo[0].bar.baz['abc'].blah</c>),
+        /// Tries to evaluate the given expression by treating it as a chain of member access and indexing operations (e.g. <c>fob[0].oar.baz['abc'].blah</c>),
         /// and looking up the corresponding members in data model provided by <see cref="GetFrameLocals"/>.
         /// </summary>
         /// <param name="vars">List of variables, in the context of which the expression is evaluated.</param>

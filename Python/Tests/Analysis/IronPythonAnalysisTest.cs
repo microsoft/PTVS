@@ -201,10 +201,10 @@ x = EventHandler(f)";
 from System import EventHandler
 def f(sender, args): pass
 
-a.foo += EventHandler(f)
+a.fob += EventHandler(f)
 ";
             entry = ProcessText(text);
-            VerifyReferences(UniqifyVariables(entry.GetVariablesByIndex("f", text.IndexOf("a.foo +="))), new VariableLocation(5, 23, VariableType.Reference), new VariableLocation(3, 5, VariableType.Definition));
+            VerifyReferences(UniqifyVariables(entry.GetVariablesByIndex("f", text.IndexOf("a.fob +="))), new VariableLocation(5, 23, VariableType.Reference), new VariableLocation(3, 5, VariableType.Definition));
         }
 
         [TestMethod, Priority(0)]

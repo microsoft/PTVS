@@ -311,19 +311,19 @@ void VsPyProf::GetModuleName(wstring name, wstring& finalName) {
         name.compare(name.length() - wcslen(initModule), wcslen(initModule), initModule, wcslen(initModule)) == 0) {
             // it's a package, we need to remove the first __init__.py and add the package name.
 
-            // C:\Foo\Bar\baz\__init__.py -> C, Foo\Bar\Baz, __init__, .py
+            // C:\Fob\Oar\baz\__init__.py -> C, Fob\Oar\Baz, __init__, .py
             wchar_t drive[_MAX_DRIVE], dir[_MAX_DIR], file[_MAX_FNAME];
             _wsplitpath_s(name.c_str(), drive, _MAX_DRIVE, dir, _MAX_DIR, file, _MAX_FNAME, nullptr, 0);
 
-            // Re-assemble to C:\Foo\Bar\Baz
+            // Re-assemble to C:\Fob\Oar\Baz
             wchar_t newName[MAX_PATH];
             _wmakepath_s(newName, drive, dir, nullptr, nullptr);
 
-            // C:\Foo\Bar\Baz -> C, Foo\Bar, Baz
+            // C:\Fob\Oar\Baz -> C, Fob\Oar, Baz
             _wsplitpath_s(newName, drive, _MAX_DRIVE, dir, _MAX_DIR, file, _MAX_FNAME, nullptr, 0);
             finalName.append(file);	// finalName is now Baz, our package name
 
-            // re-assemble to C:\Foo\Bar\Baz
+            // re-assemble to C:\Fob\Oar\Baz
             _wmakepath_s(newName, drive, dir, file, nullptr);
 
             curName = newName;

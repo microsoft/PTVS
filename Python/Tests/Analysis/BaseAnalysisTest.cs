@@ -75,7 +75,7 @@ namespace AnalysisTests {
         }
 
         public static TextReader GetSourceUnit(string text) {
-            return GetSourceUnit(text, "foo");
+            return GetSourceUnit(text, "fob");
         }
 
         protected virtual AnalysisLimits GetLimits() {
@@ -83,7 +83,7 @@ namespace AnalysisTests {
         }
 
         public ModuleAnalysis ProcessText(string text, PythonLanguageVersion version = PythonLanguageVersion.V27, string[] analysisDirs = null, bool useAnalysisLog = false) {
-            var sourceUnit = GetSourceUnit(text, "foo");
+            var sourceUnit = GetSourceUnit(text, "fob");
             // Explicitly provide the builtins name, since we aren't recreating
             // the interpreter for each version like we should be.
             var fact = InterpreterFactory;
@@ -108,7 +108,7 @@ namespace AnalysisTests {
                     state.AddAnalysisDirectory(dir);
                 }
             }
-            var entry = state.AddModule("foo", "foo", null);
+            var entry = state.AddModule("fob", "fob", null);
             Prepare(entry, sourceUnit, version);
             entry.Analyze(CancellationToken.None);
 

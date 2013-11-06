@@ -297,7 +297,7 @@ def parse_args(tokens, cur_token, module):
         elif token == ',':
             cur_token += 2
             if cur_token < len(tokens) and tokens[cur_token] == ']':
-                # [foo,], ignore the trailing ]
+                # [fob,], ignore the trailing ]
                 cur_token += 2
             continue
         elif token == '(':
@@ -305,7 +305,7 @@ def parse_args(tokens, cur_token, module):
         else:
             arg_name = token
             if cur_token + 2 < len(tokens) and is_identifier(tokens[cur_token + 2]):
-                # C cstyle sig, 'int foo'
+                # C cstyle sig, 'int fob'
                 arg_name = tokens[cur_token + 2]
                 annotation = token
                 cur_token += 2
@@ -355,14 +355,14 @@ def parse_args(tokens, cur_token, module):
     # end of params, check for ret value
     if cur_token + 2 < len(tokens) and tokens[cur_token] in RETURN_TOKENS:
         ret_type_start = cur_token + 2
-        # we might have a descriptive return value, 'list of foo'
+        # we might have a descriptive return value, 'list of fob'
         while ret_type_start < len(tokens) and is_identifier(tokens[ret_type_start]):
             if tokens[ret_type_start - 1].find('\n') != -1:
                 break
             ret_type_start += 2
 
         if ret_type_start < len(tokens) and ',' in tokens[ret_type_start]:
-            # foo(bar, baz) -> some info about the return, and more info, and more info.
+            # fob(oar, baz) -> some info about the return, and more info, and more info.
             # "some info" is unlikely to be a return type
             ret_type = ''
             cur_token += 2
@@ -372,14 +372,14 @@ def parse_args(tokens, cur_token, module):
     elif (cur_token + 4 < len(tokens) and 
         tokens[cur_token] == ':' and tokens[cur_token + 2] in RETURN_TOKENS):
         ret_type_start = cur_token + 4
-        # we might have a descriptive return value, 'list of foo'
+        # we might have a descriptive return value, 'list of fob'
         while ret_type_start < len(tokens) and is_identifier(tokens[ret_type_start]):
             if tokens[ret_type_start - 1].find('\n') != -1:
                 break
             ret_type_start += 2
 
         if ret_type_start < len(tokens) and ',' in tokens[ret_type_start]:
-            # foo(bar, baz) -> some info about the return, and more info, and more info.
+            # fob(oar, baz) -> some info about the return, and more info, and more info.
             # "some info" is unlikely to be a return type
             ret_type = ''
             cur_token += 4
@@ -611,7 +611,7 @@ and there is at least one character in B, False otherwise.''',
     ], repr(r)
 
     r = parse_doc_str('f(INT class_code) => SpaceID',
-                'foo',
+                'fob',
                 None,
                 'f')    
     assert r == [{'args': ({'name': 'class_code', 'type': [(BUILTIN, 'int')]},),

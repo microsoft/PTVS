@@ -67,8 +67,8 @@ namespace TestAdapterTests {
             }
         }
 
-        private static TestInfo BarSuccess = TestInfo.FromRelativePaths("BarTests", "test_calculate_pass", @"TestData\TestAdapterTestA\TestAdapterTestA.pyproj", @"TestData\TestAdapterTestA\BarTest.py", 5, TestOutcome.Passed);
-        private static TestInfo BarFailure = TestInfo.FromRelativePaths("BarTests", "test_calculate_fail", @"TestData\TestAdapterTestA\TestAdapterTestA.pyproj", @"TestData\TestAdapterTestA\BarTest.py", 11, TestOutcome.Failed);
+        private static TestInfo OarSuccess = TestInfo.FromRelativePaths("OarTests", "test_calculate_pass", @"TestData\TestAdapterTestA\TestAdapterTestA.pyproj", @"TestData\TestAdapterTestA\OarTest.py", 5, TestOutcome.Passed);
+        private static TestInfo OarFailure = TestInfo.FromRelativePaths("OarTests", "test_calculate_fail", @"TestData\TestAdapterTestA\TestAdapterTestA.pyproj", @"TestData\TestAdapterTestA\OarTest.py", 11, TestOutcome.Failed);
         private static TestInfo BaseSuccess = TestInfo.FromRelativePaths("BaseClassTests", "test_base_pass", @"TestData\TestAdapterTestB\TestAdapterTestB.pyproj", @"TestData\TestAdapterTestB\InheritanceBaseTest.py", 4, TestOutcome.Passed);
         private static TestInfo BaseFailure = TestInfo.FromRelativePaths("BaseClassTests", "test_base_fail", @"TestData\TestAdapterTestB\TestAdapterTestB.pyproj", @"TestData\TestAdapterTestB\InheritanceBaseTest.py", 7, TestOutcome.Failed);
         private static TestInfo DerivedBaseSuccess = TestInfo.FromRelativePaths("DerivedClassTests", "test_base_pass", @"TestData\TestAdapterTestB\TestAdapterTestB.pyproj", @"TestData\TestAdapterTestB\InheritanceBaseTest.py", 4, TestOutcome.Passed, @"TestData\TestAdapterTestB\InheritanceDerivedTest.py");
@@ -90,8 +90,8 @@ namespace TestAdapterTests {
         public static TestInfo[] TestAdapterATests {
             get {
                 return new TestInfo[] {
-                    BarSuccess,
-                    BarFailure,
+                    OarSuccess,
+                    OarFailure,
                     LinkedSuccess,
                     LinkedFailure
                 };

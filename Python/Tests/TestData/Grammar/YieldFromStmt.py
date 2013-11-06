@@ -1,2 +1,2 @@
 ﻿def f():
-    yield from foo
+    yield from fob

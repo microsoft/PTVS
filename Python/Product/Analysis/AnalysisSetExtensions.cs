@@ -30,7 +30,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// </summary>
         public static IAnalysisSet GetMember(this IAnalysisSet self, Node node, AnalysisUnit unit, string name) {
             var res = AnalysisSet.Empty;
-            // name can be empty if we have "foo."
+            // name can be empty if we have "fob."
             if (name != null && name.Length > 0) {
                 foreach (var ns in self) {
                     res = res.Union(ns.GetMember(node, unit, name));

@@ -1,13 +1,13 @@
-﻿@foo
+﻿@fob
 class C: pass
 
-@foo.bar
+@fob.oar
 class C: pass
 
 
-@foo(bar)
+@fob(oar)
 class C: pass
 
-@foo
-@bar
+@fob
+@oar
 class C: pass

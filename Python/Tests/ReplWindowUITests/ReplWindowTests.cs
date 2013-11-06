@@ -469,8 +469,8 @@ g()",
 
             ((UIElement)interactive.TextView).Dispatcher.Invoke((Action)(() => {
                 var dataObject = new System.Windows.DataObject();
-                dataObject.SetText("foo");
-                var stream = new MemoryStream(UTF8Encoding.Default.GetBytes("\"abc,\",\"foo\",\"\"\"foo,\"\"\",bar,baz\"x\"bar,\"baz,\"\"x,\"\"bar\",,    ,bar,\",\"\",\"\"\",baz\"x\"'bar,\"baz\"\"x\"\"',bar\",\"\"\"\",\"\"\",\"\"\",\",\",\\\r\n1,2,3,4,9,10,11,12,13,19,33,22,,,,,,\r\n4,5,6,5,2,3,4,3,1,20,44,33,,,,,,\r\n7,8,9,6,3,4,0,9,4,33,55,33,,,,,,"));
+                dataObject.SetText("fob");
+                var stream = new MemoryStream(UTF8Encoding.Default.GetBytes("\"abc,\",\"fob\",\"\"\"fob,\"\"\",oar,baz\"x\"oar,\"baz,\"\"x,\"\"oar\",,    ,oar,\",\"\",\"\"\",baz\"x\"'oar,\"baz\"\"x\"\"',oar\",\"\"\"\",\"\"\",\"\"\",\",\",\\\r\n1,2,3,4,9,10,11,12,13,19,33,22,,,,,,\r\n4,5,6,5,2,3,4,3,1,20,44,33,,,,,,\r\n7,8,9,6,3,4,0,9,4,33,55,33,,,,,,"));
                 dataObject.SetData(DataFormats.CommaSeparatedValue, stream);
                 Clipboard.SetDataObject(dataObject, true);
             }));
@@ -478,7 +478,7 @@ g()",
             Keyboard.ControlV();
 
             string line1 = "[";
-            string line2 = "  ['abc,', '\"foo\"', '\"foo,\"', 'bar', 'baz\"x\"bar', 'baz,\"x,\"bar', None, None, 'bar', ',\",\"', 'baz\"x\"\\'bar', 'baz\"x\"\\',bar', '\"\"\"\"', '\",\"', ',', '\\\\'],";
+            string line2 = "  ['abc,', '\"fob\"', '\"fob,\"', 'oar', 'baz\"x\"oar', 'baz,\"x,\"oar', None, None, 'oar', ',\",\"', 'baz\"x\"\\'oar', 'baz\"x\"\\',oar', '\"\"\"\"', '\",\"', ',', '\\\\'],";
             string line3 = "  [1, 2, 3, 4, 9, 10, 11, 12, 13, 19, 33, 22, None, None, None, None, None, None],";
             string line4 = "  [4, 5, 6, 5, 2, 3, 4, 3, 1, 20, 44, 33, None, None, None, None, None, None],";
             string line5 = "  [7, 8, 9, 6, 3, 4, 0, 9, 4, 33, 55, 33, None, None, None, None, None, None],";
@@ -571,7 +571,7 @@ g()",
         public void EnterInMiddleOfLine() {
             var interactive = Prepare();
 
-            const string code = "def f(): #foo";
+            const string code = "def f(): #fob";
             Keyboard.Type(code);
             Keyboard.Type(Key.Left);
             Keyboard.Type(Key.Left);
@@ -580,7 +580,7 @@ g()",
             Keyboard.Type(Key.Enter);
             Keyboard.Type("pass");
             Keyboard.PressAndRelease(Key.Enter, Key.LeftCtrl);
-            interactive.WaitForText(ReplPrompt + "def f(): ", SecondPrompt + "    pass#foo", ReplPrompt);
+            interactive.WaitForText(ReplPrompt + "def f(): ", SecondPrompt + "    pass#fob", ReplPrompt);
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
@@ -678,7 +678,7 @@ g()",
         public void EscapeClearsMultipleLines() {
             var interactive = Prepare();
 
-            const string code = "def f(): #foo";
+            const string code = "def f(): #fob";
             Keyboard.Type(code);
             Keyboard.Type(Key.Left);
             Keyboard.Type(Key.Left);
@@ -1280,7 +1280,7 @@ g()",
         public void ReplCommandComment() {
             var interactive = Prepare();
 
-            const string code = "$$ quox bar baz";
+            const string code = "$$ quox oar baz";
             Keyboard.Type(code + "\r");
             interactive.WaitForReadyState();
 
@@ -1495,24 +1495,24 @@ g()",
             var tempFile = Path.GetTempFileName();
             try {
                 File.WriteAllText(tempFile,
-@"def foo():
+@"def fob():
     print('hello')
 $wait 10
 %% blah
 $wait 20
-foo()
+fob()
 ");
                 string command = "$load " + tempFile;
                 Keyboard.Type(command + "\r");
 
                 interactive.WaitForTextStart(
                     ReplPrompt + command,
-                    ReplPrompt + "def foo():",
+                    ReplPrompt + "def fob():",
                     SecondPrompt + "    print('hello')",
                     SecondPrompt,
                     ReplPrompt + "$wait 10",
                     ReplPrompt + "$wait 20",
-                    ReplPrompt + "foo()",
+                    ReplPrompt + "fob()",
                     "hello"
                 );
             } finally {
@@ -1531,7 +1531,7 @@ foo()
             var tempFile = Path.GetTempFileName();
             try {
                 File.WriteAllText(tempFile,
-@"def foo():
+@"def fob():
     print('hello')
 %% blah
 1+1
@@ -1768,11 +1768,11 @@ $cls
             var interactive = Prepare();
 
             // Python interactive window.  Type $help for a list of commands.
-            // >>> def foo():
+            // >>> def fob():
             // ...     print('hi')
             // ...     return 123
             // ... 
-            // >>> foo()
+            // >>> fob()
             // hi
             // 123
             // >>> raw_input()
@@ -1780,9 +1780,9 @@ $cls
             // 'blah'
             // >>> 
 
-            Keyboard.Type("def foo():\rprint('hi')\rreturn 123\r\r");
+            Keyboard.Type("def fob():\rprint('hi')\rreturn 123\r\r");
             interactive.WaitForIdleState();
-            Keyboard.Type("foo()\r");
+            Keyboard.Type("fob()\r");
             interactive.WaitForIdleState();
             Keyboard.Type(RawInput + "()\r");
             interactive.WaitForIdleState();
@@ -1790,11 +1790,11 @@ $cls
             interactive.WaitForIdleState();
 
             interactive.WaitForText(
-                ReplPrompt + "def foo():",
+                ReplPrompt + "def fob():",
                 SecondPrompt + "    print('hi')",
                 SecondPrompt + "    return 123",
                 SecondPrompt,
-                ReplPrompt + "foo()",
+                ReplPrompt + "fob()",
                 "hi",
                 "123",
                 ReplPrompt + RawInput + "()",
@@ -1807,13 +1807,13 @@ $cls
             var firstPrimaryPrompt = text.IndexOf(ReplPrompt);
             var hiLiteral = text.IndexOf("'hi'");
             var firstSecondaryPrompt = text.IndexOf(SecondPrompt);
-            var fooCall = text.IndexOf("foo()\r");
-            var hiOutput = text.IndexOf("hi", fooCall) + 1;
-            var oneTwoThreeOutput = text.IndexOf("123", fooCall) + 1;
+            var fobCall = text.IndexOf("fob()\r");
+            var hiOutput = text.IndexOf("hi", fobCall) + 1;
+            var oneTwoThreeOutput = text.IndexOf("123", fobCall) + 1;
             var blahStdIn = text.IndexOf("blah") + 2;
             var blahOutput = text.IndexOf("'blah'") + 2;
 
-            var firstSubmission = string.Format("def foo():\r\n{0}    print('hi')\r\n{0}    return 123\r\n{0}\r\n", SecondPrompt);
+            var firstSubmission = string.Format("def fob():\r\n{0}    print('hi')\r\n{0}    return 123\r\n{0}\r\n", SecondPrompt);
             AssertContainingRegion(interactive, firstPrimaryPrompt + 0, firstSubmission);
             AssertContainingRegion(interactive, firstPrimaryPrompt + 1, firstSubmission);
             AssertContainingRegion(interactive, firstPrimaryPrompt + 2, firstSubmission);
@@ -1825,7 +1825,7 @@ $cls
             AssertContainingRegion(interactive, firstSecondaryPrompt + 2, firstSubmission);
             AssertContainingRegion(interactive, firstSecondaryPrompt + 3, firstSubmission);
             AssertContainingRegion(interactive, firstSecondaryPrompt + 4, firstSubmission);
-            AssertContainingRegion(interactive, fooCall, "foo()\r\n");
+            AssertContainingRegion(interactive, fobCall, "fob()\r\n");
             AssertContainingRegion(interactive, hiOutput, "hi\r\n123\r\n");
             AssertContainingRegion(interactive, oneTwoThreeOutput, "hi\r\n123\r\n");
             AssertContainingRegion(interactive, blahStdIn, "blah\r\n");
@@ -2682,12 +2682,12 @@ $cls
         public void Comments() {
             var interactive = Prepare();
 
-            const string code = "# foo";
+            const string code = "# fob";
             Keyboard.Type(code + "\r");
 
             interactive.WaitForText(ReplPrompt + code, SecondPrompt);
 
-            const string code2 = "# bar";
+            const string code2 = "# oar";
             Keyboard.Type(code2 + "\r");
 
             interactive.WaitForText(ReplPrompt + code, SecondPrompt + code2, SecondPrompt);
@@ -2701,7 +2701,7 @@ $cls
         public void CommentPaste() {
             var interactive = Prepare();
 
-            const string comment = "# foo bar baz";
+            const string comment = "# fob oar baz";
             PasteTextTest(
                 interactive,
                 comment,

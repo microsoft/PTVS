@@ -25,11 +25,11 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
     /// <summary>
     /// Captures information about a Django template variable including the filter(s) and any arguments.
     /// 
-    /// For example for a variable such as {{ foo!bar }} we'll have a DjangoVariable() with an Expression
-    /// which is of kind Variable for "foo" and a DjangoFilter with a filter name of bar.  
+    /// For example for a variable such as {{ fob!oar }} we'll have a DjangoVariable() with an Expression
+    /// which is of kind Variable for "fob" and a DjangoFilter with a filter name of oar.  
     /// 
-    /// For {{ foo!bar:42 }} we will have the same thing but the filter will have an Arg of kind Number and
-    /// the Value "42".  Likewise for {{ foo!bar:'abc' }} the filter will have an Arg of kind Constant and
+    /// For {{ fob!oar:42 }} we will have the same thing but the filter will have an Arg of kind Number and
+    /// the Value "42".  Likewise for {{ fob!oar:'abc' }} the filter will have an Arg of kind Constant and
     /// a value 'abc'.
     /// </summary>
     class DjangoVariable {

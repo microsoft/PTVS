@@ -155,7 +155,7 @@ namespace ReplWindowUITests {
             var replEval = new PythonReplEvaluator(IronPythonInterpreter, null, new ReplTestReplOptions());
             var replWindow = new MockReplWindow(replEval);
             replEval.Initialize(replWindow);
-            var execute = replEval.ExecuteText("#foo\n1+2");
+            var execute = replEval.ExecuteText("#fob\n1+2");
             execute.Wait();
             Assert.AreEqual(execute.Result, ExecutionResult.Success);
         }
@@ -241,7 +241,7 @@ namespace ReplWindowUITests {
             var replEval = new PythonReplEvaluator(IronPythonInterpreter, null, new ReplTestReplOptions());
             var replWindow = new MockReplWindow(replEval);
             replEval.Initialize(replWindow);
-            var execute = replEval.ExecuteText("# foo\r\n\r\n    \r\n\t\t\r\na = 42");
+            var execute = replEval.ExecuteText("# fob\r\n\r\n    \r\n\t\t\r\na = 42");
             execute.Wait();
             Assert.AreEqual(execute.Result, ExecutionResult.Success);
             replWindow.ClearScreen();

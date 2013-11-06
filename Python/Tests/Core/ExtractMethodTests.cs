@@ -160,9 +160,9 @@ f = g()");
         [TestMethod, Priority(0)]
         public void TestLeadingComment() {
             SuccessTest("x = 41",
-@"# foo
+@"# fob
 x = 41",
-@"# foo
+@"# fob
 def g():
     x = 41
     return x
@@ -173,18 +173,18 @@ x = g()");
         [TestMethod, Priority(0)]
         public void AssignInIfStatementReadAfter() {
             ExtractMethodTest(@"class C:
-    def foo(self):
-        if False: # foo
-            bar = player = Player()
+    def fob(self):
+        if False: # fob
+            oar = player = Player()
         else:                
             player.update()
-", "bar = player = Player()", TestResult.Success(
+", "oar = player = Player()", TestResult.Success(
  @"class C:
     def g(self):
-        bar = player = Player()
+        oar = player = Player()
 
-    def foo(self):
-        if False: # foo
+    def fob(self):
+        if False: # fob
             self.g()
         else:                
             player.update()
@@ -193,17 +193,17 @@ x = g()");
 
 
             ExtractMethodTest(@"class C:
-    def foo(self):
+    def fob(self):
         if False: 
-            bar = player = Player()
+            oar = player = Player()
         else:                
             player.update()
-", "bar = player = Player()", TestResult.Success(
+", "oar = player = Player()", TestResult.Success(
  @"class C:
     def g(self):
-        bar = player = Player()
+        oar = player = Player()
 
-    def foo(self):
+    def fob(self):
         if False: 
             self.g()
         else:                
@@ -212,18 +212,18 @@ x = g()");
  ), scopeName: "C");
 
             ExtractMethodTest(@"class C:
-    def foo(self):
+    def fob(self):
         if False: 
-            bar = player = Player()
+            oar = player = Player()
                 
         player.update()
-", "bar = player = Player()", TestResult.Success(
+", "oar = player = Player()", TestResult.Success(
 @"class C:
     def g(self):
-        bar = player = Player()
+        oar = player = Player()
         return player
 
-    def foo(self):
+    def fob(self):
         if False: 
             player = self.g()
                 
@@ -239,11 +239,11 @@ x = g()");
             ExtractMethodTest(@"class C:
     def process_kinect_event(self, e):
         for skeleton in e.skeletons:         
-            foo[skeleton.dwTrackingID] = Player()
-", "foo[skeleton.dwTrackingID] = Player()", TestResult.Success(
+            fob[skeleton.dwTrackingID] = Player()
+", "fob[skeleton.dwTrackingID] = Player()", TestResult.Success(
  @"class C:
     def g(self, skeleton):
-        foo[skeleton.dwTrackingID] = Player()
+        fob[skeleton.dwTrackingID] = Player()
 
     def process_kinect_event(self, e):
         for skeleton in e.skeletons:         
@@ -376,8 +376,8 @@ def f():
 
         [TestMethod, Priority(0)]
         public void TestAllNodes() {
-            var prefixes = new string[] { " # foo\r\n", "" };
-            var suffixes = new string[] { " # bar", "" };
+            var prefixes = new string[] { " # fob\r\n", "" };
+            var suffixes = new string[] { " # oar", "" };
             foreach (var suffix in suffixes) {
                 foreach (var prefix in prefixes) {
                     foreach (var testCase in TestExpressions.Expressions) {
@@ -519,7 +519,7 @@ def f():
             ExtractMethodTest(
 @"class C:
     abc = 42
-    bar = 100", "abc .. 100", TestResult.Error(ErrorExtractFromClass));
+    oar = 100", "abc .. 100", TestResult.Error(ErrorExtractFromClass));
         }
 
         [TestMethod, Priority(0)]
@@ -739,16 +739,16 @@ C = g()
 
 x = 2");
 
-            SuccessTest("del foo",
+            SuccessTest("del fob",
 @"x = 1
 
-del foo
+del fob
 
 x = 2",
 @"x = 1
 
 def g():
-    del foo
+    del fob
 
 g()
 
@@ -1050,14 +1050,14 @@ x = 2");
             SuccessTest("with .. pass",
 @"x = 1
 
-with abc as foo:
+with abc as fob:
     pass
 
 x = 2",
 @"x = 1
 
 def g():
-    with abc as foo:
+    with abc as fob:
         pass
 
 g()
@@ -1067,11 +1067,11 @@ x = 2");
             SuccessTest("with .. (name)",
 @"def f():
     name = 'hello'
-    with open('Foo', 'rb') as f:
+    with open('Fob', 'rb') as f:
         print(name)
 ",
 @"def g(name):
-    with open('Foo', 'rb') as f:
+    with open('Fob', 'rb') as f:
         print(name)
 
 def f():
@@ -1079,18 +1079,18 @@ def f():
     g(name)
 ");
 
-            SuccessTest("x .. Bar()",
+            SuccessTest("x .. Oar()",
 @"class C:
     def f():
         if True:
             pass
         else:
             pass
-        x = Foo()
-        y = Bar()",
+        x = Fob()
+        y = Oar()",
 @"def g():
-    x = Foo()
-    y = Bar()
+    x = Fob()
+    y = Oar()
 
 class C:
     def f():
@@ -1103,22 +1103,22 @@ class C:
 
         [TestMethod, Priority(0)]
         public void ClassTests() {
-            SuccessTest("x = foo",
+            SuccessTest("x = fob",
 @"class C(object):
     '''Doc string'''
 
-    def abc(self, foo):
-        x = foo
+    def abc(self, fob):
+        x = fob
         print(x)",
 @"class C(object):
     '''Doc string'''
 
-    def g(self, foo):
-        x = foo
+    def g(self, fob):
+        x = fob
         return x
 
-    def abc(self, foo):
-        x = self.g(foo)
+    def abc(self, fob):
+        x = self.g(fob)
         print(x)", scopeName: "C");
 
 
@@ -1285,14 +1285,14 @@ def f():
 def f():
     x = g()");
 
-            SuccessTest("bar;baz",
+            SuccessTest("oar;baz",
 @"def f():
-    foo;bar;baz;quox",
+    fob;oar;baz;quox",
 @"def g():
-    bar;baz
+    oar;baz
 
 def f():
-    foo;g();quox");
+    fob;g();quox");
 
             SuccessTest("x() .. = 100",
 @"x = 42
@@ -1461,36 +1461,36 @@ def f():
     sys = g()
     print sys");
 
-            SuccessTest("import sys as bar",
+            SuccessTest("import sys as oar",
 @"def f():
-    import sys as bar
-    print bar",
+    import sys as oar
+    print oar",
 @"def g():
-    import sys as bar
-    return bar
+    import sys as oar
+    return oar
 
 def f():
-    bar = g()
-    print bar");
+    oar = g()
+    print oar");
 
-            SuccessTest("from sys import bar",
+            SuccessTest("from sys import oar",
 @"def f():
-    from sys import bar
-    print bar",
+    from sys import oar
+    print oar",
 @"def g():
-    from sys import bar
-    return bar
+    from sys import oar
+    return oar
 
 def f():
-    bar = g()
-    print bar");
+    oar = g()
+    print oar");
 
-            SuccessTest("from sys import bar as baz",
+            SuccessTest("from sys import oar as baz",
 @"def f():
-    from sys import bar as baz
+    from sys import oar as baz
     print baz",
 @"def g():
-    from sys import bar as baz
+    from sys import oar as baz
     return baz
 
 def f():
@@ -1572,12 +1572,12 @@ print(x)");
             SuccessTest("l = .. return r",
 @"def f():
     r = None
-    l = foo()
+    l = fob()
     if l:
         r = l[0]
     return r",
 @"def g(r):
-    l = foo()
+    l = fob()
     if l:
         r = l[0]
     return r

@@ -106,13 +106,13 @@ namespace Microsoft.PythonTools.Analysis {
     /// Dependency data is added when an one value is assigned to a variable.  
     /// For example, for the statement:
     /// 
-    ///     foo = value
+    ///     fob = value
     /// 
-    /// There will be a variable def for the name "foo", and "value" will evaluate
+    /// There will be a variable def for the name "fob", and "value" will evaluate
     /// to a collection of namespaces.  When value is assigned to
-    /// foo the types in value will be propagated to foo's VariableDef by a call
-    /// to AddDependentTypes.  If value adds any new type information to foo
-    /// then the caller needs to re-analyze anyone who is dependent upon foo's
+    /// fob the types in value will be propagated to fob's VariableDef by a call
+    /// to AddDependentTypes.  If value adds any new type information to fob
+    /// then the caller needs to re-analyze anyone who is dependent upon fob's
     /// values.  If "value" was a VariableDef as well, rather than some arbitrary 
     /// expression, then reading "value" would have made the code being analyzed dependent 
     /// upon "value".  After a call to AddTypes the caller needs to check the 

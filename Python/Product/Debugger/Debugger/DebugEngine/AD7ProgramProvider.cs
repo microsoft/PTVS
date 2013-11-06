@@ -102,8 +102,8 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             // The sample debug engine is a native debugger, and can therefore always provide a program node
             // in GetProviderProcessData. Non-native debuggers may wish to implement this method as a way
             // of monitoring the process before code for their runtime starts. For example, if implementing a 
-            // 'foo script' debug engine, one could attach to a process which might eventually run 'foo script'
-            // before this 'foo script' started.
+            // 'fob script' debug engine, one could attach to a process which might eventually run 'fob script'
+            // before this 'fob script' started.
             //
             // To implement this method, an engine would monitor the target process and call AddProgramNode
             // when the target process started running code which was debuggable by the engine. The 

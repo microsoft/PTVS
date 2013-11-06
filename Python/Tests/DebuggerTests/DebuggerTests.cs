@@ -65,11 +65,11 @@ namespace DebuggerTests {
                 // 3.x: http://pytools.codeplex.com/workitem/76
                 ChildTest(EnumChildrenTestName, lastLine, "cinst", new ChildInfo("abc", "42", "0x2a"), new ChildInfo("uc", "u\'привет мир\'"));
             }
-            ChildTest(EnumChildrenTestName, lastLine, "c2inst", new ChildInfo("abc", "42", "0x2a"), new ChildInfo("bar", "100", "0x64"), new ChildInfo("self", "myrepr", "myhex"));
+            ChildTest(EnumChildrenTestName, lastLine, "c2inst", new ChildInfo("abc", "42", "0x2a"), new ChildInfo("oar", "100", "0x64"), new ChildInfo("self", "myrepr", "myhex"));
             ChildTest(EnumChildrenTestName, lastLine, "c3inst", new ChildInfo("_contents", "[1, 2]"), new ChildInfo("abc", "42", "0x2a"), new ChildInfo("[0]", "1"), new ChildInfo("[1]", "2"));
             ChildTest(EnumChildrenTestName, lastLine, "l", AppendCountAndItem(new ChildInfo("[0]", "1"), new ChildInfo("[1]", "2")));
             ChildTest(EnumChildrenTestName, lastLine, "d1", AppendCountItemKeysAndValues(new ChildInfo("[42]", "100", "0x64")));
-            ChildTest(EnumChildrenTestName, lastLine, "d2", AppendCountItemKeysAndValues(new ChildInfo("['abc']", "'foo'")));
+            ChildTest(EnumChildrenTestName, lastLine, "d2", AppendCountItemKeysAndValues(new ChildInfo("['abc']", "'fob'")));
             ChildTest(EnumChildrenTestName, lastLine, "i", null);
             ChildTest(EnumChildrenTestName, lastLine, "u1", null);
         }
@@ -117,10 +117,10 @@ namespace DebuggerTests {
                 // 3.x: http://pytools.codeplex.com/workitem/76
                 ChildTest("PrevFrame" + EnumChildrenTestName, breakLine, "cinst", 1, new ChildInfo("abc", "42", "0x2a"), new ChildInfo("uc", "u\'привет мир\'"));
             }
-            ChildTest("PrevFrame" + EnumChildrenTestName, breakLine, "c2inst", 1, new ChildInfo("abc", "42", "0x2a"), new ChildInfo("bar", "100", "0x64"), new ChildInfo("self", "myrepr", "myhex"));
+            ChildTest("PrevFrame" + EnumChildrenTestName, breakLine, "c2inst", 1, new ChildInfo("abc", "42", "0x2a"), new ChildInfo("oar", "100", "0x64"), new ChildInfo("self", "myrepr", "myhex"));
             ChildTest("PrevFrame" + EnumChildrenTestName, breakLine, "l", 1, AppendCountAndItem(new ChildInfo("[0]", "1"), new ChildInfo("[1]", "2")));
             ChildTest("PrevFrame" + EnumChildrenTestName, breakLine, "d1", 1, AppendCountItemKeysAndValues(new ChildInfo("[42]", "100", "0x64")));
-            ChildTest("PrevFrame" + EnumChildrenTestName, breakLine, "d2", 1, AppendCountItemKeysAndValues(new ChildInfo("['abc']", "'foo'")));
+            ChildTest("PrevFrame" + EnumChildrenTestName, breakLine, "d2", 1, AppendCountItemKeysAndValues(new ChildInfo("['abc']", "'fob'")));
             ChildTest("PrevFrame" + EnumChildrenTestName, breakLine, "i", 1, null);
             ChildTest("PrevFrame" + EnumChildrenTestName, breakLine, "u1", 1, null);
         }
@@ -784,9 +784,9 @@ namespace DebuggerTests {
                     new ExpectedStep(StepKind.Over, 1),     // step over def add_two_numbers(x, y):
                     new ExpectedStep(StepKind.Over, 4),     // step over class Z(object):
                     new ExpectedStep(StepKind.Over, 9),     // step over p = Z()
-                    new ExpectedStep(StepKind.Into, 10),     // step into print add_two_numbers(p.foo, 3)
+                    new ExpectedStep(StepKind.Into, 10),     // step into print add_two_numbers(p.fob, 3)
                     new ExpectedStep(StepKind.Out, 7),     // step out return 7
-                    new ExpectedStep(StepKind.Into, 10),     // step into add_two_numbers(p.foo, 3)
+                    new ExpectedStep(StepKind.Into, 10),     // step into add_two_numbers(p.fob, 3)
                     new ExpectedStep(StepKind.Resume, 2)     // wait for exit after return x + y
                 );
 
@@ -2445,7 +2445,7 @@ int main(int argc, char* argv[]) {
                     processObj.DebuggerOutput += (sender, args) => {
                         Assert.IsFalse(gotOutput, "got output more than once");
                         gotOutput = true;
-                        Assert.AreEqual("foo", args.Output);
+                        Assert.AreEqual("fob", args.Output);
                     };
                 }, debugOptions: PythonDebugOptions.RedirectOutput);
 
@@ -2463,7 +2463,7 @@ int main(int argc, char* argv[]) {
             // ensures that calls to `input` continue to work.
 
             var debugger = new PythonDebugger();
-            var expectedOutput = "Provide A: foo\n";
+            var expectedOutput = "Provide A: fob\n";
             string actualOutput = string.Empty;
 
             var process = DebugProcess(debugger, DebuggerTestPath + @"InputFunction.py", (processObj, threadObj) => {
@@ -2475,7 +2475,7 @@ int main(int argc, char* argv[]) {
             try {
                 process.Start();
                 Thread.Sleep(1000);
-                process.SendStringToStdInput("foo\n");
+                process.SendStringToStdInput("fob\n");
             } finally {
                 WaitForExit(process);
             }

@@ -1,1 +1,1 @@
-﻿from import foo
+﻿from import fob

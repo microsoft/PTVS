@@ -949,11 +949,11 @@ namespace Microsoft.PythonTools.Debugger {
         /// for setting breakpoints and viewing source code even though the files have been
         /// deployed to a remote machine.  For example the user may have:
         /// 
-        /// C:\Users\Me\Documents\MyProject\Foo.py
+        /// C:\Users\Me\Documents\MyProject\Fob.py
         /// 
         /// which is deployed to
         /// 
-        /// \\mycluster\deploydir\MyProject\Foo.py
+        /// \\mycluster\deploydir\MyProject\Fob.py
         /// 
         /// We want the user to be working w/ the local project files during development but
         /// want to set break points in the cluster deployment share.

@@ -451,7 +451,7 @@ namespace Microsoft.VisualStudioTools.Project
                     // Now the last segment should be specially taken care, since that cannot be all dots or spaces.
                     string lastSegment = segments[segments.Length - 1];
                     string filePart = Path.GetFileNameWithoutExtension(lastSegment);
-                    // if the file is only an extension (.foo) then it's ok, otherwise we need to do the special checks.
+                    // if the file is only an extension (.fob) then it's ok, otherwise we need to do the special checks.
                     if (filePart.Length != 0 && (IsFileNameAllGivenCharacter('.', filePart) || IsFileNameAllGivenCharacter(' ', filePart)))
                     {
                         return true;
@@ -632,7 +632,7 @@ namespace Microsoft.VisualStudioTools.Project
                 if (String.IsNullOrEmpty(fileNameToVerify))
                 {
                     // http://pytools.codeplex.com/workitem/497
-                    // .foo is ok
+                    // .fob is ok
                     return false;
                 }
             }

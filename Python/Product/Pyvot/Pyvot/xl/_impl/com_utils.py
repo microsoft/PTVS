@@ -93,7 +93,7 @@ def get_running_xlWorkbook_for_filename(filename):
     context = pythoncom.CreateBindCtx(0)
     for moniker in enum_running_monikers():
         name = moniker.GetDisplayName(context, None).lower()      
-        # name will be either a temp name "book1" or a full filename  "c:\temp\foo.xlsx"
+        # name will be either a temp name "book1" or a full filename  "c:\temp\fob.xlsx"
         # use moniker.GetClassID() to narrow it down to a file Monikor?
         # match on full path, case insensitive
         if (filename == name):

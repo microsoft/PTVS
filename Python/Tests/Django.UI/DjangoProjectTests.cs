@@ -128,17 +128,17 @@ namespace DjangoUITests {
 
                 var newAppDialog = new NewAppDialog(app.OpenDialogWithDteExecuteCommand(AddDjangoAppCmd));
 
-                newAppDialog.AppName = "Foo";
+                newAppDialog.AppName = "Fob";
                 newAppDialog.Ok();
 
                 app.SolutionExplorerTreeView.WaitForItem(
                     app.Dte.Solution.FullName,
                     app.Dte.Solution.Projects.Item(1).Name,
-                    "Foo",
+                    "Fob",
                     "models.py"
                 );
 
-                var appFolder = app.Dte.Solution.Projects.Item(1).ProjectItems.Item("Foo");
+                var appFolder = app.Dte.Solution.Projects.Item(1).ProjectItems.Item("Fob");
                 Assert.AreNotEqual(null, appFolder.Collection.Item("models.py"));
                 Assert.AreNotEqual(null, appFolder.Collection.Item("tests.py"));
                 Assert.AreNotEqual(null, appFolder.Collection.Item("views.py"));
@@ -209,27 +209,27 @@ namespace DjangoUITests {
 
                 var newAppDialog = new NewAppDialog(app.OpenDialogWithDteExecuteCommand(AddDjangoAppCmd));
 
-                newAppDialog.AppName = "Foo";
+                newAppDialog.AppName = "Fob";
                 newAppDialog.Ok();
 
                 app.SolutionExplorerTreeView.WaitForItem(
                     app.Dte.Solution.FullName,
                     app.Dte.Solution.Projects.Item(1).Name,
-                    "Foo",
+                    "Fob",
                     "models.py"
                 );
 
                 AutomationWrapper.Select(projItem);
                 System.Threading.Thread.Sleep(1000);
                 newAppDialog = new NewAppDialog(app.OpenDialogWithDteExecuteCommand(AddDjangoAppCmd));
-                newAppDialog.AppName = "Foo";
+                newAppDialog.AppName = "Fob";
                 newAppDialog.Ok();
 
                 System.Threading.Thread.Sleep(1000);
 
                 VisualStudioApp.CheckMessageBox(
                     TestUtilities.UI.MessageBoxButton.Ok,
-                    "Folder already exists with the name 'Foo'"
+                    "Folder already exists with the name 'Fob'"
                 );
             }
         }

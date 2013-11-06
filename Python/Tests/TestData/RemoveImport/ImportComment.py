@@ -1,7 +1,7 @@
 #baz
-import bar,     baz,          quox
-#foo
-#bar
+import oar,     baz,          quox
+#fob
+#oar
 
-bar
+oar
 quox

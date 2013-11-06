@@ -1,2 +1,2 @@
-import foo
-a = foo.baz
+import fob
+a = fob.baz

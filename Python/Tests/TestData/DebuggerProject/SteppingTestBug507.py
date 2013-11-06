@@ -3,10 +3,10 @@ def add_two_numbers(x, y):
 
 class Z(object):
     @property
-    def foo(self):
+    def fob(self):
         return 7
 
 p = Z()
-print(add_two_numbers(p.foo, 3))
+print(add_two_numbers(p.fob, 3))
 
 print("Done")

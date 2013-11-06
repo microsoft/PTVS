@@ -1,1 +1,1 @@
-﻿[foo for foo in bar, baz]
+﻿[fob for fob in oar, baz]

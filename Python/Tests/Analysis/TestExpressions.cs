@@ -35,7 +35,7 @@ namespace AnalysisTests {
                 "-a",
                 "a and b",
                 "a or b",
-                "`foo`",
+                "`fob`",
                 "42",
                 "'abc'",
                 "42 if True else False",
@@ -64,8 +64,8 @@ namespace AnalysisTests {
                 "pass",
                 "exec 'hello'",
                 "for i in xrange(42): pass",
-                "import foo",
-                "from foo import bar",
+                "import fob",
+                "from fob import oar",
                 "global x",
                 "if True: pass",
                 "print abc",
@@ -77,7 +77,7 @@ namespace AnalysisTests {
                 "@property\r\ndef f(): pass",
             };
 
-        public static readonly string[] Statements3x = new[] { "nonlocal foo" };
+        public static readonly string[] Statements3x = new[] { "nonlocal fob" };
 
         public static string IndentCode(string code, string indentation) {
             StringBuilder res = new StringBuilder();

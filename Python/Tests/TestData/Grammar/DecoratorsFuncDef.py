@@ -1,17 +1,17 @@
-﻿@foo
+﻿@fob
 def f():
     pass
 
-@foo.bar
+@fob.oar
 def f():
     pass
 
-@foo(bar)
+@fob(oar)
 def f():
     pass
 
 
-@foo
-@bar
+@fob
+@oar
 def f():
     pass

@@ -1,7 +1,7 @@
 #baz
-from xyz import bar,     baz,          quox
-#foo
-#bar
+from xyz import oar,     baz,          quox
+#fob
+#oar
 
-bar
+oar
 quox

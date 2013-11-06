@@ -194,13 +194,13 @@ namespace Microsoft.PythonTools.Analysis {
             var res = AnalysisSet.Empty;
             if (args.Length >= 2) {
                 if (args.Length >= 3) {
-                    // getattr(foo, 'bar', baz), baz is a possible return value.
+                    // getattr(fob, 'oar', baz), baz is a possible return value.
                     res = args[2];
                 }
 
                 foreach (var value in args[0]) {
                     foreach (var name in args[1]) {
-                        // getattr(foo, 'bar') - attempt to do the getattr and return the proper value
+                        // getattr(fob, 'oar') - attempt to do the getattr and return the proper value
                         var strValue = name.GetConstantValueAsString();
                         if (strValue != null) {
                             res = res.Union(value.GetMember(node, unit, strValue));

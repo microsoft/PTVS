@@ -1,5 +1,5 @@
 d1 = {42 : 100}
-d2 = {'abc' : 'foo'}
+d2 = {'abc' : 'fob'}
 
 s = set([frozenset([2,3,4])])
 class C(object):
@@ -12,7 +12,7 @@ cinst = C()
 class C2(object):
     abc = 42
     def __init__(self):
-        self.bar = 100
+        self.oar = 100
         self.self = self
     def __repr__(self):
         return 'myrepr'

@@ -28,7 +28,7 @@ Language names (such as `csharp` or `python`) can be specified immediately after
 With `python`:
 
 ```python
-def foo():
+def fob():
     for x in range(10):
         print x
     return True
@@ -37,7 +37,7 @@ def foo():
 With `csharp`:
 
 ```csharp
-bool foo() {
+bool fob() {
     for (int x = 0; x < 10; ++i) {
         Console.WriteLine(x);
     }

@@ -26,10 +26,10 @@ namespace PythonToolsTests {
         [TestMethod, Priority(0)]
         public void LaunchWebBrowserUriTests() {
             var testCases = new[] {
-                new { Url = "/foo", Port = "", Expected = "http://localhost/foo" },
-                new { Url = "http://localhost:9999/foo", Port = "9999", Expected = "http://localhost:9999/foo" },
-                new { Url = "http://localhost/foo", Port = "9999", Expected = "http://localhost:9999/foo" },
-                new { Url = "foo", Port = "9999", Expected = "http://localhost:9999/foo" },
+                new { Url = "/fob", Port = "", Expected = "http://localhost/fob" },
+                new { Url = "http://localhost:9999/fob", Port = "9999", Expected = "http://localhost:9999/fob" },
+                new { Url = "http://localhost/fob", Port = "9999", Expected = "http://localhost:9999/fob" },
+                new { Url = "fob", Port = "9999", Expected = "http://localhost:9999/fob" },
             };
 
             foreach(var testCase in testCases) {

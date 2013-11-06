@@ -34,7 +34,7 @@ namespace VisualStudioToolsUITests {
                 ItemGroup(
                     Folder("MoveToFolder"),
                     Folder("FolderWithAFile"),
-                    Folder("Foo"),
+                    Folder("Fob"),
                     Folder("..\\LinkedFilesDir", isExcluded: true),
                     Folder("AlreadyLinkedFolder"),
 
@@ -50,7 +50,7 @@ namespace VisualStudioToolsUITests {
                     Compile("..\\FileNotInProject"),
                     Compile("..\\DeletedLinkedFile"),
                     Compile("LinkedInModule")
-                        .Link("Foo\\LinkedInModule"),
+                        .Link("Fob\\LinkedInModule"),
                     Compile("SaveAsCreateLink"),
                     Compile("..\\SaveAsCreateFile"),
                     Compile("..\\SaveAsCreateFileNewDirectory"),
@@ -58,16 +58,16 @@ namespace VisualStudioToolsUITests {
                     Compile("FolderWithAFile\\ExistsInProjectButNotOnDisk", isMissing: true),
                     Compile("FolderWithAFile\\ExistsOnDiskButNotInProject"),
                     Compile("..\\LinkedFilesDir\\SomeLinkedFile")
-                        .Link("Bar\\SomeLinkedFile"),
+                        .Link("Oar\\SomeLinkedFile"),
                     Compile("..\\RenamedLinkFile")
-                        .Link("Foo\\NewNameForLinkFile"),
+                        .Link("Fob\\NewNameForLinkFile"),
                     Compile("..\\BadLinkPath")
                         .Link("..\\BadLinkPathFolder\\BadLinkPath"),
                     Compile("..\\RootedLinkIgnored")
                         .Link("C:\\RootedLinkIgnored"),
                     Compile("C:\\RootedIncludeIgnored", isMissing: true)
                         .Link("RootedIncludeIgnored"),
-                    Compile("Foo\\AddExistingInProjectDirButNotInProject"),
+                    Compile("Fob\\AddExistingInProjectDirButNotInProject"),
                     Compile("..\\ExistingItem", isExcluded: true),
                     Compile("..\\ExistsInProjectButNotOnDisk", isExcluded: true),
                     Compile("..\\ExistsOnDiskAndInProject", isExcluded: true),
@@ -113,7 +113,7 @@ namespace VisualStudioToolsUITests {
 
                     var autoItem = solution.Project.ProjectItems.Item("ImplicitLinkedFile" + projectType.CodeExtension);
                     try {
-                        autoItem.Properties.Item("FileName").Value = "Foo";
+                        autoItem.Properties.Item("FileName").Value = "Fob";
                         Assert.Fail("Should have failed to rename");
                     } catch (TargetInvocationException tie) {
                         Assert.AreEqual(tie.InnerException.GetType(), typeof(InvalidOperationException));
@@ -121,7 +121,7 @@ namespace VisualStudioToolsUITests {
 
                     autoItem = solution.Project.ProjectItems.Item("ExplicitDir").Collection.Item("ExplicitLinkedFile" + projectType.CodeExtension);
                     try {
-                        autoItem.Properties.Item("FileName").Value = "Foo";
+                        autoItem.Properties.Item("FileName").Value = "Fob";
                         Assert.Fail("Should have failed to rename");
                     } catch (TargetInvocationException tie) {
                         Assert.AreEqual(tie.InnerException.GetType(), typeof(InvalidOperationException));
@@ -307,7 +307,7 @@ namespace VisualStudioToolsUITests {
         public void LinkedFileInProjectIgnored() {
             foreach (var projectType in ProjectTypes) {
                 using (var solution = LinkedFiles(projectType).Generate().ToVs()) {
-                    var projectNode = solution.FindItem("LinkedFiles", "Foo", "LinkedInModule" + projectType.CodeExtension);
+                    var projectNode = solution.FindItem("LinkedFiles", "Fob", "LinkedInModule" + projectType.CodeExtension);
 
                     Assert.IsNull(projectNode);
                 }
@@ -436,7 +436,7 @@ namespace VisualStudioToolsUITests {
         public void AddExistingItemAndLinkAlreadyExists() {
             foreach (var projectType in ProjectTypes) {
                 using (var solution = LinkedFiles(projectType).Generate().ToVs()) {
-                    var projectNode = solution.FindItem("LinkedFiles", "Bar");
+                    var projectNode = solution.FindItem("LinkedFiles", "Oar");
                     Assert.IsNotNull(projectNode, "projectNode");
                     AutomationWrapper.Select(projectNode);
 
@@ -527,15 +527,15 @@ namespace VisualStudioToolsUITests {
         public void AddExistingItemAsLinkButFileExistsInProjectDirectory() {
             foreach (var projectType in ProjectTypes) {
                 using (var solution = LinkedFiles(projectType).Generate().ToVs()) {
-                    var projectNode = solution.FindItem("LinkedFiles", "Foo");
+                    var projectNode = solution.FindItem("LinkedFiles", "Fob");
                     Assert.IsNotNull(projectNode, "projectNode");
                     AutomationWrapper.Select(projectNode);
 
                     var addExistingDlg = new AddExistingItemDialog(solution.App.OpenDialogWithDteExecuteCommand("Project.AddExistingItem"));
-                    addExistingDlg.FileName = Path.Combine(solution.Directory, "LinkedFiles\\Foo\\AddExistingInProjectDirButNotInProject" + projectType.CodeExtension);
+                    addExistingDlg.FileName = Path.Combine(solution.Directory, "LinkedFiles\\Fob\\AddExistingInProjectDirButNotInProject" + projectType.CodeExtension);
                     addExistingDlg.AddLink();
 
-                    var addExistingInProjectDirButNotInProject = solution.WaitForItem("LinkedFiles", "Foo", "AddExistingInProjectDirButNotInProject" + projectType.CodeExtension);
+                    var addExistingInProjectDirButNotInProject = solution.WaitForItem("LinkedFiles", "Fob", "AddExistingInProjectDirButNotInProject" + projectType.CodeExtension);
                     Assert.IsNotNull(addExistingInProjectDirButNotInProject, "addExistingInProjectDirButNotInProject");
                 }
             }
@@ -549,10 +549,10 @@ namespace VisualStudioToolsUITests {
         public void RenamedLinkedFile() {
             foreach (var projectType in ProjectTypes) {
                 using (var solution = LinkedFiles(projectType).Generate().ToVs()) {
-                    var projectNode = solution.FindItem("LinkedFiles", "Foo", "NewNameForLinkFile" + projectType.CodeExtension);
+                    var projectNode = solution.FindItem("LinkedFiles", "Fob", "NewNameForLinkFile" + projectType.CodeExtension);
                     Assert.IsNull(projectNode);
 
-                    var renamedLinkFile = solution.FindItem("LinkedFiles", "Foo", "RenamedLinkFile" + projectType.CodeExtension);
+                    var renamedLinkFile = solution.FindItem("LinkedFiles", "Fob", "RenamedLinkFile" + projectType.CodeExtension);
                     Assert.IsNotNull(renamedLinkFile, "renamedLinkFile");
                 }
             }

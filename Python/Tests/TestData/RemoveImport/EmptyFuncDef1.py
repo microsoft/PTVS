@@ -1,2 +1,2 @@
 def f():
-    import foo
+    import fob

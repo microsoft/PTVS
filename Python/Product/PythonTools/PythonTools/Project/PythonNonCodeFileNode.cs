@@ -34,10 +34,10 @@ namespace Microsoft.PythonTools.Project {
                     var fileName = Path.GetFileNameWithoutExtension(Url);
                     var filenameWithoutExt = Path.Combine(dirName, fileName);
 
-                    // look for foo.py
+                    // look for fob.py
                     var child = ProjectMgr.FindNodeByFullPath(filenameWithoutExt + PythonConstants.FileExtension);
                     if (child == null) {
-                        // then look for foo.pyw
+                        // then look for fob.pyw
                         child = ProjectMgr.FindNodeByFullPath(filenameWithoutExt + PythonConstants.WindowsFileExtension);
                     }
 

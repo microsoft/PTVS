@@ -43,7 +43,7 @@ namespace Microsoft.PythonTools.Refactoring {
             if (lhs is NameExpression) {
                 lhs.Walk(Define);
             } else {
-                // foo.bar = 42, foo[bar] = 42, we don't actually define any variables
+                // fob.oar = 42, fob[oar] = 42, we don't actually define any variables
                 lhs.Walk(this);
             }
         }

@@ -48,8 +48,8 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                         Property("ProjectView", "ShowAllFiles")
                     ), 
                     ItemGroup(
-                        Folder("Foo", isExcluded: true),
-                        Folder("Foo\\Bar", isExcluded: true),
+                        Folder("Fob", isExcluded: true),
+                        Folder("Fob\\Oar", isExcluded: true),
                         Folder("Baz", isExcluded: true)
                     )
                 );
@@ -57,11 +57,11 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                 using (var solution = testDef.Generate().ToVs()) {
                     mover(
                         solution.FindItem("Solution 'MoveExcludedFolder' (1 project)", "MoveExcludedFolder", "Baz"),
-                        solution.FindItem("Solution 'MoveExcludedFolder' (1 project)", "MoveExcludedFolder", "Foo")
+                        solution.FindItem("Solution 'MoveExcludedFolder' (1 project)", "MoveExcludedFolder", "Fob")
                     );
 
-                    solution.AssertFolderDoesntExist("MoveExcludedFolder", "Foo");
-                    solution.AssertFolderExists("MoveExcludedFolder", "Baz", "Foo");
+                    solution.AssertFolderDoesntExist("MoveExcludedFolder", "Fob");
+                    solution.AssertFolderExists("MoveExcludedFolder", "Baz", "Fob");
                 }
             }
         }

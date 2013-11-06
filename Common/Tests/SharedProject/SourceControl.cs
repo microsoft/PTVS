@@ -72,10 +72,10 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                             Property("SccProvider", "TestProvider")
                         ),
                         ItemGroup(
-                            Folder("Foo"),
-                            Folder("Foo\\Bar"),
+                            Folder("Fob"),
+                            Folder("Fob\\Oar"),
                             Compile("Program"),
-                            Compile("Foo\\Bar\\Quox")
+                            Compile("Fob\\Oar\\Quox")
                         )
                     );
 
@@ -84,7 +84,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
 
                         var project = app.OpenProject(solution.Filename);
                         var window = app.SolutionExplorerTreeView;
-                        var folder = window.WaitForItem("Solution 'SourceControl' (1 project)", "SourceControl", "Foo", "Bar");
+                        var folder = window.WaitForItem("Solution 'SourceControl' (1 project)", "SourceControl", "Fob", "Oar");
                         var point = folder.GetClickablePoint();
                         Mouse.MoveTo(point);
                         Mouse.Down(MouseButton.Left);
@@ -93,13 +93,13 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                         Mouse.MoveTo(destFolder.GetClickablePoint());
                         Mouse.Up(MouseButton.Left);
 
-                        window.AssertFileExists(Path.GetDirectoryName(solution.Filename), "Solution 'SourceControl' (1 project)", "SourceControl", "Bar", "Quox" + projectType.CodeExtension);
+                        window.AssertFileExists(Path.GetDirectoryName(solution.Filename), "Solution 'SourceControl' (1 project)", "SourceControl", "Oar", "Quox" + projectType.CodeExtension);
                         var projectDir = Path.GetDirectoryName(project.FullName);
                         AssertDocumentEvents(projectDir,
-                            OnQueryRenameFiles(projectType.Code("Foo\\Bar\\Quox"), projectType.Code("Bar\\Quox"), VSQUERYRENAMEFILEFLAGS_NoFlags),
-                            OnQueryRenameFiles("Foo\\Bar\\", "Bar", VSQUERYRENAMEFILEFLAGS_Directory),
-                            OnAfterRenameFiles(projectType.Code("Foo\\Bar\\Quox"), projectType.Code("Bar\\Quox"), VSRENAMEFILEFLAGS_NoFlags),
-                            OnAfterRenameFiles("Foo\\Bar\\", "Bar", VSRENAMEFILEFLAGS_Directory)
+                            OnQueryRenameFiles(projectType.Code("Fob\\Oar\\Quox"), projectType.Code("Oar\\Quox"), VSQUERYRENAMEFILEFLAGS_NoFlags),
+                            OnQueryRenameFiles("Fob\\Oar\\", "Oar", VSQUERYRENAMEFILEFLAGS_Directory),
+                            OnAfterRenameFiles(projectType.Code("Fob\\Oar\\Quox"), projectType.Code("Oar\\Quox"), VSRENAMEFILEFLAGS_NoFlags),
+                            OnAfterRenameFiles("Fob\\Oar\\", "Oar", VSRENAMEFILEFLAGS_Directory)
                         );
                     }
                 }

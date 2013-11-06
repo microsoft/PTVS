@@ -401,20 +401,20 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 if (curName.Names.Count == 0) {
                     continue;
                 } else if (curName.Names.Count > 1) {
-                    // import foo.bar
+                    // import fob.oar
                     if (asName != null) {
-                        // import foo.bar as baz, baz becomes the value of the bar module
+                        // import fob.oar as baz, baz becomes the value of the bar module
                         importing = curName.MakeString();
                         saveName = asName.Name;
                         nameNode = asName;
                         bottom = true;
                     } else {
-                        // plain import foo.bar, we bring in foo into the scope
+                        // plain import fob.oar, we bring in fob into the scope
                         saveName = importing = curName.Names[0].Name;
                         nameNode = curName.Names[0];
                     }
                 } else {
-                    // import foo
+                    // import fob
                     importing = curName.Names[0].Name;
                     if (asName != null) {
                         saveName = asName.Name;

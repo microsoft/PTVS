@@ -1,2 +1,2 @@
-﻿foo(bar = 1, bar = 2)
-foo(1 = 2)
+﻿fob(oar = 1, oar = 2)
+fob(1 = 2)

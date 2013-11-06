@@ -64,7 +64,7 @@ namespace PythonToolsUITests {
 
                     var consoleApp = newProjDialog.ProjectTypes.FindItem("Python Application");
                     consoleApp.Select();
-                    newProjDialog.ProjectName = "Foo.Bar";
+                    newProjDialog.ProjectName = "Fob.Oar";
                     newProjDialog.ClickOK();
 
                     // wait for new solution to load...

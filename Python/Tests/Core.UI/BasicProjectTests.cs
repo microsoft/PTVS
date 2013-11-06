@@ -158,8 +158,8 @@ namespace PythonToolsUITests {
                 AssertError<InvalidOperationException>(() => project.Name = "             ");
                 AssertError<InvalidOperationException>(() => project.Name = "...............");
                 var oldName = project.Name;
-                project.Name = ".foo";
-                Assert.AreEqual(project.Name, ".foo");
+                project.Name = ".fob";
+                Assert.AreEqual(project.Name, ".fob");
                 project.Name = oldName;
 
                 string projPath = TestData.GetPath(@"TestData\RenameProjectTest\HelloWorld3.pyproj");
@@ -404,8 +404,8 @@ namespace PythonToolsUITests {
                 AssertError<InvalidOperationException>(() => project.ProjectItems.Item("ProgramX.py").Name = "TempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFile");
                 AssertError<InvalidOperationException>(() => project.ProjectItems.Item("ProgramX.py").Name = "              ");
                 AssertError<InvalidOperationException>(() => project.ProjectItems.Item("ProgramX.py").Name = "..............");
-                project.ProjectItems.Item("ProgramX.py").Name = ".foo";
-                project.ProjectItems.Item(".foo").Name = "ProgramX.py";
+                project.ProjectItems.Item("ProgramX.py").Name = ".fob";
+                project.ProjectItems.Item(".fob").Name = "ProgramX.py";
                 AssertError<InvalidOperationException>(() => project.ProjectItems.Item("ProgramX.py").Name = "ProgramY.py");
 
                 project.ProjectItems.Item("ProgramX.py").Name = "PrOgRaMX.py";
@@ -785,7 +785,7 @@ namespace PythonToolsUITests {
                 // verify getting signature help doesn't crash...  This used to crash because IronPython
                 // used the empty path for an assembly and throws an exception.  We now handle the exception
                 // in RemoteInterpreter.GetBuiltinFunctionDocumentation and RemoteInterpreter.GetPythonTypeDocumentation
-                Assert.AreEqual(GetSignatures("Class1.Foo(", snapshot).Signatures.First().Documentation, "");
+                Assert.AreEqual(GetSignatures("Class1.Fob(", snapshot).Signatures.First().Documentation, "");
 
                 // recompile one file, we should still have type info for both DLLs, with one updated
                 CompileFile("ClassLibraryBool.cs", "ClassLibrary.dll");
@@ -940,23 +940,23 @@ namespace PythonToolsUITests {
                 ProjectNewFolder(app, solutionNode, projectNode);
 
                 System.Threading.Thread.Sleep(1000);
-                Keyboard.Type("Foo");
+                Keyboard.Type("Fob");
                 Keyboard.Type(System.Windows.Input.Key.Enter);
 
-                WaitForItem(project, "Foo");
+                WaitForItem(project, "Fob");
 
                 Mouse.MoveTo(programNode.GetClickablePoint());
                 Mouse.Click();
                 Keyboard.ControlC();
 
-                var folderNode = solutionExplorer.FindItem("Solution 'AddFolderCopyAndPasteFile' (1 project)", "AddFolderCopyAndPasteFile", "Foo");
+                var folderNode = solutionExplorer.FindItem("Solution 'AddFolderCopyAndPasteFile' (1 project)", "AddFolderCopyAndPasteFile", "Fob");
                 Mouse.MoveTo(folderNode.GetClickablePoint());
                 Mouse.Click();
 
                 Keyboard.ControlV();
                 System.Threading.Thread.Sleep(2000);
 
-                Assert.IsNotNull(solutionExplorer.FindItem("Solution 'AddFolderCopyAndPasteFile' (1 project)", "AddFolderCopyAndPasteFile", "Foo", "Program.py"));
+                Assert.IsNotNull(solutionExplorer.FindItem("Solution 'AddFolderCopyAndPasteFile' (1 project)", "AddFolderCopyAndPasteFile", "Fob", "Program.py"));
             }
         }
 
@@ -985,7 +985,7 @@ namespace PythonToolsUITests {
 
                 Assert.IsNotNull(solutionExplorer.WaitForItem("Solution 'CopyAndPasteFolder' (1 project)", "CopyAndPasteFolder", "CopiedFiles"));
                 Assert.IsTrue(File.Exists(Path.Combine("TestData", "CopyAndPasteFolder", "CopiedFiles", "SomeFile.py")));
-                Assert.IsTrue(File.Exists(Path.Combine("TestData", "CopyAndPasteFolder", "CopiedFiles", "Foo", "SomeOtherFile.py")));
+                Assert.IsTrue(File.Exists(Path.Combine("TestData", "CopyAndPasteFolder", "CopiedFiles", "Fob", "SomeOtherFile.py")));
 
                 Mouse.MoveTo(folderNode.GetClickablePoint());
                 Mouse.Click();
@@ -998,7 +998,7 @@ namespace PythonToolsUITests {
 
                 Assert.IsNotNull(solutionExplorer.WaitForItem("Solution 'CopyAndPasteFolder' (1 project)", "CopyAndPasteFolder", "X", "CopiedFiles"));
                 Assert.IsTrue(File.Exists(Path.Combine("TestData", "CopyAndPasteFolder", "X", "CopiedFiles", "SomeFile.py")));
-                Assert.IsTrue(File.Exists(Path.Combine("TestData", "CopyAndPasteFolder", "X", "CopiedFiles", "Foo", "SomeOtherFile.py")));
+                Assert.IsTrue(File.Exists(Path.Combine("TestData", "CopyAndPasteFolder", "X", "CopiedFiles", "Fob", "SomeOtherFile.py")));
             }
         }
 

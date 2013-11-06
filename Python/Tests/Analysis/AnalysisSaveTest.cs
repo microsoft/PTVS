@@ -54,7 +54,7 @@ class D(C):
     x = C().g
 
 abc = 42
-foo = int
+fob = int
 
 class X(object): pass
 class Y(object): pass
@@ -71,7 +71,7 @@ class Aliased(object):
     def f(self):
         pass
 
-def Aliased(foo):
+def Aliased(fob):
     pass
 ";
 
@@ -81,7 +81,7 @@ def Aliased(foo):
                 string codeText = @"
 import test
 abc = test.abc
-foo = test.foo
+fob = test.fob
 a = test.C()
 cf = a.f
 cg = a.g()
@@ -113,7 +113,7 @@ Aliased = test.Aliased
                 AssertUtil.ContainsExactly(newMod.Analysis.GetShortDescriptionsByIndex("list_of_int", pos), "list of int");
                 AssertUtil.ContainsExactly(newMod.Analysis.GetShortDescriptionsByIndex("tuple_of_str", pos), "tuple of str");
 
-                AssertUtil.ContainsExactly(newMod.Analysis.GetShortDescriptionsByIndex("foo", pos), "type int");
+                AssertUtil.ContainsExactly(newMod.Analysis.GetShortDescriptionsByIndex("fob", pos), "type int");
 
                 var result = newMod.Analysis.GetSignaturesByIndex("f1", pos).ToArray();
                 Assert.AreEqual(1, result.Length);
@@ -140,7 +140,7 @@ class Aliased(object):
     '''class doc'''
     pass
 
-def Aliased(foo):
+def Aliased(fob):
     '''function doc'''
     pass
 
@@ -183,10 +183,10 @@ Overloaded = test.Overloaded
             string code = @"
 class WithInstanceMembers(object):
     def __init__(self):
-        self.foo = 42
+        self.fob = 42
 
 class WithMemberFunctions(object):
-    def bar(self):
+    def oar(self):
         pass
 
 class SingleInheritance(WithMemberFunctions):
@@ -216,13 +216,13 @@ MultipleInheritance = test.MultipleInheritance
 
                 // instance attributes are present
                 var instMembers = newMod.Analysis.GetMembersByIndex("WithInstanceMembers", pos);
-                var fooMembers = instMembers.Where(x => x.Name == "foo");
-                Assert.AreNotEqual(null, fooMembers.FirstOrDefault().Name);
+                var fobMembers = instMembers.Where(x => x.Name == "fob");
+                Assert.AreNotEqual(null, fobMembers.FirstOrDefault().Name);
 
-                AssertUtil.ContainsAtLeast(newMod.Analysis.GetMemberNamesByIndex("WithMemberFunctions", pos), "bar");
-                AssertUtil.ContainsAtLeast(newMod.Analysis.GetMemberNamesByIndex("SingleInheritance", pos), "bar", "baz");
-                AssertUtil.ContainsAtLeast(newMod.Analysis.GetMemberNamesByIndex("DoubleInheritance", pos), "bar", "baz");
-                AssertUtil.ContainsAtLeast(newMod.Analysis.GetMemberNamesByIndex("MultipleInheritance", pos), "foo", "bar");
+                AssertUtil.ContainsAtLeast(newMod.Analysis.GetMemberNamesByIndex("WithMemberFunctions", pos), "oar");
+                AssertUtil.ContainsAtLeast(newMod.Analysis.GetMemberNamesByIndex("SingleInheritance", pos), "oar", "baz");
+                AssertUtil.ContainsAtLeast(newMod.Analysis.GetMemberNamesByIndex("DoubleInheritance", pos), "oar", "baz");
+                AssertUtil.ContainsAtLeast(newMod.Analysis.GetMemberNamesByIndex("MultipleInheritance", pos), "fob", "oar");
             }
         }
 
@@ -283,17 +283,17 @@ C = test.C";
 
         [TestMethod, Priority(0)]
         public void ModuleRef() {
-            string foo = @"
-import bar
-x = bar.f()
+            string fob = @"
+import oar
+x = oar.f()
 ";
-            string bar = @"
+            string oar = @"
 def f(): return 42";
 
-            using (var newPs = SaveLoad(PythonLanguageVersion.V27, new AnalysisModule("foo", "foo.py", foo), new AnalysisModule("bar", "bar.py", bar))) {
+            using (var newPs = SaveLoad(PythonLanguageVersion.V27, new AnalysisModule("fob", "fob.py", fob), new AnalysisModule("oar", "oar.py", oar))) {
                 string code = @"
-import foo
-abc = foo.x
+import fob
+abc = fob.x
 ";
                 var newMod = newPs.NewModule("baz", code);
 
@@ -303,33 +303,33 @@ abc = foo.x
 
         [TestMethod, Priority(0)]
         public void CrossModuleTypeRef() {
-            string foo = @"
-class Foo(object):
+            string fob = @"
+class Fob(object):
     pass
 ";
-            string bar = @"
-from foo import *
+            string oar = @"
+from fob import *
 ";
 
             string baz = @"
-from bar import *
+from oar import *
 ";
 
             using (var newPs = SaveLoad(
                 PythonLanguageVersion.V27,
-                new AnalysisModule("foo", "foo.py", foo),
-                new AnalysisModule("bar", "bar.py", bar),
+                new AnalysisModule("fob", "fob.py", fob),
+                new AnalysisModule("oar", "oar.py", oar),
                 new AnalysisModule("baz", "baz.py", baz)
             )) {
                 string code = @"
-import bar, baz
-bar_Foo = bar.Foo
-baz_Foo = baz.Foo
+import oar, baz
+oar_Fob = oar.Fob
+baz_Fob = baz.Fob
 ";
                 var newMod = newPs.NewModule("fez", code);
 
-                AssertUtil.ContainsExactly(newMod.Analysis.GetShortDescriptionsByIndex("bar_Foo", 0), "class Foo");
-                AssertUtil.ContainsExactly(newMod.Analysis.GetShortDescriptionsByIndex("baz_Foo", 0), "class Foo");
+                AssertUtil.ContainsExactly(newMod.Analysis.GetShortDescriptionsByIndex("oar_Fob", 0), "class Fob");
+                AssertUtil.ContainsExactly(newMod.Analysis.GetShortDescriptionsByIndex("baz_Fob", 0), "class Fob");
             }
         }
 
