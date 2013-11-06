@@ -2813,6 +2813,35 @@ def g(): pass
             interactive.ClearScreen();
         }
 
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void CwdImport() {
+            var interactive = Prepare();
+            var evaluator = interactive.ReplWindow.Evaluator;
+
+            Keyboard.Type("import os\ros.chdir(r'" + TestData.GetPath("TestData\\ReplCwd") + "')\r");
+
+            Keyboard.Type("import module1\r");
+            interactive.WaitForTextEnd("ImportError: No module named module1", ReplPrompt);
+
+            Keyboard.Type("import module2\r");
+            interactive.WaitForTextEnd("ImportError: No module named module2", ReplPrompt);
+
+            Keyboard.Type("os.chdir('A')\r");
+            interactive.WaitForTextEnd(ReplPrompt);
+
+            Keyboard.Type("import module1\r");
+            interactive.WaitForTextEnd(ReplPrompt);
+
+            Keyboard.Type("import module2\r");
+            interactive.WaitForTextEnd("ImportError: No module named module2", ReplPrompt);
+
+            Keyboard.Type("os.chdir('..\\B')\r");
+            interactive.WaitForTextEnd(ReplPrompt);
+
+            Keyboard.Type("import module2\r");
+            interactive.WaitForTextEnd(ReplPrompt);
+        }
 
         private void PasteTextTest(InteractiveWindow interactive, string code, params string[] expected) {
             ((UIElement)interactive.TextView).Dispatcher.Invoke((Action)(() => {
