@@ -43,7 +43,7 @@ namespace TestUtilities.UI {
         private ObjectBrowser _objectBrowser, _resourceView;
         private IntPtr _mainWindowHandle;
         private readonly DTE _dte;
-        private bool _isDisposed;
+        private bool _isDisposed, _skipCloseAll;
 
         public VisualStudioApp(DTE dte)
             : this(new IntPtr(dte.MainWindow.HWnd)) {
@@ -60,7 +60,7 @@ namespace TestUtilities.UI {
                 _isDisposed = true;
                 try {
                     DismissAllDialogs();
-                    for (int i = 0; i < 100; i++) {
+                    for (int i = 0; i < 100 && !_skipCloseAll; i++) {
                         try {
                             _dte.Solution.Close(false);
                             break;
@@ -80,7 +80,7 @@ namespace TestUtilities.UI {
         }
 
         public void SuppressCloseAllOnDispose() {
-            _isDisposed = true;
+            _skipCloseAll = true;
         }
 
         public IComponentModel ComponentModel {

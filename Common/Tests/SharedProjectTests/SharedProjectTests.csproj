@@ -8,7 +8,7 @@
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Microsoft.VisualStudioTools.SharedProjectTests</RootNamespace>
-    <AssemblyName>SharedProject</AssemblyName>
+    <AssemblyName>SharedProjectTests</AssemblyName>
     <FileAlignment>512</FileAlignment>
     <SccProjectName>SAK</SccProjectName>
     <SccLocalPath>SAK</SccLocalPath>
@@ -39,7 +39,7 @@
     <Reference Include="EnvDTE90a, Version=9.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
-    <Reference Include="Microsoft.Build" />
+    <Reference Include="Microsoft.Build, Version=$(MicrosoftBuildAssemblyVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="Microsoft.TC.RemoteTest">
       <HintPath>$(BuildRoot)\Common\Tests\TCTestHostAdapters\$(VSTarget)\Microsoft.TC.RemoteTest.dll</HintPath>
     </Reference>

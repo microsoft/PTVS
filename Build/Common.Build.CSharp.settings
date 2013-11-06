@@ -32,26 +32,23 @@
 
   <PropertyGroup Condition=" '$(VSTarget)' == '12.0' ">
     <DefineConstants>$(DefineConstants);DEV12;DEV12_OR_LATER;DEV11_OR_LATER</DefineConstants>
+    <VSCTDefinitions>DEV12;DEV_12_OR_LATER;DEV11_OR_LATER</VSCTDefinitions>
+    <MicrosoftBuildAssemblyVersion>12.0.0.0</MicrosoftBuildAssemblyVersion>
+    <MicrosoftBuildAssemblyVersionSuffix>v12.0</MicrosoftBuildAssemblyVersionSuffix>
   </PropertyGroup>
   
   <PropertyGroup Condition=" '$(VSTarget)' == '11.0' ">
     <DefineConstants>$(DefineConstants);DEV11;DEV11_OR_LATER</DefineConstants>
+    <VSCTDefinitions>DEV11;DEV11_OR_LATER</VSCTDefinitions>
+    <MicrosoftBuildAssemblyVersion>4.0.0.0</MicrosoftBuildAssemblyVersion>
+    <MicrosoftBuildAssemblyVersionSuffix>v4.0</MicrosoftBuildAssemblyVersionSuffix>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(VSTarget)' == '10.0' ">
     <DefineConstants>$(DefineConstants);DEV10</DefineConstants>
-  </PropertyGroup>
-
-  <PropertyGroup>
-    <VSCTDefinitions Condition="'$(VSTarget)' == '12.0'">DEV12;DEV_12_OR_LATER;DEV11_OR_LATER</VSCTDefinitions>
-  </PropertyGroup>
-
-  <PropertyGroup>
-    <VSCTDefinitions Condition="'$(VSTarget)' == '11.0'">DEV11;DEV11_OR_LATER</VSCTDefinitions>
-  </PropertyGroup>
-
-  <PropertyGroup>
-    <VSCTDefinitions Condition="'$(VSTarget)' == '10.0'">DEV10</VSCTDefinitions>
+    <VSCTDefinitions>DEV10</VSCTDefinitions>
+    <MicrosoftBuildAssemblyVersion>4.0.0.0</MicrosoftBuildAssemblyVersion>
+    <MicrosoftBuildAssemblyVersionSuffix>v4.0</MicrosoftBuildAssemblyVersionSuffix>
   </PropertyGroup>
 
   <PropertyGroup Condition="$(SuppressCommonAssemblyMetadata)">
