@@ -20,6 +20,7 @@ using System.Text;
 using System.Threading;
 using System.Windows;
 using EnvDTE;
+using Microsoft.PythonTools;
 using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -97,18 +98,25 @@ namespace PythonToolsUITests {
 
         private void OutlineTest(string filename, params ExpectedTag[] expected) {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenProject(@"TestData\Outlining.sln");
+                var prevOption = PythonToolsPackage.Instance.AdvancedEditorOptionsPage.EnterOutliningModeOnOpen;
+                try {
+                    PythonToolsPackage.Instance.AdvancedEditorOptionsPage.EnterOutliningModeOnOpen = true;
 
-                var item = project.ProjectItems.Item(filename);
-                var window = item.Open();
-                window.Activate();
+                    var project = app.OpenProject(@"TestData\Outlining.sln");
 
-                var doc = app.GetDocument(item.Document.FullName);
+                    var item = project.ProjectItems.Item(filename);
+                    var window = item.Open();
+                    window.Activate();
 
-                var snapshot = doc.TextView.TextBuffer.CurrentSnapshot;
-                var tags = doc.GetTaggerAggregator<IOutliningRegionTag>(doc.TextView.TextBuffer).GetTags(new SnapshotSpan(snapshot, 0, snapshot.Length));
+                    var doc = app.GetDocument(item.Document.FullName);
 
-                VerifyTags(doc.TextView.TextBuffer, tags, expected);
+                    var snapshot = doc.TextView.TextBuffer.CurrentSnapshot;
+                    var tags = doc.GetTaggerAggregator<IOutliningRegionTag>(doc.TextView.TextBuffer).GetTags(new SnapshotSpan(snapshot, 0, snapshot.Length));
+
+                    VerifyTags(doc.TextView.TextBuffer, tags, expected);
+                } finally {
+                    PythonToolsPackage.Instance.AdvancedEditorOptionsPage.EnterOutliningModeOnOpen = prevOption;
+                }
             }
         }
 
@@ -535,7 +543,7 @@ pass");
                 var project = app.OpenProject(@"TestData\EditorTests.sln");
 
                 // http://pytools.codeplex.com/workitem/139
-                TypingTest(project, "DecoratorOnFunction.py", 0, 0, @"@classmethod
+                TypingTest(app, project, "DecoratorOnFunction.py", 0, 0, @"@classmethod
 def f(): pass
 ", () => {
      Keyboard.Type("\r");
@@ -548,7 +556,7 @@ def f(): pass
  });
 
                 // http://pytools.codeplex.com/workitem/151
-                TypingTest(project, "DecoratorInClass.py", 1, 4, @"class C:
+                TypingTest(app, project, "DecoratorInClass.py", 1, 4, @"class C:
     @classmethod
     def f(self):
         pass
@@ -571,7 +579,7 @@ def f(): pass
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
                 var project = app.OpenProject(@"TestData\EditorTests.sln");
 
-                TypingTest(project, "BackslashCompletion.py", 2, 0, @"x = 42
+                TypingTest(app, project, "BackslashCompletion.py", 2, 0, @"x = 42
 x\
 .conjugate", () => {
                Keyboard.Type(".con\t");
@@ -587,36 +595,34 @@ x\
         /// <param name="line">zero-based line</param>
         /// <param name="column">zero based column</param>
         /// <param name="expectedText"></param>
-        private static void TypingTest(Project project, string filename, int line, int column, string expectedText, Action typing) {
+        private static void TypingTest(VisualStudioApp app, Project project, string filename, int line, int column, string expectedText, Action typing) {
             var item = project.ProjectItems.Item(filename);
             var window = item.Open();
             window.Activate();
 
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var doc = app.GetDocument(item.Document.FullName);
-                var textLine = doc.TextView.TextViewLines[line];
+            var doc = app.GetDocument(item.Document.FullName);
+            var textLine = doc.TextView.TextViewLines[line];
 
-                ((UIElement)doc.TextView).Dispatcher.Invoke((Action)(() => {
-                    try {
-                        doc.TextView.Caret.MoveTo(textLine.Start + column);
-                    } catch (Exception) {
-                        Debug.Fail("Bad position for moving caret");
-                    }
-                }));
-
-                typing();
-
-                string actual = null;
-                for (int i = 0; i < 100; i++) {
-                    actual = doc.TextView.TextBuffer.CurrentSnapshot.GetText();
-
-                    if (expectedText == actual) {
-                        break;
-                    }
-                    System.Threading.Thread.Sleep(100);
+            ((UIElement)doc.TextView).Dispatcher.Invoke((Action)(() => {
+                try {
+                    doc.TextView.Caret.MoveTo(textLine.Start + column);
+                } catch (Exception) {
+                    Debug.Fail("Bad position for moving caret");
                 }
-                Assert.AreEqual(actual, expectedText);
+            }));
+
+            typing();
+
+            string actual = null;
+            for (int i = 0; i < 100; i++) {
+                actual = doc.TextView.TextBuffer.CurrentSnapshot.GetText();
+
+                if (expectedText == actual) {
+                    break;
+                }
+                System.Threading.Thread.Sleep(100);
             }
+            Assert.AreEqual(actual, expectedText);
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]

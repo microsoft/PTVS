@@ -585,7 +585,7 @@ namespace AnalysisTests {
                         CheckConstantStmt("raw unicode"),
                         CheckConstantStmt("raw unicode"),
                         CheckConstantStmt("raw unicode"),
-                        CheckConstantStmtAndRepr("\\\'\"\a\b\f\n\r\t\u2026\v\x2A\x2A", "u'\\\\\\'\"\\a\\b\\f\\n\\r\\t\u2026\\v\x2A\x2A'", PythonLanguageVersion.V27),
+                        CheckConstantStmtAndRepr("\\\'\"\a\b\f\n\r\t\u2026\v\x2A\x2A", "u'\\\\\\\'\"\\x07\\x08\\x0c\\n\\r\\t\\u2026\\x0b**'", PythonLanguageVersion.V27),
                         IgnoreStmt(), // u'\N{COLON}',
                         CheckUnaryStmt(PythonOperator.Negate, CheckConstant(new BigInteger(2147483648))),
                         CheckUnaryStmt(PythonOperator.Negate, CheckConstant(new BigInteger(2147483648))),
@@ -671,7 +671,7 @@ namespace AnalysisTests {
                         CheckConstantStmt("raw unicode"),
                         CheckConstantStmt("raw unicode"),
                         CheckConstantStmt("raw unicode"),
-                        CheckConstantStmtAndRepr("\\\'\"\a\b\f\n\r\t\u2026\v\x2A\x2A", "'\\\\\\'\"\\a\\b\\f\\n\\r\\t\u2026\\v\x2A\x2A'", PythonLanguageVersion.V33),
+                        CheckConstantStmtAndRepr("\\\'\"\a\b\f\n\r\t\u2026\v\x2A\x2A", "'\\\\\\'\"\\x07\\x08\\x0c\\n\\r\\t\\u2026\\x0b**'", PythonLanguageVersion.V33),
                         IgnoreStmt()  // u'\N{COLON}'
                     )
                 );

@@ -91,9 +91,9 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                     default:
                         ushort cp = (ushort)c;
                         if (cp > 0xFF) {
-                            res.AppendFormat("\\u{0:X04}", cp);
+                            res.AppendFormat("\\u{0:x04}", cp);
                         } else if (cp < 0x20 || (escape8bitStrings && cp >= 0x7F)) {
-                            res.AppendFormat("\\x{0:X02}", cp);
+                            res.AppendFormat("\\x{0:x02}", cp);
                         } else {
                             res.Append(c);
                         }

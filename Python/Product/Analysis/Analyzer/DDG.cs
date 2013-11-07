@@ -428,7 +428,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 ModuleReference modRef;
 
                 var def = Scope.CreateVariable(nameNode, _unit, saveName);
-                if (!TryGetUserModule(importing, out modRef)) {
+                if (!TryGetUserModule(importing, out modRef) || modRef.Module == null) {
                     var builtinModule = ProjectState.ImportBuiltinModule(importing, bottom);
                     var ns = builtinModule as AnalysisValue;
 

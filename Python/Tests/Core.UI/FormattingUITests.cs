@@ -74,6 +74,7 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void FormatDocument() {
+            // Fails due to https://pytools.codeplex.com/workitem/1952
             FormattingTest("document.py", null, @"# the quick brown fox jumped over the slow lazy dog the quick brown fox jumped
 # over the slow lazy dog
 def f():
@@ -88,6 +89,7 @@ def g():
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void FormatSelection() {
+            // Fails due to https://pytools.codeplex.com/workitem/1952
             FormattingTest("selection.py", new Span(0, 121), @"# the quick brown fox jumped over the slow lazy dog the quick brown fox jumped
 # over the slow lazy dog
 def f():
@@ -113,7 +115,7 @@ z=3", new Span[0]);
         public void FormatReduceLines() {
             PythonToolsPackage.Instance.SetFormattingOption("SpacesAroundBinaryOperators", true);
 
-            FormattingTest("linereduction.py", null, "(a + b + c + d + e + f)\r\n\r\n", new[] { new Span(0, 41) });
+            FormattingTest("linereduction.py", null, "(a + b + c + d + e + f)\r\n", new[] { new Span(0, 41) });
         }
 
         /// <summary>

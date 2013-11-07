@@ -90,7 +90,7 @@ namespace ReplWindowUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ResetRepl() {
             using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var interactive = Prepare();
+                var interactive = Prepare(app);
                 try {
                     const string code = "x = 42";
                     Keyboard.Type(code + "\r");

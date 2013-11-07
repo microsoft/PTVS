@@ -70,8 +70,8 @@
   </Target>
   
   <Target Name="TestCommands" DependsOnTargets="$(PythonCommands)">
-    <Error Condition="'$(MSBuildThisFileDirectory)Package\Subpackage\Program.py;Package.Subpackage.Program' != '@(Commands)'" Text="@(Commands)" />
-    <Error Condition="'script+console;module+repl' != '@(Commands->'%(TargetType)+%(ExecuteIn)')'" Text="@(Commands->'%(TargetType)+%(ExecuteIn)')" />
+    <Error Condition="'$(MSBuildThisFileDirectory)Package\Subpackage\Program.py;Program' != '@(Commands)'" Text="@(Commands)" />
+    <Error Condition="'script+console;module+repl:Test Repl' != '@(Commands->'%(TargetType)+%(ExecuteIn)')'" Text="@(Commands->'%(TargetType)+%(ExecuteIn)')" />
     <Error Condition="'ABC=$(MSBuildThisFileDirectory)
 DEF=234
 EFG=3;4;5

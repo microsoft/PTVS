@@ -15,6 +15,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
@@ -149,8 +150,29 @@ namespace TestUtilities.UI {
         /// Opens and activates the Navigate To window.
         /// </summary>
         public NavigateToDialog OpenNavigateTo() {
+#if DEV12_OR_LATER
+            Dte.ExecuteCommand("Edit.NavigateTo");
+
+            for (int retries = 10; retries > 0; --retries) {
+                foreach (var element in Element.FindAll(
+                    TreeScope.Descendants,
+                    new PropertyCondition(AutomationElement.ClassNameProperty, "Window")
+                ).OfType<AutomationElement>()) {
+                    if (element.FindAll(TreeScope.Children, new OrCondition(
+                        new PropertyCondition(AutomationElement.AutomationIdProperty, "PART_SearchHost"),
+                        new PropertyCondition(AutomationElement.AutomationIdProperty, "PART_ResultList")
+                    )).Count == 2) {
+                        return new NavigateToDialog(element);
+                    }
+                }
+                System.Threading.Thread.Sleep(500);
+            }
+            Assert.Fail("Could not find Navigate To window");
+            return null;
+#else
             var dialog = OpenDialogWithDteExecuteCommand("Edit.NavigateTo");
             return new NavigateToDialog(dialog);
+#endif
         }
 
         public SaveDialog SaveAs() {

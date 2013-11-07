@@ -604,7 +604,7 @@ lambda larg1, larg2: None";
             TestQuickInfo(code, code.IndexOf("x = ") + 4, code.IndexOf("x = ") + 4 + 28, "\"ABCDEFGHIJKLMNOPQRSTUVWYXZ\": str");
 
             // trailing new lines don't show up in quick info
-            TestQuickInfo(code, code.IndexOf("def f") + 4, code.IndexOf("def f") + 5, "f: def f(...)\r\nhelpful information");
+            TestQuickInfo(code, code.IndexOf("def f") + 4, code.IndexOf("def f") + 5, "f: def f()\r\nhelpful information");
 
             // keywords don't show up in quick info
             TestQuickInfo(code, code.IndexOf("while True:"), code.IndexOf("while True:") + 5);
@@ -773,12 +773,12 @@ def func(a):
 ";
 
             // Because there is an extra line added for the Quick Info we only
-            // want the first 29 lines of the docstring. However, for the
-            // signature documentation, we'll get an extra one.
+            // want the first 29 lines of the docstring. For signature docs,
+            // we'll cut to 15 lines.
             var expected1 = string.Join(Environment.NewLine, docString.Take(29)) + Environment.NewLine + "...";
-            var expected2 = string.Join(Environment.NewLine, docString.Take(30)) + Environment.NewLine + "...";
+            var expected2 = string.Join(Environment.NewLine, docString.Take(15)).TrimStart() + Environment.NewLine + "...";
 
-            TestQuickInfo(code, code.IndexOf("func"), code.IndexOf("func") + 4, "func: def func(...)\r\n" + expected1);
+            TestQuickInfo(code, code.IndexOf("func"), code.IndexOf("func") + 4, "func: def func(a)\r\n" + expected1);
 
             SignatureAnalysis sigs;
             SignatureTest(-1, code + "func(", "func", 0, PythonLanguageVersion.V27, true, out sigs);
@@ -794,12 +794,11 @@ def func(a):
 
 ";
 
-            // The long lines cause us to truncate sooner. Coincidentally, we
-            // come up with the same number of lines for Quick Info and the
-            // signature.
-            expected1 = expected2 = string.Join(Environment.NewLine, docString.Take(15)) + Environment.NewLine + "...";
+            // The long lines cause us to truncate sooner.
+            expected1 = string.Join(Environment.NewLine, docString.Take(15)) + Environment.NewLine + "...";
+            expected2 = string.Join(Environment.NewLine, docString.Take(8)).TrimStart() + Environment.NewLine + "...";
 
-            TestQuickInfo(code, code.IndexOf("func"), code.IndexOf("func") + 4, "func: def func(...)\r\n" + expected1);
+            TestQuickInfo(code, code.IndexOf("func"), code.IndexOf("func") + 4, "func: def func(a)\r\n" + expected1);
 
             SignatureTest(-1, code + "func(", "func", 0, PythonLanguageVersion.V27, true, out sigs);
             Assert.AreEqual(1, sigs.Signatures.Count);

@@ -427,8 +427,11 @@ namespace PythonToolsUITests {
         private static string[] WaitForFiles(string dir) {
             string[] files = null;
             for (int i = 0; i < 10; i++) {
-                files = Directory.GetFiles(dir);
-                if (files.Length != 0) {
+                try {
+                    files = Directory.GetFiles(dir);
+                } catch {
+                }
+                if (files == null || files.Length != 0) {
                     break;
                 }
                 System.Threading.Thread.Sleep(3000);
