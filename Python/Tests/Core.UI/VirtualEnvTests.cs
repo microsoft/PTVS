@@ -65,7 +65,7 @@ namespace PythonToolsUITests {
 
         private static void CreateTemporaryProject(VisualStudioApp app) {
             var newProjDialog = app.FileNewProject();
-            newProjDialog.Location = Path.GetTempPath();
+            newProjDialog.Location = TestData.GetTempPath();
 
             newProjDialog.FocusLanguageNode();
 
@@ -485,6 +485,62 @@ namespace PythonToolsUITests {
                 Assert.IsNotNull(env);
                 Assert.IsNotNull(env.Element);
                 Assert.AreEqual("venv (Python 3.3)", envName);
+            }
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        public void UnavailableEnvironments() {
+            var collection = new Microsoft.Build.Evaluation.ProjectCollection();
+            try {
+                var service = new MockInterpreterOptionsService();
+                var proj = collection.LoadProject(TestData.GetPath(@"TestData\Environments\Unavailable.pyproj"));
+
+                using (var provider = new MSBuildProjectInterpreterFactoryProvider(service, proj)) {
+                    try {
+                        provider.DiscoverInterpreters();
+                        Assert.Fail("Expected InvalidDataException in DiscoverInterpreters");
+                    } catch (InvalidDataException ex) {
+                        AssertUtil.Equals(ex.Message
+                            .Replace(TestData.GetPath("TestData\\Environments\\"), "$")
+                            .Split('\r', '\n')
+                            .Where(s => !string.IsNullOrEmpty(s))
+                            .Select(s => s.Trim()),
+                            "Some project interpreters failed to load:",
+                            @"Interpreter $env\ has invalid value for 'Id': INVALID ID",
+                            @"Interpreter $env\ has invalid value for 'Version': INVALID VERSION",
+                            @"Base interpreter $env\ has invalid value for 'BaseInterpreter': INVALID BASE",
+                            @"Interpreter $env\ has invalid value for 'InterpreterPath': INVALID<>PATH",
+                            @"Interpreter $env\ has invalid value for 'WindowsInterpreterPath': INVALID<>PATH",
+                            @"Interpreter $env\ has invalid value for 'LibraryPath': INVALID<>PATH",
+                            @"Base interpreter $env\ has invalid value for 'BaseInterpreter': {98512745-4ac7-4abb-9f33-120af32edc77}"
+                        );
+                    }
+
+                    var factories = provider.GetInterpreterFactories().ToList();
+                    foreach (var fact in factories) {
+                        Console.WriteLine("{0}: {1}", fact.GetType().FullName, fact.Description);
+                    }
+
+                    foreach (var fact in factories) {
+                        Assert.IsInstanceOfType(
+                            fact,
+                            typeof(MSBuildProjectInterpreterFactoryProvider.NotFoundInterpreterFactory),
+                            string.Format("{0} was not correct type", fact.Description)
+                        );
+                    }
+
+                    AssertUtil.Equals(factories.Select(f => f.Description),
+                        "Absent BaseInterpreter (unavailable)",
+                        "Invalid BaseInterpreter (unavailable)",
+                        "Invalid InterpreterPath (unavailable)",
+                        "Invalid LibraryPath (unavailable)",
+                        "Invalid WindowsInterpreterPath (unavailable)",
+                        "Unknown Python 2.7"
+                    );
+                }
+            } finally {
+                collection.UnloadAllProjects();
+                collection.Dispose();
             }
         }
     }

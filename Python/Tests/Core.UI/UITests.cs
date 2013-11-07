@@ -885,7 +885,7 @@ namespace PythonToolsUITests {
                 do {
                     i++;
                     basename = "test" + i + " .py";
-                    filename = Path.Combine(Path.GetTempPath(), basename);
+                    filename = Path.Combine(TestData.GetTempPath(), basename);
                 } while (System.IO.File.Exists(filename));
 
                 System.IO.File.WriteAllText(filename, "def f(): pass");

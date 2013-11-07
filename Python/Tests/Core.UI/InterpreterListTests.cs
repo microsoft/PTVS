@@ -85,7 +85,7 @@ namespace PythonToolsUITests {
         public void CreateRemoveVirtualEnvInInterpreterListInVS() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
                 var newProjDialog = app.FileNewProject();
-                newProjDialog.Location = Path.GetTempPath();
+                newProjDialog.Location = TestData.GetTempPath();
 
                 newProjDialog.FocusLanguageNode();
 

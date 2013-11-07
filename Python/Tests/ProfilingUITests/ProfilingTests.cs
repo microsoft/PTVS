@@ -1448,7 +1448,7 @@ namespace ProfilingUITests {
             for (int i = 0; i < 100; i++) {
                 string csvFilename;
                 do {
-                    csvFilename = Path.Combine(Path.GetTempPath(), "test") + DateTime.Now.Ticks + "_" + _counter++;
+                    csvFilename = Path.Combine(TestData.GetTempPath(), "test") + DateTime.Now.Ticks + "_" + _counter++;
                 } while (File.Exists(csvFilename + "_FunctionSummary.csv"));
 
                 var psi = new ProcessStartInfo(perfReportPath, "\"" + report.Filename + "\"" + " /output:" + csvFilename + " /summary:function");

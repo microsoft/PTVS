@@ -1,0 +1,88 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{288ab271-4571-43f8-8d61-1a6a3e17c9d8}</ProjectGuid>
+    <ProjectHome>.</ProjectHome>
+    <StartupFile>Program.py</StartupFile>
+    <SearchPath>
+    </SearchPath>
+    <WorkingDirectory>.</WorkingDirectory>
+    <AssemblyName>With27And33</AssemblyName>
+    <Name>With27And33</Name>
+    <RootNamespace>With27And33</RootNamespace>
+    <OutputPath>.</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <DebugSymbols>true</DebugSymbols>
+    <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <DebugSymbols>true</DebugSymbols>
+    <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Program.py" />
+  </ItemGroup>
+  <ItemGroup>
+    <Interpreter Include="env\">
+      <Id>INVALID ID</Id>
+      <Description>Invalid Id</Description>
+    </Interpreter>
+    <Interpreter Include="env\">
+      <Id>{38bdb23a-7f31-47d9-9b0d-6ed2543d0810}</Id>
+      <Version>INVALID VERSION</Version>
+      <Description>Invalid Version</Description>
+    </Interpreter>
+    <Interpreter Include="env\">
+      <Id>{094463e9-fdeb-440a-b32f-115e183fcd4e}</Id>
+      <BaseInterpreter>INVALID BASE</BaseInterpreter>
+      <Version>2.7</Version>
+      <Description>Invalid BaseInterpreter</Description>
+      <InterpreterPath>Scripts\python.exe</InterpreterPath>
+      <WindowsInterpreterPath>Scripts\pythonw.exe</WindowsInterpreterPath>
+      <LibraryPath>Lib\</LibraryPath>
+      <PathEnvironmentVariable>PYTHONPATH</PathEnvironmentVariable>
+    </Interpreter>
+    <Interpreter Include="env\">
+      <Id>{8bb1b906-9f84-4bdf-ba38-3c9f5010671c}</Id>
+      <Version>2.7</Version>
+      <Description>Invalid InterpreterPath</Description>
+      <InterpreterPath>INVALID&lt;&gt;PATH</InterpreterPath>
+      <WindowsInterpreterPath>Scripts\pythonw.exe</WindowsInterpreterPath>
+      <LibraryPath>Lib\</LibraryPath>
+      <PathEnvironmentVariable>PYTHONPATH</PathEnvironmentVariable>
+    </Interpreter>
+    <Interpreter Include="env\">
+      <Id>{2d5f440a-3fef-4799-8089-29a81f42f37f}</Id>
+      <Version>2.7</Version>
+      <Description>Invalid WindowsInterpreterPath</Description>
+      <InterpreterPath>Scripts\python.exe</InterpreterPath>
+      <WindowsInterpreterPath>INVALID&lt;&gt;PATH</WindowsInterpreterPath>
+      <LibraryPath>Lib\</LibraryPath>
+      <PathEnvironmentVariable>PYTHONPATH</PathEnvironmentVariable>
+    </Interpreter>
+    <Interpreter Include="env\">
+      <Id>{b7f35585-ff28-4f36-9a37-7cce2fb3965e}</Id>
+      <Version>2.7</Version>
+      <Description>Invalid LibraryPath</Description>
+      <InterpreterPath>Scripts\python.exe</InterpreterPath>
+      <WindowsInterpreterPath>Scripts\pythonw.exe</WindowsInterpreterPath>
+      <LibraryPath>INVALID&lt;&gt;PATH</LibraryPath>
+      <PathEnvironmentVariable>PYTHONPATH</PathEnvironmentVariable>
+    </Interpreter>
+    <Interpreter Include="env\">
+      <Id>{9c35766f-1054-485a-b430-3b2c6ede3138}</Id>
+      <BaseInterpreter>{98512745-4ac7-4abb-9f33-120af32edc77}</BaseInterpreter>
+      <Version>2.7</Version>
+      <Description>Absent BaseInterpreter</Description>
+      <InterpreterPath>Scripts\python.exe</InterpreterPath>
+      <WindowsInterpreterPath>Scripts\pythonw.exe</WindowsInterpreterPath>
+      <LibraryPath>Lib\</LibraryPath>
+      <PathEnvironmentVariable>PYTHONPATH</PathEnvironmentVariable>
+    </Interpreter>
+    <InterpreterReference Include="{C8FC2350-F002-49C2-B8A5-741E3E3F09F5}\2.7" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" />
+</Project>

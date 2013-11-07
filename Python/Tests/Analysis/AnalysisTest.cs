@@ -4322,13 +4322,12 @@ abc = 42
 
         [TestMethod, Priority(0)]
         public void PackageRelativeImport() {
-            string tempPath = Path.GetTempPath();
-            Directory.CreateDirectory(Path.Combine(tempPath, "fob"));
+            string tempPath = TestData.GetTempPath("fob");
 
             var files = new[] { 
-                new { Content = "from .y import abc", FullPath = Path.Combine(tempPath, "fob\\__init__.py") },
-                new { Content = "from .y import abc", FullPath = Path.Combine(tempPath, "fob\\x.py") } ,
-                new { Content = "abc = 42",           FullPath = Path.Combine(tempPath, "fob\\y.py") } 
+                new { Content = "from .y import abc", FullPath = Path.Combine(tempPath, "__init__.py") },
+                new { Content = "from .y import abc", FullPath = Path.Combine(tempPath, "x.py") } ,
+                new { Content = "abc = 42",           FullPath = Path.Combine(tempPath, "y.py") } 
             };
 
             var srcs = new TextReader[files.Length];
@@ -4363,12 +4362,11 @@ abc = 42
         public void PackageRelativeImportAliasedMember() {
             // similar to unittest package which has unittest.main which contains a function called "main".
             // Make sure we see the function, not the module.
-            string tempPath = Path.GetTempPath();
-            Directory.CreateDirectory(Path.Combine(tempPath, "fob"));
+            string tempPath = TestData.GetTempPath("fob");
 
             var files = new[] { 
-                new { Content = "from .y import y", FullPath = Path.Combine(tempPath, "fob\\__init__.py") },
-                new { Content = "def y(): pass",    FullPath = Path.Combine(tempPath, "fob\\y.py") } 
+                new { Content = "from .y import y", FullPath = Path.Combine(tempPath, "init__.py") },
+                new { Content = "def y(): pass",    FullPath = Path.Combine(tempPath, "y.py") } 
             };
 
             var srcs = new TextReader[files.Length];
@@ -5337,8 +5335,7 @@ pass
             if (GetType() == typeof(AnalysisTest)) {
                 var stdLib = AnalyzeStdLib();
 
-                string tmpFolder = Path.Combine(Path.GetTempPath(), "6666d700-a6d8-4e11-8b73-3ba99a61e27b" /*Guid.NewGuid().ToString()*/);
-                Directory.CreateDirectory(tmpFolder);
+                string tmpFolder = TestData.GetTempPath("6666d700-a6d8-4e11-8b73-3ba99a61e27b");
 
                 new SaveAnalysis().Save(stdLib, tmpFolder);
 

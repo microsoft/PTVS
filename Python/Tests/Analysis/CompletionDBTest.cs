@@ -51,8 +51,7 @@ namespace PythonToolsTests {
                 Console.WriteLine(path.Path);
 
                 Guid testId = Guid.NewGuid();
-                var testDir = Path.Combine(Path.GetTempPath(), testId.ToString());
-                Directory.CreateDirectory(testDir);
+                var testDir = TestData.GetTempPath(testId.ToString());
 
                 // run the scraper
                 using (var proc = ProcessOutput.RunHiddenAndCapture(
@@ -119,9 +118,8 @@ namespace PythonToolsTests {
 
         [TestMethod, Priority(0)]
         public void TestPthFiles() {
-            var outputPath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+            var outputPath = TestData.GetTempPath(randomSubPath: true);
             Console.WriteLine("Writing to: " + outputPath);
-            Directory.CreateDirectory(outputPath);
 
             // run the analyzer
             using (var output = ProcessOutput.RunHiddenAndCapture("Microsoft.PythonTools.Analyzer.exe",
@@ -163,9 +161,8 @@ namespace PythonToolsTests {
         public void PydInPackage() {
             PythonPaths.Python27.AssertInstalled();
 
-            var outputPath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+            var outputPath = TestData.GetTempPath(randomSubPath: true);
             Console.WriteLine("Writing to: " + outputPath);
-            Directory.CreateDirectory(outputPath);
 
             // run the analyzer
             using (var output = ProcessOutput.RunHiddenAndCapture("Microsoft.PythonTools.Analyzer.exe",

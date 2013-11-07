@@ -446,7 +446,7 @@ def m(x = math.atan2(1, 0)): pass
                 entries[i].Analyze(CancellationToken.None);
             }
 
-            string tmpFolder = Path.Combine(Path.GetTempPath(), "6666d700-a6d8-4e11-8b73-3ba99a61e27b" /*Guid.NewGuid().ToString()*/);
+            string tmpFolder = TestData.GetTempPath("6666d700-a6d8-4e11-8b73-3ba99a61e27b");
             Directory.CreateDirectory(tmpFolder);
 
             new SaveAnalysis().Save(state, tmpFolder);
