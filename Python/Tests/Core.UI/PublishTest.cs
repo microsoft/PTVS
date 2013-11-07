@@ -102,6 +102,47 @@ namespace PythonToolsUITests {
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void TestPublishReadOnlyFiles() {
+            var sourceFile = TestData.GetPath(@"TestData\HelloWorld\Program.py");
+            Assert.IsTrue(File.Exists(sourceFile), sourceFile + " not found");
+            var attributes = File.GetAttributes(sourceFile);
+
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenProject(@"TestData\HelloWorld.sln");
+                try {
+                    string subDir = Guid.NewGuid().ToString();
+                    project.Properties.Item("PublishUrl").Value = Path.Combine(TestSharePublic, subDir);
+                    string dir = Path.Combine(TestSharePublic, subDir);
+
+                    File.SetAttributes(sourceFile, attributes | FileAttributes.ReadOnly);
+
+                    app.OpenSolutionExplorer();
+                    var window = app.SolutionExplorerTreeView;
+
+                    // find Program.py, send copy & paste, verify copy of file is there
+                    var programPy = window.FindItem("Solution 'HelloWorld' (1 project)", "HelloWorld");
+
+                    AutomationWrapper.Select(programPy);
+
+                    ThreadPool.QueueUserWorkItem(x => VsIdeTestHostContext.Dte.ExecuteCommand("Build.PublishSelection"));
+                    System.Threading.Thread.Sleep(2000);
+                    var files = Directory.GetFiles(dir);
+                    Assert.AreEqual(files.Length, 1);
+                    Assert.AreEqual(Path.GetFileName(files[0]), "Program.py");
+                    Assert.IsTrue(File.GetAttributes(sourceFile).HasFlag(FileAttributes.ReadOnly), "Source file should be read-only");
+                    Assert.IsFalse(File.GetAttributes(files[0]).HasFlag(FileAttributes.ReadOnly), "Published file should not be read-only");
+
+                    Directory.Delete(dir, true);
+                } finally {
+                    project.Properties.Item("PublishUrl").Value = "";
+                    WNetCancelConnection2(TestSharePublic, 0, true);
+                    File.SetAttributes(sourceFile, attributes);
+                }
+            }
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestPublishFilesControlled() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
                 var project = app.OpenProject(@"TestData\PublishTest.sln");

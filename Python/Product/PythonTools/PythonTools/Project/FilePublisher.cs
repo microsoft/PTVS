@@ -107,6 +107,18 @@ namespace Microsoft.PythonTools.Project {
 
             File.Copy(item.SourceFile, destFile, true);
             Debug.WriteLine("Copied file: " + destFile);
+
+            // Attempt to remove read-only attribute from the destination file.
+            try {
+                var attr = File.GetAttributes(destFile);
+
+                if (attr.HasFlag(FileAttributes.ReadOnly)) {
+                    File.SetAttributes(destFile, attr & ~FileAttributes.ReadOnly);
+                    Debug.WriteLine("Removed read-only attribute.");
+                }
+            } catch (IOException) {
+            } catch (UnauthorizedAccessException) {
+            }
         }
 
         public string DestinationDescription {
