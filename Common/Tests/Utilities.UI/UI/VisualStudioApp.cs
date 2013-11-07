@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -24,6 +25,7 @@ using System.Windows.Automation;
 using System.Windows.Input;
 using EnvDTE;
 using Microsoft.TC.TestHostAdapters;
+using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
@@ -663,6 +665,37 @@ namespace TestUtilities.UI {
 
         internal void Invoke(Action action) {
             ThreadHelper.Generic.Invoke(action);
+        }
+
+        public List<IVsTaskItem> WaitForErrorListItems(int expectedCount) {
+            var errorList = GetService<IVsTaskList>(typeof(SVsErrorList));
+            var allItems = new List<IVsTaskItem>();
+
+            if (expectedCount == 0) {
+                // Allow time for errors to appear. Otherwise when we expect 0
+                // errors we will get a false pass.
+                System.Threading.Thread.Sleep(5000);
+            }
+
+            for (int retries = 10; retries > 0; --retries) {
+                allItems.Clear();
+                IVsEnumTaskItems items;
+                ErrorHandler.ThrowOnFailure(errorList.EnumTaskItems(out items));
+
+                IVsTaskItem[] taskItems = new IVsTaskItem[1];
+
+                uint[] itemCnt = new uint[1];
+
+                while (ErrorHandler.Succeeded(items.Next(1, taskItems, itemCnt)) && itemCnt[0] == 1) {
+                    allItems.Add(taskItems[0]);
+                }
+                if (allItems.Count >= expectedCount) {
+                    break;
+                }
+                // give time for errors to process...
+                System.Threading.Thread.Sleep(1000);
+            }
+            return allItems;
         }
     }
 }

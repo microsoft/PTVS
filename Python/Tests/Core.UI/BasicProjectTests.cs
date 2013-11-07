@@ -27,7 +27,9 @@ using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Options;
 using Microsoft.TC.TestHostAdapters;
+using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
+using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudioTools.Project.Automation;
@@ -1107,6 +1109,117 @@ namespace PythonToolsUITests {
             }
         }
 
+
+        /// <summary>
+        /// Make sure errors in a file show up in the error list window
+        /// </summary>
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void TestProjectWithErrors_ErrorList() {
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenProject(@"TestData\ErrorProject.sln");
+
+                const int expectedItems = 6;
+                List<IVsTaskItem> allItems = app.WaitForErrorListItems(expectedItems);
+                Assert.AreEqual(expectedItems, allItems.Count);
+            }
+        }
+
+        /// <summary>
+        /// Make sure deleting a project clears the error list
+        /// </summary>
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void TestProjectWithErrorsDeleteProject() {
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenProject(@"TestData\ErrorProjectDelete.sln");
+
+                const int expectedItems = 6;
+                List<IVsTaskItem> allItems = app.WaitForErrorListItems(expectedItems);
+                Assert.AreEqual(expectedItems, allItems.Count);
+
+                app.Dte.Solution.Remove(project);
+
+                allItems = app.WaitForErrorListItems(0);
+                Assert.AreEqual(0, allItems.Count);
+            }
+        }
+
+        /// <summary>
+        /// Make sure deleting a project clears the error list
+        /// </summary>
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void TestProjectWithErrorsUnloadProject() {
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenProject(@"TestData\ErrorProjectDelete.sln");
+
+                const int expectedItems = 6;
+                var allItems = app.WaitForErrorListItems(expectedItems);
+                Assert.AreEqual(expectedItems, allItems.Count);
+
+                IVsSolution solutionService = app.GetService<IVsSolution>(typeof(SVsSolution));
+                Assert.IsNotNull(solutionService);
+
+                IVsHierarchy selectedHierarchy;
+                ErrorHandler.ThrowOnFailure(solutionService.GetProjectOfUniqueName(project.UniqueName, out selectedHierarchy));
+                Assert.IsNotNull(selectedHierarchy);
+
+                ErrorHandler.ThrowOnFailure(solutionService.CloseSolutionElement((uint)__VSSLNCLOSEOPTIONS.SLNCLOSEOPT_UnloadProject, selectedHierarchy, 0));
+
+                allItems = app.WaitForErrorListItems(0);
+                Assert.AreEqual(0, allItems.Count);
+            }
+        }
+
+        /// <summary>
+        /// Make sure deleting a project clears the error list when there are errors in multiple files
+        /// 
+        /// Take 2 of https://pytools.codeplex.com/workitem/1523
+        /// </summary>
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void TestProjectWithErrorsMultipleFilesUnloadProject() {
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenProject(@"TestData\ErrorProjectMultipleFiles.sln");
+
+                const int expectedItems = 12;
+                var allItems = app.WaitForErrorListItems(expectedItems);
+                Assert.AreEqual(expectedItems, allItems.Count);
+
+                var solutionService = app.GetService<IVsSolution>(typeof(SVsSolution));
+                Assert.IsNotNull(solutionService);
+
+                IVsHierarchy selectedHierarchy;
+                ErrorHandler.ThrowOnFailure(solutionService.GetProjectOfUniqueName(project.UniqueName, out selectedHierarchy));
+                Assert.IsNotNull(selectedHierarchy);
+
+                ErrorHandler.ThrowOnFailure(solutionService.CloseSolutionElement((uint)__VSSLNCLOSEOPTIONS.SLNCLOSEOPT_UnloadProject, selectedHierarchy, 0));
+
+                allItems = app.WaitForErrorListItems(0);
+                Assert.AreEqual(0, allItems.Count);
+            }
+        }
+
+        /// <summary>
+        /// Make sure deleting a file w/ errors clears the error list
+        /// </summary>
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void TestProjectWithErrorsDeleteFile() {
+            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenProject(@"TestData\ErrorProjectDeleteFile.sln");
+
+                const int expectedItems = 6;
+                var allItems = app.WaitForErrorListItems(expectedItems);
+                Assert.AreEqual(expectedItems, allItems.Count);
+
+                project.ProjectItems.Item("Program.py").Delete();
+
+                allItems = app.WaitForErrorListItems(0);
+                Assert.AreEqual(0, allItems.Count);
+            }
+        }
 
 #if DEV11_OR_LATER
         private static IEnumerable<EnvDTE.Window> GetOpenDocumentWindows(DTE dte) {

@@ -15,14 +15,16 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Windows;
 using EnvDTE;
 using Microsoft.PythonTools;
+using Microsoft.PythonTools.Options;
+using Microsoft.PythonTools.Parsing;
 using Microsoft.TC.TestHostAdapters;
+using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Language.Intellisense;
+using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
@@ -30,7 +32,6 @@ using Microsoft.VisualStudio.Text.Tagging;
 using TestUtilities;
 using TestUtilities.Python;
 using TestUtilities.UI;
-using TestUtilities.UI.Python;
 
 namespace PythonToolsUITests {
     [TestClass]
@@ -648,6 +649,69 @@ x\
             }
         }
 
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void IndentationInconsistencyWarning() {
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var options = (IPythonOptions)VsIdeTestHostContext.Dte.GetObject("VsPython");
+                var severity = options.IndentationInconsistencySeverity;
+                options.IndentationInconsistencySeverity = Severity.Warning;
+                try {
+                    var project = app.OpenProject(@"TestData\InconsistentIndentation.sln");
+
+                    var items = app.WaitForErrorListItems(1);
+                    Assert.AreEqual(1, items.Count);
+
+                    VSTASKPRIORITY[] pri = new VSTASKPRIORITY[1];
+                    ErrorHandler.ThrowOnFailure(items[0].get_Priority(pri));
+                    Assert.AreEqual(VSTASKPRIORITY.TP_NORMAL, pri[0]);
+                } finally {
+                    options.IndentationInconsistencySeverity = severity;
+                }
+            }
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void IndentationInconsistencyError() {
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var options = (IPythonOptions)VsIdeTestHostContext.Dte.GetObject("VsPython");
+                var severity = options.IndentationInconsistencySeverity;
+                options.IndentationInconsistencySeverity = Severity.Error;
+                try {
+                    var project = app.OpenProject(@"TestData\InconsistentIndentation.sln");
+
+                    var items = app.WaitForErrorListItems(1);
+                    Assert.AreEqual(1, items.Count);
+
+                    VSTASKPRIORITY[] pri = new VSTASKPRIORITY[1];
+                    ErrorHandler.ThrowOnFailure(items[0].get_Priority(pri));
+                    Assert.AreEqual(VSTASKPRIORITY.TP_HIGH, pri[0]);
+                } finally {
+                    options.IndentationInconsistencySeverity = severity;
+                }
+            }
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void IndentationInconsistencyIgnore() {
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var options = (IPythonOptions)VsIdeTestHostContext.Dte.GetObject("VsPython");
+                var severity = options.IndentationInconsistencySeverity;
+                options.IndentationInconsistencySeverity = Severity.Ignore;
+                try {
+                    var project = app.OpenProject(@"TestData\InconsistentIndentation.sln");
+
+                    List<IVsTaskItem> items = app.WaitForErrorListItems(0);
+                    Assert.AreEqual(0, items.Count);
+                } finally {
+                    options.IndentationInconsistencySeverity = severity;
+                }
+            }
+        }
+
+
         #endregion
 
         #region Helpers
@@ -702,10 +766,9 @@ x\
                 var spans = classifier.GetClassificationSpans(new SnapshotSpan(snapshot, 0, snapshot.Length));
                 return spans;
             }
+        }
 
         #endregion
-
-        }
 
     }
 }
