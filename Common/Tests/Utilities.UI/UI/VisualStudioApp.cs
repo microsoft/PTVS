@@ -258,8 +258,7 @@ namespace TestUtilities.UI {
                            "ComboBox"
                        )
                     )
-                )
-            );
+                ));
 
                 currentSourceControl.SelectItem(providerName);
 

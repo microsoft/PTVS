@@ -275,6 +275,10 @@ namespace TestUtilities.UI {
         public void SetFocus() {
             Element.SetFocus();
         }
+
+        public void Invoke() {
+            Invoke(Element);
+        }
     }
 
     public static class AutomationElementExtensions {

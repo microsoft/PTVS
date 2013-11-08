@@ -889,7 +889,7 @@ namespace PythonToolsUITests {
 #if DEV11_OR_LATER
                 VisualStudioApp.CheckMessageBox(MessageBoxButton.Ok, "Directory names cannot contain any of the following characters");
 #else
-            VisualStudioApp.CheckMessageBox(MessageBoxButton.Ok, ". is an invalid filename");
+                VisualStudioApp.CheckMessageBox(MessageBoxButton.Ok, ". is an invalid filename");
 #endif
                 System.Threading.Thread.Sleep(1000);
 
@@ -899,7 +899,7 @@ namespace PythonToolsUITests {
 #if DEV11_OR_LATER
                 VisualStudioApp.CheckMessageBox(MessageBoxButton.Ok, "Directory names cannot contain any of the following characters");
 #else
-            VisualStudioApp.CheckMessageBox(MessageBoxButton.Ok, ".. is an invalid filename");
+                VisualStudioApp.CheckMessageBox(MessageBoxButton.Ok, ".. is an invalid filename");
 #endif
                 System.Threading.Thread.Sleep(1000);
 
@@ -979,7 +979,7 @@ namespace PythonToolsUITests {
                     Path.Combine(Directory.GetCurrentDirectory(), "TestData", "CopiedFiles")
                 };
 
-                ToSTA(() => Clipboard.SetFileDropList(paths));
+                ClipboardSetFileDropList(paths);
 
                 Mouse.MoveTo(projectNode.GetClickablePoint());
                 Mouse.Click();
@@ -993,7 +993,7 @@ namespace PythonToolsUITests {
                 Mouse.Click();
 
                 // paste to folder node, make sure the files are there
-                ToSTA(() => Clipboard.SetFileDropList(paths));
+                ClipboardSetFileDropList(paths);
                 Keyboard.ControlV();
 
                 System.Threading.Thread.Sleep(2000);
@@ -1004,11 +1004,24 @@ namespace PythonToolsUITests {
             }
         }
 
-        private static void ToSTA(ST.ThreadStart code) {
-            ST.Thread t = new ST.Thread(code);
-            t.SetApartmentState(ST.ApartmentState.STA);
-            t.Start();
-            t.Join();
+        private static void ClipboardSetFileDropList(StringCollection paths) {
+            Exception exception = null;
+            var thread = new ST.Thread(p => {
+                try {
+                    Clipboard.SetFileDropList((StringCollection)p);
+                } catch (Exception ex) {
+                    exception = ex;
+                }
+            });
+            thread.SetApartmentState(ApartmentState.STA);
+            thread.Start(paths);
+            if (!thread.Join(TimeSpan.FromSeconds(60.0))) {
+                thread.Abort();
+                Assert.Fail("Failed to set file list on clipboard because the thread timed out.");
+            }
+            if (exception != null) {
+                Assert.Fail("Exception occurred while setting file drop list:{0}{1}", Environment.NewLine, exception);
+            }
         }
 
         /// <summary>
