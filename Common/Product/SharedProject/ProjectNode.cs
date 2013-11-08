@@ -3875,6 +3875,14 @@ namespace Microsoft.VisualStudioTools.Project
             }
         }
 
+        internal int GetIconIndex(ImageName name) {
+            return (int)name;
+        }
+
+        internal IntPtr GetIconHandleByName(ImageName name) {
+            return ImageHandler.GetIconHandle(GetIconIndex(name));
+        }
+
         #endregion
 
         #region IVsGetCfgProvider Members

@@ -86,8 +86,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public override object GetIconHandle(bool open) {
-            return this.ProjectMgr.ImageHandler.GetIconHandle(
-                CommonProjectNode.ImageOffset + (int)CommonImageName.SearchPathContainer);
+            return _projectNode.GetIconHandleByName(PythonProjectImageName.SearchPathContainer);
         }
 
         /// <summary>

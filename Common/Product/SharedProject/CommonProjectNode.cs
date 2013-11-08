@@ -54,7 +54,7 @@ namespace Microsoft.VisualStudioTools.Project {
         private VSLangProj.VSProject _vsProject = null;
         private static ImageList _imageList;
         private ProjectDocumentsListenerForStartupFileUpdates _projectDocListenerForStartupFileUpdates;
-        private static int _imageOffset;
+        private int _imageOffset;
         private FileSystemWatcher _watcher, _attributesWatcher;
         private int _suppressFileWatcherCount;
         private bool _isRefreshing;
@@ -117,7 +117,7 @@ namespace Microsoft.VisualStudioTools.Project {
             get { return _package; }
         }
 
-        public static int ImageOffset {
+        public int ImageOffset {
             get { return _imageOffset; }
         }
 

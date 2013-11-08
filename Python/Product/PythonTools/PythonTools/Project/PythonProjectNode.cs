@@ -129,6 +129,14 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
+        internal int GetIconIndex(PythonProjectImageName name) {
+            return ImageOffset + (int)name;
+        }
+
+        internal IntPtr GetIconHandleByName(PythonProjectImageName name) {
+            return ImageHandler.GetIconHandle(GetIconIndex(name));
+        }
+
         private static string GetSearchPathEntry(IProjectEntry entry) {
             object result;
             entry.Properties.TryGetValue(_searchPathEntryKey, out result);

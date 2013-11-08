@@ -332,6 +332,7 @@
     </Compile>
     <Compile Include="PythonTools\Commands\ImportWizardCommand.cs" />
     <Compile Include="PythonTools\Project\Pip.cs" />
+    <Compile Include="PythonTools\Project\PythonProjectImageName.cs" />
     <Compile Include="PythonTools\Project\VirtualEnv.cs" />
     <Compile Include="PythonTools\Project\XamlDesignerSupport.cs" />
     <Compile Include="Wpf\Commands.cs" />
@@ -831,7 +832,8 @@
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <EmbeddedResource Include="..\Icons\Dev$(VSTarget)\PythonImageList.bmp" />
+    <EmbeddedResource Include="..\Icons\Dev$(VSTarget)\PythonImageList.bmp" Condition="'$(VSTarget)' == '10.0'" />
+    <EmbeddedResource Include="..\Icons\Dev$(VSTarget)\PythonImageList.png" Condition="'$(VSTarget)' != '10.0'" />
     <Resource Include="..\Icons\Dev$(VSTarget)\PyFile.png" />
     <Resource Include="..\Icons\Dev$(VSTarget)\PyProjectBig.png" />
     <EmbeddedResource Include="PythonTools\Commands\DiagnosticsForm.resx">

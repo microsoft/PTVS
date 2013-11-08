@@ -38,7 +38,10 @@ namespace Microsoft.VisualStudioTools.Project {
 
         public override object GetIconHandle(bool open) {
             if (ItemNode.IsExcluded) {
-                return this.ProjectMgr.ImageHandler.GetIconHandle(open ? (int)ProjectNode.ImageName.OpenExcludedFolder : (int)ProjectNode.ImageName.ExcludedFolder);
+                return ProjectMgr.GetIconHandleByName(open ? 
+                    ProjectNode.ImageName.OpenExcludedFolder :
+                    ProjectNode.ImageName.ExcludedFolder
+                );
             }
             return base.GetIconHandle(open);
         }
