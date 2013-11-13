@@ -48,6 +48,9 @@ namespace Microsoft.PythonTools.BuildTasks {
         public string PrefixPath { get; private set; }
 
         [Output]
+        public string ProjectRelativePrefixPath { get; private set; }
+
+        [Output]
         public string InterpreterPath { get; private set; }
 
         [Output]
@@ -111,6 +114,11 @@ namespace Microsoft.PythonTools.BuildTasks {
                     project = collection.LoadProject(_projectPath);
                 }
 
+                var projectHome = CommonUtils.GetAbsoluteDirectoryPath(
+                    project.DirectoryPath,
+                    project.GetPropertyValue("ProjectHome")
+                );
+
                 provider = new MSBuildProjectInterpreterFactoryProvider(service, project);
                 try {
                     provider.DiscoverInterpreters();
@@ -127,6 +135,11 @@ namespace Microsoft.PythonTools.BuildTasks {
 
                 if (factory != null) {
                     PrefixPath = CommonUtils.EnsureEndSeparator(factory.Configuration.PrefixPath);
+                    if (CommonUtils.IsSubpathOf(projectHome, PrefixPath)) {
+                        ProjectRelativePrefixPath = CommonUtils.GetRelativeDirectoryPath(projectHome, PrefixPath);
+                    } else {
+                        ProjectRelativePrefixPath = string.Empty;
+                    }
                     InterpreterPath = factory.Configuration.InterpreterPath;
                     WindowsInterpreterPath = factory.Configuration.WindowsInterpreterPath;
                     LibraryPath = CommonUtils.EnsureEndSeparator(factory.Configuration.LibraryPath);

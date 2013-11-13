@@ -267,11 +267,7 @@ namespace Microsoft.PythonTools.Project {
                 throw Marshal.GetExceptionForHR(VSConstants.OLE_E_PROMPTSAVECANCELLED);
             }
 
-            if (_isReference) {
-                ProjectMgr.RemoveInterpreter(_factory);
-            } else {
-                ProjectMgr.RemoveInterpreter(Url, removeFromStorage && _canDelete);
-            }
+            ProjectMgr.RemoveInterpreter(_factory, !_isReference && removeFromStorage && _canDelete);
         }
 
         /// <summary>

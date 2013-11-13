@@ -62,6 +62,7 @@ namespace Microsoft.PythonTools.Project {
         private MSBuildProjectInterpreterFactoryProvider _interpreters;
 
         internal List<CustomCommand> _customCommands;
+        private string _customCommandsDisplayLabel;
         private HashSet<IReplWindow> _associatedReplWindows;
 
         public PythonProjectNode(CommonProjectPackage package)
@@ -82,6 +83,11 @@ namespace Microsoft.PythonTools.Project {
             }
 
             // Remove old custom commands
+            if (_customCommands != null) {
+                foreach (var c in _customCommands) {
+                    c.Dispose();
+                }
+            }
             _customCommands = null;
 
             // Project has been cleared, so nothing elso to do here
@@ -101,16 +107,8 @@ namespace Microsoft.PythonTools.Project {
             _interpreters.InterpreterFactoriesChanged += InterpreterFactoriesChanged;
 
             // Add any custom commands
-            var commandNames = project.GetPropertyValue("PythonCommands");
-            if (!string.IsNullOrEmpty(commandNames)) {
-                var targets = new List<Microsoft.Build.Construction.ProjectTargetElement>();
-                foreach (var name in commandNames.Split(';').Where(n => !string.IsNullOrEmpty(n))) {
-                    targets.Add(project.Xml.Targets
-                        .FirstOrDefault(target => name.Equals(target.Name, StringComparison.InvariantCultureIgnoreCase))
-                    );
-                }
-                _customCommands = targets.Select(target => new CustomCommand(this, target.Name, target.Label)).ToList();
-            }
+            _customCommands = CustomCommand.GetCommands(project, this).ToList();
+            _customCommandsDisplayLabel = CustomCommand.GetCommandsDisplayLabel(project, this);
         }
 
         private void InterpreterFactoriesChanged(object sender, EventArgs e) {
@@ -635,6 +633,12 @@ namespace Microsoft.PythonTools.Project {
                     _interpreters.Dispose();
                     _interpreters = null;
                 }
+                if (_customCommands != null) {
+                    foreach (var c in _customCommands) {
+                        c.Dispose();
+                    }
+                    _customCommands = null;
+                }
             }
 
             base.Dispose(disposing);
@@ -909,31 +913,51 @@ namespace Microsoft.PythonTools.Project {
                     } else {
                         result |= QueryStatusResult.INVISIBLE;
                     }
+
+                    if (pCmdText != IntPtr.Zero && NativeMethods.OLECMDTEXT.GetFlags(pCmdText) == NativeMethods.OLECMDTEXT.OLECMDTEXTF.OLECMDTEXTF_NAME) {
+                        NativeMethods.OLECMDTEXT.SetText(pCmdText, _customCommandsDisplayLabel);
+                    }
                     return VSConstants.S_OK;
                 }
             }
             return base.QueryStatusOnNode(cmdGroup, cmd, pCmdText, ref result);
         }
 
+        private CustomCommand GetCustomCommand(uint cmdId) {
+            if ((int)cmdId >= PythonConstants.FirstCustomCmdId && (int)cmdId <= PythonConstants.LastCustomCmdId) {
+
+                int i = (int)cmdId - PythonConstants.FirstCustomCmdId;
+                if (_customCommands == null || i >= _customCommands.Count) {
+                    return null;
+                }
+
+                return _customCommands[i];
+            } else {
+                return _customCommands.FirstOrDefault(c => c.AlternateCmdId == cmdId);
+            }
+        }
+
         protected override QueryStatusResult QueryStatusSelectionOnNodes(IList<HierarchyNode> selectedNodes, Guid cmdGroup, uint cmd, IntPtr pCmdText) {
             if (cmdGroup == GuidList.guidPythonToolsCmdSet) {
-                // Display these items in the Project menu, regardless of which
-                // items are selected.
-                if ((int)cmd >= PythonConstants.FirstCustomCmdId && (int)cmd <= PythonConstants.LastCustomCmdId) {
-                    int i = (int)cmd - PythonConstants.FirstCustomCmdId;
-
-                    if (_customCommands == null || i >= _customCommands.Count) {
-                        return QueryStatusResult.INVISIBLE | QueryStatusResult.NOTSUPPORTED;
+                var command = GetCustomCommand(cmd);
+                if (command != null) {
+                    // Update display text for the menu commands.
+                    if ((int)cmd >= PythonConstants.FirstCustomCmdId && (int)cmd <= PythonConstants.LastCustomCmdId) {
+                        if (pCmdText != IntPtr.Zero && NativeMethods.OLECMDTEXT.GetFlags(pCmdText) == NativeMethods.OLECMDTEXT.OLECMDTEXTF.OLECMDTEXTF_NAME) {
+                            NativeMethods.OLECMDTEXT.SetText(pCmdText, command.DisplayLabel);
+                        }
                     }
 
-                    if (pCmdText != IntPtr.Zero && NativeMethods.OLECMDTEXT.GetFlags(pCmdText) == NativeMethods.OLECMDTEXT.OLECMDTEXTF.OLECMDTEXTF_NAME) {
-                        NativeMethods.OLECMDTEXT.SetText(pCmdText, _customCommands[i].DisplayLabel);
-                    }
                     var result = QueryStatusResult.SUPPORTED;
-                    if (_customCommands[i].CanExecute) {
+                    if (command.CanExecute) {
                         result |= QueryStatusResult.ENABLED;
                     }
                     return result;
+                }
+
+                if ((int)cmd >= PythonConstants.FirstCustomCmdId && (int)cmd <= PythonConstants.LastCustomCmdId) {
+                    // All unspecified custom commands are hidden
+                    return QueryStatusResult.INVISIBLE | QueryStatusResult.NOTSUPPORTED;
                 }
             }
 
@@ -942,15 +966,10 @@ namespace Microsoft.PythonTools.Project {
 
         protected override int ExecCommandIndependentOfSelection(Guid cmdGroup, uint cmdId, uint cmdExecOpt, IntPtr vaIn, IntPtr vaOut, CommandOrigin commandOrigin, out bool handled) {
             if (cmdGroup == GuidList.guidPythonToolsCmdSet) {
-                if ((int)cmdId >= PythonConstants.FirstCustomCmdId && (int)cmdId <= PythonConstants.LastCustomCmdId) {
+                var command = GetCustomCommand(cmdId);
+
+                if (command != null) {
                     handled = true;
-
-                    int i = (int)cmdId - PythonConstants.FirstCustomCmdId;
-                    if (_customCommands == null || i >= _customCommands.Count) {
-                        return (int)OleConstants.OLECMDERR_E_NOTSUPPORTED;
-                    }
-
-                    var command = _customCommands[i];
                     if (command.CanExecute) {
                         if (!Utilities.SaveDirtyFiles()) {
                             return VSConstants.S_OK;
@@ -959,13 +978,17 @@ namespace Microsoft.PythonTools.Project {
                         command.Execute(this).ContinueWith(t => {
                             if (t.Exception != null) {
                                 MessageBox.Show(
-                                    SR.GetString(SR.ErrorRunningCustomCommand, command.DisplayLabelWithoutAccessKeys, t.Exception.Message),
+                                    SR.GetString(
+                                        SR.ErrorRunningCustomCommand,
+                                        command.DisplayLabelWithoutAccessKeys,
+                                        t.Exception.InnerException.Message
+                                    ),
                                     SR.GetString(SR.PythonToolsForVisualStudio)
                                 );
                             }
                         },
                             CancellationToken.None,
-                            TaskContinuationOptions.NotOnFaulted,
+                            TaskContinuationOptions.None,
                             TaskScheduler.FromCurrentSynchronizationContext()
                         );
                     }
@@ -1165,9 +1188,10 @@ namespace Microsoft.PythonTools.Project {
 
 
         /// <summary>
-        /// Removes a reference to an interpreter from the project.
+        /// Removes a given interpreter from the project, optionally deleting
+        /// its prefix path from disk.
         /// </summary>
-        internal void RemoveInterpreter(IPythonInterpreterFactory factory) {
+        internal async void RemoveInterpreter(IPythonInterpreterFactory factory, bool removeFromStorage = false) {
             Utilities.ArgumentNotNull("factory", factory);
 
             //Make sure we can edit the project file
@@ -1175,30 +1199,20 @@ namespace Microsoft.PythonTools.Project {
                 throw Marshal.GetExceptionForHR(VSConstants.OLE_E_PROMPTSAVECANCELLED);
             }
             _interpreters.RemoveInterpreterFactory(factory);
-        }
 
-        /// <summary>
-        /// Removes a given interpreter from the project, optionally deleting
-        /// files from disk.
-        /// </summary>
-        internal void RemoveInterpreter(string path, bool removeFromStorage) {
-            Utilities.ArgumentNotNull("path", path);
-
-            var fact = _interpreters.FindInterpreter(path);
-            if (fact != null) {
-                //Make sure we can edit the project file
-                if (!QueryEditProjectFile(false)) {
-                    throw Marshal.GetExceptionForHR(VSConstants.OLE_E_PROMPTSAVECANCELLED);
-                }
-                _interpreters.RemoveInterpreterFactory(fact);
-
-                if (removeFromStorage) {
-                    Task.Factory.StartNew((Action)(() => Directory.Delete(path, recursive: true))).ContinueWith(t => {
-                        MessageBox.Show(
-                            SR.GetString(SR.EnvironmentDeleteError, path),
-                            SR.GetString(SR.PythonToolsForVisualStudio)
-                        );
-                    }, CancellationToken.None, TaskContinuationOptions.OnlyOnFaulted, TaskScheduler.FromCurrentSynchronizationContext());
+            var path = factory.Configuration.PrefixPath;
+            if (removeFromStorage && Directory.Exists(path)) {
+                try {
+                    await Task.Run(() => Directory.Delete(path, true));
+                } catch (Exception ex) {
+                    ActivityLog.LogError(
+                        SR.GetString(SR.PythonToolsForVisualStudio),
+                        SR.GetString(SR.EnvironmentDeleteError, path) + ex.ToString()
+                    );
+                    MessageBox.Show(
+                        SR.GetString(SR.EnvironmentDeleteError, path),
+                        SR.GetString(SR.PythonToolsForVisualStudio)
+                    );
                 }
             }
         }

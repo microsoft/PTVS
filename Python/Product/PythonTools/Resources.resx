@@ -299,4 +299,13 @@ Continue?</value>
   <data name="CustomCommandReplTitle" xml:space="preserve">
     <value>{0} Interactive Window</value>
   </data>
+  <data name="PythonMenuLabel" xml:space="preserve">
+    <value>&amp;Python</value>
+  </data>
+  <data name="ErrorCommandAlreadyRunning" xml:space="preserve">
+    <value>A command is already running.</value>
+  </data>
+  <data name="NoInterpretersAvailable" xml:space="preserve">
+    <value>No Python environments are configured. Please install or configure an environment and try again.</value>
+  </data>
 </root>

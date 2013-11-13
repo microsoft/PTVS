@@ -1,12 +1,12 @@
 <html>
-<head><title>Foo</title></head>
+<head><title>Fob</title></head>
 <body>
 	{% autoescape on %}
 	{% autoescape off %}
 	{% autoescape blah %}
 	
 	{% comment %}
-	foo
+	fob
 	{% endcomment %}
 	
 	{% csrf %}
@@ -36,14 +36,14 @@
 	{% ifnotequal user.id comment.user_id %}
 	{% endifnotequal %}
 
-	{% if foo %}
+	{% if fob %}
 	{% endif %}
 
-	{% if foo %}
-	{% elif bar %}
+	{% if fob %}
+	{% elif oar %}
 	{% endif %}
 
-	{% if foo %}
+	{% if fob %}
 	{% else %}
 	{% endif %}
 
@@ -57,7 +57,7 @@
 	{% endfor %}
 
 	{% load baz.quox %}
-	{% load foo from bar %}
+	{% load fob from oar %}
 
 	{% now 'Y H' %}
 
@@ -68,13 +68,13 @@
 		</p>
 	{% endspaceless %}
 
-	{% ssi /home/foo.txt %}
+	{% ssi /home/fob.txt %}
 
 
 	{% unknownblock %}
     {% templatetag openblock %}
     {% templatetag closeblock %}
-    {% widthratio foo %}
-    {{ foo!title!cut }}
+    {% widthratio fob %}
+    {{ fob!title!cut }}
 </body>
 </html>

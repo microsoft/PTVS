@@ -183,6 +183,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to A command is already running..
+        /// </summary>
+        internal static string ErrorCommandAlreadyRunning {
+            get {
+                return ResourceManager.GetString("ErrorCommandAlreadyRunning", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to An error occurred while running {0}.
         ///
         ///{1}.
@@ -272,6 +281,15 @@ namespace Microsoft.PythonTools {
         internal static string MissingStartupScript {
             get {
                 return ResourceManager.GetString("MissingStartupScript", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No Python environments are configured. Please install or configure an environment and try again..
+        /// </summary>
+        internal static string NoInterpretersAvailable {
+            get {
+                return ResourceManager.GetString("NoInterpretersAvailable", resourceCulture);
             }
         }
         
@@ -425,6 +443,15 @@ namespace Microsoft.PythonTools {
         internal static string PipInstallSucceeded {
             get {
                 return ResourceManager.GetString("PipInstallSucceeded", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &amp;Python.
+        /// </summary>
+        internal static string PythonMenuLabel {
+            get {
+                return ResourceManager.GetString("PythonMenuLabel", resourceCulture);
             }
         }
         

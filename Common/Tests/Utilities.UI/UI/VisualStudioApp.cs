@@ -621,7 +621,7 @@ namespace TestUtilities.UI {
                     }
                 }
 
-                Assert.IsTrue(i == expectedProjects, String.Format("Loading project resulted in wrong number of loaded projects, expected 1, received {0}", Dte.Solution.Projects.Count));
+                Assert.AreEqual(expectedProjects, i, "Wrong number of loaded projects");
             }
 
             var iter = Dte.Solution.Projects.GetEnumerator();
@@ -630,20 +630,29 @@ namespace TestUtilities.UI {
             Project project = (Project)iter.Current;
             if (projectName != null) {
                 while (project.Name != projectName) {
-                    if (!iter.MoveNext()) {
-                        Assert.Fail("Failed to find project named " + projectName);
-                    }
+                    Assert.IsTrue(iter.MoveNext(), "Failed to find project named " + projectName);
                     project = (Project)iter.Current;
                 }
+            }
+
+            Assert.IsNotNull(project, "No project loaded");
+            try {
+                var currentItem = project.Properties.Item("StartupFile").Value;
+            } catch {
+                // The exception is not important. This is just an easy way to
+                // determine that the project did not load properly.
+                Assert.Fail("No project loaded");
             }
 
             if (startItem != null && setStartupItem) {
                 project.SetStartupFile(startItem);
                 for (var i = 0; i < 20; i++) {
                     //Wait for the startupItem to be set before returning from the project creation
-                    if (((string)project.Properties.Item("StartupFile").Value) == startItem) {
-                        break;
-                    }
+                    try {
+                        if (((string)project.Properties.Item("StartupFile").Value) == startItem) {
+                            break;
+                        }
+                    } catch { }
                     System.Threading.Thread.Sleep(250);
                 }
             }

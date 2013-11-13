@@ -72,10 +72,13 @@
     <Content Include="Microsoft.PythonTools.targets">
       <SubType>Designer</SubType>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVsix>true</IncludeInVsix>
     </Content>
     <Content Include="TestTargets\README.txt" />
     <None Include="TestTargets\Microsoft.PythonTools.Django.targets" />
-    <None Include="TestTargets\Microsoft.PythonTools.targets" />
+    <None Include="TestTargets\Microsoft.PythonTools.targets">
+      <SubType>Designer</SubType>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Analysis\Analysis.csproj">

@@ -81,9 +81,13 @@ namespace Microsoft.PythonTools.Project {
 
         public const string ErrorRunningCustomCommand = "ErrorRunningCustomCommand";
         public const string ErrorBuildingCustomCommand = "ErrorBuildingCustomCommand";
+        public const string ErrorCommandAlreadyRunning = "ErrorCommandAlreadyRunning";
         public const string FailedToReadResource = "FailedToReadResource";
 
         public const string CustomCommandReplTitle = "CustomCommandReplTitle";
+        public const string PythonMenuLabel = "PythonMenuLabel";
+
+        public const string NoInterpretersAvailable = "NoInterpretersAvailable";
 
         internal static new string GetString(string value) {
             string result = Microsoft.PythonTools.Resources.ResourceManager.GetString(value, CultureInfo.CurrentUICulture) ?? CommonSR.GetString(value);

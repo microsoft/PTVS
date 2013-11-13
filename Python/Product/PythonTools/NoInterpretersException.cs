@@ -12,13 +12,18 @@
  *
  * ***************************************************************************/
 
-// PkgCmdID.cs
-// MUST match PkgCmdID.h
 using System;
+using Microsoft.PythonTools.Project;
 
-namespace Microsoft.PythonTools.Django {
-    static class PkgCmdIDList {
-        public const uint cmdidStartNewApp = 0x1002;
-        public const uint cmdidGotoTemplateSource = 0x1003;
+namespace Microsoft.PythonTools {
+    [Serializable]
+    public class NoInterpretersException : Exception {
+        public NoInterpretersException() : this(SR.GetString(SR.NoInterpretersAvailable)) { }
+        public NoInterpretersException(string message) : base(message) { }
+        public NoInterpretersException(string message, Exception inner) : base(message, inner) { }
+        protected NoInterpretersException(
+          System.Runtime.Serialization.SerializationInfo info,
+          System.Runtime.Serialization.StreamingContext context)
+            : base(info, context) { }
     }
 }

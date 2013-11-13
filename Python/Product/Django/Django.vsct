@@ -39,56 +39,13 @@
     group; your package should define its own command set in order to avoid collisions  
     with command ids defined by other packages. -->
 
-    <Menus>
-      <Menu guid="guidDjangoCmdSet" id="DjangoProjectContextMenu" priority="0x0400" type="Menu">
-        <Parent guid="guidSHLMainMenu" id="IDG_VS_CTXT_PROJECT_BUILD"/>
-        <Strings>
-          <ButtonText>Django</ButtonText>
-        </Strings>
-      </Menu>
-    </Menus>
+    <!--<Menus>
+    </Menus>-->
 
-    <Groups>
-      <Group guid="guidDjangoCmdSet" id="DjangoProjectContextGroup" priority="0x380">
-        <Parent guid="guidDjangoCmdSet" id="DjangoProjectContextMenu"/>
-      </Group>
-    </Groups>
+    <!--<Groups>
+    </Groups>-->
 
     <Buttons>
-      <Button guid="guidDjangoCmdSet" id="cmdidDjangoShell" priority="0x0400" type="Button">
-        <Parent guid="guidDjangoCmdSet" id="DjangoProjectContextGroup"/>
-        <!-- <Icon guid="guidImages" id="bmpPic1"/> -->
-        <CommandFlag>DynamicVisibility</CommandFlag>
-        <CommandFlag>DefaultInvisible</CommandFlag>
-        <Strings>
-          <ButtonText>Open Django Shell</ButtonText>
-        </Strings>
-
-      </Button>
-
-      <Button guid="guidDjangoCmdSet" id="cmdidValidateDjangoApp" priority="0x0450" type="Button">
-        <Parent guid="guidDjangoCmdSet" id="DjangoProjectContextGroup"/>
-        <!-- <Icon guid="guidImages" id="bmpPic1"/> -->
-        <CommandFlag>DynamicVisibility</CommandFlag>
-        <CommandFlag>DefaultInvisible</CommandFlag>
-        <Strings>
-          <ButtonText>Validate Django App...</ButtonText>
-        </Strings>
-
-      </Button>
-
-      <Button guid="guidDjangoCmdSet" id="cmdidSyncDb" priority="0x0470" type="Button">
-        <Parent guid="guidDjangoCmdSet" id="DjangoProjectContextGroup"/>
-        <!-- <Icon guid="guidImages" id="bmpPic1"/> -->
-
-        <CommandFlag>DynamicVisibility</CommandFlag>
-        <CommandFlag>DefaultInvisible</CommandFlag>
-        <Strings>
-          <ButtonText>Django Sync DB...</ButtonText>
-        </Strings>
-
-      </Button>
-
       <Button guid="guidDjangoCmdSet" id="cmdidStartApp" priority="0x500" type="Button">
         <Parent guid="guidSHLMainMenu" id="IDG_VS_CTXT_PROJECT_ADD_ITEMS"/>
         <CommandFlag>DefaultInvisible</CommandFlag>
@@ -144,13 +101,8 @@
     </GuidSymbol>
     <!-- This is the guid used to group the menu commands together -->
     <GuidSymbol name="guidDjangoCmdSet" value="{5b3281a5-d037-4e84-93aa-a6819304dbd9}">
-      <IDSymbol name="cmdidValidateDjangoApp" value ="0x1001"/>
       <IDSymbol name="cmdidStartApp" value ="0x1002"/>
       <IDSymbol name="cmdidGotoTemplateSource" value="0x1003"/>
-      <IDSymbol name="cmdidSyncDb" value="0x1004"/>
-      <IDSymbol name="cmdidDjangoShell" value ="0x1005"/>
-      <IDSymbol name="DjangoProjectContextMenu" value="0x1006"/>
-      <IDSymbol name="DjangoProjectContextGroup" value="0x1007"/>
     </GuidSymbol>
 
     <GuidSymbol name="guidDjangoEditorFactory" value="{96108b8f-2a98-4f6b-a6b6-69e04e7b7d3f}" />

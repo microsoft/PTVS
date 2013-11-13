@@ -46,6 +46,7 @@ namespace DjangoUITests {
                 var djangoApp = newProjDialog.ProjectTypes.FindItem("Django Project");
                 djangoApp.Select();
 
+                newProjDialog.Location = TestData.GetTempPath();
                 newProjDialog.ClickOK();
 
                 // wait for new solution to load...
@@ -78,6 +79,7 @@ namespace DjangoUITests {
                 var djangoApp = newProjDialog.ProjectTypes.FindItem("Python Application");
                 djangoApp.Select();
 
+                newProjDialog.Location = TestData.GetTempPath();
                 newProjDialog.ClickOK();
 
                 // wait for new solution to load...
@@ -86,17 +88,19 @@ namespace DjangoUITests {
                 }
 
                 try {
-                    app.Dte.ExecuteCommand("ClassViewContextMenus.ClassViewProject.ValidateDjangoApp");
+                    app.Dte.ExecuteCommand("Project.ValidateDjangoApp");
+                    Assert.Fail("Expected COMException");
                 } catch (COMException e) {
                     // requires a Django project
-                    Assert.IsTrue(e.ToString().Contains("is not available"));
+                    Assert.IsTrue(e.Message.Contains("is not valid"), e.ToString());
                 }
 
                 try {
-                    app.Dte.ExecuteCommand("ClassViewContextMenus.ClassViewProject.ValidateDjangoApp");
+                    app.Dte.ExecuteCommand("Project.DjangoSyncDB");
+                    Assert.Fail("Expected COMException");
                 } catch (COMException e) {
                     // requires a Django project
-                    Assert.IsTrue(e.ToString().Contains("is not available"));
+                    Assert.IsTrue(e.Message.Contains("is not valid"), e.ToString());
                 }
             }
         }
@@ -112,14 +116,11 @@ namespace DjangoUITests {
                 var djangoApp = newProjDialog.ProjectTypes.FindItem("Django Project");
                 djangoApp.Select();
 
+                newProjDialog.Location = TestData.GetTempPath();
                 newProjDialog.ClickOK();
 
                 // wait for new solution to load...
-                for (int i = 0; i < 100 && app.Dte.Solution.Projects.Count == 0; i++) {
-                    System.Threading.Thread.Sleep(1000);
-                }
-
-                var projItem = app.SolutionExplorerTreeView.FindItem(
+                var projItem = app.SolutionExplorerTreeView.WaitForItem(
                     "Solution '" + app.Dte.Solution.Projects.Item(1).Name + "' (1 project)",
                     app.Dte.Solution.Projects.Item(1).Name
                 );
@@ -153,7 +154,7 @@ namespace DjangoUITests {
                 System.Threading.Thread.Sleep(1000);
                 ThreadPool.QueueUserWorkItem(x => {
                     try {
-                        app.Dte.ExecuteCommand("ClassViewContextMenus.ClassViewProject.ValidateDjangoApp");
+                        app.Dte.ExecuteCommand("Project.ValidateDjangoApp");
                     } catch (Exception e) {
                         Debug.WriteLine("Failed to execute command: {0}", e);
                     }
@@ -193,6 +194,7 @@ namespace DjangoUITests {
                 var djangoApp = newProjDialog.ProjectTypes.FindItem("Django Project");
                 djangoApp.Select();
 
+                newProjDialog.Location = TestData.GetTempPath();
                 newProjDialog.ClickOK();
 
                 // wait for new solution to load...
@@ -219,6 +221,8 @@ namespace DjangoUITests {
                     "models.py"
                 );
 
+                app.Dte.Documents.CloseAll(EnvDTE.vsSaveChanges.vsSaveChangesNo);
+
                 AutomationWrapper.Select(projItem);
                 System.Threading.Thread.Sleep(1000);
                 newAppDialog = new NewAppDialog(app.OpenDialogWithDteExecuteCommand(AddDjangoAppCmd));
@@ -229,7 +233,7 @@ namespace DjangoUITests {
 
                 VisualStudioApp.CheckMessageBox(
                     TestUtilities.UI.MessageBoxButton.Ok,
-                    "Folder already exists with the name 'Fob'"
+                    "A file of this name is already part of the project."
                 );
             }
         }
@@ -248,6 +252,7 @@ namespace DjangoUITests {
                 var djangoApp = newProjDialog.ProjectTypes.FindItem("Django Project");
                 djangoApp.Select();
 
+                newProjDialog.Location = TestData.GetTempPath();
                 newProjDialog.ClickOK();
 
                 // wait for new solution to load...
@@ -286,6 +291,7 @@ namespace DjangoUITests {
                 var djangoApp = newProjDialog.ProjectTypes.FindItem("Django Project");
                 djangoApp.Select();
 
+                newProjDialog.Location = TestData.GetTempPath();
                 newProjDialog.ClickOK();
 
                 // wait for new solution to load...
