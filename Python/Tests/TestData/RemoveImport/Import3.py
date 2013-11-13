@@ -1,3 +1,3 @@
-import bar, baz, quox
+import oar, baz, quox
 
 baz

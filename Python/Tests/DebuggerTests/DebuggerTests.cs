@@ -175,6 +175,7 @@ namespace DebuggerTests {
 
                 AutoResetEvent evalComplete = new AutoResetEvent(false);
                 PythonEvaluationResult evalRes = null;
+                Console.WriteLine("Executing {0}", text);
                 frames[frame].ExecuteText(text, (completion) => {
                     evalRes = completion;
                     evalComplete.Set();
@@ -194,9 +195,11 @@ namespace DebuggerTests {
                     Assert.AreEqual(children.Length, childrenReceived.Count, "received incorrect number of children");
                     for (int i = 0; i < children.Length; i++) {
                         var curChild = children[i];
+                        Console.WriteLine("Finding: <{0}> (Repr: <{1}>)", curChild.ChildText, curChild.Repr ?? "(null)");
                         bool foundChild = false;
                         for (int j = 0; j < childrenReceived.Count; j++) {
                             var curReceived = childrenReceived[j];
+                            Console.WriteLine("Candidate: <{0}> (Repr: <{1}>)", curReceived.ChildText, curReceived.StringRepr ?? "(null)");
                             if (ChildrenMatch(curChild, curReceived)) {
                                 foundChild = true;
 
@@ -211,13 +214,12 @@ namespace DebuggerTests {
                                 break;
                             }
                         }
-                        Assert.IsTrue(foundChild, "failed to find " + children[i].ChildText + " found " + String.Join(", ", childrenReceived.Select(x => x.Expression)));
+                        Assert.IsTrue(foundChild, "failed to find " + children[i].ChildText + " found " + String.Join(", ", childrenReceived.Select(x => x.ChildText)));
                     }
                     Assert.AreEqual(0, childrenReceived.Count, "there's still some children left over which we didn't find");
                 }
-
-                process.Continue();
             } finally {
+                process.Continue();
                 WaitForExit(process);
             }
         }
@@ -2408,14 +2410,14 @@ int main(int argc, char* argv[]) {
             //  As a last resort lets check some known locations
 
             string[] wellKnownLocations = new[] {
-                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Microsoft SDKs", "Windows", "!<version>!"),
-                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "Microsoft SDKs", "Windows", "!<version>!")
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Microsoft SDKs", "Windows", "$version$"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "Microsoft SDKs", "Windows", "$version$")
             };
 
             if (regValue == null) {
                 foreach (var sdkVersion in sdkVersions) {
                     foreach (var wellKnownLocation in wellKnownLocations) {
-                        string path = wellKnownLocation.Replace("!<version>!", sdkVersion);
+                        string path = wellKnownLocation.Replace("$version$", sdkVersion);
                         if (Directory.Exists(path + "\\Include"))
                             return path;
                     }

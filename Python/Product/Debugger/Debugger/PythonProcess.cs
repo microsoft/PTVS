@@ -30,7 +30,7 @@ namespace Microsoft.PythonTools.Debugger {
     /// <summary>
     /// Handles all interactions with a Python process which is being debugged.
     /// </summary>
-    class PythonProcess {
+    class PythonProcess : IDisposable {
         private static Random _portGenerator = new Random();
 
         private readonly Process _process;
@@ -200,8 +200,34 @@ namespace Microsoft.PythonTools.Debugger {
             DebugConnectionListener.RegisterProcess(_processGuid, this);
         }
 
-        ~PythonProcess() {
+        public void Dispose() {
+            Dispose(true);
+        }
+
+        protected virtual void Dispose(bool disposing) {
             DebugConnectionListener.UnregisterProcess(_processGuid);
+
+            if (disposing) {
+                if (_stream != null) {
+                    _stream.Dispose();
+                    _stream = null;
+                }
+                if (_socket != null) {
+                    try {
+                        _socket.Disconnect(false);
+                    } catch (ObjectDisposedException) {
+                    } catch (SocketException) {
+                    }
+                    _socket.Dispose();
+                    _socket = null;
+                }
+            }
+
+            GC.SuppressFinalize(this);
+        }
+
+        ~PythonProcess() {
+            Dispose(false);
         }
 
         void _process_Exited(object sender, EventArgs e) {
@@ -240,8 +266,14 @@ namespace Microsoft.PythonTools.Debugger {
                 _process.Kill();
             }
 
-            _stream = null;
-            _socket = null;
+            if (_stream != null) {
+                _stream.Dispose();
+                _stream = null;
+            }
+            if (_socket != null) {
+                _socket.Dispose();
+                _socket = null;
+            }
         }
 
         public bool HasExited {
@@ -1181,9 +1213,6 @@ namespace Microsoft.PythonTools.Debugger {
                 Text = text;
                 Frame = frame;
             }
-        }
-
-        internal void Close() {
         }
     }
 }

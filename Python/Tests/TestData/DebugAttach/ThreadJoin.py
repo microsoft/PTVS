@@ -1,5 +1,4 @@
 from threading import Thread
-global exit_flag
 exit_flag = False
 def f():
     i = 1

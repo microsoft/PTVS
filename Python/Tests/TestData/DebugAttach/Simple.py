@@ -1,9 +1,7 @@
 from threading import Thread, current_thread, Lock
 from time import sleep
 
-global report_progress_now
 report_progress_now = []
-global progress_lock
 progress_lock = Lock()
 
 def check_report_progress(me, id):

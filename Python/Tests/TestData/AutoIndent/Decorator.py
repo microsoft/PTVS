@@ -3,5 +3,5 @@ class C:
         pass
 
     @property
-    def bar(self):
+    def oar(self):
         pass

@@ -1284,7 +1284,9 @@ namespace Microsoft.PythonTools.Repl {
         #region IDisposable Members
 
         public virtual void Dispose() {
-            _window.TextView.BufferGraph.GraphBuffersChanged -= BufferGraphGraphBuffersChanged;
+            if (_window != null) {
+                _window.TextView.BufferGraph.GraphBuffersChanged -= BufferGraphGraphBuffersChanged;
+            }
             try {
                 Close();
             } catch {

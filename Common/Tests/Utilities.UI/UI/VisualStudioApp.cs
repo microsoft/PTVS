@@ -72,6 +72,8 @@ namespace TestUtilities.UI {
                             System.Threading.Thread.Sleep(200);
                         }
                     }
+                    _dte.Debugger.TerminateAll();
+                    _dte.Debugger.Stop();
                 } catch (Exception ex) {
                     Debug.WriteLine("Exception disposing VisualStudioApp: {0}", ex);
                 }
@@ -376,21 +378,26 @@ namespace TestUtilities.UI {
         }
 
         /// <summary>
-        /// Waits for a modal dialog to take over VS's main window and returns the HWND for the dialog.
+        /// Waits for the VS main window to receive the focus.
         /// </summary>
-        /// <returns></returns>
-        public IntPtr WaitForDialogDismissed() {
+        /// <returns>
+        /// True if the main window has the focus. Otherwise, false.
+        /// </returns>
+        public bool WaitForDialogDismissed(bool assertIfFailed = true, int timeout = 100000) {
             IVsUIShell uiShell = GetService<IVsUIShell>(typeof(IVsUIShell));
             IntPtr hwnd;
             uiShell.GetDialogOwnerHwnd(out hwnd);
 
-            for (int i = 0; i < 100 && hwnd != _mainWindowHandle; i++) {
+            for (int i = 0; i < (timeout / 100) && hwnd != _mainWindowHandle; i++) {
                 System.Threading.Thread.Sleep(100);
                 uiShell.GetDialogOwnerHwnd(out hwnd);
             }
 
-            Assert.AreEqual(_mainWindowHandle, hwnd);
-            return hwnd;
+            if (assertIfFailed) {
+                Assert.AreEqual(_mainWindowHandle, hwnd);
+                return true;
+            }
+            return _mainWindowHandle == hwnd;
         }
 
         /// <summary>

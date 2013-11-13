@@ -1,3 +1,3 @@
-from sys import (bar, baz, )
+from sys import (oar, baz, )
 
 baz

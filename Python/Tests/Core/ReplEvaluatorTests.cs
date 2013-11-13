@@ -22,6 +22,7 @@ using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudioTools.Project;
 using TestUtilities;
 using TestUtilities.Mocks;
 using TestUtilities.Python;
@@ -39,6 +40,7 @@ namespace PythonToolsTests {
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
             PythonTestData.Deploy();
+            UIThread.Instance.InitUnitTestingMode();
         }
 
         [TestMethod, Priority(0)]

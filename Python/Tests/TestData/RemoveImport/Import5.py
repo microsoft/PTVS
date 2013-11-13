@@ -1,4 +1,4 @@
-import bar,     baz, quox
+import oar,     baz, quox
 
-bar
+oar
 quox

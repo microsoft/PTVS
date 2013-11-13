@@ -42,45 +42,6 @@ namespace DebuggerUITests {
             PythonTestData.Deploy();
         }
 
-        public AttachTest() {
-            //
-            // TODO: Add constructor logic here
-            //
-        }
-
-        private TestContext testContextInstance;
-
-        /// <summary>
-        ///Gets or sets the test context which provides
-        ///information about and functionality for the current test run.
-        ///</summary>
-        public TestContext TestContext {
-            get {
-                return testContextInstance;
-            }
-            set {
-                testContextInstance = value;
-            }
-        }
-
-        #region Additional test attributes
-        //
-        // You can use the following additional attributes as you write your tests:
-        //
-        // Use ClassInitialize to run code before running the first test in the class
-        // [ClassInitialize()]
-        // public static void MyClassInitialize(TestContext testContext) { }
-        //
-        // Use ClassCleanup to run code after all tests in a class have run
-        // [ClassCleanup()]
-        // public static void MyClassCleanup() { }
-        //
-        // Use TestInitialize to run code before running each test 
-        // [TestInitialize()]
-        // public void MyTestInitialize() { }
-
-        #endregion
-        #region Tests
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestAttachBasic() {
@@ -94,10 +55,10 @@ namespace DebuggerUITests {
                 SD.Process processToAttach = OpenSolutionAndLaunchFile(app, debugSolution, startFile, "", "");
 
                 try {
-                    AttachAndWaitForMode(processToAttach, AD7Engine.DebugEngineName, dbgDebugMode.dbgRunMode);
+                    AttachAndWaitForMode(app, processToAttach, AD7Engine.DebugEngineName, dbgDebugMode.dbgRunMode);
                 } finally {
                     dbg2.DetachAll();
-                    DebugProject.WaitForMode(dbgDebugMode.dbgDesignMode);
+                    DebugProject.WaitForMode(app, dbgDebugMode.dbgDesignMode);
                     if (!processToAttach.HasExited) processToAttach.Kill();
                 }
             }
@@ -119,10 +80,10 @@ namespace DebuggerUITests {
                 VsIdeTestHostContext.Dte.Debugger.Breakpoints.Add(File: startFile, Line: breakLine);
 
                 try {
-                    AttachAndWaitForMode(processToAttach, AD7Engine.DebugEngineName, dbgDebugMode.dbgBreakMode);
+                    AttachAndWaitForMode(app, processToAttach, AD7Engine.DebugEngineName, dbgDebugMode.dbgBreakMode);
                 } finally {
                     dbg2.DetachAll();
-                    DebugProject.WaitForMode(dbgDebugMode.dbgDesignMode);
+                    DebugProject.WaitForMode(app, dbgDebugMode.dbgDesignMode);
                     if (!processToAttach.HasExited) processToAttach.Kill();
                 }
             }
@@ -142,13 +103,13 @@ namespace DebuggerUITests {
                 SD.Process processToAttach = OpenSolutionAndLaunchFile(app, debugSolution, startFile, "", "");
 
                 try {
-                    AttachAndWaitForMode(processToAttach, AD7Engine.DebugEngineName, dbgDebugMode.dbgRunMode);
+                    AttachAndWaitForMode(app, processToAttach, AD7Engine.DebugEngineName, dbgDebugMode.dbgRunMode);
                     dbg2.Breakpoints.Add(File: startFile, Line: breakLine);
-                    DebugProject.WaitForMode(dbgDebugMode.dbgBreakMode);
+                    DebugProject.WaitForMode(app, dbgDebugMode.dbgBreakMode);
 
                 } finally {
                     dbg2.DetachAll();
-                    DebugProject.WaitForMode(dbgDebugMode.dbgDesignMode);
+                    DebugProject.WaitForMode(app, dbgDebugMode.dbgDesignMode);
                     if (!processToAttach.HasExited) processToAttach.Kill();
                 }
             }
@@ -166,9 +127,9 @@ namespace DebuggerUITests {
                 SD.Process processToAttach = OpenSolutionAndLaunchFile(app, debugSolution, startFile, "", "");
 
                 try {
-                    Process2 proc = AttachAndWaitForMode(processToAttach, AD7Engine.DebugEngineName, dbgDebugMode.dbgRunMode);
+                    Process2 proc = AttachAndWaitForMode(app, processToAttach, AD7Engine.DebugEngineName, dbgDebugMode.dbgRunMode);
                     dbg2.Break(WaitForBreakMode: false);
-                    DebugProject.WaitForMode(dbgDebugMode.dbgBreakMode);
+                    DebugProject.WaitForMode(app, dbgDebugMode.dbgBreakMode);
 
                     var x = proc.Threads.Cast<Thread2>()
                         .SelectMany<Thread2, StackFrame>(t => t.StackFrames.Cast<StackFrame>())
@@ -181,7 +142,7 @@ namespace DebuggerUITests {
                     x.Value = "True";
 
                     dbg2.Go(WaitForBreakOrEnd: false);
-                    DebugProject.WaitForMode(dbgDebugMode.dbgDesignMode);
+                    DebugProject.WaitForMode(app, dbgDebugMode.dbgDesignMode);
 
                 } finally {
                     if (!processToAttach.HasExited) processToAttach.Kill();
@@ -202,9 +163,9 @@ namespace DebuggerUITests {
                 SD.Process processToAttach = OpenSolutionAndLaunchFile(app, debugSolution, startFile, "", "");
 
                 try {
-                    Process2 proc = AttachAndWaitForMode(processToAttach, AD7Engine.DebugEngineName, dbgDebugMode.dbgRunMode);
+                    Process2 proc = AttachAndWaitForMode(app, processToAttach, AD7Engine.DebugEngineName, dbgDebugMode.dbgRunMode);
                     dbg2.Breakpoints.Add(File: startFile, Line: breakLine);
-                    DebugProject.WaitForMode(dbgDebugMode.dbgBreakMode);
+                    DebugProject.WaitForMode(app, dbgDebugMode.dbgBreakMode);
                     dbg2.BreakpointLastHit.Delete();
 
                     var x = proc.Threads.Cast<Thread2>()
@@ -218,7 +179,7 @@ namespace DebuggerUITests {
                     x.Value = "True";
 
                     dbg2.Go(WaitForBreakOrEnd: false);
-                    DebugProject.WaitForMode(dbgDebugMode.dbgDesignMode);
+                    DebugProject.WaitForMode(app, dbgDebugMode.dbgDesignMode);
 
                 } finally {
                     if (!processToAttach.HasExited) processToAttach.Kill();
@@ -239,7 +200,7 @@ namespace DebuggerUITests {
                 System.Threading.Thread.Sleep(2000);
 
                 try {
-                    Process2 proc = AttachAndWaitForMode(processToAttach, AD7Engine.DebugEngineName, dbgDebugMode.dbgRunMode);
+                    Process2 proc = AttachAndWaitForMode(app, processToAttach, AD7Engine.DebugEngineName, dbgDebugMode.dbgRunMode);
 
                 } finally {
                     if (!processToAttach.HasExited) processToAttach.Kill();
@@ -247,26 +208,18 @@ namespace DebuggerUITests {
             }
         }
 
-        ///TODO: TestAttachThreadsMakingProgress
-        /// <summary>
-        /// See workitem http://pytools.codeplex.com/workitem/456 
-        /// </summary>
-        /// <param name="debugSolution"></param>
-        /// <param name="startFile"></param>
-        /// <param name="interpreterArgs"></param>
-        /// <param name="programArgs"></param>
-        /// <returns></returns>
-
-        #endregion
+        //TODO: TestAttachThreadsMakingProgress
+        // See workitem http://pytools.codeplex.com/workitem/456 
 
         #region Helper methods
+
         private static SD.Process OpenSolutionAndLaunchFile(VisualStudioApp app, string debugSolution, string startFile, string interpreterArgs, string programArgs) {
             var project = app.OpenProject(debugSolution, startFile);
             return LaunchFileFromProject(project, startFile, interpreterArgs, programArgs);
         }
 
-        private static Process2 AttachAndWaitForMode(SD.Process processToAttach, object debugEngines, dbgDebugMode expectedMode) {
-            Debugger2 dbg2 = (Debugger2)VsIdeTestHostContext.Dte.Debugger;
+        private static Process2 AttachAndWaitForMode(VisualStudioApp app, SD.Process processToAttach, object debugEngines, dbgDebugMode expectedMode) {
+            Debugger2 dbg2 = (Debugger2)app.Dte.Debugger;
             System.Threading.Thread.Sleep(1000);
             Process2 result = null;
             Transport t = dbg2.Transports.Item("Default");
@@ -280,7 +233,7 @@ namespace DebuggerUITests {
                 }
             }
             Assert.IsTrue(foundit, "The process to attach [{0}] could not be found in LocalProcesses (did it exit immediately?)", processToAttach.Id);
-            DebugProject.WaitForMode(expectedMode);
+            DebugProject.WaitForMode(app, expectedMode);
             return result;
         }
 
@@ -295,7 +248,7 @@ namespace DebuggerUITests {
 
             string cmdlineArgs = String.Format("{0} \"{1}\" {2}", interpreterArgs, fullFilename, programArgs);
 
-            string projectInterpreter = GetProjectInterpreterOrDefault(project);
+            var projectInterpreter = project.GetPythonProject().GetInterpreterFactory().Configuration.InterpreterPath;
 
             var psi = new SD.ProcessStartInfo(projectInterpreter, cmdlineArgs);
             psi.RedirectStandardError = true;
@@ -321,41 +274,6 @@ namespace DebuggerUITests {
             return p;
         }
 
-        public static string GetProjectInterpreterOrDefault(EnvDTE.Project project) {
-            var interpreterId = (string)project.Properties.Item("InterpreterId").Value;
-            var interpreterVersion = (string)project.Properties.Item("InterpreterVersion").Value;
-            var interpreterPath = (string)project.Properties.Item("InterpreterPath").Value;
-            
-            // use the project's custom interpreter path if defined
-            if (!String.IsNullOrWhiteSpace(interpreterPath)) {
-                interpreterPath = Path.GetFullPath(interpreterPath);
-                SD.Debug.WriteLine("Using project specified interpreter path: {0}", interpreterPath, null);
-                return interpreterPath;
-            }
-
-            var interpreterService = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
-            var interpreter = interpreterService.FindInterpreter(interpreterId, interpreterVersion);
-
-            // use the project's interpreter if we can find it
-            if (interpreter != null) {
-                interpreterPath = Path.GetFullPath(interpreter.Configuration.InterpreterPath);
-                SD.Debug.WriteLine("Using project specified interpreter: {0}", interpreter, null);
-                return interpreterPath;
-            }
-            // use the VS instance's default interpreter if there is one
-            SD.Debug.WriteLine("Project specified interpreter not found: {0} - {1}", interpreterId, interpreterVersion);
-            interpreter = interpreterService.DefaultInterpreter;
-            if (interpreter != null) {
-                interpreterPath = Path.GetFullPath(interpreter.Configuration.InterpreterPath);
-                SD.Debug.WriteLine("Using VS default interpreter: {0}", interpreter, null);
-                return interpreterPath;
-            }
-            // fail
-            Assert.Fail("There were no available interpreters. Could not launch project.");
-            return null;
-
-        }
-
         #endregion
     }
 }
@@ -376,4 +294,4 @@ namespace DebuggerUITests {
 
 //atp.SelectProcessForDebuggingByName("python.exe");
 //atp.ClickAttach();
-//DebugProject.WaitForMode(dbgDebugMode.dbgRunMode);
+//DebugProject.WaitForMode(app, dbgDebugMode.dbgRunMode);

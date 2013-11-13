@@ -2809,7 +2809,7 @@ $cls
                         app.Dte.Debugger.Breakpoints.Add(File: "BreakpointTest.py", Line: 1);
                         interactive.WaitForText(ReplPrompt + attachCmd, ReplPrompt);
 
-                        DebuggerUITests.DebugProject.WaitForMode(EnvDTE.dbgDebugMode.dbgRunMode);
+                        DebuggerUITests.DebugProject.WaitForMode(app, EnvDTE.dbgDebugMode.dbgRunMode);
 
                         interactive = Prepare(app, reopenOnly: true);
 
@@ -2817,13 +2817,13 @@ $cls
                         Keyboard.Type(import + "\r");
                         interactive.WaitForText(ReplPrompt + attachCmd, ReplPrompt + import, "");
 
-                        DebuggerUITests.DebugProject.WaitForMode(EnvDTE.dbgDebugMode.dbgBreakMode);
+                        DebuggerUITests.DebugProject.WaitForMode(app, EnvDTE.dbgDebugMode.dbgBreakMode);
 
                         Assert.AreEqual(app.Dte.Debugger.BreakpointLastHit.FileLine, 1);
 
                         app.Dte.ExecuteCommand("Debug.DetachAll");
 
-                        DebuggerUITests.DebugProject.WaitForMode(EnvDTE.dbgDebugMode.dbgDesignMode);
+                        DebuggerUITests.DebugProject.WaitForMode(app, EnvDTE.dbgDebugMode.dbgDesignMode);
 
                         interactive.WaitForText(ReplPrompt + attachCmd, ReplPrompt + import, "hello", ReplPrompt);
                     }

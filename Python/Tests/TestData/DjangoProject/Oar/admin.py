@@ -1,6 +1,6 @@
-from Bar.models import Poll
+from Oar.models import Poll
 from django.contrib import admin
-from Bar.models import Choice
+from Oar.models import Choice
 
 class ChoiceInline(admin.TabularInline):
     model = Choice

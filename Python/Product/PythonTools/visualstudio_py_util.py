@@ -145,8 +145,12 @@ class SafeRepr(object):
     maxstring_inner = 30
     if sys.version_info >= (3, 0):
         string_types = (str, bytes)
+        set_info = (set, '{', '}', False)
+        frozenset_info = (frozenset, 'frozenset({', '})', False)
     else:
         string_types = (basestring,)
+        set_info = (set, 'set([', '])', False)
+        frozenset_info = (frozenset, 'frozenset([', '])', False)
     
     # Collection types are recursively iterated for each limit in
     # maxcollection.
@@ -157,8 +161,8 @@ class SafeRepr(object):
     collection_types = (
         (tuple, '(', ')', True),
         (list, '[', ']', False),
-        (frozenset, 'frozenset(', ')', False),
-        (set, 'set(', ')', False),
+        frozenset_info,
+        set_info,
     )
     
     dict_types = (dict,)

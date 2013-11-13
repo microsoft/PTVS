@@ -69,7 +69,12 @@ namespace PythonToolsTests {
         [TestCleanup]
         public void TestClean() {
             foreach (var proc in _processes) {
-                proc.Continue();
+                try {
+                    proc.Continue();
+                } catch (Exception ex) {
+                    Console.WriteLine("Failed to continue process");
+                    Console.WriteLine(ex);
+                }
                 if (!proc.WaitForExit(5000)) {
                     try {
                         proc.Terminate();
@@ -78,6 +83,12 @@ namespace PythonToolsTests {
                         Console.WriteLine(ex);
                     }
                 }
+            }
+            if (_window != null) {
+                Console.WriteLine("Stdout:");
+                Console.Write(_window.Output);
+                Console.WriteLine("Stderr:");
+                Console.Write(_window.Error);
             }
         }
 
@@ -240,7 +251,7 @@ NameError: name 'does_not_exist' is not defined
         public void StepInto() {
             // Make sure that we don't step into the internal repl code
             // http://pytools.codeplex.com/workitem/777
-            Attach("DebugReplTest6.py", 1);
+            Attach("DebugReplTest6.py", 2);
 
             var thread = _processes[0].GetThreads()[0];
             thread.StepInto();
@@ -284,27 +295,34 @@ NameError: name 'does_not_exist' is not defined
 
             _processes.Add(process);
 
-            AutoResetEvent brkHit = new AutoResetEvent(false);
-            process.BreakpointHit += (sender, args) => {
-                brkHit.Set();
-            };
+            using (var brkHit = new AutoResetEvent(false))
+            using (var procExited = new AutoResetEvent(false)) {
+                EventHandler<BreakpointHitEventArgs> breakpointHitHandler = (s, e) => brkHit.Set();
+                EventHandler<ProcessExitedEventArgs> processExitedHandler = (s, e) => procExited.Set();
+                process.BreakpointHit += breakpointHitHandler;
+                process.ProcessExited += processExitedHandler;
 
-            try {
-                process.Start();
-            } catch (Win32Exception ex) {
-                _processes.Remove(process);
+                try {
+                    process.Start();
+                } catch (Win32Exception ex) {
+                    _processes.Remove(process);
 #if DEV11_OR_LATER
-                if (ex.HResult == -2147467259 /*0x80004005*/) {
-                    Assert.Inconclusive("Required Python interpreter is not installed");
-                } else
+                    if (ex.HResult == -2147467259 /*0x80004005*/) {
+                        Assert.Inconclusive("Required Python interpreter is not installed");
+                    } else
 #endif
- {
-                    Assert.Fail("Process start failed:\r\n" + ex.ToString());
+                    {
+                        Assert.Fail("Process start failed:\r\n" + ex.ToString());
+                    }
                 }
-            }
 
-            if (!brkHit.WaitOne(25000)) {
-                Assert.Fail("Failed to wait on event");
+                var handles = new[] { brkHit, procExited };
+                if (WaitHandle.WaitAny(handles, 25000) != 0) {
+                    Assert.Fail("Failed to wait on event");
+                }
+
+                process.BreakpointHit -= breakpointHitHandler;
+                process.ProcessExited -= processExitedHandler;
             }
 
             _evaluator.AttachProcess(process);

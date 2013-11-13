@@ -16,7 +16,7 @@ def f():
     class C2(object):
         abc = 42
         def __init__(self):
-            self.bar = 100
+            self.oar = 100
             self.self = self
         def __repr__(self):
             return 'myrepr'
