@@ -1549,8 +1549,8 @@ namespace DebuggerTests {
             };
             process.ProcessExited += (sender, args) => {
                 exitCode = args.ExitCode;
-                hasExited.Set();
                 processExited = true;
+                hasExited.Set();
             };
             process.ExceptionRaised += (sender, args) => {
                 process.Resume();
@@ -1564,6 +1564,10 @@ namespace DebuggerTests {
             };
 
             StartAndWaitForExit(process);
+            // Only wait a little while - the process should have already exited
+            // by the time we get here, but we may not have received the event
+            // yet.
+            Assert.IsTrue(hasExited.WaitOne(1000), "ProcessExited event was not raised");
 
             Console.WriteLine("Output from process:");
             Console.Write(output.ToString());

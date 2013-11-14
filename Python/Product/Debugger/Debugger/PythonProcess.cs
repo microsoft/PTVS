@@ -486,6 +486,13 @@ namespace Microsoft.PythonTools.Debugger {
                             break;
                     }
                 }
+            } catch (ObjectDisposedException ex) {
+                // Socket or stream have been disposed
+                Debug.Assert(
+                    ex.ObjectName == typeof(NetworkStream).FullName ||
+                    ex.ObjectName == typeof(Socket).FullName,
+                    "Accidentally handled ObjectDisposedException(" + ex.ObjectName + ")"
+                );
             }
         }
 

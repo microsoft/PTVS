@@ -62,6 +62,10 @@ namespace TestUtilities.UI {
             if (!_isDisposed) {
                 _isDisposed = true;
                 try {
+                    if (_dte != null && _dte.Debugger.CurrentMode != dbgDebugMode.dbgDesignMode) {
+                        _dte.Debugger.TerminateAll();
+                        _dte.Debugger.Stop();
+                    }
                     DismissAllDialogs();
                     for (int i = 0; i < 100 && !_skipCloseAll; i++) {
                         try {
@@ -72,8 +76,6 @@ namespace TestUtilities.UI {
                             System.Threading.Thread.Sleep(200);
                         }
                     }
-                    _dte.Debugger.TerminateAll();
-                    _dte.Debugger.Stop();
                 } catch (Exception ex) {
                     Debug.WriteLine("Exception disposing VisualStudioApp: {0}", ex);
                 }

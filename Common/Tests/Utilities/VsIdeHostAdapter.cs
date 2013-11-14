@@ -388,6 +388,11 @@ namespace TestUtilities
                     Contract.Assert(_vsIde != null);
                     _vsIde.Dispose();
                 }
+                catch (InvalidComObjectException)
+                {
+                    // This exception is always thrown when quitting VS. Nothing
+                    // is gained by reporting it for every run.
+                }
                 catch (Exception ex)
                 {
                     SendResult(string.Format(CultureInfo.InvariantCulture, "Warning: VsIdeHostAdapter: error shutting down VS IDE: {0}", ex), TestOutcome.Warning);

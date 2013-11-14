@@ -1332,7 +1332,7 @@ def _run_repl():
             backend_error = traceback.format_exc()
 
     # fix sys.path so that cwd is where the project lives.
-    sys.path[0] = ''
+    sys.path[0] = '.'
     # remove all of our parsed args in case we have a launch file that cares...
     sys.argv = args or ['']
 

@@ -2797,8 +2797,10 @@ $cls
         public void AttachReplTest() {
             using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
                 var project = app.OpenProject(@"TestData\DebuggerProject.sln");
-                PythonToolsPackage.Instance.AdvancedEditorOptionsPage.AddNewLineAtEndOfFullyTypedWord = true;
-                GetInteractiveOptions().EnableAttach = true;
+                Assert.IsNotNull(PythonToolsPackage.GetStartupProject(), "Startup project was not set");
+                var optionsInteractive = GetInteractiveOptions();
+                var previousEnableAttach = optionsInteractive.EnableAttach;
+                optionsInteractive.EnableAttach = true;
                 try {
                     var interactive = Prepare(app);
 
@@ -2811,14 +2813,15 @@ $cls
 
                         DebuggerUITests.DebugProject.WaitForMode(app, EnvDTE.dbgDebugMode.dbgRunMode);
 
-                        interactive = Prepare(app, reopenOnly: true);
-
-                        const string import = "import BreakpointTest";
+                        // Space after the name is deliberate to avoid having to
+                        // hit Enter twice depending on options.
+                        const string import = "import BreakpointTest ";
                         Keyboard.Type(import + "\r");
                         interactive.WaitForText(ReplPrompt + attachCmd, ReplPrompt + import, "");
 
                         DebuggerUITests.DebugProject.WaitForMode(app, EnvDTE.dbgDebugMode.dbgBreakMode);
 
+                        Assert.AreEqual(EnvDTE.dbgEventReason.dbgEventReasonBreakpoint, app.Dte.Debugger.LastBreakReason);
                         Assert.AreEqual(app.Dte.Debugger.BreakpointLastHit.FileLine, 1);
 
                         app.Dte.ExecuteCommand("Debug.DetachAll");
@@ -2828,8 +2831,7 @@ $cls
                         interactive.WaitForText(ReplPrompt + attachCmd, ReplPrompt + import, "hello", ReplPrompt);
                     }
                 } finally {
-                    PythonToolsPackage.Instance.AdvancedEditorOptionsPage.AddNewLineAtEndOfFullyTypedWord = false;
-                    GetInteractiveOptions().EnableAttach = false;
+                    optionsInteractive.EnableAttach = previousEnableAttach;
                 }
             }
         }
