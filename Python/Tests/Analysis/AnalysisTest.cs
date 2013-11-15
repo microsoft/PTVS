@@ -1855,7 +1855,7 @@ fob = 'abc'.lower()
 oar = fob + 'Def'
 
 fob2 = u'ab' + u'cd'
-bab2 = fob2 + u'ef'";
+oar2 = fob2 + u'ef'";
 
             var entry = ProcessText(text);
             AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("y", text.IndexOf("y =")), BuiltinTypeId.Unicode);
@@ -4365,7 +4365,7 @@ abc = 42
             string tempPath = TestData.GetTempPath("fob");
 
             var files = new[] { 
-                new { Content = "from .y import y", FullPath = Path.Combine(tempPath, "init__.py") },
+                new { Content = "from .y import y", FullPath = Path.Combine(tempPath, "__init__.py") },
                 new { Content = "def y(): pass",    FullPath = Path.Combine(tempPath, "y.py") } 
             };
 

@@ -17,15 +17,13 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading;
-using EnvDTE90;
 using Microsoft.PythonTools.Debugger;
 using Microsoft.PythonTools.Parsing;
-using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.Win32;
 using TestUtilities;
-using System.Text;
 using TestUtilities.Python;
 
 namespace DebuggerTests {
@@ -259,7 +257,7 @@ namespace DebuggerTests {
             var process =
                 DebugProcess(
                     debugger,
-                    DebuggerTestPath + @"SetNextLine.py",
+                    Path.Combine(DebuggerTestPath, "SetNextLine.py"),
                     resumeOnProcessLoaded: false,
                     onLoaded: (newproc, newthread) => {
                         thread = newthread;
@@ -762,7 +760,7 @@ namespace DebuggerTests {
         [TestMethod, Priority(0)]
         public void StepTest() {
             // Bug 1315: https://pytools.codeplex.com/workitem/1315
-            StepTest(DebuggerTestPath + @"StepIntoThroughStdLib.py",
+            StepTest(Path.Combine(DebuggerTestPath, "StepIntoThroughStdLib.py"),
                     new ExpectedStep(StepKind.Over, 1),     // step over import os
                     new ExpectedStep(StepKind.Over, 2),     // step over code =  ...
                     new ExpectedStep(StepKind.Over, 3),     // step over d = {}
@@ -773,7 +771,7 @@ namespace DebuggerTests {
                     new ExpectedStep(StepKind.Resume, 10)     // wait for exit
                 );
             // 1315 resurrected:
-            StepTest(DebuggerTestPath + @"SteppingTestBug1315.py",
+            StepTest(Path.Combine(DebuggerTestPath, "SteppingTestBug1315.py"),
                     new[] { 6 },
                     null,
                     new ExpectedStep(StepKind.Resume, 1),   // continue from import thread
@@ -782,7 +780,7 @@ namespace DebuggerTests {
                 );
 
             // Bug 507: http://pytools.codeplex.com/workitem/507
-            StepTest(DebuggerTestPath + @"SteppingTestBug507.py",
+            StepTest(Path.Combine(DebuggerTestPath, "SteppingTestBug507.py"),
                     new ExpectedStep(StepKind.Over, 1),     // step over def add_two_numbers(x, y):
                     new ExpectedStep(StepKind.Over, 4),     // step over class Z(object):
                     new ExpectedStep(StepKind.Over, 9),     // step over p = Z()
@@ -793,13 +791,13 @@ namespace DebuggerTests {
                 );
 
             // Bug 508: http://pytools.codeplex.com/workitem/508
-            StepTest(DebuggerTestPath + @"SteppingTestBug508.py",
+            StepTest(Path.Combine(DebuggerTestPath, "SteppingTestBug508.py"),
                     new ExpectedStep(StepKind.Into, 1),     // step print (should step over)
                     new ExpectedStep(StepKind.Resume, 2)     // step print (should step over)
                 );
 
             // Bug 509: http://pytools.codeplex.com/workitem/509
-            StepTest(DebuggerTestPath + @"SteppingTestBug509.py",
+            StepTest(Path.Combine(DebuggerTestPath, "SteppingTestBug509.py"),
                     new ExpectedStep(StepKind.Over, 1),     // step over def triangular_number
                     new ExpectedStep(StepKind.Into, 3),     // step into triangular_number
                     new ExpectedStep(StepKind.Into, 1),     // step over triangular_number
@@ -809,7 +807,7 @@ namespace DebuggerTests {
                 );
 
             // Bug 503: http://pytools.codeplex.com/workitem/503
-            StepTest(DebuggerTestPath + @"SteppingTestBug503.py",
+            StepTest(Path.Combine(DebuggerTestPath, "SteppingTestBug503.py"),
                 new[] { 6, 12 },
                 new Action<PythonProcess>[] { 
                     (x) => {},
@@ -835,7 +833,7 @@ namespace DebuggerTests {
             );
 
             if (Version.Version < PythonLanguageVersion.V30) {  // step into print on 3.x runs more Python code
-                StepTest(DebuggerTestPath + @"SteppingTest7.py",
+                StepTest(Path.Combine(DebuggerTestPath, "SteppingTest7.py"),
                     new ExpectedStep(StepKind.Over, 1),     // step over def f():
                     new ExpectedStep(StepKind.Over, 6),     // step over def g():
                     new ExpectedStep(StepKind.Over, 10),     // step over def h()
@@ -854,14 +852,14 @@ namespace DebuggerTests {
                 );
             }
 
-            StepTest(DebuggerTestPath + @"SteppingTest6.py",
+            StepTest(Path.Combine(DebuggerTestPath, "SteppingTest6.py"),
                 new ExpectedStep(StepKind.Over, 1),     // step over print 'hello world'
                 new ExpectedStep(StepKind.Over, 2),     // step over a = set([i for i in range(256)])
                 new ExpectedStep(StepKind.Over, 3),     // step over print a
                 new ExpectedStep(StepKind.Resume, 4)    // let the program exit
             );
 
-            StepTest(DebuggerTestPath + @"SteppingTest5.py",
+            StepTest(Path.Combine(DebuggerTestPath, "SteppingTest5.py"),
                 new ExpectedStep(StepKind.Over, 1),     // step over def g():...
                 new ExpectedStep(StepKind.Over, 4),     // step over def f():...
                 new ExpectedStep(StepKind.Into, 8),     // step into f()
@@ -869,7 +867,7 @@ namespace DebuggerTests {
                 new ExpectedStep(StepKind.Resume, 8)    // let the program exit
             );
 
-            StepTest(DebuggerTestPath + @"SteppingTest4.py",
+            StepTest(Path.Combine(DebuggerTestPath, "SteppingTest4.py"),
                 new ExpectedStep(StepKind.Over, 1),     // step over def f():...
                 new ExpectedStep(StepKind.Into, 5),     // step into f()
                 new ExpectedStep(StepKind.Over, 2),     // step over for i in xrange(10):
@@ -882,34 +880,34 @@ namespace DebuggerTests {
                 new ExpectedStep(StepKind.Resume, 5)    // let the program exit
             );
 
-            StepTest(DebuggerTestPath + @"SteppingTest3.py",
+            StepTest(Path.Combine(DebuggerTestPath, "SteppingTest3.py"),
                 new ExpectedStep(StepKind.Over, 1),     // step over def f():...
                 new ExpectedStep(StepKind.Over, 5),     // step over f()
                 new ExpectedStep(StepKind.Resume, 6)    // let the program exit
             );
 
-            StepTest(DebuggerTestPath + @"SteppingTest3.py",
+            StepTest(Path.Combine(DebuggerTestPath, "SteppingTest3.py"),
                 new ExpectedStep(StepKind.Over, 1),     // step over def f():...
                 new ExpectedStep(StepKind.Into, 5),     // step into f()
                 new ExpectedStep(StepKind.Out, 2),     // step out of f()
                 new ExpectedStep(StepKind.Resume, 5)    // let the program exit
             );
 
-            StepTest(DebuggerTestPath + @"SteppingTest2.py",
+            StepTest(Path.Combine(DebuggerTestPath, "SteppingTest2.py"),
                 new ExpectedStep(StepKind.Over, 1),     // step over def f():...
                 new ExpectedStep(StepKind.Into, 4),     // step into f()
                 new ExpectedStep(StepKind.Over, 2),     // step over print 'hi'
                 new ExpectedStep(StepKind.Resume, 4)    // let the program exit
             );
 
-            StepTest(DebuggerTestPath + @"SteppingTest2.py",
+            StepTest(Path.Combine(DebuggerTestPath, "SteppingTest2.py"),
                 new ExpectedStep(StepKind.Over, 1),     // step over def f():...
                 new ExpectedStep(StepKind.Into, 4),     // step into f()
                 new ExpectedStep(StepKind.Over, 2),     // step over print 'hi'
                 new ExpectedStep(StepKind.Resume, 4)      // let the program exit
             );
 
-            StepTest(DebuggerTestPath + @"SteppingTest.py",
+            StepTest(Path.Combine(DebuggerTestPath, "SteppingTest.py"),
                 new ExpectedStep(StepKind.Over, 1),     // step over print "hello"
                 new ExpectedStep(StepKind.Over, 2),     // step over print "goodbye"
                 new ExpectedStep(StepKind.Resume, 3)   // let the program exit
@@ -922,14 +920,13 @@ namespace DebuggerTests {
             // http://pytools.codeplex.com/workitem/504 - test option for stepping into std lib.
             var debugger = new PythonDebugger();
 
-            string fullPath = Path.GetFullPath(DebuggerTestPath + "StepStdLib.py");
-            string dir = Path.GetDirectoryName(DebuggerTestPath + "StepStdLib.py");
+            string fullPath = Path.Combine(DebuggerTestPath, "StepStdLib.py");
             foreach (var steppingStdLib in new[] { false, true }) {
                 var process = debugger.CreateProcess(
                     Version.Version,
                     Version.Path,
                     "\"" + fullPath + "\"",
-                    dir,
+                    DebuggerTestPath,
                     "",
                     debugOptions: steppingStdLib ? (PythonDebugOptions.DebugStdLib | PythonDebugOptions.RedirectOutput) : PythonDebugOptions.RedirectOutput);
 
@@ -1025,16 +1022,15 @@ namespace DebuggerTests {
         public void BreakStepStep() {
             // http://pytools.codeplex.com/workitem/815
 
-            string cwd = Path.Combine(Environment.CurrentDirectory, DebuggerTestPath);
             var debugger = new PythonDebugger();
-            string fn = Path.Combine(cwd, "StepBreakBreak.py");
+            string fn = Path.Combine(DebuggerTestPath, "StepBreakBreak.py");
             var process = DebugProcess(debugger, fn, (newproc, newthread) => {
                 PythonBreakpoint breakPoint = newproc.AddBreakPointByFileExtension(2, fn);
                 breakPoint.Add();
 
                 breakPoint = newproc.AddBreakPointByFileExtension(3, fn);
                 breakPoint.Add();
-            }, cwd: cwd);
+            }, cwd: DebuggerTestPath);
 
             int hitBp = 0;
             process.BreakpointHit += (sender, args) => {
@@ -1057,13 +1053,12 @@ namespace DebuggerTests {
         public void BreakpointNonMainFileRemoved() {
             // http://pytools.codeplex.com/workitem/638
 
-            string cwd = Path.Combine(Environment.CurrentDirectory, DebuggerTestPath);
             BreakpointTest(
-                Path.Combine(cwd, "BreakpointNonMainFileRemoved.py"),
+                Path.Combine(DebuggerTestPath, "BreakpointNonMainFileRemoved.py"),
                 new[] { 2 },
                 new[] { -2 },
-                cwd: cwd,
-                breakFilename: Path.Combine(cwd, "BreakpointNonMainFileRemovedImported.py"),
+                cwd: DebuggerTestPath,
+                breakFilename: Path.Combine(DebuggerTestPath, "BreakpointNonMainFileRemovedImported.py"),
                 checkBound: false,
                 checkThread: false);
         }
@@ -1073,13 +1068,12 @@ namespace DebuggerTests {
         public void BreakpointNonMainThreadMainThreadExited() {
             // http://pytools.codeplex.com/workitem/638
 
-            string cwd = Path.Combine(Environment.CurrentDirectory, DebuggerTestPath);
             BreakpointTest(
-                Path.Combine(cwd, "BreakpointMainThreadExited.py"),
+                Path.Combine(DebuggerTestPath, "BreakpointMainThreadExited.py"),
                 new[] { 8 },
                 new[] { 8, 8, 8, 8, 8 },
-                cwd: cwd,
-                breakFilename: Path.Combine(cwd, "BreakpointMainThreadExited.py"),
+                cwd: DebuggerTestPath,
+                breakFilename: Path.Combine(DebuggerTestPath, "BreakpointMainThreadExited.py"),
                 checkBound: false,
                 checkThread: false);
         }
@@ -1088,13 +1082,12 @@ namespace DebuggerTests {
         public void TestBreakpointsCollidingFilenames() {
             // http://pytools.codeplex.com/workitem/565
 
-            string cwd = Path.Combine(Environment.CurrentDirectory, DebuggerTestPath);
             BreakpointTest(
-                Path.Combine(Environment.CurrentDirectory, DebuggerTestPath, "BreakpointFilenames.py"),
+                Path.Combine(DebuggerTestPath, "BreakpointFilenames.py"),
                 new[] { 4 },
                 new int[0],
-                cwd: cwd,
-                breakFilename: Path.Combine(Environment.CurrentDirectory, DebuggerTestPath, "B", "module1.py"),
+                cwd: DebuggerTestPath,
+                breakFilename: Path.Combine(DebuggerTestPath, "B", "module1.py"),
                 checkBound: false);
         }
 
@@ -1102,13 +1095,12 @@ namespace DebuggerTests {
         public void TestBreakpointsRelativePathTopLevel() {
             // http://pytools.codeplex.com/workitem/522
 
-            string cwd = Path.GetFullPath(Path.Combine(Path.GetDirectoryName("SimpleFilenameBreakpoint.py"), ".."));
             BreakpointTest(
-                Path.Combine(Environment.CurrentDirectory, DebuggerTestPath, "SimpleFilenameBreakpoint.py"),
+                Path.Combine(DebuggerTestPath, "SimpleFilenameBreakpoint.py"),
                 new[] { 4, 10 },
                 new[] { 4, 10 },
-                cwd: cwd,
-                breakFilename: Path.Combine(Environment.CurrentDirectory, DebuggerTestPath, "CompiledCodeFile.py"),
+                cwd: Path.GetDirectoryName(DebuggerTestPath),
+                breakFilename: Path.Combine(DebuggerTestPath, "CompiledCodeFile.py"),
                 checkBound: false);
         }
 
@@ -1116,14 +1108,19 @@ namespace DebuggerTests {
         public void TestBreakpointsRelativePathInPackage() {
             // http://pytools.codeplex.com/workitem/522
 
-            string cwd = Path.GetFullPath(Path.Combine(Path.GetDirectoryName("BreakpointRelativePathInPackage.py"), ".."));
+            var xFrames = (Version == PythonPaths.IronPython27 || Version == PythonPaths.IronPython27_x64) ?
+                "-X:Frames" :
+                "";
+
             BreakpointTest(
-                Path.Combine(Environment.CurrentDirectory, DebuggerTestPath, "BreakpointRelativePathInPackage.py"),
+                Path.Combine(DebuggerTestPath, "BreakpointRelativePathInPackage.py"),
                 new[] { 6 },
                 new[] { 6, 6 },
-                cwd: cwd,
-                breakFilename: Path.Combine(Environment.CurrentDirectory, DebuggerTestPath, "A\\relpath.py"),
-                checkBound: false);
+                cwd: Path.GetDirectoryName(DebuggerTestPath),
+                breakFilename: Path.Combine(DebuggerTestPath, "A", "relpath.py"),
+                checkBound: false,
+                interpreterOptions: xFrames
+            );
         }
 
         [TestMethod, Priority(0)]
@@ -1131,7 +1128,7 @@ namespace DebuggerTests {
             // http://pytools.codeplex.com/workitem/483
 
             var debugger = new PythonDebugger();
-            string filename = Path.Combine(Environment.CurrentDirectory, DebuggerTestPath, "ThreadJoin.py");
+            string filename = Path.Combine(DebuggerTestPath, "ThreadJoin.py");
             PythonThread thread = null;
             var process = DebugProcess(debugger, filename, (newproc, newthread) => {
                 thread = newthread;
@@ -1273,7 +1270,7 @@ namespace DebuggerTests {
         public void TestExceptions() {
             var debugger = new PythonDebugger();
             for (int i = 0; i < 2; i++) {
-                TestException(debugger, DebuggerTestPath + @"SimpleException.py", i == 0, 1, new KeyValuePair<string, int>[0],
+                TestException(debugger, Path.Combine(DebuggerTestPath, "SimpleException.py"), i == 0, 1, new KeyValuePair<string, int>[0],
                     new ExceptionInfo(ExceptionModule + ".Exception", 3));
 
                 TestException(debugger, DebuggerTestPath + ComplexExceptions, i == 0, 1, new KeyValuePair<string, int>[0],
@@ -1301,38 +1298,38 @@ namespace DebuggerTests {
                 );
 
                 if (Version.Version.Is2x()) {
-                    TestException(debugger, DebuggerTestPath + @"UnicodeException.py", i == 0, 1, new KeyValuePair<string, int>[0],
+                    TestException(debugger, Path.Combine(DebuggerTestPath, "UnicodeException.py"), i == 0, 1, new KeyValuePair<string, int>[0],
                         new ExceptionInfo(ExceptionModule + ".Exception", 3));
                 }
 
                 // Only the last exception in each file should be noticed.
                 if (Version.Version <= PythonLanguageVersion.V25) {
-                    TestException(debugger, DebuggerTestPath + @"UnhandledException1_v25.py", i == 0, 32, new KeyValuePair<string, int>[0],
+                    TestException(debugger, Path.Combine(DebuggerTestPath, "UnhandledException1_v25.py"), i == 0, 32, new KeyValuePair<string, int>[0],
                         new ExceptionInfo(ExceptionModule + ".Exception", 57)
                     );
                 } else if (Version.Version.Is3x()) {
-                    TestException(debugger, DebuggerTestPath + @"UnhandledException1_v3x.py", i == 0, 32, new KeyValuePair<string, int>[0],
+                    TestException(debugger, Path.Combine(DebuggerTestPath, "UnhandledException1_v3x.py"), i == 0, 32, new KeyValuePair<string, int>[0],
                         new ExceptionInfo(ExceptionModule + ".Exception", 56)
                     );
                 } else {
-                    TestException(debugger, DebuggerTestPath + @"UnhandledException1.py", i == 0, 32, new KeyValuePair<string, int>[0],
+                    TestException(debugger, Path.Combine(DebuggerTestPath, "UnhandledException1.py"), i == 0, 32, new KeyValuePair<string, int>[0],
                         new ExceptionInfo(ExceptionModule + ".Exception", 81)
                     );
                 }
 
-                TestException(debugger, DebuggerTestPath + @"UnhandledException2.py", i == 0, 32, new KeyValuePair<string, int>[0],
+                TestException(debugger, Path.Combine(DebuggerTestPath, "UnhandledException2.py"), i == 0, 32, new KeyValuePair<string, int>[0],
                     new ExceptionInfo(ExceptionModule + ".Exception", 16)
                 );
-                TestException(debugger, DebuggerTestPath + @"UnhandledException3.py", i == 0, 32, new KeyValuePair<string, int>[0],
+                TestException(debugger, Path.Combine(DebuggerTestPath, "UnhandledException3.py"), i == 0, 32, new KeyValuePair<string, int>[0],
                     new ExceptionInfo(ExceptionModule + ".ValueError", 12)
                 );
-                TestException(debugger, DebuggerTestPath + @"UnhandledException4.py", i == 0, 32, new KeyValuePair<string, int>[0],
+                TestException(debugger, Path.Combine(DebuggerTestPath, "UnhandledException4.py"), i == 0, 32, new KeyValuePair<string, int>[0],
                     new ExceptionInfo(ExceptionModule + ".OSError", 17)
                 );
-                TestException(debugger, DebuggerTestPath + @"UnhandledException5.py", i == 0, 32, new KeyValuePair<string, int>[0],
+                TestException(debugger, Path.Combine(DebuggerTestPath, "UnhandledException5.py"), i == 0, 32, new KeyValuePair<string, int>[0],
                     new ExceptionInfo(ExceptionModule + ".ValueError", 4)
                 );
-                TestException(debugger, DebuggerTestPath + @"UnhandledException6.py", i == 0, 32, new KeyValuePair<string, int>[0],
+                TestException(debugger, Path.Combine(DebuggerTestPath, "UnhandledException6.py"), i == 0, 32, new KeyValuePair<string, int>[0],
                     new ExceptionInfo(ExceptionModule + ".OSError", 12)
                 );
             }
@@ -1385,7 +1382,7 @@ namespace DebuggerTests {
             var debugger = new PythonDebugger();
 
             TestException(debugger,
-                DebuggerTestPath + @"SysExitZeroRaise.py",
+                Path.Combine(DebuggerTestPath, "SysExitZeroRaise.py"),
                 true, 32,
                 new KeyValuePair<string, int>[0],
                 PythonDebugOptions.BreakOnSystemExitZero,
@@ -1393,7 +1390,7 @@ namespace DebuggerTests {
             );
 
             TestException(debugger,
-                DebuggerTestPath + @"SysExitZero.py",
+                Path.Combine(DebuggerTestPath, "SysExitZero.py"),
                 true, 32,
                 new KeyValuePair<string, int>[0],
                 PythonDebugOptions.BreakOnSystemExitZero,
@@ -1401,14 +1398,14 @@ namespace DebuggerTests {
             );
 
             TestException(debugger,
-                DebuggerTestPath + @"SysExitZeroRaise.py",
+                Path.Combine(DebuggerTestPath, "SysExitZeroRaise.py"),
                 true, 32,
                 new KeyValuePair<string, int>[0],
                 PythonDebugOptions.RedirectOutput
             );
 
             TestException(debugger,
-                DebuggerTestPath + @"SysExitZero.py",
+                Path.Combine(DebuggerTestPath, "SysExitZero.py"),
                 true, 32,
                 new KeyValuePair<string, int>[0],
                 PythonDebugOptions.RedirectOutput
@@ -1419,7 +1416,7 @@ namespace DebuggerTests {
         public void TestExceptionHandlers() {
             var debugger = new PythonDebugger();
 
-            TestGetHandledExceptionRanges(debugger, DebuggerTestPath + @"ExceptionHandlers.py",
+            TestGetHandledExceptionRanges(debugger, Path.Combine(DebuggerTestPath, "ExceptionHandlers.py"),
                 new ExceptionHandlerInfo(1, 3, "*"),
                 new ExceptionHandlerInfo(6, 7, "*"),
                 new ExceptionHandlerInfo(9, 13, "*"),
@@ -1471,7 +1468,7 @@ namespace DebuggerTests {
             TestModuleLoad(debugger, TestData.GetPath(@"TestData\HelloWorld\Program.py"), "Program.py");
 
             // imports are reported
-            TestModuleLoad(debugger, DebuggerTestPath + @"imports_other.py", "imports_other.py", "is_imported.py");
+            TestModuleLoad(debugger, Path.Combine(DebuggerTestPath, "imports_other.py"), "imports_other.py", "is_imported.py");
         }
 
         private void TestModuleLoad(PythonDebugger debugger, string filename, params string[] expectedModulesLoaded) {
@@ -1505,10 +1502,10 @@ namespace DebuggerTests {
             TestExitCode(debugger, TestData.GetPath(@"TestData\HelloWorld\Program.py"), 0);
 
             // test which calls sys.exit(23)
-            TestExitCode(debugger, DebuggerTestPath + @"SysExit.py", 23);
+            TestExitCode(debugger, Path.Combine(DebuggerTestPath, "SysExit.py"), 23);
 
             // test which calls raise Exception()
-            TestExitCode(debugger, DebuggerTestPath + @"ExceptionalExit.py", 1);
+            TestExitCode(debugger, Path.Combine(DebuggerTestPath, "ExceptionalExit.py"), 1);
         }
 
         [TestMethod, Priority(0)]
@@ -1525,10 +1522,10 @@ namespace DebuggerTests {
                 TestExitCode(debugger, TestData.GetPath(@"TestData\HelloWorld\Program.py"), 0, pythonExe: pythonwExe);
 
                 // test which calls sys.exit(23)
-                TestExitCode(debugger, DebuggerTestPath + @"SysExit.py", 23, pythonExe: pythonwExe);
+                TestExitCode(debugger, Path.Combine(DebuggerTestPath, "SysExit.py"), 23, pythonExe: pythonwExe);
 
                 // test which calls raise Exception()
-                TestExitCode(debugger, DebuggerTestPath + @"ExceptionalExit.py", 1, pythonExe: pythonwExe);
+                TestExitCode(debugger, Path.Combine(DebuggerTestPath, "ExceptionalExit.py"), 1, pythonExe: pythonwExe);
             }
         }
 
@@ -1604,7 +1601,7 @@ namespace DebuggerTests {
             var debugger = new PythonDebugger();
 
             // test which verifies we have no doc string when running w/ -OO
-            TestExitCode(debugger, DebuggerTestPath + @"DocString.py", 0, interpreterOptions: "-OO");
+            TestExitCode(debugger, Path.Combine(DebuggerTestPath, "DocString.py"), 0, interpreterOptions: "-OO");
         }
 
         #endregion
@@ -2447,7 +2444,7 @@ int main(int argc, char* argv[]) {
                 var debugger = new PythonDebugger();
 
                 bool gotOutput = false;
-                var process = DebugProcess(debugger, DebuggerTestPath + @"StdoutBuffer3x.py", (processObj, threadObj) => {
+                var process = DebugProcess(debugger, Path.Combine(DebuggerTestPath, "StdoutBuffer3x.py"), (processObj, threadObj) => {
                     processObj.DebuggerOutput += (sender, args) => {
                         Assert.IsFalse(gotOutput, "got output more than once");
                         gotOutput = true;
@@ -2472,7 +2469,7 @@ int main(int argc, char* argv[]) {
             var expectedOutput = "Provide A: fob\n";
             string actualOutput = string.Empty;
 
-            var process = DebugProcess(debugger, DebuggerTestPath + @"InputFunction.py", (processObj, threadObj) => {
+            var process = DebugProcess(debugger, Path.Combine(DebuggerTestPath, "InputFunction.py"), (processObj, threadObj) => {
                 processObj.DebuggerOutput += (sender, args) => {
                     actualOutput += args.Output;
                 };
@@ -2573,6 +2570,33 @@ int main(int argc, char* argv[]) {
         internal override PythonVersion Version {
             get {
                 return PythonPaths.Python33;
+            }
+        }
+
+        public override string CreateString {
+            get {
+                return "PyUnicode_FromString";
+            }
+        }
+    }
+
+    [TestClass]
+    public class DebuggerTests34 : DebuggerTests3x {
+        [ClassInitialize]
+        public static new void DoDeployment(TestContext context) {
+            AssertListener.Initialize();
+            PythonTestData.Deploy();
+        }
+
+        internal override PythonVersion Version {
+            get {
+                return PythonPaths.Python34;
+            }
+        }
+
+        public override string CreateString {
+            get {
+                return "PyUnicode_FromWideChar";
             }
         }
     }

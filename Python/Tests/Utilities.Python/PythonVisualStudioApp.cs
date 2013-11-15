@@ -18,13 +18,35 @@ using System.Windows.Automation;
 using System.Windows.Input;
 using EnvDTE;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using TestUtilities.Python;
 
 namespace TestUtilities.UI.Python {
     class PythonVisualStudioApp : VisualStudioApp {
+        private bool _deletePerformanceSessions;
         private PythonPerfExplorer _perfTreeView;
         private PythonPerfToolBar _perfToolBar;
         public PythonVisualStudioApp(DTE dte)
             : base(dte) {
+        }
+
+        protected override void Dispose(bool disposing) {
+            if (!IsDisposed) {
+                if (_deletePerformanceSessions) {
+                    try {
+                        dynamic profiling = Dte.GetObject("PythonProfiling");
+
+                        for (dynamic session = profiling.GetSession(1);
+                            session != null;
+                            session = profiling.GetSession(1)) {
+                            profiling.RemoveSession(session, true);
+                        }
+                    } catch (Exception ex) {
+                        Console.WriteLine("Error while cleaning up profiling sessions");
+                        Console.WriteLine(ex);
+                    }
+                }
+            }
+            base.Dispose(disposing);
         }
 
         /// <summary>
@@ -32,6 +54,7 @@ namespace TestUtilities.UI.Python {
         /// </summary>
         public void OpenPythonPerformance() {
             try {
+                _deletePerformanceSessions = true;
                 Dte.ExecuteCommand("View.PythonPerformanceExplorer");
             } catch {
                 // If the package is not loaded yet then the command may not
@@ -46,6 +69,7 @@ namespace TestUtilities.UI.Python {
         /// Opens and activates the solution explorer window.
         /// </summary>
         public void LaunchPythonProfiling() {
+            _deletePerformanceSessions = true;
             ThreadPool.QueueUserWorkItem(x => Dte.ExecuteCommand("Analyze.LaunchPythonProfiling"));
         }
 

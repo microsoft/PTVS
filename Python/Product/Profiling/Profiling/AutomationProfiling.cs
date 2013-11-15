@@ -26,7 +26,7 @@ namespace Microsoft.PythonTools.Profiling {
             _sessions = sessions;
         }
 
-        IPythonProfileSession IPythonProfiling.GetSession(object item) {
+        public IPythonProfileSession GetSession(object item) {
             if (item is int) {
                 int id = (int)item - 1;
                 if (id >= 0 && id < _sessions.Sessions.Count) {
@@ -43,7 +43,7 @@ namespace Microsoft.PythonTools.Profiling {
             return null;
         }
 
-        IPythonProfileSession IPythonProfiling.LaunchProject(EnvDTE.Project projectToProfile, bool openReport) {
+        public IPythonProfileSession LaunchProject(EnvDTE.Project projectToProfile, bool openReport) {
             var target = new ProfilingTarget();
             target.ProjectTarget = new ProjectTarget();
             target.ProjectTarget.TargetProject = new Guid(projectToProfile.Properties.Item("Guid").Value as string);
@@ -52,7 +52,7 @@ namespace Microsoft.PythonTools.Profiling {
             return PythonProfilingPackage.Instance.ProfileTarget(target, openReport).GetAutomationObject();
         }
 
-        IPythonProfileSession IPythonProfiling.LaunchProcess(string interpreter, string script, string workingDir, string arguments, bool openReport) {
+        public IPythonProfileSession LaunchProcess(string interpreter, string script, string workingDir, string arguments, bool openReport) {
             var target = new ProfilingTarget();
             target.StandaloneTarget = new StandaloneTarget();
             target.StandaloneTarget.WorkingDirectory = workingDir;
@@ -79,7 +79,7 @@ namespace Microsoft.PythonTools.Profiling {
             return PythonProfilingPackage.Instance.ProfileTarget(target, openReport).GetAutomationObject();
         }
 
-        void IPythonProfiling.RemoveSession(IPythonProfileSession session, bool deleteFromDisk) {
+        public void RemoveSession(IPythonProfileSession session, bool deleteFromDisk) {
             for (int i = 0; i < _sessions.Sessions.Count; i++) {
                 if (session == _sessions.Sessions[i].GetAutomationObject()) {
                     _sessions.DeleteItem(
@@ -92,7 +92,7 @@ namespace Microsoft.PythonTools.Profiling {
             throw new InvalidOperationException("Session has already been removed");
         }
 
-        bool IPythonProfiling.IsProfiling {
+        public bool IsProfiling {
             get { return PythonProfilingPackage.Instance.IsProfiling; }
         }
 

@@ -45,7 +45,7 @@ namespace DebuggerTests {
         internal void BreakpointTest(string filename, int[] linenos, int[] lineHits, string[] conditions = null, bool[] breakWhenChanged = null,
                                      string cwd = null, string breakFilename = null, bool checkBound = true, bool checkThread = true, string arguments = "",
                                      Action onProcessLoaded = null, PythonDebugOptions debugOptions = PythonDebugOptions.RedirectOutput,
-                                     bool waitForExit = true) {
+                                     bool waitForExit = true, string interpreterOptions = null) {
             var debugger = new PythonDebugger();
             PythonThread thread = null;
             string rootedFilename = filename;
@@ -98,7 +98,8 @@ namespace DebuggerTests {
                         onProcessLoaded();
                     }
                     processLoaded.Set();
-                }
+                },
+                interpreterOptions: interpreterOptions
             );
 
             int breakpointsBound = 0;
@@ -165,9 +166,9 @@ namespace DebuggerTests {
                     process.Terminate();
                 }
             }
-            Assert.AreEqual(breakpointHit, lineHits.Length);
+            Assert.AreEqual(lineHits.Length, breakpointHit);
             if (checkBound) {
-                Assert.AreEqual(breakpointsBound, linenos.Length);
+                Assert.AreEqual(linenos.Length, breakpointsBound);
             }
         }
 

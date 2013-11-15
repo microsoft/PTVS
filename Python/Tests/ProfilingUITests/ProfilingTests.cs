@@ -187,23 +187,20 @@ namespace ProfilingUITests {
 
                 var perf2 = app.PythonPerformanceExplorerTreeView.WaitForItem("Performance1 *");
 
-                Mouse.MoveTo(perf.GetClickablePoint());
-                Mouse.Click(System.Windows.Input.MouseButton.Left);
-
-                Keyboard.Press(System.Windows.Input.Key.LeftShift);
-
+                AutomationWrapper.Select(perf);
+                // Cannot use AddToSelection because the tree view declares that
+                // it does not support multi-select, even though it does.
+                // AutomationWrapper.AddToSelection(perf2);
+                Mouse.MoveTo(perf2.GetClickablePoint());
                 try {
-                    Mouse.MoveTo(perf2.GetClickablePoint());
+                    Keyboard.Press(System.Windows.Input.Key.LeftCtrl);
                     Mouse.Click(System.Windows.Input.MouseButton.Left);
                 } finally {
-                    Keyboard.Release(System.Windows.Input.Key.LeftShift);
+                    Keyboard.Release(System.Windows.Input.Key.LeftCtrl);
                 }
 
-                Keyboard.PressAndRelease(System.Windows.Input.Key.Delete);
-
-                app.WaitForDialog();
-
-                Keyboard.PressAndRelease(System.Windows.Input.Key.D, System.Windows.Input.Key.LeftAlt);
+                var dialog = AutomationElement.FromHandle(app.OpenDialogWithDteExecuteCommand("Edit.Delete")).AsWrapper();
+                dialog.ClickButtonByName("Delete");
 
                 Assert.IsNull(app.PythonPerformanceExplorerTreeView.WaitForItemRemoved("Performance *"));
                 Assert.IsNull(app.PythonPerformanceExplorerTreeView.WaitForItemRemoved("Performance1 *"));

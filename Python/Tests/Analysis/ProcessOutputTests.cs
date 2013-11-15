@@ -115,6 +115,7 @@ namespace AnalysisTests {
         public void RunInterpreterError() {
             foreach(var fact in Factories) {
                 using (var output = fact.Run("-c", "assert False")) {
+                    Console.WriteLine(output.Arguments);
                     Assert.IsTrue(output.Wait(TimeSpan.FromSeconds(10)));
 
                     Assert.AreEqual(0, output.StandardOutputLines.Count());

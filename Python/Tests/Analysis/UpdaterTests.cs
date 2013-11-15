@@ -18,6 +18,7 @@ using System.Threading;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using TestUtilities;
 
 namespace AnalyzerStatusTests {
     [TestClass]
@@ -180,6 +181,9 @@ namespace AnalyzerStatusTests {
                     ready.Reset();
                     listener.RequestUpdate();
                     ready.WaitOne();
+                    Assert.IsNotNull(results);
+                    AssertUtil.ContainsExactly(results.Keys, "s");
+                    Console.WriteLine(results["s"].Message);
                     Assert.AreEqual(AnalyzerStatusUpdater.MAX_MESSAGE_LENGTH, results["s"].Message.Length, 
                         "Message length was not limited");
                 }

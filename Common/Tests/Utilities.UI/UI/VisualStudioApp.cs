@@ -58,7 +58,11 @@ namespace TestUtilities.UI {
             _mainWindowHandle = windowHandle;
         }
 
-        protected void Dispose(bool disposing) {
+        public bool IsDisposed {
+            get { return _isDisposed; }
+        }
+
+        protected virtual void Dispose(bool disposing) {
             if (!_isDisposed) {
                 _isDisposed = true;
                 try {
@@ -646,11 +650,11 @@ namespace TestUtilities.UI {
 
             Assert.IsNotNull(project, "No project loaded");
             try {
-                var currentItem = project.Properties.Item("StartupFile").Value;
-            } catch {
+                var currentItem = project.Properties.Item(1).Value;
+            } catch (Exception ex) {
                 // The exception is not important. This is just an easy way to
                 // determine that the project did not load properly.
-                Assert.Fail("No project loaded");
+                Assert.Fail("No project loaded: {0}", ex);
             }
 
             if (startItem != null && setStartupItem) {
