@@ -45,13 +45,16 @@ namespace DebuggerTests {
         internal void BreakpointTest(string filename, int[] linenos, int[] lineHits, string[] conditions = null, bool[] breakWhenChanged = null,
                                      string cwd = null, string breakFilename = null, bool checkBound = true, bool checkThread = true, string arguments = "",
                                      Action onProcessLoaded = null, PythonDebugOptions debugOptions = PythonDebugOptions.RedirectOutput,
-                                    bool waitForExit = true) {
+                                     bool waitForExit = true) {
             var debugger = new PythonDebugger();
             PythonThread thread = null;
             string rootedFilename = filename;
             if (!Path.IsPathRooted(filename)) {
                 rootedFilename = DebuggerTestPath + filename;
             }
+
+            var lineList = new List<int>(linenos);
+            var breakpointsToBeBound = lineList.Count;
 
             AutoResetEvent processLoaded = new AutoResetEvent(false);
             var process = DebugProcess(
@@ -83,6 +86,11 @@ namespace DebuggerTests {
                         }
 
                         breakPoint.Add();
+
+                        // Django breakpoints are never bound
+                        if (breakPoint.IsDjangoBreakpoint) {
+                            --breakpointsToBeBound;
+                        }
                     }
                     thread = newthread;
 
@@ -93,8 +101,6 @@ namespace DebuggerTests {
                 }
             );
 
-            var lineList = new List<int>(linenos);
-            var breakpointsToBeBound = lineList.Count;
             int breakpointsBound = 0;
             int breakpointsNotBound = 0;
             AutoResetEvent allBreakpointBindResults = new AutoResetEvent(breakpointsToBeBound == 0);
@@ -124,29 +130,33 @@ namespace DebuggerTests {
                 };
 
                 process.BreakpointHit += (sender, args) => {
-                    if (lineHits[breakpointHit] < 0) {
-                        Assert.AreEqual(args.Breakpoint.LineNo, -lineHits[breakpointHit++]);
-                        try {
-                            args.Breakpoint.Remove();
-                        } catch {
-                            Debug.Assert(false);
+                    if (breakpointHit < lineHits.Length) {
+                        if (lineHits[breakpointHit] < 0) {
+                            Assert.AreEqual(args.Breakpoint.LineNo, -lineHits[breakpointHit++]);
+                            try {
+                                args.Breakpoint.Remove();
+                            } catch {
+                                Debug.Assert(false);
+                            }
+                        } else {
+                            Assert.AreEqual(args.Breakpoint.LineNo, lineHits[breakpointHit++]);
                         }
-                    } else {
-                        Assert.AreEqual(args.Breakpoint.LineNo, lineHits[breakpointHit++]);
-                    }
-                    if (checkThread) {
-                        Assert.AreEqual(args.Thread, thread);
-                    }
-                    if (breakpointHit == lineHits.Length) {
-                        allBreakpointsHit.Set();
+                        if (checkThread) {
+                            Assert.AreEqual(args.Thread, thread);
+                        }
+                        if (breakpointHit == lineHits.Length) {
+                            allBreakpointsHit.Set();
+                        }
                     }
                     process.Continue();
                 };
 
                 process.Start();
                 AssertWaited(processLoaded);
-                AssertWaited(allBreakpointBindResults);
                 process.AutoResumeThread(thread.Id);
+                if (breakpointsToBeBound > 0) {
+                    AssertWaited(allBreakpointBindResults);
+                }
             } finally {
                 if (waitForExit) {
                     WaitForExit(process);
@@ -173,9 +183,18 @@ namespace DebuggerTests {
                 var localsExpected = new HashSet<string>(localsNames);
                 var paramsExpected = new HashSet<string>(paramNames);
 
+                string fileNameExpected;
+                if (breakFilename == null) {
+                    fileNameExpected = Path.GetFullPath(DebuggerTestPath + filename);
+                } else if (Path.IsPathRooted(breakFilename)) {
+                    fileNameExpected = breakFilename;
+                } else {
+                    fileNameExpected = Path.GetFullPath(DebuggerTestPath + breakFilename);
+                }
+
                 AssertUtil.ContainsExactly(frames[0].Locals.Select(x => x.Expression), localsExpected);
                 AssertUtil.ContainsExactly(frames[0].Parameters.Select(x => x.Expression), paramsExpected);
-                Assert.AreEqual(frames[0].FileName, breakFilename != null ? Path.GetFullPath(DebuggerTestPath + breakFilename) : Path.GetFullPath(DebuggerTestPath + filename), true);
+                Assert.AreEqual(frames[0].FileName, fileNameExpected, true);
 
                 process.Continue();
 

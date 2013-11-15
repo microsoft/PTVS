@@ -4,7 +4,7 @@
     "fields": {
         "model": "choice",
         "name": "choice",
-        "app_label": "Bar"
+        "app_label": "Oar"
     }
 }, {
     "pk": 2,
@@ -44,7 +44,7 @@
     "fields": {
         "model": "poll",
         "name": "poll",
-        "app_label": "Bar"
+        "app_label": "Oar"
     }
 }, {
     "pk": 5,
@@ -86,14 +86,14 @@
     }
 }, {
     "pk": 1,
-    "model": "Bar.poll",
+    "model": "Oar.poll",
     "fields": {
         "pub_date": "2012-02-09T15:35:10",
         "question": "Test Question"
     }
 }, {
     "pk": 1,
-    "model": "Bar.choice",
+    "model": "Oar.choice",
     "fields": {
         "votes": 2,
         "poll": 1,
@@ -101,7 +101,7 @@
     }
 }, {
     "pk": 2,
-    "model": "Bar.choice",
+    "model": "Oar.choice",
     "fields": {
         "votes": 3,
         "poll": 1,
@@ -109,7 +109,7 @@
     }
 }, {
     "pk": 3,
-    "model": "Bar.choice",
+    "model": "Oar.choice",
     "fields": {
         "votes": 3,
         "poll": 1,

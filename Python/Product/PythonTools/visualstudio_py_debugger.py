@@ -155,6 +155,8 @@ FRAME_KIND_NONE = 0
 FRAME_KIND_PYTHON = 1
 FRAME_KIND_DJANGO = 2
 
+DJANGO_BUILTINS = {'True': True, 'False': False, 'None': None}
+
 if sys.version[0] == '3':
   # work around a crashing bug on CPython 3.x where they take a hard stack overflow
   # we'll never see this exception but it'll allow us to keep our try/except handler
@@ -956,7 +958,7 @@ class Thread(object):
             for d in cur_frame.f_locals['context'].dicts:
                 # hasattr check to defend against someone passing a bad dictionary value
                 # and us breaking the app.
-                if hasattr(d, 'keys'):
+                if hasattr(d, 'keys') and d != DJANGO_BUILTINS:
                     for key in d.keys():
                         locs[key] = d[key]
         else:
@@ -1115,10 +1117,13 @@ class Thread(object):
                     frame_locals = self.get_locals(cur_frame, FRAME_KIND_DJANGO)
                     var_names = frame_locals
 
-            process_globals_in_functions = True
-            if source_obj is None and frame_locals is cur_frame.f_globals:
+            if source_obj is not None:
+                process_globals_in_functions = False
+            elif frame_locals is cur_frame.f_globals:
                 var_names = frame_locals
                 process_globals_in_functions = False
+            else:
+                process_globals_in_functions = True
 
             # collect frame locals
             vars = []

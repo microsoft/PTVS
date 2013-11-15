@@ -2,7 +2,7 @@ from django.template import Context, loader
 # Create your views here.
 from django.http import HttpResponse
 
-from Bar.models import Poll
+from Oar.models import Poll
 from django.http import HttpResponse
 
 def main(request):
