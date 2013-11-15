@@ -24,15 +24,16 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyFileVersion(AssemblyVersionInfo.Version)]
 
 class AssemblyVersionInfo {
-    // This version string (and the comments for StableVersion and Version)
-    // should be updated manually between major releases.
-    // Servicing branches should retain the value
-    public const string ReleaseVersion = "2.0";
     // This version string (and the comment for StableVersion) should be
-    // updated manually between minor releases.
-    // Servicing branches should retain the value
-    public const string StableBuildVersion = "2";
-
+    // updated manually between major releases (e.g. from 2.0 to 3.0).
+    // Servicing branches and minor releases should retain the value.
+    public const string ReleaseVersion = "2.0.2";
+    
+    // This version string (and the comment for Version) should be updated
+    // manually between minor releases (e.g. from 2.0 to 2.1).
+    // Servicing branches and prereleases should retain the value.
+    public const string FileVersion = "2.1";
+    
     // This version should never change from "4100.00"; BuildRelease.ps1
     // will replace it with a generated value.
     public const string BuildNumber = "4100.00";
@@ -53,8 +54,8 @@ class AssemblyVersionInfo {
     public const string VSVersion = VSMajorVersion + ".0";
 
     // Defaults to "2.0.2.(2010|2012|2013)"
-    public const string StableVersion = ReleaseVersion + "." + StableBuildVersion + "." + VSVersionSuffix;
+    public const string StableVersion = ReleaseVersion + "." + VSVersionSuffix;
 
-    // Defaults to "2.0.4100.00"
-    public const string Version = ReleaseVersion + "." + BuildNumber;
+    // Defaults to "2.1.4100.00"
+    public const string Version = FileVersion + "." + BuildNumber;
 }

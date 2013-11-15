@@ -86,6 +86,9 @@
 .Parameter skipdebug
     If specified, does not build Debug configurations.
 
+.Parameter dev
+    If specified, generates a build name from the current date.
+
 .Example
     .\BuildRelease.ps1 -release
     
@@ -104,10 +107,25 @@
 
 #>
 [CmdletBinding()]
-param( [string] $outdir, [string] $vsTarget, [string] $name, [switch] $release, [switch] $internal, [switch] $mockrelease, [switch] $scorch, [switch] $skiptests, [switch] $skipclean, [switch] $skipcopy, [switch] $skipdebug)
+param(
+    [string] $outdir,
+    [string] $vsTarget,
+    [string] $name,
+    [switch] $release,
+    [switch] $internal,
+    [switch] $mockrelease,
+    [switch] $scorch,
+    [switch] $skiptests,
+    [switch] $skipclean,
+    [switch] $skipcopy,
+    [switch] $skipdebug,
+    [switch] $dev
+)
 
 # This value is used to determine the most significant digit of the build number.
 $base_year = 2012
+# This value is used to automatically generate outdir for -release and -internal builds
+$base_outdir = "\\pytools\Release"
 
 $buildroot = (Split-Path -Parent $MyInvocation.MyCommand.Definition)
 while ((Test-Path $buildroot) -and -not (Test-Path "$buildroot\build.root")) {
@@ -120,9 +138,9 @@ if (-not (get-command msbuild -EA 0)) {
     Visual Studio build tools are required."
 }
 
-if (-not $outdir) {
-    if ($release -or $internal) {
-        $outdir = Get-Item \\pytools\Release -EA 0
+if (-not $outdir -and -not $release) {
+    if ($internal) {
+        $outdir = "$base_outdir\Internal"
     }
     if (-not $outdir) {
         Write-Error -EA:Stop "
@@ -130,7 +148,15 @@ if (-not $outdir) {
     }
 }
 
-if ($name -eq "RTM") {
+if ($dev) {
+    if ($name) {
+        Write-Error -EA:Stop "
+    Cannot specify both -dev and -name"
+    }
+    $name = "Dev {0:yyyy-MM-dd}" -f (Get-Date)
+}
+
+if ($name -match "[0-9.]*\s*RTM") {
     $result = $host.ui.PromptForChoice(
         "Build Name",
         "'RTM' is not a recommended build name. Final releases should have a blank name.",
@@ -154,10 +180,6 @@ if ($name) {
 } elseif ($internal) {
     Write-Error -EA:Stop "
     '-name [build name]' must be specified when using '-internal'"
-}
-
-if ($internal) {
-    $outdir = "$outdir\Internal\$name"
 }
 
 if ($release -or $mockrelease) {
@@ -209,7 +231,7 @@ $products = @(
 Push-Location $buildroot
 
 $asmverfileBackedUp = 0
-$asmverfile = Get-ChildItem Build\AssemblyVersion.cs
+$asmverfile = Get-Item Build\AssemblyVersion.cs
 # Force use of a backup if there are pending changes to $asmverfile
 $asmverfileUseBackup = 0
 if ((tf status $asmverfile /format:detailed | Select-String ": edit")) {
@@ -218,6 +240,12 @@ if ((tf status $asmverfile /format:detailed | Select-String ": edit")) {
 }
 $asmverfileIsReadOnly = $asmverfile.Attributes -band [io.fileattributes]::ReadOnly
 
+$releaseVersion = [regex]::Match((Get-Content $asmverfile), 'ReleaseVersion = "([0-9.]+)";').Groups[1].Value
+$fileVersion = [regex]::Match((Get-Content $asmverfile), 'FileVersion = "([0-9.]+)";').Groups[1].Value
+
+if ($release -and -not $outdir) {
+    $outdir = "$base_outdir\$fileVersion"
+}
 
 $buildnumber = '{0}{1:MMdd}.{2:D2}' -f (((Get-Date).Year - $base_year), (Get-Date), 0)
 if ($release -or $mockrelease -or $internal) {
@@ -239,11 +267,11 @@ if ([int]::Parse([regex]::Match($buildnumber, '^[0-9]+').Value) -ge 65535) {
     (If the year is not yet $($base_year + 7) then something else has gone wrong.)"
 }
 
-$releaseVersion = [regex]::Match((Get-Content $asmverfile), 'ReleaseVersion = "([0-9.]+)";').Groups[1].Value
-$stableBuildVersion = [regex]::Match((Get-Content $asmverfile), 'StableBuildVersion = "([0-9.]+)";').Groups[1].Value
 $version = "$releaseVersion.$buildnumber"
 
-if ($release -or $mockrelease -or $internal) {
+if ($internal) {
+    $outdir = "$outdir\$name\$buildnumber"
+} elseif ($release -or $mockrelease) {
     $outdir = "$outdir\$buildnumber"
 }
 
@@ -279,13 +307,22 @@ if ($skipclean) {
 }
 
 
-Write-Output "Output Dir: $outdir"
 Write-Output ""
-Write-Output "Product version: $releaseversion.$stableBuildVersion.`$(VS version)"
-Write-Output "File version: $version"
-foreach ($targetVs in $targetversions) {
-    Write-Output "Building for: $($targetVs.name)"
+Write-Output "============================================================"
+Write-Output ""
+if ($name) {
+    Write-Output "Build Name: $name"
 }
+Write-Output "Output Dir: $outdir"
+if ($mockrelease) {
+    Write-Output "Auto-generated release outdir: $base_outdir\$fileVersion\$buildnumber"
+}
+Write-Output ""
+Write-Output "Product version: $releaseversion.`$(VS version)"
+Write-Output "File version: $version"
+Write-Output "Building for $([String]::Join(", ", ($targetversions | % { $_.name })))"
+Write-Output ""
+Write-Output "============================================================"
 Write-Output ""
 
 if (-not $skipclean) {
@@ -502,10 +539,11 @@ try {
     $successful = $true
 } finally {
     if ($asmverfileBackedUp) {
-        Move-Item "$($asmverfile).bak" $asmverfile -Force
+        Move-Item "$asmverfile.bak" $asmverfile -Force
         if ($asmverfileIsReadOnly) {
             Set-ItemProperty $asmverfile -Name IsReadOnly -Value $true
         }
+        Write-Output "Restored $asmverfile"
     } elseif (-not $asmverfileUseBackup) {
         tf undo /noprompt $asmverfile
     }
