@@ -267,7 +267,7 @@ if ([int]::Parse([regex]::Match($buildnumber, '^[0-9]+').Value) -ge 65535) {
     (If the year is not yet $($base_year + 7) then something else has gone wrong.)"
 }
 
-$version = "$releaseVersion.$buildnumber"
+$version = "$fileVersion.$buildnumber"
 
 if ($internal) {
     $outdir = "$outdir\$name\$buildnumber"
