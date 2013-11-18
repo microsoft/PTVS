@@ -1,6 +1,6 @@
 ﻿import sys
-import sys, foo
-import sys as bar
-import sys as bar, foo as baz
-import sys.foo
-import sys.foo as bar
+import sys, fob
+import sys as oar
+import sys as oar, fob as baz
+import sys.fob
+import sys.fob as oar

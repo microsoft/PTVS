@@ -314,7 +314,7 @@ def expandvars(path):
     return path
 
 
-# Normalize a path, e.g. A//B, A/./B and A/foo/../B all become A/B.
+# Normalize a path, e.g. A//B, A/./B and A/fob/../B all become A/B.
 # It should be understood that this may change the meaning of the path
 # if it contains symbolic links!
 

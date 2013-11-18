@@ -57,6 +57,11 @@ namespace Microsoft.PythonTools.Commands {
 
                 window.SetOptionValue(ReplOptions.UseSmartUpDown, PythonToolsPackage.Instance.InteractiveOptionsPage.GetOptions(factory).ReplSmartHistory);
             }
+
+            if (project != null && project.Interpreters.IsProjectSpecific(factory)) {
+                project.AddAssociatedReplWindow(window);
+            }
+
             return window;
         }
 

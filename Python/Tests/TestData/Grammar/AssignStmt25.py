@@ -1,3 +1,3 @@
 ﻿def f():
-    foo = yield 1
-    foo += yield 1
+    fob = yield 1
+    fob += yield 1

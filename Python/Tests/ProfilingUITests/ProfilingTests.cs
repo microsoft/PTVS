@@ -15,6 +15,8 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Automation;
 using Microsoft.PythonTools;
@@ -111,7 +113,7 @@ namespace ProfilingUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void NewProfilingSession() {
-            VsIdeTestHostContext.Dte.Solution.Close(false);
+            PythonPaths.Python26.AssertInstalled();
 
             using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
                 app.OpenPythonPerformance();
@@ -472,6 +474,7 @@ namespace ProfilingUITests {
                     var child = pyPerf.FindItem("HelloWorld *", "Reports", Path.GetFileNameWithoutExtension(baselineFile));
                     AutomationWrapper.EnsureExpanded(child);
                     child.SetFocus();
+                    child.Select();
 
                     Mouse.MoveTo(child.GetClickablePoint());
                     Mouse.Click(System.Windows.Input.MouseButton.Right);
@@ -496,14 +499,15 @@ namespace ProfilingUITests {
 
                     // verify the difference file opens....
                     bool foundDiff = false;
-                    for (int j = 0; j < 100 && !foundDiff; j++) {
+                    for (int j = 0; j < 10 && !foundDiff; j++) {
                         for (int i = 0; i < app.Dte.Documents.Count; i++) {
                             var doc = app.Dte.Documents.Item(i + 1);
                             string name = doc.FullName;
 
                             if (name.StartsWith("vsp://diff/?baseline=")) {
                                 foundDiff = true;
-                                doc.Close(EnvDTE.vsSaveChanges.vsSaveChangesNo);
+                                Thread.Sleep(5000);
+                                Task.Run(() => doc.Close(EnvDTE.vsSaveChanges.vsSaveChangesNo)).Wait();
                                 break;
                             }
                         }
@@ -1083,8 +1087,14 @@ namespace ProfilingUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void OldClassProfile() {
             var profiling = (IPythonProfiling)VsIdeTestHostContext.Dte.GetObject("PythonProfiling");
+            bool anyMissing = false;
 
             foreach (var version in new[] { PythonPaths.Python25, PythonPaths.Python26, PythonPaths.Python27 }) {
+                if (version == null) {
+                    anyMissing = true;
+                    continue;
+                }
+
                 // no sessions yet
                 Assert.IsNull(profiling.GetSession(1));
 
@@ -1116,6 +1126,10 @@ namespace ProfilingUITests {
                         profiling.RemoveSession(session, false);
                     }
                 }
+            }
+
+            if (anyMissing) {
+                Assert.Inconclusive("Not all interpreters were present");
             }
         }
 
@@ -1359,13 +1373,16 @@ namespace ProfilingUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void LaunchExecutableUsingInterpreterGuid() {
+            PythonPaths.Python26.AssertInstalled();
+
             var profiling = (IPythonProfiling)VsIdeTestHostContext.Dte.GetObject("PythonProfiling");
 
             // no sessions yet
             Assert.IsNull(profiling.GetSession(1));
 
             using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var session = LaunchProcess(app, profiling, "{2AF0F10D-7135-4994-9156-5D01C9C11B7E};2.6",
+                var session = LaunchProcess(app, profiling,
+                    string.Format("{0:B};{1}", PythonPaths.Python26.Interpreter, PythonPaths.Python26.Version),
                     TestData.GetPath(@"TestData\ProfileTest\Program.py"),
                     TestData.GetPath(@"TestData\ProfileTest"),
                     "",
@@ -1448,25 +1465,30 @@ namespace ProfilingUITests {
             for (int i = 0; i < 100; i++) {
                 string csvFilename;
                 do {
-                    csvFilename = Path.Combine(Path.GetTempPath(), "test") + DateTime.Now.Ticks + "_" + _counter++;
+                    csvFilename = Path.Combine(TestData.GetTempPath(), "test") + DateTime.Now.Ticks + "_" + _counter++;
                 } while (File.Exists(csvFilename + "_FunctionSummary.csv"));
 
-                var psi = new ProcessStartInfo(perfReportPath, "\"" + report.Filename + "\"" + " /output:" + csvFilename + " /summary:function");
-                psi.UseShellExecute = false;
-                psi.RedirectStandardOutput = true;
-                psi.RedirectStandardError = true;
-                var process = Process.Start(psi);
-                process.Start();
-                process.WaitForExit();
-                if (process.ExitCode != 0) {
-                    if (i == 99) {
-                        string msg = "Output: " + process.StandardOutput.ReadToEnd() + Environment.NewLine +
-                            "Error: " + process.StandardError.ReadToEnd() + Environment.NewLine;
-                        Assert.Fail(msg);
-                    } else {
-                        System.Threading.Thread.Sleep(100);
-                        continue;
+                using (var process = ProcessOutput.RunHiddenAndCapture(
+                    perfReportPath,
+                    report.Filename,
+                    "/output:" + csvFilename,
+                    "/summary:function"
+                )) {
+                    process.Wait();
+                    if (process.ExitCode != 0) {
+                        if (i == 99) {
+                            Assert.Fail(string.Join(Environment.NewLine,
+                                Enumerable.Repeat("Output: ", 1)
+                                    .Concat(process.StandardOutputLines)
+                                    .Concat(Enumerable.Repeat("Error:", 1))
+                                    .Concat(process.StandardErrorLines)
+                                ));
+                        } else {
+                            System.Threading.Thread.Sleep(100);
+                            continue;
+                        }
                     }
+
                 }
 
                 string[] res = null;

@@ -64,8 +64,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public override object GetIconHandle(bool open) {
-            int offset = (int)ProjectNode.ImageName.XWorld;
-            return this.ProjectMgr.ImageHandler.GetIconHandle(offset);
+            return ProjectMgr.GetIconHandleByName(ProjectNode.ImageName.XWorld);
         }
 
         protected override NodeProperties CreatePropertiesObject() {

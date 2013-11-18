@@ -1,3 +1,3 @@
-import bar, baz
+import oar, baz
 
-bar
+oar

@@ -102,20 +102,24 @@ namespace TestUtilities.UI.Python {
             AutomationElement element = null;
             for (int i = 0; i < 5 && element == null; i++) {
                 element = Element.FindFirst(TreeScope.Descendants,
-                        new AndCondition(
-                            new PropertyCondition(
-                                AutomationElement.AutomationIdProperty,
-                                autoId
-                            ),
-                            new PropertyCondition(
-                                AutomationElement.ClassNameProperty,
-                                ""
-                            )
+                    new AndCondition(
+                        new PropertyCondition(
+                            AutomationElement.AutomationIdProperty,
+                            autoId
+                        ),
+                        new PropertyCondition(
+                            AutomationElement.ClassNameProperty,
+                            ""
                         )
-                    );
+                    )
+                );
                 if (element == null) {
                     System.Threading.Thread.Sleep(100);
                 }
+            }
+
+            if (element == null) {
+                return null;
             }
 
             return new InteractiveWindow(
@@ -178,46 +182,47 @@ namespace TestUtilities.UI.Python {
         }
 
         /// <summary>
-        /// Selects the given source control provider.  Name merely needs to be enough text to disambiguate from other source control providers.
+        /// Selects the given interpreter as the default.
         /// </summary>
         public void SelectDefaultInterpreter(string name) {
             Element.SetFocus();
 
             // bring up Tools->Options
-            ThreadPool.QueueUserWorkItem(x => Dte.ExecuteCommand("Tools.Options"));
+            var dialog = AutomationElement.FromHandle(OpenDialogWithDteExecuteCommand("Tools.Options"));
+            try {
+                // go to the tree view which lets us select a set of options...
+                var treeView = new TreeView(dialog.FindFirst(TreeScope.Descendants,
+                    new PropertyCondition(
+                        AutomationElement.ClassNameProperty,
+                        "SysTreeView32")
+                    ));
 
-            // wait for it...
-            IntPtr dialog = WaitForDialog();
+                treeView.FindItem("Python Tools", "Environment Options").SetFocus();
 
-            // go to the tree view which lets us select a set of options...
-            var treeView = new TreeView(AutomationElement.FromHandle(dialog).FindFirst(TreeScope.Descendants,
-                new PropertyCondition(
-                    AutomationElement.ClassNameProperty,
-                    "SysTreeView32")
-                ));
-
-            treeView.FindItem("Python Tools", "Environment Options").SetFocus();
-
-            var defaultInterpreter = new ComboBox(
-                AutomationElement.FromHandle(dialog).FindFirst(
-                    TreeScope.Descendants,
-                    new AndCondition(
-                       new PropertyCondition(
-                           AutomationElement.NameProperty,
-                           "Default Environment:"
-                       ),
-                       new PropertyCondition(
-                           AutomationElement.ControlTypeProperty,
-                           ControlType.ComboBox
-                       )
+                var defaultInterpreter = new ComboBox(dialog.FindFirst(
+                        TreeScope.Descendants,
+                        new AndCondition(
+                           new PropertyCondition(
+                               AutomationElement.NameProperty,
+                               "Default Environment:"
+                           ),
+                           new PropertyCondition(
+                               AutomationElement.ControlTypeProperty,
+                               ControlType.ComboBox
+                           )
+                        )
                     )
-                )
-            );
+                );
 
-            defaultInterpreter.SelectItem(name);
-
-            Keyboard.PressAndRelease(Key.Enter);
-            WaitForDialogDismissed();
+                defaultInterpreter.SelectItem(name);
+                dialog.AsWrapper().ClickButtonByName("OK");
+                WaitForDialogDismissed();
+                dialog = null;
+            } finally {
+                if (dialog != null) {
+                    DismissAllDialogs();
+                }
+            }
         }
     }
 }

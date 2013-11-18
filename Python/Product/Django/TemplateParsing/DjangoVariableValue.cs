@@ -18,8 +18,8 @@ using Microsoft.VisualStudio.Text;
 
 namespace Microsoft.PythonTools.Django.TemplateParsing {
     /// <summary>
-    /// Captures a Django value used in a variable expression.  The value can either be an expression (foo, foo.bar)
-    /// with a kind of Variable, a string literal ('foo') of kind Constant, or a numeric value (10, 10.0, -5) of
+    /// Captures a Django value used in a variable expression.  The value can either be an expression (fob, fob.oar)
+    /// with a kind of Variable, a string literal ('fob') of kind Constant, or a numeric value (10, 10.0, -5) of
     /// kind Constant.  
     /// </summary>
     class DjangoVariableValue {

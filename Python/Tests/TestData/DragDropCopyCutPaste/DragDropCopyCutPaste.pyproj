@@ -48,7 +48,7 @@
     <Folder Include="CopyFolderMissingItem" />
     <Folder Include="DragFolderOntoSelf" />
     <Folder Include="MoveDupFilename\" />
-    <Folder Include="MoveDupFilename\Foo\" />
+    <Folder Include="MoveDupFilename\Fob\" />
     <Folder Include="CutFolderAndFile\" />
     <Folder Include="CopyDeletePaste\" />
     <Folder Include="CutRenamePaste\" />
@@ -82,7 +82,7 @@
     <Compile Include="!Source\DoubleCrossHierarchy.py" />
     <Compile Include="Python1.py" />
     <Compile Include="MissingFile.py" />
-    <Compile Include="MoveDupFilename\Foo\Python1.py" />
+    <Compile Include="MoveDupFilename\Fob\Python1.py" />
     <Compile Include="MoveDupFilename\Python1.py" />
   </ItemGroup>
 </Project>

@@ -145,6 +145,25 @@ namespace TestUtilities {
         }
 
         /// <summary>
+        /// Returns the full path to a temporary directory. This is within the
+        /// deployment to ensure that test files are easily cleaned up.
+        /// </summary>
+        public static string GetTempPath(string subPath = null, bool randomSubPath = false) {
+            var path = TestData.GetPath("Temp");
+            if (randomSubPath) {
+                subPath = Path.GetRandomFileName();
+                while (Directory.Exists(Path.Combine(path, subPath))) {
+                    subPath = Path.GetRandomFileName();
+                }
+            }
+            if (!string.IsNullOrEmpty(subPath)) {
+                path = Path.Combine(path, subPath);
+            }
+            Directory.CreateDirectory(path);
+            return path;
+        }
+
+        /// <summary>
         /// Opens a FileStream for a file from the current deployment.
         /// </summary>
         public static FileStream Open(string relativePath, FileMode mode = FileMode.Open, FileAccess access = FileAccess.Read, FileShare share = FileShare.Read) {

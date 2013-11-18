@@ -1,1 +1,1 @@
-from bar import baz, baz
+from oar import oaz, baz

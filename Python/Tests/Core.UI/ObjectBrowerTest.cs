@@ -142,24 +142,24 @@ namespace PythonToolsUITests {
                 var expectedNodesBeforeSearch = new[] {
                 new NodeInfo("ObjectBrowser", "ObjectBrowser"),
                 new NodeInfo("Program.py", "Program.py", new[] { "frob()" }),
-                new NodeInfo("Bar", "class Bar", new[] { "bar(self)" }),
-                new NodeInfo("Foo", "class Foo"),
-                new NodeInfo("FooBarBaz", "class FooBarBaz", new[] { "frob(self)" }),
+                new NodeInfo("Oar", "class Oar", new[] { "oar(self)" }),
+                new NodeInfo("Fob", "class Fob"),
+                new NodeInfo("FobOarBaz", "class FobOarBaz", new[] { "frob(self)" }),
             };
                 AssertNodes(objectBrowser, expectedNodesBeforeSearch);
 
                 // Do the search and check results
 
-                objectBrowser.SearchText.SetValue("bar");
+                objectBrowser.SearchText.SetValue("oar");
                 System.Threading.Thread.Sleep(1000);
 
                 objectBrowser.SearchButton.Click();
                 System.Threading.Thread.Sleep(1000);
 
                 var expectedNodesAfterSearch = new[] {
-                new NodeInfo("bar", "def bar(self)"),
-                new NodeInfo("Bar", "class Bar", new[] { "bar(self)" }),
-                new NodeInfo("FooBarBaz", "class FooBarBaz", new[] { "frob(self)" }),
+                new NodeInfo("oar", "def oar(self)"),
+                new NodeInfo("Oar", "class Oar", new[] { "oar(self)" }),
+                new NodeInfo("FobOarBaz", "class FobOarBaz", new[] { "frob(self)" }),
             };
                 AssertNodes(objectBrowser, expectedNodesAfterSearch);
 

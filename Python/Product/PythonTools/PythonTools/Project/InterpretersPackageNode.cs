@@ -39,7 +39,6 @@ namespace Microsoft.PythonTools.Project {
             RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
 
         private static readonly IEnumerable<string> CannotUninstall = new[] { "pip", "distribute", "virtualenv" };
-        protected PythonProjectNode _project;
         private readonly bool _canUninstall;
         private readonly string _caption;
         private readonly string _packageName;
@@ -190,9 +189,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public override object GetIconHandle(bool open) {
-            return this.ProjectMgr.ImageHandler.GetIconHandle(
-                CommonProjectNode.ImageOffset + (int)CommonImageName.InterpretersPackage
-            );
+            return ProjectMgr.GetIconHandleByName(PythonProjectImageName.InterpretersPackage);
         }
         /// <summary>
         /// Package node cannot be dragged.

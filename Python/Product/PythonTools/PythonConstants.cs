@@ -26,8 +26,12 @@ namespace Microsoft.PythonTools {
         /// The extension for Python files which represent Windows applications.
         /// </summary>
         internal const string WindowsFileExtension = ".pyw";
+#if DEV11_OR_LATER
+        internal const string ProjectImageList = "Microsoft.PythonImageList.png";
+#else
         internal const string ProjectImageList = "Microsoft.PythonImageList.bmp";
-        
+#endif
+
         internal const string LibraryManagerGuid = "888888e5-b976-4366-9e98-e7bc01f1842c";
         internal const string LibraryManagerServiceGuid = "88888859-2f95-416e-9e2b-cac4678e5af7";
         internal const string ProjectFactoryGuid = "888888a0-9f3d-457c-b088-3a5042f75d52";
@@ -60,6 +64,11 @@ namespace Microsoft.PythonTools {
         internal const int AddExistingVirtualEnv = 0x4008;
         internal const int ActivateEnvironment = 0x4009;
         internal const int InstallPythonPackage = 0x400A;
+
+        //Custom (per-project) commands
+        internal const int FirstCustomCmdId = 0x4010;
+        internal const int LastCustomCmdId = 0x402F;
+        internal const int CustomProjectCommandsMenu = 0x2005;
 
         // Shows up before references
         internal const int InterpretersContainerNodeSortPriority = 200;

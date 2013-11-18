@@ -1,4 +1,15 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
+<!--
+  Copyright (c) Microsoft Corporation.
+
+  This source code is subject to terms and conditions of the Apache License, Version 2.0. A
+  copy of the license can be found in the License.html file at the root of this distribution. If
+  you cannot locate the Apache License, Version 2.0, please send an email to
+  vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound
+  by the terms of the Apache License, Version 2.0.
+ 
+  You must not remove this notice, or any other, from this software.
+-->
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
@@ -9,8 +20,7 @@
   <!-- Normal install environment, use the current version -->
   <PropertyGroup>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
-    <AzureDjangoSupportPath>$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\</AzureDjangoSupportPath>
-    <PTVSSupportPath>$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\</PTVSSupportPath>
+    <_AzureDjangoSupportPath>$(MSBuildThisFileDirectory)</_AzureDjangoSupportPath>
     <DjangoSettingsModule Condition="'$(DjangoSettingsModule)' == ''">$(MSBuildProjectName).settings</DjangoSettingsModule>
   </PropertyGroup>
 
@@ -20,93 +30,51 @@
   <Target Name="GetTargetFrameworkMonikerDisplayName" Returns="" />
   <Target Name="CreateManifestResourceNames" Returns="" />
 
-  <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" />
+  <Import Project="$(VSToolsPath)\Python Tools\Microsoft.PythonTools.targets" />
+
   <ItemGroup>
-    <PythonAzureDeploymentFile Include="$(AzureDjangoSupportPath)Microsoft.PythonTools.AzureSetup.exe"></PythonAzureDeploymentFile>
-    <PythonAzureDeploymentFile Include="$(AzureDjangoSupportPath)Microsoft.PythonTools.AzureSetup.exe.config"></PythonAzureDeploymentFile>
+    <PythonAzureDeploymentFile Include="$(_AzureDjangoSupportPath)Microsoft.PythonTools.AzureSetup.exe" />
+    <PythonAzureDeploymentFile Include="$(_AzureDjangoSupportPath)Microsoft.PythonTools.AzureSetup.exe.config" />
     <!-- WebPI Files -->
-    <PythonAzureDeploymentFile Include="$(PTVSSupportPath)WebPICmdLine.exe"></PythonAzureDeploymentFile>
-    <PythonAzureDeploymentFile Include="$(PTVSSupportPath)WebPICmdLine.exe.config"></PythonAzureDeploymentFile>
-    <PythonAzureDeploymentFile Include="$(PTVSSupportPath)Microsoft.Web.PlatformInstaller.UI.dll"></PythonAzureDeploymentFile>
-    <PythonAzureDeploymentFile Include="$(PTVSSupportPath)Microsoft.Web.PlatformInstaller.dll"></PythonAzureDeploymentFile>
-    <PythonAzureDeploymentFile Include="$(PTVSSupportPath)Microsoft.Web.Deployment.dll"></PythonAzureDeploymentFile>
+    <PythonAzureDeploymentFile Include="$(_PTVSSupportPath)WebPICmdLine.exe" />
+    <PythonAzureDeploymentFile Include="$(_PTVSSupportPath)WebPICmdLine.exe.config" />
+    <PythonAzureDeploymentFile Include="$(_PTVSSupportPath)Microsoft.Web.PlatformInstaller.UI.dll" />
+    <PythonAzureDeploymentFile Include="$(_PTVSSupportPath)Microsoft.Web.PlatformInstaller.dll" />
+    <PythonAzureDeploymentFile Include="$(_PTVSSupportPath)Microsoft.Web.Deployment.dll" />
     <!-- WebRole files -->
-    <PythonAzureDeploymentFile Include="$(AzureDjangoSupportPath)wfastcgi.py"></PythonAzureDeploymentFile>
-    <PythonAzureDeploymentFile Include="$(AzureDjangoSupportPath)Microsoft.PythonTools.WebRole.dll"></PythonAzureDeploymentFile>
+    <PythonAzureDeploymentFile Include="$(_AzureDjangoSupportPath)wfastcgi.py" />
+    <PythonAzureDeploymentFile Include="$(_AzureDjangoSupportPath)Microsoft.PythonTools.WebRole.dll" />
   </ItemGroup>
 
   <Target Name="ResolvePythonInterpreterPath" DependsOnTargets="ResolveQualifiedProjectHome">
-    <PropertyGroup Condition="$(IsWindowsApplication) == 'true'">
-      <PythonInterpreterSuffix>w</PythonInterpreterSuffix>
-    </PropertyGroup>
+    <ResolveEnvironment>
+      <Output TaskParameter="PrefixPath" PropertyName="PythonPrefixPath" />
+      <Output TaskParameter="ProjectRelativePrefixPath" PropertyName="PythonPrefixSubPath" />
+      <Output TaskParameter="InterpreterPath" PropertyName="PythonInterpreterPath" Condition="$(IsWindowsApplication) != 'true'" />
+      <Output TaskParameter="WindowsInterpreterPath" PropertyName="PythonInterpreterPath" Condition="$(IsWindowsApplication) != 'true'" />
+      <!--<Output TaskParameter="LibraryPath" PropertyName="LibraryPath" />
+      <Output TaskParameter="Architecture" PropertyName="Architecture" />
+      <Output TaskParameter="PathEnvironmentVariable" PropertyName="PathEnvironmentVariable" />-->
+      <Output TaskParameter="Description" PropertyName="PythonInterpreterDescription" />
+      <Output TaskParameter="MajorVersion" PropertyName="PythonMajorVersion" />
+      <Output TaskParameter="MinorVersion" PropertyName="PythonMinorVersion" />
+    </ResolveEnvironment>
 
-    <PropertyGroup Condition="'$(PythonToolsOptionsRegPath)' == ''">
-      <PythonToolsOptionsRegPath>HKEY_CURRENT_USER\Software\Microsoft\VisualStudio\$(VisualStudioVersion)\PythonTools\Options\Interpreters</PythonToolsOptionsRegPath>
-    </PropertyGroup>
-
-    <PropertyGroup Condition="$(InterpreterId)==''">
-      <InterpreterId>$([MSBuild]::GetRegistryValueFromView('$(PythonToolsOptionsRegPath)', 'DefaultInterpreter', '', RegistryView.Registry32))</InterpreterId>
-    </PropertyGroup>
-
-    <PropertyGroup Condition="$(InterpreterVersion)==''">
-      <InterpreterVersion>$([MSBuild]::GetRegistryValueFromView('$(PythonToolsOptionsRegPath)', 'DefaultInterpreterVersion', '', RegistryView.Registry32))</InterpreterVersion>
-    </PropertyGroup>
-
-    <ItemGroup>
-      <_VirtualEnv Include="@(Interpreter)"
-                  Condition="'%(Id)' == '$(InterpreterId)' and '%(Version)' == '$(InterpreterVersion)'" />
-    </ItemGroup>
-
-    <PropertyGroup>
-      <VirtualEnvEnabled>true</VirtualEnvEnabled>
-      <VirtualEnvPrefixSubPath Condition="$(VirtualEnvPrefixSubPath) == ''">@(_VirtualEnv->'%(Identity)')</VirtualEnvPrefixSubPath>
-      <VirtualEnvEnabled Condition="$(VirtualEnvPrefixSubPath) == ''">false</VirtualEnvEnabled>
-      <VirtualEnvPrefixPath Condition="$(VirtualEnvEnabled)">$(ProjectHome)\$(VirtualEnvPrefixSubPath)</VirtualEnvPrefixPath>
-      <VirtualEnvInterpreterPath Condition="$(VirtualEnvEnabled)">@(_VirtualEnv->'$(VirtualEnvPrefixPath)\%(InterpreterPath)')</VirtualEnvInterpreterPath>
-      <VirtualEnvWindowsInterpreterPath Condition="$(VirtualEnvEnabled)">@(_VirtualEnv->'$(VirtualEnvPrefixPath)\%(WindowsInterpreterPath)')</VirtualEnvWindowsInterpreterPath>
-    </PropertyGroup>
-
-    <PropertyGroup Condition="$(InterpreterId)=='2af0f10d-7135-4994-9156-5d01c9c11b7e' or $(InterpreterId)=='{2af0f10d-7135-4994-9156-5d01c9c11b7e}'">
-      <!-- X86 CPython Interpreter -->
-      <PythonInterpreterPath>$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\SOFTWARE\Python\PythonCore\$(InterpreterVersion)\InstallPath', '', '', RegistryView.Registry32))python$(PythonInterpreterSuffix).exe</PythonInterpreterPath>
-    </PropertyGroup>
-    <PropertyGroup Condition="$(InterpreterId)=='9a7a9026-48c1-4688-9d5d-e5699d47d074' or $(InterpreterId)=='{9a7a9026-48c1-4688-9d5d-e5699d47d074}'">
-      <!-- X64 CPython Interpreter -->
-      <PythonInterpreterPath>$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\SOFTWARE\Python\PythonCore\$(InterpreterVersion)\InstallPath', '', '', RegistryView.Registry64))python$(PythonInterpreterSuffix).exe</PythonInterpreterPath>
-    </PropertyGroup>
-    <PropertyGroup Condition="$(InterpreterId)=='80659AB7-4D53-4E0C-8588-A766116CBD46' or $(InterpreterId)=='{80659AB7-4D53-4E0C-8588-A766116CBD46}'">
-      <!-- X86 IronPython Interpreter -->
-      <PythonInterpreterPath>$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\SOFTWARE\IronPython\$(InterpreterVersion)\InstallPath', '', '', RegistryView.Registry64))ipy$(PythonInterpreterSuffix).exe</PythonInterpreterPath>
-    </PropertyGroup>
-    <PropertyGroup Condition="$(InterpreterId)=='FCC291AA-427C-498C-A4D7-4502D6449B8C' or $(InterpreterId)=='{FCC291AA-427C-498C-A4D7-4502D6449B8C}'">
-      <!-- X64 IronPython Interpreter -->
-      <PythonInterpreterPath>$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\SOFTWARE\IronPython\$(InterpreterVersion)\InstallPath', '', '', RegistryView.Registry64))ipy$(PythonInterpreterSuffix)64.exe</PythonInterpreterPath>
-    </PropertyGroup>
-    <PropertyGroup Condition="$(PythonInterpreterPath)==''">
-      <!-- Custom interpreter, read from registry -->
-      <PythonInterpreterPath>$([MSBuild]::GetRegistryValueFromView('HKEY_CURRENT_USER\SOFTWARE\Microsoft\VisualStudio\$(VisualStudioVersion)\PythonTools\Interpreters\{$(InterpreterId)}', 'InterpreterPath', null, RegistryView.Registry32))</PythonInterpreterPath>
-    </PropertyGroup>
-    <PropertyGroup Condition="$(VirtualEnvEnabled)">
-      <!-- Per-project Python interpreter -->
-      <PythonInterpreterPath Condition="$(PythonInterpreterSuffix)!='w'">$(VirtualEnvInterpreterPath)</PythonInterpreterPath>
-      <PythonInterpreterPath Condition="$(PythonInterpreterSuffix)=='w'">$(VirtualEnvWindowsInterpreterPath)</PythonInterpreterPath>
-    </PropertyGroup>
     <PropertyGroup Condition="$(PythonInterpreterPath)==''">
       <!-- No interpreter specifed and no default interpreter available -->
       <PythonInterpreterPath>C:\Python27\python.exe</PythonInterpreterPath>
+      <PythonPrefixSubPath></PythonPrefixSubPath>
+      <PythonMajorVersion>2</PythonMajorVersion>
+      <PythonMinorVersion>7</PythonMinorVersion>
     </PropertyGroup>
 
     <PropertyGroup>
-      <PythonVersionNoDot>$(InterpreterVersion.Replace(".", ""))</PythonVersionNoDot>
+      <!-- TODO: Determine this properly -->
+      <VirtualEnvEnabled>false</VirtualEnvEnabled>
+      <VirtualEnvEnabled Condition="'$(PythonPrefixSubPath)' != ''">true</VirtualEnvEnabled>
     </PropertyGroup>
 
-    <CombinePath BasePath="$(QualifiedProjectHome)" Paths="$(PythonInterpreterPath)" Condition="'$(TargetPythonInterpreterPath)' == ''">
-      <Output TaskParameter="CombinedPaths" PropertyName="TargetPythonInterpreterPath"/>
-    </CombinePath>
-
-    <Message Text="InterpreterVersion=$(InterpreterVersion)" Importance="low"/>
-    <Message Text="PythonInterpreterPath=$(PythonInterpreterPath)" Importance="low"/>
-    <Message Text="TargetPythonInterpreterPath=$(TargetPythonInterpreterPath)" Importance="low"/>
+    <Message Text="Deploying $(PythonInterpreterDescription) from $(PythonPrefixPath)" Importance="normal"/>
   </Target>
 
   <Target Name="Build" >
@@ -131,7 +99,7 @@
       <Output TaskParameter="DestinationFiles" ItemName="FilesCopiedToIntermediate"/>
     </Copy>
 
-    <Message Text="AzureSupport: $(AzureDjangoSupportPath)" Importance="low"/>
+    <Message Text="AzureSupport: $(_AzureDjangoSupportPath)" Importance="low"/>
     <Message Text="FilesCopiedToIntermediate=@(FilesCopiedToIntermediate)" Importance="low"/>
   </Target>
 
@@ -194,7 +162,7 @@
       <WsgiAppSettings>
         <![CDATA[$(WsgiAppSettings)
     <add key="WSGI_ALT_VIRTUALENV_HANDLER" value="$(VirtualEnvWsgiHandler)"/>
-    <add key="WSGI_ALT_VIRTUALENV_ACTIVATE_THIS" value="$(VirtualEnvDeploymentPath)\$(VirtualEnvPrefixSubPath)\Scripts\activate_this.py"/>]]>
+    <add key="WSGI_ALT_VIRTUALENV_ACTIVATE_THIS" value="$(VirtualEnvDeploymentPath)\$(PythonPrefixSubPath)\Scripts\activate_this.py"/>]]>
       </WsgiAppSettings>
     </PropertyGroup>
   </Target>
@@ -276,8 +244,8 @@ log('got handler ' + repr(handler))
            in AzureSetup.exe based upon whether we're emulated or not. -->
       <_CloudServiceAzureSetupConfig>
         <![CDATA[
-interpreter_path=%SystemDrive%\Python$(PythonVersionNoDot)\python.exe
-interpreter_path_emulated=$(TargetPythonInterpreterPath)
+interpreter_path=%SystemDrive%\Python$(PythonMajorVersion)$(PythonMinorVersion)\python.exe
+interpreter_path_emulated=$(PythonInterpreterPath)
 ]]>
       </_CloudServiceAzureSetupConfig>
     </PropertyGroup>
@@ -413,9 +381,9 @@ interpreter_path_emulated=$(TargetPythonInterpreterPath)
          run in the emulator. -->
     <ItemGroup>
       <!-- Python compile files are actually content -->
-      <ContentFiles Include="@(Compile)"></ContentFiles>
-      <ContentFiles Include="@(Content)"></ContentFiles>
-      <ContentFiles Include="@(Include)"></ContentFiles>
+      <ContentFiles Include="@(Compile)" />
+      <ContentFiles Include="@(Content)" />
+      <ContentFiles Include="@(Include)" />
 
       <GeneratedFiles Include="@(PythonAzureDeploymentFile)" />
 
@@ -486,15 +454,6 @@ interpreter_path_emulated=$(TargetPythonInterpreterPath)
     <MakeDir Directories="$(OutDir);$(IntermediateOutputPath);@(DocFileItem->'%(RelativeDir)')" />
   </Target>
 
-  <!--- Gets the fully qualified path to the project home.  -->
-  <Target Name="ResolveQualifiedProjectHome">
-    <Message Text="Combining $(MSBuildProjectDirectory) with $(ProjectHome)"/>
-    <CombinePath BasePath="$(MSBuildProjectDirectory)" Paths="$(ProjectHome)">
-      <Output TaskParameter="CombinedPaths" PropertyName="QualifiedProjectHome"/>
-    </CombinePath>
-    <Message Text="QualifiedProjectHome: $(QualifiedProjectHome)"/>
-  </Target>
-
   <!-- Looks up the STATIC_URL setting in the Django project.  If this is a relative path then
        when we publish we will automatically make static files available at that path.
    -->
@@ -505,7 +464,7 @@ interpreter_path_emulated=$(TargetPythonInterpreterPath)
       <_TempStaticUrlFile>$([System.IO.Path]::GetTempFileName())</_TempStaticUrlFile>
     </PropertyGroup>
 
-    <Exec Command="&quot;$(TargetPythonInterpreterPath)&quot; -c &quot;from $(MSBuildProjectName) import settings; print(settings.STATIC_URL)&quot; > &quot;$(_TempStaticUrlFile)&quot;"
+    <Exec Command="&quot;$(PythonInterpreterPath)&quot; -c &quot;from $(MSBuildProjectName) import settings; print(settings.STATIC_URL)&quot; > &quot;$(_TempStaticUrlFile)&quot;"
           WorkingDirectory="$(QualifiedProjectHome)" Condition="'$(_TempStaticUrlFile)' != ''"/>
 
     <ReadLinesFromFile File="$(_TempStaticUrlFile)" Condition="'$(_TempStaticUrlFile)' != ''">
@@ -527,7 +486,7 @@ interpreter_path_emulated=$(TargetPythonInterpreterPath)
       <_TempStaticRootFile>$([System.IO.Path]::GetTempFileName())</_TempStaticRootFile>
     </PropertyGroup>
 
-    <Exec Command="&quot;$(TargetPythonInterpreterPath)&quot; -c &quot;from $(MSBuildProjectName) import settings; from os import path;  print(path.relpath(settings.STATIC_ROOT, r'$(QualifiedProjectHome)') if settings.STATIC_ROOT else '')&quot; > &quot;$(_TempStaticRootFile)&quot;"
+    <Exec Command="&quot;$(PythonInterpreterPath)&quot; -c &quot;from $(MSBuildProjectName) import settings; from os import path;  print(path.relpath(settings.STATIC_ROOT, r'$(QualifiedProjectHome)') if settings.STATIC_ROOT else '')&quot; > &quot;$(_TempStaticRootFile)&quot;"
           WorkingDirectory="$(QualifiedProjectHome)" Condition="'$(_TempStaticRootFile)' != ''"/>
 
     <ReadLinesFromFile File="$(_TempStaticRootFile)" Condition="'$(_TempStaticRootFile)' != ''">
@@ -546,7 +505,7 @@ interpreter_path_emulated=$(TargetPythonInterpreterPath)
           DependsOnTargets="DetectStaticRootPath;ResolvePythonInterpreterPath;ResolveQualifiedProjectHome"
           BeforeTargets="CollectFilesFromContent;Build;PipelineTransformPhase"
           Condition="'$(DisableStaticFiles)' != 'true'">
-    <Exec Command="&quot;$(TargetPythonInterpreterPath)&quot; &quot;$(QualifiedProjectHome)\manage.py&quot; collectstatic --noinput"
+    <Exec Command="&quot;$(PythonInterpreterPath)&quot; &quot;$(QualifiedProjectHome)\manage.py&quot; collectstatic --noinput"
           WorkingDirectory="$(QualifiedProjectHome)" Condition="'$(DjangoStaticRootSetting)' != ''"/>
 
     <ItemGroup>
@@ -598,14 +557,67 @@ interpreter_path_emulated=$(TargetPythonInterpreterPath)
 
       <!-- Expand the virtual env, capturing the filename, this 2 step process ensures we handle fully qualified
            paths for virtual environments so that we don't overwrite files in the env directory when deploying -->
-      <Content Include="$(VirtualEnvPrefixPath)\**\*"
-               Exclude="$(VirtualEnvPrefixPath)\Lib\orig-prefix.txt;$(VirtualEnvPrefixPath)\.ptvs\**\*;$(VirtualEnvPrefixPath)\**\*.pyc;$(VirtualEnvPrefixPath)\**\*.pyo">
+      <Content Include="$(PythonPrefixSubPath)\**\*"
+               Exclude="$(PythonPrefixSubPath)\Lib\orig-prefix.txt;$(PythonPrefixSubPath)\.ptvs\**\*;$(PythonPrefixSubPath)\**\*.pyc;$(PythonPrefixSubPath)\**\*.pyo">
       </Content>
 
       <!-- include the patched orig-prefix.txt file -->
       <Content Include="$(OrigPrefixPath)" Condition="$(VirtualEnvEnabled)">
-        <Link>$(VirtualEnvPrefixPath)\Lib\orig-prefix.txt</Link>
+        <Link>$(PythonPrefixSubPath)\Lib\orig-prefix.txt</Link>
       </Content>
     </ItemGroup>
+  </Target>
+  
+  <!-- Django-specific project commands -->
+  <PropertyGroup>
+    <PythonCommands>$(PythonCommands);DjangoShellCommand;DjangoValidateAppCommand;DjangoSyncDbCommand</PythonCommands>
+    <PythonCommandsDisplayLabel>resource:Microsoft.PythonTools.Django;Microsoft.PythonTools.Django.Resources;DjangoMenuLabel</PythonCommandsDisplayLabel>
+  </PropertyGroup>
+
+  <Target Name="SetStartupFileOrManagePy" DependsOnTargets="ResolveStartupPath" Outputs="$(StartupFileOrManagePy)">
+    <PropertyGroup>
+      <StartupFileOrManagePy>$(QualifiedProjectHome)\manage.py</StartupFileOrManagePy>
+      <StartupFileOrManagePy Condition="Exists($(StartupFile))">$(StartupFile)</StartupFileOrManagePy>
+    </PropertyGroup>
+    <Message Importance="low" Text="Management commands are run with $(StartupFileOrManagePy)" />
+  </Target>
+
+  <Target Name="DjangoShellCommand"
+          Label="resource:Microsoft.PythonTools.Django;Microsoft.PythonTools.Django.Resources;OpenDjangoShellLabel"
+          DependsOnTargets="SetStartupFileOrManagePy"
+          Returns="@(Commands)">
+    <PythonCommand Target="import django; print('Starting Django %s shell' % django.get_version())"
+                   TargetType="code"
+                   Arguments=""
+                   DeferExecution="$(BuildingInsideVisualStudio)"
+                   ExecuteIn="repl:resource:Microsoft.PythonTools.Django;Microsoft.PythonTools.Django.Resources;CommandReplTitle">
+      <Output TaskParameter="Command" ItemName="Commands" />
+    </PythonCommand>
+  </Target>
+
+  <Target Name="DjangoValidateAppCommand"
+          Label="resource:Microsoft.PythonTools.Django;Microsoft.PythonTools.Django.Resources;ValidateAppLabel"
+          DependsOnTargets="SetStartupFileOrManagePy"
+          Returns="@(Commands)">
+    <PythonCommand Target="$(StartupFileOrManagePy)"
+                   TargetType="script"
+                   Arguments="validate"
+                   DeferExecution="$(BuildingInsideVisualStudio)"
+                   ExecuteIn="Repl:resource:Microsoft.PythonTools.Django;Microsoft.PythonTools.Django.Resources;CommandReplTitle">
+      <Output TaskParameter="Command" ItemName="Commands" />
+    </PythonCommand>
+  </Target>
+
+  <Target Name="DjangoSyncDbCommand"
+          Label="resource:Microsoft.PythonTools.Django;Microsoft.PythonTools.Django.Resources;SyncDbLabel"
+          DependsOnTargets="SetStartupFileOrManagePy"
+          Returns="@(Commands)">
+    <PythonCommand Target="$(StartupFileOrManagePy)"
+                   TargetType="script"
+                   Arguments="syncdb"
+                   DeferExecution="$(BuildingInsideVisualStudio)"
+                   ExecuteIn="Repl:resource:Microsoft.PythonTools.Django;Microsoft.PythonTools.Django.Resources;CommandReplTitle">
+      <Output TaskParameter="Command" ItemName="Commands" />
+    </PythonCommand>
   </Target>
 </Project>

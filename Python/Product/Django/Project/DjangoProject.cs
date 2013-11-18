@@ -31,6 +31,7 @@ using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Flavor;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools;
+using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Django.Project {
     [Guid("564253E9-EF07-4A40-89CF-790E61F53368")]
@@ -324,11 +325,6 @@ namespace Microsoft.PythonTools.Django.Project {
                                 prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_INVISIBLE | OLECMDF.OLECMDF_SUPPORTED | OLECMDF.OLECMDF_DEFHIDEONCTXTMENU | OLECMDF.OLECMDF_ENABLED);
                             }
                             return VSConstants.S_OK;
-                        case PkgCmdIDList.cmdidValidateDjangoApp:
-                        case PkgCmdIDList.cmdidSyncDb:
-                        case PkgCmdIDList.cmdidDjangoShell:
-                            prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);
-                            return VSConstants.S_OK;
                     }
                 }
             } else if (pguidCmdGroup == GuidList.guidOfficeSharePointCmdSet) {
@@ -376,20 +372,8 @@ namespace Microsoft.PythonTools.Django.Project {
                 }
             } else if (pguidCmdGroup == GuidList.guidDjangoCmdSet) {
                 switch (nCmdID) {
-                    case PkgCmdIDList.cmdidDjangoShell:
-                        var window = GetDjangoManagementConsoleWindow();
-                        if (window == null) {
-                            NoInterpretersInstalled();
-                        }
-                        return VSConstants.S_OK;
-                    case PkgCmdIDList.cmdidValidateDjangoApp:
-                        ValidateDjangoApp();
-                        return VSConstants.S_OK;
                     case PkgCmdIDList.cmdidStartNewApp:
                         StartNewApp();
-                        return VSConstants.S_OK;
-                    case PkgCmdIDList.cmdidSyncDb:
-                        SyncDb();
                         return VSConstants.S_OK;
                 }
             }
@@ -440,122 +424,6 @@ namespace Microsoft.PythonTools.Django.Project {
                     parentItems.AddFromTemplate(newAppTemplate, dialog.ViewModel.Name);
                 }
             }
-        }
-
-        private void ValidateDjangoApp() {
-            RunManageCommand("validate");
-        }
-
-        private void SyncDb() {
-            RunManageCommand("syncdb");
-        }
-
-        private static string DjangoReplId = "CF818027-FF53-4139-9F41-B8DDCB0BAC1C";
-
-        private void RunManageCommand(string arguments) {
-            var replWindow = GetDjangoManagementConsoleWindow();
-            if (replWindow != null) {
-                object projectDir;
-                ErrorHandler.ThrowOnFailure(_innerVsHierarchy.GetProperty(
-                    (uint)VSConstants.VSITEMID.Root,
-                    (int)__VSHPROPID.VSHPROPID_ProjectDir,
-                    out projectDir)
-                );
-                
-                var pyProject = _innerVsHierarchy.GetProject().GetPythonProject();
-                var managePyPath = (pyProject != null) ? pyProject.GetStartupFile() : null;
-                if (string.IsNullOrEmpty(managePyPath)) {
-                    managePyPath = "manage.py";
-                }
-
-                var evaluator = ((IPythonReplEvaluator)replWindow.Evaluator);
-                if (evaluator.IsDisconnected) {
-                    evaluator.Reset().ContinueWith(
-                        (task) => {
-                            if (!task.IsFaulted) {
-                                DoRunManageCommand(arguments, (string)projectDir, managePyPath, replWindow, evaluator);
-                            }
-                        }
-                    );
-                } else if (evaluator.IsExecuting) {
-                    replWindow.WriteError(@"Cannot execute management command - a command is currently running.
-Either stop the current command, or reset the REPL window.");
-                } else {
-                    DoRunManageCommand(arguments, (string)projectDir, managePyPath, replWindow, evaluator);
-                }
-            } else {
-                NoInterpretersInstalled();
-            }
-        }
-
-        private static void NoInterpretersInstalled() {
-            MessageBox.Show(@"Unable to run management command - no Python environments are configured.
-            
-Please install a Python environment before using the Django management console or Django commands.");
-        }
-
-        private IReplWindow GetDjangoManagementConsoleWindow() {
-            var pyProj = _innerVsHierarchy.GetPythonInterpreterFactory();
-            if (pyProj != null) {
-                object projectDir;
-                ErrorHandler.ThrowOnFailure(_innerVsHierarchy.GetProperty(
-                    (uint)VSConstants.VSITEMID.Root,
-                    (int)__VSHPROPID.VSHPROPID_ProjectDir,
-                    out projectDir)
-                );
-
-                object projectName;
-                ErrorHandler.ThrowOnFailure(_innerVsHierarchy.GetProperty(
-                    (uint)VSConstants.VSITEMID.Root,
-                    (int)__VSHPROPID.VSHPROPID_ProjectName,
-                    out projectName)
-                );
-
-                Guid projectIdGuid;
-                ErrorHandler.ThrowOnFailure(_innerVsHierarchy.GetGuidProperty(
-                    (uint)VSConstants.VSITEMID.Root,
-                    (int)__VSHPROPID.VSHPROPID_ProjectIDGuid,
-                    out projectIdGuid)
-                );
-                IReplWindow replWindow;
-                try {
-                    replWindow = PythonToolsPackage.Instance.CreatePythonRepl(
-                        DjangoReplId + projectIdGuid.ToString(),
-                        "Django Management Console - " + projectName,
-                        pyProj,
-                        (projectDir ?? "").ToString(),
-                        new Dictionary<string, string>() {
-                            { "DJANGO_SETTINGS_MODULE", projectName + ".settings" }
-                        },
-                        _innerVsHierarchy
-                    );
-                } catch (InvalidOperationException) {
-                    return null;
-                }
-
-                IVsWindowFrame windowFrame = (IVsWindowFrame)((ToolWindowPane)replWindow).Frame;
-                ErrorHandler.ThrowOnFailure(windowFrame.Show());
-
-                return replWindow;
-            }
-            return null;
-        }
-
-        private static void DoRunManageCommand(string arguments, string projectDir, string managePyPath, IReplWindow replWindow, IPythonReplEvaluator evaluator) {
-            replWindow.WriteLine(
-                String.Format("Executing {0} {1}",
-                    CommonUtils.CreateFriendlyDirectoryPath(projectDir, managePyPath),
-                    arguments
-                )
-            );
-            evaluator.ExecuteFile(
-                managePyPath,
-                arguments
-            ).ContinueWith(
-                task => {
-                    evaluator.Reset().Wait();
-                }
-            );
         }
 
         private bool TryHandleRightClick(IntPtr pvaIn, out int res) {

@@ -76,7 +76,7 @@ namespace TestAdapterTests {
         [TestMethod, Priority(0)]
         public void DecoratedTests() {
             using (var analyzer = MakeTestAnalyzer()) {
-                AddModule(analyzer, "Foo", @"import unittest
+                AddModule(analyzer, "Fob", @"import unittest
 
 def decorator(fn):
     def wrapped(*args, **kwargs):
@@ -137,8 +137,8 @@ class MyTest3(TestBase):
             return new TestAnalyzer(
                 InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(new Version(2, 7)),
                 // Not real files/directories, but not an entirely fake path
-                TestData.GetPath("Foo.pyproj"),
-                TestData.GetPath("Foo"),
+                TestData.GetPath("Fob.pyproj"),
+                TestData.GetPath("Fob"),
                 new Uri("executor://TestOnly/v1")
             );
         }
@@ -147,7 +147,7 @@ class MyTest3(TestBase):
             using (var source = new StringReader(code)) {
                 analyzer.AddModule(
                     moduleName,
-                    TestData.GetPath("Foo\\" + (moduleFile ?? moduleName.Replace('.', '\\') + ".py")),
+                    TestData.GetPath("Fob\\" + (moduleFile ?? moduleName.Replace('.', '\\') + ".py")),
                     source
                 );
             }

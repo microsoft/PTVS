@@ -585,7 +585,7 @@ namespace AnalysisTests {
                         CheckConstantStmt("raw unicode"),
                         CheckConstantStmt("raw unicode"),
                         CheckConstantStmt("raw unicode"),
-                        CheckConstantStmtAndRepr("\\\'\"\a\b\f\n\r\t\u2026\v\x2A\x2A", "u'\\\\\\'\"\\a\\b\\f\\n\\r\\t\u2026\\v\x2A\x2A'", PythonLanguageVersion.V27),
+                        CheckConstantStmtAndRepr("\\\'\"\a\b\f\n\r\t\u2026\v\x2A\x2A", "u'\\\\\\\'\"\\x07\\x08\\x0c\\n\\r\\t\\u2026\\x0b**'", PythonLanguageVersion.V27),
                         IgnoreStmt(), // u'\N{COLON}',
                         CheckUnaryStmt(PythonOperator.Negate, CheckConstant(new BigInteger(2147483648))),
                         CheckUnaryStmt(PythonOperator.Negate, CheckConstant(new BigInteger(2147483648))),
@@ -671,7 +671,7 @@ namespace AnalysisTests {
                         CheckConstantStmt("raw unicode"),
                         CheckConstantStmt("raw unicode"),
                         CheckConstantStmt("raw unicode"),
-                        CheckConstantStmtAndRepr("\\\'\"\a\b\f\n\r\t\u2026\v\x2A\x2A", "'\\\\\\'\"\\a\\b\\f\\n\\r\\t\u2026\\v\x2A\x2A'", PythonLanguageVersion.V33),
+                        CheckConstantStmtAndRepr("\\\'\"\a\b\f\n\r\t\u2026\v\x2A\x2A", "'\\\\\\'\"\\x07\\x08\\x0c\\n\\r\\t\\u2026\\x0b**'", PythonLanguageVersion.V33),
                         IgnoreStmt()  // u'\N{COLON}'
                     )
                 );
@@ -750,8 +750,8 @@ namespace AnalysisTests {
                 CheckAst(
                     ParseFile("Keywords30.py", ErrorSink.Null, version),
                     CheckSuite(
-                        CheckAssignment(Foo, CheckConstant(true)),
-                        CheckAssignment(Bar, CheckConstant(false))
+                        CheckAssignment(Fob, CheckConstant(true)),
+                        CheckAssignment(Oar, CheckConstant(false))
                     )
                 );
             }
@@ -760,8 +760,8 @@ namespace AnalysisTests {
                 CheckAst(
                      ParseFile("Keywords30.py", ErrorSink.Null, version),
                      CheckSuite(
-                         CheckAssignment(Foo, CheckNameExpr("True")),
-                         CheckAssignment(Bar, CheckNameExpr("False"))
+                         CheckAssignment(Fob, CheckNameExpr("True")),
+                         CheckAssignment(Oar, CheckNameExpr("False"))
                      )
                  );
             }
@@ -828,7 +828,7 @@ namespace AnalysisTests {
                 CheckAst(
                     ParseFile("GroupingRecovery.py", ErrorSink.Null, version),
                     CheckSuite(
-                        CheckAssignment(Foo, CheckParenExpr(CheckErrorExpr())),
+                        CheckAssignment(Fob, CheckParenExpr(CheckErrorExpr())),
                         CheckFuncDef("f", NoParameters, CheckSuite(Pass))
                     )
                 );
@@ -907,22 +907,22 @@ namespace AnalysisTests {
                 CheckAst(
                     ParseFile("RawBytes.py", ErrorSink.Null, version),
                     CheckSuite(
-                        CheckExprStmt(CheckConstant(ToBytes("\\foo"))),
-                        CheckExprStmt(CheckConstant(ToBytes("\\foo"))),
-                        CheckExprStmt(CheckConstant(ToBytes("\\foo"))),
-                        CheckExprStmt(CheckConstant(ToBytes("\\foo"))),
-                        CheckExprStmt(CheckConstant(ToBytes("\\foo"))),
-                        CheckExprStmt(CheckConstant(ToBytes("\\foo"))),
-                        CheckExprStmt(CheckConstant(ToBytes("\\foo"))),
-                        CheckExprStmt(CheckConstant(ToBytes("\\foo"))),
-                        CheckExprStmt(CheckConstant(ToBytes("\\foo"))),
-                        CheckExprStmt(CheckConstant(ToBytes("\\foo"))),
-                        CheckExprStmt(CheckConstant(ToBytes("\\foo"))),
-                        CheckExprStmt(CheckConstant(ToBytes("\\foo"))),
-                        CheckExprStmt(CheckConstant(ToBytes("\\foo"))),
-                        CheckExprStmt(CheckConstant(ToBytes("\\foo"))),
-                        CheckExprStmt(CheckConstant(ToBytes("\\foo"))),
-                        CheckExprStmt(CheckConstant(ToBytes("\\foo")))
+                        CheckExprStmt(CheckConstant(ToBytes("\\fob"))),
+                        CheckExprStmt(CheckConstant(ToBytes("\\fob"))),
+                        CheckExprStmt(CheckConstant(ToBytes("\\fob"))),
+                        CheckExprStmt(CheckConstant(ToBytes("\\fob"))),
+                        CheckExprStmt(CheckConstant(ToBytes("\\fob"))),
+                        CheckExprStmt(CheckConstant(ToBytes("\\fob"))),
+                        CheckExprStmt(CheckConstant(ToBytes("\\fob"))),
+                        CheckExprStmt(CheckConstant(ToBytes("\\fob"))),
+                        CheckExprStmt(CheckConstant(ToBytes("\\fob"))),
+                        CheckExprStmt(CheckConstant(ToBytes("\\fob"))),
+                        CheckExprStmt(CheckConstant(ToBytes("\\fob"))),
+                        CheckExprStmt(CheckConstant(ToBytes("\\fob"))),
+                        CheckExprStmt(CheckConstant(ToBytes("\\fob"))),
+                        CheckExprStmt(CheckConstant(ToBytes("\\fob"))),
+                        CheckExprStmt(CheckConstant(ToBytes("\\fob"))),
+                        CheckExprStmt(CheckConstant(ToBytes("\\fob")))
                     )
                 );
             }
@@ -965,20 +965,20 @@ namespace AnalysisTests {
                         CheckIndexStmt(One, CheckSlice(null, null, Four)),
                         CheckIndexStmt(One, Ellipsis),
                         CheckIndexStmt(One, CheckTupleExpr(CheckSlice(null, null))),
-                        CheckMemberStmt(Foo, "bar"),
-                        CheckAssignment(Foo, One),
-                        CheckAssignment(Foo, PythonOperator.Add, One),
-                        CheckAssignment(Foo, PythonOperator.Subtract, One),
-                        CheckAssignment(Foo, PythonOperator.Multiply, One),
-                        CheckAssignment(Foo, PythonOperator.Divide, One),
-                        CheckAssignment(Foo, PythonOperator.FloorDivide, One),
-                        CheckAssignment(Foo, PythonOperator.Mod, One),
-                        CheckAssignment(Foo, PythonOperator.BitwiseAnd, One),
-                        CheckAssignment(Foo, PythonOperator.BitwiseOr, One),
-                        CheckAssignment(Foo, PythonOperator.Xor, One),
-                        CheckAssignment(Foo, PythonOperator.RightShift, One),
-                        CheckAssignment(Foo, PythonOperator.LeftShift, One),
-                        CheckAssignment(Foo, PythonOperator.Power, One)
+                        CheckMemberStmt(Fob, "oar"),
+                        CheckAssignment(Fob, One),
+                        CheckAssignment(Fob, PythonOperator.Add, One),
+                        CheckAssignment(Fob, PythonOperator.Subtract, One),
+                        CheckAssignment(Fob, PythonOperator.Multiply, One),
+                        CheckAssignment(Fob, PythonOperator.Divide, One),
+                        CheckAssignment(Fob, PythonOperator.FloorDivide, One),
+                        CheckAssignment(Fob, PythonOperator.Mod, One),
+                        CheckAssignment(Fob, PythonOperator.BitwiseAnd, One),
+                        CheckAssignment(Fob, PythonOperator.BitwiseOr, One),
+                        CheckAssignment(Fob, PythonOperator.Xor, One),
+                        CheckAssignment(Fob, PythonOperator.RightShift, One),
+                        CheckAssignment(Fob, PythonOperator.LeftShift, One),
+                        CheckAssignment(Fob, PythonOperator.Power, One)
                     )
                 );
             }
@@ -990,7 +990,7 @@ namespace AnalysisTests {
                 CheckAst(
                     ParseFile("DelimitersV2.py", ErrorSink.Null, version),
                     CheckSuite(
-                        CheckBackquoteStmt(Foo)
+                        CheckBackquoteStmt(Fob)
                     )
                 );
             }
@@ -1001,7 +1001,7 @@ namespace AnalysisTests {
                     version,
                     new [] { 
                         new ErrorInfo("unexpected token '`'", 0, 1, 1, 1, 1, 2),
-                        new ErrorInfo("unexpected token 'foo'", 1, 1, 2, 4, 1, 5),
+                        new ErrorInfo("unexpected token 'fob'", 1, 1, 2, 4, 1, 5),
                         new ErrorInfo("unexpected token '`'", 4, 1, 5, 5, 1, 6)
                    }
                 );
@@ -1014,13 +1014,13 @@ namespace AnalysisTests {
                 CheckAst(
                     ParseFile("ForStmt.py", ErrorSink.Null, version),
                     CheckSuite(
-                        CheckForStmt(Foo, Bar, CheckSuite(Pass)),
-                        CheckForStmt(CheckTupleExpr(Foo, Bar), Baz, CheckSuite(Pass)),
-                        CheckForStmt(Foo, Bar, CheckSuite(Pass), CheckSuite(Pass)),
-                        CheckForStmt(Foo, Bar, CheckSuite(Break)),
-                        CheckForStmt(Foo, Bar, CheckSuite(Continue)),
-                        CheckForStmt(CheckListExpr(CheckListExpr(Foo), CheckListExpr(Bar)), Baz, CheckSuite(Pass)),
-                        CheckForStmt(CheckTupleExpr(CheckParenExpr(Foo), CheckParenExpr(Bar)), Baz, CheckSuite(Pass))
+                        CheckForStmt(Fob, Oar, CheckSuite(Pass)),
+                        CheckForStmt(CheckTupleExpr(Fob, Oar), Baz, CheckSuite(Pass)),
+                        CheckForStmt(Fob, Oar, CheckSuite(Pass), CheckSuite(Pass)),
+                        CheckForStmt(Fob, Oar, CheckSuite(Break)),
+                        CheckForStmt(Fob, Oar, CheckSuite(Continue)),
+                        CheckForStmt(CheckListExpr(CheckListExpr(Fob), CheckListExpr(Oar)), Baz, CheckSuite(Pass)),
+                        CheckForStmt(CheckTupleExpr(CheckParenExpr(Fob), CheckParenExpr(Oar)), Baz, CheckSuite(Pass))
                     )
                 );
             }
@@ -1032,30 +1032,30 @@ namespace AnalysisTests {
                 CheckAst(
                     ParseFile("WithStmt.py", ErrorSink.Null, version),
                     CheckSuite(
-                        CheckWithStmt(Foo, CheckSuite(Pass)),
-                        CheckWithStmt(Foo, Bar, CheckSuite(Pass)),
-                        CheckWithStmt(new[] { Foo, Bar }, CheckSuite(Pass)),
-                        CheckWithStmt(new[] { Foo, Baz }, new[] { Bar, Quox }, CheckSuite(Pass))
+                        CheckWithStmt(Fob, CheckSuite(Pass)),
+                        CheckWithStmt(Fob, Oar, CheckSuite(Pass)),
+                        CheckWithStmt(new[] { Fob, Oar }, CheckSuite(Pass)),
+                        CheckWithStmt(new[] { Fob, Baz }, new[] { Oar, Quox }, CheckSuite(Pass))
                     )
                 );
             }
 
             foreach (var version in V24_V25Versions) {
                 ParseErrors("WithStmt.py", version,
-                    new ErrorInfo("unexpected token 'foo'", 5, 1, 6, 8, 1, 9),
+                    new ErrorInfo("unexpected token 'fob'", 5, 1, 6, 8, 1, 9),
                     new ErrorInfo("unexpected token ':'", 8, 1, 9, 9, 1, 10),
                     new ErrorInfo("unexpected token 'pass'", 10, 1, 11, 14, 1, 15),
-                    new ErrorInfo("unexpected token 'foo'", 23, 3, 6, 26, 3, 9),
-                    new ErrorInfo("unexpected token 'bar'", 30, 3, 13, 33, 3, 16),
+                    new ErrorInfo("unexpected token 'fob'", 23, 3, 6, 26, 3, 9),
+                    new ErrorInfo("unexpected token 'oar'", 30, 3, 13, 33, 3, 16),
                     new ErrorInfo("unexpected token ':'", 33, 3, 16, 34, 3, 17),
                     new ErrorInfo("unexpected token 'pass'", 35, 3, 18, 39, 3, 22),
-                    new ErrorInfo("unexpected token 'foo'", 48, 5, 6, 51, 5, 9),
+                    new ErrorInfo("unexpected token 'fob'", 48, 5, 6, 51, 5, 9),
                     new ErrorInfo("unexpected token ','", 51, 5, 9, 52, 5, 10),
-                    new ErrorInfo("unexpected token 'bar'", 53, 5, 11, 56, 5, 14),
+                    new ErrorInfo("unexpected token 'oar'", 53, 5, 11, 56, 5, 14),
                     new ErrorInfo("unexpected token ':'", 56, 5, 14, 57, 5, 15),
                     new ErrorInfo("unexpected token 'pass'", 58, 5, 16, 62, 5, 20),
-                    new ErrorInfo("unexpected token 'foo'", 71, 7, 6, 74, 7, 9),
-                    new ErrorInfo("unexpected token 'bar'", 78, 7, 13, 81, 7, 16),
+                    new ErrorInfo("unexpected token 'fob'", 71, 7, 6, 74, 7, 9),
+                    new ErrorInfo("unexpected token 'oar'", 78, 7, 13, 81, 7, 16),
                     new ErrorInfo("unexpected token ','", 81, 7, 16, 82, 7, 17),
                     new ErrorInfo("unexpected token 'baz'", 83, 7, 18, 86, 7, 21),
                     new ErrorInfo("unexpected token 'quox'", 90, 7, 25, 94, 7, 29),
@@ -1077,8 +1077,8 @@ namespace AnalysisTests {
                             CheckConstantStmt(3)
                         ),
                         CheckSuite(
-                            CheckNameStmt("foo"),
-                            CheckNameStmt("bar"),
+                            CheckNameStmt("fob"),
+                            CheckNameStmt("oar"),
                             CheckNameStmt("baz")
                         )
                     )
@@ -1092,13 +1092,13 @@ namespace AnalysisTests {
                 CheckAst(
                     ParseFile("DelStmt.py", ErrorSink.Null, version),
                     CheckSuite(
-                        CheckDelStmt(Foo),
-                        CheckDelStmt(Foo, Bar),
-                        CheckDelStmt(CheckMemberExpr(Foo, "bar")),
-                        CheckDelStmt(CheckIndexExpression(Foo, Bar)),
-                        CheckDelStmt(CheckTupleExpr(Foo, Bar)),
-                        CheckDelStmt(CheckListExpr(Foo, Bar)),
-                        CheckDelStmt(CheckParenExpr(Foo))
+                        CheckDelStmt(Fob),
+                        CheckDelStmt(Fob, Oar),
+                        CheckDelStmt(CheckMemberExpr(Fob, "oar")),
+                        CheckDelStmt(CheckIndexExpression(Fob, Oar)),
+                        CheckDelStmt(CheckTupleExpr(Fob, Oar)),
+                        CheckDelStmt(CheckListExpr(Fob, Oar)),
+                        CheckDelStmt(CheckParenExpr(Fob))
                     )
                 );
             }
@@ -1110,7 +1110,7 @@ namespace AnalysisTests {
                 CheckAst(
                     ParseFile("IndexExpr.py", ErrorSink.Null, version),
                     CheckSuite(
-                        CheckExprStmt(CheckIndexExpression(Foo, CheckConstant(.2)))
+                        CheckExprStmt(CheckIndexExpression(Fob, CheckConstant(.2)))
                     )
                 );
             }
@@ -1154,10 +1154,10 @@ namespace AnalysisTests {
                             CheckYieldStmt(None)
                         )),
                         CheckFuncDef("f", NoParameters, CheckSuite(
-                            CheckAssignment(Foo, CheckYieldExpr(None))
+                            CheckAssignment(Fob, CheckYieldExpr(None))
                         )),
                         CheckFuncDef("f", NoParameters, CheckSuite(
-                            CheckAssignment(Baz, CheckListComp(CheckYieldExpr(Bar), CompFor(Bar, Foo)))
+                            CheckAssignment(Baz, CheckListComp(CheckYieldExpr(Oar), CompFor(Oar, Fob)))
                         ))
                     )
                 );
@@ -1166,7 +1166,7 @@ namespace AnalysisTests {
             ParseErrors("YieldExpr.py", PythonLanguageVersion.V24,
                 new ErrorInfo("invalid syntax", 19, 2, 10, 21, 3, 1),
                 new ErrorInfo("unexpected token 'yield'", 43, 5, 11, 48, 5, 16)
-                // [(yield bar) for ...] should be an error, but it is not raised.
+                // [(yield oar) for ...] should be an error, but it is not raised.
                 // V24 is not supported by PTVS, so don't fail the test because of this.
                 //new ErrorInfo("unexpected token 'yield'", 74, 8, 13, 79, 8, 18)
             );
@@ -1198,7 +1198,7 @@ namespace AnalysisTests {
                     CheckSuite(
                         CheckFuncDef("f", NoParameters,
                             CheckSuite(
-                                CheckYieldFromStmt(Foo)
+                                CheckYieldFromStmt(Fob)
                             )
                         )
                     )
@@ -1214,9 +1214,9 @@ namespace AnalysisTests {
                     CheckSuite(
                         CheckFuncDef("f", NoParameters,
                             CheckSuite(
-                                CheckYieldFromStmt(Foo),
-                                CheckAssignment(Bar, CheckYieldFromExpr(Foo)),
-                                CheckAssignment(Baz, CheckListComp(CheckYieldFromExpr(Bar), CompFor(Bar, Foo)))
+                                CheckYieldFromStmt(Fob),
+                                CheckAssignment(Oar, CheckYieldFromExpr(Fob)),
+                                CheckAssignment(Baz, CheckListComp(CheckYieldFromExpr(Oar), CompFor(Oar, Fob)))
                             )
                         )
                     )
@@ -1266,11 +1266,11 @@ namespace AnalysisTests {
                     ParseFile("ImportStmt.py", ErrorSink.Null, version),
                     CheckSuite(
                         CheckImport(new[] { "sys" }),
-                        CheckImport(new[] { "sys", "foo" }),
-                        CheckImport(new[] { "sys" }, new[] { "bar" }),
-                        CheckImport(new[] { "sys", "foo" }, new[] { "bar", "baz" }),
-                        CheckImport(new[] { "sys.foo" }),
-                        CheckImport(new[] { "sys.foo" }, new[] { "bar" })
+                        CheckImport(new[] { "sys", "fob" }),
+                        CheckImport(new[] { "sys" }, new[] { "oar" }),
+                        CheckImport(new[] { "sys", "fob" }, new[] { "oar", "baz" }),
+                        CheckImport(new[] { "sys.fob" }),
+                        CheckImport(new[] { "sys.fob" }, new[] { "oar" })
                     )
                 );
             }
@@ -1311,12 +1311,12 @@ namespace AnalysisTests {
                     CheckSuite(
                         CheckFuncDef("g", NoParameters,
                             CheckSuite(
-                                CheckAssignment(Foo, One),
-                                CheckAssignment(Bar, One),
+                                CheckAssignment(Fob, One),
+                                CheckAssignment(Oar, One),
                                 CheckFuncDef("f", NoParameters,
                                     CheckSuite(
-                                        CheckNonlocal("foo"),
-                                        CheckNonlocal("foo", "bar")
+                                        CheckNonlocal("fob"),
+                                        CheckNonlocal("fob", "oar")
                                     )
                                 )
                             )
@@ -1325,21 +1325,21 @@ namespace AnalysisTests {
                             CheckSuite(
                                 CheckFuncDef("f", NoParameters,
                                     CheckSuite(
-                                        CheckNonlocal("foo")
+                                        CheckNonlocal("fob")
                                     )
                                 ),
-                                CheckAssignment(Foo, One)
+                                CheckAssignment(Fob, One)
                             )
                         ),
                         CheckFuncDef("f", NoParameters,
                             CheckSuite(
                                 CheckClassDef("C", 
                                     CheckSuite(
-                                        CheckNonlocal("foo"),
-                                        CheckAssignment(Foo, One)
+                                        CheckNonlocal("fob"),
+                                        CheckAssignment(Fob, One)
                                     )
                                 ),
-                                CheckAssignment(Foo, Two)
+                                CheckAssignment(Fob, Two)
                             )
                         ),
                         CheckClassDef("X",
@@ -1357,15 +1357,15 @@ namespace AnalysisTests {
 
             foreach (var version in V2Versions) {
                 ParseErrors("NonlocalStmt.py", version,
-                    new ErrorInfo("unexpected token 'foo'", 67, 5, 18, 70, 5, 21),
+                    new ErrorInfo("unexpected token 'fob'", 67, 5, 18, 70, 5, 21),
                     new ErrorInfo("unexpected token '<newline>'", 70, 5, 21, 80, 6, 9),
                     new ErrorInfo("unexpected token 'nonlocal'", 80, 6, 9, 88, 6, 17),
-                    new ErrorInfo("unexpected token 'foo'", 144, 11, 18, 147, 11, 21),
+                    new ErrorInfo("unexpected token 'fob'", 144, 11, 18, 147, 11, 21),
                     new ErrorInfo("unexpected token '<newline>'", 147, 11, 21, 149, 12, 1),
                     new ErrorInfo("unexpected token '<NL>'", 149, 12, 1, 155, 13, 5),
-                    new ErrorInfo("unexpected token 'foo'", 209, 18, 18, 212, 18, 21),
+                    new ErrorInfo("unexpected token 'fob'", 209, 18, 18, 212, 18, 21),
                     new ErrorInfo("unexpected token '<newline>'", 212, 18, 21, 222, 19, 9),
-                    new ErrorInfo("unexpected token 'foo'", 222, 19, 9, 225, 19, 12),
+                    new ErrorInfo("unexpected token 'fob'", 222, 19, 9, 225, 19, 12),
                     new ErrorInfo("unexpected token '='", 226, 19, 13, 227, 19, 14),
                     new ErrorInfo("unexpected token '1'", 228, 19, 15, 229, 19, 16),
                     new ErrorInfo("unexpected token '<newline>'", 229, 19, 16, 235, 20, 5),
@@ -1483,7 +1483,7 @@ namespace AnalysisTests {
                     ParseFile("RaiseStmt.py", ErrorSink.Null, version),
                     CheckSuite(
                         CheckRaiseStmt(),
-                        CheckRaiseStmt(Foo)
+                        CheckRaiseStmt(Fob)
                     )
                 );
             }
@@ -1492,8 +1492,8 @@ namespace AnalysisTests {
                 CheckAst(
                     ParseFile("RaiseStmtV2.py", ErrorSink.Null, version),
                     CheckSuite(
-                        CheckRaiseStmt(Foo, Bar),
-                        CheckRaiseStmt(Foo, Bar, Baz)
+                        CheckRaiseStmt(Fob, Oar),
+                        CheckRaiseStmt(Fob, Oar, Baz)
                     )
                 );
 
@@ -1507,7 +1507,7 @@ namespace AnalysisTests {
                 CheckAst(
                     ParseFile("RaiseStmtV3.py", ErrorSink.Null, version),
                     CheckSuite(
-                        CheckRaiseStmt(Foo, cause: Bar)
+                        CheckRaiseStmt(Fob, cause: Oar)
                     )
                 );
 
@@ -1530,9 +1530,9 @@ namespace AnalysisTests {
                         CheckPrintStmt(new[] { One }, trailingComma: true),
                         CheckPrintStmt(new[] { One, Two }),
                         CheckPrintStmt(new[] { One, Two }, trailingComma: true),
-                        CheckPrintStmt(new[] { One, Two }, Foo),
-                        CheckPrintStmt(new[] { One, Two }, Foo, trailingComma: true),
-                        CheckPrintStmt(new Action<Expression>[0], Foo),
+                        CheckPrintStmt(new[] { One, Two }, Fob),
+                        CheckPrintStmt(new[] { One, Two }, Fob, trailingComma: true),
+                        CheckPrintStmt(new Action<Expression>[0], Fob),
                         CheckPrintStmt(new[] { CheckBinaryExpression(One, PythonOperator.Equal, Two) }),
                         CheckPrintStmt(new[] { CheckLambda(new Action<Parameter>[0], One) })
                     )
@@ -1561,7 +1561,7 @@ namespace AnalysisTests {
                     ParseFile("AssertStmt.py", ErrorSink.Null, version),
                     CheckSuite(
                         CheckAssertStmt(One),
-                        CheckAssertStmt(One, Foo)
+                        CheckAssertStmt(One, Fob)
                     )
                 );
             }
@@ -1573,9 +1573,9 @@ namespace AnalysisTests {
                 CheckAst(
                     ParseFile("ListComp.py", ErrorSink.Null, version),
                     CheckSuite(
-                        CheckExprStmt(CheckListComp(Foo, CompFor(Foo, Bar))),
-                        CheckExprStmt(CheckListComp(Foo, CompFor(Foo, Bar), CompIf(Baz))),
-                        CheckExprStmt(CheckListComp(Foo, CompFor(Foo, Bar), CompFor(Baz, Quox)))
+                        CheckExprStmt(CheckListComp(Fob, CompFor(Fob, Oar))),
+                        CheckExprStmt(CheckListComp(Fob, CompFor(Fob, Oar), CompIf(Baz))),
+                        CheckExprStmt(CheckListComp(Fob, CompFor(Fob, Oar), CompFor(Baz, Quox)))
                     )
                 );
             }
@@ -1587,7 +1587,7 @@ namespace AnalysisTests {
                 CheckAst(
                     ParseFile("ListComp2x.py", ErrorSink.Null, version),
                     CheckSuite(
-                        CheckExprStmt(CheckListComp(Foo, CompFor(Foo, CheckTupleExpr(Bar, Baz))))
+                        CheckExprStmt(CheckListComp(Fob, CompFor(Fob, CheckTupleExpr(Oar, Baz))))
                     )
                 );
             }
@@ -1606,10 +1606,10 @@ namespace AnalysisTests {
                 CheckAst(
                     ParseFile("GenComp.py", ErrorSink.Null, version),
                     CheckSuite(
-                        CheckExprStmt(CheckGeneratorComp(Foo, CompFor(Foo, Bar))),
-                        CheckExprStmt(CheckGeneratorComp(Foo, CompFor(Foo, Bar), CompIf(Baz))),
-                        CheckExprStmt(CheckGeneratorComp(Foo, CompFor(Foo, Bar), CompFor(Baz, Quox))),
-                        CheckCallStmt(Baz, PositionalArg(CheckGeneratorComp(Foo, CompFor(Foo, Bar))))
+                        CheckExprStmt(CheckGeneratorComp(Fob, CompFor(Fob, Oar))),
+                        CheckExprStmt(CheckGeneratorComp(Fob, CompFor(Fob, Oar), CompIf(Baz))),
+                        CheckExprStmt(CheckGeneratorComp(Fob, CompFor(Fob, Oar), CompFor(Baz, Quox))),
+                        CheckCallStmt(Baz, PositionalArg(CheckGeneratorComp(Fob, CompFor(Fob, Oar))))
                     )                    
                 );
             }
@@ -1621,9 +1621,9 @@ namespace AnalysisTests {
                 CheckAst(
                     ParseFile("DictComp.py", ErrorSink.Null, version),
                     CheckSuite(
-                        CheckExprStmt(CheckDictComp(Foo, Bar, CompFor(CheckTupleExpr(Foo, Bar), Baz))),
-                        CheckExprStmt(CheckDictComp(Foo, Bar, CompFor(CheckTupleExpr(Foo, Bar), Baz), CompIf(Quox))),
-                        CheckExprStmt(CheckDictComp(Foo, Bar, CompFor(CheckTupleExpr(Foo, Bar), Baz), CompFor(Quox, Exception)))
+                        CheckExprStmt(CheckDictComp(Fob, Oar, CompFor(CheckTupleExpr(Fob, Oar), Baz))),
+                        CheckExprStmt(CheckDictComp(Fob, Oar, CompFor(CheckTupleExpr(Fob, Oar), Baz), CompIf(Quox))),
+                        CheckExprStmt(CheckDictComp(Fob, Oar, CompFor(CheckTupleExpr(Fob, Oar), Baz), CompFor(Quox, Exception)))
                     )
                 );
             }
@@ -1643,9 +1643,9 @@ namespace AnalysisTests {
                 CheckAst(
                     ParseFile("SetComp.py", ErrorSink.Null, version),
                     CheckSuite(
-                        CheckExprStmt(CheckSetComp(Foo, CompFor(Foo, Baz))),
-                        CheckExprStmt(CheckSetComp(Foo, CompFor(Foo, Baz), CompIf(Quox))),
-                        CheckExprStmt(CheckSetComp(Foo, CompFor(Foo, Baz), CompFor(Quox, Exception)))
+                        CheckExprStmt(CheckSetComp(Fob, CompFor(Fob, Baz))),
+                        CheckExprStmt(CheckSetComp(Fob, CompFor(Fob, Baz), CompIf(Quox))),
+                        CheckExprStmt(CheckSetComp(Fob, CompFor(Fob, Baz), CompFor(Quox, Exception)))
                     )
                 );
             }
@@ -1702,13 +1702,13 @@ namespace AnalysisTests {
                     CheckSuite(
                         CheckFromImport("sys", new[] { "winver" }),
                         CheckFromImport("sys", new[] { "winver" }, new[] { "baz" }),
-                        CheckFromImport("sys.foo", new[] { "winver" }),
-                        CheckFromImport("sys.foo", new[] { "winver" }, new[] { "baz" }),
-                        CheckFromImport("...foo", new[] { "bar" }),
-                        CheckFromImport("....foo", new[] { "bar" }),
-                        CheckFromImport("......foo", new[] { "bar" }),
-                        CheckFromImport(".......foo", new[] { "bar" }),
-                        CheckFromImport("foo", new[] { "foo", "baz" }, new string[] { "bar", "quox"})
+                        CheckFromImport("sys.fob", new[] { "winver" }),
+                        CheckFromImport("sys.fob", new[] { "winver" }, new[] { "baz" }),
+                        CheckFromImport("...fob", new[] { "oar" }),
+                        CheckFromImport("....fob", new[] { "oar" }),
+                        CheckFromImport("......fob", new[] { "oar" }),
+                        CheckFromImport(".......fob", new[] { "oar" }),
+                        CheckFromImport("fob", new[] { "fob", "baz" }, new string[] { "oar", "quox"})
                     )
                 );
             }
@@ -1743,7 +1743,7 @@ namespace AnalysisTests {
                 CheckAst(
                     ParseFile("FromImportStmtIllegal.py", ErrorSink.Null, version),
                     CheckSuite(
-                        CheckFromImport("", new[] { "foo" })
+                        CheckFromImport("", new[] { "fob" })
                     )
                 );
 
@@ -1786,10 +1786,10 @@ namespace AnalysisTests {
                 CheckAst(
                     ParseFile("DecoratorsFuncDef.py", ErrorSink.Null, version),
                     CheckSuite(
-                        CheckFuncDef("f", NoParameters, CheckSuite(Pass), new[] { Foo }),
-                        CheckFuncDef("f", NoParameters, CheckSuite(Pass), new[] { CheckMemberExpr(Foo, "bar") }),
-                        CheckFuncDef("f", NoParameters, CheckSuite(Pass), new[] { CheckCallExpression(Foo, PositionalArg(Bar)) }),
-                        CheckFuncDef("f", NoParameters, CheckSuite(Pass), new[] { Foo, Bar })
+                        CheckFuncDef("f", NoParameters, CheckSuite(Pass), new[] { Fob }),
+                        CheckFuncDef("f", NoParameters, CheckSuite(Pass), new[] { CheckMemberExpr(Fob, "oar") }),
+                        CheckFuncDef("f", NoParameters, CheckSuite(Pass), new[] { CheckCallExpression(Fob, PositionalArg(Oar)) }),
+                        CheckFuncDef("f", NoParameters, CheckSuite(Pass), new[] { Fob, Oar })
                     )
                 );
             }
@@ -1801,10 +1801,10 @@ namespace AnalysisTests {
                 CheckAst(
                     ParseFile("DecoratorsClassDef.py", ErrorSink.Null, version),
                     CheckSuite(
-                        CheckClassDef("C", CheckSuite(Pass), decorators: new[] { Foo }),
-                        CheckClassDef("C", CheckSuite(Pass), decorators: new[] { CheckMemberExpr(Foo, "bar") }),
-                        CheckClassDef("C", CheckSuite(Pass), decorators: new[] { CheckCallExpression(Foo, PositionalArg(Bar)) }),
-                        CheckClassDef("C", CheckSuite(Pass), decorators: new[] { Foo, Bar })
+                        CheckClassDef("C", CheckSuite(Pass), decorators: new[] { Fob }),
+                        CheckClassDef("C", CheckSuite(Pass), decorators: new[] { CheckMemberExpr(Fob, "oar") }),
+                        CheckClassDef("C", CheckSuite(Pass), decorators: new[] { CheckCallExpression(Fob, PositionalArg(Oar)) }),
+                        CheckClassDef("C", CheckSuite(Pass), decorators: new[] { Fob, Oar })
                     )
                 );
             }
@@ -1827,7 +1827,7 @@ namespace AnalysisTests {
                     ParseFile("DecoratorsIllegal.py", ErrorSink.Null, version),
                     CheckSuite(
                         CheckErrorStmt(),
-                        CheckAssignment(Foo, One)
+                        CheckAssignment(Fob, One)
                     )
                 );
             }
@@ -1835,7 +1835,7 @@ namespace AnalysisTests {
             foreach (var version in AllVersions) {
                 ParseErrors("DecoratorsIllegal.py",
                     version,
-                    new ErrorInfo("unexpected token 'foo'", 6, 2, 1, 9, 2, 4)
+                    new ErrorInfo("unexpected token 'fob'", 6, 2, 1, 9, 2, 4)
                 );
             }
         }
@@ -1846,14 +1846,14 @@ namespace AnalysisTests {
                 CheckAst(
                     ParseFile("Calls.py", ErrorSink.Null, version),
                     CheckSuite(
-                        CheckCallStmt(Foo),
-                        CheckCallStmt(Foo, PositionalArg(One)),
-                        CheckCallStmt(Foo, NamedArg("bar", One)),
-                        CheckCallStmt(Foo, ListArg(Bar)),
-                        CheckCallStmt(Foo, DictArg(Bar)),
-                        CheckCallStmt(Foo, ListArg(Bar), DictArg(Baz)),
-                        CheckCallStmt(Foo, NamedArg("bar", One), NamedArg("baz", Two)),
-                        CheckCallStmt(Foo, PositionalArg(Bar), PositionalArg(Baz))
+                        CheckCallStmt(Fob),
+                        CheckCallStmt(Fob, PositionalArg(One)),
+                        CheckCallStmt(Fob, NamedArg("oar", One)),
+                        CheckCallStmt(Fob, ListArg(Oar)),
+                        CheckCallStmt(Fob, DictArg(Oar)),
+                        CheckCallStmt(Fob, ListArg(Oar), DictArg(Baz)),
+                        CheckCallStmt(Fob, NamedArg("oar", One), NamedArg("baz", Two)),
+                        CheckCallStmt(Fob, PositionalArg(Oar), PositionalArg(Baz))
                     )
                 );
             }
@@ -1865,8 +1865,8 @@ namespace AnalysisTests {
                 CheckAst(
                     ParseFile("CallsIllegal.py", ErrorSink.Null, version),
                     CheckSuite(
-                        CheckCallStmt(Foo, NamedArg("bar", One), NamedArg("bar", Two)),
-                        CheckCallStmt(Foo, NamedArg(null, Two))
+                        CheckCallStmt(Fob, NamedArg("oar", One), NamedArg("oar", Two)),
+                        CheckCallStmt(Fob, NamedArg(null, Two))
                     )
                 );
             }
@@ -2030,7 +2030,7 @@ namespace AnalysisTests {
                     CheckSuite(
                         CheckClassDef("C", CheckSuite(Pass), new[] { CheckNamedArg("metaclass", One) }),
                         CheckClassDef("C", CheckSuite(Pass), new[] { CheckArg("object"), CheckNamedArg("metaclass", One) }),
-                        CheckClassDef("C", CheckSuite(Pass), new[] { CheckArg("list"), CheckArg("object"), CheckNamedArg("foo", One) })
+                        CheckClassDef("C", CheckSuite(Pass), new[] { CheckArg("list"), CheckArg("object"), CheckNamedArg("fob", One) })
                     )
                 );
             }
@@ -2062,16 +2062,16 @@ namespace AnalysisTests {
                 CheckAst(
                     ParseFile("AssignStmt.py", ErrorSink.Null, version),
                     CheckSuite(
-                        CheckAssignment(CheckIndexExpression(Foo, One), Two),
-                        CheckAssignment(CheckMemberExpr(Foo, "bar"), One),
-                        CheckAssignment(Foo, One),
-                        CheckAssignment(CheckParenExpr(Foo), One),
-                        CheckAssignment(CheckTupleExpr(Foo, Bar), CheckTupleExpr(One, Two)),
-                        CheckAssignment(CheckTupleExpr(Foo, Bar), CheckTupleExpr(One, Two)),
-                        CheckAssignment(CheckTupleExpr(Foo, Bar), Baz),
-                        CheckAssignment(CheckListExpr(Foo, Bar), CheckTupleExpr(One, Two)),
-                        CheckAssignment(CheckListExpr(Foo, Bar), Baz),
-                        CheckAssignment(new [] { Foo, Bar }, Baz)
+                        CheckAssignment(CheckIndexExpression(Fob, One), Two),
+                        CheckAssignment(CheckMemberExpr(Fob, "oar"), One),
+                        CheckAssignment(Fob, One),
+                        CheckAssignment(CheckParenExpr(Fob), One),
+                        CheckAssignment(CheckTupleExpr(Fob, Oar), CheckTupleExpr(One, Two)),
+                        CheckAssignment(CheckTupleExpr(Fob, Oar), CheckTupleExpr(One, Two)),
+                        CheckAssignment(CheckTupleExpr(Fob, Oar), Baz),
+                        CheckAssignment(CheckListExpr(Fob, Oar), CheckTupleExpr(One, Two)),
+                        CheckAssignment(CheckListExpr(Fob, Oar), Baz),
+                        CheckAssignment(new [] { Fob, Oar }, Baz)
                     )   
                 );
             }
@@ -2083,7 +2083,7 @@ namespace AnalysisTests {
                 CheckAst(
                     ParseFile("AssignStmt2x.py", ErrorSink.Null, version),
                     CheckSuite(
-                        CheckAssignment(Foo, CheckUnaryExpression(PythonOperator.Negate, CheckBinaryExpression(CheckConstant((BigInteger)2), PythonOperator.Power, CheckConstant(31))))
+                        CheckAssignment(Fob, CheckUnaryExpression(PythonOperator.Negate, CheckBinaryExpression(CheckConstant((BigInteger)2), PythonOperator.Power, CheckConstant(31))))
                     )
                 );
                 ParseErrors("AssignStmt2x.py", version);
@@ -2100,8 +2100,8 @@ namespace AnalysisTests {
                             "f",
                             NoParameters,
                             CheckSuite(
-                                CheckAssignment(Foo, CheckYieldExpr(One)),
-                                CheckAssignment(Foo, PythonOperator.Add, CheckYieldExpr(One))
+                                CheckAssignment(Fob, CheckYieldExpr(One)),
+                                CheckAssignment(Fob, PythonOperator.Add, CheckYieldExpr(One))
                             )
                         )
                     )
@@ -2122,10 +2122,10 @@ namespace AnalysisTests {
                 CheckAst(
                     ParseFile("AssignStmtV3.py", ErrorSink.Null, version),
                     CheckSuite(
-                        CheckAssignment( CheckTupleExpr(CheckStarExpr(Foo), Bar, Baz), CheckTupleExpr(One, Two, Three, Four)),
-                        CheckAssignment( CheckTupleExpr(Foo, CheckStarExpr(Bar), Baz), CheckTupleExpr(One, Two, Three, Four) ),
-                        CheckAssignment( CheckListExpr(Foo, CheckStarExpr(Bar), Baz), CheckTupleExpr(One, Two, Three, Four) ),
-                        CheckAssignment( CheckListExpr(CheckStarExpr(Foo), Bar, Baz), CheckTupleExpr(One, Two, Three, Four) )
+                        CheckAssignment( CheckTupleExpr(CheckStarExpr(Fob), Oar, Baz), CheckTupleExpr(One, Two, Three, Four)),
+                        CheckAssignment( CheckTupleExpr(Fob, CheckStarExpr(Oar), Baz), CheckTupleExpr(One, Two, Three, Four) ),
+                        CheckAssignment( CheckListExpr(Fob, CheckStarExpr(Oar), Baz), CheckTupleExpr(One, Two, Three, Four) ),
+                        CheckAssignment( CheckListExpr(CheckStarExpr(Fob), Oar, Baz), CheckTupleExpr(One, Two, Three, Four) )
                     )
                 );                
             }
@@ -2146,7 +2146,7 @@ namespace AnalysisTests {
                 CheckAst(
                     ParseFile("AssignStmtIllegalV3.py", ErrorSink.Null, version),
                     CheckSuite(
-                        CheckAssignment(CheckTupleExpr(Foo, CheckStarExpr(Bar), CheckStarExpr(Baz)), CheckTupleExpr(One, Two, Three, Four))
+                        CheckAssignment(CheckTupleExpr(Fob, CheckStarExpr(Oar), CheckStarExpr(Baz)), CheckTupleExpr(One, Two, Three, Four))
                     )
                 );
             }
@@ -2165,15 +2165,15 @@ namespace AnalysisTests {
                 CheckAst(
                     ParseFile("AssignStmtIllegal.py", ErrorSink.Null, version),
                     CheckSuite(
-                        CheckAssignment(CheckBinaryExpression(Foo, PythonOperator.Add, Bar), One),
-                        CheckAssignment(CheckCallExpression(Foo), One),
+                        CheckAssignment(CheckBinaryExpression(Fob, PythonOperator.Add, Oar), One),
+                        CheckAssignment(CheckCallExpression(Fob), One),
                         CheckAssignment(None, One),
                         CheckAssignment(Two, One),
-                        CheckAssignment(CheckGeneratorComp(Foo, CompFor(Foo, Bar)), One),
-                        CheckAssignment(CheckTupleExpr(Foo, Bar), PythonOperator.Add, One),
+                        CheckAssignment(CheckGeneratorComp(Fob, CompFor(Fob, Oar)), One),
+                        CheckAssignment(CheckTupleExpr(Fob, Oar), PythonOperator.Add, One),
                         CheckFuncDef("f", NoParameters, 
                             CheckSuite(    
-                                CheckAssignment(CheckYieldExpr(Foo), One)
+                                CheckAssignment(CheckYieldExpr(Fob), One)
                             )
                         )
                     )
@@ -2199,22 +2199,22 @@ namespace AnalysisTests {
                 CheckAst(
                     ParseFile("ExecStmt.py", ErrorSink.Null, version),
                     CheckSuite(
-                        CheckExecStmt(Foo),
-                        CheckExecStmt(Foo, Bar),
-                        CheckExecStmt(Foo, Bar, Baz)
+                        CheckExecStmt(Fob),
+                        CheckExecStmt(Fob, Oar),
+                        CheckExecStmt(Fob, Oar, Baz)
                     )
                 );
             }
 
             foreach (var version in V3Versions) {
                 ParseErrors("ExecStmt.py", version,
-                    new ErrorInfo("unexpected token 'foo'", 5, 1, 6, 8, 1, 9),
-                    new ErrorInfo("unexpected token 'foo'", 15, 2, 6, 18, 2, 9),
+                    new ErrorInfo("unexpected token 'fob'", 5, 1, 6, 8, 1, 9),
+                    new ErrorInfo("unexpected token 'fob'", 15, 2, 6, 18, 2, 9),
                     new ErrorInfo("unexpected token 'in'", 19, 2, 10, 21, 2, 12),
-                    new ErrorInfo("unexpected token 'bar'", 22, 2, 13, 25, 2, 16),
-                    new ErrorInfo("unexpected token 'foo'", 32, 3, 6, 35, 3, 9),
+                    new ErrorInfo("unexpected token 'oar'", 22, 2, 13, 25, 2, 16),
+                    new ErrorInfo("unexpected token 'fob'", 32, 3, 6, 35, 3, 9),
                     new ErrorInfo("unexpected token 'in'", 36, 3, 10, 38, 3, 12),
-                    new ErrorInfo("unexpected token 'bar'", 39, 3, 13, 42, 3, 16),
+                    new ErrorInfo("unexpected token 'oar'", 39, 3, 13, 42, 3, 16),
                     new ErrorInfo("unexpected token ','", 42, 3, 16, 43, 3, 17),
                     new ErrorInfo("unexpected token 'baz'", 44, 3, 18, 47, 3, 21)
                 );
@@ -2228,7 +2228,7 @@ namespace AnalysisTests {
                 CheckAst(
                     ParseFile("Ellipsis.py", ErrorSink.Null, version),
                     CheckSuite(
-                        CheckCallStmt(Foo, PositionalArg(Ellipsis)),
+                        CheckCallStmt(Fob, PositionalArg(Ellipsis)),
                         CheckBinaryStmt(One, PythonOperator.Add, Ellipsis)
                     )
                 );
@@ -2416,9 +2416,9 @@ namespace AnalysisTests {
         private static Action<Expression> Three = CheckConstant(3);
         private static Action<Expression> Four = CheckConstant(4);
         private static Action<Expression> None = CheckConstant(null);
-        private static Action<Expression> Foo = CheckNameExpr("foo");
+        private static Action<Expression> Fob = CheckNameExpr("fob");
         private static Action<Expression> Ellipsis = CheckConstant(Microsoft.PythonTools.Parsing.Ellipsis.Value);
-        private static Action<Expression> Bar = CheckNameExpr("bar");
+        private static Action<Expression> Oar = CheckNameExpr("oar");
         private static Action<Expression> Baz = CheckNameExpr("baz");
         private static Action<Expression> Quox = CheckNameExpr("quox");
         private static Action<Expression> Exception = CheckNameExpr("Exception");

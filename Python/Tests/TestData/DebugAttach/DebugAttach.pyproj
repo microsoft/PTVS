@@ -28,7 +28,6 @@
   <ItemGroup>
     <Compile Include="fg.py" />
     <Compile Include="LotsOfThreads.py" />
-    <Compile Include="c1c2.py" />
     <Compile Include="ThreadJoin.py" />
     <Compile Include="Simple.py" />
     <Compile Include="Program.py" />

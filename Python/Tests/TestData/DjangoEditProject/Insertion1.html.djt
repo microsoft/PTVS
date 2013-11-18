@@ -5,6 +5,6 @@
 <script>
 </script>
 
-{{ faoo }aaa {{ foo }}
+{{ faoo }aaa {{ fob }}
 </body>
 </html>

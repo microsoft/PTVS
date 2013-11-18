@@ -65,11 +65,11 @@ namespace DebuggerTests {
                 // 3.x: http://pytools.codeplex.com/workitem/76
                 ChildTest(EnumChildrenTestName, lastLine, "cinst", new ChildInfo("abc", "42", "0x2a"), new ChildInfo("uc", "u\'привет мир\'"));
             }
-            ChildTest(EnumChildrenTestName, lastLine, "c2inst", new ChildInfo("abc", "42", "0x2a"), new ChildInfo("bar", "100", "0x64"), new ChildInfo("self", "myrepr", "myhex"));
+            ChildTest(EnumChildrenTestName, lastLine, "c2inst", new ChildInfo("abc", "42", "0x2a"), new ChildInfo("oar", "100", "0x64"), new ChildInfo("self", "myrepr", "myhex"));
             ChildTest(EnumChildrenTestName, lastLine, "c3inst", new ChildInfo("_contents", "[1, 2]"), new ChildInfo("abc", "42", "0x2a"), new ChildInfo("[0]", "1"), new ChildInfo("[1]", "2"));
             ChildTest(EnumChildrenTestName, lastLine, "l", AppendCountAndItem(new ChildInfo("[0]", "1"), new ChildInfo("[1]", "2")));
             ChildTest(EnumChildrenTestName, lastLine, "d1", AppendCountItemKeysAndValues(new ChildInfo("[42]", "100", "0x64")));
-            ChildTest(EnumChildrenTestName, lastLine, "d2", AppendCountItemKeysAndValues(new ChildInfo("['abc']", "'foo'")));
+            ChildTest(EnumChildrenTestName, lastLine, "d2", AppendCountItemKeysAndValues(new ChildInfo("['abc']", "'fob'")));
             ChildTest(EnumChildrenTestName, lastLine, "i", null);
             ChildTest(EnumChildrenTestName, lastLine, "u1", null);
         }
@@ -117,10 +117,10 @@ namespace DebuggerTests {
                 // 3.x: http://pytools.codeplex.com/workitem/76
                 ChildTest("PrevFrame" + EnumChildrenTestName, breakLine, "cinst", 1, new ChildInfo("abc", "42", "0x2a"), new ChildInfo("uc", "u\'привет мир\'"));
             }
-            ChildTest("PrevFrame" + EnumChildrenTestName, breakLine, "c2inst", 1, new ChildInfo("abc", "42", "0x2a"), new ChildInfo("bar", "100", "0x64"), new ChildInfo("self", "myrepr", "myhex"));
+            ChildTest("PrevFrame" + EnumChildrenTestName, breakLine, "c2inst", 1, new ChildInfo("abc", "42", "0x2a"), new ChildInfo("oar", "100", "0x64"), new ChildInfo("self", "myrepr", "myhex"));
             ChildTest("PrevFrame" + EnumChildrenTestName, breakLine, "l", 1, AppendCountAndItem(new ChildInfo("[0]", "1"), new ChildInfo("[1]", "2")));
             ChildTest("PrevFrame" + EnumChildrenTestName, breakLine, "d1", 1, AppendCountItemKeysAndValues(new ChildInfo("[42]", "100", "0x64")));
-            ChildTest("PrevFrame" + EnumChildrenTestName, breakLine, "d2", 1, AppendCountItemKeysAndValues(new ChildInfo("['abc']", "'foo'")));
+            ChildTest("PrevFrame" + EnumChildrenTestName, breakLine, "d2", 1, AppendCountItemKeysAndValues(new ChildInfo("['abc']", "'fob'")));
             ChildTest("PrevFrame" + EnumChildrenTestName, breakLine, "i", 1, null);
             ChildTest("PrevFrame" + EnumChildrenTestName, breakLine, "u1", 1, null);
         }
@@ -175,6 +175,7 @@ namespace DebuggerTests {
 
                 AutoResetEvent evalComplete = new AutoResetEvent(false);
                 PythonEvaluationResult evalRes = null;
+                Console.WriteLine("Executing {0}", text);
                 frames[frame].ExecuteText(text, (completion) => {
                     evalRes = completion;
                     evalComplete.Set();
@@ -194,9 +195,11 @@ namespace DebuggerTests {
                     Assert.AreEqual(children.Length, childrenReceived.Count, "received incorrect number of children");
                     for (int i = 0; i < children.Length; i++) {
                         var curChild = children[i];
+                        Console.WriteLine("Finding: <{0}> (Repr: <{1}>)", curChild.ChildText, curChild.Repr ?? "(null)");
                         bool foundChild = false;
                         for (int j = 0; j < childrenReceived.Count; j++) {
                             var curReceived = childrenReceived[j];
+                            Console.WriteLine("Candidate: <{0}> (Repr: <{1}>)", curReceived.ChildText, curReceived.StringRepr ?? "(null)");
                             if (ChildrenMatch(curChild, curReceived)) {
                                 foundChild = true;
 
@@ -211,13 +214,12 @@ namespace DebuggerTests {
                                 break;
                             }
                         }
-                        Assert.IsTrue(foundChild, "failed to find " + children[i].ChildText + " found " + String.Join(", ", childrenReceived.Select(x => x.Expression)));
+                        Assert.IsTrue(foundChild, "failed to find " + children[i].ChildText + " found " + String.Join(", ", childrenReceived.Select(x => x.ChildText)));
                     }
                     Assert.AreEqual(0, childrenReceived.Count, "there's still some children left over which we didn't find");
                 }
-
-                process.Continue();
             } finally {
+                process.Continue();
                 WaitForExit(process);
             }
         }
@@ -784,9 +786,9 @@ namespace DebuggerTests {
                     new ExpectedStep(StepKind.Over, 1),     // step over def add_two_numbers(x, y):
                     new ExpectedStep(StepKind.Over, 4),     // step over class Z(object):
                     new ExpectedStep(StepKind.Over, 9),     // step over p = Z()
-                    new ExpectedStep(StepKind.Into, 10),     // step into print add_two_numbers(p.foo, 3)
+                    new ExpectedStep(StepKind.Into, 10),     // step into print add_two_numbers(p.fob, 3)
                     new ExpectedStep(StepKind.Out, 7),     // step out return 7
-                    new ExpectedStep(StepKind.Into, 10),     // step into add_two_numbers(p.foo, 3)
+                    new ExpectedStep(StepKind.Into, 10),     // step into add_two_numbers(p.fob, 3)
                     new ExpectedStep(StepKind.Resume, 2)     // wait for exit after return x + y
                 );
 
@@ -1547,8 +1549,8 @@ namespace DebuggerTests {
             };
             process.ProcessExited += (sender, args) => {
                 exitCode = args.ExitCode;
-                hasExited.Set();
                 processExited = true;
+                hasExited.Set();
             };
             process.ExceptionRaised += (sender, args) => {
                 process.Resume();
@@ -1562,6 +1564,10 @@ namespace DebuggerTests {
             };
 
             StartAndWaitForExit(process);
+            // Only wait a little while - the process should have already exited
+            // by the time we get here, but we may not have received the event
+            // yet.
+            Assert.IsTrue(hasExited.WaitOne(1000), "ProcessExited event was not raised");
 
             Console.WriteLine("Output from process:");
             Console.Write(output.ToString());
@@ -2408,14 +2414,14 @@ int main(int argc, char* argv[]) {
             //  As a last resort lets check some known locations
 
             string[] wellKnownLocations = new[] {
-                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Microsoft SDKs", "Windows", "!<version>!"),
-                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "Microsoft SDKs", "Windows", "!<version>!")
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Microsoft SDKs", "Windows", "$version$"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "Microsoft SDKs", "Windows", "$version$")
             };
 
             if (regValue == null) {
                 foreach (var sdkVersion in sdkVersions) {
                     foreach (var wellKnownLocation in wellKnownLocations) {
-                        string path = wellKnownLocation.Replace("!<version>!", sdkVersion);
+                        string path = wellKnownLocation.Replace("$version$", sdkVersion);
                         if (Directory.Exists(path + "\\Include"))
                             return path;
                     }
@@ -2445,7 +2451,7 @@ int main(int argc, char* argv[]) {
                     processObj.DebuggerOutput += (sender, args) => {
                         Assert.IsFalse(gotOutput, "got output more than once");
                         gotOutput = true;
-                        Assert.AreEqual("foo", args.Output);
+                        Assert.AreEqual("fob", args.Output);
                     };
                 }, debugOptions: PythonDebugOptions.RedirectOutput);
 
@@ -2463,7 +2469,7 @@ int main(int argc, char* argv[]) {
             // ensures that calls to `input` continue to work.
 
             var debugger = new PythonDebugger();
-            var expectedOutput = "Provide A: foo\n";
+            var expectedOutput = "Provide A: fob\n";
             string actualOutput = string.Empty;
 
             var process = DebugProcess(debugger, DebuggerTestPath + @"InputFunction.py", (processObj, threadObj) => {
@@ -2475,7 +2481,7 @@ int main(int argc, char* argv[]) {
             try {
                 process.Start();
                 Thread.Sleep(1000);
-                process.SendStringToStdInput("foo\n");
+                process.SendStringToStdInput("fob\n");
             } finally {
                 WaitForExit(process);
             }

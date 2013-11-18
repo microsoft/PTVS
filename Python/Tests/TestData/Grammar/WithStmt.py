@@ -1,7 +1,7 @@
-﻿with foo: pass
+﻿with fob: pass
 
-with foo as bar: pass
+with fob as oar: pass
 
-with foo, bar: pass
+with fob, oar: pass
 
-with foo as bar, baz as quox: pass
+with fob as oar, baz as quox: pass

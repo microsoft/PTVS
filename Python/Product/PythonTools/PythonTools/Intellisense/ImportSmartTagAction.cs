@@ -32,7 +32,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly ITextView _view;
 
         /// <summary>
-        /// Creates a new smart tag action for an "import foo" smart tag.
+        /// Creates a new smart tag action for an "import fob" smart tag.
         /// </summary>
         public ImportSmartTagAction(string name, ITextBuffer buffer, ITextView view)
             : base(RefactoringIconKind.AddUsing) {
@@ -42,7 +42,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         /// <summary>
-        /// Creates a new smart tag action for a "from foo import bar" smart tag.
+        /// Creates a new smart tag action for a "from fob import oar" smart tag.
         /// </summary>
         public ImportSmartTagAction(string fromName, string name, ITextBuffer buffer, ITextView view)
             : base(RefactoringIconKind.AddUsing) {

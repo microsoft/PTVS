@@ -35,7 +35,7 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void DocString() {
-            string expectedText = @"'''foo'''
+            string expectedText = @"'''fob'''
 import itertools
 
 itertools";
@@ -49,7 +49,7 @@ itertools";
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void UnicodeDocString() {
-            string expectedText = @"u'''foo'''
+            string expectedText = @"u'''fob'''
 import itertools
 
 itertools";
@@ -63,7 +63,7 @@ itertools";
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void DocStringFuture() {
-            string expectedText = @"'''foo'''
+            string expectedText = @"'''fob'''
 from __future__ import with_statement
 import itertools
 
@@ -134,12 +134,12 @@ module_func()";
 
         /// <summary>
         /// Add a from ... import for a function in another module when a from import already exists for the same module and
-        /// the existing import is an "from ... import bar as baz" import.
+        /// the existing import is an "from ... import oar as baz" import.
         /// </summary>
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ImportFunctionFromExistingFromImportAsName() {
-            string expectedText = @"from test_module import module_func_2 as bar, module_func
+            string expectedText = @"from test_module import module_func_2 as oar, module_func
 module_func()";
 
             AddSmartTagTest("ImportFunctionFromExistingFromImportAsName.py", 2, 1, new[] { "from test_module import module_func" }, 0, expectedText);
@@ -165,7 +165,7 @@ module_func()";
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ImportFunctionFromExistingFromImportParensAsName() {
-            string expectedText = @"from test_module import (module_func_2 as bar, module_func)
+            string expectedText = @"from test_module import (module_func_2 as oar, module_func)
 module_func()";
 
             AddSmartTagTest("ImportFunctionFromExistingFromImportParensAsName.py", 2, 1, new[] { "from test_module import module_func" }, 0, expectedText);
@@ -179,7 +179,7 @@ module_func()";
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ImportFunctionFromExistingFromImportParensAsNameTrailingComma() {
-            string expectedText = @"from test_module import (module_func_2 as bar, module_func)
+            string expectedText = @"from test_module import (module_func_2 as oar, module_func)
 module_func()";
 
             AddSmartTagTest("ImportFunctionFromExistingFromImportParensAsNameTrailingComma.py", 2, 1, new[] { "from test_module import module_func" }, 0, expectedText);

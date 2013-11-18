@@ -238,6 +238,16 @@ namespace Microsoft.PythonTools.DkmDebugger {
             }
         }
 
+        private class StepBeginState : DkmDataItem {
+            public ulong FrameBase { get; set; }
+        }
+
+        public void BeforeEnableNewStepper(DkmRuntimeInstance runtimeInstance, DkmStepper stepper) {
+            ulong retAddr, frameBase, vframe;
+            stepper.Thread.GetCurrentFrameInfo(out retAddr, out frameBase, out vframe);
+            stepper.SetDataItem(DkmDataCreationDisposition.CreateAlways, new StepBeginState { FrameBase = frameBase });
+        }
+
         public void Step(DkmStepper stepper, DkmStepArbitrationReason reason) {
             var thread = stepper.Thread;
             var process = thread.Process;
@@ -249,15 +259,17 @@ namespace Microsoft.PythonTools.DkmDebugger {
                 _stepper = null;
             }
 
-            ulong retAddr, frameBase, vframe;
-            thread.GetCurrentFrameInfo(out retAddr, out frameBase, out vframe);
-
             // Check if this was a step out (or step over/in that fell through) from native to Python.
             // If so, we consider the step done, since we can report the correct callstack at this point.
             if (reason == DkmStepArbitrationReason.TransitionModule) {
-                if (frameBase >= stepper.FrameBase) {
-                    stepper.OnStepComplete(thread, false);
-                    return;
+                var beginState = stepper.GetDataItem<StepBeginState>();
+                if (beginState != null) {
+                    ulong retAddr, frameBase, vframe;
+                    thread.GetCurrentFrameInfo(out retAddr, out frameBase, out vframe);
+                    if (frameBase >= beginState.FrameBase) {
+                        stepper.OnStepComplete(thread, false);
+                        return;
+                    }
                 }
             }
 
@@ -301,10 +313,13 @@ namespace Microsoft.PythonTools.DkmDebugger {
             } else {
                 // Just because we hit the return breakpoint doesn't mean that we've actually returned - it could be 
                 // a recursive call. Check stack depth to distinguish this from an actual return.
-                ulong retAddr, frameBase, vframe;
-                thread.GetCurrentFrameInfo(out retAddr, out frameBase, out vframe);
-                if (frameBase > _stepper.FrameBase) {
-                    OnStepComplete(thread);
+                var beginState = _stepper.GetDataItem<StepBeginState>();
+                if (beginState != null) {
+                    ulong retAddr, frameBase, vframe;
+                    thread.GetCurrentFrameInfo(out retAddr, out frameBase, out vframe);
+                    if (frameBase > beginState.FrameBase) {
+                        OnStepComplete(thread);
+                    }
                 }
             }
         }

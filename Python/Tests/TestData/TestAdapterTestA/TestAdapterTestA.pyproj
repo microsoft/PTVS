@@ -24,7 +24,7 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="BarTest.py" />
+    <Compile Include="OarTest.py" />
     <Compile Include="..\TestAdapterTestB\LinkedTest.py">
       <Link>LinkedTest.py</Link>
     </Compile>

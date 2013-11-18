@@ -27,11 +27,11 @@ namespace Microsoft.PythonTools.Project {
     /// Base class for Search Path nodes. 
     /// </summary>
     internal abstract class BaseSearchPathNode : CommonFolderNode {
-        protected CommonProjectNode _project;
+        protected PythonProjectNode _project;
         private string _caption;
         private readonly string _path;
 
-        public BaseSearchPathNode(CommonProjectNode project, string path, ProjectElement element)
+        public BaseSearchPathNode(PythonProjectNode project, string path, ProjectElement element)
             : base(project, element) {
             _project = project;
             _path = CommonUtils.TrimEndSeparator(path);
@@ -64,11 +64,13 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public override object GetIconHandle(bool open) {
-            return this.ProjectMgr.ImageHandler.GetIconHandle(CommonProjectNode.ImageOffset +
+            return _project.GetIconHandleByName(
 #if DEV11_OR_LATER
-                (int)CommonImageName.SearchPath
+                PythonProjectImageName.SearchPath
 #else
-                (Directory.Exists(Url) || File.Exists(Url) ? (int)CommonImageName.SearchPath : (int)CommonImageName.MissingSearchPath)
+                (Directory.Exists(Url) || File.Exists(Url)) ? 
+                    PythonProjectImageName.SearchPath : 
+                    PythonProjectImageName.MissingSearchPath
 #endif
             );
         }
@@ -76,7 +78,9 @@ namespace Microsoft.PythonTools.Project {
 #if DEV11_OR_LATER
         protected override VSOVERLAYICON OverlayIconIndex {
             get {
-                return Directory.Exists(Url) || File.Exists(Url) ? base.OverlayIconIndex : (VSOVERLAYICON)__VSOVERLAYICON2.OVERLAYICON_NOTONDISK;
+                return Directory.Exists(Url) || File.Exists(Url) ?
+                    base.OverlayIconIndex :
+                    (VSOVERLAYICON)__VSOVERLAYICON2.OVERLAYICON_NOTONDISK;
             }
         }
 #endif

@@ -47,7 +47,7 @@ namespace PythonToolsTests {
 
         [TestMethod, Priority(0)]
         public void GetApplicableSpanTest() {
-            var text = "if foo.bar(eggs, spam<=ham) :";
+            var text = "if fob.oar(eggs, spam<=ham) :";
             var buffer = new MockTextBuffer(text);
             var analyzer = AnalyzeTextBuffer(buffer);
             var snapshot = (MockTextSnapshot)buffer.CurrentSnapshot;
@@ -55,8 +55,8 @@ namespace PythonToolsTests {
             // We check the applicable span at every index in the string.
             var expected = new[] {
                 "if", "if", "if",
-                "foo", "foo", "foo", "foo",
-                "bar", "bar", "bar", "bar",
+                "fob", "fob", "fob", "fob",
+                "oar", "oar", "oar", "oar",
                 "eggs", "eggs", "eggs", "eggs", "eggs",
                 "", // between ',' and ' '
                 "spam", "spam", "spam", "spam", "spam",
@@ -152,9 +152,9 @@ namespace PythonToolsTests {
             AssertUtil.Contains(completionList, "return");
 
 
-            code = @"x = (abc, bar, )";
+            code = @"x = (abc, oar, )";
 
-            completionList = GetCompletionSetCtrlSpace(code.IndexOf("bar,") + 5, code).Completions.Select(x => x.DisplayText).ToArray();
+            completionList = GetCompletionSetCtrlSpace(code.IndexOf("oar,") + 5, code).Completions.Select(x => x.DisplayText).ToArray();
 
             AssertUtil.Contains(completionList, "and");
             AssertUtil.DoesntContain(completionList, "def");
@@ -516,8 +516,8 @@ except (None)"}) {
         public void Scenario_CompletionInTripleQuotedString() {
             string code = @"
 '''
-foo
-bar
+fob
+oar
 
 baz
 '''
@@ -604,7 +604,7 @@ lambda larg1, larg2: None";
             TestQuickInfo(code, code.IndexOf("x = ") + 4, code.IndexOf("x = ") + 4 + 28, "\"ABCDEFGHIJKLMNOPQRSTUVWYXZ\": str");
 
             // trailing new lines don't show up in quick info
-            TestQuickInfo(code, code.IndexOf("def f") + 4, code.IndexOf("def f") + 5, "f: def f(...)\r\nhelpful information");
+            TestQuickInfo(code, code.IndexOf("def f") + 4, code.IndexOf("def f") + 5, "f: def f()\r\nhelpful information");
 
             // keywords don't show up in quick info
             TestQuickInfo(code, code.IndexOf("while True:"), code.IndexOf("while True:") + 5);
@@ -624,59 +624,59 @@ e): <unknown type>");
         [TestMethod, Priority(0)]
         public void NormalOverrideCompletions() {
             foreach (var code in new[] {
-@"class Foo(object):
+@"class Fob(object):
     def func_a(self, a=100): pass
     def func_b(self, b, *p, **kw): pass
 
-class Baz(Foo):
+class Baz(Fob):
     def None
 ",
-@"class Foo(object):
+@"class Fob(object):
     def func_a(self, a=100): pass
 
-class Bar(Foo):
+class Oar(Fob):
     def func_b(self, b, *p, **kw): pass
 
-class Baz(Bar):
+class Baz(Oar):
     def None
 ",
-@"class Foo(object):
+@"class Fob(object):
     def func_a(self, a=100): pass
 
-class Bar(object):
+class Oar(object):
     def func_b(self, b, *p, **kw): pass
 
-class Baz(Foo, Bar):
+class Baz(Fob, Oar):
     def None
 ",
-@"class Foo(object):
+@"class Fob(object):
     def func_a(self, a=100): pass
     def func_b(self, b, *p, **kw): pass
     def func_c(self): pass
 
-class Baz(Foo):
+class Baz(Fob):
     def func_c(self): pass
     def None
 ",
-@"class Foo(object):
+@"class Fob(object):
     def func_a(self, a=100): pass
     def func_c(self): pass
 
-class Bar(Foo):
+class Oar(Fob):
     def func_b(self, b, *p, **kw): pass
 
-class Baz(Bar):
+class Baz(Oar):
     def func_c(self): pass
     def None
 ",
-@"class Foo(object):
+@"class Fob(object):
     def func_a(self, a=100): pass
 
-class Bar(object):
+class Oar(object):
     def func_b(self, b, *p, **kw): pass
     def func_c(self): pass
 
-class Baz(Foo, Bar):
+class Baz(Fob, Oar):
     def func_c(self): pass
     def None
 "}) {
@@ -692,29 +692,29 @@ class Baz(Foo, Bar):
 
         [TestMethod, Priority(0)]
         public void BuiltinOverrideCompletions() {
-            var code = @"class Foo(str):
+            var code = @"class Fob(str):
     def None
 ";
             var completionList = GetCompletionSetCtrlSpace(code.IndexOf("None"), code).Completions.Select(x => x.InsertionText).ToArray();
 
             AssertUtil.Contains(completionList, @"capitalize(self):
-        return super(Foo, self).capitalize()");
+        return super(Fob, self).capitalize()");
             AssertUtil.Contains(completionList, @"index(self, sub, start, end):
-        return super(Foo, self).index(sub, start, end)");
+        return super(Fob, self).index(sub, start, end)");
 
-            code = @"class Foo(str, list):
+            code = @"class Fob(str, list):
     def None
 ";
             completionList = GetCompletionSetCtrlSpace(code.IndexOf("None"), code).Completions.Select(x => x.InsertionText).ToArray();
             AssertUtil.Contains(completionList, @"index(self, sub, start, end):
-        return super(Foo, self).index(sub, start, end)");
+        return super(Fob, self).index(sub, start, end)");
 
-            code = @"class Foo(list, str):
+            code = @"class Fob(list, str):
     def None
 ";
             completionList = GetCompletionSetCtrlSpace(code.IndexOf("None"), code).Completions.Select(x => x.InsertionText).ToArray();
             AssertUtil.Contains(completionList, @"index(self, item, start, stop):
-        return super(Foo, self).index(item, start, stop)");
+        return super(Fob, self).index(item, start, stop)");
         }
 
         [TestMethod, Priority(0)]
@@ -773,12 +773,12 @@ def func(a):
 ";
 
             // Because there is an extra line added for the Quick Info we only
-            // want the first 29 lines of the docstring. However, for the
-            // signature documentation, we'll get an extra one.
+            // want the first 29 lines of the docstring. For signature docs,
+            // we'll cut to 15 lines.
             var expected1 = string.Join(Environment.NewLine, docString.Take(29)) + Environment.NewLine + "...";
-            var expected2 = string.Join(Environment.NewLine, docString.Take(30)) + Environment.NewLine + "...";
+            var expected2 = string.Join(Environment.NewLine, docString.Take(15)).TrimStart() + Environment.NewLine + "...";
 
-            TestQuickInfo(code, code.IndexOf("func"), code.IndexOf("func") + 4, "func: def func(...)\r\n" + expected1);
+            TestQuickInfo(code, code.IndexOf("func"), code.IndexOf("func") + 4, "func: def func(a)\r\n" + expected1);
 
             SignatureAnalysis sigs;
             SignatureTest(-1, code + "func(", "func", 0, PythonLanguageVersion.V27, true, out sigs);
@@ -794,12 +794,11 @@ def func(a):
 
 ";
 
-            // The long lines cause us to truncate sooner. Coincidentally, we
-            // come up with the same number of lines for Quick Info and the
-            // signature.
-            expected1 = expected2 = string.Join(Environment.NewLine, docString.Take(15)) + Environment.NewLine + "...";
+            // The long lines cause us to truncate sooner.
+            expected1 = string.Join(Environment.NewLine, docString.Take(15)) + Environment.NewLine + "...";
+            expected2 = string.Join(Environment.NewLine, docString.Take(8)).TrimStart() + Environment.NewLine + "...";
 
-            TestQuickInfo(code, code.IndexOf("func"), code.IndexOf("func") + 4, "func: def func(...)\r\n" + expected1);
+            TestQuickInfo(code, code.IndexOf("func"), code.IndexOf("func") + 4, "func: def func(a)\r\n" + expected1);
 
             SignatureTest(-1, code + "func(", "func", 0, PythonLanguageVersion.V27, true, out sigs);
             Assert.AreEqual(1, sigs.Signatures.Count);

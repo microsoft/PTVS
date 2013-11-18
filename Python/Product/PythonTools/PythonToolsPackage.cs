@@ -994,9 +994,10 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
         }
 
         /// <summary>
-        /// Creates a new Python REPL window which is independent from the default Python REPL windows.
+        /// Creates a new Python REPL window which is independent from the
+        /// default Python REPL windows.
         /// 
-        /// The interpreter can be configured to persist across REPL sessions or not.
+        /// This window will not persist across VS sessions.
         /// </summary>
         /// <param name="id">An ID which can be used to retrieve the window again and can survive across VS sessions.
         /// 
@@ -1011,30 +1012,48 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
             Utilities.ArgumentNotNull("id", id);
             Utilities.ArgumentNotNull("title", title);
 
-            // Full ID as parsed by PythonReplEvaulatorProvider
-
-            string fullId = String.Format("{0}|{1}|{2}|{3}|{4}|{5}",
-                PythonReplEvaluatorProvider._configurableGuid,
-                workingDir,
-                interpreter.Id,
-                interpreter.Configuration.Version,
+            // The previous format of repl ID would produce new windows for
+            // distinct working directories and/or env vars. To emulate this,
+            // we now put all of these values into the user ID part, even though
+            // they must still be manually provided after the evaluator is
+            // created.
+            var realId = string.Format(
+                "{0};{1};{2}",
                 id,
+                workingDir ?? "",
                 envVars == null ?
                     "" :
                     string.Join(";", envVars.Select(kvp => kvp.Key + "=" + kvp.Value))
             );
 
-            if (project != null) {
-                fullId += "|" + project.GetRootCanonicalName();
-            }
+            string replId = PythonReplEvaluatorProvider.GetConfigurableReplId(realId);
+
             var replProvider = ComponentModel.GetService<IReplWindowProvider>();
 
-            return replProvider.FindReplWindow(fullId) ?? replProvider.CreateReplWindow(
+            var window = replProvider.FindReplWindow(replId) ?? replProvider.CreateReplWindow(
                 ContentType,
                 title,
                 typeof(PythonLanguageInfo).GUID,
-                fullId
+                replId
             );
+
+            var pyProj = project as PythonProjectNode;
+            if (pyProj != null) {
+                pyProj.AddAssociatedReplWindow(window);
+            }
+
+            var evaluator = window.Evaluator as BasePythonReplEvaluator;
+            var options = (evaluator != null) ? evaluator.CurrentOptions as ConfigurablePythonReplOptions : null;
+            if (options == null) {
+                throw new NotSupportedException("Cannot modify options of " + window.Evaluator.GetType().FullName);
+            }
+            options.InterpreterFactory = interpreter;
+            options.Project = pyProj;
+            options._workingDir = workingDir;
+            options._envVars = new Dictionary<string, string>(envVars);
+            evaluator.Reset(quiet: true);
+
+            return window;
         }
 
         private void BrowseSurveyNewsOnIdle(object sender, ComponentManagerEventArgs e) {

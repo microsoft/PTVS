@@ -21,7 +21,7 @@ namespace Microsoft.PythonTools.Project {
     /// </summary>
     internal class CurrentWorkingDirectoryNode : BaseSearchPathNode {
 
-        public CurrentWorkingDirectoryNode(CommonProjectNode project, string path)
+        public CurrentWorkingDirectoryNode(PythonProjectNode project, string path)
             : base(project, path, new VirtualProjectElement(project)) { }
 
         public override string Caption {

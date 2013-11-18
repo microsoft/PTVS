@@ -5,6 +5,6 @@ def f(): pass
 'abc\
 def'
 
-foo = 'ONE \
+fob = 'ONE \
     ONE' + message_text + 'TWOXXXXXXXXXXXX\
 TWO'

@@ -742,8 +742,8 @@ class CacheDecoratorsTestCase(unittest.TestCase):
             self.assertEqual(c._f(1, 2, kwarg=None), 4)
             self.assertEqual(c._f(1, 2, kwarg=None), 4)
             # By equality rather than identity
-            self.assertEqual(c._f("foo", 0), 5)
-            self.assertEqual(c._f("fo" + "o", 0), 5)
+            self.assertEqual(c._f("fob", 0), 5)
+            self.assertEqual(c._f("fo" + "b", 0), 5)
 
     def test_cache_property(self):
         """Tests that @cache_property gives property-like behavior"""

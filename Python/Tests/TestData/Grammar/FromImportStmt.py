@@ -1,9 +1,9 @@
 ﻿from sys import winver
 from sys import winver as baz
-from sys.foo import winver
-from sys.foo import winver as baz
-from ...foo import bar
-from ....foo import bar
-from ......foo import bar
-from .......foo import bar
-from foo import (foo as bar, baz as quox)
+from sys.fob import winver
+from sys.fob import winver as baz
+from ...fob import oar
+from ....fob import oar
+from ......fob import oar
+from .......fob import oar
+from fob import (fob as oar, baz as quox)

@@ -1,0 +1,108 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<!--
+  Copyright (c) Microsoft Corporation.
+
+  This source code is subject to terms and conditions of the Apache License, Version 2.0. A
+  copy of the license can be found in the License.html file at the root of this distribution. If
+  you cannot locate the Apache License, Version 2.0, please send an email to
+  vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound
+  by the terms of the Apache License, Version 2.0.
+ 
+  You must not remove this notice, or any other, from this software.
+-->
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <_PythonToolsPath Condition="!Exists($(_PythonToolsPath))">$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\Software\Microsoft\PythonTools\$(VisualStudioVersion)', 'InstallDir', null, RegistryView.Registry32)</_PythonToolsPath>
+    <_PythonToolsPath Condition="!Exists($(_PythonToolsPath))">$(LocalAppData)\Microsoft\VisualStudio\$(VisualStudioVersion)\Extensions\Microsoft\Python Tools for Visual Studio\2.0</_PythonToolsPath>
+    <_PTVSSupportPath>$(MSBuildThisFileDirectory)</_PTVSSupportPath>
+  </PropertyGroup>
+
+  <!-- Creates a command object that will be displayed in the IDE.
+
+  <Target Name="Name1" Label="Display Name" Returns="@(Commands)">
+    <PythonCommand Target="filename, module name, or code"
+                   TargetType="executable/script/module/code"
+                   Arguments="..."
+                   DeferExecution="$(BuildingInsideVisualStudio)"
+                   ExecuteIn="console/output/repl[:Display name]/Repl[:Display name]">
+      <Output TaskParameter="Command"
+              ItemName="Commands" />
+    </PythonCommand>
+  </Target>
+  -->
+  <UsingTask AssemblyFile="$(_PythonToolsPath)\Microsoft.PythonTools.BuildTasks.dll"
+             TaskName="PythonCommand"
+             TaskFactory="PythonCommandFactory">
+    <Task Evaluate="true">
+      <PropertyGroup>
+        <ProjectPath>$(MSBuildProjectFullPath)</ProjectPath>
+      </PropertyGroup>
+    </Task>
+  </UsingTask>
+
+  <!-- Gets all the settings of the specified environment. If InterpreterId and
+       InterpreterVersion are omitted, uses the active environment.
+
+  <ResolveEnvironment [InterpreterId="..." InterpreterVersion="..."]>
+    <Output TaskParameter="PrefixPath" PropertyName="PrefixPath" />
+    <Output TaskParameter="ProjectRelativePrefixPath" PropertyName="ProjectRelativePrefixPath" />
+    <Output TaskParameter="InterpreterPath" PropertyName="InterpreterPath" />
+    <Output TaskParameter="WindowsInterpreterPath" PropertyName="WindowsInterpreterPath" />
+    <Output TaskParameter="LibraryPath" PropertyName="LibraryPath" />
+    <Output TaskParameter="Architecture" PropertyName="Architecture" />
+    <Output TaskParameter="PathEnvironmentVariable" PropertyName="PathEnvironmentVariable" />
+    <Output TaskParameter="Description" PropertyName="Description" />
+    <Output TaskParameter="MajorVersion" PropertyName="MajorVersion" />
+    <Output TaskParameter="MinorVersion" PropertyName="MinorVersion" />
+  </ResolveEnvironment>
+  -->
+  <UsingTask AssemblyFile="$(_PythonToolsPath)\Microsoft.PythonTools.BuildTasks.dll"
+             TaskName="ResolveEnvironment"
+             TaskFactory="ResolveEnvironmentFactory">
+    <Task Evaluate="true">
+      <PropertyGroup>
+        <ProjectPath>$(MSBuildProjectFullPath)</ProjectPath>
+      </PropertyGroup>
+    </Task>
+  </UsingTask>
+
+  <!-- Converts a file path to an importable module name.
+  
+  <ConvertPathToModuleName Paths="..." [PathLimit="..."]>
+    <Output TaskParameter="ModuleNames"
+            ItemName="Modules" />
+  </ConvertPathToModuleName>
+  -->
+  <UsingTask AssemblyFile="$(_PythonToolsPath)\Microsoft.PythonTools.BuildTasks.dll" TaskName="ConvertPathToModuleName" />
+
+  <!-- Gets the fully qualified path to the project home.  -->
+  <Target Name="ResolveQualifiedProjectHome">
+    <CombinePath BasePath="$(MSBuildProjectDirectory)" Paths="$(ProjectHome)">
+      <Output TaskParameter="CombinedPaths" PropertyName="QualifiedProjectHome"/>
+    </CombinePath>
+    <Message Importance="low" Text="QualifiedProjectHome: $(QualifiedProjectHome)" />
+  </Target>
+
+  <!-- Gets the full path and module name of the startup file -->
+  <Target Name="ResolveStartupPath"
+          DependsOnTargets="ResolveQualifiedProjectHome"
+          AfterTargets="_CheckForInvalidConfigurationAndPlatform"
+          Condition="'$(StartupFile)' != ''"
+          Outputs="$(StartupPath);$(StartupModule)">
+    <CombinePath BasePath="$(QualifiedProjectHome)" Paths="$(StartupFile)">
+      <Output TaskParameter="CombinedPaths" PropertyName="StartupPath" />
+    </CombinePath>
+
+    <Message Importance="low" Text="StartupPath: $(StartupPath)" />
+
+    <ConvertPathToModuleName Paths="$(StartupPath)" PathLimit="$(_ProjectHome)">
+      <Output TaskParameter="ModuleNames" PropertyName="StartupModule" />
+    </ConvertPathToModuleName>
+
+    <Message Importance="low" Text="StartupModule: $(StartupModule)" />
+  </Target>
+
+  
+
+  <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" />
+</Project>

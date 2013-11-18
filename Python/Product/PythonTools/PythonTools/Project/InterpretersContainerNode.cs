@@ -93,8 +93,11 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public override object GetIconHandle(bool open) {
-            return this.ProjectMgr.ImageHandler.GetIconHandle(
-                CommonProjectNode.ImageOffset + (int)CommonImageName.InterpretersContainer);
+            if (open) {
+                return _projectNode.GetIconHandleByName(ProjectNode.ImageName.OpenFolder);
+            } else {
+                return _projectNode.GetIconHandleByName(PythonProjectImageName.InterpretersContainer);
+            }
         }
 
         /// <summary>

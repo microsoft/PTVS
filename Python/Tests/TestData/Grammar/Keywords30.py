@@ -1,2 +1,2 @@
-﻿foo = True
-bar = False
+﻿fob = True
+oar = False

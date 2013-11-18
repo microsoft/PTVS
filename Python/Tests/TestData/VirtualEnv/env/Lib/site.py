@@ -33,27 +33,27 @@ sys.path more than once.  Blank lines and lines beginning with
 
 For example, suppose sys.prefix and sys.exec_prefix are set to
 /usr/local and there is a directory /usr/local/lib/python2.X/site-packages
-with three subdirectories, foo, bar and spam, and two path
-configuration files, foo.pth and bar.pth.  Assume foo.pth contains the
+with three subdirectories, fob, oar and spam, and two path
+configuration files, fob.pth and oar.pth.  Assume fob.pth contains the
 following:
 
-  # foo package configuration
-  foo
-  bar
+  # fob package configuration
+  fob
+  oar
   bletch
 
-and bar.pth contains:
+and oar.pth contains:
 
-  # bar package configuration
-  bar
+  # oar package configuration
+  oar
 
 Then the following directories are added to sys.path, in this order:
 
-  /usr/local/lib/python2.X/site-packages/bar
-  /usr/local/lib/python2.X/site-packages/foo
+  /usr/local/lib/python2.X/site-packages/oar
+  /usr/local/lib/python2.X/site-packages/fob
 
-Note that bletch is omitted because it doesn't exist; bar precedes foo
-because bar.pth comes alphabetically before foo.pth; and spam is
+Note that bletch is omitted because it doesn't exist; oar precedes fob
+because oar.pth comes alphabetically before fob.pth; and spam is
 omitted because it is not mentioned in either path configuration file.
 
 After these path manipulations, an attempt is made to import a module

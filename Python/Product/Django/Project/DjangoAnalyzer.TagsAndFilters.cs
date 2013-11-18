@@ -290,14 +290,14 @@ additional context using keyword arguments.
 
 Example::
 
-    {% include ""foo/some_include"" %}
-    {% include ""foo/some_include"" with bar=""BAZZ!"" baz=""BING!"" %}
+    {% include ""fob/some_include"" %}
+    {% include ""fob/some_include"" with oar=""BAZZ!"" baz=""BING!"" %}
 
 Use the ``only`` argument to exclude the current context when rendering
 the included template::
 
-    {% include ""foo/some_include"" only %}
-    {% include ""foo/some_include"" with bar=""1"" only %}
+    {% include ""fob/some_include"" only %}
+    {% include ""fob/some_include"" with oar=""1"" only %}
 "}, 
                 {"block", @"Define a block that can be overridden by child templates."}, 
                 {"extends", @"Signal that this template extends a parent template.
@@ -631,13 +631,13 @@ before using it, i.e.::
 
         {% spaceless %}
             <p>
-                <a href=""foo/"">Foo</a>
+                <a href=""fob/"">Fob</a>
             </p>
         {% endspaceless %}
 
     This example would return this HTML::
 
-        <p><a href=""foo/"">Foo</a></p>
+        <p><a href=""fob/"">Fob</a></p>
 
     Only space between *tags* is normalized -- not space between tags and text.
     In this example, the space around ``Hello`` won't be stripped::
@@ -698,12 +698,12 @@ then in a template you can create a link for a certain client like this::
     {% url app_name.client client.id %}
 
 The URL will look like ``/clients/client/123/``."}, 
-                {"widthratio", @"For creating bar charts and such, this tag calculates the ratio of a given
+                {"widthratio", @"For creating oar charts and such, this tag calculates the ratio of a given
 value to a maximum value, and then applies that ratio to a constant.
 
 For example::
 
-    <img src='bar.gif' height='10' width='{% widthratio this_value max_value 100 %}' />
+    <img src='oar.gif' height='10' width='{% widthratio this_value max_value 100 %}' />
 
 Above, if ``this_value`` is 175 and ``max_value`` is 200, the image in
 the above example will be 88 pixels wide (because 175/200 = .875;
@@ -719,7 +719,7 @@ For example::
 
 Multiple values can be added to the context::
 
-    {% with foo=1 bar=2 %}
+    {% with fob=1 oar=2 %}
         ...
     {% endwith %}
 
@@ -835,8 +835,8 @@ True indicates right-to-left layout, otherwise left-to-right"},
 
 Usage::
 
-    {% blocktrans with bar=foo|filter boo=baz|filter %}
-    This is {{ bar }} and {{ boo }}.
+    {% blocktrans with oar=fob|filter boo=baz|filter %}
+    This is {{ oar }} and {{ boo }}.
     {% endblocktrans %}
 
 Additionally, this supports pluralization::
@@ -851,13 +851,13 @@ This is much like ngettext, only in template syntax.
 
 The ""var as value"" legacy format is still supported::
 
-    {% blocktrans with foo|filter as bar and baz|filter as boo %}
+    {% blocktrans with fob|filter as oar and baz|filter as boo %}
     {% blocktrans count var|length as count %}
 
 Contextual translations are supported::
 
-    {% blocktrans with bar=foo|filter context ""greeting"" %}
-        This is {{ bar }}.
+    {% blocktrans with oar=fob|filter context ""greeting"" %}
+        This is {{ oar }}.
     {% endblocktrans %}
 
 This is equivalent to calling pgettext/npgettext instead of
@@ -905,7 +905,7 @@ This is equivalent to calling pgettext instead of (u)gettext."},
 Usage::
 
     {% language ""de"" %}
-        This is {{ bar }} and {{ boo }}.
+        This is {{ oar }} and {{ boo }}.
     {% endlanguage %}"}, 
                 {"get_admin_log", @"Populates a template variable with the admin log for the given criteria.
 

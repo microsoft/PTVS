@@ -601,7 +601,7 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
             }
 
             if (words.Length >= 4 && words[words.Length - 2] == "from") {
-                // load foo from bar
+                // load fob from oar
 
             }
 

@@ -114,7 +114,7 @@ namespace Microsoft.PythonTools {
             }
 
             var spanLength = position - line.Start.Position;
-            // Increase position by one to include 'foo' in: "abc.|foo"
+            // Increase position by one to include 'fob' in: "abc.|fob"
             if (spanLength < line.Length) {
                 spanLength += 1;
             }
@@ -126,7 +126,7 @@ namespace Microsoft.PythonTools {
             }
 
             var lastToken = classifications[classifications.Count - 1];
-            // Handle "foo |"
+            // Handle "fob |"
             if (lastToken == null || position > lastToken.Span.End) {
                 return null;
             }
@@ -143,9 +143,9 @@ namespace Microsoft.PythonTools {
 
             var secondLastToken = classifications.Count >= 2 ? classifications[classifications.Count - 2] : null;
             if (lastToken.Span.Start == position && lastToken.CanComplete() && 
-                (secondLastToken == null ||             // Handle "|foo"
-                 position > secondLastToken.Span.End || // Handle "if |foo"
-                 !secondLastToken.CanComplete())) {     // Handle "abc.|foo"
+                (secondLastToken == null ||             // Handle "|fob"
+                 position > secondLastToken.Span.End || // Handle "if |fob"
+                 !secondLastToken.CanComplete())) {     // Handle "abc.|fob"
                 return snapshot.CreateTrackingSpan(lastToken.Span, SpanTrackingMode.EdgeInclusive);
             }
 
@@ -314,11 +314,11 @@ namespace Microsoft.PythonTools {
             var snapshot = caretPoint.Value.Snapshot;
             var caretPos = caretPoint.Value.Position;
 
-            // foo(
+            // fob(
             //    ^
             //    +---  Caret here
             //
-            // We want to lookup foo, not foo(
+            // We want to lookup fob, not fob(
             //
             ITrackingSpan span;
             if (caretPos != snapshot.Length) {

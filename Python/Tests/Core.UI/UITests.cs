@@ -64,7 +64,7 @@ namespace PythonToolsUITests {
 
                     var consoleApp = newProjDialog.ProjectTypes.FindItem("Python Application");
                     consoleApp.Select();
-                    newProjDialog.ProjectName = "Foo.Bar";
+                    newProjDialog.ProjectName = "Fob.Oar";
                     newProjDialog.ClickOK();
 
                     // wait for new solution to load...
@@ -319,6 +319,7 @@ namespace PythonToolsUITests {
                 AutomationWrapper.Select(projectNode);
                 Keyboard.PressAndRelease(Key.F2);
                 System.Threading.Thread.Sleep(100);
+                Keyboard.PressAndRelease(Key.A, Key.LeftCtrl);
 
                 Keyboard.Type("NewName.txt");
                 System.Threading.Thread.Sleep(100);
@@ -332,6 +333,7 @@ namespace PythonToolsUITests {
                 AutomationWrapper.Select(projectNode);
                 Keyboard.PressAndRelease(Key.F2);
                 System.Threading.Thread.Sleep(100);
+                Keyboard.PressAndRelease(Key.A, Key.LeftCtrl);
 
                 Keyboard.Type("NewName.txt");
                 System.Threading.Thread.Sleep(100);
@@ -425,6 +427,13 @@ namespace PythonToolsUITests {
                 app.OpenSolutionExplorer();
                 var window = app.SolutionExplorerTreeView;
 
+                try {
+                    // Remove the destination folder in case a previous test has
+                    // created it.
+                    Directory.Delete(TestData.GetPath(@"TestData\HelloWorld2\TestFolder - Copy"), true);
+                } catch {
+                }
+
                 var folder = window.FindItem("Solution 'HelloWorld2' (2 projects)", "HelloWorld2", "TestFolder");
                 AutomationWrapper.Select(folder);
 
@@ -433,7 +442,11 @@ namespace PythonToolsUITests {
                 AutomationWrapper.Select(folder);
                 Keyboard.ControlV();
 
-                Assert.AreNotEqual(null, window.WaitForItem("Solution 'HelloWorld2' (2 projects)", "HelloWorld2", "TestFolder - Copy"));
+                var item = window.WaitForItem("Solution 'HelloWorld2' (2 projects)", "HelloWorld2", "TestFolder - Copy");
+                if (item == null) {
+                    AutomationWrapper.DumpElement(window.Element);
+                    Assert.Fail("Did not find TestFolder - Copy");
+                }
             }
         }
 
@@ -586,10 +599,22 @@ namespace PythonToolsUITests {
                 AutomationWrapper.Select(folder);
                 Keyboard.ControlC();
 
+                try {
+                    // Remove the destination folder in case a previous test has
+                    // created it.
+                    Directory.Delete(TestData.GetPath(@"TestData\HelloWorld2\TestFolder - Copy"), true);
+                } catch {
+                }
+
                 var subItem = window.FindItem("Solution 'HelloWorld2' (2 projects)", "HelloWorld2", "TestFolder", "SubItem.py");
                 AutomationWrapper.Select(subItem);
                 Keyboard.ControlV();
-                VisualStudioApp.CheckMessageBox("Cannot copy 'TestFolder'. The destination folder is a subfolder of the source folder.");
+
+                var item = window.WaitForItem("Solution 'HelloWorld2' (2 projects)", "HelloWorld2", "TestFolder - Copy", "SubItem.py");
+                if (item == null) {
+                    AutomationWrapper.DumpElement(window.Element);
+                    Assert.Fail("Did not find TestFolder - Copy");
+                }
             }
         }
 
@@ -602,13 +627,18 @@ namespace PythonToolsUITests {
                 app.OpenSolutionExplorer();
                 var window = app.SolutionExplorerTreeView;
 
-                var folderNode = window.FindItem("Solution 'DebuggerProject' (1 project)", "DebuggerProject", "BreakAllTest.py");
-                AutomationWrapper.Select(folderNode);
-
-                Keyboard.Press(Key.LeftShift);
-                Keyboard.PressAndRelease(Key.Down);
-                Keyboard.PressAndRelease(Key.Down);
-                Keyboard.Release(Key.LeftShift);
+                var files = new[] { "BreakAllTest.py", "BreakpointTest.py", "BreakpointTest2.py" };
+                bool anySelected = false;
+                foreach (var f in files) {
+                    var node = window.FindItem("Solution 'DebuggerProject' (1 project)", "DebuggerProject", f);
+                    Assert.IsNotNull(node, f + " not found in DebuggerProject");
+                    if (anySelected) {
+                        ((SelectionItemPattern)node.GetCurrentPattern(SelectionItemPattern.Pattern)).AddToSelection();
+                    } else {
+                        node.Select();
+                        anySelected = true;
+                    }
+                }
                 Keyboard.ControlC();
 
                 var projectNode = window.FindItem("Solution 'DebuggerProject' (1 project)", "DebuggerProject");
@@ -616,9 +646,11 @@ namespace PythonToolsUITests {
                 AutomationWrapper.Select(projectNode);
                 Keyboard.ControlV();
 
-                Assert.AreNotEqual(null, window.WaitForItem("Solution 'DebuggerProject' (1 project)", "DebuggerProject", "BreakAllTest - Copy.py"));
-                Assert.AreNotEqual(null, window.WaitForItem("Solution 'DebuggerProject' (1 project)", "DebuggerProject", "BreakpointTest - Copy.py"));
-                Assert.AreNotEqual(null, window.WaitForItem("Solution 'DebuggerProject' (1 project)", "DebuggerProject", "BreakpointTest2 - Copy.py"));
+                foreach (var f in files.Select(f => f.Remove(f.LastIndexOf('.')) + " - Copy" + f.Substring(f.LastIndexOf('.')))) {
+                    Assert.IsNotNull(
+                        window.WaitForItem("Solution 'DebuggerProject' (1 project)", "DebuggerProject", f),
+                        f + " not found after copying");
+                }
             }
         }
 
@@ -704,9 +736,10 @@ namespace PythonToolsUITests {
 
                 var newItem = new NewItemDialog(app.OpenDialogWithDteExecuteCommand("Project.AddNewItem"));
                 AutomationWrapper.Select(newItem.ProjectTypes.FindItem("Empty Python File"));
+                newItem.FileName = "zmodule1.py";
                 newItem.ClickOK();
 
-                var test2 = window.WaitForItem("Solution 'AddItemPreviousSiblingNotVisible' (1 project)", "HelloWorld", "module1.py");
+                var test2 = window.WaitForItem("Solution 'AddItemPreviousSiblingNotVisible' (1 project)", "HelloWorld", "zmodule1.py");
                 Assert.IsNotNull(test2);
 
                 selectedHierarchy.UnadviseHierarchyEvents(cookie);
@@ -763,14 +796,20 @@ namespace PythonToolsUITests {
                 Assert.IsNotNull(projectNode, "projectNode");
                 AutomationWrapper.Select(projectNode);
 
+                var addItemDlg = new NewItemDialog(app.OpenDialogWithDteExecuteCommand("Project.AddNewItem"));
+                AutomationWrapper.Select(addItemDlg.ProjectTypes.FindItem("Empty Python File"));
+                addItemDlg.FileName = "Program2.py";
+                addItemDlg.ClickOK();
 
-                var addExistingDlg = new AddExistingItemDialog(app.OpenDialogWithDteExecuteCommand("Project.AddExistingItem"));
-                addExistingDlg.FileName = TestData.GetPath(@"TestData\AddExistingItem\Program2.py");
-                addExistingDlg.Add();
+#if DEV12_OR_LATER
+                var filename = TestData.GetPath(@"TestData\AddExistingItem\Program2.py");
+#else
+                var filename = "Program2.py";
+#endif
 
                 VisualStudioApp.CheckMessageBox(
                     MessageBoxButton.Yes,
-                    "A file with the same name 'Program2.py' already exists. Do you want to overwrite it?"
+                    "A file with the same name '" + filename + "' already exists. Do you want to overwrite it?"
                 );
 
                 Assert.IsNotNull(window.WaitForItem("Solution 'AddExistingItem' (1 project)", "HelloWorld", "Program2.py"));
@@ -809,7 +848,7 @@ namespace PythonToolsUITests {
             }
 
             #endregion
-                    }
+        }
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
@@ -846,7 +885,7 @@ namespace PythonToolsUITests {
                 do {
                     i++;
                     basename = "test" + i + " .py";
-                    filename = Path.Combine(Path.GetTempPath(), basename);
+                    filename = Path.Combine(TestData.GetTempPath(), basename);
                 } while (System.IO.File.Exists(filename));
 
                 System.IO.File.WriteAllText(filename, "def f(): pass");
@@ -905,14 +944,25 @@ namespace PythonToolsUITests {
                 app.OpenSolutionExplorer();
                 var solutionTree = app.SolutionExplorerTreeView;
 
-                // open the solution, add a reference to our spam.pyd Python extension module
-                var folderNode = solutionTree.FindItem("Solution 'ExtensionReference' (1 project)", "ExtensionReference", SR.GetString(SR.ReferencesNodeName));
-                Mouse.MoveTo(folderNode.GetClickablePoint());
-                Mouse.Click();
-                Keyboard.PressAndRelease(Key.Apps); // context menu
-                Keyboard.PressAndRelease(Key.R);    // Add Reference
+                var dbPath = Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                    "Python Tools",
+                    "ReferencesDB",
+#if DEBUG
+                    "Debug",
+#endif
+                    AssemblyVersionInfo.VSVersion
+                );
+                var existingFiles = Directory.GetFiles(dbPath, "spam*");
 
-                var dialog = new AddReferenceDialog(AutomationElement.FromHandle(app.WaitForDialog()));
+                // open the solution, add a reference to our spam.pyd Python extension module
+                var folderNode = solutionTree.FindItem(
+                    "Solution 'ExtensionReference' (1 project)",
+                    "ExtensionReference",
+                    SR.GetString(SR.ReferencesNodeName)
+                );
+                folderNode.Select();
+                var dialog = new AddReferenceDialog(AutomationElement.FromHandle(app.OpenDialogWithDteExecuteCommand("Project.AddReference")));
                 dialog.ActivateBrowseTab();
 
                 dialog.BrowseFilename = TestData.GetPath(@"TestData\spam.pyd");
@@ -920,11 +970,23 @@ namespace PythonToolsUITests {
 
                 app.WaitForDialogDismissed();
 
-                System.Threading.Thread.Sleep(2000);
-
                 // make sure the reference got added
-                var spamItem = solutionTree.FindItem("Solution 'ExtensionReference' (1 project)", "ExtensionReference", SR.GetString(SR.ReferencesNodeName), "spam.pyd");
+                var spamItem = solutionTree.WaitForItem(
+                    "Solution 'ExtensionReference' (1 project)",
+                    "ExtensionReference",
+                    SR.GetString(SR.ReferencesNodeName),
+                    "spam.pyd"
+                );
                 Assert.IsNotNull(spamItem);
+
+                // wait for scraping to complete
+                for (int retries = 10;
+                    Directory.GetFiles(dbPath, "spam*").Length == existingFiles.Length && retries > 0;
+                    --retries) {
+                    System.Threading.Thread.Sleep(1000);
+                }
+
+                Assert.AreNotEqual(existingFiles.Length, Directory.GetFiles(dbPath, "spam*").Length, "File was not scraped");
 
                 // now open a file and make sure we get completions against the spam module
                 var item = project.ProjectItems.Item("Program.py");
@@ -937,7 +999,6 @@ namespace PythonToolsUITests {
 
                 Keyboard.Type("spam.");
 
-                System.Threading.Thread.Sleep(1000);
                 using (var sh = doc.WaitForSession<ICompletionSession>()) {
                     var completion = sh.Session.CompletionSets.First().Completions.Select(x => x.InsertionText).FirstOrDefault(x => x == "system");
                     Assert.IsNotNull(completion);
@@ -949,12 +1010,15 @@ namespace PythonToolsUITests {
                 }
 
                 // remove the extension
-                app.Dte.Solution.Projects.Item(1).ProjectItems.Item("References").ProjectItems.Item("spam.pyd").Remove();
-                System.Threading.Thread.Sleep(3000);
+                app.Dte.Solution.Projects.Item(1).ProjectItems.Item("References").ProjectItems.Item(@"spam.pyd").Remove();
 
                 // make sure it got removed
-                spamItem = solutionTree.FindItem("Solution 'ExtensionReference' (1 project)", "ExtensionReference", SR.GetString(SR.ReferencesNodeName), "spam.pyd");
-                Assert.AreEqual(spamItem, null);
+                solutionTree.WaitForItemRemoved(
+                    "Solution 'ExtensionReference' (1 project)",
+                    "ExtensionReference",
+                    SR.GetString(SR.ReferencesNodeName),
+                    "spam.pyd"
+                );
 
                 window.Activate();
 

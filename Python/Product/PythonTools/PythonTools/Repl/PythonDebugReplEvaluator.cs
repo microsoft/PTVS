@@ -556,7 +556,7 @@ namespace Microsoft.PythonTools.Repl {
             }
 
             // running in a test, just use a simple set of options
-            return new ConfigurablePythonReplOptions("");
+            return new ConfigurablePythonReplOptions();
         }
 
         public PythonProcess Process {
@@ -591,10 +591,6 @@ namespace Microsoft.PythonTools.Repl {
             get {
                 return "Debug" + _languageVersion.ToString();
             }
-        }
-
-        protected override void Close() {
-            base.Close();
         }
 
         protected override void Connect() {

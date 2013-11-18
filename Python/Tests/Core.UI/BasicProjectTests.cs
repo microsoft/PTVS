@@ -27,7 +27,9 @@ using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Options;
 using Microsoft.TC.TestHostAdapters;
+using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
+using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudioTools.Project.Automation;
@@ -158,8 +160,8 @@ namespace PythonToolsUITests {
                 AssertError<InvalidOperationException>(() => project.Name = "             ");
                 AssertError<InvalidOperationException>(() => project.Name = "...............");
                 var oldName = project.Name;
-                project.Name = ".foo";
-                Assert.AreEqual(project.Name, ".foo");
+                project.Name = ".fob";
+                Assert.AreEqual(project.Name, ".fob");
                 project.Name = oldName;
 
                 string projPath = TestData.GetPath(@"TestData\RenameProjectTest\HelloWorld3.pyproj");
@@ -373,7 +375,7 @@ namespace PythonToolsUITests {
 
         private static SelectFolderDialog AddExistingFolder(VisualStudioApp app) {
             try {
-                return new SelectFolderDialog(app.OpenDialogWithDteExecuteCommand("ProjectandSolutionContextMenus.Project.Add.Python.ExistingFolder"));
+                return new SelectFolderDialog(app.OpenDialogWithDteExecuteCommand("ProjectandSolutionContextMenus.Project.Add.ExistingFolder"));
             } catch (COMException ex) {
                 Console.WriteLine(ex);
                 Assert.Fail("Unable to execute AddExistingFolder command");
@@ -404,8 +406,8 @@ namespace PythonToolsUITests {
                 AssertError<InvalidOperationException>(() => project.ProjectItems.Item("ProgramX.py").Name = "TempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFileTempFile");
                 AssertError<InvalidOperationException>(() => project.ProjectItems.Item("ProgramX.py").Name = "              ");
                 AssertError<InvalidOperationException>(() => project.ProjectItems.Item("ProgramX.py").Name = "..............");
-                project.ProjectItems.Item("ProgramX.py").Name = ".foo";
-                project.ProjectItems.Item(".foo").Name = "ProgramX.py";
+                project.ProjectItems.Item("ProgramX.py").Name = ".fob";
+                project.ProjectItems.Item(".fob").Name = "ProgramX.py";
                 AssertError<InvalidOperationException>(() => project.ProjectItems.Item("ProgramX.py").Name = "ProgramY.py");
 
                 project.ProjectItems.Item("ProgramX.py").Name = "PrOgRaMX.py";
@@ -785,7 +787,7 @@ namespace PythonToolsUITests {
                 // verify getting signature help doesn't crash...  This used to crash because IronPython
                 // used the empty path for an assembly and throws an exception.  We now handle the exception
                 // in RemoteInterpreter.GetBuiltinFunctionDocumentation and RemoteInterpreter.GetPythonTypeDocumentation
-                Assert.AreEqual(GetSignatures("Class1.Foo(", snapshot).Signatures.First().Documentation, "");
+                Assert.AreEqual(GetSignatures("Class1.Fob(", snapshot).Signatures.First().Documentation, "");
 
                 // recompile one file, we should still have type info for both DLLs, with one updated
                 CompileFile("ClassLibraryBool.cs", "ClassLibrary.dll");
@@ -887,7 +889,7 @@ namespace PythonToolsUITests {
 #if DEV11_OR_LATER
                 VisualStudioApp.CheckMessageBox(MessageBoxButton.Ok, "Directory names cannot contain any of the following characters");
 #else
-            VisualStudioApp.CheckMessageBox(MessageBoxButton.Ok, ". is an invalid filename");
+                VisualStudioApp.CheckMessageBox(MessageBoxButton.Ok, ". is an invalid filename");
 #endif
                 System.Threading.Thread.Sleep(1000);
 
@@ -897,7 +899,7 @@ namespace PythonToolsUITests {
 #if DEV11_OR_LATER
                 VisualStudioApp.CheckMessageBox(MessageBoxButton.Ok, "Directory names cannot contain any of the following characters");
 #else
-            VisualStudioApp.CheckMessageBox(MessageBoxButton.Ok, ".. is an invalid filename");
+                VisualStudioApp.CheckMessageBox(MessageBoxButton.Ok, ".. is an invalid filename");
 #endif
                 System.Threading.Thread.Sleep(1000);
 
@@ -940,61 +942,23 @@ namespace PythonToolsUITests {
                 ProjectNewFolder(app, solutionNode, projectNode);
 
                 System.Threading.Thread.Sleep(1000);
-                Keyboard.Type("Foo");
+                Keyboard.Type("Fob");
                 Keyboard.Type(System.Windows.Input.Key.Enter);
 
-                WaitForItem(project, "Foo");
+                WaitForItem(project, "Fob");
 
                 Mouse.MoveTo(programNode.GetClickablePoint());
                 Mouse.Click();
                 Keyboard.ControlC();
 
-                var folderNode = solutionExplorer.FindItem("Solution 'AddFolderCopyAndPasteFile' (1 project)", "AddFolderCopyAndPasteFile", "Foo");
+                var folderNode = solutionExplorer.FindItem("Solution 'AddFolderCopyAndPasteFile' (1 project)", "AddFolderCopyAndPasteFile", "Fob");
                 Mouse.MoveTo(folderNode.GetClickablePoint());
                 Mouse.Click();
 
                 Keyboard.ControlV();
                 System.Threading.Thread.Sleep(2000);
 
-                Assert.IsNotNull(solutionExplorer.FindItem("Solution 'AddFolderCopyAndPasteFile' (1 project)", "AddFolderCopyAndPasteFile", "Foo", "Program.py"));
-            }
-        }
-
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
-        public void AddFromFileInSubDirectory() {
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenProject(@"TestData\AddExistingFolder.sln");
-                string fullPath = TestData.GetPath(@"TestData\AddExistingFolder.sln");
-
-                Assert.AreEqual(5, project.ProjectItems.Count);
-                var item = project.ProjectItems.AddFromFile(TestData.GetPath(@"TestData\AddExistingFolder\TestFolder\TestFile.txt"));
-
-                Assert.AreEqual("TestFile.txt", item.Properties.Item("FileName").Value);
-                Assert.AreEqual(Path.Combine(Path.GetDirectoryName(fullPath), "AddExistingFolder", "TestFolder", "TestFile.txt"), item.Properties.Item("FullPath").Value);
-
-                Assert.AreEqual(6, project.ProjectItems.Count);
-
-                var folder = project.ProjectItems.Item("TestFolder");
-                Assert.IsNotNull(folder);
-                Assert.IsNotNull(folder.ProjectItems.Item("TestFile.txt"));
-            }
-        }
-
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
-        public void AddFromFileOutsideOfProject() {
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenProject(@"TestData\HelloWorld.sln");
-                // "Python Environments", "References", "Search Paths", "Program.py"
-                Assert.AreEqual(4, project.ProjectItems.Count);
-                var item = project.ProjectItems.AddFromFile(TestData.GetPath(@"TestData\DebuggerProject\LocalsTest.py"));
-
-                Assert.AreEqual("LocalsTest.py", item.Properties.Item("FileName").Value);
-                
-                // TODO: Once we have IsLink use it
-                //Assert.AreEqual(true, item.Properties.Item("IsLink").Value);
-                Assert.AreEqual(TestData.GetPath(@"TestData\DebuggerProject\LocalsTest.py"), item.Properties.Item("FullPath").Value);
+                Assert.IsNotNull(solutionExplorer.FindItem("Solution 'AddFolderCopyAndPasteFile' (1 project)", "AddFolderCopyAndPasteFile", "Fob", "Program.py"));
             }
         }
 
@@ -1015,7 +979,7 @@ namespace PythonToolsUITests {
                     Path.Combine(Directory.GetCurrentDirectory(), "TestData", "CopiedFiles")
                 };
 
-                ToSTA(() => Clipboard.SetFileDropList(paths));
+                ClipboardSetFileDropList(paths);
 
                 Mouse.MoveTo(projectNode.GetClickablePoint());
                 Mouse.Click();
@@ -1023,28 +987,41 @@ namespace PythonToolsUITests {
 
                 Assert.IsNotNull(solutionExplorer.WaitForItem("Solution 'CopyAndPasteFolder' (1 project)", "CopyAndPasteFolder", "CopiedFiles"));
                 Assert.IsTrue(File.Exists(Path.Combine("TestData", "CopyAndPasteFolder", "CopiedFiles", "SomeFile.py")));
-                Assert.IsTrue(File.Exists(Path.Combine("TestData", "CopyAndPasteFolder", "CopiedFiles", "Foo", "SomeOtherFile.py")));
+                Assert.IsTrue(File.Exists(Path.Combine("TestData", "CopyAndPasteFolder", "CopiedFiles", "Fob", "SomeOtherFile.py")));
 
                 Mouse.MoveTo(folderNode.GetClickablePoint());
                 Mouse.Click();
 
                 // paste to folder node, make sure the files are there
-                ToSTA(() => Clipboard.SetFileDropList(paths));
+                ClipboardSetFileDropList(paths);
                 Keyboard.ControlV();
 
                 System.Threading.Thread.Sleep(2000);
 
                 Assert.IsNotNull(solutionExplorer.WaitForItem("Solution 'CopyAndPasteFolder' (1 project)", "CopyAndPasteFolder", "X", "CopiedFiles"));
                 Assert.IsTrue(File.Exists(Path.Combine("TestData", "CopyAndPasteFolder", "X", "CopiedFiles", "SomeFile.py")));
-                Assert.IsTrue(File.Exists(Path.Combine("TestData", "CopyAndPasteFolder", "X", "CopiedFiles", "Foo", "SomeOtherFile.py")));
+                Assert.IsTrue(File.Exists(Path.Combine("TestData", "CopyAndPasteFolder", "X", "CopiedFiles", "Fob", "SomeOtherFile.py")));
             }
         }
 
-        private static void ToSTA(ST.ThreadStart code) {
-            ST.Thread t = new ST.Thread(code);
-            t.SetApartmentState(ST.ApartmentState.STA);
-            t.Start();
-            t.Join();
+        private static void ClipboardSetFileDropList(StringCollection paths) {
+            Exception exception = null;
+            var thread = new ST.Thread(p => {
+                try {
+                    Clipboard.SetFileDropList((StringCollection)p);
+                } catch (Exception ex) {
+                    exception = ex;
+                }
+            });
+            thread.SetApartmentState(ApartmentState.STA);
+            thread.Start(paths);
+            if (!thread.Join(TimeSpan.FromSeconds(60.0))) {
+                thread.Abort();
+                Assert.Fail("Failed to set file list on clipboard because the thread timed out.");
+            }
+            if (exception != null) {
+                Assert.Fail("Exception occurred while setting file drop list:{0}{1}", Environment.NewLine, exception);
+            }
         }
 
         /// <summary>
@@ -1145,6 +1122,117 @@ namespace PythonToolsUITests {
             }
         }
 
+
+        /// <summary>
+        /// Make sure errors in a file show up in the error list window
+        /// </summary>
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void TestProjectWithErrors_ErrorList() {
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenProject(@"TestData\ErrorProject.sln");
+
+                const int expectedItems = 6;
+                List<IVsTaskItem> allItems = app.WaitForErrorListItems(expectedItems);
+                Assert.AreEqual(expectedItems, allItems.Count);
+            }
+        }
+
+        /// <summary>
+        /// Make sure deleting a project clears the error list
+        /// </summary>
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void TestProjectWithErrorsDeleteProject() {
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenProject(@"TestData\ErrorProjectDelete.sln");
+
+                const int expectedItems = 6;
+                List<IVsTaskItem> allItems = app.WaitForErrorListItems(expectedItems);
+                Assert.AreEqual(expectedItems, allItems.Count);
+
+                app.Dte.Solution.Remove(project);
+
+                allItems = app.WaitForErrorListItems(0);
+                Assert.AreEqual(0, allItems.Count);
+            }
+        }
+
+        /// <summary>
+        /// Make sure deleting a project clears the error list
+        /// </summary>
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void TestProjectWithErrorsUnloadProject() {
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenProject(@"TestData\ErrorProjectDelete.sln");
+
+                const int expectedItems = 6;
+                var allItems = app.WaitForErrorListItems(expectedItems);
+                Assert.AreEqual(expectedItems, allItems.Count);
+
+                IVsSolution solutionService = app.GetService<IVsSolution>(typeof(SVsSolution));
+                Assert.IsNotNull(solutionService);
+
+                IVsHierarchy selectedHierarchy;
+                ErrorHandler.ThrowOnFailure(solutionService.GetProjectOfUniqueName(project.UniqueName, out selectedHierarchy));
+                Assert.IsNotNull(selectedHierarchy);
+
+                ErrorHandler.ThrowOnFailure(solutionService.CloseSolutionElement((uint)__VSSLNCLOSEOPTIONS.SLNCLOSEOPT_UnloadProject, selectedHierarchy, 0));
+
+                allItems = app.WaitForErrorListItems(0);
+                Assert.AreEqual(0, allItems.Count);
+            }
+        }
+
+        /// <summary>
+        /// Make sure deleting a project clears the error list when there are errors in multiple files
+        /// 
+        /// Take 2 of https://pytools.codeplex.com/workitem/1523
+        /// </summary>
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void TestProjectWithErrorsMultipleFilesUnloadProject() {
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenProject(@"TestData\ErrorProjectMultipleFiles.sln");
+
+                const int expectedItems = 12;
+                var allItems = app.WaitForErrorListItems(expectedItems);
+                Assert.AreEqual(expectedItems, allItems.Count);
+
+                var solutionService = app.GetService<IVsSolution>(typeof(SVsSolution));
+                Assert.IsNotNull(solutionService);
+
+                IVsHierarchy selectedHierarchy;
+                ErrorHandler.ThrowOnFailure(solutionService.GetProjectOfUniqueName(project.UniqueName, out selectedHierarchy));
+                Assert.IsNotNull(selectedHierarchy);
+
+                ErrorHandler.ThrowOnFailure(solutionService.CloseSolutionElement((uint)__VSSLNCLOSEOPTIONS.SLNCLOSEOPT_UnloadProject, selectedHierarchy, 0));
+
+                allItems = app.WaitForErrorListItems(0);
+                Assert.AreEqual(0, allItems.Count);
+            }
+        }
+
+        /// <summary>
+        /// Make sure deleting a file w/ errors clears the error list
+        /// </summary>
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void TestProjectWithErrorsDeleteFile() {
+            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenProject(@"TestData\ErrorProjectDeleteFile.sln");
+
+                const int expectedItems = 6;
+                var allItems = app.WaitForErrorListItems(expectedItems);
+                Assert.AreEqual(expectedItems, allItems.Count);
+
+                project.ProjectItems.Item("Program.py").Delete();
+
+                allItems = app.WaitForErrorListItems(0);
+                Assert.AreEqual(0, allItems.Count);
+            }
+        }
 
 #if DEV11_OR_LATER
         private static IEnumerable<EnvDTE.Window> GetOpenDocumentWindows(DTE dte) {

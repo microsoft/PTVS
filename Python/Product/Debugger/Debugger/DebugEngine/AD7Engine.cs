@@ -449,7 +449,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                 _threads.Clear();
                 _modules.Clear();
 
-                debuggedProcess.Close();
+                debuggedProcess.Dispose();
             } else {
                 Debug.Fail("Unknown syncronious event");
             }

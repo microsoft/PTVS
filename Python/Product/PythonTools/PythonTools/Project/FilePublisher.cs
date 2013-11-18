@@ -98,7 +98,7 @@ namespace Microsoft.PythonTools.Project {
             Debug.WriteLine("CopyingOneFile: " + destFile);
             string destDir = Path.GetDirectoryName(destFile);
             if (!Directory.Exists(destDir)) {
-                // don't create a file share (\\foo\bar)
+                // don't create a file share (\\fob\oar)
                 if (!Path.IsPathRooted(destDir) || Path.GetPathRoot(destDir) != destDir) {
                     Directory.CreateDirectory(destDir);
                     Debug.WriteLine("Created dir: " + destDir);
@@ -107,6 +107,18 @@ namespace Microsoft.PythonTools.Project {
 
             File.Copy(item.SourceFile, destFile, true);
             Debug.WriteLine("Copied file: " + destFile);
+
+            // Attempt to remove read-only attribute from the destination file.
+            try {
+                var attr = File.GetAttributes(destFile);
+
+                if (attr.HasFlag(FileAttributes.ReadOnly)) {
+                    File.SetAttributes(destFile, attr & ~FileAttributes.ReadOnly);
+                    Debug.WriteLine("Removed read-only attribute.");
+                }
+            } catch (IOException) {
+            } catch (UnauthorizedAccessException) {
+            }
         }
 
         public string DestinationDescription {

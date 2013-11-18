@@ -267,11 +267,7 @@ namespace Microsoft.PythonTools.Project {
                 throw Marshal.GetExceptionForHR(VSConstants.OLE_E_PROMPTSAVECANCELLED);
             }
 
-            if (_isReference) {
-                ProjectMgr.RemoveInterpreter(_factory);
-            } else {
-                ProjectMgr.RemoveInterpreter(Url, removeFromStorage && _canDelete);
-            }
+            ProjectMgr.RemoveInterpreter(_factory, !_isReference && removeFromStorage && _canDelete);
         }
 
         /// <summary>
@@ -297,9 +293,19 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public override object GetIconHandle(bool open) {
-            return this.ProjectMgr.ImageHandler.GetIconHandle(
-                CommonProjectNode.ImageOffset + (int)CommonImageName.Interpreter
-            );
+            if (ProjectMgr == null) {
+                return null;
+            }
+
+            int index;
+            if (!_interpreters.IsAvailable(_factory)) {
+                index = ProjectMgr.GetIconIndex(PythonProjectImageName.MissingInterpreter);
+            } else if (_interpreters.ActiveInterpreter == _factory) {
+                index = ProjectMgr.GetIconIndex(PythonProjectImageName.ActiveInterpreter);
+            } else {
+                index = ProjectMgr.GetIconIndex(PythonProjectImageName.Interpreter);
+            }
+            return this.ProjectMgr.ImageHandler.GetIconHandle(index);
         }
 
         protected override VSOVERLAYICON OverlayIconIndex {

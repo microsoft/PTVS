@@ -1,3 +1,3 @@
 def f():
-    import foo
-    import bar
+    import fob
+    import oar

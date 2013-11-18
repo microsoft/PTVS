@@ -62,10 +62,10 @@ namespace Microsoft.PythonTools.Debugger {
 
         /// <summary>
         /// Gets the list of children which this object contains.  The children can be either
-        /// members (x.foo, x.bar) or they can be indexes (x[0], x[1], etc...).  Calling this
+        /// members (x.fob, x.oar) or they can be indexes (x[0], x[1], etc...).  Calling this
         /// causes the children to be determined by communicating with the debuggee.  These
         /// objects can then later be evaluated.  The names returned here are in the form of
-        /// "foo" or "0" so they need additional work to append onto this expression.
+        /// "fob" or "0" so they need additional work to append onto this expression.
         /// 
         /// Returns null if the object is not expandable.
         /// </summary>

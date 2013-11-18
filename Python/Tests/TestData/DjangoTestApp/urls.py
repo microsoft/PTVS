@@ -9,7 +9,7 @@ urlpatterns = patterns('',
     url(r'^$', 'DjangoTestApp.MyApp.views.home', name='home'),
     url(r'^config$', 'DjangoTestApp.MyApp.views.config', name='home'),
     url(r'^large_response$', 'DjangoTestApp.MyApp.views.large_response', name='home'),
-    # url(r'^DjangoTestApp/', include('DjangoTestApp.foo.urls')),
+    # url(r'^DjangoTestApp/', include('DjangoTestApp.example.urls')),
 
     # Uncomment the admin/doc line below to enable admin documentation:
     # url(r'^admin/doc/', include('django.contrib.admindocs.urls')),

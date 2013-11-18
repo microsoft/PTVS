@@ -2,7 +2,7 @@
     yield
 
 def f():
-    foo = yield
+    fob = yield
 
 def f():
-    baz = [(yield bar) for bar in foo]
+    baz = [(yield oar) for oar in fob]

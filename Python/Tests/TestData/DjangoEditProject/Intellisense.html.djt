@@ -2,7 +2,7 @@
 <head><title></title></head>
 
 <body>
-{% for x in foo %}
+{% for x in fob %}
 {% %}
 
 </body>

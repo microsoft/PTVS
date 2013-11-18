@@ -29,6 +29,8 @@
     <Reference Include="IronPython.Modules, Version=2.7.0.40, Culture=neutral, PublicKeyToken=7f709c5b713576e1, processorArchitecture=MSIL">
       <HintPath>..\..\Product\Python\IronPython\IronPython.Modules.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.Build, Version=$(MicrosoftBuildAssemblyVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+    <Reference Include="Microsoft.Build.Framework, Version=$(MicrosoftBuildAssemblyVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="Microsoft.Dynamic, Version=1.1.0.20, Culture=neutral, PublicKeyToken=7f709c5b713576e1, processorArchitecture=MSIL">
       <HintPath>..\..\Product\Python\IronPython\Microsoft.Dynamic.dll</HintPath>
@@ -71,6 +73,7 @@
     <Compile Include="..\DebuggerTests\DebugExtensions.cs">
       <Link>DebugExtensions.cs</Link>
     </Compile>
+    <Compile Include="BuildTasksTests.cs" />
     <Compile Include="CodeFormatterTests.cs" />
     <Compile Include="CommentBlockTests.cs" />
     <Compile Include="CommonUtilsTests.cs" />

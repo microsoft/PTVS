@@ -1,0 +1,80 @@
+<html>
+<head><title>Fob</title></head>
+<body>
+	{% autoescape on %}
+	{% autoescape off %}
+	{% autoescape blah %}
+	
+	{% comment %}
+	fob
+	{% endcomment %}
+	
+	{% csrf %}
+
+	{% cycle 'row1' 'row2' %}
+	{% cycle 'row1' 'row2' as baz %}
+	{% cycle baz %}
+	
+	{% debug %}
+	
+	{% filter force_escape|lower %}
+	{% endfilter %}
+	
+	{% firstof var1 var2 var3 %}
+
+	{% ifequal user.id comment.user_id %}
+	{% endifequal %}
+
+	{% ifequal user.id comment.user_id %}
+	{% else %}
+	{% endifequal %}
+
+	{% ifnotequal user.id comment.user_id %}
+	{% else %}
+	{% endifnotequal %}
+
+	{% ifnotequal user.id comment.user_id %}
+	{% endifnotequal %}
+
+	{% if fob %}
+	{% endif %}
+
+	{% if fob %}
+	{% elif oar %}
+	{% endif %}
+
+	{% if fob %}
+	{% else %}
+	{% endif %}
+
+	{% for x in abc %}
+	{% endfor %}
+
+	{% for x in abc reversed %}
+	{% endfor %}
+
+	{% for  x  in  abc  reversed %}
+	{% endfor %}
+
+	{% load baz.quox %}
+	{% load fob from oar %}
+
+	{% now 'Y H' %}
+
+	{% regroup people by gender as grouped %}
+
+	{% spaceless %}
+		<p>
+		</p>
+	{% endspaceless %}
+
+	{% ssi /home/fob.txt %}
+
+
+	{% unknownblock %}
+    {% templatetag openblock %}
+    {% templatetag closeblock %}
+    {% widthratio fob %}
+    {{ fob!title!cut }}
+</body>
+</html>

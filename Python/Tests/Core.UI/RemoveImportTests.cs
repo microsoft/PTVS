@@ -32,9 +32,9 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void FromImport1() {
-            string expectedText = @"from sys import bar
+            string expectedText = @"from sys import oar
 
-bar";
+oar";
 
             RemoveSmartTagTest("FromImport1.py", 1, 1, true, expectedText);
             RemoveSmartTagTest("FromImport1.py", 1, 1, false, expectedText);
@@ -53,9 +53,9 @@ baz";
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void FromImportParens1() {
-            string expectedText = @"from sys import (bar)
+            string expectedText = @"from sys import (oar)
 
-bar";
+oar";
 
             RemoveSmartTagTest("FromImportParens1.py", 1, 1, true, expectedText);
         }
@@ -83,9 +83,9 @@ baz";
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void FromImportParensTrailingComma2() {
-            string expectedText = @"from sys import (bar, )
+            string expectedText = @"from sys import (oar, )
 
-bar";
+oar";
 
             RemoveSmartTagTest("FromImportParensTrailingComma2.py", 1, 1, true, expectedText);
         }
@@ -93,9 +93,9 @@ bar";
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void Import1() {
-            string expectedText = @"import bar
+            string expectedText = @"import oar
 
-bar";
+oar";
 
             RemoveSmartTagTest("Import1.py", 1, 1, true, expectedText);
         }
@@ -123,9 +123,9 @@ baz";
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void Import4() {
-            string expectedText = @"import bar, quox
+            string expectedText = @"import oar, quox
 
-bar
+oar
 quox";
 
             RemoveSmartTagTest("Import4.py", 1, 1, true, expectedText);
@@ -134,9 +134,9 @@ quox";
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void Import5() {
-            string expectedText = @"import bar, quox
+            string expectedText = @"import oar, quox
 
-bar
+oar
 quox";
 
             RemoveSmartTagTest("Import5.py", 1, 1, true, expectedText);
@@ -145,9 +145,9 @@ quox";
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void Import6() {
-            string expectedText = @"import bar,          quox
+            string expectedText = @"import oar,          quox
 
-bar
+oar
 quox";
 
             RemoveSmartTagTest("Import6.py", 1, 1, true, expectedText);
@@ -157,11 +157,11 @@ quox";
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ImportComment() {
             string expectedText = @"#baz
-import bar,          quox
-#foo
-#bar
+import oar,          quox
+#fob
+#oar
 
-bar
+oar
 quox";
 
             RemoveSmartTagTest("ImportComment.py", 1, 1, true, expectedText);
@@ -171,11 +171,11 @@ quox";
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void FromImportComment() {
             string expectedText = @"#baz
-from xyz import bar,          quox
-#foo
-#bar
+from xyz import oar,          quox
+#fob
+#oar
 
-bar
+oar
 quox";
 
             RemoveSmartTagTest("FromImportComment.py", 1, 1, true, expectedText);
@@ -241,7 +241,7 @@ def f():
 
 def f():
 
-    bar";
+    oar";
 
             RemoveSmartTagTest("LocalScopeOnly.py", 4, 10, false, expectedText);
         }
@@ -249,7 +249,7 @@ def f():
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ImportTrailingWhitespace() {
-            string expectedText = @"foo";
+            string expectedText = @"fob";
 
             RemoveSmartTagTest("ImportTrailingWhitespace.py", 1, 1, true, expectedText);
         }
@@ -271,8 +271,8 @@ def f():
         public void NameMangledUnmangled() {
             string expectedText = @"class C:
     def f(self):
-        import __foo
-        x = _C__foo";
+        import __fob
+        x = _C__fob";
 
             RemoveSmartTagTest("NameMangleUnmangled.py", 1, 1, true, expectedText);
             RemoveSmartTagTest("NameMangleUnmangled.py", 3, 14, false, expectedText);
@@ -283,8 +283,8 @@ def f():
         public void NameMangledMangled() {
             string expectedText = @"class C:
     def f(self):
-        import __foo
-        x = __foo";
+        import __fob
+        x = __fob";
 
             RemoveSmartTagTest("NameMangleMangled.py", 1, 1, true, expectedText);
             RemoveSmartTagTest("NameMangleMangled.py", 3, 14, false, expectedText);

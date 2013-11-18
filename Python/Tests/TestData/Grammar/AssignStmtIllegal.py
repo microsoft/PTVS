@@ -1,8 +1,8 @@
-﻿foo + bar = 1
-foo() = 1
+﻿fob + oar = 1
+fob() = 1
 None = 1
 2 = 1
-(foo for foo in bar) = 1
-foo, bar += 1
+(fob for fob in oar) = 1
+fob, oar += 1
 def f():
-    (yield foo) = 1
+    (yield fob) = 1

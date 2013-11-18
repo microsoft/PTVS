@@ -14,7 +14,7 @@ def f():
     def g(x):
             nonlocal x
 
-nonlocal foo
+nonlocal fob
 
 globalvar = 42
 def g():

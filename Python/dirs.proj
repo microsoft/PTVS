@@ -3,6 +3,7 @@
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), build.root))\Build\Common.Build.settings" />
 
   <ItemGroup>
+    <ProjectFile Include="$(BuildRoot)\Common\dirs.proj"/>
     <ProjectFile Include="Product\dirs.proj"/>
     <ProjectFile Include="Tests\dirs.proj"/>
     <ProjectFile Include="Setup\dirs.proj"/>

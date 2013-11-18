@@ -28,8 +28,8 @@ namespace Microsoft.PythonTools.Debugger {
     /// <summary>
     /// Handles connections from all debuggers.
     /// </summary>
-    class DebugConnectionListener {
-        private static Socket _listenerSocket;
+    static class DebugConnectionListener {
+        private static int _listenerPort = -1;
         private static readonly Dictionary<Guid, WeakReference> _targets = new Dictionary<Guid, WeakReference>();
 
         public static void RegisterProcess(Guid id, PythonProcess process) {
@@ -46,19 +46,18 @@ namespace Microsoft.PythonTools.Debugger {
                     EnsureListenerSocket();
                 }
 
-                return ((IPEndPoint)_listenerSocket.LocalEndPoint).Port;
+                return _listenerPort;
             }
         }
 
         private static void EnsureListenerSocket() {
-            if (_listenerSocket == null) {
-                _listenerSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.IP);
-                _listenerSocket.Bind(new IPEndPoint(IPAddress.Loopback, 0));
-                _listenerSocket.Listen(0);
-                Debug.WriteLine("Listening for debug connections on port " + ListenerPort);
-                var listenerThread = new Thread(ListenForConnection);
-                listenerThread.Name = "Python Debug Connection Listener";
-                listenerThread.Start();
+            if (_listenerPort < 0) {
+                var socketSource = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.IP);
+                socketSource.Bind(new IPEndPoint(IPAddress.Loopback, 0));
+                socketSource.Listen(0);
+                _listenerPort = ((IPEndPoint)socketSource.LocalEndPoint).Port;
+                Debug.WriteLine("Listening for debug connections on port {0}", _listenerPort);
+                socketSource.BeginAccept(AcceptConnection, socketSource);
             }
         }
 
@@ -78,70 +77,88 @@ namespace Microsoft.PythonTools.Debugger {
             return null;
         }
 
-        private static void ListenForConnection() {
+        private static void AcceptConnection(IAsyncResult iar) {
+            Socket socket;
+            var socketSource = ((Socket)iar.AsyncState);
             try {
-                for (; ; ) {
-                    var socket = _listenerSocket.Accept();
-                    var stream = new NetworkStream(socket, ownsSocket: true);
-                    try {
-                        socket.Blocking = true;
-                        string debugId = stream.ReadString();
-                        var result = (ConnErrorMessages)stream.ReadInt32();
+                socket = socketSource.EndAccept(iar);
+            } catch (SocketException ex) {
+                Debug.WriteLine("DebugConnectionListener socket failed");
+                Debug.WriteLine(ex);
+                return;
+            } catch (ObjectDisposedException) {
+                Debug.WriteLine("DebugConnectionListener socket closed");
+                return;
+            }
 
-                        lock (_targets) {
-                            Guid debugGuid;
-                            WeakReference weakProcess;
-                            PythonProcess targetProcess;
+            var stream = new NetworkStream(socket, ownsSocket: false);
+            try {
+                socket.Blocking = true;
+                string debugId = stream.ReadString();
+                var result = (ConnErrorMessages)stream.ReadInt32();
 
-                            if (Guid.TryParse(debugId, out debugGuid) &&
-                                _targets.TryGetValue(debugGuid, out weakProcess) &&
-                                (targetProcess = weakProcess.Target as PythonProcess) != null) {
+                lock (_targets) {
+                    Guid debugGuid;
+                    WeakReference weakProcess;
+                    PythonProcess targetProcess;
 
-                                if (result == ConnErrorMessages.None) {
-                                    targetProcess.Connected(socket, stream);
-                                } else {
-                                    var outWin = (IVsOutputWindow)Package.GetGlobalService(typeof(IVsOutputWindow));
+                    if (Guid.TryParse(debugId, out debugGuid) &&
+                        _targets.TryGetValue(debugGuid, out weakProcess) &&
+                        (targetProcess = weakProcess.Target as PythonProcess) != null) {
 
-                                    IVsOutputWindowPane pane;
-                                    if (outWin != null && ErrorHandler.Succeeded(outWin.GetPane(VSConstants.GUID_OutWindowDebugPane, out pane))) {
-                                        pane.Activate();
-                                        string moduleName;
-                                        try {
-                                            moduleName = Process.GetProcessById(targetProcess.Id).MainModule.ModuleName;
-                                        } catch {
-                                            // either the process is no longer around, or it's a 64-bit process
-                                            // and we can't get the EXE name.
-                                            moduleName = null;
-                                        }
-
-                                        if (moduleName != null) {
-                                            pane.OutputString(String.Format("Failed to connect to process {0} ({1}): {2}",
-                                                targetProcess.Id,
-                                                moduleName,
-                                                result.GetErrorMessage())
-                                            );
-                                        } else {
-                                            pane.OutputString(String.Format("Failed to connect to process {0}: {1}",
-                                                targetProcess.Id,
-                                                result.GetErrorMessage())
-                                            );
-                                        }
-                                    }
-                                    targetProcess.Unregister();
-                                }
-                            } else {
-                                Debug.WriteLine("Unknown debug target: {0}", debugId);
-                                stream.Close();
-                            }
+                        if (result == ConnErrorMessages.None) {
+                            targetProcess.Connected(socket, stream);
+                            stream = null;
+                            socket = null;
+                        } else {
+                            WriteErrorToOutputWindow(result, targetProcess);
+                            targetProcess.Unregister();
                         }
-                    } catch (IOException) {
-                    } catch (SocketException) {
+                    } else {
+                        Debug.WriteLine("Unknown debug target: {0}", debugId);
                     }
                 }
+            } catch (IOException) {
             } catch (SocketException) {
             } finally {
-                _listenerSocket.Close();
-                _listenerSocket = null;
+                if (stream != null) {
+                    stream.Dispose();
+                }
+                if (socket != null) {
+                    socket.Dispose();
+                }
+            }
+
+            socketSource.BeginAccept(AcceptConnection, socketSource);
+        }
+
+        private static void WriteErrorToOutputWindow(ConnErrorMessages result, PythonProcess targetProcess) {
+            var outWin = (IVsOutputWindow)Package.GetGlobalService(typeof(IVsOutputWindow));
+
+            IVsOutputWindowPane pane;
+            if (outWin != null && ErrorHandler.Succeeded(outWin.GetPane(VSConstants.GUID_OutWindowDebugPane, out pane))) {
+                pane.Activate();
+                string moduleName;
+                try {
+                    moduleName = Process.GetProcessById(targetProcess.Id).MainModule.ModuleName;
+                } catch {
+                    // either the process is no longer around, or it's a 64-bit process
+                    // and we can't get the EXE name.
+                    moduleName = null;
+                }
+
+                if (moduleName != null) {
+                    pane.OutputString(String.Format("Failed to connect to process {0} ({1}): {2}",
+                        targetProcess.Id,
+                        moduleName,
+                        result.GetErrorMessage())
+                    );
+                } else {
+                    pane.OutputString(String.Format("Failed to connect to process {0}: {1}",
+                        targetProcess.Id,
+                        result.GetErrorMessage())
+                    );
+                }
             }
         }
     }

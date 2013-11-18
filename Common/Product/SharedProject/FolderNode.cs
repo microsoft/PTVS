@@ -105,7 +105,10 @@ namespace Microsoft.VisualStudioTools.Project
 
         public override object GetIconHandle(bool open)
         {
-            return this.ProjectMgr.ImageHandler.GetIconHandle(open ? (int)ProjectNode.ImageName.OpenFolder : (int)ProjectNode.ImageName.Folder);
+            return ProjectMgr.GetIconHandleByName(open ?
+                ProjectNode.ImageName.OpenFolder :
+                ProjectNode.ImageName.Folder
+            );
         }
 
         /// <summary>

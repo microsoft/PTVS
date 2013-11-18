@@ -90,7 +90,7 @@ namespace Microsoft.PythonTools.DkmDebugger.Proxies.Structs {
         public override void Repr(ReprBuilder builder) {
             var count = ReadElements().Count();
             if (count == 0) {
-                builder.Append("set()");
+                builder.Append(builder.Options.LanguageVersion >= PythonLanguageVersion.V30 ? "set()" : "set([])");
                 return;
             }
 
@@ -99,11 +99,11 @@ namespace Microsoft.PythonTools.DkmDebugger.Proxies.Structs {
                     builder.AppendFormat("<set, len() = {0}>", count);
                     return;
                 }
-            } 
+            }
 
-            builder.Append("{");
+            builder.Append(builder.Options.LanguageVersion >= PythonLanguageVersion.V30 ? "{" : "set([");
             builder.AppendJoined(", ", ReadElements(), obj => builder.AppendRepr(obj));
-            builder.Append("}");
+            builder.Append(builder.Options.LanguageVersion >= PythonLanguageVersion.V30 ? "}" : "])");
         }
 
         public override IEnumerable<PythonEvaluationResult> GetDebugChildren(ReprOptions reprOptions) {

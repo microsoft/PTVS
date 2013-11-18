@@ -353,6 +353,22 @@ namespace Microsoft.PythonTools.Analysis {
         /// path is not a valid Python module.
         /// </exception>
         public static ModulePath FromFullPath(string path) {
+            return FromFullPath(path, null);
+        }
+
+        /// <summary>
+        /// Returns a new ModulePath value determined from the provided full
+        /// path to a Python file. This function will access the filesystem to
+        /// determine the package name.
+        /// </summary>
+        /// <param name="topLevelPath">
+        /// The directory to stop searching for packages at. The module name
+        /// will never include the last segment of this path.
+        /// </param>
+        /// <exception cref="ArgumentException">
+        /// path is not a valid Python module.
+        /// </exception>
+        public static ModulePath FromFullPath(string path, string topLevelPath) {
             var name = Path.GetFileName(path);
             var nameMatch = PythonFileRegex.Match(name);
             if (nameMatch == null || !nameMatch.Success) {
@@ -364,7 +380,12 @@ namespace Microsoft.PythonTools.Analysis {
 
             var fullName = nameMatch.Groups["name"].Value;
             var remainder = Path.GetDirectoryName(path);
-            while (!string.IsNullOrEmpty(remainder) && File.Exists(Path.Combine(remainder, "__init__.py"))) {
+            while (
+                CommonUtils.IsValidPath(remainder) &&
+                File.Exists(Path.Combine(remainder, "__init__.py")) &&
+                (string.IsNullOrEmpty(topLevelPath) ||
+                 (CommonUtils.IsSubpathOf(topLevelPath, remainder) && !CommonUtils.IsSamePath(topLevelPath, remainder)))
+            ) {
                 fullName = Path.GetFileName(remainder) + "." + fullName;
                 remainder = Path.GetDirectoryName(remainder);
             }

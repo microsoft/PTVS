@@ -7,7 +7,7 @@ def f(*getrecursionlimit):
 def f(**getrecursionlimit): 
     pass
 
-def f(foo, getrecursionlimit):
+def f(fob, getrecursionlimit):
     pass
 
 def f(x, *getrecursionlimit):
@@ -16,21 +16,21 @@ def f(x, *getrecursionlimit):
 def f(x, **getrecursionlimit):
     pass
 
-def f(foo, getrecursionlimit = getrecursionlimit):
+def f(fob, getrecursionlimit = getrecursionlimit):
    pass
 
-def f(foo, bar = [], getrecursionlimit = getrecursionlimit):
+def f(fob, oar = [], getrecursionlimit = getrecursionlimit):
    pass
 
-def f(foo, bar = 1 + 2, getrecursionlimit = getrecursionlimit):
+def f(fob, oar = 1 + 2, getrecursionlimit = getrecursionlimit):
    pass
 
-def f(foo =\
+def f(fob =\
     [], getrecursionlimit = getrecursionlimit):
    pass
 
 
-def f(foo\
+def f(fob\
     = [], getrecursionlimit = getrecursionlimit):
    pass
 

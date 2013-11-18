@@ -105,9 +105,9 @@ namespace Microsoft.VisualStudioTools.Project {
                     return (int)ProjectNode.ImageName.WindowsForm;
                 } else if (this._project.IsCodeFile(FileName)) {
                     if (CommonUtils.IsSamePath(this.Url, _project.GetStartupFile())) {
-                        return CommonProjectNode.ImageOffset + (int)CommonImageName.StartupFile;
+                        return _project.ImageOffset + (int)CommonImageName.StartupFile;
                     } else {
-                        return CommonProjectNode.ImageOffset + (int)CommonImageName.File;
+                        return _project.ImageOffset + (int)CommonImageName.File;
                     }
                 }
                 return base.ImageIndex;

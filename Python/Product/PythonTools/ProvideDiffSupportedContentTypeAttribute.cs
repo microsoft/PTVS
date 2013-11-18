@@ -23,10 +23,10 @@ namespace Microsoft {
         /// <summary>
         /// contentType            mappedType
         /// ".aspx;.settings"   -> ".txt;"      .aspx & .settings files will use the .txt editor factory but set their content types normally.
-        ///  ".foo"              -> ".bar"       .foo files will use the .bar exitor factory and the .bar content type
+        ///  ".fob"              -> ".oar"       .fob files will use the .oar exitor factory and the .oar content type
         ///  ".baz"              -> ";.txt"      .baz files will use normal editor factory and the .txt content type
-        ///  ".foobar"           -> ";"          .foobar files will use the normal editor factory & content type (but be forced to open as copy). 
-        ///  ".foobar"           -> ""
+        ///  ".foboar"           -> ";"          .foboar files will use the normal editor factory & content type (but be forced to open as copy). 
+        ///  ".foboar"           -> ""
         /// </summary>
         public ProvideDiffSupportedContentTypeAttribute(string contentType, string mappedType) {
             _contentType = contentType;

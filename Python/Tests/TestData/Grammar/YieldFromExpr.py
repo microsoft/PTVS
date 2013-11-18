@@ -1,4 +1,4 @@
 ﻿def f():
-    yield from foo
-    bar = yield from foo
-    baz = [(yield from bar) for bar in foo]
+    yield from fob
+    oar = yield from fob
+    baz = [(yield from oar) for oar in fob]

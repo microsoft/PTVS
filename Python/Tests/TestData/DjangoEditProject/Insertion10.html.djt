@@ -4,7 +4,7 @@
 <body>
 <script>
 </script>sss
-{{ foo }}
-{{ faoo }aaa {{ foo }}
+{{ fob }}
+{{ faoo }aaa {{ fob }}
 </body>
 </html>

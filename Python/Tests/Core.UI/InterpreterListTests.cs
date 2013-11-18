@@ -85,7 +85,7 @@ namespace PythonToolsUITests {
         public void CreateRemoveVirtualEnvInInterpreterListInVS() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
                 var newProjDialog = app.FileNewProject();
-                newProjDialog.Location = Path.GetTempPath();
+                newProjDialog.Location = TestData.GetTempPath();
 
                 newProjDialog.FocusLanguageNode();
 
@@ -620,9 +620,11 @@ namespace PythonToolsUITests {
                 list = new InterpreterList(mockService);
                 view = list.Interpreters[0];
 
-                wnd = new Window() { Content = list };
-                wnd.ShowInTaskbar = false;
-                wnd.WindowState = WindowState.Minimized;
+                wnd = new Window {
+                    Content = list,
+                    ShowInTaskbar = false,
+                    WindowState = WindowState.Minimized
+                };
                 wnd.Show();
                 e.Set();
                 Dispatcher.Run();
@@ -630,50 +632,53 @@ namespace PythonToolsUITests {
             t.SetApartmentState(ApartmentState.STA);
             t.Start();
             Assert.IsTrue(e.WaitOne(5000));
+            var dispatcher = wnd.Dispatcher;
 
+            try {
+                Assert.IsTrue(dispatcher.Invoke(() => view.CanRefresh));
+                Assert.IsTrue(dispatcher.Invoke(() => InterpreterList.RegenerateCommand.CanExecute(view, list)));
+                Assert.IsFalse(fact.IsCurrent);
+                Assert.AreEqual(MockPythonInterpreterFactory.NoDatabaseReason, fact.GetIsCurrentReason(null));
 
-            Assert.IsTrue((bool)view.Dispatcher.Invoke((Func<bool>)(() => view.CanRefresh)));
-            Assert.IsTrue((bool)view.Dispatcher.Invoke((Func<bool>)(() => InterpreterList.RegenerateCommand.CanExecute(view, list))));
-            Assert.IsFalse(fact.IsCurrent);
-            Assert.AreEqual(MockPythonInterpreterFactory.NoDatabaseReason, fact.GetIsCurrentReason(null));
+                dispatcher.Invoke(() => InterpreterList.RegenerateCommand.Execute(view, list));
 
-            view.Dispatcher.Invoke((Action)(() => InterpreterList.RegenerateCommand.Execute(view, list)));
+                Assert.IsTrue(dispatcher.Invoke(() => view.IsRunning));
+                Assert.IsFalse(dispatcher.Invoke(() => InterpreterList.RegenerateCommand.CanExecute(view, list)));
+                Assert.IsFalse(fact.IsCurrent);
+                Assert.AreEqual(MockPythonInterpreterFactory.GeneratingReason, fact.GetIsCurrentReason(null));
 
-            Assert.IsTrue((bool)view.Dispatcher.Invoke((Func<bool>)(() => view.IsRunning)));
-            Assert.IsFalse((bool)view.Dispatcher.Invoke((Func<bool>)(() => InterpreterList.RegenerateCommand.CanExecute(view, list))));
-            Assert.IsFalse(fact.IsCurrent);
-            Assert.AreEqual(MockPythonInterpreterFactory.GeneratingReason, fact.GetIsCurrentReason(null));
+                fact.EndGenerateCompletionDatabase(list, view.Identifier, false, true);
+                while (dispatcher.Invoke(() => view.IsRunning)) {
+                    dispatcher.BeginInvoke((Action)(() => { e.Set(); }), DispatcherPriority.ApplicationIdle);
+                    Assert.IsTrue(e.WaitOne(5000));
+                }
 
-            fact.EndGenerateCompletionDatabase(list, view.Identifier, false, true);
-            while ((bool)view.Dispatcher.Invoke((Func<bool>)(() => view.IsRunning))) {
-                view.Dispatcher.BeginInvoke((Action)(() => { e.Set(); }), DispatcherPriority.ApplicationIdle);
-                Assert.IsTrue(e.WaitOne(5000));
+                Assert.IsFalse(dispatcher.Invoke(() => view.IsRunning));
+                Assert.IsTrue(dispatcher.Invoke(() => InterpreterList.RegenerateCommand.CanExecute(view, list)));
+                Assert.IsFalse(fact.IsCurrent);
+                Assert.AreEqual(MockPythonInterpreterFactory.MissingModulesReason, fact.GetIsCurrentReason(null));
+
+                dispatcher.Invoke(() => InterpreterList.RegenerateCommand.Execute(view, list));
+
+                Assert.IsTrue(dispatcher.Invoke(() => view.IsRunning));
+                Assert.IsFalse(dispatcher.Invoke(() => InterpreterList.RegenerateCommand.CanExecute(view, list)));
+                Assert.IsFalse(fact.IsCurrent);
+                Assert.AreEqual(MockPythonInterpreterFactory.GeneratingReason, fact.GetIsCurrentReason(null));
+
+                fact.EndGenerateCompletionDatabase(list, view.Identifier, true, true);
+                while (dispatcher.Invoke(() => view.IsRunning)) {
+                    dispatcher.BeginInvoke((Action)(() => e.Set()), DispatcherPriority.ApplicationIdle);
+                    Assert.IsTrue(e.WaitOne(5000));
+                }
+
+                Assert.IsFalse(dispatcher.Invoke(() => view.IsRunning));
+                Assert.IsTrue(dispatcher.Invoke(() => InterpreterList.RegenerateCommand.CanExecute(view, list)));
+                Assert.IsTrue(fact.IsCurrent);
+                Assert.AreEqual(MockPythonInterpreterFactory.UpToDateReason, fact.GetIsCurrentReason(null));
+            } finally {
+                dispatcher.Invoke(() => wnd.Close());
+                dispatcher.BeginInvokeShutdown(DispatcherPriority.Normal);
             }
-
-            Assert.IsFalse((bool)view.Dispatcher.Invoke((Func<bool>)(() => view.IsRunning)));
-            Assert.IsTrue((bool)view.Dispatcher.Invoke((Func<bool>)(() => InterpreterList.RegenerateCommand.CanExecute(view, list))));
-            Assert.IsFalse(fact.IsCurrent);
-            Assert.AreEqual(MockPythonInterpreterFactory.MissingModulesReason, fact.GetIsCurrentReason(null));
-
-            view.Dispatcher.Invoke((Action)(() => InterpreterList.RegenerateCommand.Execute(view, list)));
-
-            Assert.IsTrue((bool)view.Dispatcher.Invoke((Func<bool>)(() => view.IsRunning)));
-            Assert.IsFalse((bool)view.Dispatcher.Invoke((Func<bool>)(() => InterpreterList.RegenerateCommand.CanExecute(view, list))));
-            Assert.IsFalse(fact.IsCurrent);
-            Assert.AreEqual(MockPythonInterpreterFactory.GeneratingReason, fact.GetIsCurrentReason(null));
-
-            fact.EndGenerateCompletionDatabase(list, view.Identifier, true, true);
-            while ((bool)view.Dispatcher.Invoke((Func<bool>)(() => view.IsRunning))) {
-                view.Dispatcher.BeginInvoke((Action)(() => { e.Set(); }), DispatcherPriority.ApplicationIdle);
-                Assert.IsTrue(e.WaitOne(5000));
-            }
-
-            Assert.IsFalse((bool)view.Dispatcher.Invoke((Func<bool>)(() => view.IsRunning)));
-            Assert.IsTrue((bool)view.Dispatcher.Invoke((Func<bool>)(() => InterpreterList.RegenerateCommand.CanExecute(view, list))));
-            Assert.IsTrue(fact.IsCurrent);
-            Assert.AreEqual(MockPythonInterpreterFactory.UpToDateReason, fact.GetIsCurrentReason(null));
-
-            wnd.Dispatcher.Invoke((Action)(() => wnd.Close()));
         }
 
         #endregion

@@ -41,25 +41,28 @@ namespace DjangoUITests {
                 var djangoApp = newProjDialog.ProjectTypes.FindItem("Django Project");
                 djangoApp.Select();
 
+                newProjDialog.Location = TestData.GetTempPath();
                 newProjDialog.ClickOK();
 
                 // wait for new solution to load...
-                for (int i = 0; i < 100 && app.Dte.Solution.Projects.Count == 0; i++) {
-                    System.Threading.Thread.Sleep(1000);
-                }
-
-                var projItem = app.SolutionExplorerTreeView.FindItem(
+                var projItem = app.SolutionExplorerTreeView.WaitForItem(
                     "Solution '" + app.Dte.Solution.Projects.Item(1).Name + "' (1 project)",
                     app.Dte.Solution.Projects.Item(1).Name
                 );
                 AutomationWrapper.Select(projItem);
                 System.Threading.Thread.Sleep(1000);
 
+                Exception exception = null;
                 ThreadPool.QueueUserWorkItem(x => {
                     try {
-                        app.Dte.ExecuteCommand("Project.AddWindowsAzureCloudServiceProject");
-                    } catch (Exception e) {
-                        Debug.WriteLine(e.ToString());
+                        app.Dte.ExecuteCommand("Project.ConverttoWindowsAzureCloudServiceProject");
+                    } catch (Exception ex1) {
+                        try {
+                            app.Dte.ExecuteCommand("Project.AddWindowsAzureCloudServiceProject");
+                        } catch (Exception ex2) {
+                            Console.WriteLine("Unable to execute Project.AddWindowsAzureCloudServiceProject.\r\n{1}", ex2);
+                            exception = ex1;
+                        }
                     }
                 });
 
@@ -68,6 +71,9 @@ namespace DjangoUITests {
                     app.Dte.Solution.Projects.Item(1).Name + ".Azure"
                 );
 
+                if (exception != null) {
+                    Assert.Fail("Unable to execute Project.AddWindowsAzureCloudServiceProject:\r\n{0}", exception);
+                }
                 Assert.IsNotNull(res);
             }
         }

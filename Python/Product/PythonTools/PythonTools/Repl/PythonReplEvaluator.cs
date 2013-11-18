@@ -19,6 +19,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Sockets;
+using System.Threading.Tasks;
 using System.Windows;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
@@ -28,6 +29,7 @@ using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio.Repl;
 using Microsoft.VisualStudio.Text.Adornments;
 using Microsoft.VisualStudioTools;
+using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Repl {
 #if INTERACTIVE_WINDOW
@@ -39,7 +41,6 @@ namespace Microsoft.PythonTools.Repl {
     [ReplRole("Reset")]
     internal class PythonReplEvaluator : BasePythonReplEvaluator {
         private readonly IErrorProviderFactory _errorProviderFactory;
-        private readonly string _envVars;
         private IPythonInterpreterFactory _interpreter;
         private readonly IInterpreterOptionsService _interpreterService;
         private VsProjectAnalyzer _replAnalyzer;
@@ -49,16 +50,11 @@ namespace Microsoft.PythonTools.Repl {
             : this(interpreter, errorProviderFactory, new DefaultPythonReplEvaluatorOptions(() => PythonToolsPackage.Instance.InteractiveOptionsPage.GetOptions(interpreter)), interpreterService) {
         }
 
-        public PythonReplEvaluator(IPythonInterpreterFactory interpreter, IErrorProviderFactory errorProviderFactory, PythonReplEvaluatorOptions options, IInterpreterOptionsService interpreterService = null) :
-            this(interpreter, errorProviderFactory, options, "", interpreterService) {
-        }
-
-        public PythonReplEvaluator(IPythonInterpreterFactory interpreter, IErrorProviderFactory errorProviderFactory, PythonReplEvaluatorOptions options, string envVars, IInterpreterOptionsService interpreterService = null)
+        public PythonReplEvaluator(IPythonInterpreterFactory interpreter, IErrorProviderFactory errorProviderFactory, PythonReplEvaluatorOptions options, IInterpreterOptionsService interpreterService = null)
             : base(options) {
             _interpreter = interpreter;
             _errorProviderFactory = errorProviderFactory;
             _interpreterService = interpreterService;
-            _envVars = envVars;
             if (_interpreterService != null) {
                 _interpreterService.InterpretersChanged += InterpretersChanged;
             }
@@ -120,7 +116,7 @@ namespace Microsoft.PythonTools.Repl {
             base.Dispose();
         }
 
-        protected override void Close() {
+        public override void Close() {
             base.Close();
             if (_interpreterService != null) {
                 _interpreterService.InterpretersChanged -= InterpretersChanged;
@@ -134,6 +130,11 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         protected override void Connect() {
+            var configurableOptions = CurrentOptions as ConfigurablePythonReplOptions;
+            if (configurableOptions != null) {
+                _interpreter = configurableOptions.InterpreterFactory ?? _interpreter;
+            }
+
             if (Interpreter == null) {
                 Window.WriteError("The interpreter is not available.");
                 return;
@@ -162,15 +163,7 @@ namespace Microsoft.PythonTools.Repl {
             int portNum;
             CreateConnection(out conn, out portNum);
 
-            if (!String.IsNullOrWhiteSpace(_envVars)) {
-                foreach (var envVar in _envVars.Split(new[] { ';' })) {
-                    var nameAndValue = envVar.Split(new[] { '=' }, 2);
-                    if (nameAndValue.Length == 2) {
-                        processInfo.EnvironmentVariables[nameAndValue[0]] = nameAndValue[1];
-                    }
-                }
-            }
-
+            
             List<string> args = new List<string>();
 
             if (!String.IsNullOrWhiteSpace(CurrentOptions.InterpreterOptions)) {
@@ -180,6 +173,13 @@ namespace Microsoft.PythonTools.Repl {
             var workingDir = CurrentOptions.WorkingDirectory;
             if (workingDir != null) {
                 processInfo.WorkingDirectory = workingDir;
+            }
+
+            var envVars = CurrentOptions.EnvironmentVariables;
+            if (envVars != null) {
+                foreach (var keyValue in envVars) {
+                    processInfo.EnvironmentVariables[keyValue.Key] = keyValue.Value;
+                }
             }
 
             var searchPaths = CurrentOptions.SearchPaths;
@@ -239,27 +239,29 @@ namespace Microsoft.PythonTools.Repl {
 
             processInfo.Arguments = String.Join(" ", args);
 
-            var process = new Process();
-            process.StartInfo = processInfo;
-            try {
-                process.Start();
-            } catch (Exception e) {
-                Win32Exception wex = e as Win32Exception;
-                if (wex != null && wex.NativeErrorCode == Microsoft.VisualStudioTools.Project.NativeMethods.ERROR_FILE_NOT_FOUND) {
-                    Window.WriteError(
-                        String.Format(
-                            "Failed to start interactive process, the interpreter could not be found: {0}{1}",
-                            Interpreter.Configuration.InterpreterPath,
-                            Environment.NewLine
-                        )
-                    );
-                } else {
-                    Window.WriteError(String.Format("Failed to start interactive process: {0}{1}{2}", Environment.NewLine, e.ToString(), Environment.NewLine));
+            UIThread.Instance.RunSync(() => {
+                var process = new Process();
+                process.StartInfo = processInfo;
+                try {
+                    process.Start();
+                } catch (Exception e) {
+                    Win32Exception wex = e as Win32Exception;
+                    if (wex != null && wex.NativeErrorCode == Microsoft.VisualStudioTools.Project.NativeMethods.ERROR_FILE_NOT_FOUND) {
+                        Window.WriteError(
+                            String.Format(
+                                "Failed to start interactive process, the interpreter could not be found: {0}{1}",
+                                Interpreter.Configuration.InterpreterPath,
+                                Environment.NewLine
+                            )
+                        );
+                    } else {
+                        Window.WriteError(String.Format("Failed to start interactive process: {0}{1}{2}", Environment.NewLine, e.ToString(), Environment.NewLine));
+                    }
+                    return;
                 }
-                return;
-            }
 
-            CreateCommandProcessor(conn, null, processInfo.RedirectStandardOutput, process);
+                CreateCommandProcessor(conn, null, processInfo.RedirectStandardOutput, process);
+            });
         }
 
         const int ERROR_FILE_NOT_FOUND = 2;
@@ -268,8 +270,8 @@ namespace Microsoft.PythonTools.Repl {
 
     [ReplRole("DontPersist")]
     class PythonReplEvaluatorDontPersist : PythonReplEvaluator {
-        public PythonReplEvaluatorDontPersist(IPythonInterpreterFactory interpreter, IErrorProviderFactory errorProviderFactory, PythonReplEvaluatorOptions options, string envVars, IInterpreterOptionsService interpreterService) :
-            base(interpreter, errorProviderFactory, options, envVars, interpreterService) {
+        public PythonReplEvaluatorDontPersist(IPythonInterpreterFactory interpreter, IErrorProviderFactory errorProviderFactory, PythonReplEvaluatorOptions options, IInterpreterOptionsService interpreterService) :
+            base(interpreter, errorProviderFactory, options, interpreterService) {
         }
     }
 
@@ -282,6 +284,10 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         public abstract string WorkingDirectory {
+            get;
+        }
+
+        public abstract IDictionary<string, string> EnvironmentVariables {
             get;
         }
 
@@ -335,68 +341,111 @@ namespace Microsoft.PythonTools.Repl {
     }
 
     class ConfigurablePythonReplOptions : PythonReplEvaluatorOptions {
-        private readonly string _workingDir;
+        private IPythonInterpreterFactory _factory;
+        private PythonProjectNode _project;
 
-        public ConfigurablePythonReplOptions(string workingDir) {
-            _workingDir = workingDir;
+        internal string _interpreterOptions;
+        internal string _workingDir;
+        internal IDictionary<string, string> _envVars;
+        internal string _startupScript;
+        internal string _searchPaths;
+        internal string _interpreterArguments;
+        internal VsProjectAnalyzer _projectAnalyzer;
+        internal bool _useInterpreterPrompts;
+        internal string _executionMode;
+        internal bool _liveCompletionsOnly;
+        internal bool _replSmartHistory;
+        internal bool _inlinePrompts;
+        internal bool _enableAttach;
+        internal string _primaryPrompt;
+        internal string _secondaryPrompt;
+
+        public ConfigurablePythonReplOptions() {
+            _replSmartHistory = true;
+            _inlinePrompts = true;
+            _primaryPrompt = ">>> ";
+            _secondaryPrompt = "... ";
+        }
+
+        internal ConfigurablePythonReplOptions Clone() {
+            var newOptions = (ConfigurablePythonReplOptions)MemberwiseClone();
+            if (_envVars != null) {
+                newOptions._envVars = new Dictionary<string, string>();
+                foreach (var kv in _envVars) {
+                    newOptions._envVars[kv.Key] = kv.Value;
+                }
+            }
+            return newOptions;
+        }
+
+        public IPythonInterpreterFactory InterpreterFactory {
+            get { return _factory; }
+            set { _factory = value; }
+        }
+
+        public PythonProjectNode Project {
+            get { return _project; }
+            set { _project = value; }
         }
 
         public override string InterpreterOptions {
-            get { return ""; }
+            get { return _interpreterOptions ?? ""; }
         }
 
         public override string WorkingDirectory {
-            get { return _workingDir; }
+            get { return _workingDir ?? ""; }
+        }
+
+        public override IDictionary<string, string> EnvironmentVariables {
+            get { return _envVars; }
         }
 
         public override string StartupScript {
-            get { return ""; }
+            get { return _startupScript ?? ""; }
         }
 
         public override string SearchPaths {
-            get { return ""; }
+            get { return _searchPaths ?? ""; }
         }
 
         public override string InterpreterArguments {
-            get { return ""; }
+            get { return _interpreterArguments ?? ""; }
         }
 
         public override VsProjectAnalyzer ProjectAnalyzer {
-            get {
-                return null;
-            }
+            get { return _projectAnalyzer; }
         }
 
         public override bool UseInterpreterPrompts {
-            get { return true; }
+            get { return _useInterpreterPrompts; }
         }
 
         public override string ExecutionMode {
-            get { return null; }
+            get { return _executionMode; }
         }
 
         public override bool EnableAttach {
-            get { return false; }
+            get { return _enableAttach; }
         }
 
         public override bool InlinePrompts {
-            get { return true; }
+            get { return _inlinePrompts; }
         }
 
         public override bool ReplSmartHistory {
-            get { return true; }
+            get { return _replSmartHistory; }
         }
 
         public override bool LiveCompletionsOnly {
-            get { return false; }
+            get { return _liveCompletionsOnly; }
         }
 
         public override string PrimaryPrompt {
-            get { return ">>> "; }
+            get { return _primaryPrompt; }
         }
 
         public override string SecondaryPrompt {
-            get { return "... "; }
+            get { return _secondaryPrompt; }
         }
     }
 
@@ -446,6 +495,12 @@ namespace Microsoft.PythonTools.Repl {
                     return Path.GetDirectoryName(textView.GetFilePath());
                 }
 
+                return null;
+            }
+        }
+
+        public override IDictionary<string, string> EnvironmentVariables {
+            get {
                 return null;
             }
         }

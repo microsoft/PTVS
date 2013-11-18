@@ -3,13 +3,13 @@ print('hello world')
 class C(object):
 	abc = 42
 	def __init__(self):
-		self.bar = 100
+		self.oar = 100
 
 
 def f(a, b, c):
 	i = 42
 	l = [2,3,4]
-	d = {'abc':'foo'}
+	d = {'abc':'fob'}
 	o = C()
 	print('in f')
 

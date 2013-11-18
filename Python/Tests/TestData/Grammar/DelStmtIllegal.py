@@ -1,3 +1,3 @@
 ﻿del 1
-del (foo for foo in bar)
-del foo(bar)
+del (fob for fob in oar)
+del fob(oar)

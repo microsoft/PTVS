@@ -60,7 +60,7 @@ namespace Microsoft.PythonTools.Navigation {
         private readonly Dispatcher _dispatcher;                        // current dispatcher so we can get back to our thread
         private IWpfTextView _textView;                                 // text view we're drop downs for
         private IVsDropdownBar _dropDownBar;                            // drop down bar - used to refresh when changes occur
-        private int _curTopLevelIndex = -1, _curNestedIndex = -1;       // currently selected indices for each bar
+        private int _curTopLevelIndex = -1, _curNestedIndex = -1;       // currently selected indices for each oar
         
         private static readonly ImageList _imageList = GetImageList();
         private static readonly ReadOnlyCollection<DropDownEntryInfo> EmptyEntries = new ReadOnlyCollection<DropDownEntryInfo>(new DropDownEntryInfo[0]);

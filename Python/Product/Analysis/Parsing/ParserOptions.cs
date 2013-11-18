@@ -33,7 +33,7 @@ namespace Microsoft.PythonTools.Parsing {
         /// <summary>
         /// Specifies the class name the parser starts off with for name mangling name expressions.
         /// 
-        /// For example __foo would turn into _C__foo if PrivatePrefix is set to C.
+        /// For example __fob would turn into _C__fob if PrivatePrefix is set to C.
         /// </summary>
         public string PrivatePrefix { get; set; }
 

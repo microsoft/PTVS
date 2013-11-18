@@ -163,8 +163,8 @@ namespace Microsoft.PythonTools.Refactoring {
                         break;
                     } else if (text == "as") {
                         if (sawName) {
-                            // import foo as bar
-                            // from foo import bar as baz
+                            // import fob as oar
+                            // from fob import oar as baz
                             break;
                         }
                     } else {
@@ -175,7 +175,7 @@ namespace Microsoft.PythonTools.Refactoring {
                 }
             }
 
-            // we saw from, but not import, so we're renaming a module name (from foo, renaming foo)
+            // we saw from, but not import, so we're renaming a module name (from fob, renaming fob)
             // or we saw import, but not a from, so we're renaming a module name
             return sawFrom != sawImport;
         }

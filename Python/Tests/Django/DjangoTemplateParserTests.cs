@@ -35,41 +35,41 @@ namespace DjangoTests {
                 new { Got = ("100.0"), Expected = DjangoVariable.Number("100.0", 0) },
                 new { Got = ("+100"), Expected = DjangoVariable.Number("+100", 0) },
                 new { Got = ("-100"), Expected = DjangoVariable.Number("-100", 0) },
-                new { Got = ("'foo'"), Expected = DjangoVariable.Constant("'foo'", 0) },
-                new { Got = ("\"foo\""), Expected = DjangoVariable.Constant("\"foo\"", 0) },
-                new { Got = ("foo"), Expected = DjangoVariable.Variable("foo", 0) },
-                new { Got = ("foo.bar"), Expected = DjangoVariable.Variable("foo.bar", 0) },
-                new { Got = ("foo|bar"), Expected = DjangoVariable.Variable("foo", 0, new DjangoFilter("bar", 4)) },
-                new { Got = ("foo|bar|baz"), Expected = DjangoVariable.Variable("foo", 0, new DjangoFilter("bar", 4), new DjangoFilter("baz", 8)) },
-                new { Got = ("foo|bar:'foo'"), Expected = DjangoVariable.Variable("foo", 0, DjangoFilter.Constant("bar", 4, "'foo'", 8)) },
-                new { Got = ("foo|bar:42"), Expected = DjangoVariable.Variable("foo", 0, DjangoFilter.Number("bar", 4, "42", 8)) },
-                new { Got = ("foo|bar:\"foo\""), Expected = DjangoVariable.Variable("foo", 0, DjangoFilter.Constant("bar", 4, "\"foo\"", 8)) },
-                new { Got = ("foo|bar:100"), Expected = DjangoVariable.Variable("foo", 0, DjangoFilter.Number("bar", 4, "100", 8)) },
-                new { Got = ("foo|bar:100.0"), Expected = DjangoVariable.Variable("foo", 0, DjangoFilter.Number("bar", 4, "100.0", 8)) },
-                new { Got = ("foo|bar:+100.0"), Expected = DjangoVariable.Variable("foo", 0, DjangoFilter.Number("bar", 4, "+100.0", 8)) },
-                new { Got = ("foo|bar:-100.0"), Expected =  DjangoVariable.Variable("foo", 0, DjangoFilter.Number("bar", 4, "-100.0", 8)) },
-                new { Got = ("foo|bar:baz.quox"), Expected = DjangoVariable.Variable("foo", 0, DjangoFilter.Variable("bar", 4, "baz.quox", 8)) },
-                new { Got = ("foo|bar:baz"), Expected = DjangoVariable.Variable("foo", 0, DjangoFilter.Variable("bar", 4, "baz", 8)) },
+                new { Got = ("'fob'"), Expected = DjangoVariable.Constant("'fob'", 0) },
+                new { Got = ("\"fob\""), Expected = DjangoVariable.Constant("\"fob\"", 0) },
+                new { Got = ("fob"), Expected = DjangoVariable.Variable("fob", 0) },
+                new { Got = ("fob.oar"), Expected = DjangoVariable.Variable("fob.oar", 0) },
+                new { Got = ("fob|oar"), Expected = DjangoVariable.Variable("fob", 0, new DjangoFilter("oar", 4)) },
+                new { Got = ("fob|oar|baz"), Expected = DjangoVariable.Variable("fob", 0, new DjangoFilter("oar", 4), new DjangoFilter("baz", 8)) },
+                new { Got = ("fob|oar:'fob'"), Expected = DjangoVariable.Variable("fob", 0, DjangoFilter.Constant("oar", 4, "'fob'", 8)) },
+                new { Got = ("fob|oar:42"), Expected = DjangoVariable.Variable("fob", 0, DjangoFilter.Number("oar", 4, "42", 8)) },
+                new { Got = ("fob|oar:\"fob\""), Expected = DjangoVariable.Variable("fob", 0, DjangoFilter.Constant("oar", 4, "\"fob\"", 8)) },
+                new { Got = ("fob|oar:100"), Expected = DjangoVariable.Variable("fob", 0, DjangoFilter.Number("oar", 4, "100", 8)) },
+                new { Got = ("fob|oar:100.0"), Expected = DjangoVariable.Variable("fob", 0, DjangoFilter.Number("oar", 4, "100.0", 8)) },
+                new { Got = ("fob|oar:+100.0"), Expected = DjangoVariable.Variable("fob", 0, DjangoFilter.Number("oar", 4, "+100.0", 8)) },
+                new { Got = ("fob|oar:-100.0"), Expected =  DjangoVariable.Variable("fob", 0, DjangoFilter.Number("oar", 4, "-100.0", 8)) },
+                new { Got = ("fob|oar:baz.quox"), Expected = DjangoVariable.Variable("fob", 0, DjangoFilter.Variable("oar", 4, "baz.quox", 8)) },
+                new { Got = ("fob|oar:baz"), Expected = DjangoVariable.Variable("fob", 0, DjangoFilter.Variable("oar", 4, "baz", 8)) },
 
                 new { Got = ("{{ 100 }}"), Expected = DjangoVariable.Number("100", 3) },
                 new { Got = ("{{ 100.0 }}"), Expected = DjangoVariable.Number("100.0", 3) },
                 new { Got = ("{{ +100 }}"), Expected = DjangoVariable.Number("+100", 3) },
                 new { Got = ("{{ -100 }}"), Expected = DjangoVariable.Number("-100", 3) },
-                new { Got = ("{{ 'foo' }}"), Expected = DjangoVariable.Constant("'foo'", 3) },
-                new { Got = ("{{ \"foo\" }}"), Expected = DjangoVariable.Constant("\"foo\"", 3) },
-                new { Got = ("{{ foo }}"), Expected = DjangoVariable.Variable("foo", 3) },
-                new { Got = ("{{ foo.bar }}"), Expected = DjangoVariable.Variable("foo.bar", 3) },
-                new { Got = ("{{ foo|bar }}"), Expected = DjangoVariable.Variable("foo", 3, new DjangoFilter("bar", 7)) },                
-                new { Got = ("{{ foo|bar|baz }}"), Expected = DjangoVariable.Variable("foo", 3, new DjangoFilter("bar", 7), new DjangoFilter("baz", 11)) },
-                new { Got = ("{{ foo|bar:'foo' }}"), Expected = DjangoVariable.Variable("foo", 3, DjangoFilter.Constant("bar", 7, "'foo'", 11)) },
-                new { Got = ("{{ foo|bar:42 }}"), Expected = DjangoVariable.Variable("foo", 3, DjangoFilter.Number("bar", 7, "42", 11)) },
-                new { Got = ("{{ foo|bar:\"foo\" }}"), Expected = DjangoVariable.Variable("foo", 3, DjangoFilter.Constant("bar", 7, "\"foo\"", 11)) },
-                new { Got = ("{{ foo|bar:100 }}"), Expected = DjangoVariable.Variable("foo", 3, DjangoFilter.Number("bar", 7, "100", 11)) },
-                new { Got = ("{{ foo|bar:100.0 }}"), Expected = DjangoVariable.Variable("foo", 3, DjangoFilter.Number("bar", 7, "100.0", 11)) },
-                new { Got = ("{{ foo|bar:+100.0 }}"), Expected = DjangoVariable.Variable("foo", 3, DjangoFilter.Number("bar", 7, "+100.0", 11)) },
-                new { Got = ("{{ foo|bar:-100.0 }}"), Expected =  DjangoVariable.Variable("foo", 3, DjangoFilter.Number("bar", 7, "-100.0", 11)) },
-                new { Got = ("{{ foo|bar:baz.quox }}"), Expected = DjangoVariable.Variable("foo", 3, DjangoFilter.Variable("bar", 7, "baz.quox", 11)) },
-                new { Got = ("{{ foo|bar:baz }}"), Expected = DjangoVariable.Variable("foo", 3, DjangoFilter.Variable("bar", 7, "baz", 11)) },
+                new { Got = ("{{ 'fob' }}"), Expected = DjangoVariable.Constant("'fob'", 3) },
+                new { Got = ("{{ \"fob\" }}"), Expected = DjangoVariable.Constant("\"fob\"", 3) },
+                new { Got = ("{{ fob }}"), Expected = DjangoVariable.Variable("fob", 3) },
+                new { Got = ("{{ fob.oar }}"), Expected = DjangoVariable.Variable("fob.oar", 3) },
+                new { Got = ("{{ fob|oar }}"), Expected = DjangoVariable.Variable("fob", 3, new DjangoFilter("oar", 7)) },                
+                new { Got = ("{{ fob|oar|baz }}"), Expected = DjangoVariable.Variable("fob", 3, new DjangoFilter("oar", 7), new DjangoFilter("baz", 11)) },
+                new { Got = ("{{ fob|oar:'fob' }}"), Expected = DjangoVariable.Variable("fob", 3, DjangoFilter.Constant("oar", 7, "'fob'", 11)) },
+                new { Got = ("{{ fob|oar:42 }}"), Expected = DjangoVariable.Variable("fob", 3, DjangoFilter.Number("oar", 7, "42", 11)) },
+                new { Got = ("{{ fob|oar:\"fob\" }}"), Expected = DjangoVariable.Variable("fob", 3, DjangoFilter.Constant("oar", 7, "\"fob\"", 11)) },
+                new { Got = ("{{ fob|oar:100 }}"), Expected = DjangoVariable.Variable("fob", 3, DjangoFilter.Number("oar", 7, "100", 11)) },
+                new { Got = ("{{ fob|oar:100.0 }}"), Expected = DjangoVariable.Variable("fob", 3, DjangoFilter.Number("oar", 7, "100.0", 11)) },
+                new { Got = ("{{ fob|oar:+100.0 }}"), Expected = DjangoVariable.Variable("fob", 3, DjangoFilter.Number("oar", 7, "+100.0", 11)) },
+                new { Got = ("{{ fob|oar:-100.0 }}"), Expected =  DjangoVariable.Variable("fob", 3, DjangoFilter.Number("oar", 7, "-100.0", 11)) },
+                new { Got = ("{{ fob|oar:baz.quox }}"), Expected = DjangoVariable.Variable("fob", 3, DjangoFilter.Variable("oar", 7, "baz.quox", 11)) },
+                new { Got = ("{{ fob|oar:baz }}"), Expected = DjangoVariable.Variable("fob", 3, DjangoFilter.Variable("oar", 7, "baz", 11)) },
 };
 
             foreach (var testCase in testCases) {
@@ -112,7 +112,7 @@ namespace DjangoTests {
                     Completions = new[] {
                         new { 
                             Position = 9,
-                            Expected = new[] { "foo", "bar" }
+                            Expected = new[] { "fob", "oar" }
                         },
                         new { 
                             Position = 4,
@@ -121,13 +121,13 @@ namespace DjangoTests {
                     }
                 },
                 new { 
-                    Got = ("for x in bar"), 
-                    Expected = (DjangoBlock)new DjangoForBlock(new BlockParseInfo("for", "x in bar", 0), 6, DjangoVariable.Variable("bar", 9), 12, -1, new[] { new Tuple<string, int>("x",  4) }),
+                    Got = ("for x in oar"), 
+                    Expected = (DjangoBlock)new DjangoForBlock(new BlockParseInfo("for", "x in oar", 0), 6, DjangoVariable.Variable("oar", 9), 12, -1, new[] { new Tuple<string, int>("x",  4) }),
                     Context = TestCompletionContext.Simple,
                     Completions = new[] {
                         new { 
                             Position = 9,
-                            Expected = new[] { "foo", "bar" }
+                            Expected = new[] { "fob", "oar" }
                         },
                         new { 
                             Position = 4,
@@ -142,7 +142,7 @@ namespace DjangoTests {
                     Completions = new[] {
                         new { 
                             Position = 10,
-                            Expected = new [] { "foo", "bar" }
+                            Expected = new [] { "fob", "oar" }
                         },
                         new { 
                             Position = 4,
@@ -213,18 +213,18 @@ namespace DjangoTests {
                     Completions = new[] {
                         new { 
                             Position = 8,
-                            Expected = new [] { "foo", "bar" }
+                            Expected = new [] { "fob", "oar" }
                         }
                     }
                 },
                 new { 
-                    Got = ("ifequal foo "), 
-                    Expected = (DjangoBlock)new DjangoIfOrIfNotEqualBlock(new BlockParseInfo("ifequal", " foo ", 0), DjangoVariable.Variable("foo", 8)),
+                    Got = ("ifequal fob "), 
+                    Expected = (DjangoBlock)new DjangoIfOrIfNotEqualBlock(new BlockParseInfo("ifequal", " fob ", 0), DjangoVariable.Variable("fob", 8)),
                     Context = TestCompletionContext.Simple,
                     Completions = new[] {
                         new { 
                             Position = 12,
-                            Expected = new [] { "foo", "bar" }
+                            Expected = new [] { "fob", "oar" }
                         }
                     }
                 },
@@ -235,13 +235,13 @@ namespace DjangoTests {
                     Completions = new[] {
                         new { 
                             Position = 3,
-                            Expected = new [] { "foo", "bar", "not" }
+                            Expected = new [] { "fob", "oar", "not" }
                         }
                     }
                 },
                 new { 
-                    Got = ("if foo "), 
-                    Expected = (DjangoBlock)new DjangoIfBlock(new BlockParseInfo("if", " foo ", 0), new BlockClassification(new Span(3, 3), Classification.Identifier)),
+                    Got = ("if fob "), 
+                    Expected = (DjangoBlock)new DjangoIfBlock(new BlockParseInfo("if", " fob ", 0), new BlockClassification(new Span(3, 3), Classification.Identifier)),
                     Context = TestCompletionContext.Simple,
                     Completions = new[] {
                         new { 
@@ -251,13 +251,13 @@ namespace DjangoTests {
                     }
                 },
                 new { 
-                    Got = ("if foo and "), 
-                    Expected = (DjangoBlock)new DjangoIfBlock(new BlockParseInfo("if", " foo and ", 0), new BlockClassification(new Span(3, 3), Classification.Identifier), new BlockClassification(new Span(7, 3), Classification.Keyword)),
+                    Got = ("if fob and "), 
+                    Expected = (DjangoBlock)new DjangoIfBlock(new BlockParseInfo("if", " fob and ", 0), new BlockClassification(new Span(3, 3), Classification.Identifier), new BlockClassification(new Span(7, 3), Classification.Keyword)),
                     Context = TestCompletionContext.Simple,
                     Completions = new[] {
                         new { 
                             Position = 11,
-                            Expected = new [] { "foo", "bar", "not" }
+                            Expected = new [] { "fob", "oar", "not" }
                         }
                     }
                 },
@@ -268,13 +268,13 @@ namespace DjangoTests {
                     Completions = new[] {
                         new { 
                             Position = 8,
-                            Expected = new [] { "foo", "bar" }
+                            Expected = new [] { "fob", "oar" }
                         }
                     }
                 },
                 new { 
-                    Got = ("firstof foo|"), 
-                    Expected = (DjangoBlock)new DjangoMultiVariableArgumentBlock(new BlockParseInfo("firstof", " foo|", 0), DjangoVariable.Variable("foo", 8)),
+                    Got = ("firstof fob|"), 
+                    Expected = (DjangoBlock)new DjangoMultiVariableArgumentBlock(new BlockParseInfo("firstof", " fob|", 0), DjangoVariable.Variable("fob", 8)),
                     Context = TestCompletionContext.Simple,
                     Completions = new[] {
                         new { 
@@ -301,7 +301,7 @@ namespace DjangoTests {
                     Completions = new[] {
                         new { 
                             Position = 11,
-                            Expected = new [] { "foo", "bar" }
+                            Expected = new [] { "fob", "oar" }
                         }
                     }
                 },
@@ -520,7 +520,7 @@ namespace DjangoTests {
 
         [TestMethod, Priority(0)]
         public void SingleTrailingChar() {
-            foreach (var code in new[] { "{{foo}}\n", "{{foo}}a" }) {
+            foreach (var code in new[] { "{{fob}}\n", "{{fob}}a" }) {
                 TokenizerTest(code,
                     new TemplateToken(TemplateTokenKind.Variable, 0, 6),
                     new TemplateToken(TemplateTokenKind.Text, 7, 7)
@@ -728,7 +728,7 @@ namespace DjangoTests {
     class TestCompletionContext : IDjangoCompletionContext {
         private readonly Dictionary<string, HashSet<AnalysisValue>> _variables;
         private readonly Dictionary<string, TagInfo> _filters;
-        internal static TestCompletionContext Simple = new TestCompletionContext(new[] { "foo", "bar" }, new[] { "cut", "lower" });
+        internal static TestCompletionContext Simple = new TestCompletionContext(new[] { "fob", "oar" }, new[] { "cut", "lower" });
 
         public TestCompletionContext(string[] variables, string[] filters) {
             _variables = new Dictionary<string, HashSet<AnalysisValue>>();

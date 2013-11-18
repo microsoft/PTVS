@@ -27,7 +27,7 @@
   </PropertyGroup>
   <ItemGroup>
     <None Include="Program.py" />
-    <None Include="Foo.unregfileext" />
+    <None Include="Fob.unregfileext" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" />
 </Project>

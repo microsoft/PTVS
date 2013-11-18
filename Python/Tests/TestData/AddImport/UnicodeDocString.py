@@ -1,3 +1,3 @@
-u'''foo'''
+u'''fob'''
 
 itertools

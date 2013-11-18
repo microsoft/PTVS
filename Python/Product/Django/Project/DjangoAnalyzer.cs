@@ -448,8 +448,8 @@ namespace Microsoft.PythonTools.Django.Project {
         }
 
         public Dictionary<string, HashSet<AnalysisValue>> GetVariablesForTemplateFile(string filename) {
-            string curLevel = filename;                     // is C:\Foo\Bar\Baz\foo.html
-            string curPath = filename = Path.GetFileName(filename);    // is foo.html
+            string curLevel = filename;                     // is C:\Fob\Oar\Baz\fob.html
+            string curPath = filename = Path.GetFileName(filename);    // is fob.html
 
             for (; ; ) {
                 string curFilename = filename.Replace('\\', '/');
@@ -457,12 +457,12 @@ namespace Microsoft.PythonTools.Django.Project {
                 if (_templateFiles.TryGetValue(curFilename, out res)) {
                     return res.GetAllValues();
                 }
-                curLevel = Path.GetDirectoryName(curLevel);      // C:\Foo\Bar\Baz\foo.html gets us C:\Foo\Bar\Baz
+                curLevel = Path.GetDirectoryName(curLevel);      // C:\Fob\Oar\Baz\fob.html gets us C:\Fob\Oar\Baz
                 var fn2 = Path.GetFileName(curLevel);            // Gets us Baz
                 if (String.IsNullOrEmpty(fn2)) {
                     break;
                 }
-                curPath = Path.Combine(fn2, curPath);       // Get us Baz\foo.html
+                curPath = Path.Combine(fn2, curPath);       // Get us Baz\fob.html
                 filename = curPath;
             }
 

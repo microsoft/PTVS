@@ -330,6 +330,13 @@ actual inspection and introspection."""
         args = read_string(self.conn)
         self.execute_file(filename, args)
 
+    def _cmd_excx(self):
+        """handles executing a single file, module or process"""
+        filetype = read_string(self.conn)
+        filename = read_string(self.conn)
+        args = read_string(self.conn)
+        self.execute_file_ex(filetype, filename, args)
+
     def _cmd_debug_attach(self):
         port = read_int(self.conn)
         id = read_string(self.conn)
@@ -346,6 +353,7 @@ actual inspection and introspection."""
         to_bytes('sett'): _cmd_sett,
         to_bytes('inpl'): _cmd_inpl,
         to_bytes('excf'): _cmd_excf,
+        to_bytes('excx'): _cmd_excx,
         to_bytes('dbga'): _cmd_debug_attach,
     }
 
@@ -437,6 +445,10 @@ actual inspection and introspection."""
         
     def execute_file(self, filename, args):
         """executes the given filename as the main module"""
+        return self.execute_file_ex('script', filename, args)
+
+    def execute_file_ex(self, filetype, filename, args):
+        """executes the given filename as a 'script', 'module' or 'process'."""
         raise NotImplementedError
 
     def interrupt_main(self):
@@ -726,13 +738,43 @@ due to the exec, so we do it here"""
     def check_for_exit_execution_loop(self):
         return False
 
-    def execute_file_work_item(self):
+    def execute_script_work_item(self):
         self.run_file_as_main(self.current_code, self.current_args)
+
+    def execute_module_work_item(self):
+        new_argv = [''] + _command_line_to_args_list(self.current_args)
+        old_argv = sys.argv
+        import runpy
+        try:
+            sys.argv = new_argv
+            runpy.run_module(self.current_code, alter_sys=True)
+        except Exception:
+            traceback.print_exc()
+        finally:
+            sys.argv = old_argv
+
+    def execute_process_work_item(self):
+        try:
+            from subprocess import Popen, PIPE, STDOUT
+            import codecs
+            out_codec = codecs.lookup(sys.stdout.encoding)
+
+            proc = Popen(
+                '"%s" %s' % (self.current_code, self.current_args),
+                stdout=PIPE,
+                stderr=STDOUT,
+                bufsize=0,
+            )
+
+            for line in proc.stdout:
+                print(out_codec.decode(line, 'replace')[0].rstrip('\r\n'))
+        except Exception:
+            traceback.print_exc()
 
     @staticmethod
     def _get_cur_module_set():
-        """gets the set of modules avoiding exceptions if someone puts something"""
-        """weird in there"""
+        """gets the set of modules avoiding exceptions if someone puts something
+        weird in there"""
 
         try:
             return set(sys.modules)
@@ -751,10 +793,10 @@ due to the exec, so we do it here"""
         self.execute_item = self.execute_code_work_item
         self.execute_item_lock.release()
 
-    def execute_file(self, filename, args):
+    def execute_file_ex(self, filetype, filename, args):
         self.current_code = filename
         self.current_args = args
-        self.execute_item = self.execute_file_work_item
+        self.execute_item = getattr(self, 'execute_%s_work_item' % filetype, None)
         self.execute_item_lock.release()
 
     def interrupt_main(self):
@@ -766,7 +808,7 @@ due to the exec, so we do it here"""
             else:
                 thread.interrupt_main()
 
-    def exit_process(self):        
+    def exit_process(self):
         self.execute_item = exit_work_item
         try:
             self.execute_item_lock.release()
@@ -1290,7 +1332,7 @@ def _run_repl():
             backend_error = traceback.format_exc()
 
     # fix sys.path so that cwd is where the project lives.
-    sys.path[0] = os.getcwd()
+    sys.path[0] = '.'
     # remove all of our parsed args in case we have a launch file that cares...
     sys.argv = args or ['']
 

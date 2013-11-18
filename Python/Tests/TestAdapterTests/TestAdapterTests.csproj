@@ -63,7 +63,7 @@
     <Compile Include="TestInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="$(OutputPath)visualstudio_py_*.py;$(OutputPath)ptvsd\*.py">
+    <None Include="$(BuildRoot)\Python\Product\PythonTools\visualstudio_py_*.py;$(BuildRoot)\Python\Product\PythonTools\ptvsd\*.py">
       <Link>ptvsd\%(Filename)%(Extension)</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

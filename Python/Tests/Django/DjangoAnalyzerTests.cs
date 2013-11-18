@@ -46,11 +46,14 @@ namespace DjangoTests {
         }
 
         private DjangoAnalyzer AnalyzerTest(string path) {
+            string djangoDbPath = TestData.GetPath("TestData\\DjangoDB");
+            Assert.IsTrue(PythonTypeDatabase.IsDatabaseVersionCurrent(djangoDbPath));
+
             var testFact = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(
                 new Version(2, 7),
                 "Django Test Interpreter",
                 TestData.GetPath("CompletionDB"),
-                TestData.GetPath("TestData\\DjangoDB")
+                djangoDbPath
             );
 
             PythonAnalyzer analyzer = new PythonAnalyzer(testFact);

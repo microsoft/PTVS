@@ -1,11 +1,11 @@
-class Foo:
+class Fob:
     pass
 
-class Bar:
-    def bar(self):
+class Oar:
+    def oar(self):
         pass
 
-class FooBarBaz:
+class FobOarBaz:
     def frob(self):
         pass
 

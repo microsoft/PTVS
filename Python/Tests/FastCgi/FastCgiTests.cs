@@ -557,8 +557,8 @@ namespace FastCgiTest {
             IisExpressTest(
                 "TestData\\WFastCgi\\Environment",
                 new GetAndValidateUrl(
-                    GetLocalUrl("/foo/bar/baz?quox=100"),
-                    ValidateString("QUERY_STRING: quox=100\nPATH_INFO: /foo/bar/baz\nSCRIPT_NAME: \n")
+                    GetLocalUrl("/fob/oar/baz?quox=100"),
+                    ValidateString("QUERY_STRING: quox=100\nPATH_INFO: /fob/oar/baz\nSCRIPT_NAME: \n")
                 )
             );
         }
@@ -659,7 +659,7 @@ namespace FastCgiTest {
                 CollectStaticFiles("TestData\\WFastCgi\\DjangoSimpleApp"),
                 "TestData\\WFastCgi\\DjangoSimpleApp",
                 new GetAndValidateUrl(
-                    GetLocalUrl("/static/foo/helloworld.txt"),
+                    GetLocalUrl("/static/fob/helloworld.txt"),
                     ValidateString("hello world from a static text file!")
                 )
             );
@@ -674,7 +674,7 @@ namespace FastCgiTest {
                 CollectStaticFiles("TestData\\WFastCgi\\DjangoSimpleAppUrlRewrite"),
                 "TestData\\WFastCgi\\DjangoSimpleAppUrlRewrite",
                 new GetAndValidateUrl(
-                    GetLocalUrl("/static/foo/helloworld.txt"),
+                    GetLocalUrl("/static/fob/helloworld.txt"),
                     ValidateString("hello world from a static text file!")
                 )
             );
@@ -688,8 +688,8 @@ namespace FastCgiTest {
             IisExpressTest(
                 "TestData\\WFastCgi\\EnvironmentUrlRewrite",
                 new GetAndValidateUrl(
-                    GetLocalUrl("/foo/bar/baz?quox=100"),
-                    ValidateString("QUERY_STRING: quox=100\nPATH_INFO: /foo/bar/baz\nSCRIPT_NAME: \n")
+                    GetLocalUrl("/fob/oar/baz?quox=100"),
+                    ValidateString("QUERY_STRING: quox=100\nPATH_INFO: /fob/oar/baz\nSCRIPT_NAME: \n")
                 )
             );
         }
@@ -708,7 +708,7 @@ namespace FastCgiTest {
                         if (partCount++ == 0) {
                             Assert.AreEqual("Hello world!", piece);
 
-                            var req = WebRequest.Create(GetLocalUrl() + "/foo");
+                            var req = WebRequest.Create(GetLocalUrl() + "/fob");
                             var response = req.GetResponse();
                             var reader = new StreamReader(response.GetResponseStream());
                         } else {
@@ -729,8 +729,8 @@ namespace FastCgiTest {
             IisExpressTest(
                 "TestData\\WFastCgi\\DjangoSimpleApp",
                 new GetAndValidateUrl(
-                    GetLocalUrl("?foo=42&bar=100"),
-                    ValidateString("GET: foo=42&bar=100")
+                    GetLocalUrl("?fob=42&oar=100"),
+                    ValidateString("GET: fob=42&oar=100")
                 )
             );
         }
@@ -744,9 +744,9 @@ namespace FastCgiTest {
                 "TestData\\WFastCgi\\DjangoSimpleApp",
                 new PostAndValidateUrl(
                     GetLocalUrl(),
-                    ValidateString("POST: foo=42&bar=100"),
-                    new KeyValuePair<string, string>("foo", "42"),
-                    new KeyValuePair<string, string>("bar", "100")
+                    ValidateString("POST: fob=42&oar=100"),
+                    new KeyValuePair<string, string>("fob", "42"),
+                    new KeyValuePair<string, string>("oar", "100")
                 )
             );
         }
@@ -759,8 +759,8 @@ namespace FastCgiTest {
             IisExpressTest(
                 "TestData\\WFastCgi\\DjangoSimpleApp",
                 new GetAndValidateUrl(
-                    GetLocalUrl("/foo/bar/baz"),
-                    ValidateString("path: /foo/bar/baz\npath_info: /foo/bar/baz")
+                    GetLocalUrl("/fob/oar/baz"),
+                    ValidateString("path: /fob/oar/baz\npath_info: /fob/oar/baz")
                 )
             );
         }
@@ -773,8 +773,8 @@ namespace FastCgiTest {
             IisExpressTest(
                 "TestData\\WFastCgi\\DjangoSimpleAppUrlRewrite",
                 new GetAndValidateUrl(
-                    GetLocalUrl("?foo=42&bar=100"),
-                    ValidateString("GET: foo=42&bar=100")
+                    GetLocalUrl("?fob=42&oar=100"),
+                    ValidateString("GET: fob=42&oar=100")
                 )
             );
         }
@@ -788,9 +788,9 @@ namespace FastCgiTest {
                 "TestData\\WFastCgi\\DjangoSimpleAppUrlRewrite",
                 new PostAndValidateUrl(
                     GetLocalUrl(),
-                    ValidateString("POST: foo=42&bar=100"),
-                    new KeyValuePair<string, string>("foo", "42"),
-                    new KeyValuePair<string, string>("bar", "100")
+                    ValidateString("POST: fob=42&oar=100"),
+                    new KeyValuePair<string, string>("fob", "42"),
+                    new KeyValuePair<string, string>("oar", "100")
                 )
             );
         }
@@ -803,8 +803,8 @@ namespace FastCgiTest {
             IisExpressTest(
                 "TestData\\WFastCgi\\DjangoSimpleAppUrlRewrite",
                 new GetAndValidateUrl(
-                    GetLocalUrl("/foo/bar/baz"),
-                    ValidateString("path: /foo/bar/baz\npath_info: /foo/bar/baz")
+                    GetLocalUrl("/fob/oar/baz"),
+                    ValidateString("path: /fob/oar/baz\npath_info: /fob/oar/baz")
                 )
             );
         }

@@ -82,32 +82,32 @@ namespace AnalysisTests {
             TestOneString(PythonLanguageVersion.V33, "def f()  ->  42: pass", new CodeFormattingOptions() { SpaceAroundAnnotationArrow = null }, "def f()  ->  42: pass");
 
             // SpaceBeforeClassDeclarationParen
-            TestOneString(PythonLanguageVersion.V27, "class foo(): pass", new CodeFormattingOptions() { SpaceBeforeClassDeclarationParen = true }, "class foo (): pass");
-            TestOneString(PythonLanguageVersion.V27, "class foo (): pass", new CodeFormattingOptions() { SpaceBeforeClassDeclarationParen = true }, "class foo (): pass");
-            TestOneString(PythonLanguageVersion.V27, "class foo(): pass", new CodeFormattingOptions() { SpaceBeforeClassDeclarationParen = false }, "class foo(): pass");
-            TestOneString(PythonLanguageVersion.V27, "class foo (): pass", new CodeFormattingOptions() { SpaceBeforeClassDeclarationParen = false }, "class foo(): pass");
-            TestOneString(PythonLanguageVersion.V27, "class foo(): pass", new CodeFormattingOptions() { SpaceBeforeClassDeclarationParen = null }, "class foo(): pass");
-            TestOneString(PythonLanguageVersion.V27, "class foo (): pass", new CodeFormattingOptions() { SpaceBeforeClassDeclarationParen = null }, "class foo (): pass");
+            TestOneString(PythonLanguageVersion.V27, "class fob(): pass", new CodeFormattingOptions() { SpaceBeforeClassDeclarationParen = true }, "class fob (): pass");
+            TestOneString(PythonLanguageVersion.V27, "class fob (): pass", new CodeFormattingOptions() { SpaceBeforeClassDeclarationParen = true }, "class fob (): pass");
+            TestOneString(PythonLanguageVersion.V27, "class fob(): pass", new CodeFormattingOptions() { SpaceBeforeClassDeclarationParen = false }, "class fob(): pass");
+            TestOneString(PythonLanguageVersion.V27, "class fob (): pass", new CodeFormattingOptions() { SpaceBeforeClassDeclarationParen = false }, "class fob(): pass");
+            TestOneString(PythonLanguageVersion.V27, "class fob(): pass", new CodeFormattingOptions() { SpaceBeforeClassDeclarationParen = null }, "class fob(): pass");
+            TestOneString(PythonLanguageVersion.V27, "class fob (): pass", new CodeFormattingOptions() { SpaceBeforeClassDeclarationParen = null }, "class fob (): pass");
 
             // SpaceWithinEmptyBaseClassListList
-            TestOneString(PythonLanguageVersion.V27, "class foo(): pass", new CodeFormattingOptions() { SpaceWithinEmptyBaseClassList = true }, "class foo( ): pass");
-            TestOneString(PythonLanguageVersion.V27, "class foo(a): pass", new CodeFormattingOptions() { SpaceWithinEmptyBaseClassList = true }, "class foo(a): pass");
-            TestOneString(PythonLanguageVersion.V27, "class foo( ): pass", new CodeFormattingOptions() { SpaceWithinEmptyBaseClassList = false }, "class foo(): pass");
-            TestOneString(PythonLanguageVersion.V27, "class foo( a ): pass", new CodeFormattingOptions() { SpaceWithinEmptyBaseClassList = false }, "class foo( a ): pass");
-            TestOneString(PythonLanguageVersion.V27, "class foo(): pass", new CodeFormattingOptions() { SpaceWithinEmptyBaseClassList = null }, "class foo(): pass");
-            TestOneString(PythonLanguageVersion.V27, "class foo(a): pass", new CodeFormattingOptions() { SpaceWithinEmptyBaseClassList = null }, "class foo(a): pass");
-            TestOneString(PythonLanguageVersion.V27, "class foo( ): pass", new CodeFormattingOptions() { SpaceWithinEmptyBaseClassList = null }, "class foo( ): pass");
-            TestOneString(PythonLanguageVersion.V27, "class foo( a ): pass", new CodeFormattingOptions() { SpaceWithinEmptyBaseClassList = null }, "class foo( a ): pass");
+            TestOneString(PythonLanguageVersion.V27, "class fob(): pass", new CodeFormattingOptions() { SpaceWithinEmptyBaseClassList = true }, "class fob( ): pass");
+            TestOneString(PythonLanguageVersion.V27, "class fob(a): pass", new CodeFormattingOptions() { SpaceWithinEmptyBaseClassList = true }, "class fob(a): pass");
+            TestOneString(PythonLanguageVersion.V27, "class fob( ): pass", new CodeFormattingOptions() { SpaceWithinEmptyBaseClassList = false }, "class fob(): pass");
+            TestOneString(PythonLanguageVersion.V27, "class fob( a ): pass", new CodeFormattingOptions() { SpaceWithinEmptyBaseClassList = false }, "class fob( a ): pass");
+            TestOneString(PythonLanguageVersion.V27, "class fob(): pass", new CodeFormattingOptions() { SpaceWithinEmptyBaseClassList = null }, "class fob(): pass");
+            TestOneString(PythonLanguageVersion.V27, "class fob(a): pass", new CodeFormattingOptions() { SpaceWithinEmptyBaseClassList = null }, "class fob(a): pass");
+            TestOneString(PythonLanguageVersion.V27, "class fob( ): pass", new CodeFormattingOptions() { SpaceWithinEmptyBaseClassList = null }, "class fob( ): pass");
+            TestOneString(PythonLanguageVersion.V27, "class fob( a ): pass", new CodeFormattingOptions() { SpaceWithinEmptyBaseClassList = null }, "class fob( a ): pass");
 
             // SpaceWithinClassDeclarationParens
-            TestOneString(PythonLanguageVersion.V27, "class foo(a): pass", new CodeFormattingOptions() { SpaceWithinClassDeclarationParens = true }, "class foo( a ): pass");
-            TestOneString(PythonLanguageVersion.V27, "class foo(a, b): pass", new CodeFormattingOptions() { SpaceWithinClassDeclarationParens = true }, "class foo( a, b ): pass");
-            TestOneString(PythonLanguageVersion.V27, "class foo( a ): pass", new CodeFormattingOptions() { SpaceWithinClassDeclarationParens = false }, "class foo(a): pass");
-            TestOneString(PythonLanguageVersion.V27, "class foo( a, b ): pass", new CodeFormattingOptions() { SpaceWithinClassDeclarationParens = false }, "class foo(a, b): pass");
-            TestOneString(PythonLanguageVersion.V27, "class foo(a): pass", new CodeFormattingOptions() { SpaceWithinClassDeclarationParens = null }, "class foo(a): pass");
-            TestOneString(PythonLanguageVersion.V27, "class foo(a, b): pass", new CodeFormattingOptions() { SpaceWithinClassDeclarationParens = null }, "class foo(a, b): pass");
-            TestOneString(PythonLanguageVersion.V27, "class foo( a ): pass", new CodeFormattingOptions() { SpaceWithinClassDeclarationParens = null }, "class foo( a ): pass");
-            TestOneString(PythonLanguageVersion.V27, "class foo( a, b ): pass", new CodeFormattingOptions() { SpaceWithinClassDeclarationParens = null }, "class foo( a, b ): pass");
+            TestOneString(PythonLanguageVersion.V27, "class fob(a): pass", new CodeFormattingOptions() { SpaceWithinClassDeclarationParens = true }, "class fob( a ): pass");
+            TestOneString(PythonLanguageVersion.V27, "class fob(a, b): pass", new CodeFormattingOptions() { SpaceWithinClassDeclarationParens = true }, "class fob( a, b ): pass");
+            TestOneString(PythonLanguageVersion.V27, "class fob( a ): pass", new CodeFormattingOptions() { SpaceWithinClassDeclarationParens = false }, "class fob(a): pass");
+            TestOneString(PythonLanguageVersion.V27, "class fob( a, b ): pass", new CodeFormattingOptions() { SpaceWithinClassDeclarationParens = false }, "class fob(a, b): pass");
+            TestOneString(PythonLanguageVersion.V27, "class fob(a): pass", new CodeFormattingOptions() { SpaceWithinClassDeclarationParens = null }, "class fob(a): pass");
+            TestOneString(PythonLanguageVersion.V27, "class fob(a, b): pass", new CodeFormattingOptions() { SpaceWithinClassDeclarationParens = null }, "class fob(a, b): pass");
+            TestOneString(PythonLanguageVersion.V27, "class fob( a ): pass", new CodeFormattingOptions() { SpaceWithinClassDeclarationParens = null }, "class fob( a ): pass");
+            TestOneString(PythonLanguageVersion.V27, "class fob( a, b ): pass", new CodeFormattingOptions() { SpaceWithinClassDeclarationParens = null }, "class fob( a, b ): pass");
 
             /* Calls */
             // SpaceBeforeCallParen
@@ -120,35 +120,35 @@ namespace AnalysisTests {
             TestOneString(PythonLanguageVersion.V27, "f (a)", new CodeFormattingOptions() { SpaceBeforeCallParen = null }, "f (a)");
 
             // SpaceWithinEmptyCallArgumentList
-            TestOneString(PythonLanguageVersion.V27, "foo()", new CodeFormattingOptions() { SpaceWithinEmptyCallArgumentList = true }, "foo( )");
-            TestOneString(PythonLanguageVersion.V27, "foo(a)", new CodeFormattingOptions() { SpaceWithinEmptyCallArgumentList = true }, "foo(a)");
-            TestOneString(PythonLanguageVersion.V27, "foo( )", new CodeFormattingOptions() { SpaceWithinEmptyCallArgumentList = false }, "foo()");
-            TestOneString(PythonLanguageVersion.V27, "foo( a )", new CodeFormattingOptions() { SpaceWithinEmptyCallArgumentList = false }, "foo( a )");
-            TestOneString(PythonLanguageVersion.V27, "foo()", new CodeFormattingOptions() { SpaceWithinEmptyCallArgumentList = null }, "foo()");
-            TestOneString(PythonLanguageVersion.V27, "foo(a)", new CodeFormattingOptions() { SpaceWithinEmptyCallArgumentList = null }, "foo(a)");
-            TestOneString(PythonLanguageVersion.V27, "foo( )", new CodeFormattingOptions() { SpaceWithinEmptyCallArgumentList = null }, "foo( )");
-            TestOneString(PythonLanguageVersion.V27, "foo( a )", new CodeFormattingOptions() { SpaceWithinEmptyCallArgumentList = null }, "foo( a )");
+            TestOneString(PythonLanguageVersion.V27, "fob()", new CodeFormattingOptions() { SpaceWithinEmptyCallArgumentList = true }, "fob( )");
+            TestOneString(PythonLanguageVersion.V27, "fob(a)", new CodeFormattingOptions() { SpaceWithinEmptyCallArgumentList = true }, "fob(a)");
+            TestOneString(PythonLanguageVersion.V27, "fob( )", new CodeFormattingOptions() { SpaceWithinEmptyCallArgumentList = false }, "fob()");
+            TestOneString(PythonLanguageVersion.V27, "fob( a )", new CodeFormattingOptions() { SpaceWithinEmptyCallArgumentList = false }, "fob( a )");
+            TestOneString(PythonLanguageVersion.V27, "fob()", new CodeFormattingOptions() { SpaceWithinEmptyCallArgumentList = null }, "fob()");
+            TestOneString(PythonLanguageVersion.V27, "fob(a)", new CodeFormattingOptions() { SpaceWithinEmptyCallArgumentList = null }, "fob(a)");
+            TestOneString(PythonLanguageVersion.V27, "fob( )", new CodeFormattingOptions() { SpaceWithinEmptyCallArgumentList = null }, "fob( )");
+            TestOneString(PythonLanguageVersion.V27, "fob( a )", new CodeFormattingOptions() { SpaceWithinEmptyCallArgumentList = null }, "fob( a )");
 
             // SpaceWithinCallParens
-            TestOneString(PythonLanguageVersion.V27, "foo(a)", new CodeFormattingOptions() { SpaceWithinCallParens = true }, "foo( a )");
-            TestOneString(PythonLanguageVersion.V27, "foo(a, b)", new CodeFormattingOptions() { SpaceWithinCallParens = true }, "foo( a, b )");
-            TestOneString(PythonLanguageVersion.V27, "foo( a )", new CodeFormattingOptions() { SpaceWithinCallParens = false }, "foo(a)");
-            TestOneString(PythonLanguageVersion.V27, "foo( a, b )", new CodeFormattingOptions() { SpaceWithinCallParens = false }, "foo(a, b)");
-            TestOneString(PythonLanguageVersion.V27, "foo(a)", new CodeFormattingOptions() { SpaceWithinCallParens = null }, "foo(a)");
-            TestOneString(PythonLanguageVersion.V27, "foo(a, b)", new CodeFormattingOptions() { SpaceWithinCallParens = null }, "foo(a, b)");
-            TestOneString(PythonLanguageVersion.V27, "foo( a )", new CodeFormattingOptions() { SpaceWithinCallParens = null }, "foo( a )");
-            TestOneString(PythonLanguageVersion.V27, "foo( a, b )", new CodeFormattingOptions() { SpaceWithinCallParens = null }, "foo( a, b )");
+            TestOneString(PythonLanguageVersion.V27, "fob(a)", new CodeFormattingOptions() { SpaceWithinCallParens = true }, "fob( a )");
+            TestOneString(PythonLanguageVersion.V27, "fob(a, b)", new CodeFormattingOptions() { SpaceWithinCallParens = true }, "fob( a, b )");
+            TestOneString(PythonLanguageVersion.V27, "fob( a )", new CodeFormattingOptions() { SpaceWithinCallParens = false }, "fob(a)");
+            TestOneString(PythonLanguageVersion.V27, "fob( a, b )", new CodeFormattingOptions() { SpaceWithinCallParens = false }, "fob(a, b)");
+            TestOneString(PythonLanguageVersion.V27, "fob(a)", new CodeFormattingOptions() { SpaceWithinCallParens = null }, "fob(a)");
+            TestOneString(PythonLanguageVersion.V27, "fob(a, b)", new CodeFormattingOptions() { SpaceWithinCallParens = null }, "fob(a, b)");
+            TestOneString(PythonLanguageVersion.V27, "fob( a )", new CodeFormattingOptions() { SpaceWithinCallParens = null }, "fob( a )");
+            TestOneString(PythonLanguageVersion.V27, "fob( a, b )", new CodeFormattingOptions() { SpaceWithinCallParens = null }, "fob( a, b )");
 
             /* Index Expressions */
             // SpaceWithinIndexBrackets
-            TestOneString(PythonLanguageVersion.V27, "foo[a]", new CodeFormattingOptions() { SpaceWithinIndexBrackets = true }, "foo[ a ]");
-            TestOneString(PythonLanguageVersion.V27, "foo[a, b]", new CodeFormattingOptions() { SpaceWithinIndexBrackets = true }, "foo[ a, b ]");
-            TestOneString(PythonLanguageVersion.V27, "foo[ a ]", new CodeFormattingOptions() { SpaceWithinIndexBrackets = false }, "foo[a]");
-            TestOneString(PythonLanguageVersion.V27, "foo[ a, b ]", new CodeFormattingOptions() { SpaceWithinIndexBrackets = false }, "foo[a, b]");
-            TestOneString(PythonLanguageVersion.V27, "foo[a]", new CodeFormattingOptions() { SpaceWithinIndexBrackets = null }, "foo[a]");
-            TestOneString(PythonLanguageVersion.V27, "foo[a, b]", new CodeFormattingOptions() { SpaceWithinIndexBrackets = null }, "foo[a, b]");
-            TestOneString(PythonLanguageVersion.V27, "foo[ a ]", new CodeFormattingOptions() { SpaceWithinIndexBrackets = null }, "foo[ a ]");
-            TestOneString(PythonLanguageVersion.V27, "foo[ a, b ]", new CodeFormattingOptions() { SpaceWithinIndexBrackets = null }, "foo[ a, b ]");
+            TestOneString(PythonLanguageVersion.V27, "fob[a]", new CodeFormattingOptions() { SpaceWithinIndexBrackets = true }, "fob[ a ]");
+            TestOneString(PythonLanguageVersion.V27, "fob[a, b]", new CodeFormattingOptions() { SpaceWithinIndexBrackets = true }, "fob[ a, b ]");
+            TestOneString(PythonLanguageVersion.V27, "fob[ a ]", new CodeFormattingOptions() { SpaceWithinIndexBrackets = false }, "fob[a]");
+            TestOneString(PythonLanguageVersion.V27, "fob[ a, b ]", new CodeFormattingOptions() { SpaceWithinIndexBrackets = false }, "fob[a, b]");
+            TestOneString(PythonLanguageVersion.V27, "fob[a]", new CodeFormattingOptions() { SpaceWithinIndexBrackets = null }, "fob[a]");
+            TestOneString(PythonLanguageVersion.V27, "fob[a, b]", new CodeFormattingOptions() { SpaceWithinIndexBrackets = null }, "fob[a, b]");
+            TestOneString(PythonLanguageVersion.V27, "fob[ a ]", new CodeFormattingOptions() { SpaceWithinIndexBrackets = null }, "fob[ a ]");
+            TestOneString(PythonLanguageVersion.V27, "fob[ a, b ]", new CodeFormattingOptions() { SpaceWithinIndexBrackets = null }, "fob[ a, b ]");
 
             // SpaceBeforeIndexBracket
             TestOneString(PythonLanguageVersion.V27, "f[a]", new CodeFormattingOptions() { SpaceBeforeIndexBracket = true }, "f [a]");
@@ -256,21 +256,21 @@ namespace AnalysisTests {
 
             /* Statements */
             // ReplaceMultipleImportsWithMultipleStatements
-            TestOneString(PythonLanguageVersion.V27, "import foo", new CodeFormattingOptions() { ReplaceMultipleImportsWithMultipleStatements = true }, "import foo");
-            TestOneString(PythonLanguageVersion.V27, "import foo, bar", new CodeFormattingOptions() { ReplaceMultipleImportsWithMultipleStatements = true }, "import foo\r\nimport bar");
-            TestOneString(PythonLanguageVersion.V27, "\r\n\r\n\r\nimport foo, bar", new CodeFormattingOptions() { ReplaceMultipleImportsWithMultipleStatements = true }, "\r\n\r\n\r\nimport foo\r\nimport bar");
-            TestOneString(PythonLanguageVersion.V27, "def f():\r\n    import foo, bar", new CodeFormattingOptions() { ReplaceMultipleImportsWithMultipleStatements = true }, "def f():\r\n    import foo\r\n    import bar");
-            TestOneString(PythonLanguageVersion.V27, "import foo as quox, bar", new CodeFormattingOptions() { ReplaceMultipleImportsWithMultipleStatements = true }, "import foo as quox\r\nimport bar");
-            TestOneString(PythonLanguageVersion.V27, "import   foo,  bar", new CodeFormattingOptions() { ReplaceMultipleImportsWithMultipleStatements = true }, "import   foo\r\nimport  bar");
-            TestOneString(PythonLanguageVersion.V27, "import foo  as  quox, bar", new CodeFormattingOptions() { ReplaceMultipleImportsWithMultipleStatements = true }, "import foo  as  quox\r\nimport bar");
+            TestOneString(PythonLanguageVersion.V27, "import fob", new CodeFormattingOptions() { ReplaceMultipleImportsWithMultipleStatements = true }, "import fob");
+            TestOneString(PythonLanguageVersion.V27, "import fob, oar", new CodeFormattingOptions() { ReplaceMultipleImportsWithMultipleStatements = true }, "import fob\r\nimport oar");
+            TestOneString(PythonLanguageVersion.V27, "\r\n\r\n\r\nimport fob, oar", new CodeFormattingOptions() { ReplaceMultipleImportsWithMultipleStatements = true }, "\r\n\r\n\r\nimport fob\r\nimport oar");
+            TestOneString(PythonLanguageVersion.V27, "def f():\r\n    import fob, oar", new CodeFormattingOptions() { ReplaceMultipleImportsWithMultipleStatements = true }, "def f():\r\n    import fob\r\n    import oar");
+            TestOneString(PythonLanguageVersion.V27, "import fob as quox, oar", new CodeFormattingOptions() { ReplaceMultipleImportsWithMultipleStatements = true }, "import fob as quox\r\nimport oar");
+            TestOneString(PythonLanguageVersion.V27, "import   fob,  oar", new CodeFormattingOptions() { ReplaceMultipleImportsWithMultipleStatements = true }, "import   fob\r\nimport  oar");
+            TestOneString(PythonLanguageVersion.V27, "import fob  as  quox, oar", new CodeFormattingOptions() { ReplaceMultipleImportsWithMultipleStatements = true }, "import fob  as  quox\r\nimport oar");
 
-            TestOneString(PythonLanguageVersion.V27, "import foo", new CodeFormattingOptions() { ReplaceMultipleImportsWithMultipleStatements = false }, "import foo");
-            TestOneString(PythonLanguageVersion.V27, "import foo, bar", new CodeFormattingOptions() { ReplaceMultipleImportsWithMultipleStatements = false }, "import foo, bar");
-            TestOneString(PythonLanguageVersion.V27, "\r\n\r\n\r\nimport foo, bar", new CodeFormattingOptions() { ReplaceMultipleImportsWithMultipleStatements = false }, "\r\n\r\n\r\nimport foo, bar");
-            TestOneString(PythonLanguageVersion.V27, "def f():\r\n    import foo, bar", new CodeFormattingOptions() { ReplaceMultipleImportsWithMultipleStatements = false }, "def f():\r\n    import foo, bar");
-            TestOneString(PythonLanguageVersion.V27, "import foo as quox, bar", new CodeFormattingOptions() { ReplaceMultipleImportsWithMultipleStatements = false }, "import foo as quox, bar");
-            TestOneString(PythonLanguageVersion.V27, "import   foo,  bar", new CodeFormattingOptions() { ReplaceMultipleImportsWithMultipleStatements = false }, "import   foo,  bar");
-            TestOneString(PythonLanguageVersion.V27, "import foo  as  quox, bar", new CodeFormattingOptions() { ReplaceMultipleImportsWithMultipleStatements = false }, "import foo  as  quox, bar");
+            TestOneString(PythonLanguageVersion.V27, "import fob", new CodeFormattingOptions() { ReplaceMultipleImportsWithMultipleStatements = false }, "import fob");
+            TestOneString(PythonLanguageVersion.V27, "import fob, oar", new CodeFormattingOptions() { ReplaceMultipleImportsWithMultipleStatements = false }, "import fob, oar");
+            TestOneString(PythonLanguageVersion.V27, "\r\n\r\n\r\nimport fob, oar", new CodeFormattingOptions() { ReplaceMultipleImportsWithMultipleStatements = false }, "\r\n\r\n\r\nimport fob, oar");
+            TestOneString(PythonLanguageVersion.V27, "def f():\r\n    import fob, oar", new CodeFormattingOptions() { ReplaceMultipleImportsWithMultipleStatements = false }, "def f():\r\n    import fob, oar");
+            TestOneString(PythonLanguageVersion.V27, "import fob as quox, oar", new CodeFormattingOptions() { ReplaceMultipleImportsWithMultipleStatements = false }, "import fob as quox, oar");
+            TestOneString(PythonLanguageVersion.V27, "import   fob,  oar", new CodeFormattingOptions() { ReplaceMultipleImportsWithMultipleStatements = false }, "import   fob,  oar");
+            TestOneString(PythonLanguageVersion.V27, "import fob  as  quox, oar", new CodeFormattingOptions() { ReplaceMultipleImportsWithMultipleStatements = false }, "import fob  as  quox, oar");
 
             // RemoveTrailingSemicolons
             TestOneString(PythonLanguageVersion.V27, "x = 42;", new CodeFormattingOptions() { RemoveTrailingSemicolons = true }, "x = 42");
@@ -305,28 +305,28 @@ namespace AnalysisTests {
                     After =  "############# Beautiful is better than ugly.  Explicit is better than implicit.\r\n############# Simple is better than complex.  Complex is better than\r\n############# complicated.\r\n"
                 },
                 new {
-                    Before = "  # Beautiful is better than ugly.\r\n  # import foo\r\n  # Explicit is better than implicit. Simple is better than complex. Complex is better than complicated.\r\n",
-                    After =  "  # Beautiful is better than ugly.\r\n  # import foo\r\n  # Explicit is better than implicit.  Simple is better than complex.  Complex\r\n  # is better than complicated.\r\n"
+                    Before = "  # Beautiful is better than ugly.\r\n  # import fob\r\n  # Explicit is better than implicit. Simple is better than complex. Complex is better than complicated.\r\n",
+                    After =  "  # Beautiful is better than ugly.\r\n  # import fob\r\n  # Explicit is better than implicit.  Simple is better than complex.  Complex\r\n  # is better than complicated.\r\n"
                 },
                 new {
-                    Before = "  #\r\n  #   Beautiful is better than ugly.\r\n  #   import foo\r\n  #   Explicit is better than implicit. Simple is better than complex. Complex is better than complicated.\r\n",
-                    After =  "  #\r\n  #   Beautiful is better than ugly.\r\n  #   import foo\r\n  #   Explicit is better than implicit.  Simple is better than complex.\r\n  #   Complex is better than complicated.\r\n"
+                    Before = "  #\r\n  #   Beautiful is better than ugly.\r\n  #   import fob\r\n  #   Explicit is better than implicit. Simple is better than complex. Complex is better than complicated.\r\n",
+                    After =  "  #\r\n  #   Beautiful is better than ugly.\r\n  #   import fob\r\n  #   Explicit is better than implicit.  Simple is better than complex.\r\n  #   Complex is better than complicated.\r\n"
                 },
                 new {
-                    Before = @"def foo ( ):
+                    Before = @"def fob ( ):
     # 12345678901234567890123456789012345678901234567890123456789012345678901234567890
-    print 'foo'",
-                    After =  @"def foo ( ):
+    print 'fob'",
+                    After =  @"def fob ( ):
     # 12345678901234567890123456789012345678901234567890123456789012345678901234567890
-    print 'foo'",
+    print 'fob'",
                 },
                 new {
-                    Before = @"def foo ( ):
+                    Before = @"def fob ( ):
     # 12345678901234567890123456789012345678901234567890123456789012345678901234567890          
-    print 'foo'",
-                    After =  @"def foo ( ):
+    print 'fob'",
+                    After =  @"def fob ( ):
     # 12345678901234567890123456789012345678901234567890123456789012345678901234567890
-    print 'foo'",
+    print 'fob'",
                 },
                 new {
                     Before = @"def f ( ):
@@ -479,7 +479,7 @@ def f ( ):
         /// </summary>
         [TestMethod, Priority(0)]
         public void TestReflowComment4() {
-            var code = @"def f(): # foo
+            var code = @"def f(): # fob
     pass";
 
             var parser = Parser.CreateParser(
@@ -538,7 +538,7 @@ def f ( ):
         /// </summary>
         [TestMethod, Priority(0)]
         public void TestStartWhiteSpace() {
-            foreach (var preceedingText in new[] { "#foo\r\n" }) {
+            foreach (var preceedingText in new[] { "#fob\r\n" }) {
                 var allSnippets = 
                     TestExpressions.Snippets2x.Select(text => new { Text = text, Version = PythonLanguageVersion.V27 }).Concat(
                     TestExpressions.Statements3x.Select(text => new { Text = text, Version = PythonLanguageVersion.V33 }));
@@ -659,14 +659,14 @@ def f ( ):
             TestOneString(PythonLanguageVersion.V27, "x(abc = 42)");
             TestOneString(PythonLanguageVersion.V27, "x(*abc)");
             TestOneString(PythonLanguageVersion.V27, "x(**abc)");
-            TestOneString(PythonLanguageVersion.V27, "x(*foo, **bar)");
+            TestOneString(PythonLanguageVersion.V27, "x(*fob, **oar)");
             TestOneString(PythonLanguageVersion.V27, "x(a, b, c)");
             TestOneString(PythonLanguageVersion.V27, "x(a, b, c, d = 42)");
             TestOneString(PythonLanguageVersion.V27, "x (  abc   )");
             TestOneString(PythonLanguageVersion.V27, "x (  abc   =    42     )");
             TestOneString(PythonLanguageVersion.V27, "x (  *   abc    )");
             TestOneString(PythonLanguageVersion.V27, "x (  **   abc     )");
-            TestOneString(PythonLanguageVersion.V27, "x (  *   foo    ,     **      bar       )");
+            TestOneString(PythonLanguageVersion.V27, "x (  *   fob    ,     **      oar       )");
             TestOneString(PythonLanguageVersion.V27, "x (  a,   b,    c     )");
             TestOneString(PythonLanguageVersion.V27, "x (  a   ,    b     ,      c       ,        d         =           42           )");
             TestOneString(PythonLanguageVersion.V27, "x(abc,)");
@@ -675,11 +675,11 @@ def f ( ):
             TestOneString(PythonLanguageVersion.V27, "x  (   abc    =     42      ,       )");
 
             // Member Expression
-            TestOneString(PythonLanguageVersion.V27, "foo.bar");
-            TestOneString(PythonLanguageVersion.V27, "foo .bar");
-            TestOneString(PythonLanguageVersion.V27, "foo. bar");
-            TestOneString(PythonLanguageVersion.V27, "foo .  bar");
-            TestOneString(PythonLanguageVersion.V27, "class C:\r\n    x = foo.__bar");
+            TestOneString(PythonLanguageVersion.V27, "fob.oar");
+            TestOneString(PythonLanguageVersion.V27, "fob .oar");
+            TestOneString(PythonLanguageVersion.V27, "fob. oar");
+            TestOneString(PythonLanguageVersion.V27, "fob .  oar");
+            TestOneString(PythonLanguageVersion.V27, "class C:\r\n    x = fob.__oar");
 
             // Parenthesis expression
             TestOneString(PythonLanguageVersion.V27, "(42)");
@@ -749,11 +749,11 @@ def f ( ):
             TestOneString(PythonLanguageVersion.V27, "yield 42, ");
 
             // yield from expression
-            TestOneString(PythonLanguageVersion.V33, "yield from foo");
-            TestOneString(PythonLanguageVersion.V33, "yield from  foo");
-            TestOneString(PythonLanguageVersion.V33, "yield  from foo");
-            TestOneString(PythonLanguageVersion.V33, "yield  from  foo");
-            TestOneString(PythonLanguageVersion.V33, "x  =  yield  from  foo");
+            TestOneString(PythonLanguageVersion.V33, "yield from fob");
+            TestOneString(PythonLanguageVersion.V33, "yield from  fob");
+            TestOneString(PythonLanguageVersion.V33, "yield  from fob");
+            TestOneString(PythonLanguageVersion.V33, "yield  from  fob");
+            TestOneString(PythonLanguageVersion.V33, "x  =  yield  from  fob");
 
             // tuples
             TestOneString(PythonLanguageVersion.V27, "(1, 2, 3)");
@@ -766,8 +766,8 @@ def f ( ):
             TestOneString(PythonLanguageVersion.V27, "[1, 2,  3]");
             TestOneString(PythonLanguageVersion.V27, "[ 1  ,   2    ,     3      ]");
             TestOneString(PythonLanguageVersion.V27, "[ 1  ,   2    ,     3      ,       ]");
-            TestOneString(PythonLanguageVersion.V27, "[abc, foo and bar]");
-            TestOneString(PythonLanguageVersion.V27, "[foo if True else bar]");
+            TestOneString(PythonLanguageVersion.V27, "[abc, fob and oar]");
+            TestOneString(PythonLanguageVersion.V27, "[fob if True else oar]");
 
             // set expressions
             TestOneString(PythonLanguageVersion.V27, "{1, 2, 3}");
@@ -799,12 +799,12 @@ def f ( ):
 
             TestOneString(PythonLanguageVersion.V27, @"class C:
     import __abc
-    import __foo, __bar
+    import __fob, __oar
 ");
 
             TestOneString(PythonLanguageVersion.V27, @"class C:
     from sys import __abc
-    from sys import __foo, __bar
+    from sys import __fob, __oar
     from __sys import __abc
 ");
 
@@ -820,7 +820,7 @@ def f ( ):
         [TestMethod, Priority(0)]
         public void TestComments() {
 
-            TestOneString(PythonLanguageVersion.V27, @"x = foo(
+            TestOneString(PythonLanguageVersion.V27, @"x = fob(
         r'abc'                                # comments
         r'def'                                # are spanning across
                                               # a string plus
@@ -829,9 +829,9 @@ def f ( ):
         r'ghi'                                # handle it properly
         )");
 
-            TestOneString(PythonLanguageVersion.V27, "#foo\r\npass");
-            TestOneString(PythonLanguageVersion.V27, "#foo\r\n\r\npass"); 
-            TestOneString(PythonLanguageVersion.V27, "#foo");
+            TestOneString(PythonLanguageVersion.V27, "#fob\r\npass");
+            TestOneString(PythonLanguageVersion.V27, "#fob\r\n\r\npass"); 
+            TestOneString(PythonLanguageVersion.V27, "#fob");
 
         }
 
@@ -842,7 +842,7 @@ def f ( ):
 this is some documentation
 '''
 
-import foo");
+import fob");
         }
 
         [TestMethod, Priority(0)]
@@ -978,7 +978,7 @@ import foo");
             TestOneString(PythonLanguageVersion.V27, "x[abc:");
 
             // backquote expression
-            TestOneString(PythonLanguageVersion.V27, "`foo");
+            TestOneString(PythonLanguageVersion.V27, "`fob");
 
             // constant expressions
             TestOneString(PythonLanguageVersion.V27, "'\r");
@@ -1017,12 +1017,12 @@ import foo");
             TestOneString(PythonLanguageVersion.V27, "class X(=");
             TestOneString(PythonLanguageVersion.V27, "class X(pass");
 
-            TestOneString(PythonLanguageVersion.V27, "class C:\r\n    x = foo.42");
-            TestOneString(PythonLanguageVersion.V27, "class C:\r\n    @foo.42\r\n    def f(self): pass");
-            TestOneString(PythonLanguageVersion.V27, "class C:\r\n    @foo.[]\r\n    def f(self): pass");
+            TestOneString(PythonLanguageVersion.V27, "class C:\r\n    x = fob.42");
+            TestOneString(PythonLanguageVersion.V27, "class C:\r\n    @fob.42\r\n    def f(self): pass");
+            TestOneString(PythonLanguageVersion.V27, "class C:\r\n    @fob.[]\r\n    def f(self): pass");
             TestOneString(PythonLanguageVersion.V27, "class 42");
             TestOneString(PythonLanguageVersion.V30, "class");
-            TestOneString(PythonLanguageVersion.V27, "@foo\r\nclass 42");
+            TestOneString(PythonLanguageVersion.V27, "@fob\r\nclass 42");
 
             // func defs
             TestOneString(PythonLanguageVersion.V30, "def f(A, *, *x");
@@ -1050,7 +1050,7 @@ import foo");
             TestOneString(PythonLanguageVersion.V27, " @@");
             TestOneString(PythonLanguageVersion.V27, "def X(abc, **");
             TestOneString(PythonLanguageVersion.V27, "def X(abc, *");
-            TestOneString(PythonLanguageVersion.V27, @"@foo(
+            TestOneString(PythonLanguageVersion.V27, @"@fob(
 def f(): pass");
 
 
@@ -1084,13 +1084,13 @@ def f(): pass");
 
         [TestMethod, Priority(0)]
         public void TestExplicitLineJoin() {
-            TestOneString(PythonLanguageVersion.V27, @"foo(4 + \
+            TestOneString(PythonLanguageVersion.V27, @"fob(4 + \
                     5)");
         }
 
         [TestMethod, Priority(0)]
         public void TestTrailingComment() {
-            TestOneString(PythonLanguageVersion.V27, "def f(): pass\r\n#foo");
+            TestOneString(PythonLanguageVersion.V27, "def f(): pass\r\n#fob");
         }
 
         [TestMethod, Priority(0)]
@@ -1134,30 +1134,30 @@ def f(): pass");
 
             // Raise Statement
             TestOneString(PythonLanguageVersion.V27, "raise");
-            TestOneString(PythonLanguageVersion.V27, "raise foo");
-            TestOneString(PythonLanguageVersion.V27, "raise foo, bar");
-            TestOneString(PythonLanguageVersion.V27, "raise foo, bar, baz");
-            TestOneString(PythonLanguageVersion.V30, "raise foo from bar");
-            TestOneString(PythonLanguageVersion.V27, "raise  foo");
-            TestOneString(PythonLanguageVersion.V27, "raise  foo   ,    bar");
-            TestOneString(PythonLanguageVersion.V27, "raise  foo   ,    bar     ,      baz");
-            TestOneString(PythonLanguageVersion.V30, "raise  foo   from    bar");
+            TestOneString(PythonLanguageVersion.V27, "raise fob");
+            TestOneString(PythonLanguageVersion.V27, "raise fob, oar");
+            TestOneString(PythonLanguageVersion.V27, "raise fob, oar, baz");
+            TestOneString(PythonLanguageVersion.V30, "raise fob from oar");
+            TestOneString(PythonLanguageVersion.V27, "raise  fob");
+            TestOneString(PythonLanguageVersion.V27, "raise  fob   ,    oar");
+            TestOneString(PythonLanguageVersion.V27, "raise  fob   ,    oar     ,      baz");
+            TestOneString(PythonLanguageVersion.V30, "raise  fob   from    oar");
 
             // Assert Statement
-            TestOneString(PythonLanguageVersion.V27, "assert foo");
-            TestOneString(PythonLanguageVersion.V27, "assert foo, bar");
-            TestOneString(PythonLanguageVersion.V27, "assert  foo");
-            TestOneString(PythonLanguageVersion.V27, "assert  foo   ,    bar");
+            TestOneString(PythonLanguageVersion.V27, "assert fob");
+            TestOneString(PythonLanguageVersion.V27, "assert fob, oar");
+            TestOneString(PythonLanguageVersion.V27, "assert  fob");
+            TestOneString(PythonLanguageVersion.V27, "assert  fob   ,    oar");
 
             // Import Statement
             TestOneString(PythonLanguageVersion.V27, "import sys");
-            TestOneString(PythonLanguageVersion.V27, "import sys as foo");
-            TestOneString(PythonLanguageVersion.V27, "import sys as foo, itertools");
-            TestOneString(PythonLanguageVersion.V27, "import sys as foo, itertools as i");
+            TestOneString(PythonLanguageVersion.V27, "import sys as fob");
+            TestOneString(PythonLanguageVersion.V27, "import sys as fob, itertools");
+            TestOneString(PythonLanguageVersion.V27, "import sys as fob, itertools as i");
             TestOneString(PythonLanguageVersion.V27, "import  sys");
-            TestOneString(PythonLanguageVersion.V27, "import  sys   as    foo");
-            TestOneString(PythonLanguageVersion.V27, "import  sys   as    foo     ,       itertools");
-            TestOneString(PythonLanguageVersion.V27, "import  sys   as    foo     ,       itertools       as        i");
+            TestOneString(PythonLanguageVersion.V27, "import  sys   as    fob");
+            TestOneString(PythonLanguageVersion.V27, "import  sys   as    fob     ,       itertools");
+            TestOneString(PythonLanguageVersion.V27, "import  sys   as    fob     ,       itertools       as        i");
             TestOneString(PythonLanguageVersion.V27, "import X, Y, Z, A as B");
 
             // From Import Statement
@@ -1200,24 +1200,24 @@ def f(): pass");
             TestOneString(PythonLanguageVersion.V27, "exec  'abc'   in    l     ,      g");
 
             // Print Statement
-            TestOneString(PythonLanguageVersion.V27, "print foo");
-            TestOneString(PythonLanguageVersion.V27, "print foo, bar");
-            TestOneString(PythonLanguageVersion.V27, "print foo,");
-            TestOneString(PythonLanguageVersion.V27, "print foo, bar,"); 
+            TestOneString(PythonLanguageVersion.V27, "print fob");
+            TestOneString(PythonLanguageVersion.V27, "print fob, oar");
+            TestOneString(PythonLanguageVersion.V27, "print fob,");
+            TestOneString(PythonLanguageVersion.V27, "print fob, oar,"); 
             TestOneString(PythonLanguageVersion.V27, "print >> dest");
-            TestOneString(PythonLanguageVersion.V27, "print >> dest, foo");
-            TestOneString(PythonLanguageVersion.V27, "print >> dest, foo, bar");
-            TestOneString(PythonLanguageVersion.V27, "print >> dest, foo,");
-            TestOneString(PythonLanguageVersion.V27, "print >> dest, foo, bar,");
-            TestOneString(PythonLanguageVersion.V27, "print  foo");
-            TestOneString(PythonLanguageVersion.V27, "print  foo   ,    bar");
-            TestOneString(PythonLanguageVersion.V27, "print  foo   ,");
-            TestOneString(PythonLanguageVersion.V27, "print  foo   ,    bar     ,");
+            TestOneString(PythonLanguageVersion.V27, "print >> dest, fob");
+            TestOneString(PythonLanguageVersion.V27, "print >> dest, fob, oar");
+            TestOneString(PythonLanguageVersion.V27, "print >> dest, fob,");
+            TestOneString(PythonLanguageVersion.V27, "print >> dest, fob, oar,");
+            TestOneString(PythonLanguageVersion.V27, "print  fob");
+            TestOneString(PythonLanguageVersion.V27, "print  fob   ,    oar");
+            TestOneString(PythonLanguageVersion.V27, "print  fob   ,");
+            TestOneString(PythonLanguageVersion.V27, "print  fob   ,    oar     ,");
             TestOneString(PythonLanguageVersion.V27, "print  >>   dest");
-            TestOneString(PythonLanguageVersion.V27, "print  >>   dest    ,     foo");
-            TestOneString(PythonLanguageVersion.V27, "print  >>   dest    ,     foo      ,       bar");
-            TestOneString(PythonLanguageVersion.V27, "print  >>   dest    ,     foo      ,");
-            TestOneString(PythonLanguageVersion.V27, "print  >>   dest    ,     foo      ,       bar        ,");
+            TestOneString(PythonLanguageVersion.V27, "print  >>   dest    ,     fob");
+            TestOneString(PythonLanguageVersion.V27, "print  >>   dest    ,     fob      ,       oar");
+            TestOneString(PythonLanguageVersion.V27, "print  >>   dest    ,     fob      ,");
+            TestOneString(PythonLanguageVersion.V27, "print  >>   dest    ,     fob      ,       oar        ,");
             TestOneString(PythonLanguageVersion.V27, "print l1==l");
 
 
@@ -1264,12 +1264,12 @@ def f(): pass");
             TestOneString(PythonLanguageVersion.V27, "if  True   :\r\n    pass\r\nelif     False     :\r\n    pass      \r\nelse       :        \r\n    pass");
 
             // Suite Statement
-            TestOneString(PythonLanguageVersion.V27, "abc;foo;bar");
-            TestOneString(PythonLanguageVersion.V27, "abc  ;   foo    ;     bar");
-            TestOneString(PythonLanguageVersion.V27, "abc;foo\r\n\r\nbar;baz");
-            TestOneString(PythonLanguageVersion.V27, "abc  ;   foo    \r\n\r\nbar     ;      baz");
-            TestOneString(PythonLanguageVersion.V27, "foo;");
-            TestOneString(PythonLanguageVersion.V27, "def f():\r\n    if True:\r\n        foo;\r\n     bar");
+            TestOneString(PythonLanguageVersion.V27, "abc;fob;oar");
+            TestOneString(PythonLanguageVersion.V27, "abc  ;   fob    ;     oar");
+            TestOneString(PythonLanguageVersion.V27, "abc;fob\r\n\r\noar;baz");
+            TestOneString(PythonLanguageVersion.V27, "abc  ;   fob    \r\n\r\noar     ;      baz");
+            TestOneString(PythonLanguageVersion.V27, "fob;");
+            TestOneString(PythonLanguageVersion.V27, "def f():\r\n    if True:\r\n        fob;\r\n     oar");
             TestOneString(PythonLanguageVersion.V27, @"def f(x):
     length = x
     if length == 0:
@@ -1283,21 +1283,21 @@ def f(): pass");
 
             // With Statement
             TestOneString(PythonLanguageVersion.V27, "with abc: pass");
-            TestOneString(PythonLanguageVersion.V27, "with abc as bar: pass");
-            TestOneString(PythonLanguageVersion.V27, "with foo, bar: pass");
-            TestOneString(PythonLanguageVersion.V27, "with foo as f, bar as b: pass");
+            TestOneString(PythonLanguageVersion.V27, "with abc as oar: pass");
+            TestOneString(PythonLanguageVersion.V27, "with fob, oar: pass");
+            TestOneString(PythonLanguageVersion.V27, "with fob as f, oar as b: pass");
             TestOneString(PythonLanguageVersion.V27, "with  abc   : pass");
-            TestOneString(PythonLanguageVersion.V27, "with  abc   as    bar     :      pass");
-            TestOneString(PythonLanguageVersion.V27, "with  foo   ,    bar     :      pass");
-            TestOneString(PythonLanguageVersion.V27, "with  foo   as    f     ,       bar       as       b        :          pass");
+            TestOneString(PythonLanguageVersion.V27, "with  abc   as    oar     :      pass");
+            TestOneString(PythonLanguageVersion.V27, "with  fob   ,    oar     :      pass");
+            TestOneString(PythonLanguageVersion.V27, "with  fob   as    f     ,       oar       as       b        :          pass");
             TestOneString(PythonLanguageVersion.V27, "with abc: pass");
-            TestOneString(PythonLanguageVersion.V27, "with abc as bar:\r\n    pass");
-            TestOneString(PythonLanguageVersion.V27, "with foo, bar:\r\n    pass");
-            TestOneString(PythonLanguageVersion.V27, "with foo as f, bar as b:\r\n    pass");
+            TestOneString(PythonLanguageVersion.V27, "with abc as oar:\r\n    pass");
+            TestOneString(PythonLanguageVersion.V27, "with fob, oar:\r\n    pass");
+            TestOneString(PythonLanguageVersion.V27, "with fob as f, oar as b:\r\n    pass");
             TestOneString(PythonLanguageVersion.V27, "with  abc   :\r\n    pass");
-            TestOneString(PythonLanguageVersion.V27, "with  abc   as    bar     :  \r\n    pass");
-            TestOneString(PythonLanguageVersion.V27, "with  foo   ,    bar     :  \r\n    pass");
-            TestOneString(PythonLanguageVersion.V27, "with  foo   as    f     ,       bar       as       b        :  \r\n    pass");
+            TestOneString(PythonLanguageVersion.V27, "with  abc   as    oar     :  \r\n    pass");
+            TestOneString(PythonLanguageVersion.V27, "with  fob   ,    oar     :  \r\n    pass");
+            TestOneString(PythonLanguageVersion.V27, "with  fob   as    f     ,       oar       as       b        :  \r\n    pass");
             
             // Try Statement
             TestOneString(PythonLanguageVersion.V27, "try: pass\r\nexcept: pass");
@@ -1391,83 +1391,83 @@ def f(): pass");
             TestOneString(PythonLanguageVersion.V27, "class C(object): pass");
             TestOneString(PythonLanguageVersion.V27, "class C(object, ): pass");
             TestOneString(PythonLanguageVersion.V30, "class C(object, metaclass=42): pass");
-            TestOneString(PythonLanguageVersion.V30, "class C(*foo): pass");
-            TestOneString(PythonLanguageVersion.V30, "class C(*foo, ): pass");
-            TestOneString(PythonLanguageVersion.V30, "class C(*foo, **bar): pass");
-            TestOneString(PythonLanguageVersion.V30, "class C(*foo, **bar, ): pass");
-            TestOneString(PythonLanguageVersion.V30, "class C(**foo): pass");
-            TestOneString(PythonLanguageVersion.V30, "class C(**foo, ): pass"); 
-            TestOneString(PythonLanguageVersion.V30, "class C(foo = bar): pass");
-            TestOneString(PythonLanguageVersion.V30, "class C(foo = bar, baz = 42): pass");
+            TestOneString(PythonLanguageVersion.V30, "class C(*fob): pass");
+            TestOneString(PythonLanguageVersion.V30, "class C(*fob, ): pass");
+            TestOneString(PythonLanguageVersion.V30, "class C(*fob, **oar): pass");
+            TestOneString(PythonLanguageVersion.V30, "class C(*fob, **oar, ): pass");
+            TestOneString(PythonLanguageVersion.V30, "class C(**fob): pass");
+            TestOneString(PythonLanguageVersion.V30, "class C(**fob, ): pass"); 
+            TestOneString(PythonLanguageVersion.V30, "class C(fob = oar): pass");
+            TestOneString(PythonLanguageVersion.V30, "class C(fob = oar, baz = 42): pass");
 
             TestOneString(PythonLanguageVersion.V27, "class  C   :    pass");
             TestOneString(PythonLanguageVersion.V27, "class  C   (    )     :      pass");
             TestOneString(PythonLanguageVersion.V27, "class  C   (    object): pass");
             TestOneString(PythonLanguageVersion.V27, "class  C   (    object      ,       )      : pass");
             TestOneString(PythonLanguageVersion.V30, "class  C   (    object      ,       metaclass        =         42          )           : pass");
-            TestOneString(PythonLanguageVersion.V30, "class  C   (    *     foo      )       :         pass");
-            TestOneString(PythonLanguageVersion.V30, "class  C   (    *     foo      ,       )        :        pass");
-            TestOneString(PythonLanguageVersion.V30, "class  C   (    *     foo      ,       **        bar         )          :           pass");
-            TestOneString(PythonLanguageVersion.V30, "class  C   (    *     foo      ,      **        bar         ,          )           :            pass");
-            TestOneString(PythonLanguageVersion.V30, "class  C   (    **     foo      )       :         pass");
-            TestOneString(PythonLanguageVersion.V30, "class  C   (    **     foo      ,       )        :         pass");
-            TestOneString(PythonLanguageVersion.V30, "class  C   (    foo     =      bar       )        :         pass");
-            TestOneString(PythonLanguageVersion.V30, "class  C   (    foo     =      bar       ,        baz         =          42           )           :             pass");
+            TestOneString(PythonLanguageVersion.V30, "class  C   (    *     fob      )       :         pass");
+            TestOneString(PythonLanguageVersion.V30, "class  C   (    *     fob      ,       )        :        pass");
+            TestOneString(PythonLanguageVersion.V30, "class  C   (    *     fob      ,       **        oar         )          :           pass");
+            TestOneString(PythonLanguageVersion.V30, "class  C   (    *     fob      ,      **        oar         ,          )           :            pass");
+            TestOneString(PythonLanguageVersion.V30, "class  C   (    **     fob      )       :         pass");
+            TestOneString(PythonLanguageVersion.V30, "class  C   (    **     fob      ,       )        :         pass");
+            TestOneString(PythonLanguageVersion.V30, "class  C   (    fob     =      oar       )        :         pass");
+            TestOneString(PythonLanguageVersion.V30, "class  C   (    fob     =      oar       ,        baz         =          42           )           :             pass");
 
             TestOneString(PythonLanguageVersion.V27, "class C: \r\n    pass");
             TestOneString(PythonLanguageVersion.V27, "class C(): \r\n    pass");
             TestOneString(PythonLanguageVersion.V27, "class C(object): \r\n    pass");
             TestOneString(PythonLanguageVersion.V27, "class C(object, ): \r\n    pass");
             TestOneString(PythonLanguageVersion.V30, "class C(object, metaclass=42): \r\n    pass");
-            TestOneString(PythonLanguageVersion.V30, "class C(*foo): \r\n    pass");
-            TestOneString(PythonLanguageVersion.V30, "class C(*foo, ): \r\n    pass");
-            TestOneString(PythonLanguageVersion.V30, "class C(*foo, **bar): \r\n    pass");
-            TestOneString(PythonLanguageVersion.V30, "class C(*foo, **bar, ): \r\n    pass");
-            TestOneString(PythonLanguageVersion.V30, "class C(**foo): \r\n    pass");
-            TestOneString(PythonLanguageVersion.V30, "class C(**foo, ): \r\n    pass");
-            TestOneString(PythonLanguageVersion.V30, "class C(foo = bar): \r\n    pass");
-            TestOneString(PythonLanguageVersion.V30, "class C(foo = bar, baz = 42): \r\n    pass");
+            TestOneString(PythonLanguageVersion.V30, "class C(*fob): \r\n    pass");
+            TestOneString(PythonLanguageVersion.V30, "class C(*fob, ): \r\n    pass");
+            TestOneString(PythonLanguageVersion.V30, "class C(*fob, **oar): \r\n    pass");
+            TestOneString(PythonLanguageVersion.V30, "class C(*fob, **oar, ): \r\n    pass");
+            TestOneString(PythonLanguageVersion.V30, "class C(**fob): \r\n    pass");
+            TestOneString(PythonLanguageVersion.V30, "class C(**fob, ): \r\n    pass");
+            TestOneString(PythonLanguageVersion.V30, "class C(fob = oar): \r\n    pass");
+            TestOneString(PythonLanguageVersion.V30, "class C(fob = oar, baz = 42): \r\n    pass");
 
             TestOneString(PythonLanguageVersion.V27, "class  C   :    \r\n    pass");
             TestOneString(PythonLanguageVersion.V27, "class  C   (    )     :      \r\n    pass");
             TestOneString(PythonLanguageVersion.V27, "class  C   (    object): \r\n    pass");
             TestOneString(PythonLanguageVersion.V27, "class  C   (    object      ,       )      : \r\n    pass");
             TestOneString(PythonLanguageVersion.V30, "class  C   (    object      ,       metaclass        =         42          )           : \r\n    pass");
-            TestOneString(PythonLanguageVersion.V30, "class  C   (    *     foo      )       :         \r\n    pass");
-            TestOneString(PythonLanguageVersion.V30, "class  C   (    *     foo      ,       )        :        \r\n    pass");
-            TestOneString(PythonLanguageVersion.V30, "class  C   (    *     foo      ,       **        bar         )          :           \r\n    pass");
-            TestOneString(PythonLanguageVersion.V30, "class  C   (    *     foo      ,      **        bar         ,          )           :            \r\n    pass");
-            TestOneString(PythonLanguageVersion.V30, "class  C   (    **     foo      )       :         \r\n    pass");
-            TestOneString(PythonLanguageVersion.V30, "class  C   (    **     foo      ,       )        :         \r\n    pass");
-            TestOneString(PythonLanguageVersion.V30, "class  C   (    foo     =      bar       )        :         \r\n    pass");
-            TestOneString(PythonLanguageVersion.V30, "class  C   (    foo     =      bar       ,        baz         =          42           )           :             \r\n    pass");
-            TestOneString(PythonLanguageVersion.V27, "class Foo(int if y else object):\r\n    pass");
-            TestOneString(PythonLanguageVersion.V27, "class  Foo   (    int     if      y      else       object         )         :\r\n    pass");
+            TestOneString(PythonLanguageVersion.V30, "class  C   (    *     fob      )       :         \r\n    pass");
+            TestOneString(PythonLanguageVersion.V30, "class  C   (    *     fob      ,       )        :        \r\n    pass");
+            TestOneString(PythonLanguageVersion.V30, "class  C   (    *     fob      ,       **        oar         )          :           \r\n    pass");
+            TestOneString(PythonLanguageVersion.V30, "class  C   (    *     fob      ,      **        oar         ,          )           :            \r\n    pass");
+            TestOneString(PythonLanguageVersion.V30, "class  C   (    **     fob      )       :         \r\n    pass");
+            TestOneString(PythonLanguageVersion.V30, "class  C   (    **     fob      ,       )        :         \r\n    pass");
+            TestOneString(PythonLanguageVersion.V30, "class  C   (    fob     =      oar       )        :         \r\n    pass");
+            TestOneString(PythonLanguageVersion.V30, "class  C   (    fob     =      oar       ,        baz         =          42           )           :             \r\n    pass");
+            TestOneString(PythonLanguageVersion.V27, "class Fob(int if y else object):\r\n    pass");
+            TestOneString(PythonLanguageVersion.V27, "class  Fob   (    int     if      y      else       object         )         :\r\n    pass");
 
-            TestOneString(PythonLanguageVersion.V27, "@foo\r\nclass C: pass");
-            TestOneString(PythonLanguageVersion.V27, "@  foo   \r\nclass    C     :       pass");
+            TestOneString(PythonLanguageVersion.V27, "@fob\r\nclass C: pass");
+            TestOneString(PythonLanguageVersion.V27, "@  fob   \r\nclass    C     :       pass");
 
             // Function Definition
             TestOneString(PythonLanguageVersion.V27, "def f(): pass");
             TestOneString(PythonLanguageVersion.V27, "def f(a): pass");
             TestOneString(PythonLanguageVersion.V27, "def f(a = 42): pass");
             TestOneString(PythonLanguageVersion.V27, "def f(a, b): pass");
-            TestOneString(PythonLanguageVersion.V30, "def f(a, b) -> foo: pass");
+            TestOneString(PythonLanguageVersion.V30, "def f(a, b) -> fob: pass");
             TestOneString(PythonLanguageVersion.V27, "def f(*a, **b): pass");
             TestOneString(PythonLanguageVersion.V27, "def  f   (    )     :       pass");
             TestOneString(PythonLanguageVersion.V27, "def  f   (    a     )      :        pass");
             TestOneString(PythonLanguageVersion.V27, "def  f   (    a     =       42        )          :           pass");
             TestOneString(PythonLanguageVersion.V27, "def  f   (    a     ,       b          )          :           pass");
-            TestOneString(PythonLanguageVersion.V30, "def  f   (    a     ,       b        )         ->          foo           :            pass");
+            TestOneString(PythonLanguageVersion.V30, "def  f   (    a     ,       b        )         ->          fob           :            pass");
             TestOneString(PythonLanguageVersion.V27, "def  f   (    *     a      ,        **        b         )          :           pass");
-            TestOneString(PythonLanguageVersion.V27, "@foo\r\ndef f(): pass");
-            TestOneString(PythonLanguageVersion.V27, "@foo.bar\r\ndef f(): pass");
-            TestOneString(PythonLanguageVersion.V27, "@foo(2)\r\ndef f(): pass");
-            TestOneString(PythonLanguageVersion.V27, "@foo.bar(2)\r\ndef f(): pass");
-            TestOneString(PythonLanguageVersion.V27, "@  foo   \r\ndef f(): pass");
-            TestOneString(PythonLanguageVersion.V27, "@  foo   .    bar\r\ndef f(): pass");
-            TestOneString(PythonLanguageVersion.V27, "@  foo   (    2     )\r\ndef f(): pass");
-            TestOneString(PythonLanguageVersion.V27, "@  foo   .    bar     (      2       )\r\ndef f(): pass");
+            TestOneString(PythonLanguageVersion.V27, "@fob\r\ndef f(): pass");
+            TestOneString(PythonLanguageVersion.V27, "@fob.oar\r\ndef f(): pass");
+            TestOneString(PythonLanguageVersion.V27, "@fob(2)\r\ndef f(): pass");
+            TestOneString(PythonLanguageVersion.V27, "@fob.oar(2)\r\ndef f(): pass");
+            TestOneString(PythonLanguageVersion.V27, "@  fob   \r\ndef f(): pass");
+            TestOneString(PythonLanguageVersion.V27, "@  fob   .    oar\r\ndef f(): pass");
+            TestOneString(PythonLanguageVersion.V27, "@  fob   (    2     )\r\ndef f(): pass");
+            TestOneString(PythonLanguageVersion.V27, "@  fob   .    oar     (      2       )\r\ndef f(): pass");
             TestOneString(PythonLanguageVersion.V27, "def f((a)): pass");
             TestOneString(PythonLanguageVersion.V27, "def  f   (    (     a         )      )       :        pass");
             TestOneString(PythonLanguageVersion.V27, "def f((a, b)): pass");
@@ -1475,16 +1475,16 @@ def f(): pass");
             TestOneString(PythonLanguageVersion.V27, "def f((a, (b, c))): pass");
             TestOneString(PythonLanguageVersion.V27, "def  f   (    (     a      ,       (         b          ,          c            )             )              )              :                pass");
 
-            TestOneString(PythonLanguageVersion.V27, "@foo\r\n\r\ndef f(): pass");
+            TestOneString(PythonLanguageVersion.V27, "@fob\r\n\r\ndef f(): pass");
 
-            TestOneString(PythonLanguageVersion.V27, "class C:\r\n    @foo.__bar\r\n    def f(self): pass");
+            TestOneString(PythonLanguageVersion.V27, "class C:\r\n    @fob.__oar\r\n    def f(self): pass");
 
             TestOneString(PythonLanguageVersion.V27, "class C:\r\n    def __f(self): pass");
 
             TestOneString(PythonLanguageVersion.V27, "def f(a,): pass");
             TestOneString(PythonLanguageVersion.V27, "def  f(   a    ,     )      :       pass");
 
-            TestOneString(PythonLanguageVersion.V27, "class C:\r\n    @property\r\n    def foo(self): return 42");
+            TestOneString(PythonLanguageVersion.V27, "class C:\r\n    @property\r\n    def fob(self): return 42");
 
         }
 

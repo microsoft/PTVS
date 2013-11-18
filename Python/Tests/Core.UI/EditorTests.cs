@@ -15,13 +15,16 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Windows;
 using EnvDTE;
+using Microsoft.PythonTools;
+using Microsoft.PythonTools.Options;
+using Microsoft.PythonTools.Parsing;
 using Microsoft.TC.TestHostAdapters;
+using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Language.Intellisense;
+using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
@@ -29,7 +32,6 @@ using Microsoft.VisualStudio.Text.Tagging;
 using TestUtilities;
 using TestUtilities.Python;
 using TestUtilities.UI;
-using TestUtilities.UI.Python;
 
 namespace PythonToolsUITests {
     [TestClass]
@@ -48,7 +50,7 @@ namespace PythonToolsUITests {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
                 var project = app.OpenProject(@"TestData\UnregisteredFileExtension.sln");
 
-                var item = project.ProjectItems.Item("Foo.unregfileext");
+                var item = project.ProjectItems.Item("Fob.unregfileext");
                 var window = item.Open();
                 window.Activate();
 
@@ -97,18 +99,25 @@ namespace PythonToolsUITests {
 
         private void OutlineTest(string filename, params ExpectedTag[] expected) {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenProject(@"TestData\Outlining.sln");
+                var prevOption = PythonToolsPackage.Instance.AdvancedEditorOptionsPage.EnterOutliningModeOnOpen;
+                try {
+                    PythonToolsPackage.Instance.AdvancedEditorOptionsPage.EnterOutliningModeOnOpen = true;
 
-                var item = project.ProjectItems.Item(filename);
-                var window = item.Open();
-                window.Activate();
+                    var project = app.OpenProject(@"TestData\Outlining.sln");
 
-                var doc = app.GetDocument(item.Document.FullName);
+                    var item = project.ProjectItems.Item(filename);
+                    var window = item.Open();
+                    window.Activate();
 
-                var snapshot = doc.TextView.TextBuffer.CurrentSnapshot;
-                var tags = doc.GetTaggerAggregator<IOutliningRegionTag>(doc.TextView.TextBuffer).GetTags(new SnapshotSpan(snapshot, 0, snapshot.Length));
+                    var doc = app.GetDocument(item.Document.FullName);
 
-                VerifyTags(doc.TextView.TextBuffer, tags, expected);
+                    var snapshot = doc.TextView.TextBuffer.CurrentSnapshot;
+                    var tags = doc.GetTaggerAggregator<IOutliningRegionTag>(doc.TextView.TextBuffer).GetTags(new SnapshotSpan(snapshot, 0, snapshot.Length));
+
+                    VerifyTags(doc.TextView.TextBuffer, tags, expected);
+                } finally {
+                    PythonToolsPackage.Instance.AdvancedEditorOptionsPage.EnterOutliningModeOnOpen = prevOption;
+                }
             }
         }
 
@@ -131,7 +140,7 @@ namespace PythonToolsUITests {
                 new Classification("whitespace", 33, 35, "\r\n"),
                 new Classification("string", 35, 46, "'abc\\\r\ndef'"),
                 new Classification("whitespace", 46, 50, "\r\n\r\n"),
-                new Classification("identifier", 50, 53, "foo"),
+                new Classification("identifier", 50, 53, "fob"),
                 new Classification("Python operator", 54, 55, "="),
                 new Classification("string", 56, 72, "'ONE \\\r\n    ONE'"),
                 new Classification("Python operator", 73, 74, "+"),
@@ -159,7 +168,7 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ClassificationMultiLineStringTest2() {
             Classification.Verify(GetClassifications("MultiLineString2.py"),
-                new Classification("string", 0, 15, "'''\r\nfoo bar'''"),
+                new Classification("string", 0, 15, "'''\r\nfob oar'''"),
                 new Classification("Python operator", 40, 41, "+"),
                 new Classification("string", 45, 125, "''')\r\n\r\n__visualstudio_debugger_init()\r\ndel __visualstudio_debugger_init\r\naaa'''")
             );
@@ -266,19 +275,19 @@ namespace PythonToolsUITests {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
                 var project = app.OpenProject(@"TestData\Completions.sln");
 
-                var item = project.ProjectItems.Item("bar.py");
+                var item = project.ProjectItems.Item("oar.py");
                 var window = item.Open();
                 window.Activate();
 
-                Keyboard.Type("from foo import ba\r");
+                Keyboard.Type("from fob import ba\r");
 
                 var doc = app.GetDocument(item.Document.FullName);
 
-                doc.WaitForText("from foo import baz");
+                doc.WaitForText("from fob import baz");
                 Keyboard.Type("\r");
 
-                Keyboard.Type("from foo import Ba\r");
-                doc.WaitForText("from foo import baz\r\nfrom foo import Baz");
+                Keyboard.Type("from fob import Ba\r");
+                doc.WaitForText("from fob import baz\r\nfrom fob import Baz");
             }
         }
 
@@ -325,9 +334,9 @@ namespace PythonToolsUITests {
 
 ");
 
-                AutoIndentTest(app, project, "if True: #foo\rpass\relse: #bar\rpass\r\r42\r\r", @"if True: #foo
+                AutoIndentTest(app, project, "if True: #fob\rpass\relse: #oar\rpass\r\r42\r\r", @"if True: #fob
     pass
-else: #bar
+else: #oar
     pass
 
 42
@@ -423,15 +432,15 @@ pass");
 import os
 pass");
 
-                AutoIndentTest(app, project, "class C:\rdef foo(self):\r'doc string'\rpass", @"class C:
-    def foo(self):
+                AutoIndentTest(app, project, "class C:\rdef fob(self):\r'doc string'\rpass", @"class C:
+    def fob(self):
         'doc string'
         pass");
 
-                AutoIndentTest(app, project, "def g():\rfoo(15)\r\r\bfoo(1)\rpass", @"def g():
-    foo(15)
+                AutoIndentTest(app, project, "def g():\rfob(15)\r\r\bfob(1)\rpass", @"def g():
+    fob(15)
 
-foo(1)
+fob(1)
 pass");
 
                 AutoIndentTest(app, project, "def m():\rif True:\rpass\relse:\rabc()\r\r\b\bm()\r\rm()\rpass", @"def m():
@@ -460,7 +469,7 @@ pass");
 
     
     @property
-    def bar(self):
+    def oar(self):
         pass");
 
                 // http://pytools.codeplex.com/workitem/299
@@ -535,7 +544,7 @@ pass");
                 var project = app.OpenProject(@"TestData\EditorTests.sln");
 
                 // http://pytools.codeplex.com/workitem/139
-                TypingTest(project, "DecoratorOnFunction.py", 0, 0, @"@classmethod
+                TypingTest(app, project, "DecoratorOnFunction.py", 0, 0, @"@classmethod
 def f(): pass
 ", () => {
      Keyboard.Type("\r");
@@ -548,7 +557,7 @@ def f(): pass
  });
 
                 // http://pytools.codeplex.com/workitem/151
-                TypingTest(project, "DecoratorInClass.py", 1, 4, @"class C:
+                TypingTest(app, project, "DecoratorInClass.py", 1, 4, @"class C:
     @classmethod
     def f(self):
         pass
@@ -571,7 +580,7 @@ def f(): pass
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
                 var project = app.OpenProject(@"TestData\EditorTests.sln");
 
-                TypingTest(project, "BackslashCompletion.py", 2, 0, @"x = 42
+                TypingTest(app, project, "BackslashCompletion.py", 2, 0, @"x = 42
 x\
 .conjugate", () => {
                Keyboard.Type(".con\t");
@@ -587,36 +596,34 @@ x\
         /// <param name="line">zero-based line</param>
         /// <param name="column">zero based column</param>
         /// <param name="expectedText"></param>
-        private static void TypingTest(Project project, string filename, int line, int column, string expectedText, Action typing) {
+        private static void TypingTest(VisualStudioApp app, Project project, string filename, int line, int column, string expectedText, Action typing) {
             var item = project.ProjectItems.Item(filename);
             var window = item.Open();
             window.Activate();
 
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var doc = app.GetDocument(item.Document.FullName);
-                var textLine = doc.TextView.TextViewLines[line];
+            var doc = app.GetDocument(item.Document.FullName);
+            var textLine = doc.TextView.TextViewLines[line];
 
-                ((UIElement)doc.TextView).Dispatcher.Invoke((Action)(() => {
-                    try {
-                        doc.TextView.Caret.MoveTo(textLine.Start + column);
-                    } catch (Exception) {
-                        Debug.Fail("Bad position for moving caret");
-                    }
-                }));
-
-                typing();
-
-                string actual = null;
-                for (int i = 0; i < 100; i++) {
-                    actual = doc.TextView.TextBuffer.CurrentSnapshot.GetText();
-
-                    if (expectedText == actual) {
-                        break;
-                    }
-                    System.Threading.Thread.Sleep(100);
+            ((UIElement)doc.TextView).Dispatcher.Invoke((Action)(() => {
+                try {
+                    doc.TextView.Caret.MoveTo(textLine.Start + column);
+                } catch (Exception) {
+                    Debug.Fail("Bad position for moving caret");
                 }
-                Assert.AreEqual(actual, expectedText);
+            }));
+
+            typing();
+
+            string actual = null;
+            for (int i = 0; i < 100; i++) {
+                actual = doc.TextView.TextBuffer.CurrentSnapshot.GetText();
+
+                if (expectedText == actual) {
+                    break;
+                }
+                System.Threading.Thread.Sleep(100);
             }
+            Assert.AreEqual(actual, expectedText);
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
@@ -641,6 +648,69 @@ x\
                 Assert.AreNotEqual(text.IndexOf("????"), -1);
             }
         }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void IndentationInconsistencyWarning() {
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var options = (IPythonOptions)VsIdeTestHostContext.Dte.GetObject("VsPython");
+                var severity = options.IndentationInconsistencySeverity;
+                options.IndentationInconsistencySeverity = Severity.Warning;
+                try {
+                    var project = app.OpenProject(@"TestData\InconsistentIndentation.sln");
+
+                    var items = app.WaitForErrorListItems(1);
+                    Assert.AreEqual(1, items.Count);
+
+                    VSTASKPRIORITY[] pri = new VSTASKPRIORITY[1];
+                    ErrorHandler.ThrowOnFailure(items[0].get_Priority(pri));
+                    Assert.AreEqual(VSTASKPRIORITY.TP_NORMAL, pri[0]);
+                } finally {
+                    options.IndentationInconsistencySeverity = severity;
+                }
+            }
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void IndentationInconsistencyError() {
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var options = (IPythonOptions)VsIdeTestHostContext.Dte.GetObject("VsPython");
+                var severity = options.IndentationInconsistencySeverity;
+                options.IndentationInconsistencySeverity = Severity.Error;
+                try {
+                    var project = app.OpenProject(@"TestData\InconsistentIndentation.sln");
+
+                    var items = app.WaitForErrorListItems(1);
+                    Assert.AreEqual(1, items.Count);
+
+                    VSTASKPRIORITY[] pri = new VSTASKPRIORITY[1];
+                    ErrorHandler.ThrowOnFailure(items[0].get_Priority(pri));
+                    Assert.AreEqual(VSTASKPRIORITY.TP_HIGH, pri[0]);
+                } finally {
+                    options.IndentationInconsistencySeverity = severity;
+                }
+            }
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void IndentationInconsistencyIgnore() {
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var options = (IPythonOptions)VsIdeTestHostContext.Dte.GetObject("VsPython");
+                var severity = options.IndentationInconsistencySeverity;
+                options.IndentationInconsistencySeverity = Severity.Ignore;
+                try {
+                    var project = app.OpenProject(@"TestData\InconsistentIndentation.sln");
+
+                    List<IVsTaskItem> items = app.WaitForErrorListItems(0);
+                    Assert.AreEqual(0, items.Count);
+                } finally {
+                    options.IndentationInconsistencySeverity = severity;
+                }
+            }
+        }
+
 
         #endregion
 
@@ -696,10 +766,9 @@ x\
                 var spans = classifier.GetClassificationSpans(new SnapshotSpan(snapshot, 0, snapshot.Length));
                 return spans;
             }
+        }
 
         #endregion
-
-        }
 
     }
 }

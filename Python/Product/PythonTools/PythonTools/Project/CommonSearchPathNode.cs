@@ -27,7 +27,7 @@ namespace Microsoft.PythonTools.Project {
     [ComVisible(true)]
     internal class CommonSearchPathNode : BaseSearchPathNode {
         private int _index;
-        public CommonSearchPathNode(CommonProjectNode project, string path, int index)
+        public CommonSearchPathNode(PythonProjectNode project, string path, int index)
             : base(project, path, new VirtualProjectElement(project)) {
             _index = index;
         }

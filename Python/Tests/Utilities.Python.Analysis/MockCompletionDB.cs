@@ -117,15 +117,7 @@ namespace TestUtilities.Mocks {
             Assert.IsTrue(Directory.Exists(source1), "Cannot find " + source1);
             Assert.IsTrue(Directory.Exists(source2), "Cannot find " + source2);
 
-            var tempDir = Path.GetTempPath();
-            MockCompletionDB db = null;
-            for (int key = 0; key < int.MaxValue; ++key) {
-                var path = Path.Combine(tempDir, string.Format("PythonDB_{0}", key));
-                if (!Directory.Exists(path)) {
-                    db = new MockCompletionDB(path, version);
-                    break;
-                }
-            }
+            var db = new MockCompletionDB(TestData.GetTempPath(randomSubPath: true), version);
             Assert.IsNotNull(db, "Unable to create DB path");
             Console.WriteLine("Creating temporary database at {0}", db.DBPath);
 

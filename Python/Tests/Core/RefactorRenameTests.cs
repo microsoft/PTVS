@@ -43,7 +43,7 @@ namespace PythonToolsTests {
 
         [TestMethod, Priority(0)]
         public void PrivateMemberMangling() {
-            RefactorTest("foo", "__f",
+            RefactorTest("fob", "__f",
                 new[] { 
                     new FileInput(
 @"class C:
@@ -57,14 +57,14 @@ namespace PythonToolsTests {
         self._C__f()
     ",
 @"class C:
-    def foo(self):
+    def fob(self):
         pass
 
     def g(self):
-        self.foo()
+        self.fob()
 
     def x(self):
-        self.foo()
+        self.fob()
     "
 
                     )
@@ -76,7 +76,7 @@ namespace PythonToolsTests {
                 )
             );
 
-            RefactorTest("foo", "_C__f",
+            RefactorTest("fob", "_C__f",
                 new[] { 
                     new FileInput(
 @"class C:
@@ -90,14 +90,14 @@ namespace PythonToolsTests {
         self._C__f()
     ",
 @"class C:
-    def foo(self):
+    def fob(self):
         pass
 
     def g(self):
-        self.foo()
+        self.fob()
 
     def x(self):
-        self.foo()
+        self.fob()
     "
 
                     )
@@ -218,7 +218,7 @@ namespace PythonToolsTests {
 
         [TestMethod, Priority(0)]
         public void SanityClassField() {
-            RefactorTest("foo", "abc",
+            RefactorTest("fob", "abc",
                 new[] { 
                     new FileInput(
 @"class C:
@@ -264,47 +264,47 @@ d(a . abc, a. abc, a. \
 abc, a\
 .abc)",
 @"class C:
-    foo = 100
+    fob = 100
     def __getitem__(self, key): pass
 def d(*p): pass
 
 a = C()
-a.foo
-a .foo
-a. foo
-a.foo; a.foo
+a.fob
+a .fob
+a. fob
+a.fob; a.fob
 b = a
-b.foo
-a[a.foo]
-a[ a.foo]
-a[a.foo,]
-a[a.foo ,]
-a[a.foo,a.foo]
-a[a.foo, a.foo]
-a[a.foo ,a.foo]
-a[a.foo , a.foo]
-a[a.foo,a.foo,]
-a[a.foo, a.foo, ]
-a[a.foo ,a.foo ,]
-a[a.foo , a.foo,  ]
-a[(a.foo)]
-a[(a.foo), a.foo]
-a[(a.foo, a.foo)]
-a[a.foo, (a.foo)]
-a[(a.foo,)]
-a[(a.foo,), a.foo]
-a[(a.foo, a.foo,)]
-a[a.foo, (a.foo,)]
-a[ a . foo ]
-d(a.foo)
-d((a.foo))
-d((a.foo,))
-d((a.foo),)
-d(a.foo,a.foo)
-d (a.foo)
-d(a . foo, a. foo, a. \
-foo, a\
-.foo)"
+b.fob
+a[a.fob]
+a[ a.fob]
+a[a.fob,]
+a[a.fob ,]
+a[a.fob,a.fob]
+a[a.fob, a.fob]
+a[a.fob ,a.fob]
+a[a.fob , a.fob]
+a[a.fob,a.fob,]
+a[a.fob, a.fob, ]
+a[a.fob ,a.fob ,]
+a[a.fob , a.fob,  ]
+a[(a.fob)]
+a[(a.fob), a.fob]
+a[(a.fob, a.fob)]
+a[a.fob, (a.fob)]
+a[(a.fob,)]
+a[(a.fob,), a.fob]
+a[(a.fob, a.fob,)]
+a[a.fob, (a.fob,)]
+a[ a . fob ]
+d(a.fob)
+d((a.fob))
+d((a.fob,))
+d((a.fob),)
+d(a.fob,a.fob)
+d (a.fob)
+d(a . fob, a. fob, a. \
+fob, a\
+.fob)"
                     )
                 },
                 new ExpectedPreviewItem("test.py",
@@ -363,7 +363,7 @@ foo, a\
                     new ExpectedPreviewItem(".abc)"))
             );
 
-            RefactorTest("foo", "abc",
+            RefactorTest("fob", "abc",
                 new[] { 
                     new FileInput(
 @"class C1:
@@ -382,7 +382,7 @@ a2.abc
 abc = 200
 ",
 @"class C1:
-    foo = 100
+    fob = 100
 class C2:
     abc = 150
 
@@ -390,9 +390,9 @@ A1 = C1
 A2 = C2
 a1 = C1()
 a2 = C2()
-A1.foo
+A1.fob
 A2.abc
-a1.foo
+a1.fob
 a2.abc
 abc = 200
 "
@@ -409,7 +409,7 @@ abc = 200
         [TestMethod, Priority(0)]
         public void InheritedClassField() {
 
-            RefactorTest("foo", "abc",
+            RefactorTest("fob", "abc",
                 new[] { 
                     new FileInput(
 @"class C1:
@@ -428,7 +428,7 @@ a2.abc
 abc = 200
 ",
 @"class C1:
-    foo = 100
+    fob = 100
 class C2(C1):
     pass
 
@@ -436,10 +436,10 @@ A1 = C1
 A2 = C2
 a1 = C1()
 a2 = C2()
-A1.foo
-A2.foo
-a1.foo
-a2.foo
+A1.fob
+A2.fob
+a1.fob
+a2.fob
 abc = 200
 "
                     )
@@ -457,14 +457,14 @@ abc = 200
         [TestMethod, Priority(0)]
         public void RenameGeneratorVariable() {
             // http://pytools.codeplex.com/workitem/454
-            RefactorTest("foo", "abc",
-                new[] { new FileInput("abc = 100; x = (abc for abc in range(abc))", "foo = 100; x = (abc for abc in range(foo))") }
+            RefactorTest("fob", "abc",
+                new[] { new FileInput("abc = 100; x = (abc for abc in range(abc))", "fob = 100; x = (abc for abc in range(fob))") }
             );
-            RefactorTest("foo", "abc for",
-                new[] { new FileInput("abc = 100; x = (abc for abc in range(abc))", "abc = 100; x = (foo for foo in range(abc))") }
+            RefactorTest("fob", "abc for",
+                new[] { new FileInput("abc = 100; x = (abc for abc in range(abc))", "abc = 100; x = (fob for fob in range(abc))") }
             );
-            RefactorTest("foo", "abc for",
-                new[] { new FileInput("abc = 100; x = (abc for abc in range(abc) for xyz in abc)", "abc = 100; x = (foo for foo in range(abc) for xyz in foo)") }
+            RefactorTest("fob", "abc for",
+                new[] { new FileInput("abc = 100; x = (abc for abc in range(abc) for xyz in abc)", "abc = 100; x = (fob for fob in range(abc) for xyz in fob)") }
             );
         }
 
@@ -474,11 +474,11 @@ abc = 200
                 new[] { 
                     new FileInput(
 @"def f():
-    l = foo
+    l = fob
     for abc in l:
         l.append(abc)",
 @"def f():
-    l = foo
+    l = fob
     for baz in l:
         l.append(baz)"
                     )
@@ -492,11 +492,11 @@ abc = 200
                 new[] { 
                     new FileInput(
 @"def f():
-    l = foo
+    l = fob
     for abc, de_f in l:
         l.append(abc)",
 @"def f():
-    l = foo
+    l = fob
     for baz, de_f in l:
         l.append(baz)"
                     )
@@ -507,11 +507,11 @@ abc = 200
                 new[] { 
                     new FileInput(
 @"def f():
-    l = foo
+    l = fob
     for (abc, de_f) in l:
         l.append(abc)",
 @"def f():
-    l = foo
+    l = fob
     for (baz, de_f) in l:
         l.append(baz)"
                     )
@@ -522,11 +522,11 @@ abc = 200
                 new[] { 
                     new FileInput(
 @"def f():
-    l = foo
+    l = fob
     for (abc,), de_f in l:
         l.append(abc)",
 @"def f():
-    l = foo
+    l = fob
     for (baz,), de_f in l:
         l.append(baz)"
                     )
@@ -537,11 +537,11 @@ abc = 200
                 new[] { 
                     new FileInput(
 @"def f():
-    l = foo
+    l = fob
     for abc, de_f in l:
         l.append(de_f)",
 @"def f():
-    l = foo
+    l = fob
     for abc, baz in l:
         l.append(baz)"
                     )
@@ -552,11 +552,11 @@ abc = 200
                 new[] { 
                     new FileInput(
 @"def f():
-    l = foo
+    l = fob
     for (abc, de_f) in l:
         l.append(de_f)",
 @"def f():
-    l = foo
+    l = fob
     for (abc, baz) in l:
         l.append(baz)"
                     )
@@ -567,11 +567,11 @@ abc = 200
                 new[] { 
                     new FileInput(
 @"def f():
-    l = foo
+    l = fob
     for abc, (de_f,) in l:
         l.append(de_f)",
 @"def f():
-    l = foo
+    l = fob
     for abc, (baz,) in l:
         l.append(baz)"
                     )
@@ -581,7 +581,7 @@ abc = 200
 
         [TestMethod, Priority(0)]
         public void SanityInstanceField() {
-            RefactorTest("foo", "abc",
+            RefactorTest("fob", "abc",
                 new[] { 
                     new FileInput(
 @"class C:
@@ -594,16 +594,16 @@ a.abc
 ",
 @"class C:
     def __init__(self):
-        self.foo = 100
-    foo = 200
+        self.fob = 100
+    fob = 200
 
 a = C()
-a.foo
+a.fob
 "
                     )
                 }
             );
-            RefactorTest("foo", "abc",
+            RefactorTest("fob", "abc",
                 new[] { 
                     new FileInput(
 @"class C:
@@ -615,10 +615,10 @@ a.abc
 ",
 @"class C:
     def make(self):
-        self.foo = 100
+        self.fob = 100
 
 a = C()
-a.foo
+a.fob
 "
                     )
                 }
@@ -627,22 +627,22 @@ a.foo
 
         [TestMethod, Priority(0)]
         public void SanityParameter() {
-            RefactorTest("foo", "abc",
+            RefactorTest("fob", "abc",
                 new[] { 
                     new FileInput(
 @"def f(abc):
     print abc, abc(), abc[i], x[abc], y(abc)
     abc, _ = 100, abc
 ",
-@"def f(foo):
-    print foo, foo(), foo[i], x[foo], y(foo)
-    foo, _ = 100, foo
+@"def f(fob):
+    print fob, fob(), fob[i], x[fob], y(fob)
+    fob, _ = 100, fob
 "
                     )
                 }
             );
 
-            RefactorTest("foo", "abc",
+            RefactorTest("fob", "abc",
                 new[] { 
                     new FileInput(
 @"def f(abc):
@@ -651,9 +651,9 @@ a.foo
 
 abc = 200
 ",
-@"def f(foo):
-    print foo
-    foo = 100
+@"def f(fob):
+    print fob
+    fob = 100
 
 abc = 200
 "
@@ -661,7 +661,7 @@ abc = 200
                 }
             );
 
-            RefactorTest("foo", "abc",
+            RefactorTest("fob", "abc",
                 new[] { 
                     new FileInput(
 @"def f(*abc):
@@ -669,8 +669,8 @@ abc = 200
 
 abc = 200
 ",
-@"def f(*foo):
-    print foo
+@"def f(*fob):
+    print fob
 
 abc = 200
 "
@@ -678,7 +678,7 @@ abc = 200
                 }
             );
 
-            RefactorTest("foo", "abc",
+            RefactorTest("fob", "abc",
                 new[] { 
                     new FileInput(
 @"def f(**abc):
@@ -686,8 +686,8 @@ abc = 200
 
 abc = 200
 ",
-@"def f(**foo):
-    print foo
+@"def f(**fob):
+    print fob
 
 abc = 200
 "
@@ -695,7 +695,7 @@ abc = 200
                 }
             );
 
-            RefactorTest("foo", "abc",
+            RefactorTest("fob", "abc",
                 new[] { 
                     new FileInput(
 @"def f(*p, **abc):
@@ -703,8 +703,8 @@ abc = 200
 
 abc = 200
 ",
-@"def f(*p, **foo):
-    print foo
+@"def f(*p, **fob):
+    print fob
 
 abc = 200
 "
@@ -712,7 +712,7 @@ abc = 200
                 }
             );
 
-            RefactorTest("foo", "abc",
+            RefactorTest("fob", "abc",
                 new[] { 
                     new FileInput(
 @"def f(abc=None):
@@ -720,8 +720,8 @@ abc = 200
 
 abc = 200
 ",
-@"def f(foo=None):
-    print foo
+@"def f(fob=None):
+    print fob
 
 abc = 200
 "
@@ -729,7 +729,7 @@ abc = 200
                 }
             );
 
-            RefactorTest("foo", "abc",
+            RefactorTest("fob", "abc",
                 new[] { 
                     new FileInput(
 @"def f(i=abc):
@@ -737,16 +737,16 @@ abc = 200
 
 abc = 200
 ",
-@"def f(i=foo):
-    print foo
+@"def f(i=fob):
+    print fob
 
-foo = 200
+fob = 200
 "
                     )
                 }
             );
 
-            RefactorTest("foo", "abc",
+            RefactorTest("fob", "abc",
                 new[] { 
                     new FileInput(
 @"def f(abc=abc):
@@ -754,8 +754,8 @@ foo = 200
 
 abc = 200
 ",
-@"def f(foo=abc):
-    print foo
+@"def f(fob=abc):
+    print fob
 
 abc = 200
 "
@@ -766,7 +766,7 @@ abc = 200
 
         [TestMethod, Priority(0)]
         public void SanityLocal() {
-            RefactorTest("foo", "abc",
+            RefactorTest("fob", "abc",
                 new[] { 
                     new FileInput(
 @"def f():
@@ -774,14 +774,14 @@ abc = 200
     print abc
 ",
 @"def f():
-    foo = 100
-    print foo
+    fob = 100
+    print fob
 "
                     )
                 }
             );
 
-            RefactorTest("foo", "abc",
+            RefactorTest("fob", "abc",
                 new[] { 
                     new FileInput(
 @"def f():
@@ -791,8 +791,8 @@ abc = 200
 abc = 200
 ",
 @"def f():
-    foo = 100
-    print foo
+    fob = 100
+    print fob
 
 abc = 200
 "
@@ -800,7 +800,7 @@ abc = 200
                 }
             );
             
-            RefactorTest("foo", "abc",
+            RefactorTest("fob", "abc",
                 new[] { 
                     new FileInput(
 @"def f():
@@ -812,8 +812,8 @@ def h(abc):
     pass
 ",
 @"def f():
-    foo = 100
-    print foo
+    fob = 100
+    print fob
 def g():
     abc = 100
 def h(abc):
@@ -827,7 +827,7 @@ def h(abc):
 
         [TestMethod, Priority(0)]
         public void SanityClosure() {
-            RefactorTest("foo", "abc",
+            RefactorTest("fob", "abc",
                 new[] { 
                     new FileInput(
 @"def f():
@@ -836,15 +836,15 @@ def h(abc):
         print abc
 ",
 @"def f():
-    foo = 100
+    fob = 100
     def g():
-        print foo
+        print fob
 "
                     )
                 }
             );
 
-            RefactorTest("foo", "abc",
+            RefactorTest("fob", "abc",
                 new[] { 
                     new FileInput(
 @"def f():
@@ -855,9 +855,9 @@ def h(abc):
 abc = 200
 ",
 @"def f():
-    foo = 100
+    fob = 100
     def g():
-        print foo
+        print fob
 
 abc = 200
 "
@@ -865,7 +865,7 @@ abc = 200
                 }
             );
 
-            RefactorTest("foo", "abc",
+            RefactorTest("fob", "abc",
                 new[] { 
                     new FileInput(
 @"def f(abc):
@@ -874,11 +874,11 @@ abc = 200
     abc = 100
     g(abc)
 ",
-@"def f(foo):
+@"def f(fob):
     def g(abc):
         print abc
-    foo = 100
-    g(foo)
+    fob = 100
+    g(fob)
 "
                     )
                 }
@@ -887,7 +887,7 @@ abc = 200
 
         [TestMethod, Priority(0)]
         public void SanityLambda() {
-            RefactorTest("foo", "abc",
+            RefactorTest("fob", "abc",
                 new[] { 
                     new FileInput(
 @"def f():
@@ -895,14 +895,14 @@ abc = 200
     g = lambda: abc
 ",
 @"def f():
-    foo = 100
-    g = lambda: foo
+    fob = 100
+    g = lambda: fob
 "
                     )
                 }
             );
 
-            RefactorTest("foo", "abc",
+            RefactorTest("fob", "abc",
                 new[] { 
                     new FileInput(
 @"def f():
@@ -912,8 +912,8 @@ abc = 200
 abc = 200
 ",
 @"def f():
-    foo = 100
-    g = lambda: foo
+    fob = 100
+    g = lambda: fob
 
 abc = 200
 "
@@ -921,7 +921,7 @@ abc = 200
                 }
             );
 
-            RefactorTest("foo", "abc",
+            RefactorTest("fob", "abc",
                 new[] { 
                     new FileInput(
 @"def f(abc):
@@ -929,10 +929,10 @@ abc = 200
     abc = 100
     g(abc)
 ",
-@"def f(foo):
+@"def f(fob):
     g = lambda abc: abc
-    foo = 100
-    g(foo)
+    fob = 100
+    g(fob)
 "
                     )
                 }
@@ -941,29 +941,29 @@ abc = 200
 
         [TestMethod, Priority(0)]
         public void SanityInlineIf() {
-            RefactorTest("foo", "abc",
+            RefactorTest("fob", "abc",
                 new[] { 
                     new FileInput(
                         "abc = 0; x = True if abc else False",
-                        "foo = 0; x = True if foo else False"
+                        "fob = 0; x = True if fob else False"
                     )
                 }
             );
 
-            RefactorTest("foo", "abc",
+            RefactorTest("fob", "abc",
                 new[] { 
                     new FileInput(
                         "abc = 0; x = abc if abc else False",
-                        "foo = 0; x = foo if foo else False"
+                        "fob = 0; x = fob if fob else False"
                     )
                 }
             );
 
-            RefactorTest("foo", "abc",
+            RefactorTest("fob", "abc",
                 new[] { 
                     new FileInput(
                         "abc = 0; x = True if abc else abc",
-                        "foo = 0; x = True if foo else foo"
+                        "fob = 0; x = True if fob else fob"
                     )
                 }
             );
@@ -971,65 +971,65 @@ abc = 200
 
         [TestMethod, Priority(0)]
         public void SanityGenerator() {
-            RefactorTest("foo", "abc",
+            RefactorTest("fob", "abc",
                 new[] { 
                     new FileInput(
                         "x = (abc for abc in range(100))",
-                        "x = (foo for foo in range(100))"
+                        "x = (fob for fob in range(100))"
                     )
                 }
             );
 
-            RefactorTest("foo", "abc",
+            RefactorTest("fob", "abc",
                 new[] { 
                     new FileInput(
                         "abc = 100; x = (abc for abc in range(abc))",
-                        "foo = 100; x = (abc for abc in range(foo))"
+                        "fob = 100; x = (abc for abc in range(fob))"
                     )
                 }
             );
 
-            RefactorTest("foo", "abc",
+            RefactorTest("fob", "abc",
                 new[] { 
                     new FileInput(
                         "x = (i[abc] for abc in range(100))",
-                        "x = (i[foo] for foo in range(100))"
+                        "x = (i[fob] for fob in range(100))"
                     )
                 }
             );
 
-            RefactorTest("foo", "abc", version: new Version(3, 2),
+            RefactorTest("fob", "abc", version: new Version(3, 2),
                 inputs: new[] { 
                     new FileInput(
                         "x = {abc : i[abc] for abc in range(100)}",
-                        "x = {foo : i[foo] for foo in range(100)}"
+                        "x = {fob : i[fob] for fob in range(100)}"
                     )
                 }
             );
 
-            RefactorTest("foo", "abc", version: new Version(3, 2),
+            RefactorTest("fob", "abc", version: new Version(3, 2),
                 inputs: new[] { 
                     new FileInput(
                         "x = {i : abc for i, abc in enumerate(range(100))}",
-                        "x = {i : foo for i, foo in enumerate(range(100))}"
+                        "x = {i : fob for i, fob in enumerate(range(100))}"
                     )
                 }
             );
 
-            RefactorTest("foo", "abc", version: new Version(3, 2),
+            RefactorTest("fob", "abc", version: new Version(3, 2),
                 inputs: new[] { 
                     new FileInput(
                         "x = {abc for abc in range(100)}",
-                        "x = {foo for foo in range(100)}"
+                        "x = {fob for fob in range(100)}"
                     )
                 }
             );
 
-            RefactorTest("foo", "abc",
+            RefactorTest("fob", "abc",
                 new[] { 
                     new FileInput(
                         "abc = [1, 2, 3]; x = (abc for i in abc)",
-                        "foo = [1, 2, 3]; x = (foo for i in foo)"
+                        "fob = [1, 2, 3]; x = (fob for i in fob)"
                     )
                 }
             );
@@ -1037,56 +1037,56 @@ abc = 200
 
         [TestMethod, Priority(0)]
         public void SanityGeneratorFilter() {
-            RefactorTest("foo", "abc",
+            RefactorTest("fob", "abc",
                 new[] { 
                     new FileInput(
                         "abc = 10; x = (i for i in range(100) if abc > i)",
-                        "foo = 10; x = (i for i in range(100) if foo > i)"
+                        "fob = 10; x = (i for i in range(100) if fob > i)"
                     )
                 }
             );
 
-            RefactorTest("foo", "abc",
+            RefactorTest("fob", "abc",
                 new[] { 
                     new FileInput(
                         "abc = 10; x = (i for i in range(100) if i or abc)",
-                        "foo = 10; x = (i for i in range(100) if i or foo)"
+                        "fob = 10; x = (i for i in range(100) if i or fob)"
                     )
                 }
             );
 
-            RefactorTest("foo", "abc", version: new Version(3, 2),
+            RefactorTest("fob", "abc", version: new Version(3, 2),
                 inputs: new[] { 
                     new FileInput(
                         "x = {abc : i[abc] for abc in range(100)}",
-                        "x = {foo : i[foo] for foo in range(100)}"
+                        "x = {fob : i[fob] for fob in range(100)}"
                     )
                 }
             );
 
-            RefactorTest("foo", "abc", version: new Version(3, 2),
+            RefactorTest("fob", "abc", version: new Version(3, 2),
                 inputs: new[] { 
                     new FileInput(
                         "x = {i : abc for i, abc in enumerate(range(100))}",
-                        "x = {i : foo for i, foo in enumerate(range(100))}"
+                        "x = {i : fob for i, fob in enumerate(range(100))}"
                     )
                 }
             );
 
-            RefactorTest("foo", "abc", version: new Version(3, 2),
+            RefactorTest("fob", "abc", version: new Version(3, 2),
                 inputs: new[] { 
                     new FileInput(
                         "x = {abc for abc in range(100)}",
-                        "x = {foo for foo in range(100)}"
+                        "x = {fob for fob in range(100)}"
                     )
                 }
             );
 
-            RefactorTest("foo", "abc",
+            RefactorTest("fob", "abc",
                 new[] { 
                     new FileInput(
                         "abc = [1, 2, 3]; x = (abc for i in abc)",
-                        "foo = [1, 2, 3]; x = (foo for i in foo)"
+                        "fob = [1, 2, 3]; x = (fob for i in fob)"
                     )
                 }
             );
@@ -1094,7 +1094,7 @@ abc = 200
 
         [TestMethod, Priority(0)]
         public void SanitySlices() {
-            RefactorTest("foo", "abc", version: new Version(3, 2),
+            RefactorTest("fob", "abc", version: new Version(3, 2),
             inputs: new[] { 
                     new FileInput(
 @"
@@ -1106,12 +1106,12 @@ x = y[abc-1:abc]
 x = y[abc-1:abc:abc+1]
 ",
 @"
-foo = 100
-x = y[:foo]
-x = y[foo:]
-x = y[foo:foo+1]
-x = y[foo-1:foo]
-x = y[foo-1:foo:foo+1]
+fob = 100
+x = y[:fob]
+x = y[fob:]
+x = y[fob:fob+1]
+x = y[fob-1:fob]
+x = y[fob-1:fob:fob+1]
 "                    )
                 }
             );
@@ -1121,7 +1121,7 @@ x = y[foo-1:foo:foo+1]
 
         [TestMethod, Priority(0)]
         public void SanityGlobal() {
-            RefactorTest("foo", "abc",
+            RefactorTest("fob", "abc",
                 new[] { 
                     new FileInput(
 @"def f():
@@ -1132,17 +1132,17 @@ x = y[foo-1:foo:foo+1]
 abc = 100
 ",
 @"def f():
-    global foo
-    assert foo
-    print(foo)
+    global fob
+    assert fob
+    print(fob)
 
-foo = 100
+fob = 100
 "
                     )
                 }
             );
 
-            RefactorTest("foo", "abc",
+            RefactorTest("fob", "abc",
                 new[] { 
                     new FileInput(
 @"def f():
@@ -1152,31 +1152,31 @@ foo = 100
 abc = 100
 ",
 @"def f():
-    global foo; assert foo
-    print(foo)
+    global fob; assert fob
+    print(fob)
 
-foo = 100
+fob = 100
 "
                     )
                 }
             );
 
-            RefactorTest("foo", "abc",
+            RefactorTest("fob", "abc",
                 new[] { 
                     new FileInput(
 @"abc = { }
 def f():
     print abc[0]
 ",
-@"foo = { }
+@"fob = { }
 def f():
-    print foo[0]
+    print fob[0]
 "
                     )
                 }
             );
 
-            RefactorTest("foo", "abc",
+            RefactorTest("fob", "abc",
                 new[] { 
                     new FileInput(
 @"def f():
@@ -1189,13 +1189,13 @@ def g():
 abc = 100
 ",
 @"def f():
-    global foo
-    print foo
+    global fob
+    print fob
 
 def g():
     abc = 200
 
-foo = 100
+fob = 100
 "
                     )
                 }
@@ -1204,7 +1204,7 @@ foo = 100
 
         [TestMethod, Priority(0)]
         public void SanityNonLocal() {
-            RefactorTest("foo", "abc", version: new Version(3, 2),
+            RefactorTest("fob", "abc", version: new Version(3, 2),
             inputs: new[] { 
                     new FileInput(
 @"
@@ -1219,18 +1219,18 @@ abc = 100
 ",
 @"
 def g():
-    foo = 100
+    fob = 100
     def f():
-        nonlocal foo
-        assert foo
-        print(foo)
+        nonlocal fob
+        assert fob
+        print(fob)
 
 abc = 100
 "                    )
                 }
             );
 
-            RefactorTest("foo", "abc", version: new Version(3, 2),
+            RefactorTest("fob", "abc", version: new Version(3, 2),
             inputs: new[] { 
                     new FileInput(
 @"
@@ -1244,17 +1244,17 @@ abc = 100
 ",
 @"
 def g():
-    foo = 100
+    fob = 100
     def f():
-        nonlocal foo;assert foo
-        print(foo)
+        nonlocal fob;assert fob
+        print(fob)
 
 abc = 100
 "                    )
                 }
             );
 
-            RefactorTest("foo", "abc", version: new Version(3, 2),
+            RefactorTest("fob", "abc", version: new Version(3, 2),
             inputs: new[] { 
                     new FileInput(
 @"
@@ -1268,10 +1268,10 @@ abc = 100
 ",
 @"
 def g():
-    foo = 100
+    fob = 100
     def f():
-        nonlocal  foo
-        print(foo)
+        nonlocal  fob
+        print(fob)
 
 abc = 100
 "                    )
@@ -1281,7 +1281,7 @@ abc = 100
 
         [TestMethod, Priority(0)]
         public void SanityRenameClass() {
-            RefactorTest("foo", "abc",
+            RefactorTest("fob", "abc",
             new[] { 
                     new FileInput(
 @"
@@ -1295,17 +1295,17 @@ y = { abc: 'abc', 'abc': abc }",
 @"
 4
 
-class foo:
+class fob:
     pass
 
-x = foo()
-y = { foo: 'abc', 'abc': foo }"
+x = fob()
+y = { fob: 'abc', 'abc': fob }"
                     )
 
                 }
             );
 
-            RefactorTest("foo", "abc", 
+            RefactorTest("fob", "abc", 
             new[] { 
                     new FileInput(
 @"
@@ -1320,18 +1320,18 @@ y = { abc: 'abc', 'abc': abc, abc.A: 'A', 'A': abc.A }",
 @"
 4
 
-class foo(object):
+class fob(object):
     A = 10
 
-x = foo()
-foo.A
-y = { foo: 'abc', 'abc': foo, foo.A: 'A', 'A': foo.A }"
+x = fob()
+fob.A
+y = { fob: 'abc', 'abc': fob, fob.A: 'A', 'A': fob.A }"
                     )
 
                 }
             );
 
-            RefactorTest("foo", "abc",
+            RefactorTest("fob", "abc",
             new[] { 
                     new FileInput(
 @"
@@ -1345,16 +1345,16 @@ abc.A",
 @"
 4
 
-class foo(type):
+class fob(type):
     A = 10
 
-x = foo()
-foo.A"
+x = fob()
+fob.A"
                     )
                 }
             );
 
-            RefactorTest("foo", "abc",
+            RefactorTest("fob", "abc",
             new[] { 
                     new FileInput(
 @"
@@ -1368,17 +1368,17 @@ abc.A",
 @"
 4
 
-class foo(object):
+class fob(object):
     A = 10
 
-x = foo()
-foo.A"
+x = fob()
+fob.A"
                     )
 
                 }
             );
 
-            RefactorTest("foo", "abc",
+            RefactorTest("fob", "abc",
             new[] { 
                     new FileInput(
 @"class abc(object):
@@ -1386,9 +1386,9 @@ foo.A"
 class x(abc):
     pass
 ",
-@"class foo(object):
+@"class fob(object):
     pass
-class x(foo):
+class x(fob):
     pass
 "
                     )
@@ -1398,7 +1398,7 @@ class x(foo):
 
         [TestMethod, Priority(0)]
         public void RenameMetaclass() {
-            RefactorTest("foo", "abc", version: new Version(2, 7),
+            RefactorTest("fob", "abc", version: new Version(2, 7),
             inputs: new[] { 
                     new FileInput(
 @"class abc(type):
@@ -1406,16 +1406,16 @@ class x(foo):
 class x(object):
     __metaclass__ = abc
 ",
-@"class foo(type):
+@"class fob(type):
     pass
 class x(object):
-    __metaclass__ = foo
+    __metaclass__ = fob
 "
                     )
                 }
             );
 
-            RefactorTest("foo", "abc", version: new Version(3, 2),
+            RefactorTest("fob", "abc", version: new Version(3, 2),
             inputs: new[] { 
                     new FileInput(
 @"class abc(type):
@@ -1423,9 +1423,9 @@ class x(object):
 class x(metaclass=abc):
     pass
 ",
-@"class foo(type):
+@"class fob(type):
     pass
-class x(metaclass=foo):
+class x(metaclass=fob):
     pass
 "
                     )
@@ -1436,7 +1436,7 @@ class x(metaclass=foo):
 
         [TestMethod, Priority(0)]
         public void SanityRenameFunction() {
-            RefactorTest("foo", "abc",
+            RefactorTest("fob", "abc",
             new[] { 
                     new FileInput(
 @"
@@ -1452,19 +1452,19 @@ y = { abc: 'abc', 'abc': abc }",
 @"
 4
 
-def foo(x):
+def fob(x):
     pass
 
-x = foo()
-doc = foo.__doc__
-fdoc = foo.func_doc
-y = { foo: 'abc', 'abc': foo }"
+x = fob()
+doc = fob.__doc__
+fdoc = fob.func_doc
+y = { fob: 'abc', 'abc': fob }"
                     )
 
                 }
             );
 
-            RefactorTest("foo", "abc",
+            RefactorTest("fob", "abc",
             new[] { 
                     new FileInput(
 @"
@@ -1479,12 +1479,12 @@ fdoc = abc.func_doc",
 @"
 4
 
-def  foo(x):
+def  fob(x):
     pass
 
-x = foo()
-doc = foo.__doc__
-fdoc = foo.func_doc"
+x = fob()
+doc = fob.__doc__
+fdoc = fob.func_doc"
                     )
 
                 }
@@ -1493,7 +1493,7 @@ fdoc = foo.func_doc"
 
         [TestMethod, Priority(0)]
         public void SanityDelLocal() {
-            RefactorTest("foo", "abc",
+            RefactorTest("fob", "abc",
             new[] { 
                     new FileInput(
 @"
@@ -1502,8 +1502,8 @@ def f():
     del abc",
 @"
 def f():
-    foo = 100
-    del foo"                    
+    fob = 100
+    del fob"                    
                     )
 
                 }
@@ -1512,7 +1512,7 @@ def f():
 
         [TestMethod, Priority(0)]
         public void SanityDelInstanceMember() {
-            RefactorTest("foo", "abc",
+            RefactorTest("fob", "abc",
             new[] { 
                     new FileInput(
 @"
@@ -1528,13 +1528,13 @@ def f():
 @"
 class C(object):
     def __init__(self):
-        self.foo = 42
+        self.fob = 42
 
 def f():    
-    del C().foo
+    del C().fob
     c = C()
-    del c.foo
-    c.foo = 100"
+    del c.fob
+    c.fob = 100"
                     )
 
                 }
@@ -1543,7 +1543,7 @@ def f():
 
         [TestMethod, Priority(0)]
         public void SanityDelClassMember() {
-            RefactorTest("foo", "abc",
+            RefactorTest("fob", "abc",
             new[] { 
                     new FileInput(
 @"
@@ -1557,12 +1557,12 @@ def f():
 ",
 @"
 class C(object):
-    foo = 42
-    del foo
+    fob = 42
+    del fob
 
 def f():    
-    del C().foo
-    del C.foo
+    del C().fob
+    del C.fob
 "
                     )
 
@@ -1572,7 +1572,7 @@ def f():
 
         [TestMethod, Priority(0)]
         public void SanityDelGlobal() {
-            RefactorTest("foo", "abc",
+            RefactorTest("fob", "abc",
             new[] { 
                     new FileInput(
 @"
@@ -1584,17 +1584,17 @@ abc = 100
 ",
 @"
 def f():
-    global foo
-    del foo
+    global fob
+    del fob
 
-foo = 100
+fob = 100
 "
                     )
 
                 }
             );
 
-            RefactorTest("foo", "abc",
+            RefactorTest("fob", "abc",
             new[] { 
                     new FileInput(
 @"
@@ -1606,10 +1606,10 @@ abc = 100
 ",
 @"
 def f():
-    global foo;pass
-    del f, foo
+    global fob;pass
+    del f, fob
 
-foo = 100
+fob = 100
 "
                     )
 
@@ -1619,7 +1619,7 @@ foo = 100
 
         [TestMethod, Priority(0)]
         public void DelNonLocal() {
-            RefactorTest("foo", "abc", version: new Version(3, 2),
+            RefactorTest("fob", "abc", version: new Version(3, 2),
             inputs: new[] { 
                     new FileInput(
 @"
@@ -1633,10 +1633,10 @@ abc = 100
 ",
 @"
 def g():
-    foo = 100
+    fob = 100
     def f():
-        nonlocal foo
-        del foo
+        nonlocal fob
+        del fob
 
 abc = 100
 "                    )
@@ -1647,14 +1647,14 @@ abc = 100
 
         [TestMethod, Priority(0)]
         public void Decorators() {
-            RefactorTest("abc", "foo",
+            RefactorTest("abc", "fob",
             new[] { 
                     new FileInput(
 @"
-def foo():
+def fob():
     pass
 
-@foo
+@fob
 def f():
     pass
 ",
@@ -1669,17 +1669,17 @@ def f():
                 }
             );
 
-            RefactorTest("abc", "foo",
+            RefactorTest("abc", "fob",
             new[] { 
                     new FileInput(
 @"
-def foo():
+def fob():
     pass
 
-@foo
+@fob
 @property
-@foo
-@foo
+@fob
+@fob
 def f():
     pass
 ",
@@ -1697,14 +1697,14 @@ def f():
                 }
             );
 
-            RefactorTest("abc", "foo",
+            RefactorTest("abc", "fob",
             new[] { 
                     new FileInput(
 @"
-def foo(name):
+def fob(name):
     pass
 
-@foo('name')
+@fob('name')
 def f():
     pass
 ",
@@ -1719,21 +1719,21 @@ def f():
                 }
             );
 
-            RefactorTest("abc", "foo",
+            RefactorTest("abc", "fob",
             new[] { 
                     new FileInput(
 @"
-foo = 'foo'
+fob = 'fob'
 
 def dec(name):
     pass
 
-@dec(foo)
+@dec(fob)
 def f():
     pass
 ",
 @"
-abc = 'foo'
+abc = 'fob'
 
 def dec(name):
     pass
@@ -1745,16 +1745,16 @@ def f():
                 }
             );
 
-            RefactorTest("abc", "foo",
+            RefactorTest("abc", "fob",
             new[] { 
                     new FileInput(
 @"
 class C:
     @staticmethod
-    def foo():
+    def fob():
         pass
 
-@C.foo
+@C.fob
 def f():
     pass
 ",
@@ -1775,14 +1775,14 @@ def f():
 
         [TestMethod, Priority(0)]
         public void TryStatement() {
-            RefactorTest("abc", "foo", 
+            RefactorTest("abc", "fob", 
             new[] { 
                     new FileInput(
 @"
 try:
     pass
-except Exception, foo:
-    print(foo)
+except Exception, fob:
+    print(fob)
 ",
 @"
 try:
@@ -1793,14 +1793,14 @@ except Exception, abc:
                 }
             );
 
-            RefactorTest("abc", "foo", version: new Version(3, 2),
+            RefactorTest("abc", "fob", version: new Version(3, 2),
             inputs: new[] { 
                     new FileInput(
 @"
 try:
     pass
-except Exception as foo:
-    print(foo)
+except Exception as fob:
+    print(fob)
 ",
 @"
 try:
@@ -1815,7 +1815,7 @@ except Exception as abc:
 
         [TestMethod, Priority(0)]
         public void FinallyStatement() {
-            RefactorTest("foo", "abc",
+            RefactorTest("fob", "abc",
             new[] { 
                     new FileInput(
 @"
@@ -1828,11 +1828,11 @@ finally:
 ",
 @"
 try:
-    foo = 123
+    fob = 123
 except:
     pass
 finally:
-    del foo
+    del fob
 "                    )
                 }
             );
@@ -1840,7 +1840,7 @@ finally:
 
         [TestMethod, Priority(0)]
         public void RaiseStatement() {
-            RefactorTest("foo", "abc", version: new Version(2, 7),
+            RefactorTest("fob", "abc", version: new Version(2, 7),
             inputs: new[] { 
                     new FileInput(
 @"
@@ -1849,14 +1849,14 @@ raise Exception(abc)
 raise Exception, abc, abc
 ",
 @"
-foo = 'a message: abc'
-raise Exception(foo)
-raise Exception, foo, foo
+fob = 'a message: abc'
+raise Exception(fob)
+raise Exception, fob, fob
 "                    )
                 }
             );
 
-            RefactorTest("foo", "abc", version: new Version(3, 2),
+            RefactorTest("fob", "abc", version: new Version(3, 2),
             inputs: new[] { 
                     new FileInput(
 @"
@@ -1865,9 +1865,9 @@ raise Exception(abc)
 raise Exception() from abc
 ",
 @"
-foo = 'a message: abc'
-raise Exception(foo)
-raise Exception() from foo
+fob = 'a message: abc'
+raise Exception(fob)
+raise Exception() from fob
 "                    )
                 }
             );
@@ -1875,7 +1875,7 @@ raise Exception() from foo
 
         [TestMethod, Priority(0)]
         public void ExecStatement() {
-            RefactorTest("foo", "abc", version: new Version(2, 7),
+            RefactorTest("fob", "abc", version: new Version(2, 7),
             inputs: new[] { 
                     new FileInput(
 @"
@@ -1886,16 +1886,16 @@ exec abc in globals()
 exec compile(abc)
 ",
 @"
-foo = 'some code: abc'
-exec foo
-exec foo in { }
-exec foo in globals()
-exec compile(foo)
+fob = 'some code: abc'
+exec fob
+exec fob in { }
+exec fob in globals()
+exec compile(fob)
 "                    )
                 }
             );
 
-            RefactorTest("foo", "abc", version: new Version(3, 2),
+            RefactorTest("fob", "abc", version: new Version(3, 2),
             inputs: new[] { 
                     new FileInput(
 @"
@@ -1906,16 +1906,16 @@ exec(abc, globals())
 exec(compile(abc))
 ",
 @"
-foo = 'some code: abc'
-exec(foo)
-exec(foo, { })
-exec(foo, globals())
-exec(compile(foo))
+fob = 'some code: abc'
+exec(fob)
+exec(fob, { })
+exec(fob, globals())
+exec(compile(fob))
 "                    )
                 }
             );
 
-            RefactorTest("foo", "abc", version: new Version(2, 7),
+            RefactorTest("fob", "abc", version: new Version(2, 7),
             inputs: new[] { 
                     new FileInput(
 @"
@@ -1925,15 +1925,15 @@ exec 'abc = 1' in abc
 exec 'abc = 1' in abc, abc
 ",
 @"
-foo = { }
+fob = { }
 exec 'abc = 1'
-exec 'abc = 1' in foo
-exec 'abc = 1' in foo, foo
+exec 'abc = 1' in fob
+exec 'abc = 1' in fob, fob
 "                    )
                 }
             );
 
-            RefactorTest("foo", "abc", version: new Version(3, 2),
+            RefactorTest("fob", "abc", version: new Version(3, 2),
             inputs: new[] { 
                     new FileInput(
 @"
@@ -1943,10 +1943,10 @@ exec('abc = 1', abc)
 exec('abc = 1', abc, abc)
 ",
 @"
-foo = { }
+fob = { }
 exec('abc = 1')
-exec('abc = 1', foo)
-exec('abc = 1', foo, foo)
+exec('abc = 1', fob)
+exec('abc = 1', fob, fob)
 "                    )
                 }
             );
@@ -1954,13 +1954,13 @@ exec('abc = 1', foo, foo)
 
         [TestMethod, Priority(0)]
         public void IsInstanceScope() {
-            RefactorTest("abc", "foo", version: new Version(3, 2),
+            RefactorTest("abc", "fob", version: new Version(3, 2),
             inputs: new[] { 
                     new FileInput(
 @"
-foo = 1
-assert isinstance(foo, str)
-print(foo.upper())
+fob = 1
+assert isinstance(fob, str)
+print(fob.upper())
 ",
 @"
 abc = 1
@@ -1975,12 +1975,12 @@ print(abc.upper())
 
         [TestMethod, Priority(0)]
         public void WithStatement() {
-            RefactorTest("abc", "foo", version: new Version(3, 2),
+            RefactorTest("abc", "fob", version: new Version(3, 2),
             inputs: new[] { 
                     new FileInput(
 @"
-with foo as foo:
-    print(foo)
+with fob as fob:
+    print(fob)
 ",
 @"
 with abc as abc:
@@ -1993,7 +1993,7 @@ with abc as abc:
 
         [TestMethod, Priority(0)]
         public void YieldStatement() {
-            RefactorTest("foo", "abc", 
+            RefactorTest("fob", "abc", 
             inputs: new[] { 
                     new FileInput(
 @"
@@ -2003,8 +2003,8 @@ def a():
 ",
 @"
 def a():
-    for foo in range(100):
-        yield foo
+    for fob in range(100):
+        yield fob
 "                    )
                 }
             );
@@ -2012,7 +2012,7 @@ def a():
 
         [TestMethod, Priority(0)]
         public void KeywordParameter() {
-            RefactorTest("foo", "abc", 
+            RefactorTest("fob", "abc", 
             new[] { 
                     new FileInput(
 @"
@@ -2022,10 +2022,10 @@ def f(abc):
 f(abc = 10)
 ",
 @"
-def f(foo):
+def f(fob):
     pass
 
-f(foo = 10)
+f(fob = 10)
 "                    )
                 },
                 new ExpectedPreviewItem("test.py",
@@ -2034,7 +2034,7 @@ f(foo = 10)
                 )   
             );
 
-            RefactorTest("foo", "abc",
+            RefactorTest("fob", "abc",
             new[] { 
                     new FileInput(
 @"
@@ -2046,9 +2046,9 @@ def f(abc):
 ",
 @"
 def g():
-    f(foo = 10)
+    f(fob = 10)
 
-def f(foo):
+def f(fob):
     pass
 "                    )
                 },
@@ -2058,7 +2058,7 @@ def f(foo):
                 )
             );
 
-            RefactorTest("foo", "abc",
+            RefactorTest("fob", "abc",
             new[] { 
                     new FileInput(
 @"
@@ -2069,11 +2069,11 @@ abc = 10
 f(abc = abc)
 ",
 @"
-def f(foo):
+def f(fob):
     pass
 
 abc = 10
-f(foo = abc)
+f(fob = abc)
 "                    )
                 }
             );
@@ -2082,7 +2082,7 @@ f(foo = abc)
 
         [TestMethod, Priority(0)]
         public void ImportAsStatement() {
-            RefactorTest("foo", "abc",
+            RefactorTest("fob", "abc",
             new[] { 
                     new FileInput(
 @"
@@ -2090,8 +2090,8 @@ import sys as abc
 x = abc
 ",
 @"
-import sys as foo
-x = foo
+import sys as fob
+x = fob
 "                    )
                 },
                 new ExpectedPreviewItem("test.py",
@@ -2100,7 +2100,7 @@ x = foo
                 )
             );
 
-            RefactorTest("foo", "abc",
+            RefactorTest("fob", "abc",
             new[] { 
                     new FileInput(
 @"
@@ -2108,8 +2108,8 @@ import os, sys as abc
 x = abc
 ",
 @"
-import os, sys as foo
-x = foo
+import os, sys as fob
+x = fob
 "                    )
                 },
                 new ExpectedPreviewItem("test.py",
@@ -2118,7 +2118,7 @@ x = foo
                 )
             );
 
-            RefactorTest("foo", "abc",
+            RefactorTest("fob", "abc",
             new[] { 
                     new FileInput(
 @"
@@ -2126,8 +2126,8 @@ import sys as abc, os
 x = abc
 ",
 @"
-import sys as foo, os
-x = foo
+import sys as fob, os
+x = fob
 "                    )
                 },
                 new ExpectedPreviewItem("test.py",
@@ -2139,38 +2139,38 @@ x = foo
 
         [TestMethod, Priority(0)]
         public void FromImportAsStatement() {
-            RefactorTest("foo", "abc",
+            RefactorTest("fob", "abc",
             new[] { 
                     new FileInput(
 @"
-from sys import bar as abc
+from sys import oar as abc
 x = abc
 ",
 @"
-from sys import bar as foo
-x = foo
+from sys import oar as fob
+x = fob
 "                    )
                 },
                 new ExpectedPreviewItem("test.py",
-                    new ExpectedPreviewItem("from sys import bar as abc"),
+                    new ExpectedPreviewItem("from sys import oar as abc"),
                     new ExpectedPreviewItem("x = abc")
                 )
             );
 
-            RefactorTest("foo", "abc",
+            RefactorTest("fob", "abc",
             new[] { 
                     new FileInput(
 @"
-from sys import (bar as abc, baz)
+from sys import (oar as abc, baz)
 x = abc
 ",
 @"
-from sys import (bar as foo, baz)
-x = foo
+from sys import (oar as fob, baz)
+x = fob
 "                    )
                 },
                 new ExpectedPreviewItem("test.py",
-                    new ExpectedPreviewItem("from sys import (bar as abc, baz)"),
+                    new ExpectedPreviewItem("from sys import (oar as abc, baz)"),
                     new ExpectedPreviewItem("x = abc")
                 )
             );
@@ -2179,7 +2179,7 @@ x = foo
 
         [TestMethod, Priority(0)]
         public void Annotations() {
-            RefactorTest("foo", "abc", version: new Version(3, 2),
+            RefactorTest("fob", "abc", version: new Version(3, 2),
                 inputs: new[] { 
                     new FileInput(
 @"def f(x : abc):
@@ -2187,16 +2187,16 @@ x = foo
 
 abc = 200
 ",
-@"def f(x : foo):
-    print(foo)
+@"def f(x : fob):
+    print(fob)
 
-foo = 200
+fob = 200
 "
                     )
                 }
             );
 
-            RefactorTest("foo", "abc", version: new Version(3, 2),
+            RefactorTest("fob", "abc", version: new Version(3, 2),
                 inputs: new[] { 
                     new FileInput(
 @"def f(x : f(abc)):
@@ -2204,16 +2204,16 @@ foo = 200
 
 abc = 200
 ",
-@"def f(x : f(foo)):
-    print(foo)
+@"def f(x : f(fob)):
+    print(fob)
 
-foo = 200
+fob = 200
 "
                     )
                 }
             );
 
-            RefactorTest("foo", "abc", version: new Version(3, 2),
+            RefactorTest("fob", "abc", version: new Version(3, 2),
                 inputs: new[] { 
                     new FileInput(
 @"def f(abc : None):
@@ -2221,8 +2221,8 @@ foo = 200
 
 abc = 200
 ",
-@"def f(foo : None):
-    print(foo)
+@"def f(fob : None):
+    print(fob)
 
 abc = 200
 "
@@ -2263,43 +2263,43 @@ def g(a, b, c):
 
         [TestMethod, Priority(0)]
         public void CrossModuleRename() {
-            RefactorTest("foo", "abc",
+            RefactorTest("fob", "abc",
                 new[] { 
                     new FileInput(
                         "def abc(): pass",
-                        "def foo(): pass"
+                        "def fob(): pass"
                     ),
                     new FileInput(
                         "import test; test.abc()",
-                        "import test; test.foo()",
+                        "import test; test.fob()",
                         "C:\\a.py"
                     )
                 }
             );
 
-            RefactorTest("foo", "abc",
+            RefactorTest("fob", "abc",
                 new[] { 
                     new FileInput(
                         "abc = None",
-                        "foo = None"
+                        "fob = None"
                     ),
                     new FileInput(
                         "import test; test.abc",
-                        "import test; test.foo",
+                        "import test; test.fob",
                         "C:\\a.py"
                     )
                 }
             );
 
-            RefactorTest("foo", "abc",
+            RefactorTest("fob", "abc",
                 new[] { 
                     new FileInput(
                         "def abc(): pass",
-                        "def foo(): pass"
+                        "def fob(): pass"
                     ),
                     new FileInput(
                         "from test import abc",
-                        "from test import foo",
+                        "from test import fob",
                         "C:\\a.py"
                     )
                 }
@@ -2309,8 +2309,8 @@ def g(a, b, c):
         [TestMethod, Priority(0)]
         public void CannotRename() {
             CannotRename("abc", "import abc", ErrorModuleName);
-            CannotRename("abc", "from abc import bar", ErrorModuleName);
-            CannotRename("abc", "import abc as bar", ErrorModuleName);
+            CannotRename("abc", "from abc import oar", ErrorModuleName);
+            CannotRename("abc", "import abc as oar", ErrorModuleName);
         }
 
         class FileInput {
@@ -2369,7 +2369,7 @@ def g(a, b, c):
         }
 
         private static void CannotRename(string caretText, string text, string error) {
-            OneRefactorTest("foo", caretText, new[] { new FileInput(text, null), new FileInput("def bar(): pass", "", "C:\\abc.py") }, null, false, error, null);
+            OneRefactorTest("fob", caretText, new[] { new FileInput(text, null), new FileInput("def oar(): pass", "", "C:\\abc.py") }, null, false, error, null);
         }
 
         private static void OneRefactorTest(string newName, string caretText, FileInput[] inputs, Version version, bool preview, string error, ExpectedPreviewItem[] expected = null) {

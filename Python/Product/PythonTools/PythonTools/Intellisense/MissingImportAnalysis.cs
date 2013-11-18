@@ -35,8 +35,8 @@ namespace Microsoft.PythonTools.Intellisense {
 
         /// <summary>
         /// The locations this name can be imported from.  The names are fully qualified with
-        /// the module/package names and the name its self.  For example for "foo" defined in the "bar"
-        ///  module the name here is bar.foo.  This list is lazily calculated (including loading of cached intellisense data) 
+        /// the module/package names and the name its self.  For example for "fob" defined in the "oar"
+        ///  module the name here is oar.fob.  This list is lazily calculated (including loading of cached intellisense data) 
         ///  so that you can break from the enumeration early and save significant work.
         /// </summary>
         public IEnumerable<ExportedMemberInfo> AvailableImports {

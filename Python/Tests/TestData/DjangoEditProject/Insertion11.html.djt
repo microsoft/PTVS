@@ -3,7 +3,7 @@
 
 {% if latest_poll_list %}
     <ul>            
-    {% for poll,value in latest_poll_list_foo %}
+    {% for poll,value in latest_poll_list_fob %}
         {% for inner_poll in latest_poll_list %}
         {% endfor %}
     {% endfor %}

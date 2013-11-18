@@ -3,7 +3,7 @@
 
 <body>
 
-{% for x in bar %}
+{% for x in oar %}
 {{ content }}
 
 </body>

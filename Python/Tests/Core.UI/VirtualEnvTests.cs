@@ -65,7 +65,7 @@ namespace PythonToolsUITests {
 
         private static void CreateTemporaryProject(VisualStudioApp app) {
             var newProjDialog = app.FileNewProject();
-            newProjDialog.Location = Path.GetTempPath();
+            newProjDialog.Location = TestData.GetTempPath();
 
             newProjDialog.FocusLanguageNode();
 
@@ -73,9 +73,15 @@ namespace PythonToolsUITests {
             consoleApp.Select();
 
             newProjDialog.ClickOK();
+            for (int i = 0; i < 10 && !app.WaitForDialogDismissed(false, 1000); ++i) {
+                newProjDialog.ClickOK();
+            }
+            // Assert immediately if the dialog is still open
+            app.WaitForDialogDismissed(true, 0);
+
 
             // wait for new solution to load...
-            for (int i = 0; i < 100 && app.Dte.Solution.Projects.Count == 0; i++) {
+            for (int i = 0; i < 10 && app.Dte.Solution.Projects.Count == 0; i++) {
                 System.Threading.Thread.Sleep(1000);
             }
 
@@ -355,31 +361,29 @@ namespace PythonToolsUITests {
         public void DefaultBaseInterpreterSelection() {
             using (var dis = Init())
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                app.OpenProject(TestData.GetPath("TestData\\Environments\\With27And33.pyproj"));
+                var project = app.OpenProject(@"TestData\Environments.sln");
 
-                for (int i = 0; i < 100 && app.Dte.Solution.Projects.Count == 0; i++) {
-                    System.Threading.Thread.Sleep(1000);
-                }
-
-                Assert.AreEqual(1, app.Dte.Solution.Projects.Count);
-
-                var env = new AutomationWrapper(app.SolutionExplorerTreeView.FindItem(
-                    "Solution '" + app.Dte.Solution.Projects.Item(1).Name + "' (1 project)",
-                    app.Dte.Solution.Projects.Item(1).Name,
+                app.OpenSolutionExplorer();
+                var env = app.SolutionExplorerTreeView.FindItem(
+                    "Solution 'Environments' (1 project)",
+                    project.Name,
                     SR.GetString(SR.Environments),
-                    "Python 2.7"));
+                    "Python 2.7"
+                ).AsWrapper();
                 env.Select();
                 app.Dte.ExecuteCommand("Project.ActivateEnvironment");
 
                 app.OpenSolutionExplorer();
                 var virtualEnv = app.SolutionExplorerTreeView.FindItem(
-                    "Solution '" + app.Dte.Solution.Projects.Item(1).Name + "' (1 project)",
-                    app.Dte.Solution.Projects.Item(1).Name,
-                    SR.GetString(SR.Environments));
+                    "Solution 'Environments' (1 project)",
+                    project.Name,
+                    SR.GetString(SR.Environments)
+                );
                 AutomationWrapper.Select(virtualEnv);
 
                 var createVenv = new AutomationWrapper(AutomationElement.FromHandle(
-                    app.OpenDialogWithDteExecuteCommand("Project.AddVirtualEnvironment")));
+                    app.OpenDialogWithDteExecuteCommand("Project.AddVirtualEnvironment")
+                ));
 
                 AutomationWrapper.DumpElement(createVenv.Element);
                 var baseInterp = new ComboBox(createVenv.FindByAutomationId("BaseInterpreter")).GetSelectedItemText();
@@ -389,22 +393,25 @@ namespace PythonToolsUITests {
 
                 app.OpenSolutionExplorer();
                 env = new AutomationWrapper(app.SolutionExplorerTreeView.FindItem(
-                    "Solution '" + app.Dte.Solution.Projects.Item(1).Name + "' (1 project)",
-                    app.Dte.Solution.Projects.Item(1).Name,
+                    "Solution 'Environments' (1 project)",
+                    project.Name,
                     SR.GetString(SR.Environments),
-                    "Python 3.3"));
+                    "Python 3.3"
+                ));
                 env.Select();
                 app.Dte.ExecuteCommand("Project.ActivateEnvironment");
 
                 app.OpenSolutionExplorer();
                 virtualEnv = app.SolutionExplorerTreeView.FindItem(
-                    "Solution '" + app.Dte.Solution.Projects.Item(1).Name + "' (1 project)",
-                    app.Dte.Solution.Projects.Item(1).Name,
-                    SR.GetString(SR.Environments));
+                    "Solution 'Environments' (1 project)",
+                    project.Name,
+                    SR.GetString(SR.Environments)
+                );
                 AutomationWrapper.Select(virtualEnv);
 
                 createVenv = new AutomationWrapper(AutomationElement.FromHandle(
-                    app.OpenDialogWithDteExecuteCommand("Project.AddVirtualEnvironment")));
+                    app.OpenDialogWithDteExecuteCommand("Project.AddVirtualEnvironment")
+                ));
 
                 baseInterp = new ComboBox(createVenv.FindByAutomationId("BaseInterpreter")).GetSelectedItemText();
 
@@ -485,6 +492,62 @@ namespace PythonToolsUITests {
                 Assert.IsNotNull(env);
                 Assert.IsNotNull(env.Element);
                 Assert.AreEqual("venv (Python 3.3)", envName);
+            }
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        public void UnavailableEnvironments() {
+            var collection = new Microsoft.Build.Evaluation.ProjectCollection();
+            try {
+                var service = new MockInterpreterOptionsService();
+                var proj = collection.LoadProject(TestData.GetPath(@"TestData\Environments\Unavailable.pyproj"));
+
+                using (var provider = new MSBuildProjectInterpreterFactoryProvider(service, proj)) {
+                    try {
+                        provider.DiscoverInterpreters();
+                        Assert.Fail("Expected InvalidDataException in DiscoverInterpreters");
+                    } catch (InvalidDataException ex) {
+                        AssertUtil.Equals(ex.Message
+                            .Replace(TestData.GetPath("TestData\\Environments\\"), "$")
+                            .Split('\r', '\n')
+                            .Where(s => !string.IsNullOrEmpty(s))
+                            .Select(s => s.Trim()),
+                            "Some project interpreters failed to load:",
+                            @"Interpreter $env\ has invalid value for 'Id': INVALID ID",
+                            @"Interpreter $env\ has invalid value for 'Version': INVALID VERSION",
+                            @"Base interpreter $env\ has invalid value for 'BaseInterpreter': INVALID BASE",
+                            @"Interpreter $env\ has invalid value for 'InterpreterPath': INVALID<>PATH",
+                            @"Interpreter $env\ has invalid value for 'WindowsInterpreterPath': INVALID<>PATH",
+                            @"Interpreter $env\ has invalid value for 'LibraryPath': INVALID<>PATH",
+                            @"Base interpreter $env\ has invalid value for 'BaseInterpreter': {98512745-4ac7-4abb-9f33-120af32edc77}"
+                        );
+                    }
+
+                    var factories = provider.GetInterpreterFactories().ToList();
+                    foreach (var fact in factories) {
+                        Console.WriteLine("{0}: {1}", fact.GetType().FullName, fact.Description);
+                    }
+
+                    foreach (var fact in factories) {
+                        Assert.IsInstanceOfType(
+                            fact,
+                            typeof(MSBuildProjectInterpreterFactoryProvider.NotFoundInterpreterFactory),
+                            string.Format("{0} was not correct type", fact.Description)
+                        );
+                    }
+
+                    AssertUtil.Equals(factories.Select(f => f.Description),
+                        "Absent BaseInterpreter (unavailable)",
+                        "Invalid BaseInterpreter (unavailable)",
+                        "Invalid InterpreterPath (unavailable)",
+                        "Invalid LibraryPath (unavailable)",
+                        "Invalid WindowsInterpreterPath (unavailable)",
+                        "Unknown Python 2.7"
+                    );
+                }
+            } finally {
+                collection.UnloadAllProjects();
+                collection.Dispose();
             }
         }
     }

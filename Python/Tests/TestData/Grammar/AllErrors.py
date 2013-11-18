@@ -10,7 +10,7 @@ f(a, *b, *c)
 f(a, **b, **c)
 f(a, **abc, x = 42)
 
-@foo
+@fob
 pass
 
 
@@ -80,16 +80,16 @@ from __future__ import division
 
 
 nonlocal blazzz
-raise foo, bar
+raise fob, oar
 
 
 
-raise foo from bar
+raise fob from oar
 
 
 
 
-@foo
+@fob
 class X:
     pass
 

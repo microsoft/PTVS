@@ -33,7 +33,7 @@ namespace DjangoTests {
 
         enum DbState {
             Unknown,
-            BarApp
+            OarApp
         }
 
         [ClassInitialize]
@@ -55,7 +55,7 @@ namespace DjangoTests {
             if (_dbstate != requiredState) {
                 Version.AssertInstalled();
                 switch (requiredState) {
-                    case DbState.BarApp:
+                    case DbState.OarApp:
                         using (var output = ProcessOutput.Run(Version.Path,
                             new [] {"manage.py", "syncdb", "--noinput"},
                             DebuggerTestPath,
@@ -93,7 +93,7 @@ namespace DjangoTests {
 
         [TestMethod, Priority(0)]
         public void TemplateStepping() {
-            Init(DbState.BarApp);
+            Init(DbState.OarApp);
 
             StepTest(
                 Path.Combine(Environment.CurrentDirectory, DebuggerTestPath, "manage.py"),
@@ -154,7 +154,7 @@ namespace DjangoTests {
 
         [TestMethod, Priority(0)]
         public void BreakInTemplate() {
-            Init(DbState.BarApp);
+            Init(DbState.OarApp);
 
             string cwd = Path.Combine(Environment.CurrentDirectory, DebuggerTestPath);
             
@@ -174,7 +174,7 @@ namespace DjangoTests {
 
         [TestMethod, Priority(0)]
         public void TemplateLocals() {
-            Init(DbState.BarApp);
+            Init(DbState.OarApp);
 
             LocalsTest("polls\\index.html", 3, new[] { "latest_poll_list" });
             LocalsTest("polls\\index.html", 4, new[] { "forloop", "latest_poll_list", "poll" });
@@ -197,7 +197,7 @@ namespace DjangoTests {
         class WebPageRequester {
             private readonly string _url;
 
-            public WebPageRequester(string url = "http://127.0.0.1:8000/Bar/") {
+            public WebPageRequester(string url = "http://127.0.0.1:8000/Oar/") {
                 _url = url;
             }
 

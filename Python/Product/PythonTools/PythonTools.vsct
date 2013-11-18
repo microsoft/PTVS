@@ -91,6 +91,13 @@
         <Parent guid="guidPythonToolsCmdSet" id="DebuggerPythonContextMenu"/>
       </Group>
 
+      <Group guid="guidPythonToolsCmdSet" id="CustomProjectCommandsContextGroup" priority="0x0000">
+        <Parent guid="guidPythonToolsCmdSet" id="CustomProjectCommandsMenu"/>
+      </Group>
+
+      <Group guid="guidPythonToolsCmdSet" id="CustomProjectCommandsGroup" priority="0x0500">
+        <Parent guid="guidSHLMainMenu" id="IDM_VS_MENU_PROJECT"/>
+      </Group>
     </Groups>
 
     <Menus>
@@ -105,8 +112,8 @@
       <Menu guid="guidPythonToolsCmdSet" id="ToolsMenu" priority="0x8008" type="Menu">
         <Parent guid="guidSHLMainMenu" id="IDG_VS_TOOLS_OTHER2"/>
         <Strings>
-          <ButtonText>P&amp;ython Tools</ButtonText>
-          <CommandName>P&amp;ython Tools</CommandName>
+          <ButtonText>&amp;Python Tools</ButtonText>
+          <CommandName>&amp;Python Tools</CommandName>
         </Strings>
       </Menu>
 
@@ -135,7 +142,15 @@
         </Strings>
       </Menu>
 
-
+      <!-- Submenu for custom commands -->
+      <Menu guid="guidPythonToolsCmdSet" id="CustomProjectCommandsMenu" priority="0x0600" type="Menu">
+        <Parent guid="guidSHLMainMenu" id="IDG_VS_CTXT_PROJECT_BUILD"/>
+        <CommandFlag>DynamicVisibility DefaultInvisible TextChanges AlwaysCreate</CommandFlag>
+        <Strings>
+          <ButtonText>&amp;Python</ButtonText>
+          <CommandName>&amp;Python</CommandName>
+        </Strings>
+      </Menu>
     </Menus>
 
     <!--Buttons section: buttons include both buttons on toolbars as well as individual menu items -->
@@ -152,11 +167,12 @@
         <Parent guid="guidSHLMainMenu" id="IDG_VS_CTXT_PROJECT_ADD_ITEMS"/>
         <CommandFlag>DefaultInvisible</CommandFlag>
         <CommandFlag>DynamicVisibility</CommandFlag>
-        <!-- <Icon guid="guidImages" id="bmpPic2"/> -->        
+        <!-- <Icon guid="guidImages" id="bmpPic2"/> -->
         <Strings>
           <ButtonText>Existing &amp;Folder...</ButtonText>
-          <LocCanonicalName>Python.ExistingFolder</LocCanonicalName>
-          <CanonicalName>Python.ExistingFolder</CanonicalName>
+          <MenuText>Existing &amp;Folder...</MenuText>
+          <ToolTipText>Add an existing folder.</ToolTipText>
+          <CommandName>Add Existing Folder...</CommandName>
         </Strings>
       </Button>
 
@@ -167,7 +183,9 @@
         <CommandFlag>DefaultInvisible</CommandFlag>
         <Strings>
           <ButtonText>Current &amp;Scope</ButtonText>
-          <CommandName>Edit.RemoveImportsCurrentScope</CommandName>
+          <MenuText>Current &amp;Scope</MenuText>
+          <ToolTipText>Remove unused imports in the current scope</ToolTipText>
+          <CommandName>Current Scope</CommandName>
         </Strings>
       </Button>
       
@@ -178,7 +196,9 @@
         <CommandFlag>DefaultInvisible</CommandFlag>
         <Strings>
           <ButtonText>&amp;All Scopes</ButtonText>
-          <CommandName>Edit.RemoveImports</CommandName>
+          <MenuText>&amp;All Scopes</MenuText>
+          <ToolTipText>Remove unused imports in all scopes</ToolTipText>
+          <CommandName>All Scopes</CommandName>
         </Strings>
       </Button>
       
@@ -188,7 +208,9 @@
         <CommandFlag>DefaultInvisible</CommandFlag>
         <Strings>
           <ButtonText>Send to &amp;Interactive</ButtonText>
-          <CommandName>SendToRepl</CommandName>
+          <MenuText>Send to &amp;Interactive</MenuText>
+          <ToolTipText>Send to Interactive</ToolTipText>
+          <CommandName>Send to Interactive</CommandName>
         </Strings>
       </Button>
 
@@ -198,18 +220,22 @@
         <CommandFlag>DefaultInvisible</CommandFlag>
         <Strings>
           <ButtonText>Send to &amp;Defining Module</ButtonText>
-          <CommandName>SendToModule</CommandName>
+          <MenuText>Send to &amp;Defining Module</MenuText>
+          <ToolTipText>Send to Defining Module</ToolTipText>
+          <CommandName>Send to Defining Module</CommandName>
         </Strings>
       </Button>
       
       <Button guid="guidPythonToolsCmdSet" id="cmdidInterpreterList" priority="0x7e00" type="Button">
         <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1"/>
         <Strings>
-          <CommandName>InterpreterList</CommandName>
           <ButtonText>Python &amp;Environments</ButtonText>
+          <MenuText>Python &amp;Environments</MenuText>
+          <ToolTipText>Python Environments</ToolTipText>
+          <CommandName>Python Environments</CommandName>
         </Strings>
       </Button>
-      
+
       <Button guid="guidPythonToolsCmdSet" id="cmdidReplWindow" priority="0x7f00" type="Button">
         <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1"/>
         <Icon guid="guidImages" id="ipyReplPic" />
@@ -217,8 +243,10 @@
         <CommandFlag>DefaultInvisible</CommandFlag>
         <CommandFlag>TextChanges</CommandFlag>
         <Strings>
-          <CommandName>cmdidReplWindow</CommandName>
           <ButtonText>Python Interactive Default</ButtonText>
+          <MenuText>Python Interactive Default</MenuText>
+          <ToolTipText>Open the default Python Interactive window</ToolTipText>
+          <CommandName>Python Interactive Default</CommandName>
         </Strings>
       </Button>
 
@@ -229,8 +257,10 @@
         <CommandFlag>DefaultInvisible</CommandFlag>
         <CommandFlag>TextChanges</CommandFlag>
         <Strings>
-          <CommandName>cmdidReplWindow2</CommandName>
           <ButtonText>Python Interactive 1</ButtonText>
+          <MenuText>Python Interactive 1</MenuText>
+          <ToolTipText>Opens a Python Interactive window</ToolTipText>
+          <CommandName>Python Interactive 1</CommandName>
         </Strings>
       </Button>
 
@@ -241,8 +271,10 @@
         <CommandFlag>DefaultInvisible</CommandFlag>
         <CommandFlag>TextChanges</CommandFlag>
         <Strings>
-          <CommandName>cmdidReplWindow3</CommandName>
           <ButtonText>Python Interactive 2</ButtonText>
+          <MenuText>Python Interactive 2</MenuText>
+          <ToolTipText>Opens a Python Interactive window</ToolTipText>
+          <CommandName>Python Interactive 2</CommandName>
         </Strings>
       </Button>
 
@@ -253,8 +285,10 @@
         <CommandFlag>DefaultInvisible</CommandFlag>
         <CommandFlag>TextChanges</CommandFlag>
         <Strings>
-          <CommandName>cmdidReplWindow4</CommandName>
           <ButtonText>Python Interactive 3</ButtonText>
+          <MenuText>Python Interactive 3</MenuText>
+          <ToolTipText>Opens a Python Interactive window</ToolTipText>
+          <CommandName>Python Interactive 3</CommandName>
         </Strings>
       </Button>
 
@@ -265,8 +299,10 @@
         <CommandFlag>DefaultInvisible</CommandFlag>
         <CommandFlag>TextChanges</CommandFlag>
         <Strings>
-          <CommandName>cmdidReplWindow5</CommandName>
           <ButtonText>Python Interactive 4</ButtonText>
+          <MenuText>Python Interactive 4</MenuText>
+          <ToolTipText>Opens a Python Interactive window</ToolTipText>
+          <CommandName>Python Interactive 4</CommandName>
         </Strings>
       </Button>
 
@@ -277,8 +313,10 @@
         <CommandFlag>DefaultInvisible</CommandFlag>
         <CommandFlag>TextChanges</CommandFlag>
         <Strings>
-          <CommandName>cmdidReplWindow6</CommandName>
           <ButtonText>Python Interactive 5</ButtonText>
+          <MenuText>Python Interactive 5</MenuText>
+          <ToolTipText>Opens a Python Interactive window</ToolTipText>
+          <CommandName>Python Interactive 5</CommandName>
         </Strings>
       </Button>
 
@@ -289,8 +327,10 @@
         <CommandFlag>DefaultInvisible</CommandFlag>
         <CommandFlag>TextChanges</CommandFlag>
         <Strings>
-          <CommandName>cmdidReplWindow7</CommandName>
           <ButtonText>Python Interactive 6</ButtonText>
+          <MenuText>Python Interactive 6</MenuText>
+          <ToolTipText>Opens a Python Interactive window</ToolTipText>
+          <CommandName>Python Interactive 6</CommandName>
         </Strings>
       </Button>
 
@@ -301,8 +341,10 @@
         <CommandFlag>DefaultInvisible</CommandFlag>
         <CommandFlag>TextChanges</CommandFlag>
         <Strings>
-          <CommandName>cmdidReplWindow8</CommandName>
           <ButtonText>Python Interactive 7</ButtonText>
+          <MenuText>Python Interactive 7</MenuText>
+          <ToolTipText>Opens a Python Interactive window</ToolTipText>
+          <CommandName>Python Interactive 7</CommandName>
         </Strings>
       </Button>
 
@@ -313,8 +355,10 @@
         <CommandFlag>DefaultInvisible</CommandFlag>
         <CommandFlag>TextChanges</CommandFlag>
         <Strings>
-          <CommandName>cmdidReplWindow9</CommandName>
           <ButtonText>Python Interactive 8</ButtonText>
+          <MenuText>Python Interactive 8</MenuText>
+          <ToolTipText>Opens a Python Interactive window</ToolTipText>
+          <CommandName>Python Interactive 8</CommandName>
         </Strings>
       </Button>
 
@@ -325,8 +369,10 @@
         <CommandFlag>DefaultInvisible</CommandFlag>
         <CommandFlag>TextChanges</CommandFlag>
         <Strings>
-          <CommandName>cmdidReplWindowA</CommandName>
           <ButtonText>Python Interactive 9</ButtonText>
+          <MenuText>Python Interactive 9</MenuText>
+          <ToolTipText>Opens a Python Interactive window</ToolTipText>
+          <CommandName>Python Interactive 9</CommandName>
         </Strings>
       </Button>
 
@@ -337,8 +383,10 @@
         <CommandFlag>DefaultInvisible</CommandFlag>
         <CommandFlag>TextChanges</CommandFlag>
         <Strings>
-          <CommandName>cmdidReplWindowB</CommandName>
           <ButtonText>Python Interactive 10</ButtonText>
+          <MenuText>Python Interactive 10</MenuText>
+          <ToolTipText>Opens a Python Interactive window</ToolTipText>
+          <CommandName>Python Interactive 10</CommandName>
         </Strings>
       </Button>
 
@@ -349,8 +397,10 @@
         <CommandFlag>DefaultInvisible</CommandFlag>
         <CommandFlag>TextChanges</CommandFlag>
         <Strings>
-          <CommandName>cmdidReplWindowC</CommandName>
           <ButtonText>Python Interactive 11</ButtonText>
+          <MenuText>Python Interactive 11</MenuText>
+          <ToolTipText>Opens a Python Interactive window</ToolTipText>
+          <CommandName>Python Interactive 11</CommandName>
         </Strings>
       </Button>
 
@@ -361,8 +411,10 @@
         <CommandFlag>DefaultInvisible</CommandFlag>
         <CommandFlag>TextChanges</CommandFlag>
         <Strings>
-          <CommandName>cmdidReplWindowD</CommandName>
           <ButtonText>Python Interactive 12</ButtonText>
+          <MenuText>Python Interactive 12</MenuText>
+          <ToolTipText>Opens a Python Interactive window</ToolTipText>
+          <CommandName>Python Interactive 12</CommandName>
         </Strings>
       </Button>
 
@@ -373,8 +425,10 @@
         <CommandFlag>DefaultInvisible</CommandFlag>
         <CommandFlag>TextChanges</CommandFlag>
         <Strings>
-          <CommandName>cmdidReplWindowE</CommandName>
           <ButtonText>Python Interactive 13</ButtonText>
+          <MenuText>Python Interactive 13</MenuText>
+          <ToolTipText>Opens a Python Interactive window</ToolTipText>
+          <CommandName>Python Interactive 13</CommandName>
         </Strings>
       </Button>
 
@@ -385,8 +439,10 @@
         <CommandFlag>DefaultInvisible</CommandFlag>
         <CommandFlag>TextChanges</CommandFlag>
         <Strings>
-          <CommandName>cmdidReplWindowF</CommandName>
           <ButtonText>Python Interactive 14</ButtonText>
+          <MenuText>Python Interactive 14</MenuText>
+          <ToolTipText>Opens a Python Interactive window</ToolTipText>
+          <CommandName>Python Interactive 14</CommandName>
         </Strings>
       </Button>
 
@@ -396,8 +452,10 @@
         <CommandFlag>DynamicVisibility</CommandFlag>
         <CommandFlag>DefaultInvisible</CommandFlag>
         <Strings>
-          <CommandName>cmdidReplWindow</CommandName>
           <ButtonText>P&amp;ython Debug Interactive</ButtonText>
+          <MenuText>P&amp;ython Debug Interactive</MenuText>
+          <ToolTipText>Opens the Python Debug Interactive window</ToolTipText>
+          <CommandName>Python Debug Interactive</CommandName>
         </Strings>
       </Button>
 
@@ -406,8 +464,10 @@
         <CommandFlag>DynamicVisibility</CommandFlag>
         <CommandFlag>DefaultInvisible</CommandFlag>
         <Strings>
-          <CommandName>cmdidFillParagraph</CommandName>
           <ButtonText>&amp;Fill Comment Paragraph</ButtonText>
+          <MenuText>&amp;Fill Comment Paragraph</MenuText>
+          <ToolTipText>Fill Comment Paragraph</ToolTipText>
+          <CommandName>Fill Comment Paragraph</CommandName>
         </Strings>
       </Button>
 
@@ -418,8 +478,10 @@
         <CommandFlag>DefaultInvisible</CommandFlag>
         <CommandFlag>TextChanges</CommandFlag>
         <Strings>
-          <CommandName>cmdidExecuteFileInRepl</CommandName>
-          <ButtonText>Execute File in P&amp;ython Interactive</ButtonText>
+          <ButtonText>Execute File in Python &amp;Interactive</ButtonText>
+          <MenuText>Execute File in Python &amp;Interactive</MenuText>
+          <ToolTipText>Execute File in Python Interactive</ToolTipText>
+          <CommandName>Execute File in Python Interactive</CommandName>
         </Strings>
       </Button>
 
@@ -432,8 +494,10 @@
         <CommandFlag>DynamicVisibility</CommandFlag>
         <CommandFlag>DefaultInvisible</CommandFlag>
         <Strings>
-          <CommandName>cmdidSetAsStartupFile</CommandName>
           <ButtonText>S&amp;et as Startup File</ButtonText>
+          <MenuText>S&amp;et as Startup File</MenuText>
+          <ToolTipText>Set as Startup File</ToolTipText>
+          <CommandName>Set as Startup File</CommandName>
         </Strings>
       </Button>
 
@@ -442,8 +506,10 @@
         <CommandFlag>DynamicVisibility</CommandFlag>
         <CommandFlag>DefaultInvisible</CommandFlag>
         <Strings>
-          <CommandName>cmdIdAddSearchPath</CommandName>
           <ButtonText>Add Folder to Search &amp;Path...</ButtonText>
+          <MenuText>Add Folder to Search &amp;Path...</MenuText>
+          <ToolTipText>Add Folder to Search Path...</ToolTipText>
+          <CommandName>Add Folder to Search Path...</CommandName>
         </Strings>
         
       </Button>
@@ -452,8 +518,10 @@
         <CommandFlag>DynamicVisibility</CommandFlag>
         <CommandFlag>DefaultInvisible</CommandFlag>
         <Strings>
-          <CommandName>cmdIdAddSearchPathZip</CommandName>
           <ButtonText>Add Zip Archive to Search &amp;Path...</ButtonText>
+          <MenuText>Add Zip Archive to Search &amp;Path...</MenuText>
+          <ToolTipText>Add Zip Archive to Search Path...</ToolTipText>
+          <CommandName>Add Zip Archive to Search Path...</CommandName>
         </Strings>
       </Button>
 
@@ -462,8 +530,10 @@
         <CommandFlag>DynamicVisibility</CommandFlag>
         <CommandFlag>DefaultInvisible</CommandFlag>
         <Strings>
-          <CommandName>cmdidStartWithoutDebugging</CommandName>
           <ButtonText>&amp;Start without Debugging</ButtonText>
+          <MenuText>&amp;Start without Debugging</MenuText>
+          <ToolTipText>Start without Debugging</ToolTipText>
+          <CommandName>Start without Debugging</CommandName>
         </Strings>
       </Button>
 
@@ -472,8 +542,10 @@
         <CommandFlag>DynamicVisibility</CommandFlag>
         <CommandFlag>DefaultInvisible</CommandFlag>
         <Strings>
-          <CommandName>cmdidStartDebugging</CommandName>
           <ButtonText>Start with &amp;Debugging</ButtonText>
+          <MenuText>Start with &amp;Debugging</MenuText>
+          <ToolTipText>Start with Debugging</ToolTipText>
+          <CommandName>Start with Debugging</CommandName>
         </Strings>
       </Button>
 
@@ -481,7 +553,9 @@
         <Parent guid="guidPythonToolsCmdSet" id="ToolsMenuItemsGroup"/>
         <Strings>
           <ButtonText>&amp;Diagnostic Info...</ButtonText>
-          <CommandName>cmdidDiagnostics</CommandName>
+          <MenuText>&amp;Diagnostic Info...</MenuText>
+          <ToolTipText>Diagnostic Info...</ToolTipText>
+          <CommandName>Diagnostic Info...</CommandName>
         </Strings>
       </Button>
 
@@ -491,8 +565,9 @@
         <CommandFlag>DefaultInvisible</CommandFlag>
         <Strings>
           <ButtonText>Import Existing &amp;Project...</ButtonText>
-          <CommandName>ImportPythonProject</CommandName>
-          <LocCanonicalName>Import Python Project</LocCanonicalName>
+          <MenuText>Import Existing &amp;Project...</MenuText>
+          <ToolTipText>Import Existing Project...</ToolTipText>
+          <CommandName>Import Existing Project...</CommandName>
         </Strings>
       </Button>
 
@@ -500,7 +575,9 @@
         <Parent guid="guidPythonToolsCmdSet" id="ToolsMenuItemsGroup"/>
         <Strings>
           <ButtonText>Survey/&amp;News...</ButtonText>
-          <CommandName>cmdidSurveyNews</CommandName>
+          <MenuText>Survey/&amp;News...</MenuText>
+          <ToolTipText>Survey/News...</ToolTipText>
+          <CommandName>Survey/News...</CommandName>
         </Strings>
       </Button>
 
@@ -512,8 +589,10 @@
         <CommandFlag>DynamicVisibility</CommandFlag>
         <CommandFlag>DefaultInvisible</CommandFlag>
         <Strings>
-          <CommandName>AddPythonEnvironment</CommandName>
           <ButtonText>Add/Remove Python &amp;Environments...</ButtonText>
+          <MenuText>Add/Remove Python &amp;Environments...</MenuText>
+          <ToolTipText>Add/Remove Python Environments...</ToolTipText>
+          <CommandName>Add/Remove Python Environments...</CommandName>
         </Strings>
       </Button>
 
@@ -522,8 +601,10 @@
         <CommandFlag>DynamicVisibility</CommandFlag>
         <CommandFlag>DefaultInvisible</CommandFlag>
         <Strings>
-          <CommandName>AddVirtualEnv</CommandName>
           <ButtonText>Add &amp;Virtual Environment...</ButtonText>
+          <MenuText>Add &amp;Virtual Environment...</MenuText>
+          <ToolTipText>Add Virtual Environment...</ToolTipText>
+          <CommandName>Add Virtual Environment...</CommandName>
         </Strings>
       </Button>
 
@@ -532,8 +613,10 @@
         <CommandFlag>DynamicVisibility</CommandFlag>
         <CommandFlag>DefaultInvisible</CommandFlag>
         <Strings>
-          <CommandName>AddExistingVirtualEnv</CommandName>
           <ButtonText>Add Existing &amp;Virtual Environment...</ButtonText>
+          <MenuText>Add Existing &amp;Virtual Environment...</MenuText>
+          <ToolTipText>Add Existing Virtual Environment...</ToolTipText>
+          <CommandName>Add Existing Virtual Environment...</CommandName>
         </Strings>
       </Button>
 
@@ -542,8 +625,10 @@
         <CommandFlag>DynamicVisibility</CommandFlag>
         <CommandFlag>DefaultInvisible</CommandFlag>
         <Strings>
-          <CommandName>ActivateEnvironment</CommandName>
           <ButtonText>&amp;Activate Environment</ButtonText>
+          <MenuText>&amp;Activate Environment</MenuText>
+          <ToolTipText>Activate Environment</ToolTipText>
+          <CommandName>Activate Environment</CommandName>
         </Strings>
       </Button>
 
@@ -552,8 +637,21 @@
         <CommandFlag>DynamicVisibility</CommandFlag>
         <CommandFlag>DefaultInvisible</CommandFlag>
         <Strings>
-          <CommandName>InstallPythonPackage</CommandName>
           <ButtonText>&amp;Install Python Package...</ButtonText>
+          <MenuText>&amp;Install Python Package...</MenuText>
+          <ToolTipText>Install Python Package...</ToolTipText>
+          <CommandName>Install Python Package...</CommandName>
+        </Strings>
+      </Button>
+
+
+      <Button guid="guidPythonToolsCmdSet" id="cmdidFirstCustomCmdId" priority="0x400" type="Button">
+        <CommandFlag>DynamicItemStart DynamicVisibility DefaultInvisible NoButtonCustomize TextChanges</CommandFlag>
+        <Strings>
+          <ButtonText>Custom Commands</ButtonText>
+          <MenuText>Custom Commands</MenuText>
+          <ToolTipText>Custom Commands</ToolTipText>
+          <CommandName>Custom Commands</CommandName>
         </Strings>
       </Button>
 
@@ -567,8 +665,10 @@
         <CommandFlag>DynamicVisibility</CommandFlag>
         <CommandFlag>DefaultInvisible</CommandFlag>
         <Strings>
-          <CommandName>Refactor.ExtractMethodShell</CommandName>
           <ButtonText>Extract &amp;Method...</ButtonText>
+          <MenuText>Extract &amp;Method...</MenuText>
+          <ToolTipText>Extract Method...</ToolTipText>
+          <CommandName>Extract Method...</CommandName>
         </Strings>
       </Button>
 
@@ -579,8 +679,10 @@
         <CommandFlag>DynamicVisibility</CommandFlag>
         <CommandFlag>DefaultInvisible</CommandFlag>
         <Strings>
-          <CommandName>Refactor.RenameShell</CommandName>
           <ButtonText>&amp;Rename...</ButtonText>
+          <MenuText>&amp;Rename...</MenuText>
+          <ToolTipText>Rename...</ToolTipText>
+          <CommandName>Rename...</CommandName>
         </Strings>
       </Button>
     
@@ -593,8 +695,10 @@
         <CommandFlag>DynamicVisibility</CommandFlag>
         <CommandFlag>DefaultInvisible</CommandFlag>
         <Strings>
-          <CommandName>PythonDebugging.CppView</CommandName>
           <ButtonText>Show &amp;C++ View Nodes</ButtonText>
+          <MenuText>Show &amp;C++ View Nodes</MenuText>
+          <ToolTipText>Show C++ View Nodes</ToolTipText>
+          <CommandName>Show C++ View Nodes</CommandName>
         </Strings>
       </Button>
 
@@ -603,8 +707,10 @@
         <CommandFlag>DynamicVisibility</CommandFlag>
         <CommandFlag>DefaultInvisible</CommandFlag>
         <Strings>
-          <CommandName>PythonDebugging.PythonView</CommandName>
           <ButtonText>Show &amp;Python View Nodes</ButtonText>
+          <MenuText>Show &amp;Python View Nodes</MenuText>
+          <ToolTipText>Show Python View Nodes</ToolTipText>
+          <CommandName>Show Python View Nodes</CommandName>
         </Strings>
       </Button>
 
@@ -613,8 +719,10 @@
         <CommandFlag>DynamicVisibility</CommandFlag>
         <CommandFlag>DefaultInvisible</CommandFlag>
         <Strings>
-          <CommandName>PythonDebugging.ShowNativePythonFrames</CommandName>
           <ButtonText>Show &amp;Native Python Frames</ButtonText>
+          <MenuText>Show &amp;Native Python Frames</MenuText>
+          <ToolTipText>Show Native Python Frames</ToolTipText>
+          <CommandName>Show Native Python Frames</CommandName>
         </Strings>
       </Button>
 
@@ -623,8 +731,10 @@
         <CommandFlag>DynamicVisibility</CommandFlag>
         <CommandFlag>DefaultInvisible</CommandFlag>
         <Strings>
-          <CommandName>PythonDebugging.UsePythonStepping</CommandName>
           <ButtonText>Use Python &amp;Stepping</ButtonText>
+          <MenuText>Use Python &amp;Stepping</MenuText>
+          <ToolTipText>Use Python Stepping</ToolTipText>
+          <CommandName>Use Python Stepping</CommandName>
         </Strings>
       </Button>
 
@@ -797,6 +907,14 @@
     <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidAddExistingVirtualEnv" priority="0x605">
       <Parent guid="guidPythonToolsCmdSet" id="CodeFileGroup"/>
     </CommandPlacement>
+
+    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidFirstCustomCmdId" priority="0x400">
+      <Parent guid="guidPythonToolsCmdSet" id="CustomProjectCommandsGroup"/>
+    </CommandPlacement>
+
+    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidFirstCustomCmdId" priority="0x400">
+      <Parent guid="guidPythonToolsCmdSet" id="CustomProjectCommandsContextGroup"/>
+    </CommandPlacement>
   </CommandPlacements>
 
   <Symbols>
@@ -853,6 +971,9 @@
       <IDSymbol name="cmdidShowNativePythonFrames" value="0x400E" />
       <IDSymbol name="cmdidUsePythonStepping" value="0x400F" />
 
+      <IDSymbol name="cmdidFirstCustomCmdId" value="0x4010" />
+      <IDSymbol name="cmdidLastCustomCmdId" value="0x402F" />
+      
       <!-- Groups -->
       <IDSymbol name="EditorContextGroup" value="0x1010" />
       <IDSymbol name="EditMenuGroup" value="0x1011" />
@@ -864,12 +985,15 @@
       <IDSymbol name="InterpretersItemsGroup" value="0x1057" />
       <IDSymbol name="DebuggerPythonContextGroup" value="0x1058" />
       <IDSymbol name="CodeFileGroup2" value="0x1059" />
+      <IDSymbol name="CustomProjectCommandsGroup" value="0x105A" />
+      <IDSymbol name="CustomProjectCommandsContextGroup" value="0x105B" />
       
       <!-- Menus -->
       <IDSymbol name="ToolsMenu" value ="0x2001" />
       <IDSymbol name="RemoveImportsMenu" value ="0x2002" />
       <IDSymbol name="RefactoringCtxMenuIntShell" value="0x2003"/>
       <IDSymbol name="DebuggerPythonContextMenu" value="0x2004" />
+      <IDSymbol name="CustomProjectCommandsMenu" value="0x2005" />
 
       <IDSymbol name="SamplesMenu" value="0x4000" />
       <IDSymbol name="SamplesGroup" value="0x1020" />
