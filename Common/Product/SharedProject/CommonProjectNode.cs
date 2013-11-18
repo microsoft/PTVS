@@ -416,6 +416,8 @@ namespace Microsoft.VisualStudioTools.Project {
             _watcher = CreateFileSystemWatcher(ProjectHome);
             _attributesWatcher = CreateAttributesWatcher(ProjectHome);
 
+            // add everything that's on disk that we don't have in the project
+            MergeDiskNodes(this, ProjectHome);
         }
 
         private void BoldStartupItem() {
@@ -744,7 +746,7 @@ namespace Microsoft.VisualStudioTools.Project {
 
             if(!File.Exists(path) && !Directory.Exists(path)) {
                 // if the file has disappeared avoid the exception...
-                return false;
+                return true; // Files/directories that don't exist should be hidden. This also fix DiskMerger when adds files that were already deleted
             }
 
             try {
@@ -1329,9 +1331,7 @@ namespace Microsoft.VisualStudioTools.Project {
             // we should not use project items and instead should have virtual items.       
 
             string path = CommonUtils.GetRelativeFilePath(ProjectHome, absFileName);
-            var prjItem = BuildProject.AddItem(GetItemType(path), path)[0];
-
-            return CreateFileNode(new MsBuildProjectElement(this, prjItem));
+            return CreateFileNode(new MsBuildProjectElement(this, path, GetItemType(path)));
         }
 
         internal string GetItemType(string filename) {
@@ -1343,7 +1343,7 @@ namespace Microsoft.VisualStudioTools.Project {
         }
 
         public ProjectElement MakeProjectElement(string type, string path) {
-            var item = BuildProject.AddItem(type, path)[0];
+            var item = BuildProject.AddItem(type, MSBuild.ProjectCollection.Escape(path))[0];
             return new MsBuildProjectElement(this, item);
         }
 
