@@ -977,8 +977,9 @@ namespace Microsoft.VisualStudioTools.Project
 
             RaiseOnItemRemoved(documentToRemove, filesToBeDeleted);
 
+            // When we don't call this it behaves properly also in Solution Explorer search result set
             // Notify hierarchy event listeners that items have been invalidated
-            ProjectMgr.OnInvalidateItems(this);
+            //ProjectMgr.OnInvalidateItems(this);
 
             // Dispose the node now that is deleted.
             this.Dispose(true);
