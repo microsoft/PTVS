@@ -192,6 +192,28 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to An unexpected error {0} occurred while creating your project.
+        ///
+        ///If Visual Studio is running with the /Log option, the full exception has been written to the activity log..
+        /// </summary>
+        internal static string ErrorImportWizardException {
+            get {
+                return ResourceManager.GetString("ErrorImportWizardException", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Some file paths could not be accessed.
+        ///
+        ///Try moving your source code to a location where you can read and write files..
+        /// </summary>
+        internal static string ErrorImportWizardUnauthorizedAccess {
+            get {
+                return ResourceManager.GetString("ErrorImportWizardUnauthorizedAccess", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to An error occurred while running {0}.
         ///
         ///{1}.
@@ -524,6 +546,24 @@ namespace Microsoft.PythonTools {
         internal static string SettingWorkDir {
             get {
                 return ResourceManager.GetString("SettingWorkDir", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An error occurred and your project was not created..
+        /// </summary>
+        internal static string StatusImportWizardError {
+            get {
+                return ResourceManager.GetString("StatusImportWizardError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Importing project....
+        /// </summary>
+        internal static string StatusImportWizardStarting {
+            get {
+                return ResourceManager.GetString("StatusImportWizardStarting", resourceCulture);
             }
         }
         

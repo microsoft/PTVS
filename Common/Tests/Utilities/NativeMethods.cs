@@ -300,7 +300,7 @@ namespace TestUtilities
             FOF_NOCOPYSECURITYATTRIBS = 0x0800,  // dont copy NT file Security Attributes
             FOF_NORECURSION = 0x1000,  // don't recurse into directories.
             FOF_NO_CONNECTED_ELEMENTS = 0x2000,  // don't operate on connected elements.
-            FOF_WANTNUKEWARNING = 0x4000,  // during delete operation, warn if nuking instead of recycling (partially overrides FOF_NOCONFIRMATION)
+            FOF_WANTNUKEWARNING = 0x4000,  // during delete operation, warn if deleting instead of recycling (partially overrides FOF_NOCONFIRMATION)
             FOF_NORECURSEREPARSE = 0x8000,  // treat reparse points as objects, not containers
         }
 

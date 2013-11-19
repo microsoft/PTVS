@@ -97,6 +97,9 @@ namespace Microsoft.PythonTools.Intellisense {
                     } catch (IOException) {
                         // file being copied, try again...
                         Thread.Sleep(100);
+                    } catch (UnauthorizedAccessException) {
+                        // file is inaccessible, try again...
+                        Thread.Sleep(100);
                     }
                 }
 

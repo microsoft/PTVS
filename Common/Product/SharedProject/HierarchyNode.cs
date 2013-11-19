@@ -49,13 +49,6 @@ namespace Microsoft.VisualStudioTools.Project
         private HierarchyNode parentNode;
         private HierarchyNode nextSibling;
         private HierarchyNode firstChild;
-
-        /// <summary>
-        /// Remember the last child in the list,
-        /// so we can add new nodes quickly during project load.
-        /// </summary>
-        private HierarchyNode lastChild;
-
         private uint hierarchyId;
         private HierarchyNodeFlags flags;
 
@@ -349,24 +342,11 @@ namespace Microsoft.VisualStudioTools.Project
         {
             get 
             {
-                HierarchyNode prev = null;
-
-                if (parentNode != null)
+                var prev = PreviousSibling;
+                while (prev != null && !prev.IsVisible) 
                 {
-                    for (HierarchyNode child = parentNode.firstChild; child != null; child = child.nextSibling)
-                    {
-                        if (child == this) 
-                        {
-                            break;
-                        }
-
-                        if (child.IsVisible) 
-                        {
-                            prev = child;
-                        }
-                    }
+                    prev = prev.PreviousSibling;
                 }
-
                 return prev;
             }
         }
@@ -622,10 +602,6 @@ namespace Microsoft.VisualStudioTools.Project
                     if (n == this.firstChild)
                     {
                         this.firstChild = n.nextSibling;
-                    }
-                    if (object.ReferenceEquals(node, this.lastChild))
-                    {
-                        this.lastChild = last;
                     }
                     return;
                 }
@@ -977,9 +953,8 @@ namespace Microsoft.VisualStudioTools.Project
 
             RaiseOnItemRemoved(documentToRemove, filesToBeDeleted);
 
-            // When we don't call this it behaves properly also in Solution Explorer search result set
             // Notify hierarchy event listeners that items have been invalidated
-            //ProjectMgr.OnInvalidateItems(this);
+            ProjectMgr.OnInvalidateItems(this);
 
             // Dispose the node now that is deleted.
             this.Dispose(true);
@@ -1832,40 +1807,22 @@ namespace Microsoft.VisualStudioTools.Project
             }
 
             HierarchyNode previous = null;
-            if (this.lastChild != null && this.ProjectMgr.CompareNodes(node, this.lastChild) < 0)
+            for (HierarchyNode n = this.firstChild; n != null; n = n.nextSibling) 
             {
-                // we can add the node at the end of the list quickly:
-                previous = this.lastChild;
+                if (this.ProjectMgr.CompareNodes(node, n) > 0) break;
+                previous = n;
+            }
+            // insert "node" after "previous".
+            if (previous != null) 
+            {
+                node.nextSibling = previous.nextSibling;
                 previous.nextSibling = node;
-
-                this.lastChild = node;
-                node.nextSibling = null;
             }
             else
             {
-                // merge node into the list:
-                for (HierarchyNode n = this.firstChild; n != null; n = n.nextSibling)
-                {
-                    if (this.ProjectMgr.CompareNodes(node, n) > 0) break;
-                    previous = n;
-                }
-                // insert "node" after "previous".
-                if (previous != null)
-                {
-                    node.nextSibling = previous.nextSibling;
-                    previous.nextSibling = node;
-                }
-                else
-                {
-                    node.nextSibling = this.firstChild;
-                    this.firstChild = node;
-                }
-                if (node.nextSibling == null)
-                {
-                    this.lastChild = node;
-                }
+                node.nextSibling = this.firstChild;
+                this.firstChild = node;
             }
-            
             node.parentNode = this;
             ProjectMgr.OnItemAdded(this, node);
 #if DEV10

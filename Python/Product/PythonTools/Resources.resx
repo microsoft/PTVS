@@ -308,4 +308,20 @@ Continue?</value>
   <data name="NoInterpretersAvailable" xml:space="preserve">
     <value>No Python environments are configured. Please install or configure an environment and try again.</value>
   </data>
+  <data name="ErrorImportWizardException" xml:space="preserve">
+    <value>An unexpected error {0} occurred while creating your project.
+
+If Visual Studio is running with the /Log option, the full exception has been written to the activity log.</value>
+  </data>
+  <data name="ErrorImportWizardUnauthorizedAccess" xml:space="preserve">
+    <value>Some file paths could not be accessed.
+
+Try moving your source code to a location where you can read and write files.</value>
+  </data>
+  <data name="StatusImportWizardError" xml:space="preserve">
+    <value>An error occurred and your project was not created.</value>
+  </data>
+  <data name="StatusImportWizardStarting" xml:space="preserve">
+    <value>Importing project...</value>
+  </data>
 </root>

@@ -88,6 +88,11 @@ namespace Microsoft.PythonTools.Project {
         public const string PythonMenuLabel = "PythonMenuLabel";
 
         public const string NoInterpretersAvailable = "NoInterpretersAvailable";
+        
+        public const string ErrorImportWizardUnauthorizedAccess = "ErrorImportWizardUnauthorizedAccess";
+        public const string ErrorImportWizardException = "ErrorImportWizardException";
+        public const string StatusImportWizardError = "StatusImportWizardError";
+        public const string StatusImportWizardStarting = "StatusImportWizardStarting";
 
         internal static new string GetString(string value) {
             string result = Microsoft.PythonTools.Resources.ResourceManager.GetString(value, CultureInfo.CurrentUICulture) ?? CommonSR.GetString(value);

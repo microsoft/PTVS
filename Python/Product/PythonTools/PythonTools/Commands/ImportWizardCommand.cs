@@ -17,6 +17,7 @@ using System.IO;
 using System.Windows;
 using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools;
 
@@ -25,49 +26,48 @@ namespace Microsoft.PythonTools.Commands {
     /// Provides the command to import a project from existing code.
     /// </summary>
     class ImportWizardCommand : Command {
+        private async void CreateProjectAndHandleErrors(
+            IVsStatusbar statusBar,
+            Microsoft.PythonTools.Project.ImportWizard.ImportWizard dlg
+        ) {
+            try {
+                var path = await dlg.ImportSettings.CreateRequestedProjectAsync();
+                if (File.Exists(path)) {
+                    object outRef = null, pathRef = ProcessOutput.QuoteSingleArgument(path);
+                    PythonToolsPackage.Instance.DTE.Commands.Raise(
+                        VSConstants.GUID_VSStandardCommandSet97.ToString("B"),
+                        (int)VSConstants.VSStd97CmdID.OpenProject,
+                        ref pathRef,
+                        ref outRef
+                    );
+                    statusBar.SetText("");
+                    return;
+                }
+            } catch (UnauthorizedAccessException) {
+                MessageBox.Show(
+                    SR.GetString(SR.ErrorImportWizardUnauthorizedAccess),
+                    SR.GetString(SR.PythonToolsForVisualStudio)
+                );
+            } catch (Exception ex) {
+                ActivityLog.LogError(
+                    SR.GetString(SR.PythonToolsForVisualStudio),
+                    ex.ToString()
+                );
+                MessageBox.Show(
+                    SR.GetString(SR.ErrorImportWizardException, ex.GetType().Name),
+                    SR.GetString(SR.PythonToolsForVisualStudio)
+                );
+            }
+            statusBar.SetText(SR.GetString(SR.StatusImportWizardError));
+        }
+
         public override void DoCommand(object sender, EventArgs args) {
             var statusBar = (IVsStatusbar)CommonPackage.GetGlobalService(typeof(SVsStatusbar));
-            statusBar.SetText("Importing project...");
+            statusBar.SetText(SR.GetString(SR.StatusImportWizardStarting));
 
             var dlg = new Microsoft.PythonTools.Project.ImportWizard.ImportWizard();
             if (dlg.ShowModal() ?? false) {
-                var settings = dlg.ImportSettings;
-
-                settings.CreateRequestedProjectAsync()
-                    .ContinueWith(t => {
-                        string path;
-                        try {
-                            path = t.Result;
-                        } catch (AggregateException ex) {
-                            if (ex.InnerException is UnauthorizedAccessException) {
-                                MessageBox.Show(
-                                    "Some file paths could not be accessed." + Environment.NewLine +
-                                    "Try moving your source code to a location where you " +
-                                    "can read and write files.",
-                                    SR.GetString(SR.PythonToolsForVisualStudio)
-                                );
-                            } else {
-                                string exName = "";
-                                if (ex.InnerException != null) {
-                                    exName = "(" + ex.InnerException.GetType().Name + ") ";
-                                }
-
-                                MessageBox.Show(
-                                    "An unexpected error " + exName +
-                                    "occurred while creating your project.",
-                                    SR.GetString(SR.PythonToolsForVisualStudio)
-                                );
-                            }
-                            return;
-                        }
-                        if (File.Exists(path)) {
-                            object outRef = null, pathRef = ProcessOutput.QuoteSingleArgument(path);
-                            PythonToolsPackage.Instance.DTE.Commands.Raise(VSConstants.GUID_VSStandardCommandSet97.ToString("B"), (int)VSConstants.VSStd97CmdID.OpenProject, ref pathRef, ref outRef);
-                            statusBar.SetText("");
-                        } else {
-                            statusBar.SetText("An error occurred and your project was not created.");
-                        }
-                    }, System.Threading.Tasks.TaskScheduler.FromCurrentSynchronizationContext());
+                CreateProjectAndHandleErrors(statusBar, dlg);
             } else {
                 statusBar.SetText("");
             }

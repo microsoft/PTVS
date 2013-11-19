@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System;
+using System.IO;
 using System.Linq;
 using System.Xml.Linq;
 using Microsoft.PythonTools;
@@ -140,6 +141,91 @@ namespace PythonToolsTests {
             var proj = XDocument.Load(path);
 
             Assert.AreEqual("Program.py", proj.Descendant("StartupFile").Value);
+        }
+
+        [TestMethod, Priority(0)]
+        public void ImportWizardSemicolons() {
+            // https://pytools.codeplex.com/workitem/2022
+            var settings = new ImportSettings();
+            
+            var sourcePath = TestData.GetTempPath(randomSubPath: true);
+            // Create a fake set of files to import
+            Directory.CreateDirectory(Path.Combine(sourcePath, "ABC"));
+            File.WriteAllText(Path.Combine(sourcePath, "ABC", "a;b;c.py"), "");
+            Directory.CreateDirectory(Path.Combine(sourcePath, "A;B;C"));
+            File.WriteAllText(Path.Combine(sourcePath, "A;B;C", "abc.py"), "");
+
+            settings.SourcePath = sourcePath;
+
+            var path = settings.CreateRequestedProject();
+
+            Assert.AreEqual(settings.ProjectPath, path);
+            var proj = XDocument.Load(path);
+
+            AssertUtil.ContainsExactly(proj.Descendants(proj.GetName("Compile")).Select(x => x.Attribute("Include").Value),
+                "ABC\\a%3bb%3bc.py",
+                "A%3bB%3bC\\abc.py"
+            );
+            AssertUtil.ContainsExactly(proj.Descendants(proj.GetName("Folder")).Select(x => x.Attribute("Include").Value),
+                "ABC",
+                "A%3bB%3bC"
+            );
+        }
+
+        static T Wait<T>(System.Threading.Tasks.Task<T> task) {
+            task.Wait();
+            return task.Result;
+        }
+
+        [TestMethod, Priority(0)]
+        public void ImportWizardCandidateStartupFiles() {
+            var sourcePath = TestData.GetTempPath(randomSubPath: true);
+            // Create a fake set of files to import
+            File.WriteAllText(Path.Combine(sourcePath, "a.py"), "");
+            File.WriteAllText(Path.Combine(sourcePath, "b.py"), "");
+            File.WriteAllText(Path.Combine(sourcePath, "c.py"), "");
+            File.WriteAllText(Path.Combine(sourcePath, "a.pyw"), "");
+            File.WriteAllText(Path.Combine(sourcePath, "b.pyw"), "");
+            File.WriteAllText(Path.Combine(sourcePath, "c.pyw"), "");
+            File.WriteAllText(Path.Combine(sourcePath, "a.txt"), "");
+            File.WriteAllText(Path.Combine(sourcePath, "b.txt"), "");
+            File.WriteAllText(Path.Combine(sourcePath, "c.txt"), "");
+
+
+            AssertUtil.ContainsExactly(Wait(ImportSettings.GetCandidateStartupFiles(sourcePath, "")),
+                "a.py",
+                "b.py",
+                "c.py"
+            );
+            AssertUtil.ContainsExactly(Wait(ImportSettings.GetCandidateStartupFiles(sourcePath, "*.pyw")),
+                "a.py",
+                "b.py",
+                "c.py",
+                "a.pyw",
+                "b.pyw",
+                "c.pyw"
+            );
+            AssertUtil.ContainsExactly(Wait(ImportSettings.GetCandidateStartupFiles(sourcePath, "b.pyw")),
+                "a.py",
+                "b.py",
+                "c.py",
+                "b.pyw"
+            );
+            AssertUtil.ContainsExactly(Wait(ImportSettings.GetCandidateStartupFiles(sourcePath, "*.txt")),
+                "a.py",
+                "b.py",
+                "c.py"
+            );
+        }
+
+        [TestMethod, Priority(0)]
+        public void ImportWizardDefaultStartupFile() {
+            var files = new[] { "a.py", "b.py", "c.py" };
+            var expectedDefault = files[0];
+
+            Assert.AreEqual(expectedDefault, ImportSettings.SelectDefaultStartupFile(files, null));
+            Assert.AreEqual(expectedDefault, ImportSettings.SelectDefaultStartupFile(files, "not in list"));
+            Assert.AreEqual("b.py", ImportSettings.SelectDefaultStartupFile(files, "b.py"));
         }
     }
 }
