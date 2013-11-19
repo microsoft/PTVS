@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Windows.Automation;
 
 namespace TestUtilities.UI {
@@ -91,18 +92,32 @@ namespace TestUtilities.UI {
         {
             get
             {
-                Condition con = new PropertyCondition(
-                                    AutomationElement.LocalizedControlTypeProperty,
-                                    "tree item"
-                                );
-                AutomationElementCollection ell = Element.FindAll(TreeScope.Children, con);
-                List<TreeNode> nodes = new List<TreeNode>();
-                for (int i = 0; i < ell.Count; i++)
-                {
-                    nodes.Add(new TreeNode(ell[i]));
-                }
-                return nodes;
+                return Element.FindAll(
+                    TreeScope.Children,
+                    new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.TreeItem)
+                )
+                    .OfType<AutomationElement>()
+                    .Select(e => new TreeNode(e))
+                    .ToList();
             }
+        }
+
+        /// <summary>
+        /// Expands all nodes in the treeview.
+        /// </summary>
+        /// <returns>The total number of nodes in the treeview.</returns>
+        public int ExpandAll() {
+            var count = 0;
+            var nodes = new Queue<TreeNode>(Nodes);
+            while (nodes.Any()) {
+                count += 1;
+                var node = nodes.Dequeue();
+                node.IsExpanded = true;
+                foreach (var n in node.Nodes) {
+                    nodes.Enqueue(n);
+                }
+            }
+            return count;
         }
 
         public void CenterInView(AutomationElement node) {

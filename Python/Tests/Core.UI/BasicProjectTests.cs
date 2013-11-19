@@ -23,6 +23,7 @@ using System.Threading;
 using System.Windows;
 using EnvDTE;
 using EnvDTE80;
+using Microsoft.PythonTools;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Options;
@@ -192,10 +193,10 @@ namespace PythonToolsUITests {
 
                 // "Python Environments", "References", "Search Paths", "Program.py"
                 Assert.AreEqual(4, project.ProjectItems.Count);
-                var item = project.ProjectItems.AddFromFile(TestData.GetPath(@"TestData\DebuggerProject\LocalsTest.py"));
+                var item = project.ProjectItems.AddFromFileCopy(TestData.GetPath(@"TestData\DebuggerProject\LocalsTest.py"));
 
                 Assert.AreEqual("LocalsTest.py", item.Properties.Item("FileName").Value);
-                Assert.AreEqual(Path.Combine(Path.Combine(Path.GetDirectoryName(fullPath), "HelloWorld"), "LocalsTest.py"), item.Properties.Item("FullPath").Value);
+                Assert.AreEqual(Path.Combine(Path.GetDirectoryName(fullPath), "HelloWorld", "LocalsTest.py"), item.Properties.Item("FullPath").Value);
                 Assert.AreEqual(".py", item.Properties.Item("Extension").Value);
 
                 Assert.IsTrue(item.Object is VSProjectItem);
@@ -210,12 +211,12 @@ namespace PythonToolsUITests {
                 Assert.AreEqual(false, vsProjItem.ProjectItem.IsOpen);
                 Assert.AreEqual(VsIdeTestHostContext.Dte, vsProjItem.ProjectItem.DTE);
 
-                Assert.AreEqual(4, project.ProjectItems.Count);
+                Assert.AreEqual(5, project.ProjectItems.Count);
 
                 // add an existing item
-                project.ProjectItems.AddFromFile(TestData.GetPath(@"TestData\HelloWorld\Program.py"));
+                project.ProjectItems.AddFromFileCopy(TestData.GetPath(@"TestData\HelloWorld\Program.py"));
 
-                Assert.AreEqual(4, project.ProjectItems.Count);
+                Assert.AreEqual(5, project.ProjectItems.Count);
             }
         }
 
@@ -1012,12 +1013,17 @@ namespace PythonToolsUITests {
                 string fullPath = TestData.GetPath(@"TestData\AddExistingFolder.sln");
 
                 Assert.AreEqual(5, project.ProjectItems.Count);
+                Assert.AreEqual(7, app.OpenSolutionExplorer().ExpandAll());
+
                 var item = project.ProjectItems.AddFromFile(TestData.GetPath(@"TestData\AddExistingFolder\TestFolder\TestFile.txt"));
 
+                Assert.IsNotNull(item);
                 Assert.AreEqual("TestFile.txt", item.Properties.Item("FileName").Value);
                 Assert.AreEqual(Path.Combine(Path.GetDirectoryName(fullPath), "AddExistingFolder", "TestFolder", "TestFile.txt"), item.Properties.Item("FullPath").Value);
 
                 Assert.AreEqual(6, project.ProjectItems.Count);
+                // Two more items, because we've added the file and its folder
+                Assert.AreEqual(9, app.OpenSolutionExplorer().ExpandAll());
 
                 var folder = project.ProjectItems.Item("TestFolder");
                 Assert.IsNotNull(folder);
@@ -1029,16 +1035,27 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void AddFromFileOutsideOfProject() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenProject(@"TestData\HelloWorld.sln");
-                // "Python Environments", "References", "Search Paths", "Program.py"
-                Assert.AreEqual(4, project.ProjectItems.Count);
-                var item = project.ProjectItems.AddFromFile(TestData.GetPath(@"TestData\DebuggerProject\LocalsTest.py"));
+                var prevSetting = PythonToolsPackage.Instance.DebuggingOptionsPage.UpdateSearchPathsWhenAddingLinkedFiles;
+                try {
+                    PythonToolsPackage.Instance.DebuggingOptionsPage.UpdateSearchPathsWhenAddingLinkedFiles = false;
+                    var project = app.OpenProject(@"TestData\HelloWorld.sln");
+                    // "Python Environments", "References", "Search Paths", "Program.py"
+                    Assert.AreEqual(4, project.ProjectItems.Count);
+                    Assert.AreEqual(6, app.OpenSolutionExplorer().ExpandAll());
 
-                Assert.AreEqual("LocalsTest.py", item.Properties.Item("FileName").Value);
-                
-                // TODO: Once we have IsLink use it
-                //Assert.AreEqual(true, item.Properties.Item("IsLink").Value);
-                Assert.AreEqual(TestData.GetPath(@"TestData\DebuggerProject\LocalsTest.py"), item.Properties.Item("FullPath").Value);
+                    var item = project.ProjectItems.AddFromFile(TestData.GetPath(@"TestData\DebuggerProject\LocalsTest.py"));
+
+                    Assert.IsNotNull(item);
+                    Assert.AreEqual(5, project.ProjectItems.Count);
+                    Assert.AreEqual(7, app.OpenSolutionExplorer().ExpandAll());
+
+                    Assert.AreEqual("LocalsTest.py", item.Properties.Item("FileName").Value);
+
+                    Assert.AreEqual(true, item.Properties.Item("IsLinkFile").Value);
+                    Assert.AreEqual(TestData.GetPath(@"TestData\DebuggerProject\LocalsTest.py"), item.Properties.Item("FullPath").Value);
+                } finally {
+                    PythonToolsPackage.Instance.DebuggingOptionsPage.UpdateSearchPathsWhenAddingLinkedFiles = prevSetting;
+                }
             }
         }
 

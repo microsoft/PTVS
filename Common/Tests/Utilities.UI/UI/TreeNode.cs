@@ -12,6 +12,8 @@
  *
  * ***************************************************************************/
 
+using System.Collections.Generic;
+using System.Linq;
 using System.Windows.Automation;
 
 namespace TestUtilities.UI
@@ -37,6 +39,41 @@ namespace TestUtilities.UI
             get
             {
                 return this.Element.Current.Name.ToString();
+            }
+        }
+
+        public bool IsExpanded
+        {
+            get
+            {
+                var pattern = (ExpandCollapsePattern)Element.GetCurrentPattern(ExpandCollapsePattern.Pattern);
+                return pattern.Current.ExpandCollapseState != ExpandCollapseState.Collapsed;
+            }
+            set
+            {
+                var pattern = (ExpandCollapsePattern)Element.GetCurrentPattern(ExpandCollapsePattern.Pattern);
+                if (value)
+                {
+                    pattern.Expand();
+                }
+                else
+                {
+                    pattern.Collapse();
+                }
+            }
+        }
+
+        public List<TreeNode> Nodes
+        {
+            get
+            {
+                return Element.FindAll(
+                    TreeScope.Children,
+                    new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.TreeItem)
+                )
+                    .OfType<AutomationElement>()
+                    .Select(e => new TreeNode(e))
+                    .ToList();
             }
         }
 

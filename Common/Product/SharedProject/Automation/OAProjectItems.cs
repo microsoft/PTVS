@@ -56,10 +56,7 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
                 foreach (var extension in this.Project.ProjectNode.CodeFileExtensions) {
                     foreach (string filename in Directory.EnumerateFiles(directory, "*" + extension)) {
                         result.ProjectItems.AddFromFile(Path.Combine(directory, filename));
-                }
-                    foreach (string filename in Directory.EnumerateFiles(directory, "*" + extension)) {
-                        result.ProjectItems.AddFromFile(Path.Combine(directory, filename));
-        }
+                    }
                 }
                 return result;
             });
@@ -192,8 +189,7 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
                         string fileName = Path.GetFileName(path);
                         string fileDirectory = proj.GetBaseDirectoryForAddingFiles(this.NodeWithItems);
                         realPath = Path.Combine(fileDirectory, fileName);
-                    }
-                    else {
+                    } else {
                         realPath = path;
                     }
 
@@ -213,16 +209,17 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1800:DoNotCastUnnecessarily")]
         private EnvDTE.ProjectItem EvaluateAddResult(VSADDRESULT result, string path) {
             return UIThread.Instance.RunSync<EnvDTE.ProjectItem>(() => {
-                if (result == VSADDRESULT.ADDRESULT_Success) {
-                    if (Directory.Exists(path) && !CommonUtils.HasEndSeparator(path)) {
-                        path = path + Path.DirectorySeparatorChar;
+                if (result != VSADDRESULT.ADDRESULT_Failure) {
+                    if (Directory.Exists(path)) {
+                        path = CommonUtils.EnsureEndSeparator(path);
                     }
                     HierarchyNode nodeAdded = this.NodeWithItems.ProjectMgr.FindNodeByFullPath(path);
                     Debug.Assert(nodeAdded != null, "We should have been able to find the new element in the hierarchy");
                     if (nodeAdded != null) {
                         EnvDTE.ProjectItem item = null;
-                        if (nodeAdded is FileNode) {
-                            item = new OAFileItem(this.Project, nodeAdded as FileNode);
+                        var fileNode = nodeAdded as FileNode;
+                        if (fileNode != null) {
+                            item = new OAFileItem(this.Project, fileNode);
                         } else {
                             item = new OAProjectItem(this.Project, nodeAdded);
                         }

@@ -4251,6 +4251,7 @@ namespace Microsoft.VisualStudioTools.Project
 
             // Add the files to the hierarchy
             int actualFilesAddedIndex = 0;
+            var itemsToInvalidate = new List<HierarchyNode>();
             for (int index = 0; index < filesToAdd.Count; index++)
             {
                 HierarchyNode child;
@@ -4269,6 +4270,15 @@ namespace Microsoft.VisualStudioTools.Project
                     {
                         if (child.IsNonMemberItem) 
                         {
+                            for (var node = child; node != null; node = node.Parent)
+                            {
+                                itemsToInvalidate.Add(node);
+                                // We want to include the first member item, so
+                                // this test is not part of the loop condition.
+                                if (!node.IsNonMemberItem) {
+                                    break;
+                                }
+                            }
                             // https://pytools.codeplex.com/workitem/1251
                             ErrorHandler.ThrowOnFailure(child.IncludeInProject(false));
                         }
@@ -4489,6 +4499,11 @@ namespace Microsoft.VisualStudioTools.Project
             if (actualFilesAddedIndex > 0)
                 OnItemsAppended(n);
 
+            foreach (var node in itemsToInvalidate.Where(node => node != null).Reverse())
+            {
+                OnInvalidateItems(node);
+            }
+
             //Open files if this was requested through the editorFlags
             bool openFiles = (editorFlags & (uint)__VSSPECIFICEDITORFLAGS.VSSPECIFICEDITOR_DoOpen) != 0;
             if (openFiles && actualFiles.Length <= filesToOpen)
@@ -4550,11 +4565,10 @@ namespace Microsoft.VisualStudioTools.Project
             else if (targetFolder.IsNonMemberItem) 
             {
                 int hr = targetFolder.IncludeInProject(true);
-                if (ErrorHandler.Failed(hr))
+                if (ErrorHandler.Succeeded(hr))
                 {
-                    return hr;
+                    OnInvalidateItems(targetFolder.Parent);
                 }
-                OnItemAdded(targetFolder.Parent, targetFolder);
                 return hr;
             } 
             else if (promptOverwrite == null) 

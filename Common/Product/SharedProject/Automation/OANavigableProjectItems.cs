@@ -73,7 +73,7 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
                 int count = 0;
                 UIThread.Instance.RunSync(() => {
                     for (HierarchyNode child = this.NodeWithItems.FirstChild; child != null; child = child.NextSibling) {
-                        if (child.GetAutomationObject() is EnvDTE.ProjectItem) {
+                        if (!child.IsNonMemberItem && child.GetAutomationObject() is EnvDTE.ProjectItem) {
                             count += 1;
                         }
                     }
@@ -178,6 +178,9 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
                 int realIndex = (int)index - 1;
                 if (realIndex >= 0) {
                     for (HierarchyNode child = this.NodeWithItems.FirstChild; child != null; child = child.NextSibling) {
+                        if (child.IsNonMemberItem) {
+                            continue;
+                        }
                         var item = child.GetAutomationObject() as EnvDTE.ProjectItem;
                         if (item != null) {
                             if (realIndex == 0) {
@@ -190,6 +193,9 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
             } else if (index is string) {
                 string name = (string)index;
                 for (HierarchyNode child = this.NodeWithItems.FirstChild; child != null; child = child.NextSibling) {
+                    if (child.IsNonMemberItem) {
+                        continue;
+                    }
                     var item = child.GetAutomationObject() as EnvDTE.ProjectItem;
                     if (item != null && String.Compare(item.Name, name, StringComparison.OrdinalIgnoreCase) == 0) {
                         return item;
@@ -205,6 +211,9 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
         /// <returns>An IEnumerator for this object.</returns>
         public virtual IEnumerator GetEnumerator() {
             for (HierarchyNode child = this.NodeWithItems.FirstChild; child != null; child = child.NextSibling) {
+                if (child.IsNonMemberItem) {
+                    continue;
+                }
                 var item = child.GetAutomationObject() as EnvDTE.ProjectItem;
                 if (item != null) {
                     yield return item;
