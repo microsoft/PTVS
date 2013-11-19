@@ -49,15 +49,12 @@
   <ItemGroup>
     <Reference Include="Microsoft.Hpc.Scheduler, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>C:\Windows\assembly\GAC_MSIL\Microsoft.Hpc.Scheduler\2.0.0.0__31bf3856ad364e35\Microsoft.Hpc.Scheduler.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Hpc.Scheduler.Properties, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>C:\Windows\assembly\GAC_MSIL\Microsoft.Hpc.Scheduler.Properties\2.0.0.0__31bf3856ad364e35\Microsoft.Hpc.Scheduler.Properties.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Hpc.Scheduler.Store, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>C:\Windows\assembly\GAC_MSIL\Microsoft.Hpc.Scheduler.Store\2.0.0.0__31bf3856ad364e35\Microsoft.Hpc.Scheduler.Store.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.ComponentModelHost, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.Debugger.Interop.10.0, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
@@ -101,7 +98,7 @@
       <VSIXSubPath>.</VSIXSubPath>
     </Content>
     <Content Include="Templates\Projects\HpcMpiProject\HpcMpiApp.zip">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
     <Content Include="Templates\Projects\HpcMpiProject\PythonApp.pyproj" />
