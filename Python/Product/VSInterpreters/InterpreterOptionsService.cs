@@ -18,10 +18,8 @@ using System.ComponentModel.Composition;
 using System.ComponentModel.Composition.Hosting;
 using System.ComponentModel.Composition.Primitives;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Security;
 using Microsoft.VisualStudio.Settings;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -315,7 +313,14 @@ namespace Microsoft.PythonTools.Interpreter {
         public event EventHandler InterpretersChanged;
 
         private void DefaultInterpreterRegistry_Changed(object sender, RegistryChangedEventArgs e) {
-            LoadDefaultInterpreter();
+            try {
+                LoadDefaultInterpreter();
+            } catch (Exception ex) {
+                ActivityLog.LogError(
+                    "Python Tools for Visual Studio",
+                    string.Format("Exception updating default interpreter: {0}", ex)
+                );
+            }
         }
 
         private static bool AreEqual(IPythonInterpreterFactory factory, Guid id, Version version) {
