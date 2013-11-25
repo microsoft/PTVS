@@ -220,8 +220,8 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Design" />
     <Reference Include="System.Drawing" />
-    <Reference Include="System.IO.Compression" Condition="'$(VSTarget)' != '10.0'" />
-    <Reference Include="System.IO.Compression.FileSystem" Condition="'$(VSTarget)' != '10.0'" />
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.IO.Compression.FileSystem" />
     <Reference Include="System.Messaging" />
     <Reference Include="System.Net" />
     <Reference Include="System.Numerics" />
