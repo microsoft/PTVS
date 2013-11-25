@@ -26,6 +26,7 @@ using System.Threading;
 using System.Windows.Forms;
 using System.Windows.Threading;
 using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools.Navigation;
@@ -68,7 +69,12 @@ namespace Microsoft.VisualStudioTools.Project {
         private MSBuild.Project _userBuildProject;
         private readonly Dictionary<string, FileSystemWatcher> _symlinkWatchers = new Dictionary<string, FileSystemWatcher>();
         private DiskMerger _currentMerger;
+#if DEV11_OR_LATER
+        private IVsHierarchyItemManager _hierarchyManager;
+        private Dictionary<uint, bool> _needBolding;
+#else
         private readonly HashSet<HierarchyNode> _needBolding = new HashSet<HierarchyNode>();
+#endif
         private int _idleTriggered;
 
         public CommonProjectNode(CommonProjectPackage/*!*/ package, ImageList/*!*/ imageList) {
@@ -484,11 +490,16 @@ namespace Microsoft.VisualStudioTools.Project {
         }
 
         protected override void Dispose(bool disposing) {
-            base.Dispose(disposing);
+#if DEV11_OR_LATER
+            HierarchyManager = null;
+#endif
+
             if (this._userBuildProject != null) {
                 _userBuildProject.ProjectCollection.UnloadProject(_userBuildProject);
             }
             _package.OnIdle -= OnIdle;
+
+            base.Dispose(disposing);
         }
 
         protected internal override int ShowAllFiles() {
@@ -898,7 +909,9 @@ namespace Microsoft.VisualStudioTools.Project {
         private void OnIdle(object sender, ComponentManagerEventArgs e) {
             Interlocked.Exchange(ref _idleTriggered, 0);
             do {
+#if DEV10
                 BoldDeferredItems();
+#endif
 
                 using (new DebugTimer("ProcessFileChanges while Idle", 100)) {
                     if (IsClosed) {
@@ -1132,6 +1145,10 @@ namespace Microsoft.VisualStudioTools.Project {
             _projectDocListenerForStartupFileUpdates = new ProjectDocumentsListenerForStartupFileUpdates((ServiceProvider)Site, this);
             _projectDocListenerForStartupFileUpdates.Init();
 
+#if DEV11_OR_LATER
+            UpdateHierarchyManager(alwaysCreate: false);
+#endif
+
             return VSConstants.S_OK;
         }
 
@@ -1156,7 +1173,11 @@ namespace Microsoft.VisualStudioTools.Project {
                 _attributesWatcher = null;
             }
 
+#if DEV11_OR_LATER
+            _needBolding = null;
+#else
             _needBolding.Clear();
+#endif
 
             base.Close();
         }
@@ -1169,12 +1190,126 @@ namespace Microsoft.VisualStudioTools.Project {
             }
         }
 
+#if DEV11_OR_LATER
+        internal IVsHierarchyItemManager HierarchyManager {
+            get {
+                if (_hierarchyManager == null) {
+                    UpdateHierarchyManager(true);
+                }
+                return _hierarchyManager;
+            }
+            private set {
+                if (_hierarchyManager != null) {
+                    _hierarchyManager.OnItemAdded -= HierarchyManager_OnItemAdded;
+                }
+                _hierarchyManager = value;
+                if (_hierarchyManager != null) {
+                    _hierarchyManager.OnItemAdded += HierarchyManager_OnItemAdded;
+                    
+                    // We now have a hierarchy manager, so bold any items that
+                    // were waiting to be bolded.
+                    if (_needBolding != null) {
+                        var items = _needBolding;
+                        _needBolding = null;
+                        foreach (var keyValue in items) {
+                            BoldItem(keyValue.Key, keyValue.Value);
+                        }
+                    }
+                }
+            }
+        }
+
+        private void UpdateHierarchyManager(bool alwaysCreate) {
+            if (Site != null && (alwaysCreate || _needBolding != null && _needBolding.Any())) {
+                var componentModel = Site.GetService(typeof(SComponentModel)) as IComponentModel;
+                var newManager = componentModel != null ?
+                    componentModel.GetService<IVsHierarchyItemManager>() :
+                    null;
+
+                if (newManager != _hierarchyManager) {
+                    HierarchyManager = newManager;
+                }
+            } else {
+                HierarchyManager = null;
+            }
+        }
+
+        private void HierarchyManager_OnItemAdded(object sender, HierarchyItemEventArgs e) {
+            if (_needBolding == null) {
+                return;
+            }
+            if (e.Item.HierarchyIdentity.Hierarchy == GetOuterInterface<IVsUIHierarchy>()) {
+                // An item has been added to our hierarchy, so bold it if we
+                // need to.
+                // Typically these are references/environments, since files are
+                // added lazily through a mechanism that does not raise this
+                // event.
+                bool isBold;
+                if (_needBolding.TryGetValue(e.Item.HierarchyIdentity.ItemID, out isBold)) {
+                    e.Item.IsBold = isBold;
+                    _needBolding.Remove(e.Item.HierarchyIdentity.ItemID);
+                    if (!_needBolding.Any()) {
+                        _needBolding = null;
+                    }
+                }
+            } else if (e.Item.HierarchyIdentity.Hierarchy == GetService(typeof(SVsSolution)) &&
+                e.Item.HierarchyIdentity.NestedHierarchy == GetOuterInterface<IVsUIHierarchy>()) {
+                // Our project is being added to the solution, and we have
+                // something to bold, so look up all pending items and force
+                // them to be created.
+                // Typically these are files, which are lazily created as the
+                // containing folders are expanded.
+                // Under VS 2010, this would cause multiple items to be added to
+                // Solution Explorer, but VS 2012 fixed this issue.
+                var items = _needBolding;
+                _needBolding = null;
+                foreach (var keyValue in items) {
+                    BoldItem(keyValue.Key, keyValue.Value, force: true);
+                }
+            }
+        }
+
+        private void BoldItem(uint id, bool isBold, bool force = false) {
+            if (HierarchyManager == null) {
+                // We don't have a hierarchy manager yet (so really we shouldn't
+                // even be here...), so defer bolding until we get one.
+                if (_needBolding == null) {
+                    _needBolding = new Dictionary<uint, bool>();
+                }
+                _needBolding[id] = isBold;
+                return;
+            }
+
+            IVsHierarchyItem item;
+            if (force) {
+                item = HierarchyManager.GetHierarchyItem(GetOuterInterface<IVsUIHierarchy>(), id);
+            } else if (!HierarchyManager.TryGetHierarchyItem(GetOuterInterface<IVsUIHierarchy>(), id, out item)) {
+                item = null;
+            }
+            
+            if (item != null) {
+                item.IsBold = isBold;
+            } else {
+                // Item hasn't been created yet, so defer bolding until we get
+                // the notification from the hierarchy manager.
+                if (_needBolding == null) {
+                    _needBolding = new Dictionary<uint, bool>();
+                }
+                _needBolding[id] = isBold;
+            }
+        }
+
+        public void BoldItem(HierarchyNode node, bool isBold) {
+            BoldItem(node.ID, isBold);
+        }
+
+#else // DEV11_OR_LATER
+
         public void BoldItem(HierarchyNode node, bool isBold) {
             IVsUIHierarchyWindow2 windows = UIHierarchyUtilities.GetUIHierarchyWindow(
                 Site as IServiceProvider,
                 new Guid(ToolWindowGuids80.SolutionExplorer)) as IVsUIHierarchyWindow2;
 
-#if DEV10
             // GetItemState will fail if the item has not yet been added to the
             // hierarchy. If it succeeds, we can make the item bold.
             uint state;
@@ -1190,7 +1325,6 @@ namespace Microsoft.VisualStudioTools.Project {
                 }
                 return;
             }
-#endif
 
             if (windows == null ||
                 ErrorHandler.Failed(windows.SetItemAttribute(
@@ -1204,24 +1338,6 @@ namespace Microsoft.VisualStudioTools.Project {
                 }
                 return;
             }
-
-#if DEV11_OR_LATER
-            // GetItemState will return 0 for HIS_Bold if the setting did not
-            // stick.
-            uint state;
-            if (windows == null ||
-                ErrorHandler.Failed(windows.GetItemState(
-                this.GetOuterInterface<IVsUIHierarchy>(),
-                node.ID,
-                (uint)__VSHIERARCHYITEMSTATE.HIS_Bold,
-                out state)) ||
-                state == 0) {
-
-                if (isBold) {
-                    _needBolding.Add(node);
-                }
-            }
-#endif
         }
 
         private void BoldDeferredItems() {
@@ -1244,7 +1360,6 @@ namespace Microsoft.VisualStudioTools.Project {
 
             _needBolding.Clear();
             foreach (var node in items) {
-#if DEV10
                 // GetItemState will fail if the item has not yet been added to the
                 // hierarchy. If it succeeds, we can make the item bold.
                 uint state;
@@ -1256,7 +1371,6 @@ namespace Microsoft.VisualStudioTools.Project {
                     _needBolding.Add(node);
                     continue;
                 }
-#endif
 
                 windows.SetItemAttribute(
                     this.GetOuterInterface<IVsUIHierarchy>(),
@@ -1264,23 +1378,10 @@ namespace Microsoft.VisualStudioTools.Project {
                     (uint)__VSHIERITEMATTRIBUTE.VSHIERITEMATTRIBUTE_Bold,
                     true
                 );
-
-#if DEV11_OR_LATER
-            // GetItemState will return 0 for HIS_Bold if the setting did not
-            // stick.
-                uint state;
-                if (ErrorHandler.Failed(windows.GetItemState(
-                    this.GetOuterInterface<IVsUIHierarchy>(),
-                    node.HierarchyId,
-                    (uint)__VSHIERARCHYITEMSTATE.HIS_Bold,
-                    out state)) ||
-                    state == 0) {
-                    _needBolding.Add(node);
-                    continue;
-                }
-#endif
             }
         }
+
+#endif // DEV11_OR_LATER
 
         /// <summary>
         /// Overriding to provide project general property page
@@ -1544,9 +1645,13 @@ namespace Microsoft.VisualStudioTools.Project {
         internal void AddSearchPathEntry(string newpath) {
             Utilities.ArgumentNotNull("newpath", newpath);
 
-            IList<string> searchPath = ParseSearchPath();
+            var searchPath = ParseSearchPath();
             var absPath = CommonUtils.GetAbsoluteFilePath(ProjectHome, newpath);
-            if (searchPath.Contains(absPath, StringComparer.OrdinalIgnoreCase)) {
+            // Ignore the end separator when determining whether the path has
+            // already been added. Having both "C:\Fob" and "C:\Fob\" is not
+            // legal.
+            if (searchPath.Contains(CommonUtils.EnsureEndSeparator(absPath), StringComparer.OrdinalIgnoreCase) ||
+                searchPath.Contains(CommonUtils.TrimEndSeparator(absPath), StringComparer.OrdinalIgnoreCase)) {
                 return;
             }
             searchPath.Add(absPath);
@@ -1557,10 +1662,18 @@ namespace Microsoft.VisualStudioTools.Project {
         /// Removes a given path from the SearchPath property.
         /// </summary>
         internal void RemoveSearchPathEntry(string path) {
-            IList<string> searchPath = ParseSearchPath();
-            var absPath = CommonUtils.GetAbsoluteFilePath(ProjectHome, path);
-            if (searchPath.Remove(path)) {
-                SaveSearchPath(searchPath);
+            var absPath = CommonUtils.TrimEndSeparator(CommonUtils.GetAbsoluteFilePath(ProjectHome, path));
+            var absPathWithEndSeparator = CommonUtils.EnsureEndSeparator(absPath);
+            var searchPath = ParseSearchPath();
+            
+            var newSearchPath = searchPath
+                // Ignore the end separator when determining paths to remove.
+                .Where(p => !absPath.Equals(p, StringComparison.OrdinalIgnoreCase) &&
+                            !absPathWithEndSeparator.Equals(p, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+            if (searchPath.Count != newSearchPath.Count) {
+                SaveSearchPath(newSearchPath);
             }
         }
 
@@ -1587,7 +1700,7 @@ namespace Microsoft.VisualStudioTools.Project {
                 ProjectHome);
 
             if (dirName != null) {
-                AddSearchPathEntry(dirName);
+                AddSearchPathEntry(CommonUtils.EnsureEndSeparator(dirName));
             }
             
             return VSConstants.S_OK;

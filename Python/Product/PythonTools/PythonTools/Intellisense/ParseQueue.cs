@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Threading;
 using System.Windows;
@@ -25,10 +26,6 @@ using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
-
-#if DEV11_OR_LATER
-using System.IO.Compression;
-#endif
 
 namespace Microsoft.PythonTools.Intellisense {
     /// <summary>
@@ -111,7 +108,6 @@ namespace Microsoft.PythonTools.Intellisense {
             });
         }
 
-#if DEV11_OR_LATER
         public void EnqueueZipArchiveEntry(IProjectEntry projEntry, string zipFileName, ZipArchiveEntry entry, Action onComplete) {
             var pathInArchive = entry.FullName.Replace('/', '\\');
             var fileName = Path.Combine(zipFileName, pathInArchive);
@@ -137,7 +133,6 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
             });
         }
-#endif
 
         private void EnqueWorker(Action parser) {
             Interlocked.Increment(ref _analysisPending);

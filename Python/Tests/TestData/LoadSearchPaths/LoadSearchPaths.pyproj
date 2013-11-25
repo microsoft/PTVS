@@ -6,7 +6,7 @@
     <ProjectGuid>{59013AE7-5BB1-44C0-A04B-7029800B7E9A}</ProjectGuid>
     <ProjectHome>.</ProjectHome>
     <StartupFile>Program.py</StartupFile>
-    <SearchPath>..\AddSearchPaths\;..\HelloWorld;..\LoadSearchPaths\NotHere\..\;.\NotHere\</SearchPath>
+    <SearchPath>..\AddSearchPaths\;..\HelloWorld;..\LoadSearchPaths\NotHere\..\;.\NotHere\;Invalid*Search?Path</SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <AssemblyName>AddSearchPaths</AssemblyName>
     <Name>AddSearchPaths</Name>

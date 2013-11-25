@@ -63,6 +63,18 @@ namespace Microsoft.PythonTools.Project {
             return null;
         }
 
+        /// <summary>
+        /// Prevent Find in Files from searching these nodes.
+        /// </summary>
+        public override bool IsSearchable {
+            // https://pytools.codeplex.com/workitem/2030
+            // If we return true here then the search path will be added to the
+            // list of files VS will search in. Because this is actually a
+            // folder, VS will crash later if it tries to add a file that is in
+            // this folder.
+            get { return false; }
+        }
+
         public override object GetIconHandle(bool open) {
             return _project.GetIconHandleByName(
 #if DEV11_OR_LATER

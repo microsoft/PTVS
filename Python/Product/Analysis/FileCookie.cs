@@ -15,10 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-
-#if DEV11_OR_LATER
 using System.IO.Compression;
-#endif
 
 namespace Microsoft.PythonTools.Analysis {
     public class FileCookie : IAnalysisCookie {
@@ -56,7 +53,6 @@ namespace Microsoft.PythonTools.Analysis {
         #endregion
     }
 
-#if DEV11_OR_LATER
     public class ZipFileCookie : IAnalysisCookie {
         private readonly string _zipFileName;
         private readonly string _pathInZip;
@@ -109,5 +105,4 @@ namespace Microsoft.PythonTools.Analysis {
 
         #endregion
     }
-#endif
 }

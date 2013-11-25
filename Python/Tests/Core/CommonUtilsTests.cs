@@ -299,7 +299,12 @@ namespace PythonToolsTests {
                 // part.
                 // GetRelativeDirectoryPath returns an empty string, because it
                 // assumes that both paths are directories.
-                "C:\\a\\b\\", @"C:\a\b", @"..\b"
+                "C:\\a\\b\\", @"C:\a\b", @"..\b",
+
+                // Ensure end-separators are retained when the target is a
+                // directory rather than a file.
+                "C:\\a\\", "C:\\a\\b\\", "b\\",
+                "C:\\a", "C:\\a\\b\\", "b\\"
                 )) {
                 var expected = testCase.Item3;
                 var actual = CommonUtils.GetRelativeFilePath(testCase.Item1, testCase.Item2);

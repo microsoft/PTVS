@@ -165,7 +165,7 @@ namespace Microsoft.PythonTools.Project {
                     dirToAdd = Path.GetDirectoryName(dirToAdd);
                 }
 
-                AddSearchPathEntry(dirToAdd);
+                AddSearchPathEntry(CommonUtils.EnsureEndSeparator(dirToAdd));
             }
 
             base.LinkFileAdded(filename);
@@ -524,14 +524,13 @@ namespace Microsoft.PythonTools.Project {
         private void AnalyzeSearchPaths(IEnumerable<string> newDirs) {
             // now add all of the missing files, any dups will automatically not be re-analyzed
             foreach (var dir in newDirs) {
-#if DEV11_OR_LATER
-                // If it's a file and not a directory, parse it as a .zip file in accordance with PEP 273.
                 if (File.Exists(dir)) {
+                    // If it's a file and not a directory, parse it as a .zip
+                    // file in accordance with PEP 273.
                     _analyzer.AnalyzeZipArchive(dir, onFileAnalyzed: entry => SetSearchPathEntry(entry, dir));
-                    continue;
+                } else if (Directory.Exists(dir)) {
+                    _analyzer.AnalyzeDirectory(dir, onFileAnalyzed: entry => SetSearchPathEntry(entry, dir));
                 }
-#endif
-                _analyzer.AnalyzeDirectory(dir, onFileAnalyzed: entry => SetSearchPathEntry(entry, dir));
             }
         }
 

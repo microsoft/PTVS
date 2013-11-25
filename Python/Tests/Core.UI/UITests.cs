@@ -22,6 +22,7 @@ using System.Threading.Tasks;
 using System.Windows.Automation;
 using System.Windows.Input;
 using EnvDTE;
+using Microsoft.PythonTools;
 using Microsoft.PythonTools.Project;
 using Microsoft.TC.TestHostAdapters;
 using Microsoft.TestSccPackage;
@@ -181,7 +182,7 @@ namespace PythonToolsUITests {
 
                 var text = File.ReadAllText(TestData.GetPath(@"TestData\AddSearchPaths\AddSearchPaths.pyproj"));
                 string actual = Regex.Match(text, @"<SearchPath>.*</SearchPath>", RegexOptions.Singleline).Value;
-                Assert.AreEqual("<SearchPath>..\\Outlining</SearchPath>", actual);
+                Assert.AreEqual("<SearchPath>..\\Outlining\\</SearchPath>", actual);
             }
         }
 
@@ -190,6 +191,10 @@ namespace PythonToolsUITests {
         public void LoadSearchPath() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
                 var project = app.OpenProject(@"TestData\LoadSearchPaths.sln");
+
+                // Ensure we complete analysis. VS may crash if the invalid
+                // path is not handled correctly.
+                project.GetPythonProject().GetAnalyzer().WaitForCompleteAnalysis(_ => true);
 
                 app.OpenSolutionExplorer();
                 var window = app.SolutionExplorerTreeView;
@@ -209,11 +214,24 @@ namespace PythonToolsUITests {
                 // Entered in file as .\NotHere\
                 var path4 = window.FindItem("Solution 'LoadSearchPaths' (1 project)", "LoadSearchPaths", SR.GetString(SR.SearchPaths), "NotHere");
                 Assert.IsNotNull(path4, "Could not find NotHere");
+                Assert.AreEqual("NotHere", path4.Current.Name);
 
-                // Entered in file as .\NotHere\
                 AutomationWrapper.Select(path4);
-                Keyboard.Type(Key.Delete);  // should not prompt, https://pytools.codeplex.com/workitem/1233
+                app.Dte.ExecuteCommand("Edit.Delete"); // should not prompt, https://pytools.codeplex.com/workitem/1233
                 Assert.IsNull(window.WaitForItemRemoved("Solution 'LoadSearchPaths' (1 project)", "LoadSearchPaths", SR.GetString(SR.SearchPaths), "NotHere"));
+
+                // Entered in file as Invalid*Search?Path
+                var path5 = window.FindItem("Solution 'LoadSearchPaths' (1 project)", "LoadSearchPaths", SR.GetString(SR.SearchPaths), "Invalid*Search?Path");
+                Assert.IsNotNull(path5, "Could not find Invalid*Search?Path");
+                Assert.AreEqual(path5.Current.Name, "Invalid*Search?Path");
+
+                AutomationWrapper.Select(path5);
+                app.Dte.ExecuteCommand("Edit.Delete");
+                Assert.IsNull(window.WaitForItemRemoved("Solution 'LoadSearchPaths' (1 project)", "LoadSearchPaths", SR.GetString(SR.SearchPaths), "Invalid*Search?Path"));
+
+                // Ensure NotHere hasn't come back
+                path4 = window.FindItem("Solution 'LoadSearchPaths' (1 project)", "LoadSearchPaths", SR.GetString(SR.SearchPaths), "NotHere");
+                Assert.IsNull(path4, "NotHere came back");
             }
         }
 

@@ -17,6 +17,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -30,7 +31,6 @@ using Microsoft.PythonTools.Project;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Language.Intellisense;
-using Microsoft.VisualStudio.Language.StandardClassification;
 using Microsoft.VisualStudio.Repl;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
@@ -38,10 +38,6 @@ using Microsoft.VisualStudio.Text.Adornments;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Tagging;
 using Microsoft.VisualStudioTools;
-
-#if DEV11_OR_LATER
-using System.IO.Compression;
-#endif
 
 namespace Microsoft.PythonTools.Intellisense {
 #if INTERACTIVE_WINDOW
@@ -610,12 +606,7 @@ namespace Microsoft.PythonTools.Intellisense {
             if (zipFileName == null) {
                 cookie = (IAnalysisCookie)new FileCookie(filename);
             } else {
-#if DEV11_OR_LATER
                 cookie = new ZipFileCookie(zipFileName, pathInZipFile);
-#else
-                Debug.Fail("There should be no ProjectEntry objects loaded from zip archives in Dev10");
-                throw new NotSupportedException();
-#endif
             }
 
             if ((pyEntry = projectEntry as IPythonProjectEntry) != null) {
@@ -1125,7 +1116,6 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-#if DEV11_OR_LATER
         /// <summary>
         /// Analyzes a .zip file including all of the contained files and packages.
         /// </summary>
@@ -1267,7 +1257,6 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
             }
         }
-#endif
 
         internal void StopAnalyzingDirectory(string directory) {
             lock (_contentsLock) {
