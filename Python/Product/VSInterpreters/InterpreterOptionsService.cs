@@ -20,6 +20,7 @@ using System.ComponentModel.Composition.Primitives;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 using Microsoft.VisualStudio.Settings;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -58,9 +59,13 @@ namespace Microsoft.PythonTools.Interpreter {
         IPythonInterpreterFactory _defaultInterpreter;
         IPythonInterpreterFactory _noInterpretersValue;
 
+        private readonly Thread _serviceThread;
+        private readonly SynchronizationContext _serviceContext;
 
         [ImportingConstructor]
         public InterpreterOptionsService([Import(typeof(SVsServiceProvider), AllowDefault = true)] IServiceProvider provider) {
+            _serviceThread = Thread.CurrentThread;
+            _serviceContext = SynchronizationContext.Current;
             _settings = SettingsManagerCreator.GetSettingsManager(provider);
             if (provider != null) {
                 _activityLog = provider.GetService(typeof(SVsActivityLog)) as IVsActivityLog;
@@ -313,13 +318,29 @@ namespace Microsoft.PythonTools.Interpreter {
         public event EventHandler InterpretersChanged;
 
         private void DefaultInterpreterRegistry_Changed(object sender, RegistryChangedEventArgs e) {
+#if !DEV12_OR_LATER
+            // Pre-VS 2013 has trouble obtaining services from the original
+            // thread, so attempt to get back to the thread we started on.
+            if (_serviceContext != null && Thread.CurrentThread != _serviceThread) {
+                _serviceContext.Post(_ => DefaultInterpreterRegistry_Changed(sender, e), null);
+                return;
+            }
+#endif
             try {
                 LoadDefaultInterpreter();
             } catch (Exception ex) {
-                ActivityLog.LogError(
-                    "Python Tools for Visual Studio",
-                    string.Format("Exception updating default interpreter: {0}", ex)
-                );
+                try {
+                    ActivityLog.LogError(
+                        "Python Tools for Visual Studio",
+                        string.Format("Exception updating default interpreter: {0}", ex)
+                    );
+                } catch (InvalidOperationException) {
+                    // Can't get the activity log service either. This probably
+                    // means we're being used from outside of VS, but also
+                    // occurs during some unit tests. We want to debug this if
+                    // possible, but generally avoid crashing.
+                    Debug.Fail(ex.ToString());
+                }
             }
         }
 
