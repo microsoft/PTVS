@@ -12,7 +12,9 @@
  *
  * ***************************************************************************/
 
+using System.Diagnostics;
 using System.Windows.Controls;
+using System.Windows.Data;
 
 namespace Microsoft.PythonTools.Project.ImportWizard {
     /// <summary>
@@ -21,6 +23,11 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
     internal partial class FileSourcePage : Page {
         public FileSourcePage() {
             InitializeComponent();
+        }
+
+        private async void SourcePathTextBox_SourceUpdated(object sender, DataTransferEventArgs e) {
+            Debug.Assert(DataContext is ImportSettings);
+            await ((ImportSettings)DataContext).UpdateSourcePath();
         }
     }
 }

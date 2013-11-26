@@ -32,7 +32,10 @@
                 <Grid.RowDefinitions>
                     <RowDefinition Height="auto" />
                 </Grid.RowDefinitions>
-                <TextBox Grid.Column="0" Text="{Binding Path=SourcePath,Mode=TwoWay}" Name="SourcePathTextBox" />
+                <TextBox Grid.Column="0"
+                         Text="{Binding Path=SourcePath,Mode=TwoWay,NotifyOnSourceUpdated=True}"
+                         SourceUpdated="SourcePathTextBox_SourceUpdated"
+                         Name="SourcePathTextBox" />
                 <Button Grid.Column="1" Style="{StaticResource BrowseFolderButton}" CommandTarget="{Binding ElementName=SourcePathTextBox}" />
             </Grid>
         </wpf:LabelledControl>

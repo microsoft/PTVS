@@ -208,18 +208,19 @@ namespace Microsoft.PythonTools.Debugger {
             DebugConnectionListener.UnregisterProcess(_processGuid);
 
             if (disposing) {
-                if (_stream != null) {
-                    _stream.Dispose();
-                    _stream = null;
-                }
-                if (_socket != null) {
-                    try {
-                        _socket.Disconnect(false);
-                    } catch (ObjectDisposedException) {
-                    } catch (SocketException) {
+                lock (_socketLock) {
+                    if (_stream != null) {
+                        _stream.Dispose();
                     }
-                    _socket.Dispose();
-                    _socket = null;
+                    if (_socket != null) {
+                        try {
+                            _socket.Disconnect(false);
+                        } catch (ObjectDisposedException) {
+                        } catch (SocketException) {
+                        }
+                        _socket.Dispose();
+                        _socket = null;
+                    }
                 }
             }
 
@@ -268,7 +269,6 @@ namespace Microsoft.PythonTools.Debugger {
 
             if (_stream != null) {
                 _stream.Dispose();
-                _stream = null;
             }
             if (_socket != null) {
                 _socket.Dispose();
@@ -470,7 +470,7 @@ namespace Microsoft.PythonTools.Debugger {
                         case "OUTP": HandleDebuggerOutput(stream); break;
                         case "REQH": HandleRequestHandlers(stream); break;
                         case "DETC": _process_Exited(this, EventArgs.Empty); break; // detach, report process exit
-                        case "LAST": HandleLast(); break;
+                        case "LAST": HandleLast(stream); break;
                     }
                 }
             } catch (IOException ioExc) {
@@ -588,19 +588,19 @@ namespace Microsoft.PythonTools.Debugger {
             var statements = GetHandledExceptionRanges(filename);
 
             lock (_socketLock) {
-                _stream.Write(SetExceptionHandlerInfoCommandBytes);
-                _stream.WriteString(filename);
+                stream.Write(SetExceptionHandlerInfoCommandBytes);
+                stream.WriteString(filename);
 
-                _stream.WriteInt32(statements.Count);
+                stream.WriteInt32(statements.Count);
 
                 foreach (var t in statements) {
-                    _stream.WriteInt32(t.Item1);
-                    _stream.WriteInt32(t.Item2);
+                    stream.WriteInt32(t.Item1);
+                    stream.WriteInt32(t.Item2);
 
                     foreach (var expr in t.Item3) {
-                        _stream.WriteString(expr);
+                        stream.WriteString(expr);
                     }
-                    _stream.WriteString("-");
+                    stream.WriteString("-");
                 }
             }
         }
@@ -888,10 +888,10 @@ namespace Microsoft.PythonTools.Debugger {
             return new string(new char[] { (char)cmd_buffer[0], (char)cmd_buffer[1], (char)cmd_buffer[2], (char)cmd_buffer[3] });
         }
 
-        private void HandleLast() {
+        private void HandleLast(Stream stream) {
             DebugWriteCommand("LAST ack");
             lock (_socketLock) {
-                _stream.Write(LastAckCommandBytes);
+                stream.Write(LastAckCommandBytes);
             }
         }
 
