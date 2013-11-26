@@ -127,7 +127,7 @@ namespace Microsoft.PythonTools.Options {
             _showOutputWindowForVirtualEnvCreate = true;
             _showOutputWindowForPackageInstallation = true;
             _elevatePip = false;
-            _elevateEasyInstall = true;
+            _elevateEasyInstall = false;
         }
 
         private const string DefaultSurveyNewsFeedUrl = "http://go.microsoft.com/fwlink/?LinkId=303967";
@@ -150,7 +150,7 @@ namespace Microsoft.PythonTools.Options {
             _showOutputWindowForVirtualEnvCreate = LoadBool(ShowOutputWindowForVirtualEnvCreateSetting) ?? true;
             _showOutputWindowForPackageInstallation = LoadBool(ShowOutputWindowForPackageInstallationSetting) ?? true;
             _elevatePip = LoadBool(ElevatePipSetting) ?? false;
-            _elevateEasyInstall = LoadBool(ElevateEasyInstallSetting) ?? true;
+            _elevateEasyInstall = LoadBool(ElevateEasyInstallSetting) ?? false;
         }
 
         public override void SaveSettingsToStorage() {
