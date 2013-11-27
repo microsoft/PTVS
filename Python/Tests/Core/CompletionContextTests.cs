@@ -199,6 +199,41 @@ yield_expression = 42
         }
 
         [TestMethod, Priority(0)]
+        public void TrueFalseNoneCompletions() {
+            // http://pytools.codeplex.com/workitem/1905
+            var factory = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(PythonLanguageVersion.V27.ToVersion());
+            var completionList = GetCompletionSetCtrlSpace(0, "", factory: factory)
+                .Completions
+                .ToArray();
+
+            var trueItems = completionList.Where(t => t.DisplayText == "True").ToArray();
+            var falseItems = completionList.Where(t => t.DisplayText == "False").ToArray();
+            var noneItems = completionList.Where(t => t.DisplayText == "None").ToArray();
+            Assert.AreEqual(1, trueItems.Count());
+            Assert.AreEqual(1, falseItems.Count());
+            Assert.AreEqual(1, noneItems.Count());
+            Assert.AreEqual("Constant", trueItems.Single().IconAutomationText);
+            Assert.AreEqual("Constant", falseItems.Single().IconAutomationText);
+            Assert.AreEqual("Keyword", noneItems.Single().IconAutomationText);
+
+            factory = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(PythonLanguageVersion.V33.ToVersion());
+
+            completionList = GetCompletionSetCtrlSpace(0, "", factory: factory)
+                .Completions
+                .ToArray();
+
+            trueItems = completionList.Where(t => t.DisplayText == "True").ToArray();
+            falseItems = completionList.Where(t => t.DisplayText == "False").ToArray();
+            noneItems = completionList.Where(t => t.DisplayText == "None").ToArray();
+            Assert.AreEqual(1, trueItems.Count());
+            Assert.AreEqual(1, falseItems.Count());
+            Assert.AreEqual(1, noneItems.Count());
+            Assert.AreEqual("Keyword", trueItems.Single().IconAutomationText);
+            Assert.AreEqual("Keyword", falseItems.Single().IconAutomationText);
+            Assert.AreEqual("Keyword", noneItems.Single().IconAutomationText);
+        }
+
+        [TestMethod, Priority(0)]
         public void CtrlSpaceAfterKeyword() {
             // http://pytools.codeplex.com/workitem/560
             string code = @"

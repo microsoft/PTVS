@@ -420,7 +420,7 @@ namespace Microsoft.PythonTools.Analysis {
 
             var res = MemberDictToResultList(GetPrivatePrefix(scope), options, result);
             if (options.Keywords()) {
-                res = Enumerable.Concat(res, GetKeywordMembers(options, scope));
+                res = GetKeywordMembers(options, scope).Union(res);
             }
 
             return res;
@@ -474,9 +474,10 @@ namespace Microsoft.PythonTools.Analysis {
                 yield return new MemberResult("with", PythonMemberType.Keyword);
             }
 
+            yield return new MemberResult("None", PythonMemberType.Keyword);
+
             if (ProjectState.LanguageVersion.Is3x()) {
                 yield return new MemberResult("False", PythonMemberType.Keyword);
-                yield return new MemberResult("None", PythonMemberType.Keyword);
                 yield return new MemberResult("True", PythonMemberType.Keyword);
 
                 // statement context only

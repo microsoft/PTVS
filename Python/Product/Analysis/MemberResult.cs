@@ -182,5 +182,17 @@ namespace Microsoft.PythonTools.Analysis {
                 }
             }
         }
+
+        public override bool Equals(object obj) {
+            if (!(obj is MemberResult)) {
+                return false;
+            }
+
+            return Name == ((MemberResult)obj).Name;
+        }
+
+        public override int GetHashCode() {
+            return Name.GetHashCode();
+        }
     }
 }
