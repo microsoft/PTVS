@@ -4662,83 +4662,55 @@ If the files in the existing folder have the same names as files in the folder y
         /// </summary>
         public virtual int GenerateUniqueItemName(uint itemIdLoc, string ext, string suggestedRoot, out string itemName)
         {
-            string rootName = String.Empty;
-            string extToUse = String.Empty;
-            itemName = String.Empty;
+            string root = string.IsNullOrEmpty(suggestedRoot) ? "NewFolder" : suggestedRoot.Trim();
+            string extToUse = string.IsNullOrEmpty(ext) ? "" : ext.Trim();
+            itemName = string.Empty;
 
-            //force new items to have a number
-            int cb = 1;
-            bool found = false;
-            bool fFolderCase = false;
-            HierarchyNode parent = this.NodeFromItemId(itemIdLoc);
-
-            if (!String.IsNullOrEmpty(ext))
+            // Find the folder or project the item is being added to.
+            HierarchyNode parent = NodeFromItemId(itemIdLoc);
+            while (parent != null && !parent.CanAddFiles)
             {
-                extToUse = ext.Trim();
+                parent = parent.Parent;
             }
 
-            if (!String.IsNullOrEmpty(suggestedRoot))
+            if (parent == null)
             {
-                suggestedRoot = suggestedRoot.Trim();
+                return VSConstants.E_FAIL;
             }
 
-            if (suggestedRoot == null || suggestedRoot.Length == 0)
-            {
-                // foldercase, we assume... 
-                suggestedRoot = "NewFolder";
-                fFolderCase = true;
-            }
+            var parentProject = parent as ProjectNode;
+            var destDirectory = parentProject != null ? parentProject.ProjectHome : parent.Url;
 
-            while (!found)
+            for (int count = 1; count < int.MaxValue; ++count)
             {
-                rootName = suggestedRoot;
-                if (cb > 0)
-                    rootName += cb.ToString(CultureInfo.CurrentCulture);
+                var candidate = string.Format(
+                    CultureInfo.CurrentCulture,
+                    "{0}{1}{2}",
+                    root,
+                    count,
+                    extToUse
+                );
 
-                if (extToUse.Length > 0)
+                var candidatePath = CommonUtils.GetAbsoluteFilePath(destDirectory, candidate);
+
+                if (File.Exists(candidatePath) || Directory.Exists(candidatePath))
                 {
-                    rootName += extToUse;
+                    // Cannot create a file or a directory when one exists with
+                    // the same name.
+                    continue;
                 }
 
-                cb++;
-                found = true;
-                for (HierarchyNode n = parent.FirstChild; n != null; n = n.NextSibling)
+                if (parent.AllChildren.Any(n => candidate == n.GetEditLabel()))
                 {
-                    if (rootName == n.GetEditLabel())
-                    {
-                        found = false;
-                        break;
-                    }
-
-                    //if parent is a folder, we need the whole url
-                    string parentFolder = parent.Url;
-                    ProjectNode parentProj = parent as ProjectNode;
-                    if (parentProj != null)
-                        parentFolder = parentProj.ProjectHome;
-
-                    string checkFile = CommonUtils.GetAbsoluteFilePath(parentFolder, rootName);
-
-                    if (fFolderCase)
-                    {
-                        if (Directory.Exists(checkFile))
-                        {
-                            found = false;
-                            break;
-                        }
-                    }
-                    else
-                    {
-                        if (File.Exists(checkFile))
-                        {
-                            found = false;
-                            break;
-                        }
-                    }
+                    // Cannot create a node if one exists with the same name.
+                    continue;
                 }
+
+                itemName = candidate;
+                return VSConstants.S_OK;
             }
 
-            itemName = rootName;
-            return VSConstants.S_OK;
+            return VSConstants.E_FAIL;
         }
 
 
