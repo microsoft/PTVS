@@ -151,8 +151,9 @@ namespace Microsoft.PythonTools.Interpreters {
 
             // Create and mark the DB directory as hidden
             try {
-                var dbDir = Directory.CreateDirectory(BaseDatabasePath);
+                var dbDir = Directory.CreateDirectory(DatabasePath);
                 dbDir.Attributes |= FileAttributes.Hidden;
+            } catch (ArgumentException) {
             } catch (IOException) {
             } catch (UnauthorizedAccessException) {
             }
@@ -187,21 +188,11 @@ namespace Microsoft.PythonTools.Interpreters {
             }
         }
 
-        private string BaseDatabasePath {
+        public override string DatabasePath {
             get {
                 return Path.Combine(
                     Configuration.PrefixPath,
                     ".ptvs"
-                );
-            }
-        }
-
-        public override string DatabasePath {
-            get {
-                return Path.Combine(
-                    BaseDatabasePath,
-                    Id.ToString(),
-                    Configuration.Version.ToString()
                 );
             }
         }

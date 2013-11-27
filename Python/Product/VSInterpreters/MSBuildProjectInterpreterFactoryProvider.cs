@@ -108,7 +108,7 @@ namespace Microsoft.PythonTools.Interpreter {
             foreach (var item in _project.GetItems(InterpreterItem)) {
                 IPythonInterpreterFactory fact;
                 Guid id, baseId;
-                
+
                 // Errors in these options are fatal, so we set anyError and
                 // continue with the next entry.
                 var dir = item.EvaluatedInclude;
@@ -209,6 +209,7 @@ namespace Microsoft.PythonTools.Interpreter {
                         string.Format("{0} (unavailable)", description)
                     );
                 } else if (baseInterp != null) {
+                    MigrateOldDerivedInterpreterFactoryDatabase(id, baseInterp.Configuration.Version, dir);
                     fact = new DerivedInterpreterFactory(
                         baseInterp,
                         new InterpreterFactoryCreationOptions {
@@ -363,6 +364,7 @@ namespace Microsoft.PythonTools.Interpreter {
                     }
                 }
 
+                MigrateOldDerivedInterpreterFactoryDatabase(id, baseInterp.Configuration.Version, options.PrefixPath);
                 fact = new DerivedInterpreterFactory(
                     baseInterp,
                     new InterpreterFactoryCreationOptions {
@@ -398,6 +400,40 @@ namespace Microsoft.PythonTools.Interpreter {
             AddInterpreter(fact, true);
 
             return id;
+        }
+
+        private static void MigrateOldDerivedInterpreterFactoryDatabase(Guid id, Version version, string prefixPath) {
+            var newPath = Path.Combine(prefixPath, ".ptvs");
+            var oldPath = Path.Combine(newPath, id.ToString(), version.ToString());
+            if (Directory.Exists(oldPath)) {
+                bool success = false;
+                try {
+                    foreach (var file in Directory.GetFiles(oldPath, "*", SearchOption.AllDirectories)) {
+                        var newFile = CommonUtils.GetAbsoluteFilePath(newPath, CommonUtils.GetRelativeFilePath(oldPath, file));
+                        var newDirectory = Path.GetDirectoryName(newFile);
+                        Directory.CreateDirectory(newDirectory);
+                        File.Move(file, newFile);
+                    }
+                    success = true;
+                } catch (ArgumentException) {
+                } catch (IOException) {
+                } catch (UnauthorizedAccessException) {
+                }
+
+                try {
+                    if (success) {
+                        // Succeeded, so just delete the old database folders
+                        Directory.Delete(Path.Combine(newPath, id.ToString()), true);
+                    } else {
+                        // Failed, so delete everything. The DB will regenerate.
+                        Directory.Delete(newPath, true);
+                    }
+                } catch (ArgumentException) {
+                } catch (IOException) {
+                } catch (UnauthorizedAccessException) {
+                }
+            }
+
         }
 
         /// <summary>
@@ -519,8 +555,8 @@ namespace Microsoft.PythonTools.Interpreter {
             lock (_factoriesLock) {
                 raiseEvent = _factories.TryGetValue(factory, out factInfo) && _factories.Remove(factory);
             }
-            if (factInfo != null && 
-                factInfo.Owned && 
+            if (factInfo != null &&
+                factInfo.Owned &&
                 factory is IDisposable) {
                 ((IDisposable)factory).Dispose();
             }
