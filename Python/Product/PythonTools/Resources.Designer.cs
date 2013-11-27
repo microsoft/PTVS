@@ -245,6 +245,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The specified project file already exists. Overwrite?.
+        /// </summary>
+        internal static string ImportWizardProjectExists {
+            get {
+                return ResourceManager.GetString("ImportWizardProjectExists", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to .
         /// </summary>
         internal static string InitializingFromProject {

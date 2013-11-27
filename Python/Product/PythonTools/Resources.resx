@@ -324,4 +324,7 @@ Try moving your source code to a location where you can read and write files.</v
   <data name="StatusImportWizardStarting" xml:space="preserve">
     <value>Importing project...</value>
   </data>
+  <data name="ImportWizardProjectExists" xml:space="preserve">
+    <value>The specified project file already exists. Overwrite?</value>
+  </data>
 </root>

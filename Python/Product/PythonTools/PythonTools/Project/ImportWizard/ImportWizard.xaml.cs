@@ -15,6 +15,7 @@
 using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -97,6 +98,15 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
         }
 
         private void Finish_Executed(object sender, ExecutedRoutedEventArgs e) {
+            if (ImportSettings.ProjectFileExists) {
+                if (MessageBoxResult.Cancel == MessageBox.Show(
+                    SR.GetString(SR.ImportWizardProjectExists),
+                    SR.GetString(SR.PythonToolsForVisualStudio),
+                    MessageBoxButton.OKCancel
+                )) {
+                    return;
+                }
+            }
             DialogResult = true;
             Close();
         }
