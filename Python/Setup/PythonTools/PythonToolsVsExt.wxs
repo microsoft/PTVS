@@ -259,9 +259,6 @@
             <Component Id="cmp9FDAC44BCF68934A8572124DA7E1ED74" Directory="dir1B4805CEC92CD8586B8C95875EA0F7DF" Guid="{92D84818-8351-4FDA-BFE7-ACB88CEADDD9}">
                 <File Id="fil239ADA4722C2140FE8F0DFBEF96AE8C1" KeyPath="yes" Source="$(var.TargetDir)\CompletionDB\time.idb" />
             </Component>
-            <Component Id="cmpB9D1F2120D69CECF7349730062E4F6B6" Directory="dir1B4805CEC92CD8586B8C95875EA0F7DF" Guid="{70F12FC3-10A4-424A-9896-7815CBF2FAAA}">
-                <File Id="fil74DA7FD94CCB0414E6A8A847B4E2ADB3" KeyPath="yes" Source="$(var.TargetDir)\CompletionDB\wpf.idb" />
-            </Component>
             <Component Id="cmpDF753CFAF39C1B9DC9BD5B705935A698" Directory="dir1B4805CEC92CD8586B8C95875EA0F7DF" Guid="{7415D470-4FFB-42AD-97CA-DFD6443EA615}">
                 <File Id="filAC79839970CE792068FE82A078B11AE3" KeyPath="yes" Source="$(var.TargetDir)\CompletionDB\xxsubtype.idb" />
             </Component>

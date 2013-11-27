@@ -405,13 +405,29 @@ constructed = str().Contains
             string[] testContains = new[] { "const", "constructed" };
             foreach (var test in testContains) {
                 var result = entry.GetSignaturesByIndex(test, 1).ToArray();
-                Assert.AreEqual(result.Length, 1);
-                Assert.AreEqual(result[0].Parameters.Length, 1);
-                Assert.AreEqual(result[0].Parameters[0].Name, "value");
-                Assert.AreEqual(result[0].Parameters[0].IsOptional, false);
+                Assert.AreEqual(1, result.Length);
+                Assert.AreEqual(1, result[0].Parameters.Length);
+                Assert.AreEqual("value", result[0].Parameters[0].Name);
+                Assert.IsFalse(result[0].Parameters[0].IsOptional);
             }
 
         }
+
+        [TestMethod, Priority(0)]
+        public void BuiltinMethodDocumentationClr() {
+            var entry = ProcessText(@"
+import wpf
+from System.Windows import Window
+w = Window()
+w.Activate
+");
+
+            var result = entry.GetValuesByIndex("w.Activate", 1).ToArray();
+            Assert.AreEqual(1, result.Length);
+            Console.WriteLine("Docstring was: <{0}>", result[0].Documentation);
+            Assert.IsFalse(string.IsNullOrWhiteSpace(result[0].Documentation));
+        }
+
         /*
         [TestMethod, Priority(0)]
         public void OverrideParams() {
@@ -427,7 +443,7 @@ class MyArrayList(System.Collections.ArrayList):
             AssertUtil.ContainsExactly(x, GetMembers(ClrModule.GetPythonType(typeof(System.Collections.ICollection)), true));
         }*/
 
-#if IPY
+
         /// <summary>
         /// Verify importing wpf will add a reference to the WPF assemblies
         /// </summary>
@@ -438,9 +454,9 @@ import wpf
 from System.Windows.Media import Colors
 ");
 
-            AssertUtil.Contains(entry.GetMembersFromName("Colors", 1), "Blue");
+            AssertUtil.Contains(entry.GetMemberNamesByIndex("Colors", 1), "Blue");
+            AssertUtil.Contains(entry.GetMemberNamesByIndex("wpf", 1), "LoadComponent");
         }
-#endif
 
         [TestMethod, Priority(0)]
         public void XamlEmptyXName() {

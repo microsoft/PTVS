@@ -106,6 +106,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
                         doc.Append(Utils.StripDocumentation(overload.Documentation));
                     }
                     _doc = doc.ToString();
+                    if (string.IsNullOrWhiteSpace(_doc)) {
+                        _doc = Utils.StripDocumentation(Function.Documentation);
+                    }
                 }
                 return _doc;
             }
