@@ -48,7 +48,8 @@ namespace Microsoft.PythonTools.Project {
         public static AddVirtualEnvironmentView ShowDialog(
             PythonProjectNode project,
             IInterpreterOptionsService service,
-            bool browseForExisting = false) {
+            bool browseForExisting = false
+        ) {
             var wnd = new AddVirtualEnvironment(project, service);
 
             if (browseForExisting) {
@@ -60,7 +61,9 @@ namespace Microsoft.PythonTools.Project {
                 if (wnd._view.WillAddVirtualEnv) {
                     return wnd._view;
                 }
-                wnd.InvalidBrowsePathLabel.Visibility = Visibility.Visible;
+                
+                wnd._view.ShowBrowsePathError = true;
+                wnd._view.BrowseOrigPrefix = VirtualEnv.GetOrigPrefixPath(path);
             }
 
             wnd.VirtualEnvPathTextBox.ScrollToEnd();

@@ -89,6 +89,31 @@ namespace Microsoft.PythonTools.Project {
         }
 
 
+        public bool ShowBrowsePathError {
+            get { return (bool)GetValue(ShowBrowsePathErrorProperty); }
+            set { SetValue(ShowBrowsePathErrorProperty, value); }
+        }
+
+        public string BrowseOrigPrefix {
+            get { return (string)GetValue(BrowseOrigPrefixProperty); }
+            set { SetValue(BrowseOrigPrefixProperty, value); }
+        }
+
+        public static readonly DependencyProperty ShowBrowsePathErrorProperty = DependencyProperty.Register(
+            "ShowBrowsePathError",
+            typeof(bool),
+            typeof(AddVirtualEnvironmentView),
+            new PropertyMetadata(false)
+        );
+
+        public static readonly DependencyProperty BrowseOrigPrefixProperty = DependencyProperty.Register(
+            "BrowseOrigPrefix",
+            typeof(string),
+            typeof(AddVirtualEnvironmentView),
+            new PropertyMetadata()
+        );
+
+
         public string VirtualEnvBasePath {
             get { return (string)GetValue(VirtualEnvBasePathProperty); }
             private set { SetValue(VirtualEnvBasePathPropertyKey, value); }

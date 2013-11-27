@@ -59,6 +59,29 @@
                     <DataTemplate x:Key="NameTemplate" DataType="{x:Type ptvs:InterpreterView}">
                         <Label Name="InterpreterName" Content="{Binding Name}" />
                     </DataTemplate>
+                    
+                    <DataTemplate x:Key="ErrorMessage">
+                        <Grid TextElement.FontWeight="Bold"
+                              TextElement.FontSize="14">
+                            <Label Visibility="Collapsed"
+                                   Name="BrowsePathError">
+                                We could not identify a virtual environment in the selected path.
+                            </Label>
+
+                            <Label Name="BrowsePathOrigPrefixError">
+                                <TextBlock TextWrapping="Wrap">
+                                    <Run>We could not find a base interpreter at </Run>
+                                    <Run Text="{Binding BrowseOrigPrefix}" />
+                                </TextBlock>
+                            </Label>
+                        </Grid>
+                        <DataTemplate.Triggers>
+                            <DataTrigger Binding="{Binding BrowseOrigPrefix,Mode=OneTime}" Value="{x:Null}">
+                                <Setter TargetName="BrowsePathError" Property="UIElement.Visibility" Value="Visible" />
+                                <Setter TargetName="BrowsePathOrigPrefixError" Property="UIElement.Visibility" Value="Collapsed" />
+                            </DataTrigger>
+                        </DataTemplate.Triggers>
+                    </DataTemplate>
                 </ResourceDictionary>
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
@@ -73,14 +96,10 @@
             <RowDefinition Height="auto" />
         </Grid.RowDefinitions>
 
-        <Label Grid.Row="0"
-               FontWeight="Bold"
-               FontSize="14"
-               Visibility="Collapsed"
-               Name="InvalidBrowsePathLabel">
-            The selected path did not contain a virtual environment.
-        </Label>
-
+        <ContentControl Content="{Binding}"
+                        ContentTemplate="{StaticResource ErrorMessage}"
+                        Visibility="{Binding ShowBrowsePathError,Converter={StaticResource BoolToVisibleOrCollapsed}}" />
+        
         <wpf:LabelledControl Grid.Row="1"
                              Title="Location of the virtual environment">
             <wpf:LabelledControl.HelpText>

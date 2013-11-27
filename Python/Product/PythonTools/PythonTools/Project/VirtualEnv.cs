@@ -149,8 +149,23 @@ namespace Microsoft.PythonTools.Project {
             string prefixPath,
             string libPath,
             IInterpreterOptionsService service) {
+            string basePath = GetOrigPrefixPath(prefixPath, libPath);
+
+            if (Directory.Exists(basePath)) {
+                return service.Interpreters.FirstOrDefault(interp =>
+                    CommonUtils.IsSamePath(interp.Configuration.PrefixPath, basePath)
+                );
+            }
+            return null;
+        }
+
+        internal static string GetOrigPrefixPath(string prefixPath, string libPath = null) {
             string basePath = null;
-            
+
+            if (!Directory.Exists(prefixPath)) {
+                return null;
+            }
+
             var cfgFile = Path.Combine(prefixPath, "pyvenv.cfg");
             if (File.Exists(cfgFile)) {
                 try {
@@ -168,6 +183,14 @@ namespace Microsoft.PythonTools.Project {
                 }
             }
 
+            if (string.IsNullOrEmpty(libPath)) {
+                libPath = FindLibPath(prefixPath);
+            }
+
+            if (!Directory.Exists(libPath)) {
+                return null;
+            }
+
             var prefixFile = Path.Combine(libPath, "orig-prefix.txt");
             if (basePath == null && File.Exists(prefixFile)) {
                 try {
@@ -178,13 +201,7 @@ namespace Microsoft.PythonTools.Project {
                 } catch (System.Security.SecurityException) {
                 }
             }
-
-            if (Directory.Exists(basePath)) {
-                return service.Interpreters.FirstOrDefault(interp =>
-                    CommonUtils.IsSamePath(interp.Configuration.PrefixPath, basePath)
-                );
-            }
-            return null;
+            return basePath;
         }
 
         private static string FindFile(string root, string file, int depthLimit = 2) {
@@ -223,14 +240,7 @@ namespace Microsoft.PythonTools.Project {
             return null;
         }
 
-
-        public static InterpreterFactoryCreationOptions FindInterpreterOptions(
-            string prefixPath,
-            IInterpreterOptionsService service,
-            IPythonInterpreterFactory baseInterpreter = null) {
-
-            var result = new InterpreterFactoryCreationOptions();
-
+        internal static string FindLibPath(string prefixPath) {
             // Find site.py to find the library
             var libPath = FindFile(prefixPath, "site.py");
             if (!File.Exists(libPath)) {
@@ -243,7 +253,17 @@ namespace Microsoft.PythonTools.Project {
             } else {
                 libPath = Path.GetDirectoryName(libPath);
             }
+            return libPath;
+        }
 
+        public static InterpreterFactoryCreationOptions FindInterpreterOptions(
+            string prefixPath,
+            IInterpreterOptionsService service,
+            IPythonInterpreterFactory baseInterpreter = null) {
+
+            var result = new InterpreterFactoryCreationOptions();
+
+            var libPath = FindLibPath(prefixPath);
 
             if (baseInterpreter == null) {
                 baseInterpreter = FindBaseInterpreterFromVirtualEnv(prefixPath, libPath, service);
