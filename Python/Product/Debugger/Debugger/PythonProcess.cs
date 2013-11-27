@@ -1113,6 +1113,7 @@ namespace Microsoft.PythonTools.Debugger {
                 try {
                     _stream.Write(DisconnectReplCommandBytes);
                 } catch (IOException) {
+                } catch (ObjectDisposedException) {
                     // If the process has terminated, we expect an exception
                 }
             }
