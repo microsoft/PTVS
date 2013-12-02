@@ -327,4 +327,17 @@ Try moving your source code to a location where you can read and write files.</v
   <data name="ImportWizardProjectExists" xml:space="preserve">
     <value>The specified project file already exists. Overwrite?</value>
   </data>
+  <data name="ReplEvaluatorInterpreterNotFound" xml:space="preserve">
+    <value>The interactive window could not be started because the associated Python environment could not be found.
+If this version of Python has recently been uninstalled, you can close this window.
+</value>
+  </data>
+  <data name="ReplEvaluatorInterpreterNotConfigured" xml:space="preserve">
+    <value>{0} cannot be started because the path to the interpreter has not been configured.
+Please update the environment in Tools-&gt;Options-&gt;Python Tools-&gt;Environment Options
+</value>
+  </data>
+  <data name="ReplInitializationMessage" xml:space="preserve">
+    <value>Python interactive window. Type $help for a list of commands.</value>
+  </data>
 </root>

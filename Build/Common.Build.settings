@@ -55,14 +55,8 @@
 
     <ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
 
-    <DevEnvDir Condition="'$(VSTarget)'=='10.0'">$(VS100COMNTOOLS)..\IDE\</DevEnvDir>
-    <DevEnvDir Condition="'$(VSTarget)'=='11.0'">$(VS110COMNTOOLS)..\IDE\</DevEnvDir>
-    <DevEnvDir Condition="'$(VSTarget)'=='12.0'">$(VS120COMNTOOLS)..\IDE\</DevEnvDir>
-
-    <VSSDKDir Condition="'$(VSTarget)'=='10.0'">$(VSSDK100Install)</VSSDKDir>
-    <VSSDKDir Condition="'$(VSTarget)'=='11.0'">$(VSSDK110Install)</VSSDKDir>
-    <VSSDKDir Condition="'$(VSTarget)'=='12.0'">$(VSSDK120Install)</VSSDKDir>
-
+    <DevEnvDir>$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\Software\Microsoft\VisualStudio\$(VSTarget)', 'InstallDir', null, RegistryView.Registry32))\</DevEnvDir>
+    <VSSDKDir>$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\Software\Microsoft\VisualStudio\VSIP\$(VSTarget)', 'InstallDir', null, RegistryView.Registry32))\</VSSDKDir>
   </PropertyGroup>
 
   <Import Project="$(TargetsPath)\Common.Build.CSharp.settings" Condition="'$(MSBuildProjectExtension)' == '.csproj' or '$(MSBuildProjectExtension)' == '.tmp_proj'" />

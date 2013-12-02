@@ -95,6 +95,10 @@ namespace Microsoft.PythonTools.Project {
         public const string StatusImportWizardStarting = "StatusImportWizardStarting";
         public const string ImportWizardProjectExists = "ImportWizardProjectExists";
 
+        public const string ReplInitializationMessage = "ReplInitializationMessage";
+        public const string ReplEvaluatorInterpreterNotFound = "ReplEvaluatorInterpreterNotFound";
+        public const string ReplEvaluatorInterpreterNotConfigured = "ReplEvaluatorInterpreterNotConfigured";
+
         internal static new string GetString(string value) {
             string result = Microsoft.PythonTools.Resources.ResourceManager.GetString(value, CultureInfo.CurrentUICulture) ?? CommonSR.GetString(value);
             if (result == null) {

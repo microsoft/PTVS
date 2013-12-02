@@ -52,7 +52,6 @@ namespace Microsoft.PythonTools.Profiling {
             availableInterpreters.Add(_customInterpreter);
             _availableInterpreters = new ReadOnlyCollection<PythonInterpreterView>(availableInterpreters);
 
-            _interpreter = null;
             _interpreterPath = null;
             _canSpecifyInterpreterPath = false;
             _scriptPath = null;
@@ -64,7 +63,9 @@ namespace Microsoft.PythonTools.Profiling {
             PropertyChanged += new PropertyChangedEventHandler(StandaloneTargetView_PropertyChanged);
 
             if (IsAnyAvailableInterpreters) {
-                Interpreter = AvailableInterpreters[0];
+                var defaultId = interpreterService.DefaultInterpreter.Id;
+                var defaultVersion = interpreterService.DefaultInterpreter.Configuration.Version;
+                Interpreter = AvailableInterpreters.FirstOrDefault(v => v.Id == defaultId && v.Version == defaultVersion);
             }
         }
 

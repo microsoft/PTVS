@@ -54,10 +54,19 @@ namespace Microsoft.PythonTools.Project {
             } while (curNode != null && curNode.FindImmediateChildByName("__init__.py") != null);
 
             for (int i = nodes.Count - 1; i >= 0; i--) {
-                fullName.Append(nodes[i].Caption);
+                fullName.Append(GetNodeNameForPackage(nodes[i]));
                 if (i != 0) {
                     fullName.Append('.');
                 }
+            }
+        }
+
+        private static string GetNodeNameForPackage(HierarchyNode node) {
+            var project = node as ProjectNode;
+            if (project != null) {
+                return Path.GetFileName(CommonUtils.TrimEndSeparator(project.ProjectHome));
+            } else {
+                return node.Caption;
             }
         }
 

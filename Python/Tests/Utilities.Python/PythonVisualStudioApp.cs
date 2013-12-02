@@ -17,6 +17,8 @@ using System.Threading;
 using System.Windows.Automation;
 using System.Windows.Input;
 using EnvDTE;
+using Microsoft.PythonTools.Interpreter;
+using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities.Python;
 
@@ -68,9 +70,9 @@ namespace TestUtilities.UI.Python {
         /// <summary>
         /// Opens and activates the solution explorer window.
         /// </summary>
-        public void LaunchPythonProfiling() {
+        public PythonPerfTarget LaunchPythonProfiling() {
             _deletePerformanceSessions = true;
-            ThreadPool.QueueUserWorkItem(x => Dte.ExecuteCommand("Analyze.LaunchPythonProfiling"));
+            return new PythonPerfTarget(OpenDialogWithDteExecuteCommand("Analyze.LaunchPythonProfiling"));
         }
 
         /// <summary>
@@ -246,6 +248,13 @@ namespace TestUtilities.UI.Python {
                 if (dialog != null) {
                     DismissAllDialogs();
                 }
+            }
+        }
+
+        public IInterpreterOptionsService InterpreterService {
+            get {
+                var model = GetService<IComponentModel>(typeof(SComponentModel));
+                return model.GetService<IInterpreterOptionsService>();
             }
         }
     }

@@ -89,6 +89,10 @@
       <Project>{fa7be5f5-e04f-4613-b7ac-70ce10d1bb68}</Project>
       <Name>PythonTools</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\Product\VSInterpreters\VSInterpreters.csproj">
+      <Project>{815db0cd-c0dd-4997-b43c-abee4dbeffe7}</Project>
+      <Name>VSInterpreters</Name>
+    </ProjectReference>
     <ProjectReference Include="..\DebuggerUITests\DebuggerUITests.csproj">
       <Project>{82BB3890-C943-421E-8643-7244421E8ADE}</Project>
       <Name>DebuggerUITests</Name>

@@ -28,7 +28,6 @@ using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools.Project;
-using System.Windows.Interop;
 
 namespace Microsoft.PythonTools.Profiling {
     /// <summary>
@@ -130,6 +129,28 @@ namespace Microsoft.PythonTools.Profiling {
             }
 
             return base.GetAutomationObject(name);
+        }
+
+        internal Guid GetStartupProjectGuid() {
+            var buildMgr = (IVsSolutionBuildManager)GetService(typeof(IVsSolutionBuildManager));
+            IVsHierarchy hierarchy;
+            if (buildMgr != null && ErrorHandler.Succeeded(buildMgr.get_StartupProject(out hierarchy)) && hierarchy != null) {
+                Guid guid;
+                if (ErrorHandler.Succeeded(hierarchy.GetGuidProperty(
+                    (uint)VSConstants.VSITEMID.Root,
+                    (int)__VSHPROPID.VSHPROPID_ProjectIDGuid,
+                    out guid
+                ))) {
+                    return guid;
+                }
+            }
+            return Guid.Empty;
+        }
+
+        internal IVsSolution Solution {
+            get {
+                return GetService(typeof(SVsSolution)) as IVsSolution;
+            }
         }
 
         /// <summary>

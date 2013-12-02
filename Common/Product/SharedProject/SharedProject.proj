@@ -541,6 +541,7 @@
       <Visible>true</Visible>
     </Compile>
     <Compile Include="$(_ProjectSystemFilesLocation)\WebPiComponentPickerControl.Designer.cs">
+      <DependentUpon>WebPiComponentPickerControl.cs</DependentUpon>
       <Link>SharedProject\WebPiComponentPickerControl.Designer.cs</Link>
       <Visible>true</Visible>
     </Compile>
@@ -581,6 +582,7 @@
       <Visible>true</Visible>
     </EmbeddedResource>
     <EmbeddedResource Include="$(_ProjectSystemFilesLocation)\WebPiComponentPickerControl.resx">
+      <DependentUpon>WebPiComponentPickerControl.cs</DependentUpon>
       <Link>SharedProject\WebPiComponentPickerControl.resx</Link>
       <SubType>Designer</SubType>
       <Visible>true</Visible>

@@ -43,6 +43,7 @@ using Microsoft.VisualStudio.Text.Editor.OptionsExtensionMethods;
 using Microsoft.VisualStudio.Text.Projection;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
+using SR = Microsoft.PythonTools.Project.SR;
 
 namespace Microsoft.PythonTools.Repl {
 #if INTERACTIVE_WINDOW
@@ -117,6 +118,10 @@ namespace Microsoft.PythonTools.Repl {
 
         #region IReplEvaluator Members
 
+        protected virtual void WriteInitializationMessage() {
+            Window.WriteLine(SR.GetString(SR.ReplInitializationMessage));
+        }
+
         public Task<ExecutionResult> Initialize(IReplWindow window) {
             _window = window;
             _window.SetOptionValue(ReplOptions.CommandPrefix, "$");
@@ -127,7 +132,7 @@ namespace Microsoft.PythonTools.Repl {
             window.SetOptionValue(ReplOptions.SupportAnsiColors, true);
             window.SetOptionValue(ReplOptions.FormattedPrompts, true);
 
-            window.WriteLine("Python interactive window.  Type $help for a list of commands.");
+            WriteInitializationMessage();
 
             _window.TextView.BufferGraph.GraphBuffersChanged += BufferGraphGraphBuffersChanged;
             return ExecutionResult.Succeeded;

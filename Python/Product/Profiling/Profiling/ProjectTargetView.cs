@@ -13,6 +13,8 @@
  * ***************************************************************************/
 
 using System;
+using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.Shell.Interop;
 
 namespace Microsoft.PythonTools.Profiling {
     /// <summary>
@@ -25,9 +27,19 @@ namespace Microsoft.PythonTools.Profiling {
         /// <summary>
         /// Create a ProjectTargetView with values from an EnvDTE.Project.
         /// </summary>
-        public ProjectTargetView(EnvDTE.Project project) {
-            _name = project.Name;
-            _guid = new Guid((string)project.Properties.Item("Guid").Value);
+        public ProjectTargetView(IVsHierarchy project) {
+            object value;
+            ErrorHandler.ThrowOnFailure(project.GetProperty(
+                (uint)VSConstants.VSITEMID.Root,
+                (int)__VSHPROPID.VSHPROPID_Name,
+                out value
+            ));
+            _name = value as string ?? "(Unknown name)";
+            ErrorHandler.ThrowOnFailure(project.GetGuidProperty(
+                (uint)VSConstants.VSITEMID.Root,
+                (int)__VSHPROPID.VSHPROPID_ProjectIDGuid,
+                out _guid
+            ));
         }
 
         /// <summary>

@@ -24,6 +24,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly ISmartTagBroker _broker;
         private readonly ITextView _textView;
         private ISmartTagSession _curSession;
+        private string _curSessionText;
         internal bool _sessionIsInvalid;
         internal SmartTagSource.AbortedAugmentInfo _abortedAugment;
 
@@ -86,7 +87,8 @@ namespace Microsoft.PythonTools.Intellisense {
                 _curSession != null &&
                 !_curSession.IsDismissed &&
                 _curSession.ApplicableToSpan != null &&
-                _curSession.ApplicableToSpan.GetSpan(_textView.TextBuffer.CurrentSnapshot).Contains(caretPoint.Value.Position)) {
+                _curSession.ApplicableToSpan.GetText(snapshot) == _curSessionText &&
+                _curSession.ApplicableToSpan.GetSpan(snapshot).Contains(caretPoint.Value.Position)) {
                     return;
             }
 
@@ -96,6 +98,7 @@ namespace Microsoft.PythonTools.Intellisense {
             // We need to use the view's data buffer as the source location
             if (_curSession != null && !_curSession.IsDismissed) {
                 _curSession.Dismiss();
+                _curSessionText = null;
             }
 
 
@@ -109,6 +112,9 @@ namespace Microsoft.PythonTools.Intellisense {
             newSession.Properties.AddProperty(typeof(SmartTagSource.AbortedAugmentInfo), this);
 
             newSession.Start();
+            if (newSession.ApplicableToSpan != null) {
+                _curSessionText = newSession.ApplicableToSpan.GetText(snapshot);
+            }
         }
     }
 }

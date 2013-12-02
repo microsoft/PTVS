@@ -40,6 +40,53 @@ namespace ProfilingUITests {
             PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnAbnormalExit = false;
         }
 
+        [TestMethod, Priority(0)]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void DefaultInterpreterSelected() {
+            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var service = app.InterpreterService;
+                var originalDefault = service.DefaultInterpreter;
+
+                try {
+                    foreach (var interpreter in service.Interpreters) {
+                        service.DefaultInterpreter = interpreter;
+                        var dialog = app.LaunchPythonProfiling();
+                        try {
+                            Assert.AreEqual(interpreter.Description, dialog.SelectedInterpreter);
+                        } finally {
+                            dialog.Cancel();
+                        }
+                        app.WaitForDialogDismissed();
+                    }
+                } finally {
+                    service.DefaultInterpreter = originalDefault;
+                }
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void StartupProjectSelected() {
+            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
+                app.OpenProject(TestData.GetPath(@"TestData\MultiProjectAnalysis\MultiProjectAnalysis.sln"));
+
+                foreach (var project in app.Dte.Solution.Projects.Cast<EnvDTE.Project>()) {
+                    var tree = app.OpenSolutionExplorer();
+                    var item = tree.FindByName(project.Name);
+                    item.Select();
+                    app.Dte.ExecuteCommand("Project.SetasStartupProject");
+
+                    var dialog = app.LaunchPythonProfiling();
+                    try {
+                        Assert.AreEqual(project.Name, dialog.SelectedProject);
+                    } finally {
+                        dialog.Cancel();
+                    }
+                    app.WaitForDialogDismissed();
+                }
+            }
+        }
+
         private static IPythonProfileSession LaunchSession(
             VisualStudioApp app,
             Func<IPythonProfileSession> creator,

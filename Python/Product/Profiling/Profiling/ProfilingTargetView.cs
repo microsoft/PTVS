@@ -12,11 +12,12 @@
  *
  * ***************************************************************************/
 
-using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Linq;
+using Microsoft.VisualStudio.Shell.Interop;
 
 namespace Microsoft.PythonTools.Profiling {
     /// <summary>
@@ -26,7 +27,7 @@ namespace Microsoft.PythonTools.Profiling {
         private ReadOnlyCollection<ProjectTargetView> _availableProjects;
         
         private ProjectTargetView _project;
-        private bool _isProjectSelected;
+        private bool _isProjectSelected, _isStandaloneSelected;
         private StandaloneTargetView _standalone;
         private readonly string _startText;
 
@@ -36,14 +37,11 @@ namespace Microsoft.PythonTools.Profiling {
         /// Create a ProfilingTargetView with default values.
         /// </summary>
         public ProfilingTargetView() {
-            var dteService = (EnvDTE.DTE)(PythonProfilingPackage.GetGlobalService(typeof(EnvDTE.DTE)));
-
+            var solution = PythonProfilingPackage.Instance.Solution;
+            
             var availableProjects = new List<ProjectTargetView>();
-            foreach (EnvDTE.Project project in dteService.Solution.Projects) {
-                var kind = project.Kind;
-                if (String.Equals(kind, PythonProfilingPackage.PythonProjectGuid, StringComparison.OrdinalIgnoreCase)) {
-                    availableProjects.Add(new ProjectTargetView(project));
-                }
+            foreach (var project in solution.EnumerateLoadedProjects()) {
+                availableProjects.Add(new ProjectTargetView((IVsHierarchy)project));
             }
             _availableProjects = new ReadOnlyCollection<ProjectTargetView>(availableProjects);
 
@@ -56,9 +54,14 @@ namespace Microsoft.PythonTools.Profiling {
             PropertyChanged += new PropertyChangedEventHandler(ProfilingTargetView_PropertyChanged);
             _standalone.PropertyChanged += new PropertyChangedEventHandler(Standalone_PropertyChanged);
 
-            if (IsAnyAvailableProjects) {
-                Project = AvailableProjects[0];
+            var startupProject = PythonProfilingPackage.Instance.GetStartupProjectGuid();
+            Project = AvailableProjects.FirstOrDefault(p => p.Guid == startupProject) ??
+                AvailableProjects.FirstOrDefault();
+            if (Project != null) {
+                IsStandaloneSelected = false;
+                IsProjectSelected = true;
             } else {
+                IsProjectSelected = false;
                 IsStandaloneSelected = true;
             }
             _startText = "_Start";
@@ -72,9 +75,11 @@ namespace Microsoft.PythonTools.Profiling {
             : this() {
             if (template.ProjectTarget != null) {
                 Project = new ProjectTargetView(template.ProjectTarget);
+                IsStandaloneSelected = false;
                 IsProjectSelected = true;
             } else if (template.StandaloneTarget != null) {
                 Standalone = new StandaloneTargetView(template.StandaloneTarget);
+                IsProjectSelected = false;
                 IsStandaloneSelected = true;
             }
             _startText = "_OK";
@@ -136,7 +141,6 @@ namespace Microsoft.PythonTools.Profiling {
                 if (_isProjectSelected != value) {
                     _isProjectSelected = value;
                     OnPropertyChanged("IsProjectSelected");
-                    OnPropertyChanged("IsStandaloneSelected");
                 }
             }
         }
@@ -168,10 +172,13 @@ namespace Microsoft.PythonTools.Profiling {
         /// </summary>
         public bool IsStandaloneSelected {
             get {
-                return !IsProjectSelected;
+                return _isStandaloneSelected;
             }
             set {
-                IsProjectSelected = !value;
+                if (_isStandaloneSelected != value) {
+                    _isStandaloneSelected = value;
+                    OnPropertyChanged("IsStandaloneSelected");
+                }
             }
         }
 
@@ -183,8 +190,10 @@ namespace Microsoft.PythonTools.Profiling {
             Debug.Assert(sender == this);
 
             if (e.PropertyName != "IsValid") {
-                IsValid = (IsProjectSelected && Project != null) ||
-                    (IsStandaloneSelected && Standalone != null && Standalone.IsValid);
+                IsValid = (IsProjectSelected != IsStandaloneSelected) &&
+                    (IsProjectSelected ?
+                        Project != null :
+                        (Standalone != null && Standalone.IsValid));
             }
         }
 

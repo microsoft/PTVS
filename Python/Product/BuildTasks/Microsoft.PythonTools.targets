@@ -102,7 +102,9 @@
     <Message Importance="low" Text="StartupModule: $(StartupModule)" />
   </Target>
 
-  
-
   <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" />
+
+  <Target Name="PrepareForBuild">
+    <MakeDir Directories="$(OutDir);@(CreateDirectory)" ContinueOnError="True"/>
+  </Target>
 </Project>

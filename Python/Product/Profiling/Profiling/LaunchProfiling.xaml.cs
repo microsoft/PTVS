@@ -24,10 +24,8 @@ namespace Microsoft.PythonTools.Profiling {
 
         public LaunchProfiling(ProfilingTargetView viewModel) {
             _viewModel = viewModel;
-
-            InitializeComponent();
-
             DataContext = _viewModel;
+            InitializeComponent();
         }
 
         private void FindInterpreterClick(object sender, RoutedEventArgs e) {

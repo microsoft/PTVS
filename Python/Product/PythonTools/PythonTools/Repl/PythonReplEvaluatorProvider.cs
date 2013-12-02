@@ -60,10 +60,12 @@ namespace Microsoft.PythonTools.Repl {
             if (replId.StartsWith(_replGuid, StringComparison.OrdinalIgnoreCase)) {
                 string[] components = replId.Split(new[] { ' ' }, 3);
                 if (components.Length == 3) {
-                    var interpreter = _interpreterService.FindInterpreter(components[1], components[2]);
-                    if (interpreter != null) {
-                        return new PythonReplEvaluator(interpreter, _errorProviderFactory, _interpreterService);
-                    }
+                    return PythonReplEvaluator.Create(
+                        components[1],
+                        components[2],
+                        _errorProviderFactory,
+                        _interpreterService
+                    );
                 }
             } else if (replId.StartsWith(_configurableGuid, StringComparison.OrdinalIgnoreCase)) {
                 return CreateConfigurableInterpreter(replId);

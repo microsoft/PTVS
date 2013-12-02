@@ -27,7 +27,13 @@ namespace Microsoft.PythonTools.Interpreter {
         readonly ProcessorArchitecture _architecture;
         readonly Version _version;
 
-        internal InterpreterConfiguration(Version version) {
+        /// <summary>
+        /// Creates a blank configuration with the specified language version.
+        /// This is intended for use in placeholder implementations of
+        /// <see cref="IPythonInterpreterFactory"/> for when a known interpreter
+        /// is unavailable.
+        /// </summary>
+        public InterpreterConfiguration(Version version) {
             _version = version;
         }
 

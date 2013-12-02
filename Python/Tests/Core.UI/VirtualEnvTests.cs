@@ -106,7 +106,7 @@ namespace PythonToolsUITests {
                 app.OpenDialogWithDteExecuteCommand("Project.AddVirtualEnvironment")));
 
             envPath = new TextBox(createVenv.FindByAutomationId("VirtualEnvPath")).GetValue();
-            var baseInterp = new ComboBox(createVenv.FindByAutomationId("BaseInterpreter")).GetSelectedItemText();
+            var baseInterp = new ComboBox(createVenv.FindByAutomationId("BaseInterpreter")).GetSelectedItemName();
 
             envName = string.Format("{0} ({1})", envPath, baseInterp);
 
@@ -140,7 +140,7 @@ namespace PythonToolsUITests {
                 app.OpenDialogWithDteExecuteCommand("Project.AddVirtualEnvironment")));
 
             new TextBox(createVenv.FindByAutomationId("VirtualEnvPath")).SetValue(envPath);
-            var baseInterp = new ComboBox(createVenv.FindByAutomationId("BaseInterpreter")).GetSelectedItemText();
+            var baseInterp = new ComboBox(createVenv.FindByAutomationId("BaseInterpreter")).GetSelectedItemName();
 
             envName = string.Format("{0} ({1})", Path.GetFileName(envPath), baseInterp);
 
@@ -386,7 +386,7 @@ namespace PythonToolsUITests {
                 ));
 
                 AutomationWrapper.DumpElement(createVenv.Element);
-                var baseInterp = new ComboBox(createVenv.FindByAutomationId("BaseInterpreter")).GetSelectedItemText();
+                var baseInterp = new ComboBox(createVenv.FindByAutomationId("BaseInterpreter")).GetSelectedItemName();
 
                 Assert.AreEqual("Python 2.7", baseInterp);
                 createVenv.ClickButtonByAutomationId("Cancel");
@@ -413,7 +413,7 @@ namespace PythonToolsUITests {
                     app.OpenDialogWithDteExecuteCommand("Project.AddVirtualEnvironment")
                 ));
 
-                baseInterp = new ComboBox(createVenv.FindByAutomationId("BaseInterpreter")).GetSelectedItemText();
+                baseInterp = new ComboBox(createVenv.FindByAutomationId("BaseInterpreter")).GetSelectedItemName();
 
                 Assert.AreEqual("Python 3.3", baseInterp);
                 createVenv.ClickButtonByAutomationId("Cancel");

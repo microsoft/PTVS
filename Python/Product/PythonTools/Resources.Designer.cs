@@ -505,6 +505,37 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} cannot be started because the path to the interpreter has not been configured.
+        ///Please update the environment in Tools-&gt;Options-&gt;Python Tools-&gt;Environment Options
+        ///.
+        /// </summary>
+        internal static string ReplEvaluatorInterpreterNotConfigured {
+            get {
+                return ResourceManager.GetString("ReplEvaluatorInterpreterNotConfigured", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The interactive window could not be started because the associated Python environment could not be found.
+        ///If this version of Python has recently been uninstalled, you can close this window.
+        ///.
+        /// </summary>
+        internal static string ReplEvaluatorInterpreterNotFound {
+            get {
+                return ResourceManager.GetString("ReplEvaluatorInterpreterNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Python interactive window. Type $help for a list of commands..
+        /// </summary>
+        internal static string ReplInitializationMessage {
+            get {
+                return ResourceManager.GetString("ReplInitializationMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Search Paths Properties.
         /// </summary>
         internal static string SearchPathContainerProperties {

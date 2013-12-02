@@ -98,11 +98,13 @@ namespace Microsoft.PythonTools.Intellisense {
             _interpreterFactory = factory;
             _implicitProject = implicitProject;
 
-            _pyAnalyzer = new PythonAnalyzer(factory, interpreter);
-            interpreter.ModuleNamesChanged += OnModulesChanged;
+            if (interpreter != null) {
+                _pyAnalyzer = new PythonAnalyzer(factory, interpreter);
+                interpreter.ModuleNamesChanged += OnModulesChanged;
+            }
             _projectFiles = new ConcurrentDictionary<string, IProjectEntry>(StringComparer.OrdinalIgnoreCase);
 
-            if (PythonToolsPackage.Instance != null) {
+            if (PythonToolsPackage.Instance != null && _pyAnalyzer != null) {
                 _pyAnalyzer.Limits.CrossModule = PythonToolsPackage.Instance.DebuggingOptionsPage.CrossModuleAnalysisLimit;
                 // TODO: Load other limits from options
             }
@@ -143,6 +145,11 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private void OnModulesChanged(object sender, EventArgs e) {
+            Debug.Assert(_pyAnalyzer != null, "Should not have null _pyAnalyzer here");
+            if (_pyAnalyzer == null) {
+                return;
+            }
+
             lock (_contentsLock) {
                 _pyAnalyzer.ReloadModules();
 
@@ -215,6 +222,11 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private IProjectEntry CreateProjectEntry(ITextBuffer buffer, IAnalysisCookie analysisCookie) {
+            if (_pyAnalyzer == null) {
+                // We aren't able to analyze code, so don't create an entry.
+                return null;
+            }
+
             var replEval = buffer.GetReplEvaluator();
             if (replEval != null) {
                 // We have a repl window, create an untracked module.
@@ -279,6 +291,11 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         internal IProjectEntry AnalyzeFile(string path) {
+            if (_pyAnalyzer == null) {
+                // We aren't able to analyze code, so don't create an entry.                
+                return null;
+            }
+            
             IProjectEntry item;
             if (!_projectFiles.TryGetValue(path, out item)) {
                 if (PythonProjectNode.IsPythonFile(path)) {
@@ -572,7 +589,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         internal IPythonInterpreter Interpreter {
             get {
-                return _pyAnalyzer.Interpreter;
+                return _pyAnalyzer != null ? _pyAnalyzer.Interpreter : null;
             }
         }
 
@@ -1060,8 +1077,13 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private void AnalyzeDirectoryWorker(string dir, bool addDir, Action<IProjectEntry> onFileAnalyzed, CancellationToken cancel) {
+            if (_pyAnalyzer == null) {
+                // We aren't able to analyze code.
+                return;
+            }
+
             if (string.IsNullOrEmpty(dir)) {
-                Debug.Assert(!string.IsNullOrEmpty(dir));
+                Debug.Assert(false, "Unexpected empty dir");
                 return;
             }
             
@@ -1153,6 +1175,11 @@ namespace Microsoft.PythonTools.Intellisense {
 
 
         private void AnalyzeZipArchiveWorker(string zipFileName, Action<IProjectEntry> onFileAnalyzed, CancellationToken cancel) {
+            if (_pyAnalyzer == null) {
+                // We aren't able to analyze code.
+                return;
+            }
+
             lock (_contentsLock) {
                 _pyAnalyzer.AddAnalysisDirectory(zipFileName);
             }
@@ -1220,6 +1247,10 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private IProjectEntry AnalyzeZipArchiveEntry(string zipFileName, ZipArchiveEntry entry, Action onComplete) {
+            if (_pyAnalyzer == null) {
+                // We aren't able to analyze code, so don't create an entry.
+                return null;
+            }
             try {
                 string pathInZip = entry.FullName.Replace('/', '\\');
                 string path = Path.Combine(zipFileName, pathInZip);
@@ -1259,6 +1290,11 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         internal void StopAnalyzingDirectory(string directory) {
+            if (_pyAnalyzer == null) {
+                // We aren't able to analyze code.
+                return;
+            }
+
             lock (_contentsLock) {
                 _pyAnalyzer.RemoveAnalysisDirectory(directory);
             }
@@ -1269,6 +1305,11 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         internal void UnloadFile(IProjectEntry entry, bool suppressUpdate = false) {
+            if (_pyAnalyzer == null) {
+                // We aren't able to analyze code.
+                return;
+            }
+
             if (entry != null && entry.FilePath != null) {
                 RemoveErrors(entry, suppressUpdate);
                 _pyAnalyzer.RemoveModule(entry);
@@ -1733,9 +1774,11 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             _analysisQueue.Stop();
-            lock (_contentsLock) {
-                _pyAnalyzer.Interpreter.ModuleNamesChanged -= OnModulesChanged;
-                ((IDisposable)_pyAnalyzer).Dispose();
+            if (_pyAnalyzer != null) {
+                lock (_contentsLock) {
+                    _pyAnalyzer.Interpreter.ModuleNamesChanged -= OnModulesChanged;
+                    ((IDisposable)_pyAnalyzer).Dispose();
+                }
             }
         }
 

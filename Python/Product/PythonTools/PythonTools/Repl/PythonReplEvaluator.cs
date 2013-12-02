@@ -19,6 +19,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Sockets;
+using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows;
 using Microsoft.PythonTools.Intellisense;
@@ -30,6 +31,7 @@ using Microsoft.VisualStudio.Repl;
 using Microsoft.VisualStudio.Text.Adornments;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
+using SR = Microsoft.PythonTools.Project.SR;
 
 namespace Microsoft.PythonTools.Repl {
 #if INTERACTIVE_WINDOW
@@ -60,11 +62,60 @@ namespace Microsoft.PythonTools.Repl {
             }
         }
 
-        void InterpretersChanged(object sender, EventArgs e) {
+        private class UnavailableFactory : IPythonInterpreterFactory {
+            public UnavailableFactory(string id, string version) {
+                Id = Guid.Parse(id);
+                Configuration = new InterpreterConfiguration(Version.Parse(version));
+            }
+            public string Description { get { return Id.ToString(); } }
+            public InterpreterConfiguration Configuration { get; private set; }
+            public Guid Id { get; private set; }
+            public IPythonInterpreter CreateInterpreter() { return null; }
+        }
+
+        public static IPythonReplEvaluator Create(
+            string id,
+            string version,
+            IErrorProviderFactory errorProviderFactory,
+            IInterpreterOptionsService interpreterService
+        ) {
+            var factory = interpreterService != null ? interpreterService.FindInterpreter(id, version) : null;
+            if (factory == null) {
+                try {
+                    factory = new UnavailableFactory(id, version);
+                } catch (FormatException) {
+                    return null;
+                }
+            }
+            return new PythonReplEvaluator(factory, errorProviderFactory, interpreterService);
+        }
+
+        async void InterpretersChanged(object sender, EventArgs e) {
             var interpreter = _interpreterService.FindInterpreter(Interpreter.Id, Interpreter.Configuration.Version);
             if (interpreter != null && interpreter != _interpreter) {
+                // if the previous interpreter was not available, we will want
+                // to reset afterwards
+                bool resetAfter = _interpreter is UnavailableFactory;
+
                 // the interpreter has been reconfigured, we want the new settings
                 _interpreter = interpreter;
+                if (_replAnalyzer != null) {
+                    var oldAnalyser = _replAnalyzer;
+                    bool disposeOld = _ownsAnalyzer && oldAnalyser != null;
+                    
+                    _replAnalyzer = null;
+                    var newAnalyzer = ReplAnalyzer;
+                    if (newAnalyzer != null && oldAnalyser != null) {
+                        newAnalyzer.SwitchAnalyzers(oldAnalyser);
+                    }
+                    if (disposeOld) {
+                        oldAnalyser.Dispose();
+                    }
+                }
+
+                if (resetAfter) {
+                    await Reset();
+                }
             }
         }
 
@@ -86,7 +137,10 @@ namespace Microsoft.PythonTools.Repl {
 
         protected override PythonLanguageVersion AnalyzerProjectLanguageVersion {
             get {
-                return _replAnalyzer.Project.LanguageVersion;
+                if (_replAnalyzer != null && _replAnalyzer.Project != null) {
+                    return _replAnalyzer.Project.LanguageVersion;
+                }
+                return LanguageVersion;
             }
         }
 
@@ -104,7 +158,7 @@ namespace Microsoft.PythonTools.Repl {
 
         public bool AttachEnabled {
             get {
-                return _enableAttach;
+                return _enableAttach && !(Interpreter is UnavailableFactory);
             }
         }
 
@@ -129,6 +183,14 @@ namespace Microsoft.PythonTools.Repl {
             }
         }
 
+        protected override void WriteInitializationMessage() {
+            if (Interpreter is UnavailableFactory) {
+                Window.WriteError(SR.GetString(SR.ReplEvaluatorInterpreterNotFound));
+            } else {
+                base.WriteInitializationMessage();
+            }
+        }
+
         protected override void Connect() {
             var configurableOptions = CurrentOptions as ConfigurablePythonReplOptions;
             if (configurableOptions != null) {
@@ -138,8 +200,11 @@ namespace Microsoft.PythonTools.Repl {
             if (Interpreter == null) {
                 Window.WriteError("The interpreter is not available.");
                 return;
+            } else if (Interpreter is UnavailableFactory) {
+                Window.WriteError(SR.GetString(SR.ReplEvaluatorInterpreterNotFound));
+                return;
             } else if (String.IsNullOrWhiteSpace(Interpreter.Configuration.InterpreterPath)) {
-                Window.WriteError(String.Format("The interpreter {0} cannot be started.  The path to the interpreter has not been configured." + Environment.NewLine + "Please update the interpreter in Tools->Options->Python Tools->Interpreter Options" + Environment.NewLine, Interpreter.Description));
+                Window.WriteError(SR.GetString(SR.ReplEvaluatorInterpreterNotConfigured, Interpreter.Description));
                 return;
             }
             var processInfo = new ProcessStartInfo(Interpreter.Configuration.InterpreterPath);

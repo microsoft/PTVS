@@ -61,6 +61,9 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         internal PythonAnalyzer(IPythonInterpreterFactory factory, IPythonInterpreter pythonInterpreter, string builtinName) {
+            if (pythonInterpreter == null) {
+                throw new ArgumentNullException("pythonInterpreter");
+            }
             _langVersion = factory.GetLanguageVersion();
             _interpreter = pythonInterpreter;
             _builtinName = builtinName ?? (_langVersion.Is3x() ? SharedDatabaseState.BuiltinName3x : SharedDatabaseState.BuiltinName2x);
