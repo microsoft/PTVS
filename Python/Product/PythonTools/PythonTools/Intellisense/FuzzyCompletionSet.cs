@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Windows.Media;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Text;
@@ -156,6 +157,11 @@ namespace Microsoft.PythonTools.Intellisense {
         readonly bool _shouldFilter;
         readonly bool _shouldHideAdvanced;
 
+        private readonly static Regex _advancedItemPattern = new Regex(
+            @"__\w+__($|\s)",
+            RegexOptions.IgnoreCase | RegexOptions.CultureInvariant
+        );
+
         /// <summary>
         /// Initializes a new instance with the specified properties.
         /// </summary>
@@ -193,7 +199,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private static bool IsAdvanced(Completion comp) {
-            return comp.DisplayText.StartsWith("__") && comp.DisplayText.EndsWith("__");
+            return _advancedItemPattern.IsMatch(comp.DisplayText);
         }
 
         /// <summary>

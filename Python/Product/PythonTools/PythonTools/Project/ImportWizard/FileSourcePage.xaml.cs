@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System.Diagnostics;
+using System.IO;
 using System.Windows.Controls;
 using System.Windows.Data;
 
@@ -27,7 +28,12 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
 
         private async void SourcePathTextBox_SourceUpdated(object sender, DataTransferEventArgs e) {
             Debug.Assert(DataContext is ImportSettings);
-            await ((ImportSettings)DataContext).UpdateSourcePath();
+            var settings = (ImportSettings)DataContext;
+            SourcePathDoesNotExist.Visibility = 
+                (string.IsNullOrEmpty(settings.SourcePath) || Directory.Exists(settings.SourcePath)) ?
+                System.Windows.Visibility.Collapsed :
+                System.Windows.Visibility.Visible;
+            await settings.UpdateSourcePath();
         }
     }
 }

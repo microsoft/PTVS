@@ -15,6 +15,8 @@
 using System;
 using System.ComponentModel;
 using System.Text.RegularExpressions;
+using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Parsing;
 
 namespace Microsoft.PythonTools.Refactoring {
     /// <summary>
@@ -22,6 +24,7 @@ namespace Microsoft.PythonTools.Refactoring {
     /// </summary>
     sealed class RenameVariableRequestView : INotifyPropertyChanged {
         private readonly string _originalName;
+        private readonly PythonLanguageVersion _languageVersion;
         internal static readonly Regex _validNameRegex = ExtractMethodRequestView._validNameRegex;
 
         private string _name;
@@ -34,8 +37,9 @@ namespace Microsoft.PythonTools.Refactoring {
         /// <summary>
         /// Create a RenameVariableRequestView with default values.
         /// </summary>
-        public RenameVariableRequestView(string originalName) {
+        public RenameVariableRequestView(string originalName, PythonLanguageVersion languageVersion) {
             _originalName = originalName;
+            _languageVersion = languageVersion;
             //_name = null;
 
             // Access properties rather than underlying variables to ensure dependent properties
@@ -47,8 +51,12 @@ namespace Microsoft.PythonTools.Refactoring {
         /// <summary>
         /// Create a RenameVariableRequestView with values taken from a template.
         /// </summary>
-        public RenameVariableRequestView(string originalName, RenameVariableRequest template)
-            : this(originalName) {
+        public RenameVariableRequestView(
+            string originalName,
+            PythonLanguageVersion languageVersion,
+            RenameVariableRequest template
+        )
+            : this(originalName, languageVersion) {
             // Access properties rather than underlying variables to ensure dependent properties
             // are also updated.
             Name = template.Name;
@@ -76,7 +84,10 @@ namespace Microsoft.PythonTools.Refactoring {
                 if (_name != value) {
                     _name = value;
                     OnPropertyChanged("Name");
-                    IsValid = !_originalName.Equals(_name) && _validNameRegex.IsMatch(_name);
+                    IsValid =
+                        !_originalName.Equals(_name) &&
+                        _validNameRegex.IsMatch(_name) &&
+                        !PythonKeywords.IsKeyword(_name, _languageVersion);
                 }
             }
         }

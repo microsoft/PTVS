@@ -15,6 +15,7 @@
 using System;
 using System.Windows;
 using System.Windows.Interop;
+using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -36,8 +37,8 @@ namespace Microsoft.PythonTools.Refactoring {
         private const string RenameKey = "Rename";
         private const string PreviewChangesKey = "PreviewChanges";
 
-        public RenameVariableRequest GetRenameInfo(string originalName) {
-            var requestView = new RenameVariableRequestView(originalName);
+        public RenameVariableRequest GetRenameInfo(string originalName, PythonLanguageVersion languageVersion) {
+            var requestView = new RenameVariableRequestView(originalName, languageVersion);
             LoadPreferences(requestView);
             var dialog = new RenameVariableDialog(requestView);
             bool res = dialog.ShowModal() ?? false;

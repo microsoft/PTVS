@@ -1003,7 +1003,6 @@ namespace Microsoft.PythonTools.Project {
                 if (IsCurrentStateASuppressCommandsMode()) {
                     switch ((int)cmd) {
                         case CommonConstants.AddSearchPathCommandId:
-                        case CommonConstants.AddSearchPathZipCommandId:
                         case CommonConstants.StartDebuggingCmdId:
                         case CommonConstants.StartWithoutDebuggingCmdId:
                             return true;
@@ -1012,6 +1011,8 @@ namespace Microsoft.PythonTools.Project {
                         case PythonConstants.AddExistingVirtualEnv:
                         case PythonConstants.AddVirtualEnv:
                         case PythonConstants.InstallPythonPackage:
+                        case PythonConstants.AddSearchPathZipCommandId:
+                        case PythonConstants.AddPythonPathToSearchPathCommandId:
                             return true;
                         default:
                             if (cmd >= PythonConstants.FirstCustomCmdId && cmd <= PythonConstants.LastCustomCmdId) {
@@ -1065,35 +1066,33 @@ namespace Microsoft.PythonTools.Project {
 
         #endregion
 
-        internal unsafe int AddSearchPathZip() {
-            var uiShell = GetService(typeof(SVsUIShell)) as IVsUIShell;
-            if (uiShell == null) {
-                return VSConstants.S_FALSE;
+        internal int AddSearchPathZip() {
+            var fileName = PythonToolsPackage.Instance.BrowseForFileOpen(
+                IntPtr.Zero,
+                "Zip Archives (*.zip;*.egg)|*.zip;*.egg|All Files (*.*)|*.*",
+                ProjectHome
+            );
+            if (!string.IsNullOrEmpty(fileName)) {
+                AddSearchPathEntry(fileName);
             }
-
-            var fileNameBuf = stackalloc char[NativeMethods.MAX_PATH];
-            var ofn = new[] {
-                new VSOPENFILENAMEW {
-                    lStructSize = (uint)Marshal.SizeOf(typeof(VSOPENFILENAMEW)),
-                    pwzDlgTitle = DynamicProjectSR.GetString(DynamicProjectSR.SelectZipFileForSearchPath),
-                    nMaxFileName = NativeMethods.MAX_PATH,
-                    pwzFileName = (IntPtr)fileNameBuf,
-                    pwzInitialDir = ProjectHome,
-                    pwzFilter = "Zip Archives (*.zip, *.egg)\0*.zip;*.egg\0All Files\0*.*\0"
-                }
-            };
-            uiShell.GetDialogOwnerHwnd(out ofn[0].hwndOwner);
-
-            var hr = uiShell.GetOpenFileNameViaDlg(ofn);
-            if (hr == VSConstants.OLE_E_PROMPTSAVECANCELLED) {
-                return VSConstants.S_OK;
-            }
-            ErrorHandler.ThrowOnFailure(hr);
-
-            string fileName = new string(fileNameBuf);
-            AddSearchPathEntry(fileName);
             return VSConstants.S_OK;
         }
+
+        internal int AddPythonPathToSearchPath() {
+            var value = Environment.GetEnvironmentVariable(GetInterpreterFactory().Configuration.PathEnvironmentVariable);
+            if (string.IsNullOrEmpty(value)) {
+                return VSConstants.S_OK;
+            }
+
+            foreach (var bit in value.Split(';')) {
+                if (!string.IsNullOrEmpty(bit)) {
+                    AddSearchPathEntry(bit);
+                }
+            }
+            return VSConstants.S_OK;
+        }
+
+
 
         #region Virtual Env support
 

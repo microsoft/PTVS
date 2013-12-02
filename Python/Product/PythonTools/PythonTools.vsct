@@ -518,13 +518,25 @@
         <CommandFlag>DynamicVisibility</CommandFlag>
         <CommandFlag>DefaultInvisible</CommandFlag>
         <Strings>
-          <ButtonText>Add Zip Archive to Search &amp;Path...</ButtonText>
-          <MenuText>Add Zip Archive to Search &amp;Path...</MenuText>
+          <ButtonText>Add &amp;Zip Archive to Search Path...</ButtonText>
+          <MenuText>Add &amp;Zip Archive to Search Path...</MenuText>
           <ToolTipText>Add Zip Archive to Search Path...</ToolTipText>
           <CommandName>Add Zip Archive to Search Path...</CommandName>
         </Strings>
       </Button>
 
+      <Button guid="guidPythonToolsCmdSet" id="cmdIdAddPythonPathToSearchPath" priority="0x0303" type="Button">
+        <Parent guid="guidSHLMainMenu" id="IDG_VS_CTXT_PROJECT_ADD"/>
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <CommandFlag>DefaultInvisible</CommandFlag>
+        <Strings>
+          <ButtonText>Add P&amp;YTHONPATH to Search Path</ButtonText>
+          <MenuText>Add P&amp;YTHONPATH to Search Path</MenuText>
+          <ToolTipText>Add PYTHONPATH to Search Path</ToolTipText>
+          <CommandName>Add PYTHONPATH to Search Path</CommandName>
+        </Strings>
+      </Button>
+      
       <Button guid="guidPythonToolsCmdSet" id="cmdidStartWithoutDebugging" priority="0x0303" type="Button">
         <Parent guid="guidPythonToolsCmdSet" id="CodeFileGroup"/>
         <CommandFlag>DynamicVisibility</CommandFlag>
@@ -896,6 +908,10 @@
       <Parent guid="guidPythonToolsCmdSet" id="CodeFileGroup"/>
     </CommandPlacement>
 
+    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdIdAddPythonPathToSearchPath" priority="0x603">
+      <Parent guid="guidPythonToolsCmdSet" id="CodeFileGroup"/>
+    </CommandPlacement>
+
     <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidAddEnvironment" priority="0x603">
       <Parent guid="guidPythonToolsCmdSet" id="CodeFileGroup"/>
     </CommandPlacement>
@@ -957,6 +973,7 @@
 
       <IDSymbol name="cmdIdAddSearchPath" value="0x4002" />
       <IDSymbol name="cmdIdAddSearchPathZip" value="0x4003" />
+      <!-- Defined below <IDSymbol name="cmdIdAddPythonPathToSearchPath" value="0x4030" />-->
       <IDSymbol name="cmdidStartWithoutDebugging" value="0x4004" />
       <IDSymbol name="cmdidStartDebugging" value="0x4005" />
 
@@ -973,7 +990,9 @@
 
       <IDSymbol name="cmdidFirstCustomCmdId" value="0x4010" />
       <IDSymbol name="cmdidLastCustomCmdId" value="0x402F" />
-      
+
+      <IDSymbol name="cmdIdAddPythonPathToSearchPath" value="0x4030" />
+
       <!-- Groups -->
       <IDSymbol name="EditorContextGroup" value="0x1010" />
       <IDSymbol name="EditMenuGroup" value="0x1011" />

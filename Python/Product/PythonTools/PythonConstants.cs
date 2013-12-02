@@ -65,6 +65,9 @@ namespace Microsoft.PythonTools {
         internal const int ActivateEnvironment = 0x4009;
         internal const int InstallPythonPackage = 0x400A;
 
+        internal const int AddSearchPathZipCommandId = 0x4003;
+        internal const int AddPythonPathToSearchPathCommandId = 0x4030;
+
         //Custom (per-project) commands
         internal const int FirstCustomCmdId = 0x4010;
         internal const int LastCustomCmdId = 0x402F;

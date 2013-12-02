@@ -28,15 +28,31 @@
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="auto"/>
+                    <ColumnDefinition Width="auto"/>
                 </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="auto" />
+                    <RowDefinition Height="auto" />
                 </Grid.RowDefinitions>
-                <TextBox Grid.Column="0"
-                         Text="{Binding Path=SourcePath,Mode=TwoWay,NotifyOnSourceUpdated=True}"
+                <TextBox Grid.Column="0" Grid.ColumnSpan="2"
+                         Text="{Binding Path=SourcePath,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged,NotifyOnSourceUpdated=True}"
                          SourceUpdated="SourcePathTextBox_SourceUpdated"
                          Name="SourcePathTextBox" />
-                <Button Grid.Column="1" Style="{StaticResource BrowseFolderButton}" CommandTarget="{Binding ElementName=SourcePathTextBox}" />
+                <AdornerDecorator Grid.Column="1"
+                                  ToolTip="Specified path does not exist"
+                                  Visibility="Collapsed"
+                                  Name="SourcePathDoesNotExist">
+                    <Grid VerticalAlignment="Stretch" Width="{Binding ActualHeight,RelativeSource={RelativeSource Self}}">
+                        <Ellipse Fill="Red" Margin="3" />
+                        <TextBlock Foreground="White"
+                                   FontWeight="Bold"
+                                   BaselineOffset="0" TextAlignment="Center"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center">
+                            !
+                        </TextBlock>
+                    </Grid>
+                </AdornerDecorator>
+                <Button Grid.Column="2" Style="{StaticResource BrowseFolderButton}" CommandTarget="{Binding ElementName=SourcePathTextBox}" />
             </Grid>
         </wpf:LabelledControl>
 

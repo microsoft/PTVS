@@ -118,10 +118,10 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="110" xml:space="preserve">
-    <value>Microsoft Python Tools for Visual Studio</value>
+    <value>Python Tools for Visual Studio</value>
   </data>
   <data name="112" xml:space="preserve">
-    <value>Python Tools for Visual Studio provides intellisense, project support, project and item templates, as well as a REPL window for Python development.</value>
+    <value>Python Tools for Visual Studio provides IntelliSense, projects, templates, Interactive windows, and other support for Python developers.</value>
   </data>
   <data name="113" xml:space="preserve">
     <value>Advanced</value>

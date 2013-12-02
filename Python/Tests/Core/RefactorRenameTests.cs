@@ -20,6 +20,7 @@ using Microsoft.PythonTools;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Interpreter.Default;
+using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Refactoring;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -2448,8 +2449,8 @@ def g(a, b, c):
                 _buffers = buffers;
             }
 
-            public RenameVariableRequest GetRenameInfo(string originalName) {
-                var requestView = new RenameVariableRequestView(originalName);
+            public RenameVariableRequest GetRenameInfo(string originalName, PythonLanguageVersion languageVersion) {
+                var requestView = new RenameVariableRequestView(originalName, languageVersion);
                 requestView.Name = _name;
                 requestView.PreviewChanges = _preview;
                 requestView.SearchInComments = _searchInComments;

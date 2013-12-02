@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System;
+using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio.Language.StandardClassification;
 using Microsoft.VisualStudio.Repl;
@@ -116,7 +117,7 @@ namespace Microsoft.PythonTools.Editor {
                         break;
                     } else if (token != null &&
                        token.ClassificationType == revParser.Classifier.Provider.Keyword &&
-                       ReverseExpressionParser.IsStmtKeyword(token.Span.GetText())) {
+                       PythonKeywords.IsOnlyStatementKeyword(token.Span.GetText())) {
                         endAtNextNull = true;
                     }
                 }

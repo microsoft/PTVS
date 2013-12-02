@@ -106,6 +106,7 @@
     <Compile Include="Parsing\Ast\YieldFromExpression.cs" />
     <Compile Include="ProjectEntryExtensions.cs" />
     <Compile Include="PythonAnalyzer.Specializations.cs" />
+    <Compile Include="PythonKeywords.cs" />
     <Compile Include="Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>

@@ -107,7 +107,8 @@ namespace Microsoft.PythonTools.Project {
             if (cmdGroup == GuidList.guidPythonToolsCmdSet) {
                 switch (cmd) {
                     case CommonConstants.AddSearchPathCommandId:
-                    case CommonConstants.AddSearchPathZipCommandId:
+                    case PythonConstants.AddSearchPathZipCommandId:
+                    case PythonConstants.AddPythonPathToSearchPathCommandId:
                         result |= QueryStatusResult.SUPPORTED | QueryStatusResult.ENABLED;
                         return VSConstants.S_OK;
                 }
@@ -121,8 +122,10 @@ namespace Microsoft.PythonTools.Project {
                 switch (cmd) {
                     case CommonConstants.AddSearchPathCommandId:
                         return _projectNode.AddSearchPath();
-                    case CommonConstants.AddSearchPathZipCommandId:
+                    case PythonConstants.AddSearchPathZipCommandId:
                         return _projectNode.AddSearchPathZip();
+                    case PythonConstants.AddPythonPathToSearchPathCommandId:
+                        return _projectNode.AddPythonPathToSearchPath();
                 }
             }
             return base.ExecCommandOnNode(cmdGroup, cmd, nCmdexecopt, pvaIn, pvaOut);

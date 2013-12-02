@@ -51,75 +51,65 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public static CompletionAnalysis Make(IList<ClassificationSpan> tokens, ITrackingSpan span, ITextBuffer textBuffer, CompletionOptions options) {
             Debug.Assert(tokens[0].Span.GetText() == "from");
-            int beforeImportToken = tokens
-                .TakeWhile(tok => !IsKeyword(tok, "import"))
-                .Count();
-
-            bool includeStar = false;
-            var lastToken = tokens.LastOrDefault();
-            if (lastToken != null) {
-                if (lastToken.ClassificationType.IsOfType(PredefinedClassificationTypeNames.Identifier) &&
-                    lastToken.Span.End < span.GetEndPoint(textBuffer.CurrentSnapshot).Position) {
-                    // If the last token was a name, but the cursor is not on
-                    // that name anymore...
-                    if (beforeImportToken == tokens.Count) {
-                        // "from a.b "...
-                        return new ImportKeywordCompletionAnalysis(span, textBuffer, options);
-                    } else {
-                        // "from a.b import x "...
-                        // "from a.b import x, y "...
-                        return new AsKeywordCompletionAnalysis(span, textBuffer, options);
-                    }
-                } else if (beforeImportToken == tokens.Count) {
-                    // "from "...
-                    return ImportCompletionAnalysis.Make(tokens, span, textBuffer, options);
-                } else if (beforeImportToken == tokens.Count - 1) {
-                    // "from a.b "...
-                    includeStar = true;
-                }
-            }
-
-            if (tokens.Take(tokens.Count - 1).Any(tok => tok != null && tok.Span != null && tok.Span.GetText() == "*")) {
-                // No completions after "*" has been imported
-                return EmptyCompletionContext;
-            }
-
-            bool seenAs = false;
-            foreach (var tok in tokens.Skip(beforeImportToken + 1)) {
-                if (IsKeyword(tok, "as")) {
-                    seenAs = true;
-                } else if (tok.ClassificationType.IsOfType(PythonPredefinedClassificationTypeNames.Comma)) {
-                    seenAs = false;
-                }
-            }
-            if (seenAs) {
-                // "from a.b import x as "...
-                // "from a.b import x, y as "...
-                // BUT NOT "from a.b import x as x1, "...
-                return EmptyCompletionContext;
-            }
 
             var ns = new List<string>();
-            bool expectDot = false;
-            foreach (var tok in tokens.Take(beforeImportToken).Skip(1)) {
-                if (expectDot) {
-                    if (tok.ClassificationType.IsOfType(PythonPredefinedClassificationTypeNames.Dot)) {
-                        expectDot = false;
-                    } else {
-                        return EmptyCompletionContext;
+            bool nsComplete = false;
+            bool seenImport = false;
+            bool seenName = false;
+            bool seenAs = false;
+            bool seenAlias = false;
+            bool includeStar = true;
+            foreach (var token in tokens.Skip(1)) {
+                if (token == null ||
+                    token.Span == null ||
+                    token.Span.End > span.GetEndPoint(textBuffer.CurrentSnapshot).Position) {
+                    break;
+                }
+
+                if (!seenImport) {
+                    if (token.ClassificationType.IsOfType(PredefinedClassificationTypeNames.Identifier)) {
+                        ns.Add(token.Span.GetText());
+                        nsComplete = true;
+                    } else if (token.ClassificationType.IsOfType(PythonPredefinedClassificationTypeNames.Dot)) {
+                        nsComplete = false;
                     }
-                } else {
-                    if (tok.ClassificationType.IsOfType(PredefinedClassificationTypeNames.Identifier)) {
-                        ns.Add(tok.Span.GetText());
-                        expectDot = true;
-                    } else {
+                    seenImport = IsKeyword(token, "import");
+                } else if (token.ClassificationType.IsOfType(PythonPredefinedClassificationTypeNames.Comma)) {
+                    seenName = false;
+                    seenAs = false;
+                    seenAlias = false;
+                    includeStar = false;
+                } else if (token.Span.GetText() == "*") {
+                    // Nothing comes after a star
+                    return EmptyCompletionContext;
+                } else if (IsKeyword(token, "as")) {
+                    seenAs = true;
+                } else if (token.ClassificationType.IsOfType(PredefinedClassificationTypeNames.Identifier)) {
+                    if (seenAlias) {
                         return EmptyCompletionContext;
+                    } else if (seenAs) {
+                        seenAlias = true;
+                    } else if (seenName) {
+                        return EmptyCompletionContext;
+                    } else {
+                        seenName = true;
                     }
                 }
             }
+            if (!seenImport) {
+                if (nsComplete) {
+                    return new ImportKeywordCompletionAnalysis(span, textBuffer, options);
+                } else {
+                    return ImportCompletionAnalysis.Make(tokens, span, textBuffer, options);
+                }
+            }
 
-            if (!expectDot) {
+            if (!nsComplete || seenAlias || seenAs) {
                 return EmptyCompletionContext;
+            }
+
+            if (seenName) {
+                return new AsKeywordCompletionAnalysis(span, textBuffer, options);
             }
 
             return new FromImportCompletionAnalysis(ns.ToArray(), includeStar, span, textBuffer, options);

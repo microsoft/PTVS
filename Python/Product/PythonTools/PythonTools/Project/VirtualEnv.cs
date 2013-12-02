@@ -64,6 +64,9 @@ namespace Microsoft.PythonTools.Project {
                     }
                 }
 
+                // Ensure the target directory exists.
+                Directory.CreateDirectory(dir);
+
                 using (var proc = ProcessOutput.Run(factory.Configuration.InterpreterPath,
                     new[] { "-m", useVEnv ? "venv" : "virtualenv", name },
                     dir,

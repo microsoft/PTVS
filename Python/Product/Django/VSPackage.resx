@@ -118,7 +118,7 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="110" xml:space="preserve">
-    <value>Microsoft Python Tools for Visual Studio - Django Integration</value>
+    <value>Python Tools for Visual Studio - Django Integration</value>
   </data>
   <data name="112" xml:space="preserve">
     <value>Provides templates and integration for the Django web framework.</value>

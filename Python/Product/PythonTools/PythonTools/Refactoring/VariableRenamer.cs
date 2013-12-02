@@ -15,6 +15,7 @@
 using System.Collections.Generic;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Intellisense;
+using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Language.StandardClassification;
@@ -95,7 +96,14 @@ namespace Microsoft.PythonTools.Refactoring {
 
             }
 
-            var info = input.GetRenameInfo(originalName);
+            PythonLanguageVersion languageVersion = PythonLanguageVersion.None;
+            var analyzer = _view.GetAnalyzer();
+            var factory = analyzer != null ? analyzer.InterpreterFactory : null;
+            if (factory != null) {
+                languageVersion = factory.Configuration.Version.ToLanguageVersion();
+            }
+
+            var info = input.GetRenameInfo(originalName, languageVersion);
             if (info != null) {
                 var engine = new PreviewChangesEngine(input, analysis, info, originalName, privatePrefix, _view.GetAnalyzer(), variables);
                 if (info.Preview) {

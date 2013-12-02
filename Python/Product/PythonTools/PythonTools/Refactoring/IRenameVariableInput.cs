@@ -12,6 +12,7 @@
  *
  * ***************************************************************************/
 
+using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.TextManager.Interop;
 
@@ -21,7 +22,7 @@ namespace Microsoft.PythonTools.Refactoring {
     /// or via UI.
     /// </summary>
     interface IRenameVariableInput {
-        RenameVariableRequest GetRenameInfo(string originalName);
+        RenameVariableRequest GetRenameInfo(string originalName, PythonLanguageVersion languageVersion);
 
         void CannotRename(string message);
 

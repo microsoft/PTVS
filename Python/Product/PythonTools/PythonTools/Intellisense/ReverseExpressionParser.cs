@@ -17,6 +17,7 @@ using Microsoft.VisualStudio.Language.StandardClassification;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
 using System.Diagnostics;
+using Microsoft.PythonTools.Analysis;
 
 namespace Microsoft.PythonTools.Intellisense {
     /// <summary>
@@ -32,11 +33,6 @@ namespace Microsoft.PythonTools.Intellisense {
         private PythonClassifier _classifier;
         private static readonly string[] _assignOperators = new[] {
             "=" ,  "+=" ,  "-=" ,  "/=" ,  "%=" ,  "^=" ,  "*=" ,  "//=" ,  "&=" ,  "|=" ,  ">>=" ,  "<<=" ,  "**="
-        };
-        private static readonly string[] _stmtKeywords = new[] {
-            "assert", "print" , "break" ,  "del" ,  "except" ,  "finally" ,  "global" ,  
-            "nonlocal" ,  "pass" ,  "raise" ,  "return" ,  "try" ,  "while" ,  "with" ,  "class" ,  
-            "def"
         };
 
 
@@ -112,7 +108,7 @@ namespace Microsoft.PythonTools.Intellisense {
                         return true;
                     }
 
-                    if (IsStmtKeyword(enumerator.Current.Span.GetText())) {
+                    if (PythonKeywords.IsOnlyStatementKeyword(enumerator.Current.Span.GetText())) {
                         return false;
                     }
                 }
@@ -301,7 +297,8 @@ namespace Microsoft.PythonTools.Intellisense {
                                 }
                             }
                             break;
-                        } else if ((token.ClassificationType == Classifier.Provider.Keyword && IsStmtKeyword(text)) ||
+                        } else if ((token.ClassificationType == Classifier.Provider.Keyword &&
+                            PythonKeywords.IsOnlyStatementKeyword(text)) ||
                             (token.ClassificationType == Classifier.Provider.Operator && IsAssignmentOperator(text))) {
                             if (isSigHelp && text == "=") {
                                 // keyword argument allowed in signatures
@@ -373,10 +370,6 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private static bool IsAssignmentOperator(string text) {
             return ((IList<string>)_assignOperators).Contains(text);
-        }
-
-        public static bool IsStmtKeyword(string text) {
-            return ((IList<string>)_stmtKeywords).Contains(text);
         }
 
         internal static bool IsExplicitLineJoin(ClassificationSpan cur) {
@@ -451,7 +444,7 @@ namespace Microsoft.PythonTools.Intellisense {
                         return true;
                     }
                 } else if (token.ClassificationType.IsOfType(PredefinedClassificationTypeNames.Keyword) &&
-                    IsStmtKeyword(token.Span.GetText())) {
+                    PythonKeywords.IsOnlyStatementKeyword(token.Span.GetText())) {
                     return false;
                 }
             }

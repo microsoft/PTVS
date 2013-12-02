@@ -50,13 +50,24 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
             Filters = "*.pyw;*.txt;*.htm;*.html;*.css;*.djt;*.js;*.png;*.jpg;*.gif;*.bmp;*.ico;*.svg";
         }
 
+        private static string MakeSafePath(string path) {
+            if (string.IsNullOrEmpty(path)) {
+                return null;
+            }
+            var safePath = path.Trim(' ', '"');
+            if (CommonUtils.IsValidPath(safePath)) {
+                return safePath;
+            }
+            return null;
+        }
+
         public string ProjectPath {
-            get { return (string)GetValue(ProjectPathProperty); }
+            get { return MakeSafePath((string)GetValue(ProjectPathProperty)); }
             set { SetValue(ProjectPathProperty, value); }
         }
 
         public string SourcePath {
-            get { return (string)GetValue(SourcePathProperty); }
+            get { return MakeSafePath((string)GetValue(SourcePathProperty)); }
             set { SetValue(SourcePathProperty, value); }
         }
 
