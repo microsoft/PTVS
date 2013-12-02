@@ -649,13 +649,8 @@ namespace TestUtilities.UI {
             }
 
             Assert.IsNotNull(project, "No project loaded");
-            try {
-                var currentItem = project.Properties.Item(1).Value;
-            } catch (Exception ex) {
-                // The exception is not important. This is just an easy way to
-                // determine that the project did not load properly.
-                Assert.Fail("No project loaded: {0}", ex);
-            }
+            Assert.IsNotNull(project.Properties, "No project loaded");
+            Assert.IsTrue(project.Properties.GetEnumerator().MoveNext(), "No project loaded");
 
             if (startItem != null && setStartupItem) {
                 project.SetStartupFile(startItem);
