@@ -94,6 +94,8 @@ namespace Microsoft.PythonTools.Intellisense {
                     } else {
                         seenName = true;
                     }
+                } else {
+                    includeStar = false;
                 }
             }
             if (!seenImport) {

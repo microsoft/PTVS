@@ -104,10 +104,10 @@ namespace Microsoft.PythonTools {
 
                 if (update.Progress < int.MaxValue) {
                     Dispatcher.BeginInvoke((Action)(() => {
-                        if (update.Progress > Progress) {
+                        if (update.Progress > Progress || update.Maximum != Maximum) {
                             Progress = update.Progress;
+                            Maximum = update.Maximum;
                         }
-                        Maximum = update.Maximum;
                         Message = update.Message;
                     }));
                 } else {
