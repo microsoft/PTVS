@@ -330,7 +330,7 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\Common\Product\ReplWindow\ReplWindow.csproj">
+    <ProjectReference Include="..\ReplWindow\ReplWindow.csproj">
       <Project>{20bb6fac-44d2-4d76-abfe-0c1e163a1a4f}</Project>
       <Name>ReplWindow</Name>
     </ProjectReference>
