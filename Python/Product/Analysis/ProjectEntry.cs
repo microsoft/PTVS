@@ -204,9 +204,6 @@ namespace Microsoft.PythonTools.Analysis {
             MyScope.Scope.ClearNodeScopes();
             MyScope.Scope.ClearNodeValues();
 
-            // create new analysis object and add to the queue to be analyzed
-            //var newAnalysis = new ModuleAnalysis(_unit);
-
             // collect top-level definitions first
             var walker = new OverviewWalker(this, _unit);
             tree.Walk(walker);

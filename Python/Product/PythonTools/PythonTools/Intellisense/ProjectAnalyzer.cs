@@ -248,7 +248,9 @@ namespace Microsoft.PythonTools.Intellisense {
                         buffer.GetFilePath(),
                         analysisCookie
                     );
-
+                    foreach (var entryRef in Project.GetEntriesThatImportModule(modName)) {
+                        _analysisQueue.Enqueue(entryRef, AnalysisPriority.Low);
+                    }
                 } else if (buffer.ContentType.IsOfType("XAML")) {
                     entry = _pyAnalyzer.AddXamlFile(buffer.GetFilePath());
                 } else {
@@ -301,23 +303,25 @@ namespace Microsoft.PythonTools.Intellisense {
                 if (PythonProjectNode.IsPythonFile(path)) {
                     var modName = PythonAnalyzer.PathToModuleName(path);
 
-                    item = _pyAnalyzer.AddModule(
+                    var pyEntry = _pyAnalyzer.AddModule(
                         modName,
                         path,
                         null
                     );
+
+                    pyEntry.BeginParsingTree();
+
+                    foreach (var entryRef in Project.GetEntriesThatImportModule(modName)) {
+                        _analysisQueue.Enqueue(entryRef, AnalysisPriority.Low);
+                    }
+
+                    item = pyEntry;
                 } else if (path.EndsWith(".xaml", StringComparison.Ordinal)) {
                     item = _pyAnalyzer.AddXamlFile(path, null);
                 }
 
                 if (item != null) {
                     _projectFiles[path] = item;
-
-                    IPythonProjectEntry pyEntry = item as IPythonProjectEntry;
-                    if (pyEntry != null) {
-                        pyEntry.BeginParsingTree();
-                    }
-
                     _queue.EnqueueFile(item, path);
                 }
             }
@@ -1311,10 +1315,24 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             if (entry != null && entry.FilePath != null) {
+                // If we remove a Python module, reanalyze any other modules
+                // that referenced it.
+                IPythonProjectEntry[] reanalyzeEntries = null;
+                var pyEntry = entry as IPythonProjectEntry;
+                if (pyEntry != null && !string.IsNullOrEmpty(pyEntry.ModuleName)) {
+                    reanalyzeEntries = _pyAnalyzer.GetEntriesThatImportModule(pyEntry.ModuleName).ToArray();
+                }
+
                 RemoveErrors(entry, suppressUpdate);
                 _pyAnalyzer.RemoveModule(entry);
                 IProjectEntry removed;
                 _projectFiles.TryRemove(entry.FilePath, out removed);
+
+                if (reanalyzeEntries != null) {
+                    foreach (var existing in reanalyzeEntries) {
+                        _analysisQueue.Enqueue(existing, AnalysisPriority.Normal);
+                    }
+                }
             }
         }
 

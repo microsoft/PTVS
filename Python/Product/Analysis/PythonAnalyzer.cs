@@ -156,7 +156,12 @@ namespace Microsoft.PythonTools.Analysis {
             var entry = new ProjectEntry(this, moduleName, filePath, cookie);
 
             if (moduleName != null) {
-                Modules[moduleName] = new ModuleReference(entry.MyScope);
+                ModuleReference moduleRef;
+                if (Modules.TryGetValue(moduleName, out moduleRef)) {
+                    moduleRef.Module = entry.MyScope;
+                } else {
+                    Modules[moduleName] = new ModuleReference(entry.MyScope);
+                }
 
                 DoDelayedSpecialization(moduleName);
             }
@@ -183,9 +188,15 @@ namespace Microsoft.PythonTools.Analysis {
             var pyEntry = entry as IPythonProjectEntry;
             if (pyEntry != null) {
                 ModuleReference modRef;
-                Modules.TryRemove(pyEntry.ModuleName, out modRef);
-                entry.RemovedFromProject();
+                if (Modules.TryGetValue(pyEntry.ModuleName, out modRef)) {
+                    if (modRef.HasReferences) {
+                        modRef.Module = null;
+                    } else {
+                        Modules.TryRemove(pyEntry.ModuleName, out modRef);
+                    }
+                }
             }
+            entry.RemovedFromProject();
         }
 
         /// <summary>
@@ -202,6 +213,19 @@ namespace Microsoft.PythonTools.Analysis {
             _xamlByFilename[filePath] = entry;
 
             return entry;
+        }
+
+        /// <summary>
+        /// Returns a sequence of project entries that import the specified
+        /// module. The sequence will be empty if the module is unknown.
+        /// </summary>
+        public IEnumerable<IPythonProjectEntry> GetEntriesThatImportModule(string moduleName) {
+            ModuleReference moduleRef;
+            if (!Modules.TryGetValue(moduleName, out moduleRef)) {
+                return Enumerable.Empty<IPythonProjectEntry>();
+            }
+
+            return moduleRef.References.Select(mi => mi.ProjectEntry).OfType<IPythonProjectEntry>();
         }
 
         /// <summary>

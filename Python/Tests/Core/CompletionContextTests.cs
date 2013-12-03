@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using IronPython.Hosting;
@@ -177,13 +178,13 @@ yield_expression = 42
 ";
 
             var completionList = GetCompletionSetCtrlSpace(
-                code.IndexOf("yield_") + 6, 
+                code.IndexOf("yield_") + 6,
                 code).Completions.Select(x => x.DisplayText).ToArray();
 
             AssertUtil.DoesntContain(completionList, "yield");
             AssertUtil.Contains(completionList, "yield_expression");
 
-            completionList  = GetCompletionSetCtrlSpace(
+            completionList = GetCompletionSetCtrlSpace(
                 code.IndexOf("yield") + 5,
                 code).Completions.Select(x => x.DisplayText).ToArray();
 
@@ -716,7 +717,7 @@ class Baz(Fob, Oar):
     def None
 "}) {
                 var completionList = GetCompletionSetCtrlSpace(code.IndexOf("None"), code).Completions.Select(x => x.InsertionText).ToArray();
-                
+
                 Console.WriteLine(code);
                 AssertUtil.Contains(completionList, @"func_a(self, a = 100):
         return super(Baz, self).func_a(a)");
@@ -839,6 +840,57 @@ def func(a):
             Assert.AreEqual(1, sigs.Signatures.Count);
             Assert.AreEqual(1, sigs.Signatures[0].Parameters.Count);
             Assert.AreEqual(expected2, sigs.Signatures[0].Documentation);
+        }
+
+
+        [TestMethod, Priority(0)]
+        public void LoadAndUnloadModule() {
+            var factories = new[] { InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(new Version(3, 3)) };
+            using (var analyzer = new VsProjectAnalyzer(factories[0], factories, new MockErrorProviderFactory())) {
+                var m1Path = TestData.GetPath("TestData\\SimpleImport\\module1.py");
+                var m2Path = TestData.GetPath("TestData\\SimpleImport\\module2.py");
+
+                var entry1 = analyzer.AnalyzeFile(m1Path) as IPythonProjectEntry;
+                var entry2 = analyzer.AnalyzeFile(m2Path) as IPythonProjectEntry;
+                analyzer.WaitForCompleteAnalysis(_ => true);
+
+                AssertUtil.ContainsExactly(
+                    analyzer.Project.GetEntriesThatImportModule("module1").Select(m => m.ModuleName),
+                    "module2"
+                );
+
+                AssertUtil.ContainsExactly(
+                    entry2.Analysis.GetValuesByIndex("x", 0).Select(v => v.TypeId),
+                    BuiltinTypeId.Int
+                );
+
+                analyzer.UnloadFile(entry1);
+                analyzer.WaitForCompleteAnalysis(_ => true);
+
+                // Even though module1 has been unloaded, we still know that
+                // module2 imports it.
+                AssertUtil.ContainsExactly(
+                    analyzer.Project.GetEntriesThatImportModule("module1").Select(m => m.ModuleName),
+                    "module2"
+                );
+
+                AssertUtil.ContainsExactly(
+                    entry2.Analysis.GetValuesByIndex("x", 0).Select(v => v.TypeId)
+                );
+
+                analyzer.AnalyzeFile(m1Path);
+                analyzer.WaitForCompleteAnalysis(_ => true);
+
+                AssertUtil.ContainsExactly(
+                    analyzer.Project.GetEntriesThatImportModule("module1").Select(m => m.ModuleName),
+                    "module2"
+                );
+
+                AssertUtil.ContainsExactly(
+                    entry2.Analysis.GetValuesByIndex("x", 0).Select(v => v.TypeId),
+                    BuiltinTypeId.Int
+                );
+            }
         }
 
         private static HashSet<string> EditAndGetCompletions(string code, string editText, int editInsert, string completeAfter, PythonLanguageVersion version = PythonLanguageVersion.V27) {
@@ -1007,7 +1059,7 @@ def func(a):
 
 #pragma warning disable 618
             var context = snapshot.GetCompletions(
-                span, 
+                span,
                 new MockTrackingPoint(snapshot, location),
                 new CompletionOptions {
                     HideAdvancedMembers = false,
@@ -1036,7 +1088,7 @@ def func(a):
                 var classifierProvider = new PythonClassifierProvider(new MockContentTypeRegistryService());
                 classifierProvider._classificationRegistry = new MockClassificationTypeRegistryService();
                 classifierProvider.GetClassifier(buffer);
-                
+
                 var snapshot = (MockTextSnapshot)buffer.CurrentSnapshot;
 
                 if (analyze) {

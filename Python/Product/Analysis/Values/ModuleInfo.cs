@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.Interpreter;
@@ -32,6 +33,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         private Dictionary<string, Tuple<CallDelegate, bool>> _specialized;
         private ModuleInfo _parentPackage;
         private DependentData _definition = new DependentData();
+        private readonly HashSet<ModuleReference> _referencedModules;
 
         public ModuleInfo(string moduleName, ProjectEntry projectEntry, IModuleContext moduleContext) {
             _name = moduleName;
@@ -41,6 +43,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             _weakModule = new WeakReference(this);
             _context = moduleContext;
             _scopes = new Dictionary<Node, InterpreterScope>();
+            _referencedModules = new HashSet<ModuleReference>();
         }
 
         internal void Clear() {
@@ -48,6 +51,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             _scope.ClearLinkedVariables();
             _scope.ClearVariables();
             _scope.ClearNodeScopes();
+            _referencedModules.Clear();
         }
 
         public override IDictionary<string, IAnalysisSet> GetAllMembers(IModuleContext moduleContext) {
@@ -113,6 +117,27 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 _packageModules.Remove(name);
             }
             return null;
+        }
+
+        public void AddModuleReference(ModuleReference moduleRef) {
+            if (moduleRef == null) {
+                Debug.Fail("moduleRef should never be null");
+                throw new ArgumentNullException("moduleRef");
+            }
+            _referencedModules.Add(moduleRef);
+            moduleRef.AddReference(this);
+        }
+
+        public void RemoveModuleReference(ModuleReference moduleRef) {
+            if (_referencedModules.Remove(moduleRef)) {
+                moduleRef.RemoveReference(this);
+            }
+        }
+
+        public IEnumerable<ModuleReference> ModuleReferences {
+            get {
+                return _referencedModules;
+            }
         }
 
         public void SpecializeFunction(string name, CallDelegate callable, bool mergeOriginalAnalysis) {

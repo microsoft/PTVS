@@ -284,7 +284,7 @@ namespace Microsoft.PythonTools.Analysis {
                 }
             }
 
-            public override bool HasEphemeralReferences {
+            public override bool HasReferences {
                 get {
                     return false;
                 }
@@ -333,15 +333,15 @@ namespace Microsoft.PythonTools.Analysis {
                 }
             }
 
-            public override bool HasEphemeralReferences {
+            public override bool HasReferences {
                 get {
-                    return _reference.HasEphemeralReferences;
+                    return _reference.HasReferences;
                 }
             }
 
             public override bool IsValid {
                 get {
-                    return Module != null || HasEphemeralReferences;
+                    return Module != null || HasReferences;
                 }
             }
 
@@ -463,7 +463,7 @@ namespace Microsoft.PythonTools.Analysis {
             get;
         }
 
-        public abstract bool HasEphemeralReferences {
+        public abstract bool HasReferences {
             get;
         }
 

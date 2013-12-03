@@ -29,14 +29,24 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         private InterpreterScope _scope;
         private readonly ProjectEntry _entry;
         private readonly Stack<AnalysisUnit> _analysisStack = new Stack<AnalysisUnit>();
+        private readonly HashSet<ModuleReference> _moduleReferencesAtStart;
         private AnalysisUnit _curUnit;
         private SuiteStatement _curSuite;
 
         public OverviewWalker(ProjectEntry entry, AnalysisUnit topAnalysis) {
             _entry = entry;
+            _moduleReferencesAtStart = new HashSet<ModuleReference>(entry.MyScope.ModuleReferences);
             _curUnit = topAnalysis;
 
             _scope = topAnalysis.Scope;
+        }
+
+        public override void PostWalk(PythonAst node) {
+            base.PostWalk(node);
+
+            foreach (var moduleRef in _moduleReferencesAtStart) {
+                _entry.MyScope.RemoveModuleReference(moduleRef);
+            }
         }
 
         // TODO: What about names being redefined?
@@ -418,8 +428,21 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             return base.Walk(node);
         }
 
+        private void AddModuleReference(string dottedName) {
+            var moduleTable = _entry.ProjectState.Modules;
+            ModuleReference modRef;
+            if (!moduleTable.TryGetValue(dottedName, out modRef)) {
+                moduleTable[dottedName] = modRef = new ModuleReference();
+            }
+            _moduleReferencesAtStart.Remove(modRef);
+            _entry.MyScope.AddModuleReference(modRef);
+        }
+
         public override bool Walk(FromImportStatement node) {
             UpdateChildRanges(node);
+            
+            AddModuleReference(node.Root.MakeString());
+
             var asNames = node.AsNames ?? node.Names;
             int len = Math.Min(node.Names.Count, asNames.Count);
             for (int i = 0; i < len; i++) {
@@ -464,6 +487,10 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         }
 
         public override bool Walk(ImportStatement node) {
+            foreach(var dotted in node.Names) {
+                AddModuleReference(dotted.MakeString());
+            }
+
             for (int i = 0; i < node.Names.Count; i++) {
                 NameExpression name = null;
                 if (i < node.AsNames.Count && node.AsNames[i] != null) {

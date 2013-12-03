@@ -218,7 +218,6 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         }
 
         public override bool Walk(FromImportStatement node) {
-            ModuleReference moduleRef;
             IModule userMod = null;
             RelativeModuleName relativeName = node.Root as RelativeModuleName;
             if (relativeName != null) {
@@ -244,23 +243,16 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             }
 
             if (userMod == null) {
+                ModuleReference moduleRef;
                 var modName = node.Root.MakeString();
 
-                if (!TryGetUserModule(modName, out moduleRef) || moduleRef.Module == null) {
-                    userMod = ProjectState.ImportBuiltinModule(modName);
+                if (!TryGetUserModule(modName, out moduleRef)) {
+                    moduleRef = ProjectState.Modules[modName] = new ModuleReference();
                 }
 
-                if (moduleRef != null) {
-                    if (moduleRef.Module != null) {
-                        userMod = moduleRef.Module as IModule;
-                        if (userMod == null) {
-                            moduleRef.AddEphemeralReference(_unit.DeclaringModule);
-                        }
-                    }
-                } else if (userMod == null) {
-                    moduleRef = ProjectState.Modules[modName] = new ModuleReference();
-                    moduleRef.AddEphemeralReference(_unit.DeclaringModule);
-                }
+                moduleRef.AddReference(GlobalScope);
+
+                userMod = moduleRef.Module ?? ProjectState.ImportBuiltinModule(modName);
             }
 
             var asNames = node.AsNames ?? node.Names;
@@ -441,19 +433,17 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                     }
                 }
 
-                if (modRef != null) {
-                    if (modRef.Module != null) {
-                        modRef.Module.Imported(_unit);
+                if (modRef == null) {
+                    modRef = ProjectState.Modules[importing] = new ModuleReference();
+                }
 
-                        def.AddTypes(_unit, modRef.AnalysisModule);
-                        def.AddAssignment(nameNode, _unit);
-                        continue;
-                    } else {
-                        modRef.AddEphemeralReference(_unit.DeclaringModule);
-                    }
-                } else {
-                    ProjectState.Modules[importing] = modRef = new ModuleReference();
-                    modRef.AddEphemeralReference(_unit.DeclaringModule);
+                modRef.AddReference(_unit.DeclaringModule);
+
+                if (modRef.Module != null) {
+                    modRef.Module.Imported(_unit);
+
+                    def.AddTypes(_unit, modRef.AnalysisModule);
+                    def.AddAssignment(nameNode, _unit);
                 }
             }
             return true;
