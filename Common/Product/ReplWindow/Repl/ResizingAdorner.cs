@@ -19,7 +19,11 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 
+#if NTVS_FEATURE_INTERACTIVEWINDOW
+namespace Microsoft.NodejsTools.Repl {
+#else
 namespace Microsoft.VisualStudio.Repl {
+#endif
     internal class ResizingAdorner : Adorner {
         private readonly VisualCollection _visualChildren;
         private readonly Thumb _bottomRight;

@@ -150,58 +150,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Guids.cs" />
-    <Compile Include="ReplMouseProcessor.cs" />
-    <Compile Include="Repl\InlineReplAdornmentManager.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Repl\IReplCommand2.cs" />
-    <Compile Include="Repl\Margin\GlyphPrompts.cs" />
-    <Compile Include="Repl\Margin\PromptMarginVisualManager.cs" />
-    <Compile Include="Repl\Margin\PromptMargin.cs" />
-    <Compile Include="Repl\OutputBuffer.cs" />
-    <Compile Include="Repl\OutputColors.cs" />
-    <Compile Include="Repl\ReplOutputClassificationFormatDefinitions.cs" />
-    <Compile Include="Repl\ReplOutputClassifier.cs" />
-    <Compile Include="Repl\ReplOutputClassifierProvider.cs" />
-    <Compile Include="Repl\ReplOutputContentType.cs" />
-    <Compile Include="Repl\CustomTrackingSpan.cs" />
-    <Compile Include="Repl\IContentTypeMetadata.cs" />
-    <Compile Include="Repl\IReplWindowCreationListener.cs" />
-    <Compile Include="Repl\ReplInput.cs" />
-    <Compile Include="Repl\Commands\CancelExecutionCommand.cs" />
-    <Compile Include="Repl\Commands\ClearScreenReplCommand.cs" />
-    <Compile Include="Repl\Commands\EchoReplCommand.cs" />
-    <Compile Include="Repl\Commands\ResetReplCommand.cs" />
-    <Compile Include="Repl\Commands\WaitReplCommand.cs" />
-    <Compile Include="Repl\ReplAggregateClassifier.cs" />
-    <Compile Include="Repl\ReplAggregateClassifierProvider.cs" />
-    <Compile Include="Repl\ReplConstants.cs" />
-    <Compile Include="Repl\ExecutionResult.cs" />
-    <Compile Include="Repl\History.cs" />
-    <Compile Include="Repl\IMultipleScopeEvaluator.cs" />
-    <Compile Include="Repl\InlineReplAdornment.cs" />
-    <Compile Include="Repl\IReplCommand.cs" />
-    <Compile Include="Repl\IReplEvaluator.cs" />
-    <Compile Include="Repl\IReplEvaluatorProvider.cs" />
-    <Compile Include="Repl\IReplWindow.cs" />
-    <Compile Include="Repl\IReplWindowProvider.cs" />
-    <Compile Include="Repl\ReplContentType.cs" />
-    <Compile Include="Repl\ReplOptions.cs" />
-    <Compile Include="Repl\ReplRoleAttribute.cs" />
-    <Compile Include="Repl\ReplWindow.cs" />
-    <Compile Include="Repl\ReplWindowExtensions.cs" />
-    <Compile Include="Repl\ReplWindowProvider.cs" />
-    <Compile Include="Repl\ResizingAdorner.cs" />
-    <Compile Include="Repl\ZoomableInlineAdornment.cs" />
     <Compile Include="Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <Compile Include="GlobalSuppressions.cs" />
-    <Compile Include="ReplWindowPackage.cs" />
-    <Compile Include="PkgCmdID.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resources.resx">
@@ -234,6 +187,7 @@
     <RegisterOutputPackage>true</RegisterOutputPackage>
     <RegisterWithCodebase>true</RegisterWithCodebase>
   </PropertyGroup>
+  <Import Project="$(BuildRoot)\Common\Product\ReplWindow\ReplWindow.proj" />
   <Import Project="..\ProjectAfter.settings" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

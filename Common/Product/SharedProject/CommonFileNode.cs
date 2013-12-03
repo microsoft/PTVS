@@ -251,8 +251,8 @@ namespace Microsoft.VisualStudioTools.Project {
             ResetNodeProperties();
             ItemNode.RemoveFromProjectFile();
             if (!File.Exists(Url) || IsLinkFile) {
-                Parent.RemoveChild(this);
                 ProjectMgr.OnItemDeleted(this);
+                Parent.RemoveChild(this);
             } else {
                 ItemNode = new AllFilesProjectElement(Url, ItemNode.ItemTypeName, ProjectMgr);
                 if (!ProjectMgr.IsShowingAllFiles) {

@@ -20,7 +20,11 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using Microsoft.VisualStudio.Text.Editor;
 
+#if NTVS_FEATURE_INTERACTIVEWINDOW
+namespace Microsoft.NodejsTools.Repl {
+#else
 namespace Microsoft.VisualStudio.Repl {
+#endif
     internal class ZoomableInlineAdornment : ContentControl {
         private readonly ITextView _parent;
         private ResizingAdorner _adorner;

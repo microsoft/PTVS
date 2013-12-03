@@ -32,14 +32,14 @@ namespace TestUtilities.SharedProject {
     /// </summary>
     public sealed class SolutionFile : IDisposable {
         public readonly string Filename;
-        public readonly ProjectDefinition[] Projects;
+        public readonly ISolutionElement[] Projects;
 
-        private SolutionFile(string slnFilename, ProjectDefinition[] projects) {
+        private SolutionFile(string slnFilename, ISolutionElement[] projects) {
             Filename = slnFilename;
             Projects = projects;
         }
 
-        public static SolutionFile Generate(string solutionName, params ProjectDefinition[] toGenerate) {
+        public static SolutionFile Generate(string solutionName, params ISolutionElement[] toGenerate) {
             return Generate(solutionName, -1, toGenerate);
         }
 
@@ -51,7 +51,7 @@ namespace TestUtilities.SharedProject {
         /// <param name="pathSpaceRemaining">The amount of path space remaining, or -1 to generate normally</param>
         /// <param name="toGenerate">The projects to be incldued in the generated solution</param>
         /// <returns></returns>
-        public static SolutionFile Generate(string solutionName, int pathSpaceRemaining, params ProjectDefinition[] toGenerate) {
+        public static SolutionFile Generate(string solutionName, int pathSpaceRemaining, params ISolutionElement[] toGenerate) {
             List<MSBuild.Project> projects = new List<MSBuild.Project>();
             var location = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
 
@@ -63,7 +63,7 @@ namespace TestUtilities.SharedProject {
 
             MSBuild.ProjectCollection collection = new MSBuild.ProjectCollection();
             foreach (var project in toGenerate) {
-                projects.Add(project.ProjectType.Generate(collection, location, project.Name, project.Items));
+                projects.Add(project.Save(collection, location));
             }
 
 #if DEV10
@@ -76,15 +76,19 @@ namespace TestUtilities.SharedProject {
 #error Unsupported VS version
 #endif
             for (int i = 0; i < projects.Count; i++) {
+                if (toGenerate[i].Flags.HasFlag(SolutionElementFlags.ExcludeFromSolution)) {
+                    continue;
+                }
+
                 var project = projects[i];
-                var kind = toGenerate[i].ProjectType;
+                var projectTypeGuid = toGenerate[i].TypeGuid;
 
                 slnFile.AppendFormat(@"Project(""{0:B}"") = ""{1}"", ""{2}"", ""{3:B}""
 EndProject
-", kind.ProjectTypeGuid,
- Path.GetFileNameWithoutExtension(project.FullPath),
- CommonUtils.GetRelativeFilePath(location, project.FullPath),
- Guid.Parse(project.GetProperty("ProjectGuid").EvaluatedValue));
+", projectTypeGuid,
+ project != null ? Path.GetFileNameWithoutExtension(project.FullPath) : toGenerate[i].Name,
+ project != null ? CommonUtils.GetRelativeFilePath(location, project.FullPath): toGenerate[i].Name,
+ project != null ? Guid.Parse(project.GetProperty("ProjectGuid").EvaluatedValue) : Guid.NewGuid());
             }
             slnFile.Append(@"Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -93,7 +97,12 @@ EndProject
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 ");
-            foreach (var project in projects) {
+            for (int i = 0; i < projects.Count; i++) {
+                if (toGenerate[i].Flags.HasFlag(SolutionElementFlags.ExcludeFromConfiguration)) {
+                    continue;
+                }
+
+                var project = projects[i];
                 slnFile.AppendFormat(@"		{0:B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{0:B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0:B}.Release|Any CPU.ActiveCfg = Release|Any CPU

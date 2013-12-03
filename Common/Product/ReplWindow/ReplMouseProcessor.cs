@@ -13,11 +13,19 @@
  * ***************************************************************************/
 
 using System.ComponentModel.Composition;
+#if NTVS_FEATURE_INTERACTIVEWINDOW
+using Microsoft.NodejsTools.Repl;
+#else
 using Microsoft.VisualStudio.Repl;
+#endif
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Utilities;
 
+#if NTVS_FEATURE_INTERACTIVEWINDOW
+namespace Microsoft.NodejsTools {
+#else
 namespace Microsoft.VisualStudio {
+#endif
     /// <summary>
     /// Processes right click events in the REPL window to handle our adornment
     /// context menu.

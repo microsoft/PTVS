@@ -15,10 +15,12 @@
 // PkgCmdID.cs
 // MUST match PkgCmdID.h
 
-namespace Microsoft.VisualStudio.Repl
-{
-    static class PkgCmdIDList
-    {
+#if NTVS_FEATURE_INTERACTIVEWINDOW
+namespace Microsoft.NodejsTools.Repl {
+#else
+namespace Microsoft.VisualStudio.Repl {
+#endif
+    static class PkgCmdIDList {
         public const uint cmdidSmartExecute = 0x103;
         public const uint cmdidBreakRepl = 0x104;
         public const uint cmdidResetRepl = 0x105;

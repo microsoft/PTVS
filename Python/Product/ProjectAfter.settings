@@ -1,4 +1,22 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Choose>
+    <When Condition="'$(Language)' == 'C#' and !$(SuppressCommonAssemblyMetadata)">
+      <PropertyGroup>
+        <TrackFileAccess>false</TrackFileAccess>            <!-- CHECK RELEVANCE -->
+      </PropertyGroup>
+      <ItemGroup>
+        <Compile Include="$(BuildRoot)\Python\Product\AssemblyInfoCommon.cs">
+          <Link>AssemblyInfoCommon.cs</Link>
+        </Compile>
+        <Compile Include="$(BuildRoot)\Python\Product\AssemblyVersion.cs">
+          <Link>AssemblyVersion.cs</Link>
+        </Compile>
+      </ItemGroup>
+      <PropertyGroup>
+        <TrackFileAccess>true</TrackFileAccess>             <!-- CHECK RELEVANCE -->
+      </PropertyGroup>
+    </When>
+  </Choose>
   <Import Project="$(BuildRoot)\Build\Common.Build.targets" />
     <!--
     =================================================================================
@@ -27,6 +45,20 @@
         <LastGenOutput Condition="'%(ConditionalEmbeddedResource.LastGenOutput)' != ''">%(ConditionalEmbeddedResource.LastGenOutput)</LastGenOutput>
         <Generator Condition="'%(ConditionalEmbeddedResource.Generator)' != ''">%(ConditionalEmbeddedResource.Generator)</Generator>
       </EmbeddedResource>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="TransformZipProject"
+          BeforeTargets="MainResourcesGeneration"
+          Condition="'@(TransformedZipProject)' != ''"
+          >
+    <WriteLinesToFile 
+      File="@(TransformedZipProject->'%(RootDir)%(Directory)%(Filename)')" 
+      Lines="$([System.IO.File]::ReadAllText('%(fullpath)').Replace(&quot;_VSVERSION_&quot;,&quot;$(VSTarget)&quot;))" 
+      Overwrite="true"/> 
+      
+    <ItemGroup>
+      <ZipProject Include="@(TransformedZipProject->'%(RootDir)%(Directory)%(Filename)')" />
     </ItemGroup>
   </Target>
 </Project>

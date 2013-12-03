@@ -18,7 +18,11 @@ using System.Threading.Tasks;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 
+#if NTVS_FEATURE_INTERACTIVEWINDOW
+namespace Microsoft.NodejsTools.Repl {
+#else
 namespace Microsoft.VisualStudio.Repl {
+#endif
 #if INTERACTIVE_WINDOW
     using IReplCommand = IInteractiveWindowCommand;
     using IReplEvaluator = IInteractiveEngine;

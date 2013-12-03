@@ -17,7 +17,11 @@ using System.Collections.Generic;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
 
+#if NTVS_FEATURE_INTERACTIVEWINDOW
+namespace Microsoft.NodejsTools.Repl {
+#else
 namespace Microsoft.VisualStudio.Repl {
+#endif
     /// <summary>
     /// Classifies regions for REPL error output spans.  These are always classified as errors.
     /// </summary>

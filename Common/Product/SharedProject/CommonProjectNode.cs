@@ -182,9 +182,10 @@ namespace Microsoft.VisualStudioTools.Project {
 
         protected bool IsUserProjectFileDirty {
             get {
-                return _userBuildProject != null && _userBuildProject.Xml.HasUnsavedChanges;
+                return _userBuildProject != null && 
+                    _userBuildProject.Xml.HasUnsavedChanges;
+                }
             }
-        }
 
         #endregion
 
@@ -422,8 +423,20 @@ namespace Microsoft.VisualStudioTools.Project {
             _watcher = CreateFileSystemWatcher(ProjectHome);
             _attributesWatcher = CreateAttributesWatcher(ProjectHome);
 
-            // add everything that's on disk that we don't have in the project
-            MergeDiskNodes(this, ProjectHome);
+            _currentMerger = new DiskMerger(this, this, ProjectHome);
+        }
+
+        /// <summary>
+        /// Called to ensure that the hierarchy's show all files nodes are in
+        /// sync with the file system.
+        /// </summary>
+        protected void SyncFileSystem() {
+            if (_currentMerger == null) {
+                _currentMerger = new DiskMerger(this, this, ProjectHome);
+            }
+            while (_currentMerger.ContinueMerge(ParentHierarchy != null)) {
+            }
+            _currentMerger = null;
         }
 
         private void BoldStartupItem() {
@@ -443,6 +456,9 @@ namespace Microsoft.VisualStudioTools.Project {
             watcher.Deleted += new FileSystemEventHandler(FileExistanceChanged);
             watcher.Renamed += new RenamedEventHandler(FileNameChanged);
             watcher.Changed += FileContentsChanged;
+#if DEV12_OR_LATER
+            watcher.Renamed += FileContentsChanged;
+#endif
             watcher.Error += WatcherError;
             watcher.EnableRaisingEvents = true;
             watcher.InternalBufferSize = 1024 * 4;  // 4k is minimum buffer size
@@ -468,7 +484,7 @@ namespace Microsoft.VisualStudioTools.Project {
             lock (_fileSystemChanges) {
                 _fileSystemChanges.Clear(); // none of the other changes matter now, we'll rescan the world
                 _currentMerger = null;  // abort any current merge now that we have a new one
-                _fileSystemChanges.Enqueue(new FileSystemChange(this, WatcherChangeTypes.All, null));
+                _fileSystemChanges.Enqueue(new FileSystemChange(this, WatcherChangeTypes.All, null, watcher: sender as FileSystemWatcher));
                 TriggerIdle();
             }
         }
@@ -503,6 +519,8 @@ namespace Microsoft.VisualStudioTools.Project {
         }
 
         protected internal override int ShowAllFiles() {
+            UIThread.Instance.MustBeCalledFromUIThread();
+
             if (!QueryEditProjectFile(false)) {
                 return VSConstants.E_FAIL;
             }
@@ -542,11 +560,10 @@ namespace Microsoft.VisualStudioTools.Project {
                 var allFiles = curNode.ItemNode as AllFilesProjectElement;
                 if (allFiles != null) {
                     curNode.IsVisible = enabled;
-
                     if (enabled) {
-                        ProjectMgr.OnItemAdded(node, curNode);
+                        OnItemAdded(node, curNode);
                     } else {
-                        ProjectMgr.OnItemDeleted(curNode);
+                        RaiseItemDeleted(curNode);
                     }
                 }
             }
@@ -579,11 +596,13 @@ namespace Microsoft.VisualStudioTools.Project {
             private readonly string _initialDir;
             private readonly Stack<DirState> _remainingDirs = new Stack<DirState>();
             private readonly CommonProjectNode _project;
+            private readonly FileSystemWatcher _watcher;
 
-            public DiskMerger(CommonProjectNode project, HierarchyNode parent, string dir) {
+            public DiskMerger(CommonProjectNode project, HierarchyNode parent, string dir, FileSystemWatcher watcher = null) {
                 _project = project;
                 _initialDir = dir;
                 _remainingDirs.Push(new DirState(dir, parent));
+                _watcher = watcher;
             }
 
             /// <summary>
@@ -592,8 +611,11 @@ namespace Microsoft.VisualStudioTools.Project {
             /// 
             /// Returns true if the merge needs to continue, or false if the merge has completed.
             /// </summary>
-            public bool ContinueMerge() {
+            public bool ContinueMerge(bool hierarchyCreated = true) {
                 if (_remainingDirs.Count == 0) {   // all done
+                    if (_watcher != null) {
+                        _watcher.EnableRaisingEvents = true;
+                    }
                     return false;
                 }
 
@@ -611,6 +633,7 @@ namespace Microsoft.VisualStudioTools.Project {
                     return true;
                 }
 
+                bool wasExpanded = hierarchyCreated ? dir.Parent.GetIsExpanded() : false;
                 foreach (var curDir in dirs) {
                     if (_project.IsFileHidden(curDir)) {
                         continue;
@@ -625,7 +648,7 @@ namespace Microsoft.VisualStudioTools.Project {
                         _project.CreateSymLinkWatcher(curDir);
                     }
 
-                    var existing = _project.AddAllFilesFolder(dir.Parent, curDir + Path.DirectorySeparatorChar);
+                    var existing = _project.AddAllFilesFolder(dir.Parent, curDir + Path.DirectorySeparatorChar, hierarchyCreated);
                     missingChildren.Remove(existing);
                     _remainingDirs.Push(new DirState(curDir, existing));
                 }
@@ -635,6 +658,12 @@ namespace Microsoft.VisualStudioTools.Project {
                     files = Directory.EnumerateFiles(dir.Name);
                 } catch {
                     // directory was deleted, we don't have access, etc...
+                                        
+                    // We are about to return and some of the previous operations may have affect the Parent's Expanded
+                    // state.  Set it back to what it was
+                    if (hierarchyCreated) {
+                        dir.Parent.ExpandItem(wasExpanded ? EXPANDFLAGS.EXPF_ExpandFolder : EXPANDFLAGS.EXPF_CollapseFolder);
+                    }
                     return true;
                 }
 
@@ -650,6 +679,10 @@ namespace Microsoft.VisualStudioTools.Project {
                     if (child.ItemNode.IsExcluded) {
                         _project.RemoveSubTree(child);
                     }
+                }
+
+                if (hierarchyCreated) {
+                    dir.Parent.ExpandItem(wasExpanded ? EXPANDFLAGS.EXPF_ExpandFolder : EXPANDFLAGS.EXPF_CollapseFolder);
                 }
 
                 return true;
@@ -673,6 +706,7 @@ namespace Microsoft.VisualStudioTools.Project {
         }
 
         private void RemoveSubTree(HierarchyNode node) {
+            UIThread.Instance.MustBeCalledFromUIThread();
             foreach (var child in node.AllChildren) {
                 RemoveSubTree(child);
             }
@@ -787,15 +821,17 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <summary>
         /// Adds a folder which is displayed when Show All files is enabled
         /// </summary>
-        private HierarchyNode AddAllFilesFolder(HierarchyNode curParent, string curDir) {
+        private HierarchyNode AddAllFilesFolder(HierarchyNode curParent, string curDir, bool hierarchyCreated = true) {
             var folderNode = FindNodeByFullPath(curDir);
             if (folderNode == null) {
                 folderNode = CreateFolderNode(new AllFilesProjectElement(curDir, "Folder", this));
                 AddAllFilesNode(curParent, folderNode);
 
+                if (hierarchyCreated) {
                 // Solution Explorer will expand the parent when an item is
                 // added, which we don't want
                 folderNode.ExpandItem(EXPANDFLAGS.EXPF_CollapseFolder);
+            }
             }
             return folderNode;
         }
@@ -943,7 +979,7 @@ namespace Microsoft.VisualStudioTools.Project {
                     try {
 #endif
                         if (change._type == WatcherChangeTypes.All) {
-                            _currentMerger = new DiskMerger(this, this, ProjectHome);
+                            _currentMerger = new DiskMerger(this, this, ProjectHome, change._watcher);
                             continue;
                         } else {
                             change.ProcessChange();
@@ -967,12 +1003,14 @@ namespace Microsoft.VisualStudioTools.Project {
             internal readonly WatcherChangeTypes _type;
             private readonly string _path;
             private readonly bool _isRename;
+            internal readonly FileSystemWatcher _watcher;
 
-            public FileSystemChange(CommonProjectNode node, WatcherChangeTypes changeType, string path, bool isRename = false) {
+            public FileSystemChange(CommonProjectNode node, WatcherChangeTypes changeType, string path, bool isRename = false, FileSystemWatcher watcher = null) {
                 _project = node;
                 _type = changeType;
                 _path = path;
                 _isRename = isRename;
+                _watcher = watcher;
             }
 
             public override string ToString() {
@@ -1023,8 +1061,8 @@ namespace Microsoft.VisualStudioTools.Project {
 
                     // then remove us if we're an all files node
                     if (current.ItemNode is AllFilesProjectElement) {
-                        parent.RemoveChild(current);
                         _project.OnItemDeleted(current);
+                        parent.RemoveChild(current);
                     }
                 }
             }
@@ -1032,13 +1070,18 @@ namespace Microsoft.VisualStudioTools.Project {
             private void ChildDeleted(HierarchyNode child) {
                 if (child != null) {
                     _project.TryDeactivateSymLinkWatcher(child);
+                    UIThread.Instance.MustBeCalledFromUIThread();
 
+                    // rapid changes can arrive out of order, if the file or directory 
+                    // actually exists ignore the event.
+                    if ((!File.Exists(child.Url) && !Directory.Exists(child.Url)) || 
+                        _project.IsFileHidden(child.Url)) {
                     if (child.ItemNode.IsExcluded) {
                         RemoveAllFilesChildren(child);
-
                         // deleting a show all files item, remove the node.
-                        child.Parent.RemoveChild(child);
                         _project.OnItemDeleted(child);
+                            child.Parent.RemoveChild(child);
+                            child.Close();
                     } else {
                         Debug.Assert(!child.IsNonMemberItem);
                         // deleting an item in the project, fix the icon, also
@@ -1047,6 +1090,7 @@ namespace Microsoft.VisualStudioTools.Project {
                         RedrawIcon(child);
                     }
                 }
+            }            
             }            
 
             private void ChildCreated(HierarchyNode child) {
@@ -1084,27 +1128,19 @@ namespace Microsoft.VisualStudioTools.Project {
                         }
 
                         var folderNode = _project.AddAllFilesFolder(parent, _path + Path.DirectorySeparatorChar);
-                        // we may have just moved a directory from another location (e.g. drag and
-                        // and drop in explorer), in which case we also need to process the items
-                        // which are in the folder that we won't receive create notifications for.
-
-                        // First, make sure we don't have any children
-                        RemoveAllFilesChildren(folderNode);
+                        bool folderNodeWasExpanded = folderNode.GetIsExpanded();
 
                         // then add the folder nodes
                         _project.MergeDiskNodes(folderNode, _path);
-
                         _project.OnInvalidateItems(folderNode);
-                    } else {
+
+                        folderNode.ExpandItem(folderNodeWasExpanded ? EXPANDFLAGS.EXPF_ExpandFolder : EXPANDFLAGS.EXPF_CollapseFolder);
+
+                    } else if (File.Exists(_path)) { // rapid changes can arrive out of order, make sure the file still exists
                         _project.AddAllFilesFile(parent, _path);
                     }
 
-                    if (!wasExpanded) {
-                        // Solution Explorer will expand the parent when an item is
-                        // added, which we don't want, so we check it's state before
-                        // adding, and then collapse the folder if it was expanded.
-                        parent.ExpandItem(EXPANDFLAGS.EXPF_CollapseFolder);
-                    }
+                    parent.ExpandItem(wasExpanded ? EXPANDFLAGS.EXPF_ExpandFolder: EXPANDFLAGS.EXPF_CollapseFolder);
                 }
             }
         }
@@ -1278,7 +1314,7 @@ namespace Microsoft.VisualStudioTools.Project {
                 }
                 _needBolding[id] = isBold;
                 return;
-            }
+        }
 
             IVsHierarchyItem item;
             if (force) {
@@ -1338,10 +1374,10 @@ namespace Microsoft.VisualStudioTools.Project {
                 }
                 return;
             }
-        }
+                }
 
         private void BoldDeferredItems() {
-            if (_needBolding.Count == 0) {
+            if (_needBolding.Count == 0 || ParentHierarchy == null) {
                 return;
             }
             if (IsClosed) {
@@ -1350,6 +1386,7 @@ namespace Microsoft.VisualStudioTools.Project {
             }
             var items = _needBolding.ToArray();
 
+            AssertHasParentHierarchy();
             IVsUIHierarchyWindow2 windows = UIHierarchyUtilities.GetUIHierarchyWindow(
                 Site as IServiceProvider,
                 new Guid(ToolWindowGuids80.SolutionExplorer)) as IVsUIHierarchyWindow2;
@@ -1538,6 +1575,7 @@ namespace Microsoft.VisualStudioTools.Project {
         /// Returns first immediate child node (non-recursive) of a given type.
         /// </summary>
         private void RefreshStartupFile(HierarchyNode parent, string oldFile, string newFile) {
+            AssertHasParentHierarchy();
             IVsUIHierarchyWindow2 windows = UIHierarchyUtilities.GetUIHierarchyWindow(
                 Site,
                 new Guid(ToolWindowGuids80.SolutionExplorer)) as IVsUIHierarchyWindow2;

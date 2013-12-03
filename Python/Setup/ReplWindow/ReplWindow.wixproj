@@ -13,7 +13,7 @@
     <SccAuxPath>SAK</SccAuxPath>
     <SccLocalPath>SAK</SccLocalPath>
     <DefineConstants>
-      ObjDir=$(BuildRoot)\Common\Product\ReplWindow\obj\Dev$(VSTarget)\$(Configuration);
+      ObjDir=$(BuildRoot)\Python\Product\ReplWindow\obj\Dev$(VSTarget)\$(Configuration);
       VSTargetVersion=$(VSTarget)
     </DefineConstants>
   </PropertyGroup>
@@ -22,7 +22,7 @@
     <Compile Include="ReplWindowVsExt.wxs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="$(BuildRoot)\Common\Product\ReplWindow\ReplWindow.csproj">
+    <ProjectReference Include="$(BuildRoot)\Python\Product\ReplWindow\ReplWindow.csproj">
       <Name>ReplWindow</Name>
       <Project>{20BB6FAC-44D2-4D76-ABFE-0C1E163A1A4F}</Project>
       <Private>True</Private>

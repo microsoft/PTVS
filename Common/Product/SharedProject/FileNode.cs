@@ -758,7 +758,9 @@ namespace Microsoft.VisualStudioTools.Project
                 return null;
             }
 
-            if (newParent.IsNonMemberItem) {
+            //If we are included in the project and our parent isn't then
+            //we need to bring our parent into the project
+            if (!this.IsNonMemberItem && newParent.IsNonMemberItem) {
                 ErrorHandler.ThrowOnFailure(newParent.IncludeInProject(false));
             }
             using (this.ProjectMgr.ExtensibilityEventsDispatcher.Suspend()) {

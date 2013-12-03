@@ -16,7 +16,12 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
+#if Feature_NodejsTools_ReplWindow
+[assembly: AssemblyTitle("Node.js Tools for Visual Studio Interactive Window")]
+#else
 [assembly: AssemblyTitle("Visual Studio Interactive Window")]
+#endif
+
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 

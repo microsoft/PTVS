@@ -29,7 +29,7 @@ namespace TestUtilities.UI {
     public class VisualStudioSolution : IDisposable {
         private readonly SolutionFile _solution;
         private readonly VisualStudioApp _app;
-        private readonly SolutionExplorerTree _solutionExplorer;
+        public readonly SolutionExplorerTree SolutionExplorer;
         public readonly EnvDTE.Project Project;
         private bool _disposed;
 
@@ -39,7 +39,7 @@ namespace TestUtilities.UI {
             Project = _app.OpenProject(solution.Filename);
 
             App.Invoke(Keyboard.Reset);
-            _solutionExplorer = _app.OpenSolutionExplorer();
+            SolutionExplorer = _app.OpenSolutionExplorer();
             SelectSolutionNode();
         }
 
@@ -79,7 +79,7 @@ namespace TestUtilities.UI {
         }
 
         public AutomationElement FindItem(params string[] path) {
-            return _solutionExplorer.FindItem(AddSolutionToPath(path));
+            return SolutionExplorer.FindItem(AddSolutionToPath(path));
         }
 
         private string[] AddSolutionToPath(string[] path) {
@@ -87,7 +87,11 @@ namespace TestUtilities.UI {
         }
 
         public AutomationElement WaitForItem(params string[] path) {
-            return _solutionExplorer.WaitForItem(AddSolutionToPath(path));
+            return SolutionExplorer.WaitForItem(AddSolutionToPath(path));
+        }
+
+        public AutomationElement WaitForItemRemoved(params string[] path) {
+            return SolutionExplorer.WaitForItemRemoved(AddSolutionToPath(path));
         }
 
         public string Filename {
@@ -104,7 +108,7 @@ namespace TestUtilities.UI {
 
         private string SolutionNodeText {
             get {
-                if (_solution.Projects.Length > 1) {
+                if (_solution.Projects.Count(sln => !sln.Flags.HasFlag(SolutionElementFlags.ExcludeFromConfiguration | SolutionElementFlags.ExcludeFromSolution)) > 1) {
                     return String.Format(
                         "Solution '{0}' ({1} projects)",
                         Path.GetFileNameWithoutExtension(_solution.Filename),
@@ -130,8 +134,8 @@ namespace TestUtilities.UI {
         /// see the bad behavior.
         /// </summary>
         public void SelectSolutionNode() {
-            var item = _solutionExplorer.WaitForItem(SolutionNodeText);
-            _solutionExplorer.CenterInView(item);
+            var item = SolutionExplorer.WaitForItem(SolutionNodeText);
+            SolutionExplorer.CenterInView(item);
             Mouse.MoveTo(item.GetClickablePoint());
             Mouse.Click(MouseButton.Left);
         }
@@ -150,8 +154,8 @@ namespace TestUtilities.UI {
         protected virtual void Dispose(bool disposing) {
             if (!_disposed) {
                 if (disposing) {
-                    _solution.Dispose();
                     _app.Dispose();
+                    _solution.Dispose();
                 }
 
                 _disposed = true;
@@ -161,23 +165,23 @@ namespace TestUtilities.UI {
         #endregion
 
         public void AssertFileExists(params string[] path) {
-            _solutionExplorer.AssertFileExists(Directory, AddSolutionToPath(path));
+            SolutionExplorer.AssertFileExists(Directory, AddSolutionToPath(path));
         }
 
         public void AssertFileDoesntExist(params string[] path) {
-            _solutionExplorer.AssertFileDoesntExist(Directory, AddSolutionToPath(path));
+            SolutionExplorer.AssertFileDoesntExist(Directory, AddSolutionToPath(path));
         }
 
         public void AssertFolderExists(params string[] path) {
-            _solutionExplorer.AssertFolderExists(Directory, AddSolutionToPath(path));
+            SolutionExplorer.AssertFolderExists(Directory, AddSolutionToPath(path));
         }
 
         public void AssertFolderDoesntExist(params string[] path) {
-            _solutionExplorer.AssertFolderDoesntExist(Directory, AddSolutionToPath(path));
+            SolutionExplorer.AssertFolderDoesntExist(Directory, AddSolutionToPath(path));
         }
 
         public void AssertFileExistsWithContent(string content, params string[] path) {
-            _solutionExplorer.AssertFileExistsWithContent(Directory, content, AddSolutionToPath(path));
+            SolutionExplorer.AssertFileExistsWithContent(Directory, content, AddSolutionToPath(path));
         }
     }
 }

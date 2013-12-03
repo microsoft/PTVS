@@ -128,24 +128,26 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
                 throw new ArgumentException("Parameter specification for AddFolder was not meet", "kind");
             }
 
-            var existingChild = this.NodeWithItems.FindImmediateChildByName(name);
-            if (existingChild != null) {
-                throw new ArgumentException(String.Format(CultureInfo.CurrentCulture, "Folder already exists with the name '{0}'", name));
-            }
+            return UIThread.Instance.RunSync<EnvDTE.ProjectItem>(() => {
+                var existingChild = this.NodeWithItems.FindImmediateChildByName(name);
+                if (existingChild != null) {
+                    throw new ArgumentException(String.Format(CultureInfo.CurrentCulture, "Folder already exists with the name '{0}'", name));
+                }
 
-            ProjectNode proj = this.Project.ProjectNode;
+                ProjectNode proj = this.Project.ProjectNode;
 
-            HierarchyNode newFolder = null;
-            using (AutomationScope scope = new AutomationScope(this.Project.ProjectNode.Site)) {
+                HierarchyNode newFolder = null;
+                using (AutomationScope scope = new AutomationScope(this.Project.ProjectNode.Site)) {
 
-                //In the case that we are adding a folder to a folder, we need to build up
-                //the path to the project node.
-                name = Path.Combine(NodeWithItems.FullPathToChildren, name);
+                    //In the case that we are adding a folder to a folder, we need to build up
+                    //the path to the project node.
+                    name = Path.Combine(NodeWithItems.FullPathToChildren, name);
 
-                newFolder = proj.CreateFolderNodes(name);
-            }
+                    newFolder = proj.CreateFolderNodes(name);
+                }
 
-            return newFolder.GetAutomationObject() as ProjectItem;
+                return newFolder.GetAutomationObject() as ProjectItem;
+            });
         }
 
         /// <summary>

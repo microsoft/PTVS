@@ -36,6 +36,8 @@ namespace Microsoft.VisualStudioTools {
         /// </summary>
         internal const string AddReferenceMRUPageGuid = "{19B97F03-9594-4c1c-BE28-25FF030113B3}";
 
+        internal const string TextEditorPackage = "{F5E7E720-1401-11D1-883B-0000F87579D2}";
+
         /// <summary>
         /// Do not change this constant. This is Visual Studio core text editor GUID.
         /// </summary>

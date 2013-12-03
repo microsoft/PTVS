@@ -56,8 +56,8 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
 
                 using (var solution = testDef.Generate().ToVs()) {
                     mover(
-                        solution.FindItem("Solution 'MoveExcludedFolder' (1 project)", "MoveExcludedFolder", "Baz"),
-                        solution.FindItem("Solution 'MoveExcludedFolder' (1 project)", "MoveExcludedFolder", "Fob")
+                        solution.FindItem("MoveExcludedFolder", "Baz"),
+                        solution.FindItem("MoveExcludedFolder", "Fob")
                     );
 
                     solution.AssertFolderDoesntExist("MoveExcludedFolder", "Fob");
@@ -79,6 +79,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         }
 
         private void MoveExcludedItemToFolder(MoveDelegate mover) {
+            
             foreach (var projectType in ProjectTypes) {
                 var testDef = new ProjectDefinition("MoveExcludedItemToFolder", 
                     projectType, 
@@ -98,7 +99,9 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                     );
 
                     solution.AssertFileDoesntExist("MoveExcludedItemToFolder", "codefile" + projectType.CodeExtension);
-                    solution.AssertFileExists(Path.GetDirectoryName(solution.Filename), "MoveExcludedItemToFolder", "Folder", "codefile" + projectType.CodeExtension);
+                    solution.AssertFileExists("MoveExcludedItemToFolder", "Folder", "codefile" + projectType.CodeExtension);
+                    Assert.IsTrue(solution.Project.GetIsFolderExpanded("Folder"));
+                    
                 }
             }
         }

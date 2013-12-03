@@ -30,7 +30,7 @@ namespace TestUtilities.SharedProject {
     public sealed class ProjectType {
         public readonly string CodeExtension, ProjectExtension, SampleCode;
         public readonly Guid ProjectTypeGuid;
-        private readonly IProjectProcessor[] _processors;
+        public readonly IProjectProcessor[] Processors;
 
         /// <summary>
         /// Provides a ProjectKind which will produce a C# project.  Used for multiple project solution
@@ -45,7 +45,7 @@ namespace TestUtilities.SharedProject {
             ProjectExtension = projectExtension;
             SampleCode = sampleCode;
             ProjectTypeGuid = projectTypeGuid;
-            _processors = postProcess ?? new IProjectProcessor[0];
+            Processors = postProcess ?? new IProjectProcessor[0];
         }
 
         /// <summary>
@@ -56,36 +56,6 @@ namespace TestUtilities.SharedProject {
                 throw new ArgumentException("no filename suppied", "filename");
             }
             return filename + CodeExtension;
-        }
-
-        public MSBuild.Project Generate(MSBuild.ProjectCollection collection, string location, string projectName, params ProjectContentGenerator[] items) {
-            location = Path.Combine(location, projectName);
-            Directory.CreateDirectory(location);
-
-            var project = new MSBuild.Project(collection);
-            project.Save(Path.Combine(location, projectName) + ProjectExtension);
-
-            var projGuid = Guid.NewGuid();
-            project.SetProperty("ProjectTypeGuid", ProjectTypeGuid.ToString());
-            project.SetProperty("Name", projectName);
-            project.SetProperty("ProjectGuid", projGuid.ToString("B"));
-            project.SetProperty("SchemaVersion", "2.0");
-
-            foreach (var processor in _processors) {
-                processor.PreProcess(project);
-            }
-
-            foreach (var item in items) {
-                item.Generate(this, project);
-            }
-
-            foreach (var processor in _processors) {
-                processor.PostProcess(project);
-            }
-
-            project.Save();
-
-            return project;
         }
     }
 }

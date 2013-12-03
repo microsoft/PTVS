@@ -14,7 +14,11 @@
 
 using Microsoft.VisualStudio.Text;
 
+#if NTVS_FEATURE_INTERACTIVEWINDOW
+namespace Microsoft.NodejsTools.Repl {
+#else
 namespace Microsoft.VisualStudio.Repl {
+#endif
     /// <summary>
     /// This is a custom span which is like an EdgeInclusive span.  We need a custom span because elision buffers
     /// do not allow EdgeInclusive unless it spans the entire buffer.  We create snippets of our language spans

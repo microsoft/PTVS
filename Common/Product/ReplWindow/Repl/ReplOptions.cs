@@ -13,7 +13,11 @@
  * ***************************************************************************/
 
 
+#if NTVS_FEATURE_INTERACTIVEWINDOW
+namespace Microsoft.NodejsTools.Repl {
+#else
 namespace Microsoft.VisualStudio.Repl {
+#endif
     /// <summary>
     /// Enumerates the various options that can be configured for a REPL window.
     /// </summary>

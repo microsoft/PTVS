@@ -18,7 +18,11 @@ using System.Diagnostics;
 using System.Text;
 using System.Windows.Threading;
 
+#if NTVS_FEATURE_INTERACTIVEWINDOW
+namespace Microsoft.NodejsTools.Repl {
+#else
 namespace Microsoft.VisualStudio.Repl {
+#endif
     internal sealed class OutputBuffer : IDisposable {
         private readonly DispatcherTimer _timer;
         private int _maxSize;

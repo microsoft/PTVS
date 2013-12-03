@@ -48,30 +48,32 @@ namespace TestUtilities.UI {
         /// </summary>
         /// <param name="mouseButton">The mouse button to click.</param>
         public static void DoubleClick(MouseButton mouseButton) {
-            Click(mouseButton);
-            Click(mouseButton);
+            Down(mouseButton, delay:false);
+            Up(mouseButton, delay:false);
+            Down(mouseButton, delay: false);
+            Up(mouseButton);
         }
 
         /// <summary>
         /// Performs a mouse-down operation for a specified mouse button.
         /// </summary>
         /// <param name="mouseButton">The mouse button to use.</param>
-        public static void Down(MouseButton mouseButton) {
+        public static void Down(MouseButton mouseButton, bool delay = true) {
             switch (mouseButton) {
                 case MouseButton.Left:
-                    SendMouseInput(0, 0, 0, NativeMethods.SendMouseInputFlags.LeftDown);
+                    SendMouseInput(0, 0, 0, NativeMethods.SendMouseInputFlags.LeftDown, delay);
                     break;
                 case MouseButton.Right:
-                    SendMouseInput(0, 0, 0, NativeMethods.SendMouseInputFlags.RightDown);
+                    SendMouseInput(0, 0, 0, NativeMethods.SendMouseInputFlags.RightDown, delay);
                     break;
                 case MouseButton.Middle:
-                    SendMouseInput(0, 0, 0, NativeMethods.SendMouseInputFlags.MiddleDown);
+                    SendMouseInput(0, 0, 0, NativeMethods.SendMouseInputFlags.MiddleDown, delay);
                     break;
                 case MouseButton.XButton1:
-                    SendMouseInput(0, 0, NativeMethods.XButton1, NativeMethods.SendMouseInputFlags.XDown);
+                    SendMouseInput(0, 0, NativeMethods.XButton1, NativeMethods.SendMouseInputFlags.XDown, delay);
                     break;
                 case MouseButton.XButton2:
-                    SendMouseInput(0, 0, NativeMethods.XButton2, NativeMethods.SendMouseInputFlags.XDown);
+                    SendMouseInput(0, 0, NativeMethods.XButton2, NativeMethods.SendMouseInputFlags.XDown, delay);
                     break;
                 default:
                     throw new InvalidOperationException("Unsupported MouseButton input.");
@@ -130,22 +132,22 @@ namespace TestUtilities.UI {
         /// Performs a mouse-up operation for a specified mouse button.
         /// </summary>
         /// <param name="mouseButton">The mouse button to use.</param>
-        public static void Up(MouseButton mouseButton) {
+        public static void Up(MouseButton mouseButton, bool delay = true) {
             switch (mouseButton) {
                 case MouseButton.Left:
-                    SendMouseInput(0, 0, 0, NativeMethods.SendMouseInputFlags.LeftUp);
+                    SendMouseInput(0, 0, 0, NativeMethods.SendMouseInputFlags.LeftUp, delay);
                     break;
                 case MouseButton.Right:
-                    SendMouseInput(0, 0, 0, NativeMethods.SendMouseInputFlags.RightUp);
+                    SendMouseInput(0, 0, 0, NativeMethods.SendMouseInputFlags.RightUp, delay);
                     break;
                 case MouseButton.Middle:
-                    SendMouseInput(0, 0, 0, NativeMethods.SendMouseInputFlags.MiddleUp);
+                    SendMouseInput(0, 0, 0, NativeMethods.SendMouseInputFlags.MiddleUp, delay);
                     break;
                 case MouseButton.XButton1:
-                    SendMouseInput(0, 0, NativeMethods.XButton1, NativeMethods.SendMouseInputFlags.XUp);
+                    SendMouseInput(0, 0, NativeMethods.XButton1, NativeMethods.SendMouseInputFlags.XUp, delay);
                     break;
                 case MouseButton.XButton2:
-                    SendMouseInput(0, 0, NativeMethods.XButton2, NativeMethods.SendMouseInputFlags.XUp);
+                    SendMouseInput(0, 0, NativeMethods.XButton2, NativeMethods.SendMouseInputFlags.XUp, delay);
                     break;
                 default:
                     throw new InvalidOperationException("Unsupported MouseButton input.");
@@ -160,7 +162,7 @@ namespace TestUtilities.UI {
         /// <param name="data">scroll wheel amount</param>
         /// <param name="flags">SendMouseInputFlags flags</param>
         [PermissionSet(SecurityAction.Assert, Name = "FullTrust")]
-        private static void SendMouseInput(int x, int y, int data, NativeMethods.SendMouseInputFlags flags) {
+        private static void SendMouseInput(int x, int y, int data, NativeMethods.SendMouseInputFlags flags, bool delay = true) {
             PermissionSet permissions = new PermissionSet(PermissionState.Unrestricted);
             permissions.Demand();
 
@@ -184,7 +186,9 @@ namespace TestUtilities.UI {
             if (NativeMethods.SendInput(1, ref mi, Marshal.SizeOf(mi)) == 0) {
                 throw new Win32Exception(Marshal.GetLastWin32Error());
             }
-            System.Threading.Thread.Sleep(250);
+            if (delay) {
+                System.Threading.Thread.Sleep(250);
+            }
         }
 
         private static void NormalizeCoordinates(ref int x, ref int y) {

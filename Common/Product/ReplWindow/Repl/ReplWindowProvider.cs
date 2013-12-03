@@ -22,7 +22,12 @@ using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Utilities;
 using Microsoft.Win32;
 
+#if NTVS_FEATURE_INTERACTIVEWINDOW
+using Microsoft.VisualStudio;
+namespace Microsoft.NodejsTools.Repl {
+#else
 namespace Microsoft.VisualStudio.Repl {
+#endif
 #if INTERACTIVE_WINDOW
     using IReplWindow = IInteractiveWindow;
     using IReplWindowProvider = IInteractiveWindowProvider;

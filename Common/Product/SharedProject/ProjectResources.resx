@@ -230,7 +230,7 @@ Files and folders cannot be:
     <value>Destination File Exists</value>
   </data>
   <data name="FileAlreadyInProject" xml:space="preserve">
-    <value>A file of this name is already part of the project. Do you want to overwrite it?</value>
+    <value>A file named '{0}' is already part of the project. Do you want to overwrite it?</value>
   </data>
   <data name="FileAlreadyInProjectCaption" xml:space="preserve">
     <value>Destination File Exists</value>

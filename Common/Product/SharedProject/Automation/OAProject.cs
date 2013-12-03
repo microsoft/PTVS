@@ -226,20 +226,22 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
         /// </summary>
         public virtual EnvDTE.ConfigurationManager ConfigurationManager {
             get {
-                if (this.configurationManager == null) {
-                    IVsExtensibility3 extensibility = this.project.Site.GetService(typeof(IVsExtensibility)) as IVsExtensibility3;
+                return UIThread.Instance.RunSync(() => {
+                    if (this.configurationManager == null) {
+                        IVsExtensibility3 extensibility = this.project.Site.GetService(typeof(IVsExtensibility)) as IVsExtensibility3;
 
-                    Utilities.CheckNotNull(extensibility);
+                        Utilities.CheckNotNull(extensibility);
 
-                    object configurationManagerAsObject;
-                    ErrorHandler.ThrowOnFailure(extensibility.GetConfigMgr(this.project, VSConstants.VSITEMID_ROOT, out configurationManagerAsObject));
+                        object configurationManagerAsObject;
+                        ErrorHandler.ThrowOnFailure(extensibility.GetConfigMgr(this.project, VSConstants.VSITEMID_ROOT, out configurationManagerAsObject));
 
-                    Utilities.CheckNotNull(configurationManagerAsObject);
+                        Utilities.CheckNotNull(configurationManagerAsObject);
 
-                    this.configurationManager = (ConfigurationManager)configurationManagerAsObject;
-                }
+                        this.configurationManager = (ConfigurationManager)configurationManagerAsObject;
+                    }
 
-                return this.configurationManager;
+                    return this.configurationManager;
+                });
             }
         }
 

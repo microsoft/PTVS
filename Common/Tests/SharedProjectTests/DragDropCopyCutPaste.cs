@@ -25,7 +25,7 @@ using TestUtilities.UI;
 using Keyboard = TestUtilities.UI.Keyboard;
 using Mouse = TestUtilities.UI.Mouse;
 
-namespace Microsoft.Nodejs.Tests.UI {
+namespace Microsoft.VisualStudioTools.SharedProjectTests {
     [TestClass]
     public class DragDropCopyCutPaste : SharedProjectTest {
         [ClassInitialize]
@@ -1113,6 +1113,39 @@ namespace Microsoft.Nodejs.Tests.UI {
                     );
 
                     VisualStudioApp.CheckMessageBox("Unable to add 'FolderCollision'. A file with that name already exists.");
+                }
+            }
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void MoveProjectToSolutionFolderKeyboard() {
+            MoveProjectToSolutionFolder(MoveByKeyboard);
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void MoveProjectToSolutionFolderMouse() {
+            MoveProjectToSolutionFolder(MoveByMouse);
+        }
+
+        /// <summary>
+        /// Cut an item from our project, paste into another project, item should be removed from our project
+        /// </summary>
+        private void MoveProjectToSolutionFolder(MoveDelegate mover) {
+            foreach (var projectType in ProjectTypes) {
+                var projects = new ISolutionElement[] {
+                    new ProjectDefinition("DragDropCopyCutPaste", projectType),
+                    SolutionFolder("SolFolder")
+                };
+
+                using (var solution = SolutionFile.Generate("DragDropCopyCutPaste", projects).ToVs()) {
+                    mover(
+                        solution.WaitForItem("SolFolder"),
+                        solution.WaitForItem("DragDropCopyCutPaste")
+                    );
+
+                    Assert.IsNotNull(solution.WaitForItem("SolFolder", "DragDropCopyCutPaste"));
                 }
             }
         }

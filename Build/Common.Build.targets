@@ -1,23 +1,4 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Choose>
-    <When Condition="'$(Language)' == 'C#' and !$(SuppressCommonAssemblyMetadata)">
-      <PropertyGroup>
-        <TrackFileAccess>false</TrackFileAccess>            <!-- CHECK RELEVANCE -->
-      </PropertyGroup>
-      <ItemGroup>
-        <Compile Include="$(BuildRoot)\Build\AssemblyInfoCommon.cs">
-          <Link>AssemblyInfoCommon.cs</Link>
-        </Compile>
-        <Compile Include="$(BuildRoot)\Build\AssemblyVersion.cs">
-          <Link>AssemblyVersion.cs</Link>
-        </Compile>
-      </ItemGroup>
-      <PropertyGroup>
-        <TrackFileAccess>true</TrackFileAccess>             <!-- CHECK RELEVANCE -->
-      </PropertyGroup>
-    </When>
-  </Choose>
-  
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" Condition="'$(Language)' == 'C#'" />
   <Import Project="$(VSToolsPath)\VSSDK\Microsoft.VsSDK.targets" Condition="'$(Language)' == 'C#' and '$(CreateVsixContainer)' != '' and $(CreateVsixContainer) and '$(VSToolsPath)' != ''" />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" Condition="'$(Language)' == 'C++'" />

@@ -15,7 +15,11 @@
 
 using System.Threading.Tasks;
 
+#if NTVS_FEATURE_INTERACTIVEWINDOW
+namespace Microsoft.NodejsTools.Repl {
+#else
 namespace Microsoft.VisualStudio.Repl {
+#endif
     /// <summary>
     /// The result of command execution.  
     /// </summary>

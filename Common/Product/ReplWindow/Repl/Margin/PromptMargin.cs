@@ -27,7 +27,11 @@ using Microsoft.VisualStudio.Utilities;
 using Microsoft.VisualStudio.Text.Classification;
 using System.Diagnostics;
 
+#if NTVS_FEATURE_INTERACTIVEWINDOW
+namespace Microsoft.NodejsTools.Repl {
+#else
 namespace Microsoft.VisualStudio.Repl {
+#endif
 
     [Export(typeof(IWpfTextViewMarginProvider))]
     [Name(PromptMargin.MarginName)]
@@ -48,7 +52,11 @@ namespace Microsoft.VisualStudio.Repl {
     /// Provides glyphs corresponding to GlyphTags in the buffer.
     /// </summary>
     internal sealed class PromptMargin : IWpfTextViewMargin {
+#if NTVS_FEATURE_INTERACTIVEWINDOW
+        public const string MarginName = "NodejsInteractivePromptMargin";
+#else
         public const string MarginName = "InteractivePromptMargin";
+#endif
 
         private readonly IWpfTextView _textView;
         private readonly IEditorFormatMap _editorFormatMap;

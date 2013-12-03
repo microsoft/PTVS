@@ -231,10 +231,10 @@ $products = @(
 Push-Location $buildroot
 
 $asmverfileBackedUp = 0
-$asmverfile = Get-Item Build\AssemblyVersion.cs
+$asmverfile = Get-ChildItem Python\Product\AssemblyVersion.cs
 # Force use of a backup if there are pending changes to $asmverfile
 $asmverfileUseBackup = 0
-if ((tf status $asmverfile /format:detailed | Select-String ": edit")) {
+if (-not (tf status $asmverfile /format:detailed | Select-String "There are no pending changes.")) {
     Write-Output "$asmverfile has pending changes. Using backup instead of tf undo."
     $asmverfileUseBackup = 1
 }
@@ -417,7 +417,7 @@ try {
             Copy-Item -force -recurse $bindir\*.config $destdir\Binaries\
             
             mkdir $destdir\Binaries\ReplWindow -EA 0 | Out-Null
-            Copy-Item -force -recurse Common\Product\ReplWindow\obj\Dev$($targetVs.number)\$config\extension.vsixmanifest $destdir\Binaries\ReplWindow
+            Copy-Item -force -recurse Python\Product\ReplWindow\obj\Dev$($targetVs.number)\$config\extension.vsixmanifest $destdir\Binaries\ReplWindow
             
             ######################################################################
             ##  BEGIN SIGNING CODE
@@ -548,7 +548,7 @@ try {
         tf undo /noprompt $asmverfile
     }
     
-    if (-not (Get-Content $asmverfile) -match '"4100.00"') {
+    if (-not (Get-Content $asmverfile) -match ' = "4100.00"') {
         Write-Error "Failed to undo $asmverfile"
     }
     

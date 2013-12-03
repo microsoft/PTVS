@@ -19,7 +19,11 @@ using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Utilities;
 
-namespace Microsoft.VisualStudio.Repl {    
+#if NTVS_FEATURE_INTERACTIVEWINDOW
+namespace Microsoft.NodejsTools.Repl {
+#else
+namespace Microsoft.VisualStudio.Repl {
+#endif
     /// <summary>
     /// Provides the classifier for our repl error output buffer.
     /// </summary>

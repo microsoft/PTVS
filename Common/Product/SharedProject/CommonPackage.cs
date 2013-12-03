@@ -211,7 +211,7 @@ namespace Microsoft.VisualStudioTools {
             return 1;
         }
 
-        public int FDoIdle(uint grfidlef) {
+        public virtual int FDoIdle(uint grfidlef) {
             if (null != _libraryManager) {
                 _libraryManager.OnIdle(_compMgr);
             }

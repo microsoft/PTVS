@@ -16,7 +16,11 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
+#if NTVS_FEATURE_INTERACTIVEWINDOW
+namespace Microsoft.NodejsTools.Repl {
+#else
 namespace Microsoft.VisualStudio.Repl {
+#endif
 #if INTERACTIVE_WINDOW
     using IReplWindow = IInteractiveWindow;
 #endif

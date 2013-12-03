@@ -15,7 +15,11 @@
 using System;
 using System.ComponentModel.Composition;
 
+#if NTVS_FEATURE_INTERACTIVEWINDOW
+namespace Microsoft.NodejsTools.Repl {
+#else
 namespace Microsoft.VisualStudio.Repl {
+#endif
     /// <summary>
     /// Represents an interactive window role.
     /// 

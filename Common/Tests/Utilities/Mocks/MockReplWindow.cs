@@ -16,7 +16,11 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
+#if NTVS_FEATURE_INTERACTIVEWINDOW
+using Microsoft.NodejsTools.Repl;
+#else
 using Microsoft.VisualStudio.Repl;
+#endif
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 

@@ -1,3 +1,18 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Choose>
+    <When Condition="'$(Language)' == 'C#'">
+      <PropertyGroup>
+        <TrackFileAccess>false</TrackFileAccess>            <!-- CHECK RELEVANCE -->
+      </PropertyGroup>
+      <ItemGroup>
+        <Compile Include="$(BuildRoot)\Common\Tests\AssemblyInfoCommon.cs">
+          <Link>AssemblyInfoCommon.cs</Link>
+        </Compile>
+      </ItemGroup>
+      <PropertyGroup>
+        <TrackFileAccess>true</TrackFileAccess>             <!-- CHECK RELEVANCE -->
+      </PropertyGroup>
+    </When>
+  </Choose>
   <Import Project="$(BuildRoot)\Build\Common.Build.targets" />
 </Project>

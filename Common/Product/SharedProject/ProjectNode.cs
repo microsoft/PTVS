@@ -222,7 +222,7 @@ namespace Microsoft.VisualStudioTools.Project
 
         private Guid projectIdGuid;
 
-        private bool isClosed;
+        private bool isClosed, isClosing;
 
         private EventTriggering eventTriggeringFlag = EventTriggering.TriggerAll;
 
@@ -451,6 +451,12 @@ namespace Microsoft.VisualStudioTools.Project
         }
 
         #region overridden properties
+
+        public override bool CanOpenCommandPrompt {
+            get {
+                return true;
+            }
+        }
 
         internal override string FullPathToChildren {
             get {
@@ -733,6 +739,17 @@ namespace Microsoft.VisualStudioTools.Project
             get
             {
                 return this.isClosed;
+            }
+        }
+
+        /// <summary>
+        /// Gets whether or not the project has begun closing.
+        /// </summary>
+        public bool IsClosing
+        {
+            get 
+            {
+                return this.isClosing;
             }
         }
 
@@ -1293,7 +1310,7 @@ namespace Microsoft.VisualStudioTools.Project
 
                 }
             }
-            else
+            else if(cmdGroup != SharedCommandGuid)
             {
                 return (int)OleConstants.OLECMDERR_E_UNKNOWNGROUP;
             }
@@ -1611,6 +1628,8 @@ namespace Microsoft.VisualStudioTools.Project
         {
             using (new DebugTimer("ProjectLoad"))
             {
+                _diskNodes.Clear();
+
                 bool successful = false;
                 try
                 {
@@ -1727,6 +1746,7 @@ namespace Microsoft.VisualStudioTools.Project
                     {
                         this.filename = fileName;
                     }
+                    _diskNodes[this.filename] = this;
 
                     // now reload to fix up references
                     this.Reload();
@@ -2831,7 +2851,9 @@ namespace Microsoft.VisualStudioTools.Project
             buildProject.FullPath = newFileName;
 
 
-            filename = newFileName;
+            _diskNodes.Remove(this.filename);
+            this.filename = newFileName;
+            _diskNodes[this.filename] = this;
 
             string newFileNameWithoutExtension = Path.GetFileNameWithoutExtension(newFileName);
 
@@ -3144,7 +3166,7 @@ namespace Microsoft.VisualStudioTools.Project
         {
             List<String> subitemsKeys = new List<String>();
             Dictionary<String, MSBuild.ProjectItem> subitems = new Dictionary<String, MSBuild.ProjectItem>();
-            
+
             // Define a set for our build items. The value does not really matter here.
             Dictionary<String, MSBuild.ProjectItem> items = new Dictionary<String, MSBuild.ProjectItem>();
 
@@ -3223,7 +3245,7 @@ namespace Microsoft.VisualStudioTools.Project
                             continue;
                         }
                     }
-                    
+
                     AddIndependentFileNode(item, parent);
                 }
                 else
@@ -3930,7 +3952,7 @@ namespace Microsoft.VisualStudioTools.Project
             } else {
                 isDirty = 0;
             }
-            
+
             return VSConstants.S_OK;
         }
 
@@ -3992,11 +4014,10 @@ namespace Microsoft.VisualStudioTools.Project
             return isDirty != 0;
         }
 
-        public virtual int Load(string fileName, uint mode, int readOnly)
+        int IPersistFileFormat.Load(string fileName, uint mode, int readOnly)
         {
-            this.filename = fileName;
-            this.Reload();
-            return VSConstants.S_OK;
+            // This isn't how projects are loaded, C#, VB, and CPS all fail this call
+            return VSConstants.E_NOTIMPL;
         }
 
         public virtual int Save(string fileToBeSaved, int remember, uint formatIndex)
@@ -4701,10 +4722,10 @@ If the files in the existing folder have the same names as files in the folder y
                 }
 
                 if (parent.AllChildren.Any(n => candidate == n.GetEditLabel()))
-                {
+                    {
                     // Cannot create a node if one exists with the same name.
                     continue;
-                }
+                    }
 
                 itemName = candidate;
                 return VSConstants.S_OK;
@@ -5523,6 +5544,8 @@ If the files in the existing folder have the same names as files in the folder y
         /// <returns>parent node</returns>
         internal HierarchyNode GetItemParentNode(MSBuild.ProjectItem item)
         {
+            UIThread.Instance.MustBeCalledFromUIThread();
+
             var link = item.GetMetadataValue(ProjectFileConstants.Link);
             HierarchyNode currentParent = this;
             string strPath = item.EvaluatedInclude;
@@ -6030,6 +6053,8 @@ If the files in the existing folder have the same names as files in the folder y
         /// Finds a node by it's full path on disk.
         /// </summary>
         internal HierarchyNode FindNodeByFullPath(string name) {
+            UIThread.Instance.MustBeCalledFromUIThread();
+
             Debug.Assert(Path.IsPathRooted(name));
             HierarchyNode res;
             _diskNodes.TryGetValue(name, out res);
@@ -6082,6 +6107,7 @@ If the files in the existing folder have the same names as files in the folder y
         /// <returns>A success or failure value.</returns>
         int IVsHierarchy.Close() {
             int hr = VSConstants.S_OK;
+            isClosing = true;
             try {
                 // Walk the tree and close all nodes.
                 // This has to be done before the project closes, since we want still state available for the ProjectMgr on the nodes 
@@ -6096,6 +6122,7 @@ If the files in the existing folder have the same names as files in the folder y
             SetBuildProject(null);
 
             this.isClosed = true;
+            isClosing = false;
 
             return hr;
         }
@@ -6255,6 +6282,8 @@ If the files in the existing folder have the same names as files in the folder y
             Utilities.ArgumentNotNull("parent", parent);
             Utilities.ArgumentNotNull("child", child);
 
+            UIThread.Instance.MustBeCalledFromUIThread();
+
             IDiskBasedNode diskNode = child as IDiskBasedNode;
             if (diskNode != null) {
                 _diskNodes[diskNode.Url] = child;
@@ -6277,11 +6306,17 @@ If the files in the existing folder have the same names as files in the folder y
         }
 
         internal void OnItemDeleted(HierarchyNode deletedItem) {
+            UIThread.Instance.MustBeCalledFromUIThread();
+
             IDiskBasedNode diskNode = deletedItem as IDiskBasedNode;
             if (diskNode != null) {
                 _diskNodes.Remove(diskNode.Url);
             }
 
+            RaiseItemDeleted(deletedItem);
+        }
+
+        internal void RaiseItemDeleted(HierarchyNode deletedItem) {
             if ((EventTriggeringFlag & ProjectNode.EventTriggering.DoNotTriggerHierarchyEvents) != 0) {
                 return;
             }
@@ -6604,9 +6639,28 @@ If the files in the existing folder have the same names as files in the folder y
         #endregion
 
         public void UpdatePathForDeferredSave(string oldPath, string newPath) {
+            UIThread.Instance.MustBeCalledFromUIThread();
+
             var existing = _diskNodes[oldPath];
             _diskNodes.Remove(oldPath);
             _diskNodes.Add(newPath, existing);
+        }
+
+        public IVsHierarchy ParentHierarchy {
+            get {
+                return parentHierarchy;
+            }
+        }
+
+        [Conditional("DEBUG")]
+        internal void AssertHasParentHierarchy() {
+            // Calling into solution explorer before a parent hierarchy is assigned can
+            // cause us to corrupt solution explorer if we're using flavored projects.  We
+            // will call in with our inner project node and later we get wrapped in an
+            // aggregate COM object which has different object identity.  At that point
+            // solution explorer is confused because it uses object identity to track
+            // the hierarchies.
+            Debug.Assert(parentHierarchy != null, "dont call into the hierarchy before the project is loaded, it corrupts the hierarchy");
         }
     }
 }

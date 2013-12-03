@@ -127,6 +127,14 @@ namespace TestUtilities.SharedProject {
         }
 
         /// <summary>
+        /// Helper function to create a StartupFileProjectProperty object to simply syntax in 
+        /// project definitions.
+        /// </summary>
+        public static StartupFileProjectProperty StartupFile(string filename) {
+            return new StartupFileProjectProperty(filename);
+        }
+        
+        /// <summary>
         /// Helper function to create a group of properties when creating project definitions.
         /// These aren't strictly necessary and just serve to add structure to the code
         /// and make it similar to an MSBuild project file.
@@ -155,8 +163,8 @@ namespace TestUtilities.SharedProject {
         /// Helper function to create a FolderItem object to simply syntax in 
         /// defining project definitions.
         /// </summary>
-        public static FolderItem Folder(string name, bool isExcluded = false) {
-            return new FolderItem(name, isExcluded);
+        public static FolderItem Folder(string name, bool isExcluded = false, bool isMissing = false) {
+            return new FolderItem(name, isExcluded, isMissing);
         }
 
         /// <summary>
@@ -166,6 +174,14 @@ namespace TestUtilities.SharedProject {
         /// </summary>
         public static ProjectContentGroup ItemGroup(params ProjectContentGenerator[] properties) {
             return new ProjectContentGroup(properties);
+        }
+
+        /// <summary>
+        /// Returns a new SolutionFolder object which can be used to create
+        /// a solution folder in the generated project.
+        /// </summary>
+        public static SolutionFolder SolutionFolder(string name) {
+            return new SolutionFolder(name);
         }
     }
 }

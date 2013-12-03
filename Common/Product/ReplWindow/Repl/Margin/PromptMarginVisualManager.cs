@@ -26,7 +26,11 @@ using Microsoft.VisualStudio.Utilities;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text;
 
+#if NTVS_FEATURE_INTERACTIVEWINDOW
+namespace Microsoft.NodejsTools.Repl {
+#else
 namespace Microsoft.VisualStudio.Repl {
+#endif
     internal sealed class PromptMarginVisualManager {
         private readonly PromptMargin _margin;
         private readonly IEditorFormatMap _editorFormatMap;

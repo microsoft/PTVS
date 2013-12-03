@@ -35,11 +35,14 @@ namespace Microsoft.VisualStudioTools.Project
         /// <returns>A reference to an IVsUIHierarchyWindow interface.</returns>
         public static IVsUIHierarchyWindow GetUIHierarchyWindow(IServiceProvider serviceProvider, Guid persistenceSlot)
         {
-            Utilities.ArgumentNotNull("serviceProvider", serviceProvider);
+            if (serviceProvider == null) {
+                throw new ArgumentNullException("serviceProvider");
+            }
 
             IVsUIShell shell = serviceProvider.GetService(typeof(SVsUIShell)) as IVsUIShell;
-
-            Utilities.CheckNotNull(shell, "Could not get the UI shell from the project");
+            if (shell == null) {
+                throw new InvalidOperationException("Could not get the UI shell from the project");
+            }
 
             object pvar;
             IVsWindowFrame frame;

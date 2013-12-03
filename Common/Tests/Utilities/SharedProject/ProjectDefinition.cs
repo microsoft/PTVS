@@ -12,7 +12,10 @@
  *
  * ***************************************************************************/
 
+using System;
 using System.Collections.Generic;
+using System.IO;
+using MSBuild = Microsoft.Build.Evaluation;
 
 namespace TestUtilities.SharedProject {
     /// <summary>
@@ -20,9 +23,10 @@ namespace TestUtilities.SharedProject {
     /// the items in the project (which will be generated at test time) as well as
     /// MSBuild project properties.
     /// </summary>
-    public sealed class ProjectDefinition {
+    public sealed class ProjectDefinition : ISolutionElement {
+        private readonly bool _isUserProject;
         public readonly ProjectType ProjectType;
-        public readonly string Name;
+        private readonly string _name;
         public readonly ProjectContentGenerator[] Items;
 
         /// <summary>
@@ -33,8 +37,13 @@ namespace TestUtilities.SharedProject {
         /// <param name="items">The items included in the project</param>
         public ProjectDefinition(string name, ProjectType projectType, params ProjectContentGenerator[] items) {
             ProjectType = projectType;
-            Name = name;
+            _name = name;
             Items = items;
+        }
+
+        public ProjectDefinition(string name, ProjectType projectType, bool isUserProject, params ProjectContentGenerator[] items)
+            : this(name, projectType, items) {
+            _isUserProject  = isUserProject;
         }
 
         /// <summary>
@@ -42,7 +51,51 @@ namespace TestUtilities.SharedProject {
         /// project in the solution.
         /// </summary>
         public SolutionFile Generate() {
-            return SolutionFile.Generate(Name, this);
+            return SolutionFile.Generate(_name, this);
         }
+
+        public MSBuild.Project Save(MSBuild.ProjectCollection collection, string location) {
+            location = Path.Combine(location, _name);
+            Directory.CreateDirectory(location);
+
+            var project = new MSBuild.Project(collection);
+            string projectFile = Path.Combine(location, _name) + ProjectType.ProjectExtension;
+            if (_isUserProject) {
+                projectFile += ".user";
+            }
+            project.Save(projectFile);
+
+            var projGuid = Guid.NewGuid();
+            project.SetProperty("ProjectTypeGuid", TypeGuid.ToString());
+            project.SetProperty("Name", _name);
+            project.SetProperty("ProjectGuid", projGuid.ToString("B"));
+            project.SetProperty("SchemaVersion", "2.0");
+
+            foreach (var processor in ProjectType.Processors) {
+                processor.PreProcess(project);
+            }
+
+            foreach (var item in Items) {
+                item.Generate(ProjectType, project);
+            }
+
+            foreach (var processor in ProjectType.Processors) {
+                processor.PostProcess(project);
+            }
+
+            project.Save();
+
+            return project;
+        }
+
+        public Guid TypeGuid {
+            get { return ProjectType.ProjectTypeGuid; }
+        }
+
+        public SolutionElementFlags Flags {
+            get { return _isUserProject ? SolutionElementFlags.ExcludeFromSolution : SolutionElementFlags.None; }
+        }
+
+        public string Name { get { return _name; } }
     }
 }

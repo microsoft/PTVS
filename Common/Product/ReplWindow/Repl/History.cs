@@ -16,7 +16,11 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 
+#if NTVS_FEATURE_INTERACTIVEWINDOW
+namespace Microsoft.NodejsTools.Repl {
+#else
 namespace Microsoft.VisualStudio.Repl {
+#endif
     internal class History {
         private readonly int _maxLength;
         private int _pos;

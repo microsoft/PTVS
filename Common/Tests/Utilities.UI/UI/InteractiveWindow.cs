@@ -22,7 +22,11 @@ using System.Windows.Automation;
 using System.Windows.Threading;
 using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio.ComponentModelHost;
+#if NTVS_FEATURE_INTERACTIVEWINDOW
+using Microsoft.NodejsTools.Repl;
+#else
 using Microsoft.VisualStudio.Repl;
+#endif
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text.Editor;
 using System.Diagnostics;
