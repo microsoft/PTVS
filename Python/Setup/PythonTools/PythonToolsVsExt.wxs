@@ -181,6 +181,12 @@
             <Component Id="cmp8135586F02804D91A8DB72CC7FC6ACD4" Directory="Dir_ProjectTemplates_Python" Guid="{5982C49A-8FAA-4351-BA08-2F6DDD71B0F8}">
                 <File Id="filA06AE3FFF4054E38B7EBD00CA9F67187" KeyPath="yes" Source="$(var.TargetDir)\ProjectTemplates\Python\FromExistingCode.zip" />
             </Component>
+            <Component Id="cmp5052646A4FF54D6EB2D042231F927F34" Directory="Dir_ProjectTemplates_Python" Guid="{5332F616-353A-4094-9E25-D3220AB5DF3C}">
+                <File Id="filE4A0DE0C95B24246AF3BA66E5720B030" KeyPath="yes" Source="$(var.TargetDir)\ProjectTemplates\Python\EmptyWebProject.zip" />
+            </Component>
+            <Component Id="cmp18974073E987485FA155D63B72A03A36" Directory="Dir_ProjectTemplates_Python" Guid="{35F24411-E4F5-452B-AC51-6461C837321C}">
+                <File Id="fil58D19508E5174B7CA0C834725BC5AC55" KeyPath="yes" Source="$(var.TargetDir)\ProjectTemplates\Python\WebProjectFlask.zip" />
+            </Component>
             <Component Id="cmp5E1CEDE43A189A6AACBB60829AD63E1D" Directory="dir1B4805CEC92CD8586B8C95875EA0F7DF" Guid="{6BF9570B-B452-4D37-AC11-7376E0D43881}">
                 <File Id="filF929E14C8F0D95906776F9E4446FE9C8" KeyPath="yes" Source="$(var.TargetDir)\CompletionDB\array.idb" />
             </Component>
@@ -339,11 +345,17 @@
             </Component>
 
             <!-- Build targets and tasks -->
-            <Component Id="cmpCD5897C7E18F4AE4815B5E53BF4B9F28" Directory="INSTALLLOCATION" Guid="{3B556A00-075A-47CC-85D0-95B93AF2B990}">
-                <File Id="fil7CB4B0CA13FD4ED3BB412FFC3092155D" KeyPath="yes" Source="$(var.TargetDir)\Microsoft.PythonTools.BuildTasks.dll" />
+            <Component Directory="INSTALLLOCATION" Guid="{3B556A00-075A-47CC-85D0-95B93AF2B990}">
+                <File KeyPath="yes" Source="$(var.TargetDir)\Microsoft.PythonTools.BuildTasks.dll" />
             </Component>
-            <Component Id="cmpD889F3C777FC4C319DB399C26C9FA90F" Directory="Dir_PythonToolsMsBuild" Guid="{C6C594C6-2A04-4601-BEF5-4967D813DB5B}">
-                <File Id="filBD5D8E2D9B4F477E952554A3C6ACF185" KeyPath="yes" Source="$(var.TargetDir)\Microsoft.PythonTools.targets" />
+            <Component Directory="Dir_PythonToolsMsBuild" Guid="{C6C594C6-2A04-4601-BEF5-4967D813DB5B}">
+                <File KeyPath="yes" Source="$(var.TargetDir)\Microsoft.PythonTools.targets" />
+            </Component>
+            <Component Directory="Dir_PythonToolsMsBuild" Guid="{08CAE48C-BC52-4A77-82C1-F80F2035EAAF}">
+                <File KeyPath="yes" Source="$(var.TargetDir)\Microsoft.PythonTools.Web.targets" />
+            </Component>
+            <Component Directory="Dir_PythonToolsMsBuild" Guid="{07BEB21F-CF4D-4C58-A339-AD0A46E65929}">
+                <File KeyPath="yes" Source="$(var.TargetDir)\Microsoft.PythonTools.Flask.targets" />
             </Component>
 
             <!-- Mixed-mode debugging files -->
