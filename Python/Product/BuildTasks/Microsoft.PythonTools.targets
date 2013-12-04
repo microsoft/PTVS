@@ -10,7 +10,7 @@
  
   You must not remove this notice, or any other, from this software.
 -->
-<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <_PythonToolsPath Condition="!Exists($(_PythonToolsPath))">$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\Software\Microsoft\PythonTools\$(VisualStudioVersion)', 'InstallDir', null, RegistryView.Registry32)</_PythonToolsPath>
     <_PythonToolsPath Condition="!Exists($(_PythonToolsPath))">$(LocalAppData)\Microsoft\VisualStudio\$(VisualStudioVersion)\Extensions\Microsoft\Python Tools for Visual Studio\2.0</_PythonToolsPath>
@@ -95,7 +95,7 @@
 
     <Message Importance="low" Text="StartupPath: $(StartupPath)" />
 
-    <ConvertPathToModuleName Paths="$(StartupPath)" PathLimit="$(_ProjectHome)">
+    <ConvertPathToModuleName Paths="$(StartupPath)" PathLimit="$(QualifiedProjectHome)">
       <Output TaskParameter="ModuleNames" PropertyName="StartupModule" />
     </ConvertPathToModuleName>
 

@@ -25,6 +25,8 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Input;
+using Microsoft.Build.Execution;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
@@ -46,7 +48,7 @@ using VsMenus = Microsoft.VisualStudioTools.Project.VsMenus;
 
 namespace Microsoft.PythonTools.Project {
     [Guid(PythonConstants.ProjectNodeGuid)]
-    internal class PythonProjectNode : CommonProjectNode, IPythonProject {
+    internal class PythonProjectNode : CommonProjectNode, IPythonProject2 {
         // For files that are analyzed because they were directly or indirectly referenced in the search path, store the information
         // about the directory from the search path that referenced them in IProjectEntry.Properties[_searchPathEntryKey], so that
         // they can be located and removed when that directory is removed from the path.
@@ -63,7 +65,7 @@ namespace Microsoft.PythonTools.Project {
 
         internal List<CustomCommand> _customCommands;
         private string _customCommandsDisplayLabel;
-        private HashSet<IReplWindow> _associatedReplWindows;
+        private Dictionary<object, Action<object>> _actionsOnClose;
 
         public PythonProjectNode(CommonProjectPackage package)
             : base(package, Utilities.GetImageList(typeof(PythonProjectNode).Assembly.GetManifestResourceStream(PythonConstants.ProjectImageList))) {
@@ -109,6 +111,15 @@ namespace Microsoft.PythonTools.Project {
             // Add any custom commands
             _customCommands = CustomCommand.GetCommands(project, this).ToList();
             _customCommandsDisplayLabel = CustomCommand.GetCommandsDisplayLabel(project, this);
+        }
+
+        IAsyncCommand IPythonProject2.FindCommand(string canonicalName) {
+            return _customCommands.FirstOrDefault(cc => cc.Target == canonicalName);
+        }
+
+        ProjectInstance IPythonProject2.GetMSBuildProjectInstance() {
+            return CurrentConfig ??
+                BuildProject.CreateProjectInstance(Microsoft.Build.Execution.ProjectInstanceSettings.Immutable);
         }
 
         private void InterpreterFactoriesChanged(object sender, EventArgs e) {
@@ -576,37 +587,27 @@ namespace Microsoft.PythonTools.Project {
             return PythonToolsPackage.GetLauncher(this);
         }
 
-        internal void AddAssociatedReplWindow(IReplWindow window) {
-            Debug.Assert(window != null);
-            if (window == null) {
+        public void AddActionOnClose(object key, Action<object> action) {
+            Debug.Assert(key != null);
+            Debug.Assert(action != null);
+            if (key == null || action == null) {
                 return;
             }
 
-            if (_associatedReplWindows == null) {
-                _associatedReplWindows = new HashSet<IReplWindow>();
+            if (_actionsOnClose == null) {
+                _actionsOnClose = new Dictionary<object, Action<object>>();
             }
-            _associatedReplWindows.Add(window);
+            _actionsOnClose[key] = action;
         }
 
         protected override void Dispose(bool disposing) {
             if (disposing) {
-                var windows = _associatedReplWindows;
-                _associatedReplWindows = null;
-                if (windows != null) {
-                    foreach (var window in windows) {
-                        // Close backends when the project closes so we don't
-                        // leave Python processes hanging around.
-                        var pyEvaluator = window.Evaluator as BasePythonReplEvaluator;
-                        if (pyEvaluator != null) {
-                            pyEvaluator.Close();
-                        }
-
-                        // Close project-specific REPL windows when the project
-                        // closes.
-                        var pane = window as ToolWindowPane;
-                        var frame = pane != null ? pane.Frame as IVsWindowFrame : null;
-                        if (frame != null) {
-                            frame.CloseFrame((uint)__FRAMECLOSE.FRAMECLOSE_NoSave);
+                var actions = _actionsOnClose;
+                _actionsOnClose = null;
+                if (actions != null) {
+                    foreach (var keyValue in actions) {
+                        if (keyValue.Value != null) {
+                            keyValue.Value(keyValue.Key);
                         }
                     }
                 }
@@ -763,7 +764,7 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-        internal IPythonInterpreterFactory GetInterpreterFactory() {
+        public IPythonInterpreterFactory GetInterpreterFactory() {
             var fact = _interpreters.ActiveInterpreter;
 
             PythonToolsPackage.EnsureCompletionDb(fact);
@@ -782,7 +783,7 @@ namespace Microsoft.PythonTools.Project {
             }
 
             if (_uiSync.InvokeRequired) {
-                _uiSync.Invoke((EventHandler)ActiveInterpreterChanged, sender, e);
+                _uiSync.BeginInvoke((EventHandler)ActiveInterpreterChanged, sender, e);
                 return;
             }
             RefreshInterpreters();
@@ -948,7 +949,7 @@ namespace Microsoft.PythonTools.Project {
                     }
 
                     var result = QueryStatusResult.SUPPORTED;
-                    if (command.CanExecute) {
+                    if (command.CanExecute(null)) {
                         result |= QueryStatusResult.ENABLED;
                     }
                     return result;
@@ -969,12 +970,12 @@ namespace Microsoft.PythonTools.Project {
 
                 if (command != null) {
                     handled = true;
-                    if (command.CanExecute) {
+                    if (command.CanExecute(null)) {
                         if (!Utilities.SaveDirtyFiles()) {
                             return VSConstants.S_OK;
                         }
 
-                        command.Execute(this).ContinueWith(t => {
+                        command.ExecuteAsync(null).ContinueWith(t => {
                             if (t.Exception != null) {
                                 MessageBox.Show(
                                     SR.GetString(
@@ -985,11 +986,7 @@ namespace Microsoft.PythonTools.Project {
                                     SR.GetString(SR.PythonToolsForVisualStudio)
                                 );
                             }
-                        },
-                            CancellationToken.None,
-                            TaskContinuationOptions.None,
-                            TaskScheduler.FromCurrentSynchronizationContext()
-                        );
+                        });
                     }
                     return VSConstants.S_OK;
                 }
@@ -1142,46 +1139,54 @@ namespace Microsoft.PythonTools.Project {
             var path = data.VirtualEnvPath;
             var baseInterp = data.BaseInterpreter.Interpreter;
 
-            Task task;
-            if (doCreate && data.UseVEnv) {
-                task = VirtualEnv.CreateWithVEnv(baseInterp,
+            return CreateOrAddVirtualEnvironment(
+                service,
+                data.WillCreateVirtualEnv,
+                data.VirtualEnvPath,
+                data.BaseInterpreter.Interpreter,
+                data.UseVEnv
+            );
+        }
+
+        internal async Task<IPythonInterpreterFactory> CreateOrAddVirtualEnvironment(
+            IInterpreterOptionsService service,
+            bool create,
+            string path,
+            IPythonInterpreterFactory baseInterp,
+            bool preferVEnv = false
+        ) {
+            if (create && preferVEnv) {
+                await VirtualEnv.CreateWithVEnv(baseInterp,
                     path,
                     OutputWindowRedirector.GetGeneral(Site));
-            } else if (doCreate) {
-                task = VirtualEnv.CreateAndInstallDependencies(baseInterp,
+            } else if (create) {
+                await VirtualEnv.CreateAndInstallDependencies(baseInterp,
                     path,
                     OutputWindowRedirector.GetGeneral(Site));
-            } else {
-                var tcs = new TaskCompletionSource<object>();
-                tcs.SetResult(null);
-                task = tcs.Task;
             }
 
-            return task.ContinueWith<InterpreterFactoryCreationOptions>(t => {
-                if (_interpreters.FindInterpreter(path) != null) {
-                    return null;
-                }
+            var existing = _interpreters.FindInterpreter(path);
+            if (existing != null) {
+                return existing;
+            }
 
-                var options = VirtualEnv.FindInterpreterOptions(path, service, baseInterp);
-                if (options == null) {
-                    throw new InvalidOperationException("Unable to add virtual environment");
-                }
-                if (!doCreate) {
-                    baseInterp = service.FindInterpreter(options.Id, options.LanguageVersion);
-                }
-                if (baseInterp != null) {
-                    options.Description = string.Format("{0} ({1})", options.Description, baseInterp.Description);
-                }
-                return options;
-            }, TaskContinuationOptions.OnlyOnRanToCompletion).ContinueWith(t => {
-                if (t.Result != null) {
-                    if (!QueryEditProjectFile(false)) {
-                        throw Marshal.GetExceptionForHR(VSConstants.OLE_E_PROMPTSAVECANCELLED);
-                    }
+            var options = VirtualEnv.FindInterpreterOptions(path, service, baseInterp);
+            if (options == null) {
+                throw new InvalidOperationException("Unable to add virtual environment");
+            }
+            if (!create) {
+                baseInterp = service.FindInterpreter(options.Id, options.LanguageVersion);
+            }
+            if (baseInterp != null) {
+                options.Description = string.Format("{0} ({1})", options.Description, baseInterp.Description);
+            }
 
-                    _interpreters.CreateInterpreterFactory(t.Result);
-                }
-            }, CancellationToken.None, TaskContinuationOptions.OnlyOnRanToCompletion, scheduler);
+            if (!QueryEditProjectFile(false)) {
+                throw Marshal.GetExceptionForHR(VSConstants.OLE_E_PROMPTSAVECANCELLED);
+            }
+
+            var id = _interpreters.CreateInterpreterFactory(options);
+            return _interpreters.FindInterpreter(id, options.LanguageVersion);
         }
 
 

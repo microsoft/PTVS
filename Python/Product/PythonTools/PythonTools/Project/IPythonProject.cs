@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using Microsoft.Build.Execution;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
@@ -117,6 +118,52 @@ namespace Microsoft.PythonTools.Project {
         /// </summary>
         event EventHandler ProjectAnalyzerChanged;
     }
+
+    /// <summary>
+    /// Extends <see cref="IPythonProject"/> with members required for managing
+    /// and invoking custom commands.
+    /// </summary>
+    public interface IPythonProject2 : IPythonProject {
+        /// <summary>
+        /// Returns a command with the provided name if one is available. The
+        /// name matches the target name in the associated MSBuild project.
+        /// Otherwise, returns null.
+        /// </summary>
+        IAsyncCommand FindCommand(string canonicalName);
+
+        /// <summary>
+        /// Gets the MSBuild project instance to evaluate.
+        /// </summary>
+        ProjectInstance GetMSBuildProjectInstance();
+
+        /// <summary>
+        /// Gets the root project directory.
+        /// </summary>
+        string ProjectHome { get; }
+
+        /// <summary>
+        /// Gets the full path to the project file.
+        /// </summary>
+        string ProjectFile { get; }
+
+        /// <summary>
+        /// Gets the project site.
+        /// </summary>
+        IServiceProvider Site { get; }
+
+        /// <summary>
+        /// Specifies an action to execute prior to closing the provider.
+        /// </summary>
+        /// <param name="key">
+        /// An object identifying the action. If multiple actions have identical
+        /// keys, only the last added should be executed.
+        /// </param>
+        /// <param name="action">
+        /// The action to execute. The parameter is <paramref name="key"/>.
+        /// </param>
+        void AddActionOnClose(object key, Action<object> action);
+    }
+
 
     public static class IPythonProjectExtensions {
         /// <summary>

@@ -187,6 +187,9 @@
   <data name="405" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\icons\dev_VSVERSION_\IronPythonWpfWindow.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="406" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\icons\dev_VSVERSION_\PythonWebSite.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
   <data name="3006" xml:space="preserve">
     <value>Python</value>
   </data>
@@ -237,5 +240,8 @@
   </data>
   <data name="125" xml:space="preserve">
     <value>Debugging</value>
+  </data>
+  <data name="3016" xml:space="preserve">
+    <value>Python</value>
   </data>
 </root>

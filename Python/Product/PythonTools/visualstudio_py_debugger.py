@@ -27,6 +27,7 @@ import types
 import bisect
 from os import path
 import ntpath
+import runpy
 
 try:
     import visualstudio_py_util as _vspu
@@ -38,6 +39,8 @@ except ImportError:
         _vspu = visualstudio_py_util
 to_bytes = _vspu.to_bytes
 exec_file = _vspu.exec_file
+exec_module = _vspu.exec_module
+exec_code = _vspu.exec_code
 read_bytes = _vspu.read_bytes
 read_int = _vspu.read_int
 read_string = _vspu.read_string
@@ -2077,7 +2080,20 @@ def silent_excepthook(exc_type, exc_value, exc_tb):
     # Used to avoid displaying the exception twice on exit.
     pass
 
-def debug(file, port_num, debug_id, globals_obj, locals_obj, wait_on_exception, redirect_output, wait_on_exit, break_on_systemexit_zero = False, debug_stdlib = False, django_debugging = False):
+def debug(
+    file,
+    port_num,
+    debug_id,
+    globals_obj,
+    locals_obj,
+    wait_on_exception,
+    redirect_output,
+    wait_on_exit,
+    break_on_systemexit_zero = False,
+    debug_stdlib = False,
+    django_debugging = False,
+    run_as = 'script'
+):
     # remove us from modules so there's no trace of us
     sys.modules['$visualstudio_py_debugger'] = sys.modules['visualstudio_py_debugger']
     __name__ = '$visualstudio_py_debugger'
@@ -2114,7 +2130,12 @@ def debug(file, port_num, debug_id, globals_obj, locals_obj, wait_on_exception, 
     # now execute main file
     try:
         try:
-            exec_file(file, globals_obj)
+            if run_as == 'module':
+                exec_module(file, globals_obj)
+            elif run_as == 'code':
+                exec_code(file, '<string>', globals_obj)
+            else:
+                exec_file(file, globals_obj)
         finally:
             sys.settrace(None)
             THREADS_LOCK.acquire()

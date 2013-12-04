@@ -75,10 +75,20 @@
       <IncludeInVsix>true</IncludeInVsix>
     </Content>
     <Content Include="TestTargets\README.txt" />
+    <Content Include="Microsoft.PythonTools.Web.targets">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <SubType>Designer</SubType>
+    </Content>
+    <Content Include="Microsoft.PythonTools.Flask.targets">
+      <SubType>Designer</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Include="TestTargets\Microsoft.PythonTools.Flask.targets" />
     <None Include="TestTargets\Microsoft.PythonTools.Django.targets" />
     <None Include="TestTargets\Microsoft.PythonTools.targets">
       <SubType>Designer</SubType>
     </None>
+    <None Include="TestTargets\Microsoft.PythonTools.Web.targets" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Analysis\Analysis.csproj">

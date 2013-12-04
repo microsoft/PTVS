@@ -15,13 +15,13 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Project {
     partial class PythonDebugPropertyPageControl : UserControl {
         private readonly PythonDebugPropertyPage _propPage;
-        private readonly List<LauncherInfo> _launchers = new List<LauncherInfo>();
         private readonly Dictionary<object, bool> _dirtyPages = new Dictionary<object, bool>();
         private readonly ToolTip _debuggerToolTip = new ToolTip();
         private bool _launcherSelectionDirty;
@@ -39,32 +39,40 @@ namespace Microsoft.PythonTools.Project {
 
         internal void LoadSettings() {
             var compModel = PythonToolsPackage.ComponentModel;
-            var launchers = compModel.GetExtensions<IPythonLauncherProvider>();
             var launchProvider = _propPage.Project.GetProjectProperty(PythonConstants.LaunchProvider, false);
             if (String.IsNullOrWhiteSpace(launchProvider)) {
-                launchProvider = DefaultLauncherProvider.DefaultLauncherDescription;
+                launchProvider = DefaultLauncherProvider.DefaultLauncherName;
             }
 
-            foreach (var launcher in launchers) {
-                var launchInfo = new LauncherInfo((PythonProjectNode)_propPage.Project, launcher);
-                launchInfo.LauncherOptions.DirtyChanged += LauncherOptionsDirtyChanged;
-                _launchers.Add(launchInfo);
-                this._launchModeCombo.Items.Add(launcher.Name);
+            _launchModeCombo.SelectedIndexChanged -= LaunchModeComboSelectedIndexChanged;
 
-                if (launcher.Name == launchProvider) {
-                    _launchModeCombo.SelectedIndexChanged -= LaunchModeComboSelectedIndexChanged;
-                    _launchModeCombo.SelectedIndex = _launchModeCombo.Items.Count - 1;
-                    _launchModeCombo.SelectedIndexChanged += LaunchModeComboSelectedIndexChanged;
-                    _debuggerToolTip.SetToolTip(_launchModeCombo, launcher.Description);
+            LauncherInfo currentInfo = null;
+            var projectNode = (PythonProjectNode)_propPage.Project;
+            foreach (var info in compModel.GetExtensions<IPythonLauncherProvider>()
+                .Select(i => new LauncherInfo(projectNode, i))
+                .OrderBy(i => i.SortKey)) {
 
-                    SwitchLauncher(launchInfo);
+                info.LauncherOptions.DirtyChanged += LauncherOptionsDirtyChanged;
+                _launchModeCombo.Items.Add(info);
+                if (info.Launcher.Name == launchProvider) {
+                    currentInfo = info;
                 }
             }
+
+            if (currentInfo != null) {
+                _launchModeCombo.SelectedItem = currentInfo;
+                SwitchLauncher(currentInfo);
+            } else {
+                _launchModeCombo.SelectedIndex = -1;
+                SwitchLauncher(null);
+            }
+
+            _launchModeCombo.SelectedIndexChanged += LaunchModeComboSelectedIndexChanged;
         }
 
         public string CurrentLauncher {
             get {
-                return _launchModeCombo.Items[_launchModeCombo.SelectedIndex].ToString();
+                return ((LauncherInfo)_launchModeCombo.SelectedItem).Launcher.Name;
             }
         }
 
@@ -89,11 +97,13 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public void SaveSettings() {
-            _launchers[_launchModeCombo.SelectedIndex].LauncherOptions.SaveSettings();
+            var launcher = (LauncherInfo)_launchModeCombo.SelectedItem;
+            launcher.LauncherOptions.SaveSettings();
         }
 
         public void ReloadSetting(string settingName) {
-            _launchers[_launchModeCombo.SelectedIndex].LauncherOptions.ReloadSetting(settingName);
+            var launcher = (LauncherInfo)_launchModeCombo.SelectedItem;
+            launcher.LauncherOptions.ReloadSetting(settingName);
         }
 
         class LauncherInfo {
@@ -107,16 +117,43 @@ namespace Microsoft.PythonTools.Project {
                 OptionsControl = LauncherOptions.Control;
                 LauncherOptions.LoadSettings();
             }
+
+            public string DisplayName {
+                get {
+                    var launcher2 = Launcher as IPythonLauncherProvider2;
+                    if (launcher2 != null) {
+                        return launcher2.LocalizedName;
+                    } else {
+                        return Launcher.Name;
+                    }
+                }
+            }
+
+            public string SortKey {
+                get {
+                    var launcher2 = Launcher as IPythonLauncherProvider2;
+                    if (launcher2 != null) {
+                        return string.Format("{0:D011};{1}", launcher2.SortPriority, launcher2.LocalizedName);
+                    } else {
+                        return string.Format("{0:D011};{1}", Int32.MaxValue, Launcher.Name);
+                    }
+                }
+            }
         }
 
         private void SwitchLauncher(LauncherInfo info) {
-            var newLauncher = info.OptionsControl;
-            info.LauncherOptions.LoadSettings();
-
             if (_curLauncher != null) {
                 tableLayout.Controls.Remove(_curLauncher);
             }
 
+            if (info == null) {
+                _curLauncher = null;
+                _debuggerToolTip.SetToolTip(_launchModeCombo, null);
+                return;
+            }
+
+            var newLauncher = info.OptionsControl;
+            info.LauncherOptions.LoadSettings();
             tableLayout.Controls.Add(newLauncher);
             tableLayout.SetCellPosition(newLauncher, new TableLayoutPanelCellPosition(0, 1));
             tableLayout.SetColumnSpan(newLauncher, 2);
@@ -128,7 +165,12 @@ namespace Microsoft.PythonTools.Project {
         private void LaunchModeComboSelectedIndexChanged(object sender, EventArgs e) {
             _launcherSelectionDirty = true;
             _propPage.IsDirty = true;
-            SwitchLauncher(_launchers[_launchModeCombo.SelectedIndex]);
+            SwitchLauncher((LauncherInfo)_launchModeCombo.SelectedItem);
+        }
+
+        private void _launchModeCombo_Format(object sender, ListControlConvertEventArgs e) {
+            var launcher = (LauncherInfo)e.ListItem;
+            e.Value = launcher.DisplayName;
         }
 
     }

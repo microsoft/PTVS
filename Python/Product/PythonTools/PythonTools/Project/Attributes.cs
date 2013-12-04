@@ -99,6 +99,13 @@ namespace Microsoft.PythonTools.Project {
         public const string ReplEvaluatorInterpreterNotFound = "ReplEvaluatorInterpreterNotFound";
         public const string ReplEvaluatorInterpreterNotConfigured = "ReplEvaluatorInterpreterNotConfigured";
 
+        public const string DefaultLauncherName = "DefaultLauncherName";
+        public const string DefaultLauncherDescription = "DefaultLauncherDescription";
+        
+        public const string PythonWebLauncherName = "PythonWebLauncherName";
+        public const string PythonWebLauncherDescription = "PythonWebLauncherDescription";
+        public const string ErrorInvalidLaunchUrl = "ErrorInvalidLaunchUrl";
+
         internal static new string GetString(string value) {
             string result = Microsoft.PythonTools.Resources.ResourceManager.GetString(value, CultureInfo.CurrentUICulture) ?? CommonSR.GetString(value);
             if (result == null) {

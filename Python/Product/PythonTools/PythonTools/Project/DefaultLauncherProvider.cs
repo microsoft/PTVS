@@ -21,8 +21,8 @@ using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Project {
     [Export(typeof(IPythonLauncherProvider))]
-    class DefaultLauncherProvider : IPythonLauncherProvider {
-        internal const string DefaultLauncherDescription = "Standard Python launcher";
+    class DefaultLauncherProvider : IPythonLauncherProvider2 {
+        internal const string DefaultLauncherName = "Standard Python launcher";
 
         public IPythonLauncherOptions GetLauncherOptions(IPythonProject properties) {
             return new DefaultPythonLauncherOptions(properties);
@@ -30,13 +30,25 @@ namespace Microsoft.PythonTools.Project {
 
         public string Name {
             get {
-                return DefaultLauncherDescription;
+                return DefaultLauncherName;
+            }
+        }
+
+        public string LocalizedName {
+            get {
+                return SR.GetString(SR.DefaultLauncherName);
             }
         }
 
         public string Description {
             get {
-                return "Launches and debugs Python programs.  This is the default.";
+                return SR.GetString(SR.DefaultLauncherDescription);
+            }
+        }
+
+        public int SortPriority {
+            get {
+                return 0;
             }
         }
 

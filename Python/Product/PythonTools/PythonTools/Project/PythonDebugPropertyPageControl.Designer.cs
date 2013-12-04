@@ -54,6 +54,7 @@
             this._launchModeCombo.Size = new System.Drawing.Size(351, 21);
             this._launchModeCombo.TabIndex = 1;
             this._launchModeCombo.SelectedIndexChanged += new System.EventHandler(this.LaunchModeComboSelectedIndexChanged);
+            this._launchModeCombo.Format += new System.Windows.Forms.ListControlConvertEventHandler(this._launchModeCombo_Format);
             // 
             // tableLayout
             // 

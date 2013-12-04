@@ -36,8 +36,8 @@ else:
     def to_bytes(cmd_str):
         return cmd_str
 
-def exec_file(file, global_variables):
-    '''Executes the provided script as if it were the original script provided
+def exec_code(code, file, global_variables):
+    '''Executes the provided code as if it were the original script provided
     to python.exe. The functionality is similar to `runpy.run_path`, which was
     added in Python 2.7/3.2.
 
@@ -68,13 +68,40 @@ def exec_file(file, global_variables):
             global_variables.setdefault('__loader__', None)
 
     sys.path[0] = os.path.split(file)[0]
-    f = open(file, "rb")
-    try:
-        code_obj = compile(f.read().replace(to_bytes('\r\n'), to_bytes('\n')) + to_bytes('\n'), file, 'exec')
-    finally:
-        f.close()
+    code_obj = compile(code, file, 'exec')
     exec(code_obj, global_variables)
 
+def exec_file(file, global_variables):
+    '''Executes the provided script as if it were the original script provided
+    to python.exe. The functionality is similar to `runpy.run_path`, which was
+    added in Python 2.7/3.2.
+
+    The following values in `global_variables` will be set to the following
+    values, if they are not already set::
+        __name__ = '<run_path>'
+        __file__ = file
+        __package__ = __name__.rpartition('.')[0] # 2.6 and later
+        __cached__ = None # 3.2 and later
+        __loader__ = None # 3.3 and later
+
+    The `sys.modules` entry for ``__name__`` will be set to a new module, and
+    ``sys.path[0]`` will be changed to the value of `file` without the filename.
+    Both values are restored when this function exits.
+    '''
+    f = open(file, "rb")
+    try:
+        code = f.read().replace(to_bytes('\r\n'), to_bytes('\n')) + to_bytes('\n')
+    finally:
+        f.close()
+    exec_code(code, file, global_variables)
+
+def exec_module(module, global_variables):
+    '''Executes the provided module as if it were provided as '-m module'. The
+    functionality is implemented using `runpy.run_module`, which was added in
+    Python 2.5.
+    '''
+    import runpy
+    runpy.run_module(module, global_variables, alter_sys = True)
 
 UNICODE_PREFIX = to_bytes('U')
 ASCII_PREFIX = to_bytes('A')

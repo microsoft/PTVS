@@ -51,88 +51,19 @@ namespace Microsoft.PythonTools.Project {
             return LaunchFile(startupFile, debug);
         }
 
-        internal static string GetFullUrl(string url, string port) {
-            if (!String.IsNullOrWhiteSpace(url)) {
-                Uri relativeUri;
-                if (Uri.TryCreate(url, UriKind.Relative, out relativeUri)) {
-                    url = new Uri(new Uri("http://localhost"), url).ToString();
-                }
-
-                Uri uri;
-
-                if (Uri.TryCreate(url, UriKind.Absolute, out uri)) {
-                    if (String.IsNullOrEmpty(uri.GetComponents(UriComponents.Port, UriFormat.Unescaped))) {
-                        int portNum;
-                        if (Int32.TryParse(port, out portNum)) {
-                            var builder = new UriBuilder(uri);
-                            builder.Port = portNum;
-                            url = builder.ToString();
-                        }
-                    }
-
-                }
-                return url;
-            }
-            return null;
-        }
-
-        private string GetFullUrl() {
-            var url = GetFullUrl(
-                _project.GetProperty(PythonConstants.WebBrowserUrlSetting),
-                _project.GetProperty(PythonConstants.WebBrowserPortSetting)
-            );
-            Uri uri;
-            if (!String.IsNullOrWhiteSpace(url) &&
-                !Uri.TryCreate(url, UriKind.RelativeOrAbsolute, out uri)) {
-                MessageBox.Show(String.Format("Project is configured to launch to invalid URL: \"{0}\"\r\n\r\nYour web browser will not be opened.", url));
-            }
-            return url;
-        }
-
         public int LaunchFile(string/*!*/ file, bool debug) {
             if (debug) {
                 PythonToolsPackage.Instance.Logger.LogEvent(Logging.PythonLogEvent.Launch, 1);
                 StartWithDebugger(file);
             } else {
                 PythonToolsPackage.Instance.Logger.LogEvent(Logging.PythonLogEvent.Launch, 0);
-                var process = StartWithoutDebugger(file);
-                var url = GetFullUrl();
-                Uri uri;
-                if (process != null &&
-                    !String.IsNullOrWhiteSpace(url) &&
-                    Uri.TryCreate(url, UriKind.RelativeOrAbsolute, out uri)) {
-                    OnPortOpenedHandler.CreateHandler(
-                        uri.Port,
-                        shortCircuitPredicate: () => process.HasExited,
-                        action: () => {
-                            var web = PythonToolsPackage.GetGlobalService(typeof(SVsWebBrowsingService)) as IVsWebBrowsingService;
-                            if (web == null) {
-                                PythonToolsPackage.OpenWebBrowser(url);
-                                return;
-                            }
-
-                            ErrorHandler.ThrowOnFailure(
-                                web.CreateExternalWebBrowser(
-                                    (uint)__VSCREATEWEBBROWSER.VSCWB_ForceNew,
-                                    VSPREVIEWRESOLUTION.PR_Default,
-                                    url
-                                )
-                            );
-                        }
-                    );
-                }
+                StartWithoutDebugger(file);
             }
 
             return VSConstants.S_OK;
         }
 
         #endregion
-
-        private bool NoInterpretersAvailable() {
-            var interpreter = _project.GetInterpreterFactory();
-            var interpreterService = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
-            return interpreterService == null || interpreterService.NoInterpretersValue == interpreter;
-        }
 
         private string GetInterpreterExecutableInternal(out bool isWindows) {
             if (!Boolean.TryParse(_project.GetProperty(CommonConstants.IsWindowsApplication) ?? Boolean.FalseString, out isWindows)) {
@@ -151,12 +82,12 @@ namespace Microsoft.PythonTools.Project {
                 return result;
             }
 
-            if (NoInterpretersAvailable()) {
-                PythonToolsPackage.OpenVsWebBrowser(PythonToolsInstallPath.GetFile("NoInterpreters.html"));
-                return null;
+            var interpreter = _project.GetInterpreterFactory();
+            var interpreterService = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
+            if (interpreterService == null || interpreterService.NoInterpretersValue == interpreter) {
+                throw new NoInterpretersException();
             }
 
-            var interpreter = _project.GetInterpreterFactory();
             return !isWindows ?
                 interpreter.Configuration.InterpreterPath :
                 interpreter.Configuration.WindowsInterpreterPath;
@@ -187,11 +118,9 @@ namespace Microsoft.PythonTools.Project {
         private Process StartWithoutDebugger(string startupFile) {
             var psi = CreateProcessStartInfoNoDebug(startupFile);
             if (psi == null) {
-                if (!NoInterpretersAvailable()) {
-                    MessageBox.Show(
-                        "The project cannot be started because its active Python environment does not have the interpreter executable specified.",
-                        "Python Tools for Visual Studio", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
+                MessageBox.Show(
+                    "The project cannot be started because its active Python environment does not have the interpreter executable specified.",
+                    "Python Tools for Visual Studio", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return null;
             }
             return Process.Start(psi);
@@ -207,11 +136,9 @@ namespace Microsoft.PythonTools.Project {
                 SetupDebugInfo(ref dbgInfo, startupFile);
 
                 if (string.IsNullOrEmpty(dbgInfo.bstrExe)) {
-                    if (!NoInterpretersAvailable()) {
-                        MessageBox.Show(
-                            "The project cannot be debugged because its active Python environment does not have the interpreter executable specified.",
-                            "Python Tools for Visual Studio", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    }
+                    MessageBox.Show(
+                        "The project cannot be debugged because its active Python environment does not have the interpreter executable specified.",
+                        "Python Tools for Visual Studio", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
                 }
 
@@ -283,11 +210,6 @@ namespace Microsoft.PythonTools.Project {
                 }
                 if (!String.IsNullOrWhiteSpace(interpArgs)) {
                     dbgInfo.bstrOptions += ";" + AD7Engine.InterpreterOptions + "=" + interpArgs.Replace(";", ";;");
-                }
-
-                var url = GetFullUrl();
-                if (!String.IsNullOrWhiteSpace(url)) {
-                    dbgInfo.bstrOptions += ";" + AD7Engine.WebBrowserUrl + "=" + HttpUtility.UrlEncode(url);
                 }
 
                 var djangoDebugging = _project.GetProperty("DjangoDebugging");

@@ -13,11 +13,7 @@
  * ***************************************************************************/
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.PythonTools.Project;
+using Microsoft.PythonTools.Project.Web;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace PythonToolsTests {
@@ -26,17 +22,17 @@ namespace PythonToolsTests {
         [TestMethod, Priority(0)]
         public void LaunchWebBrowserUriTests() {
             var testCases = new[] {
-                new { Url = "/fob", Port = "", Expected = "http://localhost/fob" },
-                new { Url = "http://localhost:9999/fob", Port = "9999", Expected = "http://localhost:9999/fob" },
-                new { Url = "http://localhost/fob", Port = "9999", Expected = "http://localhost:9999/fob" },
-                new { Url = "fob", Port = "9999", Expected = "http://localhost:9999/fob" },
+                new { Url = "/fob", Port = 0, Expected = "http://localhost/fob" },
+                new { Url = "http://localhost:9999/fob", Port = 9999, Expected = "http://localhost:9999/fob" },
+                new { Url = "http://localhost/fob", Port = 9999, Expected = "http://localhost:9999/fob" },
+                new { Url = "fob", Port = 9999, Expected = "http://localhost:9999/fob" },
             };
 
             foreach(var testCase in testCases) {
                 Console.WriteLine("{0} {1} == {2}", testCase.Url, testCase.Port, testCase.Expected);
 
                 Assert.AreEqual(
-                    DefaultPythonLauncher.GetFullUrl(testCase.Url, testCase.Port),
+                    PythonWebLauncher.GetFullUrl(testCase.Url, testCase.Port),
                     testCase.Expected
                 );
             }

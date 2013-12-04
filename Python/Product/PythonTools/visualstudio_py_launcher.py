@@ -17,9 +17,9 @@ Starts Debugging, expected to start with normal program
 to start as first argument and directory to run from as
 the second argument.
 """
+import os
 import sys
 import visualstudio_py_debugger
-import os
 
 # arguments are working dir, port, normal arguments which should include a filename to execute
 
@@ -36,48 +36,51 @@ wait_on_exit = False
 break_on_systemexit_zero = False
 debug_stdlib = False
 django_debugging = False
-if len(sys.argv) >= 1 and sys.argv[0] == '--wait-on-exception':
-    wait_on_exception = True
+run_as = 'script'
+
+for opt in [
+    # Order is important for these options.
+    'wait_on_exception',
+    'wait_on_exit',
+    'redirect_output',
+    'break_on_systemexit_zero',
+    'debug_stdlib',
+    'django_debugging'
+]:
+    if sys.argv and sys.argv[0] == '--' + opt.replace('_', '-'):
+        globals()[opt] = True
+        del sys.argv[0]
+
+# set run_as mode appropriately
+if sys.argv and sys.argv[0] == '-m':
+    run_as = 'module'
     del sys.argv[0]
 
-if len(sys.argv) >= 1 and sys.argv[0] == '--wait-on-exit':
-    wait_on_exit = True
+if sys.argv and sys.argv[0] == '-c':
+    run_as = 'code'
     del sys.argv[0]
 
-if len(sys.argv) >= 1 and sys.argv[0] == '--redirect-output':
-    redirect_output = True
-    del sys.argv[0]
-
-if len(sys.argv) >= 1 and sys.argv[0] == '--break-on-systemexit-zero':
-    break_on_systemexit_zero = True
-    del sys.argv[0]
-    # set file appropriately, fix up sys.argv...
-    
-if len(sys.argv) >= 1 and sys.argv[0] == '--debug-stdlib':
-    debug_stdlib = True
-    del sys.argv[0]
-
-if len(sys.argv) >= 1 and sys.argv[0] == '--django-debugging':
-    django_debugging = True
-    del sys.argv[0]
-
-__file__ = sys.argv[0]
+# preserve filename before we del sys
+filename = sys.argv[0]
 
 # fix sys.path to be the script file dir
-sys.path[0] = os.path.split(sys.argv[0])[0]
+sys.path[0] = ''
 
 # remove all state we imported
 del sys, os
 
 # and start debugging
-visualstudio_py_debugger.debug(__file__, 
-                                port_num, 
-                                debug_id, 
-                                globals(), 
-                                locals(), 
-                                wait_on_exception, 
-                                redirect_output, 
-                                wait_on_exit,
-                                break_on_systemexit_zero,
-                                debug_stdlib,
-                                django_debugging)
+visualstudio_py_debugger.debug(
+    filename, 
+    port_num, 
+    debug_id, 
+    globals(), 
+    locals(), 
+    wait_on_exception, 
+    redirect_output, 
+    wait_on_exit,
+    break_on_systemexit_zero,
+    debug_stdlib,
+    django_debugging,
+    run_as
+)

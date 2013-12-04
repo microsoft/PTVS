@@ -23,6 +23,6 @@ def home5(request):
 
 
 def home6(request):
-    return render(request, 'page5.html.djt', {'content': 'fob'}))
+    return render(request, 'page5.html.djt', {'content': 'fob'})
 
 

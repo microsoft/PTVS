@@ -30,7 +30,17 @@
   <Target Name="GetTargetFrameworkMonikerDisplayName" Returns="" />
   <Target Name="CreateManifestResourceNames" Returns="" />
 
-  <Import Project="$(VSToolsPath)\Python Tools\Microsoft.PythonTools.targets" />
+  <PropertyGroup>
+    <DjangoDebugging Condition="'$(DjangoDebugging)'==''">true</DjangoDebugging>
+    <PythonRunWebServerCommandArguments Condition="'$(PythonRunWebServerCommandArguments)' == ''">runserver --settings $(DjangoSettingsModule) $(CommandLineArguments) %SERVER_PORT%</PythonRunWebServerCommandArguments>
+    <PythonRunWebServerCommandType Condition="'$(PythonRunWebServerCommandType)' == ''">script</PythonRunWebServerCommandType>
+    <PythonDebugWebServerCommandArguments Condition="'$(PythonDebugWebServerCommandArguments)' == ''">runserver --noreload --settings $(DjangoSettingsModule) $(CommandLineArguments) %SERVER_PORT%</PythonDebugWebServerCommandArguments>
+    <PythonDebugWebServerCommandType Condition="'$(PythonDebugWebServerCommandType)' == ''">script</PythonDebugWebServerCommandType>
+    <PythonWebFrameworkPackage Condition="'$(PythonWebFrameworkPackage)' == ''">django</PythonWebFrameworkPackage>
+    <PythonWebFrameworkPackageDisplayName Condition="'$(PythonWebFrameworkPackageDisplayName)' == ''">Django</PythonWebFrameworkPackageDisplayName>
+  </PropertyGroup>
+  
+  <Import Project="$(VSToolsPath)\Python Tools\Microsoft.PythonTools.Web.targets" />
 
   <ItemGroup>
     <PythonAzureDeploymentFile Include="$(_AzureDjangoSupportPath)Microsoft.PythonTools.AzureSetup.exe" />
@@ -570,7 +580,7 @@ interpreter_path_emulated=$(PythonInterpreterPath)
   
   <!-- Django-specific project commands -->
   <PropertyGroup>
-    <PythonCommands>$(PythonCommands);DjangoShellCommand;DjangoValidateAppCommand;DjangoSyncDbCommand</PythonCommands>
+    <PythonCommands>DjangoShellCommand;DjangoValidateAppCommand;DjangoSyncDbCommand;$(PythonCommands)</PythonCommands>
     <PythonCommandsDisplayLabel>resource:Microsoft.PythonTools.Django;Microsoft.PythonTools.Django.Resources;DjangoMenuLabel</PythonCommandsDisplayLabel>
   </PropertyGroup>
 
@@ -584,7 +594,6 @@ interpreter_path_emulated=$(PythonInterpreterPath)
 
   <Target Name="DjangoShellCommand"
           Label="resource:Microsoft.PythonTools.Django;Microsoft.PythonTools.Django.Resources;OpenDjangoShellLabel"
-          DependsOnTargets="SetStartupFileOrManagePy"
           Returns="@(Commands)">
     <PythonCommand Target="import django; print('Starting Django %s shell' % django.get_version())"
                    TargetType="code"

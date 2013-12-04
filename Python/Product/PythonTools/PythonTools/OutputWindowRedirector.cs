@@ -22,12 +22,18 @@ namespace Microsoft.PythonTools {
         private static readonly Guid OutputWindowGuid = new Guid("{34E76E81-EE4A-11D0-AE2E-00A0C90FFFC3}");
         static OutputWindowRedirector _generalPane;
 
+        public static OutputWindowRedirector Get(IServiceProvider provider, Guid id, string title) {
+            IVsOutputWindow outputWindow = provider.GetService(typeof(SVsOutputWindow)) as IVsOutputWindow;
+            IVsOutputWindowPane pane;
+            if (ErrorHandler.Failed(outputWindow.GetPane(id, out pane)) || pane == null) {
+                ErrorHandler.ThrowOnFailure(outputWindow.CreatePane(id, title, 1, 0));
+            }
+            return new OutputWindowRedirector(provider, id);
+        }
+
         public static OutputWindowRedirector GetGeneral(IServiceProvider provider) {
             if (_generalPane == null) {
-                IVsOutputWindow outputWindow = provider.GetService(typeof(SVsOutputWindow)) as IVsOutputWindow;
-                // Create the General pane if it doesn't exist
-                outputWindow.CreatePane(VSConstants.OutputWindowPaneGuid.GeneralPane_guid, "General", 1, 0);
-                _generalPane = new OutputWindowRedirector(provider, VSConstants.OutputWindowPaneGuid.GeneralPane_guid);
+                _generalPane = Get(provider, VSConstants.OutputWindowPaneGuid.GeneralPane_guid, "General");
             }
             return _generalPane;
         }

@@ -20,27 +20,31 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
-using System.Windows.Forms;
 using System.Xml;
+using Microsoft.Build.Execution;
+using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Project;
-using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.OLE.Interop;
-using Microsoft.VisualStudio.Repl;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Flavor;
 using Microsoft.VisualStudio.Shell.Interop;
-using Microsoft.VisualStudioTools;
-using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Django.Project {
     [Guid("564253E9-EF07-4A40-89CF-790E61F53368")]
-    partial class DjangoProject : FlavoredProjectBase, IOleCommandTarget, IVsProjectFlavorCfgProvider, IVsProject, IDjangoProject, IVsFilterAddProjectItemDlg {
+    partial class DjangoProject :
+        FlavoredProjectBase,
+        IOleCommandTarget,
+        IVsProjectFlavorCfgProvider,
+        IVsProject,
+        IDjangoProject,
+        IVsFilterAddProjectItemDlg
+    {
         internal DjangoPackage _package;
         internal IVsProject _innerProject;
         internal IVsProject3 _innerProject3;
         private IVsProjectFlavorCfgProvider _innerVsProjectFlavorCfgProvider;
-        private static Guid PythonProjectGuid = new Guid("888888a0-9f3d-457c-b088-3a5042f75d52");
+        private static Guid PythonProjectGuid = new Guid(PythonConstants.ProjectFactoryGuid);
         private OleMenuCommandService _menuService;
         private List<OleMenuCommand> _commands = new List<OleMenuCommand>();
         private readonly DjangoAnalyzer _analyzer = new DjangoAnalyzer();
@@ -140,7 +144,6 @@ namespace Microsoft.PythonTools.Django.Project {
             _commands.Clear();
             _analyzer.Dispose();
             base.Close();
-            _menuService.Dispose();
         }
 
         private void OpenFileBeforeQueryStatus(object sender, EventArgs e) {
@@ -518,7 +521,7 @@ namespace Microsoft.PythonTools.Django.Project {
             // Now let the base implementation set the inner object
             base.SetInnerProject(innerIUnknown);
 
-            // Add our commands (this must run after we called base.SetInnerProject)            
+            // Add our commands (this must run after we called base.SetInnerProject)
             _menuService = ((System.IServiceProvider)this).GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
         }
 

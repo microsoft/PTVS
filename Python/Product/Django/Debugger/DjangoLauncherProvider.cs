@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
+using System.Linq;
 using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudioTools.Project;
 
@@ -45,19 +46,13 @@ namespace Microsoft.PythonTools.Django.Debugger {
         }
 
         public IProjectLauncher CreateLauncher(IPythonProject project) {
-            IPythonLauncherProvider defaultLauncher = null;
-            foreach (var launcher in _providers) {
-                if (launcher.Value.Name == "Standard Python launcher") {
-                    defaultLauncher = launcher.Value;
-                    break;
-                }
+            var webLauncher = _providers.FirstOrDefault(p => p.Value.Name == PythonConstants.WebLauncherName);
+
+            if (webLauncher == null) {
+                throw new InvalidOperationException("Cannot find Python Web launcher");
             }
 
-            if (defaultLauncher == null) {
-                throw new InvalidOperationException("Cannot find default Python launcher");
-            }
-
-            return new DjangoLauncher(project, defaultLauncher);
+            return webLauncher.Value.CreateLauncher(project);
         }
 
         #endregion

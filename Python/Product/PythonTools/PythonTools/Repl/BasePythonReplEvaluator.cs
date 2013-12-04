@@ -37,6 +37,7 @@ using Microsoft.PythonTools.Language;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Repl;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor.OptionsExtensionMethods;
@@ -1516,6 +1517,29 @@ namespace Microsoft.PythonTools.Repl {
                 prevText = prevText.Substring(0, prevText.Length - 1);
             }
             return prevText;
+        }
+
+        internal static void CloseReplWindow(object key) {
+            var window = key as IReplWindow;
+            Debug.Assert(window != null);
+            if (window == null) {
+                return;
+            }
+
+            // Close backends when the project closes so we don't
+            // leave Python processes hanging around.
+            var evaluator = window.Evaluator as BasePythonReplEvaluator;
+            if (evaluator != null) {
+                evaluator.Close();
+            }
+
+            // Close project-specific REPL windows when the project
+            // closes.
+            var pane = window as ToolWindowPane;
+            var frame = pane != null ? pane.Frame as IVsWindowFrame : null;
+            if (frame != null) {
+                frame.CloseFrame((uint)__FRAMECLOSE.FRAMECLOSE_NoSave);
+            }
         }
     }
 }

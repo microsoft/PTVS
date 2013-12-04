@@ -107,6 +107,7 @@
     </Compile>
     <Compile Include="UITests.cs" />
     <Compile Include="VirtualEnvTests.cs" />
+    <Compile Include="WebProjectTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Product\ReplWindow\ReplWindow.csproj">
@@ -121,6 +122,7 @@
     <ProjectReference Include="..\..\Product\VSInterpreters\VSInterpreters.csproj">
       <Project>{815db0cd-c0dd-4997-b43c-abee4dbeffe7}</Project>
       <Name>VSInterpreters</Name>
+      <Aliases>global,vsinterpreters</Aliases>
     </ProjectReference>
     <ProjectReference Include="..\..\Product\PythonTools\PythonTools.csproj">
       <Project>{FA7BE5F5-E04F-4613-B7AC-70CE10D1BB68}</Project>

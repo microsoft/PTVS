@@ -111,7 +111,7 @@ namespace PythonToolsUITests {
                 OpenProject(app, "Commands2.sln", out node, out proj);
 
                 AssertUtil.ContainsExactly(
-                    node._customCommands.Select(cc => cc._label),
+                    node._customCommands.Select(cc => cc.Label),
                     "resource:PythonToolsUITests;PythonToolsUITests.Resources;CommandName"
                 );
 
@@ -159,6 +159,10 @@ namespace PythonToolsUITests {
                     "Program.py completed",
                     (string)repl.ReplWindow.GetOptionValue(ReplOptions.CurrentPrimaryPrompt)
                 );
+
+                app.Dte.Solution.Close();
+
+                Assert.IsNull(app.GetInteractiveWindow("Test Repl"), "Repl window was not closed");
             }
         }
 

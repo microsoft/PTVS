@@ -97,6 +97,33 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Start &amp;debug server.
+        /// </summary>
+        internal static string DebugWebServerLabel {
+            get {
+                return ResourceManager.GetString("DebugWebServerLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Launches and debugs Python programs. This is the default..
+        /// </summary>
+        internal static string DefaultLauncherDescription {
+            get {
+                return ResourceManager.GetString("DefaultLauncherDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Standard Python launcher.
+        /// </summary>
+        internal static string DefaultLauncherName {
+            get {
+                return ResourceManager.GetString("DefaultLauncherName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to &apos;{0}&apos; will be removed froh the project and the directory
         ///&apos;{1}&apos;
         ///and all its contents will be deleted from disk..
@@ -210,6 +237,17 @@ namespace Microsoft.PythonTools {
         internal static string ErrorImportWizardUnauthorizedAccess {
             get {
                 return ResourceManager.GetString("ErrorImportWizardUnauthorizedAccess", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Project is configured to launch to invalid URL: &quot;{0}&quot;
+        ///
+        ///Your web browser will not be opened..
+        /// </summary>
+        internal static string ErrorInvalidLaunchUrl {
+            get {
+                return ResourceManager.GetString("ErrorInvalidLaunchUrl", resourceCulture);
             }
         }
         
@@ -496,11 +534,38 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Launches web sites using the Python debugger. This enables launching and starting a web browser automatically, using the commands specified in the project file..
+        /// </summary>
+        internal static string PythonWebLauncherDescription {
+            get {
+                return ResourceManager.GetString("PythonWebLauncherDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Web launcher.
+        /// </summary>
+        internal static string PythonWebLauncherName {
+            get {
+                return ResourceManager.GetString("PythonWebLauncherName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to References.
         /// </summary>
         internal static string ReferencesNodeName {
             get {
                 return ResourceManager.GetString("ReferencesNodeName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &amp;Start server.
+        /// </summary>
+        internal static string RunWebServerLabel {
+            get {
+                return ResourceManager.GetString("RunWebServerLabel", resourceCulture);
             }
         }
         
@@ -635,6 +700,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to &amp;Install/upgrade {PythonWebFrameworkPackageDisplayName}.
+        /// </summary>
+        internal static string UpgradeWebFrameworkLabel {
+            get {
+                return ResourceManager.GetString("UpgradeWebFrameworkLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Virtual environment is being created at &apos;{0}&apos;.
         /// </summary>
         internal static string VirtualEnvCreating {
@@ -676,6 +750,15 @@ namespace Microsoft.PythonTools {
         internal static string WarningAnalysisNotCurrent {
             get {
                 return ResourceManager.GetString("WarningAnalysisNotCurrent", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &amp;Web.
+        /// </summary>
+        internal static string WebMenuLabel {
+            get {
+                return ResourceManager.GetString("WebMenuLabel", resourceCulture);
             }
         }
     }

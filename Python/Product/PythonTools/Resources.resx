@@ -324,6 +324,35 @@ Try moving your source code to a location where you can read and write files.</v
   <data name="StatusImportWizardStarting" xml:space="preserve">
     <value>Importing project...</value>
   </data>
+  <data name="DefaultLauncherDescription" xml:space="preserve">
+    <value>Launches and debugs Python programs. This is the default.</value>
+  </data>
+  <data name="DefaultLauncherName" xml:space="preserve">
+    <value>Standard Python launcher</value>
+  </data>
+  <data name="ErrorInvalidLaunchUrl" xml:space="preserve">
+    <value>Project is configured to launch to invalid URL: "{0}"
+
+Your web browser will not be opened.</value>
+  </data>
+  <data name="PythonWebLauncherDescription" xml:space="preserve">
+    <value>Launches web sites using the Python debugger. This enables launching and starting a web browser automatically, using the commands specified in the project file.</value>
+  </data>
+  <data name="PythonWebLauncherName" xml:space="preserve">
+    <value>Web launcher</value>
+  </data>
+  <data name="DebugWebServerLabel" xml:space="preserve">
+    <value>Start &amp;debug server</value>
+  </data>
+  <data name="RunWebServerLabel" xml:space="preserve">
+    <value>&amp;Start server</value>
+  </data>
+  <data name="UpgradeWebFrameworkLabel" xml:space="preserve">
+    <value>&amp;Install/upgrade {PythonWebFrameworkPackageDisplayName}</value>
+  </data>
+  <data name="WebMenuLabel" xml:space="preserve">
+    <value>&amp;Web</value>
+  </data>
   <data name="ImportWizardProjectExists" xml:space="preserve">
     <value>The specified project file already exists. Overwrite?</value>
   </data>

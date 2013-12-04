@@ -1,0 +1,76 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<!--
+  Copyright (c) Microsoft Corporation.
+
+  This source code is subject to terms and conditions of the Apache License, Version 2.0. A
+  copy of the license can be found in the License.html file at the root of this distribution. If
+  you cannot locate the Apache License, Version 2.0, please send an email to
+  vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound
+  by the terms of the Apache License, Version 2.0.
+ 
+  You must not remove this notice, or any other, from this software.
+-->
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="Microsoft.PythonTools.targets"/>
+
+  <PropertyGroup>
+    <WebServerHost Condition="'$(WebServerHost)' == ''">localhost</WebServerHost>
+    <PythonCommandsDisplayLabel>resource:Microsoft.PythonTools;Microsoft.Resources;WebMenuLabel</PythonCommandsDisplayLabel>
+    <PythonCommands>$(PythonCommands);PythonRunWebServerCommand;PythonDebugWebServerCommand</PythonCommands>
+    <PythonCommands Condition="'$(PythonWebFrameworkPackage)' != ''">$(PythonCommands);PythonUpgradeWebFrameworkCommand</PythonCommands>
+    <PythonWebFrameworkPackageDisplayName Condition="'$(PythonWebFrameworkPackageDisplayName)' == ''">framework</PythonWebFrameworkPackageDisplayName>
+  </PropertyGroup>
+
+  <Target Name="PythonRunWebServerCommand"
+          Label="resource:Microsoft.PythonTools;Microsoft.Resources;RunWebServerLabel"
+          DependsOnTargets="ResolveStartupPath"
+          Returns="@(Commands)">
+    <PropertyGroup>
+      <PythonRunWebServerCommand Condition="'$(PythonRunWebServerCommand)' == ''">$(StartupPath)</PythonRunWebServerCommand>
+      <PythonRunWebServerCommandType Condition="'$(PythonRunWebServerCommandType)' == ''">script</PythonRunWebServerCommandType>
+    </PropertyGroup>
+    <!-- 'console' and 'consolepause' are the only valid ExecuteIn values for this command. -->
+    <PythonCommand Target="$(PythonRunWebServerCommand)"
+                   TargetType="$(PythonRunWebServerCommandType)"
+                   Arguments="$(PythonRunWebServerCommandArguments)"
+                   Environment="SERVER_HOST=$(WebServerHost)
+                                SERVER_PORT=$(WebServerPort)"
+                   DeferExecution="$(BuildingInsideVisualStudio)"
+                   ExecuteIn="console">
+      <Output TaskParameter="Command" ItemName="Commands" />
+    </PythonCommand>
+  </Target>
+
+  <Target Name="PythonDebugWebServerCommand"
+          Label="resource:Microsoft.PythonTools;Microsoft.Resources;DebugWebServerLabel"
+          DependsOnTargets="ResolveStartupPath"
+          Returns="@(Commands)">
+    <PropertyGroup>
+      <PythonDebugWebServerCommand Condition="'$(PythonDebugWebServerCommand)' == ''">$(StartupPath)</PythonDebugWebServerCommand>
+      <PythonDebugWebServerCommandType Condition="'$(PythonDebugWebServerCommandType)' == ''">script</PythonDebugWebServerCommandType>
+    </PropertyGroup>
+    <!-- 'console' and 'consolepause' are the only valid ExecuteIn values for this command. -->
+    <PythonCommand Target="$(PythonDebugWebServerCommand)"
+                   TargetType="$(PythonDebugWebServerCommandType)"
+                   Arguments="$(PythonDebugWebServerCommandArguments)"
+                   Environment="SERVER_HOST=$(WebServerHost)
+                                SERVER_PORT=$(WebServerPort)"
+                   DeferExecution="$(BuildingInsideVisualStudio)"
+                   ExecuteIn="console">
+      <Output TaskParameter="Command" ItemName="Commands" />
+    </PythonCommand>
+  </Target>
+
+  <Target Name="PythonUpgradeWebFrameworkCommand"
+          Label="resource:Microsoft.PythonTools;Microsoft.Resources;UpgradeWebFrameworkLabel"
+          Returns="@(Commands)">
+    <!-- 'pip' is a special TargetType that will also install pip if required. -->
+    <PythonCommand Target="$(PythonWebFrameworkPackage)"
+                   TargetType="pip"
+                   Arguments="--upgrade"
+                   DeferExecution="$(BuildingInsideVisualStudio)"
+                   ExecuteIn="output">
+      <Output TaskParameter="Command" ItemName="Commands" />
+    </PythonCommand>
+  </Target>
+</Project>

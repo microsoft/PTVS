@@ -36,8 +36,12 @@ namespace Microsoft.PythonTools.Project {
                 }
             }
 
-
-            return base.DebugLaunch(flags);
+            try {
+                return base.DebugLaunch(flags);
+            } catch (NoInterpretersException) {
+                PythonToolsPackage.OpenVsWebBrowser(PythonToolsInstallPath.GetFile("NoInterpreters.html"));
+                return VSConstants.E_FAIL;
+            }
         }
     }
 }

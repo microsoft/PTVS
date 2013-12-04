@@ -59,7 +59,7 @@ namespace Microsoft.PythonTools.Commands {
             }
 
             if (project != null && project.Interpreters.IsProjectSpecific(factory)) {
-                project.AddAssociatedReplWindow(window);
+                project.AddActionOnClose(window, BasePythonReplEvaluator.CloseReplWindow);
             }
 
             return window;

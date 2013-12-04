@@ -34,7 +34,8 @@ namespace Microsoft.PythonTools {
 
         internal const string LibraryManagerGuid = "888888e5-b976-4366-9e98-e7bc01f1842c";
         internal const string LibraryManagerServiceGuid = "88888859-2f95-416e-9e2b-cac4678e5af7";
-        internal const string ProjectFactoryGuid = "888888a0-9f3d-457c-b088-3a5042f75d52";
+        public const string ProjectFactoryGuid = "888888a0-9f3d-457c-b088-3a5042f75d52";
+        internal const string WebProjectFactoryGuid = "1b580a1a-fdb3-4b32-83e1-6407eb2722e6";
         internal const string EditorFactoryGuid = "888888c4-36f9-4453-90aa-29fa4d2e5706";
         internal const string ProjectNodeGuid = "8888881a-afb8-42b1-8398-e60d69ee864d";
         internal const string GeneralPropertyPageGuid = "888888fd-3c4a-40da-aefb-5ac10f5e8b30";
@@ -100,10 +101,20 @@ namespace Microsoft.PythonTools {
         /// </summary>
         public const string WebBrowserUrlSetting = "WebBrowserUrl";
 
+        /// <summary>
+        /// Specifies local address for the web server to listen on.
+        /// </summary>
+        public const string WebServerHostSetting = "WebServerHost";
+
         //Mixed-mode debugging project property
         public const string EnableNativeCodeDebugging = "EnableNativeCodeDebugging";
 
         public const string WorkingDirectorySetting = CommonConstants.WorkingDirectory;
         public const string ProjectHomeSetting = CommonConstants.ProjectHome;
+
+        /// <summary>
+        /// The canonical name of the debug launcher for web projects.
+        /// </summary>
+        public const string WebLauncherName = "Web launcher";
     }
 }

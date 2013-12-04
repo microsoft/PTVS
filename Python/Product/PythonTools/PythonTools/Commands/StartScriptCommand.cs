@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System;
+using System.Windows.Forms;
 using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.OLE.Interop;
@@ -41,7 +42,11 @@ namespace Microsoft.PythonTools.Commands {
             IPythonProject pythonProject = pythonProjectNode as IPythonProject ?? new DefaultPythonProject(file);
 
             var launcher = PythonToolsPackage.GetLauncher(pythonProject);
-            launcher.LaunchFile(file, CommandId == CommonConstants.StartDebuggingCmdId);
+            try {
+                launcher.LaunchFile(file, CommandId == CommonConstants.StartDebuggingCmdId);
+            } catch (NoInterpretersException) {
+                PythonToolsPackage.OpenVsWebBrowser(PythonToolsInstallPath.GetFile("NoInterpreters.html"));
+            }
         }
 
         public override int? EditFilterQueryStatus(ref VisualStudio.OLE.Interop.OLECMD cmd, IntPtr pCmdText) {

@@ -42,6 +42,7 @@ using Microsoft.PythonTools.Navigation;
 using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Project;
+using Microsoft.PythonTools.Project.Web;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Debugger.Interop;
@@ -370,7 +371,7 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
                     return launcher.CreateLauncher(project);
                 }
 
-                if (launcher.Name == DefaultLauncherProvider.DefaultLauncherDescription) {
+                if (launcher.Name == DefaultLauncherProvider.DefaultLauncherName) {
                     defaultLaunchProvider = launcher;
                 }
             }
@@ -701,6 +702,8 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
             }, GuidList.guidPythonToolsCmdSet);
 
             RegisterCommands(GetReplCommands(), GuidList.guidPythonToolsCmdSet);
+
+            RegisterProjectFactory(new PythonWebProjectFactory(this));
 
             var interpreterService = ComponentModel.GetService<IInterpreterOptionsService>();
             interpreterService.InterpretersChanged += RefreshReplCommands;
@@ -1037,9 +1040,9 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
                 replId
             );
 
-            var pyProj = project as PythonProjectNode;
-            if (pyProj != null) {
-                pyProj.AddAssociatedReplWindow(window);
+            var commandProvider = project as IPythonProject2;
+            if (commandProvider != null) {
+                commandProvider.AddActionOnClose((object)window, BasePythonReplEvaluator.CloseReplWindow);
             }
 
             var evaluator = window.Evaluator as BasePythonReplEvaluator;
@@ -1048,7 +1051,7 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
                 throw new NotSupportedException("Cannot modify options of " + window.Evaluator.GetType().FullName);
             }
             options.InterpreterFactory = interpreter;
-            options.Project = pyProj;
+            options.Project = project as PythonProjectNode;
             options._workingDir = workingDir;
             options._envVars = new Dictionary<string, string>(envVars);
             evaluator.Reset(quiet: true);

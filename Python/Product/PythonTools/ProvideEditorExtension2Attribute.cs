@@ -40,6 +40,7 @@ namespace Microsoft.PythonTools {
         private Guid _project;
         private string _templateDir;
         private int _resId;
+        private int _editorNameResId;
         private bool _editorFactoryNotify;
         private string _editorName;
         private Guid _linkedEditorGuid;
@@ -146,6 +147,11 @@ namespace Microsoft.PythonTools {
             set { _resId = value; }
         }
 
+        public int EditorNameResourceId {
+            get { return _editorNameResId; }
+            set { _editorNameResId = value; }
+        }
+
         /// <include file='doc\ProvideEditorExtensionAttribute.uex' path='docs/doc[@for="ProvideEditorExtensionAttribute.DefaultName"]/*' />
         public string DefaultName {
             get { return _editorName; }
@@ -193,7 +199,9 @@ namespace Microsoft.PythonTools {
                 if (!string.IsNullOrEmpty(DefaultName)) {
                     editorKey.SetValue(null, DefaultName);
                 }
-                if (0 != _resId)
+                if (0 != _editorNameResId)
+                    editorKey.SetValue("DisplayName", "#" + _editorNameResId.ToString(CultureInfo.InvariantCulture));
+                else if (0 != _resId)
                     editorKey.SetValue("DisplayName", "#" + _resId.ToString(CultureInfo.InvariantCulture));
                 if (_linkedEditorGuid != Guid.Empty) {
                     editorKey.SetValue("LinkedEditorGuid", _linkedEditorGuid.ToString("B"));

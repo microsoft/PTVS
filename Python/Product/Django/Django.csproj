@@ -86,6 +86,7 @@
     </Reference>
     <Reference Include="Microsoft.VisualStudio.TextManager.Interop.8.0, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="Microsoft.VisualStudio.TextManager.Interop.9.0, Version=9.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+    <Reference Include="Microsoft.Build, Version=$(MicrosoftBuildAssemblyVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
     <Reference Include="PresentationUI, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35" />
@@ -184,7 +185,6 @@
     <Compile Include="Project\ProjectSmuggler.cs" />
     <Compile Include="Project\TemplateVariables.cs" />
     <Compile Include="ProvideLanguageTemplatesAttribute.cs" />
-    <Compile Include="Debugger\DjangoLauncher.cs" />
     <Compile Include="Debugger\DjangoLauncherProvider.cs" />
     <Compile Include="Debugger\DjangoLauncherOptions.cs">
       <SubType>UserControl</SubType>

@@ -269,6 +269,7 @@
       <Link>PythonInterpreterFactoryExtensions.cs</Link>
     </Compile>
     <Compile Include="NoInterpretersException.cs" />
+    <Compile Include="ProvideLanguageTemplatesAttribute.cs" />
     <Compile Include="PythonToolsInstallPath.cs" />
     <Compile Include="PythonTools\Intellisense\FileEventArgs.cs" />
     <Compile Include="PythonTools\Logging\InMemoryLogger.cs" />
@@ -318,6 +319,7 @@
     <Compile Include="PythonTools\Project\AddInterpreterView.cs" />
     <Compile Include="PythonTools\Project\CustomCommand.cs" />
     <Compile Include="PythonTools\Project\EasyInstall.cs" />
+    <Compile Include="PythonTools\Project\IAsyncCommand.cs" />
     <Compile Include="PythonTools\Project\ImportWizard\SaveProjectPage.xaml.cs">
       <DependentUpon>SaveProjectPage.xaml</DependentUpon>
     </Compile>
@@ -336,6 +338,18 @@
     <Compile Include="PythonTools\Project\PythonProjectImageName.cs" />
     <Compile Include="PythonTools\Project\VirtualEnv.cs" />
     <Compile Include="PythonTools\Project\XamlDesignerSupport.cs" />
+    <Compile Include="PythonTools\WebProject\AzureSolutionListener.cs" />
+    <Compile Include="PythonTools\WebProject\PythonWebLauncher.cs" />
+    <Compile Include="PythonTools\WebProject\PythonWebLauncherOptions.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="PythonTools\WebProject\PythonWebLauncherOptions.Designer.cs">
+      <DependentUpon>PythonWebLauncherOptions.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PythonTools\WebProject\PythonWebLauncherProvider.cs" />
+    <Compile Include="PythonTools\WebProject\PythonWebProject.cs" />
+    <Compile Include="PythonTools\WebProject\PythonWebProjectConfig.cs" />
+    <Compile Include="PythonTools\WebProject\PythonWebProjectFactory.cs" />
     <Compile Include="Wpf\Commands.cs" />
     <Compile Include="Wpf\LabelledButton.cs" />
     <Compile Include="Wpf\LabelledControl.cs" />
@@ -700,6 +714,8 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <None Include="RefreshDefaultDB.py" />
+    <ZipProject Include="Templates\Projects\WebProjectFlask\app.py" />
+    <ZipProject Include="Templates\Projects\WebProjectFlask\runserver.py" />
     <ZipProject Include="Templates\Projects\FromExistingCode\FromExistingCode.pyproj" />
     <ZipProject Include="Templates\Projects\FromExistingCode\FromExistingCode.vstemplate">
       <SubType>Designer</SubType>
@@ -718,6 +734,18 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
+    <ZipProject Include="Templates\Projects\EmptyWebProject\EmptyWebProject.pyproj">
+      <SubType>Designer</SubType>
+    </ZipProject>
+    <ZipProject Include="Templates\Projects\EmptyWebProject\EmptyWebProject.vstemplate">
+      <SubType>Designer</SubType>
+    </ZipProject>
+    <ZipProject Include="Templates\Projects\WebProjectFlask\WebProjectFlask.pyproj">
+      <SubType>Designer</SubType>
+    </ZipProject>
+    <ZipProject Include="Templates\Projects\WebProjectFlask\WebProjectFlask.vstemplate">
+      <SubType>Designer</SubType>
+    </ZipProject>
     <Content Include="visualstudio_py_debugger.py">
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -919,6 +947,9 @@
       <DependentUpon>Resources.resx</DependentUpon>
       <Visible>true</Visible>
     </Compile>
+    <EmbeddedResource Include="PythonTools\WebProject\PythonWebLauncherOptions.resx">
+      <DependentUpon>PythonWebLauncherOptions.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
