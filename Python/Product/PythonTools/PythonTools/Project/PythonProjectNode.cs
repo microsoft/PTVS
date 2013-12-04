@@ -297,7 +297,7 @@ namespace Microsoft.PythonTools.Project {
             RefreshSearchPaths();
             _interpretersContainer = new InterpretersContainerNode(this);
             this.AddChild(_interpretersContainer);
-            RefreshInterpreters();
+            RefreshInterpreters(alwaysCollapse: true);
 
             OnProjectPropertyChanged += PythonProjectNode_OnProjectPropertyChanged;
             base.Reload();
@@ -398,13 +398,13 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-        private void RefreshInterpreters() {
+        private void RefreshInterpreters(bool alwaysCollapse = false) {
             if (IsClosed) {
                 return;
             }
 
             if (_uiSync.InvokeRequired) {
-                _uiSync.BeginInvoke((Action)RefreshInterpreters, null);
+                _uiSync.BeginInvoke((Action<bool>)RefreshInterpreters, alwaysCollapse);
                 return;
             }
 
@@ -436,14 +436,18 @@ namespace Microsoft.PythonTools.Project {
                 node.RemoveChild(child);
             }
 
-            bool wasExpanded = node.GetIsExpanded();
-            var expandAfter = node.AllChildren.Where(n => n.GetIsExpanded()).ToArray();
-            OnInvalidateItems(node);
-            if (wasExpanded) {
-                node.ExpandItem(EXPANDFLAGS.EXPF_ExpandFolder);
-            }
-            foreach (var child in expandAfter) {
-                child.ExpandItem(EXPANDFLAGS.EXPF_ExpandFolder);
+            if (alwaysCollapse) {
+                OnInvalidateItems(node);
+            } else {
+                bool wasExpanded = node.GetIsExpanded();
+                var expandAfter = node.AllChildren.Where(n => n.GetIsExpanded()).ToArray();
+                OnInvalidateItems(node);
+                if (wasExpanded) {
+                    node.ExpandItem(EXPANDFLAGS.EXPF_ExpandFolder);
+                }
+                foreach (var child in expandAfter) {
+                    child.ExpandItem(EXPANDFLAGS.EXPF_ExpandFolder);
+                }
             }
             BoldActiveEnvironment();
         }
