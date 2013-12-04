@@ -485,17 +485,11 @@ namespace DjangoUITests {
         public void Insertion4() {
             InsertionTest("Insertion4.html.djt", 1, 1, "{", new[] {
                 new Classification("Django template tag", 0, 2, "{{"),
-#if DEV12_OR_LATER
-                new Classification("HtmlClientTemplateValue", 2, 8, "<html>"),
-#endif
                 new Classification("Django template tag", 10, 12, "}}")
             });
 
             InsertionTest("Insertion4.html.djt", 1, 2, "{", new[] {
                 new Classification("Django template tag", 0, 2, "{{"),
-#if DEV12_OR_LATER
-                new Classification("HtmlClientTemplateValue", 2, 8, "<html>"),
-#endif
                 new Classification("Django template tag", 10, 12, "}}")
             });
         }
@@ -1311,6 +1305,10 @@ namespace DjangoUITests {
                     var snapshot = item.TextView.TextBuffer.CurrentSnapshot;
                     var classifier = item.Classifier;
                     spans = classifier.GetClassificationSpans(new SnapshotSpan(snapshot, 0, snapshot.Length));
+                    // HtmlTemplatesClassifier treats {{ and }} as client-side Mustache templates, and classifies them and their
+                    // content  accordingly with somewhat inconsistent results, which throws our tests off. Filter out those
+                    // classifications entirely to avoid the problem.
+                    spans = spans.Where(span => !span.ClassificationType.IsOfType("HtmlClientTemplateValue")).ToList();
                 });
 
                 Assert.IsNotNull(spans);
