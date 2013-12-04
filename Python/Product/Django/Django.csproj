@@ -106,6 +106,23 @@
     </Reference>
     <Reference Include="WindowsBase" />
   </ItemGroup>
+  <ItemGroup Condition="'$(VSTarget)' != '10.0' And '$(VSTarget)' != '11.0'">
+    <Reference Include="Microsoft.Web.Core, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>$(DevEnvDir)\CommonExtensions\Microsoft\Web\Editor\Microsoft.Web.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Web.Editor, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>$(DevEnvDir)\CommonExtensions\Microsoft\Web\Editor\Microsoft.Web.Editor.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Html.Core, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>$(DevEnvDir)\CommonExtensions\Microsoft\Web\Editor\Microsoft.Html.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Html.Editor, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>$(DevEnvDir)\CommonExtensions\Microsoft\Web\Editor\Microsoft.Html.Editor.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.Html.Package, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>$(DevEnvDir)\CommonExtensions\Microsoft\Web\Editor\Microsoft.VisualStudio.Html.Package.dll</HintPath>
+    </Reference>
+  </ItemGroup>
   <ItemGroup>
     <COMReference Include="EnvDTE">
       <Guid>{80CC9F66-E7D8-4DDD-85B6-D9E6CD0E93E2}</Guid>
@@ -178,6 +195,16 @@
       <Link>Project\CommonUtils.cs</Link>
     </Compile>
     <Compile Include="DialogWindowVersioningWorkaround.cs" />
+    <Compile Include="Intellisense\DjangoCompletionSource.cs" />
+    <Compile Include="Intellisense\ProjectBlockCompletionContext.cs" />
+    <Compile Include="Intellisense\ProjectBlockCompletionContextBase.cs" />
+    <Compile Include="Legacy\DjangoEditorFactory.cs" />
+    <Compile Include="Legacy\Intellisense\DjangoCompletionSource.cs" />
+    <Compile Include="Legacy\Intellisense\DjangoCompletionSourceProvider.cs" />
+    <Compile Include="Legacy\Intellisense\ProjectBlockCompletionContext.cs" />
+    <Compile Include="Legacy\TemplateContentType.cs" />
+    <Compile Include="Legacy\TemplateParsing\TemplateClassifier.cs" />
+    <Compile Include="Legacy\TemplateParsing\TemplateClassifierProvider.cs" />
     <Compile Include="Project\DjangoAnalyzer.cs" />
     <Compile Include="Project\DjangoAnalyzer.TagsAndFilters.cs" />
     <Compile Include="Project\DjangoProjectConfig.cs" />
@@ -195,10 +222,10 @@
     <Compile Include="DjangoEditorFactory.cs" />
     <Compile Include="Extensions.cs" />
     <Compile Include="Guids.cs" />
-    <Compile Include="Intellisense\DjangoCompletionSource.cs" />
+    <Compile Include="Intellisense\DjangoCompletionSourceBase.cs" />
     <Compile Include="Intellisense\DjangoCompletionSourceProvider.cs" />
-    <Compile Include="Intellisense\DjangoIntellisenseController.cs" />
-    <Compile Include="Intellisense\DjangoIntellisenseControllerProvider.cs" />
+    <Compile Include="Legacy\Intellisense\DjangoIntellisenseController.cs" />
+    <Compile Include="Legacy\Intellisense\DjangoIntellisenseControllerProvider.cs" />
     <Compile Include="Intellisense\DjangoPredefinedClassificationTypeNames.cs" />
     <Compile Include="Project\DjangoAzureSolutionListener.cs" />
     <Compile Include="Project\DjangoProjectFactory.cs" />
@@ -220,23 +247,39 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PkgCmdID.cs" />
     <Compile Include="TemplateContentType.cs" />
-    <Compile Include="TemplateParsing\CustomTrackingSpan.cs" />
+    <Compile Include="Legacy\TemplateParsing\CustomTrackingSpan.cs" />
     <Compile Include="TemplateParsing\DjangoBlock.cs" />
     <Compile Include="TemplateParsing\DjangoFilter.cs" />
     <Compile Include="TemplateParsing\DjangoFormatDefinitions.cs" />
     <Compile Include="TemplateParsing\DjangoVariable.cs" />
     <Compile Include="TemplateParsing\DjangoVariableValue.cs" />
-    <Compile Include="TemplateParsing\HtmlCompletionSource.cs" />
-    <Compile Include="TemplateParsing\HtmlCompletionSourceProvider.cs" />
-    <Compile Include="TemplateParsing\HtmlIntellisenseControllerProvider.cs" />
-    <Compile Include="TemplateParsing\HtmlIntellisenseController.cs" />
+    <Compile Include="Legacy\Intellisense\HtmlCompletionSource.cs" />
+    <Compile Include="Legacy\Intellisense\HtmlCompletionSourceProvider.cs" />
+    <Compile Include="Legacy\Intellisense\HtmlIntellisenseControllerProvider.cs" />
+    <Compile Include="Legacy\Intellisense\HtmlIntellisenseController.cs" />
+    <Compile Include="TemplateParsing\TemplateArtifact.cs" />
+    <Compile Include="TemplateParsing\TemplateArtifactCollection.cs" />
+    <Compile Include="TemplateParsing\TemplateArtifactProcessor.cs" />
+    <Compile Include="TemplateParsing\TemplateBlockHandler.cs" />
+    <Compile Include="TemplateParsing\TemplateBufferGenerator.cs" />
+    <Compile Include="Intellisense\TemplateCommandFactory.cs" />
+    <Compile Include="Intellisense\TemplateCompletionCommandHandler.cs" />
+    <Compile Include="Intellisense\TemplateCompletionController.cs" />
+    <Compile Include="Intellisense\TemplateCompletionControllerProvider.cs" />
+    <Compile Include="TemplateParsing\TemplateContentTypeHandlerProvider.cs" />
+    <Compile Include="TemplateParsing\TemplateContentTypeHandler.cs" />
+    <Compile Include="Intellisense\TemplateMainController.cs" />
+    <Compile Include="Intellisense\TemplateTextViewConnectionListener.cs" />
+    <Compile Include="Intellisense\TemplateTypingCommandHandler.cs" />
     <Compile Include="TemplateParsing\IDjangoCompletionContext.cs" />
-    <Compile Include="TemplateParsing\ProjectionClassifier.cs" />
-    <Compile Include="TemplateParsing\ProjectionClassifierProvider.cs" />
-    <Compile Include="TemplateParsing\TemplateProjectionBuffer.cs" />
+    <Compile Include="Legacy\TemplateParsing\ProjectionClassifier.cs" />
+    <Compile Include="Legacy\TemplateParsing\ProjectionClassifierProvider.cs" />
+    <Compile Include="Legacy\TemplateParsing\TemplateProjectionBuffer.cs" />
     <Compile Include="TemplateParsing\IContentTypeMetadata.cs" />
-    <Compile Include="TemplateParsing\SnapshotSpanSourceCodeReader.cs" />
+    <Compile Include="Legacy\TemplateParsing\SnapshotSpanSourceCodeReader.cs" />
+    <Compile Include="TemplateParsing\TemplateClassifierBase.cs" />
     <Compile Include="TemplateParsing\TemplateClassifier.cs" />
+    <Compile Include="TemplateParsing\TemplateClassifierProviderBase.cs" />
     <Compile Include="TemplateParsing\TemplateClassifierProvider.cs" />
     <Compile Include="TemplateParsing\TemplateRegion.cs" />
     <Compile Include="TemplateParsing\TemplateToken.cs" />
@@ -244,6 +287,7 @@
     <Compile Include="TemplateParsing\TemplateTokenKind.cs" />
     <Compile Include="Utilities.cs" />
     <Compile Include="VsMenus.cs" />
+    <Resource Include="Legacy\ReadMe.txt" />
     <Content Include="Microsoft.PythonTools.Django.targets">
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

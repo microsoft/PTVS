@@ -14,16 +14,18 @@
 
 #if DEV12_OR_LATER
 
-using System.ComponentModel.Composition;
-using Microsoft.VisualStudio.Text.Classification;
-using Microsoft.VisualStudio.Utilities;
+using Microsoft.Html.Core;
+using Microsoft.Html.Editor;
 
 namespace Microsoft.PythonTools.Django.TemplateParsing {
-    [Export(typeof(IClassifierProvider)), ContentType(TemplateTagContentType.ContentTypeName)]
-    class TemplateClassifierProvider : TemplateClassifierProviderBase {
-        [ImportingConstructor]
-        public TemplateClassifierProvider(IContentTypeRegistryService contentTypeRegistryService, IClassificationTypeRegistryService classificationRegistry)
-            : base(TemplateTagContentType.ContentTypeName, contentTypeRegistryService, classificationRegistry) {
+    internal class TemplateContentTypeHandler : HtmlServerCodeContentTypeHandler {
+        public override void Init(HtmlEditorTree editorTree) {
+            base.Init(editorTree);
+            ContainedLanguageBlockHandler = new TemplateBlockHandler(editorTree);
+        }
+
+        public override ArtifactCollection CreateArtifactCollection() {
+            return new TemplateArtifactCollection();
         }
     }
 }

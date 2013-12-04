@@ -12,12 +12,9 @@
  *
  * ***************************************************************************/
 
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.IO;
 using System.Diagnostics;
+using System.IO;
 
 namespace Microsoft.PythonTools.Django.TemplateParsing {
     class TemplateTokenizer {
@@ -95,7 +92,7 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
             var prevChar = ReadChar();            
             for (; ; ) {               
                 if (prevChar == -1) {
-                    return new TemplateToken(kind, start, _position - 1);
+                    return new TemplateToken(kind, start, _position - 1, isClosed: false);
                 } else if (prevChar == closeType) {
                     if ((prevChar = ReadChar()) == '}') {
                         // we're done

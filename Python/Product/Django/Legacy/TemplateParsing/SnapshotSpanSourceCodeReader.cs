@@ -12,6 +12,8 @@
  *
  * ***************************************************************************/
 
+#if !DEV12_OR_LATER
+
 using System;
 using System.IO;
 using Microsoft.VisualStudio.Text;
@@ -125,3 +127,5 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
         #endregion
     }
 }
+
+#endif

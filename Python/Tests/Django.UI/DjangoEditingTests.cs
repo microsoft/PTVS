@@ -70,6 +70,12 @@ namespace DjangoUITests {
             interpreterService.DefaultInterpreter = PreviousDefault;
         }
 
+#if DEV12_OR_LATER
+        private const string DjangoComment = "HTML Comment";
+#else
+        private const string DjangoComment = "comment";
+#endif
+
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void Classifications() {
@@ -477,15 +483,21 @@ namespace DjangoUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void Insertion4() {
-            InsertionTest("Insertion4.html.djt", 1, 1, "{",
+            InsertionTest("Insertion4.html.djt", 1, 1, "{", new[] {
                 new Classification("Django template tag", 0, 2, "{{"),
+#if DEV12_OR_LATER
+                new Classification("HtmlClientTemplateValue", 2, 8, "<html>"),
+#endif
                 new Classification("Django template tag", 10, 12, "}}")
-            );
+            });
 
-            InsertionTest("Insertion4.html.djt", 1, 2, "{",
+            InsertionTest("Insertion4.html.djt", 1, 2, "{", new[] {
                 new Classification("Django template tag", 0, 2, "{{"),
+#if DEV12_OR_LATER
+                new Classification("HtmlClientTemplateValue", 2, 8, "<html>"),
+#endif
                 new Classification("Django template tag", 10, 12, "}}")
-            );
+            });
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
@@ -493,7 +505,7 @@ namespace DjangoUITests {
         public void Insertion5() {
             InsertionTest("Insertion5.html.djt", 1, 2, "#",
                 new Classification("Django template tag", 0, 2, "{#"),
-                new Classification("comment", 2, 11, "{<html>\r\n"),
+                new Classification(DjangoComment, 2, 11, "{<html>\r\n"),
                 new Classification("Django template tag", 11, 13, "#}")
             );
         }
@@ -725,8 +737,15 @@ namespace DjangoUITests {
                 new Classification("HTML Attribute Value", 87, 90, "\"1\""),
                 new Classification("HTML Attribute Name", 91, 96, "style"),
                 new Classification("HTML Operator", 96, 97, "="),
+#if DEV12_OR_LATER
+ new Classification("HTML Attribute Value", 97, 98, "\""),
+                new Classification("CSS Property Name", 98, 103, "width"),
+                new Classification("CSS Property Value", 105, 109, "100%"),
+                new Classification("HTML Attribute Value", 109, 110, "\""),
+#else
                 new Classification("HTML Attribute Value", 97, 110, "\"width: 100%\""),
-                new Classification("HTML Tag Delimiter", 110, 111, ">"),
+#endif
+ new Classification("HTML Tag Delimiter", 110, 111, ">"),
                 new Classification("HTML Tag Delimiter", 121, 122, "<"),
                 new Classification("HTML Element Name", 122, 124, "tr"),
                 new Classification("HTML Tag Delimiter", 124, 125, ">"),
@@ -880,8 +899,15 @@ namespace DjangoUITests {
                 new Classification("HTML Element Name", 894, 899, "table"),
                 new Classification("HTML Attribute Name", 900, 905, "style"),
                 new Classification("HTML Operator", 905, 906, "="),
+#if DEV12_OR_LATER
+ new Classification("HTML Attribute Value", 906, 907, "\""),
+                new Classification("CSS Property Name", 907, 912, "width"),
+                new Classification("CSS Property Value", 914, 918, "100%"),
+                new Classification("HTML Attribute Value", 918, 919, "\""),
+#else
                 new Classification("HTML Attribute Value", 906, 919, "\"width: 100%\""),
-                new Classification("HTML Tag Delimiter", 919, 920, ">"),
+#endif
+ new Classification("HTML Tag Delimiter", 919, 920, ">"),
                 new Classification("HTML Tag Delimiter", 926, 927, "<"),
                 new Classification("HTML Element Name", 927, 929, "tr"),
                 new Classification("HTML Tag Delimiter", 929, 930, ">"),
@@ -1203,8 +1229,39 @@ namespace DjangoUITests {
             InsertionTest(filename, line, column, selectionLength, insertionText, paste, checkInsertionLen, @"TestData\DjangoEditProject.sln", false, expected);
         }
 
+        private static bool SetBraceCompletion(VisualStudioApp app, bool value) {
+            bool oldValue = false;
+#if DEV12_OR_LATER
+            app.Invoke(() => {
+                var prop = app.Dte.Properties["TextEditor", "HTMLX"].Cast<Property>().Single(p => p.Name == "BraceCompletion");
+                oldValue = (bool?)prop.Value ?? false;
+                prop.Value = value;
+            });
+#endif
+            return oldValue;
+        }
+
+        private class SetRestoreBraceCompletion : IDisposable {
+            private readonly VisualStudioApp _app;
+            private readonly bool _oldValue;
+
+            public SetRestoreBraceCompletion(VisualStudioApp app, bool newValue) {
+                _app = app;
+                _oldValue = SetBraceCompletion(app, newValue);
+            }
+
+            public void Dispose() {
+                SetBraceCompletion(_app, _oldValue);
+            }
+        }
+
+        private static IDisposable WithoutBraceCompletion(VisualStudioApp app) {
+            return new SetRestoreBraceCompletion(app, false);
+        }
+
         private static void InsertionTest(string filename, int line, int column, int selectionLength, string insertionText, bool paste, bool checkInsertionLen, string projectName, bool wait, params Classification[] expected) {
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte))
+            using (WithoutBraceCompletion(app)) {
                 Window window;
                 var item = OpenDjangoProjectItem(app, filename, out window, projectName, wait);
 
@@ -1267,7 +1324,8 @@ namespace DjangoUITests {
         }
 
         private static void InsertionDeletionTest(string filename, int line, int column, string insertionText, Classification[] expectedFirst, Classification[] expectedAfter) {
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte))
+            using (WithoutBraceCompletion(app)) {
                 Window window;
                 var item = OpenDjangoProjectItem(app, filename, out window);
                 item.MoveCaret(line, column);
@@ -1394,47 +1452,6 @@ namespace DjangoUITests {
                     new Classification("HTML Tag Delimiter", 106, 108, "</"),
                     new Classification("HTML Element Name", 108, 112, "html"),
                     new Classification("HTML Tag Delimiter", 112, 113, ">")
-                }
-            );
-        }
-
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
-        public void IntellisenseCompletions3() {
-            InsertionTest("Intellisense3.html.djt", 4, 1, -1, "<bo>",
-                paste: false,
-                checkInsertionLen: false,
-                expected: new Classification[] {
-                    new Classification("HTML Tag Delimiter", 0, 1, "<"),
-                    new Classification("HTML Element Name", 1, 5, "html"),
-                    new Classification("HTML Tag Delimiter", 5, 6, ">"),
-                    new Classification("HTML Tag Delimiter", 8, 9, "<"),
-                    new Classification("HTML Element Name", 9, 13, "head"),
-                    new Classification("HTML Tag Delimiter", 13, 15, "><"),
-                    new Classification("HTML Element Name", 15, 20, "title"),
-                    new Classification("HTML Tag Delimiter", 20, 23, "></"),
-                    new Classification("HTML Element Name", 23, 28, "title"),
-                    new Classification("HTML Tag Delimiter", 28, 31, "></"),
-                    new Classification("HTML Element Name", 31, 35, "head"),
-                    new Classification("HTML Tag Delimiter", 35, 36, ">"),
-                    new Classification("HTML Tag Delimiter", 40, 41, "<"),
-                    new Classification("HTML Element Name", 41, 45, "body"),
-                    new Classification("HTML Tag Delimiter", 45, 46, ">"),
-                    new Classification("Django template tag", 48, 50, "{%"),
-                    new Classification("keyword", 51, 54, "for"),
-                    new Classification("identifier", 55, 58, "oar"),
-                    new Classification("keyword", 59, 61, "in"),
-                    new Classification("identifier", 62, 65, "fob"),
-                    new Classification("Django template tag", 66, 68, "%}"),
-                    new Classification("Django template tag", 72, 74, "{%"),
-                    new Classification("keyword", 75, 81, "endfor"),
-                    new Classification("Django template tag", 82, 84, "%}"),
-                    new Classification("HTML Tag Delimiter", 88, 90, "</"),
-                    new Classification("HTML Element Name", 90, 94, "body"),
-                    new Classification("HTML Tag Delimiter", 94, 95, ">"),
-                    new Classification("HTML Tag Delimiter", 97, 99, "</"),
-                    new Classification("HTML Element Name", 99, 103, "html"),
-                    new Classification("HTML Tag Delimiter", 103, 104, ">")
                 }
             );
         }
@@ -1600,7 +1617,11 @@ namespace DjangoUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void IntellisenseCompletions8() {
-            InsertionTest("TestApp\\Templates\\page2.html.djt", 7, 8, -1, Keyboard.CtrlSpace + "\t",
+            string keySequence = Keyboard.CtrlSpace.ToString();
+#if !DEV12_OR_LATER
+            keySequence += "\t";
+#endif
+            InsertionTest("TestApp\\Templates\\page2.html.djt", 7, 8, -1, keySequence,
                 paste: false,
                 checkInsertionLen: false,
                 projectName: @"TestData\DjangoTemplateCodeIntelligence.sln",
@@ -1644,7 +1665,11 @@ namespace DjangoUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void IntellisenseCompletions9() {
-            InsertionTest("TestApp\\Templates\\page2.html.djt", 8, 4, -1, Keyboard.CtrlSpace.ToString(),
+            string keySequence = Keyboard.CtrlSpace.ToString();
+#if DEV12_OR_LATER
+            keySequence = "c" + keySequence;
+#endif
+            InsertionTest("TestApp\\Templates\\page2.html.djt", 8, 4, -1, keySequence,
                 paste: false,
                 checkInsertionLen: false,
                 projectName: @"TestData\DjangoTemplateCodeIntelligence.sln",
@@ -1809,6 +1834,157 @@ namespace DjangoUITests {
                 }
             );
         }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void IntellisenseCompletionsHtml() {
+            InsertionTest("Intellisense3.html.djt", 4, 1, -1, "<bo>",
+                paste: false,
+                checkInsertionLen: false,
+                expected: new Classification[] {
+                    new Classification("HTML Tag Delimiter", 0, 1, "<"),
+                    new Classification("HTML Element Name", 1, 5, "html"),
+                    new Classification("HTML Tag Delimiter", 5, 6, ">"),
+                    new Classification("HTML Tag Delimiter", 8, 9, "<"),
+                    new Classification("HTML Element Name", 9, 13, "head"),
+                    new Classification("HTML Tag Delimiter", 13, 15, "><"),
+                    new Classification("HTML Element Name", 15, 20, "title"),
+                    new Classification("HTML Tag Delimiter", 20, 23, "></"),
+                    new Classification("HTML Element Name", 23, 28, "title"),
+                    new Classification("HTML Tag Delimiter", 28, 31, "></"),
+                    new Classification("HTML Element Name", 31, 35, "head"),
+                    new Classification("HTML Tag Delimiter", 35, 36, ">"),
+                    new Classification("HTML Tag Delimiter", 40, 41, "<"),
+                    new Classification("HTML Element Name", 41, 45, "body"),
+                    new Classification("HTML Tag Delimiter", 45, 46, ">"),
+                    new Classification("Django template tag", 48, 50, "{%"),
+                    new Classification("keyword", 51, 54, "for"),
+                    new Classification("identifier", 55, 58, "oar"),
+                    new Classification("keyword", 59, 61, "in"),
+                    new Classification("identifier", 62, 65, "fob"),
+                    new Classification("Django template tag", 66, 68, "%}"),
+                    new Classification("Django template tag", 72, 74, "{%"),
+                    new Classification("keyword", 75, 81, "endfor"),
+                    new Classification("Django template tag", 82, 84, "%}"),
+                    new Classification("HTML Tag Delimiter", 88, 90, "</"),
+                    new Classification("HTML Element Name", 90, 94, "body"),
+                    new Classification("HTML Tag Delimiter", 94, 95, ">"),
+                    new Classification("HTML Tag Delimiter", 97, 99, "</"),
+                    new Classification("HTML Element Name", 99, 103, "html"),
+                    new Classification("HTML Tag Delimiter", 103, 104, ">")
+                }
+            );
+        }
+
+#if DEV12_OR_LATER
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void IntellisenseCompletionsCss() {
+            InsertionTest("IntellisenseCssJs.html.djt", 3, 36, -1, Keyboard.CtrlSpace.ToString(),
+                paste: false,
+                checkInsertionLen: false,
+                expected: new Classification[] {
+                    new Classification("HTML Tag Delimiter", 0, 1, "<"),
+                    new Classification("HTML Element Name", 1, 5, "html"),
+                    new Classification("HTML Tag Delimiter", 5, 6, ">"),
+                    new Classification("HTML Tag Delimiter", 8, 9, "<"),
+                    new Classification("HTML Element Name", 9, 13, "head"),
+                    new Classification("HTML Tag Delimiter", 13, 14, ">"),
+                    new Classification("HTML Tag Delimiter", 16, 17, "<"),
+                    new Classification("HTML Element Name", 17, 22, "style"),
+                    new Classification("HTML Attribute Name", 23, 27, "type"),
+                    new Classification("HTML Operator", 27, 28, "="),
+                    new Classification("HTML Attribute Value", 28, 38, "\"text/css\""),
+                    new Classification("HTML Tag Delimiter", 38, 39, ">"),
+                    new Classification("CSS Selector", 39, 40, "*"),
+                    new Classification("CSS Property Name", 43, 54, "font-family"),
+                    new Classification("HTML Tag Delimiter", 56, 58, "</"),
+                    new Classification("HTML Element Name", 58, 63, "style"),
+                    new Classification("HTML Tag Delimiter", 63, 64, ">"),
+                    new Classification("HTML Tag Delimiter", 66, 67, "<"),
+                    new Classification("HTML Element Name", 67, 73, "script"),
+                    new Classification("HTML Attribute Name", 74, 78, "type"),
+                    new Classification("HTML Operator", 78, 79, "="),
+                    new Classification("HTML Attribute Value", 79, 96, "\"text/javascript\""),
+                    new Classification("HTML Tag Delimiter", 96, 97, ">"),
+                    new Classification("identifier", 97, 100, "thr"),
+                    new Classification("HTML Tag Delimiter", 100, 102, "</"),
+                    new Classification("HTML Element Name", 102, 108, "script"),
+                    new Classification("HTML Tag Delimiter", 108, 109, ">"),
+                    new Classification("HTML Tag Delimiter", 111, 113, "</"),
+                    new Classification("HTML Element Name", 113, 117, "head"),
+                    new Classification("HTML Tag Delimiter", 117, 118, ">"),
+                    new Classification("HTML Tag Delimiter", 120, 121, "<"),
+                    new Classification("HTML Element Name", 121, 125, "body"),
+                    new Classification("HTML Tag Delimiter", 125, 126, ">"),
+                    new Classification("Django template tag", 126, 128, "{{"),
+                    new Classification("identifier", 129, 136, "content"),
+                    new Classification("Django template tag", 137, 139, "}}"),
+                    new Classification("HTML Tag Delimiter", 139, 141, "</"),
+                    new Classification("HTML Element Name", 141, 145, "body"),
+                    new Classification("HTML Tag Delimiter", 145, 146, ">"),
+                    new Classification("HTML Tag Delimiter", 148, 150, "</"),
+                    new Classification("HTML Element Name", 150, 154, "html"),
+                    new Classification("HTML Tag Delimiter", 154, 155, ">")
+                }
+            );
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void IntellisenseCompletionsJS() {
+            InsertionTest("IntellisenseCssJs.html.djt", 4, 35, -1, Keyboard.CtrlSpace.ToString(),
+                paste: false,
+                checkInsertionLen: false,
+                expected: new Classification[] {
+                    new Classification("HTML Tag Delimiter", 0, 1, "<"),
+                    new Classification("HTML Element Name", 1, 5, "html"),
+                    new Classification("HTML Tag Delimiter", 5, 6, ">"),
+                    new Classification("HTML Tag Delimiter", 8, 9, "<"),
+                    new Classification("HTML Element Name", 9, 13, "head"),
+                    new Classification("HTML Tag Delimiter", 13, 14, ">"),
+                    new Classification("HTML Tag Delimiter", 16, 17, "<"),
+                    new Classification("HTML Element Name", 17, 22, "style"),
+                    new Classification("HTML Attribute Name", 23, 27, "type"),
+                    new Classification("HTML Operator", 27, 28, "="),
+                    new Classification("HTML Attribute Value", 28, 38, "\"text/css\""),
+                    new Classification("HTML Tag Delimiter", 38, 39, ">"),
+                    new Classification("CSS Selector", 39, 40, "*"),
+                    new Classification("CSS Property Name", 43, 51, "font-fam"),
+                    new Classification("HTML Tag Delimiter", 53, 55, "</"),
+                    new Classification("HTML Element Name", 55, 60, "style"),
+                    new Classification("HTML Tag Delimiter", 60, 61, ">"),
+                    new Classification("HTML Tag Delimiter", 63, 64, "<"),
+                    new Classification("HTML Element Name", 64, 70, "script"),
+                    new Classification("HTML Attribute Name", 71, 75, "type"),
+                    new Classification("HTML Operator", 75, 76, "="),
+                    new Classification("HTML Attribute Value", 76, 93, "\"text/javascript\""),
+                    new Classification("HTML Tag Delimiter", 93, 94, ">"),
+                    new Classification("keyword", 94, 99, "throw"),
+                    new Classification("HTML Tag Delimiter", 99, 101, "</"),
+                    new Classification("HTML Element Name", 101, 107, "script"),
+                    new Classification("HTML Tag Delimiter", 107, 108, ">"),
+                    new Classification("HTML Tag Delimiter", 110, 112, "</"),
+                    new Classification("HTML Element Name", 112, 116, "head"),
+                    new Classification("HTML Tag Delimiter", 116, 117, ">"),
+                    new Classification("HTML Tag Delimiter", 119, 120, "<"),
+                    new Classification("HTML Element Name", 120, 124, "body"),
+                    new Classification("HTML Tag Delimiter", 124, 125, ">"),
+                    new Classification("Django template tag", 125, 127, "{{"),
+                    new Classification("identifier", 128, 135, "content"),
+                    new Classification("Django template tag", 136, 138, "}}"),
+                    new Classification("HTML Tag Delimiter", 138, 140, "</"),
+                    new Classification("HTML Element Name", 140, 144, "body"),
+                    new Classification("HTML Tag Delimiter", 144, 145, ">"),
+                    new Classification("HTML Tag Delimiter", 147, 149, "</"),
+                    new Classification("HTML Element Name", 149, 153, "html"),
+                    new Classification("HTML Tag Delimiter", 153, 154, ">")
+                }
+            );
+        }
+
+#endif
 
         private static EditorWindow OpenDjangoProjectItem(VisualStudioApp app, string startItem, out Window window, string projectName = @"TestData\DjangoEditProject.sln", bool wait = false) {
             var project = app.OpenProject(projectName, startItem);

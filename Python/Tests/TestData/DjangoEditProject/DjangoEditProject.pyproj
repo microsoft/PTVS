@@ -54,6 +54,7 @@
     <Compile Include="Intellisense.html.djt" />
     <Compile Include="Intellisense2.html.djt" />
     <Compile Include="Intellisense3.html.djt" />
+    <Compile Include="IntellisenseCssJS.html.djt" />
   </ItemGroup>
   <Import Project="$(VSToolsPath)\Python Tools\Microsoft.PythonTools.Django.targets" />
   <ProjectExtensions>

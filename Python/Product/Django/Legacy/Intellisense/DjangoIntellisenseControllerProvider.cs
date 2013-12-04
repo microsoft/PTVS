@@ -12,6 +12,8 @@
  *
  * ***************************************************************************/
 
+#if !DEV12_OR_LATER
+
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Linq;
@@ -68,3 +70,5 @@ namespace Microsoft.PythonTools.Django.Intellisense {
         }
     }
 }
+
+#endif

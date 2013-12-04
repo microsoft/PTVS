@@ -12,136 +12,63 @@
  *
  * ***************************************************************************/
 
-using System;
+#if DEV12_OR_LATER
+
 using System.Collections.Generic;
-using Microsoft.PythonTools.Django.Intellisense;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
+using Microsoft.VisualStudio.Text.Projection;
 
 namespace Microsoft.PythonTools.Django.TemplateParsing {
-    class TemplateClassifier : IClassifier {
-        private readonly ITextBuffer _textBuffer;
-        private readonly TemplateClassifierProvider _classifierProvider;
-
-        public TemplateClassifier(TemplateClassifierProvider provider, ITextBuffer textBuffer) {
-            _textBuffer = textBuffer;
-            _classifierProvider = provider;
+    internal class TemplateClassifier : TemplateClassifierBase {
+        public TemplateClassifier(TemplateClassifierProviderBase provider, ITextBuffer textBuffer)
+            : base(provider, textBuffer) {
         }
 
-        #region IClassifier Members
+        public override IList<ClassificationSpan> GetClassificationSpans(SnapshotSpan span) {
+            var spans = new List<ClassificationSpan>();
 
-        public event EventHandler<ClassificationChangedEventArgs> ClassificationChanged {
-            add {
+            var doc = Microsoft.Html.Editor.HtmlEditorDocument.TryFromTextBuffer(span.Snapshot.TextBuffer);
+            if (doc == null) {
+                return spans;
             }
-            remove {
+            doc.HtmlEditorTree.EnsureTreeReady();
+
+            var projSnapshot = doc.PrimaryView.TextSnapshot as IProjectionSnapshot;
+            if (projSnapshot == null) {
+                return spans;
             }
-        }
 
-        IList<ClassificationSpan> IClassifier.GetClassificationSpans(SnapshotSpan span) {
-            List<ClassificationSpan> spans = new List<ClassificationSpan>();
+            var primarySpans = projSnapshot.MapFromSourceSnapshot(span);
+            foreach (var primarySpan in primarySpans) {
+                var index = doc.HtmlEditorTree.ArtifactCollection.GetItemContaining(primarySpan.Start);
+                if (index < 0) {
+                    continue;
+                }
 
-            TemplateProjectionBuffer projBuffer;
-            if (_textBuffer.Properties.TryGetProperty<TemplateProjectionBuffer>(typeof(TemplateProjectionBuffer), out projBuffer)) {
-                foreach (var region in projBuffer.GetTemplateRegions(span)) {
-                    // classify {{, {#, or {%
-                    spans.Add(
-                        new ClassificationSpan(
-                            new SnapshotSpan(
-                                span.Snapshot,
-                                new Span(region.Start, 2)
-                            ),
-                            _classifierProvider._templateClassType
-                        )
-                    );
-                    
-                    // classify template tag body
-                    ClassifyTemplateBody(span.Snapshot, spans, region);
-                    
-                    // classify }}, #}, or %}
-                    spans.Add(
-                        new ClassificationSpan(
-                            new SnapshotSpan(
-                                span.Snapshot,
-                                new Span(region.Start + region.Text.Length - 2, 2)
-                            ),
-                            _classifierProvider._templateClassType
-                        )
-                    );
+                var artifact = doc.HtmlEditorTree.ArtifactCollection[index] as TemplateArtifact;
+                if (artifact == null) {
+                    continue;
+                }
+
+                var artifactStart = projSnapshot.MapToSourceSnapshot(artifact.InnerRange.Start);
+                if (artifactStart.Snapshot != span.Snapshot) {
+                    continue;
+                }
+
+                var artifactText = doc.HtmlEditorTree.ParseTree.Text.GetText(artifact.InnerRange);
+                artifact.Parse(artifactText);
+
+                var classifications = artifact.GetClassifications();
+                foreach (var classification in classifications) {
+                    var classificationSpan = ToClassificationSpan(classification, span.Snapshot, artifactStart.Position);
+                    spans.Add(classificationSpan);
                 }
             }
 
             return spans;
         }
-
-        private void ClassifyTemplateBody(ITextSnapshot snapshot, List<ClassificationSpan> spans, TemplateRegion region) {
-            switch (region.Kind) {
-                case TemplateTokenKind.Comment:
-                    spans.Add(
-                        new ClassificationSpan(
-                            new SnapshotSpan(
-                                snapshot,
-                                new Span(region.Start + 2, region.Text.Length - 4)
-                            ),
-                            _classifierProvider._commentClassType
-                        )
-                    );
-                    break;
-                case TemplateTokenKind.Variable:
-                    var filterInfo = DjangoVariable.Parse(region.Text);
-                    
-                    if (filterInfo != null) {
-                        foreach(var curSpan in filterInfo.GetSpans()) {
-                            spans.Add(ToClassification(curSpan, snapshot, region));
-                        }
-                    }
-                    break;
-                case TemplateTokenKind.Block:
-                    var blockInfo = region.Block;
-                    if (blockInfo != null) {
-                        foreach (var curSpan in blockInfo.GetSpans()) {
-                            spans.Add(ToClassification(curSpan, snapshot, region));
-                        }
-                    } else if (region.Text.Length > 4) {    // unterminated block at end of file
-                        spans.Add(
-                            new ClassificationSpan(
-                                new SnapshotSpan(
-                                    snapshot,
-                                    new Span(region.Start + 2, region.Text.Length - 4)
-                                ),
-                                _classifierProvider._classType
-                            )
-                        );
-                    }
-                    break;
-            }
-        }
-
-        private ClassificationSpan ToClassification(BlockClassification curSpan, ITextSnapshot snapshot, TemplateRegion region) {
-            return new ClassificationSpan(
-                new SnapshotSpan(
-                    snapshot,
-                    new Span(
-                        curSpan.Span.Start + region.Start,
-                        curSpan.Span.Length
-                    )
-                ),
-                GetClassification(curSpan.Classification)
-            );
-        }
-
-        private IClassificationType GetClassification(Classification classification) {
-            switch (classification) {
-                case Classification.None:           return _classifierProvider._classType;                    
-                case Classification.Keyword:        return _classifierProvider._keywordType;
-                case Classification.ExcludedCode:   return _classifierProvider._excludedCode;
-                case Classification.Identifier:     return _classifierProvider._identifierType;
-                case Classification.Dot:            return _classifierProvider._dot;
-                case Classification.Literal:        return _classifierProvider._literalType;
-                case Classification.Number:         return _classifierProvider._numberType;
-                default: throw new InvalidOperationException();
-            }
-        }
-
-        #endregion
     }
 }
+
+#endif

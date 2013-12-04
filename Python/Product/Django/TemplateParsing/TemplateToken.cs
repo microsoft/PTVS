@@ -13,19 +13,18 @@
  * ***************************************************************************/
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace Microsoft.PythonTools.Django.TemplateParsing {
     struct TemplateToken : IEquatable<TemplateToken> {
         internal readonly TemplateTokenKind Kind;
         internal readonly int Start, End;
+        internal readonly bool IsClosed;
 
-        public TemplateToken(TemplateTokenKind kind, int start, int end) {
+        public TemplateToken(TemplateTokenKind kind, int start, int end, bool isClosed = true) {
             Kind = kind;
             Start = start;
             End = end;
+            IsClosed = isClosed;
         }
 
         public override bool Equals(object obj) {
@@ -36,7 +35,7 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
         }
 
         public override int GetHashCode() {
-            return Kind.GetHashCode() ^ Start ^ End;
+            return Kind.GetHashCode() ^ Start ^ End ^ IsClosed.GetHashCode();
         }
 
         #region IEquatable<TemplateToken> Members
@@ -44,7 +43,8 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
         public bool Equals(TemplateToken other) {
             return Kind == other.Kind &&
                 Start == other.Start &&
-                End == other.End;
+                End == other.End &&
+                IsClosed == other.IsClosed;
         }
 
         #endregion

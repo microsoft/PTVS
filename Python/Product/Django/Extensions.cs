@@ -52,18 +52,6 @@ namespace Microsoft.PythonTools.Django {
             return null;
         }
 
-        internal static string GetFilePath(this ITextBuffer textBuffer) {
-            ITextDocument textDocument;
-            TemplateProjectionBuffer projBuffer;
-            if (textBuffer.Properties.TryGetProperty<ITextDocument>(typeof(ITextDocument), out textDocument)) {
-                return textDocument.FilePath;
-            } else if(textBuffer.Properties.TryGetProperty<TemplateProjectionBuffer>(typeof(TemplateProjectionBuffer), out projBuffer)) {
-                return projBuffer.DiskBuffer.GetFilePath();
-            } else {
-                return null;
-            }
-        }
-
         internal static Guid GetItemType(this VSITEMSELECTION vsItemSelection) {
             Guid typeGuid;
             try {

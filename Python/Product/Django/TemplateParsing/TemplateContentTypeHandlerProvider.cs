@@ -12,24 +12,20 @@
  *
  * ***************************************************************************/
 
+#if DEV12_OR_LATER
 
 using System.ComponentModel.Composition;
-using Microsoft.VisualStudio.Language.Intellisense;
-using Microsoft.VisualStudio.Text;
+using Microsoft.Html.Editor;
 using Microsoft.VisualStudio.Utilities;
 
 namespace Microsoft.PythonTools.Django.TemplateParsing {
-    [Export(typeof(ICompletionSourceProvider)), ContentType("HTML"), Order, Name("HtmlCompletionProvider")]
-    internal class HtmlCompletionSourceProvider : ICompletionSourceProvider {
-        internal readonly IGlyphService _glyphService;
-        
-        [ImportingConstructor]
-        public HtmlCompletionSourceProvider(IGlyphService glyphService) {
-            _glyphService = glyphService;
-        }
-        
-        public ICompletionSource TryCreateCompletionSource(ITextBuffer textBuffer) {
-            return new HtmlCompletionSource(this, textBuffer);
+    [Export(typeof(IContentTypeHandlerProvider))]
+    [ContentType(TemplateHtmlContentType.ContentTypeName)]
+    internal class TemplateContentTypeHandlerProvider : IContentTypeHandlerProvider {
+        public IContentTypeHandler GetContentTypeHandler() {
+            return new TemplateContentTypeHandler();
         }
     }
 }
+
+#endif

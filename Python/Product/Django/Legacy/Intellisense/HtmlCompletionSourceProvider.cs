@@ -12,18 +12,25 @@
  *
  * ***************************************************************************/
 
-#if DEV12_OR_LATER
+#if !DEV12_OR_LATER
 
 using System.ComponentModel.Composition;
-using Microsoft.VisualStudio.Text.Classification;
+using Microsoft.VisualStudio.Language.Intellisense;
+using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Utilities;
 
 namespace Microsoft.PythonTools.Django.TemplateParsing {
-    [Export(typeof(IClassifierProvider)), ContentType(TemplateTagContentType.ContentTypeName)]
-    class TemplateClassifierProvider : TemplateClassifierProviderBase {
+    [Export(typeof(ICompletionSourceProvider)), ContentType("HTML"), Order, Name("HtmlCompletionProvider")]
+    internal class HtmlCompletionSourceProvider : ICompletionSourceProvider {
+        internal readonly IGlyphService _glyphService;
+        
         [ImportingConstructor]
-        public TemplateClassifierProvider(IContentTypeRegistryService contentTypeRegistryService, IClassificationTypeRegistryService classificationRegistry)
-            : base(TemplateTagContentType.ContentTypeName, contentTypeRegistryService, classificationRegistry) {
+        public HtmlCompletionSourceProvider(IGlyphService glyphService) {
+            _glyphService = glyphService;
+        }
+        
+        public ICompletionSource TryCreateCompletionSource(ITextBuffer textBuffer) {
+            return new HtmlCompletionSource(this, textBuffer);
         }
     }
 }

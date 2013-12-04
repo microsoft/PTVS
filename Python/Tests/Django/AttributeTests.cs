@@ -123,41 +123,6 @@ RemovedKey: Editors\{e1b7abde-cdde-4874-a8a6-5b5c7597a848}
 RemovedKey: Projects\{a2fe74e1-b743-11d0-ae1a-00a0c90fffc3}\AddItemTemplates\TemplateDirs\{a8637c34-aa55-46e2-973c-9c3e09afc17b}
 ", mockCtx._result.ToString());
         }
-
-        [TestMethod, Priority(0), TestCategory("Core")]
-        public void SnapshotSpanSourceCodeReaderTests() {
-            var text = "hello world\r\nHello again!";
-            var buffer = new MockTextBuffer(text);
-            var snapshot = new MockTextSnapshot(buffer, text);
-
-            var reader = new SnapshotSpanSourceCodeReader(new SnapshotSpan(snapshot, new Span(0, text.Length)));
-
-            Assert.AreEqual(reader.Snapshot, snapshot);
-            Assert.AreEqual(reader.Position, 0);
-            var line = reader.ReadLine();
-            Assert.AreEqual(line, "hello world");
-            line = reader.ReadLine();
-            Assert.AreEqual(line, "Hello again!");
-
-            reader = new SnapshotSpanSourceCodeReader(new SnapshotSpan(snapshot, new Span(0, text.Length)));
-            int ch = reader.Peek();
-            Assert.AreEqual(ch, (int)'h');
-
-            char[] readBuf = new char[text.Length];
-            reader.Read(readBuf, 0, readBuf.Length);
-
-            Assert.AreEqual(new string(readBuf), text);
-
-            reader = new SnapshotSpanSourceCodeReader(new SnapshotSpan(snapshot, new Span(0, text.Length)));
-            Assert.AreEqual(reader.ReadToEnd(), text);
-
-            reader.Reset();
-
-            Assert.AreEqual(reader.ReadToEnd(), text);
-
-            reader.Close();
-            Assert.AreEqual(reader.Snapshot, null);
-        }
     }
 
     class MockRegistrationContext : RegistrationAttribute.RegistrationContext {

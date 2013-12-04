@@ -48,10 +48,12 @@ namespace Microsoft.PythonTools.Django {
     [ProvideLanguageExtension(typeof(DjangoLanguageInfo), ".djt")]
     [ProvideDebugLanguage("Django Templates", DjangoTemplateLanguageId, "{" + DjangoExpressionEvaluatorGuid + "}", "{EC1375B7-E2CE-43E8-BF75-DC638DE1F1F9}")]
     [ProvideEditorExtension2(typeof(DjangoEditorFactory), ".djt", 50, "*:1", ProjectGuid = "{A2FE74E1-B743-11d0-AE1A-00A0C90FFFC3}", TemplateDir = ".\\NullPath", NameResourceID = 102, DefaultName = "webpage")]
-    [ProvideEditorExtension2(typeof(DjangoEditorFactoryPromptForEncoding), ".djt", 50, "*:1", ProjectGuid = "{A2FE74E1-B743-11d0-AE1A-00A0C90FFFC3}", TemplateDir = ".\\NullPath", NameResourceID = 113, DefaultName = "webpage")]
-    [ProvideKeyBindingTable(GuidList.guidDjangoKeyBindingString, 102)]
     [ProvideEditorLogicalView(typeof(DjangoEditorFactory), VSConstants.LOGVIEWID.TextView_string)]
+#if !DEV12_OR_LATER
+    [ProvideEditorExtension2(typeof(DjangoEditorFactoryPromptForEncoding), ".djt", 50, "*:1", ProjectGuid = "{A2FE74E1-B743-11d0-AE1A-00A0C90FFFC3}", TemplateDir = ".\\NullPath", NameResourceID = 113, DefaultName = "webpage")]
     [ProvideEditorLogicalView(typeof(DjangoEditorFactoryPromptForEncoding), VSConstants.LOGVIEWID.TextView_string)]
+#endif
+    [ProvideKeyBindingTable(GuidList.guidDjangoKeyBindingString, 102)]
     [Guid(GuidList.guidDjangoPkgString)]
     [ProvideObject(typeof(DjangoProject), RegisterUsing = RegistrationMethod.CodeBase)]
     [ProvideProjectFactory(typeof(DjangoProjectFactory), "Django/Python", "Python Project Files (*.pyproj);*.pyproj", "pyproj", "pyproj", ".\\NullPath", LanguageVsTemplate = "Python")]
@@ -91,7 +93,9 @@ namespace Microsoft.PythonTools.Django {
 
             //Create Editor Factory. Note that the base Package class will call Dispose on it.
             RegisterEditorFactory(new DjangoEditorFactory(this));
+#if !DEV12_OR_LATER
             RegisterEditorFactory(new DjangoEditorFactoryPromptForEncoding(this));
+#endif
             RegisterProjectFactory(new DjangoProjectFactory(this));
             
             // Add our command handlers for menu (commands must exist in the .vsct file)

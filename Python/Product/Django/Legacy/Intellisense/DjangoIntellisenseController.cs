@@ -12,6 +12,8 @@
  *
  * ***************************************************************************/
 
+#if !DEV12_OR_LATER
+
 using System;
 using Microsoft.PythonTools.Django.Project;
 using Microsoft.PythonTools.Django.TemplateParsing;
@@ -260,3 +262,5 @@ namespace Microsoft.PythonTools.Django.Intellisense {
         #endregion
     }
 }
+
+#endif

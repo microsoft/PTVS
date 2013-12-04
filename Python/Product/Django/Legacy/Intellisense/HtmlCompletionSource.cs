@@ -12,6 +12,7 @@
  *
  * ***************************************************************************/
 
+#if !DEV12_OR_LATER
 
 using System.Collections.Generic;
 using Microsoft.PythonTools.Intellisense;
@@ -103,3 +104,5 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
         #endregion
     }
 }
+
+#endif

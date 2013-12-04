@@ -12,6 +12,8 @@
  *
  * ***************************************************************************/
 
+#if !DEV12_OR_LATER
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -689,5 +691,18 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
             }
         }
 
+        public static string GetFilePath(ITextBuffer textBuffer) {
+            ITextDocument textDocument;
+            TemplateProjectionBuffer projBuffer;
+            if (textBuffer.Properties.TryGetProperty<ITextDocument>(typeof(ITextDocument), out textDocument)) {
+                return textDocument.FilePath;
+            } else if (textBuffer.Properties.TryGetProperty<TemplateProjectionBuffer>(typeof(TemplateProjectionBuffer), out projBuffer)) {
+                return GetFilePath(projBuffer.DiskBuffer);
+            } else {
+                return null;
+            }
+        }
     }
 }
+
+#endif

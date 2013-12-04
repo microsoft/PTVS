@@ -84,6 +84,15 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
                 if (filterText == null) {
                     return null;
                 }
+            } else {
+                int i = 0;
+                while (i < filterText.Length && char.IsWhiteSpace(filterText[i])) {
+                    ++i;
+                    ++start;
+                }
+                if (i < filterText.Length) {
+                    filterText = filterText.Substring(i).TrimEnd();
+                }
             }
 
             int varStart = start;

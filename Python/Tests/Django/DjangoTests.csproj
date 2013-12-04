@@ -44,6 +44,11 @@
     </Reference>
     <Reference Include="System.Web" />
   </ItemGroup>
+  <ItemGroup Condition="'$(VSTarget)' != '10.0' And '$(VSTarget)' != '11.0'">
+    <Reference Include="Microsoft.VisualStudio.Html.Package, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>$(DevEnvDir)\CommonExtensions\Microsoft\Web\Editor\Microsoft.VisualStudio.Html.Package.dll</HintPath>
+    </Reference>
+  </ItemGroup>
   <ItemGroup>
     <CodeAnalysisDependentAssemblyPaths Condition=" '$(VS100COMNTOOLS)' != '' " Include="$(VS100COMNTOOLS)..\IDE\PrivateAssemblies">
       <Visible>False</Visible>
@@ -53,6 +58,7 @@
     <Compile Include="..\..\Product\Analysis\Interpreter\ProcessOutput.cs">
       <Link>ProcessOutput.cs</Link>
     </Compile>
+    <Compile Include="SnapshotSpanSourceCodeReaderTests.cs" />
     <Compile Include="AttributeTests.cs" />
     <Compile Include="DjangoAnalyzerTests.cs" />
     <Compile Include="DjangoDebuggerTests.cs" />

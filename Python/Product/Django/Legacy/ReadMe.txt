@@ -1,0 +1,1 @@
+﻿All code in this folder implements Django template highlighting and code completion for Visual Studio 2010 and 2012 only. For 2013 and above, the code on the top level is used instead.

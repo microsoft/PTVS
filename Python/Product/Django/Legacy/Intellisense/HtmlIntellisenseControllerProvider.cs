@@ -12,6 +12,8 @@
  *
  * ***************************************************************************/
 
+#if !DEV12_OR_LATER
+
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
@@ -70,3 +72,5 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
 
     }
 }
+
+#endif

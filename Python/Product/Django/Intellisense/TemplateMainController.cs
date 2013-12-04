@@ -14,16 +14,20 @@
 
 #if DEV12_OR_LATER
 
-using System.ComponentModel.Composition;
-using Microsoft.VisualStudio.Text.Classification;
-using Microsoft.VisualStudio.Utilities;
+using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudio.Text.Editor;
+using Microsoft.Web.Editor;
 
-namespace Microsoft.PythonTools.Django.TemplateParsing {
-    [Export(typeof(IClassifierProvider)), ContentType(TemplateTagContentType.ContentTypeName)]
-    class TemplateClassifierProvider : TemplateClassifierProviderBase {
-        [ImportingConstructor]
-        public TemplateClassifierProvider(IContentTypeRegistryService contentTypeRegistryService, IClassificationTypeRegistryService classificationRegistry)
-            : base(TemplateTagContentType.ContentTypeName, contentTypeRegistryService, classificationRegistry) {
+namespace Microsoft.PythonTools.Django.Intellisense {
+    internal class TemplateMainController : ViewController {
+        public TemplateMainController(ITextView textView, ITextBuffer textBuffer)
+            : base(textView, textBuffer) {
+            ServiceManager.AddService<TemplateMainController>(this, textView);
+        }
+
+        protected override void Dispose(bool disposing) {
+            ServiceManager.RemoveService<TemplateMainController>(TextView);
+            base.Dispose(disposing);
         }
     }
 }

@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -35,25 +36,43 @@ namespace TestUtilities {
         public static void Verify(IList<ClassificationSpan> spans, params Classification[] expected) {
             bool passed = false;
             try {
-                Assert.AreEqual(expected.Length, spans.Count);
-
                 for (int i = 0; i < spans.Count; i++) {
-                    var curSpan = spans[i];
+                    if (i >= expected.Length) {
+                        Assert.Fail();
+                        break;
+                    }
 
+                    var curSpan = spans[i];
 
                     int start = curSpan.Span.Start.Position;
                     int end = curSpan.Span.End.Position;
 
-                    Assert.AreEqual(expected[i].Start, start);
-                    Assert.AreEqual(expected[i].End, end);
-                    Assert.AreEqual(expected[i].Text, curSpan.Span.GetText());
-                    Assert.AreEqual(expected[i].ClassificationType, curSpan.ClassificationType.Classification);
+                    string spanInfo = string.Format("Span #{0}: {1}", i, expected[i].Text);
+                    Assert.AreEqual(expected[i].Start, start, spanInfo);
+                    Assert.AreEqual(expected[i].End, end, spanInfo);
+                    Assert.AreEqual(expected[i].Text, curSpan.Span.GetText(), spanInfo);
+                    Assert.IsTrue(curSpan.ClassificationType.IsOfType(expected[i].ClassificationType));
                 }
+
                 passed = true;
             } finally {
                 if (!passed) {
-                    // output results for easy test creation...
-                    Console.WriteLine(
+                    // Output expected and actual results as Classification objects for easy diffing and copy-pasting.
+
+                    Console.WriteLine("Expected:\r\n" +
+                        String.Join(",\r\n",
+                            expected.Select(cls =>
+                                String.Format("new Classification(\"{0}\", {1}, {2}, \"{3}\")",
+                                    cls.ClassificationType,
+                                    cls.Start,
+                                    cls.End,
+                                    FormatString(cls.Text)
+                                )
+                            )
+                        )
+                    );
+
+                    Console.WriteLine("Actual:\r\n" +
                         String.Join(",\r\n",
                             spans.Select(curSpan =>
                                 String.Format("new Classification(\"{0}\", {1}, {2}, \"{3}\")",

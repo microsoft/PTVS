@@ -620,9 +620,22 @@ namespace TestUtilities.UI {
             string fullPath = TestData.GetPath(projName);
             Assert.IsTrue(File.Exists(fullPath), "Cannot find " + fullPath);
             Console.WriteLine("Opening {0}", fullPath);
-            Dte.Solution.Open(fullPath);
 
+            // If there is a .suo file, delete that so that there is no state carried over from another test.
+            for (int i = 10; i <= 12; ++i) {
+                string suoPath = Path.ChangeExtension(fullPath, ".v" + i + ".suo");
+                if (File.Exists(suoPath)) {
+                    File.Delete(suoPath);
+                }
+            }
+
+            Dte.Solution.Open(fullPath);
             Assert.IsTrue(Dte.Solution.IsOpen, "The solution is not open");
+
+            // Force all projects to load before running any tests.
+            var solution = GetService<IVsSolution4>(typeof(SVsSolution));
+            Assert.IsNotNull(solution, "Failed to obtain SVsSolution service");
+            solution.EnsureSolutionIsLoaded((uint)__VSBSLFLAGS.VSBSLFLAGS_None);
 
             int count = Dte.Solution.Projects.Count;
             if (expectedProjects != null && expectedProjects.Value != count) {

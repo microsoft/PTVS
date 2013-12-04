@@ -19,28 +19,16 @@ using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Utilities;
 
+#if !DEV12_OR_LATER
 
 namespace Microsoft.PythonTools.Django.TemplateParsing {
-    /// <summary>
-    /// Provides a classifier for our HTML projection buffers so we can raise that the tags
-    /// have changed on the full buffer when we switch between portions being HTML and portions
-    /// being Django tags.
-    /// </summary>
-    [Export(typeof(IClassifierProvider)), ContentType("projection")]
-    class ProjectionClassifierProvider : IClassifierProvider {
-
-        #region IClassifierProvider Members
-
-        public IClassifier GetClassifier(ITextBuffer textBuffer) {
-            ProjectionClassifier res;
-            if (!textBuffer.Properties.TryGetProperty<ProjectionClassifier>(typeof(ProjectionClassifier), out res) &&
-                textBuffer.Properties.ContainsProperty(typeof(TemplateProjectionBuffer))) {
-                res = new ProjectionClassifier();
-                textBuffer.Properties.AddProperty(typeof(ProjectionClassifier), res);
-            }
-            return res;
+    [Export(typeof(IClassifierProvider)), ContentType(TemplateContentType.ContentTypeName)]
+    class TemplateClassifierProvider : TemplateClassifierProviderBase {
+        [ImportingConstructor]
+        public TemplateClassifierProvider(IContentTypeRegistryService contentTypeRegistryService, IClassificationTypeRegistryService classificationRegistry)
+            : base(TemplateContentType.ContentTypeName, contentTypeRegistryService, classificationRegistry) {
         }
-
-        #endregion
     }
 }
+
+#endif

@@ -597,7 +597,7 @@ namespace DjangoTests {
             TokenizerTest(code,
                 /*unclosed*/true,
                 new TemplateToken(TemplateTokenKind.Text, 0, 49),
-                new TemplateToken(TemplateTokenKind.Variable, 50, 80)
+                new TemplateToken(TemplateTokenKind.Variable, 50, 80, isClosed: false)
             );
         }
 
@@ -643,7 +643,7 @@ namespace DjangoTests {
             TokenizerTest(code,
                 /*unclosed*/true,
                 new TemplateToken(TemplateTokenKind.Text, 0, 49),
-                new TemplateToken(TemplateTokenKind.Comment, 50, 80)
+                new TemplateToken(TemplateTokenKind.Comment, 50, 80, isClosed: false)
             );
         }
 
@@ -662,7 +662,7 @@ namespace DjangoTests {
             TokenizerTest(code, 
                 /*unclosed*/true, 
                 new TemplateToken(TemplateTokenKind.Text, 0, 49),
-                new TemplateToken(TemplateTokenKind.Block, 50, 80)
+                new TemplateToken(TemplateTokenKind.Block, 50, 80, isClosed: false)
             );
         }
 

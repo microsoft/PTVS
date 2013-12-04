@@ -12,15 +12,16 @@
  *
  * ***************************************************************************/
 
-#if DEV12_OR_LATER
+#if !DEV12_OR_LATER
 
 using System.ComponentModel.Composition;
+using Microsoft.PythonTools.Django.TemplateParsing;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Utilities;
 
 namespace Microsoft.PythonTools.Django.Intellisense {
-    [Export(typeof(ICompletionSourceProvider)), ContentType(TemplateTagContentType.ContentTypeName), Order, Name("DjangoCompletionSourceProvider")]
+    [Export(typeof(ICompletionSourceProvider)), ContentType(TemplateContentType.ContentTypeName), Order, Name("DjangoCompletionSourceProvider")]
     internal class DjangoCompletionSourceProvider : ICompletionSourceProvider {
         internal readonly IGlyphService _glyphService;
 
@@ -30,7 +31,7 @@ namespace Microsoft.PythonTools.Django.Intellisense {
         }
 
         public ICompletionSource TryCreateCompletionSource(ITextBuffer textBuffer) {
-            var filename = Microsoft.Web.Editor.TextBufferExtensions.GetFileName(textBuffer);
+            var filename = TemplateProjectionBuffer.GetFilePath(textBuffer);
             if (filename != null) {
                 var project = DjangoPackage.GetProject(filename);
                 return new DjangoCompletionSource(_glyphService, project.Analyzer, textBuffer);

@@ -37,7 +37,7 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
         /// Parses the text and returns a DjangoBlock.  Returns null if the block is empty
         /// or consists entirely of whitespace.
         /// </summary>
-        public static DjangoBlock Parse(string text) {
+        public static DjangoBlock Parse(string text, bool trim = false) {
             int start = 0;
             if (text.StartsWith("{%")) {
                 text = DjangoVariable.GetTrimmedFilterText(text, ref start);
@@ -61,6 +61,9 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
                 string blockCmd = text.Substring(firstChar, length);
                 if (Char.IsLetterOrDigit(blockCmd[0])) {
                     string args = text.Substring(firstChar + length, text.Length - (firstChar + length));
+                    if (trim) {
+                        args = args.TrimEnd();
+                    }
 
                     Func<BlockParseInfo, DjangoBlock> parser;
                     if (!_parsers.TryGetValue(blockCmd, out parser)) {
@@ -358,7 +361,7 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
                     if (nlStart != -1) {
                         trimmed = words[i].Substring(0, nlStart);
                     }
-                    
+
                     if (i != inIndex + 1 && trimmed == words[i]) { // if we trimmed we don't have an extra space
                         filterText += " ";
                         argsEnd += 1;
@@ -379,7 +382,7 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
 
                 var trimmedFilter = filterText.TrimStart(' ');
 
-                variable = DjangoVariable.Parse(trimmedFilter, 
+                variable = DjangoVariable.Parse(trimmedFilter,
                     inStart + "in".Length + 1 + filterText.Length - trimmedFilter.Length);
             }
 
@@ -415,8 +418,8 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
                 return new CompletionInfo[0];
             } else if (Variable != null && position > InStart) {
                 var res = Variable.GetCompletions(context, position);
-                if (position > ArgsEnd && 
-                    ReversedStart == -1 && 
+                if (position > ArgsEnd &&
+                    ReversedStart == -1 &&
                     Variable.Expression != null) {
                     return System.Linq.Enumerable.Concat(
                         res,
