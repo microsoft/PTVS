@@ -436,7 +436,7 @@ namespace Microsoft.PythonTools.Project {
                 node.RemoveChild(child);
             }
 
-            if (alwaysCollapse) {
+            if (alwaysCollapse || ParentHierarchy == null) {
                 OnInvalidateItems(node);
             } else {
                 bool wasExpanded = node.GetIsExpanded();
