@@ -65,6 +65,7 @@ def remap_refs(filemap, content):
     
     content = re.sub(r'''(\<img[^>]+src=['"])([^'"]+)(['"])''', repl, content)
     content = re.sub(r'''(\<a[^>]+href=['"])([^'"]+)(['"])''', repl, content)
+    content = re.sub(r'''(\<[^>]+\bstyle=['"][^'"]*\burl\()([^)]*)(\))''', repl, content)
     
     return content
 

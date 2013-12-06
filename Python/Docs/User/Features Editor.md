@@ -1,11 +1,8 @@
 The Editor
 ==========
 
-<p style="text-align: center;">For a quick overview of how we've improved the editor in PTVS 2.0, 
-
-please see: <a href="http://www.youtube.com/watch?v=eIr9be6yroY">http://www.youtube.com/watch?v=eIr9be6yroY</a></p>
-
-<p style="text-align: center;"><a href="http://www.youtube.com/watch?v=eIr9be6yroY" target="_blank"><img style="padding-left: 0px; padding-right: 0px; display: inline; padding-top: 0px; border: 0px;" title="Analysis and IntelliSense video" src="http://download-codeplex.sec.s-msft.com/Download?ProjectName=pytools&amp;DownloadId=635054" border="0" alt="Analysis and IntelliSense video" width="317" height="183" /></a></p>
+<p style="text-align: center;">For a quick overview of how we've improved the editor in PTVS 2.0, please watch the video:</p>
+[video:"Analysis and IntelliSense video" eIr9be6yroY]
 
 When developing, most of your time is spent in the text editor. Python Tools provides a rich editor with functionality to help you be more productive, such as syntax highlighting, identifier and member completion, signature help, method overrides, and search and navigation. A background analysis engine uses type inference and whole-program analysis to determine the possible types of each variable, ensuring that the information provided is accurate and up to date.
 

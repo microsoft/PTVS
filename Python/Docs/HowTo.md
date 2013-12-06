@@ -74,6 +74,8 @@ We have some special link formats:
 * `[issue:number]` will link to an issue, and `[issue:"New Title"number]` will change the display text:
  * [issue:1234]
  * [issue:"Our very first issue" 1]
+* `[video:"Video title" ID]` will create a centered thumbnail of YouTube video with the given ID with alt text of the thumbnail set to "Video title", which will open that video when clicked:
+ * [video:"Mixed-mode debugging" wvJaKQ94lBY]
 
 Other special conversions include:
 
@@ -99,6 +101,7 @@ Requirements are:
 * Python 3.3
 * markdown2 (`pip install markdown2`)
 * Pygments (`pip install pygments`)
+* Pillow with JPEG and PNG codecs (`pip install --use-wheel Pillow`)
 
 The first time the script is run, it will generate a file `maps.cache`, which contains all of the mappings used for the `src` and `file` links. This file should be deleted when source files are added, removed, moved or renamed, but will significantly speed up later refresh times.
 

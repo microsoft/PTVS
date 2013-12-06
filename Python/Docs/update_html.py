@@ -1,15 +1,24 @@
 #! python3
-import sys
+import io
 import os
 import pickle
 import re
+import sys
 import urllib
+import urllib.request
 
 try:
     import markdown2
 except ImportError:
     print("markdown2 is required. Run `pip install markdown2`")
     sys.exit(1)
+
+try:
+    import PIL.Image
+except ImportError:
+    print("Pillow is required. Run `pip install --use-wheel Pillow`")
+    sys.exit(1)
+
 
 # Relative path from location of build.root file
 DOC_ROOT = r'Python\Docs'
@@ -41,6 +50,8 @@ def get_build_root(start):
 
 class LinkMapper:
     def __init__(self, source_root):
+        self.source_root = source_root
+
         try:
             with open('maps.cache', 'rb') as f:
                 self.file_map, self.type_map = pickle.load(f)
@@ -119,6 +130,27 @@ class LinkMapper:
 
         return '[{}]({})'.format(title, ISSUE_URL_BASE + number)
 
+    def replace_video_links(self, matchobj):
+        video_id = matchobj.group(3)
+        title = matchobj.group(2) or ("YouTube video " + matchobj.group(3))
+
+        print('Generating video thumbnail for {}'.format(video_id))
+
+        with urllib.request.urlopen("http://img.youtube.com/vi/{}/hqdefault.jpg".format(video_id)) as f:
+            thumbnail_data = f.read()
+        thumbnail = PIL.Image.open(io.BytesIO(thumbnail_data)).convert('RGBA')
+        overlay = PIL.Image.open(os.path.join(self.source_root, DOC_ROOT, 'Images/Play.png'))
+
+        thumbnail_filename = 'VideoThumbnails/{}.png'.format(video_id)
+        PIL.Image.alpha_composite(thumbnail, overlay).save(thumbnail_filename)
+
+        return """
+<p style="text-align: center">
+<a href="http://www.youtube.com/watch?v={0}" target="_blank" style="display: inline-block">
+<img src="{1}" alt="{2}" border="0" width="480" height="360" />
+</a></p>
+               """.format(video_id, thumbnail_filename, title)
+
     @property
     def patterns(self):
         return [
@@ -126,6 +158,7 @@ class LinkMapper:
             (r'(?<!`)\[file\:([^\]]+)\]', self.replace_file_links),
             (r'(?<!`)\[wiki\:("([^"]+)"\s*)?([^\]]+)\]', self.replace_wiki_links),
             (r'(?<!`)\[issue\:("([^"]+)"\s*)?([0-9]+)\]', self.replace_issue_links),
+            (r'(?<!`)\[video\:("([^"]+)"\s*)?([^\]]+)\]', self.replace_video_links),
         ]
 
 
@@ -141,6 +174,7 @@ SPAN_STYLES = {
     'nc': 'color: #2b91af', 
     'ow': 'color: #0000ff', 
     's': 'color: #a31515', 
+    'menu': 'font: menu; color: MenuText; background-color: ThreeDFace; padding: 0em 0.5em 0em 0.5em;'
 }
 
 def replace_span_style(matchobj):
@@ -169,6 +203,8 @@ HTML_PATTERNS = [
     (r'\<pre\>', '<pre style="border: 2px solid #a0a0a0; padding: 1em;">'),
     (r'\<table\>', '<table style="border-spacing: 0; border-collapse: collapse;">'),
     (r'\<td\>', '<td style="padding: 0.2em 0.5em; border: 1px solid #a0a0a0;">'),
+    (r'\<kbd\>', '<span style="font-family: sans-serif; font-size: 0.8em; padding: 0.1em 0.6em; border: 1px solid #cccccc; background-color:#f7f7f7; color:#333333; box-shadow: 0 1px 0px rgba(0, 0, 0, 0.2), 0 0 0 2px #ffffff inset; border-radius: 3px; display: inline-block; margin: 0 0.1em; text-shadow: 0 1px 0 #ffffff; line-height: 1.4; white-space:nowrap">'),
+    (r'\</kbd\>', '</span>'),
     (r'\<span class="(.+?)"\>', replace_span_style),
     
     # Remove unnecessary spans
@@ -194,23 +230,28 @@ def main(start_dir):
     for dirname, _, filenames in os.walk(sources):
         for filename in (f for f in filenames if f.upper().endswith('.MD')):
             print('Converting {}'.format(filename))
-            with open(os.path.join(dirname, filename), 'r', encoding='utf-8-sig') as src:
-                text = src.read()
+            cwd = os.getcwd()
+            os.chdir(dirname)
+            try:
+                with open(filename, 'r', encoding='utf-8-sig') as src:
+                    text = src.read()
             
-            # Do our own link replacements, rather than markdown2's
-            for pattern, repl in link_mapper.patterns:
-                text = re.sub(pattern, repl, text)
+                # Do our own link replacements, rather than markdown2's
+                for pattern, repl in link_mapper.patterns:
+                    text = re.sub(pattern, repl, text)
             
-            html = markdown.convert(text)
+                html = markdown.convert(text)
             
-            # Do any post-conversion replacements
-            for pattern, repl in HTML_PATTERNS:
-                html = re.sub(pattern, repl, html)
+                # Do any post-conversion replacements
+                for pattern, repl in HTML_PATTERNS:
+                    html = re.sub(pattern, repl, html)
             
-            with open(os.path.join(dirname, filename[:-3] + '.html'), 'w', encoding='utf-8') as dest:
-                dest.write(HEADER)
-                dest.write(html)
-                dest.write(FOOTER)
+                with open(filename[:-3] + '.html', 'w', encoding='utf-8') as dest:
+                    dest.write(HEADER)
+                    dest.write(html)
+                    dest.write(FOOTER)
+            finally:
+                os.chdir(cwd)
 
 if __name__ == '__main__':
     sys.exit(main(os.getcwd()) or 0)
