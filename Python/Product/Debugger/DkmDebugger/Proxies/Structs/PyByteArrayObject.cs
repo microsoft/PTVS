@@ -21,7 +21,7 @@ using Microsoft.VisualStudio.Debugger;
 using Microsoft.VisualStudio.Debugger.Evaluation;
 
 namespace Microsoft.PythonTools.DkmDebugger.Proxies.Structs {
-    internal class PyByteArrayObject : PyVarObject {
+    internal abstract class PyByteArrayObject : PyVarObject {
         public class Fields {
             // Not CStringProxy, because the array can contain embedded null chars.
             public StructField<PointerProxy<ArrayProxy<ByteProxy>>> ob_bytes;
@@ -36,12 +36,13 @@ namespace Microsoft.PythonTools.DkmDebugger.Proxies.Structs {
         public PyByteArrayObject(DkmProcess process, ulong address)
             : base(process, address) {
             InitializeStruct(this, out _fields);
-            CheckPyType<PyByteArrayObject>();
         }
 
         public PointerProxy<ArrayProxy<ByteProxy>> ob_bytes {
             get { return GetFieldProxy(_fields.ob_bytes); }
         }
+
+        protected abstract ArrayProxy<ByteProxy> GetDataProxy();
 
         public byte[] ToBytes() {
             var size = ob_size.Read();
@@ -50,7 +51,7 @@ namespace Microsoft.PythonTools.DkmDebugger.Proxies.Structs {
             }
 
             var buf = new byte[size];
-            Process.ReadMemory(ob_bytes.Read().Address, DkmReadMemoryFlags.None, buf);
+            Process.ReadMemory(GetDataProxy().Address, DkmReadMemoryFlags.None, buf);
             return buf;
         }
 
@@ -77,10 +78,47 @@ namespace Microsoft.PythonTools.DkmDebugger.Proxies.Structs {
             };
 
             if (count > 0) {
-                foreach (var b in ob_bytes.Read().Take((int)count)) {
+                foreach (var b in GetDataProxy().Take((int)count)) {
                     yield return new PythonEvaluationResult(b);
                 }
             }
+        }
+    }
+
+    [StructProxy(MaxVersion = PythonLanguageVersion.V33, StructName = "PyByteArrayObject")]
+    [PyType(MaxVersion = PythonLanguageVersion.V33, VariableName = "PyByteArray_Type")]
+    internal class PyByteArrayObject33 : PyByteArrayObject {
+        public PyByteArrayObject33(DkmProcess process, ulong address)
+            : base(process, address) {
+            CheckPyType<PyByteArrayObject33>();
+        }
+
+        protected override ArrayProxy<ByteProxy> GetDataProxy() {
+            return ob_bytes.Read();
+        }
+    }
+
+    [StructProxy(MinVersion = PythonLanguageVersion.V34, StructName = "PyByteArrayObject")]
+    [PyType(MinVersion = PythonLanguageVersion.V34, VariableName = "PyByteArray_Type")]
+    internal class PyByteArrayObject34 : PyByteArrayObject {
+        private new class Fields {
+            public StructField<PointerProxy<ArrayProxy<ByteProxy>>> ob_start;
+        }
+
+        private readonly Fields _fields;
+
+        public PyByteArrayObject34(DkmProcess process, ulong address)
+            : base(process, address) {
+            InitializeStruct(this, out _fields);
+            CheckPyType<PyByteArrayObject34>();
+        }
+
+        public PointerProxy<ArrayProxy<ByteProxy>> ob_start {
+            get { return GetFieldProxy(_fields.ob_start); }
+        }
+
+        protected override ArrayProxy<ByteProxy> GetDataProxy() {
+            return ob_start.Read();
         }
     }
 }
