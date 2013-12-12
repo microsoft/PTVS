@@ -23,7 +23,7 @@ All of the basic formatting elements, such as **bold** and *italics* exist, howe
 My monochromatic code block
 ```
 
-Language names (such as `csharp` or `python`) can be specified immediately after the first three backticks to perform formatting:
+Language names (such as `python`, `javascript` or `csharp`) can be specified immediately after the first three backticks to perform formatting:
 
 With `python`:
 
@@ -32,6 +32,14 @@ def fob():
     for x in range(10):
         print x
     return True
+```
+
+With `javascript`:
+
+```javascript
+exports.index = function(req, res){
+  res.render('index', { title: 'Express' })
+};
 ```
 
 With `csharp`:
@@ -84,17 +92,46 @@ Other special conversions include:
 * `--(` and `--)` to delimit a layout block. These get converted into a div that does not allow floats to escape.
 * `>>` floats the line to the right, like the image.
 
+
+Documentation Project
+---------------------
+
+The source for the documentation is under source control. It is part of a Python Tools for Visual Studio project (`.pyproj`) -- the script that converts the documentation and uploads it to CodePlex is written in Python. The Visual Studio project contains all the Markdown files, references to the convert/upload script and necessary script arguments in the project settings.
+
+To edit existing documentation, open the `.md` file using Solution Explorer and start editing. To add new documentation pages, add a New Item or copy/paste an existing .md file using Solution Explorer.
+
+When you are done with your changes, convert the documentation to HTML to make sure your Markdown is rendered as expected (previews in Markdown editors won't be accurate).  To do this, run the project (F5 or CTRL-F5).  You will be prompted for some information:
+1. Convert to HTML, answer **y**.
+1. Upload to CodePlex, answer **n**.
+After all files are converted, verify the contents of the generated HTML files.
+
+When you are ready to upload your changes, check-out `User\codeplex.map` from source control. Then run the project (F5 or CTRL-F5). You will be prompted for some information:
+1. Convert to HTML, answer **y** unless you are absolutely sure the HTML is already up to date (ie. you haven't modified anything since the last conversion).
+1. Upload to CodePlex, answer **y**.
+1. Enter your CodePlex user.
+1. Enter your CodePlex password.
+
+For more details on how the script works, including requirements and how to use it from the command line, see the following sections.
+
+
 Converting to HTML
 ------------------
 
-The [file:update_html.py] script can be run with Python 3.3 to generate HTML files for all `*.md` files in the branch. This script handles filename mapping and the tweaks that we use for Markdown. It includes a shebang line that is recognized by the `py.exe` launcher, allowing it to be run directly.
+The [file:build.py] script can be run with Python 3.3 to generate HTML files for all `*.md` files in the branch. This script handles filename mapping and the tweaks that we use for Markdown. It includes a shebang line that is recognized by the `py.exe` launcher, allowing it to be run directly.
 
 Running the script looks like:
 
 ```
 cd Python\Docs
-py update_html.py
+py ..\..\Common\Docs\build.py --convert --site pytools --doc-root Python\Docs
 ```
+or
+```
+cd Nodejs\Docs
+py ..\..\Common\Docs\build.py --convert --site nodejstools --doc-root Nodejs\Docs
+```
+
+If you omit required parameters, the script will prompt for the requirement information.
 
 Requirements are:
 
@@ -108,15 +145,22 @@ The first time the script is run, it will generate a file `maps.cache`, which co
 Uploading to CodePlex
 ---------------------
 
-Generated documentation can be uploaded to CodePlex using the [file:upload_to_codeplex.py] script. This script requires a CodePlex username and password with permissions to edit the wiki. It must be run after [file:update_html.py] has been run.
+Generated documentation can be uploaded to CodePlex using the [file:build.py] script. This script requires a CodePlex username and password with permissions to edit the wiki. Uploading must be done after the files have been converted to HTML.  Convert and upload can be done in one invocation of the script.
 
 Running the script looks like:
 
 ```
 cd Python\Docs
-py update_html.py
 tf edit User\codeplex.map
-py upload_to_codeplex.py --dir User --user MyName --password "MyPassword123"
+py ..\..\Common\Docs\build.py --convert --upload --site pytools --doc-root Python\Docs --dir User --user MyName --password "MyPassword123"
 ```
+or
+```
+cd Nodejs\Docs
+tf edit User\codeplex.map
+py ..\..\Common\Docs\build.py --convert --upload --site nodejstools --doc-root Nodejs\Docs --dir User --user MyName --password "MyPassword123"
+```
+
+If you omit required parameters, the script will prompt for the requirement information.
 
 The `codeplex.map` file in the uploaded directory may be modified and needs to be writable before running the script. If it is not writable, an error will be displayed. The contents of the file include URLs for images and hashes for files that have been uploaded before. These will be used to determine whether the file has changes since it was last published to CodePlex, and to skip unchanged files.

@@ -1,4 +1,3 @@
-#! python3
 import io
 import os
 import pickle
@@ -20,15 +19,6 @@ except ImportError:
     sys.exit(1)
 
 
-# Relative path from location of build.root file
-DOC_ROOT = r'Python\Docs'
-
-# Base URL of source file location
-URL_BASE = 'http://pytools.codeplex.com/'
-SOURCE_URL_BASE = URL_BASE + 'SourceControl/latest#'
-WIKI_URL_BASE = URL_BASE + 'wikipage?title='
-ISSUE_URL_BASE = URL_BASE + 'workitem/'
-
 EXTRAS = {
     'code-friendly': None,
     'header-ids': None,
@@ -49,8 +39,13 @@ def get_build_root(start):
     return start
 
 class LinkMapper:
-    def __init__(self, source_root):
+    def __init__(self, source_root, url_base, doc_root):
         self.source_root = source_root
+        self.url_base = url_base
+        self.doc_root = doc_root
+        self.source_url_base = self.url_base + 'SourceControl/latest#'
+        self.wiki_url_base = self.url_base + 'wikipage?title='
+        self.issue_url_base = self.url_base + 'workitem/'
 
         try:
             with open('maps.cache', 'rb') as f:
@@ -107,7 +102,7 @@ class LinkMapper:
         
         url = self.type_map.get(typename, None)
         if url:
-            return '[{}]({} "{}")'.format(typename.rpartition('.')[-1], SOURCE_URL_BASE + url, typename)
+            return '[{}]({} "{}")'.format(typename.rpartition('.')[-1], self.source_url_base + url, typename)
         else:
             return '`{}`'.format(typename)
 
@@ -115,20 +110,20 @@ class LinkMapper:
         filename = matchobj.group(1)
 
         url = self.file_map.get(filename) or filename.replace('\\', '/')
-        return '[{}]({} "{}")'.format(os.path.split(filename)[-1], SOURCE_URL_BASE + url, filename)
+        return '[{}]({} "{}")'.format(os.path.split(filename)[-1], self.source_url_base + url, filename)
 
     def replace_wiki_links(self, matchobj):
         path = matchobj.group(3)
         title = matchobj.group(2) or matchobj.group(3)
 
         p1, p2, p3 = path.partition('#')
-        return '[{}]({})'.format(title, WIKI_URL_BASE + urllib.parse.quote(p1) + p2 + p3)
+        return '[{}]({})'.format(title, self.wiki_url_base + urllib.parse.quote(p1) + p2 + p3)
 
     def replace_issue_links(self, matchobj):
         number = matchobj.group(3)
         title = matchobj.group(2) or matchobj.group(3)
 
-        return '[{}]({})'.format(title, ISSUE_URL_BASE + number)
+        return '[{}]({})'.format(title, self.issue_url_base + number)
 
     def replace_video_links(self, matchobj):
         video_id = matchobj.group(3)
@@ -139,7 +134,7 @@ class LinkMapper:
         with urllib.request.urlopen("http://img.youtube.com/vi/{}/hqdefault.jpg".format(video_id)) as f:
             thumbnail_data = f.read()
         thumbnail = PIL.Image.open(io.BytesIO(thumbnail_data)).convert('RGBA')
-        overlay = PIL.Image.open(os.path.join(self.source_root, DOC_ROOT, 'Images/Play.png'))
+        overlay = PIL.Image.open(os.path.join(self.source_root, self.doc_root, 'Images/Play.png'))
 
         thumbnail_filename = 'VideoThumbnails/{}.png'.format(video_id)
         PIL.Image.alpha_composite(thumbnail, overlay).save(thumbnail_filename)
@@ -220,11 +215,16 @@ markdown = markdown2.Markdown(
 # and the indented ones cause formatting conflicts.
 markdown._do_code_blocks = lambda t: t
 
-def main(start_dir):
+def main(start_dir, site, doc_root):
+    if not os.path.isabs(start_dir):
+        start_dir = os.path.join(os.getcwd(), start_dir)
+
     BUILD_ROOT = get_build_root(start_dir)
-    link_mapper = LinkMapper(BUILD_ROOT)
+    url_base = 'http://{0}.codeplex.com/'.format(site)
+
+    link_mapper = LinkMapper(BUILD_ROOT, url_base, doc_root)
     
-    sources = os.path.join(BUILD_ROOT, DOC_ROOT)
+    sources = os.path.join(BUILD_ROOT, doc_root)
     print('Reading from ' + sources)
     
     for dirname, _, filenames in os.walk(sources):
@@ -252,6 +252,3 @@ def main(start_dir):
                     dest.write(FOOTER)
             finally:
                 os.chdir(cwd)
-
-if __name__ == '__main__':
-    sys.exit(main(os.getcwd()) or 0)

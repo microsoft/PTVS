@@ -1,0 +1,158 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>38632795-3a0b-40da-bd30-8fe284f1017b</ProjectGuid>
+    <ProjectHome>.</ProjectHome>
+    <StartupFile>..\..\Common\Docs\build.py</StartupFile>
+    <SearchPath>..\..\Common\Docs</SearchPath>
+    <WorkingDirectory>.</WorkingDirectory>
+    <OutputPath>.</OutputPath>
+    <Name>PythonDocs</Name>
+    <RootNamespace>PythonDocs</RootNamespace>
+    <InterpreterId>{2af0f10d-7135-4994-9156-5d01c9c11b7e}</InterpreterId>
+    <InterpreterVersion>3.3</InterpreterVersion>
+    <LaunchProvider>Standard Python launcher</LaunchProvider>
+    <CommandLineArguments>--site pytools --doc-root Python\Docs --dir User</CommandLineArguments>
+    <InterpreterPath />
+    <InterpreterArguments />
+    <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
+    <SccProjectName>SAK</SccProjectName>
+    <SccProvider>SAK</SccProvider>
+    <SccAuxPath>SAK</SccAuxPath>
+    <SccLocalPath>SAK</SccLocalPath>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <DebugSymbols>true</DebugSymbols>
+    <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <DebugSymbols>true</DebugSymbols>
+    <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="..\..\Common\Docs\build.py">
+      <Link>build.py</Link>
+    </Compile>
+    <Compile Include="..\..\Common\Docs\update_html.py">
+      <Link>update_html.py</Link>
+    </Compile>
+    <Compile Include="..\..\Common\Docs\upload_to_codeplex.py">
+      <Link>upload_to_codeplex.py</Link>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Dev\" />
+    <Folder Include="Images\" />
+    <Folder Include="Planning\" />
+    <Folder Include="User\" />
+    <Folder Include="User\Images\" />
+    <Folder Include="User\VideoThumbnails\" />
+    <Folder Include="VideoThumbnails\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="..\..\Common\Docs\HowTo.md">
+      <Link>HowTo.md</Link>
+    </Content>
+    <Content Include="Dev\Environments.md" />
+    <Content Include="Images\EditHTML.png" />
+    <Content Include="Images\Play.png" />
+    <Content Include="Images\Play.svg" />
+    <Content Include="Planning\WebFrameworks.md" />
+    <Content Include="User\codeplex.map" />
+    <Content Include="User\Documentation.md" />
+    <Content Include="User\Features Browsing.md" />
+    <Content Include="User\Features Debugging.md" />
+    <Content Include="User\Features Editor.md" />
+    <Content Include="User\Features Interactive REPL.md" />
+    <Content Include="User\Features Mixed-Mode Debugging.md" />
+    <Content Include="User\Features Projects.md" />
+    <Content Include="User\Features Refactoring.md" />
+    <Content Include="User\Features Remote Debugging.md" />
+    <Content Include="User\Images\AddImport.png" />
+    <Content Include="User\Images\AddRemoveEnvironments.png" />
+    <Content Include="User\Images\AddVirtualEnvironment.png" />
+    <Content Include="User\Images\Bookmarks.png" />
+    <Content Include="User\Images\Breakpoints.png" />
+    <Content Include="User\Images\ClassView.png" />
+    <Content Include="User\Images\CompletionDecorator.png" />
+    <Content Include="User\Images\CompletionDunder.png" />
+    <Content Include="User\Images\CompletionException.png" />
+    <Content Include="User\Images\CompletionFiltering.png" />
+    <Content Include="User\Images\CompletionImport.png" />
+    <Content Include="User\Images\CompletionMode.png" />
+    <Content Include="User\Images\CompletionSimple.png" />
+    <Content Include="User\Images\CompletionTypes.png" />
+    <Content Include="User\Images\ConditionalBreakpoint.png" />
+    <Content Include="User\Images\CreateVirtualEnvironment.png" />
+    <Content Include="User\Images\DebugInteractive.png" />
+    <Content Include="User\Images\DebugInteractiveMenu.png" />
+    <Content Include="User\Images\DebugInteractiveOptions.png" />
+    <Content Include="User\Images\EnvironmentsWindow.png" />
+    <Content Include="User\Images\ExceptionPopup.png" />
+    <Content Include="User\Images\ExceptionsDialog.png" />
+    <Content Include="User\Images\ExecuteProjectInPythonInteractive.png" />
+    <Content Include="User\Images\ExtensionReferences.png" />
+    <Content Include="User\Images\FindAllReferences.png" />
+    <Content Include="User\Images\FromExisting1.png" />
+    <Content Include="User\Images\FromExisting2.png" />
+    <Content Include="User\Images\FromExisting3.png" />
+    <Content Include="User\Images\FromExisting4.png" />
+    <Content Include="User\Images\GoToDefinition.png" />
+    <Content Include="User\Images\InstalledPackages.png" />
+    <Content Include="User\Images\InstallPythonPackage.png" />
+    <Content Include="User\Images\IntelliSenseVideo.png" />
+    <Content Include="User\Images\InteractiveMath.png" />
+    <Content Include="User\Images\InteractiveScopes.png" />
+    <Content Include="User\Images\InteractiveUserDictScope.png" />
+    <Content Include="User\Images\InteractiveWindow.png" />
+    <Content Include="User\Images\InteractiveWindowOptions.png" />
+    <Content Include="User\Images\LinkedFileIcon.png" />
+    <Content Include="User\Images\LocalsWindow.png" />
+    <Content Include="User\Images\MixedModeDebuggingCallStack.png" />
+    <Content Include="User\Images\MixedModeDebuggingCodeType.png" />
+    <Content Include="User\Images\MixedModeDebuggingCppView.png" />
+    <Content Include="User\Images\MixedModeDebuggingEnableCppView.png" />
+    <Content Include="User\Images\MixedModeDebuggingEnableNative.png" />
+    <Content Include="User\Images\MixedModeDebuggingEnablePythonView.png" />
+    <Content Include="User\Images\MixedModeDebuggingPythonView.png" />
+    <Content Include="User\Images\MixedModeDebuggingScreenshot.png" />
+    <Content Include="User\Images\MixedModeDebuggingSymbolsRequired.png" />
+    <Content Include="User\Images\NavigateTo.png" />
+    <Content Include="User\Images\NavigationBar.png" />
+    <Content Include="User\Images\ObjectBrowser.png" />
+    <Content Include="User\Images\OptionsDialog.png" />
+    <Content Include="User\Images\ProjectEnvironments.png" />
+    <Content Include="User\Images\PythonLauncher.png" />
+    <Content Include="User\Images\QuickInfo.png" />
+    <Content Include="User\Images\QuickTips.png" />
+    <Content Include="User\Images\RefactorExtractMethod.png" />
+    <Content Include="User\Images\RefactorMenu.png" />
+    <Content Include="User\Images\RefactorRename.png" />
+    <Content Include="User\Images\RemoteDebuggingBreakpointHit.png" />
+    <Content Include="User\Images\RemoteDebuggingBreakpointSet.png" />
+    <Content Include="User\Images\RemoteDebuggingQualifier.png" />
+    <Content Include="User\Images\RemoteDebuggingSSLWarning.png" />
+    <Content Include="User\Images\RemoteDebuggingTransport.png" />
+    <Content Include="User\Images\RemoteDebuggingTransportSSL.png" />
+    <Content Include="User\Images\RemoteDebuggingVideo.png" />
+    <Content Include="User\Images\SearchPath.png" />
+    <Content Include="User\Images\SendToDefiningModule.png" />
+    <Content Include="User\Images\SendToInteractive.png" />
+    <Content Include="User\Images\ShowAllFilesDisabled.png" />
+    <Content Include="User\Images\ShowAllFilesEnabled.png" />
+    <Content Include="User\Images\SignatureHelp.png" />
+    <Content Include="User\Images\SolutionExplorer.png" />
+    <Content Include="User\Images\StartWithDebugging.png" />
+    <Content Include="User\Images\StepCommands.png" />
+    <Content Include="User\Images\WatchWindow.png" />
+    <Content Include="User\Images\WebPIComponents.png" />
+    <Content Include="User\Python Environments.md" />
+    <Content Include="User\Where is PTVS installed%253f.md" />
+  </ItemGroup>
+  <ItemGroup>
+    <InterpreterReference Include="{2af0f10d-7135-4994-9156-5d01c9c11b7e}\3.3" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" />
+</Project>

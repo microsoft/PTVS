@@ -1,5 +1,3 @@
-#! python3
-import argparse
 import base64
 import hashlib
 import json
@@ -19,7 +17,6 @@ import xmlrpc.client
 MAP_FILENAME = 'codeplex.map'
 
 MW_SOURCE = 'https://www.codeplex.com/site/metaweblog'
-SITE_NAME = 'pytools'
 
 MEDIA_TYPES = {
     '.PNG': 'image/png',
@@ -50,10 +47,10 @@ def add_files(root, filemap=None):
 
 def get_posts(server, site, user, password):
     post_count = 50
-    existing_posts = server.getRecentPosts(SITE_NAME, user, password, post_count)
+    existing_posts = server.getRecentPosts(site, user, password, post_count)
     while len(existing_posts) == post_count:
         post_count += 50
-        existing_posts = server.getRecentPosts(SITE_NAME, user, password, post_count)
+        existing_posts = server.getRecentPosts(site, user, password, post_count)
     print('Found {} posts'.format(len(existing_posts)))
     return existing_posts
 
@@ -69,22 +66,11 @@ def remap_refs(filemap, content):
     
     return content
 
-def main(args):
-    parser = argparse.ArgumentParser(description='Uploads compiled documentation to CodePlex')
-    parser.add_argument('--user', '-u', metavar='USERNAME', type=str,
-                        help='Your CodePlex username')
-    parser.add_argument('--password', '-p', metavar='PASSWORD', type=str,
-                        help='Your CodePlex password')
-    parser.add_argument('--dir', '-d', metavar='DIRECTORY', type=str,
-                        help='Folder to upload')
-    parser.add_argument('--dry-run', action='store_true',
-                        help='If specified, does not modify CodePlex.' +
-                             'Username and password are still required.')
-    options = parser.parse_args(args)
-    
-    root = options.dir or os.getcwd()
+def main(root, site, user, password, dry_run):
+    if not os.path.isabs(root):
+        start_dir = os.path.join(os.getcwd(), root)
 
-    if not options.dry_run:
+    if not dry_run:
         try:
             with open(os.path.join(root, MAP_FILENAME), 'r+b') as f:
                 pass
@@ -99,7 +85,7 @@ def main(args):
     server = xmlrpc.client.ServerProxy(MW_SOURCE)
     existing_posts = {
         p['title'] : (p['postid'], p['description'])
-        for p in get_posts(server, SITE_NAME, options.user, options.password)
+        for p in get_posts(server, site, user, password)
     }
 
     try:
@@ -131,11 +117,18 @@ def main(args):
             'type': mediatype,
             'bits': content,
         }
-        if options.dry_run:
+        if dry_run:
             filemap[local_path] = 'http://fake/' + local_path
         else:
-            result = server.newMediaObject(SITE_NAME, options.user, options.password, post_data)
-            filemap[local_path] = result['url']
+            result = server.newMediaObject(site, user, password, post_data)
+            parsed_url = list(urllib.parse.urlparse(result['url']))
+            # Uploaded files are hosted on a separate website with a different domain, and linking
+            # to them directly does not work because the authentication cookie is not passed through.
+            # To make it work, the URL has to be adjusted to go through codeplex.com - it will do
+            # a redirect to the real URL and pass the cookie along.
+            parsed_url[1] = 'www.codeplex.com'
+            url = urllib.parse.urlunparse(parsed_url)
+            filemap[local_path] = url
         print('Uploaded {} to {}'.format(local_path, filemap[local_path]))
     
     
@@ -158,18 +151,18 @@ def main(args):
             if existing_post:
                 post_id, old_text = existing_post
                 if content_hash not in old_text:
-                    if options.dry_run:
+                    if dry_run:
                         success = True
                     else:
-                        success = server.editPost(post_id, options.user, options.password, post_data, False)
+                        success = server.editPost(post_id, user, password, post_data, False)
                     print(('Uploaded {}' if success else 'Failed to upload {}').format(local_path))
                 else:
                     print('Did not upload {} - contents are identical'.format(local_path))
             else:
-                if options.dry_run:
+                if dry_run:
                     success = True
                 else:
-                    success = server.newPost(SITE_NAME, options.user, options.password, post_data, False)
+                    success = server.newPost(site, user, password, post_data, False)
                 print(('Uploaded {}' if success else 'Failed to upload {}').format(local_path))
         except:
             print('Potentially failed to upload {}: {}'.format(local_path, sys.exc_info()[1]))
@@ -177,7 +170,7 @@ def main(args):
                 traceback.print_exc()
             print()
     
-    if options.dry_run:
+    if dry_run:
         print('** This was a dry run. No pages were updated. **')
     else:
         try:
@@ -186,7 +179,3 @@ def main(args):
             print('Updated "codeplex.map" with {} remote files.'.format(len(filemap)))
         except PermissionError:
             pass
-
-
-if __name__ == '__main__':
-    sys.exit(main(sys.argv[1:]) or 0)
