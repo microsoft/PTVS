@@ -2374,14 +2374,19 @@ int main(int argc, char* argv[]) {
         /// </summary>
         /// <returns>Path to the install dir.</returns>
         private static string GetWindowsKitsDir() {
+            string[] kitsVersions = new[] { "KitsRoot81", "KitsRoot" };
             object regValue = null;
-            regValue = Registry.GetValue(
-                "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows Kits\\Installed Roots",
-                "KitsRoot",
-                null);
 
-            if (regValue != null && Directory.Exists(Path.Combine(regValue.ToString(), "Include")))
-                return regValue.ToString();
+            foreach (var kitsVersion in kitsVersions) {
+                regValue = Registry.GetValue(
+                    "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows Kits\\Installed Roots",
+                    kitsVersion,
+                    null);
+
+                if (regValue != null && Directory.Exists(Path.Combine(regValue.ToString(), "Include"))) {
+                    return regValue.ToString();
+                }
+            }
 
             return null;
         }
