@@ -224,8 +224,9 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 // attempt relative import...
                 var curPackage = GlobalScope;
                 int dotCount = relativeName.DotCount;
-                if (curPackage.ProjectEntry.FilePath.EndsWith("\\__init__.py") ||
-                    curPackage.ProjectEntry.FilePath.EndsWith("\\__init__.pyw")) {
+                if (curPackage.ProjectEntry.FilePath != null && (
+                    curPackage.ProjectEntry.FilePath.EndsWith("\\__init__.py") ||
+                    curPackage.ProjectEntry.FilePath.EndsWith("\\__init__.pyw"))) {
                     // relative import from inside of a package definition, we don't go out
                     // of our own package.
                     dotCount--;
