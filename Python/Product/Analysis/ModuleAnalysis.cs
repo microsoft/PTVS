@@ -431,13 +431,17 @@ namespace Microsoft.PythonTools.Analysis {
             
             if (options.ExpressionKeywords()) {
                 // keywords available in any context
-                keywords = PythonKeywords.Expression(ProjectState.LanguageVersion, scope is FunctionScope);
+                keywords = PythonKeywords.Expression(ProjectState.LanguageVersion);
             } else {
                 keywords = Enumerable.Empty<string>();
             }
 
             if (options.StatementKeywords()) {
-                keywords = keywords.Union(PythonKeywords.Statement(ProjectState.LanguageVersion, scope is FunctionScope));
+                keywords = keywords.Union(PythonKeywords.Statement(ProjectState.LanguageVersion));
+            }
+
+            if (!(scope is FunctionScope)) {
+                keywords = keywords.Except(PythonKeywords.InvalidOutsideFunction(ProjectState.LanguageVersion));
             }
 
             return keywords.Select(kw => new MemberResult(kw, PythonMemberType.Keyword));
