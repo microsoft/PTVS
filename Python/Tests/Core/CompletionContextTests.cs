@@ -449,6 +449,10 @@ except (None)"}) {
             completions = GetCompletionSetCtrlSpace(-1, code);
             Assert.IsNull(completions);
 
+            code = "from sys import settrace as st ";
+            completions = GetCompletionSetCtrlSpace(-1, code);
+            Assert.IsNull(completions);
+
             code = "from sys import settrace as st, ";
             completions = GetCompletionSetCtrlSpace(-1, code);
             AssertUtil.ContainsAtLeast(GetCompletionNames(completions), "api_version", "settrace");

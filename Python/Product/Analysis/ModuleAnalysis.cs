@@ -427,70 +427,20 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         private IEnumerable<MemberResult> GetKeywordMembers(GetMemberOptions options, InterpreterScope scope) {
+            IEnumerable<string> keywords = null;
+            
             if (options.ExpressionKeywords()) {
                 // keywords available in any context
-                yield return new MemberResult("and", PythonMemberType.Keyword);
-                yield return new MemberResult("as", PythonMemberType.Keyword);
-                yield return new MemberResult("else", PythonMemberType.Keyword);
-                yield return new MemberResult("for", PythonMemberType.Keyword);
-                yield return new MemberResult("if", PythonMemberType.Keyword);
-                yield return new MemberResult("in", PythonMemberType.Keyword);
-                yield return new MemberResult("is", PythonMemberType.Keyword);
-                yield return new MemberResult("lambda", PythonMemberType.Keyword);
-                yield return new MemberResult("not", PythonMemberType.Keyword);
-                yield return new MemberResult("or", PythonMemberType.Keyword);
+                keywords = PythonKeywords.Expression(ProjectState.LanguageVersion, scope is FunctionScope);
+            } else {
+                keywords = Enumerable.Empty<string>();
             }
 
-            bool isStmtContext = options.StatementKeywords();
-
-            // and now the keywords...
-            if (scope is FunctionScope) {
-                if (isStmtContext) {
-                    yield return new MemberResult("return", PythonMemberType.Keyword);
-                }
-
-                // yield is always available as an expression in 2.5+
-                yield return new MemberResult("yield", PythonMemberType.Keyword);
+            if (options.StatementKeywords()) {
+                keywords = keywords.Union(PythonKeywords.Statement(ProjectState.LanguageVersion, scope is FunctionScope));
             }
 
-            if (isStmtContext) {
-                // statement context only
-                yield return new MemberResult("assert", PythonMemberType.Keyword);
-                yield return new MemberResult("break", PythonMemberType.Keyword);
-                yield return new MemberResult("continue", PythonMemberType.Keyword);
-                yield return new MemberResult("class", PythonMemberType.Keyword);
-                yield return new MemberResult("def", PythonMemberType.Keyword);
-                yield return new MemberResult("del", PythonMemberType.Keyword);
-                yield return new MemberResult("elif", PythonMemberType.Keyword);
-                yield return new MemberResult("except", PythonMemberType.Keyword);
-                yield return new MemberResult("finally", PythonMemberType.Keyword);
-                yield return new MemberResult("from", PythonMemberType.Keyword);
-                yield return new MemberResult("global", PythonMemberType.Keyword);
-                yield return new MemberResult("import", PythonMemberType.Keyword);
-                yield return new MemberResult("pass", PythonMemberType.Keyword);
-                yield return new MemberResult("raise", PythonMemberType.Keyword);
-                yield return new MemberResult("try", PythonMemberType.Keyword);
-                yield return new MemberResult("while", PythonMemberType.Keyword);
-                yield return new MemberResult("with", PythonMemberType.Keyword);
-            }
-
-            yield return new MemberResult("None", PythonMemberType.Keyword);
-
-            if (ProjectState.LanguageVersion.Is3x()) {
-                yield return new MemberResult("False", PythonMemberType.Keyword);
-                yield return new MemberResult("True", PythonMemberType.Keyword);
-
-                // statement context only
-                if (isStmtContext) {
-                    yield return new MemberResult("nonlocal", PythonMemberType.Keyword);
-                }
-            }
-
-            if (ProjectState.LanguageVersion.Is2x() && isStmtContext) {
-                // statement context only
-                yield return new MemberResult("exec", PythonMemberType.Keyword);
-                yield return new MemberResult("print", PythonMemberType.Keyword);
-            }
+            return keywords.Select(kw => new MemberResult(kw, PythonMemberType.Keyword));
         }
 
         #endregion
