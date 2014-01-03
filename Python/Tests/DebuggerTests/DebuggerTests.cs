@@ -1270,10 +1270,11 @@ namespace DebuggerTests {
         public void TestExceptions() {
             var debugger = new PythonDebugger();
             for (int i = 0; i < 2; i++) {
-                TestException(debugger, Path.Combine(DebuggerTestPath, "SimpleException.py"), i == 0, 1, new KeyValuePair<string, int>[0],
-                    new ExceptionInfo(ExceptionModule + ".Exception", 3));
+                TestException(debugger, Path.Combine(DebuggerTestPath, "SimpleException.py"), i == 0, ExceptionMode.Always, null,
+                    new ExceptionInfo(ExceptionModule + ".Exception", 3)
+                );
 
-                TestException(debugger, DebuggerTestPath + ComplexExceptions, i == 0, 1, new KeyValuePair<string, int>[0],
+                TestException(debugger, DebuggerTestPath + ComplexExceptions, i == 0, ExceptionMode.Always, null,
                     new ExceptionInfo(PickleModule + ".PickleError", 6),
                     new ExceptionInfo(ExceptionModule + ".StopIteration", 13),
                     new ExceptionInfo(ExceptionModule + ".NameError", 15),
@@ -1283,69 +1284,99 @@ namespace DebuggerTests {
                     new ExceptionInfo(ExceptionModule + ".Exception", 32)
                 );
 
-                TestException(debugger, DebuggerTestPath + ComplexExceptions, i == 0, 32, new KeyValuePair<string, int>[] {
-                    new KeyValuePair<string, int>(PickleModule + ".PickleError", 0)
+                TestException(debugger, DebuggerTestPath + ComplexExceptions, i == 0, ExceptionMode.Unhandled, new[] {
+                    new KeyValuePair<string, ExceptionMode>(PickleModule + ".PickleError", ExceptionMode.Never)
                 });
-                TestException(debugger, DebuggerTestPath + ComplexExceptions, i == 0, 0, new KeyValuePair<string, int>[] {
-                    new KeyValuePair<string, int>(PickleModule + ".PickleError", 1),
-                    new KeyValuePair<string, int>(ExceptionModule + ".StopIteration", 32),
-                    new KeyValuePair<string, int>(ExceptionModule + ".NameError", 0),
-                    new KeyValuePair<string, int>(ExceptionModule + ".Exception", 33),
+                TestException(debugger, DebuggerTestPath + ComplexExceptions, i == 0, ExceptionMode.Never, new[] {
+                    new KeyValuePair<string, ExceptionMode>(PickleModule + ".PickleError", ExceptionMode.Always),
+                    new KeyValuePair<string, ExceptionMode>(ExceptionModule + ".StopIteration", ExceptionMode.Unhandled),
+                    new KeyValuePair<string, ExceptionMode>(ExceptionModule + ".NameError", ExceptionMode.Never),
+                    new KeyValuePair<string, ExceptionMode>(ExceptionModule + ".Exception", ExceptionMode.Always | ExceptionMode.Unhandled),
                 },
                     new ExceptionInfo(PickleModule + ".PickleError", 6),
                     new ExceptionInfo(ExceptionModule + ".Exception", 29),
                     new ExceptionInfo(ExceptionModule + ".Exception", 32)
                 );
 
+                TestException(debugger, DebuggerTestPath + "FinallyExceptions.py", i == 0, ExceptionMode.Unhandled, null,
+                    new ExceptionInfo(ExceptionModule + ".Exception", 3)
+                );
+
                 if (Version.Version.Is2x()) {
-                    TestException(debugger, Path.Combine(DebuggerTestPath, "UnicodeException.py"), i == 0, 1, new KeyValuePair<string, int>[0],
-                        new ExceptionInfo(ExceptionModule + ".Exception", 3));
+                    TestException(debugger, Path.Combine(DebuggerTestPath, "UnicodeException.py"), i == 0, ExceptionMode.Always, null,
+                        new ExceptionInfo(ExceptionModule + ".Exception", 3)
+                    );
                 }
 
                 // Only the last exception in each file should be noticed.
                 if (Version.Version <= PythonLanguageVersion.V25) {
-                    TestException(debugger, Path.Combine(DebuggerTestPath, "UnhandledException1_v25.py"), i == 0, 32, new KeyValuePair<string, int>[0],
+                    TestException(debugger, Path.Combine(DebuggerTestPath, "UnhandledException1_v25.py"), i == 0, ExceptionMode.Unhandled, null,
                         new ExceptionInfo(ExceptionModule + ".Exception", 57)
                     );
                 } else if (Version.Version.Is3x()) {
-                    TestException(debugger, Path.Combine(DebuggerTestPath, "UnhandledException1_v3x.py"), i == 0, 32, new KeyValuePair<string, int>[0],
+                    TestException(debugger, Path.Combine(DebuggerTestPath, "UnhandledException1_v3x.py"), i == 0, ExceptionMode.Unhandled, null,
                         new ExceptionInfo(ExceptionModule + ".Exception", 56)
                     );
                 } else {
-                    TestException(debugger, Path.Combine(DebuggerTestPath, "UnhandledException1.py"), i == 0, 32, new KeyValuePair<string, int>[0],
+                    TestException(debugger, Path.Combine(DebuggerTestPath, "UnhandledException1.py"), i == 0, ExceptionMode.Unhandled, null,
                         new ExceptionInfo(ExceptionModule + ".Exception", 81)
                     );
                 }
 
-                TestException(debugger, Path.Combine(DebuggerTestPath, "UnhandledException2.py"), i == 0, 32, new KeyValuePair<string, int>[0],
+                TestException(debugger, Path.Combine(DebuggerTestPath, "UnhandledException2.py"), i == 0, ExceptionMode.Unhandled, null,
                     new ExceptionInfo(ExceptionModule + ".Exception", 16)
                 );
-                TestException(debugger, Path.Combine(DebuggerTestPath, "UnhandledException3.py"), i == 0, 32, new KeyValuePair<string, int>[0],
+                TestException(debugger, Path.Combine(DebuggerTestPath, "UnhandledException3.py"), i == 0, ExceptionMode.Unhandled, null,
                     new ExceptionInfo(ExceptionModule + ".ValueError", 12)
                 );
-                TestException(debugger, Path.Combine(DebuggerTestPath, "UnhandledException4.py"), i == 0, 32, new KeyValuePair<string, int>[0],
+                TestException(debugger, Path.Combine(DebuggerTestPath, "UnhandledException4.py"), i == 0, ExceptionMode.Unhandled, null,
                     new ExceptionInfo(ExceptionModule + ".OSError", 17)
                 );
-                TestException(debugger, Path.Combine(DebuggerTestPath, "UnhandledException5.py"), i == 0, 32, new KeyValuePair<string, int>[0],
+                TestException(debugger, Path.Combine(DebuggerTestPath, "UnhandledException5.py"), i == 0, ExceptionMode.Unhandled, null,
                     new ExceptionInfo(ExceptionModule + ".ValueError", 4)
                 );
-                TestException(debugger, Path.Combine(DebuggerTestPath, "UnhandledException6.py"), i == 0, 32, new KeyValuePair<string, int>[0],
+                TestException(debugger, Path.Combine(DebuggerTestPath, "UnhandledException6.py"), i == 0, ExceptionMode.Unhandled, null,
                     new ExceptionInfo(ExceptionModule + ".OSError", 12)
                 );
             }
         }
 
-        private void TestException(PythonDebugger debugger, string filename, bool resumeProcess,
-            int defaultExceptionMode, ICollection<KeyValuePair<string, int>> exceptionModes, params ExceptionInfo[] exceptions) {
+        [Flags]
+        private enum ExceptionMode {
+            Never = 0,
+            Always = 1,
+            Unhandled = 32
+        }
+
+        private void TestException(
+            PythonDebugger debugger,
+            string filename,
+            bool resumeProcess,
+            ExceptionMode defaultExceptionMode,
+            ICollection<KeyValuePair<string, ExceptionMode>> exceptionModes,
+            params ExceptionInfo[] exceptions
+        ) {
             TestException(debugger, filename, resumeProcess, defaultExceptionMode, exceptionModes, PythonDebugOptions.RedirectOutput, exceptions);
         }
 
-        private void TestException(PythonDebugger debugger, string filename, bool resumeProcess,
-            int defaultExceptionMode, ICollection<KeyValuePair<string, int>> exceptionModes, PythonDebugOptions debugOptions, params ExceptionInfo[] exceptions) {
+        private void TestException(
+            PythonDebugger debugger,
+            string filename,
+            bool resumeProcess,
+            ExceptionMode defaultExceptionMode,
+            ICollection<KeyValuePair<string, ExceptionMode>> exceptionModes,
+            PythonDebugOptions debugOptions,
+            params ExceptionInfo[] exceptions
+        ) {
             bool loaded = false;
             var process = DebugProcess(debugger, filename, (processObj, threadObj) => {
                 loaded = true;
-                processObj.SetExceptionInfo(defaultExceptionMode, exceptionModes);
+                processObj.SetExceptionInfo(
+                    (int)defaultExceptionMode,
+                    exceptionModes == null ?
+                        Enumerable.Empty<KeyValuePair<string,int>>() :
+                        exceptionModes.Select(m => new KeyValuePair<string, int>(m.Key, (int)m.Value))
+                );
             }, debugOptions: debugOptions);
 
             int curException = 0;
@@ -1381,33 +1412,37 @@ namespace DebuggerTests {
         public void TestExceptionsSysExitZero() {
             var debugger = new PythonDebugger();
 
-            TestException(debugger,
+            TestException(
+                debugger,
                 Path.Combine(DebuggerTestPath, "SysExitZeroRaise.py"),
-                true, 32,
-                new KeyValuePair<string, int>[0],
+                true, ExceptionMode.Unhandled,
+                null,
                 PythonDebugOptions.BreakOnSystemExitZero,
                 new ExceptionInfo(ExceptionModule + ".SystemExit", 1)
             );
 
-            TestException(debugger,
+            TestException(
+                debugger,
                 Path.Combine(DebuggerTestPath, "SysExitZero.py"),
-                true, 32,
-                new KeyValuePair<string, int>[0],
+                true, ExceptionMode.Unhandled,
+                null,
                 PythonDebugOptions.BreakOnSystemExitZero,
                 new ExceptionInfo(ExceptionModule + ".SystemExit", 2)
             );
 
-            TestException(debugger,
+            TestException(
+                debugger,
                 Path.Combine(DebuggerTestPath, "SysExitZeroRaise.py"),
-                true, 32,
-                new KeyValuePair<string, int>[0],
+                true, ExceptionMode.Unhandled,
+                null,
                 PythonDebugOptions.RedirectOutput
             );
 
-            TestException(debugger,
+            TestException(
+                debugger,
                 Path.Combine(DebuggerTestPath, "SysExitZero.py"),
-                true, 32,
-                new KeyValuePair<string, int>[0],
+                true, ExceptionMode.Unhandled,
+                null,
                 PythonDebugOptions.RedirectOutput
             );
         }

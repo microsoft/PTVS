@@ -546,7 +546,18 @@ namespace Microsoft.PythonTools.Debugger {
                 var expressions = new List<string>();
 
                 if (statement.Handlers == null) {
-                    expressions.Add("*");
+                    if (statement.Finally != null) {
+                        // This is a try/finally block without an except, which
+                        // means that no exceptions are handled.
+                        continue;
+                    } else {
+                        // If Handlers and Finally are null, there was probably
+                        // a parser error. We assume all exceptions are handled
+                        // by default, to avoid bothering the user too much, so
+                        // handle everything here since we can't be more
+                        // accurate.
+                        expressions.Add("*");
+                    }
                 } else {
                     foreach (var handler in statement.Handlers) {
                         Expression expr = handler.Test;
