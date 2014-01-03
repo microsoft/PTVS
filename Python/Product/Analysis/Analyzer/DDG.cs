@@ -296,8 +296,8 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             }
 
             // look for absolute name, then relative name
-            if (ProjectState.Modules.TryGetValue(modName, out moduleRef) ||
-                ProjectState.Modules.TryGetValue(_unit.DeclaringModule.Name + "." + modName, out moduleRef)) {
+            if ((ProjectState.Modules.TryGetValue(modName, out moduleRef) && moduleRef.Module != null) ||
+                (ProjectState.Modules.TryGetValue(_unit.DeclaringModule.Name + "." + modName, out moduleRef) && moduleRef.Module != null)) {
                 return true;
             }
 
@@ -306,7 +306,8 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             string name = _unit.DeclaringModule.Name;
             while ((lastDot = name.LastIndexOf('.')) != -1) {
                 name = name.Substring(0, lastDot);
-                if (ProjectState.Modules.TryGetValue(name + "." + modName, out moduleRef)) {
+                if (ProjectState.Modules.TryGetValue(name + "." + modName, out moduleRef) &&
+                    moduleRef.Module != null) {
                     return true;
                 }
             }
