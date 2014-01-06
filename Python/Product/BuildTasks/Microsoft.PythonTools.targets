@@ -20,19 +20,40 @@
   <!-- Creates a command object that will be displayed in the IDE.
 
   <Target Name="Name1" Label="Display Name" Returns="@(Commands)">
-    <PythonCommand Target="filename, module name, or code"
-                   TargetType="executable/script/module/code"
+    <CreatePythonCommandItem Target="filename, module name, or code"
+                   TargetType="executable/script/module/code/pip"
                    Arguments="..."
-                   DeferExecution="$(BuildingInsideVisualStudio)"
                    ExecuteIn="console/output/repl[:Display name]/Repl[:Display name]">
       <Output TaskParameter="Command"
               ItemName="Commands" />
-    </PythonCommand>
+    </CreatePythonCommandItem>
   </Target>
   -->
   <UsingTask AssemblyFile="$(_PythonToolsPath)\Microsoft.PythonTools.BuildTasks.dll"
-             TaskName="PythonCommand"
-             TaskFactory="PythonCommandFactory">
+             TaskName="CreatePythonCommandItem"
+             TaskFactory="CreatePythonCommandItemFactory">
+    <Task Evaluate="true">
+      <PropertyGroup>
+        <ProjectPath>$(MSBuildProjectFullPath)</ProjectPath>
+      </PropertyGroup>
+    </Task>
+  </UsingTask>
+
+  <!-- Runs a Python command. Like CreatePythonCommandItem, but instead of creating a user-activatable
+       UI command, just runs it immediately.
+  <Target Name="Name1" Label="Display Name" Returns="@(Commands)">
+    <RunPythonCommand Target="filename, module name, or code"
+                   TargetType="executable/script/module/code"
+                   Arguments="..."
+                   ExecuteIn="console/output/repl[:Display name]/Repl[:Display name]">
+      <Output TaskParameter="Command"
+              ItemName="Commands" />
+    </RunPythonCommand>
+  </Target>
+  -->
+  <UsingTask AssemblyFile="$(_PythonToolsPath)\Microsoft.PythonTools.BuildTasks.dll"
+             TaskName="RunPythonCommand"
+             TaskFactory="RunPythonCommandFactory">
     <Task Evaluate="true">
       <PropertyGroup>
         <ProjectPath>$(MSBuildProjectFullPath)</ProjectPath>

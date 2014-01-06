@@ -77,6 +77,10 @@ namespace Microsoft.PythonTools {
             Name = name;
         }
 
+        public override string ToString() {
+            return Name;
+        }
+
         private void Interpreter_IsCurrentChanged(object sender, EventArgs e) {
             var withDb = sender as IPythonInterpreterFactoryWithDatabase;
             if (withDb != null) {

@@ -595,38 +595,35 @@ interpreter_path_emulated=$(PythonInterpreterPath)
   <Target Name="DjangoShellCommand"
           Label="resource:Microsoft.PythonTools.Django;Microsoft.PythonTools.Django.Resources;OpenDjangoShellLabel"
           Returns="@(Commands)">
-    <PythonCommand Target="import django; print('Starting Django %s shell' % django.get_version())"
-                   TargetType="code"
-                   Arguments=""
-                   DeferExecution="$(BuildingInsideVisualStudio)"
-                   ExecuteIn="repl:resource:Microsoft.PythonTools.Django;Microsoft.PythonTools.Django.Resources;CommandReplTitle">
+    <CreatePythonCommandItem Target="import django; print('Starting Django %s shell' % django.get_version())"
+                             TargetType="code"
+                             Arguments=""
+                             ExecuteIn="repl:resource:Microsoft.PythonTools.Django;Microsoft.PythonTools.Django.Resources;CommandReplTitle">
       <Output TaskParameter="Command" ItemName="Commands" />
-    </PythonCommand>
+    </CreatePythonCommandItem>
   </Target>
 
   <Target Name="DjangoValidateAppCommand"
           Label="resource:Microsoft.PythonTools.Django;Microsoft.PythonTools.Django.Resources;ValidateAppLabel"
           DependsOnTargets="SetStartupFileOrManagePy"
           Returns="@(Commands)">
-    <PythonCommand Target="$(StartupFileOrManagePy)"
-                   TargetType="script"
-                   Arguments="validate"
-                   DeferExecution="$(BuildingInsideVisualStudio)"
-                   ExecuteIn="Repl:resource:Microsoft.PythonTools.Django;Microsoft.PythonTools.Django.Resources;CommandReplTitle">
+    <CreatePythonCommandItem Target="$(StartupFileOrManagePy)"
+                             TargetType="script"
+                             Arguments="validate"
+                             ExecuteIn="Repl:resource:Microsoft.PythonTools.Django;Microsoft.PythonTools.Django.Resources;CommandReplTitle">
       <Output TaskParameter="Command" ItemName="Commands" />
-    </PythonCommand>
+    </CreatePythonCommandItem>
   </Target>
 
   <Target Name="DjangoSyncDbCommand"
           Label="resource:Microsoft.PythonTools.Django;Microsoft.PythonTools.Django.Resources;SyncDbLabel"
           DependsOnTargets="SetStartupFileOrManagePy"
           Returns="@(Commands)">
-    <PythonCommand Target="$(StartupFileOrManagePy)"
-                   TargetType="script"
-                   Arguments="syncdb"
-                   DeferExecution="$(BuildingInsideVisualStudio)"
-                   ExecuteIn="Repl:resource:Microsoft.PythonTools.Django;Microsoft.PythonTools.Django.Resources;CommandReplTitle">
+    <CreatePythonCommandItem Target="$(StartupFileOrManagePy)"
+                             TargetType="script"
+                             Arguments="syncdb"
+                             ExecuteIn="Repl:resource:Microsoft.PythonTools.Django;Microsoft.PythonTools.Django.Resources;CommandReplTitle">
       <Output TaskParameter="Command" ItemName="Commands" />
-    </PythonCommand>
+    </CreatePythonCommandItem>
   </Target>
 </Project>

@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -27,19 +28,21 @@ namespace Microsoft.PythonTools.BuildTasks {
     /// <summary>
     /// Creates an item representing a command.
     /// </summary>
-    public sealed class PythonCommand : ITask {
-        public const string TargetTypeKey = "TargetType";
-        public const string ArgumentsKey = "Arguments";
-        public const string WorkingDirectoryKey = "WorkingDirectory";
-        public const string EnvironmentKey = "Environment";
-        public const string ExecuteInKey = "ExecuteIn";
+    public abstract class PythonCommandTask : Task {
+        public const string TargetTypeExecutable = "executable";
+        public const string TargetTypeScript = "script";
+        public const string TargetTypeModule = "module";
+        public const string TargetTypeCode = "code";
+        public const string TargetTypePip = "pip";
 
-        private readonly string _projectPath;
+        private static readonly string[] _targetTypes = { TargetTypeExecutable, TargetTypeScript, TargetTypeModule, TargetTypeCode, TargetTypePip };
 
-        internal PythonCommand(string projectPath, IBuildEngine buildEngine) {
+        internal PythonCommandTask(string projectPath, IBuildEngine buildEngine) {
             BuildEngine = buildEngine;
-            _projectPath = projectPath;
+            ProjectPath = projectPath;
         }
+
+        protected string ProjectPath { get; private set; }
 
         /// <summary>
         /// A filename or Python module name.
@@ -47,10 +50,22 @@ namespace Microsoft.PythonTools.BuildTasks {
         [Required]
         public string Target { get; set; }
 
+        private string _targetType = TargetTypeExecutable;
+
         /// <summary>
-        /// One of 'executable' (default), 'script' or 'module'.
+        /// One of 'executable' (default), 'script', 'module', 'code' or 'pip'.
         /// </summary>
-        public string TargetType { get; set; }
+        public string TargetType {
+            get {
+                return _targetType;
+            }
+            set {
+                if (!_targetTypes.Contains(value, StringComparer.InvariantCultureIgnoreCase)) {
+                    throw new ArgumentException("TargetType must be one of: " + string.Join(", ", _targetTypes.Select(s => '"' + s + '"')));
+                }
+                _targetType = value;
+            }
+        }
 
         /// <summary>
         /// The arguments to pass to the command.
@@ -70,20 +85,123 @@ namespace Microsoft.PythonTools.BuildTasks {
         public string Environment { get; set; }
 
         /// <summary>
-        /// False to execute the command immediately. Defaults to true.
+        /// A regular expression used to detect error messages in the output. If not set, error detection is disabled.
         /// </summary>
-        public bool DeferExecution { get; set; }
+        /// <remarks>
+        /// Only valid when <see cref="ExecuteIn"/> is set to <c>"output"</c>.
+        /// The regular expression should use named capture groups to extract and present information about the exception.
+        /// The following named groups will be queried:
+        /// <list type="bullet">
+        ///     <item>
+        ///         <term>(?&lt;message&gt;...)</term>
+        ///         <description>Text of the error.</description>
+        ///     </item>
+        ///     <item>
+        ///         <term>(?&lt;code&gt;...)</term>
+        ///         <description>Error code.</description>
+        ///     </item>
+        ///     <item>
+        ///         <term>(?&lt;filename&gt;...)</term>
+        ///         <description>Name of the file for which the error is reported.</description>
+        ///     </item>
+        ///     <item>
+        ///         <term>(?&lt;line&gt;...)</term>
+        ///         <description>Line number of the location in the file for which the error reported.</description>
+        ///     </item>
+        ///     <item>
+        ///         <term>(?&lt;column&gt;...)</term>
+        ///         <description>Column number of the location in the file for which the error reported.</description>
+        ///     </item>
+        /// </list>
+        /// Any of these can be omitted if absent from a particular error format.
+        /// </remarks>
+        public string ErrorRegex { get; set; }
 
         /// <summary>
-        /// One of 'console' (default), 'repl', 'output' or 'none'.
+        /// A regular expression used to detect warning messages in the output. If not set, warning detection is disabled.
         /// </summary>
-        public string ExecuteIn { get; set; }
+        /// <remarks>
+        /// Only valid when <see cref="ExecuteIn"/> is set to <c>"output"</c>.
+        /// See documentation for <see cref="ErrorRegex"/> for a detailed description of the regular expression format.
+        /// </remarks>
+        public string WarningRegex { get; set; }
+
+        /// <summary>
+        /// A list of package requirements for this command, in setuptools format. If any package from this list is not installed,
+        /// pip will be used to install it before running the command.
+        /// </summary>
+        public string[] RequiredPackages { get; set; }
+    }
+
+    public class CreatePythonCommandItem : PythonCommandTask {
+        public const string TargetTypeKey = "TargetType";
+        public const string ArgumentsKey = "Arguments";
+        public const string WorkingDirectoryKey = "WorkingDirectory";
+        public const string EnvironmentKey = "Environment";
+        public const string ExecuteInKey = "ExecuteIn";
+        public const string ErrorRegexKey = "ErrorRegex";
+        public const string WarningRegexKey = "WarningRegex";
+        public const string RequiredPackagesKey = "RequiredPackages";
+
+        public const string ExecuteInConsole = "console";
+        public const string ExecuteInConsolePause = "consolepause";
+        public const string ExecuteInRepl = "repl";
+        public const string ExecuteInOutput = "output";
+        public const string ExecuteInNone = "none";
+
+        private static readonly string[] _executeIns = { ExecuteInConsole, ExecuteInConsolePause, ExecuteInRepl, ExecuteInOutput, ExecuteInNone };
+
+        internal CreatePythonCommandItem(string projectPath, IBuildEngine buildEngine)
+            : base(projectPath, buildEngine) {
+        }
+
+        private string _executeIn = ExecuteInConsole;
+
+        /// <summary>
+        /// One of 'console' (default), 'consolepause', 'repl', 'output' or 'none'.
+        /// </summary>
+        public string ExecuteIn {
+            get {
+                return _executeIn;
+            }
+            set {
+                if (value != null &&
+                    !value.StartsWith(ExecuteInRepl, StringComparison.InvariantCultureIgnoreCase) &&
+                    !_executeIns.Contains(value, StringComparer.InvariantCultureIgnoreCase)
+                ) {
+                    throw new ArgumentException("ExecuteIn must be one of: " + string.Join(", ", _executeIns.Select(s => '"' + s + '"')));
+                }
+                _executeIn = value;
+            }
+        }
 
         /// <summary>
         /// The created command.
         /// </summary>
         [Output]
         public ITaskItem[] Command { get; private set; }
+
+        public override bool Execute() {
+            if (!ExecuteInOutput.Equals(ExecuteIn, StringComparison.InvariantCultureIgnoreCase) &&
+                !(string.IsNullOrEmpty(ErrorRegex) && string.IsNullOrEmpty(WarningRegex))) {
+                Log.LogError("ErrorRegex and WarningRegex are only valid for ExecuteIn='output'");
+                return false;
+            }
+
+            var cmd = new TaskItem(Target, new Dictionary<string, string> {
+                { TargetTypeKey, TargetType ?? "" },
+                { ArgumentsKey, Arguments ?? "" },
+                { WorkingDirectoryKey, WorkingDirectory ?? "" },
+                { EnvironmentKey, SplitEnvironment(Environment ?? "") },
+                { ExecuteInKey, ExecuteIn ?? "" },
+                { ErrorRegexKey, ErrorRegex ?? "" },
+                { WarningRegexKey, WarningRegex ?? "" },
+                { RequiredPackagesKey, RequiredPackages != null ? string.Join(";", RequiredPackages) : "" }
+            });
+
+            Command = new[] { cmd };
+            return true;
+        }
 
         private static string SplitEnvironment(string source) {
             var result = new StringBuilder();
@@ -97,49 +215,34 @@ namespace Microsoft.PythonTools.BuildTasks {
 
             return result.ToString();
         }
+    }
 
-        public bool Execute() {
-            var cmd = new TaskItem(Target, new Dictionary<string, string> {
-                { TargetTypeKey, TargetType ?? "" },
-                { ArgumentsKey, Arguments ?? "" },
-                { WorkingDirectoryKey, WorkingDirectory ?? "" },
-                { EnvironmentKey, SplitEnvironment(Environment ?? "") },
-                { ExecuteInKey, ExecuteIn ?? "" }
-            });
-
-            Command = new[] { cmd };
-
-            if (!DeferExecution) {
-                return ExecuteNow();
-            }
-
-            return true;
+    public class RunPythonCommand : PythonCommandTask {
+        internal RunPythonCommand(string projectPath, IBuildEngine buildEngine)
+            : base(projectPath, buildEngine) {
         }
 
-        private bool ExecuteNow() {
+        public override bool Execute() {
             var psi = new ProcessStartInfo();
 
-            if ("module".Equals(TargetType, StringComparison.InvariantCultureIgnoreCase)) {
-                // We need the active environment to run these commands.
-                var resolver = new ResolveEnvironment(_projectPath, BuildEngine);
-                if (!resolver.Execute()) {
-                    return false;
-                }
-
-                psi.FileName = resolver.InterpreterPath;
-                psi.Arguments = string.Format("-m {0} {1}", Target, Arguments);
-            } else if ("script".Equals(TargetType, StringComparison.InvariantCultureIgnoreCase)) {
-                // We need the active environment to run these commands.
-                var resolver = new ResolveEnvironment(_projectPath, BuildEngine);
-                if (!resolver.Execute()) {
-                    return false;
-                }
-
-                psi.FileName = resolver.InterpreterPath;
-                psi.Arguments = string.Format("\"{0}\" {1}", Target, Arguments);
-            } else {
+            if (TargetTypeExecutable.Equals(TargetType, StringComparison.InvariantCultureIgnoreCase)) {
                 psi.FileName = Target;
                 psi.Arguments = Arguments;
+            } else {
+                // We need the active environment to run these commands.
+                var resolver = new ResolveEnvironment(ProjectPath, BuildEngine);
+                if (!resolver.Execute()) {
+                    return false;
+                }
+                psi.FileName = resolver.InterpreterPath;
+
+                if (TargetTypeModule.Equals(TargetType, StringComparison.InvariantCultureIgnoreCase)) {
+                    psi.Arguments = string.Format("-m {0} {1}", Target, Arguments);
+                } else if (TargetTypeScript.Equals(TargetType, StringComparison.InvariantCultureIgnoreCase)) {
+                    psi.Arguments = string.Format("\"{0}\" {1}", Target, Arguments);
+                } else if (TargetTypeCode.Equals(TargetType, StringComparison.InvariantCultureIgnoreCase)) {
+                    psi.Arguments = string.Format("-c \"{0}\"", Target);
+                }
             }
 
             psi.WorkingDirectory = WorkingDirectory;
@@ -184,18 +287,23 @@ namespace Microsoft.PythonTools.BuildTasks {
                 ));
             }
         }
-
-        public IBuildEngine BuildEngine { get; set; }
-        public ITaskHost HostObject { get; set; }
     }
 
     /// <summary>
-    /// Constructs PythonCommand task objects.
+    /// Constructs CreatePythonCommandItem task objects.
     /// </summary>
-    public sealed class PythonCommandFactory : TaskFactory<PythonCommand> {
+    public sealed class CreatePythonCommandItemFactory : TaskFactory<CreatePythonCommandItem> {
         public override ITask CreateTask(IBuildEngine taskFactoryLoggingHost) {
-            return new PythonCommand(Properties["ProjectPath"], taskFactoryLoggingHost);
+            return new CreatePythonCommandItem(Properties["ProjectPath"], taskFactoryLoggingHost);
         }
     }
 
+    /// <summary>
+    /// Constructs RunPythonCommand task objects.
+    /// </summary>
+    public sealed class RunPythonCommandFactory : TaskFactory<RunPythonCommand> {
+        public override ITask CreateTask(IBuildEngine taskFactoryLoggingHost) {
+            return new RunPythonCommand(Properties["ProjectPath"], taskFactoryLoggingHost);
+        }
+    }
 }

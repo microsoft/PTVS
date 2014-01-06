@@ -42,19 +42,21 @@
   </PropertyGroup>
 
   <Import Project="$(VSToolsPath)\Python Tools\Microsoft.PythonTools.targets" />
+  <PropertyGroup>
+    <PythonCommands>Command1</PythonCommands>
+  </PropertyGroup>
 
   <Target Name="Command1" Label="resource:PythonToolsUITests;PythonToolsUITests.Resources;CommandName" Returns="@(Commands)">
-    <PythonCommand Target="$(StartupPath)"
-                   TargetType="script"
-                   Arguments='"A" "B" "C"'
-                   DeferExecution="true"
-                   Environment="ABC=$(ProjectDir)
-                                DEF=234
-                                EFG=3;4;5
-                                A=2"
-                   ExecuteIn="repl:resource:PythonToolsUITests;PythonToolsUITests.Resources;ReplName">
+    <CreatePythonCommandItem Target="$(StartupPath)"
+                             TargetType="script"
+                             Arguments='"A" "B" "C"'
+                             Environment="ABC=$(ProjectDir)
+                                          DEF=234
+                                          EFG=3;4;5
+                                          A=2"
+                             ExecuteIn="repl:resource:PythonToolsUITests;PythonToolsUITests.Resources;ReplName">
       <Output TaskParameter="Command"
               ItemName="Commands" />
-    </PythonCommand>
+    </CreatePythonCommandItem>
   </Target>
 </Project>

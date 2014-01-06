@@ -7,19 +7,15 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{b1a0d563-6ee1-4cd8-808a-966ec2b2e5fc}</ProjectGuid>
+    <ProjectGuid>{12535E18-06DA-4F15-B99E-8F492FE721E3}</ProjectGuid>
     <ProjectHome>Package\Subpackage</ProjectHome>
     <StartupFile>Program.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
-    <AssemblyName>Commands3</AssemblyName>
-    <Name>Commands3</Name>
-    <RootNamespace>Commands3</RootNamespace>
     <OutputPath>.</OutputPath>
     <InterpreterId>{2af0f10d-7135-4994-9156-5d01c9c11b7e}</InterpreterId>
-    <InterpreterVersion>3.3</InterpreterVersion>
-    <PythonCommands>PrintToRepl;PrintToOutput;PrintToConsole</PythonCommands>
+    <InterpreterVersion>2.7</InterpreterVersion>
   </PropertyGroup>
   <ItemGroup>
     <InterpreterReference Include="{2af0f10d-7135-4994-9156-5d01c9c11b7e}\2.5" />
@@ -34,28 +30,30 @@
   </ItemGroup>
 
   <Import Project="$(VSToolsPath)\Python Tools\Microsoft.PythonTools.targets" />
+
   <PropertyGroup>
-    <PythonCommands>PrintToRepl;PrintToOutput;PrintToConsole</PythonCommands>
+    <PythonCommands>CommandRequirePackages</PythonCommands>
+    <VerifyPackagesPresent>
+<![CDATA[
+try:
+    import ptvsd, azure
+    print('pass')
+except:
+    print('fail')
+]]>
+    </VerifyPackagesPresent>
   </PropertyGroup>
 
-  <Target Name="SetInterpreterPath">
-    <ResolveEnvironment>
-      <Output TaskParameter="InterpreterPath" PropertyName="InterpreterPath" />
-    </ResolveEnvironment>
-  </Target>
-  <Target Name="PrintToRepl" Label="Write to Repl" Returns="@(Commands)" DependsOnTargets="SetInterpreterPath">
-    <CreatePythonCommandItem Target="$(InterpreterPath)" TargetType="executable" Arguments="-c &quot;import sys; print(sys.version_info[:2])&quot;" ExecuteIn="repl:Test Repl">
+  <Target Name="CommandRequirePackages"
+          Label="Require Packages"
+          DependsOnTargets="ResolveStartupPath"
+          Returns="@(Commands)">
+    <CreatePythonCommandItem Target="$(VerifyPackagesPresent)"
+                             TargetType="code"
+                             ExecuteIn="output"
+                             RequiredPackages="ptvsd;azure==0.6.2">
       <Output TaskParameter="Command" ItemName="Commands" />
     </CreatePythonCommandItem>
   </Target>
-  <Target Name="PrintToOutput" Label="Write to Output" Returns="@(Commands)" DependsOnTargets="SetInterpreterPath">
-    <CreatePythonCommandItem Target="$(InterpreterPath)" TargetType="executable" Arguments="-c &quot;import sys; print(sys.version_info[:2])&quot;" ExecuteIn="output">
-      <Output TaskParameter="Command" ItemName="Commands" />
-    </CreatePythonCommandItem>
-  </Target>
-  <Target Name="PrintToConsole" Label="Write to Console" Returns="@(Commands)" DependsOnTargets="SetInterpreterPath">
-    <CreatePythonCommandItem Target="$(InterpreterPath)" TargetType="executable" Arguments="-c &quot;import sys; print(sys.version_info[:2])&quot;" ExecuteIn="consolepause">
-      <Output TaskParameter="Command" ItemName="Commands" />
-    </CreatePythonCommandItem>
-  </Target>
+
 </Project>

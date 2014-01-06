@@ -88,6 +88,19 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The following packages will be installed from PyPI in order to run this command:
+        ///
+        ///{0}
+        ///
+        ///Do you want to continue?.
+        /// </summary>
+        internal static string CustomCommandPrerequisitesInstallPrompt {
+            get {
+                return ResourceManager.GetString("CustomCommandPrerequisitesInstallPrompt", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} Interactive Window.
         /// </summary>
         internal static string CustomCommandReplTitle {
@@ -561,15 +574,6 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to &amp;Start server.
-        /// </summary>
-        internal static string RunWebServerLabel {
-            get {
-                return ResourceManager.GetString("RunWebServerLabel", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to {0} cannot be started because the path to the interpreter has not been configured.
         ///Please update the environment in Tools-&gt;Options-&gt;Python Tools-&gt;Environment Options
         ///.
@@ -597,6 +601,15 @@ namespace Microsoft.PythonTools {
         internal static string ReplInitializationMessage {
             get {
                 return ResourceManager.GetString("ReplInitializationMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &amp;Start server.
+        /// </summary>
+        internal static string RunWebServerLabel {
+            get {
+                return ResourceManager.GetString("RunWebServerLabel", resourceCulture);
             }
         }
         

@@ -14,13 +14,16 @@
 
 using System;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Automation;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Project;
 using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio.Repl;
+using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 using TestUtilities.Python;
@@ -45,6 +48,14 @@ namespace PythonToolsUITests {
             projectNode._uiSync.Invoke((Action)(() => {
                 projectNode._customCommands.First(cc => cc.DisplayLabel == commandName).Execute(projectNode);
             }));
+        }
+
+        internal Task ExecuteAsync(PythonProjectNode projectNode, string commandName) {
+            Task task = null;
+            projectNode._uiSync.Invoke((Action)(() => {
+                task = projectNode._customCommands.First(cc => cc.DisplayLabel == commandName).ExecuteAsync(projectNode);
+            }));
+            return task;
         }
 
         internal void OpenProject(VisualStudioApp app, string slnName, out PythonProjectNode projectNode, out EnvDTE.Project dteProject) {
@@ -185,6 +196,27 @@ namespace PythonToolsUITests {
             }
         }
 
+        private static void ExpectOutputWindowText(VisualStudioApp app, string expected) {
+            var outputWindow = app.Element.FindFirst(TreeScope.Descendants,
+                new AndCondition(
+                    new PropertyCondition(AutomationElement.ClassNameProperty, "GenericPane"),
+                    new PropertyCondition(AutomationElement.NameProperty, "Output")
+                )
+            );
+            Assert.IsNotNull(outputWindow, "Output Window was not opened");
+
+            var outputText = "";
+            for (int retries = 100; !outputText.Contains(expected) && retries > 0; --retries) {
+                Thread.Sleep(100);
+                outputText = outputWindow.FindFirst(TreeScope.Descendants,
+                    new PropertyCondition(AutomationElement.ClassNameProperty, "WpfTextView")
+                ).AsWrapper().GetValue();
+            }
+
+            Console.WriteLine("Output Window: " + outputText);
+            Assert.IsTrue(outputText.Contains(expected), outputText);
+        }
+
         [TestMethod, Priority(0)]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CustomCommandsRunProcessInOutput() {
@@ -203,18 +235,7 @@ namespace PythonToolsUITests {
                 );
                 Assert.IsNotNull(outputWindow, "Output Window was not opened");
 
-                var expected = string.Format("({0}, {1})", PythonVersion.Configuration.Version.Major, PythonVersion.Configuration.Version.Minor);
-                var outputText = "";
-
-                for (int retries = 100; !outputText.Contains(expected) && retries > 0; --retries) {
-                    Thread.Sleep(100);
-                    outputText = outputWindow.FindFirst(TreeScope.Descendants,
-                        new PropertyCondition(AutomationElement.ClassNameProperty, "WpfTextView")
-                    ).AsWrapper().GetValue();
-                }
-
-                Console.WriteLine("Output Window: " + outputText);
-                Assert.IsTrue(outputText.Contains(expected), outputText);
+                ExpectOutputWindowText(app, string.Format("({0}, {1})", PythonVersion.Configuration.Version.Major, PythonVersion.Configuration.Version.Minor));
             }
         }
 
@@ -246,6 +267,132 @@ namespace PythonToolsUITests {
                     if (newProcess != null) {
                         newProcess.Kill();
                     }
+                }
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void CustomCommandsErrorList() {
+            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
+                PythonProjectNode node;
+                EnvDTE.Project proj;
+                OpenProject(app, "ErrorCommand.sln", out node, out proj);
+
+                var expectedItems = new[] {
+                    new { Document = "Program.py", Line = 0, Column = 1, Category = __VSERRORCATEGORY.EC_ERROR, Message = "This is an error with a relative path." },
+                    new { Document = Path.Combine(node.ProjectHome, "Program.py"), Line = 2, Column = 3, Category = __VSERRORCATEGORY.EC_WARNING, Message = "This is a warning with an absolute path." },
+                    new { Document = ">>>", Line = 4, Column = -1, Category = __VSERRORCATEGORY.EC_ERROR, Message = "This is an error with an invalid path." },
+                };
+
+                Execute(node, "Produce Errors");
+                var items = app.WaitForErrorListItems(3);
+                Assert.AreEqual(expectedItems.Length, items.Count);
+
+                // Second invoke should replace the error items in the list, not add new ones to those already existing.
+                Execute(node, "Produce Errors");
+                items = app.WaitForErrorListItems(3);
+                Assert.AreEqual(expectedItems.Length, items.Count);
+
+                for (int i = 0; i < expectedItems.Length; ++i) {
+                    var item = items[i];
+                    var expectedItem = expectedItems[i];
+
+                    string document, message;
+                    item.Document(out document);
+                    item.get_Text(out message);
+
+                    int line, column;
+                    item.Line(out line);
+                    item.Column(out column);
+
+                    uint category;
+                    ((IVsErrorItem)item).GetCategory(out category);
+
+                    Assert.AreEqual(expectedItem.Document, document);
+                    Assert.AreEqual(expectedItem.Line, line);
+                    Assert.AreEqual(expectedItem.Column, column);
+                    Assert.AreEqual(expectedItem.Message, message);
+                    Assert.AreEqual(expectedItem.Category, (__VSERRORCATEGORY)category);
+                }
+
+                node._uiSync.Invoke((Action)delegate { items[0].NavigateTo(); });
+
+                var doc = app.Dte.ActiveDocument;
+                Assert.IsNotNull(doc);
+                Assert.AreEqual("Program.py", doc.Name);
+
+                var textDoc = (EnvDTE.TextDocument)doc.Object("TextDocument");
+                Assert.AreEqual(1, textDoc.Selection.ActivePoint.Line);
+                Assert.AreEqual(2, textDoc.Selection.ActivePoint.DisplayColumn);
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void CustomCommandsRequiredPackages() {
+            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
+                PythonProjectNode node;
+                EnvDTE.Project proj;
+                OpenProject(app, "CommandRequirePackages.sln", out node, out proj);
+
+                string envName;
+                var env = VirtualEnvTests.CreateVirtualEnvironment(app, out envName);
+
+                env.Select();
+                app.Dte.ExecuteCommand("Project.ActivateEnvironment");
+
+                // First, execute the command and cancel it.
+                using (var task = ExecuteAsync(node, "Require Packages")) {
+                    var dialogHandle = app.WaitForDialog(task);
+                    if (dialogHandle == IntPtr.Zero) {
+                        if (task.IsFaulted && task.Exception != null) {
+                            Assert.Fail("Unexpected exception in package install confirmation dialog:\n{0}", task.Exception);
+                        } else {
+                            Assert.AreNotEqual(IntPtr.Zero, dialogHandle);
+                        }
+                    }
+
+                    var dialog = new AutomationWrapper(AutomationElement.FromHandle(dialogHandle));
+                    var label = dialog.FindByAutomationId("65535");
+                    Assert.IsNotNull(label);
+
+                    string expectedLabel =
+                        "The following packages will be installed from PyPI in order to run this command:\r\n" +
+                        "\r\n" +
+                        "ptvsd\r\n" +
+                        "azure==0.6.2\r\n" +
+                        "\r\n" +
+                        "Do you want to continue?";
+                    Assert.AreEqual(expectedLabel, label.Current.Name);
+
+                    dialog.ClickButtonByName("Cancel");
+                    try {
+                        task.Wait(1000);
+                        Assert.Fail("Command was not canceled after dismissing the package install confirmation dialog");
+                    } catch (AggregateException ex) {
+                        if (!(ex.InnerException is TaskCanceledException)) {
+                            throw;
+                        }
+                    }
+                }
+
+                // Then, execute command and allow it to proceed.
+                using (var task = ExecuteAsync(node, "Require Packages")) {
+                    var dialogHandle = app.WaitForDialog(task);
+                    if (dialogHandle == IntPtr.Zero) {
+                        if (task.IsFaulted && task.Exception != null) {
+                            Assert.Fail("Unexpected exception in package install confirmation dialog:\n{0}", task.Exception);
+                        } else {
+                            Assert.AreNotEqual(IntPtr.Zero, dialogHandle);
+                        }
+                    }
+
+                    var dialog = new AutomationWrapper(AutomationElement.FromHandle(dialogHandle));
+                    dialog.ClickButtonByName("OK");
+                    task.Wait();
+
+                    ExpectOutputWindowText(app, "pass");
                 }
             }
         }

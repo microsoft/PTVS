@@ -233,7 +233,7 @@ namespace Microsoft.PythonTools.Project {
                     }
                 }
                 using (var proc = ProcessOutput.Run(factory.Configuration.InterpreterPath,
-                    new [] { pipDownloaderPath },
+                    new[] { pipDownloaderPath },
                     factory.Configuration.PrefixPath,
                     null,
                     false,
@@ -294,6 +294,32 @@ namespace Microsoft.PythonTools.Project {
             }
 
             return InstallPip(factory, elevate, output);
+        }
+
+        /// <summary>
+        /// Checks whether a given package is installed and satisfies the version specification.
+        /// </summary>
+        /// <param name="package">Name, and optionally the version of the package to install, in setuptools format.</param>
+        /// <remarks>
+        /// This method requires setuptools to be installed to correctly detect packages and verify their versions. If setuptools
+        /// is not available, the method will always return <c>false</c> for any package name.
+        /// </remarks>
+        public static Task<bool> IsInstalled(IPythonInterpreterFactory factory, string package) {
+            return Task.Factory.StartNew(() => {
+                var code = string.Format("import pkg_resources; pkg_resources.require('{0}')", package);
+                using (var proc = ProcessOutput.Run(
+                    factory.Configuration.InterpreterPath,
+                    new[] { "-c", code  },
+                    factory.Configuration.PrefixPath,
+                    UnbufferedEnv,
+                    visible: false,
+                    redirector: null,
+                    quoteArgs: true)
+                ) {
+                    proc.Wait();
+                    return proc.ExitCode == 0;
+                }
+            });
         }
     }
 }

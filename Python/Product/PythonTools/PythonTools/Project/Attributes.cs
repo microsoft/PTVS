@@ -85,6 +85,7 @@ namespace Microsoft.PythonTools.Project {
         public const string FailedToReadResource = "FailedToReadResource";
 
         public const string CustomCommandReplTitle = "CustomCommandReplTitle";
+        public const string CustomCommandPrerequisitesInstallPrompt = "CustomCommandPrerequisitesInstallPrompt";
         public const string PythonMenuLabel = "PythonMenuLabel";
 
         public const string NoInterpretersAvailable = "NoInterpretersAvailable";

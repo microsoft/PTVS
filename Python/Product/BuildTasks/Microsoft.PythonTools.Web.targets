@@ -30,15 +30,14 @@
       <PythonRunWebServerCommandType Condition="'$(PythonRunWebServerCommandType)' == ''">script</PythonRunWebServerCommandType>
     </PropertyGroup>
     <!-- 'console' and 'consolepause' are the only valid ExecuteIn values for this command. -->
-    <PythonCommand Target="$(PythonRunWebServerCommand)"
-                   TargetType="$(PythonRunWebServerCommandType)"
-                   Arguments="$(PythonRunWebServerCommandArguments)"
-                   Environment="SERVER_HOST=$(WebServerHost)
-                                SERVER_PORT=$(WebServerPort)"
-                   DeferExecution="$(BuildingInsideVisualStudio)"
-                   ExecuteIn="console">
+    <CreatePythonCommandItem Target="$(PythonRunWebServerCommand)"
+                             TargetType="$(PythonRunWebServerCommandType)"
+                             Arguments="$(PythonRunWebServerCommandArguments)"
+                             Environment="SERVER_HOST=$(WebServerHost)
+                                          SERVER_PORT=$(WebServerPort)"
+                             ExecuteIn="console">
       <Output TaskParameter="Command" ItemName="Commands" />
-    </PythonCommand>
+    </CreatePythonCommandItem>
   </Target>
 
   <Target Name="PythonDebugWebServerCommand"
@@ -50,27 +49,25 @@
       <PythonDebugWebServerCommandType Condition="'$(PythonDebugWebServerCommandType)' == ''">script</PythonDebugWebServerCommandType>
     </PropertyGroup>
     <!-- 'console' and 'consolepause' are the only valid ExecuteIn values for this command. -->
-    <PythonCommand Target="$(PythonDebugWebServerCommand)"
+    <CreatePythonCommandItem Target="$(PythonDebugWebServerCommand)"
                    TargetType="$(PythonDebugWebServerCommandType)"
                    Arguments="$(PythonDebugWebServerCommandArguments)"
                    Environment="SERVER_HOST=$(WebServerHost)
                                 SERVER_PORT=$(WebServerPort)"
-                   DeferExecution="$(BuildingInsideVisualStudio)"
                    ExecuteIn="console">
       <Output TaskParameter="Command" ItemName="Commands" />
-    </PythonCommand>
+    </CreatePythonCommandItem>
   </Target>
 
   <Target Name="PythonUpgradeWebFrameworkCommand"
           Label="resource:Microsoft.PythonTools;Microsoft.Resources;UpgradeWebFrameworkLabel"
           Returns="@(Commands)">
     <!-- 'pip' is a special TargetType that will also install pip if required. -->
-    <PythonCommand Target="$(PythonWebFrameworkPackage)"
-                   TargetType="pip"
-                   Arguments="--upgrade"
-                   DeferExecution="$(BuildingInsideVisualStudio)"
-                   ExecuteIn="output">
+    <CreatePythonCommandItem Target="$(PythonWebFrameworkPackage)"
+                             TargetType="pip"
+                             Arguments="--upgrade"
+                             ExecuteIn="output">
       <Output TaskParameter="Command" ItemName="Commands" />
-    </PythonCommand>
+    </CreatePythonCommandItem>
   </Target>
 </Project>

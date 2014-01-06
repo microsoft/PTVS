@@ -369,4 +369,7 @@ Please update the environment in Tools-&gt;Options-&gt;Python Tools-&gt;Environm
   <data name="ReplInitializationMessage" xml:space="preserve">
     <value>Python interactive window. Type $help for a list of commands.</value>
   </data>
+  <data name="CustomCommandPrerequisitesInstallPrompt" xml:space="preserve">
+    <value>The following packages will be installed from PyPI in order to run this command:&#13;&#10;&#13;&#10;{0}&#13;&#10;&#13;&#10;Do you want to continue?</value>
+  </data>
 </root>
