@@ -29,12 +29,7 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
 
         #region IClassifier Members
 
-        public event EventHandler<ClassificationChangedEventArgs> ClassificationChanged {
-            add {
-            }
-            remove {
-            }
-        }
+        public abstract event EventHandler<ClassificationChangedEventArgs> ClassificationChanged;
 
         public abstract IList<ClassificationSpan> GetClassificationSpans(SnapshotSpan span);
 

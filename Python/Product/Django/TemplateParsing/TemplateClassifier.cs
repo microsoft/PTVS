@@ -14,39 +14,64 @@
 
 #if DEV12_OR_LATER
 
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Threading;
+using Microsoft.Html.Editor;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Text.Projection;
 
 namespace Microsoft.PythonTools.Django.TemplateParsing {
     internal class TemplateClassifier : TemplateClassifierBase {
+        private HtmlEditorDocument _htmlDoc;
+        private int _deferredClassifications;
+
         public TemplateClassifier(TemplateClassifierProviderBase provider, ITextBuffer textBuffer)
             : base(provider, textBuffer) {
         }
 
+        public override event EventHandler<ClassificationChangedEventArgs> ClassificationChanged;
+
         public override IList<ClassificationSpan> GetClassificationSpans(SnapshotSpan span) {
             var spans = new List<ClassificationSpan>();
 
-            var doc = Microsoft.Html.Editor.HtmlEditorDocument.TryFromTextBuffer(span.Snapshot.TextBuffer);
-            if (doc == null) {
+            var htmlDoc = HtmlEditorDocument.TryFromTextBuffer(span.Snapshot.TextBuffer);
+            if (htmlDoc == null) {
                 return spans;
             }
-            doc.HtmlEditorTree.EnsureTreeReady();
 
-            var projSnapshot = doc.PrimaryView.TextSnapshot as IProjectionSnapshot;
+            if (_htmlDoc == null) {
+                _htmlDoc = htmlDoc;
+                _htmlDoc.HtmlEditorTree.UpdateCompleted += HtmlEditorTree_UpdateCompleted;
+            } else {
+                Debug.Assert(htmlDoc == _htmlDoc);
+            }
+
+            // If the tree is not up to date with respect to the current snapshot, then artifact ranges and the
+            // associated parse results are also not up to date. We cannot force a refresh here because this
+            // can potentially change the buffer, which is not legal for GetClassificationSpans to do, and will
+            // break the editor. Queue the refresh for later, and asynchronously notify the editor that it needs
+            // to re-classify once it's done.
+            if (!_htmlDoc.HtmlEditorTree.IsReady) {
+                Interlocked.Increment(ref _deferredClassifications);
+                return spans;
+            }
+
+            var projSnapshot = _htmlDoc.PrimaryView.TextSnapshot as IProjectionSnapshot;
             if (projSnapshot == null) {
                 return spans;
             }
 
             var primarySpans = projSnapshot.MapFromSourceSnapshot(span);
             foreach (var primarySpan in primarySpans) {
-                var index = doc.HtmlEditorTree.ArtifactCollection.GetItemContaining(primarySpan.Start);
+                var index = _htmlDoc.HtmlEditorTree.ArtifactCollection.GetItemContaining(primarySpan.Start);
                 if (index < 0) {
                     continue;
                 }
 
-                var artifact = doc.HtmlEditorTree.ArtifactCollection[index] as TemplateArtifact;
+                var artifact = _htmlDoc.HtmlEditorTree.ArtifactCollection[index] as TemplateArtifact;
                 if (artifact == null) {
                     continue;
                 }
@@ -56,7 +81,7 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
                     continue;
                 }
 
-                var artifactText = doc.HtmlEditorTree.ParseTree.Text.GetText(artifact.InnerRange);
+                var artifactText = _htmlDoc.HtmlEditorTree.ParseTree.Text.GetText(artifact.InnerRange);
                 artifact.Parse(artifactText);
 
                 var classifications = artifact.GetClassifications();
@@ -67,6 +92,22 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
             }
 
             return spans;
+        }
+
+        private void HtmlEditorTree_UpdateCompleted(object sender, EventArgs e) {
+            if (!_htmlDoc.HtmlEditorTree.IsReady) {
+                return;
+            }
+
+            int deferredClassifications = Interlocked.Exchange(ref _deferredClassifications, 0);
+            if (deferredClassifications > 0) {
+                var classificationChanged = ClassificationChanged;
+                if (classificationChanged != null) {
+                    var snapshot = _textBuffer.CurrentSnapshot;
+                    var span = new SnapshotSpan(snapshot, 0, snapshot.Length);
+                    classificationChanged(this, new ClassificationChangedEventArgs(span));
+                }
+            }
         }
     }
 }

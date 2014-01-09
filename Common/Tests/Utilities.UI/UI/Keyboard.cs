@@ -113,6 +113,8 @@ namespace TestUtilities.UI {
         }
 
         public const char CtrlSpace = '♫';
+        public const char OneSecondDelay = '…';
+
         /// <summary>
         /// Types the specified text.
         /// </summary>
@@ -129,7 +131,12 @@ namespace TestUtilities.UI {
                     case '→': Type(Key.Right); break;
                     case '↑': Type(Key.Up); break;
                     case '↓': Type(Key.Down); break;
-                    case CtrlSpace: Keyboard.PressAndRelease(Key.Space, Key.LeftCtrl); break;
+                    case CtrlSpace:
+                        Keyboard.PressAndRelease(Key.Space, Key.LeftCtrl);
+                        break;
+                    case OneSecondDelay:
+                        System.Threading.Thread.Sleep(1000);
+                        break;
                     default:
                         int vKeyValue = NativeMethods.VkKeyScan(c);
                         bool keyIsShifted = (vKeyValue & NativeMethods.VKeyShiftMask) == NativeMethods.VKeyShiftMask;

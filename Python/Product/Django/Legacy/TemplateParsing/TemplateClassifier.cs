@@ -27,6 +27,13 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
             : base(provider, textBuffer) {
         }
 
+        public override event EventHandler<ClassificationChangedEventArgs> ClassificationChanged {
+            add {
+            }
+            remove {
+            }
+        }
+
         public override IList<ClassificationSpan> GetClassificationSpans(SnapshotSpan span) {
             List<ClassificationSpan> spans = new List<ClassificationSpan>();
 

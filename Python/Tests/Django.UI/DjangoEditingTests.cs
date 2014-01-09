@@ -26,6 +26,7 @@ using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
+using Microsoft.VisualStudio.Text.Editor;
 using TestUtilities;
 using TestUtilities.Python;
 using TestUtilities.UI;
@@ -68,6 +69,48 @@ namespace DjangoUITests {
             var model = (IComponentModel)VsIdeTestHostContext.ServiceProvider.GetService(typeof(SComponentModel));
             var interpreterService = model.GetService<IInterpreterOptionsService>();
             interpreterService.DefaultInterpreter = PreviousDefault;
+        }
+
+        private static void WaitForTextChange(IWpfTextView textView, Action textChange) {
+            var are = new AutoResetEvent(false);
+
+            EventHandler<TextContentChangedEventArgs> textChangedHandler = null;
+            textChangedHandler = delegate {
+                textView.TextBuffer.Changed -= textChangedHandler;
+                are.Set();
+            };
+            textView.TextBuffer.Changed += textChangedHandler;
+
+            textChange();
+
+            Assert.IsTrue(are.WaitOne(5000), "Failed to see text change");
+        }
+
+        private static void WaitForHtmlTreeUpdate(IWpfTextView textView) {
+#if DEV12_OR_LATER
+            var htmlDoc = Microsoft.Html.Editor.HtmlEditorDocument.TryFromTextView(textView);
+            Assert.IsNotNull(htmlDoc);
+
+            if (htmlDoc.HtmlEditorTree.IsReady) {
+                return;
+            }
+
+            var are = new AutoResetEvent(false);
+
+            EventHandler<Microsoft.Html.Editor.HtmlTreeUpdatedEventArgs> updateCompletedHandler = null;
+            updateCompletedHandler = delegate {
+                if (htmlDoc.HtmlEditorTree.IsReady) {
+                    if (htmlDoc != null) {
+                        htmlDoc.HtmlEditorTree.UpdateCompleted -= updateCompletedHandler;
+                        htmlDoc = null;
+                        are.Set();
+                    }
+                }
+            };
+            htmlDoc.HtmlEditorTree.UpdateCompleted += updateCompletedHandler;
+
+            Assert.IsTrue(are.WaitOne(5000), "Failed to see HTML tree update");
+#endif
         }
 
 #if DEV12_OR_LATER
@@ -1106,6 +1149,8 @@ namespace DjangoUITests {
                     }
                 });
 
+                WaitForHtmlTreeUpdate(item.TextView);
+
                 var snapshot = item.TextView.TextBuffer.CurrentSnapshot;
                 var classifier = item.Classifier;
                 var spans = classifier.GetClassificationSpans(new SnapshotSpan(snapshot, 0, snapshot.Length));
@@ -1122,6 +1167,8 @@ namespace DjangoUITests {
                 for (int i = 0; i < deletionCount; i++) {
                     Keyboard.Backspace();
                 }
+
+                WaitForHtmlTreeUpdate(item.TextView);
 
                 var snapshot = item.TextView.TextBuffer.CurrentSnapshot;
                 var classifier = item.Classifier;
@@ -1148,14 +1195,10 @@ namespace DjangoUITests {
                     System.Windows.Clipboard.SetText(pasteText);
                 });
 
-                AutoResetEvent are = new AutoResetEvent(false);
-                EventHandler<TextContentChangedEventArgs> textChangedHandler = (sender, args) => {
-                    are.Set();
-                };
-                item.TextView.TextBuffer.Changed += textChangedHandler;
-                Keyboard.ControlV();
-                Assert.IsTrue(are.WaitOne(5000), "failed to see text change");
-                item.TextView.TextBuffer.Changed -= textChangedHandler;
+                WaitForTextChange(item.TextView, () => {
+                    Keyboard.ControlV();
+                });
+                WaitForHtmlTreeUpdate(item.TextView);
 
                 IList<ClassificationSpan> spans = null;
                 item.Invoke(() => {
@@ -1186,15 +1229,10 @@ namespace DjangoUITests {
                     Keyboard.ControlX();
                 });
 
-                AutoResetEvent are = new AutoResetEvent(false);
-                EventHandler<TextContentChangedEventArgs> textChangedHandler = (sender, args) => {
-                    are.Set();
-                };
-                item.TextView.TextBuffer.Changed += textChangedHandler;
-
-                Keyboard.ControlZ();
-                Assert.IsTrue(are.WaitOne(5000), "failed to see text change");
-                item.TextView.TextBuffer.Changed -= textChangedHandler;
+                WaitForTextChange(item.TextView, () => {
+                    Keyboard.ControlZ();
+                });
+                WaitForHtmlTreeUpdate(item.TextView);
 
                 IList<ClassificationSpan> spans = null;
                 item.Invoke(() => {
@@ -1227,9 +1265,8 @@ namespace DjangoUITests {
             bool oldValue = false;
 #if DEV12_OR_LATER
             app.Invoke(() => {
-                var prop = app.Dte.Properties["TextEditor", "HTMLX"].Cast<Property>().Single(p => p.Name == "BraceCompletion");
-                oldValue = (bool?)prop.Value ?? false;
-                prop.Value = value;
+                Microsoft.Html.Editor.HtmlSettings.InsertMatchingBraces = false;
+                Microsoft.Html.Editor.HtmlSettings.InsertEndTags = false;
             });
 #endif
             return oldValue;
@@ -1283,22 +1320,25 @@ namespace DjangoUITests {
                             }
                         }
                     };
-
                     item.TextView.TextBuffer.Changed += textChangedHandler;
+
                     if (paste) {
                         item.Invoke(() => System.Windows.Clipboard.SetText(insertionText));
                         Keyboard.ControlV();
                     } else {
                         Keyboard.Type(insertionText);
                     }
-                    Assert.IsTrue(are.WaitOne(5000), "failed to see text change");
+
+                    Assert.IsTrue(are.WaitOne(5000), "Failed to see text change");
+                    item.TextView.TextBuffer.Changed -= textChangedHandler;
 
                     var newPos = item.TextView.Caret.Position.BufferPosition;
                     if (checkInsertionLen) {
                         Assert.AreEqual(pos + insertionText.Length, newPos.Position);
                     }
-                    item.TextView.TextBuffer.Changed -= textChangedHandler;
                 }
+
+                WaitForHtmlTreeUpdate(item.TextView);
 
                 IList<ClassificationSpan> spans = null;
                 item.Invoke(() => {
@@ -1327,15 +1367,11 @@ namespace DjangoUITests {
                 Window window;
                 var item = OpenDjangoProjectItem(app, filename, out window);
                 item.MoveCaret(line, column);
-                AutoResetEvent are = new AutoResetEvent(false);
-                EventHandler<TextContentChangedEventArgs> textChangedHandler = (sender, args) => {
-                    are.Set();
-                };
 
-                item.TextView.TextBuffer.Changed += textChangedHandler;
-                Keyboard.Type(insertionText);
-                Assert.IsTrue(are.WaitOne(5000), "failed to see text change");
-                are.Reset();
+                WaitForTextChange(item.TextView, () => {
+                    Keyboard.Type(insertionText);
+                });
+                WaitForHtmlTreeUpdate(item.TextView);
 
                 var snapshot = item.TextView.TextBuffer.CurrentSnapshot;
                 var classifier = item.Classifier;
@@ -1349,11 +1385,12 @@ namespace DjangoUITests {
                     expectedFirst
                 );
 
-                for (int i = 0; i < insertionText.Length; i++) {
-                    Keyboard.Backspace();
-                }
-                Assert.IsTrue(are.WaitOne(5000), "failed to see text change after deletion");
-                item.TextView.TextBuffer.Changed -= textChangedHandler;
+                WaitForTextChange(item.TextView, () => {
+                    for (int i = 0; i < insertionText.Length; i++) {
+                        Keyboard.Backspace();
+                    }
+                });
+                WaitForHtmlTreeUpdate(item.TextView);
 
                 item.Invoke(() => {
                     snapshot = item.TextView.TextBuffer.CurrentSnapshot;
@@ -1413,7 +1450,7 @@ namespace DjangoUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void IntellisenseCompletions2() {
-            InsertionTest("Intellisense2.html.djt", 6, 1, -1, "{{ b\t }}",
+            InsertionTest("Intellisense2.html.djt", 6, 1, -1, "{{" + Keyboard.OneSecondDelay + " o\t }}",
                 paste: false,
                 checkInsertionLen: false,
                 expected: new Classification[] {
@@ -1534,7 +1571,7 @@ namespace DjangoUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void IntellisenseCompletions6() {
-            InsertionTest("TestApp\\Templates\\page.html.djt", 7, 1, -1, "{% auto\t o\t %}",
+            InsertionTest("TestApp\\Templates\\page.html.djt", 7, 1, -1, "{%" + Keyboard.OneSecondDelay + " auto\t o\t %}",
                 paste: false,
                 checkInsertionLen: false,
                 projectName: @"TestData\DjangoTemplateCodeIntelligence.sln",
@@ -1713,7 +1750,7 @@ namespace DjangoUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void IntellisenseCompletions10() {
-            InsertionTest("TestApp\\Templates\\page3.html.djt", 6, 1, -1, Keyboard.CtrlSpace + "{% fo\t fob in con\t \t %}",
+            InsertionTest("TestApp\\Templates\\page3.html.djt", 6, 1, -1, Keyboard.CtrlSpace + "{%" + Keyboard.OneSecondDelay + " fo\t fob in con\t \t %}",
                 paste: false,
                 checkInsertionLen: false,
                 projectName: @"TestData\DjangoTemplateCodeIntelligence.sln",
