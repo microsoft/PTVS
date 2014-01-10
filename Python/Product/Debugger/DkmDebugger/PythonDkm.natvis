@@ -53,9 +53,6 @@
   <Type Name="PyUnicodeObject">
     <CustomVisualizer VisualizerId="C85DBEDF-48BA-4BC8-ADC7-B3A7B70D692A"/>
   </Type>
-  <Type Name="PyListObject">
-    <CustomVisualizer VisualizerId="C85DBEDF-48BA-4BC8-ADC7-B3A7B70D692A"/>
-  </Type>
   <Type Name="PyVarObject">
     <CustomVisualizer VisualizerId="C85DBEDF-48BA-4BC8-ADC7-B3A7B70D692A"/>
   </Type>
