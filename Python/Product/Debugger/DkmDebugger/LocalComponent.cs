@@ -65,11 +65,20 @@ namespace Microsoft.PythonTools.DkmDebugger {
             }.SendLower(process);
         }
 
-        private class SuspendedThreadHolder : DkmDataItem {
-            public DkmThread Thread { get; set; }
+        private class HelperDllInjectionDataHolder : DkmDataItem {
+            public DkmThread SuspendedThread { get; set; }
         }
 
         private static void InjectHelperDll(DkmProcess process) {
+            var injectionData = process.GetDataItem<HelperDllInjectionDataHolder>();
+            if (injectionData != null) {
+                // Injection is already in progress.
+                return;
+            }
+
+            injectionData = new HelperDllInjectionDataHolder();
+            process.SetDataItem(DkmDataCreationDisposition.CreateNew, injectionData);
+
             var pyrtInfo = process.GetPythonRuntimeInfo();
 
             // Loading the helper is done via CreateRemoteThread(LoadLibrary), which is inherently asynchronous.
@@ -96,7 +105,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
                     makePendingCallsBP.Close();
                     if (process.GetPythonRuntimeInstance() == null) {
                         thread.Suspend(true);
-                        thread.Process.SetDataItem(DkmDataCreationDisposition.CreateNew, new SuspendedThreadHolder { Thread = thread });
+                        injectionData.SuspendedThread = thread;
                     }
                 });
                 makePendingCallsBP.Enable();
@@ -116,9 +125,9 @@ namespace Microsoft.PythonTools.DkmDebugger {
             }
 
             // If there was a suspended thread, resume it.
-            var suspendedThreadHolder = process.GetDataItem<SuspendedThreadHolder>();
-            if (suspendedThreadHolder != null) {
-                suspendedThreadHolder.Thread.Resume(true);
+            var injectionData = process.GetDataItem<HelperDllInjectionDataHolder>();
+            if (injectionData != null && injectionData.SuspendedThread != null) {
+                injectionData.SuspendedThread.Resume(true);
             }
         }
 
