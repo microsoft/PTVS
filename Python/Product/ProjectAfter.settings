@@ -61,4 +61,27 @@
       <ZipProject Include="@(TransformedZipProject->'%(RootDir)%(Directory)%(Filename)')" />
     </ItemGroup>
   </Target>
+
+
+  <!-- If this package is building a VSIX and InstalledByMsi property is set to False, edit
+       the intermediate manifest to reflect that. -->
+  <PropertyGroup>
+    <InstalledByMsi Condition="'$(InstalledByMsi)' == ''">True</InstalledByMsi>
+    <VsixManifestSchemaNamespaces><![CDATA[
+        <Namespace Prefix="vsx10" Uri="http://schemas.microsoft.com/developer/vsx-schema/2010"/>
+        <Namespace Prefix="vsx11" Uri="http://schemas.microsoft.com/developer/vsx-schema/2011"/>
+    ]]></VsixManifestSchemaNamespaces>
+  </PropertyGroup>
+  <Target Name="EditIntermediateVsixManifest" AfterTargets="DetokenizeVsixManifestFile"
+          Condition="!$(InstalledByMsi)">
+    <XmlPoke XmlInputPath="$(IntermediateVsixManifest)"
+             Namespaces="$(VsixManifestSchemaNamespaces)"
+             Query="/vsx10:Vsix/vsx10:Identifier/vsx10:InstalledByMsi" 
+             Value="false" />
+    <XmlPoke XmlInputPath="$(IntermediateVsixManifest)"
+             Namespaces="$(VsixManifestSchemaNamespaces)"
+             Query="/vsx11:PackageManifest/vsx11:Installation/@InstalledByMsi" 
+             Value="false" />
+  </Target>
+
 </Project>
