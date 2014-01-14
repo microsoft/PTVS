@@ -1138,7 +1138,7 @@ class Thread(object):
                 # collect globals used locally, skipping undefined found in builtins
                 f_globals = cur_frame.f_globals
                 if f_globals: # ensure globals to work with (IPy may have None for cur_frame.f_globals for frames within stdlib)
-                    self.collect_variables(vars, f_globals, cur_frame.f_code.co_names, treated, f_globals.get('__builtins__', None))
+                    self.collect_variables(vars, f_globals, cur_frame.f_code.co_names, treated, skip_unknown = True)
             
             frame_info = None
 
@@ -1187,7 +1187,7 @@ class Thread(object):
         return frames
 
     
-    def collect_variables(self, vars, objects, names, treated, builtins = None):
+    def collect_variables(self, vars, objects, names, treated, skip_unknown = False):
         for name in names:
             if name not in treated:
                 try:
@@ -1200,17 +1200,8 @@ class Thread(object):
                     except:
                         type_name = 'unknown'
                 except:
-                    # skip undefined, if builtin
-                    if builtins:
-                        if isinstance(builtins, dict):
-                            # handle builtins for imported modules (dictionary elements)
-                            if name in builtins:
-                                continue
-                        else:
-                            # handle builtins for '__main__' module (module attributes)
-                            if hasattr(builtins, name):
-                                continue
-                            
+                    if skip_unknown:
+                        continue
                     obj = '<undefined>'
                     type_name = 'unknown'
                 vars.append((name, type(obj), safe_repr(obj), safe_hex_repr(obj), type_name, get_object_len(obj)))
