@@ -357,8 +357,26 @@
             <Component Directory="Dir_PythonToolsMsBuild" Guid="{07BEB21F-CF4D-4C58-A339-AD0A46E65929}">
                 <File KeyPath="yes" Source="$(var.TargetDir)\Microsoft.PythonTools.Flask.targets" />
             </Component>
+            <Component Directory="Dir_PythonToolsMsBuild" Guid="{E191EBE8-37D1-4320-98CF-571675A57BB6}">
+                <File KeyPath="yes" Source="$(var.TargetDir)\wfastcgi.py" />
+            </Component>
+            <Component Directory="Dir_PythonToolsMsBuild" Guid="{FBED67AB-7541-40A5-B775-DDFB5582C391}">
+                <File KeyPath="yes" Source="$(var.TargetDir)\Microsoft.PythonTools.WebRole.dll" />
+            </Component>
+            <Component Directory="Dir_PythonToolsMsBuild" Guid="{69BC20F5-7A60-41BC-AEAD-632388B532BC}">
+                <File KeyPath="yes" Source="$(var.TargetDir)\Microsoft.PythonTools.AzureSetup.exe" />
+            </Component>
+            <Component Directory="Dir_PythonToolsMsBuild" Guid="{EA371872-4305-4DB9-9281-1B21F1A56BC6}">
+                <File KeyPath="yes" Source="$(var.TargetDir)\Microsoft.PythonTools.AzureSetup.exe.config" />
+            </Component>
+            <Component Directory="Dir_PythonToolsMsBuild" Guid="{0906A8CF-D398-4BA9-AB37-62C3B509D434}">
+              <File KeyPath="yes" Source="$(var.TargetDir)\web_config.xml" />
+            </Component>
+            <Component Directory="Dir_PythonToolsMsBuild" Guid="{A1B75F2F-8CF4-453F-B176-549BDF735010}">
+              <File KeyPath="yes" Source="$(var.TargetDir)\ptvs_virtualenv_proxy.py" />
+            </Component>
 
-            <!-- Mixed-mode debugging files -->
+          <!-- Mixed-mode debugging files -->
             <?if "$(var.VSTargetVersion)" != "10.0" ?>
             <Component Id="cmpB9D19167C9944EB1880D0B3E2EE2CD78" Directory="INSTALLLOCATION" Guid="{B2E65062-DD6B-4501-B8E0-34CC6BF47491}">
                 <File Id="fil0CC20894AD324A70AB88CB9C47B5A9D6" KeyPath="yes" Source="$(var.TargetDir)\Microsoft.PythonTools.Debugger.Helper.x86.dll" />

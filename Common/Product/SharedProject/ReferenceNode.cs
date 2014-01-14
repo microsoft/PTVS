@@ -181,6 +181,8 @@ namespace Microsoft.VisualStudioTools.Project
         /// </summary>
         public virtual void AddReference()
         {
+            UIThread.Instance.MustBeCalledFromUIThread();
+
             ReferenceContainerNode referencesFolder = this.ProjectMgr.GetReferenceContainer() as ReferenceContainerNode;
             Utilities.CheckNotNull(referencesFolder, "Could not find the References node");
 

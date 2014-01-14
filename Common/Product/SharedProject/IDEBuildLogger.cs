@@ -23,8 +23,11 @@ using System.Windows.Forms.Design;
 using System.Windows.Threading;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
+using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.Settings;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudio.Shell.Settings;
 using Microsoft.Win32;
 using IOleServiceProvider = Microsoft.VisualStudio.OLE.Interop.IServiceProvider;
 
@@ -38,10 +41,8 @@ namespace Microsoft.VisualStudioTools.Project
     {
         #region fields
 
-        // TODO: Remove these constants when we have a version that suppoerts getting the verbosity using automation.
-        private string buildVerbosityRegistryRoot = @"Software\Microsoft\VisualStudio\10.0";
-        private const string buildVerbosityRegistrySubKey = @"General";
-        private const string buildVerbosityRegistryKey = "MSBuildLoggerVerbosity";
+        private const string GeneralCollection = @"General";
+        private const string BuildVerbosityProperty = "MSBuildLoggerVerbosity";
 
         private int currentIndent;
         private IVsOutputWindowPane outputWindowPane;
@@ -55,7 +56,7 @@ namespace Microsoft.VisualStudioTools.Project
 
         // Queues to manage Tasks and Error output plus message logging
         private ConcurrentQueue<Func<ErrorTask>> taskQueue;
-        private ConcurrentQueue<string> outputQueue;
+        private ConcurrentQueue<OutputQueueEntry> outputQueue;
 
         #endregion
 
@@ -90,20 +91,6 @@ namespace Microsoft.VisualStudioTools.Project
         }
 
         /// <summary>
-        /// When building from within VS, setting this will
-        /// enable the logger to retrive the verbosity from
-        /// the correct registry hive.
-        /// </summary>
-        internal string BuildVerbosityRegistryRoot
-        {
-            get { return this.buildVerbosityRegistryRoot; }
-            set
-            {
-                this.buildVerbosityRegistryRoot = value;
-            }
-        }
-
-        /// <summary>
         /// Set to null to avoid writing to the output window
         /// </summary>
         internal IVsOutputWindowPane OutputWindowPane
@@ -119,12 +106,11 @@ namespace Microsoft.VisualStudioTools.Project
         /// <summary>
         /// Constructor.  Inititialize member data.
         /// </summary>
-        public IDEBuildLogger(IVsOutputWindowPane output, TaskProvider taskProvider, IVsHierarchy hierarchy)
-        {
-            if (taskProvider == null)
-                throw new ArgumentNullException("taskProvider");
-            if (hierarchy == null)
-                throw new ArgumentNullException("hierarchy");
+        public IDEBuildLogger(IVsOutputWindowPane output, TaskProvider taskProvider, IVsHierarchy hierarchy) {
+            UIThread.Instance.MustBeCalledFromUIThread();
+
+            Utilities.ArgumentNotNull("taskProvider", taskProvider);
+            Utilities.ArgumentNotNull("hierarchy", hierarchy);
 
             Trace.WriteLineIf(Thread.CurrentThread.GetApartmentState() != ApartmentState.STA, "WARNING: IDEBuildLogger constructor running on the wrong thread.");
 
@@ -147,13 +133,10 @@ namespace Microsoft.VisualStudioTools.Project
         /// </summary>
         public override void Initialize(IEventSource eventSource)
         {
-            if (null == eventSource)
-            {
-                throw new ArgumentNullException("eventSource");
-            }
+            Utilities.ArgumentNotNull("eventSource", eventSource);
 
             this.taskQueue = new ConcurrentQueue<Func<ErrorTask>>();
-            this.outputQueue = new ConcurrentQueue<string>();
+            this.outputQueue = new ConcurrentQueue<OutputQueueEntry>();
 
             eventSource.BuildStarted += new BuildStartedEventHandler(BuildStartedHandler);
             eventSource.BuildFinished += new BuildFinishedEventHandler(BuildFinishedHandler);
@@ -164,7 +147,7 @@ namespace Microsoft.VisualStudioTools.Project
             eventSource.TaskStarted += new TaskStartedEventHandler(TaskStartedHandler);
             eventSource.TaskFinished += new TaskFinishedEventHandler(TaskFinishedHandler);
             eventSource.CustomEventRaised += new CustomBuildEventHandler(CustomHandler);
-            eventSource.ErrorRaised += new BuildErrorEventHandler(ErrorHandler);
+            eventSource.ErrorRaised += new BuildErrorEventHandler(ErrorRaisedHandler);
             eventSource.WarningRaised += new BuildWarningEventHandler(WarningHandler);
             eventSource.MessageRaised += new BuildMessageEventHandler(MessageHandler);
         }
@@ -275,7 +258,7 @@ namespace Microsoft.VisualStudioTools.Project
         /// <summary>
         /// This is the delegate for error events.
         /// </summary>
-        protected virtual void ErrorHandler(object sender, BuildErrorEventArgs errorEvent)
+        protected virtual void ErrorRaisedHandler(object sender, BuildErrorEventArgs errorEvent)
         {
             // NOTE: This may run on a background thread!
             QueueOutputText(GetFormattedErrorMessage(errorEvent.File, errorEvent.LineNumber, errorEvent.ColumnNumber, false, errorEvent.Code, errorEvent.Message));
@@ -336,7 +319,7 @@ namespace Microsoft.VisualStudioTools.Project
             if (this.OutputWindowPane != null)
             {
                 // Enqueue the output text
-                this.outputQueue.Enqueue(text);
+                this.outputQueue.Enqueue(new OutputQueueEntry(text, OutputWindowPane));
 
                 // We want to interactively report the output. But we dont want to dispatch
                 // more than one at a time, otherwise we might overflow the main thread's
@@ -364,23 +347,21 @@ namespace Microsoft.VisualStudioTools.Project
         {
             // NOTE: This may run on a background thread!
             // We need to output this on the main thread. We must use BeginInvoke because the main thread may not be pumping events yet.
-            BeginInvokeWithErrorMessage(this.serviceProvider, this.dispatcher, () => {
-                if (this.OutputWindowPane != null)
-                {
-                    string outputString;
+            BeginInvokeWithErrorMessage(this.serviceProvider, this.dispatcher, FlushBuildOutput);
+        }
 
-                    while (this.outputQueue.TryDequeue(out outputString))
-                    {
-                        Microsoft.VisualStudio.ErrorHandler.ThrowOnFailure(this.OutputWindowPane.OutputString(outputString));
-                    }
-                }
-            });
+        internal void FlushBuildOutput() {
+            OutputQueueEntry output;
+
+            while (this.outputQueue.TryDequeue(out output)) {
+                ErrorHandler.ThrowOnFailure(output.Pane.OutputString(output.Message));
+            }
         }
 
         private void ClearQueuedOutput()
         {
             // NOTE: This may run on a background thread!
-            this.outputQueue = new ConcurrentQueue<string>();
+            this.outputQueue = new ConcurrentQueue<OutputQueueEntry>();
         }
 
         #endregion output queue
@@ -494,7 +475,7 @@ namespace Microsoft.VisualStudioTools.Project
                     logIt = true;
                     break;
                 default:
-                    Debug.Fail("Unknown Verbosity level. Ignoring will cause everything to be logged");
+                    Debug.Fail("Unknown Verbosity level. Ignoring will cause nothing to be logged");
                     break;
             }
 
@@ -530,20 +511,27 @@ namespace Microsoft.VisualStudioTools.Project
         /// </summary>
         private void SetVerbosity()
         {
-            // TODO: This should be replaced when we have a version that supports automation.
             if (!this.haveCachedVerbosity)
             {
-                string verbosityKey = String.Format(CultureInfo.InvariantCulture, @"{0}\{1}", BuildVerbosityRegistryRoot, buildVerbosityRegistrySubKey);
-                using (RegistryKey subKey = Registry.CurrentUser.OpenSubKey(verbosityKey))
+                this.Verbosity = LoggerVerbosity.Normal;
+
+                try
                 {
-                    if (subKey != null)
+                    var settings = new ShellSettingsManager(serviceProvider);
+                    var store = settings.GetReadOnlySettingsStore(SettingsScope.UserSettings);
+                    if (store.CollectionExists(GeneralCollection) && store.PropertyExists(GeneralCollection, BuildVerbosityProperty))
                     {
-                        object valueAsObject = subKey.GetValue(buildVerbosityRegistryKey);
-                        if (valueAsObject != null)
-                        {
-                            this.Verbosity = (LoggerVerbosity)((int)valueAsObject);
-                        }
+                        this.Verbosity = (LoggerVerbosity)store.GetInt32(GeneralCollection, BuildVerbosityProperty, (int)LoggerVerbosity.Normal);
                     }
+                }
+                catch (Exception ex)
+                {
+                    var message = string.Format(
+                        "Unable to read verbosity option from the registry.{0}{1}",
+                        Environment.NewLine,
+                        ex.ToString()
+                    );
+                    this.QueueOutputText(MessageImportance.High, message);
                 }
 
                 this.haveCachedVerbosity = true;
@@ -610,5 +598,17 @@ namespace Microsoft.VisualStudioTools.Project
         }
 
         #endregion exception handling helpers
+
+        class OutputQueueEntry 
+        {
+            public readonly string Message;
+            public readonly IVsOutputWindowPane Pane;
+
+            public OutputQueueEntry(string message, IVsOutputWindowPane pane) 
+            {
+                Message = message;
+                Pane = pane;
+            }
+        }
     }
 }

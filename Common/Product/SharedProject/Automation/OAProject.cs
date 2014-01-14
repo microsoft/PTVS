@@ -233,7 +233,11 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
                         Utilities.CheckNotNull(extensibility);
 
                         object configurationManagerAsObject;
-                        ErrorHandler.ThrowOnFailure(extensibility.GetConfigMgr(this.project, VSConstants.VSITEMID_ROOT, out configurationManagerAsObject));
+                        ErrorHandler.ThrowOnFailure(extensibility.GetConfigMgr(
+                            this.project.GetOuterInterface<IVsHierarchy>(),
+                            VSConstants.VSITEMID_ROOT,
+                            out configurationManagerAsObject
+                        ));
 
                         Utilities.CheckNotNull(configurationManagerAsObject);
 

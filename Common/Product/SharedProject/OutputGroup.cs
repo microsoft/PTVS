@@ -93,9 +93,9 @@ namespace Microsoft.VisualStudioTools.Project
             const string generateDependencyList = "AllProjectOutputGroups";
             if (_project.BuildProject.Targets.ContainsKey(generateDependencyList))
             {
-                //bool succeeded = false;
-                //project.BuildTarget(generateDependencyList, out succeeded);
-                //Debug.Assert(succeeded, "Failed to build target: " + generateDependencyList);
+                bool succeeded = false;
+                _project.BuildTarget(generateDependencyList, out succeeded);
+                System.Diagnostics.Debug.Assert(succeeded, "Failed to build target: " + generateDependencyList);
             }
 
             // Rebuild the content of our list of output

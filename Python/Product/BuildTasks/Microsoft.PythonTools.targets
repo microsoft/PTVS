@@ -12,24 +12,33 @@
 -->
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <_PythonToolsPath Condition="!Exists($(_PythonToolsPath))">$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\Software\Microsoft\PythonTools\$(VisualStudioVersion)', 'InstallDir', null, RegistryView.Registry32)</_PythonToolsPath>
+    <_PythonToolsPath Condition="!Exists($(_PythonToolsPath))">$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\Software\Microsoft\PythonTools\$(VisualStudioVersion)', 'InstallDir', null, RegistryView.Registry32))</_PythonToolsPath>
     <_PythonToolsPath Condition="!Exists($(_PythonToolsPath))">$(LocalAppData)\Microsoft\VisualStudio\$(VisualStudioVersion)\Extensions\Microsoft\Python Tools for Visual Studio\2.0</_PythonToolsPath>
-    <_PTVSSupportPath>$(MSBuildThisFileDirectory)</_PTVSSupportPath>
+    <_PythonToolsPath Condition="!HasTrailingSlash('$(_PythonToolsPath)')">$(_PythonToolsPath)\</_PythonToolsPath>
+    <_PTVSSupportPath Condition="'$(_PTVSSupportPath)' == ''">$(MSBuildThisFileDirectory)</_PTVSSupportPath>
+    <_PTVSSupportPath Condition="!HasTrailingSlash('$(_PTVSSupportPath)')">$(_PTVSSupportPath)\</_PTVSSupportPath>
   </PropertyGroup>
 
   <!-- Creates a command object that will be displayed in the IDE.
+  
+  ErrorRegex/WarningRegex are only useful when ExecuteIn="output". They identify
+  (with named groups) 'message', 'code', 'filename', 'line' and 'column' of an
+  item to add to the Error List window.
 
   <Target Name="Name1" Label="Display Name" Returns="@(Commands)">
     <CreatePythonCommandItem Target="filename, module name, or code"
                    TargetType="executable/script/module/code/pip"
                    Arguments="..."
-                   ExecuteIn="console/output/repl[:Display name]/Repl[:Display name]">
+                   ExecuteIn="console/output/repl[:Display name]/Repl[:Display name]"
+                   ErrorRegex="..."
+                   WarningRegex="..."
+                   RequiredPackages="...;...">
       <Output TaskParameter="Command"
               ItemName="Commands" />
     </CreatePythonCommandItem>
   </Target>
   -->
-  <UsingTask AssemblyFile="$(_PythonToolsPath)\Microsoft.PythonTools.BuildTasks.dll"
+  <UsingTask AssemblyFile="$([MSBuild]::Unescape($(_PythonToolsPath)\Microsoft.PythonTools.BuildTasks.dll))"
              TaskName="CreatePythonCommandItem"
              TaskFactory="CreatePythonCommandItemFactory">
     <Task Evaluate="true">
@@ -39,19 +48,19 @@
     </Task>
   </UsingTask>
 
-  <!-- Runs a Python command. Like CreatePythonCommandItem, but instead of creating a user-activatable
-       UI command, just runs it immediately.
+  <!-- Runs a Python command. Like CreatePythonCommandItem, but instead of
+       creating a user-activatable UI command, just runs it immediately.
   <Target Name="Name1" Label="Display Name" Returns="@(Commands)">
     <RunPythonCommand Target="filename, module name, or code"
                    TargetType="executable/script/module/code"
                    Arguments="..."
-                   ExecuteIn="console/output/repl[:Display name]/Repl[:Display name]">
+                   RequiredPackages="...;...">
       <Output TaskParameter="Command"
               ItemName="Commands" />
     </RunPythonCommand>
   </Target>
   -->
-  <UsingTask AssemblyFile="$(_PythonToolsPath)\Microsoft.PythonTools.BuildTasks.dll"
+  <UsingTask AssemblyFile="$([MSBuild]::Unescape($(_PythonToolsPath)\Microsoft.PythonTools.BuildTasks.dll))"
              TaskName="RunPythonCommand"
              TaskFactory="RunPythonCommandFactory">
     <Task Evaluate="true">
@@ -77,7 +86,7 @@
     <Output TaskParameter="MinorVersion" PropertyName="MinorVersion" />
   </ResolveEnvironment>
   -->
-  <UsingTask AssemblyFile="$(_PythonToolsPath)\Microsoft.PythonTools.BuildTasks.dll"
+  <UsingTask AssemblyFile="$([MSBuild]::Unescape($(_PythonToolsPath)\Microsoft.PythonTools.BuildTasks.dll))"
              TaskName="ResolveEnvironment"
              TaskFactory="ResolveEnvironmentFactory">
     <Task Evaluate="true">
@@ -94,13 +103,20 @@
             ItemName="Modules" />
   </ConvertPathToModuleName>
   -->
-  <UsingTask AssemblyFile="$(_PythonToolsPath)\Microsoft.PythonTools.BuildTasks.dll" TaskName="ConvertPathToModuleName" />
+  <UsingTask AssemblyFile="$([MSBuild]::Unescape($(_PythonToolsPath)\Microsoft.PythonTools.BuildTasks.dll))"
+             TaskName="ConvertPathToModuleName" />
 
   <!-- Gets the fully qualified path to the project home.  -->
   <Target Name="ResolveQualifiedProjectHome">
-    <CombinePath BasePath="$(MSBuildProjectDirectory)" Paths="$(ProjectHome)">
+    <CombinePath BasePath="$(MSBuildProjectDirectory)" Paths="$(ProjectHome)" Condition="'$(ProjectHome)' != ''">
       <Output TaskParameter="CombinedPaths" PropertyName="QualifiedProjectHome"/>
     </CombinePath>
+    <PropertyGroup Condition="'$(ProjectHome)' == ''">
+      <QualifiedProjectHome>$(MSBuildProjectDirectory)</QualifiedProjectHome>
+    </PropertyGroup>
+    <PropertyGroup>
+      <QualifiedProjectHome Condition="!HasTrailingSlash('$(QualifiedProjectHome)')">$(QualifiedProjectHome)\</QualifiedProjectHome>
+    </PropertyGroup>
     <Message Importance="low" Text="QualifiedProjectHome: $(QualifiedProjectHome)" />
   </Target>
 
@@ -108,8 +124,7 @@
   <Target Name="ResolveStartupPath"
           DependsOnTargets="ResolveQualifiedProjectHome"
           AfterTargets="_CheckForInvalidConfigurationAndPlatform"
-          Condition="'$(StartupFile)' != ''"
-          Outputs="$(StartupPath);$(StartupModule)">
+          Condition="'$(StartupFile)' != ''">
     <CombinePath BasePath="$(QualifiedProjectHome)" Paths="$(StartupFile)">
       <Output TaskParameter="CombinedPaths" PropertyName="StartupPath" />
     </CombinePath>
@@ -125,7 +140,19 @@
 
   <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" />
 
+  <!-- We don't have an intermediate assembly, but the common targets will set
+       one anyway. We clear it before PrepareForBuild in case another targets
+       file overrides that one.
+  -->
+  <Target Name="_ClearIntermediateAssembly" BeforeTargets="PrepareForBuild">
+    <ItemGroup>
+      <IntermediateAssembly Remove="@(IntermediateAssembly)" />
+    </ItemGroup>
+  </Target>
+
   <Target Name="PrepareForBuild">
     <MakeDir Directories="$(OutDir);@(CreateDirectory)" ContinueOnError="True"/>
   </Target>
+
+  <Target Name="_CopyAppConfigFile" />
 </Project>

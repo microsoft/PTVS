@@ -15,6 +15,7 @@
 using System.Diagnostics;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudioTools.Project.Automation;
 using IServiceProvider = System.IServiceProvider;
 
 namespace Microsoft.VisualStudioTools.Project
@@ -30,6 +31,16 @@ namespace Microsoft.VisualStudioTools.Project
 
         public override int OnAfterOpenProject(IVsHierarchy hierarchy, int added)
         {
+            // If this is our project, notify it that it has been opened.
+            if (hierarchy.GetProject() != null)
+            {
+                var oaProject = hierarchy.GetProject() as OAProject;
+                if (oaProject != null && oaProject.Project is ProjectNode)
+                {
+                    ((ProjectNode)oaProject.Project).OnAfterProjectOpen();
+                }
+            }
+
             // If this is a new project and our project. We use here that it is only our project that will implemnet the "internal"  IBuildDependencyOnProjectContainer.
             if (added != 0 && hierarchy is IBuildDependencyUpdate)
             {

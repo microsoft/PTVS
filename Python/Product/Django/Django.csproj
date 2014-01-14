@@ -316,10 +316,6 @@
       <SubType>Designer</SubType>
     </ZipItem>
     <ZipItem Include="Templates\Files\Stylesheet\Stylesheet.css" />
-    <Content Include="wfastcgi.py">
-      <IncludeInVSIX>true</IncludeInVSIX>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <ZipItem Include="Templates\Files\DjangoHtml\DjangoHtml.vstemplate">
       <SubType>Designer</SubType>
     </ZipItem>
@@ -382,12 +378,6 @@
       <Project>{A85D479D-67A9-4BDB-904A-7D86DAF68A6F}</Project>
       <Name>Analysis</Name>
     </ProjectReference>
-    <ProjectReference Include="..\AzureSetup\AzureSetup.csproj">
-      <Project>{B6905758-81D9-4287-BE59-5D4E2F336414}</Project>
-      <Name>AzureSetup</Name>
-      <IncludeOutputGroupsInVSIX>BuiltProjectOutputGroup%3bBuiltProjectOutputGroupDependencies%3bGetCopyToOutputDirectoryItems%3b</IncludeOutputGroupsInVSIX>
-      <IncludeOutputGroupsInVSIXLocalOnly>DebugSymbolsProjectOutputGroup%3b</IncludeOutputGroupsInVSIXLocalOnly>
-    </ProjectReference>
     <ProjectReference Include="..\Debugger\Debugger.csproj">
       <Project>{DECC7971-FA58-4DB0-9561-BFFADD393BBD}</Project>
       <Name>Debugger</Name>
@@ -396,12 +386,6 @@
       <Project>{FA7BE5F5-E04F-4613-B7AC-70CE10D1BB68}</Project>
       <Name>PythonTools</Name>
       <EmbedInteropTypes>False</EmbedInteropTypes>
-    </ProjectReference>
-    <ProjectReference Include="..\WebRole\WebRole.csproj">
-      <Project>{304AB14D-4E63-4004-8D63-AB8DA2C601B4}</Project>
-      <Name>WebRole</Name>
-      <IncludeOutputGroupsInVSIX>BuiltProjectOutputGroup%3bBuiltProjectOutputGroupDependencies%3bGetCopyToOutputDirectoryItems%3b</IncludeOutputGroupsInVSIX>
-      <IncludeOutputGroupsInVSIXLocalOnly>DebugSymbolsProjectOutputGroup%3b</IncludeOutputGroupsInVSIXLocalOnly>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

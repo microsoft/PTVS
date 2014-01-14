@@ -37,6 +37,14 @@ namespace Microsoft.PythonTools.Project.Automation {
                 return prjReferenceType.prjReferenceTypeAssembly;
             }
         }
+
+        public override bool CopyLocal {
+            get {
+                return false;
+            }
+            set { }
+        }
+
         #endregion
     }
 }

@@ -10,575 +10,124 @@
  
   You must not remove this notice, or any other, from this software.
 -->
-<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
     <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
   </PropertyGroup>
 
-  <!-- *********************************************************************************** -->
-  <!-- Normal install environment, use the current version -->
   <PropertyGroup>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
-    <_AzureDjangoSupportPath>$(MSBuildThisFileDirectory)</_AzureDjangoSupportPath>
     <DjangoSettingsModule Condition="'$(DjangoSettingsModule)' == ''">$(MSBuildProjectName).settings</DjangoSettingsModule>
-  </PropertyGroup>
-
-  <Target Name="GetTargetFrameworkVersion" Returns="$(TargetFrameworkVersion)" />
-  <Target Name="GetTargetFrameworkDirectories" Returns="" />
-  <Target Name="GetTargetFrameworkMoniker" Returns="" />
-  <Target Name="GetTargetFrameworkMonikerDisplayName" Returns="" />
-  <Target Name="CreateManifestResourceNames" Returns="" />
-
-  <PropertyGroup>
     <DjangoDebugging Condition="'$(DjangoDebugging)'==''">true</DjangoDebugging>
+
     <PythonRunWebServerCommandArguments Condition="'$(PythonRunWebServerCommandArguments)' == ''">runserver --settings $(DjangoSettingsModule) $(CommandLineArguments) %SERVER_PORT%</PythonRunWebServerCommandArguments>
     <PythonRunWebServerCommandType Condition="'$(PythonRunWebServerCommandType)' == ''">script</PythonRunWebServerCommandType>
     <PythonDebugWebServerCommandArguments Condition="'$(PythonDebugWebServerCommandArguments)' == ''">runserver --noreload --settings $(DjangoSettingsModule) $(CommandLineArguments) %SERVER_PORT%</PythonDebugWebServerCommandArguments>
     <PythonDebugWebServerCommandType Condition="'$(PythonDebugWebServerCommandType)' == ''">script</PythonDebugWebServerCommandType>
     <PythonWebFrameworkPackage Condition="'$(PythonWebFrameworkPackage)' == ''">django</PythonWebFrameworkPackage>
     <PythonWebFrameworkPackageDisplayName Condition="'$(PythonWebFrameworkPackageDisplayName)' == ''">Django</PythonWebFrameworkPackageDisplayName>
+
+    <PythonWsgiHandler Condition="'$(PythonWsgiHandler)' == ''">django.core.handlers.wsgi.WSGIHandler()</PythonWsgiHandler>
   </PropertyGroup>
-  
-  <Import Project="$(VSToolsPath)\Python Tools\Microsoft.PythonTools.Web.targets" />
 
-  <ItemGroup>
-    <PythonAzureDeploymentFile Include="$(_AzureDjangoSupportPath)Microsoft.PythonTools.AzureSetup.exe" />
-    <PythonAzureDeploymentFile Include="$(_AzureDjangoSupportPath)Microsoft.PythonTools.AzureSetup.exe.config" />
-    <!-- WebPI Files -->
-    <PythonAzureDeploymentFile Include="$(_PTVSSupportPath)WebPICmdLine.exe" />
-    <PythonAzureDeploymentFile Include="$(_PTVSSupportPath)WebPICmdLine.exe.config" />
-    <PythonAzureDeploymentFile Include="$(_PTVSSupportPath)Microsoft.Web.PlatformInstaller.UI.dll" />
-    <PythonAzureDeploymentFile Include="$(_PTVSSupportPath)Microsoft.Web.PlatformInstaller.dll" />
-    <PythonAzureDeploymentFile Include="$(_PTVSSupportPath)Microsoft.Web.Deployment.dll" />
-    <!-- WebRole files -->
-    <PythonAzureDeploymentFile Include="$(_AzureDjangoSupportPath)wfastcgi.py" />
-    <PythonAzureDeploymentFile Include="$(_AzureDjangoSupportPath)Microsoft.PythonTools.WebRole.dll" />
-  </ItemGroup>
-
-  <Target Name="ResolvePythonInterpreterPath" DependsOnTargets="ResolveQualifiedProjectHome">
-    <ResolveEnvironment>
-      <Output TaskParameter="PrefixPath" PropertyName="PythonPrefixPath" />
-      <Output TaskParameter="ProjectRelativePrefixPath" PropertyName="PythonPrefixSubPath" />
-      <Output TaskParameter="InterpreterPath" PropertyName="PythonInterpreterPath" Condition="$(IsWindowsApplication) != 'true'" />
-      <Output TaskParameter="WindowsInterpreterPath" PropertyName="PythonInterpreterPath" Condition="$(IsWindowsApplication) != 'true'" />
-      <!--<Output TaskParameter="LibraryPath" PropertyName="LibraryPath" />
-      <Output TaskParameter="Architecture" PropertyName="Architecture" />
-      <Output TaskParameter="PathEnvironmentVariable" PropertyName="PathEnvironmentVariable" />-->
-      <Output TaskParameter="Description" PropertyName="PythonInterpreterDescription" />
-      <Output TaskParameter="MajorVersion" PropertyName="PythonMajorVersion" />
-      <Output TaskParameter="MinorVersion" PropertyName="PythonMinorVersion" />
-    </ResolveEnvironment>
-
-    <PropertyGroup Condition="$(PythonInterpreterPath)==''">
-      <!-- No interpreter specifed and no default interpreter available -->
-      <PythonInterpreterPath>C:\Python27\python.exe</PythonInterpreterPath>
-      <PythonPrefixSubPath></PythonPrefixSubPath>
-      <PythonMajorVersion>2</PythonMajorVersion>
-      <PythonMinorVersion>7</PythonMinorVersion>
-    </PropertyGroup>
-
+  <Target Name="CreateDjangoAppSettings">
     <PropertyGroup>
-      <!-- TODO: Determine this properly -->
-      <VirtualEnvEnabled>false</VirtualEnvEnabled>
-      <VirtualEnvEnabled Condition="'$(PythonPrefixSubPath)' != ''">true</VirtualEnvEnabled>
-    </PropertyGroup>
-
-    <Message Text="Deploying $(PythonInterpreterDescription) from $(PythonPrefixPath)" Importance="normal"/>
-  </Target>
-
-  <Target Name="Build" >
-    <!-- 
-    <Copy
-        SourceFiles="@(Compile)"
-        DestinationFiles="@(Compile->'$(IntermediateOutputPath)%(RelativeDir)%(Filename)%(Extension)')"
-        SkipUnchangedFiles="true">
-    </Copy>
-    <Copy SourceFiles="@(Include)"
-          DestinationFiles="@(Include->'$(IntermediateOutputPath)%(RelativeDir)%(Filename)%(Extension)')"
-          SkipUnchangedFiles="true">
-    </Copy>
-    <Copy SourceFiles="@(Content)"
-          DestinationFiles="@(Content->'$(IntermediateOutputPath)%(RelativeDir)%(Filename)%(Extension)')"
-          SkipUnchangedFiles="true">
-    </Copy>
--->
-    <Copy SourceFiles="@(PythonAzureDeploymentFile)"
-          DestinationFolder="bin"
-          SkipUnchangedFiles="true">
-      <Output TaskParameter="DestinationFiles" ItemName="FilesCopiedToIntermediate"/>
-    </Copy>
-
-    <Message Text="AzureSupport: $(_AzureDjangoSupportPath)" Importance="low"/>
-    <Message Text="FilesCopiedToIntermediate=@(FilesCopiedToIntermediate)" Importance="low"/>
-  </Target>
-
-  <Target Name="ResolveDeploymentSettings">
-    <PropertyGroup Condition="'$(_PythonDeploymentMethod)' == ''">
-      <!-- We are deploying via cloud tools to a service if we didn't 
-           set this before doing GenerateGlobalPublishSetting which happens
-           only when we're publishing via web deploy -->
-      <_PythonDeploymentMethod>CloudServiceDeploy</_PythonDeploymentMethod>
-    </PropertyGroup>
-
-    <Message Text="Building to deploying Django via $(_PythonDeploymentMethod)"  Importance="low"/>
-
-    <!-- ******************* -->
-    <!-- Deployment settings -->
-    <!-- ******************* -->
-    <PropertyGroup Condition="'$(_PythonDeploymentMethod)' == 'WebDeploy'">
-      <!-- Set the deployment locations assuming deployment to Antares, user could override these in the project file -->
-      <DeployedPythonInterpreterPath Condition="'$(DeployedPythonInterpreterPath)' == ''">D:\Python27\python.exe</DeployedPythonInterpreterPath>
-      <DeployedSiteRoot Condition="'$(DeployedSiteRoot)' == ''">D:\home\site\wwwroot</DeployedSiteRoot>
-      <DeployedWFastCgiPath Condition="'$(DeployedWFastCgiPath)' == ''">D:\Python27\Scripts\wfastcgi.py</DeployedWFastCgiPath>
-    </PropertyGroup>
-
-    <!-- Setup default deployment values if none have yet been provided-->
-    <PropertyGroup>
-      <!-- Set default deployment options for unspecified values.  These assume the values will be replaced (typically by
-          AzureSetup) on the deployment. -->
-      <DeployedPythonInterpreterPath Condition="'$(DeployedPythonInterpreterPath)' == ''">%INTERPRETERPATH%</DeployedPythonInterpreterPath>
-      <DeployedSiteRoot Condition="'$(DeployedSiteRoot)' == ''">%RootDir%</DeployedSiteRoot>
-      <DeployedWFastCgiPath Condition="'$(DeployedWFastCgiPath)' == ''">%WFASTCGIPATH%</DeployedWFastCgiPath>
-    </PropertyGroup>
-
-    <Message Text="Deployment site root is $(DeployedSiteRoot)" Importance="low"/>
-    <Message Text="Deployment WFastCgi path is $(DeployedWFastCgiPath)" Importance="low"/>
-    <Message Text="Deployment Python interpreter path is $(DeployedPythonInterpreterPath)" Importance="low"/>
-  </Target>
-
-  <!-- ************* -->
-  <!-- WSGI settings -->
-  <!-- ************* -->
-  <Target Name="ResolveWsgiSettings" DependsOnTargets="ResolveDeploymentSettings">
-    <PropertyGroup>
-      <WsgiHandler Condition="'$(WsgiHandler)' == ''">django.core.handlers.wsgi.WSGIHandler()</WsgiHandler>
-      <WsgiAppSettings Condition="'$(WsgiLogPath)' != ''">
-        <![CDATA[$(WsgiAppSettings)
-    <add key="WSGI_LOG" value="$(WsgiLogPath)"/>]]>
-      </WsgiAppSettings>
-    </PropertyGroup>
-  </Target>
-
-  <Target Name="ConfigureVirtualEnv"
-          BeforeTargets="CreateWebConfig"
-          DependsOnTargets="ResolveWsgiSettings;ResolvePythonInterpreterPath">
-    <PropertyGroup Condition="$(VirtualEnvEnabled)">
-      <!-- Setup for when virtual env is enabled in a project.  We use a bootstrap
-            wfastcgi handler which does activate_this on the deployed env. -->
-      <VirtualEnvWsgiHandler>$(WsgiHandler)</VirtualEnvWsgiHandler>
-      <VirtualEnvDeploymentPath Condition="'$(VirtualEnvDeploymentPath)' == ''">$(DeployedSiteRoot)</VirtualEnvDeploymentPath>
-      <WsgiHandler>ptvs_virtualenv_proxy.handler</WsgiHandler>
       <WsgiAppSettings>
         <![CDATA[$(WsgiAppSettings)
-    <add key="WSGI_ALT_VIRTUALENV_HANDLER" value="$(VirtualEnvWsgiHandler)"/>
-    <add key="WSGI_ALT_VIRTUALENV_ACTIVATE_THIS" value="$(VirtualEnvDeploymentPath)\$(PythonPrefixSubPath)\Scripts\activate_this.py"/>]]>
+        <add key="DJANGO_SETTINGS_MODULE" value="$(DjangoSettingsModule)" />]]>
       </WsgiAppSettings>
     </PropertyGroup>
   </Target>
 
-  <Target Name="CreateVirtualEnvProxy"
-          BeforeTargets="Build"
-          DependsOnTargets="ResolvePythonInterpreterPath">
-    <!-- Contains code for a proxy handler which does virtual env's activate_this, and then gets
-            the real FastCGI handler.  This enables running on systems where we need to execute using
-            the main Python interpreter. -->
-    <PropertyGroup Condition="$(VirtualEnvEnabled)">
-      <_CurrentVirtualEnvFastCgiProxy Condition="$([System.IO.File]::Exists('ptvs_virtualenv_proxy.py'))">$([System.IO.File]::ReadAllText('ptvs_virtualenv_proxy.py'))</_CurrentVirtualEnvFastCgiProxy>
-      <_VirtualEnvFastCgiProxy>
-        <![CDATA[
-import os
-import datetime
+  <Import Project="$(VSToolsPath)\Python Tools\Microsoft.PythonTools.Web.targets" />
 
-def log(txt):
-    """Logs fatal errors to a log file if WSGI_LOG env var is defined"""
-    log_file = os.environ.get('WSGI_LOG')
-    if log_file:
-        f = file(log_file, 'a+')
-        try:
-            f.write(str(datetime.datetime.now()))
-            f.write(': ')
-            f.write(txt)
-        finally:
-          f.close()
-
-def get_wsgi_handler(handler_name):
-      if not handler_name:
-          raise Exception('WSGI_ALT_VIRTUALENV_HANDLER env var must be set')
-    
-      module, _, callable = handler_name.rpartition('.')
-      if not module:
-          raise Exception('WSGI_ALT_VIRTUALENV_HANDLER must be set to module_name.wsgi_handler, got %s' % handler_name)
-    
-      if isinstance(callable, unicode):
-          callable = callable.encode('ascii')
-
-      if callable.endswith('()'):
-          callable = callable.rstrip('()')
-          handler = getattr(__import__(module, fromlist=[callable]), callable)()
-      else:
-          handler = getattr(__import__(module, fromlist=[callable]), callable)
-    
-      if handler is None:
-          raise Exception('WSGI_ALT_VIRTUALENV_HANDLER "' + handler_name + '" was set to None')
-            
-      return handler
-      
-activate_this = os.getenv('WSGI_ALT_VIRTUALENV_ACTIVATE_THIS')
-if activate_this is None:
-    raise Exception('WSGI_ALT_VIRTUALENV_ACTIVATE_THIS is not set')
-
-log('doing activation' + '\n')
-execfile(activate_this, dict(__file__=activate_this))
-log('getting handler ' + os.getenv('WSGI_ALT_VIRTUALENV_HANDLER') + '\n')
-handler = get_wsgi_handler(os.getenv('WSGI_ALT_VIRTUALENV_HANDLER'))
-log('got handler ' + repr(handler))
-]]>
-      </_VirtualEnvFastCgiProxy>
-    </PropertyGroup>
-
-    <WriteLinesToFile File="ptvs_virtualenv_proxy.py"
-                      Condition="$(VirtualEnvEnabled) and'$(_CurrentVirtualEnvFastCgiProxy)' != '$(_VirtualEnvFastCgiProxy)'" Lines="$(_VirtualEnvFastCgiProxy)" Overwrite="true"/>
-    <ItemGroup Condition="$(VirtualEnvEnabled)">
-      <Content Include="ptvs_virtualenv_proxy.py"/>
-    </ItemGroup>
-  </Target>
-
-  <Target
-    Name="CreatePythonAzureSetupConfig"
-    BeforeTargets="Build"
-    DependsOnTargets="ResolveDeploymentSettings;ResolvePythonInterpreterPath">
-
-    <PropertyGroup Condition="'$(_PythonDeploymentMethod)' == 'CloudServiceDeploy'">
-      <!-- AzureSetup.cfg variables, these need to be written out here so we can switch on them
-           in AzureSetup.exe based upon whether we're emulated or not. -->
-      <_CloudServiceAzureSetupConfig>
-        <![CDATA[
-interpreter_path=%SystemDrive%\Python$(PythonMajorVersion)$(PythonMinorVersion)\python.exe
-interpreter_path_emulated=$(PythonInterpreterPath)
-]]>
-      </_CloudServiceAzureSetupConfig>
-    </PropertyGroup>
-
-    <MakeDir Directories="bin"/>
-    <WriteLinesToFile File="bin\AzureSetup.cfg"
-                      Lines="$(_CloudServiceAzureSetupConfig)"
-                      Overwrite="true"
-                      Condition="'$(_PythonDeploymentMethod)' == 'CloudServiceDeploy'"/>
-    <WriteLinesToFile File="bin\AzureSetup.cfg"
-                      Lines="@(WebPiReference->'webpi_install=%(Feed);%(ProductId)')"
-                      Overwrite="false"
-                      Condition="'$(_PythonDeploymentMethod)' == 'CloudServiceDeploy'"/>
-
-    <ItemGroup Condition="'$(_PythonDeploymentMethod)' == 'CloudServiceDeploy'">
-      <Content Include="bin\AzureSetup.cfg"/>
-    </ItemGroup>
-  </Target>
-
-  <Target Name="CreateWebConfig"
-          BeforeTargets="Build"
-          DependsOnTargets="ResolvePythonInterpreterPath;ResolveDeploymentSettings;ResolveWsgiSettings;CreateDjangoRewriteConditions">
-    <ItemGroup>
-      <_FoundWebConfig Include="@(Content)" Condition=" '%(Content.Filename)%(Content.Extension)' == 'web.config' " />
-      <_FoundWebConfig Include="@(Include)" Condition=" '%(Content.Filename)%(Content.Extension)' == 'web.config' " />
-      <_FoundTopLevelInit Include="@(Content)" Condition=" '%(Content.Filename)%(Content.Extension)' == '__init__.py' " />
-      <_FoundTopLevelInit Include="@(Include)" Condition=" '%(Content.Filename)%(Content.Extension)' == '__init__.py' " />
-    </ItemGroup>
-
-    <Message Text="Didn't find top level init..." Condition="'@(_FoundTopLevelInit)' == ''"/>
-    <Message Text="Generating web.config automatically..." Condition="'@(_FoundWebConfig)' == ''"/>
-    <Message Text="Skipping generation of web.config automatically because it already exists in the project..." Condition="@(_FoundWebConfig) != ''"/>
-
-    <PropertyGroup>
-      <_CurrentDjangoWebConfigCode Condition="$([System.IO.File]::Exists('web.config'))">$([System.IO.File]::ReadAllText('web.config'))</_CurrentDjangoWebConfigCode>
-      <_DjangoWebConfigCode>
-        <![CDATA[<?xml version="1.0"?>
-<!-- Generated web.config for Django azure projects.  You can add a web.config file to your project to customize this. -->
-<configuration>
-  <system.diagnostics>
-    <trace>
-      <listeners>
-        <add type="Microsoft.WindowsAzure.Diagnostics.DiagnosticMonitorTraceListener, Microsoft.WindowsAzure.Diagnostics, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35"
-          name="AzureDiagnostics">
-          <filter type="" />  
-        </add>
-      </listeners>
-    </trace>
-  </system.diagnostics>
-
-  <appSettings>$(WsgiAppSettings)
-    <add key="WSGI_HANDLER" value="$(WsgiHandler)"/>
-    <add key="PYTHONPATH" value="$(DeployedSiteRoot)"/>
-    <add key="DJANGO_SETTINGS_MODULE" value="$(DjangoSettingsModule)" />
-  </appSettings>
-
-  <system.web>
-    <compilation debug="true" targetFramework="4.0" />
-  </system.web>
-  
-  <system.webServer>
-    <modules runAllManagedModulesForAllRequests="true"/>
-    <handlers>
-      <add name="Django FastCGI" 
-           path="handler.fcgi" 
-           verb="*" 
-           modules="FastCgiModule" 
-           scriptProcessor="$(DeployedPythonInterpreterPath)|$(DeployedWFastCgiPath)" 
-           resourceType="Unspecified" 
-           requireAccess="Script" />
-    </handlers>
-    <rewrite>
-      <rules>
-        <rule name="Configure Python" stopProcessing="true">
-          <match url="(.*)" ignoreCase="false" />
-          <conditions>$(DjangoRewriteConditions)
-          </conditions>
-          <action type="Rewrite" url="handler.fcgi/{R:1}" appendQueryString="true" />
-        </rule>
-      </rules>
-    </rewrite>
-  </system.webServer>
-</configuration>
-]]>
-      </_DjangoWebConfigCode>
-    </PropertyGroup>
-
-    <WriteLinesToFile File="web.config" Condition="@(_FoundWebConfig) == '' and '$(_CurrentDjangoWebConfigCode)' != '$(_DjangoWebConfigCode)'" Lines="$(_DjangoWebConfigCode)" Overwrite="true"/>
-
-    <ItemGroup>
-      <Content Include="web.config" Condition="@(_FoundWebConfig) == ''" />
-    </ItemGroup>
-  </Target>
-
-  <!--- Detects if we're deploying via web deploy, and sets _PythonDeploymentMethod appropriately.
-        Otherwise we'll assume we're deploying to cloud service. -->
-  <Target Name="_HostDeployDetectTarget" BeforeTargets="GenerateGlobalPublishSetting">
-    <PropertyGroup>
-      <!-- We are deploying via web deploy to a shared host -->
-      <_PythonDeploymentMethod>WebDeploy</_PythonDeploymentMethod>
-    </PropertyGroup>
-  </Target>
-
-  <Target
-    Name="GetTargetPath"
-    DependsOnTargets="Build"
-    Returns="@(ScriptAndWebDeployFiles)">
-    <ItemGroup>
-      <ScriptAndWebDeployFiles Include="@(InstallPython->'%(FullPath)')"/>
-      <PythonAzureDeploymentFileLocal Include="@(PythonAzureDeploymentFile->'bin\%(Filename)%(Extension)')" />
-      <ScriptAndWebDeployFiles Include="@(PythonAzureDeploymentFileLocal->'%(RootDir)%(Directory)%(Filename)%(Extension)')"/>
-    </ItemGroup>
-    <Message Text="ScriptAndWebDeployFiles=@(ScriptAndWebDeployFiles)"  Importance="low"/>
-  </Target>
-
-  <Target Name="WatGetTargetFrameworkDirectories" Returns=""  />
-  <Target Name="BuiltProjectOutputGroupDependencies" Returns=""  />
-  <Target Name="WatGetTargetFrameworkMoniker" Returns="" />
-  <Target Name="WatGetTargetFrameworkMonikerDisplayName" Returns=""  />
-
+  <!-- Extend the standard Python web targets with our Django specific ones. -->
   <PropertyGroup>
-    <CleanWPPAllFilesInSingleFolder Condition="'$(CleanWPPAllFilesInSingleFolder)' == ''">false</CleanWPPAllFilesInSingleFolder>
+    <CreateWebConfigDependsOnTargets>
+      $(CreateWebConfigDependsOnTargets);
+      CreateDjangoAppSettings;
+      CreateFastCgiRewriteConditions;
+    </CreateWebConfigDependsOnTargets>
+    <BuildDependsOnTargets>
+      $(BuildDependsOnTargets);
+      DjangoCollectStaticFiles;
+    </BuildDependsOnTargets>
   </PropertyGroup>
 
-  <Import Project="$(VSToolsPath)\WebApplications\Microsoft.WebApplication.targets" Condition="'$(VSToolsPath)' != ''" />
-
-  <Target
-    Name="PipelineTransformPhase"
-    DependsOnTargets="Build;ResolvePythonInterpreterPath"
-    Returns="@(TransformedFilenames)"
-    >
-    <!-- Target used for generating a package which can be uploaded to web server.  This isn't called when doing F5 to
-         run in the emulator. -->
-    <ItemGroup>
-      <!-- Python compile files are actually content -->
-      <ContentFiles Include="@(Compile)" />
-      <ContentFiles Include="@(Content)" />
-      <ContentFiles Include="@(Include)" />
-
-      <GeneratedFiles Include="@(PythonAzureDeploymentFile)" />
-
-      <TransformedFilenames Include="@(ContentFiles->'%(FullPath)')">
-        <DestinationRelativePath Condition="'%(ContentFiles.Link)' == ''">%(RelativeDir)%(Filename)%(Extension)</DestinationRelativePath>
-        <DestinationRelativePath Condition="'%(ContentFiles.Link)' != ''">%(ContentFiles.Link)</DestinationRelativePath>
-        <Exclude>false</Exclude>
-        <FromTarget>Unknown</FromTarget>
-        <Category>Run</Category>
-        <ProjectFileType>Default</ProjectFileType>
-      </TransformedFilenames>
-
-      <TransformedFilenames Include="@(GeneratedFiles)">
-        <DestinationRelativePath>bin\%(Filename)%(Extension)</DestinationRelativePath>
-        <Exclude>false</Exclude>
-        <FromTarget>Unknown</FromTarget>
-        <Category>Run</Category>
-        <ProjectFileType>Default</ProjectFileType>
-      </TransformedFilenames>
-
-      <TransformedFilenames Include="@(TopLevelFiles)">
-        <DestinationRelativePath>%(Filename)%(Extension)</DestinationRelativePath>
-        <Exclude>false</Exclude>
-        <FromTarget>Unknown</FromTarget>
-        <Category>Run</Category>
-        <ProjectFileType>Default</ProjectFileType>
-      </TransformedFilenames>
-    </ItemGroup>
-  </Target>
-
-  <Target Name="GenerateManifests" Returns="" />
-  <Target Name="PrepareForBuild" DependsOnTargets="$(PrepareForBuildDependsOn)" >
-    <!-- 
-        These CreateProperty calls are required because TargetDir and TargetPath are defined 
-        to contain an item list. We want that item list to be expanded so that it can be used
-        as a regular property value and not as an item-list-with-transform.
-        -->
-    <!-- 
-        Choose exactly one app.config to be the main app.config that is copied to the destination folder. 
-        
-        The search order is:
-        
-            (1) Choose the value $(AppConfig) set in the main project.
-            (2) Choose @(None) App.Config in the same folder as the project.
-            (3) Choose @(Content) App.Config in the same folder as the project.
-            (4) Choose @(None) App.Config in any subfolder in the project.
-            (5) Choose @(Content) App.Config in any subfolder in the project.
-        
-        If an app.config is not found in one of these locations then there is no app.config for this project.
-        -->
-    <CreateProperty Value="%(None.Identity)" Condition="'$(AppConfig)'=='' and '%(RelativeDir)%(Filename)%(Extension)'=='App.Config'">
-      <Output TaskParameter="Value" PropertyName="AppConfig" />
-    </CreateProperty>
-    <CreateProperty Value="%(Content.Identity)" Condition="'$(AppConfig)'=='' and '%(RelativeDir)%(Filename)%(Extension)'=='App.Config'">
-      <Output TaskParameter="Value" PropertyName="AppConfig" />
-    </CreateProperty>
-    <CreateProperty Value="%(None.Identity)" Condition="'$(AppConfig)'=='' and '%(Filename)%(Extension)'=='App.Config'">
-      <Output TaskParameter="Value" PropertyName="AppConfig" />
-    </CreateProperty>
-    <CreateProperty Value="%(Content.Identity)" Condition="'$(AppConfig)'=='' and '%(Filename)%(Extension)'=='App.Config'">
-      <Output TaskParameter="Value" PropertyName="AppConfig" />
-    </CreateProperty>
-    <!-- Dump the single app.config into an item list with TargetPath set. -->
-    <CreateItem Include="$(AppConfig)" AdditionalMetadata="TargetPath=$(TargetFileName).config">
-      <Output TaskParameter="Include" ItemName="AppConfigWithTargetPath" />
-    </CreateItem>
-    <!-- Create the directories for intermediate and final build products. -->
-    <MakeDir Directories="$(OutDir);$(IntermediateOutputPath);@(DocFileItem->'%(RelativeDir)')" />
-  </Target>
-
-  <!-- Looks up the STATIC_URL setting in the Django project.  If this is a relative path then
-       when we publish we will automatically make static files available at that path.
+  <!-- *************************************************************************
+       Looks up the STATIC_URL setting in the Django project so that we can
+       ensure they are served directly.
    -->
-  <Target Name="DetectStaticUrlPath"
-          DependsOnTargets="ResolvePythonInterpreterPath;ResolveQualifiedProjectHome">
-
-    <PropertyGroup Condition="'$(DjangoStaticUrlSetting)' == ''">
-      <_TempStaticUrlFile>$([System.IO.Path]::GetTempFileName())</_TempStaticUrlFile>
-    </PropertyGroup>
-
-    <Exec Command="&quot;$(PythonInterpreterPath)&quot; -c &quot;from $(MSBuildProjectName) import settings; print(settings.STATIC_URL)&quot; > &quot;$(_TempStaticUrlFile)&quot;"
-          WorkingDirectory="$(QualifiedProjectHome)" Condition="'$(_TempStaticUrlFile)' != ''"/>
-
-    <ReadLinesFromFile File="$(_TempStaticUrlFile)" Condition="'$(_TempStaticUrlFile)' != ''">
-      <Output TaskParameter="Lines" PropertyName="DjangoStaticUrlSetting"/>
-    </ReadLinesFromFile>
-
-    <Delete Files="$(_TempStaticUrlFile)" Condition="'$(_TempStaticUrlFile)' != ''"/>
-
+  <Target Name="ResolveStaticUrlSetting" DependsOnTargets="ResolvePythonInterpreterPath;ResolveQualifiedProjectHome">
+    <Exec Command="&quot;$(PythonInterpreterPath)&quot; -c &quot;from $(MSBuildProjectName) import settings; print(settings.STATIC_URL)&quot;"
+          WorkingDirectory="$(QualifiedProjectHome)"
+          ConsoleToMSBuild="true"
+          StandardOutputImportance="low"
+          Condition="'$(DjangoStaticUrlSetting)' == ''">
+      <Output TaskParameter="ConsoleOutput" PropertyName="DjangoStaticUrlSetting" />
+    </Exec>
+    
     <Message Text="DjangoStaticUrlSetting=$(DjangoStaticUrlSetting)"/>
   </Target>
 
-  <!-- Looks up the STATIC_URL setting in the Django project.  If this is a relative path then
-       when we publish we will automatically make static files available at that path.
-   -->
-  <Target Name="DetectStaticRootPath"
-          DependsOnTargets="ResolvePythonInterpreterPath;ResolveQualifiedProjectHome">
-
-    <PropertyGroup Condition="'$(DjangoStaticRootSetting)' == ''">
-      <_TempStaticRootFile>$([System.IO.Path]::GetTempFileName())</_TempStaticRootFile>
+  <Target Name="CreateFastCgiRewriteConditions" DependsOnTargets="ResolveStaticUrlSetting">
+    <PropertyGroup Condition="'$(DjangoStaticUrlSetting)' != ''">
+      <EscapedDjangoStaticUrlSetting>$([System.Text.RegularExpressions.Regex]::Escape($(DjangoStaticUrlSetting)))</EscapedDjangoStaticUrlSetting>
+      <FastCgiRewriteConditions>
+        <![CDATA[$(FastCgiRewriteConditions)
+            <add input="{REQUEST_URI}" pattern="^$(EscapedDjangoStaticUrlSetting).*" ignoreCase="true" negate="true"/>]]>
+      </FastCgiRewriteConditions>
     </PropertyGroup>
+  </Target>
 
-    <Exec Command="&quot;$(PythonInterpreterPath)&quot; -c &quot;from $(MSBuildProjectName) import settings; from os import path;  print(path.relpath(settings.STATIC_ROOT, r'$(QualifiedProjectHome)') if settings.STATIC_ROOT else '')&quot; > &quot;$(_TempStaticRootFile)&quot;"
-          WorkingDirectory="$(QualifiedProjectHome)" Condition="'$(_TempStaticRootFile)' != ''"/>
 
-    <ReadLinesFromFile File="$(_TempStaticRootFile)" Condition="'$(_TempStaticRootFile)' != ''">
-      <Output TaskParameter="Lines" PropertyName="DjangoStaticRootSetting"/>
-    </ReadLinesFromFile>
+  <!-- *************************************************************************
+       Runs the django `manage.py collectstatic` command to gather static files
+       in the user's project if they're configured for serving project files. 
+       The resulting files are added as content.
+       
+       This target is unconditional, to ensure we add the trailing slash if the
+       user has provided their own value.
+  -->
+  <Target Name="DetectStaticRootPath" DependsOnTargets="ResolvePythonInterpreterPath;ResolveQualifiedProjectHome">
+    <PropertyGroup>
+      <_EscapedQualifiedProjectHome>"""$(QualifiedProjectHome.Replace(`\`, `\\`))"""</_EscapedQualifiedProjectHome>
+    </PropertyGroup>
+    <Exec Command="&quot;$(PythonInterpreterPath)&quot; -c &quot;from $(MSBuildProjectName) import settings; from os import path; print(path.relpath(settings.STATIC_ROOT, $(EscapedQualifiedProjectHome)) if settings.STATIC_ROOT else '')&quot;"
+          WorkingDirectory="$(QualifiedProjectHome)"
+          ConsoleToMSBuild="true"
+          StandardOutputImportance="low"
+          Condition="'$(DjangoStaticRootSetting)' == ''">
+      <Output TaskParameter="ConsoleOutput" PropertyName="DjangoStaticRootSetting" />
+    </Exec>
 
-    <Delete Files="$(_TempStaticUrlFile)" Condition="'$(_TempStaticRootFile)' != ''"/>
+    <PropertyGroup>
+      <DjangoStaticRootSetting Condition="'$(DjangoStaticRootSetting)' != '' and !HasTrailingSlash('$(DjangoStaticRootSetting)')">$(DjangoStaticRootSetting)\</DjangoStaticRootSetting>
+    </PropertyGroup>
 
     <Message Text="DjangoStaticRootSetting=$(DjangoStaticRootSetting)"/>
   </Target>
 
-  <!-- Runs the django manage.py collectstatic command to gather the static files in the
-      user's project if they're configured for serving project files.  Then adds the resulting
-      collected files to -->
   <Target Name="DjangoCollectStaticFiles"
-          DependsOnTargets="DetectStaticRootPath;ResolvePythonInterpreterPath;ResolveQualifiedProjectHome"
-          BeforeTargets="CollectFilesFromContent;Build;PipelineTransformPhase"
-          Condition="'$(DisableStaticFiles)' != 'true'">
-    <Exec Command="&quot;$(PythonInterpreterPath)&quot; &quot;$(QualifiedProjectHome)\manage.py&quot; collectstatic --noinput"
-          WorkingDirectory="$(QualifiedProjectHome)" Condition="'$(DjangoStaticRootSetting)' != ''"/>
+          DependsOnTargets="DetectStaticRootPath;_DjangoCollectStaticFiles"
+          Condition="'$(DisableStaticFiles)' != 'true'" />
+
+  <Target Name="_DjangoCollectStaticFiles"
+          DependsOnTargets="ResolvePythonInterpreterPath;ResolveQualifiedProjectHome"
+          Condition="'$(DjangoStaticRootSetting)' != ''">
+    <Exec Command="&quot;$(PythonInterpreterPath)&quot; &quot;$(QualifiedProjectHome)manage.py&quot; collectstatic --noinput"
+          WorkingDirectory="$(QualifiedProjectHome)" />
 
     <ItemGroup>
-      <Content Include="$(DjangoStaticRootSetting)\\**\*"
-               Condition="'$(DjangoStaticRootSetting)' != ''"/>
-    </ItemGroup>
-  </Target>
-
-  <Target Name="CreateDjangoRewriteConditions"
-          DependsOnTargets="DetectStaticUrlPath"
-          Outputs="DjangoRewriteConditions">
-    <PropertyGroup Condition="'$(DjangoStaticUrlSetting)' != ''">
-      <EscapedDjangoStaticUrlSetting>$([System.Text.RegularExpressions.Regex]::Escape($(DjangoStaticUrlSetting)))</EscapedDjangoStaticUrlSetting>
-      <DjangoRewriteConditions><![CDATA[
-            <add input="{REQUEST_URI}" pattern="^$(EscapedDjangoStaticUrlSetting).*" ignoreCase="true" negate="true"/>]]>
-      </DjangoRewriteConditions>
-    </PropertyGroup>
-
-    <Message Text="DjangoRewriteConditions=$(DjangoRewriteConditions)"/>
-  </Target>
-
-  <!-- ##################################################################################### -->
-  <!-- Web Publishing support -->
-  <!-- Web applications use this for publishing, but we don't have an intermediate assembly. -->
-  <Target Name="CollectFilesFromIntermediateAssembly"
-      DependsOnTargets="$(CollectFilesFromIntermediateAssemblyDependsOn)"
-      Condition="'@(IntermediateAssembly)'!=''">
-  </Target>
-
-  <ItemGroup>
-    <!-- Python compile files are actually content -->
-    <Content Include="@(Compile)" />
-  </ItemGroup>
-
-  <!-- Transforms a VirtualEnv entry into a directory of content which we include -->
-  <Target Name="TransformVirtualEnvToContent"
-          BeforeTargets="CollectFilesFromContent;Build"
-          DependsOnTargets="ResolvePythonInterpreterPath">
-    <PropertyGroup Condition="$(VirtualEnvEnabled)">
-      <OrigPrefixPath>$(IntermediateOutputPath)\bin\deployment-updated-orig-prefix.txt</OrigPrefixPath>
-      <TargetPythonPrefix Condition="$(TargetPythonPrefix) == ''">D:\Python27</TargetPythonPrefix>
-    </PropertyGroup>
-    <MakeDir Directories="$(IntermediateOutputPath)\bin" Condition="$(VirtualEnvEnabled)"/>
-    <WriteLinesToFile Lines="$(TargetPythonPrefix)" File="$(OrigPrefixPath)" Overwrite="true" Condition="$(VirtualEnvEnabled)"/>
-
-    <ItemGroup Condition="$(VirtualEnvEnabled)">
-      <!-- We take the virtual env as is, but we transform the orig-prefix.txt to 
-      match the location of Python on the server -->
-
-      <!-- Expand the virtual env, capturing the filename, this 2 step process ensures we handle fully qualified
-           paths for virtual environments so that we don't overwrite files in the env directory when deploying -->
-      <Content Include="$(PythonPrefixSubPath)\**\*"
-               Exclude="$(PythonPrefixSubPath)\Lib\orig-prefix.txt;$(PythonPrefixSubPath)\.ptvs\**\*;$(PythonPrefixSubPath)\**\*.pyc;$(PythonPrefixSubPath)\**\*.pyo">
-      </Content>
-
-      <!-- include the patched orig-prefix.txt file -->
-      <Content Include="$(OrigPrefixPath)" Condition="$(VirtualEnvEnabled)">
-        <Link>$(PythonPrefixSubPath)\Lib\orig-prefix.txt</Link>
-      </Content>
+      <Content Include="$(DjangoStaticRootSetting)**\*" />
     </ItemGroup>
   </Target>
   
-  <!-- Django-specific project commands -->
+
+  <!-- *************************************************************************
+       Django-specific project commands
+  -->
+
   <PropertyGroup>
     <PythonCommands>DjangoShellCommand;DjangoValidateAppCommand;DjangoSyncDbCommand;$(PythonCommands)</PythonCommands>
     <PythonCommandsDisplayLabel>resource:Microsoft.PythonTools.Django;Microsoft.PythonTools.Django.Resources;DjangoMenuLabel</PythonCommandsDisplayLabel>
@@ -586,7 +135,7 @@ interpreter_path_emulated=$(PythonInterpreterPath)
 
   <Target Name="SetStartupFileOrManagePy" DependsOnTargets="ResolveStartupPath" Outputs="$(StartupFileOrManagePy)">
     <PropertyGroup>
-      <StartupFileOrManagePy>$(QualifiedProjectHome)\manage.py</StartupFileOrManagePy>
+      <StartupFileOrManagePy>$(QualifiedProjectHome)manage.py</StartupFileOrManagePy>
       <StartupFileOrManagePy Condition="Exists($(StartupFile))">$(StartupFile)</StartupFileOrManagePy>
     </PropertyGroup>
     <Message Importance="low" Text="Management commands are run with $(StartupFileOrManagePy)" />

@@ -13,10 +13,12 @@
     <SccAuxPath>SAK</SccAuxPath>
     <SccLocalPath>SAK</SccLocalPath>
     <DefineConstants>
-      DjangoDir=$(BuildRoot)\Python\Product\Django;MsiVersion=$(WixVersion);VSTargetVersion=$(VSTarget)
+      BuildTasksDir=$(BuildRoot)\Python\Product\BuildTasks;MsiVersion=$(WixVersion);VSTargetVersion=$(VSTarget)
     </DefineConstants>
-    <LinkerAdditionalOptions>-ext WixUIExtension -ext WixUtilExtension</LinkerAdditionalOptions>
   </PropertyGroup>
+  <ItemGroup>
+    <WixExtension Include="WixUIExtension;WixUtilExtension" />
+  </ItemGroup>
   <ItemGroup>
     <Compile Include="FastCgiInstaller.wxs" />
   </ItemGroup>

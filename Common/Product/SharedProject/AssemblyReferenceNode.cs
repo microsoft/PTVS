@@ -177,6 +177,8 @@ namespace Microsoft.VisualStudioTools.Project
         /// </summary>
         protected override void BindReferenceData()
         {
+            UIThread.Instance.MustBeCalledFromUIThread();
+
             Debug.Assert(this.assemblyName != null, "The AssemblyName field has not been initialized");
 
             // If the item has not been set correctly like in case of a new reference added it now.
@@ -355,6 +357,8 @@ namespace Microsoft.VisualStudioTools.Project
         /// </summary>
         private void SetReferenceProperties()
         {
+            UIThread.Instance.MustBeCalledFromUIThread();
+
             // Set a default HintPath for msbuild to be able to resolve the reference.
             this.ItemNode.SetMetadata(ProjectFileConstants.HintPath, this.assemblyPath);
 

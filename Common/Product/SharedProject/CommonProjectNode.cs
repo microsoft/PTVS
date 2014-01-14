@@ -386,10 +386,6 @@ namespace Microsoft.VisualStudioTools.Project {
             return VSConstants.S_OK;
         }
 
-        internal override void BuildAsync(uint vsopts, string config, IVsOutputWindowPane output, string target, Action<MSBuildResult, string> uiThreadCallback) {
-            uiThreadCallback(MSBuildResult.Successful, target);
-        }
-
         /// <summary>
         /// Overriding main project loading method to inject our hierarachy of nodes.
         /// </summary>

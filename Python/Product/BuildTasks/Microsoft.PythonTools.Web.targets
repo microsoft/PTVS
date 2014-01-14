@@ -10,9 +10,580 @@
  
   You must not remove this notice, or any other, from this software.
 -->
-<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="Microsoft.PythonTools.targets"/>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+  <!-- *************************************************************************
+       Azure publishing support.
+  -->
+  <PropertyGroup>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <_AzureSupportPath Condition="'$(_AzureSupportPath)' == ''">$(MSBuildThisFileDirectory)</_AzureSupportPath>
+    <_AzureSupportPath Condition="!HasTrailingSlash('$(_AzureSupportPath)')">$(_AzureSupportPath)\</_AzureSupportPath>
+    <_WebPISupportPath Condition="'$(_WebPISupportPath)' == ''">$(_AzureSupportPath)</_WebPISupportPath>
+    <_WebPISupportPath Condition="!HasTrailingSlash('$(_WebPISupportPath)')">$(_WebPISupportPath)\</_WebPISupportPath>
+  </PropertyGroup>
 
+  <!-- Build is only enabled if CoreCompile is defined. -->
+  <Target Name="CoreCompile" />
+
+  <!-- These targets are required to satisfy the Web publishing targets. -->
+  <Target Name="GetTargetFrameworkVersion" Returns="v4.0" />
+  <Target Name="GetTargetFrameworkDirectories" Returns="" />
+  <Target Name="GetTargetFrameworkMoniker" Returns="" />
+  <Target Name="GetTargetFrameworkMonikerDisplayName" Returns="" />
+
+  <Target Name="GenerateManifests" Returns="" />
+  <Target Name="AddDatabasesToSourceManifest" Returns="" />
+  <Target Name="CreateManifestResourceNames" Returns="" />
+
+  <Target Name="WatGetTargetFrameworkDirectories" Returns=""  />
+  <Target Name="BuiltProjectOutputGroupDependencies" Returns=""  />
+  <Target Name="WatGetTargetFrameworkMoniker" Returns="" />
+  <Target Name="WatGetTargetFrameworkMonikerDisplayName" Returns=""  />
+
+  <Import Project="Microsoft.PythonTools.targets"/>
+  <Import Project="$(VSToolsPath)\WebApplications\Microsoft.WebApplication.targets" />
+  
+  <!-- *************************************************************************
+       Targets files for specific frameworks can schedule their own targets to
+       be dependencies of ResolvePythonWsgiHandler to set the value of
+       $(PythonWsgiHandler) at build time.
+       
+       Alternatively, the value of $(PythonWsgiHandler) can be set directly if
+       it does not depend on any build-time variables such as $(StartupModule).
+  -->
+  <PropertyGroup>
+    <ResolvePythonWsgiHandlerDependsOnTargets>
+      $(ResolvePythonWsgiHandlerDependsOnTargets)
+    </ResolvePythonWsgiHandlerDependsOnTargets>
+  </PropertyGroup>
+
+  <Target Name="ResolvePythonWsgiHandler" DependsOnTargets="$(ResolvePythonWsgiHandlerDependsOnTargets)" />
+
+  <!-- *************************************************************************
+       The Build target is invoked as part of the Publish phase.
+  -->
+
+  <PropertyGroup>
+    <SkipCopyBuildProduct>true</SkipCopyBuildProduct>
+
+    <PipelineCollectFilesPhaseDependsOn>
+      $(PipelineCollectFilesPhaseDependsOn);
+      CreateWebConfig;
+      CollectPythonSourceFiles;
+      CollectPythonWebSitesFiles;
+      CollectPythonCloudServiceFiles;
+      CollectVirtualEnvFiles
+    </PipelineCollectFilesPhaseDependsOn>
+  </PropertyGroup>
+
+  <Target Name="CollectPythonSourceFiles">
+    <ItemGroup>
+      <FilesForPackagingFromProject Include="@(Compile)">
+        <DestinationRelativePath>%(Compile.RelativeDir)%(Compile.Filename)%(Compile.Extension)</DestinationRelativePath>
+        <FromTarget>CollectPythonSourceFiles</FromTarget>
+        <Category>Run</Category>
+      </FilesForPackagingFromProject>
+    </ItemGroup>
+  </Target>
+
+  <!-- *************************************************************************
+       ResolvePythonInterpreterPath finds and sets values based on the project's
+       active environment. Interesting properties that are set include:
+          PythonInterpreterPath (either python.exe/pythonw.exe or equivalent)
+          VirtualEnvEnabled (true/false)
+          PythonMajorVersion (2 or 3)
+          PythonMinorVersion (0 through 9)
+  -->
+  <Target Name="ResolvePythonInterpreterPath" DependsOnTargets="ResolveQualifiedProjectHome">
+    <ResolveEnvironment>
+      <Output TaskParameter="PrefixPath" PropertyName="PythonPrefixPath" />
+      <Output TaskParameter="ProjectRelativePrefixPath" PropertyName="PythonPrefixSubPath" />
+      <Output TaskParameter="InterpreterPath" PropertyName="PythonInterpreterPath" Condition="$(IsWindowsApplication) != 'true'" />
+      <Output TaskParameter="WindowsInterpreterPath" PropertyName="PythonInterpreterPath" Condition="$(IsWindowsApplication) == 'true'" />
+      <Output TaskParameter="Description" PropertyName="PythonInterpreterDescription" />
+      <Output TaskParameter="MajorVersion" PropertyName="PythonMajorVersion" />
+      <Output TaskParameter="MinorVersion" PropertyName="PythonMinorVersion" />
+    </ResolveEnvironment>
+
+    <Error Text="Unable to resolve local Python environment" Condition="'$(PythonInterpreterPath)'==''" />
+
+    <PropertyGroup Condition="'$(PythonPrefixSubPath)' == ''">
+      <VirtualEnvEnabled>false</VirtualEnvEnabled>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(PythonPrefixSubPath)' != ''">
+      <VirtualEnvEnabled>true</VirtualEnvEnabled>
+      <PythonPrefixSubPath Condition="!HasTrailingSlash('$(PythonPrefixSubPath)')">$(PythonPrefixSubPath)\</PythonPrefixSubPath>
+    </PropertyGroup>
+  </Target>
+
+  <!-- *************************************************************************
+       ResolveDeploymentSettings determines values for the following properties:
+          DeployedPythonInterpreterPath
+          DeployedSiteRoot
+          DeployedWFastCgiPath
+       
+       It also executes ResolvePythonDeploymentMethod, which will ensure that
+       _PythonDeploymentMethod is set to 'WebDeploy' or 'CloudServiceDeploy'.
+       
+       The _HostDeployDetectTarget should only be executed implicitly, or the
+       value of _PythonDeploymentMethod may be incorrect.
+  -->
+
+  <Target Name="_HostDeployDetectTarget" BeforeTargets="GenerateGlobalPublishSetting">
+    <PropertyGroup>
+      <!-- We are deploying via web deploy to Windows Azure Web Sites -->
+      <_PythonDeploymentMethod>WebDeploy</_PythonDeploymentMethod>
+    </PropertyGroup>
+  </Target>
+
+  <Target Name="ResolvePythonDeploymentMethod" AfterTargets="_HostDeployDetectTarget">
+    <PropertyGroup Condition="'$(_PythonDeploymentMethod)' == ''">
+      <_PythonDeploymentMethod>CloudServiceDeploy</_PythonDeploymentMethod>
+    </PropertyGroup>
+
+    <Message Text="Deploying with $(_PythonDeploymentMethod)" Importance="normal" />
+  </Target>
+
+  <Target Name="ResolveDeploymentSettings" DependsOnTargets="ResolvePythonDeploymentMethod">
+    <!-- Set the deployment locations assuming deployment to WAWS, user could
+         override these in the project file
+    -->
+    <PropertyGroup Condition="'$(_PythonDeploymentMethod)' == 'WebDeploy'">
+      <DeployedPythonInterpreterPath Condition="'$(DeployedPythonInterpreterPath)' == ''">D:\Python27\python.exe</DeployedPythonInterpreterPath>
+      <DeployedSiteRoot Condition="'$(DeployedSiteRoot)' == ''">D:\home\site\wwwroot</DeployedSiteRoot>
+      <DeployedWFastCgiPath Condition="'$(DeployedWFastCgiPath)' == ''">D:\Python27\Scripts\wfastcgi.py</DeployedWFastCgiPath>
+    </PropertyGroup>
+
+    <!-- Setup default deployment values if none have yet been provided. These
+         assume the values will be replaced (typically by AzureSetup.exe) on the
+         deployment.
+    -->
+    <PropertyGroup>
+      <DeployedPythonInterpreterPath Condition="'$(DeployedPythonInterpreterPath)' == ''">%INTERPRETERPATH%</DeployedPythonInterpreterPath>
+      <DeployedSiteRoot Condition="'$(DeployedSiteRoot)' == ''">%RootDir%</DeployedSiteRoot>
+      <DeployedWFastCgiPath Condition="'$(DeployedWFastCgiPath)' == ''">%WFASTCGIPATH%</DeployedWFastCgiPath>
+    </PropertyGroup>
+
+    <Message Text="Deployed site root is $(DeployedSiteRoot)" Importance="normal"/>
+    <Message Text="Deployed WFastCgi path is $(DeployedWFastCgiPath)" Importance="normal"/>
+    <Message Text="Deployed Python path is $(DeployedPythonInterpreterPath)" Importance="normal"/>
+  </Target>
+
+  <!-- *************************************************************************
+       WSGI settings are written by CreateWebConfig target. To extend the
+       settings added to this file, create a target that appends to
+       $(WsgiAppSettings) and add its name to the CreateWebConfigDependsOn
+       property.
+       
+       Note that if the user includes a web.config file in their project, no
+       file will be generated and these targets will have no effect.
+  -->
+  <Target Name="ResolveWsgiAppSettings"
+          DependsOnTargets="ResolvePythonWsgiHandler;ResolveVirtualEnvSettings;ResolveDeploymentSettings">
+    <PropertyGroup>
+      <WsgiAppSettings>
+        <![CDATA[$(WsgiAppSettings)
+    <add key="WSGI_HANDLER" value="$(PythonWsgiHandler)"/>
+    <add key="PYTHONPATH" value="$(DeployedSiteRoot)"/>]]>
+      </WsgiAppSettings>
+      <WsgiAppSettings Condition="'$(WsgiLogPath)' != ''">
+        <![CDATA[$(WsgiAppSettings)
+    <add key="WSGI_LOG" value="$(WsgiLogPath)"/>]]>
+      </WsgiAppSettings>
+    </PropertyGroup>
+  </Target>
+
+  <!-- *************************************************************************
+       The FastCGI handler is written out in the CreateWebConfig target. To
+       replace the handler, this target should be redefined.
+  -->
+  <Target Name="ResolveFastCgiHandler"
+          DependsOnTargets="ResolveDeploymentSettings">
+    <PropertyGroup>
+      <FastCgiHandler Condition="'$(FastCgiHandler)' == ''">
+        <![CDATA[<add name="Python FastCGI"
+             path="handler.fcgi"
+             verb="*"
+             modules="FastCgiModule"
+             scriptProcessor="$(DeployedPythonInterpreterPath)|$(DeployedWFastCgiPath)"
+             resourceType="Unspecified"
+             requireAccess="Script" />]]>
+      </FastCgiHandler>
+    </PropertyGroup>
+  </Target>
+
+  <!-- *************************************************************************
+       Virtual environments are handled in three targets.
+       
+       ConfigureVirtualEnv is part of generating WSGI settings for web.config.
+       
+       CollectVirtualEnvFiles will convert a virtual environment into deployable
+       Content.
+  -->
+  <Target Name="ResolveVirtualEnvSettings" DependsOnTargets="ResolvePythonInterpreterPath;_ResolveVirtualEnvSettings" />
+
+  <Target Name="_ResolveVirtualEnvSettings"
+          DependsOnTargets="ResolvePythonWsgiHandler;ResolveDeploymentSettings"
+          Condition="$(VirtualEnvEnabled)">
+    <Error Text="No WSGI handler specified" Condition="'$(PythonWsgiHandler)' == ''" />
+
+    <PropertyGroup>
+      <!-- Setup for when a virtualenv is used in a project. We use a bootstrap
+           wfastcgi handler which does activate_this on the deployed env. -->
+      <DeployedVirtualEnvPath Condition="'$(DeployedVirtualEnvPath)' == ''">$(DeployedSiteRoot)</DeployedVirtualEnvPath>
+      <DeployedVirtualEnvPath Condition="!HasTrailingSlash('$(DeployedVirtualEnvPath)')">$(DeployedVirtualEnvPath)\</DeployedVirtualEnvPath>
+      <WsgiAppSettings>
+        <![CDATA[$(WsgiAppSettings)
+    <add key="WSGI_ALT_VIRTUALENV_HANDLER" value="$(PythonWsgiHandler)"/>
+    <add key="WSGI_ALT_VIRTUALENV_ACTIVATE_THIS" value="$(DeployedVirtualEnvPath)$(PythonPrefixSubPath)Scripts\activate_this.py"/>]]>
+      </WsgiAppSettings>
+      <PythonWsgiHandler>ptvs_virtualenv_proxy.handler</PythonWsgiHandler>
+    </PropertyGroup>
+
+    <!-- ptvs_virtualenv_proxy.py runs virtualenv's activate_this.py and then
+         returns the real FastCGI handler. This enables running on systems where
+         we need to execute using the system Python interpreter.
+    -->
+    <ItemGroup>
+      <FilesForPackagingFromProject Include="$(_AzureSupportPath)ptvs_virtualenv_proxy.py">
+        <DestinationRelativePath>ptvs_virtualenv_proxy.py</DestinationRelativePath>
+        <FromTarget>ResolveVirtualEnvSettings</FromTarget>
+        <Category>Run</Category>
+      </FilesForPackagingFromProject>
+    </ItemGroup>
+    
+    <!-- Copy the proxy script to the bin\ directory for the Cloud Service
+         emulator. -->
+    <Copy SourceFiles="$(_AzureSupportPath)ptvs_virtualenv_proxy.py"
+          DestinationFolder="bin"
+          SkipUnchangedFiles="true"
+          Condition="'$(_PythonDeploymentMethod)' == 'CloudServiceDeploy'" />
+  </Target>
+
+  <Target Name="CollectVirtualEnvFiles" DependsOnTargets="ResolvePythonInterpreterPath;_CollectVirtualEnvFiles;_CollectVEnvFiles" />
+
+  <Target Name="_CollectVirtualEnvFiles"
+          DependsOnTargets="ResolveVirtualEnvSettings"
+          Condition="$(VirtualEnvEnabled) and Exists('$(PythonPrefixSubPath)Lib\orig-prefix.txt')">
+    <PropertyGroup>
+      <OrigPrefixPath>$(IntermediateOutputPath)deployment-updated-orig-prefix.txt</OrigPrefixPath>
+      <TargetPythonPrefix Condition="$(TargetPythonPrefix) == ''">D:\Python$(PythonMajorVersion)$(PythonMinorVersion)</TargetPythonPrefix>
+    </PropertyGroup>
+
+    <ReadLinesFromFile File="$(OrigPrefixPath)" Condition="Exists($(OrigPrefixPath))">
+      <Output TaskParameter="Lines" PropertyName="_ExistingPrefixText"/>
+    </ReadLinesFromFile>
+
+    <WriteLinesToFile Lines="$(TargetPythonPrefix)"
+                      File="$(OrigPrefixPath)"
+                      Overwrite="true"
+                      Condition="'$(_ExistingPrefixText)' != '$(TargetPythonPrefix)' "/>
+
+    <ItemGroup>
+      <!-- Include all the virtual env files (except cached bytecode and
+           completion DBs), and replace the orig-prefix.txt file with our
+           rewritten version.
+      -->
+      <_VirtualEnvFilesWithoutMetadata Include="$(PythonPrefixSubPath)**\*"
+        Exclude="$(PythonPrefixSubPath)Lib\orig-prefix.txt;
+                 $(PythonPrefixSubPath).ptvs\**\*;
+                 $(PythonPrefixSubPath)**\*.pyc;
+                 $(PythonPrefixSubPath)**\*.pyo" />
+
+      <FilesForPackagingFromProject Include="@(_VirtualEnvFilesWithoutMetadata)">
+        <DestinationRelativePath>$(PythonPrefixSubPath)%(RecursiveDir)%(Filename)%(Extension)</DestinationRelativePath>
+        <FromTarget>CollectVirtualEnvFiles</FromTarget>
+        <Category>Run</Category>
+      </FilesForPackagingFromProject>
+
+      <FilesForPackagingFromProject Include="$(OrigPrefixPath)">
+        <DestinationRelativePath>$(PythonPrefixSubPath)Lib\orig-prefix.txt</DestinationRelativePath>
+        <FromTarget>CollectVirtualEnvFiles</FromTarget>
+        <Category>Run</Category>
+      </FilesForPackagingFromProject>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_CollectVEnvFiles"
+          DependsOnTargets="ResolvePythonInterpreterPath"
+          Condition="$(VirtualEnvEnabled) and Exists('$(PythonPrefixSubPath)pyvenv.cfg')">
+    <Error Text="venv environments are not yet supported. Please use the virtualenv package to create a virtual environment." />
+  </Target>
+
+  <!-- *************************************************************************
+       CollectPythonWebSitesFiles deploys and includes extra files required for
+       Windows Azure Web Sites.
+  -->
+  <ItemGroup>
+    <!--<_WebSitesFiles />-->
+  </ItemGroup>
+
+  <Target Name="CollectPythonWebSitesFiles"
+          DependsOnTargets="ResolvePythonDeploymentMethod;_CollectPythonWebSitesFiles"
+          Condition="'@(_WebSitesFiles)' != ''"/>
+
+  <Target Name="_GetPythonWebSitesFiles"
+          Returns="@(_PythonWebSitesFiles)"
+          Condition="'$(_PythonDeploymentMethod)' == 'WebDeploy'">
+    <ItemGroup>
+      <_PythonWebSitesFiles Include="@(_WebSitesFiles->'$(IntermediateOutputPath)%(Filename)%(Extension)')" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_CollectPythonWebSitesFiles"
+          Inputs="@(_WebSitesFiles)"
+          Outputs="@(_PythonWebSitesFiles)"
+          DependsOnTargets="_GetPythonWebSitesFiles"
+          Condition="'$(_PythonDeploymentMethod)' == 'WebDeploy'">
+    <Copy SourceFiles="@(_WebSitesFiles)"
+          DestinationFiles="@(_PythonWebSitesFiles)"
+          SkipUnchangedFiles="true" />
+
+    <ItemGroup>
+      <FilesForPackagingFromProject Include="@(_PythonWebSitesFiles->'%(FullPath)')">
+        <DestinationRelativePath>%(FileName)%(Extension)</DestinationRelativePath>
+        <FromTarget>CollectPythonWebSitesFiles</FromTarget>
+        <Category>Run</Category>
+      </FilesForPackagingFromProject>
+    </ItemGroup>
+  </Target>
+
+  <!-- *************************************************************************
+       CollectPythonCloudServiceFiles deploys extra files for cloud services.
+       
+       These files are copied to the intermediate path on build.
+       
+       When building inside VS (for the emulator), the directory of the item
+       returned from the GetTargetPath target is copied to the approot\bin
+       directory. We also copy them to $(QualifiedProjectHome)\bin, since that
+       is where AzureSetup.exe expects to find them.
+       
+       When building outside VS (for publishing), the PipelineTransformPhase
+       target will add these files as content with a link to "bin\$(name)" to
+       ensure they are deployed to approot\bin.
+  -->
+  <ItemGroup>
+    <!-- Azure setup files -->
+    <_CloudServiceFiles Include="$(_AzureSupportPath)Microsoft.PythonTools.AzureSetup.exe;
+                                 $(_AzureSupportPath)Microsoft.PythonTools.AzureSetup.exe.config"/>
+    <_CloudServiceFiles Include="$(_AzureSupportPath)Microsoft.PythonTools.AzureSetup.pdb"
+                        Condition="Exists('$(_AzureSupportPath)Microsoft.PythonTools.AzureSetup.pdb')" />
+
+    <!-- WebPI deployment files -->
+    <_CloudServiceFiles Include="$(_WebPISupportPath)WebPICmdLine.exe;
+                                 $(_WebPISupportPath)WebPICmdLine.exe.config;
+                                 $(_WebPISupportPath)Microsoft.Web.PlatformInstaller.UI.dll;
+                                 $(_WebPISupportPath)Microsoft.Web.PlatformInstaller.dll;
+                                 $(_WebPISupportPath)Microsoft.Web.Deployment.dll" />
+
+    <!-- Web Role files -->
+    <_CloudServiceFiles Include="$(_AzureSupportPath)Microsoft.PythonTools.WebRole.dll" />
+    
+    <!-- FastCGI handler -->
+    <_CloudServiceFiles Include="$(_AzureSupportPath)wfastcgi.py" />
+  </ItemGroup>
+
+  <Target Name="CollectPythonCloudServiceFiles"
+          DependsOnTargets="ResolvePythonDeploymentMethod;
+                            CreatePythonAzureSetupConfig;
+                            _DeployPythonCloudServiceFiles;
+                            _DeployPythonCloudServiceFilesForEmulator;
+                            _CollectPythonCloudServiceFiles"
+          Condition="'@(_CloudServiceFiles)' != ''"/>
+
+  <Target Name="_GetPythonCloudServiceFiles"
+          Returns="@(_PythonCloudServiceFiles);@(_PythonCloudServiceFilesForEmulator)"
+          Condition="'$(_PythonDeploymentMethod)' == 'CloudServiceDeploy'">
+    <ItemGroup>
+      <_PythonCloudServiceFiles Include="@(_CloudServiceFiles->'$(IntermediateOutputPath)%(Filename)%(Extension)')" />
+      <_PythonCloudServiceFilesForEmulator Include="@(_CloudServiceFiles->'$(QualifiedProjectHome)bin\%(Filename)%(Extension)')" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_DeployPythonCloudServiceFiles"
+          Inputs="@(_CloudServiceFiles)"
+          Outputs="@(_PythonCloudServiceFiles)"
+          DependsOnTargets="_GetPythonCloudServiceFiles"
+          Condition="'$(_PythonDeploymentMethod)' == 'CloudServiceDeploy'">
+    <Copy SourceFiles="@(_CloudServiceFiles)"
+          DestinationFiles="@(_PythonCloudServiceFiles)"
+          SkipUnchangedFiles="true" />
+  </Target>
+
+  <Target Name="_DeployPythonCloudServiceFilesForEmulator"
+          Inputs="@(_CloudServiceFiles)"
+          Outputs="@(_PythonCloudServiceFilesForEmulator)"
+          DependsOnTargets="_GetPythonCloudServiceFiles"
+          Condition="'$(_PythonDeploymentMethod)' == 'CloudServiceDeploy'">
+    <Copy SourceFiles="@(_CloudServiceFiles)"
+          DestinationFiles="@(_PythonCloudServiceFilesForEmulator)"
+          SkipUnchangedFiles="true" />
+  </Target>
+
+  <Target Name="_CollectPythonCloudServiceFiles"
+          DependsOnTargets="_GetPythonCloudServiceFiles"
+          Condition="'$(_PythonDeploymentMethod)' == 'CloudServiceDeploy'">
+    <ItemGroup>
+      <FilesForPackagingFromProject Include="@(_PythonCloudServiceFiles)">
+        <DestinationRelativePath>bin\%(FileName)%(Extension)</DestinationRelativePath>
+        <FromTarget>CollectPythonCloudServiceFiles</FromTarget>
+        <Category>Run</Category>
+      </FilesForPackagingFromProject>
+    </ItemGroup>
+  </Target>
+
+  <!-- *************************************************************************
+       CreatePythonAzureSetupConfig generates the AzureSetup.cfg used for cloud
+       service deployments.
+  -->
+  <Target Name="CreatePythonAzureSetupConfig" DependsOnTargets="ResolvePythonDeploymentMethod;_CreatePythonAzureSetupConfig" />
+
+  <Target Name="_CreatePythonAzureSetupConfig"
+          DependsOnTargets="ResolvePythonInterpreterPath"
+          Condition="'$(_PythonDeploymentMethod)' == 'CloudServiceDeploy'">
+
+    <ItemGroup>
+      <_PythonAzureSetupConfig Include="$(IntermediateOutputPath)AzureSetup.cfg" />
+    </ItemGroup>
+
+    <PropertyGroup>
+      <!-- AzureSetup.cfg variables are written out here so we can switch on
+           them in AzureSetup.exe based upon whether we're emulated or not.
+      -->
+      <_CloudServiceAzureSetupConfig>
+        <![CDATA[
+interpreter_path=%SystemDrive%\Python$(PythonMajorVersion)$(PythonMinorVersion)\python.exe
+interpreter_path_emulated=$(PythonInterpreterPath)
+]]>
+      </_CloudServiceAzureSetupConfig>
+    </PropertyGroup>
+
+    <WriteLinesToFile File="@(_PythonAzureSetupConfig)"
+                      Lines="$(_CloudServiceAzureSetupConfig)"
+                      Overwrite="true" />
+    <WriteLinesToFile File="@(_PythonAzureSetupConfig)"
+                      Lines="@(WebPiReference->'webpi_install=%(Feed);%(ProductId)')"
+                      Overwrite="false" />
+
+    <Copy SourceFiles="@(_PythonAzureSetupConfig)"
+          DestinationFolder="$(QualifiedProjectHome)bin" />
+    
+    <ItemGroup>
+      <FilesForPackagingFromProject Include="@(_PythonAzureSetupConfig)">
+        <DestinationRelativePath>bin\%(FileName)%(Extension)</DestinationRelativePath>
+        <FromTarget>CreatePythonAzureSetupConfig</FromTarget>
+        <Category>Run</Category>
+      </FilesForPackagingFromProject>
+    </ItemGroup>
+  </Target>
+
+
+  <!-- *************************************************************************
+       CreateWebConfig will generate a web.config file if the project does not
+       specify one as a <Content> or <Include> item.
+  -->
+  <PropertyGroup>
+    <CreateWebConfigDependsOnTargets>
+      $(CreateWebConfigDependsOnTargets);
+      ResolvePythonInterpreterPath;
+      ResolvePythonWsgiHandler;
+      ResolveFastCgiHandler;
+      ResolveDeploymentSettings;
+      ResolveWsgiAppSettings;
+      ResolveVirtualEnvSettings;
+    </CreateWebConfigDependsOnTargets>
+  </PropertyGroup>
+
+  <Target Name="CreateWebConfig" DependsOnTargets="_DetectWebConfig;_CreateWebConfig" />
+
+  <Target Name="_DetectWebConfig">
+    <ItemGroup>
+      <_FoundWebConfig Include="@(Content);@(Include)" Condition=" '%(Content.Filename)%(Content.Extension)' == 'web.config' " />
+    </ItemGroup>
+
+    <Message Text="Generating web.config automatically..." Condition="'@(_FoundWebConfig)' == ''"/>
+    <Message Text="Skipping generation of web.config automatically because it already exists in the project..." Condition="@(_FoundWebConfig) != ''"/>
+  </Target>
+
+  <Target Name="_CreateWebConfig"
+          DependsOnTargets="$(CreateWebConfigDependsOnTargets)"
+          Condition="'@(_FoundWebConfig)' == ''">
+    <Error Text="No WSGI handler specified" Condition="'$(PythonWsgiHandler)' == ''" />
+
+    <ItemGroup>
+      <_TempWebConfig Include="$(IntermediateOutputPath)web.config" />
+      <_OutWebConfig Include="$(QualifiedProjectHome)web.config" />
+    </ItemGroup>
+
+    <Copy SourceFiles="$(_AzureSupportPath)web_config.xml"
+          DestinationFiles="@(_TempWebConfig)" />
+
+    <Message Text="Updating app settings in web.config" />
+    <XmlPoke XmlInputPath="@(_TempWebConfig)"
+             Query="/configuration/appSettings"
+             Value="$(WsgiAppSettings)" />
+
+    <Message Text="Updating rewrite conditions in web.config" />
+    <XmlPoke XmlInputPath="@(_TempWebConfig)"
+             Query="/configuration/system.webServer/rewrite/rules/rule[@name='Configure Python']/conditions"
+             Value="$(FastCgiRewriteConditions)"
+             Condition="'$(FastCgiRewriteConditions)' != ''"/>
+
+    <Message Text="Updating FastCGI handlers in web.config" />
+    <XmlPoke XmlInputPath="@(_TempWebConfig)"
+             Query="/configuration/system.webServer/handlers"
+             Value="$(FastCgiHandler)" />
+
+    <ReadLinesFromFile File="@(_OutWebConfig)" Condition="Exists(@(_OutWebConfig))">
+      <Output TaskParameter="Lines" PropertyName="_CurrentWebConfigCode"/>
+    </ReadLinesFromFile>
+    <ReadLinesFromFile File="@(_TempWebConfig)">
+      <Output TaskParameter="Lines" PropertyName="_NewWebConfigCode"/>
+    </ReadLinesFromFile>
+    
+    <Copy SourceFiles="@(_TempWebConfig)"
+          DestinationFiles="@(_OutWebConfig)"
+          Condition="'$(_CurrentWebConfigCode)' != '$(_NewWebConfigCode)'" />
+    
+    <ItemGroup>
+      <FilesForPackagingFromProject Include="@(_OutWebConfig)">
+        <DestinationRelativePath>web.config</DestinationRelativePath>
+        <FromTarget>CreateWebConfig</FromTarget>
+        <Category>Run</Category>
+      </FilesForPackagingFromProject>
+    </ItemGroup>
+  </Target>
+
+  <!-- *************************************************************************
+       GetTargetPath is invoked by Microsoft.WindowsAzure.targets when it is
+       collecting web role files. It returns one item that is our WebRole.dll.
+  -->
+  <Target Name="GetTargetPath" Returns="$(_WebRoleDll)"
+          DependsOnTargets="ResolvePythonDeploymentMethod;
+                            _DeployPythonCloudServiceFiles;
+                            _DeployPythonCloudServiceFilesForEmulator">
+    <!-- We need to build CreateWebConfig in a separate instance. This will
+         ensure that the web.config file exists for the Cloud Service emulator,
+         while also allowing us to rebuild it later if we determine that we
+         really wanted a WAWS web.config.
+         
+         The DependsOnTargets attribute is not useful here, since running the
+         targets that way will prevent us from reevaluating them later in the
+         same build.
+    -->
+    <MSBuild Projects="$(MSBuildProjectFullPath)"
+             Targets="CreateWebConfig"
+             Properties="BuildingForGetTargetPath=true" />
+    
+    <PropertyGroup>
+      <_WebRoleDll>$([System.IO.Path]::GetFullPath('$(IntermediateOutputPath)Microsoft.PythonTools.WebRole.dll'))</_WebRoleDll>
+    </PropertyGroup>
+  </Target>
+
+  <!-- *************************************************************************
+       Web commands. These are displayed to the user in the PTVS IDE and are
+       used by the web launcher.
+  -->
   <PropertyGroup>
     <WebServerHost Condition="'$(WebServerHost)' == ''">localhost</WebServerHost>
     <PythonCommandsDisplayLabel>resource:Microsoft.PythonTools;Microsoft.Resources;WebMenuLabel</PythonCommandsDisplayLabel>
@@ -50,11 +621,11 @@
     </PropertyGroup>
     <!-- 'console' and 'consolepause' are the only valid ExecuteIn values for this command. -->
     <CreatePythonCommandItem Target="$(PythonDebugWebServerCommand)"
-                   TargetType="$(PythonDebugWebServerCommandType)"
-                   Arguments="$(PythonDebugWebServerCommandArguments)"
-                   Environment="SERVER_HOST=$(WebServerHost)
-                                SERVER_PORT=$(WebServerPort)"
-                   ExecuteIn="console">
+                             TargetType="$(PythonDebugWebServerCommandType)"
+                             Arguments="$(PythonDebugWebServerCommandArguments)"
+                             Environment="SERVER_HOST=$(WebServerHost)
+                                          SERVER_PORT=$(WebServerPort)"
+                             ExecuteIn="console">
       <Output TaskParameter="Command" ItemName="Commands" />
     </CreatePythonCommandItem>
   </Target>

@@ -109,7 +109,7 @@ namespace Microsoft.VisualStudioTools.Project
         /// <returns>S_OK if successful, otherwise an error is returned</returns>
         public virtual int Close(__FRAMECLOSE closeFlag)
         {
-            if (this.node == null || this.node.ProjectMgr == null || this.node.ProjectMgr.IsClosed)
+            if (this.node == null || this.node.ProjectMgr == null || this.node.ProjectMgr.IsClosed || this.node.ProjectMgr.IsClosing)
             {
                 return VSConstants.E_FAIL;
             }

@@ -772,7 +772,6 @@ folder you are copying, do you want to replace the existing files?", Path.GetFil
                     bool wasExpanded = false;
                     HierarchyNode newNode;
                     var sourceFolder = Project.FindNodeByFullPath(SourceFolder) as FolderNode;
-                    bool isNonMember = false;
                     if (sourceFolder == null || DropEffect != DropEffect.Move) {
                         newNode = Project.CreateFolderNodes(NewFolderPath);
                     } else {
@@ -784,7 +783,6 @@ folder you are copying, do you want to replace the existing files?", Path.GetFil
 
                         sourceFolder.ExpandItem(wasExpanded ? EXPANDFLAGS.EXPF_ExpandFolder : EXPANDFLAGS.EXPF_CollapseFolder);
                         newNode = sourceFolder;
-                        isNonMember = sourceFolder.IsNonMemberItem;
                     }
 
                     foreach (var addition in Additions) {
@@ -792,7 +790,7 @@ folder you are copying, do you want to replace the existing files?", Path.GetFil
                     }
 
                     if (sourceFolder != null) {
-                        if (isNonMember) {
+                        if (sourceFolder.IsNonMemberItem) {
                             // copying or moving an existing excluded folder, new folder
                             // is excluded too.
                             ErrorHandler.ThrowOnFailure(newNode.ExcludeFromProject());

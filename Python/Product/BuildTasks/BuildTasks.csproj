@@ -78,16 +78,28 @@
     <Content Include="Microsoft.PythonTools.Web.targets">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <SubType>Designer</SubType>
+      <IncludeInVsix>true</IncludeInVsix>
     </Content>
     <Content Include="Microsoft.PythonTools.Flask.targets">
       <SubType>Designer</SubType>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVsix>true</IncludeInVsix>
+    </Content>
+    <Content Include="ptvs_virtualenv_proxy.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVsix>true</IncludeInVsix>
+    </Content>
+    <Content Include="web_config.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVsix>true</IncludeInVsix>
+    </Content>
+    <Content Include="wfastcgi.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVsix>true</IncludeInVsix>
     </Content>
     <None Include="TestTargets\Microsoft.PythonTools.Flask.targets" />
     <None Include="TestTargets\Microsoft.PythonTools.Django.targets" />
-    <None Include="TestTargets\Microsoft.PythonTools.targets">
-      <SubType>Designer</SubType>
-    </None>
+    <None Include="TestTargets\Microsoft.PythonTools.targets" />
     <None Include="TestTargets\Microsoft.PythonTools.Web.targets" />
   </ItemGroup>
   <ItemGroup>
@@ -100,6 +112,20 @@
       <Name>Microsoft.PythonTools.VSInterpreters</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\AzureSetup\AzureSetup.csproj">
+      <Project>{b6905758-81d9-4287-be59-5d4e2f336414}</Project>
+      <Name>AzureSetup</Name>
+      <OutputItemType>_SupportFiles</OutputItemType>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\WebRole\WebRole.csproj">
+      <Project>{304ab14d-4e63-4004-8d63-ab8da2c601b4}</Project>
+      <Name>WebRole</Name>
+      <OutputItemType>_SupportFiles</OutputItemType>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="..\ProjectAfter.settings" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
@@ -108,4 +134,25 @@
   <Target Name="AfterBuild">
   </Target>
   -->
+  <!-- These targets are invoked from PythonTools.csproj to collect correct
+       information about this project. -->
+  <Target Name="_GetAzureSupportFiles" Returns="@(_SupportFiles)">
+    <ItemGroup>
+      <!-- _SupportFiles already includes the outputs of AzureSetup and WebRole,
+           but we need to add the config file manually. -->
+      <_SupportFiles Include="$(OutDir)Microsoft.PythonTools.AzureSetup.exe.config" />
+    </ItemGroup>
+  </Target>
+  <Target Name="_GetTargetPath" Returns="@(_ResolvedReference1)">
+    <ItemGroup>
+      <_ResolvedReference1 Include="$(TargetPath)" />
+    </ItemGroup>
+  </Target>
+  <Target Name="_GetAssemblyName" Returns="@(_ResolvedReference2)">
+    <ItemGroup>
+      <_ResolvedReference2 Include="$(TargetPath)">
+        <UseAssemblyName>true</UseAssemblyName>
+      </_ResolvedReference2>
+    </ItemGroup>
+  </Target>
 </Project>

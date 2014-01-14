@@ -240,6 +240,8 @@ namespace Microsoft.VisualStudioTools.Project
         /// </summary>
         public void LoadReferencesFromBuildProject(MSBuild.Project buildProject)
         {
+            UIThread.Instance.MustBeCalledFromUIThread();
+
             foreach (string referenceType in SupportedReferenceTypes)
             {
                 IEnumerable<MSBuild.ProjectItem> referencesGroup = this.ProjectMgr.BuildProject.GetItems(referenceType);

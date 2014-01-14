@@ -462,30 +462,40 @@ def start_file_watcher(path, restartRegex):
     thread.start_new_thread(watcher, (path, restart))
 
 def get_wsgi_handler(handler_name):
-        if not handler_name:
-            raise Exception('WSGI_HANDLER env var must be set')
+    if not handler_name:
+        raise Exception('WSGI_HANDLER env var must be set')
     
-        module, _, callable = handler_name.rpartition('.')
-        if not module:
-            raise Exception('WSGI_HANDLER must be set to module_name.wsgi_handler, got %s' % handler_name)
-    
-        if sys.version_info[0] == 2:
-            if isinstance(callable, unicode):
-                callable = callable.encode('ascii')
+    if not isinstance(handler_name, str):
+        if sys.version_info >= (3,):
+            handler_name = handler_name.decode(sys.getfilesystemencoding())
         else:
-            if isinstance(callable, bytes):
-                callable = callable.decode('ascii')
-
-        if callable.endswith('()'):
-            callable = callable[:-2]
-            handler = getattr(__import__(module, fromlist=[callable]), callable)()
-        else:
-            handler = getattr(__import__(module, fromlist=[callable]), callable)
+            handler_name = handler_name.encode(sys.getfilesystemencoding())
     
-        if handler is None:
-            raise Exception('WSGI_HANDLER "' + handler_name + '" was set to None')
+    module_name, _, callable_name = handler_name.rpartition('.')
+    should_call = callable_name.endswith('()')
+    callable_name = callable_name[:-2] if should_call else callable_name
+    name_list = [(callable_name, should_call)]
+    handler = None
 
-        return handler
+    while module_name:
+        try:
+            handler = __import__(module_name, fromlist=[name_list[0][0]])
+            for name, should_call in name_list:
+                handler = getattr(handler, name)
+                if should_call:
+                    handler = handler()
+            break
+        except ImportError:
+            module_name, _, callable_name = module_name.rpartition('.')
+            should_call = callable_name.endswith('()')
+            callable_name = callable_name[:-2] if should_call else callable_name
+            name_list.insert(0, (callable_name, should_call))
+            handler = None
+    
+    if handler is None:
+        raise ValueError('"%s" could not be imported' % handler_name)
+    
+    return handler
 
 def read_wsgi_handler(physical_path):
     env = get_environment(physical_path)
@@ -498,18 +508,19 @@ def read_wsgi_handler(physical_path):
                 pat = re.compile(re.escape('%' + var + '%'), re.IGNORECASE)
                 path = pat.sub(lambda _:os.environ[var], path)
             
-
+            
             for path_location in path.split(';'):
                 sys.path.append(path_location)
             break
     
+    handler_name = None
     handler_ex = None
     try:
         handler_name = os.getenv('WSGI_HANDLER')
         handler = get_wsgi_handler(handler_name)
     except:
         handler = None
-        handler_ex = sys.exc_info()
+        handler_ex = (handler_name, sys.exc_info())
     
     
     return env, handler, handler_ex
@@ -578,13 +589,15 @@ if __name__ == '__main__':
 
                 if handler is None:
                     fatal_error = True
-                    error_msg = ('Error while importing WSGI_HANDLER:\n\n' +
-                                    ''.join(traceback.format_exception(*handler_ex)) + '\n\n' +
-                                    'StdOut: ' + output.getvalue() + '\n\n'
-                                    'StdErr: ' + errors.getvalue() + '\n\n')
+                    error_msg = """Error while importing WSGI_HANDLER '%s':\n\n%s\n\nStdOut: %s\n\nStdErr: %s""" % (
+                        handler_ex[0],
+                        ''.join(traceback.format_exception(*handler_ex[1])),
+                        output.getvalue(),
+                        errors.getvalue(),
+                    )
                     log(error_msg)
                     send_response(record.req_id, FCGI_STDERR, error_msg)
-                else:                    
+                else:
                     try: 
                         for part in handler(record.params, start_response):
                             if part:

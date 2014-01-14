@@ -18,27 +18,105 @@ using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Windows.Forms;
 using System.Xml;
 using System.Xml.XPath;
 using Microsoft.Win32;
 
 namespace AzureSetup {
     class Program {
+        static readonly string[] SystemPackages = new [] {
+            "IIS-WebServerRole",
+            "IIS-WebServer",
+            "IIS-CommonHttpFeatures",
+            "IIS-StaticContent",
+            "IIS-DefaultDocument",
+            "IIS-DirectoryBrowsing",
+            "IIS-HttpErrors",
+            "IIS-HealthAndDiagnostics",
+            "IIS-HttpLogging",
+            "IIS-LoggingLibraries",
+            "IIS-RequestMonitor",
+            "IIS-Security",
+            "IIS-RequestFiltering",
+            "IIS-HttpCompressionStatic",
+            "IIS-WebServerManagementTools",
+            "IIS-ManagementConsole",
+            "WAS-WindowsActivationService",
+            "WAS-ProcessModel",
+            "WAS-NetFxEnvironment",
+            "WAS-ConfigurationAPI",
+            "IIS-CGI"
+        };
+        
         static void Main(string[] args) {
-            ConfigureFastCgi();
+            try {
+                ConfigureFastCgi();
+            } catch (Exception ex) {
+                var logMessage = string.Format("Failed to initialize role.\r\n\r\nException:\r\n{0}", ex);
+
+                bool wroteLog = false;
+                try {
+                    File.AppendAllText("AzureSetup.log", logMessage);
+                    wroteLog = true;
+                } catch {
+                    Console.Error.WriteLine("Unable to write to log file.");
+                }
+
+                if (IsEmulated()) {
+                    // In the emulator, so display some UI.
+                    MessageBox.Show(
+                        string.Format("Initialization failed due to a {0}:\r\n    {1}.", ex.GetType().Name, ex.Message),
+                        "Python Tools for Visual Studio"
+                    );
+                }
+
+                if (!wroteLog) {
+                    // Failed to write to the log, so rethrow the exception so
+                    // it will be shown on the console, will be added to the
+                    // event log, and also sent via WER.
+                    throw;
+                }
+            }
         }
 
         public static void ConfigureFastCgi() {
+            var psi = new ProcessStartInfo();
+            // pkgmgr.exe is deprecated for Windows 7/Server 2008R2 and later in
+            // favor of dism.exe, and displays UI when invoked on these
+            // platforms.
+            // If dism.exe exists, we will use that; otherwise, we will fall
+            // back on pkgmgr.exe. The feature names are identical between the
+            // two programs, though the command lines differ slightly.
+            var dismPath = Path.Combine(Environment.GetEnvironmentVariable("windir"), "System32\\dism.exe");
+            var pkgMgrPath = Path.Combine(Environment.GetEnvironmentVariable("windir"), "System32\\PkgMgr.exe");
+            
             // enable FastCGI in IIS
-            var proc = Process.Start(
-                Path.Combine(Environment.GetEnvironmentVariable("windir"), "System32\\PkgMgr.exe"),
-                "/iu:IIS-WebServerRole;IIS-WebServer;IIS-CommonHttpFeatures;IIS-StaticContent;IIS-DefaultDocument;IIS-DirectoryBrowsing;IIS-HttpErrors;IIS-HealthAndDiagnostics;IIS-HttpLogging;IIS-LoggingLibraries;IIS-RequestMonitor;IIS-Security;IIS-RequestFiltering;IIS-HttpCompressionStatic;IIS-WebServerManagementTools;IIS-ManagementConsole;WAS-WindowsActivationService;WAS-ProcessModel;WAS-NetFxEnvironment;WAS-ConfigurationAPI;IIS-CGI"
-            );
-            proc.WaitForExit();
+            if (File.Exists(dismPath)) {
+                psi.FileName = dismPath;
+                psi.Arguments = "/Online /NoRestart /Enable-Feature /FeatureName:" + string.Join(" /FeatureName:", SystemPackages);
+            } else if (File.Exists(pkgMgrPath)) {
+                psi.FileName = pkgMgrPath;
+                psi.Arguments = "/quiet /iu:" + string.Join(";", SystemPackages);
+            } else {
+                Console.Error.WriteLine("Unable to install IIS FastCGI features.");
+                psi = null;
+            }
+
+            if (psi != null) {
+                psi.CreateNoWindow = true;
+                psi.WindowStyle = ProcessWindowStyle.Hidden;
+                using (var proc = Process.Start(psi)) {
+                    proc.WaitForExit();
+                }
+            }
 
             // Crack RoleModel.xml to figure out where our site lives...
-            // Path.GetFullPath - in the cloud the RoleRoot is "E:" instead of "E:\"
+
             var roleRoot = Environment.GetEnvironmentVariable("RoleRoot");
+            // In the cloud the RoleRoot is "E:" instead of "E:\", so we
+            // manually add the backslash to ensure it is not interpreted as a
+            // relative path.
             if (!roleRoot.EndsWith("\\")) {
                 roleRoot = roleRoot + "\\";
             }
@@ -61,13 +139,10 @@ namespace AzureSetup {
                 physicalDir = Path.Combine(roleRoot, physicalDir);
             }
 
-            nodes = navigator.Select("/sd:RoleModel/sd:Properties/sd:Property", mngr);
+            nodes = navigator.Select("/sd:RoleModel/sd:Properties/sd:Property[@name='Configuration']", mngr);
             bool isDebug = false;
             foreach (XPathNavigator node in nodes) {
-                if (node.GetAttribute("name", "") == "Configuration" &&
-                    node.GetAttribute("value", "") == "Debug") {
-                    isDebug = true;
-                }
+                isDebug |= node.GetAttribute("value", "") == "Debug";
             }
 
             string interpreter = null, interpreterEmulated = null;

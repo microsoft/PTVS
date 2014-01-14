@@ -29,6 +29,7 @@
     <VsPackage>|%CurrentProject%;PkgdefProjectOutputGroup|</VsPackage>
     <Assembly AssemblyName="Microsoft.PythonTools">|%CurrentProject%|</Assembly>
     <Assembly AssemblyName="|Microsoft.PythonTools.Analysis;AssemblyName|">|Microsoft.PythonTools.Analysis|</Assembly>
+    <Assembly AssemblyName="|Microsoft.PythonTools.BuildTasks;_GetAssemblyName|">|Microsoft.PythonTools.BuildTasks;_GetTargetPath|</Assembly>
     <Assembly AssemblyName="|Microsoft.PythonTools.Debugger;AssemblyName|">|Microsoft.PythonTools.Debugger|</Assembly>
     <Assembly AssemblyName="|Microsoft.PythonTools.ImportWizard;AssemblyName|">|Microsoft.PythonTools.ImportWizard|</Assembly>
     <Assembly AssemblyName="|Microsoft.PythonTools.VSInterpreters;AssemblyName|">|Microsoft.PythonTools.VSInterpreters|</Assembly>

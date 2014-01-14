@@ -12,7 +12,8 @@
  *
  * ***************************************************************************/
 
-using System;
+using System.Diagnostics;
+using System.IO;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -46,14 +47,27 @@ namespace Microsoft.VisualStudioTools.Project {
                 //Investigate all of the oldFileNames if they are equal to the current StartupFile
                 int index = 0;
                 foreach (string oldfile in oldFileNames) {
-                    //Compare the files and update the StartupFile Property if the currentStartupFile is an old file
-                    if (CommonUtils.IsSamePath(oldfile, fullPathToStartupFile)) {
+                    FileNode node = null;
+                    if ((flags[index] & VSRENAMEFILEFLAGS.VSRENAMEFILEFLAGS_Directory) != 0) {
+                        if (CommonUtils.IsSubpathOf(oldfile, fullPathToStartupFile)) {
+                            // Get the newfilename and update the StartupFile property
+                            string newfilename = Path.Combine(
+                                newFileNames[index],
+                                CommonUtils.GetRelativeFilePath(oldfile, fullPathToStartupFile)
+                            );
+
+                            node = _project.FindNodeByFullPath(newfilename) as FileNode;
+                            Debug.Assert(node != null);
+                        }
+                    } else if (CommonUtils.IsSamePath(oldfile, fullPathToStartupFile)) {
                         //Get the newfilename and update the StartupFile property
                         string newfilename = newFileNames[index];
-                        CommonFileNode node = _project.FindNodeByFullPath(newfilename) as CommonFileNode;
-                        if (node == null)
-                            throw new InvalidOperationException("Could not find the CommonFileNode object");
-                        //Startup file has been renamed
+                        node = _project.FindNodeByFullPath(newfilename) as FileNode;
+                        Debug.Assert(node != null);
+                    }                    
+
+                    if (node != null) {
+                        // Startup file has been renamed
                         _project.SetProjectProperty(
                             CommonConstants.StartupFile,
                             CommonUtils.GetRelativeFilePath(_project.ProjectHome, node.Url));

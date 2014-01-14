@@ -1,7 +1,11 @@
 '''A script that allows Flask servers to be started from the command line.
 
 This is used by PTVS to launch the server with a port configured through Visual
-Studio, either by the user or randomly selected.
+Studio, either by the user or selected randomly.
+
+When an app is deployed to Azure, $(StartupModule).wsgi_app will be used as a
+WSGI handler instead of this script. This may be modified by providing a custom
+web.config file.
 '''
 
 __author__ = 'Microsoft Corporation <ptvshelp@microsoft.com>'

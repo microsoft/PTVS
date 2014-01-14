@@ -111,12 +111,11 @@ namespace Microsoft.VisualStudioTools.Project
             return String.IsNullOrEmpty(value) ? VSConstants.E_NOTIMPL : VSConstants.S_OK;
         }
 
-        // TODO: Should RootRelativeURL be based on ProjectHome?
         public int get_RootRelativeURL(out string pbstrRelativePath)
         {
             if (output == null)
             {
-                pbstrRelativePath = Path.GetDirectoryName(project.Url);
+                pbstrRelativePath = project.ProjectHome;
                 return VSConstants.E_FAIL;
             }
 
@@ -135,12 +134,11 @@ namespace Microsoft.VisualStudioTools.Project
             }
             else
             {
-                string baseDir = output.Project.Directory;
+                string baseDir = project.ProjectHome;
                 string fullPath = output.GetMetadataValue("FullPath");
                 if (CommonUtils.IsSubpathOf(baseDir, fullPath))
                 {
-                    // TODO: Maybe GetRelativeFilePath?
-                    pbstrRelativePath = CommonUtils.GetRelativeDirectoryPath(baseDir, fullPath);
+                    pbstrRelativePath = CommonUtils.GetRelativeFilePath(baseDir, fullPath);
                 }
             }
 

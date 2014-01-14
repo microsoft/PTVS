@@ -64,7 +64,7 @@
       <!-- Install the tools into the VS directory -->
       <Directory Id="EXTENSION_INSTALLPATH">
           <Component Id="Comp_FastCGI" Guid="{3B37970C-D9A8-42B2-9EDC-580F59471A4A}">
-            <File Id="filBD27964D881D4A4F92534C7CB751BD7E" KeyPath="yes" Source="$(var.DjangoDir)\wfastcgi.py" />
+            <File Id="filBD27964D881D4A4F92534C7CB751BD7E" KeyPath="yes" Source="$(var.BuildTasksDir)\wfastcgi.py" />
           </Component>
       </Directory>
     </Directory>

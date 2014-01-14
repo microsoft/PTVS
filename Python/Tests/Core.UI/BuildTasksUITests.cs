@@ -331,6 +331,7 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0)]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CustomCommandsRequiredPackages() {
+            using (var dis = VirtualEnvTests.Init(PythonVersion, true))
             using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
                 PythonProjectNode node;
                 EnvDTE.Project proj;

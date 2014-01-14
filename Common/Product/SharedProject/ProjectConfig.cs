@@ -70,7 +70,7 @@ namespace Microsoft.VisualStudioTools.Project
             }
         }
 
-        protected IList<OutputGroup> OutputGroups
+        internal IList<OutputGroup> OutputGroups
         {
             get
             {
@@ -79,21 +79,25 @@ namespace Microsoft.VisualStudioTools.Project
                     // Initialize output groups
                     this.outputGroups = new List<OutputGroup>();
 
-                    // Get the list of group names from the project.
-                    // The main reason we get it from the project is to make it easier for someone to modify
-                    // it by simply overriding that method and providing the correct MSBuild target(s).
-                    IList<KeyValuePair<string, string>> groupNames = project.GetOutputGroupNames();
-
-                    if (groupNames != null)
+                    // If the project is not buildable (no CoreCompile target)
+                    // then don't bother getting the output groups.
+                    if (this.project.BuildProject != null && this.project.BuildProject.Targets.ContainsKey("CoreCompile"))
                     {
-                        // Populate the output array
-                        foreach (KeyValuePair<string, string> group in groupNames)
+                        // Get the list of group names from the project.
+                        // The main reason we get it from the project is to make it easier for someone to modify
+                        // it by simply overriding that method and providing the correct MSBuild target(s).
+                        IList<KeyValuePair<string, string>> groupNames = project.GetOutputGroupNames();
+
+                        if (groupNames != null)
                         {
-                            OutputGroup outputGroup = CreateOutputGroup(project, group);
-                            this.outputGroups.Add(outputGroup);
+                            // Populate the output array
+                            foreach (KeyValuePair<string, string> group in groupNames)
+                            {
+                                OutputGroup outputGroup = CreateOutputGroup(project, group);
+                                this.outputGroups.Add(outputGroup);
+                            }
                         }
                     }
-
                 }
                 return this.outputGroups;
             }
@@ -318,11 +322,18 @@ namespace Microsoft.VisualStudioTools.Project
 
         public virtual int get_BuildableProjectCfg(out IVsBuildableProjectCfg pb)
         {
+            if (project.BuildProject == null || !project.BuildProject.Targets.ContainsKey("CoreCompile"))
+            {
+                // The project is not buildable, so don't return a config. This
+                // will hide the 'Build' commands from the VS UI.
+                pb = null;
+                return VSConstants.E_NOTIMPL;
+            }
             if (buildableCfg == null) {
                 buildableCfg = new BuildableProjectConfig(this);
             }
             pb = buildableCfg;
-            return VSConstants.E_NOTIMPL;
+            return VSConstants.S_OK;
         }
 
         public virtual int get_CanonicalName(out string name)
@@ -676,18 +687,16 @@ namespace Microsoft.VisualStudioTools.Project
         }
 
         public virtual int QueryStartClean(uint options, int[] supported, int[] ready) {
-            config.PrepareBuild(false);
             if (supported != null && supported.Length > 0)
                 supported[0] = 1;
             if (ready != null && ready.Length > 0)
                 ready[0] = (this.config.ProjectMgr.BuildInProgress) ? 0 : 1;
             return VSConstants.S_OK;
-    }
+        }
 
         public virtual int QueryStartUpToDateCheck(uint options, int[] supported, int[] ready) {
-            config.PrepareBuild(false);
             if (supported != null && supported.Length > 0)
-                supported[0] = 0; // TODO:
+                supported[0] = 1;
             if (ready != null && ready.Length > 0)
                 ready[0] = (this.config.ProjectMgr.BuildInProgress) ? 0 : 1;
             return VSConstants.S_OK;
@@ -718,6 +727,8 @@ namespace Microsoft.VisualStudioTools.Project
         }
 
         public virtual int StartUpToDateCheck(IVsOutputWindowPane pane, uint options) {
+            // Report that the build is not up to date to ensure that we always
+            // build.
             return VSConstants.E_NOTIMPL;
         }
 
@@ -753,7 +764,7 @@ namespace Microsoft.VisualStudioTools.Project
             }
 
             return true;
-    }
+        }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes")]
         private void NotifyBuildEnd(MSBuildResult result, string buildTarget) {

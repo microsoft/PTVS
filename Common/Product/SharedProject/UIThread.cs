@@ -146,7 +146,7 @@ namespace Microsoft.VisualStudioTools.Project
             // if we're already on the UI thread run immediately - this prevents
             // re-entrancy at unexpected times when we're already on the UI thread.
             if (this.isUnitTestingMode || 
-                uithread == Thread.CurrentThread)   
+                uithread == Thread.CurrentThread)
             {
                 a();
                 return;
@@ -184,8 +184,8 @@ namespace Microsoft.VisualStudioTools.Project
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode"), System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes")]
         internal T RunSync<T>(Func<T> a) {
             T retValue = default(T);
-            if (this.isUnitTestingMode) {
-                return a();                
+            if (this.isUnitTestingMode || uithread == Thread.CurrentThread) {
+                return a();
             }
             Exception exn = null; ;
             Debug.Assert(this.synchronizationContext != null, "The SynchronizationContext must be captured before calling this method");

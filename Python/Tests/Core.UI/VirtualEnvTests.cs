@@ -42,11 +42,11 @@ namespace PythonToolsUITests {
             PythonTestData.Deploy();
         }
 
-        private DefaultInterpreterSetter Init() {
+        private static DefaultInterpreterSetter Init() {
             return Init(PythonPaths.Python27 ?? PythonPaths.Python27_x64, true);
         }
 
-        public DefaultInterpreterSetter Init(PythonVersion interp, bool install) {
+        public static DefaultInterpreterSetter Init(PythonVersion interp, bool install) {
             interp.AssertInstalled();
 
             var sp = new ServiceProvider(VsIdeTestHostContext.Dte as Microsoft.VisualStudio.OLE.Interop.IServiceProvider);

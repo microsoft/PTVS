@@ -1,0 +1,35 @@
+﻿<?xml version="1.0"?>
+<!-- Generated web.config for Azure projects. You can add a web.config file to
+     your project to replace this.
+-->
+<configuration>
+  <system.diagnostics>
+    <trace>
+      <listeners>
+        <add type="Microsoft.WindowsAzure.Diagnostics.DiagnosticMonitorTraceListener, Microsoft.WindowsAzure.Diagnostics, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35" name="AzureDiagnostics">
+          <filter type="" />
+        </add>
+      </listeners>
+    </trace>
+  </system.diagnostics>
+
+  <appSettings></appSettings>
+
+  <system.web>
+    <compilation debug="true" targetFramework="4.0" />
+  </system.web>
+
+  <system.webServer>
+    <modules runAllManagedModulesForAllRequests="true"/>
+    <handlers></handlers>
+    <rewrite>
+      <rules>
+        <rule name="Configure Python" stopProcessing="true">
+          <match url="(.*)" ignoreCase="false" />
+          <conditions></conditions>
+          <action type="Rewrite" url="handler.fcgi/{R:1}" appendQueryString="true" />
+        </rule>
+      </rules>
+    </rewrite>
+  </system.webServer>
+</configuration>

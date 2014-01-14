@@ -34,6 +34,7 @@ ASSEMBLIES = sorted([
     "Microsoft.PythonTools.TestAdapter",
     "Microsoft.PythonTools.VSInterpreters",
     "Microsoft.PythonTools.VsLogger",
+    "Microsoft.PythonTools.WebRole",
     "Microsoft.VisualStudio.ReplWindow",
     "ProfilingUITests",
     "PythonToolsTests",
