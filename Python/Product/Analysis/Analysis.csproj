@@ -149,6 +149,7 @@
     <Compile Include="Analyzer\ModuleScope.cs" />
     <Compile Include="Analyzer\OverviewWalker.cs" />
     <Compile Include="SingleDict.cs" />
+    <Compile Include="Values\PartialFunctionInfo.cs" />
     <Compile Include="VariableDef.cs" />
     <Compile Include="Interpreter\Default\CPythonFunctionOverload.cs" />
     <Compile Include="Interpreter\Default\CPythonMethodDescriptor.cs" />

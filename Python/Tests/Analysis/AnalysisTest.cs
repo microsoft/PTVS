@@ -131,39 +131,28 @@ f(x=42, y = 'abc')
             var baz = GetSourceUnit("import quox\r\nfunc = quox.func", @"C:\\Test\\Lib\\fob\\oar\\baz.py");
             var quox = GetSourceUnit("def func(): return 42", @"C:\\Test\\Lib\\fob\\oar\\quox.py");
 
-            var state = new PythonAnalyzer(InterpreterFactory, Interpreter);
+            var state = CreateAnalyzer(useAnalysisLog: true);
 
-            var fobInitState = state.AddModule("fob", @"C:\\Test\\Lib\\fob\\__init__.py", EmptyAnalysisCookie.Instance);
-            var oarInitState = state.AddModule("fob.oar", @"C:\\Test\\Lib\\fob\\oar\\__init__.py", EmptyAnalysisCookie.Instance);
-            var bazState = state.AddModule("fob.oar.baz", @"C:\\Test\\Lib\\fob\\oar\\baz.py", EmptyAnalysisCookie.Instance);
-            var quoxState = state.AddModule("fob.oar.quox", @"C:\\Test\\Lib\\fob\\oar\\quox.py", EmptyAnalysisCookie.Instance);
+            var fobInitState = state.AddModule("fob", @"C:\\Test\\Lib\\fob\\__init__.py");
+            var oarInitState = state.AddModule("fob.oar", @"C:\\Test\\Lib\\fob\\oar\\__init__.py");
+            var bazState = state.AddModule("fob.oar.baz", @"C:\\Test\\Lib\\fob\\oar\\baz.py");
+            var quoxState = state.AddModule("fob.oar.quox", @"C:\\Test\\Lib\\fob\\oar\\quox.py");
 
             Prepare(fobInitState, fobInit);
             Prepare(oarInitState, oarInit);
             Prepare(bazState, baz);
             Prepare(quoxState, quox);
 
-            fobInitState.Analyze(CancellationToken.None);
-            oarInitState.Analyze(CancellationToken.None);
-            bazState.Analyze(CancellationToken.None);
-            quoxState.Analyze(CancellationToken.None);
-            Assert.AreEqual(
-                quoxState.Analysis.GetValuesByIndex("func", 1).First().Description,
-                "def func() -> int"
-            );
-            Assert.AreEqual(
-                bazState.Analysis.GetValuesByIndex("func", 1).First().Description,
-                "def func() -> int"
-            );
-            Assert.AreEqual(
-                oarInitState.Analysis.GetValuesByIndex("func", 1).First().Description,
-                "def func() -> int"
-            );
+            fobInitState.Analyze(CancellationToken.None, true);
+            oarInitState.Analyze(CancellationToken.None, true);
+            bazState.Analyze(CancellationToken.None, true);
+            quoxState.Analyze(CancellationToken.None, true);
+            state.AnalyzeQueuedEntries(CancellationToken.None);
 
-            Assert.AreEqual(
-                fobInitState.Analysis.GetValuesByIndex("func", 1).First().Description, 
-                "def func() -> int"
-            );
+            AssertUtil.ContainsExactly(quoxState.Analysis.GetDescriptionsByIndex("func", 1), "def func() -> int");
+            AssertUtil.ContainsExactly(bazState.Analysis.GetDescriptionsByIndex("func", 1), "def func() -> int");
+            AssertUtil.ContainsExactly(oarInitState.Analysis.GetDescriptionsByIndex("func", 1), "def func() -> int");
+            AssertUtil.ContainsExactly(fobInitState.Analysis.GetDescriptionsByIndex("func", 1), "def func() -> int");
         }
         
         /// <summary>
@@ -5727,6 +5716,159 @@ def f(s = 123) -> s:
             AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("s", text.IndexOf("return s")), BuiltinTypeId.Int);
         }
 
+        [TestMethod, Priority(0)]
+        public void FunctoolsPartial() {
+            var text = @"
+from _functools import partial
+
+def fob(a, b, c, d):
+    return a, b, c, d
+
+sanity = fob(123, 3.14, 'abc', [])
+
+fob_1 = partial(fob, 123, 3.14, 'abc', [])
+result_1 = fob_1()
+
+fob_2 = partial(fob, d = [], c = 'abc', b = 3.14, a = 123)
+result_2 = fob_2()
+
+fob_3 = partial(fob, 123, 3.14)
+result_3 = fob_3('abc', [])
+
+fob_4 = partial(fob, c = 'abc', d = [])
+result_4 = fob_4(123, 3.14)
+
+func_from_fob_1 = fob_1.func
+args_from_fob_1 = fob_1.args
+keywords_from_fob_2 = fob_2.keywords
+";
+            var entry = ProcessText(text, PythonLanguageVersion.V27);
+
+            foreach (var name in new[] {
+                "sanity",
+                "result_1",
+                "result_2",
+                "result_3",
+                "result_4",
+                "args_from_fob_1"
+            }) {
+                var resultList = entry.GetValuesByIndex(name, 0).ToArray();
+                Assert.AreEqual(1, resultList.Length, name + ".Types.Length");
+                Assert.IsInstanceOfType(resultList[0], typeof(SequenceInfo), name + ".Types[0]");
+                var result = (SequenceInfo)resultList[0];
+                AssertTupleContains(result, BuiltinTypeId.Int, BuiltinTypeId.Float, BuiltinTypeId_Str, BuiltinTypeId.List);
+            }
+
+            var fobList = entry.GetValuesByIndex("fob", 0).ToArray();
+            Assert.AreEqual(1, fobList.Length, "fob.Types.Length");
+            Assert.IsInstanceOfType(fobList[0], typeof(FunctionInfo), "fob.Types[0]");
+            var fob = (FunctionInfo)fobList[0];
+            fobList = entry.GetValuesByIndex("func_from_fob_1", 0).ToArray();
+            Assert.AreEqual(1, fobList.Length, "func_from_fob_1.Types.Length");
+            Assert.IsInstanceOfType(fobList[0], typeof(FunctionInfo), "func_from_fob_1.Types[0]");
+            Assert.AreSame(fob, fobList[0]);
+
+            var kwList = entry.GetValuesByIndex("keywords_from_fob_2", 0).ToArray();
+            Assert.AreEqual(1, kwList.Length, "kwList.Types.Length");
+            Assert.IsInstanceOfType(kwList[0], typeof(DictionaryInfo), "kwList.Types[0]");
+        }
+
+        [TestMethod, Priority(0)]
+        public void FunctoolsWraps() {
+            var text = @"
+from functools import wraps, update_wrapper
+
+def decorator1(fn):
+    @wraps(fn)
+    def wrapper(*args, **kwargs):
+        fn(*args, **kwargs)
+        return 'decorated'
+    return wrapper
+
+@decorator1
+def test1():
+    return 'undecorated'
+
+def test2():
+    pass
+
+def test2a():
+    pass
+
+test2.test_attr = 123
+update_wrapper(test2a, test2, ('test_attr',))
+
+test1_result = test1()
+";
+
+            var functools = @"
+from _functools import partial
+
+# These functions will be specialized
+def wraps(f):
+    pass
+
+def update_wrapper(wrapper, wrapped, assigned, updated):
+    pass
+";
+
+            var state = CreateAnalyzer();
+            var functoolsEntry = state.AddModule("functools", "functools", null);
+            Prepare(functoolsEntry, GetSourceUnit(functools));
+            var textEntry = state.AddModule("fob", "fob", null);
+            Prepare(textEntry, GetSourceUnit(text));
+            functoolsEntry.Analyze(CancellationToken.None, true);
+            textEntry.Analyze(CancellationToken.None, true);
+            state.AnalyzeQueuedEntries(CancellationToken.None);
+            var entry = textEntry.Analysis;
+
+            Assert.AreEqual(1, entry.GetValuesByIndex("test1", 0).Count());
+            var nameList = entry.GetValuesByIndex("test1.__name__", 0).ToArray();
+            Assert.AreEqual(1, nameList.Length);
+            Assert.AreEqual("test1", nameList[0].GetConstantValueAsString(), "test1.__name__");
+            var wrappedList = entry.GetValuesByIndex("test1.__wrapped__", 0).ToArray();
+            Assert.AreEqual(1, wrappedList.Length);
+            Assert.IsInstanceOfType(wrappedList[0], typeof(FunctionInfo), "typeof(test1.__wrapped__)");
+            var returnList = entry.GetValuesByIndex("test1_result", 0).ToArray();
+            Assert.AreEqual(1, returnList.Length);
+            Assert.AreEqual("decorated", returnList[0].GetConstantValueAsString(), "test1()");
+
+            // __name__ should not have been changed by update_wrapper
+            nameList = entry.GetValuesByIndex("test2.__name__", 0).ToArray();
+            Assert.AreEqual(1, nameList.Length);
+            Assert.AreEqual("test2", nameList[0].GetConstantValueAsString(), "test2.__name__");
+            nameList = entry.GetValuesByIndex("test2a.__name__", 0).ToArray();
+            Assert.AreEqual(1, nameList.Length);
+            Assert.AreEqual("test2a", nameList[0].GetConstantValueAsString(), "test2a.__name__");
+
+            // test_attr should have been copied by update_wrapper
+            var test2 = entry.GetValuesByIndex("test2.test_attr", 0).ToArray();
+            Assert.AreEqual(1, test2.Length);
+            Assert.AreEqual(BuiltinTypeId.Int, test2[0].TypeId);
+            var test2a = entry.GetValuesByIndex("test2a.test_attr", 0).ToArray();
+            Assert.AreEqual(1, test2a.Length);
+            Assert.AreEqual(BuiltinTypeId.Int, test2a[0].TypeId);
+        }
+
+        private static void AssertTupleContains(SequenceInfo tuple, params BuiltinTypeId[] id) {
+            var expected = string.Join(", ", id);
+            var actual = string.Join(", ", tuple.IndexTypes.Select(t => {
+                var t2 = t.TypesNoCopy;
+                if (t2.Count == 1) {
+                    return t2.Single().TypeId.ToString();
+                } else {
+                    return "{" + string.Join(", ", t2.Select(t3 => t3.TypeId).OrderBy(t3 => t3)) + "}";
+                }
+            }));
+            if (tuple.IndexTypes
+                .Zip(id, (t1, id2) => t1.TypesNoCopy.Count == 1 && t1.TypesNoCopy.Single().TypeId == id2)
+                .Any(b => !b)) {
+                Assert.Fail(string.Format("Expected <{0}>. Actual <{1}>.", expected, actual));
+            }
+        }
+
+        #endregion
+
         #region Helpers
 
         protected IEnumerable<IAnalysisVariable> UniqifyVariables(IEnumerable<IAnalysisVariable> vars) {
@@ -5741,7 +5883,6 @@ def f(s = 123) -> s:
 
         }
 
-        #endregion
         private static string[] GetMembers(object obj, bool showClr) {
             var dir = showClr ? ClrModule.DirClr(obj) : ClrModule.Dir(obj);
             int len = dir.__len__();

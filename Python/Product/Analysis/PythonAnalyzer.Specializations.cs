@@ -160,12 +160,35 @@ namespace Microsoft.PythonTools.Analysis {
             SpecializeFunction("os._Environ", "update", Nop);
             SpecializeFunction("ntpath", "expandvars", ReturnsString);
             SpecializeFunction("idlelib.EditorWindow.EditorWindow", "__init__", Nop);
+            SpecializeFunction("_functools", "partial", PartialFunction);
+            SpecializeFunction("functools", "update_wrapper", UpdateWrapperFunction);
+            SpecializeFunction("functools", "wraps", WrapsFunction);
 
             // cached for quick checks to see if we're a call to clr.AddReference
 
             SpecializeFunction("wpf", "LoadComponent", LoadComponent);
         }
 
+        private static IAnalysisSet GetArg(
+            IAnalysisSet[] args,
+            NameExpression[] keywordArgNames,
+            string name,
+            int index
+        ) {
+            for (int i = 0, j = args.Length - keywordArgNames.Length;
+                i < keywordArgNames.Length && j < args.Length;
+                ++i, ++j) {
+                if (keywordArgNames[i].Name == name) {
+                    return args[j];
+                }
+            }
+
+            if (index < args.Length) {
+                return args[index];
+            }
+
+            return null;
+        }
 
         IAnalysisSet Nop(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
             return AnalysisSet.Empty;
@@ -294,6 +317,115 @@ namespace Microsoft.PythonTools.Analysis {
                 }
                 return res;
             });
+        }
+
+        IAnalysisSet PartialFunction(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
+            if (args.Length >= 1) {
+                return unit.Scope.GetOrMakeNodeValue(node, n => {
+                    return new PartialFunctionInfo(args[0], args.Skip(1).ToArray(), keywordArgNames);
+                });
+            }
+
+            return AnalysisSet.Empty;
+        }
+
+        private static IEnumerable<string> IterateStringConstants(IEnumerable<VariableDef> args) {
+            return args
+                .SelectMany(arg => arg.TypesNoCopy)
+                .Where(obj => obj != null)
+                .Select(obj => obj.GetConstantValueAsString())
+                .Where(value => !string.IsNullOrEmpty(value));
+        }
+
+        IAnalysisSet UpdateWrapperFunction(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
+            var wrapper = GetArg(args, keywordArgNames, "wrapper", 0);
+            var wrapped = GetArg(args, keywordArgNames, "wrapped", 1);
+            var assigned = GetArg(args, keywordArgNames, "assigned", 2) as IterableInfo;
+            var updated = GetArg(args, keywordArgNames, "updated", 3) as IterableInfo;
+
+            if (wrapper == null || wrapped == null) {
+                return AnalysisSet.Empty;
+            }
+
+            wrapper.SetMember(node, unit, "__wrapped__", wrapped);
+            
+            var assignedItems = (assigned != null) ?
+                IterateStringConstants(assigned.IndexTypes) :
+                new[] { "__module__", "__name__", "__qualname__", "__doc__", "__annotations__" };
+
+            foreach (var attr in assignedItems) {
+                var member = wrapped.GetMember(node, unit, attr);
+                if (member != null && member.Any()) {
+                    wrapper.SetMember(node, unit, attr, member);
+                }
+            }
+
+            var updatedItems = (updated != null) ?
+                IterateStringConstants(updated.IndexTypes) :
+                new[] { "__dict__" };
+
+            foreach (var attr in updatedItems) {
+                var member = wrapped.GetMember(node, unit, attr);
+                if (member != null && member.Any()) {
+                    var existing = wrapper.GetMember(node, unit, attr);
+                    if (existing != null) {
+                        var updateMethod = existing.GetMember(node, unit, "update");
+                        if (updateMethod != null) {
+                            updateMethod.Call(node, unit, new[] { member }, NameExpression.EmptyArray);
+                        }
+                    }
+                }
+            }
+
+            return wrapper;
+        }
+
+        IAnalysisSet WrapsFunction(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
+            if (args.Length >= 1) {
+                return unit.Scope.GetOrMakeNodeValue(node, n => {
+                    IModule mod;
+                    ModuleReference modRef;
+                    if (!Modules.TryGetValue("functools", out modRef) || (mod = modRef.Module) == null) {
+                        mod = ImportBuiltinModule("functools");
+                    }
+                    if (mod == null) {
+                        return AnalysisSet.Empty;
+                    }
+                    IAnalysisSet updateWrapper;
+                    if (!mod.GetAllMembers(_defaultContext).TryGetValue("update_wrapper", out updateWrapper)) {
+                        return AnalysisSet.Empty;
+                    }
+
+                    var newArgs = new [] {
+                        args[0],
+                        args.Length > 1 ? args[1] : AnalysisSet.Empty,
+                        args.Length > 2 ? args[2] : AnalysisSet.Empty
+                    };
+                    var newKeywords = new[] {
+                        new NameExpression("wrapped"),
+                        new NameExpression("assigned"),
+                        new NameExpression("updated")
+                    };
+
+                    for (int i = 0; i < keywordArgNames.Length; ++i) {
+                        int j = i + args.Length - keywordArgNames.Length;
+                        if (j >= 0 && j < args.Length) {
+                            if (keywordArgNames[i].Name == "assigned") {
+                                newArgs[1] = args[j];
+                            } else if (keywordArgNames[i].Name == "updated") {
+                                newArgs[2] = args[j];
+                            }
+                        }
+                    }
+
+                    return new PartialFunctionInfo(
+                        updateWrapper,
+                        newArgs,
+                        newKeywords
+                    );
+                });
+            }
+            return AnalysisSet.Empty;
         }
 
         IAnalysisSet ReturnUnionOfInputs(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
