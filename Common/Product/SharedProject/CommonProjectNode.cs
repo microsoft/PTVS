@@ -697,7 +697,7 @@ namespace Microsoft.VisualStudioTools.Project {
 
         private void MergeDiskNodes(HierarchyNode curParent, string dir) {
             var merger = new DiskMerger(this, curParent, dir);
-            while (merger.ContinueMerge()) {
+            while (merger.ContinueMerge(ParentHierarchy != null)) {
             }
         }
 
@@ -966,7 +966,7 @@ namespace Microsoft.VisualStudioTools.Project {
                     if (merger != null) {
                         // we have more file merges to process, do this
                         // before reflecting any other pending updates...
-                        if (!merger.ContinueMerge()) {
+                        if (!merger.ContinueMerge(ParentHierarchy != null)) {
                             _currentMerger = null;
                         }
                         continue;

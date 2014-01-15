@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System;
+using System.Runtime.InteropServices;
 using VSLangProj;
 using VSLangProj80;
 
@@ -21,6 +22,7 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
     /// Represents the automation equivalent of ReferenceNode
     /// </summary>
     /// <typeparam name="RefType"></typeparam>
+    [ComVisible(true)]
     public abstract class OAReferenceBase : Reference3 {
         #region fields
         private ReferenceNode referenceNode;
