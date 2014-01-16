@@ -12,12 +12,6 @@
 -->
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
   <PropertyGroup>
-    <PythonRunWebServerCommand Condition="'$(PythonRunWebServerCommand)' == ''">runserver.py</PythonRunWebServerCommand>
-    <PythonRunWebServerCommandArguments Condition="'$(PythonRunWebServerCommandArguments)' == ''">--host "%SERVER_HOST%" --port %SERVER_PORT% $(StartupModule)</PythonRunWebServerCommandArguments>
-    <PythonRunWebServerCommandType Condition="'$(PythonRunWebServerCommandType)' == ''">script</PythonRunWebServerCommandType>
-    <PythonDebugWebServerCommand Condition="'$(PythonDebugWebServerCommand)' == ''">runserver.py</PythonDebugWebServerCommand>
-    <PythonDebugWebServerCommandArguments Condition="'$(PythonDebugWebServerCommandArguments)' == ''">--host "%SERVER_HOST%" --port %SERVER_PORT% $(StartupModule)</PythonDebugWebServerCommandArguments>
-    <PythonDebugWebServerCommandType Condition="'$(PythonDebugWebServerCommandType)' == ''">script</PythonDebugWebServerCommandType>
     <PythonWebFrameworkPackage Condition="'$(PythonWebFrameworkPackage)' == ''">flask</PythonWebFrameworkPackage>
     <PythonWebFrameworkPackageDisplayName Condition="'$(PythonWebFrameworkPackageDisplayName)' == ''">Flask</PythonWebFrameworkPackageDisplayName>
   </PropertyGroup>

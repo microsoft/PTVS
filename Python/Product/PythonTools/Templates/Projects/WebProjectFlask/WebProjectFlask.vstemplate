@@ -13,7 +13,6 @@
   <TemplateContent>
     <Project File="WebProjectFlask.pyproj" ReplaceParameters="true">
       <ProjectItem OpenInEditor="true">app.py</ProjectItem>
-      <ProjectItem>runserver.py</ProjectItem>
     </Project>
   </TemplateContent>
 </VSTemplate>

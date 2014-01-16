@@ -711,7 +711,6 @@
     </Content>
     <None Include="RefreshDefaultDB.py" />
     <ZipProject Include="Templates\Projects\WebProjectFlask\app.py" />
-    <ZipProject Include="Templates\Projects\WebProjectFlask\runserver.py" />
     <ZipProject Include="Templates\Projects\FromExistingCode\FromExistingCode.pyproj" />
     <ZipProject Include="Templates\Projects\FromExistingCode\FromExistingCode.vstemplate">
       <SubType>Designer</SubType>
