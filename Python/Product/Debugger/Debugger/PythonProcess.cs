@@ -678,39 +678,33 @@ namespace Microsoft.PythonTools.Debugger {
                 _ids.Free(execId);
             }
             Debug.WriteLine("Received execution request {0}", execId);
-            completion.Completion(ReadPythonObject(stream, completion.Text, "", false, false, completion.Frame));
+            completion.Completion(ReadPythonObject(stream, completion.Text, null, completion.Frame));
         }
 
         private void HandleEnumChildren(Stream stream) {
             int execId = stream.ReadInt32();
-            ChildrenInfo completion;
 
+            ChildrenInfo completion;
             lock (_pendingChildEnums) {
                 completion = _pendingChildEnums[execId];
                 _pendingChildEnums.Remove(execId);
             }
 
-            int attributesCount = stream.ReadInt32();
-            int indicesCount = stream.ReadInt32();
-            bool indicesAreIndex = stream.ReadInt32() == 1;
-            bool indicesAreEnumerate = stream.ReadInt32() == 1;
-            PythonEvaluationResult[] res = new PythonEvaluationResult[attributesCount + indicesCount];
-            for (int i = 0; i < attributesCount; i++) {
-                string expr = stream.ReadString();
-                res[i] = ReadPythonObject(stream, completion.Text, expr, false, false, completion.Frame);
+            var children = new PythonEvaluationResult[stream.ReadInt32()];
+            for (int i = 0; i < children.Length; i++) {
+                string childName = stream.ReadString();
+                string childExpr = stream.ReadString();
+                children[i] = ReadPythonObject(stream, childExpr, childName, completion.Frame);
             }
-            for (int i = attributesCount; i < res.Length; i++) {
-                string expr = stream.ReadString();
-                res[i] = ReadPythonObject(stream, completion.Text, expr, indicesAreIndex, indicesAreEnumerate, completion.Frame);
-            }
-            completion.Completion(res);
+
+            completion.Completion(children);
         }
 
-        private PythonEvaluationResult ReadPythonObject(Stream stream, string text, string childText, bool childIsIndex, bool childIsEnumerate, PythonStackFrame frame) {
+        private PythonEvaluationResult ReadPythonObject(Stream stream, string expr, string childName, PythonStackFrame frame) {
             string objRepr = stream.ReadString();
             string hexRepr = stream.ReadString();
             string typeName = stream.ReadString();
-            bool isExpandable = stream.ReadInt32() == 1;
+            var flags = (PythonEvaluationResultFlags)stream.ReadInt32();
 
             if ((typeName == "unicode" && LanguageVersion.Is2x()) ||
                 (typeName == "str" && LanguageVersion.Is3x())) {
@@ -721,7 +715,7 @@ namespace Microsoft.PythonTools.Debugger {
                 hexRepr = null;
             }
 
-            return new PythonEvaluationResult(this, objRepr, hexRepr, typeName, text, childText, childIsIndex, childIsEnumerate, frame, isExpandable);
+            return new PythonEvaluationResult(this, objRepr, hexRepr, typeName, expr, childName, frame, flags);
         }
 
         private void HandleThreadFrameList(Stream stream) {
@@ -761,7 +755,7 @@ namespace Microsoft.PythonTools.Debugger {
                 for (int j = 0; j < variables.Length; j++) {
                     string name = stream.ReadString();
                     if (frame != null) {
-                        variables[j] = ReadPythonObject(stream, name, "", false, false, frame);
+                        variables[j] = ReadPythonObject(stream, name, name, frame);
                     }
                 }
                 if (frame != null) {
@@ -1063,7 +1057,7 @@ namespace Microsoft.PythonTools.Debugger {
             }
         }
 
-        internal void EnumChildren(string text, PythonStackFrame pythonStackFrame, bool childIsEnumerate, Action<PythonEvaluationResult[]> completion) {
+        internal void EnumChildren(string text, PythonStackFrame pythonStackFrame, Action<PythonEvaluationResult[]> completion) {
             DebugWriteCommand("Enum Children");
             int executeId = _ids.Allocate();
             lock (_pendingChildEnums) {
@@ -1077,7 +1071,6 @@ namespace Microsoft.PythonTools.Debugger {
                 _stream.WriteInt32(pythonStackFrame.FrameId);
                 _stream.WriteInt32(executeId);
                 _stream.WriteInt32((int)pythonStackFrame.Kind);
-                _stream.WriteInt32(childIsEnumerate ? 1 : 0);
             }
         }
 

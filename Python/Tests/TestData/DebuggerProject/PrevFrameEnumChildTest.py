@@ -2,8 +2,9 @@
     pass
 
 def f():
-    d1 = {42 : 100}
-    d2 = {'abc' : 'fob'}
+    d1 = {42: 100}
+    d2 = {'abc': 'fob'}
+    d3 = {1e1000: d1}
     u1 = u"привет мир"
     s = set([frozenset([2,3,4])])
     class C(object):

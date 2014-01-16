@@ -103,6 +103,13 @@ try:
 except:
     unicode = str
 
+# A value of a synthesized child. The string is passed through to the variable list, and type is not displayed at all.
+class SynthesizedValue(object):
+    def __init__(self, s = ''):
+        self.s = s
+    def __repr__(self):
+        return self.s
+
 # dictionary of line no to break point info
 BREAKPOINTS = {}
 DJANGO_BREAKPOINTS = {}
@@ -159,6 +166,45 @@ FRAME_KIND_PYTHON = 1
 FRAME_KIND_DJANGO = 2
 
 DJANGO_BUILTINS = {'True': True, 'False': False, 'None': None}
+
+PYTHON_EVALUATION_RESULT_EXPANDABLE = 1
+PYTHON_EVALUATION_RESULT_METHOD_CALL = 2
+PYTHON_EVALUATION_RESULT_SIDE_EFFECTS = 4
+
+# Don't show attributes of these types if they come from the class (assume they are methods).
+METHOD_TYPES = (
+    types.FunctionType,
+    types.MethodType,
+    types.BuiltinFunctionType,
+    type("".__repr__), # method-wrapper
+)
+
+# repr() for these types can be used as input for eval() to get the original value.
+# float is intentionally not included because it is not always round-trippable (e.g inf, nan).
+TYPES_WITH_ROUND_TRIPPING_REPR = set((type(None), int, bool, str, unicode))
+if sys.version[0] == '3':
+    TYPES_WITH_ROUND_TRIPPING_REPR.add(bytes)
+else:
+    TYPES_WITH_ROUND_TRIPPING_REPR.add(long)
+
+# repr() for these types can be used as input for eval() to get the original value, provided that the same is true for all their elements.
+COLLECTION_TYPES_WITH_ROUND_TRIPPING_REPR = set((tuple, list, set, frozenset))
+
+# eval(repr(x)), but optimized for common types for which it is known that result == x.
+def eval_repr(x):
+    def is_repr_round_tripping(x):
+        # Do exact type checks here - subclasses can override __repr__.
+        if type(x) in TYPES_WITH_ROUND_TRIPPING_REPR:
+            return True
+        elif type(x) in COLLECTION_TYPES_WITH_ROUND_TRIPPING_REPR:
+            # All standard sequence types are round-trippable if their elements are.
+            return all((is_repr_round_tripping(item) for item in x))
+        else:
+            return False
+    if is_repr_round_tripping(x):
+        return x
+    else:
+        return eval(repr(x), {})
 
 if sys.version[0] == '3':
   # work around a crashing bug on CPython 3.x where they take a hard stack overflow
@@ -945,14 +991,14 @@ class Thread(object):
         
         self._block_starting_lock.release()
 
-    def enum_child_on_thread(self, text, cur_frame, execution_id, child_is_enumerate, frame_kind):
+    def enum_child_on_thread(self, text, cur_frame, execution_id, frame_kind):
         self._block_starting_lock.acquire()
         if not self._is_working and self._is_blocked:
-            self.schedule_work(lambda : self.enum_child_locally(text, cur_frame, execution_id, child_is_enumerate, frame_kind))
+            self.schedule_work(lambda : self.enum_child_locally(text, cur_frame, execution_id, frame_kind))
             self._block_starting_lock.release()
         else:
             self._block_starting_lock.release()
-            report_children(execution_id, [], [], False, False)
+            report_children(execution_id, [])
 
     def get_locals(self, cur_frame, frame_kind):
         if frame_kind == FRAME_KIND_DJANGO:
@@ -1002,92 +1048,97 @@ class Thread(object):
         self.locals_to_fast(cur_frame)
         sys.displayhook(res)
 
-    def enum_child_locally(self, text, cur_frame, execution_id, child_is_enumerate, frame_kind):
-        def get_attributes(res):
-            items = []
-            for name in dir(res):
-                if not (name.startswith('__') and name.endswith('__')):
-                    try:
-                        item = getattr(res, name)
-                        if not hasattr(item, '__call__'):
-                            items.append( (name, item) )
-                    except:
-                        # skip this item if we can't display it...
-                        pass
-            return items
-
+    def enum_child_locally(self, expr, cur_frame, execution_id, frame_kind):
         try:
-            if child_is_enumerate:
-                # remove index from eval, then get the index back.
-                index_size = 0
-                enumerate_index = 0
-                for c in reversed(text):
-                    index_size += 1
-                    if c.isdigit():
-                        enumerate_index = enumerate_index * 10 + (ord(c) - ord('0'))
-                    elif c == '[':
-                        text = text[:-index_size]
-                        break
-            
-            code = compile(text, cur_frame.f_code.co_name, 'eval')
+            code = compile(expr, cur_frame.f_code.co_name, 'eval')
             res = eval(code, cur_frame.f_globals, self.get_locals(cur_frame, frame_kind))
-            
-            if child_is_enumerate:
-                for index, value in enumerate(res):
-                    if enumerate_index == index:
-                        res = value
-                        break
-                else:
-                    # value changed?
-                    report_children(execution_id, [], [], False, False)
-                    return
-            
-            indices_are_index = False
-            indices_are_enumerate = False
-            maybe_enumerate = False
+
+            children = [] # [(name, expression, value, flags)]
+
+            # Process attributes.
+
+            cls_dir = set(dir(type(res)))
+            res_dict = getattr(res, '__dict__', {})
+            res_slots = set(getattr(res, '__slots__', ()))
+
+            for attr_name in dir(res):
+                try:
+                    # Skip special attributes.
+                    if attr_name.startswith('__') and attr_name.endswith('__'):
+                        continue
+                    attr_value = getattr(res, attr_name)
+                    # If it comes from the class and is not shadowed by any instance attribute, filter it out if it looks like a method.
+                    if attr_name in cls_dir and attr_name not in res_dict and attr_name not in res_slots:
+                        if isinstance(attr_value, METHOD_TYPES):
+                            continue
+                    children.append((attr_name, expr + '.' + attr_name, attr_value, 0))
+                except:
+                    # Skip this attribute if we can't process it.
+                    pass
+
+            # Process items, if this is a collection.
+
             try:
-                if isinstance(res, types.GeneratorType):
-                    # go to the except block
-                    raise Exception('generator')
+                if hasattr(res, '__iter__') and iter(res) is res:
+                    # An iterable object that is its own iterator - iterators, generators, enumerate() etc. These can only be iterated once, so
+                    # don't try to iterate them immediately. Instead, provide a child item that will do so when expanded, to give user full control.
+                    children.append(('Results View', 'tuple(' + expr + ')', SynthesizedValue('Expanding the Results View will run the iterator'), PYTHON_EVALUATION_RESULT_METHOD_CALL | PYTHON_EVALUATION_RESULT_SIDE_EFFECTS))
+                    enum = ()
                 elif isinstance(res, dict) or (hasattr(res, 'items') and hasattr(res, 'has_key')):
-                    # dictionary-like object
-                    enum = res.items()
-                else:
-                    # indexable object
-                    enum = enumerate(res)
-                    maybe_enumerate = True
-
-                indices = []
-                for index, item in enum:
+                    # Dictionary-like object.
                     try:
-                        if len(indices) > 10000:
-                            # report at most 10000 items.
-                            indices.append( ('[...]', 'Evaluation halted because sequence included too many items...') )
-                            break
-                        
-                        indices.append( ('[' + repr(index) + ']', item) )
-                        if maybe_enumerate and not indices_are_enumerate:
-                            # check if we can index back into this object, or if we have to use
-                            # enumerate to get values out of it.
-                            try:
-                                fetched = res[index]
-                                if fetched is not item:
-                                    indices_are_enumerate = True
-                            except:
-                                indices_are_enumerate = True
-                                
+                        enum = res.viewitems()
+                        enum_expr = expr + '.viewitems()'
+                        children.append(('viewitems()', enum_expr, SynthesizedValue(), PYTHON_EVALUATION_RESULT_METHOD_CALL))
                     except:
-                        # ignore bad objects for now...
-                        pass
-
-                indices_are_index = True
+                        enum = res.items()
+                        enum_expr = expr + '.items()'
+                        children.append(('items()', enum_expr, SynthesizedValue(), PYTHON_EVALUATION_RESULT_METHOD_CALL))
+                    enum_var = '(k, v)'
+                    enum = enumerate(enum)
+                else:
+                    # Indexable or enumerable object.
+                    enum = enumerate(enumerate(res))
+                    enum_expr = expr
+                    enum_var = 'v'
             except:
-                # non-indexable object
-                indices = []
+                enum = ()
 
-            report_children(execution_id, get_attributes(res), indices, indices_are_index, indices_are_enumerate)
+            for index, (key, item) in enum:
+                try:
+                    if len(children) > 10000:
+                        # Report at most 10000 items.
+                        children.append(('[...]', None, 'Evaluation halted because sequence has too many items', 0))
+                        break
+
+                    key_repr = safe_repr(key)
+                        
+                    # Some objects are enumerable but not indexable, or repr(key) is not a valid Python expression. For those, we
+                    # cannot use obj[key] to get the item by its key, and have to retrieve it by index from enumerate() instead.
+                    try:
+                        item_by_key = res[eval_repr(key)]
+                        use_index = item is not item_by_key
+                    except:
+                        use_index = True
+                    else:
+                        use_index = False
+
+                    item_name = '[' + key_repr + ']'
+                    if use_index:
+                        item_expr = 'next((v for i, %s in enumerate(%s) if i == %s))' % (enum_var, enum_expr, index)
+                    else:
+                        item_expr = expr + item_name
+
+                    children.append((item_name, item_expr, item, 0))
+
+                except:
+                    # Skip this item if we can't process it.
+                    pass
+
+            report_children(execution_id, children)
+
         except:
-            report_children(execution_id, [], [], False, False)
+            report_children(execution_id, [])
 
     def get_frame_list(self):
         frames = []
@@ -1598,11 +1649,10 @@ class DebuggerLoop(object):
         fid = read_int(self.conn) # frame id
         eid = read_int(self.conn) # execution id
         frame_kind = read_int(self.conn) # frame kind
-        child_is_enumerate = read_int(self.conn)
                 
         thread, cur_frame = self.get_thread_and_frame(tid, fid, frame_kind)
         if thread is not None and cur_frame is not None:
-            thread.enum_child_on_thread(text, cur_frame, eid, child_is_enumerate, frame_kind)
+            thread.enum_child_on_thread(text, cur_frame, eid, frame_kind)
     
     def get_thread_and_frame(self, tid, fid, frame_kind):
         thread = get_thread_from_id(tid)
@@ -1769,23 +1819,16 @@ def report_execution_result(execution_id, result):
         write_int(conn, execution_id)
         write_object(conn, res_type, obj_repr, hex_repr, type_name, obj_len)
 
-def report_children(execution_id, attributes, indices, indices_are_index, indices_are_enumerate):
-    attributes = [(index, safe_repr(result), safe_hex_repr(result), type(result), type(result).__name__, get_object_len(result)) for index, result in attributes]
-    indices = [(index, safe_repr(result), safe_hex_repr(result), type(result), type(result).__name__, get_object_len(result)) for index, result in indices]
-
+def report_children(execution_id, children):
+    children = [(name, expression, flags, safe_repr(result), safe_hex_repr(result), type(result), type(result).__name__, get_object_len(result)) for name, expression, result, flags in children]
     with _SendLockCtx:
         write_bytes(conn, CHLD)
         write_int(conn, execution_id)
-        write_int(conn, len(attributes))
-        write_int(conn, len(indices))
-        write_int(conn, indices_are_index)
-        write_int(conn, indices_are_enumerate)
-        for child_name, obj_repr, hex_repr, res_type, type_name, obj_len in attributes:
-            write_string(conn, child_name)
-            write_object(conn, res_type, obj_repr, hex_repr, type_name, obj_len)
-        for child_name, obj_repr, hex_repr, res_type, type_name, obj_len in indices:
-            write_string(conn, child_name)
-            write_object(conn, res_type, obj_repr, hex_repr, type_name, obj_len)
+        write_int(conn, len(children))
+        for name, expression, flags, obj_repr, hex_repr, res_type, type_name, obj_len in children:
+            write_string(conn, name)
+            write_string(conn, expression)
+            write_object(conn, res_type, obj_repr, hex_repr, type_name, obj_len, flags)
 
 def get_code_filename(code):
     return path.abspath(code.co_filename)
@@ -1795,14 +1838,16 @@ try:
     NONEXPANDABLE_TYPES.append(long)
 except NameError: pass
 
-def write_object(conn, obj_type, obj_repr, hex_repr, type_name, obj_len):
+def write_object(conn, obj_type, obj_repr, hex_repr, type_name, obj_len, flags = 0):
     write_string(conn, obj_repr)
     write_string(conn, hex_repr)
-    write_string(conn, type_name)
-    if obj_type in NONEXPANDABLE_TYPES or obj_len == 0:
-        write_int(conn, 0)
+    if obj_type is SynthesizedValue:
+        write_string(conn, '')
     else:
-        write_int(conn, 1)
+        write_string(conn, type_name)
+    if obj_type not in NONEXPANDABLE_TYPES and obj_len != 0:
+        flags |= PYTHON_EVALUATION_RESULT_EXPANDABLE
+    write_int(conn, flags)
 
 
 debugger_thread_id = -1
@@ -2100,6 +2145,12 @@ def debug(
         del globals_obj['break_on_systemexit_zero']
     if 'debug_stdlib' in globals_obj: 
         del globals_obj['debug_stdlib']
+    if 'opt' in globals_obj:
+        del globals_obj['opt']
+    if 'filename' in globals_obj:
+        del globals_obj['filename']
+    if 'run_as' in globals_obj:
+        del globals_obj['run_as']
 
     global BREAK_ON_SYSTEMEXIT_ZERO, DEBUG_STDLIB, DJANGO_DEBUG
     BREAK_ON_SYSTEMEXIT_ZERO = break_on_systemexit_zero

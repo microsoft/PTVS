@@ -16,29 +16,36 @@ using System;
 using System.Threading;
 
 namespace Microsoft.PythonTools.Debugger {
+
+    [Flags]
+    enum PythonEvaluationResultFlags {
+        None = 0,
+        Expandable = 1,
+        MethodCall = 2,
+        SideEffects = 4
+    }
+
     /// <summary>
     /// Represents the result of an evaluation of an expression against a given stack frame.
     /// </summary>
     class PythonEvaluationResult {
-        private readonly string _expression, _objRepr, _typeName, _exceptionText, _childText, _hexRepr;
+        private readonly string _objRepr, _hexRepr, _typeName, _expression, _childName, _exceptionText;
         private readonly PythonStackFrame _frame;
         private readonly PythonProcess _process;
-        private readonly bool _isExpandable, _childIsIndex, _childIsEnumerate;
+        private readonly PythonEvaluationResultFlags _flags;
 
         /// <summary>
         /// Creates a PythonObject for an expression which successfully returned a value.
         /// </summary>
-        public PythonEvaluationResult(PythonProcess process, string objRepr, string hexRepr, string typeName, string expression, string childText, bool childIsIndex, bool childIsEnumerate, PythonStackFrame frame, bool isExpandable) {
+        public PythonEvaluationResult(PythonProcess process, string objRepr, string hexRepr, string typeName, string expression, string childName, PythonStackFrame frame, PythonEvaluationResultFlags flags) {
             _process = process;
-            _expression = expression;
-            _frame = frame;
             _objRepr = objRepr;
             _hexRepr = hexRepr;
             _typeName = typeName;
-            _isExpandable = isExpandable;
-            _childText = childText;
-            _childIsIndex = childIsIndex;
-            _childIsEnumerate = childIsEnumerate;
+            _expression = expression;
+            _childName = childName;
+            _frame = frame;
+            _flags = flags;
         }
 
         /// <summary>
@@ -51,12 +58,16 @@ namespace Microsoft.PythonTools.Debugger {
             _exceptionText = exceptionText;
         }
 
+        public PythonEvaluationResultFlags Flags {
+            get { return _flags; }
+        }
+
         /// <summary>
         /// Returns true if this object is expandable.  
         /// </summary>
         public bool IsExpandable {
             get {
-                return _isExpandable;
+                return _flags.HasFlag(PythonEvaluationResultFlags.Expandable);
             }
         }
 
@@ -77,7 +88,7 @@ namespace Microsoft.PythonTools.Debugger {
             AutoResetEvent childrenEnumed = new AutoResetEvent(false);
             PythonEvaluationResult[] res = null;
 
-            _process.EnumChildren(Expression, _frame, _childIsEnumerate, (children) => {
+            _process.EnumChildren(Expression, _frame, (children) => {
                 res = children;
                 childrenEnumed.Set();
             });
@@ -134,21 +145,18 @@ namespace Microsoft.PythonTools.Debugger {
         /// </summary>
         public string Expression {
             get {
-                if (!String.IsNullOrEmpty(_childText)) {
-                    if (_childIsIndex) {
-                        return _expression + _childText;
-                    } else {
-                        return _expression + "." + _childText;
-                    }
-                }
-
                 return _expression;
             }
         }
 
-        public string ChildText {
+        /// <summary>
+        /// If this evaluation result represents a child of another expression (e.g. an object attribute or a collection element),
+        /// the short name of that child that uniquely identifies it relative to the parent; for example: "attr", "[123]", "len()". 
+        /// If this is not a child of another expression, <c>null</c>.
+        /// </summary>
+        public string ChildName {
             get {
-                return _childText;
+                return _childName;
             }
         }
 
@@ -162,7 +170,5 @@ namespace Microsoft.PythonTools.Debugger {
         }
 
         public PythonProcess Process { get { return _process; } }
-
-        public bool ChildIsIndex { get { return _childIsIndex;  } }
     }
 }

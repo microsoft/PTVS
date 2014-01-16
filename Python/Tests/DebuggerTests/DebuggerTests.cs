@@ -47,97 +47,134 @@ namespace DebuggerTests {
             // TODO: Thread creation tests w/ both thread.start_new_thread and threading module.
         }
 
+        private string InfRepr {
+            get {
+                return Version.Version > PythonLanguageVersion.V25 ? "inf" : "1.#INF";
+            }
+        }
+
         #region Enum Children Tests
 
         [TestMethod, Priority(0)]
         public void EnumChildrenTest() {
-            const int lastLine = 40;
+            const int lastLine = 41;
 
-            if (Version.Version.Is3x()) {
-                ChildTest(EnumChildrenTestName, lastLine, "s", AppendCount(new ChildInfo("[0]", "frozenset({2, 3, 4})")));
-            } else {
-                ChildTest(EnumChildrenTestName, lastLine, "s", AppendCount(new ChildInfo("[0]", "frozenset([2, 3, 4])")));
-            }
+            ChildTest(EnumChildrenTestName, lastLine, "s", GetSetChildren(
+                new ChildInfo("[0]", "next((v for i, v in enumerate(s) if i == 0))", Version.Version.Is3x() ? "frozenset({2, 3, 4})" : "frozenset([2, 3, 4])")));
+
             if (GetType() != typeof(DebuggerTestsIpy) && Version.Version.Is2x()) {
                 // IronPython unicode repr differs
                 // 3.x: http://pytools.codeplex.com/workitem/76
-                ChildTest(EnumChildrenTestName, lastLine, "cinst", new ChildInfo("abc", "42", "0x2a"), new ChildInfo("uc", "u\'привет мир\'"));
+                ChildTest(EnumChildrenTestName, lastLine, "cinst",
+                    new ChildInfo("abc", null, "42", "0x2a"),
+                    new ChildInfo("uc", null, "u\'привет мир\'"));
             }
-            ChildTest(EnumChildrenTestName, lastLine, "c2inst", new ChildInfo("abc", "42", "0x2a"), new ChildInfo("oar", "100", "0x64"), new ChildInfo("self", "myrepr", "myhex"));
-            ChildTest(EnumChildrenTestName, lastLine, "c3inst", new ChildInfo("_contents", "[1, 2]"), new ChildInfo("abc", "42", "0x2a"), new ChildInfo("[0]", "1"), new ChildInfo("[1]", "2"));
-            ChildTest(EnumChildrenTestName, lastLine, "l", AppendCountAndItem(new ChildInfo("[0]", "1"), new ChildInfo("[1]", "2")));
-            ChildTest(EnumChildrenTestName, lastLine, "d1", AppendCountItemKeysAndValues(new ChildInfo("[42]", "100", "0x64")));
-            ChildTest(EnumChildrenTestName, lastLine, "d2", AppendCountItemKeysAndValues(new ChildInfo("['abc']", "'fob'")));
+            ChildTest(EnumChildrenTestName, lastLine, "c2inst",
+                new ChildInfo("abc", null, "42", "0x2a"),
+                new ChildInfo("oar", null, "100", "0x64"),
+                new ChildInfo("self", null, "myrepr", "myhex"));
+            ChildTest(EnumChildrenTestName, lastLine, "c3inst",
+                new ChildInfo("_contents", null, "[1, 2]"),
+                new ChildInfo("abc", null, "42", "0x2a"),
+                new ChildInfo("[0]", null, "1"),
+                new ChildInfo("[1]", null, "2"));
+            ChildTest(EnumChildrenTestName, lastLine, "l", GetListChildren(
+                new ChildInfo("[0]", null, "1"),
+                new ChildInfo("[1]", null, "2")));
+            ChildTest(EnumChildrenTestName, lastLine, "d1", GetDictChildren(
+                new ChildInfo("[42]", null, "100", "0x64")));
+            string itemsName = Version.Version == PythonLanguageVersion.V27 ? "viewitems" : "items";
+            ChildTest(EnumChildrenTestName, lastLine, "d2", GetDictChildren(
+                new ChildInfo("['abc']", null, "'fob'")));
+            ChildTest(EnumChildrenTestName, lastLine, "d3", GetDictChildren(
+                new ChildInfo("[" + InfRepr + "]", "next((v for i, (k, v) in enumerate(d3." + itemsName + "()) if i == 0))", "{42: 100}")));
             ChildTest(EnumChildrenTestName, lastLine, "i", null);
             ChildTest(EnumChildrenTestName, lastLine, "u1", null);
         }
 
-        private ChildInfo[] AppendCount(ChildInfo existing) {
+        private ChildInfo[] GetSetChildren(ChildInfo items) {
             if (this is DebuggerTestsIpy) {
-                return new ChildInfo[] { new ChildInfo("Count"), existing };
+                return new ChildInfo[] { new ChildInfo("Count", null), items };
             }
-            return new[] { existing };
+            return new[] { items };
         }
 
-        private ChildInfo[] AppendCountAndItem(params ChildInfo[] existing) {
+        private ChildInfo[] GetListChildren(params ChildInfo[] items) {
             if (this is DebuggerTestsIpy) {
-                List<ChildInfo> res = new List<ChildInfo>(existing);
-                res.Add(new ChildInfo("Count"));
-                res.Add(new ChildInfo("Item"));
+                var res = new List<ChildInfo>(items);
+                res.Add(new ChildInfo("Count", null));
+                res.Add(new ChildInfo("Item", null));
                 return res.ToArray();
             }
-            return existing;
+            return items;
         }
 
-        private ChildInfo[] AppendCountItemKeysAndValues(params ChildInfo[] existing) {
-            if (this is DebuggerTestsIpy) {
-                List<ChildInfo> res = new List<ChildInfo>(existing);
-                res.Add(new ChildInfo("Count"));
-                res.Add(new ChildInfo("Item"));
-                res.Add(new ChildInfo("Keys"));
-                res.Add(new ChildInfo("Values"));
-                return res.ToArray();
+        private ChildInfo[] GetDictChildren(params ChildInfo[] items) {
+            var res = new List<ChildInfo>();
+
+            if (Version.Version == PythonLanguageVersion.V27) {
+                res.Add(new ChildInfo("viewitems()", null, ""));
+            } else {
+                res.Add(new ChildInfo("items()", null, ""));
             }
-            return existing;
+
+            res.AddRange(items);
+
+            if (this is DebuggerTestsIpy) {
+                res.Add(new ChildInfo("Count", null));
+                res.Add(new ChildInfo("Item", null));
+                res.Add(new ChildInfo("Keys", null));
+                res.Add(new ChildInfo("Values", null));
+            }
+
+            return res.ToArray();
         }
 
         [TestMethod, Priority(0)]
         public void EnumChildrenTestPrevFrame() {
             const int breakLine = 2;
 
-            if (Version.Version.Is3x()) {
-                ChildTest("PrevFrame" + EnumChildrenTestName, breakLine, "s", 1, AppendCount(new ChildInfo("[0]", "frozenset({2, 3, 4})")));
-            } else {
-                ChildTest("PrevFrame" + EnumChildrenTestName, breakLine, "s", 1, AppendCount(new ChildInfo("[0]", "frozenset([2, 3, 4])")));
-            }
+            ChildTest("PrevFrame" + EnumChildrenTestName, breakLine, "s", 1, GetSetChildren(
+                new ChildInfo("[0]", "next((v for i, v in enumerate(s) if i == 0))", Version.Version.Is3x() ? "frozenset({2, 3, 4})" : "frozenset([2, 3, 4])")));
+
             if (GetType() != typeof(DebuggerTestsIpy) && Version.Version.Is2x()) {
                 // IronPython unicode repr differs
                 // 3.x: http://pytools.codeplex.com/workitem/76
-                ChildTest("PrevFrame" + EnumChildrenTestName, breakLine, "cinst", 1, new ChildInfo("abc", "42", "0x2a"), new ChildInfo("uc", "u\'привет мир\'"));
+                ChildTest("PrevFrame" + EnumChildrenTestName, breakLine, "cinst", 1,
+                    new ChildInfo("abc", null, "42", "0x2a"),
+                    new ChildInfo("uc", null, "u\'привет мир\'"));
             }
-            ChildTest("PrevFrame" + EnumChildrenTestName, breakLine, "c2inst", 1, new ChildInfo("abc", "42", "0x2a"), new ChildInfo("oar", "100", "0x64"), new ChildInfo("self", "myrepr", "myhex"));
-            ChildTest("PrevFrame" + EnumChildrenTestName, breakLine, "l", 1, AppendCountAndItem(new ChildInfo("[0]", "1"), new ChildInfo("[1]", "2")));
-            ChildTest("PrevFrame" + EnumChildrenTestName, breakLine, "d1", 1, AppendCountItemKeysAndValues(new ChildInfo("[42]", "100", "0x64")));
-            ChildTest("PrevFrame" + EnumChildrenTestName, breakLine, "d2", 1, AppendCountItemKeysAndValues(new ChildInfo("['abc']", "'fob'")));
+            ChildTest("PrevFrame" + EnumChildrenTestName, breakLine, "c2inst", 1,
+                new ChildInfo("abc", null, "42", "0x2a"),
+                new ChildInfo("oar", null, "100", "0x64"),
+                new ChildInfo("self", null, "myrepr", "myhex"));
+            ChildTest("PrevFrame" + EnumChildrenTestName, breakLine, "l", 1, GetListChildren(
+                new ChildInfo("[0]", null, "1"),
+                new ChildInfo("[1]", null, "2")));
+            ChildTest("PrevFrame" + EnumChildrenTestName, breakLine, "d1", 1, GetDictChildren(
+                new ChildInfo("[42]", null, "100", "0x64")));
+            string itemsName = Version.Version == PythonLanguageVersion.V27 ? "viewitems" : "items";
+            ChildTest("PrevFrame" + EnumChildrenTestName, breakLine, "d2", 1, GetDictChildren(
+                new ChildInfo("['abc']", null, "'fob'")));
+            ChildTest("PrevFrame" + EnumChildrenTestName, breakLine, "d3", 1, GetDictChildren(
+                new ChildInfo("[" + InfRepr + "]", "next((v for i, (k, v) in enumerate(d3." + itemsName + "()) if i == 0))", "{42: 100}")));
             ChildTest("PrevFrame" + EnumChildrenTestName, breakLine, "i", 1, null);
             ChildTest("PrevFrame" + EnumChildrenTestName, breakLine, "u1", 1, null);
         }
 
         [TestMethod, Priority(0)]
         public void GeneratorChildrenTest() {
-            if (Version.Version <= PythonLanguageVersion.V25) {
-                // gi_code new in 2.6
-                ChildTest("GeneratorTest.py", 6, "a", 0,
-                    new ChildInfo("gi_frame"),
-                    new ChildInfo("gi_running")
-                );
-            } else {
-                ChildTest("GeneratorTest.py", 6, "a", 0,
-                    new ChildInfo("gi_code"),
-                    new ChildInfo("gi_frame"),
-                    new ChildInfo("gi_running")
-                );
+            var children = new List<ChildInfo> {
+                new ChildInfo("gi_frame", null),
+                new ChildInfo("gi_running", null),
+                new ChildInfo("Results View", "tuple(a)", "Expanding the Results View will run the iterator")
+            };
+
+            if (Version.Version >= PythonLanguageVersion.V26) {
+                children.Insert(0, new ChildInfo("gi_code", null));
             }
+
+            ChildTest("GeneratorTest.py", 6, "a", 0, children.ToArray());
         }
 
         public virtual string EnumChildrenTestName {
@@ -190,30 +227,43 @@ namespace DebuggerTests {
                     Assert.IsTrue(evalRes.IsExpandable, "result is not expandable");
                     var childrenReceived = new List<PythonEvaluationResult>(evalRes.GetChildren(Int32.MaxValue));
 
+                    Console.WriteLine("{0} children received:", childrenReceived.Count);
+                    foreach (var childReceived in childrenReceived) {
+                        Console.WriteLine("\t{0}\t{1}\t{2}\t{3}", childReceived.ChildName, childReceived.Expression, childReceived.StringRepr, childReceived.HexRepr);
+                    }
+
                     Assert.AreEqual(children.Length, childrenReceived.Count, "received incorrect number of children");
+
                     for (int i = 0; i < children.Length; i++) {
                         var curChild = children[i];
                         Console.WriteLine("Finding: <{0}> (Repr: <{1}>)", curChild.ChildText, curChild.Repr ?? "(null)");
+
                         bool foundChild = false;
                         for (int j = 0; j < childrenReceived.Count; j++) {
                             var curReceived = childrenReceived[j];
-                            Console.WriteLine("Candidate: <{0}> (Repr: <{1}>)", curReceived.ChildText, curReceived.StringRepr ?? "(null)");
+                            Console.WriteLine("Candidate: <{0}> (Repr: <{1}>)", curReceived.ChildName, curReceived.StringRepr ?? "(null)");
                             if (ChildrenMatch(curChild, curReceived)) {
                                 foundChild = true;
 
-                                if (children[i].ChildText.StartsWith("[")) {
-                                    Assert.AreEqual(text + children[i].ChildText, childrenReceived[j].Expression);
-                                } else {
-                                    Assert.AreEqual(text + "." + children[i].ChildText, childrenReceived[j].Expression);
+                                string expr = curChild.Expression;
+                                if (expr == null) {
+                                    if (curChild.ChildText.StartsWith("[")) {
+                                        expr = text + curChild.ChildText;
+                                    } else {
+                                        expr = text + "." + curChild.ChildText;
+                                    }
                                 }
 
-                                Assert.AreEqual(frames[frame], childrenReceived[j].Frame);
+                                Assert.AreEqual(expr, curReceived.Expression);
+                                Assert.AreEqual(frames[frame], curReceived.Frame);
                                 childrenReceived.RemoveAt(j);
                                 break;
                             }
                         }
-                        Assert.IsTrue(foundChild, "failed to find " + children[i].ChildText + " found " + String.Join(", ", childrenReceived.Select(x => x.ChildText)));
+
+                        Assert.IsTrue(foundChild, "failed to find " + curChild.ChildText + " found " + String.Join(", ", childrenReceived.Select(x => x.ChildName)));
                     }
+
                     Assert.AreEqual(0, childrenReceived.Count, "there's still some children left over which we didn't find");
                 }
             } finally {
@@ -223,18 +273,20 @@ namespace DebuggerTests {
         }
 
         private bool ChildrenMatch(ChildInfo curChild, PythonEvaluationResult curReceived) {
-            return curReceived.ChildText == curChild.ChildText &&
+            return curReceived.ChildName == curChild.ChildText &&
                 (curReceived.StringRepr == curChild.Repr || curChild.Repr == null) &&
                 (Version.Version.Is3x() || (curChild.HexRepr == null || curChild.HexRepr == curReceived.HexRepr));// __hex__ no longer used in 3.x, http://mail.python.org/pipermail/python-list/2009-September/1218287.html
         }
 
         class ChildInfo {
             public readonly string ChildText;
+            public readonly string Expression; // if null, compute automatically from parent expression and ChildText
             public readonly string Repr;
             public readonly string HexRepr;
 
-            public ChildInfo(string key, string value = null, string hexRepr = null) {
-                ChildText = key;
+            public ChildInfo(string childText, string expression, string value = null, string hexRepr = null) {
+                ChildText = childText;
+                Expression = expression;
                 Repr = value;
                 HexRepr = hexRepr;
             }
@@ -544,10 +596,10 @@ namespace DebuggerTests {
         /// </summary>
         [TestMethod, Priority(0)]
         public void LocalGlobalsTest() {
-            LocalsTest("LocalGlobalsTest.py", 3, new string[] { }, new string[] { "x" });
+            LocalsTest("LocalGlobalsTest.py", 3, new string[] { }, new string[] { });
             LocalsTest("LocalGlobalsTest.py", 4, new string[] { }, new string[] { "x" });
 
-            LocalsTest("LocalGlobalsTest.py", 5, new string[] { "self" }, new string[] { "x" }, "LocalGlobalsTestImported.py");
+            LocalsTest("LocalGlobalsTest.py", 5, new string[] { "self" }, new string[] { }, "LocalGlobalsTestImported.py");
             LocalsTest("LocalGlobalsTest.py", 6, new string[] { "self" }, new string[] { "x" }, "LocalGlobalsTestImported.py");
         }
 
@@ -584,7 +636,9 @@ namespace DebuggerTests {
 
         [TestMethod, Priority(0)]
         public void GlobalsTest() {
-            if (Version.Version >= PythonLanguageVersion.V33) {
+            if (Version.Version >= PythonLanguageVersion.V34) {
+                LocalsTest("GlobalsTest.py", 4, new string[] { }, new[] { "x", "y", "__file__", "__name__", "__package__", "__builtins__", "__doc__", "__cached__", "__loader__", "__spec__" });
+            }  else if (Version.Version >= PythonLanguageVersion.V33) {
                 LocalsTest("GlobalsTest.py", 4, new string[] { }, new[] { "x", "y", "__file__", "__name__", "__package__", "__builtins__", "__doc__", "__cached__", "__loader__" });
             } else if (Version.Version >= PythonLanguageVersion.V32) {
                 LocalsTest("GlobalsTest.py", 4, new string[] { }, new[] { "x", "y", "__file__", "__name__", "__package__", "__builtins__", "__doc__", "__cached__" });
@@ -1374,7 +1428,7 @@ namespace DebuggerTests {
                 processObj.SetExceptionInfo(
                     (int)defaultExceptionMode,
                     exceptionModes == null ?
-                        Enumerable.Empty<KeyValuePair<string,int>>() :
+                        Enumerable.Empty<KeyValuePair<string, int>>() :
                         exceptionModes.Select(m => new KeyValuePair<string, int>(m.Key, (int)m.Value))
                 );
             }, debugOptions: debugOptions);

@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System;
+using System.Runtime.InteropServices;
 using System.Threading;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Debugger.Interop;
@@ -23,7 +24,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
     // The property is usually the result of an expression evaluation. 
     //
     // The sample engine only supports locals and parameters for functions that have symbols loaded.
-    class AD7Property : IDebugProperty2 {
+    class AD7Property : IDebugProperty2, IDebugProperty3 {
         private PythonEvaluationResult _evalResult;
         private readonly AD7StackFrame _frame;
         private readonly bool _writable;
@@ -44,10 +45,10 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             }
 
             if ((dwFields & enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_NAME) != 0) {
-                if (String.IsNullOrEmpty(_evalResult.ChildText)) {
+                if (String.IsNullOrEmpty(_evalResult.ChildName)) {
                     propertyInfo.bstrName = _evalResult.Expression;
                 } else {
-                    propertyInfo.bstrName = _evalResult.ChildText;
+                    propertyInfo.bstrName = _evalResult.ChildName;
                 }
                 propertyInfo.dwFields |= enum_DEBUGPROP_INFO_FLAGS.DEBUGPROP_INFO_NAME;
             }
@@ -76,13 +77,17 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                 if (!_writable) {
                     propertyInfo.dwAttrib |= enum_DBG_ATTRIB_FLAGS.DBG_ATTRIB_VALUE_READONLY;
                 }
-                
                 if (_evalResult.ExceptionText != null) {
                     propertyInfo.dwAttrib |= enum_DBG_ATTRIB_FLAGS.DBG_ATTRIB_VALUE_ERROR;
                 }
-                if (_evalResult.IsExpandable)
-                {
+                if (_evalResult.IsExpandable) {
                     propertyInfo.dwAttrib |= enum_DBG_ATTRIB_FLAGS.DBG_ATTRIB_OBJ_IS_EXPANDABLE;
+                }
+                if (_evalResult.Flags.HasFlag(PythonEvaluationResultFlags.MethodCall)) {
+                    propertyInfo.dwAttrib |= enum_DBG_ATTRIB_FLAGS.DBG_ATTRIB_METHOD;
+                }
+                if (_evalResult.Flags.HasFlag(PythonEvaluationResultFlags.SideEffects)) {
+                    propertyInfo.dwAttrib |= enum_DBG_ATTRIB_FLAGS.DBG_ATTRIB_VALUE_SIDE_EFFECT;
                 }
             }
 
@@ -186,5 +191,41 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
 
         #endregion
 
+        #region IDebugProperty3 Members
+
+        public int CreateObjectID() {
+            return VSConstants.E_NOTIMPL;
+        }
+
+        public int DestroyObjectID() {
+            return VSConstants.E_NOTIMPL;
+        }
+
+        public int GetCustomViewerCount(out uint pcelt) {
+            pcelt = 0;
+            return VSConstants.E_NOTIMPL;
+        }
+
+        public int GetCustomViewerList(uint celtSkip, uint celtRequested, DEBUG_CUSTOM_VIEWER[] rgViewers, out uint pceltFetched) {
+            pceltFetched = 0;
+            return VSConstants.E_NOTIMPL;
+        }
+
+        public int GetStringCharLength(out uint pLen) {
+            pLen = 0;
+            return VSConstants.E_NOTIMPL;
+        }
+
+        public unsafe int GetStringChars(uint buflen, ushort[] rgString, out uint pceltFetched) {
+            pceltFetched = 0;
+            return VSConstants.E_NOTIMPL;
+        }
+
+        public int SetValueAsStringWithError(string pszValue, uint dwRadix, uint dwTimeout, out string errorString) {
+            errorString = null;
+            return VSConstants.E_NOTIMPL;
+        }
+
+        #endregion
     }
 }
