@@ -471,7 +471,6 @@
     <Compile Include="PythonTools\Repl\IPythonReplIntellisense.cs" />
     <Compile Include="PythonTools\Repl\PythonDebugReplEvaluator.cs" />
     <Compile Include="PythonTools\Repl\PythonDebugReplEvaluatorProvider.cs" />
-    <Compile Include="PythonTools\SnapshotSpanSourceCodeStream.cs" />
     <Compile Include="PythonTools\Editor\SmartIndentProvider.cs" />
     <Compile Include="PythonTools\Intellisense\DecoratorCompletionAnalysis.cs" />
     <Compile Include="PythonTools\Intellisense\XamlTextViewCreationListener.cs" />

@@ -673,7 +673,7 @@ namespace Microsoft.PythonTools.Intellisense {
                         PythonAst ast;
                         CollectingErrorSink errorSink;
 
-                        var reader = new SnapshotSpanSourceCodeStream(new SnapshotSpan(snapshot, new Span(0, snapshot.Length)));
+                        var reader = new SnapshotSpanSourceCodeReader(new SnapshotSpan(snapshot, new Span(0, snapshot.Length)));
                         ParsePythonCode(reader, indentationSeverity, out ast, out errorSink);
 
                         if (ast != null) {
