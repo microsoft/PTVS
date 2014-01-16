@@ -36,8 +36,8 @@
     <VerifyPackagesPresent>
 <![CDATA[
 try:
-    import ptvsd, azure
-    print('pass')
+    import ptvsd, azure, sys
+    print('pass %d.%d' % (sys.version_info[0], sys.version_info[1]))
 except:
     print('fail')
 ]]>
@@ -51,7 +51,7 @@ except:
     <CreatePythonCommandItem Target="$(VerifyPackagesPresent)"
                              TargetType="code"
                              ExecuteIn="output"
-                             RequiredPackages="ptvsd;azure==0.6.2">
+                             RequiredPackages="ptvsd;azure==0.1">
       <Output TaskParameter="Command" ItemName="Commands" />
     </CreatePythonCommandItem>
   </Target>

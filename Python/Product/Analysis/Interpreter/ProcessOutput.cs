@@ -109,7 +109,7 @@ namespace Microsoft.PythonTools {
         private bool _isDisposed;
 
         private static readonly char[] EolChars = new[] { '\r', '\n' };
-        private static readonly char[] _needToBeQuoted = new[] { ' ', '"' };
+        private static readonly char[] _needToBeQuoted = new[] { ' ', '"', '\r', '\n' };
 
         /// <summary>
         /// Runs the provided executable file and allows the program to display

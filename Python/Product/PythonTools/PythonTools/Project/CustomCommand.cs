@@ -817,7 +817,7 @@ namespace Microsoft.PythonTools.Project {
                 AddArgumentAtStart("-m");
                 Filename = interpreterPath;
             } else if (IsCode) {
-                AddArgumentAtStart(Filename);
+                AddArgumentAtStart(Filename.Replace("\r\n", "\n"));
                 AddArgumentAtStart("-c");
                 Filename = interpreterPath;
             }

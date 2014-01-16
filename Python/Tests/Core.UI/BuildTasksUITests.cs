@@ -20,6 +20,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Automation;
 using Microsoft.PythonTools;
+using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Project;
 using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio.Repl;
@@ -366,7 +367,7 @@ namespace PythonToolsUITests {
                         "The following packages will be installed from PyPI in order to run this command:\r\n" +
                         "\r\n" +
                         "ptvsd\r\n" +
-                        "azure==0.6.2\r\n" +
+                        "azure==0.1\r\n" +
                         "\r\n" +
                         "Do you want to continue?";
                     Assert.AreEqual(expectedLabel, label.Current.Name);
@@ -397,7 +398,8 @@ namespace PythonToolsUITests {
                     dialog.ClickButtonByName("OK");
                     task.Wait();
 
-                    ExpectOutputWindowText(app, "pass");
+                    var ver = PythonVersion.Version.ToVersion();
+                    ExpectOutputWindowText(app, string.Format("pass {0}.{1}", ver.Major, ver.Minor));
                 }
             }
         }

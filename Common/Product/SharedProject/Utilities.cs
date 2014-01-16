@@ -311,10 +311,17 @@ namespace Microsoft.VisualStudioTools.Project
             string currentConfigName = string.Empty;
             if (automationObject.ConfigurationManager != null)
             {
-                EnvDTE.Configuration activeConfig = automationObject.ConfigurationManager.ActiveConfiguration;
-                if (activeConfig != null)
+                try
                 {
-                    currentConfigName = activeConfig.ConfigurationName;
+                    EnvDTE.Configuration activeConfig = automationObject.ConfigurationManager.ActiveConfiguration;
+                    if (activeConfig != null)
+                    {
+                        currentConfigName = activeConfig.ConfigurationName;
+                    }
+                }
+                catch (COMException ex)
+                {
+                    Debug.WriteLine("Failed to get active configuration because of {0}", ex);
                 }
             }
             return currentConfigName;
