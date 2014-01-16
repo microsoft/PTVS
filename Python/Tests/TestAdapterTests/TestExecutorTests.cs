@@ -114,6 +114,27 @@ namespace TestAdapterTests {
             Assert.IsTrue(recorder.Results.Count < expectedTests.Length);
         }
 
+        [TestMethod, Priority(0)]
+        public void TestMultiprocessing() {
+            PythonPaths.Python27_x64.AssertInstalled();
+
+            var executor = new TestExecutor();
+            var recorder = new MockTestExecutionRecorder();
+            var runContext = new MockRunContext();
+            var expectedTests = TestInfo.TestAdapterMultiprocessingTests;
+            var testCases = expectedTests.Select(tr => tr.TestCase);
+
+            executor.RunTests(new[] { TestInfo.TestAdapterMultiprocessingProjectFilePath }, runContext, recorder);
+            PrintTestResults(recorder.Results);
+
+            foreach (var expectedResult in expectedTests) {
+                var actualResult = recorder.Results.SingleOrDefault(tr => tr.TestCase.FullyQualifiedName == expectedResult.TestCase.FullyQualifiedName);
+
+                Assert.IsNotNull(actualResult, expectedResult.TestCase.FullyQualifiedName + " not found in results");
+                Assert.AreEqual(expectedResult.Outcome, actualResult.Outcome, expectedResult.TestCase.FullyQualifiedName + " had incorrect result");
+            }
+        }
+
         private static void PrintTestResults(IEnumerable<TestResult> results) {
             foreach (var result in results) {
                 Console.WriteLine("Test: " + result.TestCase.FullyQualifiedName);

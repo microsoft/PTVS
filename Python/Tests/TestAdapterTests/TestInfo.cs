@@ -115,5 +115,15 @@ namespace TestAdapterTests {
                 };
             }
         }
+
+        private static TestInfo MultiprocessingSuccess = TestInfo.FromRelativePaths("Multiprocessing", "test_pool", @"TestData\TestAdapterTests\Multiprocessing.pyproj", @"TestData\TestAdapterTests\Multiprocessing.py", 6, TestOutcome.Passed);
+
+        public static string TestAdapterMultiprocessingProjectFilePath = TestData.GetPath(@"TestData\TestAdapterTests\Multiprocessing.pyproj");
+
+        public static TestInfo[] TestAdapterMultiprocessingTests {
+            get {
+                return new[] { MultiprocessingSuccess };
+            }
+        }
     }
 }
