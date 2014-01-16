@@ -180,7 +180,10 @@ namespace Microsoft.PythonTools.Options {
         }
 
         private static bool EvaluatorUsesThisInterpreter(PythonReplEvaluator pyEval, IPythonInterpreterFactory interpreter) {
-            return pyEval != null && pyEval.Interpreter.Id == interpreter.Id && pyEval.Interpreter.Configuration.Version == interpreter.Configuration.Version;
+            return pyEval != null &&
+                pyEval.Interpreter != null &&
+                pyEval.Interpreter.Id == interpreter.Id &&
+                pyEval.Interpreter.Configuration.Version == interpreter.Configuration.Version;
         }
 
         internal void NewInterpreter(IPythonInterpreterFactory factory, PythonInteractiveOptions options) {

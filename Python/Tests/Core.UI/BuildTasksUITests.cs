@@ -45,6 +45,7 @@ namespace PythonToolsUITests {
         }
 
         internal void Execute(PythonProjectNode projectNode, string commandName) {
+            Console.WriteLine("Executing command {0}", commandName);
             projectNode._uiSync.Invoke((Action)(() => {
                 projectNode._customCommands.First(cc => cc.DisplayLabel == commandName).Execute(projectNode);
             }));
@@ -52,6 +53,7 @@ namespace PythonToolsUITests {
 
         internal Task ExecuteAsync(PythonProjectNode projectNode, string commandName) {
             Task task = null;
+            Console.WriteLine("Executing command {0} asynchronously", commandName);
             projectNode._uiSync.Invoke((Action)(() => {
                 task = projectNode._customCommands.First(cc => cc.DisplayLabel == commandName).ExecuteAsync(projectNode);
             }));
@@ -342,6 +344,8 @@ namespace PythonToolsUITests {
 
                 env.Select();
                 app.Dte.ExecuteCommand("Project.ActivateEnvironment");
+                // Ensure that no error dialog appears
+                app.WaitForNoDialog(TimeSpan.FromSeconds(5.0));
 
                 // First, execute the command and cancel it.
                 using (var task = ExecuteAsync(node, "Require Packages")) {
