@@ -3,7 +3,7 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:ui="clr-namespace:Microsoft.PythonTools.Profiling"
-    xmlns:wpf="clr-namespace:Microsoft.PythonTools.Wpf;assembly=Microsoft.PythonTools"
+    xmlns:wpf="clr-namespace:Microsoft.VisualStudioTools.Wpf;assembly=Microsoft.PythonTools"
     Title="Select analysis files for comparison"
     MinWidth="300" MinHeight="220"
     Width="500" Height="auto" SizeToContent="Height"
@@ -15,7 +15,7 @@
     <Window.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="pack://application:,,,/Microsoft.PythonTools;component/Wpf/Controls.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/Microsoft.PythonTools;component/SharedProject/Wpf/Controls.xaml" />
 
                 <ResourceDictionary>
                     <Style x:Key="BrowseButtonStyle" TargetType="{x:Type Button}" BasedOn="{StaticResource {x:Type Button}}">

@@ -131,5 +131,9 @@ namespace Microsoft.VisualStudioTools {
         /// </summary>
         public const string ProjectView = "ProjectView";
 
+        /// <summary>
+        /// Item meta data for whether or not a item in msbuild is visible in the project
+        /// </summary>
+        public const string Visible = "Visible";
     }
 }

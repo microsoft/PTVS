@@ -219,7 +219,12 @@ namespace TestUtilities.UI {
                 System.Threading.Thread.Sleep(250);
             }
 
-            Assert.IsTrue(sessionStack.TopSession is T);
+            if (!(sessionStack.TopSession is T)) {
+                Console.WriteLine("Buffer text:\r\n{0}", Text);
+                Console.WriteLine("-----");
+                AutomationWrapper.DumpVS();
+                Assert.Fail("failed to find session " + typeof(T).FullName);
+            }
             return new SessionHolder<T>((T)sessionStack.TopSession, this);
         }
 

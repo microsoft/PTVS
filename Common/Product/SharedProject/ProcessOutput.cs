@@ -23,7 +23,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Win32.SafeHandles;
 
-namespace Microsoft.PythonTools {
+namespace Microsoft.VisualStudioTools.Project{
     /// <summary>
     /// Base class that can receive output from <see cref="ProcessOutput"/>.
     /// 
@@ -109,7 +109,7 @@ namespace Microsoft.PythonTools {
         private bool _isDisposed;
 
         private static readonly char[] EolChars = new[] { '\r', '\n' };
-        private static readonly char[] _needToBeQuoted = new[] { ' ', '"', '\r', '\n' };
+        private static readonly char[] _needToBeQuoted = new[] { ' ', '"' };
 
         /// <summary>
         /// Runs the provided executable file and allows the program to display
@@ -202,6 +202,7 @@ namespace Microsoft.PythonTools {
         /// <param name="redirector">
         /// An object to receive redirected output.
         /// </param>
+        /// <param name="quoteArgs"></param>
         /// <returns>A <see cref="ProcessOutput"/> object.</returns>
         public static ProcessOutput RunElevated(string filename,
                                                 IEnumerable<string> arguments,
@@ -342,7 +343,11 @@ namespace Microsoft.PythonTools {
                 _process.ErrorDataReceived += OnErrorDataReceived;
             }
 
-            try {
+            _process.Exited += OnExited;
+            _process.EnableRaisingEvents = true;
+
+            try
+            {
                 _process.Start();
             } catch (Exception ex) {
                 _error.AddRange(SplitLines(ex.ToString()));
@@ -350,8 +355,6 @@ namespace Microsoft.PythonTools {
             }
 
             if (_process != null) {
-                _process.Exited += OnExited;
-                _process.EnableRaisingEvents = true;
                 if (_process.StartInfo.RedirectStandardOutput) {
                     _process.BeginOutputReadLine();
                 } if (_process.StartInfo.RedirectStandardError) {

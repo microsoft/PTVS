@@ -19,7 +19,7 @@ using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
-namespace Microsoft.PythonTools.TestAdapter {
+namespace Microsoft.VisualStudioTools.TestAdapter {
     enum TestFileChangedReason {
         None,
         Added,
@@ -43,14 +43,17 @@ namespace Microsoft.PythonTools.TestAdapter {
     sealed class TestFileAddRemoveListener : IVsTrackProjectDocumentsEvents2, IDisposable {
         private IVsTrackProjectDocuments2 _projectDocTracker;
         private uint _cookie = VSConstants.VSCOOKIE_NIL;
+        private Guid _testProjectGuid;
 
         /// <summary>
         /// Fires a task when a build completes
         /// </summary>
         public event EventHandler<TestFileChangedEventArgs> TestFileChanged;
 
-        public TestFileAddRemoveListener(IServiceProvider serviceProvider) {
+        public TestFileAddRemoveListener(IServiceProvider serviceProvider, Guid projectGuid) {
             ValidateArg.NotNull(serviceProvider, "serviceProvider");
+
+            _testProjectGuid = projectGuid;
 
             _projectDocTracker = serviceProvider.GetService<IVsTrackProjectDocuments2>(typeof(SVsTrackProjectDocuments));
         }
@@ -77,7 +80,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                 var projectIndex = rgFirstIndices[index];
                 var project = changedProjects[projectIndex];
 
-                if (project != null && project.IsTestProject()) {
+                if (project != null && project.IsTestProject(_testProjectGuid)) {
                     var evt = TestFileChanged;
                     if (evt != null) {
                         evt(this, new TestFileChangedEventArgs(project, projectItem, reason));

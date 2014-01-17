@@ -834,6 +834,53 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             }
         }
 
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void ShowAllFilesCopyExcludedFolderWithItemByKeyboard() {
+            ShowAllFilesCopyExcludedFolderWithItem(DragDropCopyCutPaste.CopyByKeyboard);
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void ShowAllFilesCopyExcludedFolderWithItemByMouse() {
+            ShowAllFilesCopyExcludedFolderWithItem(DragDropCopyCutPaste.CopyByMouse);
+        }
+
+        /// <summary>
+        /// https://nodejstools.codeplex.com/workitem/475
+        /// </summary>
+        private void ShowAllFilesCopyExcludedFolderWithItem(DragDropCopyCutPaste.MoveDelegate copier) {
+            foreach (var projectType in ProjectTypes) {
+                var def = new ProjectDefinition(
+                    "CopyExcludedFolderWithItem",
+                    projectType,
+                    Property("ProjectView", "ShowAllFiles"),
+                    Folder("NewFolder1"),
+                    Folder("NewFolder2", isExcluded: true),
+                    Compile("server", isExcluded: true)
+                );
+
+                using (var solution = def.Generate().ToVs()) {
+                    var projectNode = solution.WaitForItem("CopyExcludedFolderWithItem");
+                    AutomationWrapper.Select(projectNode);
+
+                    copier(
+                        solution.WaitForItem("CopyExcludedFolderWithItem", "NewFolder1"),
+                        solution.WaitForItem("CopyExcludedFolderWithItem", "NewFolder2")
+                    );
+
+                    Assert.IsNotNull(
+                        solution.WaitForItem("CopyExcludedFolderWithItem", "NewFolder1", "NewFolder2")
+                    );
+                    solution.App.Dte.ExecuteCommand("Project.ShowAllFiles"); // stop showing all
+                    
+                    Assert.IsNull(
+                        solution.WaitForItemRemoved("CopyExcludedFolderWithItem", "NewFolder1", "NewFolder2")
+                    );
+                }
+            }
+        }
+
         private static ProjectDefinition MakeBasicProject(ProjectType projectType) {
             var def = new ProjectDefinition(
                 "ShowAllFiles",

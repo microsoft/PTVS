@@ -14,6 +14,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -21,6 +23,7 @@ using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 using TestUtilities.SharedProject;
 
@@ -47,9 +50,26 @@ namespace TestUtilities.UI {
         }
 
         public static bool GetNodeState(this EnvDTE.Project project, string item, __VSHIERARCHYITEMSTATE state) {
-            IVsHierarchy hier;
-            uint id;
-            ((IVsBrowseObject)((dynamic)project.ProjectItems.Item(item).Properties).Target).GetProjectItem(out hier, out id);
+            IVsHierarchy hier = null;
+            uint id = 0;
+            UIThreadInvoker.Invoke((Action)(() => {
+                hier = ((dynamic)project).Project as IVsHierarchy;
+                object projectDir;
+                ErrorHandler.ThrowOnFailure(
+                    hier.GetProperty(
+                        (uint)VSConstants.VSITEMID.Root,
+                        (int)__VSHPROPID.VSHPROPID_ProjectDir,
+                        out projectDir
+                    )
+                );
+
+                string itemPath = Path.Combine((string)projectDir, item);
+                if (ErrorHandler.Failed(hier.ParseCanonicalName(itemPath, out id))) {
+                    ErrorHandler.ThrowOnFailure(
+                        hier.ParseCanonicalName(itemPath + "\\", out id)
+                    );
+                }
+            }));
 
             // make sure we're still expanded.
             var solutionWindow = UIHierarchyUtilities.GetUIHierarchyWindow(

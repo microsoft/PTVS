@@ -6,7 +6,7 @@
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
       xmlns:pt="clr-namespace:Microsoft.PythonTools"
       xmlns:l="clr-namespace:Microsoft.PythonTools.Project.ImportWizard"
-      xmlns:wpf="clr-namespace:Microsoft.PythonTools.Wpf"
+      xmlns:wpf="clr-namespace:Microsoft.VisualStudioTools.Wpf"
       mc:Ignorable="d" 
       d:DesignHeight="300" d:DesignWidth="500"
       Title="Interpreter Selection"

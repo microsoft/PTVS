@@ -1150,7 +1150,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             }
         }
 
-        private delegate void MoveDelegate(AutomationElement destination, params AutomationElement[] source);
+        internal delegate void MoveDelegate(AutomationElement destination, params AutomationElement[] source);
 
         /// <summary>
         /// Moves one or more items in solution explorer to the destination using the mouse.
@@ -1187,7 +1187,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         /// <summary>
         /// Moves one or more items in solution explorer to the destination using the mouse.
         /// </summary>
-        private static void CopyByMouse(AutomationElement destination, params AutomationElement[] source) {
+        internal static void CopyByMouse(AutomationElement destination, params AutomationElement[] source) {
             SelectItemsForDragAndDrop(source);
 
             try {
@@ -1238,7 +1238,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         /// </summary>
         /// <param name="destination"></param>
         /// <param name="source"></param>
-        private static void CopyByKeyboard(AutomationElement destination, params AutomationElement[] source) {
+        internal static void CopyByKeyboard(AutomationElement destination, params AutomationElement[] source) {
             AutomationWrapper.Select(source.First());
             for (int i = 1; i < source.Length; i++) {
                 AutomationWrapper.AddToSelection(source[i]);

@@ -23,6 +23,7 @@ using Microsoft.PythonTools;
 using Microsoft.PythonTools.Profiling;
 using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudioTools.Project;
 using Microsoft.Win32;
 using TestUtilities;
 using TestUtilities.Python;

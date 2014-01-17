@@ -22,6 +22,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.Interpreter.Default;
+using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Interpreter {
     /// <summary>

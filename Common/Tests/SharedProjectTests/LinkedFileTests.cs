@@ -419,7 +419,7 @@ namespace VisualStudioToolsUITests {
                     addExistingDlg.AddLink();
 
                     solution.App.WaitForDialog();
-                    VisualStudioApp.CheckMessageBox(MessageBoxButton.Ok, "There is already a link to", "A project cannot have more than one link to the same file.", "FileNotInProject.py");
+                    VisualStudioApp.CheckMessageBox(MessageBoxButton.Ok, "There is already a link to", "A project cannot have more than one link to the same file.", "FileNotInProject" + projectType.CodeExtension);
                 }
             }
         }

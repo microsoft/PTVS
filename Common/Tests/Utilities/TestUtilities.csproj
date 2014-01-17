@@ -130,6 +130,7 @@
       <ExcludeFromStyleCop>true</ExcludeFromStyleCop>
     </Compile>
     <Compile Include="SharedProject\CodeExtensionAttribute.cs" />
+    <Compile Include="SharedProject\CustomItem.cs" />
     <Compile Include="SharedProject\CompileItem.cs" />
     <Compile Include="SharedProject\ContentItem.cs" />
     <Compile Include="SharedProject\FolderItem.cs" />
@@ -151,6 +152,8 @@
     <Compile Include="SharedProject\SolutionFile.cs" />
     <Compile Include="SharedProject\StartupFileProjectProperty.cs" />
     <Compile Include="SharedProject\SolutionFolder.cs" />
+    <Compile Include="SharedProject\ImportDefinition.cs" />
+    <Compile Include="SharedProject\TargetDefinition.cs" />
     <Compile Include="TestData.cs" />
     <Compile Include="TestExtensions.cs" />
     <Compile Include="TestMethod.cs" />

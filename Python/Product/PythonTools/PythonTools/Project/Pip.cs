@@ -21,6 +21,7 @@ using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Project {
     static class Pip {

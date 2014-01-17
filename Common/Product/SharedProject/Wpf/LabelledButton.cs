@@ -15,7 +15,7 @@
 using System.Windows;
 using System.Windows.Controls;
 
-namespace Microsoft.PythonTools.Wpf {
+namespace Microsoft.VisualStudioTools.Wpf {
     sealed class LabelledButton : Button {
         public string Title {
             get { return (string)GetValue(TitleProperty); }

@@ -100,7 +100,7 @@ namespace Microsoft.VisualStudioTools.Project
             {
                 if (null == references)
                 {
-                    references = new Automation.OAReferences(this);
+                    references = new Automation.OAReferences(this, ProjectMgr);
                 }
                 return references;
             }

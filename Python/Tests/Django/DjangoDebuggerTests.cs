@@ -23,6 +23,7 @@ using DebuggerTests;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Debugger;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudioTools.Project;
 using TestUtilities;
 using TestUtilities.Python;
 

@@ -14,7 +14,7 @@
     TextOptions.TextFormattingMode="Display"
     MinHeight="110" MinWidth="300">
     <ui:DialogWindowVersioningWorkaround.Resources>
-        <ResourceDictionary Source="pack://application:,,,/Microsoft.PythonTools;component/Wpf/Controls.xaml" />
+        <ResourceDictionary Source="pack://application:,,,/Microsoft.PythonTools;component/SharedProject/Wpf/Controls.xaml" />
     </ui:DialogWindowVersioningWorkaround.Resources>
     <DockPanel>
         <DockPanel LastChildFill="true" HorizontalAlignment="Stretch" DockPanel.Dock="Top">

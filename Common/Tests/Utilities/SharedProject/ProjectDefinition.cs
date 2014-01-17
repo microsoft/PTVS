@@ -30,6 +30,16 @@ namespace TestUtilities.SharedProject {
         public readonly ProjectContentGenerator[] Items;
 
         /// <summary>
+        /// Creates a new generic project not associated with any language that can be used
+        /// as a project which is imported from another project.
+        /// </summary>
+        public ProjectDefinition(string name, params ProjectContentGenerator[] items) {
+            ProjectType = ProjectType.Generic;
+            _name = name;
+            Items = items;
+        }
+
+        /// <summary>
         /// Creates a new project definition which can be included in a solution or generated.
         /// </summary>
         /// <param name="name">The name of the project</param>
@@ -65,11 +75,13 @@ namespace TestUtilities.SharedProject {
             }
             project.Save(projectFile);
 
-            var projGuid = Guid.NewGuid();
-            project.SetProperty("ProjectTypeGuid", TypeGuid.ToString());
-            project.SetProperty("Name", _name);
-            project.SetProperty("ProjectGuid", projGuid.ToString("B"));
-            project.SetProperty("SchemaVersion", "2.0");
+            if (ProjectType != ProjectType.Generic) {
+                var projGuid = Guid.NewGuid();
+                project.SetProperty("ProjectTypeGuid", TypeGuid.ToString());
+                project.SetProperty("Name", _name);
+                project.SetProperty("ProjectGuid", projGuid.ToString("B"));
+                project.SetProperty("SchemaVersion", "2.0");
+            }
 
             foreach (var processor in ProjectType.Processors) {
                 processor.PreProcess(project);
@@ -93,7 +105,16 @@ namespace TestUtilities.SharedProject {
         }
 
         public SolutionElementFlags Flags {
-            get { return _isUserProject ? SolutionElementFlags.ExcludeFromSolution : SolutionElementFlags.None; }
+            get {
+                if (ProjectType == ProjectType.Generic) {
+                    return SolutionElementFlags.ExcludeFromConfiguration | 
+                        SolutionElementFlags.ExcludeFromSolution;
+                } else if (_isUserProject) {
+                    return SolutionElementFlags.ExcludeFromSolution;
+                }
+
+                return SolutionElementFlags.None; 
+            }
         }
 
         public string Name { get { return _name; } }

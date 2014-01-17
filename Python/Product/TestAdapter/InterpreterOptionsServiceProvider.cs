@@ -21,6 +21,7 @@ using System.Linq;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudioTools;
 using IOleServiceProvider = Microsoft.VisualStudio.OLE.Interop.IServiceProvider;
 
 namespace Microsoft.PythonTools {

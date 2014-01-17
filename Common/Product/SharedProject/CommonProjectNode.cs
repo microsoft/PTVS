@@ -1151,21 +1151,6 @@ namespace Microsoft.VisualStudioTools.Project {
             return VSConstants.S_OK;
         }
 
-        protected override bool IsItemTypeFileType(string type) {
-            if (!base.IsItemTypeFileType(type)) {
-                if (String.Compare(type, "Page", StringComparison.OrdinalIgnoreCase) == 0
-                || String.Compare(type, "ApplicationDefinition", StringComparison.OrdinalIgnoreCase) == 0
-                || String.Compare(type, "Resource", StringComparison.OrdinalIgnoreCase) == 0) {
-                    return true;
-                } else {
-                    return false;
-                }
-            } else {
-                //This is a well known item node type, so return true.
-                return true;
-            }
-        }
-
         protected override NodeProperties CreatePropertiesObject() {
             return new CommonProjectNodeProperties(this);
         }

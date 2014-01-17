@@ -39,9 +39,9 @@ namespace Microsoft.TestSccPackage
     // This attribute tells the PkgDef creation utility (CreatePkgDef.exe) that this class is
     // a package.
     [PackageRegistration(UseManagedResourcesOnly = true)]
-    [Guid(GuidList.guidSccPackagePkgString)]
+    [Guid(Guids.guidSccPackagePkgString)]
     [ProvideService(typeof(TestSccProvider), ServiceName="Test Source Provider")]
-    [ProvideSourceControlProvider("Test Source Provider", GuidList.guidSccPackageCmdSetString, typeof(SccPackage), typeof(TestSccProvider))]
+    [ProvideSourceControlProvider("Test Source Provider", Guids.guidSccPackageCmdSetString, typeof(SccPackage), typeof(TestSccProvider))]
     [ProvideMenuResource(1000, 1)]                              // This attribute is needed to let the shell know that this package exposes some menus.
     public sealed class SccPackage : Package
     {
@@ -71,11 +71,11 @@ namespace Microsoft.TestSccPackage
             base.Initialize();
 
             OleMenuCommandService mcs = GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
-            CommandID replWindowCmdId = new CommandID(GuidList.guidSccPackageCmdSet, PkgCmdId.cmdidShowDocEvents);
+            CommandID replWindowCmdId = new CommandID(Guids.guidSccPackageCmdSet, PkgCmdId.cmdidShowDocEvents);
             MenuCommand showDocEventsCmdId = new MenuCommand(ShowDocEvents, replWindowCmdId);
             mcs.AddCommand(showDocEventsCmdId);
 
-            CommandID clearDocEventsCmdId = new CommandID(GuidList.guidSccPackageCmdSet, PkgCmdId.cmdidClearDocEvents);
+            CommandID clearDocEventsCmdId = new CommandID(Guids.guidSccPackageCmdSet, PkgCmdId.cmdidClearDocEvents);
             MenuCommand openRemoteDebugProxyFolderCmd = new MenuCommand(ClearDocEvents, clearDocEventsCmdId);
             mcs.AddCommand(openRemoteDebugProxyFolderCmd);
 

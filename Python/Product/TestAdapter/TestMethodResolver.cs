@@ -25,6 +25,7 @@ using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestWindow.Extensibility;
 using Microsoft.VisualStudioTools;
+using Microsoft.VisualStudioTools.TestAdapter;
 using MSBuild = Microsoft.Build.Evaluation;
 
 namespace Microsoft.PythonTools.TestAdapter {

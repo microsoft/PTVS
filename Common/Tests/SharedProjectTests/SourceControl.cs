@@ -20,7 +20,6 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Automation;
 using System.Windows.Input;
-using EnvDTE;
 using Microsoft.TC.TestHostAdapters;
 using Microsoft.TestSccPackage;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -28,8 +27,8 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 using TestUtilities.SharedProject;
 using TestUtilities.UI;
-using Mouse = TestUtilities.UI.Mouse;
 using Keyboard = TestUtilities.UI.Keyboard;
+using Mouse = TestUtilities.UI.Mouse;
 
 namespace Microsoft.VisualStudioTools.SharedProjectTests {
     [TestClass]
@@ -340,10 +339,11 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                         foreach (var curFile in sccProject.Files) {
                             Assert.IsFalse(curFile.Key.EndsWith("ExcludedFile" + projectType.CodeExtension), "found excluded file");
                         }
-
-                        app.SelectSourceControlProvider("None");
                     }
                 }
+
+                app.Dte.Solution.Close();
+                app.SelectSourceControlProvider("None");
             }
         }
 
@@ -359,6 +359,8 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                     app.Dte.Solution.Close();
 
                     app.SelectSourceControlProvider("Test Source Provider");
+
+                    TestSccProvider.DocumentEvents.Clear();
 
                     using (var solution = SourceControlProject(projectType).Generate()) {
                         try {

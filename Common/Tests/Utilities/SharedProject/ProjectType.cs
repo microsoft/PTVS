@@ -33,10 +33,16 @@ namespace TestUtilities.SharedProject {
         public readonly IProjectProcessor[] Processors;
 
         /// <summary>
-        /// Provides a ProjectKind which will produce a C# project.  Used for multiple project solution
+        /// Provides a ProjectType which will produce a C# project.  Used for multiple project solution
         /// testing scenarios.  Not exported because there's no need to test the C# project system.
         /// </summary>
         public static readonly ProjectType CSharp = new ProjectType(".cs", ".csproj", new Guid("FAE04EC0-301F-11D3-BF4B-00C04F79EFBC"), "class C { }");
+
+        /// <summary>
+        /// Provides a ProjectType which is completely generic.  Useful for generating a simple
+        /// .proj file which will be imported fropm another project.
+        /// </summary>
+        public static readonly ProjectType Generic = new ProjectType(".txt", ".proj", Guid.Empty, "");
 
         public ProjectType(string codeExtension, string projectExtension, Guid projectTypeGuid, string sampleCode = "", IProjectProcessor[] postProcess = null) {
             Debug.Assert(!String.IsNullOrWhiteSpace(codeExtension));

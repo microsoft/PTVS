@@ -19,7 +19,7 @@ using System.IO;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudioTools;
 
-namespace Microsoft.PythonTools.TestAdapter {
+namespace Microsoft.VisualStudioTools.TestAdapter {
     class TestFilesUpdateWatcher : IDisposable {
         private readonly IDictionary<string, FileSystemWatcher> _fileWatchers;
         public event EventHandler<TestFileChangedEventArgs> FileChangedEvent;

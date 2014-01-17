@@ -35,6 +35,7 @@ using Microsoft.VisualStudio.Repl;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools;
+using Microsoft.VisualStudioTools.Project;
 using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.PythonTools.Project {
@@ -103,8 +104,8 @@ namespace Microsoft.PythonTools.Project {
 
                 if (_errorListProvider != null) {
                     _errorListProvider.Dispose();
-                }
             }
+        }
         }
 
         private static uint AddNamedCommand(IServiceProvider provider, string name, string tooltipText = null) {

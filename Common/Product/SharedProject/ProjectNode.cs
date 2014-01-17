@@ -1730,7 +1730,7 @@ namespace Microsoft.VisualStudioTools.Project
                                 // MSBuilds tasks/targets can create items (such as object files),
                                 // such items are not part of the project per say, and should not be displayed.
                                 // so ignore those items.
-                                if (!this.IsItemTypeFileType(item.ItemType))
+                                if (!IsVisibleItem(item))
                                 {
                                     continue;
                                 }
@@ -1746,6 +1746,8 @@ namespace Microsoft.VisualStudioTools.Project
                                 // now the copy file
                                 AddFileFromTemplate(strPathToFile, newFileName);
                             }
+
+                            FinishProjectCreation(basePath, baseLocation);
                         }
                     }
                     else
@@ -1782,6 +1784,13 @@ namespace Microsoft.VisualStudioTools.Project
                 // HierarchyNode.Close() will also call Dispose on us
                 base.Close();
             }
+        }
+
+        /// <summary>
+        /// Performs any new project initialization after the MSBuild project
+        /// has been constructed and template files copied to the project directory.
+        /// </summary>
+        protected virtual void FinishProjectCreation(string sourceFolder, string destFolder) {
         }
 
         /// <summary>
@@ -1898,6 +1907,8 @@ namespace Microsoft.VisualStudioTools.Project
         /// <returns>null if property does not exist, otherwise value of the property</returns>
         public virtual string GetProjectProperty(string propertyName, bool resetCache)
         {
+            UIThread.Instance.MustBeCalledFromUIThread();
+
             MSBuildExecution.ProjectPropertyInstance property = GetMsBuildProperty(propertyName, resetCache);
             if (property == null)
                 return null;
@@ -1913,6 +1924,8 @@ namespace Microsoft.VisualStudioTools.Project
         /// <param name="propertyName">Name of the property to get</param>
         public virtual string GetUnevaluatedProperty(string propertyName)
         {
+            UIThread.Instance.MustBeCalledFromUIThread();
+
             var res = this.buildProject.GetProperty(propertyName);
 
             if (res != null)
@@ -1930,6 +1943,7 @@ namespace Microsoft.VisualStudioTools.Project
         public virtual void SetProjectProperty(string propertyName, string propertyValue)
         {
             Utilities.ArgumentNotNull("propertyName", propertyName);
+            UIThread.Instance.MustBeCalledFromUIThread();
 
             string oldValue = null;
             ProjectPropertyInstance oldProp = GetMsBuildProperty(propertyName, true);
@@ -2211,7 +2225,8 @@ namespace Microsoft.VisualStudioTools.Project
             string[] parts = strFullPath.Substring(ProjectHome.Length).Split(new [] { Path.DirectorySeparatorChar }, StringSplitOptions.RemoveEmptyEntries);
             if (parts.Length == 0)
             {
-                throw new ArgumentException("The path is invalid", "path");
+                // pointing at the project home, it already exists
+                return this;
             }
             path = parts[0];
             string fullPath = Path.Combine(ProjectHome, path) + "\\";
@@ -2568,26 +2583,6 @@ namespace Microsoft.VisualStudioTools.Project
             {
                 throw Marshal.GetExceptionForHR(VSConstants.OLE_E_PROMPTSAVECANCELLED);
             }
-        }
-
-        /// <summary>
-        /// Called by the project to know if the item is a file (that is part of the project)
-        /// or an intermediate file used by the MSBuild tasks/targets
-        /// Override this method if your project has more types or different ones
-        /// </summary>
-        /// <param name="type">Type name</param>
-        /// <returns>True = items of this type should be included in the project</returns>
-        protected virtual bool IsItemTypeFileType(string type)
-        {
-            // recognize the typical types as a file....
-            if (String.Compare(type, "Compile", StringComparison.OrdinalIgnoreCase) == 0
-                || String.Compare(type, "Content", StringComparison.OrdinalIgnoreCase) == 0
-                || String.Compare(type, "EmbeddedResource", StringComparison.OrdinalIgnoreCase) == 0
-                || String.Compare(type, "None", StringComparison.OrdinalIgnoreCase) == 0)
-                return true;
-
-            // we don't know about this type, so ignore it.
-            return false;
         }
 
         /// <summary>
@@ -3238,21 +3233,16 @@ namespace Microsoft.VisualStudioTools.Project
             // Process Files
             foreach (MSBuild.ProjectItem item in this.buildProject.Items.ToArray()) // copy the array, we could add folders while enumerating
             {
-                // Ignore items imported from .targets files. In particular, this will ignore the <Content>
-                // items that are generated from any <Compile> items in our .targets.
-                if (item.IsImported) {
-                    continue;
-                }
-
                 // Ignore the item if it is a reference or folder
                 if (this.FilterItemTypeToBeAddedToHierarchy(item.ItemType))
                     continue;
 
-                // MSBuilds tasks/targets can create items (such as object files),
-                // such items are not part of the project per say, and should not be displayed.
-                // so ignore those items.
-                if (!this.IsItemTypeFileType(item.ItemType))
+                // Check if the item is imported.  If it is we'll only show it in the
+                // project if it is a Visible item meta data.  Visible can also be used
+                // to hide non-imported items.
+                if (!IsVisibleItem(item)) {
                     continue;
+                }
 
                 // If the item is already contained do nothing.
                 // TODO: possibly report in the error list that the the item is already contained in the project file similar to Language projects.
@@ -3329,6 +3319,16 @@ namespace Microsoft.VisualStudioTools.Project
                 ProcessDependentFileNodes(subitemsKeys, subitems);
             }
 
+        }
+
+        private static bool IsVisibleItem(MSBuild.ProjectItem item) {
+            bool isVisibleItem = true;
+            string visible = item.GetMetadataValue(CommonConstants.Visible);
+            if ((item.IsImported && !String.Equals(visible, "true", StringComparison.OrdinalIgnoreCase)) ||
+                String.Equals(visible, "false", StringComparison.OrdinalIgnoreCase)) {
+                isVisibleItem = false;
+            }
+            return isVisibleItem;
         }
 
         /// <summary>
@@ -3444,16 +3444,16 @@ namespace Microsoft.VisualStudioTools.Project
 
                 try
                 {
-                    this.SetBuildConfigurationProperties(config);
+                    SetBuildConfigurationProperties(config);
 
-                    result = this.InvokeMsBuild(target);
+                    result = InvokeMsBuild(target);
                 }
                 finally
                 {
                     // Unless someone specifically request to use an output window pane, we should not output to it
                     if (null != output)
                     {
-                        this.SetOutputLogger(null);
+                        SetOutputLogger(null);
                         BuildEngine.OnlyLogCriticalEvents = engineLogOnlyCritical;
                     }
                 }
@@ -5922,10 +5922,10 @@ If the files in the existing folder have the same names as files in the folder y
                 // If the SVsBuildManagerAccessor service is absent, we're not running within Visual Studio.
                 if (accessor != null)
                 {
-                    if (requiresUIThread) 
+                    if (requiresUIThread)
                     {
                         int result = accessor.ClaimUIThreadForBuild();
-                        if (result < 0) 
+                        if (result < 0)
                         {
                             // Not allowed to claim the UI thread right now. Try again later.
                             return false;
@@ -5977,7 +5977,7 @@ If the files in the existing folder have the same names as files in the folder y
         /// <remarks>
         /// This method must be called on the UI thread.
         /// </remarks>
-        private void EndBuild(BuildSubmission submission, bool designTime, bool requiresUIThread = false) 
+        private void EndBuild(BuildSubmission submission, bool designTime, bool requiresUIThread = false)
         {
             IVsBuildManagerAccessor accessor = null;
 
@@ -6026,7 +6026,7 @@ If the files in the existing folder have the same names as files in the folder y
 
                 try
                 {
-                    if (requiresUIThread) 
+                    if (requiresUIThread)
                     {
                         Marshal.ThrowExceptionForHR(accessor.ReleaseUIThreadForBuild());
                     }
@@ -6116,6 +6116,7 @@ If the files in the existing folder have the same names as files in the folder y
             UIThread.Instance.MustBeCalledFromUIThread();
 
             Debug.Assert(Path.IsPathRooted(name));
+            
             HierarchyNode res;
             _diskNodes.TryGetValue(name, out res);
             return res;

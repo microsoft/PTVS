@@ -16,7 +16,7 @@ using System;
 using System.Globalization;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
-namespace Microsoft.PythonTools.TestAdapter {
+namespace Microsoft.VisualStudioTools.TestAdapter {
     internal static class ServiceProviderExtensions {
         public static T GetService<T>(this IServiceProvider serviceProvider)
             where T : class {

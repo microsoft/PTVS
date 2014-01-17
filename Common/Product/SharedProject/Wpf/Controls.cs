@@ -19,10 +19,13 @@ using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Interop;
+using System.Windows.Markup;
 using System.Windows.Media.Imaging;
 using Microsoft.VisualStudio.Shell;
 
-namespace Microsoft.PythonTools.Wpf {
+[assembly: XmlnsDefinition("http://schemas.microsoft.com/vstools/2013/wpf", "Microsoft.VisualStudioTools.Wpf")]
+
+namespace Microsoft.VisualStudioTools.Wpf {
     public static class Controls {
         public static readonly object BackgroundKey = VsBrushes.WindowKey;
         public static readonly object BackgroundAccentKey = VsBrushes.ButtonFaceKey;

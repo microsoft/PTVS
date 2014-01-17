@@ -29,6 +29,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudioTools;
+using WpfCommands = Microsoft.VisualStudioTools.Wpf.Commands;
 
 namespace Microsoft.PythonTools.Project {
     /// <summary>
@@ -81,11 +82,11 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private void Browse_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
-            Wpf.Commands.CanExecute(this, sender, e);
+            WpfCommands.CanExecute(this, sender, e);
         }
 
         private void Browse_Executed(object sender, ExecutedRoutedEventArgs e) {
-            Wpf.Commands.Executed(this, sender, e);
+            WpfCommands.Executed(this, sender, e);
         }
 
         private void Close_CanExecute(object sender, CanExecuteRoutedEventArgs e) {

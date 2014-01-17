@@ -53,7 +53,7 @@ namespace Microsoft.VisualStudio.Repl {
     [ProvideMenuResource("Menus.ctmenu", 1)]
     [ProvideAutoLoad(Microsoft.VisualStudio.Shell.Interop.UIContextGuids.NoSolution)]
     [ProvideAutoLoad(Microsoft.VisualStudio.Shell.Interop.UIContextGuids.SolutionExists)]
-    [Guid(GuidList.guidReplWindowPkgString)]
+    [Guid(Guids.guidReplWindowPkgString)]
     internal sealed class ReplWindowPackage : Package, IVsToolWindowFactory {
         int IVsToolWindowFactory.CreateToolWindow(ref Guid toolWindowType, uint id) {
             if (toolWindowType == typeof(ReplWindow).GUID) {

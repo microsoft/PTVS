@@ -98,6 +98,7 @@ namespace Microsoft.VisualStudioTools.Project
         internal const string EmbeddedResource = "EmbeddedResource";
         internal const string Error = "Error";
         internal const string ErrorInvalidFileName = "ErrorInvalidFileName";
+        internal const string ErrorInvalidLaunchUrl = "ErrorInvalidLaunchUrl";
         internal const string ErrorInvalidProjectName = "ErrorInvalidProjectName";
         internal const string ErrorReferenceCouldNotBeAdded = "ErrorReferenceCouldNotBeAdded";
         internal const string ErrorMsBuildRegistration = "ErrorMsBuildRegistration";
@@ -196,7 +197,7 @@ namespace Microsoft.VisualStudioTools.Project
         internal const string WebPiFeedDescription = "WebPiFeedDescription";
         internal const string WebPiProductDescription = "WebPiProductDescription";
         internal const string WebPiReferenceProperties = "WebPiReferenceProperties";
-
+                
         static SR loader;
         ResourceManager resources;
 

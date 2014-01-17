@@ -25,10 +25,10 @@ using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Interpreter.Default;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudioTools.Project;
 using TestUtilities;
 using TestUtilities.Python;
 using Assert = Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
-using ProcessOutput = analysis::Microsoft.PythonTools.ProcessOutput;
 
 namespace PythonToolsTests {
     [TestClass]

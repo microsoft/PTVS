@@ -108,7 +108,7 @@ namespace TestUtilities.UI {
 
         private string SolutionNodeText {
             get {
-                if (_solution.Projects.Count(sln => !sln.Flags.HasFlag(SolutionElementFlags.ExcludeFromConfiguration | SolutionElementFlags.ExcludeFromSolution)) > 1) {
+                if (_solution.Projects.Count(sln => !sln.Flags.HasFlag(SolutionElementFlags.ExcludeFromConfiguration) && !sln.Flags.HasFlag(SolutionElementFlags.ExcludeFromSolution)) > 1) {
                     return String.Format(
                         "Solution '{0}' ({1} projects)",
                         Path.GetFileNameWithoutExtension(_solution.Filename),

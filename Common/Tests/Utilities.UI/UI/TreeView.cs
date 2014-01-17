@@ -36,6 +36,10 @@ namespace TestUtilities.UI {
                 }
                 System.Threading.Thread.Sleep(250);
             }
+            if (item == null) {
+                Console.WriteLine("Failed to find {0}", String.Join("\\", path));
+                DumpElement(Element);
+            }
             return item;
         }
 

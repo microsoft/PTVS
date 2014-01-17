@@ -202,7 +202,7 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
                     }
                 }
             }
-            throw new ArgumentException();
+            throw new ArgumentException("Failed to find item: " + index);
         }
 
         /// <summary>

@@ -34,11 +34,7 @@ namespace TestUtilities.UI {
                     Assert.Fail("Unexpected Exception - ClickSelect(){0}{1}", Environment.NewLine, e.ToString());
                 } 
             });
-            AutomationElement sctel = null;
-            for (int i = 0; i < 100 && sctel == null; i++) {
-                Thread.Sleep(100); 
-                sctel = FindByName("Select Code Type");
-            }
+            AutomationElement sctel = FindByName("Select Code Type");
             Assert.IsNotNull(sctel, "Could not find the Select Code Type dialog!");
             return new SelectCodeTypeDialog(sctel);
         }

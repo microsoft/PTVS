@@ -772,7 +772,16 @@ namespace Microsoft.VisualStudioTools.Project
                     break;
 
                 case __VSHPROPID.VSHPROPID_ExtObject:
-                    result = GetAutomationObject();
+#if DEBUG
+                    try {
+#endif
+                        result = GetAutomationObject();
+#if DEBUG
+                    } catch (Exception e) {
+                        Debug.WriteLine(String.Format("Failed to get automation object for node {1}: {0}", e, this));
+                        throw;
+                    }
+#endif
                     break;
             }
 

@@ -19,7 +19,7 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestWindow.Extensibility;
 using Microsoft.VisualStudio.TestWindow.Extensibility.Model;
 
-namespace Microsoft.PythonTools.TestAdapter {
+namespace Microsoft.VisualStudioTools.TestAdapter {
     internal class TestContainer : ITestContainer {
         private readonly DateTime _timeStamp;
         private readonly Architecture _architecture;

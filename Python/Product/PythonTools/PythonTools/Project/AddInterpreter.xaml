@@ -7,7 +7,7 @@
     xmlns:ptvs="clr-namespace:Microsoft.PythonTools"
     xmlns:l="clr-namespace:Microsoft.PythonTools.Project"
     xmlns:l2="clr-namespace:Microsoft.PythonTools.InterpreterList"
-    xmlns:wpf="clr-namespace:Microsoft.PythonTools.Wpf"
+    xmlns:wpf="clr-namespace:Microsoft.VisualStudioTools.Wpf"
     Title="Add/Remove Python Environments"
     MinWidth="300" Width="500"
     MinHeight="250" Height="400"
@@ -26,7 +26,7 @@
     <vstools:DialogWindowVersioningWorkaround.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="pack://application:,,,/Microsoft.PythonTools;component/Wpf/Controls.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/Microsoft.PythonTools;component/SharedProject/Wpf/Controls.xaml" />
 
                 <ResourceDictionary>
                     <DataTemplate x:Key="NameTemplate" DataType="{x:Type ptvs:InterpreterView}">

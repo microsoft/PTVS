@@ -20,7 +20,7 @@ using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Interop;
 
-namespace Microsoft.PythonTools.Wpf {
+namespace Microsoft.VisualStudioTools.Wpf {
     static class Commands {
         public static readonly RoutedCommand BrowseFolder = new RoutedCommand();
         public static readonly RoutedCommand BrowseOpenFile = new RoutedCommand();
@@ -49,7 +49,7 @@ namespace Microsoft.PythonTools.Wpf {
                 while (!string.IsNullOrEmpty(path) && !Directory.Exists(path)) {
                     path = Path.GetDirectoryName(path);
                 }
-                path = PythonToolsPackage.Instance.BrowseForDirectory(new WindowInteropHelper(window).Handle, path);
+                path = Dialogs.BrowseForDirectory(new WindowInteropHelper(window).Handle, path);
                 if (path != null) {
                     tb.SetCurrentValue(TextBox.TextProperty, path);
                     var binding = BindingOperations.GetBindingExpressionBase(tb, TextBox.TextProperty);
@@ -63,7 +63,7 @@ namespace Microsoft.PythonTools.Wpf {
                 while (!string.IsNullOrEmpty(path) && !Directory.Exists(path)) {
                     path = Path.GetDirectoryName(path);
                 }
-                path = PythonToolsPackage.Instance.BrowseForDirectory(new WindowInteropHelper(window).Handle, path);
+                path = Dialogs.BrowseForDirectory(new WindowInteropHelper(window).Handle, path);
                 if (path != null) {
                     if (string.IsNullOrEmpty(existing)) {
                         tb.SetCurrentValue(TextBox.TextProperty, path);
@@ -83,7 +83,7 @@ namespace Microsoft.PythonTools.Wpf {
             var filter = (e.Parameter as string) ?? "All Files (*.*)|*.*";
 
             var path = tb.GetValue(TextBox.TextProperty) as string;
-            path = PythonToolsPackage.Instance.BrowseForFileOpen(new WindowInteropHelper(window).Handle, filter, path);
+            path = Dialogs.BrowseForFileOpen(new WindowInteropHelper(window).Handle, filter, path);
             if (path != null) {
                 tb.SetCurrentValue(TextBox.TextProperty, path);
                 var binding = BindingOperations.GetBindingExpressionBase(tb, TextBox.TextProperty);
@@ -98,7 +98,7 @@ namespace Microsoft.PythonTools.Wpf {
             var filter = (e.Parameter as string) ?? "All Files (*.*)|*.*";
 
             var path = tb.GetValue(TextBox.TextProperty) as string;
-            path = PythonToolsPackage.Instance.BrowseForFileSave(new WindowInteropHelper(window).Handle, filter, path);
+            path = Dialogs.BrowseForFileSave(new WindowInteropHelper(window).Handle, filter, path);
             if (path != null) {
                 tb.SetCurrentValue(TextBox.TextProperty, path);
                 var binding = BindingOperations.GetBindingExpressionBase(tb, TextBox.TextProperty);

@@ -38,20 +38,24 @@ namespace Microsoft.VisualStudioTools.Project {
         [SRDescriptionAttribute(SR.StartupFileDescription)]
         public string StartupFile {
             get {
-                var res = Node.ProjectMgr.GetProjectProperty(CommonConstants.StartupFile, true);
-                if (!Path.IsPathRooted(res)) {
-                    res = CommonUtils.GetAbsoluteFilePath(Node.ProjectMgr.ProjectHome, res);
-                }
-                return res;
+                return UIThread.Instance.RunSync(() => {
+                    var res = Node.ProjectMgr.GetProjectProperty(CommonConstants.StartupFile, true);
+                    if (res != null && !Path.IsPathRooted(res)) {
+                        res = CommonUtils.GetAbsoluteFilePath(Node.ProjectMgr.ProjectHome, res);
+                    }
+                    return res;
+                });
             }
             set {
-                this.Node.ProjectMgr.SetProjectProperty(
-                    CommonConstants.StartupFile,
-                    CommonUtils.GetRelativeFilePath(
-                        Node.ProjectMgr.ProjectHome,
-                        Path.Combine(Node.ProjectMgr.ProjectHome, value)
-                    )
-                );
+                UIThread.Instance.RunSync(() => {
+                    this.Node.ProjectMgr.SetProjectProperty(
+                        CommonConstants.StartupFile,
+                        CommonUtils.GetRelativeFilePath(
+                            Node.ProjectMgr.ProjectHome, 
+                            Path.Combine(Node.ProjectMgr.ProjectHome, value)
+                        )
+                    );
+                });
             }
         }
 
@@ -63,10 +67,14 @@ namespace Microsoft.VisualStudioTools.Project {
         [SRDescriptionAttribute(SR.WorkingDirectoryDescription)]
         public string WorkingDirectory {
             get {
-                return this.Node.ProjectMgr.GetProjectProperty(CommonConstants.WorkingDirectory, true);
+                return UIThread.Instance.RunSync(() => {
+                    return this.Node.ProjectMgr.GetProjectProperty(CommonConstants.WorkingDirectory, true);
+                });
             }
             set {
-                this.Node.ProjectMgr.SetProjectProperty(CommonConstants.WorkingDirectory, value);
+                UIThread.Instance.RunSync(() => {
+                    this.Node.ProjectMgr.SetProjectProperty(CommonConstants.WorkingDirectory, value);
+                });
             }
         }
 
@@ -76,10 +84,14 @@ namespace Microsoft.VisualStudioTools.Project {
         [Browsable(false)]
         public string PublishUrl {
             get {
-                return this.Node.ProjectMgr.GetProjectProperty(CommonConstants.PublishUrl, true);
+                return UIThread.Instance.RunSync(() => {
+                    return this.Node.ProjectMgr.GetProjectProperty(CommonConstants.PublishUrl, true);
+                });
             }
             set {
-                this.Node.ProjectMgr.SetProjectProperty(CommonConstants.PublishUrl, value);
+                UIThread.Instance.RunSync(() => {
+                    this.Node.ProjectMgr.SetProjectProperty(CommonConstants.PublishUrl, value);
+                });
             }
         }
 
@@ -121,7 +133,7 @@ namespace Microsoft.VisualStudioTools.Project {
         #endregion
 
         #region ProjectProperties Members
-
+        
         [Browsable(false)]
         public string AbsoluteProjectDirectory {
             get {
@@ -352,13 +364,17 @@ namespace Microsoft.VisualStudioTools.Project {
         [Browsable(false)]
         public string StartupObject {
             get {
-                return Node.ProjectMgr.GetProjectProperty(CommonConstants.StartupFile);
+                return UIThread.Instance.RunSync(() => {
+                    return Node.ProjectMgr.GetProjectProperty(CommonConstants.StartupFile);
+                });
             }
             set {
-                Node.ProjectMgr.SetProjectProperty(
-                    CommonConstants.StartupFile,
-                    CommonUtils.GetRelativeFilePath(Node.ProjectMgr.ProjectHome, value)
-                );
+                UIThread.Instance.RunSync(() => {
+                    Node.ProjectMgr.SetProjectProperty(
+                        CommonConstants.StartupFile,
+                        CommonUtils.GetRelativeFilePath(Node.ProjectMgr.ProjectHome, value)
+                    );
+                });
             }
         }
 

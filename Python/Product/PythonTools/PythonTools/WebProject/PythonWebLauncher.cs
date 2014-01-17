@@ -432,6 +432,7 @@ namespace Microsoft.PythonTools.Project.Web {
                 builder = new UriBuilder();
                 builder.Scheme = Uri.UriSchemeHttp;
                 builder.Host = "localhost";
+                builder.Path = host;
             }
 
             builder.Port = port;

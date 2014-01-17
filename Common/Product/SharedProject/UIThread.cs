@@ -95,7 +95,7 @@ namespace Microsoft.VisualStudioTools.Project
         [Conditional("DEBUG")]
         internal void MustBeCalledFromUIThread()
         {
-            Debug.Assert(this.uithread == System.Threading.Thread.CurrentThread || this.isUnitTestingMode, "This must be called from the GUI thread");
+            Debug.Assert(IsUIThread || this.isUnitTestingMode, "This must be called from the GUI thread");
         }
 
         /// <summary>
@@ -145,8 +145,7 @@ namespace Microsoft.VisualStudioTools.Project
         {
             // if we're already on the UI thread run immediately - this prevents
             // re-entrancy at unexpected times when we're already on the UI thread.
-            if (this.isUnitTestingMode || 
-                uithread == Thread.CurrentThread)
+            if (this.isUnitTestingMode || IsUIThread)   
             {
                 a();
                 return;
@@ -184,7 +183,7 @@ namespace Microsoft.VisualStudioTools.Project
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode"), System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes")]
         internal T RunSync<T>(Func<T> a) {
             T retValue = default(T);
-            if (this.isUnitTestingMode || uithread == Thread.CurrentThread) {
+            if (this.isUnitTestingMode || IsUIThread) {
                 return a();
             }
             Exception exn = null; ;

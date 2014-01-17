@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Interpreter {
     public static class PythonInterpreterFactoryExtensions {

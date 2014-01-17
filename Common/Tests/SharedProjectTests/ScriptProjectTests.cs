@@ -12,6 +12,7 @@
  *
  * ***************************************************************************/
 
+using System.IO;
 using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
@@ -39,6 +40,62 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                     solution.App.OpenDialogWithDteExecuteCommand("Debug.StartWithoutDebugging");
                     VisualStudioApp.CheckMessageBox(
                         "No startup file is defined for the startup project."
+                    );
+                }
+            }
+        }
+
+        /// <summary>
+        /// Renaming the folder containing the startup script should update the startup script
+        /// https://nodejstools.codeplex.com/workitem/476
+        /// </summary>
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void RenameStartupFileFolder() {
+            foreach (var projectType in ProjectTypes) {
+                var testDef = new ProjectDefinition(
+                    "RenameStartupFileFolder", 
+                    projectType,
+                    Folder("Folder"),
+                    Compile("Folder\\server"),
+                    Property("StartupFile", "Folder\\server" + projectType.CodeExtension)
+                );
+
+                using (var solution = testDef.Generate().ToVs()) {
+                    var folder = solution.Project.ProjectItems.Item("Folder");
+                    folder.Name = "FolderNew";
+
+                    string startupFile = (string)solution.Project.Properties.Item("StartupFile").Value;
+                    Assert.IsTrue(
+                        startupFile.EndsWith(projectType.Code("FolderNew\\server")),
+                        "Expected FolderNew in path, got {0}",
+                        startupFile
+                    );
+                }
+            }
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void RenameStartupFile() {
+            foreach (var projectType in ProjectTypes) {
+                var testDef = new ProjectDefinition(
+                    "RenameStartupFileFolder",
+                    projectType,
+                    Folder("Folder"),
+                    Compile("Folder\\server"),
+                    Property("StartupFile", "Folder\\server" + projectType.CodeExtension)
+                );
+
+                using (var solution = testDef.Generate().ToVs()) {
+                    var file = solution.Project.ProjectItems.Item("Folder").ProjectItems.Item("server" + projectType.CodeExtension);
+                    file.Name = "server2" + projectType.CodeExtension;
+
+                    Assert.AreEqual(
+                        "server2" + projectType.CodeExtension,
+                        Path.GetFileName(
+                            (string)solution.Project.Properties.Item("StartupFile").Value
+                        )
                     );
                 }
             }

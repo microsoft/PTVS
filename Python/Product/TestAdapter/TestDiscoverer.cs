@@ -58,7 +58,9 @@ namespace Microsoft.PythonTools.TestAdapter {
                         }
                         var factory = provider.ActiveInterpreter;
                         if (factory == _interpreterService.NoInterpretersValue) {
-                            logger.SendMessage(TestMessageLevel.Warning, "No interpreters available for project " + proj.FullPath);
+                            if (logger != null) {
+                                logger.SendMessage(TestMessageLevel.Warning, "No interpreters available for project " + proj.FullPath);
+                            }
                             continue;
                         }
 
@@ -80,7 +82,9 @@ namespace Microsoft.PythonTools.TestAdapter {
                                 try {
                                     fullName = ModulePath.FromFullPath(fileAbsolutePath).ModuleName;
                                 } catch (ArgumentException) {
-                                    logger.SendMessage(TestMessageLevel.Warning, "File has an invalid module name: " + fileAbsolutePath);
+                                    if (logger != null) {
+                                        logger.SendMessage(TestMessageLevel.Warning, "File has an invalid module name: " + fileAbsolutePath);
+                                    }
                                     continue;
                                 }
 
@@ -93,12 +97,16 @@ namespace Microsoft.PythonTools.TestAdapter {
                                     // isn't saved.
 #if DEBUG
                                 } catch (Exception ex) {
-                                    logger.SendMessage(TestMessageLevel.Warning, "Failed to discover tests in " + fileAbsolutePath);
-                                    logger.SendMessage(TestMessageLevel.Informational, ex.ToString());
+                                    if (logger != null) {
+                                        logger.SendMessage(TestMessageLevel.Warning, "Failed to discover tests in " + fileAbsolutePath);
+                                        logger.SendMessage(TestMessageLevel.Informational, ex.ToString());
+                                    }
                                 }
 #else
                             } catch (Exception) {
-                                logger.SendMessage(TestMessageLevel.Warning, "Failed to discover tests in " + fileAbsolutePath);
+                                if (logger != null) {
+                                    logger.SendMessage(TestMessageLevel.Warning, "Failed to discover tests in " + fileAbsolutePath);
+                                }
                             }
 #endif
                             }

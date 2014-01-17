@@ -122,14 +122,12 @@ namespace TestUtilities.UI {
         public void FocusLanguageNode(string name = "Python") {
 #if DEV11_OR_LATER
             if (InstalledTemplates == null) {
+                Console.WriteLine("Failed to find InstalledTemplates:");
                 AutomationWrapper.DumpElement(Element);
             }
             var item = InstalledTemplates.FindItem("Templates", name);
             if (item == null) {
                 item = InstalledTemplates.FindItem("Templates", "Other Languages", name);
-            }
-            if (item == null) {
-                AutomationWrapper.DumpElement(InstalledTemplates.Element);
             }
 #else
             var item = InstalledTemplates.FindItem("Other Languages", name);
@@ -139,7 +137,8 @@ namespace TestUtilities.UI {
             }
 #endif
             if (item == null) {
-                DumpElement(InstalledTemplates.Element);
+                Console.WriteLine("Failed to find templates for " + name);
+                AutomationWrapper.DumpElement(InstalledTemplates.Element);
             }
             item.SetFocus();
         }

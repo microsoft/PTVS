@@ -24,6 +24,7 @@ using System.Windows.Input;
 using System.Windows.Interop;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudioTools;
+using WpfCommands = Microsoft.VisualStudioTools.Wpf.Commands;
 
 namespace Microsoft.PythonTools.Project.ImportWizard {
     /// <summary>
@@ -137,11 +138,11 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
         }
 
         private void Browse_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
-            Wpf.Commands.CanExecute(this, sender, e);
+            WpfCommands.CanExecute(this, sender, e);
         }
 
         private void Browse_Executed(object sender, ExecutedRoutedEventArgs e) {
-            Wpf.Commands.Executed(this, sender, e);
+            WpfCommands.Executed(this, sender, e);
         }
     }
 }

@@ -447,7 +447,7 @@ namespace Microsoft.VisualStudio.Repl {
             object otbh;
             Microsoft.VisualStudio.ErrorHandler.ThrowOnFailure(frame.GetProperty((int)__VSFPROPID.VSFPROPID_ToolbarHost, out otbh));
             IVsToolWindowToolbarHost tbh = otbh as IVsToolWindowToolbarHost;
-            Guid guidPerfMenuGroup = GuidList.guidReplWindowCmdSet;
+            Guid guidPerfMenuGroup = Guids.guidReplWindowCmdSet;
             Microsoft.VisualStudio.ErrorHandler.ThrowOnFailure(tbh.AddToolbar(VSTWT_LOCATION.VSTWT_TOP, ref guidPerfMenuGroup, PkgCmdIDList.menuIdReplToolbar));
         }
 
@@ -1324,7 +1324,7 @@ namespace Microsoft.VisualStudio.Repl {
             if (uishell != null) {
                 var pt = System.Windows.Forms.Cursor.Position;
                 var pnts = new[] { new POINTS { x = (short)pt.X, y = (short)pt.Y } };
-                var guid = GuidList.guidReplWindowCmdSet;
+                var guid = Guids.guidReplWindowCmdSet;
                 int hr = uishell.ShowContextMenu(
                     0,
                     ref guid,
@@ -1408,7 +1408,7 @@ namespace Microsoft.VisualStudio.Repl {
         public int QueryStatus(ref Guid pguidCmdGroup, uint cCmds, OLECMD[] prgCmds, IntPtr pCmdText) {
             var nextTarget = TextViewCommandFilterChain;
 
-            if (pguidCmdGroup == GuidList.guidReplWindowCmdSet) {
+            if (pguidCmdGroup == Guids.guidReplWindowCmdSet) {
                 switch (prgCmds[0].cmdID) {
                     case PkgCmdIDList.cmdidReplSearchHistoryNext:
                     case PkgCmdIDList.cmdidReplSearchHistoryPrevious:
@@ -1438,7 +1438,7 @@ namespace Microsoft.VisualStudio.Repl {
         public int Exec(ref Guid pguidCmdGroup, uint nCmdID, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut) {
             var nextTarget = TextViewCommandFilterChain;
 
-            if (pguidCmdGroup == GuidList.guidReplWindowCmdSet) {
+            if (pguidCmdGroup == Guids.guidReplWindowCmdSet) {
                 switch (nCmdID) {
                     case PkgCmdIDList.cmdidBreakRepl:
                         AbortCommand();
@@ -1497,7 +1497,7 @@ namespace Microsoft.VisualStudio.Repl {
         private int PreLanguageCommandFilterQueryStatus(ref Guid pguidCmdGroup, uint cCmds, OLECMD[] prgCmds, IntPtr pCmdText) {
             var nextTarget = _languageServiceCommandFilter;
 
-            if (pguidCmdGroup == GuidList.guidReplWindowCmdSet) {
+            if (pguidCmdGroup == Guids.guidReplWindowCmdSet) {
                 switch (prgCmds[0].cmdID) {
                     case PkgCmdIDList.cmdidBreakLine:
                         prgCmds[0].cmdf = CommandEnabled;
@@ -1542,7 +1542,7 @@ namespace Microsoft.VisualStudio.Repl {
                         }
                         break;
                 }
-            } else if (pguidCmdGroup == GuidList.guidReplWindowCmdSet) {
+            } else if (pguidCmdGroup == Guids.guidReplWindowCmdSet) {
                 switch (nCmdID) {
                     case PkgCmdIDList.cmdidBreakLine:
                         // map to RETURN, so that IntelliSense and other services treat this as a new line

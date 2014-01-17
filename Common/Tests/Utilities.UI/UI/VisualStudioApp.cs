@@ -17,24 +17,16 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Automation;
-using System.Windows.Input;
 using EnvDTE;
+using EnvDTE80;
 using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
-using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
-using Microsoft.VisualStudio.TestTools.Execution;
-using Microsoft.VisualStudio.TestTools.TestAdapter;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Microsoft.Win32;
-using TestUtilities;
 using Task = System.Threading.Tasks.Task;
 
 namespace TestUtilities.UI {
@@ -121,6 +113,7 @@ namespace TestUtilities.UI {
         /// Opens and activates the solution explorer window.
         /// </summary>
         public SolutionExplorerTree OpenSolutionExplorer() {
+            _solutionExplorerTreeView = null;
             Dte.ExecuteCommand("View.SolutionExplorer");
             return SolutionExplorerTreeView;
         }
@@ -142,16 +135,22 @@ namespace TestUtilities.UI {
         public IntPtr OpenDialogWithDteExecuteCommand(string commandName, string commandArgs = "") {
             Task task = Task.Factory.StartNew(() => {
                 Dte.ExecuteCommand(commandName, commandArgs);
+                Console.WriteLine("Successfully executed command {0} {1}", commandName, commandArgs);
             });
 
-            var dialog = WaitForDialog(task);
-            if (dialog == IntPtr.Zero) {
-                if (task.IsFaulted && task.Exception != null) {
-                    Assert.Fail("Unexpected Exception - VsIdeTestHostContext.Dte.ExecuteCommand({0},{1}){2}{3}",
-                            commandName, commandArgs, Environment.NewLine, task.Exception.ToString());
+            IntPtr dialog = IntPtr.Zero;
+
+            try {
+                dialog = WaitForDialog(task);
+            } finally {
+                if (dialog == IntPtr.Zero) {
+                    if (task.IsFaulted && task.Exception != null) {
+                        Assert.Fail("Unexpected Exception - VsIdeTestHostContext.Dte.ExecuteCommand({0},{1}){2}{3}",
+                                commandName, commandArgs, Environment.NewLine, task.Exception.ToString());
+                    }
+                    Assert.Fail("Task failed - VsIdeTestHostContext.Dte.ExecuteCommand({0},{1})",
+                            commandName, commandArgs);
                 }
-                Assert.Fail("Task failed - VsIdeTestHostContext.Dte.ExecuteCommand({0},{1})",
-                        commandName, commandArgs);
             }
             return dialog;
         }
@@ -290,6 +289,28 @@ namespace TestUtilities.UI {
             return new AttachToProcessDialog(dialog);
         }
 
+        public OutputWindowPane GetOutputWindow(string name) {
+            return ((DTE2)VsIdeTestHostContext.Dte).ToolWindows.OutputWindow.OutputWindowPanes.Item(name);
+        }
+
+        public string GetOutputWindowText(string name) {
+            var window = GetOutputWindow(name);
+            var doc = window.TextDocument;
+            doc.Selection.SelectAll();
+            return doc.Selection.Text;
+        }
+
+        public void WaitForOutputWindowText(string name, string containsText) {
+            for (int i = 0; i < 10; i++) {
+                var text = GetOutputWindowText(name);
+                if (text.Contains(containsText)) {
+                    return;
+                }
+                System.Threading.Thread.Sleep(500);
+            }
+
+            Assert.Fail("Failed to find {0} in output window {1}, found:\r\n{2}", containsText, name, GetOutputWindowText(name));
+        }
 
         public void DismissAllDialogs() {
             int foundWindow = 2;
@@ -316,6 +337,8 @@ namespace TestUtilities.UI {
                 //MessageBoxButton.Ok
                 //MessageBoxButton.Yes
                 //The second parameter is going to be the value returned... We always send Ok
+                Debug.WriteLine("Dismissing dialog");
+                AutomationWrapper.DumpElement(AutomationElement.FromHandle(hwnd));
                 NativeMethods.EndDialog(hwnd, new IntPtr(1));
             }
         }
@@ -333,19 +356,16 @@ namespace TestUtilities.UI {
         }
 
         public ExceptionHelperDialog WaitForException() {
-            for (int i = 0; i < 20; i++) {
-                var window = FindByName("Exception Helper Indicator Window");
-                if (window != null) {
-                    var innerPane = window.FindFirst(TreeScope.Descendants,
-                        new PropertyCondition(
-                            AutomationElement.ControlTypeProperty,
-                            ControlType.Pane
-                        )
-                    );
-                    Assert.IsNotNull(innerPane);
-                    return new ExceptionHelperDialog(innerPane);
-                }
-                System.Threading.Thread.Sleep(500);
+            var window = FindByName("Exception Helper Indicator Window");
+            if (window != null) {
+                var innerPane = window.FindFirst(TreeScope.Descendants,
+                    new PropertyCondition(
+                        AutomationElement.ControlTypeProperty,
+                        ControlType.Pane
+                    )
+                );
+                Assert.IsNotNull(innerPane);
+                return new ExceptionHelperDialog(innerPane);
             }
 
             Assert.Fail("Failed to find exception helper window");
@@ -454,7 +474,9 @@ namespace TestUtilities.UI {
 
             Assert.AreNotEqual(IntPtr.Zero, hwnd, "hwnd is null, We failed to get the dialog");
             Assert.AreNotEqual(handle, hwnd, "hwnd is Dte.MainWindow, We failed to get the dialog");
+            Console.WriteLine("Ending dialog: ");
             AutomationWrapper.DumpElement(AutomationElement.FromHandle(hwnd));
+            Console.WriteLine("--------");
             StringBuilder title = new StringBuilder(4096);
             Assert.AreNotEqual(NativeMethods.GetDlgItemText(hwnd, dlgField, title, title.Capacity), (uint)0);
 
@@ -613,7 +635,7 @@ namespace TestUtilities.UI {
                 System.Threading.Thread.Sleep(500);
             }
 
-            Assert.AreEqual(VsIdeTestHostContext.Dte.Debugger.CurrentMode, mode);
+            Assert.AreEqual(mode, VsIdeTestHostContext.Dte.Debugger.CurrentMode);
         }
 
         public Project OpenProject(string projName, string startItem = null, int? expectedProjects = null, string projectName = null, bool setStartupItem = true) {

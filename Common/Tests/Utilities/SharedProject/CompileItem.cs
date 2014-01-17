@@ -27,7 +27,6 @@ namespace TestUtilities.SharedProject {
         public readonly string Name, Content, LinkFile;
         public readonly bool IsExcluded;
         public readonly bool IsMissing;
-        public readonly KeyValuePair<string, string>[] Metadata;
 
         /// <summary>
         /// Creates a new compile item.  The item will be generated with the 

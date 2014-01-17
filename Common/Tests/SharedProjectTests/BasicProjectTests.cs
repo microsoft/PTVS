@@ -15,22 +15,16 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
-using System.Threading;
 using System.Windows;
 using EnvDTE;
-using EnvDTE90;
-using EnvDTE90a;
 using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 using TestUtilities.SharedProject;
 using TestUtilities.UI;
 using VSLangProj;
-using ST = System.Threading;
 
 namespace Microsoft.VisualStudioTools.SharedProjectTests {
     [TestClass]
@@ -164,9 +158,9 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                     using (var solution = BasicProject(projectType).Generate().ToVs()) {
                         var project = solution.Project;
 
-                        Assert.AreEqual(1, project.ProjectItems.Count);
+                        Assert.AreEqual(2, project.ProjectItems.Count);
                         
-                        var item = project.ProjectItems.AddFromFile(Path.Combine(solution.Directory, "Extra" + projectType.CodeExtension));
+                        var item = project.ProjectItems.AddFromFileCopy(Path.Combine(solution.Directory, "Extra" + projectType.CodeExtension));
 
                         Assert.AreEqual("Extra" + projectType.CodeExtension, item.Properties.Item("FileName").Value);
                         Assert.AreEqual(Path.Combine(solution.Directory, "HelloWorld", "Extra" + projectType.CodeExtension), item.Properties.Item("FullPath").Value);
@@ -184,12 +178,64 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                         Assert.AreEqual(false, vsProjItem.ProjectItem.IsOpen);
                         Assert.AreEqual(VsIdeTestHostContext.Dte, vsProjItem.ProjectItem.DTE);
 
-                        Assert.AreEqual(2, project.ProjectItems.Count);
+                        Assert.AreEqual(3, project.ProjectItems.Count);
 
                         // add an existing item
                         project.ProjectItems.AddFromFile(Path.Combine(solution.Directory, "HelloWorld", "server" + projectType.CodeExtension));
 
-                        Assert.AreEqual(2, project.ProjectItems.Count);
+                        Assert.AreEqual(3, project.ProjectItems.Count);
+                    }
+                }
+            } finally {
+                VsIdeTestHostContext.Dte.Solution.Close();
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+            }
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void CleanSolution() {
+            try {
+                foreach (var projectType in ProjectTypes) {
+                    var proj = new ProjectDefinition(
+                        "HelloWorld",
+                        projectType,
+                        Compile("server"),
+                        Target(
+                            "Clean", 
+                            Tasks.Message("Hello Clean World!", importance: "high")
+                        )
+                    );
+                    using (var solution = proj.Generate().ToVs()) {
+                        VsIdeTestHostContext.Dte.ExecuteCommand("Build.CleanSolution");
+                        solution.App.WaitForOutputWindowText("Build", "Hello Clean World!");
+                    }
+                }
+            } finally {
+                VsIdeTestHostContext.Dte.Solution.Close();
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+            }
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void BuildSolution() {
+            try {
+                foreach (var projectType in ProjectTypes) {
+                    var proj = new ProjectDefinition(
+                        "HelloWorld",
+                        projectType,
+                        Compile("server"),
+                        Target(
+                            "Build",
+                            Tasks.Message("Hello Build World!", importance: "high")
+                        )
+                    );
+                    using (var solution = proj.Generate().ToVs()) {
+                        VsIdeTestHostContext.Dte.ExecuteCommand("Build.BuildSolution");
+                        solution.App.WaitForOutputWindowText("Build", "Hello Build World!");
                     }
                 }
             } finally {
@@ -1156,5 +1202,97 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                 }
             }
         }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void PasteFileWhileOpenInEditor() {
+            foreach (var projectType in ProjectTypes) {
+                var proj = new ProjectDefinition(
+                    "HelloWorld",
+                    projectType,
+                    Compile("server"),
+                    Folder("Folder", isExcluded: true),
+                    Compile("Folder\\server", content:"// new server", isExcluded: true)
+                );
+                using (var solution = proj.Generate().ToVs()) {
+                    var window = solution.Project.ProjectItems.Item(projectType.Code("server")).Open();
+                    window.Activate();
+
+                    var docWindow = solution.App.GetDocument(window.Document.FullName);
+                    var copyPath = Path.Combine(solution.Directory, "HelloWorld", "Folder", projectType.Code("server"));
+
+                    docWindow.Invoke((Action)(() => {
+                        Clipboard.SetFileDropList(
+                            new StringCollection() { copyPath }
+                        );
+                    }));
+
+                    AutomationWrapper.Select(solution.WaitForItem("HelloWorld"));
+
+                    Keyboard.ControlV();
+
+                    // paste again, we should get the replace prompts...
+                    VisualStudioApp.CheckMessageBox(
+                        TestUtilities.UI.MessageBoxButton.Yes, 
+                        "is already part of the project. Do you want to overwrite it?"
+                    );
+
+                    System.Threading.Thread.Sleep(1000);
+                    solution.AssertFileExistsWithContent("// new server", "HelloWorld", "server.js");
+
+                    var dlg = solution.App.WaitForDialog(); // not a simple dialog we can check
+                    NativeMethods.EndDialog(dlg, new IntPtr((int)TestUtilities.UI.MessageBoxButton.Yes));
+                }
+            }
+        }
+
+        /// <summary>
+        /// Checks various combinations of item visibility from within the users project
+        /// and from imported projects and how it's controlled by the Visible metadata.
+        /// </summary>
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void ItemVisibility() {
+            try {
+                foreach (var projectType in ProjectTypes) {
+                    var imported = new ProjectDefinition(
+                        "Imported",
+                        ItemGroup(
+                            CustomItem("MyItemType", "..\\Imported\\ImportedItem.txt", ""),
+                            CustomItem(
+                                "MyItemType", 
+                                "..\\Imported\\VisibleItem.txt", 
+                                "", 
+                                metadata: new Dictionary<string, string>() { { "Visible", "true" } }
+                            )
+                        )
+                    );
+                    var baseProj = new ProjectDefinition(
+                        "HelloWorld",
+                        projectType,
+                        CustomItem(
+                            "MyItemType", 
+                            "ProjectInvisible.txt", 
+                            "", 
+                            metadata: new Dictionary<string, string>() { { "Visible", "false" } }
+                        ),
+                        Import("..\\Imported\\Imported.proj"),
+                        Property("ProjectView", "ProjectFiles")
+                    );
+
+                    var solutionFile = SolutionFile.Generate("HelloWorld", baseProj, imported);
+                    using (var solution = solutionFile.ToVs()) {
+                        Assert.IsNotNull(solution.WaitForItem("HelloWorld", "VisibleItem.txt"), "VisibleItem.txt not found");
+                        Assert.IsNull(solution.FindItem("HelloWorld", "ProjectInvisible.txt"), "VisibleItem.txt not found");
+                        Assert.IsNull(solution.FindItem("HelloWorld", "ImportedItem.txt"), "VisibleItem.txt not found");
+                    }
+                }
+            } finally {
+                VsIdeTestHostContext.Dte.Solution.Close();
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+            }
+        }
+
     }
 }

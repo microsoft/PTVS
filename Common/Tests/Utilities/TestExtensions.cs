@@ -22,7 +22,7 @@ namespace TestUtilities {
     public static class TestExtensions {
         public static void SetStartupFile(this Project project, string name) {
             Assert.IsNotNull(project, "null project");
-            Assert.IsNotNull(project.Properties, "null project properties " + project.Name + " " + project.GetType().FullName);
+            Assert.IsNotNull(project.Properties, "null project properties " + project.Name + " " + project.GetType().FullName + " " + project.Kind);
             Assert.IsNotNull(project.Properties.Item("StartupFile"), "null startup file property" + project.Name + " " + project.GetType().FullName);
             project.Properties.Item("StartupFile").Value = name;
         }

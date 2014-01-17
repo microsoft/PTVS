@@ -254,17 +254,6 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Project is configured to launch to invalid URL: &quot;{0}&quot;
-        ///
-        ///Your web browser will not be opened..
-        /// </summary>
-        internal static string ErrorInvalidLaunchUrl {
-            get {
-                return ResourceManager.GetString("ErrorInvalidLaunchUrl", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to An error occurred while running {0}.
         ///
         ///{1}.

@@ -121,7 +121,7 @@ namespace Microsoft.VisualStudioTools.Project.Automation
                 ReferenceContainerNode references = project.GetReferenceContainer() as ReferenceContainerNode;
                 if (null == references)
                 {
-                    return null;
+                    return new OAReferences(null, project);
                 }
                 return references.Object as References;
             }

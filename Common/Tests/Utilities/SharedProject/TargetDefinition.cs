@@ -12,17 +12,25 @@
  *
  * ***************************************************************************/
 
-// Guids.cs
-// MUST match guids.h
 using System;
+using Microsoft.Build.Construction;
+using MSBuild = Microsoft.Build.Evaluation;
 
-namespace Microsoft.TestSccPackage
-{
-    static class Guids
-    {
-        public const string guidSccPackagePkgString = "49e63f87-6b69-42ca-9496-1e20a919ef1f";
-        public const string guidSccPackageCmdSetString = "045cf08e-e640-42c4-af80-0251d6f553a1";
+namespace TestUtilities.SharedProject {
+    public class TargetDefinition : ProjectContentGenerator {
+        public readonly string Name;
+        public readonly Action<ProjectTargetElement>[] Creators;
+        
+        public TargetDefinition(string name, params Action<ProjectTargetElement>[] creators) {
+            Name = name;
+            Creators = creators;
+        }
 
-        public static readonly Guid guidSccPackageCmdSet = new Guid(guidSccPackageCmdSetString);
-    };
+        public override void Generate(ProjectType projectType, MSBuild.Project project) {
+            var target = project.Xml.AddTarget(Name);
+            foreach (var creator in Creators) {
+                creator(target);
+            }
+        }
+    }
 }

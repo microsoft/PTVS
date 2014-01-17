@@ -20,7 +20,7 @@ using Microsoft.VisualStudio.Shell.Flavor;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
-namespace Microsoft.PythonTools.TestAdapter {
+namespace Microsoft.VisualStudioTools.TestAdapter {
     internal static class VSProjectExtensions {
         internal static EnvDTE.Project GetProject(this IVsHierarchy hierarchy) {
             object project;
@@ -79,13 +79,13 @@ namespace Microsoft.PythonTools.TestAdapter {
         /// <summary>
         /// Returns whether the parameter project is a test project or not. 
         /// </summary>
-        public static bool IsTestProject(this IVsProject project) {
+        public static bool IsTestProject(this IVsProject project, Guid projectGuid) {
             ValidateArg.NotNull(project, "project");
 
             string projectTypeGuids = project.GetAggregateProjectTypeGuids();
 
             // Currently we assume that all Python projects are test projects.
-            return projectTypeGuids.IndexOf(PythonProjectGuidString, StringComparison.OrdinalIgnoreCase) >= 0;
+            return (projectTypeGuids.IndexOf(projectGuid.ToString(), StringComparison.OrdinalIgnoreCase) >= 0);
         }
 
         /// <summary>
@@ -211,6 +211,7 @@ namespace Microsoft.PythonTools.TestAdapter {
             return strRet;
         }
 
-        public const string PythonProjectGuidString = "{888888A0-9F3D-457C-B088-3A5042F75D52}";
+        private const string PythonProjectGuidString = "{888888A0-9F3D-457C-B088-3A5042F75D52}";
+        private const string NodejsBaseProjectGuidString = "{9092AA53-FB77-4645-B42D-1CCCA6BD08BD}";
     }
 }

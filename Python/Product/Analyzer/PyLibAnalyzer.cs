@@ -28,6 +28,7 @@ using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.VisualStudioTools;
+using Microsoft.VisualStudioTools.Project;
 using Microsoft.Win32;
 
 namespace Microsoft.PythonTools.Analysis {

@@ -259,9 +259,6 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
-    <Compile Include="..\Analysis\Interpreter\ProcessOutput.cs">
-      <Link>ProcessOutput.cs</Link>
-    </Compile>
     <Compile Include="..\Analysis\Interpreter\PythonInterpreterFactoryExtensions.cs">
       <Link>PythonInterpreterFactoryExtensions.cs</Link>
     </Compile>
@@ -305,7 +302,6 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="PythonTools\Options\SurveyNewsPolicy.cs" />
-    <Compile Include="PythonTools\OutputWindowRedirector.cs" />
     <Compile Include="PythonTools\Project\AddVirtualEnvironment.xaml.cs">
       <DependentUpon>AddVirtualEnvironment.xaml</DependentUpon>
     </Compile>
@@ -347,9 +343,6 @@
     <Compile Include="PythonTools\WebProject\PythonWebProject.cs" />
     <Compile Include="PythonTools\WebProject\PythonWebProjectConfig.cs" />
     <Compile Include="PythonTools\WebProject\PythonWebProjectFactory.cs" />
-    <Compile Include="Wpf\Commands.cs" />
-    <Compile Include="Wpf\LabelledButton.cs" />
-    <Compile Include="Wpf\LabelledControl.cs" />
     <Compile Include="PythonTools\Project\InstallPythonPackage.xaml.cs">
       <DependentUpon>InstallPythonPackage.xaml</DependentUpon>
     </Compile>
@@ -677,8 +670,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PkgCmdID.cs" />
     <Compile Include="VsCredentials.cs" />
-    <Compile Include="Wpf\Controls.cs" />
-    <Compile Include="Wpf\NativeMethods.cs" />
   </ItemGroup>
   <ItemGroup Condition="'$(VSTarget)' != '10.0'">
     <Compile Include="PythonTools\Commands\UsePythonStepping.cs" />
@@ -1014,10 +1005,6 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Resource Include="Wpf\Controls.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Resource>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Templates\Files\EmptyPackage\package\" />

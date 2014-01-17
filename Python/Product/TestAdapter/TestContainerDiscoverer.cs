@@ -18,6 +18,7 @@ using System.ComponentModel.Composition;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using Microsoft.PythonTools;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio;
@@ -26,6 +27,7 @@ using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestWindow.Extensibility;
 using Microsoft.VisualStudioTools;
+using Microsoft.VisualStudioTools.TestAdapter;
 
 namespace Microsoft.PythonTools.TestAdapter {
     [Export(typeof(ITestContainerDiscoverer))]
@@ -45,7 +47,7 @@ namespace Microsoft.PythonTools.TestAdapter {
             : this(serviceProvider,
                    new SolutionEventsListener(serviceProvider),
                    new TestFilesUpdateWatcher(),
-                   new TestFileAddRemoveListener(serviceProvider),
+                   new TestFileAddRemoveListener(serviceProvider, new Guid(PythonConstants.ProjectFactoryGuid)),
                     operationState) { }
 
         public TestContainerDiscoverer(IServiceProvider serviceProvider,
@@ -164,7 +166,7 @@ namespace Microsoft.PythonTools.TestAdapter {
         public event EventHandler TestContainersUpdated;
 
         public IEnumerable<ITestContainer> GetTestContainers(IVsProject project) {
-            if (!project.IsTestProject()) {
+            if (!project.IsTestProject(GuidList.guidPythonToolsPackage)) {
                 if (EqtTrace.IsVerboseEnabled) {
                     EqtTrace.Verbose("TestContainerDiscoverer: Ignoring project {0} as it is not a test project.", project.GetProjectName());
                 }
@@ -335,7 +337,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                 switch (e.ChangedReason) {
                     case TestFileChangedReason.Added:
                         Debug.Assert(e.Project != null);
-                        if (e.Project.IsTestProject()) {
+                        if (e.Project.IsTestProject(GuidList.guidPythonToolsPackage)) {
                             root = e.Project.GetProjectHome();
 
                             if (!string.IsNullOrEmpty(root) && CommonUtils.IsSubpathOf(root, e.File)) {
@@ -403,7 +405,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                 
                 bool isTestProject;
                 try {
-                    isTestProject = project.IsTestProject();
+                    isTestProject = project.IsTestProject(GuidList.guidPythonToolsPackage);
                 } catch (ObjectDisposedException) {
                     isTestProject = false;
                 }

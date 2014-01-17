@@ -17,8 +17,9 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using EnvDTE;
 using Microsoft.VisualStudio.OLE.Interop;
+using Microsoft.VisualStudioTools.Project;
 
-namespace Microsoft.PythonTools {
+namespace Microsoft.VisualStudioTools {
     class VisualStudioApp : IDisposable {
         private static readonly Dictionary<int, VisualStudioApp> _knownInstances = new Dictionary<int, VisualStudioApp>();
         private readonly int _processId;

@@ -5,7 +5,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:ui="clr-namespace:Microsoft.PythonTools.Project"
     xmlns:vstools="clr-namespace:Microsoft.VisualStudioTools"
-    xmlns:wpf="clr-namespace:Microsoft.PythonTools.Wpf"
+    xmlns:wpf="clr-namespace:Microsoft.VisualStudioTools.Wpf"
     Title="Install Python Package" 
     MinHeight="245"
     Width="500" MinWidth="500"
@@ -17,7 +17,7 @@
     Background="{DynamicResource {x:Static wpf:Controls.BackgroundKey}}"
     TextElement.Foreground="{DynamicResource {x:Static wpf:Controls.ForegroundKey}}">
     <vstools:DialogWindowVersioningWorkaround.Resources>
-        <ResourceDictionary Source="pack://application:,,,/Microsoft.PythonTools;component/Wpf/Controls.xaml" />
+        <ResourceDictionary Source="pack://application:,,,/Microsoft.PythonTools;component/SharedProject/Wpf/Controls.xaml" />
     </vstools:DialogWindowVersioningWorkaround.Resources>
     
     <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="12">

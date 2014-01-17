@@ -364,15 +364,36 @@ namespace Microsoft.VisualStudioTools.Project
         {
         }
 
+        /// <summary>
+        /// Specifies the build action as a string so the user can configure it to any value.
+        /// </summary>
         [SRCategoryAttribute(SR.Advanced)]
         [LocDisplayName(SR.BuildAction)]
         [SRDescriptionAttribute(SR.BuildActionDescription)]
-        [TypeConverter(typeof(BuildActionTypeConverter))]
+        [TypeConverter(typeof(BuildActionStringConverter))]
+        public string BuildActionString {
+            get {
+                return HierarchyNode.ItemNode.ItemTypeName;
+            }
+            set {
+                HierarchyNode.ItemNode.ItemTypeName = value;
+            }
+        }
+
+        /// <summary>
+        /// Specifies the build action as a projBuildAction so that automation can get the
+        /// expected enum value.
+        /// </summary>
+        [Browsable(false)]
         public prjBuildAction BuildAction 
         {
             get 
             {
-                return (prjBuildAction)BuildActionTypeConverter.Instance.ConvertFromString(HierarchyNode.ItemNode.ItemTypeName);
+                var res = BuildActionTypeConverter.Instance.ConvertFromString(HierarchyNode.ItemNode.ItemTypeName);
+                if (res is prjBuildAction) {
+                    return (prjBuildAction)res;
+                }
+                return prjBuildAction.prjBuildActionNone;
             }
             set 
             {
@@ -548,6 +569,44 @@ namespace Microsoft.VisualStudioTools.Project
         public override StandardValuesCollection GetStandardValues(ITypeDescriptorContext context)
         {
             return new StandardValuesCollection(new[] { prjBuildAction.prjBuildActionNone, prjBuildAction.prjBuildActionCompile, prjBuildAction.prjBuildActionContent });
+        }
+    }
+
+    /// <summary>
+    /// This type converter doesn't really do any conversions, but allows us to provide
+    /// a list of standard values for the build action.
+    /// </summary>
+    class BuildActionStringConverter : StringConverter {
+        internal static readonly BuildActionStringConverter Instance = new BuildActionStringConverter();
+
+        public BuildActionStringConverter() {
+        }
+
+        public override bool GetStandardValuesSupported(ITypeDescriptorContext context) {
+            return true;
+        }
+
+        public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType) {
+            if (sourceType == typeof(string)) {
+                return true;
+            }
+            return base.CanConvertFrom(context, sourceType);
+        }
+
+        public override bool CanConvertTo(ITypeDescriptorContext context, Type destinationType) {
+            return base.CanConvertTo(context, destinationType);
+        }
+
+        public override object ConvertTo(ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType) {
+            return value;
+        }
+
+        public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value) {
+            return value;
+        }
+
+        public override StandardValuesCollection GetStandardValues(ITypeDescriptorContext context) {
+            return new StandardValuesCollection(new[] { "None", "Compile", "Content" });
         }
     }
    

@@ -5,13 +5,13 @@
                 xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
                 xmlns:ptvs="clr-namespace:Microsoft.PythonTools"
                 xmlns:l="clr-namespace:Microsoft.PythonTools.Intellisense"
-                xmlns:wpf="clr-namespace:Microsoft.PythonTools.Wpf"
+                xmlns:wpf="clr-namespace:Microsoft.VisualStudioTools.Wpf"
                 mc:Ignorable="d"
                 SizeChanged="OnSizeChanged"
                 HorizontalContentAlignment="Stretch"
                 VerticalContentAlignment="Stretch">
     <ContentControl.Resources>
-        <ResourceDictionary Source="pack://application:,,,/Microsoft.PythonTools;component/Wpf/Controls.xaml" />
+        <ResourceDictionary Source="pack://application:,,,/Microsoft.PythonTools;component/SharedProject/Wpf/Controls.xaml" />
     </ContentControl.Resources>
 
     <ContentControl.ContentTemplate>

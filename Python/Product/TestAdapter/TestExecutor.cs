@@ -27,6 +27,7 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 using Microsoft.VisualStudioTools;
+using Microsoft.VisualStudioTools.Project;
 using MSBuild = Microsoft.Build.Evaluation;
 
 namespace Microsoft.PythonTools.TestAdapter {

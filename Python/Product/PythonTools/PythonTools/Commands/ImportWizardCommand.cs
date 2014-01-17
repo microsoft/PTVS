@@ -20,6 +20,8 @@ using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools;
+using Microsoft.VisualStudioTools.Project;
+using SR = Microsoft.PythonTools.Project.SR;
 
 namespace Microsoft.PythonTools.Commands {
     /// <summary>

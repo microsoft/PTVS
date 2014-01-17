@@ -18,6 +18,7 @@ using System.ComponentModel.Composition.Hosting;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using Microsoft.Build.Construction;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudioTools;
 
@@ -168,6 +169,14 @@ namespace TestUtilities.SharedProject {
         }
 
         /// <summary>
+        /// Helper function to create a CustomItem object which is an MSBuild item with
+        /// the specified item type.
+        /// </summary>
+        public static CustomItem CustomItem(string itemType, string name, string content = null, bool isExcluded = false, bool isMissing = false, IEnumerable<KeyValuePair<string, string>> metadata = null) {
+            return new CustomItem(itemType, name, content, isExcluded, isMissing, metadata);
+        }
+
+        /// <summary>
         /// Helper function to create a group of items when creating project definitions.
         /// These aren't strictly necessary and just serve to add structure to the code
         /// and make it similar to an MSBuild project file.
@@ -182,6 +191,42 @@ namespace TestUtilities.SharedProject {
         /// </summary>
         public static SolutionFolder SolutionFolder(string name) {
             return new SolutionFolder(name);
+        }
+
+        /// <summary>
+        /// Returns a new TargetDefinition which represents a specified Target
+        /// inside of the project file.  The various stages of the target can be
+        /// created using the members of the static Tasks class.
+        /// </summary>
+        public static TargetDefinition Target(string name, params Action<ProjectTargetElement>[] creators) {
+            return new TargetDefinition(name, creators);
+        }
+
+        /// <summary>
+        /// Returns a new ImportDefinition for the specified project.
+        /// </summary>
+        /// <param name="project"></param>
+        /// <returns></returns>
+        public static ImportDefinition Import(string project) {
+            return new ImportDefinition(project);
+        }
+
+        /// <summary>
+        /// Provides tasks for creating target definitions in generated projects.
+        /// </summary>
+        public static class Tasks {
+            /// <summary>
+            /// Creates a task which outputs a message during the build.
+            /// </summary>
+            public static Action<ProjectTargetElement> Message(string message, string importance = null) {
+                return target => {
+                    var messageTask = target.AddTask("Message");
+                    messageTask.SetParameter("Text", message);
+                    if (importance != null) {
+                        messageTask.SetParameter("Importance", importance);
+                    }
+                };
+            }
         }
     }
 }

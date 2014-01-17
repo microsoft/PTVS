@@ -330,11 +330,6 @@ Try moving your source code to a location where you can read and write files.</v
   <data name="DefaultLauncherName" xml:space="preserve">
     <value>Standard Python launcher</value>
   </data>
-  <data name="ErrorInvalidLaunchUrl" xml:space="preserve">
-    <value>Project is configured to launch to invalid URL: "{0}"
-
-Your web browser will not be opened.</value>
-  </data>
   <data name="PythonWebLauncherDescription" xml:space="preserve">
     <value>Launches web sites using the Python debugger. This enables launching and starting a web browser automatically, using the commands specified in the project file.</value>
   </data>

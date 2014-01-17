@@ -15,6 +15,14 @@
       <Link>SharedProject\HierarchyNodeFlags.cs</Link>
       <Visible>true</Visible>
     </Compile>
+	<Compile Include="$(_ProjectSystemFilesLocation)\OutputWindowRedirector.cs">
+      <Link>SharedProject\OutputWindowRedirector.cs</Link>
+      <Visible>true</Visible>
+    </Compile>
+	<Compile Include="$(_ProjectSystemFilesLocation)\ProcessOutput.cs">
+      <Link>SharedProject\ProcessOutput.cs</Link>
+      <Visible>true</Visible>
+    </Compile>
     <Compile Include="$(_ProjectSystemFilesLocation)\OverwriteFileDialog.xaml.cs">
       <DependentUpon>OverwriteFileDialog.xaml</DependentUpon>
       <Link>SharedProject\OverwriteFileDialog.xaml.cs</Link>
@@ -573,6 +581,36 @@
       <Link>SharedProject\SolutionEventsListener.cs</Link>
       <Visible>true</Visible>
     </Compile>
+    <Compile Include="$(_ProjectSystemFilesLocation)\Wpf\Commands.cs">
+      <Link>SharedProject\Wpf\Commands.cs</Link>
+      <Visible>true</Visible>
+    </Compile>
+    <Compile Include="$(_ProjectSystemFilesLocation)\Wpf\LabelledButton.cs">
+      <Link>SharedProject\Wpf\LabelledButton.cs</Link>
+      <Visible>true</Visible>
+    </Compile>
+    <Compile Include="$(_ProjectSystemFilesLocation)\Wpf\LabelledControl.cs">
+      <Link>SharedProject\Wpf\LabelledControl.cs</Link>
+      <Visible>true</Visible>
+    </Compile>
+    <Compile Include="$(_ProjectSystemFilesLocation)\Wpf\Controls.cs">
+      <Link>SharedProject\Wpf\Controls.cs</Link>
+      <Visible>true</Visible>
+    </Compile>
+    <Compile Include="$(_ProjectSystemFilesLocation)\Wpf\NativeMethods.cs">
+      <Link>SharedProject\Wpf\NativeMethods.cs</Link>
+      <Visible>true</Visible>
+    </Compile>
+    <Compile Include="$(_ProjectSystemFilesLocation)\Wpf\Dialogs.cs">
+      <Link>SharedProject\Wpf\Dialogs.cs</Link>
+      <Visible>true</Visible>
+    </Compile>
+    <Resource Include="$(_ProjectSystemFilesLocation)\Wpf\Controls.xaml">
+      <Link>SharedProject\Wpf\Controls.xaml</Link>
+      <Visible>true</Visible>
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Resource>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="$(_ProjectSystemFilesLocation)\ProjectResources.resx">
