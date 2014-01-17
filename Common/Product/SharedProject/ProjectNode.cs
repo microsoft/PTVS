@@ -1774,6 +1774,11 @@ namespace Microsoft.VisualStudioTools.Project
         public override void Close() {
             projectOpened = false;
             isClosing = true;
+
+            if (taskProvider != null) {
+                taskProvider.Tasks.Clear();
+            }
+
             try {
                 // Walk the tree and close all nodes.
                 // This has to be done before the project closes, since we want
