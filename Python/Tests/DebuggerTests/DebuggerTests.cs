@@ -826,11 +826,11 @@ namespace DebuggerTests {
                 );
             // 1315 resurrected:
             StepTest(Path.Combine(DebuggerTestPath, "SteppingTestBug1315.py"),
-                    new[] { 6 },
+                    new[] { 9 },
                     null,
                     new ExpectedStep(StepKind.Resume, 1),   // continue from import thread
-                    new ExpectedStep(StepKind.Over, 6),
-                    new ExpectedStep(StepKind.Resume, 7)
+                    new ExpectedStep(StepKind.Over, 9),
+                    new ExpectedStep(StepKind.Resume, 10)
                 );
 
             // Bug 507: http://pytools.codeplex.com/workitem/507
@@ -2397,11 +2397,10 @@ int main(int argc, char* argv[]) {
 
             startInfo.EnvironmentVariables["PATH"] = Environment.GetEnvironmentVariable("PATH") + ";" + GetVSIDEInstallDir();
 
-            var vcDir = GetVCInstallDir();
-            startInfo.EnvironmentVariables["INCLUDE"] = Path.Combine(vcDir, "INCLUDE")
-                + ";" + string.Join(";", WindowsSdk.Latest.IncludePaths);
-            startInfo.EnvironmentVariables["LIB"] = Path.Combine(vcDir, "LIB")
-                + ";" + (Version.Isx64 ? WindowsSdk.Latest.X64LibPath : WindowsSdk.Latest.X86LibPath);
+            startInfo.EnvironmentVariables["INCLUDE"] = GetVCIncludeDir() + ";" +
+                string.Join(";", WindowsSdk.Latest.IncludePaths);
+            startInfo.EnvironmentVariables["LIB"] = GetVCLibDir() + ";" +
+                (Version.Isx64 ? WindowsSdk.Latest.X64LibPath : WindowsSdk.Latest.X86LibPath);
 
             Console.WriteLine("\n\nPATH:\n" + startInfo.EnvironmentVariables["PATH"]);
             Console.WriteLine("\n\nINCLUDE:\n" + startInfo.EnvironmentVariables["INCLUDE"]);
@@ -2444,6 +2443,17 @@ int main(int argc, char* argv[]) {
             return Version.Isx64 ?
                 Path.Combine(installDir, "bin", "x86_amd64") :
                 Path.Combine(installDir, "bin");
+        }
+
+        private string GetVCIncludeDir() {
+            return Path.Combine(GetVCInstallDir(), "include");
+        }
+
+        private string GetVCLibDir() {
+            var installDir = GetVCInstallDir();
+            return Version.Isx64 ?
+                Path.Combine(installDir, "lib", "amd64") :
+                Path.Combine(installDir, "lib");
         }
 
         private static string GetVCInstallDir() {

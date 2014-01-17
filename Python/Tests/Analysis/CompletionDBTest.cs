@@ -39,81 +39,111 @@ namespace PythonToolsTests {
             PythonTestData.Deploy();
         }
 
-        [TestMethod, Priority(0)]
-        public void TestOpen() {
-            var untested = new List<string>();
+        private void TestOpen(PythonVersion path) {
+            path.AssertInstalled();
+            Console.WriteLine(path.Path);
 
-            foreach (var path in PythonPaths.Versions) {
-                if (!File.Exists(path.Path)) {
-                    untested.Add(path.Version.ToString());
-                    continue;
+            Guid testId = Guid.NewGuid();
+            var testDir = TestData.GetTempPath(testId.ToString());
+
+            // run the scraper
+            using (var proc = ProcessOutput.RunHiddenAndCapture(
+                path.Path,
+                TestData.GetPath("PythonScraper.py"),
+                testDir,
+                TestData.GetPath("CompletionDB")
+            )) {
+                Console.WriteLine("Command: " + proc.Arguments);
+
+                proc.Wait();
+
+                // it should succeed
+                Console.WriteLine("**Stdout**");
+                foreach (var line in proc.StandardOutputLines) {
+                    Console.WriteLine(line);
                 }
-                Console.WriteLine(path.Path);
-
-                Guid testId = Guid.NewGuid();
-                var testDir = TestData.GetTempPath(testId.ToString());
-
-                // run the scraper
-                using (var proc = ProcessOutput.RunHiddenAndCapture(
-                    path.Path,
-                    TestData.GetPath("PythonScraper.py"),
-                    testDir,
-                    TestData.GetPath("CompletionDB")
-                )) {
-                    Console.WriteLine("Command: " + proc.Arguments);
-
-                    proc.Wait();
-
-                    // it should succeed
-                    Console.WriteLine("**Stdout**");
-                    foreach (var line in proc.StandardOutputLines) {
-                        Console.WriteLine(line);
-                    }
-                    Console.WriteLine("");
-                    Console.WriteLine("**Stdout**");
-                    foreach (var line in proc.StandardErrorLines) {
-                        Console.WriteLine(line);
-                    }
+                Console.WriteLine("");
+                Console.WriteLine("**Stdout**");
+                foreach (var line in proc.StandardErrorLines) {
+                    Console.WriteLine(line);
+                }
                 
-                    Assert.AreEqual(0, proc.ExitCode, "Bad exit code: " + proc.ExitCode);
-                }
+                Assert.AreEqual(0, proc.ExitCode, "Bad exit code: " + proc.ExitCode);
+            }
 
-                // perform some basic validation
-                dynamic builtinDb = Unpickle.Load(new FileStream(Path.Combine(testDir, path.Version.Is3x() ? "builtins.idb" : "__builtin__.idb"), FileMode.Open, FileAccess.Read));
-                if (path.Version.Is2x()) { // no open in 3.x
-                    foreach (var overload in builtinDb["members"]["open"]["value"]["overloads"]) {
-                        Assert.AreEqual("__builtin__", overload["ret_type"][0][0]);
-                        Assert.AreEqual("file", overload["ret_type"][0][1]);
-                    }
-
-                    if (!path.Path.Contains("Iron")) {
-                        // http://pytools.codeplex.com/workitem/799
-                        var arr = (IList<object>)builtinDb["members"]["list"]["value"]["members"]["__init__"]["value"]["overloads"];
-                        Assert.AreEqual(
-                            "args",
-                            ((dynamic)(arr[0]))["args"][1]["name"]
-                        );
-                    }
+            // perform some basic validation
+            dynamic builtinDb = Unpickle.Load(new FileStream(Path.Combine(testDir, path.Version.Is3x() ? "builtins.idb" : "__builtin__.idb"), FileMode.Open, FileAccess.Read));
+            if (path.Version.Is2x()) { // no open in 3.x
+                foreach (var overload in builtinDb["members"]["open"]["value"]["overloads"]) {
+                    Assert.AreEqual("__builtin__", overload["ret_type"][0][0]);
+                    Assert.AreEqual("file", overload["ret_type"][0][1]);
                 }
 
                 if (!path.Path.Contains("Iron")) {
-                    dynamic itertoolsDb = Unpickle.Load(new FileStream(Path.Combine(testDir, "itertools.idb"), FileMode.Open, FileAccess.Read));
-                    var tee = itertoolsDb["members"]["tee"]["value"];
-                    var overloads = tee["overloads"];
-                    var nArg = overloads[0]["args"][1];
-                    Assert.AreEqual("n", nArg["name"]);
-                    Assert.AreEqual("2", nArg["default_value"]);
-
-                    dynamic sreDb = Unpickle.Load(new FileStream(Path.Combine(testDir, "_sre.idb"), FileMode.Open, FileAccess.Read));
-                    var members = sreDb["members"];
-                    Assert.IsTrue(members.ContainsKey("SRE_Pattern"));
-                    Assert.IsTrue(members.ContainsKey("SRE_Match"));
+                    // http://pytools.codeplex.com/workitem/799
+                    var arr = (IList<object>)builtinDb["members"]["list"]["value"]["members"]["__init__"]["value"]["overloads"];
+                    Assert.AreEqual(
+                        "args",
+                        ((dynamic)(arr[0]))["args"][1]["name"]
+                    );
                 }
             }
 
-            if (untested.Count > 0) {
-                Assert.Inconclusive("Did not test with version(s) " + string.Join(", ", untested));
+            if (!path.Path.Contains("Iron")) {
+                dynamic itertoolsDb = Unpickle.Load(new FileStream(Path.Combine(testDir, "itertools.idb"), FileMode.Open, FileAccess.Read));
+                var tee = itertoolsDb["members"]["tee"]["value"];
+                var overloads = tee["overloads"];
+                var nArg = overloads[0]["args"][1];
+                Assert.AreEqual("n", nArg["name"]);
+                Assert.AreEqual("2", nArg["default_value"]);
+
+                dynamic sreDb = Unpickle.Load(new FileStream(Path.Combine(testDir, "_sre.idb"), FileMode.Open, FileAccess.Read));
+                var members = sreDb["members"];
+                Assert.IsTrue(members.ContainsKey("SRE_Pattern"));
+                Assert.IsTrue(members.ContainsKey("SRE_Match"));
             }
+
+            Console.WriteLine("Passed: {0}", path.Path);
+        }
+
+        [TestMethod, Priority(0)]
+        public void TestOpen25() {
+            TestOpen(PythonPaths.Python25 ?? PythonPaths.Python25_x64);
+        }
+
+        [TestMethod, Priority(0)]
+        public void TestOpen26() {
+            TestOpen(PythonPaths.Python26 ?? PythonPaths.Python26_x64);
+        }
+
+        [TestMethod, Priority(0)]
+        public void TestOpen27() {
+            TestOpen(PythonPaths.Python27 ?? PythonPaths.Python27_x64);
+        }
+
+        [TestMethod, Priority(0)]
+        public void TestOpen30() {
+            TestOpen(PythonPaths.Python30 ?? PythonPaths.Python30_x64);
+        }
+
+        [TestMethod, Priority(0)]
+        public void TestOpen31() {
+            TestOpen(PythonPaths.Python31 ?? PythonPaths.Python31_x64);
+        }
+
+        [TestMethod, Priority(0)]
+        public void TestOpen32() {
+            TestOpen(PythonPaths.Python32 ?? PythonPaths.Python32_x64);
+        }
+
+        [TestMethod, Priority(0)]
+        public void TestOpen33() {
+            TestOpen(PythonPaths.Python33 ?? PythonPaths.Python33_x64);
+        }
+
+        [TestMethod, Priority(0)]
+        public void TestOpen34() {
+            TestOpen(PythonPaths.Python34 ?? PythonPaths.Python34_x64);
         }
 
         [TestMethod, Priority(0)]
