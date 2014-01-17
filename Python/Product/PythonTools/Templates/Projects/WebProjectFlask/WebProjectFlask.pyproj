@@ -23,7 +23,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="app.py" />
-    <Compile Include="runserver.py" />
   </ItemGroup>
   <ItemGroup>
     <WebPiReference Include="https://www.microsoft.com/web/webpi/3.0/toolsproductlist.xml%3fPython27">
