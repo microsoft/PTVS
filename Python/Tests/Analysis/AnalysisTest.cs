@@ -131,28 +131,37 @@ f(x=42, y = 'abc')
             var baz = GetSourceUnit("import quox\r\nfunc = quox.func", @"C:\\Test\\Lib\\fob\\oar\\baz.py");
             var quox = GetSourceUnit("def func(): return 42", @"C:\\Test\\Lib\\fob\\oar\\quox.py");
 
-            var state = CreateAnalyzer(useAnalysisLog: true);
+            var state = CreateAnalyzer();
 
-            var fobInitState = state.AddModule("fob", @"C:\\Test\\Lib\\fob\\__init__.py");
-            var oarInitState = state.AddModule("fob.oar", @"C:\\Test\\Lib\\fob\\oar\\__init__.py");
-            var bazState = state.AddModule("fob.oar.baz", @"C:\\Test\\Lib\\fob\\oar\\baz.py");
-            var quoxState = state.AddModule("fob.oar.quox", @"C:\\Test\\Lib\\fob\\oar\\quox.py");
+            AnalysisLog.Output = Console.Out;
+            try {
+                var fobInitState = state.AddModule("fob", @"C:\\Test\\Lib\\fob\\__init__.py");
+                var oarInitState = state.AddModule("fob.oar", @"C:\\Test\\Lib\\fob\\oar\\__init__.py");
+                var bazState = state.AddModule("fob.oar.baz", @"C:\\Test\\Lib\\fob\\oar\\baz.py");
+                var quoxState = state.AddModule("fob.oar.quox", @"C:\\Test\\Lib\\fob\\oar\\quox.py");
 
-            Prepare(fobInitState, fobInit);
-            Prepare(oarInitState, oarInit);
-            Prepare(bazState, baz);
-            Prepare(quoxState, quox);
+                Prepare(fobInitState, fobInit);
+                Prepare(oarInitState, oarInit);
+                Prepare(bazState, baz);
+                Prepare(quoxState, quox);
 
-            fobInitState.Analyze(CancellationToken.None, true);
-            oarInitState.Analyze(CancellationToken.None, true);
-            bazState.Analyze(CancellationToken.None, true);
-            quoxState.Analyze(CancellationToken.None, true);
-            state.AnalyzeQueuedEntries(CancellationToken.None);
+                fobInitState.Analyze(CancellationToken.None, true);
+                oarInitState.Analyze(CancellationToken.None, true);
+                bazState.Analyze(CancellationToken.None, true);
+                quoxState.Analyze(CancellationToken.None, true);
+                state.AnalyzeQueuedEntries(CancellationToken.None);
 
-            AssertUtil.ContainsExactly(quoxState.Analysis.GetDescriptionsByIndex("func", 1), "def func() -> int");
-            AssertUtil.ContainsExactly(bazState.Analysis.GetDescriptionsByIndex("func", 1), "def func() -> int");
-            AssertUtil.ContainsExactly(oarInitState.Analysis.GetDescriptionsByIndex("func", 1), "def func() -> int");
-            AssertUtil.ContainsExactly(fobInitState.Analysis.GetDescriptionsByIndex("func", 1), "def func() -> int");
+                AssertUtil.ContainsExactly(quoxState.Analysis.GetDescriptionsByIndex("func", 1), "def func() -> int");
+                AssertUtil.ContainsExactly(bazState.Analysis.GetDescriptionsByIndex("func", 1), "def func() -> int");
+                AssertUtil.ContainsExactly(oarInitState.Analysis.GetDescriptionsByIndex("func", 1), "def func() -> int");
+                AssertUtil.ContainsExactly(fobInitState.Analysis.GetDescriptionsByIndex("func", 1), "def func() -> int");
+            } finally {
+                try {
+                    AnalysisLog.Flush();
+                } finally {
+                    AnalysisLog.Output = null;
+                }
+            }
         }
         
         /// <summary>

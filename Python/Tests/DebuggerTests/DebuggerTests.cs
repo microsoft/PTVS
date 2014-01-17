@@ -2035,16 +2035,17 @@ int main(int argc, char* argv[]) {
         /// </summary>
         [TestMethod, Priority(0)]
         public void AttachNewThread_PyGILState_Ensure() {
-            if (GetType() != typeof(DebuggerTestsIpy)) {    // IronPython doesn't support attach
+            if (GetType() == typeof(DebuggerTestsIpy)) {    // IronPython doesn't support attach
+                Assert.Inconclusive("Test not supported");
+            }
 
-
-                File.WriteAllText("gilstate_attach.py", @"def test():
+            File.WriteAllText("gilstate_attach.py", @"def test():
     for i in range(10):
         print(i)
 
     return 0");
 
-                var hostCode = @"#include <Windows.h>
+            var hostCode = @"#include <Windows.h>
 #include <process.h>
 #undef _DEBUG
 #include <Python.h>
@@ -2113,47 +2114,46 @@ void main()
     Py_Finalize();
     return;
 }".Replace("CREATE_STRING", CreateString);
-                CompileCode(hostCode);
+            CompileCode(hostCode);
 
-                // start the test process w/ our handle
-                Process p = RunHost("test.exe");
-                try {
-                    System.Threading.Thread.Sleep(1500);
+            // start the test process w/ our handle
+            Process p = RunHost("test.exe");
+            try {
+                System.Threading.Thread.Sleep(1500);
 
-                    AutoResetEvent attached = new AutoResetEvent(false);
-                    AutoResetEvent bpHit = new AutoResetEvent(false);
-                    PythonProcess proc;
-                    ConnErrorMessages errReason;
-                    if ((errReason = PythonProcess.TryAttach(p.Id, out proc)) != ConnErrorMessages.None) {
-                        Assert.Fail("Failed to attach {0}", errReason);
-                    } else {
-                        Console.WriteLine("Attached");
-                    }
-
-                    try {
-                        proc.ProcessLoaded += (sender, args) => {
-                            Console.WriteLine("Process loaded");
-                            attached.Set();
-                        };
-                        proc.StartListening();
-
-                        Assert.IsTrue(attached.WaitOne(20000), "Failed to attach within 20s");
-
-                        proc.BreakpointHit += (sender, args) => {
-                            Console.WriteLine("Breakpoint hit");
-                            bpHit.Set();
-                        };
-
-                        var bp = proc.AddBreakPoint("gilstate_attach.py", 3);
-                        bp.Add();
-
-                        Assert.IsTrue(bpHit.WaitOne(20000), "Failed to hit breakpoint within 20s");
-                    } finally {
-                        DetachProcess(proc);
-                    }
-                } finally {
-                    DisposeProcess(p);
+                AutoResetEvent attached = new AutoResetEvent(false);
+                AutoResetEvent bpHit = new AutoResetEvent(false);
+                PythonProcess proc;
+                ConnErrorMessages errReason;
+                if ((errReason = PythonProcess.TryAttach(p.Id, out proc)) != ConnErrorMessages.None) {
+                    Assert.Fail("Failed to attach {0}", errReason);
+                } else {
+                    Console.WriteLine("Attached");
                 }
+
+                try {
+                    proc.ProcessLoaded += (sender, args) => {
+                        Console.WriteLine("Process loaded");
+                        attached.Set();
+                    };
+                    proc.StartListening();
+
+                    Assert.IsTrue(attached.WaitOne(20000), "Failed to attach within 20s");
+
+                    proc.BreakpointHit += (sender, args) => {
+                        Console.WriteLine("Breakpoint hit");
+                        bpHit.Set();
+                    };
+
+                    var bp = proc.AddBreakPoint("gilstate_attach.py", 3);
+                    bp.Add();
+
+                    Assert.IsTrue(bpHit.WaitOne(20000), "Failed to hit breakpoint within 20s");
+                } finally {
+                    DetachProcess(proc);
+                }
+            } finally {
+                DisposeProcess(p);
             }
         }
 
@@ -2162,16 +2162,18 @@ void main()
         /// </summary>
         [TestMethod, Priority(0)]
         public void AttachNewThread_PyThreadState_New() {
+            if (GetType() == typeof(DebuggerTestsIpy) ||    // IronPython doesn't support attach
+                Version.Version >= PythonLanguageVersion.V32) {    // PyEval_AcquireLock deprecated in 3.2
+                Assert.Inconclusive("Test not supported");
+            }
 
-            if (GetType() != typeof(DebuggerTestsIpy) &&    // IronPython doesn't support attach
-                Version.Version <= PythonLanguageVersion.V31) {    // PyEval_AcquireLock deprecated in 3.2
-                File.WriteAllText("gilstate_attach.py", @"def test():
+            File.WriteAllText("gilstate_attach.py", @"def test():
     for i in range(10):
         print(i)
 
     return 0");
 
-                var hostCode = @"#include <Windows.h>
+            var hostCode = @"#include <Windows.h>
 #include <process.h>
 #undef _DEBUG
 #include <Python.h>
@@ -2248,47 +2250,46 @@ void main()
     Py_Finalize();
     return;
 }".Replace("CREATE_STRING", CreateString);
-                CompileCode(hostCode);
+            CompileCode(hostCode);
 
-                // start the test process w/ our handle
-                Process p = RunHost("test.exe");
-                try {
-                    System.Threading.Thread.Sleep(1500);
+            // start the test process w/ our handle
+            Process p = RunHost("test.exe");
+            try {
+                System.Threading.Thread.Sleep(1500);
 
-                    AutoResetEvent attached = new AutoResetEvent(false);
-                    AutoResetEvent bpHit = new AutoResetEvent(false);
-                    PythonProcess proc;
-                    ConnErrorMessages errReason;
-                    if ((errReason = PythonProcess.TryAttach(p.Id, out proc)) != ConnErrorMessages.None) {
-                        Assert.Fail("Failed to attach {0}", errReason);
-                    } else {
-                        Console.WriteLine("Attached");
-                    }
-
-                    try {
-                        proc.ProcessLoaded += (sender, args) => {
-                            Console.WriteLine("Process loaded");
-                            attached.Set();
-                        };
-                        proc.StartListening();
-
-                        Assert.IsTrue(attached.WaitOne(20000), "Failed to attach within 20s");
-
-                        proc.BreakpointHit += (sender, args) => {
-                            Console.WriteLine("Breakpoint hit");
-                            bpHit.Set();
-                        };
-
-                        var bp = proc.AddBreakPoint("gilstate_attach.py", 3);
-                        bp.Add();
-
-                        Assert.IsTrue(bpHit.WaitOne(20000), "Failed to hit breakpoint within 20s");
-                    } finally {
-                        DetachProcess(proc);
-                    }
-                } finally {
-                    DisposeProcess(p);
+                AutoResetEvent attached = new AutoResetEvent(false);
+                AutoResetEvent bpHit = new AutoResetEvent(false);
+                PythonProcess proc;
+                ConnErrorMessages errReason;
+                if ((errReason = PythonProcess.TryAttach(p.Id, out proc)) != ConnErrorMessages.None) {
+                    Assert.Fail("Failed to attach {0}", errReason);
+                } else {
+                    Console.WriteLine("Attached");
                 }
+
+                try {
+                    proc.ProcessLoaded += (sender, args) => {
+                        Console.WriteLine("Process loaded");
+                        attached.Set();
+                    };
+                    proc.StartListening();
+
+                    Assert.IsTrue(attached.WaitOne(20000), "Failed to attach within 20s");
+
+                    proc.BreakpointHit += (sender, args) => {
+                        Console.WriteLine("Breakpoint hit");
+                        bpHit.Set();
+                    };
+
+                    var bp = proc.AddBreakPoint("gilstate_attach.py", 3);
+                    bp.Add();
+
+                    Assert.IsTrue(bpHit.WaitOne(20000), "Failed to hit breakpoint within 20s");
+                } finally {
+                    DetachProcess(proc);
+                }
+            } finally {
+                DisposeProcess(p);
             }
         }
 
@@ -2390,7 +2391,7 @@ int main(int argc, char* argv[]) {
 
             // compile our host code...
             var startInfo = new ProcessStartInfo(
-                Path.Combine(GetVCInstallDir(), "bin", "cl.exe"),
+                Path.Combine(GetVCBinDir(), "cl.exe"),
                 String.Format("/I{0}\\Include test.cpp /link /libpath:{0}\\libs", Path.GetDirectoryName(Version.Path))
             );
 
@@ -2400,7 +2401,7 @@ int main(int argc, char* argv[]) {
             startInfo.EnvironmentVariables["INCLUDE"] = Path.Combine(vcDir, "INCLUDE")
                 + ";" + string.Join(";", WindowsSdk.Latest.IncludePaths);
             startInfo.EnvironmentVariables["LIB"] = Path.Combine(vcDir, "LIB")
-                + ";" + WindowsSdk.Latest.X86LibPath;
+                + ";" + (Version.Isx64 ? WindowsSdk.Latest.X64LibPath : WindowsSdk.Latest.X86LibPath);
 
             Console.WriteLine("\n\nPATH:\n" + startInfo.EnvironmentVariables["PATH"]);
             Console.WriteLine("\n\nINCLUDE:\n" + startInfo.EnvironmentVariables["INCLUDE"]);
@@ -2438,6 +2439,13 @@ int main(int argc, char* argv[]) {
             return Process.Start(psi);
         }
 
+        private string GetVCBinDir() {
+            var installDir = GetVCInstallDir();
+            return Version.Isx64 ?
+                Path.Combine(installDir, "bin", "x86_amd64") :
+                Path.Combine(installDir, "bin");
+        }
+
         private static string GetVCInstallDir() {
             using (var key = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32).OpenSubKey("SOFTWARE\\Microsoft\\VisualStudio\\" + VSUtility.Version + "\\Setup\\VC")) {
                 return key.GetValue("ProductDir").ToString();
@@ -2446,6 +2454,7 @@ int main(int argc, char* argv[]) {
 
         class WindowsSdk {
             public string X86LibPath { get; private set; }
+            public string X64LibPath { get; private set; }
             public string[] IncludePaths { get; private set; }
 
             public static WindowsSdk Sdk70 = FindWindowsSdk("v7.0");
@@ -2466,8 +2475,9 @@ int main(int argc, char* argv[]) {
                 }
             }
 
-            private WindowsSdk(string x86libPath, params string[] includePaths) {
+            private WindowsSdk(string x86libPath, string x64LibPath, params string[] includePaths) {
                 X86LibPath = x86libPath;
+                X64LibPath = x64LibPath;
                 IncludePaths = includePaths;
             }
 
@@ -2495,6 +2505,7 @@ int main(int argc, char* argv[]) {
                     if (Directory.Exists(Path.Combine(rootPath, "Include")))
                         return new WindowsSdk(
                             Path.Combine(rootPath, "Lib"),
+                            Path.Combine(rootPath, "Lib", "x64"),
                             Path.Combine(rootPath, "Include"));
                 }
 
@@ -2512,6 +2523,7 @@ int main(int argc, char* argv[]) {
                     if (Directory.Exists(Path.Combine(rootPath, "Include"))) {
                         return new WindowsSdk(
                             Path.Combine(rootPath, "Lib", libFolderName, "um", "x86"),
+                            Path.Combine(rootPath, "Lib", libFolderName, "um", "x64"),
                             Path.Combine(rootPath, "Include", "shared"),
                             Path.Combine(rootPath, "Include", "um"));
                     }
@@ -2689,7 +2701,7 @@ int main(int argc, char* argv[]) {
 
         public override string CreateString {
             get {
-                return "PyUnicode_FromWideChar";
+                return "PyUnicode_FromString";
             }
         }
     }

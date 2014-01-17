@@ -82,7 +82,7 @@ namespace AnalysisTests {
             return AnalysisLimits.GetDefaultLimits();
         }
 
-        public PythonAnalyzer CreateAnalyzer(PythonLanguageVersion version = PythonLanguageVersion.V27, string[] analysisDirs = null, bool useAnalysisLog = false) {
+        public PythonAnalyzer CreateAnalyzer(PythonLanguageVersion version = PythonLanguageVersion.V27, string[] analysisDirs = null) {
             // Explicitly provide the builtins name, since we aren't recreating
             // the interpreter for each version like we should be.
             var fact = InterpreterFactory;
@@ -92,7 +92,6 @@ namespace AnalysisTests {
                 interp = fact.CreateInterpreter();
             }
             var state = new PythonAnalyzer(fact, interp, "__builtin__");
-            AnalysisLog.Output = Console.Out;
 
             if (version.Is3x() || this is IronPythonAnalysisTest) {
                 var types = (KnownTypes)state.Types;
@@ -112,9 +111,9 @@ namespace AnalysisTests {
             return state;
         }
 
-        public ModuleAnalysis ProcessText(string text, PythonLanguageVersion version = PythonLanguageVersion.V27, string[] analysisDirs = null, bool useAnalysisLog = false) {
+        public ModuleAnalysis ProcessText(string text, PythonLanguageVersion version = PythonLanguageVersion.V27, string[] analysisDirs = null) {
             var sourceUnit = GetSourceUnit(text, "fob");
-            var state = CreateAnalyzer(version, analysisDirs, useAnalysisLog);
+            var state = CreateAnalyzer(version, analysisDirs);
             var entry = state.AddModule("fob", "fob", null);
             Prepare(entry, sourceUnit, version);
             entry.Analyze(CancellationToken.None);
