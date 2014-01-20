@@ -247,9 +247,13 @@ namespace Microsoft.PythonTools.Repl {
                 }
             }
 
+            string pathEnvVar = Interpreter.Configuration.PathEnvironmentVariable;
+            if (processInfo.EnvironmentVariables.ContainsKey(pathEnvVar)) {
+                processInfo.EnvironmentVariables.Remove(pathEnvVar);
+            }
+
             var searchPaths = CurrentOptions.SearchPaths;
             if (searchPaths != null) {
-                string pathEnvVar = Interpreter.Configuration.PathEnvironmentVariable;
                 if (!string.IsNullOrEmpty(searchPaths) && !String.IsNullOrWhiteSpace(pathEnvVar)) {
                     processInfo.EnvironmentVariables[pathEnvVar] = searchPaths;
                 }
