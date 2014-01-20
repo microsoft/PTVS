@@ -869,7 +869,11 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void AddFolderExists() {
-            Directory.CreateDirectory(TestData.GetPath(@"TestData\\AddFolderExists\\X"));
+            try {
+                // Ensure X does not exist, otherwise we won't be able to create
+                // it and pass the test.
+                Directory.Delete(TestData.GetPath(@"TestData\\AddFolderExists\\X"), true);
+            } catch { }
             Directory.CreateDirectory(TestData.GetPath(@"TestData\\AddFolderExists\\Y"));
 
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {

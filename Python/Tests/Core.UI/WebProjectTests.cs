@@ -29,6 +29,7 @@ using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudioTools;
+using Microsoft.VisualStudioTools.Project;
 using TestUtilities;
 using TestUtilities.Python;
 using TestUtilities.UI;
@@ -117,31 +118,38 @@ namespace PythonToolsUITests {
                     Thread.Sleep(1000);
                 }
 
-                pyProj.SetProjectProperty("WebServerPort", "23456");
-                LaunchAndVerifyDebug(app, 23456, textInResponse);
-
-                pyProj.SetProjectProperty("WebServerPort", "23457");
+                UIThread.Instance.RunSync(() => {
+                    pyProj.SetProjectProperty("WebServerPort", "23457");
+                });
                 LaunchAndVerifyNoDebug(pyProj, 23457, textInResponse);
+
+                UIThread.Instance.RunSync(() => {
+                    pyProj.SetProjectProperty("WebServerPort", "23456");
+                });
+                LaunchAndVerifyDebug(app, 23456, textInResponse);
             }
         }
 
         private static void LaunchAndVerifyDebug(VisualStudioApp app, int port, string textInResponse) {
             app.Dte.Debugger.Go(false);
+            
+            string text = string.Empty;
+            try {
+                for (int i = 100;
+                    i > 0 &&
+                        (app.Dte.Debugger.CurrentMode != EnvDTE.dbgDebugMode.dbgRunMode ||
+                        !IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpListeners().Any(p => p.Port == port));
+                    --i) {
+                    Thread.Sleep(300);
+                }
 
-            for (int i = 10;
-                i > 0 &&
-                    (app.Dte.Debugger.CurrentMode != EnvDTE.dbgDebugMode.dbgRunMode ||
-                    !IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpConnections().Any(p => p.LocalEndPoint.Port == port));
-                --i) {
-                Thread.Sleep(500);
+                var req = HttpWebRequest.CreateHttp(new Uri(string.Format("http://localhost:{0}/", port)));
+                using (var resp = req.GetResponse()) {
+                    text = new StreamReader(resp.GetResponseStream()).ReadToEnd();
+                }
+            } finally {
+                app.Dte.Debugger.Stop();
             }
-
-            string text;
-            var req = HttpWebRequest.CreateHttp(new Uri(string.Format("http://localhost:{0}/", port)));
-            using (var resp = req.GetResponse()) {
-                text = new StreamReader(resp.GetResponseStream()).ReadToEnd();
-            }
-            app.Dte.Debugger.Stop();
 
             Console.WriteLine("Response from http://localhost:{0}/", port);
             Console.WriteLine(text);
@@ -150,7 +158,7 @@ namespace PythonToolsUITests {
             for (int i = 10;
                 i > 0 &&
                     (app.Dte.Debugger.CurrentMode != EnvDTE.dbgDebugMode.dbgRunMode ||
-                    !IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpConnections().All(p => p.LocalEndPoint.Port != port));
+                    !IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpListeners().All(p => p.Port != port));
                 --i) {
                 Thread.Sleep(500);
             }
@@ -159,23 +167,25 @@ namespace PythonToolsUITests {
         private static void LaunchAndVerifyNoDebug(PythonProjectNode project, int port, string textInResponse) {
             var pythonProcesses = Process.GetProcessesByName("python");
 
-            var prevNormal = PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnNormalExit;
-            var prevAbnormal = PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnAbnormalExit;
-            try {
-                PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnNormalExit = false;
-                PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnAbnormalExit = false;
+            UIThread.Instance.RunSync(() => {
+                var prevNormal = PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnNormalExit;
+                var prevAbnormal = PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnAbnormalExit;
+                try {
+                    PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnNormalExit = false;
+                    PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnAbnormalExit = false;
 
-                ErrorHandler.ThrowOnFailure(project.GetLauncher().LaunchProject(false));
-            } finally {
-                PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnNormalExit = prevNormal;
-                PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnAbnormalExit = prevAbnormal;
-            }
+                    ErrorHandler.ThrowOnFailure(project.GetLauncher().LaunchProject(false));
+                } finally {
+                    PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnNormalExit = prevNormal;
+                    PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnAbnormalExit = prevAbnormal;
+                }
+            });
 
-            for (int i = 20;
+            for (int i = 100;
                 i > 0 &&
-                    !IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpConnections().Any(p => p.LocalEndPoint.Port == port);
+                    !IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpListeners().Any(p => p.Port == port);
                 --i) {
-                Thread.Sleep(500);
+                Thread.Sleep(300);
             }
 
             Process newProcess = null;
@@ -192,7 +202,17 @@ namespace PythonToolsUITests {
                 text = new StreamReader(resp.GetResponseStream()).ReadToEnd();
             }
 
-            newProcess.Kill();
+            for (int i = 10; i >= 0; --i) {
+                try {
+                    newProcess.Kill();
+                    break;
+                } catch {
+                    Thread.Sleep(100);
+                }
+                if (i == 0) {
+                    Console.WriteLine("Failed to kill process.");
+                }
+            }
 
             Console.WriteLine("Response from http://localhost:{0}/", port);
             Console.WriteLine(text);
@@ -201,19 +221,19 @@ namespace PythonToolsUITests {
 
         #endregion
 
-        [TestMethod, Priority(0), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core"), Timeout(10 * 60 * 60 * 1000)]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void FlaskEndToEndV33() {
             EndToEndTest("Flask Web Project", "flask", "Hello World!", "3.3");
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core"), Timeout(10 * 60 * 60 * 1000)]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void FlaskEndToEndV27() {
             EndToEndTest("Flask Web Project", "flask", "Hello World!", "2.7");
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
+        [TestMethod, Priority(0), TestCategory("Core"), Timeout(10 * 60 * 60 * 1000)]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void DjangoEndToEndV27() {
             EndToEndTest("Django Project", "django", "Congratulations on your first Django-powered page.", "2.7");

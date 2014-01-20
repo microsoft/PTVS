@@ -384,7 +384,8 @@ namespace Microsoft.PythonTools.Analysis {
                 CommonUtils.IsValidPath(remainder) &&
                 File.Exists(Path.Combine(remainder, "__init__.py")) &&
                 (string.IsNullOrEmpty(topLevelPath) ||
-                 (CommonUtils.IsSubpathOf(topLevelPath, remainder) && !CommonUtils.IsSamePath(topLevelPath, remainder)))
+                 (CommonUtils.IsSubpathOf(topLevelPath, remainder) &&
+                  !CommonUtils.IsSameDirectory(topLevelPath, remainder)))
             ) {
                 fullName = Path.GetFileName(remainder) + "." + fullName;
                 remainder = Path.GetDirectoryName(remainder);
