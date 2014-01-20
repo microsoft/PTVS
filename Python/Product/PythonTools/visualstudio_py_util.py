@@ -200,7 +200,13 @@ class SafeRepr(object):
     maxother_inner = 30
     
     def __call__(self, obj):
-        return ''.join(self._repr(obj, 0))
+        try:
+            return ''.join(self._repr(obj, 0))
+        except:
+            try:
+                return 'An exception was raised: %r' % sys.exc_info()[1]
+            except:
+                return 'An exception was raised'
     
     def _repr(self, obj, level):
         '''Returns an iterable of the parts in the final repr string.'''
