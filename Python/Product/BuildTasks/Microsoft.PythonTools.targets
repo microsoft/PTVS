@@ -138,6 +138,29 @@
     <Message Importance="low" Text="StartupModule: $(StartupModule)" />
   </Target>
 
+  <!-- PyLint -->
+
+  <PropertyGroup>
+    <PythonCommands>$(PythonCommands);PythonRunPyLintCommand</PythonCommands>
+    <PyLintWarningRegex>
+    <![CDATA[^(?<filename>.+?)\((?<line>\d+),(?<column>\d+)\): warning (?<msg_id>.+?): (?<message>.+?)$]]>
+    </PyLintWarningRegex>
+  </PropertyGroup>
+
+  <Target Name="PythonRunPyLintCommand"
+          Label="Run PyLint"
+          DependsOnTargets="ResolveStartupPath"
+          Returns="@(Commands)">
+    <CreatePythonCommandItem Target="pylint.lint"
+                             TargetType="module"
+                             Arguments="&quot;--msg-template={abspath}({line},{column}): warning {msg_id}: {msg}&quot; -r n @(Compile, ' ')"
+                             ExecuteIn="output"
+                             RequiredPackages="pylint&gt;=1.0.0"
+                             WarningRegex="$(PyLintWarningRegex)">
+      <Output TaskParameter="Command" ItemName="Commands" />
+    </CreatePythonCommandItem>
+  </Target>
+
   <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" />
 
   <!-- We don't have an intermediate assembly, but the common targets will set
