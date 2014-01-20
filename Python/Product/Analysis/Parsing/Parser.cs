@@ -913,6 +913,10 @@ namespace Microsoft.PythonTools.Parsing {
             if (_verbatim) {
                 AddNamesWhiteSpace(ret, dotWhiteSpace.ToArray());
             }
+
+            if (ret.Names.Count > 0) {
+                start = ret.Names[0].StartIndex;
+            }
             ret.SetLoc(start, GetEnd());
             return ret;
         }
@@ -922,6 +926,7 @@ namespace Microsoft.PythonTools.Parsing {
         // relative_module: "."* module | "."+
         private ModuleName ParseRelativeModuleName() {
             var start = GetStart();
+            bool isStartSetCorrectly = false;
 
             int dotCount = 0;
             List<string> dotWhiteSpace = MakeWhiteSpaceList();
@@ -941,12 +946,20 @@ namespace Microsoft.PythonTools.Parsing {
                 } else {
                     break;
                 }
+                if (!isStartSetCorrectly) {
+                    start = GetStart();
+                    isStartSetCorrectly = true;
+                }
             }
 
             List<string> nameWhiteSpace = null;
             NameExpression[] names = EmptyNames;
             if (PeekToken() is NameToken) {
                 names = ReadDottedName(out nameWhiteSpace);
+                if (!isStartSetCorrectly && names.Length > 0) {
+                    start = names[0].StartIndex;
+                    isStartSetCorrectly = true;
+                }
             }
 
             ModuleName ret;

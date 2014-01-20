@@ -88,6 +88,7 @@
     <Compile Include="RefactorRenameTests.cs" />
     <Compile Include="RegistryWatcherTest.cs" />
     <Compile Include="ReplEvaluatorTests.cs" />
+    <Compile Include="SquiggleTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Product\Analysis\Analysis.csproj">

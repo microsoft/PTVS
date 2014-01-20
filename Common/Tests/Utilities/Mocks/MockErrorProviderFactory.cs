@@ -17,8 +17,10 @@ using Microsoft.VisualStudio.Text.Tagging;
 
 namespace TestUtilities.Mocks {
     public class MockErrorProviderFactory : IErrorProviderFactory {
+        private SimpleTagger<ErrorTag> _instance;
+
         public SimpleTagger<ErrorTag> GetErrorTagger(Microsoft.VisualStudio.Text.ITextBuffer textBuffer) {
-            return new SimpleTagger<ErrorTag>(textBuffer);
+            return _instance = _instance ?? new SimpleTagger<ErrorTag>(textBuffer);
         }
     }
 }

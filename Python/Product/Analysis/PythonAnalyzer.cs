@@ -229,6 +229,50 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         /// <summary>
+        /// Returns true if a module has been imported.
+        /// </summary>
+        /// <param name="relativeModuleName">
+        /// The absolute or relative name of the module. If a relative name is 
+        /// passed here, <paramref name="importedFrom"/> must be provided.
+        /// </param>
+        /// <param name="importedFrom">
+        /// The full name of the module doing the import.
+        /// </param>
+        /// <returns>
+        /// True if the module was imported during analysis; otherwise, false.
+        /// </returns>
+        public bool IsModuleResolved(string relativeModuleName, string importedFrom) {
+            if (string.IsNullOrEmpty(importedFrom) || relativeModuleName.FirstOrDefault() != '.') {
+                // Module name is absolute or importedFrom is not specified.
+                return IsModuleResolved(relativeModuleName);
+            }
+
+            var suffix = relativeModuleName.Split('.').ToList();
+            var dotCount = suffix.TakeWhile(bit => string.IsNullOrEmpty(bit)).Count();
+
+            var prefix = importedFrom.Split('.').ToList();
+            var moduleName = string.Join(".", prefix.Take(prefix.Count - dotCount).Concat(suffix.Skip(dotCount)));
+
+            return IsModuleResolved(moduleName);
+        }
+
+        /// <summary>
+        /// Returns true if a module has been imported.
+        /// </summary>
+        /// <param name="moduleName">
+        /// The absolute name of the module.
+        /// </param>
+        /// <returns>
+        /// True if the module was imported during analysis; otherwise, false.
+        /// </returns>
+        public bool IsModuleResolved(string moduleName) {
+            ModuleReference moduleRef;
+            return Modules.TryGetValue(moduleName, out moduleRef) &&
+                moduleRef != null &&
+                moduleRef.Module != null;
+        }
+
+        /// <summary>
         /// Looks up the specified module by name.
         /// </summary>
         public MemberResult[] GetModule(string name) {

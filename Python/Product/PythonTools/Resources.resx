@@ -367,4 +367,7 @@ Please update the environment in Tools-&gt;Options-&gt;Python Tools-&gt;Environm
   <data name="CustomCommandPrerequisitesInstallPrompt" xml:space="preserve">
     <value>The following packages will be installed from PyPI in order to run this command:&#13;&#10;&#13;&#10;{0}&#13;&#10;&#13;&#10;Do you want to continue?</value>
   </data>
+  <data name="UnresolvedModuleTooltip" xml:space="preserve">
+    <value>Unable to resolve "{0}". IntelliSense may be missing for this module.</value>
+  </data>
 </root>

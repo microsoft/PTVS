@@ -266,6 +266,7 @@
     <Compile Include="ProvideLanguageTemplatesAttribute.cs" />
     <Compile Include="PythonToolsInstallPath.cs" />
     <Compile Include="PythonTools\Intellisense\FileEventArgs.cs" />
+    <Compile Include="PythonTools\Intellisense\UnresolvedImportSquiggleProvider.cs" />
     <Compile Include="PythonTools\Logging\InMemoryLogger.cs" />
     <Compile Include="PythonTools\Logging\IPythonToolsLogger.cs" />
     <Compile Include="PythonTools\Logging\PythonLogEvent.cs" />

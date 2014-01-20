@@ -36,6 +36,7 @@ namespace Microsoft.PythonTools.Options {
             _elevateEasyInstall.Checked = PythonToolsPackage.Instance.GeneralOptionsPage.ElevateEasyInstall;
             _autoAnalysis.Checked = PythonToolsPackage.Instance.DebuggingOptionsPage.AutoAnalyzeStandardLibrary;
             _updateSearchPathsForLinkedFiles.Checked = PythonToolsPackage.Instance.DebuggingOptionsPage.UpdateSearchPathsWhenAddingLinkedFiles;
+            _unresolvedImportWarning.Checked = PythonToolsPackage.Instance.GeneralOptionsPage.UnresolvedImportWarning;
 
             switch (PythonToolsPackage.Instance.DebuggingOptionsPage.IndentationInconsistencySeverity) {
                 case Severity.Error: _indentationInconsistentCombo.SelectedIndex = ErrorIndex; break;
@@ -90,6 +91,10 @@ namespace Microsoft.PythonTools.Options {
                 case SurveyNewsOnceWeekIndex: PythonToolsPackage.Instance.GeneralOptionsPage.SurveyNewsCheck = SurveyNewsPolicy.CheckOnceWeek; break;
                 case SurveyNewsOnceMonthIndex: PythonToolsPackage.Instance.GeneralOptionsPage.SurveyNewsCheck = SurveyNewsPolicy.CheckOnceMonth; break;
             }
+        }
+
+        private void _unresolvedImportWarning_CheckedChanged(object sender, EventArgs e) {
+            PythonToolsPackage.Instance.GeneralOptionsPage.UnresolvedImportWarning = _unresolvedImportWarning.Checked;
         }
     }
 }

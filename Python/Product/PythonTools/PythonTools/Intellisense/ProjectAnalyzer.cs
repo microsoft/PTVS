@@ -22,6 +22,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows.Forms;
+using System.Windows.Threading;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Navigation;
@@ -38,6 +39,7 @@ using Microsoft.VisualStudio.Text.Adornments;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Tagging;
 using Microsoft.VisualStudioTools;
+using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Intellisense {
 #if INTERACTIVE_WINDOW
@@ -68,7 +70,6 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly AnalysisQueue _analysisQueue;
         private readonly IPythonInterpreterFactory _interpreterFactory;
         private readonly Dictionary<BufferParser, IProjectEntry> _openFiles = new Dictionary<BufferParser, IProjectEntry>();
-        private readonly IErrorProviderFactory _errorProvider;
         private readonly ConcurrentDictionary<string, IProjectEntry> _projectFiles;
         private readonly PythonAnalyzer _pyAnalyzer;
         private readonly bool _implicitProject;
@@ -76,6 +77,9 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly IPythonInterpreterFactory[] _allFactories;
 
         private int _userCount;
+
+        // Internal for tests
+        internal readonly IErrorProviderFactory _errorProvider;
 
         private static readonly Lazy<TaskProvider> _taskProvider = new Lazy<TaskProvider>(() => {
             var _errorList = PythonToolsPackage.GetGlobalService(typeof(SVsErrorList)) as IVsTaskList;
@@ -297,7 +301,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 // We aren't able to analyze code, so don't create an entry.                
                 return null;
             }
-            
+
             IProjectEntry item;
             if (!_projectFiles.TryGetValue(path, out item)) {
                 if (PythonProjectNode.IsPythonFile(path)) {
@@ -457,7 +461,7 @@ namespace Microsoft.PythonTools.Intellisense {
         internal static int TranslateIndex(int index, ITextSnapshot fromSnapshot, ModuleAnalysis toAnalysisSnapshot) {
             var snapshotCookie = toAnalysisSnapshot.AnalysisCookie as SnapshotCookie;
             // TODO: buffers differ in the REPL window case, in the future we should handle this better
-            if (snapshotCookie != null && 
+            if (snapshotCookie != null &&
                 fromSnapshot != null &&
                 snapshotCookie.Snapshot.TextBuffer == fromSnapshot.TextBuffer) {
 
@@ -492,7 +496,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             var expr = Statement.GetExpression(
                 analysis.GetAstFromTextByIndex(
-                    text, 
+                    text,
                     TranslateIndex(
                         index,
                         snapshot,
@@ -681,23 +685,38 @@ namespace Microsoft.PythonTools.Intellisense {
                         }
 
                         // update squiggles for the buffer
-                        var buffer = snapshot.TextBuffer;
-
-                        SimpleTagger<ErrorTag> squiggles = _errorProvider.GetErrorTagger(snapshot.TextBuffer);
-                        TaskProvider provider = GetTaskProviderAndClearProjectItems(bufferParser._currentProjEntry);
 
                         // SimpleTagger says it's thread safe (http://msdn.microsoft.com/en-us/library/dd885186.aspx), but it's buggy...  
                         // Post the removing of squiggles to the UI thread so that we don't crash when we're racing with 
                         // updates to the buffer.  http://pytools.codeplex.com/workitem/142
-
                         var dispatcher = bufferParser.Dispatcher;
-                        if (dispatcher != null) {   // not a UI element in completion context tests w/ mocks.                            
-                            dispatcher.BeginInvoke((Action)new SquiggleUpdater(errorSink, snapshot, squiggles, bufferParser._currentProjEntry.FilePath, provider).DoUpdate);
+
+                        var options = PythonToolsPackage.Instance == null ? null : PythonToolsPackage.Instance.GeneralOptionsPage;
+                        bool unresolvedImportWarning = options != null && options.UnresolvedImportWarning;
+
+                        if (UIThread.IsUnitTestingMode) {
+                            UpdateSquiggles(snapshot, bufferParser._currentProjEntry, errorSink, true);
+                            // For unit tests we want to always warn about
+                            // unresolved imports. Otherwise we can't test them.
+                            unresolvedImportWarning = true;
+                        } else if (dispatcher != null) {
+                            var entry = bufferParser._currentProjEntry;
+                            dispatcher.BeginInvoke((Action)(() => {
+                                UpdateSquiggles(snapshot, entry, errorSink, unresolvedImportWarning);
+                            }));
                         }
 
-                        string path = bufferParser._currentProjEntry.FilePath;
-                        if (path != null) {
-                            UpdateErrorList(errorSink, path, provider);
+                        if (unresolvedImportWarning) {
+                            var squiggles = _errorProvider.GetErrorTagger(snapshot.TextBuffer);
+                            var unresolvedSquiggles = new UnresolvedImportSquiggleProvider(
+                                _pyAnalyzer,
+                                squiggles,
+                                dispatcher  // allowed to be null for unit tests
+                            );
+                            // May execute immediately if analysis has already
+                            // completed. Otherwise, the update will be run
+                            // when the OnNewAnalysis event is raised.
+                            unresolvedSquiggles.ListenForNextNewAnalysis(pyProjEntry);
                         }
                     }
                 } else {
@@ -737,50 +756,36 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        class SquiggleUpdater {
-            private CollectingErrorSink _errorSink;
-            private ITextSnapshot _snapshot;
-            private SimpleTagger<ErrorTag> _squiggles;
-            private TaskProvider _provider;
-            private readonly string _filename;
+        private void UpdateSquiggles(
+            ITextSnapshot snapshot,
+            IProjectEntry entry,
+            CollectingErrorSink errorSink,
+            bool unresolvedImportWarning
+        ) {
+            var squiggles = _errorProvider.GetErrorTagger(snapshot.TextBuffer);
+            var provider = GetTaskProviderAndClearProjectItems(entry);
 
-            public SquiggleUpdater(CollectingErrorSink errorSink, ITextSnapshot snapshot, SimpleTagger<ErrorTag> squiggles, string filename, TaskProvider provider) {
-                _errorSink = errorSink;
-                _snapshot = snapshot;
-                _squiggles = squiggles;
-                _provider = provider;
-                _filename = filename;
-            }
-
-            public void DoUpdate() {
-                _squiggles.RemoveTagSpans(x => true);
-
-                if (_filename != null) {
-                    AddWarnings(_snapshot, _errorSink, _squiggles, _filename);
-
-                    AddErrors(_snapshot, _errorSink, _squiggles, _filename);
-
-                    if (_provider != null) {
-                        _provider.ReplaceWarnings(_filename, _errorSink.Warnings);
-                        _provider.ReplaceErrors(_filename, _errorSink.Errors);
-                    }
+            squiggles.RemoveTagSpans(x => true);
+            if (entry.FilePath != null) {
+                foreach (ErrorResult warning in errorSink.Warnings) {
+                    squiggles.CreateTagSpan(
+                        CreateSpan(snapshot, warning.Span),
+                        new ErrorTag(PredefinedErrorTypeNames.Warning, warning.Message)
+                    );
                 }
-            }
-        }
 
-        private static void AddErrors(ITextSnapshot snapshot, CollectingErrorSink errorSink, SimpleTagger<ErrorTag> squiggles, string filename) {
-            foreach (ErrorResult error in errorSink.Errors) {
-                var span = error.Span;
-                var tspan = CreateSpan(snapshot, span);
-                squiggles.CreateTagSpan(tspan, new ErrorTag(PredefinedErrorTypeNames.SyntaxError, error.Message));
-            }
-        }
+                foreach (ErrorResult error in errorSink.Errors) {
+                    squiggles.CreateTagSpan(
+                        CreateSpan(snapshot, error.Span),
+                        new ErrorTag(PredefinedErrorTypeNames.SyntaxError, error.Message)
+                    );
+                }
 
-        private static void AddWarnings(ITextSnapshot snapshot, CollectingErrorSink errorSink, SimpleTagger<ErrorTag> squiggles, string filename) {
-            foreach (ErrorResult warning in errorSink.Warnings) {
-                var span = warning.Span;
-                var tspan = CreateSpan(snapshot, span);
-                squiggles.CreateTagSpan(tspan, new ErrorTag(PredefinedErrorTypeNames.Warning, warning.Message));
+                if (provider != null) {
+                    provider.ReplaceWarnings(entry.FilePath, errorSink.Warnings);
+                    provider.ReplaceErrors(entry.FilePath, errorSink.Errors);
+                    UpdateErrorList(errorSink, entry.FilePath, provider);
+                }
             }
         }
 
@@ -794,14 +799,14 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private void UpdateErrorList(CollectingErrorSink errorSink, string filepath, TaskProvider provider) {
-                if (errorSink.Warnings.Count > 0) {
+            if (errorSink.Warnings.Count > 0) {
                 OnWarningAdded(filepath);
-                } else {
+            } else {
                 OnWarningRemoved(filepath);
-                }
-                if (errorSink.Errors.Count > 0) {
+            }
+            if (errorSink.Errors.Count > 0) {
                 OnErrorAdded(filepath);
-                } else {
+            } else {
                 OnErrorRemoved(filepath);
             }
 
@@ -1090,7 +1095,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 Debug.Assert(false, "Unexpected empty dir");
                 return;
             }
-            
+
             if (addDir) {
                 lock (_contentsLock) {
                     _pyAnalyzer.AddAnalysisDirectory(dir);
@@ -1359,14 +1364,14 @@ namespace Microsoft.PythonTools.Intellisense {
             var evt = WarningRemoved;
             if (evt != null) {
                 evt(this, new FileEventArgs(path));
-                }
             }
+        }
 
         private void OnErrorAdded(string path) {
             var evt = ErrorAdded;
             if (evt != null) {
                 evt(this, new FileEventArgs(path));
-        }
+            }
         }
 
         private void OnErrorRemoved(string path) {

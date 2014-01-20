@@ -693,6 +693,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unable to resolve &quot;{0}&quot;. IntelliSense may be missing for this module..
+        /// </summary>
+        internal static string UnresolvedModuleTooltip {
+            get {
+                return ResourceManager.GetString("UnresolvedModuleTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to .
         /// </summary>
         internal static string UpdatingSearchPath {

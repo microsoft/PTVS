@@ -23,7 +23,7 @@ namespace Microsoft.VisualStudioTools.Project
     internal sealed class UIThread : IDisposable
     {
         private WindowsFormsSynchronizationContext synchronizationContext;
-        private bool isUnitTestingMode;
+        private static bool isUnitTestingMode;
         private Thread uithread;
 #if DEBUG
         /// <summary>
@@ -42,7 +42,7 @@ namespace Microsoft.VisualStudioTools.Project
         /// <summary>
         /// The singleton instance.
         /// </summary>
-        private static volatile UIThread instance = new UIThread();
+        private static volatile UIThread instance;
 
         internal UIThread()
         {
@@ -56,7 +56,7 @@ namespace Microsoft.VisualStudioTools.Project
         {
             get
             {
-                return instance;
+                return instance = instance ?? new UIThread();
             }
         }
 
@@ -66,6 +66,14 @@ namespace Microsoft.VisualStudioTools.Project
         public bool IsUIThread
         {
             get { return this.uithread == System.Threading.Thread.CurrentThread; }
+        }
+
+        /// <summary>
+        /// Checks whether unit testing mode has been initialized.
+        /// </summary>
+        internal static bool IsUnitTestingMode
+        {
+            get { return isUnitTestingMode; }
         }
 
         #region IDisposable Members
@@ -86,16 +94,16 @@ namespace Microsoft.VisualStudioTools.Project
         /// Initializes unit testing mode for this object
         /// </summary>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        internal void InitUnitTestingMode()
+        internal static void InitUnitTestingMode()
         {
-            Debug.Assert(this.synchronizationContext == null, "Context has already been captured; too late to InitUnitTestingMode");
-            this.isUnitTestingMode = true;
+            Debug.Assert(instance == null, "Context has already been captured; too late to InitUnitTestingMode");
+            isUnitTestingMode = true;
         }
 
         [Conditional("DEBUG")]
         internal void MustBeCalledFromUIThread()
         {
-            Debug.Assert(IsUIThread || this.isUnitTestingMode, "This must be called from the GUI thread");
+            Debug.Assert(IsUIThread || isUnitTestingMode, "This must be called from the GUI thread");
         }
 
         /// <summary>
@@ -105,7 +113,7 @@ namespace Microsoft.VisualStudioTools.Project
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes")]
         internal void Run(Action a)
         {
-            if (this.isUnitTestingMode)
+            if (isUnitTestingMode)
             {
                 a();
                 return;
@@ -145,7 +153,7 @@ namespace Microsoft.VisualStudioTools.Project
         {
             // if we're already on the UI thread run immediately - this prevents
             // re-entrancy at unexpected times when we're already on the UI thread.
-            if (this.isUnitTestingMode || IsUIThread)   
+            if (isUnitTestingMode || IsUIThread)   
             {
                 a();
                 return;
@@ -183,7 +191,7 @@ namespace Microsoft.VisualStudioTools.Project
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode"), System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes")]
         internal T RunSync<T>(Func<T> a) {
             T retValue = default(T);
-            if (this.isUnitTestingMode || IsUIThread) {
+            if (isUnitTestingMode || IsUIThread) {
                 return a();
             }
             Exception exn = null; ;
@@ -212,7 +220,7 @@ namespace Microsoft.VisualStudioTools.Project
         /// </summary>
         private void Initialize()
         {
-            if (this.isUnitTestingMode) return;
+            if (isUnitTestingMode) return;
             this.uithread = System.Threading.Thread.CurrentThread;
 
             if (this.synchronizationContext == null)

@@ -106,6 +106,8 @@ namespace Microsoft.PythonTools.Project {
         public const string PythonWebLauncherName = "PythonWebLauncherName";
         public const string PythonWebLauncherDescription = "PythonWebLauncherDescription";
 
+        public const string UnresolvedModuleTooltip = "UnresolvedModuleTooltip";
+
         internal static new string GetString(string value) {
             string result = Microsoft.PythonTools.Resources.ResourceManager.GetString(value, CultureInfo.CurrentUICulture) ?? CommonSR.GetString(value);
             if (result == null) {

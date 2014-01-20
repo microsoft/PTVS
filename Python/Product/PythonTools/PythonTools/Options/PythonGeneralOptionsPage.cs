@@ -27,6 +27,7 @@ namespace Microsoft.PythonTools.Options {
         private bool _showOutputWindowForPackageInstallation;
         private bool _elevatePip;
         private bool _elevateEasyInstall;
+        private bool _unresolvedImportWarning;
 
         public PythonGeneralOptionsPage()
             : base("General") {
@@ -115,6 +116,14 @@ namespace Microsoft.PythonTools.Options {
         }
 
         /// <summary>
+        /// True to warn when a module is not resolved.
+        /// </summary>
+        public bool UnresolvedImportWarning {
+            get { return _unresolvedImportWarning; }
+            set { _unresolvedImportWarning = value; }
+        }
+
+        /// <summary>
         /// Resets settings back to their defaults. This should be followed by
         /// a call to <see cref="SaveSettingsToStorage"/> to commit the new
         /// values.
@@ -128,6 +137,7 @@ namespace Microsoft.PythonTools.Options {
             _showOutputWindowForPackageInstallation = true;
             _elevatePip = false;
             _elevateEasyInstall = false;
+            _unresolvedImportWarning = true;
         }
 
         private const string DefaultSurveyNewsFeedUrl = "http://go.microsoft.com/fwlink/?LinkId=303967";
@@ -141,6 +151,7 @@ namespace Microsoft.PythonTools.Options {
         private const string SurveyNewsLastCheckSetting = "SurveyNewsLastCheck";
         private const string SurveyNewsFeedUrlSetting = "SurveyNewsFeedUrl";
         private const string SurveyNewsIndexUrlSetting = "SurveyNewsIndexUrl";
+        private const string UnresolvedImportWarningSetting = "UnresolvedImportWarning";
 
         public override void LoadSettingsFromStorage() {
             _surveyNewsCheck = LoadEnum<SurveyNewsPolicy>(SurveyNewsCheckSetting) ?? SurveyNewsPolicy.CheckOnceWeek;
@@ -151,6 +162,7 @@ namespace Microsoft.PythonTools.Options {
             _showOutputWindowForPackageInstallation = LoadBool(ShowOutputWindowForPackageInstallationSetting) ?? true;
             _elevatePip = LoadBool(ElevatePipSetting) ?? false;
             _elevateEasyInstall = LoadBool(ElevateEasyInstallSetting) ?? false;
+            _unresolvedImportWarning = LoadBool(UnresolvedImportWarningSetting) ?? true;
         }
 
         public override void SaveSettingsToStorage() {
@@ -160,7 +172,7 @@ namespace Microsoft.PythonTools.Options {
             SaveBool(ShowOutputWindowForPackageInstallationSetting, _showOutputWindowForPackageInstallation);
             SaveBool(ElevatePipSetting, _elevatePip);
             SaveBool(ElevateEasyInstallSetting, _elevateEasyInstall);
+            SaveBool(UnresolvedImportWarningSetting, _unresolvedImportWarning);
         }
-
     }
 }
