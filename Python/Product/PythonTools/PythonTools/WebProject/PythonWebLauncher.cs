@@ -286,7 +286,7 @@ namespace Microsoft.PythonTools.Project.Web {
             var alwaysPause = startInfo.ExecuteInConsoleAndPause;
             // We only want to debug a web server in a console.
             startInfo.ExecuteIn = "console";
-            startInfo.AdjustArgumentsForProcessStartInfo(interpreterPath);
+            startInfo.AdjustArgumentsForProcessStartInfo(interpreterPath, handleConsoleAndPause: false);
 
             try {
                 bool enableNativeCodeDebugging = false;
@@ -358,7 +358,7 @@ namespace Microsoft.PythonTools.Project.Web {
             bool alwaysPause = startInfo.ExecuteInConsoleAndPause;
             // We only want to run the webserver in a console.
             startInfo.ExecuteIn = "console";
-            startInfo.AdjustArgumentsForProcessStartInfo(interpreterPath);
+            startInfo.AdjustArgumentsForProcessStartInfo(interpreterPath, handleConsoleAndPause: false);
 
             var psi = new ProcessStartInfo {
                 FileName = startInfo.Filename,

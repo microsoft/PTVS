@@ -359,6 +359,9 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void DefaultBaseInterpreterSelection() {
+            PythonPaths.Python27.AssertInstalled();
+            PythonPaths.Python33.AssertInstalled();
+            
             using (var dis = Init())
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
                 var project = app.OpenProject(@"TestData\Environments.sln");
@@ -456,7 +459,7 @@ namespace PythonToolsUITests {
                 if (analysis::Microsoft.PythonTools.Interpreter.PythonInterpreterFactoryExtensions
                         .FindModules(dis.CurrentDefault, "virtualenv")
                         .Contains("virtualenv")) {
-                    Assert.Inconclusive("Requires Python 3.3 without virtualenv");
+                    Pip.Uninstall(dis.CurrentDefault, "virtualenv", false).Wait();
                 }
 
                 using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {

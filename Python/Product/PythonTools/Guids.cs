@@ -22,9 +22,11 @@ namespace Microsoft.PythonTools
     {
         public const string guidPythonToolsPkgString =    "6dbd7c1e-1f1b-496d-ac7c-c55dae66c783";
         public const string guidPythonToolsCmdSetString = "bdfa79d2-2cd2-474a-a82a-ce8694116825";
+        public const string guidPythonProjectString = "888888A0-9F3D-457C-B088-3A5042F75D52";
 
         public static readonly Guid guidPythonToolsPackage = new Guid(guidPythonToolsPkgString);
         public static readonly Guid guidPythonToolsCmdSet = new Guid(guidPythonToolsCmdSetString);
+        public static readonly Guid guidPythonProjectGuid = new Guid(guidPythonProjectString);
         public static readonly Guid guidCSharpProjectPacakge = new Guid("FAE04EC1-301F-11D3-BF4B-00C04F79EFBC");
         
         public static readonly Guid guidVenusCmdId = new Guid("c7547851-4e3a-4e5b-9173-fa6e9c8bd82c");

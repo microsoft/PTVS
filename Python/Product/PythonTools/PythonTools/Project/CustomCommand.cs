@@ -826,6 +826,16 @@ namespace Microsoft.PythonTools.Project {
 
             if (ExecuteInRepl) {
                 ExecuteIn = CreatePythonCommandItem.ExecuteInOutput;
+            } else if (ExecuteInConsole) {
+                if (handleConsoleAndPause) {
+                    Arguments = string.Format(
+                        "/C \"{0} {1}\" & if errorlevel 1 pause",
+                        ProcessOutput.QuoteSingleArgument(Filename),
+                        Arguments
+                    );
+                    Filename = Path.Combine(Environment.SystemDirectory, "cmd.exe");
+                    ExecuteIn = CreatePythonCommandItem.ExecuteInConsole;
+                }
             } else if (ExecuteInConsoleAndPause) {
                 if (handleConsoleAndPause) {
                     Arguments = string.Format(

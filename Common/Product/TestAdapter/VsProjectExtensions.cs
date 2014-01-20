@@ -210,8 +210,5 @@ namespace Microsoft.VisualStudioTools.TestAdapter {
             }
             return strRet;
         }
-
-        private const string PythonProjectGuidString = "{888888A0-9F3D-457C-B088-3A5042F75D52}";
-        private const string NodejsBaseProjectGuidString = "{9092AA53-FB77-4645-B42D-1CCCA6BD08BD}";
     }
 }

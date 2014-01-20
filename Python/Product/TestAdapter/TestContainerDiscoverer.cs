@@ -166,7 +166,7 @@ namespace Microsoft.PythonTools.TestAdapter {
         public event EventHandler TestContainersUpdated;
 
         public IEnumerable<ITestContainer> GetTestContainers(IVsProject project) {
-            if (!project.IsTestProject(GuidList.guidPythonToolsPackage)) {
+            if (!project.IsTestProject(GuidList.guidPythonProjectGuid)) {
                 if (EqtTrace.IsVerboseEnabled) {
                     EqtTrace.Verbose("TestContainerDiscoverer: Ignoring project {0} as it is not a test project.", project.GetProjectName());
                 }
@@ -337,7 +337,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                 switch (e.ChangedReason) {
                     case TestFileChangedReason.Added:
                         Debug.Assert(e.Project != null);
-                        if (e.Project.IsTestProject(GuidList.guidPythonToolsPackage)) {
+                        if (e.Project.IsTestProject(GuidList.guidPythonProjectGuid)) {
                             root = e.Project.GetProjectHome();
 
                             if (!string.IsNullOrEmpty(root) && CommonUtils.IsSubpathOf(root, e.File)) {
@@ -405,7 +405,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                 
                 bool isTestProject;
                 try {
-                    isTestProject = project.IsTestProject(GuidList.guidPythonToolsPackage);
+                    isTestProject = project.IsTestProject(GuidList.guidPythonProjectGuid);
                 } catch (ObjectDisposedException) {
                     isTestProject = false;
                 }
