@@ -148,7 +148,7 @@ Continue?</value>
 Continue?</value>
   </data>
   <data name="EnvironmentDeleteConfirmation" xml:space="preserve">
-    <value>'{0}' will be removed froh the project and the directory
+    <value>'{0}' will be removed from the project and the directory
 '{1}'
 and all its contents will be deleted from disk.</value>
   </data>
@@ -365,9 +365,18 @@ Please update the environment in Tools-&gt;Options-&gt;Python Tools-&gt;Environm
     <value>Python interactive window. Type $help for a list of commands.</value>
   </data>
   <data name="CustomCommandPrerequisitesInstallPrompt" xml:space="preserve">
-    <value>The following packages will be installed from PyPI in order to run this command:&#13;&#10;&#13;&#10;{0}&#13;&#10;&#13;&#10;Do you want to continue?</value>
+    <value>The following packages will be installed from PyPI in order to run this command:
+
+{0}
+
+Do you want to continue?</value>
   </data>
   <data name="UnresolvedModuleTooltip" xml:space="preserve">
     <value>Unable to resolve "{0}". IntelliSense may be missing for this module.</value>
+  </data>
+  <data name="FillCommentSelectionError" xml:space="preserve">
+    <value>Fill Comment Paragraph fills the text in a contiguous block of comment lines or multiline strings.
+
+It must be invoked on a comment line or within a triple quoted line.</value>
   </data>
 </root>

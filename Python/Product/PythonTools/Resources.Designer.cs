@@ -137,7 +137,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to &apos;{0}&apos; will be removed froh the project and the directory
+        ///   Looks up a localized string similar to &apos;{0}&apos; will be removed from the project and the directory
         ///&apos;{1}&apos;
         ///and all its contents will be deleted from disk..
         /// </summary>
@@ -281,6 +281,17 @@ namespace Microsoft.PythonTools {
         internal static string FailedToReadResource {
             get {
                 return ResourceManager.GetString("FailedToReadResource", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Fill Comment Paragraph fills the text in a contiguous block of comment lines or multiline strings.
+        ///
+        ///It must be invoked on a comment line or within a triple quoted line..
+        /// </summary>
+        internal static string FillCommentSelectionError {
+            get {
+                return ResourceManager.GetString("FillCommentSelectionError", resourceCulture);
             }
         }
         

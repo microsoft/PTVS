@@ -108,6 +108,8 @@ namespace Microsoft.PythonTools.Project {
 
         public const string UnresolvedModuleTooltip = "UnresolvedModuleTooltip";
 
+        public const string FillCommentSelectionError = "FillCommentSelectionError";
+
         internal static new string GetString(string value) {
             string result = Microsoft.PythonTools.Resources.ResourceManager.GetString(value, CultureInfo.CurrentUICulture) ?? CommonSR.GetString(value);
             if (result == null) {

@@ -15,6 +15,7 @@
 using System;
 using System.Text;
 using System.Text.RegularExpressions;
+using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Language.StandardClassification;
 using Microsoft.VisualStudio.OLE.Interop;
@@ -57,10 +58,7 @@ namespace Microsoft.PythonTools.Commands {
             
             // TODO: Fix doc string parsing
             if (fillPrefix.Prefix == null || fillPrefix.Prefix.Length == 0 || fillPrefix.IsDocString) {
-                System.Windows.MessageBox.Show(
-@"FillCommentParagraph fills the text in a contiguous block of comment lines or multiline strings.
-
-It must be invoked on a comment line or within a triple quoted line.", "Python Tools for Visual Studio");
+                System.Windows.MessageBox.Show(SR.GetString(SR.FillCommentSelectionError), SR.GetString(SR.PythonToolsForVisualStudio));
                 return;
             }
 

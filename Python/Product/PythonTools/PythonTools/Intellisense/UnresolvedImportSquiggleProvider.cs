@@ -52,6 +52,10 @@ namespace Microsoft.PythonTools.Intellisense {
             }
             entry.OnNewAnalysis -= OnNewAnalysis;
 
+            if (string.IsNullOrEmpty(entry.ModuleName) || string.IsNullOrEmpty(entry.FilePath)) {
+                return;
+            }
+
             PythonAst ast;
             IAnalysisCookie cookie;
             entry.GetTreeAndCookie(out ast, out cookie);
