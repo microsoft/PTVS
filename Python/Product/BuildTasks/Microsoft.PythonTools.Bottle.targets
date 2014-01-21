@@ -1,0 +1,41 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<!--
+  Copyright (c) Microsoft Corporation.
+
+  This source code is subject to terms and conditions of the Apache License, Version 2.0. A
+  copy of the license can be found in the License.html file at the root of this distribution. If
+  you cannot locate the Apache License, Version 2.0, please send an email to
+  vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound
+  by the terms of the Apache License, Version 2.0.
+ 
+  You must not remove this notice, or any other, from this software.
+-->
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+  <PropertyGroup>
+    <PythonDebugWebServerCommandArguments Condition="'$(PythonDebugWebServerCommandArguments)' == ''">--debug</PythonDebugWebServerCommandArguments>
+    <PythonWebFrameworkPackage Condition="'$(PythonWebFrameworkPackage)' == ''">bottle</PythonWebFrameworkPackage>
+    <PythonWebFrameworkPackageDisplayName Condition="'$(PythonWebFrameworkPackageDisplayName)' == ''">Bottle</PythonWebFrameworkPackageDisplayName>
+  </PropertyGroup>
+
+  <Import Project="Microsoft.PythonTools.Web.targets"/>
+
+  <!-- *************************************************************************
+       Because the WSGI handler name depends on the startup module, we can't set
+       it until we've started building. If it has not been set by this point, we
+       will set it to the default 'app'.
+  -->
+  <PropertyGroup>
+    <ResolvePythonWsgiHandlerDependsOnTargets>
+      $(ResolvePythonWsgiHandlerDependsOnTargets);
+      GetBottleWsgiHandler
+    </ResolvePythonWsgiHandlerDependsOnTargets>
+  </PropertyGroup>
+  
+  <Target Name="GetBottleWsgiHandler"
+          DependsOnTargets="ResolveStartupPath"
+          Condition="'$(PythonWsgiHandler)' == ''">
+    <PropertyGroup>
+      <PythonWsgiHandler>$(StartupModule).wsgi_app</PythonWsgiHandler>
+    </PropertyGroup>
+  </Target>
+</Project>

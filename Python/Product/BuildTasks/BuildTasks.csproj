@@ -70,7 +70,6 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Microsoft.PythonTools.targets">
-      <SubType>Designer</SubType>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVsix>true</IncludeInVsix>
     </Content>
@@ -81,7 +80,6 @@
       <IncludeInVsix>true</IncludeInVsix>
     </Content>
     <Content Include="Microsoft.PythonTools.Flask.targets">
-      <SubType>Designer</SubType>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVsix>true</IncludeInVsix>
     </Content>
@@ -97,6 +95,11 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVsix>true</IncludeInVsix>
     </Content>
+    <Content Include="Microsoft.PythonTools.Bottle.targets">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVsix>true</IncludeInVsix>
+    </Content>
+    <None Include="TestTargets\Microsoft.PythonTools.Bottle.targets" />
     <None Include="TestTargets\Microsoft.PythonTools.Flask.targets" />
     <None Include="TestTargets\Microsoft.PythonTools.Django.targets" />
     <None Include="TestTargets\Microsoft.PythonTools.targets" />

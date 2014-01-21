@@ -702,6 +702,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <None Include="RefreshDefaultDB.py" />
+    <ZipProject Include="Templates\Projects\WebProjectBottle\app.py" />
     <ZipProject Include="Templates\Projects\WebProjectFlask\app.py" />
     <ZipProject Include="Templates\Projects\FromExistingCode\FromExistingCode.pyproj" />
     <ZipProject Include="Templates\Projects\FromExistingCode\FromExistingCode.vstemplate">
@@ -731,6 +732,12 @@
       <SubType>Designer</SubType>
     </ZipProject>
     <ZipProject Include="Templates\Projects\WebProjectFlask\WebProjectFlask.vstemplate">
+      <SubType>Designer</SubType>
+    </ZipProject>
+    <ZipProject Include="Templates\Projects\WebProjectBottle\WebProjectBottle.pyproj">
+      <SubType>Designer</SubType>
+    </ZipProject>
+    <ZipProject Include="Templates\Projects\WebProjectBottle\WebProjectBottle.vstemplate">
       <SubType>Designer</SubType>
     </ZipProject>
     <Content Include="visualstudio_py_debugger.py">
