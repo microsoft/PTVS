@@ -221,19 +221,31 @@ namespace PythonToolsUITests {
 
         #endregion
 
-        [TestMethod, Priority(0), TestCategory("Core"), Timeout(10 * 60 * 60 * 1000)]
+        [TestMethod, Priority(0), TestCategory("Core"), Timeout(10 * 60 * 1000)]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void FlaskEndToEndV33() {
             EndToEndTest("Flask Web Project", "flask", "Hello World!", "3.3");
         }
 
-        [TestMethod, Priority(0), TestCategory("Core"), Timeout(10 * 60 * 60 * 1000)]
+        [TestMethod, Priority(0), TestCategory("Core"), Timeout(10 * 60 * 1000)]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void FlaskEndToEndV27() {
             EndToEndTest("Flask Web Project", "flask", "Hello World!", "2.7");
         }
 
-        [TestMethod, Priority(0), TestCategory("Core"), Timeout(10 * 60 * 60 * 1000)]
+        [TestMethod, Priority(0), TestCategory("Core"), Timeout(10 * 60 * 1000)]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void BottleEndToEndV33() {
+            EndToEndTest("Bottle Web Project", "bottle", "Hello World!", "3.3");
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core"), Timeout(10 * 60 * 1000)]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void BottleEndToEndV27() {
+            EndToEndTest("Bottle Web Project", "bottle", "Hello World!", "2.7");
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core"), Timeout(10 * 60 * 1000)]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void DjangoEndToEndV27() {
             EndToEndTest("Django Project", "django", "Congratulations on your first Django-powered page.", "2.7");

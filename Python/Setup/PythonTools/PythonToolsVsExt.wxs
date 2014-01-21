@@ -184,9 +184,6 @@
             <Component Id="cmp5052646A4FF54D6EB2D042231F927F34" Directory="Dir_ProjectTemplates_Python" Guid="{5332F616-353A-4094-9E25-D3220AB5DF3C}">
                 <File Id="filE4A0DE0C95B24246AF3BA66E5720B030" KeyPath="yes" Source="$(var.TargetDir)\ProjectTemplates\Python\EmptyWebProject.zip" />
             </Component>
-            <Component Id="cmp18974073E987485FA155D63B72A03A36" Directory="Dir_ProjectTemplates_Python" Guid="{35F24411-E4F5-452B-AC51-6461C837321C}">
-                <File Id="fil58D19508E5174B7CA0C834725BC5AC55" KeyPath="yes" Source="$(var.TargetDir)\ProjectTemplates\Python\WebProjectFlask.zip" />
-            </Component>
             <Component Id="cmp5E1CEDE43A189A6AACBB60829AD63E1D" Directory="dir1B4805CEC92CD8586B8C95875EA0F7DF" Guid="{6BF9570B-B452-4D37-AC11-7376E0D43881}">
                 <File Id="filF929E14C8F0D95906776F9E4446FE9C8" KeyPath="yes" Source="$(var.TargetDir)\CompletionDB\array.idb" />
             </Component>
@@ -354,9 +351,6 @@
             <Component Directory="Dir_PythonToolsMsBuild" Guid="{08CAE48C-BC52-4A77-82C1-F80F2035EAAF}">
                 <File KeyPath="yes" Source="$(var.TargetDir)\Microsoft.PythonTools.Web.targets" />
             </Component>
-            <Component Directory="Dir_PythonToolsMsBuild" Guid="{07BEB21F-CF4D-4C58-A339-AD0A46E65929}">
-                <File KeyPath="yes" Source="$(var.TargetDir)\Microsoft.PythonTools.Flask.targets" />
-            </Component>
             <Component Directory="Dir_PythonToolsMsBuild" Guid="{E191EBE8-37D1-4320-98CF-571675A57BB6}">
                 <File KeyPath="yes" Source="$(var.TargetDir)\wfastcgi.py" />
             </Component>
@@ -376,7 +370,21 @@
               <File KeyPath="yes" Source="$(var.TargetDir)\ptvs_virtualenv_proxy.py" />
             </Component>
 
-          <!-- Mixed-mode debugging files -->
+            <!-- Web Project Templates and Targets -->
+            <Component Directory="Dir_ProjectTemplates_Python" Guid="{35F24411-E4F5-452B-AC51-6461C837321C}">
+                <File KeyPath="yes" Source="$(var.TargetDir)\ProjectTemplates\Python\WebProjectFlask.zip" />
+            </Component>
+            <Component Directory="Dir_PythonToolsMsBuild" Guid="{07BEB21F-CF4D-4C58-A339-AD0A46E65929}">
+                <File KeyPath="yes" Source="$(var.TargetDir)\Microsoft.PythonTools.Flask.targets" />
+            </Component>
+            <Component Directory="Dir_ProjectTemplates_Python" Guid="{01CFBD48-599E-4A6F-88D5-164ACFCE484D}">
+                <File KeyPath="yes" Source="$(var.TargetDir)\ProjectTemplates\Python\WebProjectBottle.zip" />
+            </Component>
+            <Component Directory="Dir_PythonToolsMsBuild" Guid="{67B3BA86-5394-44D7-BB4C-054EB64C20FF}">
+                <File KeyPath="yes" Source="$(var.TargetDir)\Microsoft.PythonTools.Bottle.targets" />
+            </Component>
+
+            <!-- Mixed-mode debugging files -->
             <?if "$(var.VSTargetVersion)" != "10.0" ?>
             <Component Id="cmpB9D19167C9944EB1880D0B3E2EE2CD78" Directory="INSTALLLOCATION" Guid="{B2E65062-DD6B-4501-B8E0-34CC6BF47491}">
                 <File Id="fil0CC20894AD324A70AB88CB9C47B5A9D6" KeyPath="yes" Source="$(var.TargetDir)\Microsoft.PythonTools.Debugger.Helper.x86.dll" />
