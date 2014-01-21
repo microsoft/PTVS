@@ -137,12 +137,15 @@ namespace Microsoft.PythonTools.Debugger.Remote {
                 }
 
                 long ver = stream.ReadInt64();
+
+                // If we are talking the same protocol but different version, reply with signature + version before bailing out
+                // so that ptvsd has a chance to gracefully close the socket on its side. 
+                stream.Write(DebuggerSignatureBytes);
+                stream.WriteInt64(DebuggerProtocolVersion);
+
                 if (ver != DebuggerProtocolVersion) {
                     return ConnErrorMessages.RemoteUnsupportedServer;
                 }
-
-                stream.Write(DebuggerSignatureBytes);
-                stream.WriteInt64(DebuggerProtocolVersion);
 
                 stream.WriteString(secret);
                 string secretResp = stream.ReadAsciiString(Accepted.Length);
@@ -224,7 +227,6 @@ namespace Microsoft.PythonTools.Debugger.Remote {
 
             return err;
         }
-
     }
 }
 

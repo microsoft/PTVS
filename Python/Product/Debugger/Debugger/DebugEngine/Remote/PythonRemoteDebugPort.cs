@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System;
+using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Debugger.Interop;
 
 namespace Microsoft.PythonTools.Debugger.Remote {
@@ -49,8 +50,14 @@ namespace Microsoft.PythonTools.Debugger.Remote {
         }
 
         public int EnumProcesses(out IEnumDebugProcesses2 ppEnum) {
-            ppEnum = new PythonRemoteEnumDebugProcesses(this);
-            return 0;
+            var process = PythonRemoteDebugProcess.Connect(this);
+            if (process == null) {
+                ppEnum = null;
+                return VSConstants.E_FAIL;
+            } else {
+                ppEnum = new PythonRemoteEnumDebugProcesses(process);
+                return VSConstants.S_OK;
+            }
         }
 
         public int GetPortId(out Guid pguidPort) {
@@ -63,7 +70,7 @@ namespace Microsoft.PythonTools.Debugger.Remote {
             if (_secret != "") {
                 pbstrName = _secret + "@" + pbstrName;
             }
-            return 0;
+            return VSConstants.S_OK;
         }
 
         public int GetPortRequest(out IDebugPortRequest2 ppRequest) {
