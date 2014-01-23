@@ -7,7 +7,7 @@
     <SortOrder>61</SortOrder>
     <NumberOfParentCategoriesToRollUp>2</NumberOfParentCategoriesToRollUp>
     <CreateNewFolder>true</CreateNewFolder>
-    <DefaultName>WebProject</DefaultName>
+    <DefaultName>BottleWebProject</DefaultName>
     <ProvideDefaultName>true</ProvideDefaultName>
   </TemplateData>
   <TemplateContent>
