@@ -253,7 +253,10 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
 
                 moduleRef.AddReference(GlobalScope);
 
-                userMod = moduleRef.Module ?? ProjectState.ImportBuiltinModule(modName);
+                if (moduleRef.Module == null) {
+                    moduleRef.Module = ProjectState.ImportBuiltinModule(modName);
+                }
+                userMod = moduleRef.Module;
             }
 
             var asNames = node.AsNames ?? node.Names;
