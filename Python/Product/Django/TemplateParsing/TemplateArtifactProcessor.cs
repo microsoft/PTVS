@@ -61,11 +61,11 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
         }
 
         public string LeftSeparator {
-            get { return "{%"; }
+            get { return ""; }
         }
 
         public string RightSeparator {
-            get { return "%}"; }
+            get { return ""; }
         }
 
         public string LeftCommentSeparator {
