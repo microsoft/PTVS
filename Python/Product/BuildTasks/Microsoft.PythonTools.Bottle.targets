@@ -35,7 +35,7 @@
           DependsOnTargets="ResolveStartupPath"
           Condition="'$(PythonWsgiHandler)' == ''">
     <PropertyGroup>
-      <PythonWsgiHandler>$(StartupModule).wsgi_app</PythonWsgiHandler>
+      <PythonWsgiHandler>$(StartupModule).wsgi_app()</PythonWsgiHandler>
     </PropertyGroup>
   </Target>
 </Project>
