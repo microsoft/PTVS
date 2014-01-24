@@ -13,7 +13,8 @@
   </system.diagnostics>
 
   <appSettings>
-    <add key="WSGI_HANDLER" value="myapp.handler"/>
+    <add key="WSGI_HANDLER" value="django.core.handlers.wsgi.WSGIHandler()"/>
+    <add key="DJANGO_SETTINGS_MODULE" value="DjangoApplication.settings" />
     <add key="PYTHONPATH" value="[SITEPATH]" />
   </appSettings>
 
@@ -25,13 +26,23 @@
     <modules runAllManagedModulesForAllRequests="true"/>
     <handlers>
       <add name="Django FastCGI" 
-           path="*" 
+           path="handler.fcgi" 
            verb="*" 
            modules="FastCgiModule" 
            scriptProcessor="[PYTHONPATH]|&quot;[WFASTCGIPATH]&quot;" 
            resourceType="Unspecified" 
-           requireAccess="Script" 
-           responseBufferLimit="0" />
+           requireAccess="Script" />
     </handlers>
+    <rewrite>
+        <rules>
+        <rule name="Configure Python" stopProcessing="true">
+          <match url="(.*)" ignoreCase="false" />
+          <conditions>
+            <add input="{REQUEST_FILENAME}" matchType="IsFile" negate="true" />
+          </conditions>
+          <action type="Rewrite" url="handler.fcgi/{R:1}" appendQueryString="true" />
+        </rule>
+        </rules>
+    </rewrite>
   </system.webServer>
 </configuration>

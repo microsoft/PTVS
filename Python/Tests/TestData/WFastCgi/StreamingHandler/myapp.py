@@ -3,7 +3,7 @@ import time
 
 def handler(environment, start_response):
     if 'fob' in environment['PATH_INFO']:
-        f = file('progress.txt', 'w')
+        f = open('progress.txt', 'w')
         f.close()
         start_response('200', [])
         yield b'Hello world!\r\n'

@@ -12,32 +12,33 @@
  #
  # ###########################################################################
 
-import sys
-import struct
-try:
-    import cStringIO
-except ImportError:
-    import io as cStringIO
-
-import os
-import traceback
+from __future__ import absolute_import, with_statement
 import ctypes
-from os import path
-from xml.dom import minidom
-import re
 import datetime
-try:
-    import thread
-except ImportError:
-    import _thread as thread
+import os
+import re
+import struct
+import sys
+import traceback
+from xml.dom import minidom
 
-__version__ = '2.0.0'
+try:
+    from cStringIO import StringIO
+    BytesIO = StringIO
+except ImportError:
+    from io import StringIO, BytesIO
+try:
+    from thread import start_new_thread
+except ImportError:
+    from _thread import start_new_thread
+
+__version__ = '2.1.0'
 
 # http://www.fastcgi.com/devkit/doc/fcgi-spec.html#S3
 
 FCGI_VERSION_1 = 1
 FCGI_HEADER_LEN = 8
- 
+
 FCGI_BEGIN_REQUEST       = 1
 FCGI_ABORT_REQUEST       = 2
 FCGI_END_REQUEST         = 3
@@ -70,7 +71,7 @@ FCGI_MPXS_CONNS = "FCGI_MPXS_CONNS"
 
 class FastCgiRecord(object):
     """Represents a FastCgiRecord.  Encapulates the type, role, flags.  Holds
-onto the params which we will receive and update later."""
+    onto the params which we will receive and update later."""
     def __init__(self, type, req_id, role, flags):
         self.type = type
         self.req_id = req_id
@@ -103,48 +104,72 @@ class _ExitException(Exception):
 if sys.version_info[0] >= 3:
     # indexing into byte strings gives us an int, so
     # ord is unnecessary on Python 3
-    def ord(x): return x
-    def chr(x): return bytes((x, ))
+    def ord(x):
+        return x
+    def chr(x):
+        return bytes((x, ))
+
     def wsgi_decode(x):
         return x.decode('iso-8859-1')
     def wsgi_encode(x):
         return x.encode('iso-8859-1')
+
+    def fs_encode(x):
+        return x
+
+    def exception_with_traceback(exc_value, exc_tb):
+        return exc_value.with_traceback(exc_tb)
+
+    zero_bytes = bytes
 else:
+    # Replace the builtin open with one that supports an encoding parameter
+    from codecs import open
+
     def wsgi_decode(x):
         return x
     def wsgi_encode(x):
         return x
 
-def read_fastcgi_record(input):
+    def fs_encode(x):
+        return x if isinstance(x, str) else x.encode(sys.getfilesystemencoding())
+
+    def exception_with_traceback(exc_value, exc_tb):
+        # x.with_traceback() is not supported on 2.x
+        return exc_value
+
+    bytes = str
+
+    def zero_bytes(length):
+        return '\x00' * length
+
+def read_fastcgi_record(stream):
     """reads the main fast cgi record"""
-    data = input.read(8)     # read record
+    data = stream.read(8)     # read record
     if not data:
         # no more data, our other process must have died...
         raise _ExitException()
 
-    content_size = ord(data[4]) << 8 | ord(data[5])
+    fcgi_ver, reqtype, req_id, content_size, padding_len, _ = struct.unpack('>BBHHBB', data)
 
-    content = input.read(content_size)  # read content    
-    input.read(ord(data[6]))     # read padding
+    content = stream.read(content_size)  # read content
+    stream.read(padding_len)
 
-    if ord(data[0]) != FCGI_VERSION_1:
-        raise Exception('Unknown fastcgi version ' + str(data[0]))
+    if fcgi_ver != FCGI_VERSION_1:
+        raise Exception('Unknown fastcgi version %s' % fcgi_ver)
 
-    req_id = (ord(data[2]) << 8) | ord(data[3])
-    
-    reqtype = ord(data[1])
     processor = REQUEST_PROCESSORS.get(reqtype)
-    if processor is None:
-        # unknown type requested, send response
-        send_response(req_id, FCGI_UNKNOWN_TYPE, data[1] + '\0' * 7)
-        return None
+    if processor is not None:
+        return processor(stream, req_id, content)
 
-    return processor(req_id, content)
+    # unknown type requested, send response
+    log('Unknown request type %s' % reqtype)
+    send_response(stream, req_id, FCGI_UNKNOWN_TYPE, chr(reqtype) + zero_bytes(7))
+    return None
 
 
-def read_fastcgi_begin_request(req_id, content):
-    """reads the begin request body and updates our
-_REQUESTS table to include the new request"""
+def read_fastcgi_begin_request(stream, req_id, content):
+    """reads the begin request body and updates our _REQUESTS table to include
+    the new request"""
     #    typedef struct {
     #        unsigned char roleB1;
     #        unsigned char roleB0;
@@ -152,69 +177,75 @@ _REQUESTS table to include the new request"""
     #        unsigned char reserved[5];
     #    } FCGI_BeginRequestBody;
 
-    # TODO: Ignore request if it exists    
+    # TODO: Ignore request if it exists
     res = FastCgiRecord(
         FCGI_BEGIN_REQUEST,
         req_id,
         (ord(content[0]) << 8) | ord(content[1]),   # role
         ord(content[2]),  # flags
     )
-    _REQUESTS[req_id] = res    
+    _REQUESTS[req_id] = res
+
+def read_encoded_int(content, offset):
+    i = struct.unpack_from('>B', content, offset)[0]
+
+    if i < 0x80:
+        return offset + 1, i
+    
+    return offset + 4, struct.unpack_from('>I', content, offset)[0] & ~0x80000000
 
 
 def read_fastcgi_keyvalue_pairs(content, offset):
     """Reads a FastCGI key/value pair stream"""
 
-    name_len = ord(content[offset])
+    offset, name_len = read_encoded_int(content, offset)
+    offset, value_len = read_encoded_int(content, offset)
 
-    if (name_len & 0x80) != 0:
-        name_full_len = chr(name_len & ~0x80) + content[offset + 1:offset+4]
-        name_len = int_struct.unpack(name_full_len)[0]
-        offset += 4
-    else:
-        offset += 1
-    
-    value_len = ord(content[offset])
-
-    if (value_len & 0x80) != 0:
-        value_full_len = chr(value_len & ~0x80) + content[offset+1:offset+4]
-        value_len = int_struct.unpack(value_full_len)[0]
-        offset += 4
-    else:
-        offset += 1
-
-    name = wsgi_decode(content[offset:offset+name_len])
+    name = content[offset:(offset + name_len)]
     offset += name_len
     
-    value = wsgi_decode(content[offset:offset+value_len])
+    value = content[offset:(offset + value_len)]
     offset += value_len
 
     return offset, name, value
 
 
-def write_name_len(io, name):
-    """Writes the length of a single name for a key or value in
-a key/value stream"""
-    if len(name) <= 0x7f:
-        io.write(chr(len(name)))
+def get_encoded_int(i):
+    """Writes the length of a single name for a key or value in a key/value
+    stream"""
+    if i <= 0x7f:
+        return struct.pack('>B', i)
+    elif i < 0x80000000:
+        return struct.pack('>I', i | 0x80000000)
     else:
-        io.write(int_struct.pack(len(name)))
+        raise ValueError('cannot encode value %s (%x) because it is too large' % (i, i))
 
 
 def write_fastcgi_keyvalue_pairs(pairs):
-    """creates a FastCGI key/value stream and returns it as a string"""
-    res = cStringIO.StringIO()
-    for key, value in pairs.iteritems():
-        write_name_len(res, key)
-        write_name_len(res, value)
+    """Creates a FastCGI key/value stream and returns it as a byte string"""
+    parts = []
+    for raw_key, raw_value in pairs.items():
+        key = wsgi_encode(raw_key)
+        value = wsgi_encode(raw_value)
         
-        res.write(key)
-        res.write(value)
+        parts.append(get_encoded_int(len(key)))
+        parts.append(get_encoded_int(len(value)))
+        parts.append(key)
+        parts.append(value)
 
-    return res.getvalue()
+    return bytes().join(parts)
 
+# Keys in this set will be stored in the record without modification but with a
+# 'wsgi.' prefix. The original key will have the decoded version.
+# (Following mod_wsgi from http://wsgi.readthedocs.org/en/latest/python3.html)
+RAW_VALUE_NAMES = {
+    'SCRIPT_NAME' : 'wsgi.script_name',
+    'PATH_INFO' : 'wsgi.path_info',
+    'QUERY_STRING' : 'wsgi.query_string',
+    'HTTP_X_ORIGINAL_URL' : 'wfastcgi.http_x_original_url',
+}
 
-def read_fastcgi_params(req_id, content):
+def read_fastcgi_params(stream, req_id, content):
     if not content:
         return None
 
@@ -222,41 +253,45 @@ def read_fastcgi_params(req_id, content):
     res = _REQUESTS[req_id].params
     while offset < len(content):
         offset, name, value = read_fastcgi_keyvalue_pairs(content, offset)
-        res[name] = value
+        name = wsgi_decode(name)
+        raw_name = RAW_VALUE_NAMES.get(name)
+        if raw_name:
+            res[raw_name] = value
+        res[name] = wsgi_decode(value)
 
 
-def read_fastcgi_input(req_id, content):
+def read_fastcgi_input(stream, req_id, content):
     """reads FastCGI std-in and stores it in wsgi.input passed in the
-wsgi environment array"""
+    wsgi environment array"""
     res = _REQUESTS[req_id].params
     if 'wsgi.input' not in res:
-        res['wsgi.input'] = wsgi_decode(content)
+        res['wsgi.input'] = content
     else:
-        res['wsgi.input'] += wsgi_decode(content)
+        res['wsgi.input'] += content
 
     if not content:
         # we've hit the end of the input stream, time to process input...
         return _REQUESTS[req_id]
 
 
-def read_fastcgi_data(req_id, content):
+def read_fastcgi_data(stream, req_id, content):
     """reads FastCGI data stream and publishes it as wsgi.data"""
     res = _REQUESTS[req_id].params
     if 'wsgi.data' not in res:
-        res['wsgi.data'] = wsgi_decode(content)
+        res['wsgi.data'] = content
     else:
-        res['wsgi.data'] += wsgi_decode(content)
+        res['wsgi.data'] += content
 
 
-def read_fastcgi_abort_request(req_id, content):
+def read_fastcgi_abort_request(stream, req_id, content):
     """reads the wsgi abort request, which we ignore, we'll send the
-finish execution request anyway..."""
+    finish execution request anyway..."""
     pass
 
 
-def read_fastcgi_get_values(req_id, content):
+def read_fastcgi_get_values(stream, req_id, content):
     """reads the fastcgi request to get parameter values, and immediately 
-responds"""
+    responds"""
     offset = 0
     request = {}
     while offset < len(content):
@@ -273,15 +308,16 @@ responds"""
     if FCGI_MPXS_CONNS in request:
         response[FCGI_MPXS_CONNS] = '0'
 
-    send_response(req_id, FCGI_GET_VALUES_RESULT, 
-                  write_fastcgi_keyvalue_pairs(response))
+    send_response(
+        stream,
+        req_id,
+        FCGI_GET_VALUES_RESULT,
+        write_fastcgi_keyvalue_pairs(response)
+    )
 
 
-# Formatting of 4-byte ints in network order
-int_struct = struct.Struct('!i')
-
-# Our request processors for different FastCGI protocol requests.  Only
-# the requests which we receive are defined here.
+# Our request processors for different FastCGI protocol requests. Only those
+# requests that we receive are defined here.
 REQUEST_PROCESSORS = {
     FCGI_BEGIN_REQUEST : read_fastcgi_begin_request,
     FCGI_ABORT_REQUEST : read_fastcgi_abort_request,
@@ -292,112 +328,99 @@ REQUEST_PROCESSORS = {
 }
 
 def log(txt):
-    """Logs fatal errors to a log file if WSGI_LOG env var is defined"""
+    """Logs messages to a log file if WSGI_LOG env var is defined."""
     log_file = os.environ.get('WSGI_LOG')
     if log_file:
-        f = open(log_file, 'a+')
-        try:
-            f.write(str(datetime.datetime.now()))
-            f.write(': ')
-            f.write(txt)
-        finally:
-            f.close()
+        with open(log_file, 'a+', encoding='utf-8') as f:
+            txt = txt.replace('\r\n', '\n')
+            f.write('%s: %s%s' % (datetime.datetime.now(), txt, '' if txt.endswith('\n') else '\n'))
 
+def maybe_log(txt):
+    """Logs messages to a log file if WSGI_LOG env var is defined, and does not
+    raise exceptions if logging fails."""
+    try:
+        log(txt)
+    except:
+        pass
 
-def send_response(id, resp_type, content, streaming = True):
+def send_response(stream, req_id, resp_type, content, streaming = True):
     """sends a response w/ the given id, type, and content to the server.
-If the content is streaming then an empty record is sent at the end to 
-terminate the stream"""
-    offset = 0
-    while 1:
-        if id < 256:
-            id_0 = 0
-            id_1 = id
-        else:
-            id_0 = id >> 8
-            id_1 = id & 0xff
+    If the content is streaming then an empty record is sent at the end to 
+    terminate the stream"""
+    if not isinstance(content, bytes):
+        raise TypeError("content must be encoded before sending: %r" % content)
     
-        # content len, padding len, content
-        len_remaining = len(content) - offset
-        if len_remaining > 65535:
-            len_0 = 0xff
-            len_1 = 0xff
-            content_str = content[offset:offset+65535]
-            offset += 65535
-        else:
-            len_0 = len_remaining >> 8
-            len_1 = len_remaining & 0xff
-            content_str = content[offset:]
-            offset += len_remaining
+    offset = 0
+    while True:
+        len_remaining = max(min(len(content) - offset, 0xFFFF), 0)
 
-        data = wsgi_encode('%c%c%c%c%c%c%c%c%s' % (
-                FCGI_VERSION_1,     # version
-                resp_type,          # type
-                id_0,               # requestIdB1
-                id_1,               # requestIdB0
-                len_0,              # contentLengthB1
-                len_1,              # contentLengthB0
-                0,                  # paddingLength
-                0,                  # reserved
-                content_str))
+        data = struct.pack('>BBHHBB',
+            FCGI_VERSION_1,     # version
+            resp_type,          # type
+            req_id,             # requestIdB1:B0
+            len_remaining,      # contentLengthB1:B0
+            0,                  # paddingLength
+            0,                  # reserved
+        ) + content[offset:(offset + len_remaining)]
 
-        os.write(stdout, data)
+        offset += len_remaining
+
+        os.write(stream.fileno(), data)
         if len_remaining == 0 or not streaming:
             break
-    sys.stdin.flush()
+    stream.flush()
 
 def get_environment(dir):
-    web_config = path.join(dir, 'Web.config')
+    web_config = os.path.join(dir, 'Web.config')
+    if not os.path.exists(web_config):
+        return {}
 
     d = {}
-
-    if os.path.exists(web_config):
-        try:
-            wc = open(web_config) 
-            try:
-                doc = minidom.parse(wc)
-                config = doc.getElementsByTagName('configuration')
-                for configSection in config:
-                    appSettings = configSection.getElementsByTagName('appSettings')
-                    for appSettingsSection in appSettings:
-                        values = appSettingsSection.getElementsByTagName('add')
-                        for curAdd in values:
-                            key = curAdd.getAttribute('key')
-                            value = curAdd.getAttribute('value')
-                            if key and value is not None:
-                                d[key.strip()] = value
-            finally:
-              wc.close()
-        except:
-            # unable to read file
-            log(traceback.format_exc())
-            pass
+    doc = minidom.parse(web_config)
+    config = doc.getElementsByTagName('configuration')
+    for configSection in config:
+        appSettings = configSection.getElementsByTagName('appSettings')
+        for appSettingsSection in appSettings:
+            values = appSettingsSection.getElementsByTagName('add')
+            for curAdd in values:
+                key = curAdd.getAttribute('key')
+                value = curAdd.getAttribute('value')
+                if key and value is not None:
+                    d[key.strip()] = value
     return d
 
-ReadDirectoryChangesW = ctypes.WinDLL('kernel32').ReadDirectoryChangesW
-ReadDirectoryChangesW.restype = ctypes.c_bool
-ReadDirectoryChangesW.argtypes  = [ctypes.c_void_p,     # HANDLE hDirectory
-                                   ctypes.c_void_p,     # LPVOID lpBuffer
-                                   ctypes.c_uint32,     # DWORD nBufferLength
-                                   ctypes.c_bool,       # BOOL bWatchSubtree
-                                   ctypes.c_uint32,     # DWORD dwNotifyFilter
-                                   ctypes.POINTER(ctypes.c_uint32),  # LPDWORD lpBytesReturned
-                                   ctypes.c_void_p,     # LPOVERLAPPED lpOverlapped
-                                   ctypes.c_void_p      # LPOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine
-                                  ]
+ReadDirectoryChangesW = ctypes.windll.kernel32.ReadDirectoryChangesW
+ReadDirectoryChangesW.restype = ctypes.c_uint32
+ReadDirectoryChangesW.argtypes  = [
+    ctypes.c_void_p,     # HANDLE hDirectory
+    ctypes.c_void_p,     # LPVOID lpBuffer
+    ctypes.c_uint32,     # DWORD nBufferLength
+    ctypes.c_uint32,     # BOOL bWatchSubtree
+    ctypes.c_uint32,     # DWORD dwNotifyFilter
+    ctypes.POINTER(ctypes.c_uint32),  # LPDWORD lpBytesReturned
+    ctypes.c_void_p,     # LPOVERLAPPED lpOverlapped
+    ctypes.c_void_p      # LPOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine
+]
 
-CreateFile = ctypes.WinDLL('kernel32').CreateFileW
+CreateFile = ctypes.windll.kernel32.CreateFileW
 CreateFile.restype = ctypes.c_void_p
-CreateFile.argtypes  = [ctypes.c_wchar_p,     # lpFilename
-                                   ctypes.c_uint32,      # dwDesiredAccess
-                                   ctypes.c_uint32,      # dwShareMode
-                                   ctypes.c_voidp,       # LPSECURITY_ATTRIBUTES,
-                                   ctypes.c_uint32,      # dwCreationDisposition,
-                                   ctypes.c_uint32,      # dwFlagsAndAttributes,
-                                   ctypes.c_void_p       # hTemplateFile
-                                  ]
+CreateFile.argtypes  = [
+    ctypes.c_wchar_p,     # lpFilename
+    ctypes.c_uint32,      # dwDesiredAccess
+    ctypes.c_uint32,      # dwShareMode
+    ctypes.c_voidp,       # LPSECURITY_ATTRIBUTES,
+    ctypes.c_uint32,      # dwCreationDisposition,
+    ctypes.c_uint32,      # dwFlagsAndAttributes,
+    ctypes.c_void_p       # hTemplateFile
+]
 
-ExitProcess = ctypes.WinDLL('kernel32').ExitProcess
+CloseHandle = ctypes.windll.kernel32.CloseHandle
+CloseHandle.argtypes = [ctypes.c_void_p]
+
+GetLastError = ctypes.windll.kernel32.GetLastError
+GetLastError.restype = ctypes.c_uint32
+
+ExitProcess = ctypes.windll.kernel32.ExitProcess
 ExitProcess.restype = ctypes.c_void_p
 ExitProcess.argtypes  = [ctypes.c_uint32]
 
@@ -409,6 +432,8 @@ OPEN_EXISTING = 3
 FILE_FLAG_BACKUP_SEMANTICS = 0x02000000
 MAX_PATH = 260
 FILE_NOTIFY_CHANGE_LAST_WRITE  = 0x10
+ERROR_NOTIFY_ENUM_DIR = 1022
+INVALID_HANDLE_VALUE = 0xFFFFFFFF
 
 class FILE_NOTIFY_INFORMATION(ctypes.Structure):
     _fields_ = [('NextEntryOffset', ctypes.c_uint32),
@@ -423,43 +448,72 @@ def start_file_watcher(path, restartRegex):
         # restart regex set to empty string, no restart behavior
         return
     
-    log('wfastcgi.py will restart when files in ' + path + ' are changed: ' + restartRegex + '\n')
-    restart = re.compile(restartRegex)
-    def watcher(path, restart):
-        the_dir = CreateFile(path, 
-                                FILE_LIST_DIRECTORY, 
-                                FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
-                                None,
-                                OPEN_EXISTING,
-                                FILE_FLAG_BACKUP_SEMANTICS,
-                                None
-                            )
-        
+    def enum_changes(path):
+        """Returns a generator that blocks until a change occurs, then yields
+        the filename of the changed file.
+
+        Yields an empty string and stops if the buffer overruns, indicating that
+        too many files were changed."""
+
         buffer = ctypes.create_string_buffer(32 * 1024)
         bytes_ret = ctypes.c_uint32()
 
-        while ReadDirectoryChangesW(the_dir, 
-                                buffer, 
-                                ctypes.sizeof(buffer), 
-                                True, 
-                                FILE_NOTIFY_CHANGE_LAST_WRITE,
-                                ctypes.byref(bytes_ret),
-                                None,
-                                None):
-            cur_pointer = ctypes.addressof(buffer)
-            while True:
-                fni = ctypes.cast(cur_pointer, ctypes.POINTER(FILE_NOTIFY_INFORMATION))
-                filename = ctypes.wstring_at(cur_pointer + 12)
-                if restart.match(filename):
-                    log('wfastcgi.py exiting because ' + filename + ' has changed, matching ' + restartRegex + '\n')
-                    # we call ExitProcess directly to quickly shutdown the whole process
-                    # because sys.exit(0) won't have an effect on the main thread.
-                    ExitProcess(0)
-                if fni.contents.NextEntryOffset == 0:
-                    break
-                cur_pointer = cur_pointer + fni.contents.NextEntryOffset
+        the_dir = CreateFile(
+            path, 
+            FILE_LIST_DIRECTORY, 
+            FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+            None,
+            OPEN_EXISTING,
+            FILE_FLAG_BACKUP_SEMANTICS,
+            None,
+        )
 
-    thread.start_new_thread(watcher, (path, restart))
+        if not the_dir or the_dir == INVALID_HANDLE_VALUE:
+            return
+
+        while True:
+            ret_code = ReadDirectoryChangesW(
+                the_dir, 
+                buffer, 
+                ctypes.sizeof(buffer), 
+                True, 
+                FILE_NOTIFY_CHANGE_LAST_WRITE,
+                ctypes.byref(bytes_ret),
+                None,
+                None,
+            )
+
+            if ret_code:
+                cur_pointer = ctypes.addressof(buffer)
+                while True:
+                    fni = ctypes.cast(cur_pointer, ctypes.POINTER(FILE_NOTIFY_INFORMATION))
+                    filename = ctypes.wstring_at(cur_pointer + 12)
+                    yield filename
+                    if fni.contents.NextEntryOffset == 0:
+                        break
+                    cur_pointer = cur_pointer + fni.contents.NextEntryOffset
+            elif GetLastError() == ERROR_NOTIFY_ENUM_DIR:
+                CloseHandle(the_dir)
+                yield ''
+                return
+            else:
+                CloseHandle(the_dir)
+                return
+
+    log('wfastcgi.py will restart when files in %s are changed: %s' % (path, restartRegex))
+    def watcher(path, restart):
+        for filename in enum_changes(path):
+            if not filename:
+                log('wfastcgi.py exiting because the buffer was full')
+                ExitProcess(0)
+            elif restart.match(filename):
+                log('wfastcgi.py exiting because %s has changed, matching %s' % (filename, restartRegex))
+                # we call ExitProcess directly to quickly shutdown the whole process
+                # because sys.exit(0) won't have an effect on the main thread.
+                ExitProcess(0)
+
+    restart = re.compile(restartRegex)
+    start_new_thread(watcher, (path, restart))
 
 def get_wsgi_handler(handler_name):
     if not handler_name:
@@ -500,116 +554,197 @@ def get_wsgi_handler(handler_name):
 def read_wsgi_handler(physical_path):
     env = get_environment(physical_path)
     os.environ.update(env)
-    for env_name in env:
-        if env_name.lower() == 'pythonpath':
-            # expand any environment variables in the path...
-            path = env[env_name]
-            for var in os.environ:
-                pat = re.compile(re.escape('%' + var + '%'), re.IGNORECASE)
-                path = pat.sub(lambda _:os.environ[var], path)
-            
-            
-            for path_location in path.split(';'):
-                sys.path.append(path_location)
-            break
+    for path in (v for k, v in env.items() if k.lower() == 'pythonpath'):
+        # Expand environment variables manually.
+        expanded_path = re.sub(
+            '%(\\w+?)%',
+            lambda m: os.getenv(m.group(1), ''),
+            path
+        )
+        sys.path.extend(fs_encode(p) for p in expanded_path.split(';') if p)
     
-    handler_name = None
-    handler_ex = None
-    try:
-        handler_name = os.getenv('WSGI_HANDLER')
-        handler = get_wsgi_handler(handler_name)
-    except:
-        handler = None
-        handler_ex = (handler_name, sys.exc_info())
-    
-    
-    return env, handler, handler_ex
+    handler_name = os.getenv('WSGI_HANDLER')
+    return env, get_wsgi_handler(handler_name)
 
-if __name__ == '__main__': 
-    stdout = sys.stdin.fileno()
-    try:
-        import msvcrt
-        msvcrt.setmode(sys.stdin.fileno(), os.O_BINARY)
-    except ImportError:
-        pass
-    
-    _REQUESTS = {}
-    
+class handle_response(object):
+    """A context manager for handling the response. This will ensure that
+    exceptions in the handler are correctly reported, and the FastCGI request is
+    properly terminated.
+    """
+
+    def __init__(self, stream, record, get_output, get_errors):
+        self.stream = stream
+        self.record = record
+        self._get_output = get_output
+        self._get_errors = get_errors
+        self.error_message = ''
+        self.fatal_errors = False
+        self.physical_path = ''
+        self.header_bytes = None
+        self.sent_headers = False
+
+    def __enter__(self):
+        record = self.record
+        record.params['wsgi.input'] = BytesIO(record.params['wsgi.input'])
+        record.params['wsgi.version'] = (1, 0)
+        record.params['wsgi.url_scheme'] = 'https' if record.params.get('HTTPS', '').lower() == 'on' else 'http'
+        record.params['wsgi.multiprocess'] = True
+        record.params['wsgi.multithread'] = False
+        record.params['wsgi.run_once'] = False
+
+        self.physical_path = record.params.get('DOCUMENT_ROOT', os.path.dirname(__file__))
+
+        if 'HTTP_X_ORIGINAL_URL' in record.params:
+            # We've been re-written for shared FastCGI hosting, so send the
+            # original URL as PATH_INFO.
+            record.params['PATH_INFO'] = record.params['HTTP_X_ORIGINAL_URL']
+            record.params['wsgi.path_info'] = record.params['wfastcgi.http_x_original_url']
+
+        # PATH_INFO is not supposed to include the query parameters, so remove them
+        record.params['PATH_INFO'] = record.params['PATH_INFO'].partition('?')[0]
+        record.params['wsgi.path_info'] = record.params['wsgi.path_info'].partition(wsgi_encode('?'))[0]
+
+        return self
+
+    def __exit__(self, exc_type, exc_value, exc_tb):
+        # Send any error message on FCGI_STDERR.
+        if exc_type and exc_type is not _ExitException:
+            error_msg = "%s:\n\n%s\n\nStdOut: %s\n\nStdErr: %s" % (
+                self.error_message or 'Error occurred',
+                ''.join(traceback.format_exception(exc_type, exc_value, exc_tb)),
+                self._get_output(),
+                self._get_errors(),
+            )
+            if not self.header_bytes or not self.sent_headers:
+                self.header_bytes = wsgi_encode('Status: 500 Internal Server Error\r\n')
+            self.send(FCGI_STDERR, wsgi_encode(error_msg))
+            # Best effort at writing to the log. It's more important to
+            # finish the response or the user will only see a generic 500
+            # error.
+            maybe_log(error_msg)
+
+        # End the request. This has to run in both success and failure cases.
+        self.send(FCGI_END_REQUEST, zero_bytes(8), streaming=False)
+        
+        # Remove the request from our global dict
+        del _REQUESTS[self.record.req_id]
+        
+        # Suppress all exceptions unless requested
+        return not self.fatal_errors
+
+    @staticmethod
+    def _decode_header(key, value):
+        if not isinstance(key, str):
+            key = wsgi_decode(key)
+        if not isinstance(value, str):
+            value = wsgi_decode(value)
+        return key, value
+
+    def start(self, status, headers, exc_info=None):
+        """Starts sending the response. The response is ended when the context
+        manager exits."""
+        if exc_info:
+            try:
+                if self.sent_headers:
+                    # We have to re-raise if we've already started sending data.
+                    raise exception_with_traceback(exc_info[1], exc_info[2])
+            finally:
+                exc_info = None
+        elif self.header_bytes:
+            raise Exception('start_response has already been called')
+
+        if not isinstance(status, str):
+            status = wsgi_decode(status)
+        header_text = 'Status: %s\r\n' % status
+        if headers:
+            header_text += ''.join('%s: %s\r\n' % handle_response._decode_header(*i) for i in headers)
+        self.header_bytes = wsgi_encode(header_text + '\r\n')
+
+        return lambda content: self.send(FCGI_STDOUT, content)
+
+    def send(self, resp_type, content, streaming = True):
+        '''Sends part of the response.'''
+        if not self.sent_headers:
+            if not self.header_bytes:
+                raise Exception("start_response has not yet been called")
+
+            self.sent_headers = True
+            send_response(self.stream, self.record.req_id, FCGI_STDOUT, self.header_bytes)
+            self.header_bytes = None
+
+        return send_response(self.stream, self.record.req_id, resp_type, content, streaming)
+
+_REQUESTS = {}
+
+def main():
     initialized = False
-    fatal_error = False
-    log('wfastcgi.py ' + __version__ + ' started\n')
-    if sys.version_info[0] == 2:
-        input_src = sys.stdin
-    else:
-        input_src = sys.stdin.buffer.raw
-    while fatal_error is False:
+    log('wfastcgi.py %s started' % __version__)
+    log('Python version: %s' % sys.version)
+
+    try:
+        fcgi_stream = sys.stdin.detach() if sys.version_info[0] >= 3 else sys.stdin
         try:
-            record = read_fastcgi_record(input_src)
-            if record:
-                record.params['wsgi.input'] = cStringIO.StringIO(record.params['wsgi.input'])
-                record.params['wsgi.version'] = (1,0)
-                record.params['wsgi.url_scheme'] = 'https' if record.params.get('HTTPS', '').lower() == 'on' else 'http'
-                record.params['wsgi.multiprocess'] = True
-                record.params['wsgi.multithread'] = False
-                record.params['wsgi.run_once'] = False
+            import msvcrt
+            msvcrt.setmode(fcgi_stream.fileno(), os.O_BINARY)
+        except ImportError:
+            pass
 
-                physical_path = record.params.get('DOCUMENT_ROOT', path.dirname(__file__))
-                
-                errors = sys.stderr = sys.__stderr__ = record.params['wsgi.errors'] = cStringIO.StringIO()
-                output = sys.stdout = sys.__stdout__ = cStringIO.StringIO()
-                
+        while True:
+            record = read_fastcgi_record(fcgi_stream)
+            if not record:
+                continue
+
+            errors = sys.stderr = sys.__stderr__ = record.params['wsgi.errors'] = StringIO()
+            output = sys.stdout = sys.__stdout__ = StringIO()
+
+            with handle_response(fcgi_stream, record, output.getvalue, errors.getvalue) as response:
                 if not initialized:
-                    os.chdir(physical_path)
+                    log('wfastcgi.py %s initializing' % __version__)
 
-                    env, handler, handler_ex = read_wsgi_handler(physical_path)
+                    os.chdir(response.physical_path)
 
-                    start_file_watcher(physical_path, env.get('WSGI_RESTART_FILE_REGEX'))
+                    # Initialization errors should be treated as fatal.
+                    response.fatal_errors = True
+                    response.error_message = 'Error occurred while reading WSGI handler'
+                    env, handler = read_wsgi_handler(response.physical_path)
 
-                    log('wfastcgi.py ' + __version__ + ' initialized\n')
+                    response.error_message = 'Error occurred starting file watcher'
+                    start_file_watcher(response.physical_path, env.get('WSGI_RESTART_FILE_REGEX'))
+
+                    response.error_message = ''
+                    response.fatal_errors = False
+
+                    log('wfastcgi.py %s initialized' % __version__)
                     initialized = True
-                    
-                def start_response(status, headers, exc_info = None):
-                    status = 'Status: ' + status + '\r\n'
-                    headers = ''.join('%s: %s\r\n' % (name, value) for name, value in headers)
-                    send_response(record.req_id, FCGI_STDOUT, status + headers + '\r\n')
-                
-                os.environ.update(env)
-                if 'HTTP_X_ORIGINAL_URL' in record.params:
-                    # We've been re-written for shared FastCGI hosting, send the original URL as the PATH_INFO.
-                    record.params['PATH_INFO'] = record.params['HTTP_X_ORIGINAL_URL']
-                
-                # PATH_INFO is not supposed to include the query parameters, so remove them
-                record.params['PATH_INFO'] = record.params['PATH_INFO'].partition('?')[0]
 
-                # SCRIPT_NAME + PATH_INFO is supposed to be the full path http://www.python.org/dev/peps/pep-0333/
-                # but by default (http://msdn.microsoft.com/en-us/library/ms525840(v=vs.90).aspx) IIS is sending us 
-                # the full URL in PATH_INFO, so we need to clear the script name here
+                os.environ.update(env)
+
+                # SCRIPT_NAME + PATH_INFO is supposed to be the full path
+                # (http://www.python.org/dev/peps/pep-0333/) but by default
+                # (http://msdn.microsoft.com/en-us/library/ms525840(v=vs.90).aspx)
+                # IIS is sending us the full URL in PATH_INFO, so we need to
+                # clear the script name here
                 if 'AllowPathInfoForScriptMappings' not in os.environ:
                     record.params['SCRIPT_NAME'] = ''
+                    record.params['wsgi.script_name'] = wsgi_encode('')
 
-                if handler is None:
-                    fatal_error = True
-                    error_msg = """Error while importing WSGI_HANDLER '%s':\n\n%s\n\nStdOut: %s\n\nStdErr: %s""" % (
-                        handler_ex[0],
-                        ''.join(traceback.format_exception(*handler_ex[1])),
-                        output.getvalue(),
-                        errors.getvalue(),
-                    )
-                    log(error_msg)
-                    send_response(record.req_id, FCGI_STDERR, error_msg)
-                else:
-                    try: 
-                        for part in handler(record.params, start_response):
-                            if part:
-                                send_response(record.req_id, FCGI_STDOUT, wsgi_decode(part))
-                    except:
-                        log('Exception from handler: ' + traceback.format_exc())
-                        send_response(record.req_id, FCGI_STDERR, errors.getvalue() + '\n\n' + traceback.format_exc())
+                # Send each part of the response to FCGI_STDOUT.
+                # Exceptions raised in the handler will be logged by the context
+                # manager and we will then wait for the next record.
+                result = handler(record.params, response.start)
+                try:
+                    for part in result:
+                        if part:
+                            response.send(FCGI_STDOUT, part)
+                finally:
+                    if hasattr(result, 'close'):
+                        result.close()
+    except _ExitException:
+        pass
+    except:
+        maybe_log('Unhandled exception in wfastcgi.py: ' + traceback.format_exc())
+    finally:
+        maybe_log('wfastcgi.py %s closed' % __version__)
 
-                send_response(record.req_id, FCGI_END_REQUEST, '\x00\x00\x00\x00\x00\x00\x00\x00', streaming=False)
-                del _REQUESTS[record.req_id]
-        except _ExitException:
-            break
-        except:
-            log('Unhandled exception in wfastcgi.py: ' + traceback.format_exc())
-
+if __name__ == '__main__':
+    main()

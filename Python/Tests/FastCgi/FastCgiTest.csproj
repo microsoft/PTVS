@@ -23,6 +23,10 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Product\BuildTasks\BuildTasks.csproj">
+      <Project>{89d51398-a003-44ba-b1b2-cfc6f8396d7e}</Project>
+      <Name>BuildTasks</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Utilities.Python.Analysis\TestUtilities.Python.Analysis.csproj">
       <Project>{a731c4c3-3741-4080-a946-c47574c1f3bf}</Project>
       <Name>TestUtilities.Python.Analysis</Name>
