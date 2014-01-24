@@ -37,6 +37,8 @@ namespace Microsoft.PythonTools.Analysis {
         private readonly IPythonInterpreter _interpreter;
         private readonly ModuleTable _modules;
         private readonly ConcurrentDictionary<string, ModuleInfo> _modulesByFilename;
+        private readonly HashSet<ModuleInfo> _modulesWithUnresolvedImports;
+        private readonly object _modulesWithUnresolvedImportsLock = new object();
         private readonly Dictionary<object, AnalysisValue> _itemCache;
         private readonly string _builtinName;
         internal BuiltinModule _builtinModule;
@@ -67,8 +69,9 @@ namespace Microsoft.PythonTools.Analysis {
             _langVersion = factory.GetLanguageVersion();
             _interpreter = pythonInterpreter;
             _builtinName = builtinName ?? (_langVersion.Is3x() ? SharedDatabaseState.BuiltinName3x : SharedDatabaseState.BuiltinName2x);
-            _modules = new ModuleTable(this, _interpreter, _interpreter.GetModuleNames());
+            _modules = new ModuleTable(this, _interpreter);
             _modulesByFilename = new ConcurrentDictionary<string, ModuleInfo>(StringComparer.OrdinalIgnoreCase);
+            _modulesWithUnresolvedImports = new HashSet<ModuleInfo>();
             _itemCache = new Dictionary<object, AnalysisValue>();
 
             try {
@@ -188,13 +191,7 @@ namespace Microsoft.PythonTools.Analysis {
             var pyEntry = entry as IPythonProjectEntry;
             if (pyEntry != null) {
                 ModuleReference modRef;
-                if (Modules.TryGetValue(pyEntry.ModuleName, out modRef)) {
-                    if (modRef.HasReferences) {
-                        modRef.Module = null;
-                    } else {
-                        Modules.TryRemove(pyEntry.ModuleName, out modRef);
-                    }
-                }
+                Modules.TryRemove(pyEntry.ModuleName, out modRef);
             }
             entry.RemovedFromProject();
         }
@@ -219,58 +216,169 @@ namespace Microsoft.PythonTools.Analysis {
         /// Returns a sequence of project entries that import the specified
         /// module. The sequence will be empty if the module is unknown.
         /// </summary>
-        public IEnumerable<IPythonProjectEntry> GetEntriesThatImportModule(string moduleName) {
-            ModuleReference moduleRef;
-            if (!Modules.TryGetValue(moduleName, out moduleRef)) {
-                return Enumerable.Empty<IPythonProjectEntry>();
+        /// <param name="moduleName">
+        /// The absolute name of the module. This should never end with
+        /// '__init__'.
+        /// </param>
+        public IEnumerable<IPythonProjectEntry> GetEntriesThatImportModule(string moduleName, bool includeUnresolved) {
+            ModuleReference modRef;
+            var entries = new List<IPythonProjectEntry>();
+            if (_modules.TryGetValue(moduleName, out modRef) && modRef.HasReferences) {
+                entries.AddRange(modRef.References.Select(m => m.ProjectEntry).OfType<IPythonProjectEntry>());
             }
 
-            return moduleRef.References.Select(mi => mi.ProjectEntry).OfType<IPythonProjectEntry>();
+            if (includeUnresolved) {
+                // Have to iterate over modules with unresolved imports to find
+                // ephemeral references.
+                lock (_modulesWithUnresolvedImportsLock) {
+                    foreach (var module in _modulesWithUnresolvedImports) {
+                        if (module.GetAllUnresolvedModules().Contains(moduleName)) {
+                            entries.Add(module.ProjectEntry);
+                        }
+                    }
+                }
+            }
+
+            return entries;
+        }
+
+        /// <summary>
+        /// Returns a sequence of absolute module names that, if available,
+        /// would resolve one or more unresolved references.
+        /// </summary>
+        internal ISet<string> GetAllUnresolvedModuleNames() {
+            var set = new HashSet<string>(StringComparer.Ordinal);
+            lock (_modulesWithUnresolvedImportsLock) {
+                foreach (var module in _modulesWithUnresolvedImports) {
+                    set.UnionWith(module.GetAllUnresolvedModules());
+                }
+            }
+            return set;
+        }
+
+        internal void ModuleHasUnresolvedImports(ModuleInfo module, bool hasUnresolvedImports) {
+            lock (_modulesWithUnresolvedImportsLock) {
+                if (hasUnresolvedImports) {
+                    _modulesWithUnresolvedImports.Add(module);
+                } else {
+                    _modulesWithUnresolvedImports.Remove(module);
+                }
+            }
         }
 
         /// <summary>
         /// Returns true if a module has been imported.
         /// </summary>
-        /// <param name="relativeModuleName">
-        /// The absolute or relative name of the module. If a relative name is 
-        /// passed here, <paramref name="importedFrom"/> must be provided.
-        /// </param>
-        /// <param name="importedFrom">
+        /// <param name="importFrom">
         /// The full name of the module doing the import.
         /// </param>
-        /// <returns>
-        /// True if the module was imported during analysis; otherwise, false.
-        /// </returns>
-        public bool IsModuleResolved(string relativeModuleName, string importedFrom) {
-            if (string.IsNullOrEmpty(importedFrom) || relativeModuleName.FirstOrDefault() != '.') {
-                // Module name is absolute or importedFrom is not specified.
-                return IsModuleResolved(relativeModuleName);
-            }
-
-            var suffix = relativeModuleName.Split('.').ToList();
-            var dotCount = suffix.TakeWhile(bit => string.IsNullOrEmpty(bit)).Count();
-
-            var prefix = importedFrom.Split('.').ToList();
-            var moduleName = string.Join(".", prefix.Take(prefix.Count - dotCount).Concat(suffix.Skip(dotCount)));
-
-            return IsModuleResolved(moduleName);
-        }
-
-        /// <summary>
-        /// Returns true if a module has been imported.
-        /// </summary>
-        /// <param name="moduleName">
-        /// The absolute name of the module.
+        /// <param name="relativeModuleName">
+        /// The absolute or relative name of the module. If a relative name is 
+        /// passed here, <paramref name="importFrom"/> must be provided.
+        /// </param>
+        /// <param name="absoluteImports">
+        /// True if Python 3.x style imports should be used.
         /// </param>
         /// <returns>
         /// True if the module was imported during analysis; otherwise, false.
         /// </returns>
-        public bool IsModuleResolved(string moduleName) {
+        public bool IsModuleResolved(IPythonProjectEntry importFrom, string relativeModuleName, bool absoluteImports) {
             ModuleReference moduleRef;
-            return Modules.TryGetValue(moduleName, out moduleRef) &&
-                moduleRef != null &&
-                moduleRef.Module != null;
+            return ResolvePotentialModuleNames(importFrom, relativeModuleName, absoluteImports)
+                .Any(m =>
+                    Modules.TryGetValue(m, out moduleRef) &&
+                    moduleRef != null &&
+                    moduleRef.Module != null
+                );
         }
+
+        /// <summary>
+        /// Returns a sequence of candidate absolute module names for the given
+        /// modules.
+        /// </summary>
+        /// <param name="projectEntry">
+        /// The project entry that is importing the module.
+        /// </param>
+        /// <param name="relativeModuleName">
+        /// A dotted name identifying the path to the module.
+        /// </param>
+        /// <returns>
+        /// A sequence of strings representing the absolute names of the module
+        /// in order of precedence.
+        /// </returns>
+        internal static IEnumerable<string> ResolvePotentialModuleNames(
+            IPythonProjectEntry projectEntry,
+            string relativeModuleName,
+            bool absoluteImports
+        ) {
+            string importingFrom = null;
+            if (projectEntry != null) {
+                importingFrom = projectEntry.ModuleName;
+                if (ModulePath.IsInitPyFile(projectEntry.FilePath)) {
+                    if (string.IsNullOrEmpty(importingFrom)) {
+                        importingFrom = "__init__";
+                    } else {
+                        importingFrom += ".__init__";
+                    }
+                }
+            }
+
+            if (string.IsNullOrEmpty(relativeModuleName)) {
+                yield break;
+            }
+
+            // Handle relative module names
+            if (relativeModuleName.FirstOrDefault() == '.') {
+                if (string.IsNullOrEmpty(importingFrom)) {
+                    // No source to import relative to.
+                    yield break;
+                }
+
+                var prefix = importingFrom.Split('.');
+
+                if (relativeModuleName.LastOrDefault() == '.') {
+                    // Last part empty means the whole name is dots, so there's
+                    // nothing to concatenate.
+                    yield return string.Join(".", prefix.Take(prefix.Length - relativeModuleName.Length));
+                } else {
+                    var suffix = relativeModuleName.Split('.');
+                    var dotCount = suffix.TakeWhile(bit => string.IsNullOrEmpty(bit)).Count();
+                    if (dotCount < prefix.Length) {
+                        // If we have as many dots as prefix parts, the entire
+                        // name will disappear. Despite what PEP 328 says, in
+                        // reality this means the import will fail.
+                        yield return string.Join(".", prefix.Take(prefix.Length - dotCount).Concat(suffix.Skip(dotCount)));
+                    }
+                }
+                yield break;
+            }
+
+            // The two possible names that can be imported here are:
+            // * relativeModuleName
+            // * importingFrom.relativeModuleName
+            // and the order they are returned depends on whether
+            // absolute_import is enabled or not.
+
+            // With absolute_import, we treat the name as complete first.
+            if (absoluteImports) {
+                yield return relativeModuleName;
+            }
+
+            if (!string.IsNullOrEmpty(importingFrom)) {
+                var prefix = importingFrom.Split('.');
+
+                if (prefix.Length > 1) {
+                    var adjacentModuleName = string.Join(".", prefix.Take(prefix.Length - 1)) + "." + relativeModuleName;
+                    yield return adjacentModuleName;
+                }
+            }
+
+            // Without absolute_import, we treat the name as complete last.
+            if (!absoluteImports) {
+                yield return relativeModuleName;
+            }
+        }
+
 
         /// <summary>
         /// Looks up the specified module by name.
@@ -491,7 +599,7 @@ namespace Microsoft.PythonTools.Analysis {
 
             if (path == null) {
                 return String.Empty;
-            } else if (path.EndsWith("__init__.py")) {
+            } else if (ModulePath.IsInitPyFile(path)) {
                 moduleName = Path.GetFileName(Path.GetDirectoryName(path));
                 dirName = Path.GetDirectoryName(path);
             } else {
@@ -535,91 +643,6 @@ namespace Microsoft.PythonTools.Analysis {
             get {
                 return _queue;
             }
-        }
-
-        private IModule ImportFromIMember(IMember member, string[] names, int curIndex) {
-            if (member == null) {
-                return null;
-            }
-            if (curIndex >= names.Length) {
-                return GetAnalysisValueFromObjects(member) as IModule;
-            }
-
-            var ipm = member as IPythonModule;
-            if (ipm != null) {
-                return ImportFromIPythonModule(ipm, names, curIndex);
-            }
-
-            var im = member as IModule;
-            if (im != null) {
-                return ImportFromIModule(im, names, curIndex);
-            }
-
-            var ipmm = member as IPythonMultipleMembers;
-            if (ipmm != null) {
-                return ImportFromIPythonMultipleMembers(ipmm, names, curIndex);
-            }
-
-            return null;
-        }
-
-        private IModule ImportFromIPythonMultipleMembers(IPythonMultipleMembers mod, string[] names, int curIndex) {
-            if (mod == null) {
-                return null;
-            }
-            var modules = new List<IModule>();
-            foreach (var member in mod.Members) {
-                modules.Add(ImportFromIMember(member, names, curIndex));
-            }
-            var mods = modules.OfType<AnalysisValue>().ToArray();
-            if (mods.Length == 0) {
-                return null;
-            } else if (mods.Length == 1) {
-                return (IModule)mods[0];
-            } else {
-                return new MultipleMemberInfo(mods);
-            }
-        }
-
-        private IModule ImportFromIModule(IModule mod, string[] names, int curIndex) {
-            for (; mod != null && curIndex < names.Length; ++curIndex) {
-                mod = mod.GetChildPackage(_defaultContext, names[curIndex]);
-            }
-            return mod;
-        }
-
-        private IModule ImportFromIPythonModule(IPythonModule mod, string[] names, int curIndex) {
-            if (mod == null) {
-                return null;
-            }
-            var member = mod.GetMember(_defaultContext, names[curIndex]);
-            return ImportFromIMember(member, names, curIndex + 1);
-        }
-
-        internal IModule ImportBuiltinModule(string modName, bool bottom = true) {
-            IPythonModule mod = null;
-
-            if (modName.IndexOf('.') != -1) {
-                string[] names = modName.Split('.');
-                if (names[0].Length > 0) {
-                    mod = _interpreter.ImportModule(names[0]);
-                    if (bottom && names.Length > 1) {
-                        var mod2 = ImportFromIPythonModule(mod, names, 1);
-                        if (mod2 != null) {
-                            return mod2;
-                        }
-                    }
-                }
-                // else relative import, we're not getting a builtin module...
-            } else {
-                mod = _interpreter.ImportModule(modName);
-            }
-
-            if (mod != null) {
-                return (BuiltinModule)GetAnalysisValueFromObjects(mod);
-            }
-
-            return null;
         }
 
         internal AnalysisValue GetCached(object key, Func<AnalysisValue> maker) {

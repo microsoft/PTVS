@@ -33,144 +33,17 @@ namespace Microsoft.PythonTools.Analysis {
         private readonly PythonAnalyzer _analyzer;
         private readonly ConcurrentDictionary<IPythonModule, BuiltinModule> _builtinModuleTable = new ConcurrentDictionary<IPythonModule, BuiltinModule>();
         private readonly ConcurrentDictionary<string, ModuleReference> _modules = new ConcurrentDictionary<string, ModuleReference>(StringComparer.Ordinal);
-        private string[] _builtinNames;
-#if DEBUG
-        internal static Stopwatch _timer = new Stopwatch();
-#endif
 
-        public ModuleTable(PythonAnalyzer analyzer, IPythonInterpreter interpreter, IEnumerable<string> builtinNames) {
+        public ModuleTable(PythonAnalyzer analyzer, IPythonInterpreter interpreter) {
             _analyzer = analyzer;
             _interpreter = interpreter;
-            SaveNames(builtinNames);
-        }
-
-        private void SaveNames(IEnumerable<string> builtinNames) {
-            var names = builtinNames.ToArray();
-            Array.Sort(names, StringComparer.Ordinal);
-            _builtinNames = names;
         }
         
         public bool TryGetValue(string name, out ModuleReference res) {
-            if (_modules.TryGetValue(name, out res)) {
-                return true;
-            } else if (Array.BinarySearch(_builtinNames, name, StringComparer.Ordinal) >= 0) {
-                res = LoadModule(name);
-                return res != null;
+            if (!_modules.TryGetValue(name, out res) || res == null) {
+                res = new ModuleReference(GetBuiltinModule(_interpreter.ImportModule(name)));
             }
-
-            return false;
-        }
-
-        private ModuleReference LoadModule(string name) {
-#if DEBUG
-            var start = _timer.ElapsedMilliseconds;
-            _timer.Start();
-            try {
-#endif
-                return LoadModuleWorker(name);
-#if DEBUG
-            } finally {
-                _timer.Stop();
-                Debug.WriteLine(string.Format("ModuleLoadTime: {0} {1}ms Total: {2}ms", name, _timer.ElapsedMilliseconds - start, _timer.ElapsedMilliseconds));
-            }
-#endif
-        }
-
-        private ModuleReference LoadModuleWorker(string name) {
-            var mod = _interpreter.ImportModule(name);
-            if (mod != null) {
-                // get or create our BuiltinModule object
-                var newMod = GetBuiltinModule(mod);
-                var res = _modules[name] = new ModuleReference(newMod);
-                
-                // load any of our children (recursively)
-                LoadChildrenModules(name);
-
-                // and then make sure we're published in our parent module, recursively
-                // loading our parent if necessary.
-                int dotStart;
-                if ((dotStart = name.IndexOf('.')) != -1) {
-                    string parentName = name.Substring(0, dotStart);
-                    do {
-                        ModuleReference parentRef;
-                        if (!_modules.TryGetValue(parentName, out parentRef)) {
-                            parentRef = LoadModuleWorker(parentName);
-                            if (parentRef == null) {
-                                parentRef = new ModuleReference(new BuiltinModule(new EmptyBuiltinModule(parentName), _analyzer));
-                            }
-                            _modules[parentName] = parentRef;
-                        }
-
-                        BuiltinModule parentModule = parentRef.Module as BuiltinModule;
-                        if (parentModule == null) {
-                            break;
-                        }
-
-                        int dotEnd;
-                        string curModName;
-                        if ((dotEnd = name.IndexOf('.', dotStart + 1)) == -1) {
-                            curModName = name.Substring(dotStart + 1);
-                        } else {
-                            curModName = name.Substring(dotStart + 1, dotEnd - dotStart - 1);
-                        }
-
-                        IAnalysisSet existing;
-                        if (parentModule.TryGetMember(curModName, out existing)) {
-                            if (existing == newMod) {
-                                // we hit somewhere within the hierarchy where we're already
-                                // published in our parent module. Therefore the rest of the
-                                // hierarchy had to be published as well.
-                                return res;
-                            } else if (ShouldMergeModules(newMod, existing)) {
-                                // module is aliased w/ a member, merge it in...
-                                parentModule[curModName] = existing.Add(newMod, canMutate: false);
-                            }
-                        } else {
-                            parentModule[curModName] = newMod;
-                        }
-                        newMod = parentModule;
-                    } while (dotStart != 0 && (dotStart = parentName.LastIndexOf('.', dotStart - 1)) != -1);
-                }
-                return res;
-            }
-            return null;
-        }
-
-        private void LoadChildrenModules(string name) {
-            var builtinNames = _builtinNames;
-            int ourIndex = Array.BinarySearch(builtinNames, name, StringComparer.Ordinal);
-            ModuleReference parentRef;
-
-            if(ourIndex >= 0 &&
-                _modules.TryGetValue(name, out parentRef) && 
-                parentRef.Module is BuiltinModule)  {
-                var parentModule = parentRef.Module as BuiltinModule;
-                string baseName = name + ".";
-                for (int i = ourIndex + 1; i < builtinNames.Length; i++) {
-                    var newName = builtinNames[i];
-                    if (newName.StartsWith(baseName, StringComparison.Ordinal)) {
-                        if (newName.IndexOf('.', baseName.Length) != -1) {
-                            // sub-sub module
-                            LoadChildrenModules(newName);
-                        } else {
-                            ModuleReference newRef;
-                            if (!_modules.TryGetValue(newName, out newRef)) {
-                                var newNewMod = _interpreter.ImportModule(newName);
-                                if (newNewMod != null) {
-                                    var builtinMod = GetBuiltinModule(newNewMod);
-                                    if (builtinMod != null) {
-                                        _modules[newName] = new ModuleReference(builtinMod);
-
-                                        parentModule[newName.Substring(baseName.Length)] = builtinMod;
-                                    }
-                                }
-                            }
-                        }
-                    } else {
-                        break;
-                    }
-                }
-            }
+            return res != null && res.Module != null;
         }
 
         public bool TryRemove(string name, out ModuleReference res) {
@@ -190,23 +63,13 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
-        private bool ShouldMergeModules(BuiltinModule module, IAnalysisSet existing) {
-            if (existing.Count == 1) {
-                var existingValue = existing.First();
-                if (existingValue is ConstantInfo && existingValue.PythonType == _analyzer.Types[BuiltinTypeId.Object]) {
-                    // something's typed to object and won't provide useful completions, don't
-                    // merge the types with that so we get better completions.
-                    return false;
-                }
-            }
-            return true;
-        }
-
         /// <summary>
         /// Reloads the modules when the interpreter says they've changed.
+        /// Modules that are already in the table as builtins are replaced or
+        /// removed, but no new modules are added.
         /// </summary>
         public void ReInit() {
-            var newNames = new HashSet<string>(_interpreter.GetModuleNames());
+            var newNames = new HashSet<string>(_interpreter.GetModuleNames(), StringComparer.Ordinal);
 
             foreach (var keyValue in _modules) {
                 var name = keyValue.Key;
@@ -232,11 +95,12 @@ namespace Microsoft.PythonTools.Analysis {
                     }
                 }
             }
-
-            SaveNames(newNames);
         }
 
         internal BuiltinModule GetBuiltinModule(IPythonModule attr) {
+            if (attr == null) {
+                return null;
+            }
             BuiltinModule res;
             if (!_builtinModuleTable.TryGetValue(attr, out res)) {
                 _builtinModuleTable[attr] = res = new BuiltinModule(attr, _analyzer);
@@ -247,16 +111,50 @@ namespace Microsoft.PythonTools.Analysis {
         #region IEnumerable<KeyValuePair<string,ModuleReference>> Members
 
         public IEnumerator<KeyValuePair<string, ModuleLoadState>> GetEnumerator() {
+            var unloadedNames = new HashSet<string>(_interpreter.GetModuleNames(), StringComparer.Ordinal);
+            var unresolvedNames = _analyzer.GetAllUnresolvedModuleNames();
+
             foreach (var keyValue in _modules) {
+                unloadedNames.Remove(keyValue.Key);
+                unresolvedNames.Remove(keyValue.Key);
                 yield return new KeyValuePair<string, ModuleLoadState>(keyValue.Key, new InitializedModuleLoadState(keyValue.Value));
             }
 
-            foreach (var name in _builtinNames) {
-                if (!_modules.ContainsKey(name)) {
-                    yield return new KeyValuePair<string, ModuleLoadState>(name, new UninitializedModuleLoadState(this, name));
-                }
+            foreach (var name in unloadedNames) {
+                yield return new KeyValuePair<string, ModuleLoadState>(name, new UninitializedModuleLoadState(this, name));
+            }
+
+            foreach (var name in unresolvedNames) {
+                yield return new KeyValuePair<string, ModuleLoadState>(name, new UnresolvedModuleLoadState());
             }
         }
+
+        class UnresolvedModuleLoadState : ModuleLoadState {
+            public override AnalysisValue Module {
+                get { return null; }
+            }
+
+            public override bool HasModule {
+                get { return false; }
+            }
+
+            public override bool HasReferences {
+                get { return false; }
+            }
+
+            public override bool IsValid {
+                get { return true; }
+            }
+
+            public override PythonMemberType MemberType {
+                get { return PythonMemberType.Unknown; }
+            }
+
+            internal override bool ModuleContainsMember(IModuleContext context, string name) {
+                return false;
+            }
+        }
+
 
         class UninitializedModuleLoadState : ModuleLoadState {
             private readonly ModuleTable _moduleTable;
@@ -270,8 +168,8 @@ namespace Microsoft.PythonTools.Analysis {
 
             public override AnalysisValue Module {
                 get {
-                    var res = _moduleTable.LoadModule(_name);
-                    if (res != null) {
+                    ModuleReference res;
+                    if (_moduleTable.TryGetValue(_name, out res)) {
                         return res.AnalysisModule;
                     }
                     return null;
@@ -368,7 +266,7 @@ namespace Microsoft.PythonTools.Analysis {
 
                 ModuleInfo modInfo = Module as ModuleInfo;
                 if (modInfo != null) {
-                    VariableDef varDef;                    
+                    VariableDef varDef;
                     if (modInfo.Scope.Variables.TryGetValue(name, out varDef) &&
                         varDef.VariableStillExists) {
                         var types = varDef.TypesNoCopy;
@@ -448,7 +346,7 @@ namespace Microsoft.PythonTools.Analysis {
         #region IEnumerable Members
 
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() {
-            throw new System.NotImplementedException();
+            return GetEnumerator();
         }
 
         #endregion

@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using Microsoft.PythonTools.Analysis.Values;
@@ -219,44 +220,14 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
 
         public override bool Walk(FromImportStatement node) {
             IModule userMod = null;
-            RelativeModuleName relativeName = node.Root as RelativeModuleName;
-            if (relativeName != null) {
-                // attempt relative import...
-                var curPackage = GlobalScope;
-                int dotCount = relativeName.DotCount;
-                if (curPackage.ProjectEntry.FilePath != null && (
-                    curPackage.ProjectEntry.FilePath.EndsWith("\\__init__.py") ||
-                    curPackage.ProjectEntry.FilePath.EndsWith("\\__init__.pyw"))) {
-                    // relative import from inside of a package definition, we don't go out
-                    // of our own package.
-                    dotCount--;
-                }
+            ModuleReference modRef;
+            var modName = node.Root.MakeString();
 
-                for (int i = 0; i < dotCount && curPackage != null; i++) {
-                    curPackage = curPackage.ParentPackage;
-                }
+            if (TryImportModule(modName, node.ForceAbsolute, out modRef)) {
+                modRef.AddReference(_unit.DeclaringModule);
 
-                for (int i = 0; i < relativeName.Names.Count && curPackage != null; i++) {
-                    curPackage = curPackage.GetChildPackage(GlobalScope.InterpreterContext, relativeName.Names[i].Name) as ModuleInfo;
-                }
-
-                userMod = curPackage;
-            }
-
-            if (userMod == null) {
-                ModuleReference moduleRef;
-                var modName = node.Root.MakeString();
-
-                if (!TryGetUserModule(modName, out moduleRef)) {
-                    moduleRef = ProjectState.Modules[modName] = new ModuleReference();
-                }
-
-                moduleRef.AddReference(GlobalScope);
-
-                if (moduleRef.Module == null) {
-                    moduleRef.Module = ProjectState.ImportBuiltinModule(modName);
-                }
-                userMod = moduleRef.Module;
+                Debug.Assert(modRef.Module != null);
+                userMod = modRef.Module;
             }
 
             var asNames = node.AsNames ?? node.Names;
@@ -289,7 +260,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             return true;
         }
 
-        private bool TryGetUserModule(string modName, out ModuleReference moduleRef) {
+        private bool TryImportModule(string modName, bool forceAbsolute, out ModuleReference moduleRef) {
             if (ProjectState.Limits.CrossModule != null &&
                 ProjectState.ModulesByFilename.Count > ProjectState.Limits.CrossModule) {
                 // too many modules loaded, disable cross module analysis by blocking
@@ -298,23 +269,15 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 return false;
             }
 
-            // look for absolute name, then relative name
-            if ((ProjectState.Modules.TryGetValue(modName, out moduleRef) && moduleRef.Module != null) ||
-                (ProjectState.Modules.TryGetValue(_unit.DeclaringModule.Name + "." + modName, out moduleRef) && moduleRef.Module != null)) {
-                return true;
-            }
-
-            // search relative name in our parents.
-            int lastDot;
-            string name = _unit.DeclaringModule.Name;
-            while ((lastDot = name.LastIndexOf('.')) != -1) {
-                name = name.Substring(0, lastDot);
-                if (ProjectState.Modules.TryGetValue(name + "." + modName, out moduleRef) &&
-                    moduleRef.Module != null) {
+            foreach (var name in PythonAnalyzer.ResolvePotentialModuleNames(_unit.ProjectEntry, modName, forceAbsolute)) {
+                if (ProjectState.Modules.TryGetValue(name, out moduleRef)) {
                     return true;
                 }
             }
 
+            _unit.DeclaringModule.AddUnresolvedModule(modName, forceAbsolute);
+
+            moduleRef = null;
             return false;
         }
 
@@ -394,17 +357,15 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
 
                 string importing, saveName;
                 Node nameNode;
-                bool bottom = false;
                 if (curName.Names.Count == 0) {
                     continue;
                 } else if (curName.Names.Count > 1) {
                     // import fob.oar
                     if (asName != null) {
-                        // import fob.oar as baz, baz becomes the value of the bar module
+                        // import fob.oar as baz, baz becomes the value of the oar module
                         importing = curName.MakeString();
                         saveName = asName.Name;
                         nameNode = asName;
-                        bottom = true;
                     } else {
                         // plain import fob.oar, we bring in fob into the scope
                         saveName = importing = curName.Names[0].Name;
@@ -425,30 +386,18 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 ModuleReference modRef;
 
                 var def = Scope.CreateVariable(nameNode, _unit, saveName);
-                if (!TryGetUserModule(importing, out modRef) || modRef.Module == null) {
-                    var builtinModule = ProjectState.ImportBuiltinModule(importing, bottom);
-                    var ns = builtinModule as AnalysisValue;
+                if (TryImportModule(importing, node.ForceAbsolute, out modRef)) {
+                    modRef.AddReference(_unit.DeclaringModule);
 
-                    if (builtinModule != null && ns != null) {
-                        builtinModule.Imported(_unit);
+                    Debug.Assert(modRef.Module != null);
+                    if (modRef.Module != null) {
+                        modRef.Module.Imported(_unit);
 
-                        def.AddTypes(_unit, ns);
+                        if (modRef.AnalysisModule != null) {
+                            def.AddTypes(_unit, modRef.AnalysisModule);
+                        }
                         def.AddAssignment(nameNode, _unit);
-                        continue;
                     }
-                }
-
-                if (modRef == null) {
-                    modRef = ProjectState.Modules[importing] = new ModuleReference();
-                }
-
-                modRef.AddReference(_unit.DeclaringModule);
-
-                if (modRef.Module != null) {
-                    modRef.Module.Imported(_unit);
-
-                    def.AddTypes(_unit, modRef.AnalysisModule);
-                    def.AddAssignment(nameNode, _unit);
                 }
             }
             return true;

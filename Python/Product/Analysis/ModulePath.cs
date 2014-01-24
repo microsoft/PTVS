@@ -334,14 +334,49 @@ namespace Microsoft.PythonTools.Analysis {
         /// <summary>
         /// Returns true if the provided path references an importable Python
         /// module. This function does not access the filesystem.
+        /// Retuns false if an invalid string is provided. This function does
+        /// not raise exceptions.
         /// </summary>
         public static bool IsPythonFile(string path) {
-            var name = Path.GetFileName(path);
-            var nameMatch = PythonFileRegex.Match(name);
-            if (nameMatch == null || !nameMatch.Success) {
-                nameMatch = PythonBinaryRegex.Match(name);
+            if (string.IsNullOrEmpty(path)) {
+                return false;
             }
-            return nameMatch != null && nameMatch.Success;
+
+            string name;
+            try {
+                name = Path.GetFileName(path);
+            } catch (ArgumentException) {
+                return false;
+            }
+
+            try {
+                var nameMatch = PythonFileRegex.Match(name);
+                if (nameMatch == null || !nameMatch.Success) {
+                    nameMatch = PythonBinaryRegex.Match(name);
+                }
+                return nameMatch != null && nameMatch.Success;
+            } catch (RegexMatchTimeoutException) {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Returns true if the provided path is to an '__init__.py' file.
+        /// Returns false if an invalid string is provided. This function does
+        /// not raise exceptions.
+        /// </summary>
+        public static bool IsInitPyFile(string path) {
+            if (string.IsNullOrEmpty(path)) {
+                return false;
+            }
+
+            try {
+                var name = Path.GetFileName(path);
+                return name.Equals("__init__.py", StringComparison.OrdinalIgnoreCase) ||
+                    name.Equals("__init__.pyw", StringComparison.OrdinalIgnoreCase);
+            } catch (ArgumentException) {
+                return false;
+            }
         }
 
         /// <summary>

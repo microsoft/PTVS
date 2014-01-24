@@ -30,6 +30,7 @@ using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.Scripting.Utils;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
+using TestUtilities.Python;
 using Assert = Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
 
 namespace AnalysisTests {
@@ -5873,6 +5874,66 @@ def update_wrapper(wrapper, wrapped, assigned, updated):
                 .Zip(id, (t1, id2) => t1.TypesNoCopy.Count == 1 && t1.TypesNoCopy.Single().TypeId == id2)
                 .Any(b => !b)) {
                 Assert.Fail(string.Format("Expected <{0}>. Actual <{1}>.", expected, actual));
+            }
+        }
+
+
+        [TestMethod, Priority(0)]
+        public void ValidatePotentialModuleNames() {
+            // Validating against the structure given in
+            // http://www.python.org/dev/peps/pep-0328/
+
+            var entry = new MockPythonProjectEntry {
+                ModuleName = "package.subpackage1.moduleX",
+                FilePath = "C:\\package\\subpackage1\\moduleX.py"
+            };
+            
+            // Without absolute_import, we should see these two possibilities
+            // for a regular import.
+            AssertUtil.ContainsExactly(
+                PythonAnalyzer.ResolvePotentialModuleNames(entry, "moduleY", false),
+                "package.subpackage1.moduleY",
+                "moduleY"
+            );
+
+            // With absolute_import, we should see the two possibilities for a
+            // regular import, but in the opposite order.
+            AssertUtil.ContainsExactly(
+                PythonAnalyzer.ResolvePotentialModuleNames(entry, "moduleY", true),
+                "moduleY",
+                "package.subpackage1.moduleY"
+            );
+            
+            // Regardless of absolute import, we should see these results for
+            // relative imports.
+            foreach (var absoluteImport in new[] { true, false }) {
+                Console.WriteLine("Testing with absoluteImport = {0}", absoluteImport);
+
+                AssertUtil.ContainsExactly(
+                    PythonAnalyzer.ResolvePotentialModuleNames(entry, ".moduleY", absoluteImport),
+                    "package.subpackage1.moduleY"
+                );
+                AssertUtil.ContainsExactly(
+                    PythonAnalyzer.ResolvePotentialModuleNames(entry, ".", absoluteImport),
+                    "package.subpackage1"
+                );
+                AssertUtil.ContainsExactly(
+                    PythonAnalyzer.ResolvePotentialModuleNames(entry, "..subpackage1", absoluteImport),
+                    "package.subpackage1"
+                );
+                AssertUtil.ContainsExactly(
+                    PythonAnalyzer.ResolvePotentialModuleNames(entry, "..subpackage2.moduleZ", absoluteImport),
+                    "package.subpackage2.moduleZ"
+                );
+                AssertUtil.ContainsExactly(
+                    PythonAnalyzer.ResolvePotentialModuleNames(entry, "..moduleA", absoluteImport),
+                    "package.moduleA"
+                );
+
+                // Despite what PEP 328 says, this relative import never succeeds.
+                AssertUtil.ContainsExactly(
+                    PythonAnalyzer.ResolvePotentialModuleNames(entry, "...package", absoluteImport)
+                );
             }
         }
 

@@ -381,51 +381,48 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         IAnalysisSet WrapsFunction(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
-            if (args.Length >= 1) {
-                return unit.Scope.GetOrMakeNodeValue(node, n => {
-                    IModule mod;
-                    ModuleReference modRef;
-                    if (!Modules.TryGetValue("functools", out modRef) || (mod = modRef.Module) == null) {
-                        mod = ImportBuiltinModule("functools");
-                    }
-                    if (mod == null) {
-                        return AnalysisSet.Empty;
-                    }
-                    IAnalysisSet updateWrapper;
-                    if (!mod.GetAllMembers(_defaultContext).TryGetValue("update_wrapper", out updateWrapper)) {
-                        return AnalysisSet.Empty;
-                    }
+            if (args.Length < 1) {
+                return AnalysisSet.Empty;
+            }
 
-                    var newArgs = new [] {
-                        args[0],
-                        args.Length > 1 ? args[1] : AnalysisSet.Empty,
-                        args.Length > 2 ? args[2] : AnalysisSet.Empty
-                    };
-                    var newKeywords = new[] {
-                        new NameExpression("wrapped"),
-                        new NameExpression("assigned"),
-                        new NameExpression("updated")
-                    };
+            return unit.Scope.GetOrMakeNodeValue(node, n => {
+                ModuleReference modRef;
+                if (!Modules.TryGetValue("functools", out modRef)) {
+                    return AnalysisSet.Empty;
+                }
+                IAnalysisSet updateWrapper;
+                if (!modRef.Module.GetAllMembers(_defaultContext).TryGetValue("update_wrapper", out updateWrapper)) {
+                    return AnalysisSet.Empty;
+                }
 
-                    for (int i = 0; i < keywordArgNames.Length; ++i) {
-                        int j = i + args.Length - keywordArgNames.Length;
-                        if (j >= 0 && j < args.Length) {
-                            if (keywordArgNames[i].Name == "assigned") {
-                                newArgs[1] = args[j];
-                            } else if (keywordArgNames[i].Name == "updated") {
-                                newArgs[2] = args[j];
-                            }
+                var newArgs = new [] {
+                    args[0],
+                    args.Length > 1 ? args[1] : AnalysisSet.Empty,
+                    args.Length > 2 ? args[2] : AnalysisSet.Empty
+                };
+                var newKeywords = new[] {
+                    new NameExpression("wrapped"),
+                    new NameExpression("assigned"),
+                    new NameExpression("updated")
+                };
+
+                for (int i = 0; i < keywordArgNames.Length; ++i) {
+                    int j = i + args.Length - keywordArgNames.Length;
+                    if (j >= 0 && j < args.Length) {
+                        if (keywordArgNames[i].Name == "assigned") {
+                            newArgs[1] = args[j];
+                        } else if (keywordArgNames[i].Name == "updated") {
+                            newArgs[2] = args[j];
                         }
                     }
+                }
 
-                    return new PartialFunctionInfo(
-                        updateWrapper,
-                        newArgs,
-                        newKeywords
-                    );
-                });
-            }
-            return AnalysisSet.Empty;
+                return new PartialFunctionInfo(
+                    updateWrapper,
+                    newArgs,
+                    newKeywords
+                );
+            });
         }
 
         IAnalysisSet ReturnUnionOfInputs(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {

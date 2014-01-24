@@ -339,24 +339,37 @@ namespace Microsoft.IronPythonTools.Interpreter {
         }
 
         public IPythonModule ImportModule(string name) {
-            if (!String.IsNullOrWhiteSpace(name)) {
-                // clr module needs to be an IronPythonModule, not a CPythonModule, so we can track when it's imported
-                // and make clr completions available.
-                if (_typeDb != null && name != "clr") {
-                    var res = _typeDb.GetModule(name);
-                    if (res != null) {
-                        return res;
-                    }
-                }
+            if (string.IsNullOrWhiteSpace(name)) {
+                return null;
+            }
 
-                IronPythonModule mod;
-                if (_modules.TryGetValue(name, out mod)) {
-                    return mod;
+            // clr module needs to be an IronPythonModule, not a CPythonModule, so we can track when it's imported
+            // and make clr completions available.
+            if (_typeDb != null && name != "clr") {
+                var res = _typeDb.GetModule(name);
+                if (res != null) {
+                    return res;
                 }
+            }
 
-                var handle = Remote.LookupNamespace(name);
-                if (!handle.IsNull) {
-                    return MakeObject(handle) as IPythonModule;
+            IronPythonModule mod;
+            if (_modules.TryGetValue(name, out mod)) {
+                return mod;
+            }
+
+            var handle = Remote.LookupNamespace(name);
+            if (!handle.IsNull) {
+                return MakeObject(handle) as IPythonModule;
+            }
+
+            var nameParts = name.Split('.');
+            IPythonModule pythonMod;
+            if (nameParts.Length > 1 && (pythonMod = ImportModule(nameParts[0])) != null) {
+                for (int i = 1; i < nameParts.Length && pythonMod != null; ++i) {
+                    pythonMod = pythonMod.GetMember(IronPythonModuleContext.ShowClrInstance, nameParts[i]) as IPythonModule;
+                }
+                if (pythonMod != null) {
+                    return pythonMod;
                 }
             }
 

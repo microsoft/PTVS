@@ -73,8 +73,8 @@ namespace Microsoft.PythonTools.Parsing {
             _bindReferences = bindRefs;
             
             if (langVersion.Is3x()) {
-                // 3.x always does true division
-                _languageFeatures |= FutureOptions.TrueDivision;
+                // 3.x always does true division and absolute import
+                _languageFeatures |= FutureOptions.TrueDivision | FutureOptions.AbsoluteImports;
             }
 
             Reset(FutureOptions.None);

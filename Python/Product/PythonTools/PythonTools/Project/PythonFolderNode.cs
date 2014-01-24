@@ -16,6 +16,7 @@ using System;
 using System.Drawing;
 using System.Reflection;
 using System.Windows.Forms;
+using Microsoft.PythonTools.Analysis;
 using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Project {
@@ -37,7 +38,7 @@ namespace Microsoft.PythonTools.Project {
             }
 
             for (HierarchyNode child = this.FirstChild; child != null; child = child.NextSibling) {
-                if (child.Url.EndsWith("\\__init__.py", StringComparison.Ordinal)) {
+                if (ModulePath.IsInitPyFile(child.Url)) {
                     if (_imageList == null) {
                         _imageList = Utilities.GetImageList(Assembly.GetExecutingAssembly().GetManifestResourceStream("Microsoft.Resources.PythonPackageIcons.bmp"));
                     }

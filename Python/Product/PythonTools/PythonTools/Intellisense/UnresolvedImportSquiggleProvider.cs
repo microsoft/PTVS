@@ -108,22 +108,16 @@ namespace Microsoft.PythonTools.Intellisense {
             public readonly List<Tuple<string, DottedName>> Imports = new List<Tuple<string, DottedName>>();
 
             readonly IPythonProjectEntry _entry;
-            readonly string _moduleName;
             readonly PythonAnalyzer _analyzer;
 
             public ImportStatementWalker(IPythonProjectEntry entry, PythonAnalyzer analyzer) {
                 _entry = entry;
-                // We add ".__init__" to the name if the file is there, because
-                // we're going to use this name for determining relative imports
-                // and the last segment is required.
-                _moduleName = _entry.ModuleName +
-                    (_entry.FilePath.EndsWith("__init__.py", StringComparison.OrdinalIgnoreCase) ? ".__init__" : null);
                 _analyzer = analyzer;
             }
 
             public override bool Walk(FromImportStatement node) {
                 var name = node.Root.MakeString();
-                if (!_analyzer.IsModuleResolved(name, _moduleName)) {
+                if (!_analyzer.IsModuleResolved(_entry, name, node.ForceAbsolute)) {
                     Imports.Add(Tuple.Create(name, node.Root));
                 }
                 return base.Walk(node);
@@ -132,7 +126,7 @@ namespace Microsoft.PythonTools.Intellisense {
             public override bool Walk(ImportStatement node) {
                 foreach (var nameNode in node.Names) {
                     var name = nameNode.MakeString();
-                    if (!_analyzer.IsModuleResolved(name, _moduleName)) {
+                    if (!_analyzer.IsModuleResolved(_entry, name, node.ForceAbsolute)) {
                         Imports.Add(Tuple.Create(name, nameNode));
                     }
                 }

@@ -247,12 +247,14 @@ namespace Microsoft.PythonTools.Intellisense {
                 var modName = PythonAnalyzer.PathToModuleName(path);
 
                 if (buffer.ContentType.IsOfType(PythonCoreConstants.ContentType)) {
+                    var reanalyzeEntries = Project.GetEntriesThatImportModule(modName, true).ToArray();
+
                     entry = _pyAnalyzer.AddModule(
                         modName,
                         buffer.GetFilePath(),
                         analysisCookie
                     );
-                    foreach (var entryRef in Project.GetEntriesThatImportModule(modName)) {
+                    foreach (var entryRef in reanalyzeEntries) {
                         _analysisQueue.Enqueue(entryRef, AnalysisPriority.Low);
                     }
                 } else if (buffer.ContentType.IsOfType("XAML")) {
@@ -306,6 +308,7 @@ namespace Microsoft.PythonTools.Intellisense {
             if (!_projectFiles.TryGetValue(path, out item)) {
                 if (PythonProjectNode.IsPythonFile(path)) {
                     var modName = PythonAnalyzer.PathToModuleName(path);
+                    var reanalyzeEntries = Project.GetEntriesThatImportModule(modName, true).ToArray();
 
                     var pyEntry = _pyAnalyzer.AddModule(
                         modName,
@@ -315,7 +318,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
                     pyEntry.BeginParsingTree();
 
-                    foreach (var entryRef in Project.GetEntriesThatImportModule(modName)) {
+                    foreach (var entryRef in reanalyzeEntries) {
                         _analysisQueue.Enqueue(entryRef, AnalysisPriority.Low);
                     }
 
@@ -1325,7 +1328,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 IPythonProjectEntry[] reanalyzeEntries = null;
                 var pyEntry = entry as IPythonProjectEntry;
                 if (pyEntry != null && !string.IsNullOrEmpty(pyEntry.ModuleName)) {
-                    reanalyzeEntries = _pyAnalyzer.GetEntriesThatImportModule(pyEntry.ModuleName).ToArray();
+                    reanalyzeEntries = _pyAnalyzer.GetEntriesThatImportModule(pyEntry.ModuleName, false).ToArray();
                 }
 
                 RemoveErrors(entry, suppressUpdate);

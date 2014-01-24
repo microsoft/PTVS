@@ -859,7 +859,7 @@ def func(a):
                 analyzer.WaitForCompleteAnalysis(_ => true);
 
                 AssertUtil.ContainsExactly(
-                    analyzer.Project.GetEntriesThatImportModule("module1").Select(m => m.ModuleName),
+                    analyzer.Project.GetEntriesThatImportModule("module1", true).Select(m => m.ModuleName),
                     "module2"
                 );
 
@@ -874,7 +874,7 @@ def func(a):
                 // Even though module1 has been unloaded, we still know that
                 // module2 imports it.
                 AssertUtil.ContainsExactly(
-                    analyzer.Project.GetEntriesThatImportModule("module1").Select(m => m.ModuleName),
+                    analyzer.Project.GetEntriesThatImportModule("module1", true).Select(m => m.ModuleName),
                     "module2"
                 );
 
@@ -886,7 +886,7 @@ def func(a):
                 analyzer.WaitForCompleteAnalysis(_ => true);
 
                 AssertUtil.ContainsExactly(
-                    analyzer.Project.GetEntriesThatImportModule("module1").Select(m => m.ModuleName),
+                    analyzer.Project.GetEntriesThatImportModule("module1", true).Select(m => m.ModuleName),
                     "module2"
                 );
 

@@ -34,6 +34,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         private ModuleInfo _parentPackage;
         private DependentData _definition = new DependentData();
         private readonly HashSet<ModuleReference> _referencedModules;
+        private readonly HashSet<String> _unresolvedModules;
 
         public ModuleInfo(string moduleName, ProjectEntry projectEntry, IModuleContext moduleContext) {
             _name = moduleName;
@@ -44,6 +45,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             _context = moduleContext;
             _scopes = new Dictionary<Node, InterpreterScope>();
             _referencedModules = new HashSet<ModuleReference>();
+            _unresolvedModules = new HashSet<string>(StringComparer.Ordinal);
         }
 
         internal void Clear() {
@@ -52,6 +54,29 @@ namespace Microsoft.PythonTools.Analysis.Values {
             _scope.ClearVariables();
             _scope.ClearNodeScopes();
             _referencedModules.Clear();
+            _unresolvedModules.Clear();
+        }
+
+        /// <summary>
+        /// Returns all the absolute module names that need to be resolved from
+        /// this module.
+        /// 
+        /// Note that a single import statement may add multiple names to this
+        /// set, and so the Count property does not accurately reflect the 
+        /// actual number of imports required.
+        /// </summary>
+        internal ISet<string> GetAllUnresolvedModules() {
+            return _unresolvedModules;
+        }
+
+        internal void AddUnresolvedModule(string relativeModuleName, bool absoluteImports) {
+            _unresolvedModules.UnionWith(PythonAnalyzer.ResolvePotentialModuleNames(_projectEntry, relativeModuleName, absoluteImports));
+            _projectEntry.ProjectState.ModuleHasUnresolvedImports(this, true);
+        }
+
+        internal void ClearUnresolvedModules() {
+            _unresolvedModules.Clear();
+            _projectEntry.ProjectState.ModuleHasUnresolvedImports(this, false);
         }
 
         public override IDictionary<string, IAnalysisSet> GetAllMembers(IModuleContext moduleContext) {

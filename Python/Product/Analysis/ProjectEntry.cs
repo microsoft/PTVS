@@ -183,7 +183,7 @@ namespace Microsoft.PythonTools.Analysis {
                 // we need to check and see if our parent is a package for the case where we're adding a new
                 // file but not re-analyzing our parent package.
                 string parentFilename;
-                if (Path.GetFileName(_filePath).Equals("__init__.py", StringComparison.OrdinalIgnoreCase)) {
+                if (ModulePath.IsInitPyFile(_filePath)) {
                     // subpackage
                     parentFilename = Path.Combine(Path.GetDirectoryName(Path.GetDirectoryName(_filePath)), "__init__.py");
                 } else {
@@ -203,6 +203,7 @@ namespace Microsoft.PythonTools.Analysis {
             MyScope.Scope.Children.Clear();
             MyScope.Scope.ClearNodeScopes();
             MyScope.Scope.ClearNodeValues();
+            MyScope.ClearUnresolvedModules();
 
             // collect top-level definitions first
             var walker = new OverviewWalker(this, _unit);
@@ -212,7 +213,7 @@ namespace Microsoft.PythonTools.Analysis {
             // It may be that we have analyzed some child packages of this package already, but because it wasn't analyzed,
             // the children were not registered. To handle this possibility, scan analyzed packages for children of this
             // package (checked by module name first, then sanity-checked by path), and register any that match.
-            if (_filePath != null && _filePath.EndsWith("__init__.py")) {
+            if (ModulePath.IsInitPyFile(_filePath)) {
                 string pathPrefix = Path.GetDirectoryName(_filePath) + "\\";
                 var children =
                     from pair in _projectState.ModulesByFilename
