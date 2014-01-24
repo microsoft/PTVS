@@ -248,7 +248,7 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core"), Timeout(10 * 60 * 1000)]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void DjangoEndToEndV27() {
-            EndToEndTest("Django Project", "django", "Congratulations on your first Django-powered page.", "2.7");
+            EndToEndTest("Django Web Project", "django", "Congratulations on your first Django-powered page.", "2.7");
         }
     }
 }

@@ -38,7 +38,7 @@ namespace DjangoUITests {
 
                 newProjDialog.FocusLanguageNode();
 
-                var djangoApp = newProjDialog.ProjectTypes.FindItem("Django Project");
+                var djangoApp = newProjDialog.ProjectTypes.FindItem("Django Web Project");
                 djangoApp.Select();
 
                 newProjDialog.Location = TestData.GetTempPath();
