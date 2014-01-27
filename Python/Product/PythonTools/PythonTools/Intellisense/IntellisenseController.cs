@@ -123,6 +123,8 @@ namespace Microsoft.PythonTools.Intellisense {
             _textView.Properties.RemoveProperty(typeof(IntellisenseController));
 
             DetachKeyboardFilter();
+
+            _bufferParser = null;
         }
 
         /// <summary>
