@@ -23,6 +23,7 @@ using System.Text.RegularExpressions;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.BuildTasks {
     /// <summary>
@@ -36,6 +37,12 @@ namespace Microsoft.PythonTools.BuildTasks {
         public const string TargetTypePip = "pip";
 
         private static readonly string[] _targetTypes = { TargetTypeExecutable, TargetTypeScript, TargetTypeModule, TargetTypeCode, TargetTypePip };
+
+        public const string ExecuteInConsole = "console";
+        public const string ExecuteInConsolePause = "consolepause";
+        public const string ExecuteInNone = "none";
+
+        private static readonly string[] _executeIns = { ExecuteInNone, ExecuteInConsole, ExecuteInConsolePause };
 
         internal PythonCommandTask(string projectPath, IBuildEngine buildEngine) {
             BuildEngine = buildEngine;
@@ -64,6 +71,29 @@ namespace Microsoft.PythonTools.BuildTasks {
                     throw new ArgumentException("TargetType must be one of: " + string.Join(", ", _targetTypes.Select(s => '"' + s + '"')));
                 }
                 _targetType = value;
+            }
+        }
+
+        private string _executeIn = ExecuteInConsole;
+
+        protected virtual bool IsValidExecuteInValue(string value, out string message) {
+            message = "ExecuteIn must be one of: " + string.Join(", ", _executeIns.Select(s => '"' + s + '"'));;
+            return _executeIns.Any(s => s.Equals(value, StringComparison.InvariantCultureIgnoreCase));
+        }
+
+        /// <summary>
+        /// One of 'console' (default), 'consolepause', 'repl', 'output' or 'none'.
+        /// </summary>
+        public string ExecuteIn {
+            get {
+                return _executeIn;
+            }
+            set {
+                string errorMessage;
+                if (value != null && !IsValidExecuteInValue(value, out errorMessage)) {
+                    throw new ArgumentException(errorMessage);
+                }
+                _executeIn = value;
             }
         }
 
@@ -143,36 +173,18 @@ namespace Microsoft.PythonTools.BuildTasks {
         public const string WarningRegexKey = "WarningRegex";
         public const string RequiredPackagesKey = "RequiredPackages";
 
-        public const string ExecuteInConsole = "console";
-        public const string ExecuteInConsolePause = "consolepause";
         public const string ExecuteInRepl = "repl";
         public const string ExecuteInOutput = "output";
-        public const string ExecuteInNone = "none";
-
         private static readonly string[] _executeIns = { ExecuteInConsole, ExecuteInConsolePause, ExecuteInRepl, ExecuteInOutput, ExecuteInNone };
 
         internal CreatePythonCommandItem(string projectPath, IBuildEngine buildEngine)
             : base(projectPath, buildEngine) {
         }
 
-        private string _executeIn = ExecuteInConsole;
-
-        /// <summary>
-        /// One of 'console' (default), 'consolepause', 'repl', 'output' or 'none'.
-        /// </summary>
-        public string ExecuteIn {
-            get {
-                return _executeIn;
-            }
-            set {
-                if (value != null &&
-                    !value.StartsWith(ExecuteInRepl, StringComparison.InvariantCultureIgnoreCase) &&
-                    !_executeIns.Contains(value, StringComparer.InvariantCultureIgnoreCase)
-                ) {
-                    throw new ArgumentException("ExecuteIn must be one of: " + string.Join(", ", _executeIns.Select(s => '"' + s + '"')));
-                }
-                _executeIn = value;
-            }
+        protected override bool IsValidExecuteInValue(string value, out string message) {
+            message = "ExecuteIn must be one of: " + string.Join(", ", _executeIns.Select(s => '"' + s + '"')); ;
+            return _executeIns.Any(s => s.Equals(value, StringComparison.InvariantCultureIgnoreCase)) ||
+                value.StartsWith(ExecuteInRepl, StringComparison.InvariantCultureIgnoreCase);
         }
 
         /// <summary>
@@ -218,12 +230,39 @@ namespace Microsoft.PythonTools.BuildTasks {
     }
 
     public class RunPythonCommand : PythonCommandTask {
+        private readonly Lazy<List<string>> _consoleOutput = new Lazy<List<string>>();
+        private readonly Lazy<List<string>> _consoleError = new Lazy<List<string>>();
+        
         internal RunPythonCommand(string projectPath, IBuildEngine buildEngine)
             : base(projectPath, buildEngine) {
         }
 
+        public bool ConsoleToMSBuild {
+            get;
+            set;
+        }
+
+        [Output]
+        public string ConsoleOutput {
+            get {
+                return _consoleOutput.IsValueCreated ?
+                    string.Join(System.Environment.NewLine, _consoleOutput.Value) :
+                    string.Empty;
+            }
+        }
+
+        [Output]
+        public string ConsoleError {
+            get {
+                return _consoleError.IsValueCreated ?
+                    string.Join(System.Environment.NewLine, _consoleError.Value) :
+                    string.Empty;
+            }
+        }
+
         public override bool Execute() {
             var psi = new ProcessStartInfo();
+            psi.UseShellExecute = false;
 
             if (TargetTypeExecutable.Equals(TargetType, StringComparison.InvariantCultureIgnoreCase)) {
                 psi.FileName = Target;
@@ -243,14 +282,33 @@ namespace Microsoft.PythonTools.BuildTasks {
                 } else if (TargetTypeCode.Equals(TargetType, StringComparison.InvariantCultureIgnoreCase)) {
                     psi.Arguments = string.Format("-c \"{0}\"", Target);
                 }
+
+                // If no search paths are read, this is set to an empty string
+                // to mask any global setting.
+                psi.EnvironmentVariables[resolver.PathEnvironmentVariable] = string.Join(";", resolver.SearchPaths);
             }
 
             psi.WorkingDirectory = WorkingDirectory;
-            foreach (var line in Environment.Split('\r', '\n')) {
-                int equals = line.IndexOf('=');
-                if (equals > 0) {
-                    psi.EnvironmentVariables[line.Substring(0, equals)] = line.Substring(equals + 1);
+
+            if (!string.IsNullOrEmpty(Environment)) {
+                foreach (var line in Environment.Split('\r', '\n')) {
+                    int equals = line.IndexOf('=');
+                    if (equals > 0) {
+                        psi.EnvironmentVariables[line.Substring(0, equals)] = line.Substring(equals + 1);
+                    }
                 }
+            }
+
+            if (ExecuteInNone.Equals(ExecuteIn, StringComparison.InvariantCultureIgnoreCase)) {
+                psi.CreateNoWindow = true;
+                psi.WindowStyle = ProcessWindowStyle.Hidden;
+            } else if (ExecuteInConsolePause.Equals(ExecuteIn, StringComparison.InvariantCultureIgnoreCase)) {
+                psi.Arguments = string.Format(
+                    "/C \"\"{0}\" {1}\" & pause",
+                    psi.FileName,
+                    psi.Arguments
+                );
+                psi.FileName = CommonUtils.GetAbsoluteFilePath(System.Environment.SystemDirectory, "cmd.exe");
             }
 
             psi.RedirectStandardOutput = true;
@@ -268,23 +326,31 @@ namespace Microsoft.PythonTools.BuildTasks {
 
         private void Process_OutputDataReceived(object sender, DataReceivedEventArgs e) {
             if (!string.IsNullOrEmpty(e.Data)) {
-                BuildEngine.LogMessageEvent(new BuildMessageEventArgs(
-                    e.Data,
-                    "",
-                    "PythonCommand",
-                    MessageImportance.Normal
-                ));
+                if (ConsoleToMSBuild) {
+                    _consoleOutput.Value.Add(e.Data);
+                } else {
+                    BuildEngine.LogMessageEvent(new BuildMessageEventArgs(
+                        e.Data,
+                        "",
+                        "PythonCommand",
+                        MessageImportance.Normal
+                    ));
+                }
             }
         }
 
         private void Process_ErrorDataReceived(object sender, DataReceivedEventArgs e) {
             if (!string.IsNullOrEmpty(e.Data)) {
-                BuildEngine.LogMessageEvent(new BuildMessageEventArgs(
-                    e.Data,
-                    "",
-                    "PythonCommand",
-                    MessageImportance.High
-                ));
+                if (ConsoleToMSBuild) {
+                    _consoleError.Value.Add(e.Data);
+                } else {
+                    BuildEngine.LogMessageEvent(new BuildMessageEventArgs(
+                        e.Data,
+                        "",
+                        "PythonCommand",
+                        MessageImportance.High
+                    ));
+                }
             }
         }
     }

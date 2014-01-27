@@ -59,13 +59,13 @@
        ensure they are served directly.
    -->
   <Target Name="ResolveStaticUrlSetting" DependsOnTargets="ResolvePythonInterpreterPath;ResolveQualifiedProjectHome">
-    <Exec Command="&quot;$(PythonInterpreterPath)&quot; -c &quot;from $(MSBuildProjectName) import settings; print(settings.STATIC_URL)&quot;"
-          WorkingDirectory="$(QualifiedProjectHome)"
-          ConsoleToMSBuild="true"
-          StandardOutputImportance="low"
-          Condition="'$(DjangoStaticUrlSetting)' == ''">
+    <RunPythonCommand Target="from $(MSBuildProjectName) import settings; print(settings.STATIC_URL)"
+                      TargetType="code"
+                      ExecuteIn="none"
+                      WorkingDirectory="$(QualifiedProjectHome)"
+                      ConsoleToMSBuild="true">
       <Output TaskParameter="ConsoleOutput" PropertyName="DjangoStaticUrlSetting" />
-    </Exec>
+    </RunPythonCommand>
     
     <Message Text="DjangoStaticUrlSetting=$(DjangoStaticUrlSetting)"/>
   </Target>
@@ -93,13 +93,14 @@
     <PropertyGroup>
       <_EscapedQualifiedProjectHome>"""$(QualifiedProjectHome.Replace(`\`, `\\`))"""</_EscapedQualifiedProjectHome>
     </PropertyGroup>
-    <Exec Command="&quot;$(PythonInterpreterPath)&quot; -c &quot;from $(MSBuildProjectName) import settings; from os import path; print(path.relpath(settings.STATIC_ROOT, $(EscapedQualifiedProjectHome)) if settings.STATIC_ROOT else '')&quot;"
-          WorkingDirectory="$(QualifiedProjectHome)"
-          ConsoleToMSBuild="true"
-          StandardOutputImportance="low"
-          Condition="'$(DjangoStaticRootSetting)' == ''">
+    <RunPythonCommand Target="from $(MSBuildProjectName) import settings; from os import path; print(path.relpath(settings.STATIC_ROOT, $(EscapedQualifiedProjectHome)) if settings.STATIC_ROOT else '')"
+                      TargetType="code"
+                      ExecuteIn="none"
+                      WorkingDirectory="$(QualifiedProjectHome)"
+                      ConsoleToMSBuild="true"
+                      Condition="'$(DjangoStaticRootSetting)' == ''">
       <Output TaskParameter="ConsoleOutput" PropertyName="DjangoStaticRootSetting" />
-    </Exec>
+    </RunPythonCommand>
 
     <PropertyGroup>
       <DjangoStaticRootSetting Condition="'$(DjangoStaticRootSetting)' != '' and !HasTrailingSlash('$(DjangoStaticRootSetting)')">$(DjangoStaticRootSetting)\</DjangoStaticRootSetting>

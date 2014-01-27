@@ -74,6 +74,8 @@ namespace Microsoft.PythonTools.BuildTasks {
         [Output]
         public string MinorVersion { get; private set; }
 
+        internal string[] SearchPaths { get; private set; }
+
         public bool Execute() {
             bool returnActive;
             Guid id;
@@ -118,6 +120,15 @@ namespace Microsoft.PythonTools.BuildTasks {
                     project.DirectoryPath,
                     project.GetPropertyValue("ProjectHome")
                 );
+
+                var searchPath = project.GetPropertyValue("SearchPath");
+                if (!string.IsNullOrEmpty(searchPath)) {
+                    SearchPaths = searchPath.Split(';')
+                        .Select(p => CommonUtils.GetAbsoluteFilePath(projectHome, p))
+                        .ToArray();
+                } else {
+                    SearchPaths = new string[0];
+                }
 
                 provider = new MSBuildProjectInterpreterFactoryProvider(service, project);
                 try {

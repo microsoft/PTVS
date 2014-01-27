@@ -50,15 +50,15 @@
 
   <!-- Runs a Python command. Like CreatePythonCommandItem, but instead of
        creating a user-activatable UI command, just runs it immediately.
-  <Target Name="Name1" Label="Display Name" Returns="@(Commands)">
-    <RunPythonCommand Target="filename, module name, or code"
-                   TargetType="executable/script/module/code"
-                   Arguments="..."
-                   RequiredPackages="...;...">
-      <Output TaskParameter="Command"
-              ItemName="Commands" />
-    </RunPythonCommand>
-  </Target>
+  <RunPythonCommand Target="filename, module name, or code"
+                  TargetType="executable/script/module/code"
+                  ExecuteIn="none/console/consolepause"
+                  Arguments="..."
+                  RequiredPackages="...;..."
+                  ConsoleToMSBuild="true/false">
+    <Output TaskParameter="ConsoleOutput" PropertyName="OutputText" />
+    <Output TaskParameter="ConsoleError" PropertyName="ErrorText" />
+  </RunPythonCommand>
   -->
   <UsingTask AssemblyFile="$([MSBuild]::Unescape($(_PythonToolsPath)\Microsoft.PythonTools.BuildTasks.dll))"
              TaskName="RunPythonCommand"
