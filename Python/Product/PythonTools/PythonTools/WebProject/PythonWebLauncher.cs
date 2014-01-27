@@ -71,10 +71,6 @@ namespace Microsoft.PythonTools.Project.Web {
         #region IPythonLauncher Members
 
         public int LaunchProject(bool debug) {
-            return LaunchFile(_project.GetStartupFile(), debug);
-        }
-
-        public int LaunchFile(string file, bool debug) {
             bool isWindows;
             if (!Boolean.TryParse(_project.GetProperty(CommonConstants.IsWindowsApplication) ?? Boolean.FalseString, out isWindows)) {
                 isWindows = false;
@@ -101,7 +97,7 @@ namespace Microsoft.PythonTools.Project.Web {
                 // No command, so set up a startInfo that looks like the default
                 // launcher.
                 startInfo = new CommandStartInfo {
-                    Filename = file,
+                    Filename = _project.GetStartupFile(),
                     Arguments = _project.GetProperty(CommonConstants.CommandLineArguments) ?? string.Empty,
                     WorkingDirectory = _project.GetWorkingDirectory(),
                     EnvironmentVariables = null,
@@ -149,6 +145,10 @@ namespace Microsoft.PythonTools.Project.Web {
             }
 
             return VSConstants.S_OK;
+        }
+
+        public int LaunchFile(string file, bool debug) {
+            return new DefaultPythonLauncher(_project).LaunchFile(file, debug);
         }
 
         private static string GetInterpreterPath(IPythonProject project, bool isWindows) {
