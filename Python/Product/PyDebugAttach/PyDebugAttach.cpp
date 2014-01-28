@@ -57,7 +57,8 @@ typedef void PyEval_SetTrace(Py_tracefunc func, PyObject *obj);
 typedef void (PyErr_Restore)(PyObject *type, PyObject *value, PyObject *traceback);
 typedef void (PyErr_Fetch)(PyObject **ptype, PyObject **pvalue, PyObject **ptraceback);
 typedef PyObject* (PyErr_Occurred)();
-typedef PyObject* (PyImport_ImportModule)(const char *name);
+typedef PyObject* (PyErr_Print)();
+typedef PyObject* (PyImport_ImportModule) (const char *name);
 typedef PyObject* (PyObject_GetAttrString)(PyObject *o, const char *attr_name);
 typedef PyObject* (PyObject_SetAttrString)(PyObject *o, const char *attr_name, PyObject* value);
 typedef PyObject* (PyBool_FromLong)(long v);
@@ -726,33 +727,42 @@ public:
     }
 };
 
-bool LoadAndEvaluateCode(wchar_t* filePath, const char* fileName, ConnectionInfo& connInfo, bool isDebug, PyObject* globalsDict,
+bool LoadAndEvaluateCode(
+    wchar_t* filePath, const char* fileName, ConnectionInfo& connInfo, bool isDebug, PyObject* globalsDict,
     Py_CompileString* pyCompileString, PyDict_SetItemString* dictSetItem,
-    PyEval_EvalCode* pyEvalCode, PyString_FromString* strFromString, PyEval_GetBuiltins* getBuiltins) {
-        auto debuggerCode = ReadCodeFromFile(filePath);
-        if (debuggerCode == nullptr) {
-            connInfo.ReportErrorAfterAttachDone(ConnError_LoadDebuggerFailed);
-            return false;
-        }
+    PyEval_EvalCode* pyEvalCode, PyString_FromString* strFromString, PyEval_GetBuiltins* getBuiltins,
+    PyErr_Print pyErrPrint
+ ) {
+    auto debuggerCode = ReadCodeFromFile(filePath);
+    if (debuggerCode == nullptr) {
+        connInfo.ReportErrorAfterAttachDone(ConnError_LoadDebuggerFailed);
+        return false;
+    }
 
-        auto code = PyObjectHolder(isDebug, pyCompileString(debuggerCode, fileName, 257 /*Py_file_input*/));
-        delete[] debuggerCode;
+    auto code = PyObjectHolder(isDebug, pyCompileString(debuggerCode, fileName, 257 /*Py_file_input*/));
+    delete[] debuggerCode;
 
-        if (*code == nullptr) {
-            connInfo.ReportErrorAfterAttachDone(ConnError_LoadDebuggerFailed);
-            return false;
-        }
+    if (*code == nullptr) {
+        connInfo.ReportErrorAfterAttachDone(ConnError_LoadDebuggerFailed);
+        return false;
+    }
 
-        dictSetItem(globalsDict, "__builtins__", getBuiltins());
-        auto size = WideCharToMultiByte(CP_UTF8, 0, filePath, (DWORD)wcslen(filePath), NULL, 0, NULL, NULL);
-        char* filenameBuffer = new char[size];
-        if (WideCharToMultiByte(CP_UTF8, 0, filePath, (DWORD)wcslen(filePath), filenameBuffer, size, NULL, NULL) != 0) {
-            filenameBuffer[size] = 0;
-            dictSetItem(globalsDict, "__file__", strFromString(filenameBuffer));
-        }
-        auto evalResult = PyObjectHolder(isDebug, pyEvalCode(code.ToPython(), globalsDict, globalsDict));
+    dictSetItem(globalsDict, "__builtins__", getBuiltins());
+    auto size = WideCharToMultiByte(CP_UTF8, 0, filePath, (DWORD)wcslen(filePath), NULL, 0, NULL, NULL);
+    char* filenameBuffer = new char[size];
+    if (WideCharToMultiByte(CP_UTF8, 0, filePath, (DWORD)wcslen(filePath), filenameBuffer, size, NULL, NULL) != 0) {
+        filenameBuffer[size] = 0;
+        dictSetItem(globalsDict, "__file__", strFromString(filenameBuffer));
+    }
 
-        return true;
+    auto evalResult = PyObjectHolder(isDebug, pyEvalCode(code.ToPython(), globalsDict, globalsDict));
+#if !NDEBUG
+    if (*evalResult == nullptr) {
+        pyErrPrint();
+    }
+#endif
+
+    return true;
 }
 
 bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
@@ -818,7 +828,8 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
         auto errOccurred = (PyErr_Occurred*)GetProcAddress(module, "PyErr_Occurred");
         auto pyErrFetch = (PyErr_Fetch*)GetProcAddress(module, "PyErr_Fetch");
         auto pyErrRestore = (PyErr_Restore*)GetProcAddress(module, "PyErr_Restore");
-        auto pyImportMod = (PyImport_ImportModule*)GetProcAddress(module, "PyImport_ImportModule");
+        auto pyErrPrint = (PyErr_Print*)GetProcAddress(module, "PyErr_Print");
+        auto pyImportMod = (PyImport_ImportModule*) GetProcAddress(module, "PyImport_ImportModule");
         auto pyGetAttr = (PyObject_GetAttrString*)GetProcAddress(module, "PyObject_GetAttrString");
         auto pySetAttr = (PyObject_SetAttrString*)GetProcAddress(module, "PyObject_SetAttrString");
         auto pyNone = (PyObject*)GetProcAddress(module, "_Py_NoneStruct");
@@ -990,6 +1001,9 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
         // go ahead and bring in the debugger module and initialize all threads in the process...
         GilHolder gilLock(gilEnsure, gilRelease);   // acquire and hold the GIL until done...
 
+        auto pyTrue = boolFromLong(1);
+        auto pyFalse = boolFromLong(0);
+
         auto filename = GetCurrentModuleFilename();
         if (filename.length() == 0) {
             return nullptr;
@@ -1013,19 +1027,19 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
         auto utilModule = PyObjectHolder(isDebug, pyModuleNew("visualstudio_py_util"));
         auto utilModuleDict = pyModuleGetDict(utilModule.ToPython());
         LoadAndEvaluateCode(utilModuleFilePath, "visualstudio_py_util.py", connInfo, isDebug, utilModuleDict,
-            pyCompileString, dictSetItem, pyEvalCode, strFromString, getBuiltins);
+            pyCompileString, dictSetItem, pyEvalCode, strFromString, getBuiltins, pyErrPrint);
 
         auto replModule = PyObjectHolder(isDebug, pyModuleNew("visualstudio_py_repl"));
         auto replModuleDict = pyModuleGetDict(replModule.ToPython());
         dictSetItem(replModuleDict, "visualstudio_py_util", utilModule.ToPython());
         LoadAndEvaluateCode(replModuleFilePath, "visualstudio_py_repl.py", connInfo, isDebug, replModuleDict,
-            pyCompileString, dictSetItem, pyEvalCode, strFromString, getBuiltins);
+            pyCompileString, dictSetItem, pyEvalCode, strFromString, getBuiltins, pyErrPrint);
 
         auto globalsDict = PyObjectHolder(isDebug, pyDictNew());
         dictSetItem(globalsDict.ToPython(), "visualstudio_py_util", utilModule.ToPython());
         dictSetItem(globalsDict.ToPython(), "visualstudio_py_repl", replModule.ToPython());
         LoadAndEvaluateCode(debuggerModuleFilePath, "visualstudio_py_debugger.py", connInfo, isDebug, globalsDict.ToPython(),
-            pyCompileString, dictSetItem, pyEvalCode, strFromString, getBuiltins);
+            pyCompileString, dictSetItem, pyEvalCode, strFromString, getBuiltins, pyErrPrint);
 
         // now initialize debugger process wide state
         auto attach_process = PyObjectHolder(isDebug, getDictItem(globalsDict.ToPython(), "attach_process"), true);
@@ -1046,7 +1060,7 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
 
         auto debugId = PyObjectHolder(isDebug, strFromString(connInfo.Buffer->DebugId));
 
-        DecRef(call(attach_process.ToPython(), pyPortNum.ToPython(), debugId.ToPython(), NULL), isDebug);
+        DecRef(call(attach_process.ToPython(), pyPortNum.ToPython(), debugId.ToPython(), pyTrue, pyFalse, NULL), isDebug);
 
         auto sysMod = PyObjectHolder(isDebug, pyImportMod("sys"));
         if (*sysMod == nullptr) {
@@ -1072,8 +1086,6 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
             initialThreads.insert(curThread);
         }
 
-        auto pyTrue = boolFromLong(1);
-        auto pyFalse = boolFromLong(0);
         hash_set<PyThreadState*> seenThreads;
         {
             // Python 3.2's GIL has changed and we need it to be less aggressive in the face of heavy contention

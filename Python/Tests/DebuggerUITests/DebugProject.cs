@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows.Automation;
@@ -287,10 +288,12 @@ namespace DebuggerUITests {
                 StartHelloWorldAndBreak(app);
 
                 var modules = ((Process3)VsIdeTestHostContext.Dte.Debugger.CurrentProcess).Modules;
-                Assert.AreEqual(1, modules.Count);
-                var module = modules.Item(1);
-                var modulePath = module.Path;
-                Assert.IsTrue(modulePath.EndsWith("Program.py"));
+                Assert.IsTrue(modules.Count >= 1);
+
+                var module = modules.Item("Program");
+                Assert.IsNotNull(module);
+
+                Assert.IsTrue(module.Path.EndsWith("Program.py"));
                 Assert.AreEqual("Program", module.Name);
                 Assert.AreNotEqual((uint)0, module.Order);
 

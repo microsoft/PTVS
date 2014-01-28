@@ -39,13 +39,14 @@ import types
 from collections import deque
 
 try:
-    import visualstudio_py_util as _vspu
-except ImportError:
+    # In the local attach scenario, visualstudio_py_util is injected into globals()
+    # by PyDebugAttach before loading this module, and cannot be imported.
+    _vspu = visualstudio_py_util
+except:
     try:
-        import ptvsd.visualstudio_py_util as _vspu
+        import visualstudio_py_util as _vspu
     except ImportError:
-        # in the local attach scenario, visualstudio_py_util should already be defined
-        _vspu = visualstudio_py_util
+        import ptvsd.visualstudio_py_util as _vspu
 to_bytes = _vspu.to_bytes
 read_bytes = _vspu.read_bytes
 read_int = _vspu.read_int
@@ -986,7 +987,7 @@ due to the exec, so we do it here"""
         def execute_attach_process_work_item():
             import visualstudio_py_debugger
             visualstudio_py_debugger.DETACH_CALLBACKS.append(self.do_detach)
-            visualstudio_py_debugger.attach_process(port, debugger_id, True)        
+            visualstudio_py_debugger.attach_process(port, debugger_id, report = True, block = True)
         
         self.execute_item = execute_attach_process_work_item
         self.execute_item_lock.release()

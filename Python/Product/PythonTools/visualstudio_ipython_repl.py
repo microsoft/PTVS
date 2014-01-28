@@ -326,7 +326,7 @@ def __visualstudio_debugger_attach():
         visualstudio_py_debugger.DETACH_CALLBACKS.remove(do_detach)
 
     visualstudio_py_debugger.DETACH_CALLBACKS.append(do_detach)
-    visualstudio_py_debugger.attach_process(''' + str(port) + ''', ''' + repr(debugger_id) + ''', True)        
+    visualstudio_py_debugger.attach_process(''' + str(port) + ''', ''' + repr(debugger_id) + ''', report = True, block = True)
 
 __visualstudio_debugger_attach()
 del __visualstudio_debugger_attach

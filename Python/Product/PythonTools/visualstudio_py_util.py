@@ -229,11 +229,9 @@ class SafeRepr(object):
         '''Returns an iterable of the parts in the final repr string.'''
 
         obj_repr = type(obj).__repr__
+
         def has_obj_repr(t):
-            try:
-                r = t.__repr__
-            except:
-                return False
+            r = t.__repr__
             try:
                 return obj_repr == r
             except:

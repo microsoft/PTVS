@@ -30,13 +30,14 @@ import ntpath
 import runpy
 
 try:
-    import visualstudio_py_util as _vspu
-except ImportError:
+    # In the local attach scenario, visualstudio_py_util is injected into globals()
+    # by PyDebugAttach before loading this module, and cannot be imported.
+    _vspu = visualstudio_py_util
+except:
     try:
-        import ptvsd.visualstudio_py_util as _vspu
+        import visualstudio_py_util as _vspu
     except ImportError:
-        # in the local attach scenario, visualstudio_py_util should already be defined
-        _vspu = visualstudio_py_util
+        import ptvsd.visualstudio_py_util as _vspu
 to_bytes = _vspu.to_bytes
 exec_file = _vspu.exec_file
 exec_module = _vspu.exec_module
@@ -50,13 +51,14 @@ write_string = _vspu.write_string
 safe_repr = _vspu.SafeRepr()
 
 try:
-    import visualstudio_py_repl as _vspr
-except ImportError:
+    # In the local attach scenario, visualstudio_py_repl is injected into globals()
+    # by PyDebugAttach before loading this module, and cannot be imported.
+    _vspr = visualstudio_py_repl
+except:
     try:
-        import ptvsd.visualstudio_py_repl as _vspr
+        import visualstudio_py_repl as _vspr
     except ImportError:
-        # in the local attach scenario, visualstudio_py_repl should already be defined
-        _vspr = visualstudio_py_repl
+        import ptvsd.visualstudio_py_repl as _vspr
 
 try:
     import stackless
@@ -1865,7 +1867,7 @@ def intercept_threads(for_attach = False):
     global _INTERCEPTING_FOR_ATTACH
     _INTERCEPTING_FOR_ATTACH = for_attach
 
-def attach_process(port_num, debug_id, report_and_block = False):
+def attach_process(port_num, debug_id, report = False, block = False):
     global conn
     for i in xrange(50):
         try:
@@ -1879,7 +1881,7 @@ def attach_process(port_num, debug_id, report_and_block = False):
             time.sleep(50./1000)
     else:
         raise Exception('failed to attach')
-    attach_process_from_socket(conn, report_and_block, report_and_block)
+    attach_process_from_socket(conn, report, block)
 
 def attach_process_from_socket(sock, report = False, block = False):
     global conn
@@ -1891,22 +1893,6 @@ def attach_process_from_socket(sock, report = False, block = False):
     # start the debugging loop
     global debugger_thread_id
     debugger_thread_id = _start_new_thread(DebuggerLoop(conn).loop, ())
-
-    if report:
-        THREADS_LOCK.acquire()
-        all_threads = list(THREADS.values())
-        if block:
-            main_thread = THREADS[thread.get_ident()]
-        THREADS_LOCK.release()
-        for cur_thread in all_threads:
-            report_new_thread(cur_thread)
-
-        for filename, module in MODULES:
-            report_module_load(module)
-    DETACHED = False
-
-    if block:
-        main_thread.block(lambda: report_process_loaded(thread.get_ident()))
 
     for mod_name, mod_value in sys.modules.items():
         try:
@@ -1920,6 +1906,21 @@ def attach_process_from_socket(sock, report = False, block = False):
                     MODULES.append((filename, Module(fullpath)))
         except:
             traceback.print_exc()   
+
+    if report:
+        THREADS_LOCK.acquire()
+        all_threads = list(THREADS.values())
+        if block:
+            main_thread = THREADS[thread.get_ident()]
+        THREADS_LOCK.release()
+        for cur_thread in all_threads:
+            report_new_thread(cur_thread)
+        for filename, module in MODULES:
+            report_module_load(module)
+    DETACHED = False
+
+    if block:
+        main_thread.block(lambda: report_process_loaded(thread.get_ident()))
 
     # intercept all new thread requests
     if not _INTERCEPTING_FOR_ATTACH:
@@ -2157,7 +2158,7 @@ def debug(
     DEBUG_STDLIB = debug_stdlib
     DJANGO_DEBUG = django_debugging
 
-    attach_process(port_num, debug_id)
+    attach_process(port_num, debug_id, report = True)
 
     if redirect_output:
         enable_output_redirection()
