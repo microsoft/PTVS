@@ -125,6 +125,11 @@ namespace Microsoft.VisualStudioTools.Project
             _project.OnProjectPropertyChanged += new EventHandler<ProjectPropertyChangedArgs>(OnProjectPropertyChanged);
         }
 
+        public virtual IList<Output> EnumerateOutputs() {
+            UIThread.Instance.RunSync(Refresh);
+            return _outputs;
+        }
+
         public virtual void InvalidateGroup()
         {
             // Set keyOutput to null so that a refresh will be performed the next time

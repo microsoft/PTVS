@@ -17,6 +17,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
+using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.OLE.Interop;
@@ -548,25 +550,31 @@ namespace Microsoft.VisualStudioTools.Project
 
         #region helper methods
 
-        private MSBuildExecution.ProjectPropertyInstance GetMsBuildProperty(string propertyName, bool resetCache)
+        private MSBuildExecution.ProjectInstance GetCurrentConfig(bool resetCache = false)
         {
-            if (resetCache || this.currentConfig == null)
+            if (resetCache || currentConfig == null)
             {
                 // Get properties for current configuration from project file and cache it
-                this.project.SetConfiguration(this.ConfigName);
-                this.project.BuildProject.ReevaluateIfNecessary();
+                project.SetConfiguration(ConfigName);
+                project.BuildProject.ReevaluateIfNecessary();
                 // Create a snapshot of the evaluated project in its current state
-                this.currentConfig = this.project.BuildProject.CreateProjectInstance();
+                currentConfig = project.BuildProject.CreateProjectInstance();
 
                 // Restore configuration
                 project.SetCurrentConfiguration();
             }
+            return currentConfig;
+        }
 
-            if (this.currentConfig == null)
+        private MSBuildExecution.ProjectPropertyInstance GetMsBuildProperty(string propertyName, bool resetCache)
+        {
+            var current = GetCurrentConfig(resetCache);
+
+            if (current == null)
                 throw new Exception("Failed to retrieve properties");
 
             // return property asked for
-            return this.currentConfig.GetProperty(propertyName);
+            return current.GetProperty(propertyName);
         }
 
         /// <summary>
@@ -604,6 +612,72 @@ namespace Microsoft.VisualStudioTools.Project
                 pages[0] = PackageUtilities.CreateCAUUIDFromGuidArray(guids);
             }
         }
+
+        internal virtual bool IsInputGroup(string groupName)
+        {
+            return groupName == "SourceFiles";
+        }
+
+        internal virtual bool IsUpToDate()
+        {
+            var inputs = Enumerable.Empty<DateTime?>();
+            var outputs = Enumerable.Empty<DateTime?>();
+
+            foreach (var group in OutputGroups)
+            {
+                string groupName;
+                ErrorHandler.ThrowOnFailure(group.get_CanonicalName(out groupName));
+                
+                var seq = IsInputGroup(groupName) ? inputs : outputs;
+
+                seq = seq.Concat(group
+                    .EnumerateOutputs()
+                    .Select(o =>
+                    {
+                        string path;
+                        return ErrorHandler.Succeeded(o.get_CanonicalName(out path)) ? path : null;
+                    })
+                    .Where(File.Exists)
+                    .Select<string, DateTime?>(path =>
+                    {
+                        try
+                        {
+                            return File.GetLastWriteTimeUtc(path);
+                        }
+                        catch (ArgumentException)
+                        { }
+                        catch (UnauthorizedAccessException)
+                        { }
+                        catch (NotSupportedException)
+                        { }
+                        return null;
+                    })
+                );
+
+                if (IsInputGroup(groupName))
+                {
+                    inputs = seq;
+                }
+                else
+                {
+                    outputs = seq;
+                }
+            }
+
+            var lastInput = inputs
+                .Where(dt => dt.HasValue)
+                .Select(dt => dt.Value)
+                .DefaultIfEmpty(DateTime.MinValue)
+                .Max();
+            var firstOutput = outputs
+                .Where(dt => dt.HasValue)
+                .Select(dt => dt.Value)
+                .DefaultIfEmpty(DateTime.MaxValue)
+                .Min();
+
+            return lastInput < firstOutput;
+        }
+
         #endregion
 
         #region IVsProjectFlavorCfg Members
@@ -727,9 +801,9 @@ namespace Microsoft.VisualStudioTools.Project
         }
 
         public virtual int StartUpToDateCheck(IVsOutputWindowPane pane, uint options) {
-            // Report that the build is not up to date to ensure that we always
-            // build.
-            return VSConstants.E_NOTIMPL;
+            return config.IsUpToDate() ?
+                VSConstants.S_OK :
+                VSConstants.E_FAIL;
         }
 
         public virtual int Stop(int fsync) {
