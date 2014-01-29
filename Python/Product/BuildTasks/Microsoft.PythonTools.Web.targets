@@ -492,27 +492,37 @@ interpreter_path_emulated=$(PythonInterpreterPath)
       ResolveWsgiAppSettings;
       ResolveVirtualEnvSettings;
     </CreateWebConfigDependsOnTargets>
+
+    <AlwaysRegenerateWebConfig Condition="'$(AlwaysRegenerateWebConfig)' == ''">false</AlwaysRegenerateWebConfig>
   </PropertyGroup>
 
   <Target Name="CreateWebConfig" DependsOnTargets="_DetectWebConfig;_CreateWebConfig" />
 
   <Target Name="_DetectWebConfig">
     <ItemGroup>
-      <_FoundWebConfig Include="@(Content);@(Include)" Condition=" '%(Content.Filename)%(Content.Extension)' == 'web.config' " />
+      <_OutWebConfig Include="$(QualifiedProjectHome)web.config"/>
     </ItemGroup>
 
-    <Message Text="Generating web.config automatically..." Condition="'@(_FoundWebConfig)' == ''"/>
-    <Message Text="Skipping generation of web.config automatically because it already exists in the project..." Condition="@(_FoundWebConfig) != ''"/>
+    <ReadLinesFromFile File="@(_OutWebConfig)" Condition="Exists('@(_OutWebConfig)')">
+      <Output TaskParameter="Lines" PropertyName="_CurrentWebConfigCode"/>
+    </ReadLinesFromFile>
+
+    <PropertyGroup>
+      <_RegenerateWebConfig>true</_RegenerateWebConfig>
+      <_RegenerateWebConfig Condition="Exists('@(_OutWebConfig)') and !$(AlwaysRegenerateWebConfig)">$(_CurrentWebConfigCode.Contains('Generated web.config for Windows Azure.'))</_RegenerateWebConfig>
+    </PropertyGroup>
+
+    <Message Text="Regenerating web.config" Condition="$(_RegenerateWebConfig)"/>
+    <Message Text="Using existing web.config file" Condition="!$(_RegenerateWebConfig)"/>
   </Target>
 
   <Target Name="_CreateWebConfig"
           DependsOnTargets="$(CreateWebConfigDependsOnTargets)"
-          Condition="'@(_FoundWebConfig)' == ''">
+          Condition="$(_RegenerateWebConfig)">
     <Error Text="No WSGI handler specified" Condition="'$(PythonWsgiHandler)' == ''" />
 
     <ItemGroup>
       <_TempWebConfig Include="$(IntermediateOutputPath)web.config" />
-      <_OutWebConfig Include="$(QualifiedProjectHome)web.config" />
     </ItemGroup>
 
     <Copy SourceFiles="$(_AzureSupportPath)web_config.xml"
@@ -534,17 +544,8 @@ interpreter_path_emulated=$(PythonInterpreterPath)
              Query="/configuration/system.webServer/handlers"
              Value="$(FastCgiHandler)" />
 
-    <ReadLinesFromFile File="@(_OutWebConfig)" Condition="Exists(@(_OutWebConfig))">
-      <Output TaskParameter="Lines" PropertyName="_CurrentWebConfigCode"/>
-    </ReadLinesFromFile>
-    <ReadLinesFromFile File="@(_TempWebConfig)">
-      <Output TaskParameter="Lines" PropertyName="_NewWebConfigCode"/>
-    </ReadLinesFromFile>
-    
-    <Copy SourceFiles="@(_TempWebConfig)"
-          DestinationFiles="@(_OutWebConfig)"
-          Condition="'$(_CurrentWebConfigCode)' != '$(_NewWebConfigCode)'" />
-    
+    <Copy SourceFiles="@(_TempWebConfig)" DestinationFiles="@(_OutWebConfig)"/>
+
     <ItemGroup>
       <FilesForPackagingFromProject Include="@(_OutWebConfig)">
         <DestinationRelativePath>web.config</DestinationRelativePath>
@@ -560,6 +561,7 @@ interpreter_path_emulated=$(PythonInterpreterPath)
   -->
   <Target Name="GetTargetPath" Returns="$(_WebRoleDll)"
           DependsOnTargets="ResolvePythonDeploymentMethod;
+                            CreatePythonAzureSetupConfig;
                             _DeployPythonCloudServiceFiles;
                             _DeployPythonCloudServiceFilesForEmulator">
     <!-- We need to build CreateWebConfig in a separate instance. This will

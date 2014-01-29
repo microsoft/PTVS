@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0"?>
-<!-- Generated web.config for Azure projects. You can add a web.config file to
-     your project to replace this.
+<!-- Generated web.config for Windows Azure. Remove this comment to prevent
+     modifications being overwritten when publishing the project.
 -->
 <configuration>
   <system.diagnostics>
