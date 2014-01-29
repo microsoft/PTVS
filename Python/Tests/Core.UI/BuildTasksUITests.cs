@@ -217,7 +217,7 @@ namespace PythonToolsUITests {
             }
 
             Console.WriteLine("Output Window: " + outputText);
-            Assert.IsTrue(outputText.Contains(expected), outputText);
+            Assert.IsTrue(outputText.Contains(expected), string.Format("Expected to see:\r\n\r\n{0}\r\n\r\nActual content:\r\n\r\n{1}", expected, outputText));
         }
 
         [TestMethod, Priority(0)]
@@ -401,6 +401,34 @@ namespace PythonToolsUITests {
                     var ver = PythonVersion.Version.ToVersion();
                     ExpectOutputWindowText(app, string.Format("pass {0}.{1}", ver.Major, ver.Minor));
                 }
+            }
+        }
+
+
+        [TestMethod, Priority(0)]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void CustomCommandsSearchPath() {
+            var expectedSearchPath = string.Format("['{0}', '{1}']",
+                TestData.GetPath(@"TestData\Targets").Replace("\\", "\\\\"),
+                TestData.GetPath(@"TestData\Targets\Package").Replace("\\", "\\\\")
+            );
+           
+            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
+                PythonProjectNode node;
+                EnvDTE.Project proj;
+                OpenProject(app, "CommandSearchPath.sln", out node, out proj);
+
+                Execute(node, "Import From Search Path");
+
+                var outputWindow = app.Element.FindFirst(TreeScope.Descendants,
+                    new AndCondition(
+                        new PropertyCondition(AutomationElement.ClassNameProperty, "GenericPane"),
+                        new PropertyCondition(AutomationElement.NameProperty, "Output")
+                    )
+                );
+                Assert.IsNotNull(outputWindow, "Output Window was not opened");
+
+                ExpectOutputWindowText(app, expectedSearchPath);
             }
         }
     }

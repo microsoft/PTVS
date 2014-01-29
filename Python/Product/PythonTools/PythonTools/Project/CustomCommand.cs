@@ -493,7 +493,7 @@ namespace Microsoft.PythonTools.Project {
                 EnvironmentVariables = new Dictionary<string, string>(),
                 TargetType = item.GetMetadata(BuildTasks.CreatePythonCommandItem.TargetTypeKey),
                 ExecuteIn = item.GetMetadata(BuildTasks.CreatePythonCommandItem.ExecuteInKey),
-                RequiredPackages = item.GetMetadata(BuildTasks.CreatePythonCommandItem.RequiredPackagesKey).Split(';')
+                RequiredPackages = item.GetMetadata(BuildTasks.CreatePythonCommandItem.RequiredPackagesKey).Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries)
             };
 
             string errorRegex = item.GetMetadata(BuildTasks.CreatePythonCommandItem.ErrorRegexKey);
@@ -505,6 +505,11 @@ namespace Microsoft.PythonTools.Project {
             if (!string.IsNullOrEmpty(warningRegex)) {
                 startInfo.WarningRegex = new Regex(warningRegex);
             }
+
+            // Fill PYTHONPATH from interpreter settings before we load values from Environment metadata item,
+            // so that commands can explicitly override it if they want to.
+            var pythonPathVarName = project.GetInterpreterFactory().Configuration.PathEnvironmentVariable ?? "PYTHONPATH";
+            startInfo.EnvironmentVariables[pythonPathVarName] = string.Join(";", project.GetSearchPaths());
 
             var environment = item.GetMetadata(BuildTasks.CreatePythonCommandItem.EnvironmentKey);
             foreach (var line in environment.Split('\r', '\n')) {
