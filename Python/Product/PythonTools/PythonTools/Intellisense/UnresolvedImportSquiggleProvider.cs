@@ -18,6 +18,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Windows.Threading;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.PythonTools.Project;
@@ -100,7 +101,11 @@ namespace Microsoft.PythonTools.Intellisense {
             return snapshot.CreateTrackingSpan(newSpan, SpanTrackingMode.EdgeInclusive);
         }
 
-        private static object GetToolTip(string module) {
+        private object GetToolTip(string module) {
+            var factory = _analyzer.InterpreterFactory as IPythonInterpreterFactoryWithDatabase;
+            if (factory != null && !factory.IsCurrent) {
+                return SR.GetString(SR.UnresolvedModuleTooltipRefreshing, module);
+            }
             return SR.GetString(SR.UnresolvedModuleTooltip, module);
         }
 

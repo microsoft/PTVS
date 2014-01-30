@@ -713,6 +713,18 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unable to resolve &quot;{0}&quot;.
+        ///The completion DB for the active environment needs to be refreshed,
+        ///and IntelliSense may be missing until that has completed.
+        ///See the Python Environments window for details..
+        /// </summary>
+        internal static string UnresolvedModuleTooltipRefreshing {
+            get {
+                return ResourceManager.GetString("UnresolvedModuleTooltipRefreshing", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to .
         /// </summary>
         internal static string UpdatingSearchPath {

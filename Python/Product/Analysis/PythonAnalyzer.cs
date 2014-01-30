@@ -35,6 +35,7 @@ namespace Microsoft.PythonTools.Analysis {
     /// </summary>
     public partial class PythonAnalyzer : IGroupableAnalysisProject, IDisposable {
         private readonly IPythonInterpreter _interpreter;
+        private readonly IPythonInterpreterFactory _interpreterFactory;
         private readonly ModuleTable _modules;
         private readonly ConcurrentDictionary<string, ModuleInfo> _modulesByFilename;
         private readonly HashSet<ModuleInfo> _modulesWithUnresolvedImports;
@@ -66,6 +67,7 @@ namespace Microsoft.PythonTools.Analysis {
             if (pythonInterpreter == null) {
                 throw new ArgumentNullException("pythonInterpreter");
             }
+            _interpreterFactory = factory;
             _langVersion = factory.GetLanguageVersion();
             _interpreter = pythonInterpreter;
             _builtinName = builtinName ?? (_langVersion.Is3x() ? SharedDatabaseState.BuiltinName3x : SharedDatabaseState.BuiltinName2x);
@@ -509,6 +511,15 @@ namespace Microsoft.PythonTools.Analysis {
         public IPythonInterpreter Interpreter {
             get {
                 return _interpreter;
+            }
+        }
+
+        /// <summary>
+        /// Returns the interpreter factory that the analyzer is using.
+        /// </summary>
+        public IPythonInterpreterFactory InterpreterFactory {
+            get {
+                return _interpreterFactory;
             }
         }
 

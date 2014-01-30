@@ -107,6 +107,7 @@ namespace Microsoft.PythonTools.Project {
         public const string PythonWebLauncherDescription = "PythonWebLauncherDescription";
 
         public const string UnresolvedModuleTooltip = "UnresolvedModuleTooltip";
+        public const string UnresolvedModuleTooltipRefreshing = "UnresolvedModuleTooltipRefreshing";
 
         public const string FillCommentSelectionError = "FillCommentSelectionError";
 
