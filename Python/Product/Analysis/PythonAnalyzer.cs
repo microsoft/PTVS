@@ -159,12 +159,8 @@ namespace Microsoft.PythonTools.Analysis {
             var entry = new ProjectEntry(this, moduleName, filePath, cookie);
 
             if (moduleName != null) {
-                ModuleReference moduleRef;
-                if (Modules.TryGetValue(moduleName, out moduleRef)) {
-                    moduleRef.Module = entry.MyScope;
-                } else {
-                    Modules[moduleName] = new ModuleReference(entry.MyScope);
-                }
+                var moduleRef = Modules.GetOrAdd(moduleName);
+                moduleRef.Module = entry.MyScope;
 
                 DoDelayedSpecialization(moduleName);
             }

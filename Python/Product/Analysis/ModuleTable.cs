@@ -63,6 +63,10 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
+        public ModuleReference GetOrAdd(string name) {
+            return _modules.GetOrAdd(name, _ => new ModuleReference());
+        }
+
         /// <summary>
         /// Reloads the modules when the interpreter says they've changed.
         /// Modules that are already in the table as builtins are replaced or
