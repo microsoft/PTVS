@@ -13,6 +13,8 @@
  * ***************************************************************************/
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.InteropServices;
 using Microsoft.VisualStudioTools.Project;
 using IOleServiceProvider = Microsoft.VisualStudio.OLE.Interop.IServiceProvider;
@@ -23,6 +25,12 @@ namespace Microsoft.PythonTools.Project {
     /// </summary>
     [Guid(PythonConstants.ProjectFactoryGuid)]
     class PythonProjectFactory : ProjectFactory {
+        // We don't want to create projects with these GUIDs because they are
+        // either incompatible or don't really exist (e.g. telemetry markers).
+        private static readonly HashSet<Guid> IgnoredProjectTypeGuids = new HashSet<Guid> {
+            new Guid("{789894C7-04A9-4A11-A6B5-3F4435165112}"), // Flask Web Project marker
+            new Guid("{E614C764-6D9E-4607-9337-B7073809A0BD}")  // Bottle Web Project marker
+        };
 
         public PythonProjectFactory(PythonProjectPackage/*!*/ package)
             : base(package) {
@@ -32,6 +40,20 @@ namespace Microsoft.PythonTools.Project {
             PythonProjectNode project = new PythonProjectNode((PythonProjectPackage)Package);
             project.SetSite((IOleServiceProvider)((IServiceProvider)Package).GetService(typeof(IOleServiceProvider)));
             return project;
+        }
+
+        protected override string ProjectTypeGuids(string file) {
+            var guids = base.ProjectTypeGuids(file);
+
+            // Exclude GUIDs from IgnoredProjectTypeGuids so we don't try and
+            // create projects from them.
+            return string.Join(";", guids
+                .Split(';')
+                .Where(s => {
+                    Guid g;
+                    return Guid.TryParse(s, out g) && !IgnoredProjectTypeGuids.Contains(g);
+                })
+            );
         }
     }
 }

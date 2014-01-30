@@ -188,13 +188,13 @@ namespace PythonToolsUITests {
                 Thread.Sleep(300);
             }
 
-            Process newProcess = null;
+            var newProcesses = new Process[0];
             for (int i = 20;
-                i > 0 && newProcess == null;
-                --i, newProcess = Process.GetProcessesByName("python").Except(pythonProcesses).FirstOrDefault()) {
+                i > 0 && !newProcesses.Any();
+                --i, newProcesses = Process.GetProcessesByName("python").Except(pythonProcesses).ToArray()) {
                 Thread.Sleep(500);
             }
-            Assert.IsNotNull(newProcess, "Did not find new Python process");
+            Assert.IsTrue(newProcesses.Any(), "Did not find new Python process");
 
             string text;
             var req = HttpWebRequest.CreateHttp(new Uri(string.Format("http://localhost:{0}/", port)));
@@ -203,20 +203,38 @@ namespace PythonToolsUITests {
             }
 
             for (int i = 10; i >= 0; --i) {
-                try {
-                    newProcess.Kill();
+                bool allKilled = true;
+                for (int j = 0; j < newProcesses.Length; ++j) {
+                    try {
+                        if (newProcesses[j] != null) {
+                            if (!newProcesses[j].HasExited) {
+                                newProcesses[j].Kill();
+                            }
+                            newProcesses[j] = null;
+                        }
+                    } catch (Exception ex) {
+                        Console.WriteLine("Failed to kill {0}", newProcesses[j]);
+                        Console.WriteLine(ex);
+                        Console.WriteLine();
+                        allKilled = false;
+                    }
+                }
+                if (allKilled) {
                     break;
-                } catch {
-                    Thread.Sleep(100);
                 }
-                if (i == 0) {
-                    Console.WriteLine("Failed to kill process.");
-                }
+                Thread.Sleep(100);
+                Assert.AreNotEqual(0, i, "Failed to kill process.");
             }
 
             Console.WriteLine("Response from http://localhost:{0}/", port);
             Console.WriteLine(text);
             Assert.IsTrue(text.Contains(textInResponse), text);
+
+            for (int i = 10;
+                i > 0 && !IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpListeners().All(p => p.Port != port);
+                --i) {
+                Thread.Sleep(500);
+            }
         }
 
         #endregion
@@ -236,19 +254,25 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core"), Timeout(10 * 60 * 1000)]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void BottleEndToEndV33() {
-            EndToEndTest("Bottle Web Project", "bottle", "Hello World!", "3.3");
+            EndToEndTest("Bottle Web Project", "bottle", "<b>Hello world</b>!", "3.3");
         }
 
         [TestMethod, Priority(0), TestCategory("Core"), Timeout(10 * 60 * 1000)]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void BottleEndToEndV27() {
-            EndToEndTest("Bottle Web Project", "bottle", "Hello World!", "2.7");
+            EndToEndTest("Bottle Web Project", "bottle", "<b>Hello world</b>!", "2.7");
         }
 
         [TestMethod, Priority(0), TestCategory("Core"), Timeout(10 * 60 * 1000)]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void DjangoEndToEndV27() {
             EndToEndTest("Django Web Project", "django", "Congratulations on your first Django-powered page.", "2.7");
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core"), Timeout(10 * 60 * 1000)]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void DjangoEndToEndV33() {
+            EndToEndTest("Django Web Project", "django", "Congratulations on your first Django-powered page.", "3.3");
         }
     }
 }
