@@ -21,6 +21,7 @@ namespace TestUtilities.Mocks {
         
         public object GetService(Type serviceType) {
             object service;
+            Console.WriteLine("MockServiceProvider.GetService({0})", serviceType.Name);
             Services.TryGetValue(serviceType.Name, out service);
             return service;
         }

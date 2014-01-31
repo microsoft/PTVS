@@ -13,8 +13,9 @@
  * ***************************************************************************/
 
 using System;
-using System.Diagnostics;
+using System.IO;
 using System.Runtime.InteropServices;
+using Microsoft.Build.Construction;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -26,10 +27,12 @@ namespace Microsoft.VisualStudioTools.Project
     /// Creates projects within the solution
     /// </summary>
 
-    public abstract class ProjectFactory : Microsoft.VisualStudio.Shell.Flavor.FlavoredProjectFactoryBase
+    public abstract class ProjectFactory : Microsoft.VisualStudio.Shell.Flavor.FlavoredProjectFactoryBase,
 #if DEV11_OR_LATER
-        , IVsAsynchronousProjectCreate
+        IVsAsynchronousProjectCreate,
 #endif
+        IVsProjectUpgradeViaFactory,
+        IVsProjectUpgradeViaFactory4
     {
         #region fields
         private Microsoft.VisualStudio.Shell.Package package;
@@ -47,6 +50,16 @@ namespace Microsoft.VisualStudioTools.Project
 #if DEV11_OR_LATER
         private static readonly Lazy<IVsTaskSchedulerService> taskSchedulerService = new Lazy<IVsTaskSchedulerService>(() => Package.GetGlobalService(typeof(SVsTaskSchedulerService)) as IVsTaskSchedulerService);
 #endif
+        
+        // (See GetSccInfo below.)
+        // When we upgrade a project, we need to cache the SCC info in case
+        // somebody calls to ask for it via GetSccInfo.
+        // We only need to know about the most recently upgraded project, and
+        // can fail for other projects.
+        private string _cachedSccProject;
+        private string _cachedSccProjectName, _cachedSccAuxPath, _cachedSccLocalPath, _cachedSccProvider;
+
+
         #endregion
 
         #region properties
@@ -58,11 +71,15 @@ namespace Microsoft.VisualStudioTools.Project
             }
         }
 
-        protected System.IServiceProvider Site
+        protected internal System.IServiceProvider Site
         {
             get
             {
                 return this.site;
+            }
+            internal set
+            {
+                this.site = value;
             }
         }
 
@@ -73,9 +90,7 @@ namespace Microsoft.VisualStudioTools.Project
         {
             this.package = package;
             this.site = package;
-
-            // Please be aware that this methods needs that ServiceProvider is valid, thus the ordering of calls in the ctor matters.
-            this.buildEngine = Utilities.InitializeMsBuildEngine(this.buildEngine, this.site);
+            this.buildEngine = MSBuild.ProjectCollection.GlobalProjectCollection;
         }
         #endregion
 
@@ -192,5 +207,390 @@ namespace Microsoft.VisualStudioTools.Project
 
 #endif
 
+        #region Project Upgrades
+
+        /// <summary>
+        /// Override this method to upgrade project files.
+        /// </summary>
+        /// <param name="projectXml">
+        /// The XML of the project file being upgraded. This may be modified
+        /// directly or replaced with a new element.
+        /// </param>
+        /// <param name="userProjectXml">
+        /// The XML of the user file being upgraded. This may be modified
+        /// directly or replaced with a new element.
+        /// 
+        /// If there is no user file before upgrading, this may be null. If it
+        /// is non-null on return, the file is created.
+        /// </param>
+        /// <param name="log">
+        /// Callback to log messages. These messages will be added to the
+        /// migration log that is displayed after upgrading completes.
+        /// </param>
+        protected virtual void UpgradeProject(
+            ref ProjectRootElement projectXml,
+            ref ProjectRootElement userProjectXml,
+            Action<__VSUL_ERRORLEVEL, string> log
+        ) { }
+
+        /// <summary>
+        /// Determines whether a project needs to be upgraded.
+        /// </summary>
+        /// <param name="projectXml">
+        /// The XML of the project file being upgraded.
+        /// </param>
+        /// <param name="userProjectXml">
+        /// The XML of the user file being upgraded, or null if no user file
+        /// exists.
+        /// </param>
+        /// <param name="log">
+        /// Callback to log messages. These messages will be added to the
+        /// migration log that is displayed after upgrading completes.
+        /// </param>
+        /// <param name="projectFactory">
+        /// The project factory that will be used. This may be replaced with
+        /// another Guid if a new project factory should be used to upgrade the
+        /// project.
+        /// </param>
+        /// <param name="backupSupport">
+        /// The level of backup support requested for the project. By default,
+        /// the project file (and user file, if any) will be copied alongside
+        /// the originals with ".old" added to the filenames.
+        /// </param>
+        /// <returns>
+        /// The form of upgrade required.
+        /// </returns>
+        protected virtual __VSPPROJECTUPGRADEVIAFACTORYREPAIRFLAGS UpgradeProjectCheck(
+            ProjectRootElement projectXml,
+            ProjectRootElement userProjectXml,
+            Action<__VSUL_ERRORLEVEL, string> log,
+            ref Guid projectFactory,
+            ref __VSPPROJECTUPGRADEVIAFACTORYFLAGS backupSupport
+        ) {
+            return __VSPPROJECTUPGRADEVIAFACTORYREPAIRFLAGS.VSPUVF_PROJECT_NOREPAIR;
+        }
+
+
+
+        class UpgradeLogger {
+            private readonly string _projectFile;
+            private readonly string _projectName;
+            private readonly IVsUpgradeLogger _logger;
+
+            public UpgradeLogger(string projectFile, IVsUpgradeLogger logger) {
+                _projectFile = projectFile;
+                _projectName = Path.GetFileNameWithoutExtension(projectFile);
+                _logger = logger;
+            }
+
+            public void Log(__VSUL_ERRORLEVEL level, string text) {
+                if (_logger != null) {
+                    ErrorHandler.ThrowOnFailure(_logger.LogMessage((uint)level, _projectName, _projectFile, text));
+                }
+            }
+        }
+
+        int IVsProjectUpgradeViaFactory.GetSccInfo(
+            string bstrProjectFileName,
+            out string pbstrSccProjectName,
+            out string pbstrSccAuxPath,
+            out string pbstrSccLocalPath,
+            out string pbstrProvider
+        ) {
+            if (string.Equals(_cachedSccProject, bstrProjectFileName, StringComparison.OrdinalIgnoreCase)) {
+                pbstrSccProjectName = _cachedSccProjectName;
+                pbstrSccAuxPath = _cachedSccAuxPath;
+                pbstrSccLocalPath = _cachedSccLocalPath;
+                pbstrProvider = _cachedSccProvider;
+                return VSConstants.S_OK;
+            }
+            pbstrSccProjectName = null;
+            pbstrSccAuxPath = null;
+            pbstrSccLocalPath = null;
+            pbstrProvider = null;
+            return VSConstants.E_FAIL;
+        }
+
+        int IVsProjectUpgradeViaFactory.UpgradeProject(
+            string bstrFileName,
+            uint fUpgradeFlag,
+            string bstrCopyLocation,
+            out string pbstrUpgradedFullyQualifiedFileName,
+            IVsUpgradeLogger pLogger,
+            out int pUpgradeRequired,
+            out Guid pguidNewProjectFactory
+        ) {
+            pbstrUpgradedFullyQualifiedFileName = null;
+            
+            // We first run (or re-run) the upgrade check and bail out early if
+            // there is actually no need to upgrade.
+            uint dummy;
+            var hr = ((IVsProjectUpgradeViaFactory)this).UpgradeProject_CheckOnly(
+                bstrFileName,
+                pLogger,
+                out pUpgradeRequired,
+                out pguidNewProjectFactory,
+                out dummy
+            );
+
+            if (!ErrorHandler.Succeeded(hr)) {
+                return hr;
+            }
+
+            var logger = new UpgradeLogger(bstrFileName, pLogger);
+
+            var backup = (__VSPPROJECTUPGRADEVIAFACTORYFLAGS)fUpgradeFlag;
+            bool anyBackup, sxsBackup, copyBackup;
+            anyBackup = backup.HasFlag(__VSPPROJECTUPGRADEVIAFACTORYFLAGS.PUVFF_BACKUPSUPPORTED);
+            if (anyBackup) {
+                sxsBackup = backup.HasFlag(__VSPPROJECTUPGRADEVIAFACTORYFLAGS.PUVFF_SXSBACKUP);
+                copyBackup = !sxsBackup && backup.HasFlag(__VSPPROJECTUPGRADEVIAFACTORYFLAGS.PUVFF_COPYBACKUP);
+            } else {
+                sxsBackup = copyBackup = false;
+            }
+            
+            if (copyBackup) {
+                throw new NotSupportedException("PUVFF_COPYBACKUP is not supported");
+            }
+
+            pbstrUpgradedFullyQualifiedFileName = bstrFileName;
+
+            if (pUpgradeRequired == 0 && !copyBackup) {
+                // No upgrade required, and no backup required.
+                logger.Log(__VSUL_ERRORLEVEL.VSUL_INFORMATIONAL, SR.GetString(SR.UpgradeNotRequired));
+                return VSConstants.S_OK;
+            }
+
+            try {
+                UpgradeLogger logger2 = null;
+                var userFileName = bstrFileName + ".user";
+                if (File.Exists(userFileName)) {
+                    logger2 = new UpgradeLogger(userFileName, pLogger);
+                } else {
+                    userFileName = null;
+                }
+
+                if (sxsBackup) {
+                    // For SxS backups we want to put the old project file alongside
+                    // the current one.
+                    bstrCopyLocation = Path.GetDirectoryName(bstrFileName);
+                }
+
+                if (anyBackup) {
+                    var namePart = Path.GetFileNameWithoutExtension(bstrFileName);
+                    var extPart = Path.GetExtension(bstrFileName) + (sxsBackup ? ".old" : "");
+                    var projectFileBackup = Path.Combine(bstrCopyLocation, namePart + extPart);
+                    for (int i = 1; File.Exists(projectFileBackup); ++i) {
+                        projectFileBackup = Path.Combine(
+                            bstrCopyLocation,
+                            string.Format("{0}{1}{2}", namePart, i, extPart)
+                        );
+                    }
+
+                    File.Copy(bstrFileName, projectFileBackup);
+
+                    // Back up the .user file if there is one
+                    if (userFileName != null) {
+                        if (sxsBackup) {
+                            File.Copy(
+                                userFileName,
+                                Path.ChangeExtension(projectFileBackup, ".user.old")
+                            );
+                        } else {
+                            File.Copy(userFileName, projectFileBackup + ".old");
+                        }
+                    }
+
+                    // TODO: Implement support for backing up all files
+                    //if (copyBackup) {
+                    //  - Open the project
+                    //  - Inspect all Items
+                    //  - Copy those items that are referenced relative to the
+                    //    project file into bstrCopyLocation
+                    //}
+                }
+
+
+                var queryEdit = site.GetService(typeof(SVsQueryEditQuerySave)) as IVsQueryEditQuerySave2;
+                if (queryEdit != null) {
+                    uint editVerdict;
+                    uint queryEditMoreInfo;
+                    var tagVSQueryEditFlags_QEF_AllowUnopenedProjects = (tagVSQueryEditFlags)0x80;
+
+                    ErrorHandler.ThrowOnFailure(queryEdit.QueryEditFiles(
+                        (uint)(tagVSQueryEditFlags.QEF_ForceEdit_NoPrompting |
+                            tagVSQueryEditFlags.QEF_DisallowInMemoryEdits |
+                            tagVSQueryEditFlags_QEF_AllowUnopenedProjects),
+                        1,
+                        new[] { bstrFileName },
+                        null,
+                        null,
+                        out editVerdict,
+                        out queryEditMoreInfo
+                    ));
+
+                    if (editVerdict != (uint)tagVSQueryEditResult.QER_EditOK) {
+                        logger.Log(__VSUL_ERRORLEVEL.VSUL_ERROR, SR.GetString(SR.UpgradeCannotCheckOutProject));
+                        return VSConstants.E_FAIL;
+                    }
+
+                    // File may have been updated during checkout, so check
+                    // again whether we need to upgrade.
+                    if ((queryEditMoreInfo & (uint)tagVSQueryEditResultFlags.QER_MaybeChanged) != 0) {
+                        hr = ((IVsProjectUpgradeViaFactory)this).UpgradeProject_CheckOnly(
+                            bstrFileName,
+                            pLogger,
+                            out pUpgradeRequired,
+                            out pguidNewProjectFactory,
+                            out dummy
+                        );
+
+                        if (!ErrorHandler.Succeeded(hr)) {
+                            return hr;
+                        }
+                        if (pUpgradeRequired == 0) {
+                            logger.Log(__VSUL_ERRORLEVEL.VSUL_INFORMATIONAL, SR.GetString(SR.UpgradeNotRequired));
+                            return VSConstants.S_OK;
+                        }
+                    }
+                }
+
+                // Load the project file and user file into MSBuild as plain
+                // XML to make it easier for subclasses.
+                var projectXml = ProjectRootElement.Open(bstrFileName);
+                var userXml = userFileName != null ? ProjectRootElement.Open(userFileName) : null;
+
+                // Invoke our virtual UpgradeProject function. If it fails, it
+                // will throw and we will log the exception.
+                UpgradeProject(ref projectXml, ref userXml, logger.Log);
+
+                // Get the SCC info from the project file.
+                if (projectXml != null) {
+                    _cachedSccProject = bstrFileName;
+                    _cachedSccProjectName = string.Empty;
+                    _cachedSccAuxPath = string.Empty;
+                    _cachedSccLocalPath = string.Empty;
+                    _cachedSccProvider = string.Empty;
+                    foreach (var property in projectXml.Properties) {
+                        switch(property.Name) {
+                            case ProjectFileConstants.SccProjectName:
+                                _cachedSccProjectName = property.Value;
+                                break;
+                            case ProjectFileConstants.SccAuxPath:
+                                _cachedSccAuxPath = property.Value;
+                                break;
+                            case ProjectFileConstants.SccLocalPath:
+                                _cachedSccLocalPath = property.Value;
+                                break;
+                            case ProjectFileConstants.SccProvider:
+                                _cachedSccProvider = property.Value;
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                }
+
+                // Save the updated files.
+                if (projectXml != null) {
+                    projectXml.Save();
+                }
+                if (userXml != null) {
+                    userXml.Save();
+                }
+
+                // Need to add "Converted" (unlocalized) to the report because
+                // the XSLT refers to it.
+                logger.Log(__VSUL_ERRORLEVEL.VSUL_STATUSMSG, "Converted");
+                return VSConstants.S_OK;
+            } catch (Exception ex) {
+                logger.Log(__VSUL_ERRORLEVEL.VSUL_ERROR, SR.GetString(SR.UnexpectedUpgradeError, ex.Message));
+                try {
+                    ActivityLog.LogError(GetType().FullName, ex.ToString());
+                } catch (InvalidOperationException) {
+                    // Cannot log to ActivityLog. This may occur if we are
+                    // outside of VS right now (for example, unit tests).
+                    Console.WriteLine(ex);
+                }
+                return VSConstants.E_FAIL;
+            }
+        }
+
+        int IVsProjectUpgradeViaFactory.UpgradeProject_CheckOnly(
+            string bstrFileName,
+            IVsUpgradeLogger pLogger,
+            out int pUpgradeRequired,
+            out Guid pguidNewProjectFactory,
+            out uint pUpgradeProjectCapabilityFlags
+        ) {
+            pUpgradeRequired = 0;
+            if (!File.Exists(bstrFileName)) {
+                pguidNewProjectFactory = Guid.Empty;
+                pUpgradeProjectCapabilityFlags = 0;
+                return VSConstants.E_INVALIDARG;
+            }
+
+            uint upgradeRequired;
+            ((IVsProjectUpgradeViaFactory4)this).UpgradeProject_CheckOnly(
+                bstrFileName,
+                pLogger,
+                out upgradeRequired,
+                out pguidNewProjectFactory,
+                out pUpgradeProjectCapabilityFlags
+            );
+
+            if (upgradeRequired != (uint)__VSPPROJECTUPGRADEVIAFACTORYREPAIRFLAGS.VSPUVF_PROJECT_NOREPAIR) {
+                pUpgradeRequired = 1;
+            }
+            return VSConstants.S_OK;
+        }
+
+
+        void IVsProjectUpgradeViaFactory4.UpgradeProject_CheckOnly(
+            string bstrFileName,
+            IVsUpgradeLogger pLogger,
+            out uint pUpgradeRequired,
+            out Guid pguidNewProjectFactory,
+            out uint pUpgradeProjectCapabilityFlags
+        ) {
+            if (!File.Exists(bstrFileName)) {
+                pUpgradeRequired = 0;
+                pguidNewProjectFactory = Guid.Empty;
+                pUpgradeProjectCapabilityFlags = 0;
+                return;
+            }
+
+            pguidNewProjectFactory = GetType().GUID;
+            var backupSupport = __VSPPROJECTUPGRADEVIAFACTORYFLAGS.PUVFF_BACKUPSUPPORTED |
+                __VSPPROJECTUPGRADEVIAFACTORYFLAGS.PUVFF_COPYBACKUP |
+                __VSPPROJECTUPGRADEVIAFACTORYFLAGS.PUVFF_SXSBACKUP;
+            var logger = new UpgradeLogger(bstrFileName, pLogger);
+            try {
+                var projectXml = ProjectRootElement.Open(bstrFileName);
+                var userProjectName = bstrFileName + ".user";
+                var userProjectXml = File.Exists(userProjectName) ? ProjectRootElement.Open(userProjectName) : null;
+
+                pUpgradeRequired = (uint)UpgradeProjectCheck(
+                    projectXml,
+                    userProjectXml,
+                    logger.Log,
+                    ref pguidNewProjectFactory,
+                    ref backupSupport
+                );
+            } catch (Exception ex) {
+                // Log the error and don't attempt to upgrade the project.
+                logger.Log(__VSUL_ERRORLEVEL.VSUL_ERROR, SR.GetString(SR.UnexpectedUpgradeError));
+                try {
+                    ActivityLog.LogError(GetType().FullName, ex.ToString());
+                } catch (InvalidOperationException) {
+                    // Cannot log to ActivityLog. This may occur if we are
+                    // outside of VS right now (for example, unit tests).
+                    Console.WriteLine(ex);
+                }
+                pUpgradeRequired = (uint)__VSPPROJECTUPGRADEVIAFACTORYREPAIRFLAGS.VSPUVF_PROJECT_NOREPAIR;
+            }
+            pUpgradeProjectCapabilityFlags = (uint)backupSupport;
+        }
+        #endregion
     }
 }

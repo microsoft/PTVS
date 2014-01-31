@@ -554,25 +554,6 @@ namespace Microsoft.VisualStudioTools.Project
             return Utilities.InitializeMsBuildProject(buildEngine, fullProjectPath);
         }
 
-        /// <summary>
-        /// Initialize the build engine. Sets the build enabled property to true. The engine is initialzed if the passed in engine is null or does not have its bin path set.
-        /// </summary>
-        /// <param name="engine">An instance of MSBuild.ProjectCollection build engine, that will be checked if initialized.</param>
-        /// <param name="engine">The service provider.</param>
-        /// <returns>The buildengine to use.</returns>
-        internal static MSBuild.ProjectCollection InitializeMsBuildEngine(MSBuild.ProjectCollection existingEngine, IServiceProvider serviceProvider)
-        {
-            Utilities.ArgumentNotNull("serviceProvider", serviceProvider);
-
-            if (existingEngine == null)
-            {
-                MSBuild.ProjectCollection buildEngine = MSBuild.ProjectCollection.GlobalProjectCollection;
-                return buildEngine;
-            }
-
-            return existingEngine;
-        }
-
         /// <summary>>
         /// Checks if the file name is all the given character.
         /// </summary>

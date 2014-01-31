@@ -182,4 +182,14 @@
 
 Your web browser will not be opened.</value>
   </data>
+  <data name="UnexpectedUpgradeError" xml:space="preserve">
+    <value>An unexpected error occurred while attempting to upgrade a project: {0}
+Run Visual Studio with the /Log option and check ActivityLog.xml for more detail.</value>
+  </data>
+  <data name="UpgradeCannotCheckOutProject" xml:space="preserve">
+    <value>The project could not be upgraded because it could not be checked out from source control.</value>
+  </data>
+  <data name="UpgradeNotRequired" xml:space="preserve">
+    <value>No upgrade required for project.</value>
+  </data>
 </root>

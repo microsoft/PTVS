@@ -385,4 +385,7 @@ The completion DB for the active environment needs to be refreshed,
 and IntelliSense may be missing until that has completed.
 See the Python Environments window for details.</value>
   </data>
+  <data name="UpgradedToolsVersion" xml:space="preserve">
+    <value>The tools version has been changed to 4.0. This will not affect compatibility with other versions of Visual Studio.</value>
+  </data>
 </root>

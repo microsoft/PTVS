@@ -16,6 +16,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Xml;
+using Microsoft.Build.Construction;
+using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools.Project;
 using IOleServiceProvider = Microsoft.VisualStudio.OLE.Interop.IServiceProvider;
 
@@ -54,6 +58,32 @@ namespace Microsoft.PythonTools.Project {
                     return Guid.TryParse(s, out g) && !IgnoredProjectTypeGuids.Contains(g);
                 })
             );
+        }
+
+        protected override __VSPPROJECTUPGRADEVIAFACTORYREPAIRFLAGS UpgradeProjectCheck(
+            ProjectRootElement projectXml,
+            ProjectRootElement userProjectXml,
+            Action<__VSUL_ERRORLEVEL, string> log,
+            ref Guid projectFactory,
+            ref __VSPPROJECTUPGRADEVIAFACTORYFLAGS backupSupport
+        ) {
+            Version version;
+
+            if (!Version.TryParse(projectXml.ToolsVersion, out version) ||
+                version < new Version(4, 0)) {
+                return __VSPPROJECTUPGRADEVIAFACTORYREPAIRFLAGS.VSPUVF_PROJECT_SAFEREPAIR;
+            }
+
+            return __VSPPROJECTUPGRADEVIAFACTORYREPAIRFLAGS.VSPUVF_PROJECT_NOREPAIR;
+        }
+
+        protected override void UpgradeProject(
+            ref ProjectRootElement projectXml,
+            ref ProjectRootElement userProjectXml,
+            Action<__VSUL_ERRORLEVEL, string> log
+        ) {
+            projectXml.ToolsVersion = "4.0";
+            log(__VSUL_ERRORLEVEL.VSUL_INFORMATIONAL, SR.GetString(SR.UpgradedToolsVersion));
         }
     }
 }

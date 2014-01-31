@@ -1656,8 +1656,8 @@ namespace Microsoft.VisualStudioTools.Project
                         this.SetProjectGuidFromProjectFile();
                     }
 
-                    // This is almost a No op if the engine has already been instantiated in the factory.
-                    this.buildEngine = Utilities.InitializeMsBuildEngine(this.buildEngine, this.Site);
+                    // Ensure we have a valid build engine.
+                    this.buildEngine = this.buildEngine ?? MSBuild.ProjectCollection.GlobalProjectCollection;
 
                     // based on the passed in flags, this either reloads/loads a project, or tries to create a new one
                     // now we create a new project... we do that by loading the template and then saving under a new name

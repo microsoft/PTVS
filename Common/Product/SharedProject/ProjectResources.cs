@@ -197,7 +197,10 @@ namespace Microsoft.VisualStudioTools.Project
         internal const string WebPiFeedDescription = "WebPiFeedDescription";
         internal const string WebPiProductDescription = "WebPiProductDescription";
         internal const string WebPiReferenceProperties = "WebPiReferenceProperties";
-                
+        internal const string UnexpectedUpgradeError = "UnexpectedUpgradeError";
+        internal const string UpgradeNotRequired = "UpgradeNotRequired";
+        internal const string UpgradeCannotCheckOutProject = "UpgradeCannotCheckOutProject";
+
         static SR loader;
         ResourceManager resources;
 

@@ -734,6 +734,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The tools version has been changed to 4.0. This will not affect compatibility with other versions of Visual Studio..
+        /// </summary>
+        internal static string UpgradedToolsVersion {
+            get {
+                return ResourceManager.GetString("UpgradedToolsVersion", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to &amp;Install/upgrade {PythonWebFrameworkPackageDisplayName}.
         /// </summary>
         internal static string UpgradeWebFrameworkLabel {
