@@ -33,6 +33,13 @@ namespace TestUtilities.UI.Python {
 
         protected override void Dispose(bool disposing) {
             if (!IsDisposed) {
+                try {
+                    InteractiveWindow.CloseAll(this);
+                } catch (Exception ex) {
+                    Console.WriteLine("Error while closing all interactive windows");
+                    Console.WriteLine(ex);
+                }
+
                 if (_deletePerformanceSessions) {
                     try {
                         dynamic profiling = Dte.GetObject("PythonProfiling");
@@ -156,7 +163,8 @@ namespace TestUtilities.UI.Python {
                         AutomationElement.AutomationIdProperty,
                         "WpfTextView"
                     )
-                )
+                ),
+                this
             );
 
         }

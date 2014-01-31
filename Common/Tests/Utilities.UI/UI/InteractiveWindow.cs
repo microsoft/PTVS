@@ -14,6 +14,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
@@ -27,9 +29,10 @@ using Microsoft.NodejsTools.Repl;
 #else
 using Microsoft.VisualStudio.Repl;
 #endif
+using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text.Editor;
-using System.Diagnostics;
 
 namespace TestUtilities.UI {
 #if INTERACTIVE_WINDOW
@@ -54,11 +57,16 @@ namespace TestUtilities.UI {
         private readonly ReplWindow _replWindow;
         private readonly ReplWindowInfo _replWindowInfo;
 
-        public InteractiveWindow(string title, AutomationElement element)
+        public InteractiveWindow(string title, AutomationElement element, VisualStudioApp app = null)
             : base(null, element) {
             _title = title;
 
-            var compModel = (IComponentModel)VsIdeTestHostContext.ServiceProvider.GetService(typeof(SComponentModel));
+            IComponentModel compModel;
+            if (app != null) {
+                compModel = app.GetService<IComponentModel>(typeof(SComponentModel));
+            } else {
+                compModel = (IComponentModel)VsIdeTestHostContext.ServiceProvider.GetService(typeof(SComponentModel));
+            }
             var replWindowProvider = compModel.GetService<IReplWindowProvider>();
             _replWindow = (ReplWindow)GetReplWindow(replWindowProvider);
 
@@ -67,6 +75,29 @@ namespace TestUtilities.UI {
                 window.ReadyForInput += new Action(info.OnReadyForInput);
                 return info;
             });
+        }
+
+        public void Close() {
+            var frame = _replWindow.Frame as IVsWindowFrame;
+            if (frame != null) {
+                frame.Hide();
+            }
+        }
+
+        public static void CloseAll(VisualStudioApp app = null) {
+            IComponentModel compModel;
+            if (app != null) {
+                compModel = app.GetService<IComponentModel>(typeof(SComponentModel));
+            } else {
+                compModel = (IComponentModel)VsIdeTestHostContext.ServiceProvider.GetService(typeof(SComponentModel));
+            }
+            var replWindowProvider = compModel.GetService<IReplWindowProvider>();
+            foreach (var frame in replWindowProvider.GetReplWindows()
+                .OfType<ReplWindow>()
+                .Select(r => r.Frame)
+                .OfType<IVsWindowFrame>()) {
+                frame.Hide();
+            }
         }
 
         public void WaitForReadyState(int timeout = 500) {
@@ -258,31 +289,6 @@ namespace TestUtilities.UI {
         internal virtual bool IsTabGroupContainer(AutomationElement element) {
             var clsName = element.GetCurrentPropertyValue(AutomationElement.ClassNameProperty) as string;
             return clsName == "ToolWindowTabGroupContainer" || clsName == "FloatingWindow";
-        }
-
-        public virtual void Close() {
-            var elem = Element;
-            while (elem != null && !IsTabGroupContainer(elem)) {
-                elem = TreeWalker.ControlViewWalker.GetParent(elem);
-            }
-
-            if (elem == null) {
-                Debug.WriteLine("Could not find window");
-                return;
-            }
-
-            var titleBar = elem.FindFirst(
-                TreeScope.Descendants,
-                new PropertyCondition(AutomationElement.AutomationIdProperty, "DragHeader")
-            );
-
-            if (titleBar == null) {
-                Debug.WriteLine("Could not find title bar");
-                AutomationWrapper.DumpElement(elem);
-                return;
-            }
-
-            titleBar.AsWrapper().ClickButtonByAutomationId("HideButton");
         }
     }
 }
