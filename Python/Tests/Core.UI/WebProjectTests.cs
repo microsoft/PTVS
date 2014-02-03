@@ -33,6 +33,7 @@ using Microsoft.VisualStudioTools.Project;
 using TestUtilities;
 using TestUtilities.Python;
 using TestUtilities.UI;
+using TestUtilities.UI.Python;
 using InterpreterExt = analysis::Microsoft.PythonTools.Interpreter.PythonInterpreterFactoryExtensions;
 
 namespace PythonToolsUITests {
@@ -43,6 +44,8 @@ namespace PythonToolsUITests {
             AssertListener.Initialize();
             PythonTestData.Deploy();
         }
+
+        public TestContext TestContext { get; set; }
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
@@ -68,26 +71,20 @@ namespace PythonToolsUITests {
 
         #region EndToEndTest
 
-        private static void EndToEndTest(
+        private void EndToEndTest(
             string templateName,
             string moduleName,
             string textInResponse,
             string pythonVersion
         ) {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var newProjDialog = app.FileNewProject();
+                var pyProj = app.CreateProject(
+                    PythonVisualStudioApp.TemplateLanguageName,
+                    templateName,
+                    TestData.GetTempPath(),
+                    TestContext.TestName
+                ).GetPythonProject();
 
-                newProjDialog.FocusLanguageNode();
-                newProjDialog.Location = TestData.GetTempPath();
-                newProjDialog.ProjectTypes.FindItem(templateName).Select();
-                newProjDialog.ClickOK();
-
-                for (int i = 0; i < 10 && app.Dte.Solution.Projects.Count == 0; i++) {
-                    System.Threading.Thread.Sleep(1000);
-                }
-                Assert.AreEqual(1, app.Dte.Solution.Projects.Count);
-
-                var pyProj = app.Dte.Solution.Projects.Item(1).GetPythonProject();
                 Assert.IsInstanceOfType(pyProj.GetLauncher(), typeof(PythonWebLauncher));
 
                 var model = app.GetService<IComponentModel>(typeof(SComponentModel));
@@ -107,8 +104,10 @@ namespace PythonToolsUITests {
                 // dialog.
                 Pip.InstallPip(factory, false).Wait();
 
-                var cmd = ((IPythonProject2)pyProj).FindCommand("PythonUpgradeWebFrameworkCommand");
-                cmd.Execute(null);
+                UIThread.Instance.RunSync(() => {
+                    var cmd = ((IPythonProject2)pyProj).FindCommand("PythonUpgradeWebFrameworkCommand");
+                    cmd.Execute(null);
+                });
 
                 Assert.AreEqual(1, InterpreterExt.FindModules(factory, moduleName).Count);
 
@@ -242,37 +241,47 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core"), Timeout(10 * 60 * 1000)]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void FlaskEndToEndV33() {
-            EndToEndTest("Flask Web Project", "flask", "Hello World!", "3.3");
+            EndToEndTest(PythonVisualStudioApp.FlaskWebProjectTemplate, "flask", "Hello World!", "3.3");
         }
 
         [TestMethod, Priority(0), TestCategory("Core"), Timeout(10 * 60 * 1000)]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void FlaskEndToEndV27() {
-            EndToEndTest("Flask Web Project", "flask", "Hello World!", "2.7");
+            EndToEndTest(PythonVisualStudioApp.FlaskWebProjectTemplate, "flask", "Hello World!", "2.7");
         }
 
         [TestMethod, Priority(0), TestCategory("Core"), Timeout(10 * 60 * 1000)]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void BottleEndToEndV33() {
-            EndToEndTest("Bottle Web Project", "bottle", "<b>Hello world</b>!", "3.3");
+            EndToEndTest(PythonVisualStudioApp.BottleWebProjectTemplate, "bottle", "<b>Hello world</b>!", "3.3");
         }
 
         [TestMethod, Priority(0), TestCategory("Core"), Timeout(10 * 60 * 1000)]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void BottleEndToEndV27() {
-            EndToEndTest("Bottle Web Project", "bottle", "<b>Hello world</b>!", "2.7");
+            EndToEndTest(PythonVisualStudioApp.BottleWebProjectTemplate, "bottle", "<b>Hello world</b>!", "2.7");
         }
 
         [TestMethod, Priority(0), TestCategory("Core"), Timeout(10 * 60 * 1000)]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void DjangoEndToEndV27() {
-            EndToEndTest("Django Web Project", "django", "Congratulations on your first Django-powered page.", "2.7");
+            EndToEndTest(
+                PythonVisualStudioApp.DjangoWebProjectTemplate,
+                "django",
+                "Congratulations on your first Django-powered page.",
+                "2.7"
+            );
         }
 
         [TestMethod, Priority(0), TestCategory("Core"), Timeout(10 * 60 * 1000)]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void DjangoEndToEndV33() {
-            EndToEndTest("Django Web Project", "django", "Congratulations on your first Django-powered page.", "3.3");
+            EndToEndTest(
+                PythonVisualStudioApp.DjangoWebProjectTemplate,
+                "django",
+                "Congratulations on your first Django-powered page.",
+                "3.3"
+            );
         }
     }
 }

@@ -58,6 +58,22 @@ namespace TestUtilities.UI.Python {
             base.Dispose(disposing);
         }
 
+        // Constants for passing to CreateProject
+#if DEV10
+        // VS 2010 looks up language names as if they are progids, which means
+        // passing "Python" may fail, whereas passing the GUID will always
+        // succeed.
+        public const string TemplateLanguageName = "{888888a0-9f3d-457c-b088-3a5042f75d52}";
+#else
+        public const string TemplateLanguageName = "Python";
+#endif
+
+        public const string PythonApplicationTemplate = "ConsoleAppProject.zip";
+        public const string EmptyWebProjectTemplate = "EmptyWebProject.zip";
+        public const string BottleWebProjectTemplate = "BottleWebProject.zip";
+        public const string FlaskWebProjectTemplate = "FlaskWebProject.zip";
+        public const string DjangoWebProjectTemplate = "DjangoWebProject.zip";
+
         /// <summary>
         /// Opens and activates the solution explorer window.
         /// </summary>

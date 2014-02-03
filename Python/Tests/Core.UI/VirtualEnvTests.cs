@@ -31,6 +31,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 using TestUtilities.Python;
 using TestUtilities.UI;
+using TestUtilities.UI.Python;
 using Path = System.IO.Path;
 
 namespace PythonToolsUITests {
@@ -41,6 +42,8 @@ namespace PythonToolsUITests {
             AssertListener.Initialize();
             PythonTestData.Deploy();
         }
+
+        public TestContext TestContext { get; set; }
 
         private static DefaultInterpreterSetter Init() {
             return Init(PythonPaths.Python27 ?? PythonPaths.Python27_x64, true);
@@ -63,30 +66,15 @@ namespace PythonToolsUITests {
             return defaultInterpreterSetter;
         }
 
-        private static void CreateTemporaryProject(VisualStudioApp app) {
-            var newProjDialog = app.FileNewProject();
-            newProjDialog.Location = TestData.GetTempPath();
+        private void CreateTemporaryProject(VisualStudioApp app) {
+            var project = app.CreateProject(
+                PythonVisualStudioApp.TemplateLanguageName,
+                PythonVisualStudioApp.PythonApplicationTemplate,
+                TestData.GetTempPath(),
+                TestContext.TestName
+            );
 
-            newProjDialog.FocusLanguageNode();
-
-            var consoleApp = newProjDialog.ProjectTypes.FindItem("Python Application");
-            consoleApp.Select();
-
-            newProjDialog.ClickOK();
-            for (int i = 0; i < 10 && !app.WaitForDialogDismissed(false, 1000); ++i) {
-                newProjDialog.ClickOK();
-            }
-            // Assert immediately if the dialog is still open
-            app.WaitForDialogDismissed(true, 0);
-
-
-            // wait for new solution to load...
-            for (int i = 0; i < 10 && app.Dte.Solution.Projects.Count == 0; i++) {
-                System.Threading.Thread.Sleep(1000);
-            }
-
-            Assert.AreEqual(1, app.Dte.Solution.Projects.Count);
-            Assert.AreNotEqual(null, app.Dte.Solution.Projects.Item(1).ProjectItems.Item(Path.GetFileNameWithoutExtension(app.Dte.Solution.FullName) + ".py"));
+            Assert.IsNotNull(project);
         }
 
         internal static AutomationWrapper CreateVirtualEnvironment(VisualStudioApp app, out string envName) {

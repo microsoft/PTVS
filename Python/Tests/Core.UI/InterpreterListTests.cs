@@ -36,6 +36,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 using TestUtilities.Python;
 using TestUtilities.UI;
+using TestUtilities.UI.Python;
 
 namespace PythonToolsUITests {
     [TestClass]
@@ -84,24 +85,12 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CreateRemoveVirtualEnvInInterpreterListInVS() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var newProjDialog = app.FileNewProject();
-                newProjDialog.Location = TestData.GetTempPath();
-
-                newProjDialog.FocusLanguageNode();
-
-                var consoleApp = newProjDialog.ProjectTypes.FindItem("Python Application");
-                consoleApp.Select();
-
-                newProjDialog.ClickOK();
-
-                // wait for new solution to load...
-                for (int i = 0; i < 100 && app.Dte.Solution.Projects.Count == 0; i++) {
-                    System.Threading.Thread.Sleep(1000);
-                }
-
-                Assert.AreEqual(1, app.Dte.Solution.Projects.Count);
-
-                Assert.AreNotEqual(null, app.Dte.Solution.Projects.Item(1).ProjectItems.Item(Path.GetFileNameWithoutExtension(app.Dte.Solution.FullName) + ".py"));
+                app.CreateProject(
+                    PythonVisualStudioApp.TemplateLanguageName,
+                    PythonVisualStudioApp.PythonApplicationTemplate,
+                    TestData.GetTempPath(),
+                    "CreateRemoveVirtualEnvInInterpreterListInVS"
+                );
 
                 // Check that only global environments are in the list
                 var model = (IComponentModel)VsIdeTestHostContext.ServiceProvider.GetService(typeof(SComponentModel));
