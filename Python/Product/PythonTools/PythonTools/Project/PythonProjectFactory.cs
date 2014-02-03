@@ -60,7 +60,7 @@ namespace Microsoft.PythonTools.Project {
             );
         }
 
-        protected override __VSPPROJECTUPGRADEVIAFACTORYREPAIRFLAGS UpgradeProjectCheck(
+        protected override ProjectUpgradeState UpgradeProjectCheck(
             ProjectRootElement projectXml,
             ProjectRootElement userProjectXml,
             Action<__VSUL_ERRORLEVEL, string> log,
@@ -71,10 +71,10 @@ namespace Microsoft.PythonTools.Project {
 
             if (!Version.TryParse(projectXml.ToolsVersion, out version) ||
                 version < new Version(4, 0)) {
-                return __VSPPROJECTUPGRADEVIAFACTORYREPAIRFLAGS.VSPUVF_PROJECT_SAFEREPAIR;
+                return ProjectUpgradeState.SafeRepair;
             }
 
-            return __VSPPROJECTUPGRADEVIAFACTORYREPAIRFLAGS.VSPUVF_PROJECT_NOREPAIR;
+            return ProjectUpgradeState.NotNeeded;
         }
 
         protected override void UpgradeProject(

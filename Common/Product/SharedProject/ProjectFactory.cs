@@ -30,9 +30,9 @@ namespace Microsoft.VisualStudioTools.Project
     public abstract class ProjectFactory : Microsoft.VisualStudio.Shell.Flavor.FlavoredProjectFactoryBase,
 #if DEV11_OR_LATER
         IVsAsynchronousProjectCreate,
+        IVsProjectUpgradeViaFactory4,
 #endif
-        IVsProjectUpgradeViaFactory,
-        IVsProjectUpgradeViaFactory4
+        IVsProjectUpgradeViaFactory
     {
         #region fields
         private Microsoft.VisualStudio.Shell.Package package;
@@ -260,14 +260,14 @@ namespace Microsoft.VisualStudioTools.Project
         /// <returns>
         /// The form of upgrade required.
         /// </returns>
-        protected virtual __VSPPROJECTUPGRADEVIAFACTORYREPAIRFLAGS UpgradeProjectCheck(
+        protected virtual ProjectUpgradeState UpgradeProjectCheck(
             ProjectRootElement projectXml,
             ProjectRootElement userProjectXml,
             Action<__VSUL_ERRORLEVEL, string> log,
             ref Guid projectFactory,
             ref __VSPPROJECTUPGRADEVIAFACTORYFLAGS backupSupport
         ) {
-            return __VSPPROJECTUPGRADEVIAFACTORYREPAIRFLAGS.VSPUVF_PROJECT_NOREPAIR;
+            return ProjectUpgradeState.NotNeeded;
         }
 
 
@@ -530,22 +530,45 @@ namespace Microsoft.VisualStudioTools.Project
                 return VSConstants.E_INVALIDARG;
             }
 
-            uint upgradeRequired;
-            ((IVsProjectUpgradeViaFactory4)this).UpgradeProject_CheckOnly(
-                bstrFileName,
-                pLogger,
-                out upgradeRequired,
-                out pguidNewProjectFactory,
-                out pUpgradeProjectCapabilityFlags
-            );
+            pguidNewProjectFactory = GetType().GUID;
 
-            if (upgradeRequired != (uint)__VSPPROJECTUPGRADEVIAFACTORYREPAIRFLAGS.VSPUVF_PROJECT_NOREPAIR) {
-                pUpgradeRequired = 1;
+            var backupSupport = __VSPPROJECTUPGRADEVIAFACTORYFLAGS.PUVFF_BACKUPSUPPORTED |
+                __VSPPROJECTUPGRADEVIAFACTORYFLAGS.PUVFF_COPYBACKUP |
+                __VSPPROJECTUPGRADEVIAFACTORYFLAGS.PUVFF_SXSBACKUP;
+            var logger = new UpgradeLogger(bstrFileName, pLogger);
+            try {
+                var projectXml = ProjectRootElement.Open(bstrFileName);
+                var userProjectName = bstrFileName + ".user";
+                var userProjectXml = File.Exists(userProjectName) ? ProjectRootElement.Open(userProjectName) : null;
+
+                var upgradeRequired = UpgradeProjectCheck(
+                    projectXml,
+                    userProjectXml,
+                    logger.Log,
+                    ref pguidNewProjectFactory,
+                    ref backupSupport
+                );
+
+                if (upgradeRequired != ProjectUpgradeState.NotNeeded) {
+                    pUpgradeRequired = 1;
+                }
+            } catch (Exception ex) {
+                // Log the error and don't attempt to upgrade the project.
+                logger.Log(__VSUL_ERRORLEVEL.VSUL_ERROR, SR.GetString(SR.UnexpectedUpgradeError));
+                try {
+                    ActivityLog.LogError(GetType().FullName, ex.ToString());
+                } catch (InvalidOperationException) {
+                    // Cannot log to ActivityLog. This may occur if we are
+                    // outside of VS right now (for example, unit tests).
+                    Console.WriteLine(ex);
+                }
+                pUpgradeRequired = 0;
             }
+            pUpgradeProjectCapabilityFlags = (uint)backupSupport;
             return VSConstants.S_OK;
         }
 
-
+#if DEV11_OR_LATER
         void IVsProjectUpgradeViaFactory4.UpgradeProject_CheckOnly(
             string bstrFileName,
             IVsUpgradeLogger pLogger,
@@ -570,13 +593,36 @@ namespace Microsoft.VisualStudioTools.Project
                 var userProjectName = bstrFileName + ".user";
                 var userProjectXml = File.Exists(userProjectName) ? ProjectRootElement.Open(userProjectName) : null;
 
-                pUpgradeRequired = (uint)UpgradeProjectCheck(
+                var upgradeRequired = UpgradeProjectCheck(
                     projectXml,
                     userProjectXml,
                     logger.Log,
                     ref pguidNewProjectFactory,
                     ref backupSupport
                 );
+
+                switch (upgradeRequired) {
+                    case ProjectUpgradeState.SafeRepair:
+                        pUpgradeRequired = (uint)__VSPPROJECTUPGRADEVIAFACTORYREPAIRFLAGS.VSPUVF_PROJECT_SAFEREPAIR;
+                        break;
+                    case ProjectUpgradeState.UnsafeRepair:
+                        pUpgradeRequired = (uint)__VSPPROJECTUPGRADEVIAFACTORYREPAIRFLAGS.VSPUVF_PROJECT_UNSAFEREPAIR;
+                        break;
+                    case ProjectUpgradeState.OneWayUpgrade:
+                        pUpgradeRequired = (uint)__VSPPROJECTUPGRADEVIAFACTORYREPAIRFLAGS.VSPUVF_PROJECT_ONEWAYUPGRADE;
+                        break;
+                    case ProjectUpgradeState.Incompatible:
+                        pUpgradeRequired = (uint)__VSPPROJECTUPGRADEVIAFACTORYREPAIRFLAGS.VSPUVF_PROJECT_INCOMPATIBLE;
+                        break;
+                    case ProjectUpgradeState.Deprecated:
+                        pUpgradeRequired = (uint)__VSPPROJECTUPGRADEVIAFACTORYREPAIRFLAGS.VSPUVF_PROJECT_DEPRECATED;
+                        break;
+                    default:
+                    case ProjectUpgradeState.NotNeeded:
+                        pUpgradeRequired = (uint)__VSPPROJECTUPGRADEVIAFACTORYREPAIRFLAGS.VSPUVF_PROJECT_NOREPAIR;
+                        break;
+                }
+
             } catch (Exception ex) {
                 // Log the error and don't attempt to upgrade the project.
                 logger.Log(__VSUL_ERRORLEVEL.VSUL_ERROR, SR.GetString(SR.UnexpectedUpgradeError));
@@ -591,6 +637,40 @@ namespace Microsoft.VisualStudioTools.Project
             }
             pUpgradeProjectCapabilityFlags = (uint)backupSupport;
         }
+#endif
         #endregion
+    }
+
+    /// <summary>
+    /// Status indicating whether a project upgrade should occur and how the
+    /// project will be affected.
+    /// </summary>
+    public enum ProjectUpgradeState {
+        /// <summary>
+        /// No action will be taken.
+        /// </summary>
+        NotNeeded,
+        /// <summary>
+        /// The project will be upgraded without asking the user.
+        /// </summary>
+        SafeRepair,
+        /// <summary>
+        /// The project will be upgraded with the user's permission.
+        /// </summary>
+        UnsafeRepair,
+        /// <summary>
+        /// The project will be upgraded with the user's permission and they
+        /// will be informed that the project will no longer work with earlier
+        /// versions of Visual Studio.
+        /// </summary>
+        OneWayUpgrade,
+        /// <summary>
+        /// The project will be marked as incompatible.
+        /// </summary>
+        Incompatible,
+        /// <summary>
+        /// The project will be marked as deprecated.
+        /// </summary>
+        Deprecated
     }
 }
