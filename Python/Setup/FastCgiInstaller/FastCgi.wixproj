@@ -13,14 +13,20 @@
     <SccAuxPath>SAK</SccAuxPath>
     <SccLocalPath>SAK</SccLocalPath>
     <DefineConstants>
-      BuildTasksDir=$(BuildRoot)\Python\Product\BuildTasks;MsiVersion=$(WixVersion);VSTargetVersion=$(VSTarget)
+      MsiVersion=$(WixVersion);VSTargetVersion=$(VSTarget)
     </DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <WixExtension Include="WixUIExtension;WixUtilExtension" />
+    <WixExtension Include="PythonVersions" />
+    <BindInputPaths Include="$(BuildRoot)\Python\Product\BuildTasks" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="FastCgiInstaller.wxs" />
   </ItemGroup>
   <Import Project="..\SetupProjectAfter.settings" />
+  <!-- Build our extension that we use for this installer -->
+  <Target Name="BuildExtension" BeforeTargets="BeforeBuild" Inputs="PythonVersions.cs" Outputs="PythonVersions.dll">
+    <Csc TargetType="library" OutputAssembly="PythonVersions.dll" References="$(WixToolPath)\wix.dll" Sources="PythonVersions.cs" />
+  </Target>
 </Project>
