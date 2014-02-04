@@ -554,7 +554,7 @@ namespace Microsoft.VisualStudioTools.Project
                 }
             } catch (Exception ex) {
                 // Log the error and don't attempt to upgrade the project.
-                logger.Log(__VSUL_ERRORLEVEL.VSUL_ERROR, SR.GetString(SR.UnexpectedUpgradeError));
+                logger.Log(__VSUL_ERRORLEVEL.VSUL_ERROR, SR.GetString(SR.UnexpectedUpgradeError, ex.Message));
                 try {
                     ActivityLog.LogError(GetType().FullName, ex.ToString());
                 } catch (InvalidOperationException) {
@@ -625,7 +625,7 @@ namespace Microsoft.VisualStudioTools.Project
 
             } catch (Exception ex) {
                 // Log the error and don't attempt to upgrade the project.
-                logger.Log(__VSUL_ERRORLEVEL.VSUL_ERROR, SR.GetString(SR.UnexpectedUpgradeError));
+                logger.Log(__VSUL_ERRORLEVEL.VSUL_ERROR, SR.GetString(SR.UnexpectedUpgradeError, ex.Message));
                 try {
                     ActivityLog.LogError(GetType().FullName, ex.ToString());
                 } catch (InvalidOperationException) {
