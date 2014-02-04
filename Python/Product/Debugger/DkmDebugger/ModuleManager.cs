@@ -94,6 +94,12 @@ namespace Microsoft.PythonTools.DkmDebugger {
                         if (name == "__file__") {
                             var fileName = (entry.Value.TryRead() as IPyBaseStringObject).ToStringOrNull();
                             if (fileName != null && !fileName.EndsWith(".pyd")) {
+                                // Unlike co_filename, __file__ usually reflects the actual name of the file from which the module
+                                // was created, which will be .pyc rather than .py if it was available, so fix that up.
+                                if (fileName.EndsWith(".pyc")) {
+                                    fileName = fileName.Substring(0, fileName.Length - 1);
+                                }
+
                                 new RemoteComponent.CreateModuleRequest {
                                     ModuleId = Guid.NewGuid(),
                                     FileName = fileName
