@@ -131,7 +131,6 @@
 
   <PropertyGroup>
     <PythonCommands>DjangoShellCommand;DjangoValidateAppCommand;DjangoSyncDbCommand;$(PythonCommands)</PythonCommands>
-    <PythonCommandsDisplayLabel>resource:Microsoft.PythonTools.Django;Microsoft.PythonTools.Django.Resources;DjangoMenuLabel</PythonCommandsDisplayLabel>
   </PropertyGroup>
 
   <Target Name="SetStartupFileOrManagePy" DependsOnTargets="ResolveStartupPath" Outputs="$(StartupFileOrManagePy)">

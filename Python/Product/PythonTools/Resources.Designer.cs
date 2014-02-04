@@ -795,14 +795,5 @@ namespace Microsoft.PythonTools {
                 return ResourceManager.GetString("WarningAnalysisNotCurrent", resourceCulture);
             }
         }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to &amp;Web.
-        /// </summary>
-        internal static string WebMenuLabel {
-            get {
-                return ResourceManager.GetString("WebMenuLabel", resourceCulture);
-            }
-        }
     }
 }

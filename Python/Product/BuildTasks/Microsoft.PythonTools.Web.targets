@@ -588,7 +588,6 @@ interpreter_path_emulated=$(PythonInterpreterPath)
   -->
   <PropertyGroup>
     <WebServerHost Condition="'$(WebServerHost)' == ''">localhost</WebServerHost>
-    <PythonCommandsDisplayLabel>resource:Microsoft.PythonTools;Microsoft.Resources;WebMenuLabel</PythonCommandsDisplayLabel>
     <PythonCommands>$(PythonCommands);PythonRunWebServerCommand;PythonDebugWebServerCommand</PythonCommands>
     <PythonCommands Condition="'$(PythonWebFrameworkPackage)' != ''">$(PythonCommands);PythonUpgradeWebFrameworkCommand</PythonCommands>
     <PythonWebFrameworkPackageDisplayName Condition="'$(PythonWebFrameworkPackageDisplayName)' == ''">framework</PythonWebFrameworkPackageDisplayName>
@@ -607,7 +606,7 @@ interpreter_path_emulated=$(PythonInterpreterPath)
                              TargetType="$(PythonRunWebServerCommandType)"
                              Arguments="$(PythonRunWebServerCommandArguments)"
                              Environment="SERVER_HOST=$(WebServerHost)
-                                          SERVER_PORT=$(WebServerPort)"
+                                          SERVER_PORT=$(WebBrowserPort)"
                              ExecuteIn="console">
       <Output TaskParameter="Command" ItemName="Commands" />
     </CreatePythonCommandItem>
@@ -626,7 +625,7 @@ interpreter_path_emulated=$(PythonInterpreterPath)
                              TargetType="$(PythonDebugWebServerCommandType)"
                              Arguments="$(PythonDebugWebServerCommandArguments)"
                              Environment="SERVER_HOST=$(WebServerHost)
-                                          SERVER_PORT=$(WebServerPort)"
+                                          SERVER_PORT=$(WebBrowserPort)"
                              ExecuteIn="console">
       <Output TaskParameter="Command" ItemName="Commands" />
     </CreatePythonCommandItem>

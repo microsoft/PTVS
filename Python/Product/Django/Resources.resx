@@ -120,9 +120,6 @@
   <data name="CommandReplTitle" xml:space="preserve">
     <value>Django Management Console - {ProjectName}</value>
   </data>
-  <data name="DjangoMenuLabel" xml:space="preserve">
-    <value>&amp;Django</value>
-  </data>
   <data name="OpenDjangoShellLabel" xml:space="preserve">
     <value>Open &amp;Django Shell</value>
   </data>

@@ -70,15 +70,6 @@ namespace Microsoft.PythonTools.Django {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to &amp;Django.
-        /// </summary>
-        internal static string DjangoMenuLabel {
-            get {
-                return ResourceManager.GetString("DjangoMenuLabel", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Open &amp;Django Shell.
         /// </summary>
         internal static string OpenDjangoShellLabel {

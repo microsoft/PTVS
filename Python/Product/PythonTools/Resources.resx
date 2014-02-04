@@ -345,9 +345,6 @@ Try moving your source code to a location where you can read and write files.</v
   <data name="UpgradeWebFrameworkLabel" xml:space="preserve">
     <value>&amp;Install/upgrade {PythonWebFrameworkPackageDisplayName}</value>
   </data>
-  <data name="WebMenuLabel" xml:space="preserve">
-    <value>&amp;Web</value>
-  </data>
   <data name="ImportWizardProjectExists" xml:space="preserve">
     <value>The specified project file already exists. Overwrite?</value>
   </data>
