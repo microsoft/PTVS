@@ -70,9 +70,9 @@ namespace TestUtilities.UI.Python {
 
         public const string PythonApplicationTemplate = "ConsoleAppProject.zip";
         public const string EmptyWebProjectTemplate = "EmptyWebProject.zip";
-        public const string BottleWebProjectTemplate = "BottleWebProject.zip";
-        public const string FlaskWebProjectTemplate = "FlaskWebProject.zip";
-        public const string DjangoWebProjectTemplate = "DjangoWebProject.zip";
+        public const string BottleWebProjectTemplate = "WebProjectBottle.zip";
+        public const string FlaskWebProjectTemplate = "WebProjectFlask.zip";
+        public const string DjangoWebProjectTemplate = "DjangoProject.zip";
 
         /// <summary>
         /// Opens and activates the solution explorer window.
