@@ -245,7 +245,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         public virtual IAnalysisSet GetMergedVariableTypes(string name) {
             var res = AnalysisSet.Empty;
             foreach (var val in GetMergedVariables(name)) {
-                res = res.Union(val.TypesNoCopy);
+                res = res.Union(val.Types);
             }
 
             return res;
