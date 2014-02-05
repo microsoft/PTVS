@@ -49,15 +49,15 @@
 
     <Condition Message="Python Tools 1.5 was installed per-user.  Python Tools 1.5 must be uninstalled via Add\Remove Programs before continuing installation.">NOT PTVS_15_PERUSER OR Installed</Condition>
     
-    <!-- On 2013 prevent installing on Visual Studio pre-RC builds -->
+    <!-- On 2013 prevent installing on Visual Studio pre-Release builds -->
     <?if "$(var.VSTargetVersion)" = "12.0" ?>
-      <Property Id="VS2013_PREVIEW" Secure="no"> 
+      <Property Id="VS2013_PRERELEASE" Secure="no"> 
         <DirectorySearch Id="VS120DevEnvFilePathSearch" Path="[VSINSTALLPATH]"> 
-          <FileSearch Id="VS120DevEnvFileVersionSearch" Name="devenv.exe" MaxVersion="12.0.20618.0"/> 
+          <FileSearch Id="VS120DevEnvFileVersionSearch" Name="devenv.exe" MaxVersion="12.0.21004.0"/> 
         </DirectorySearch>
       </Property> 
     
-      <Condition Message="Visual Studio 2013 Preview was detected.  This version of Python Tools is not supported on Visual Studio 2013 Preview.  Please upgrade to Visual Studio 2013 RC."> NOT VS2013_PREVIEW OR Installed </Condition>
+      <Condition Message="A pre-release version of Visual Studio 2013 was detected.  This version of Python Tools is not supported on pre-release builds of Visual Studio 2013.  Please upgrade to Visual Studio 2013."> NOT VS2013_PRERELEASE OR Installed </Condition>
     <?endif ?>
     
     
@@ -67,7 +67,7 @@
     <?elseif "$(var.VSTargetVersion)" = "11.0" ?>
     <Condition Message="Visual Studio 2012 must be installed."> VSINSTALLPATH OR Installed </Condition>
     <?else?>
-    <Condition Message="Visual Studio 2013 RC must be installed.  The free integrated shell (and its dependent isolated shell) can be downloaded at http://www.microsoft.com/visualstudio."> VSINSTALLPATH OR Installed </Condition>
+    <Condition Message="Visual Studio 2013 must be installed.  The free integrated shell (and its dependent isolated shell) can be downloaded at http://www.microsoft.com/visualstudio."> VSINSTALLPATH OR Installed </Condition>
     <?endif ?>
 
     <!-- Files/Components/MSMs to install -->
