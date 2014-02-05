@@ -74,8 +74,6 @@ visualstudio_py_debugger.debug(
     filename, 
     port_num, 
     debug_id, 
-    globals(), 
-    locals(), 
     wait_on_exception, 
     redirect_output, 
     wait_on_exit,

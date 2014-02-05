@@ -1595,6 +1595,9 @@ namespace DebuggerTests {
 
             // test which calls raise Exception()
             TestExitCode(debugger, Path.Combine(DebuggerTestPath, "ExceptionalExit.py"), 1);
+
+            // test which checks __name__ and __file__ to be correct
+            TestExitCode(debugger, Path.Combine(DebuggerTestPath, "CheckNameAndFile.py"), 0);
         }
 
         [TestMethod, Priority(0)]

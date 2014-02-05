@@ -2121,8 +2121,6 @@ def debug(
     file,
     port_num,
     debug_id,
-    globals_obj,
-    locals_obj,
     wait_on_exception,
     redirect_output,
     wait_on_exit,
@@ -2135,23 +2133,6 @@ def debug(
     sys.modules['$visualstudio_py_debugger'] = sys.modules['visualstudio_py_debugger']
     __name__ = '$visualstudio_py_debugger'
     del sys.modules['visualstudio_py_debugger']
-    del globals_obj['port_num']
-    del globals_obj['visualstudio_py_debugger']
-    del globals_obj['wait_on_exception']
-    del globals_obj['redirect_output']
-    del globals_obj['wait_on_exit']
-    del globals_obj['debug_id']
-    del globals_obj['django_debugging']
-    if 'break_on_systemexit_zero' in globals_obj: 
-        del globals_obj['break_on_systemexit_zero']
-    if 'debug_stdlib' in globals_obj: 
-        del globals_obj['debug_stdlib']
-    if 'opt' in globals_obj:
-        del globals_obj['opt']
-    if 'filename' in globals_obj:
-        del globals_obj['filename']
-    if 'run_as' in globals_obj:
-        del globals_obj['run_as']
 
     global BREAK_ON_SYSTEMEXIT_ZERO, DEBUG_STDLIB, DJANGO_DEBUG
     BREAK_ON_SYSTEMEXIT_ZERO = break_on_systemexit_zero
@@ -2171,6 +2152,7 @@ def debug(
     sys.settrace(cur_thread.trace_func)
 
     # now execute main file
+    globals_obj = {'__name__': '__main__'}
     try:
         try:
             if run_as == 'module':
