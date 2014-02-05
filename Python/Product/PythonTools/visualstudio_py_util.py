@@ -58,19 +58,24 @@ def exec_code(code, file, global_variables):
     ``sys.path[0]`` will be changed to the value of `file` without the filename.
     Both values are restored when this function exits.
     '''
+    original_main = sys.modules.get('__main__')
+
     global_variables = dict(global_variables)
     mod_name = global_variables.setdefault('__name__', '<run_path>')
     mod = sys.modules[mod_name] = imp.new_module(mod_name)
     mod.__dict__.update(global_variables)
     global_variables = mod.__dict__
     global_variables.setdefault('__file__', file)
-    if sys.version_info[0] > 2 or sys.version_info[1] >= 6:
+    if sys.version_info[0] >= 3 or sys.version_info[1] >= 6:
         global_variables.setdefault('__package__', mod_name.rpartition('.')[0])
     if sys.version_info[0] >= 3:
-        if sys.version_info[0] > 3 or sys.version_info[1] >= 2:
+        if sys.version_info[1] >= 2:
             global_variables.setdefault('__cached__', None)
-        if sys.version_info[0] > 3 or sys.version_info[1] >= 3:
-            global_variables.setdefault('__loader__', None)
+        if sys.version_info[1] >= 3:
+            try:
+                global_variables.setdefault('__loader__', original_main.__loader__)
+            except AttributeError:
+                pass
 
     sys.path[0] = os.path.split(file)[0]
     code_obj = compile(code, file, 'exec')
@@ -87,7 +92,7 @@ def exec_file(file, global_variables):
         __file__ = file
         __package__ = __name__.rpartition('.')[0] # 2.6 and later
         __cached__ = None # 3.2 and later
-        __loader__ = None # 3.3 and later
+        __loader__ = sys.modules['__main__'].__loader__ # 3.3 and later
 
     The `sys.modules` entry for ``__name__`` will be set to a new module, and
     ``sys.path[0]`` will be changed to the value of `file` without the filename.
