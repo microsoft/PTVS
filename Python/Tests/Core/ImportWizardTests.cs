@@ -134,6 +134,7 @@ namespace PythonToolsTests {
                 Assert.AreEqual(settings.ProjectPath, path);
                 var proj = XDocument.Load(path);
 
+                Assert.AreEqual("4.0", proj.Descendant("Project").Attribute("ToolsVersion").Value);
                 Assert.AreEqual("..\\..\\HelloWorld\\", proj.Descendant("ProjectHome").Value);
                 Assert.AreEqual("..\\SearchPath1\\;..\\SearchPath2\\", proj.Descendant("SearchPath").Value);
                 AssertUtil.ContainsExactly(proj.Descendants(proj.GetName("Compile")).Select(x => x.Attribute("Include").Value),

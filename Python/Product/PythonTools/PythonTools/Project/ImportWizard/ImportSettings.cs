@@ -307,6 +307,7 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
             writer.WriteStartDocument();
             writer.WriteStartElement("Project", "http://schemas.microsoft.com/developer/msbuild/2003");
             writer.WriteAttributeString("DefaultTargets", "Build");
+            writer.WriteAttributeString("ToolsVersion", "4.0");
 
             writer.WriteStartElement("PropertyGroup");
 
