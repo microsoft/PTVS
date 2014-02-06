@@ -19,10 +19,10 @@
             <Component Id="PerUserInstallRegistry" Directory="INSTALLLOCATION" Guid="{B2C46CB0-DF28-4540-BC7F-29B0EA636055}">
                 <Condition>NOT ALLUSERS = 1</Condition>
                 <RegistryKey Root='HKCU' Key='Software\Microsoft\VisualStudio\$(var.VSTargetVersion)\ExtensionManager\EnabledExtensions'>
-                    <RegistryValue Type='string' Name='0AC9CC8C-C057-4CFA-884B-0D4318BB2EFC,2.0' Value='[INSTALLLOCATION]'/>
+                    <RegistryValue Type='string' Name='0AC9CC8C-C057-4CFA-884B-0D4318BB2EFC,2.1' Value='[INSTALLLOCATION]'/>
                 </RegistryKey>
                 <RegistryKey Root='HKCU' Key='Software\Microsoft\VisualStudio\$(var.VSTargetVersion)\ExtensionManager\ExtensionTypes'>
-                    <RegistryValue Type='string' Name='0AC9CC8C-C057-4CFA-884B-0D4318BB2EFC,2.0' Value='Tool'/>
+                    <RegistryValue Type='string' Name='0AC9CC8C-C057-4CFA-884B-0D4318BB2EFC,2.1' Value='Tool'/>
                 </RegistryKey>
             </Component>
 

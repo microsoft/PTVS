@@ -3,7 +3,7 @@
   <Identifier Id="81da0100-e6db-4783-91ea-c38c3fa1b81e">
     <Name>Python Tools for Visual Studio, Profiling Support</Name>
     <Author>Microsoft</Author>
-    <Version>2.0</Version>
+    <Version>2.1</Version>
     <Description xml:space="preserve">Provides support for profiling Python projects</Description>
     <Locale>1033</Locale>
     <InstalledByMsi>true</InstalledByMsi>
@@ -27,6 +27,10 @@
   <References>
     <Reference Id="Microsoft.VisualStudio.MPF" MinVersion="10.0">
       <Name>Visual Studio MPF</Name>
+    </Reference>
+    <Reference Id="96492FC7-7BC6-46F7-8559-66BB4E09FD1E" MinVersion="2.1" MaxVersion="2.1">
+      <Name>Python Tools for Visual Studio</Name>
+      <MoreInfoUrl>http://pytools.codeplex.com/</MoreInfoUrl>
     </Reference>
   </References>
   <Content>

@@ -67,7 +67,7 @@ from ptvsd.visualstudio_py_util import to_bytes, read_bytes, read_int, read_stri
 #   is assumed to be using the normal PTVS REPL protocol. If not successful (which can happen if there is
 #   no debugger attached), the server responds with 'RJCT' and closes the connection. 
 
-PTVS_VER = '2.0'
+PTVS_VER = '2.1'
 DEFAULT_PORT = 5678
 PTVSDBG_VER = 3 # must be kept in sync with DebuggerProtocolVersion in PythonRemoteProcess.cs
 PTVSDBG = to_bytes('PTVSDBG')

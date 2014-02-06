@@ -6,10 +6,10 @@
             <Component Id="PerUserInstallRegistry" Directory="INSTALLLOCATION" Guid="{3A0AEDAE-0D3C-415C-A586-F91CBBEC2673}">
                 <Condition>NOT ALLUSERS = 1</Condition>
                 <RegistryKey Root='HKCU' Key='Software\Microsoft\VisualStudio\$(var.VSTargetVersion)\ExtensionManager\EnabledExtensions'>
-                    <RegistryValue Type='string' Name='81da0100-e6db-4783-91ea-c38c3fa1b81e,2.0' Value='[EXTENSION_INSTALLPATH]Extensions\Microsoft\PythonProfiling\2.0\'/>
+                    <RegistryValue Type='string' Name='81da0100-e6db-4783-91ea-c38c3fa1b81e,2.1' Value='[EXTENSION_INSTALLPATH]Extensions\Microsoft\PythonProfiling\2.1\'/>
                 </RegistryKey>
                 <RegistryKey Root='HKCU' Key='Software\Microsoft\VisualStudio\$(var.VSTargetVersion)\ExtensionManager\ExtensionTypes'>
-                    <RegistryValue Type='string' Name='81da0100-e6db-4783-91ea-c38c3fa1b81e,2.0' Value='Microsoft.VisualStudio.VsPackage'/>
+                    <RegistryValue Type='string' Name='81da0100-e6db-4783-91ea-c38c3fa1b81e,2.1' Value='Microsoft.VisualStudio.VsPackage'/>
                 </RegistryKey>
             </Component>
 

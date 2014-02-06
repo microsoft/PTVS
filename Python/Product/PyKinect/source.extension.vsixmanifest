@@ -3,7 +3,7 @@
   <Identifier Id="83f5123e-4b4a-45c0-baec-bea8964d7b25">
     <Name>Python Tools PyKinect Sample</Name>
     <Author>Microsoft</Author>
-    <Version>2.0</Version>
+    <Version>2.1</Version>
     <Description xml:space="preserve">Adds samples for working with Kinect from Python.</Description>
     <Locale>1033</Locale>
     <InstalledByMsi>true</InstalledByMsi>
@@ -28,11 +28,7 @@
     <Reference Id="Microsoft.VisualStudio.MPF" MinVersion="10.0">
       <Name>Visual Studio MPF</Name>
     </Reference>
-    <Reference Id="Python Tools for Visual Studio" MinVersion="2.0">
-      <Name>Python Tools for Visual Studio</Name>
-      <MoreInfoUrl>http://pytools.codeplex.com/</MoreInfoUrl>
-    </Reference>
-    <Reference Id="96492FC7-7BC6-46F7-8559-66BB4E09FD1E" MinVersion="2.0">
+    <Reference Id="96492FC7-7BC6-46F7-8559-66BB4E09FD1E" MinVersion="2.1" MaxVersion="2.1">
       <Name>Python Tools for Visual Studio</Name>
       <MoreInfoUrl>http://pytools.codeplex.com/</MoreInfoUrl>
     </Reference>

@@ -11,10 +11,10 @@
             <Component Id="PerUserInstallRegistry" Directory="INSTALLLOCATION" Guid="{D02050BD-AC66-4EFF-AF1C-E5C08A906CF1}">
                 <Condition>NOT ALLUSERS = 1</Condition>
                 <RegistryKey Root='HKCU' Key='Software\Microsoft\VisualStudio\$(var.VSTargetVersion)\ExtensionManager\EnabledExtensions'>
-                    <RegistryValue Type='string' Name='ce8d8e55-ad29-423e-aca2-810d0b16cdc4,2.0' Value='[EXTENSION_INSTALLPATH]Extensions\Microsoft\Microsoft.VisualStudio.ReplWindow\2.0\'/>
+                    <RegistryValue Type='string' Name='ce8d8e55-ad29-423e-aca2-810d0b16cdc4,2.1' Value='[EXTENSION_INSTALLPATH]Extensions\Microsoft\Microsoft.VisualStudio.ReplWindow\2.1\'/>
                 </RegistryKey>
                 <RegistryKey Root='HKCU' Key='Software\Microsoft\VisualStudio\$(var.VSTargetVersion)\ExtensionManager\ExtensionTypes'>
-                    <RegistryValue Type='string' Name='ce8d8e55-ad29-423e-aca2-810d0b16cdc4,2.0' Value='Tool'/>
+                    <RegistryValue Type='string' Name='ce8d8e55-ad29-423e-aca2-810d0b16cdc4,2.1' Value='Tool'/>
                 </RegistryKey>
             </Component>
 
