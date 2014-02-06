@@ -65,6 +65,7 @@ namespace Microsoft.PythonTools {
         internal const int AddExistingVirtualEnv = 0x4008;
         internal const int ActivateEnvironment = 0x4009;
         internal const int InstallPythonPackage = 0x400A;
+        internal const int ViewAllEnvironments = 0x400B;
 
         internal const int AddSearchPathZipCommandId = 0x4003;
         internal const int AddPythonPathToSearchPathCommandId = 0x4030;

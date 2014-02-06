@@ -401,6 +401,20 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
                 out viewAdapter);
         }
 
+        internal void ShowInterpreterList() {
+            var window = FindWindowPane(typeof(InterpreterListToolWindow), 0, true) as ToolWindowPane;
+            if (window != null) {
+                var frame = window.Frame as IVsWindowFrame;
+                if (frame != null) {
+                    ErrorHandler.ThrowOnFailure(frame.Show());
+                }
+                var content = window.Content as System.Windows.UIElement;
+                if (content != null) {
+                    content.Focus();
+                }
+            }
+        }
+
         public static string InterpreterHelpUrl {
             get {
                 return string.Format("http://go.microsoft.com/fwlink/?LinkId=299429&clcid=0x{0:X}",

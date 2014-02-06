@@ -127,6 +127,7 @@ namespace Microsoft.PythonTools.Project {
                     case PythonConstants.AddEnvironment:
                     case PythonConstants.AddVirtualEnv:
                     case PythonConstants.AddExistingVirtualEnv:
+                    case PythonConstants.ViewAllEnvironments:
                         result |= QueryStatusResult.SUPPORTED | QueryStatusResult.ENABLED;
                         return VSConstants.S_OK;
                 }
@@ -154,6 +155,9 @@ namespace Microsoft.PythonTools.Project {
                             CancellationToken.None,
                             TaskContinuationOptions.OnlyOnFaulted,
                             TaskScheduler.FromCurrentSynchronizationContext());
+                        return VSConstants.S_OK;
+                    case PythonConstants.ViewAllEnvironments:
+                        PythonToolsPackage.Instance.ShowInterpreterList();
                         return VSConstants.S_OK;
                 }
             }

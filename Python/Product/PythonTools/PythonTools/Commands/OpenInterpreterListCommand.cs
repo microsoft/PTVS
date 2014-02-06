@@ -13,11 +13,6 @@
  * ***************************************************************************/
 
 using System;
-using System.Windows;
-using Microsoft.PythonTools.InterpreterList;
-using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Commands {
@@ -27,17 +22,7 @@ namespace Microsoft.PythonTools.Commands {
     class OpenInterpreterListCommand : Command {
 
         public override void DoCommand(object sender, EventArgs args) {
-            var window = PythonToolsPackage.Instance.FindWindowPane(typeof(InterpreterListToolWindow), 0, true) as ToolWindowPane;
-            if (window != null) {
-                var frame = window.Frame as IVsWindowFrame;
-                if (frame != null) {
-                    ErrorHandler.ThrowOnFailure(frame.Show());
-                }
-                var content = window.Content as UIElement;
-                if (content != null) {
-                    content.Focus();
-                }
-            }
+            PythonToolsPackage.Instance.ShowInterpreterList();
         }
 
         public string Description {

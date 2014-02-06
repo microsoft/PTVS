@@ -236,6 +236,20 @@
         </Strings>
       </Button>
 
+      <!-- Duplicate the Python Environments for context menus -->
+      <Button guid="guidPythonToolsCmdSet" id="cmdidViewAllEnvironments" priority="0x0700" type="Button">
+        <Parent guid="guidPythonToolsCmdSet" id="CodeFileGroup2" />
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <CommandFlag>DefaultInvisible</CommandFlag>
+        <Icon guid="guidImages" id="pyListPic"/>
+        <Strings>
+          <ButtonText>Vie&amp;w All Python Environments</ButtonText>
+          <MenuText>Vie&amp;w All Python Environments</MenuText>
+          <ToolTipText>Open the Python Environments window</ToolTipText>
+          <CommandName>View All Python Environments</CommandName>
+        </Strings>
+      </Button>
+
       <Button guid="guidPythonToolsCmdSet" id="cmdidReplWindow" priority="0x7f00" type="Button">
         <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1"/>
         <Icon guid="guidImages" id="pyReplPic" />
@@ -982,6 +996,7 @@
       <IDSymbol name="cmdidAddExistingVirtualEnv" value="0x4008" />
       <IDSymbol name="cmdidActivateEnvironment" value="0x4009" />
       <IDSymbol name="cmdidInstallPythonPackage" value="0x400A" />
+      <IDSymbol name="cmdidViewAllEnvironments" value="0x400B" />
 
       <IDSymbol name="cmdidShowCppView" value="0x400C" />
       <IDSymbol name="cmdidShowPythonView" value="0x400D" />
