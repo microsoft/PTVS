@@ -618,64 +618,189 @@ namespace Microsoft.VisualStudioTools.Project
             return groupName == "SourceFiles";
         }
 
+        private static DateTime? TryGetLastWriteTimeUtc(string path, Redirector output = null)
+        {
+            try
+            {
+                return File.GetLastWriteTimeUtc(path);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                if (output != null)
+                {
+                    output.WriteErrorLine(string.Format("Failed to access {0}: {1}", path, ex.Message));
+#if DEBUG
+                    output.WriteErrorLine(ex.ToString());
+#endif
+                }
+            }
+            catch (ArgumentException ex)
+            {
+                if (output != null)
+                {
+                    output.WriteErrorLine(string.Format("Failed to access {0}: {1}", path, ex.Message));
+#if DEBUG
+                    output.WriteErrorLine(ex.ToString());
+#endif
+                }
+            }
+            catch (PathTooLongException ex)
+            {
+                if (output != null)
+                {
+                    output.WriteErrorLine(string.Format("Failed to access {0}: {1}", path, ex.Message));
+#if DEBUG
+                    output.WriteErrorLine(ex.ToString());
+#endif
+                }
+            }
+            catch (NotSupportedException ex)
+            {
+                if (output != null)
+                {
+                    output.WriteErrorLine(string.Format("Failed to access {0}: {1}", path, ex.Message));
+#if DEBUG
+                    output.WriteErrorLine(ex.ToString());
+#endif
+                }
+            }
+            return null;
+        }
+
         internal virtual bool IsUpToDate()
         {
-            var inputs = Enumerable.Empty<DateTime?>();
-            var outputs = Enumerable.Empty<DateTime?>();
+            var outputWindow = OutputWindowRedirector.GetGeneral(ProjectMgr.Site);
+#if DEBUG
+            outputWindow.WriteLine(string.Format("Checking whether {0} needs to be rebuilt:", ProjectMgr.Caption));
+#endif
 
-            foreach (var group in OutputGroups)
+            var latestInput = DateTime.MinValue;
+            var earliestOutput = DateTime.MaxValue;
+            bool mustRebuild = false;
+
+            foreach (var group in OutputGroups.Where(g => !IsInputGroup(g.Name)))
             {
-                string groupName;
-                ErrorHandler.ThrowOnFailure(group.get_CanonicalName(out groupName));
-                
-                var seq = IsInputGroup(groupName) ? inputs : outputs;
+                foreach (var output in group.EnumerateOutputs())
+                {
+                    var path = output.CanonicalName;
+#if DEBUG
+                    var dt = TryGetLastWriteTimeUtc(path);
+                    outputWindow.WriteLine(string.Format(
+                        "  Out: {0}: {1} [{2}]",
+                        group.Name,
+                        path,
+                        dt.HasValue ? dt.Value.ToString("s") : "err"
+                    ));
+#endif
+                    DateTime? modifiedTime;
 
-                seq = seq.Concat(group
-                    .EnumerateOutputs()
-                    .Select(o =>
+                    if (!File.Exists(path) ||
+                        !(modifiedTime = TryGetLastWriteTimeUtc(path, outputWindow)).HasValue)
                     {
-                        string path;
-                        return ErrorHandler.Succeeded(o.get_CanonicalName(out path)) ? path : null;
-                    })
-                    .Where(File.Exists)
-                    .Select<string, DateTime?>(path =>
+                        mustRebuild = true;
+                        break;
+                    }
+
+                    string inputPath;
+                    if (File.Exists(inputPath = output.GetMetadata("SourceFile")))
                     {
-                        try
+                        var inputModifiedTime = TryGetLastWriteTimeUtc(inputPath, outputWindow);
+                        if (inputModifiedTime.HasValue && inputModifiedTime.Value > modifiedTime.Value)
                         {
-                            return File.GetLastWriteTimeUtc(path);
+                            mustRebuild = true;
+                            break;
                         }
-                        catch (ArgumentException)
-                        { }
-                        catch (UnauthorizedAccessException)
-                        { }
-                        catch (NotSupportedException)
-                        { }
-                        return null;
-                    })
-                );
+                        else
+                        {
+                            continue;
+                        }
+                    }
 
-                if (IsInputGroup(groupName))
-                {
-                    inputs = seq;
+                    if (modifiedTime.Value < earliestOutput)
+                    {
+                        earliestOutput = modifiedTime.Value;
+                    }
                 }
-                else
+
+                if (mustRebuild)
                 {
-                    outputs = seq;
+                    // Early exit if we know we're going to have to rebuild
+                    break;
                 }
             }
 
-            var lastInput = inputs
-                .Where(dt => dt.HasValue)
-                .Select(dt => dt.Value)
-                .DefaultIfEmpty(DateTime.MinValue)
-                .Max();
-            var firstOutput = outputs
-                .Where(dt => dt.HasValue)
-                .Select(dt => dt.Value)
-                .DefaultIfEmpty(DateTime.MaxValue)
-                .Min();
+            if (mustRebuild)
+            {
+#if DEBUG
+                outputWindow.WriteLine(string.Format(
+                    "Rebuilding {0} because mustRebuild is true",
+                    ProjectMgr.Caption
+                ));
+#endif
+                return false;
+            }
 
-            return lastInput < firstOutput;
+            foreach (var group in OutputGroups.Where(g => IsInputGroup(g.Name)))
+            {
+                foreach (var input in group.EnumerateOutputs())
+                {
+                    var path = input.CanonicalName;
+#if DEBUG
+                    var dt = TryGetLastWriteTimeUtc(path);
+                    outputWindow.WriteLine(string.Format(
+                        "  In:  {0}: {1} [{2}]",
+                        group.Name,
+                        path,
+                        dt.HasValue ? dt.Value.ToString("s") : "err"
+                    ));
+#endif
+                    if (!File.Exists(path))
+                    {
+                        continue;
+                    }
+
+                    var modifiedTime = TryGetLastWriteTimeUtc(path, outputWindow);
+                    if (modifiedTime.HasValue && modifiedTime.Value > latestInput)
+                    {
+                        latestInput = modifiedTime.Value;
+                        if (earliestOutput < latestInput)
+                        {
+                            break;
+                        }
+                    }
+                }
+
+                if (earliestOutput < latestInput)
+                {
+                    // Early exit if we know we're going to have to rebuild
+                    break;
+                }
+            }
+
+            if (earliestOutput < latestInput)
+            {
+#if DEBUG
+                outputWindow.WriteLine(string.Format(
+                    "Rebuilding {0} because {1:s} < {2:s}",
+                    ProjectMgr.Caption,
+                    earliestOutput,
+                    latestInput
+                ));
+#endif
+                return false;
+            }
+            else
+            {
+#if DEBUG
+                outputWindow.WriteLine(string.Format(
+                    "Not rebuilding {0} because {1:s} >= {2:s}",
+                    ProjectMgr.Caption,
+                    earliestOutput,
+                    latestInput
+                ));
+#endif
+                return true;
+            }
         }
 
         #endregion

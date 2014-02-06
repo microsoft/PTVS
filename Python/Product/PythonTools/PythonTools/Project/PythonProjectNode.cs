@@ -878,15 +878,6 @@ namespace Microsoft.PythonTools.Project {
             return msg;
         }
 
-        class OutputDataReceiver {
-            public readonly StringBuilder Received = new StringBuilder();
-
-            public void OutputDataReceived(object sender, DataReceivedEventArgs e) {
-                Received.Append(e.Data);
-            }
-
-        }
-
         protected override string AddReferenceExtensions {
             get {
                 return "Python Extension Modules (*.dll;*.pyd)\0*.dll;*.pyd\0All Files (*.*)\0*.*\0";

@@ -40,6 +40,21 @@ namespace Microsoft.VisualStudioTools.Project
             output = outputAssembly;
         }
 
+        internal string CanonicalName
+        {
+            get
+            {
+                string canonicalName;
+                return ErrorHandler.Succeeded(get_CanonicalName(out canonicalName)) ? canonicalName : null;
+            }
+        }
+
+        internal string GetMetadata(string name)
+        {
+            object value;
+            return ErrorHandler.Succeeded(get_Property(name, out value)) ? value as string : null;
+        }
+
         #region IVsOutput2 Members
 
         public int get_CanonicalName(out string pbstrCanonicalName)

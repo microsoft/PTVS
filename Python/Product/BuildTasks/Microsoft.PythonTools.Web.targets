@@ -42,7 +42,7 @@
 
   <Import Project="Microsoft.PythonTools.targets"/>
   <Import Project="$(VSToolsPath)\WebApplications\Microsoft.WebApplication.targets" />
-  
+
   <!-- *************************************************************************
        Targets files for specific frameworks can schedule their own targets to
        be dependencies of ResolvePythonWsgiHandler to set the value of
@@ -83,6 +83,51 @@
         <FromTarget>CollectPythonSourceFiles</FromTarget>
         <Category>Run</Category>
       </FilesForPackagingFromProject>
+    </ItemGroup>
+  </Target>
+
+  <!-- *************************************************************************
+       The AllProjectOutputGroups target is invoked by the IDE when determining
+       whether the project needs to be rebuilt.
+  -->
+
+  <PropertyGroup>
+    <AllProjectOutputGroupsDependsOn>
+      _BuildingForUpToDateCheck;
+      ResolvePythonDeploymentMethod;
+      _DetectWebConfig;
+      _GetPythonWebSitesFiles;
+      _GetPythonCloudServiceFiles;
+      ResolveVirtualEnvSettings;
+      _GetPythonAzureSetupConfigOutput
+    </AllProjectOutputGroupsDependsOn>
+
+    <BuildingForUpToDateCheck>false</BuildingForUpToDateCheck>
+  </PropertyGroup>
+
+  <Target Name="_BuildingForUpToDateCheck">
+    <PropertyGroup>
+      <BuildingForUpToDateCheck>true</BuildingForUpToDateCheck>
+    </PropertyGroup>
+  </Target>
+
+  <Target Name="AllProjectOutputGroups" DependsOnTargets="$(AllProjectOutputGroupsDependsOn)">
+    <ItemGroup>
+      <SourceFilesProjectOutputGroupOutput Include="@(Compile);@(Content)" />
+
+      <!-- If the project includes web.config, but we are going to regenerate
+           it, we need to exclude it from our source files. -->
+      <SourceFilesProjectOutputGroupOutput Remove="**\web.config" Condition="$(_RegenerateWebConfig)" />
+
+      <BuiltProjectOutputGroupOutput Remove="@(BuiltProjectOutputGroupOutput)" />
+      <BuiltProjectOutputGroupOutput Include="@(_PythonWebSitesFiles)" />
+      <BuiltProjectOutputGroupOutput Include="@(_PythonCloudServiceFiles);@(_PythonCloudServiceFilesForEmulator)" />
+      <BuiltProjectOutputGroupOutput Include="@(_PythonVirtualEnvProxy)" />
+      <BuiltProjectOutputGroupOutput Include="@(_PythonAzureSetupConfigOutput)" />
+
+      <!-- The common targets invents a symbols file for our project, which will
+           never be created. -->
+      <DebugSymbolsProjectOutputGroupOutput Remove="@(DebugSymbolsProjectOutputGroupOutput)" />
     </ItemGroup>
   </Target>
 
@@ -141,7 +186,7 @@
       <_PythonDeploymentMethod>CloudServiceDeploy</_PythonDeploymentMethod>
     </PropertyGroup>
 
-    <Message Text="Deploying with $(_PythonDeploymentMethod)" Importance="normal" />
+    <Message Text="Deploying with $(_PythonDeploymentMethod)" Condition="!$(BuildingForUpToDateCheck)" />
   </Target>
 
   <Target Name="ResolveDeploymentSettings" DependsOnTargets="ResolvePythonDeploymentMethod">
@@ -164,9 +209,9 @@
       <DeployedWFastCgiPath Condition="'$(DeployedWFastCgiPath)' == ''">%WFASTCGIPATH%</DeployedWFastCgiPath>
     </PropertyGroup>
 
-    <Message Text="Deployed site root is $(DeployedSiteRoot)" Importance="normal"/>
-    <Message Text="Deployed WFastCgi path is $(DeployedWFastCgiPath)" Importance="normal"/>
-    <Message Text="Deployed Python path is $(DeployedPythonInterpreterPath)" Importance="normal"/>
+    <Message Text="Deployed site root is $(DeployedSiteRoot)" Condition="!$(BuildingForUpToDateCheck)"/>
+    <Message Text="Deployed WFastCgi path is $(DeployedWFastCgiPath)" Condition="!$(BuildingForUpToDateCheck)"/>
+    <Message Text="Deployed Python path is $(DeployedPythonInterpreterPath)" Condition="!$(BuildingForUpToDateCheck)"/>
   </Target>
 
   <!-- *************************************************************************
@@ -251,13 +296,22 @@
         <Category>Run</Category>
       </FilesForPackagingFromProject>
     </ItemGroup>
-    
+
     <!-- Copy the proxy script to the bin\ directory for the Cloud Service
          emulator. -->
     <Copy SourceFiles="$(_AzureSupportPath)ptvs_virtualenv_proxy.py"
           DestinationFolder="bin"
           SkipUnchangedFiles="true"
-          Condition="'$(_PythonDeploymentMethod)' == 'CloudServiceDeploy'" />
+          Condition="'$(_PythonDeploymentMethod)' == 'CloudServiceDeploy'">
+      <Output TaskParameter="CopiedFiles" ItemName="_CopiedVirtualEnvProxy"/>
+      <Output TaskParameter="CopiedFiles" ItemName="FileWrites"/>
+    </Copy>
+
+    <ItemGroup>
+      <_PythonVirtualEnvProxy Include="%(_CopiedVirtualEnvProxy)">
+        <SourceFile>$(_AzureSupportPath)ptvs_virtualenv_proxy.py</SourceFile>
+      </_PythonVirtualEnvProxy>
+    </ItemGroup>
   </Target>
 
   <Target Name="CollectVirtualEnvFiles" DependsOnTargets="ResolvePythonInterpreterPath;_CollectVirtualEnvFiles;_CollectVEnvFiles" />
@@ -265,6 +319,8 @@
   <Target Name="_CollectVirtualEnvFiles"
           DependsOnTargets="ResolveVirtualEnvSettings"
           Condition="$(VirtualEnvEnabled) and Exists('$(PythonPrefixSubPath)Lib\orig-prefix.txt')">
+    <Error Text="Should not be invoked during up-to-date check" Condition="$(BuildingForUpToDateCheck)" />
+
     <PropertyGroup>
       <OrigPrefixPath>$(IntermediateOutputPath)deployment-updated-orig-prefix.txt</OrigPrefixPath>
       <TargetPythonPrefix Condition="$(TargetPythonPrefix) == ''">D:\Python$(PythonMajorVersion)$(PythonMinorVersion)</TargetPythonPrefix>
@@ -326,7 +382,9 @@
           Returns="@(_PythonWebSitesFiles)"
           Condition="'$(_PythonDeploymentMethod)' == 'WebDeploy'">
     <ItemGroup>
-      <_PythonWebSitesFiles Include="@(_WebSitesFiles->'$(IntermediateOutputPath)%(Filename)%(Extension)')" />
+      <_PythonWebSitesFiles Include="@(_WebSitesFiles->'$(IntermediateOutputPath)%(Filename)%(Extension)')">
+        <SourceFile>%(FullPath)</SourceFile>
+      </_PythonWebSitesFiles>
     </ItemGroup>
   </Target>
 
@@ -335,9 +393,13 @@
           Outputs="@(_PythonWebSitesFiles)"
           DependsOnTargets="_GetPythonWebSitesFiles"
           Condition="'$(_PythonDeploymentMethod)' == 'WebDeploy'">
+    <Error Text="Should not be invoked during up-to-date check" Condition="$(BuildingForUpToDateCheck)" />
+
     <Copy SourceFiles="@(_WebSitesFiles)"
           DestinationFiles="@(_PythonWebSitesFiles)"
-          SkipUnchangedFiles="true" />
+          SkipUnchangedFiles="true">
+      <Output TaskParameter="CopiedFiles" ItemName="FileWrites"/>
+    </Copy>
 
     <ItemGroup>
       <FilesForPackagingFromProject Include="@(_PythonWebSitesFiles->'%(FullPath)')">
@@ -378,7 +440,7 @@
 
     <!-- Web Role files -->
     <_CloudServiceFiles Include="$(_AzureSupportPath)Microsoft.PythonTools.WebRole.dll" />
-    
+
     <!-- FastCGI handler -->
     <_CloudServiceFiles Include="$(_AzureSupportPath)wfastcgi.py" />
   </ItemGroup>
@@ -395,8 +457,12 @@
           Returns="@(_PythonCloudServiceFiles);@(_PythonCloudServiceFilesForEmulator)"
           Condition="'$(_PythonDeploymentMethod)' == 'CloudServiceDeploy'">
     <ItemGroup>
-      <_PythonCloudServiceFiles Include="@(_CloudServiceFiles->'$(IntermediateOutputPath)%(Filename)%(Extension)')" />
-      <_PythonCloudServiceFilesForEmulator Include="@(_CloudServiceFiles->'$(QualifiedProjectHome)bin\%(Filename)%(Extension)')" />
+      <_PythonCloudServiceFiles Include="@(_CloudServiceFiles->'$(IntermediateOutputPath)%(Filename)%(Extension)')">
+        <SourceFile>%(FullPath)</SourceFile>
+      </_PythonCloudServiceFiles>
+      <_PythonCloudServiceFilesForEmulator Include="@(_CloudServiceFiles->'$(QualifiedProjectHome)bin\%(Filename)%(Extension)')">
+        <SourceFile>%(FullPath)</SourceFile>
+      </_PythonCloudServiceFilesForEmulator>
     </ItemGroup>
   </Target>
 
@@ -405,9 +471,13 @@
           Outputs="@(_PythonCloudServiceFiles)"
           DependsOnTargets="_GetPythonCloudServiceFiles"
           Condition="'$(_PythonDeploymentMethod)' == 'CloudServiceDeploy'">
+    <Error Text="Should not be invoked during up-to-date check" Condition="$(BuildingForUpToDateCheck)" />
+
     <Copy SourceFiles="@(_CloudServiceFiles)"
           DestinationFiles="@(_PythonCloudServiceFiles)"
-          SkipUnchangedFiles="true" />
+          SkipUnchangedFiles="true">
+      <Output TaskParameter="CopiedFiles" ItemName="FileWrites"/>
+    </Copy>
   </Target>
 
   <Target Name="_DeployPythonCloudServiceFilesForEmulator"
@@ -415,9 +485,13 @@
           Outputs="@(_PythonCloudServiceFilesForEmulator)"
           DependsOnTargets="_GetPythonCloudServiceFiles"
           Condition="'$(_PythonDeploymentMethod)' == 'CloudServiceDeploy'">
+    <Error Text="Should not be invoked during up-to-date check" Condition="$(BuildingForUpToDateCheck)" />
+
     <Copy SourceFiles="@(_CloudServiceFiles)"
           DestinationFiles="@(_PythonCloudServiceFilesForEmulator)"
-          SkipUnchangedFiles="true" />
+          SkipUnchangedFiles="true">
+      <Output TaskParameter="CopiedFiles" ItemName="FileWrites"/>
+    </Copy>
   </Target>
 
   <Target Name="_CollectPythonCloudServiceFiles"
@@ -438,13 +512,20 @@
   -->
   <Target Name="CreatePythonAzureSetupConfig" DependsOnTargets="ResolvePythonDeploymentMethod;_CreatePythonAzureSetupConfig" />
 
-  <Target Name="_CreatePythonAzureSetupConfig"
-          DependsOnTargets="ResolvePythonInterpreterPath"
+  <Target Name="_GetPythonAzureSetupConfigOutput"
+          DependsOnTargets="ResolveQualifiedProjectHome"
           Condition="'$(_PythonDeploymentMethod)' == 'CloudServiceDeploy'">
-
     <ItemGroup>
       <_PythonAzureSetupConfig Include="$(IntermediateOutputPath)AzureSetup.cfg" />
+      <_PythonAzureSetupConfigForEmulator Include="$(QualifiedProjectHome)bin\AzureSetup.cfg" />
+      <_PythonAzureSetupConfigOutput Include="@(_PythonAzureSetupConfig);@(_PythonAzureSetupConfigForEmulator)" />
     </ItemGroup>
+  </Target>
+
+  <Target Name="_CreatePythonAzureSetupConfig"
+          DependsOnTargets="ResolvePythonInterpreterPath;_GetPythonAzureSetupConfigOutput"
+          Condition="'$(_PythonDeploymentMethod)' == 'CloudServiceDeploy'">
+    <Error Text="Should not be invoked during up-to-date check" Condition="$(BuildingForUpToDateCheck)" />
 
     <PropertyGroup>
       <!-- AzureSetup.cfg variables are written out here so we can switch on
@@ -466,9 +547,11 @@ interpreter_path_emulated=$(PythonInterpreterPath)
                       Overwrite="false" />
 
     <Copy SourceFiles="@(_PythonAzureSetupConfig)"
-          DestinationFolder="$(QualifiedProjectHome)bin" />
-    
+          DestinationFiles="@(_PythonAzureSetupConfigForEmulator)" />
+
     <ItemGroup>
+      <FileWrites Include="@(_PythonAzureSetupConfigOutput)" />
+
       <FilesForPackagingFromProject Include="@(_PythonAzureSetupConfig)">
         <DestinationRelativePath>bin\%(FileName)%(Extension)</DestinationRelativePath>
         <FromTarget>CreatePythonAzureSetupConfig</FromTarget>
@@ -501,6 +584,7 @@ interpreter_path_emulated=$(PythonInterpreterPath)
   <Target Name="_DetectWebConfig">
     <ItemGroup>
       <_OutWebConfig Include="$(QualifiedProjectHome)web.config"/>
+      <_WebConfigInContent Include="@(Content)" Condition="'%(Content.Identity)' == 'web.config'" />
     </ItemGroup>
 
     <ReadLinesFromFile File="@(_OutWebConfig)" Condition="Exists('@(_OutWebConfig)')">
@@ -512,13 +596,14 @@ interpreter_path_emulated=$(PythonInterpreterPath)
       <_RegenerateWebConfig Condition="Exists('@(_OutWebConfig)') and !$(AlwaysRegenerateWebConfig)">$(_CurrentWebConfigCode.Contains('Generated web.config for Windows Azure.'))</_RegenerateWebConfig>
     </PropertyGroup>
 
-    <Message Text="Regenerating web.config" Condition="$(_RegenerateWebConfig)"/>
-    <Message Text="Using existing web.config file" Condition="!$(_RegenerateWebConfig)"/>
+    <Message Text="Using existing web.config file" Condition="!$(_RegenerateWebConfig) and !$(BuildingForUpToDateCheck)"/>
   </Target>
 
   <Target Name="_CreateWebConfig"
           DependsOnTargets="$(CreateWebConfigDependsOnTargets)"
           Condition="$(_RegenerateWebConfig)">
+    <Message Text="Regenerating web.config" />
+    <Error Text="Should not be invoked during up-to-date check" Condition="$(BuildingForUpToDateCheck)" />
     <Error Text="No WSGI handler specified" Condition="'$(PythonWsgiHandler)' == ''" />
 
     <ItemGroup>
@@ -526,7 +611,9 @@ interpreter_path_emulated=$(PythonInterpreterPath)
     </ItemGroup>
 
     <Copy SourceFiles="$(_AzureSupportPath)web_config.xml"
-          DestinationFiles="@(_TempWebConfig)" />
+          DestinationFiles="@(_TempWebConfig)">
+      <Output TaskParameter="CopiedFiles" ItemName="FileWrites"/>
+    </Copy>
 
     <Message Text="Updating app settings in web.config" />
     <XmlPoke XmlInputPath="@(_TempWebConfig)"
@@ -544,10 +631,12 @@ interpreter_path_emulated=$(PythonInterpreterPath)
              Query="/configuration/system.webServer/handlers"
              Value="$(FastCgiHandler)" />
 
-    <Copy SourceFiles="@(_TempWebConfig)" DestinationFiles="@(_OutWebConfig)"/>
+    <Copy SourceFiles="@(_TempWebConfig)" DestinationFiles="@(_OutWebConfig)" />
+
+    <Delete Files="@(_TempWebConfig)" Condition="'$(BuildingForGetTargetPath)' == 'True'" />
 
     <ItemGroup>
-      <FilesForPackagingFromProject Include="@(_OutWebConfig)">
+      <FilesForPackagingFromProject Include="web.config" Condition="'@(_WebConfigInContent)' == ''">
         <DestinationRelativePath>web.config</DestinationRelativePath>
         <FromTarget>CreateWebConfig</FromTarget>
         <Category>Run</Category>
@@ -576,11 +665,16 @@ interpreter_path_emulated=$(PythonInterpreterPath)
     <MSBuild Projects="$(MSBuildProjectFullPath)"
              Targets="CreateWebConfig"
              Properties="BuildingForGetTargetPath=true" />
-    
+
     <PropertyGroup>
       <_WebRoleDll>$([System.IO.Path]::GetFullPath('$(IntermediateOutputPath)Microsoft.PythonTools.WebRole.dll'))</_WebRoleDll>
     </PropertyGroup>
   </Target>
+
+  <Target Name="PrepareForBuild">
+    <MakeDir Directories="$(OutDir);$(IntermediateOutputPath);@(CreateDirectory)" ContinueOnError="True"/>
+  </Target>
+
 
   <!-- *************************************************************************
        Web commands. These are displayed to the user in the PTVS IDE and are

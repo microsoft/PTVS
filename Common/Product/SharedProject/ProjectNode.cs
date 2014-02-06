@@ -162,7 +162,7 @@ namespace Microsoft.VisualStudioTools.Project
         /// List of output groups names and their associated target
         /// </summary>
         private static KeyValuePair<string, string>[] outputGroupNames =
-        {                                      // Name                    Target (MSBuild)
+        {                                      // Name                    ItemGroup (MSBuild)
             new KeyValuePair<string, string>("Built",                 "BuiltProjectOutputGroup"),
             new KeyValuePair<string, string>("ContentFiles",          "ContentFilesProjectOutputGroup"),
             new KeyValuePair<string, string>("LocalizedResourceDlls", "SatelliteDllsProjectOutputGroup"),

@@ -82,6 +82,19 @@ namespace Microsoft.VisualStudioTools.Project
             get { return _targetName; }
         }
 
+        /// <summary>
+        /// Easy access to the canonical name of the group.
+        /// </summary>
+        internal string Name
+        {
+            get
+            {
+                string canonicalName;
+                ErrorHandler.ThrowOnFailure(get_CanonicalName(out canonicalName));
+                return canonicalName;
+            }
+        }
+
         #region virtual methods
 
         protected virtual void Refresh()

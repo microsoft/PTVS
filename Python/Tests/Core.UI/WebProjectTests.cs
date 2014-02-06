@@ -118,18 +118,19 @@ namespace PythonToolsUITests {
                 }
 
                 UIThread.Instance.RunSync(() => {
-                    pyProj.SetProjectProperty("WebServerPort", "23457");
+                    pyProj.SetProjectProperty("WebBrowserPort", "23457");
                 });
-                LaunchAndVerifyNoDebug(pyProj, 23457, textInResponse);
+                LaunchAndVerifyNoDebug(app, 23457, textInResponse);
 
                 UIThread.Instance.RunSync(() => {
-                    pyProj.SetProjectProperty("WebServerPort", "23456");
+                    pyProj.SetProjectProperty("WebBrowserPort", "23456");
                 });
                 LaunchAndVerifyDebug(app, 23456, textInResponse);
             }
         }
 
         private static void LaunchAndVerifyDebug(VisualStudioApp app, int port, string textInResponse) {
+            app.Dte.Solution.SolutionBuild.Build(true);
             app.Dte.Debugger.Go(false);
             
             string text = string.Empty;
@@ -163,38 +164,46 @@ namespace PythonToolsUITests {
             }
         }
 
-        private static void LaunchAndVerifyNoDebug(PythonProjectNode project, int port, string textInResponse) {
+        private static void LaunchAndVerifyNoDebug(
+            VisualStudioApp app,
+            int port,
+            string textInResponse
+        ) {
             var pythonProcesses = Process.GetProcessesByName("python");
+            Process[] newProcesses;
+            bool prevNormal = true, prevAbnormal = true;
 
-            UIThread.Instance.RunSync(() => {
-                var prevNormal = PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnNormalExit;
-                var prevAbnormal = PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnAbnormalExit;
-                try {
+            try {
+                UIThread.Instance.RunSync(() => {
+                    app.Dte.Solution.SolutionBuild.Build(true);
+                    prevNormal = PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnNormalExit;
+                    prevAbnormal = PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnAbnormalExit;
                     PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnNormalExit = false;
                     PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnAbnormalExit = false;
 
-                    ErrorHandler.ThrowOnFailure(project.GetLauncher().LaunchProject(false));
-                } finally {
+                    app.Dte.Solution.SolutionBuild.Run();
+                });
+
+                newProcesses = new Process[0];
+                for (int i = 20;
+                    i > 0 && !newProcesses.Any();
+                    --i, newProcesses = Process.GetProcessesByName("python").Except(pythonProcesses).ToArray()) {
+                    Thread.Sleep(500);
+                }
+                Assert.IsTrue(newProcesses.Any(), "Did not find new Python process");
+
+                for (int i = 100;
+                    i > 0 &&
+                        !IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpListeners().Any(p => p.Port == port);
+                    --i) {
+                    Thread.Sleep(300);
+                }
+            } finally {
+                UIThread.Instance.RunSync(() => {
                     PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnNormalExit = prevNormal;
                     PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnAbnormalExit = prevAbnormal;
-                }
-            });
-
-            for (int i = 100;
-                i > 0 &&
-                    !IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpListeners().Any(p => p.Port == port);
-                --i) {
-                Thread.Sleep(300);
+                });
             }
-
-            var newProcesses = new Process[0];
-            for (int i = 20;
-                i > 0 && !newProcesses.Any();
-                --i, newProcesses = Process.GetProcessesByName("python").Except(pythonProcesses).ToArray()) {
-                Thread.Sleep(500);
-            }
-            Assert.IsTrue(newProcesses.Any(), "Did not find new Python process");
-
             string text;
             var req = HttpWebRequest.CreateHttp(new Uri(string.Format("http://localhost:{0}/", port)));
             using (var resp = req.GetResponse()) {
