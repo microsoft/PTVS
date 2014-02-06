@@ -385,4 +385,22 @@ See the Python Environments window for details.</value>
   <data name="UpgradedToolsVersion" xml:space="preserve">
     <value>The tools version has been changed to 4.0. This will not affect compatibility with other versions of Visual Studio.</value>
   </data>
+  <data name="WebLauncherArgumentsHelp" xml:space="preserve">
+    <value>Specifies arguments which are passed to the script and available via sys.argv.</value>
+  </data>
+  <data name="WebLauncherInterpreterArgumentsHelp" xml:space="preserve">
+    <value>Specifies arguments which alter how the interpreter is started (for example, -O to generate optimized byte code).</value>
+  </data>
+  <data name="WebLauncherInterpreterPathHelp" xml:space="preserve">
+    <value>Overrides the interpreter executable which is used for launching the project.</value>
+  </data>
+  <data name="WebLauncherLaunchUrlHelp" xml:space="preserve">
+    <value>The URL to open in the browser when starting the development server. When not specified http://localhost will be launched.</value>
+  </data>
+  <data name="WebLauncherPortNumberHelp" xml:space="preserve">
+    <value>The port on which the development server should listen. When not specified a random free port will be used. The SERVER_PORT environment variable is set to this value.</value>
+  </data>
+  <data name="WebLauncherSearchPathHelp" xml:space="preserve">
+    <value>Specifies additional directories which are added to sys.path for making libraries available for importing.</value>
+  </data>
 </root>

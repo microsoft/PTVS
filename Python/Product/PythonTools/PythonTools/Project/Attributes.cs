@@ -106,6 +106,13 @@ namespace Microsoft.PythonTools.Project {
         public const string PythonWebLauncherName = "PythonWebLauncherName";
         public const string PythonWebLauncherDescription = "PythonWebLauncherDescription";
 
+        public const string WebLauncherSearchPathHelp = "WebLauncherSearchPathHelp";
+        public const string WebLauncherArgumentsHelp = "WebLauncherArgumentsHelp";
+        public const string WebLauncherInterpreterArgumentsHelp = "WebLauncherInterpreterArgumentsHelp";
+        public const string WebLauncherInterpreterPathHelp = "WebLauncherInterpreterPathHelp";
+        public const string WebLauncherPortNumberHelp = "WebLauncherPortNumberHelp";
+        public const string WebLauncherLaunchUrlHelp = "WebLauncherLaunchUrlHelp";
+
         public const string UnresolvedModuleTooltip = "UnresolvedModuleTooltip";
         public const string UnresolvedModuleTooltipRefreshing = "UnresolvedModuleTooltipRefreshing";
 

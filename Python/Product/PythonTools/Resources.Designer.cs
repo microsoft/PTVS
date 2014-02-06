@@ -795,5 +795,59 @@ namespace Microsoft.PythonTools {
                 return ResourceManager.GetString("WarningAnalysisNotCurrent", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Specifies arguments which are passed to the script and available via sys.argv..
+        /// </summary>
+        internal static string WebLauncherArgumentsHelp {
+            get {
+                return ResourceManager.GetString("WebLauncherArgumentsHelp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Specifies arguments which alter how the interpreter is started (for example, -O to generate optimized byte code)..
+        /// </summary>
+        internal static string WebLauncherInterpreterArgumentsHelp {
+            get {
+                return ResourceManager.GetString("WebLauncherInterpreterArgumentsHelp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Overrides the interpreter executable which is used for launching the project..
+        /// </summary>
+        internal static string WebLauncherInterpreterPathHelp {
+            get {
+                return ResourceManager.GetString("WebLauncherInterpreterPathHelp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The URL to open in the browser when starting the development server. When not specified http://localhost will be launched..
+        /// </summary>
+        internal static string WebLauncherLaunchUrlHelp {
+            get {
+                return ResourceManager.GetString("WebLauncherLaunchUrlHelp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The port on which the development server should listen. When not specified a random free port will be used. The SERVER_PORT environment variable is set to this value..
+        /// </summary>
+        internal static string WebLauncherPortNumberHelp {
+            get {
+                return ResourceManager.GetString("WebLauncherPortNumberHelp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Specifies additional directories which are added to sys.path for making libraries available for importing..
+        /// </summary>
+        internal static string WebLauncherSearchPathHelp {
+            get {
+                return ResourceManager.GetString("WebLauncherSearchPathHelp", resourceCulture);
+            }
+        }
     }
 }
