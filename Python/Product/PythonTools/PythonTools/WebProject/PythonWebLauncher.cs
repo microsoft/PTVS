@@ -274,7 +274,18 @@ namespace Microsoft.PythonTools.Project.Web {
             if (!String.IsNullOrWhiteSpace(url)) {
                 yield return string.Format("{0}={1}", AD7Engine.WebBrowserUrl, HttpUtility.UrlEncode(url));
             }
-
+            
+            // Check project type GUID and enable the Django-specific features
+            // of the debugger if required.
+            var projectGuids = _project.GetUnevaluatedProperty("ProjectTypeGuids") ?? "";
+            // HACK: Literal GUID string to avoid introducing Django-specific public API
+            // We don't want to expose a constant from PythonTools.dll.
+            // TODO: Add generic breakpoint extension point
+            // to avoid having to pass this property for Django and any future
+            // extensions.
+            if (projectGuids.IndexOf("5F0BE9CA-D677-4A4D-8806-6076C0FAAD37", StringComparison.OrdinalIgnoreCase) >= 0) {
+                yield return AD7Engine.EnableDjangoDebugging + "=True";
+            }
         }
 
         private unsafe DebugTargetInfo CreateDebugTargetInfo(

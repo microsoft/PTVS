@@ -43,7 +43,7 @@
              TaskFactory="CreatePythonCommandItemFactory">
     <Task Evaluate="true">
       <PropertyGroup>
-        <ProjectPath>$(MSBuildProjectFullPath)</ProjectPath>
+        <ProjectPath>$([MSBuild]::Unescape($(MSBuildProjectFullPath)))</ProjectPath>
       </PropertyGroup>
     </Task>
   </UsingTask>
@@ -65,7 +65,7 @@
              TaskFactory="RunPythonCommandFactory">
     <Task Evaluate="true">
       <PropertyGroup>
-        <ProjectPath>$(MSBuildProjectFullPath)</ProjectPath>
+        <ProjectPath>$([MSBuild]::Unescape($(MSBuildProjectFullPath)))</ProjectPath>
       </PropertyGroup>
     </Task>
   </UsingTask>
@@ -91,7 +91,7 @@
              TaskFactory="ResolveEnvironmentFactory">
     <Task Evaluate="true">
       <PropertyGroup>
-        <ProjectPath>$(MSBuildProjectFullPath)</ProjectPath>
+        <ProjectPath>$([MSBuild]::Unescape($(MSBuildProjectFullPath)))</ProjectPath>
       </PropertyGroup>
     </Task>
   </UsingTask>
