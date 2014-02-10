@@ -129,6 +129,12 @@
            never be created. -->
       <DebugSymbolsProjectOutputGroupOutput Remove="@(DebugSymbolsProjectOutputGroupOutput)" />
     </ItemGroup>
+    
+    <!-- Finished checking, so reset this flag in case whoever is building us
+         immediately starts running an actual build. -->
+    <PropertyGroup>
+      <BuildingForUpToDateCheck>false</BuildingForUpToDateCheck>
+    </PropertyGroup>
   </Target>
 
   <!-- *************************************************************************
