@@ -107,7 +107,7 @@ namespace PythonToolsTests {
                 @".*warning:.*\.spam.*\(41-46\)"
             }) {
                 Assert.IsTrue(i < squiggles.Length, "Not enough squiggles");
-                AssertUtil.AreEqual(new Regex(expected, RegexOptions.IgnoreCase), squiggles[i]);
+                AssertUtil.AreEqual(new Regex(expected, RegexOptions.IgnoreCase | RegexOptions.Singleline), squiggles[i]);
                 i += 1;
             }
         }

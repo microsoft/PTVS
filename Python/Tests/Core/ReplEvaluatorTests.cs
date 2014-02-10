@@ -68,9 +68,14 @@ namespace PythonToolsTests {
                 var window = new MockReplWindow(evaluator);
                 evaluator.Initialize(window);
 
-                TestOutput(window, evaluator, "while True: pass\n", false, (completed) => {
-                        Thread.Sleep(200);
+                TestOutput(
+                    window,
+                    evaluator,
+                    "while True: pass\n",
+                    false,
+                    (completed) => {
                         Assert.IsTrue(!completed);
+                        Thread.Sleep(1000);
 
                         evaluator.AbortCommand();
                     }, 
@@ -137,7 +142,7 @@ namespace PythonToolsTests {
 
             bool completed = false;
             var task = evaluator.ExecuteText(code).ContinueWith(completedTask => {
-                Assert.AreEqual(completedTask.Result.IsSuccessful, success);
+                Assert.AreEqual(success, completedTask.Result.IsSuccessful);
 
                 var output = success ? window.Output : window.Error;
                 if (equalOutput) {
@@ -164,7 +169,7 @@ namespace PythonToolsTests {
                     }
                 } else {
                     foreach (var line in expectedOutput) {
-                        Assert.IsTrue(output.IndexOf(line) != -1);
+                        Assert.IsTrue(output.Contains(line), string.Format("'{0}' does not contain '{1}'", output, line));
                     }
                 }
 
@@ -175,7 +180,14 @@ namespace PythonToolsTests {
                 afterExecute(completed);
             }
 
-            task.Wait(timeout);
+            try {
+                task.Wait(timeout);
+            } catch (AggregateException ex) {
+                if (ex.InnerException != null) {
+                    throw ex.InnerException;
+                }
+                throw;
+            }
 
             if (!completed) {
                 Assert.Fail(string.Format("command didn't complete in {0} seconds", timeout / 1000.0));
@@ -195,7 +207,11 @@ namespace PythonToolsTests {
             var replWindow = new MockReplWindow(replEval);
             replEval.Initialize(replWindow);
             var execute = replEval.ExecuteText("42");
-            Assert.IsTrue(replWindow.Error.IndexOf("The interpreter Test Interpreter cannot be started.  The path to the interpreter has not been configured.") != -1);
+            Console.WriteLine(replWindow.Error);
+            Assert.IsTrue(
+                replWindow.Error.Contains("Test Interpreter cannot be started"),
+                "Expected: <Test Interpreter cannot be started>\r\nActual: <" + replWindow.Error + ">"
+            );
         }
 
         [TestMethod, Priority(0)]

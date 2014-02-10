@@ -26,8 +26,13 @@ namespace TestUtilities.SharedProject {
             Creators = creators;
         }
 
+        public string DependsOnTargets { get; set; }
+
         public override void Generate(ProjectType projectType, MSBuild.Project project) {
             var target = project.Xml.AddTarget(Name);
+            if (!string.IsNullOrEmpty(DependsOnTargets)) {
+                target.DependsOnTargets = DependsOnTargets;
+            }
             foreach (var creator in Creators) {
                 creator(target);
             }

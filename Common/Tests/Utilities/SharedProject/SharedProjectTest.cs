@@ -203,6 +203,15 @@ namespace TestUtilities.SharedProject {
         }
 
         /// <summary>
+        /// Returns a new TargetDefinition which represents a specified Target
+        /// inside of the project file.  The various stages of the target can be
+        /// created using the members of the static Tasks class.
+        /// </summary>
+        public static TargetDefinition Target(string name, string dependsOnTargets, params Action<ProjectTargetElement>[] creators) {
+            return new TargetDefinition(name, creators) { DependsOnTargets = dependsOnTargets };
+        }
+
+        /// <summary>
         /// Returns a new ImportDefinition for the specified project.
         /// </summary>
         /// <param name="project"></param>

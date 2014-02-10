@@ -526,8 +526,23 @@ namespace PythonToolsUITests {
 
                 int propCount = 0;
                 foreach (Property prop in project.Properties) {
-                    Assert.AreEqual(project.Properties.Item(propCount + 1).Value, project.Properties.Item(prop.Name).Value);
-                    Assert.AreEqual(project.Properties.Item(propCount + 1).Value, project.Properties.Item(prop.Name).get_IndexedValue(null));
+                    try {
+                        Assert.AreEqual(project.Properties.Item(propCount + 1).Value, project.Properties.Item(prop.Name).Value);
+                        Assert.AreEqual(project.Properties.Item(propCount + 1).Value, project.Properties.Item(prop.Name).get_IndexedValue(null));
+                    } catch (NotImplementedException) {
+                        // Different test for properties that are not implemented
+                        try {
+                            var value = project.Properties.Item(propCount + 1).Value;
+                            Assert.Fail("Expected NotImplementedException");
+                        } catch (NotImplementedException) {
+                        }
+                        try {
+                            var value = project.Properties.Item(prop.Name).Value;
+                            Assert.Fail("Expected NotImplementedException");
+                        } catch (NotImplementedException) {
+                        }
+                    }
+
                     Assert.AreEqual(VsIdeTestHostContext.Dte, project.Properties.Item(propCount + 1).DTE);
                     Assert.AreEqual(0, project.Properties.Item(propCount + 1).NumIndices);
                     Assert.AreNotEqual(null, project.Properties.Item(propCount + 1).Parent);
