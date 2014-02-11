@@ -41,6 +41,7 @@ Features in Depth
 * [wiki:"Unit Tests" Unit Tests]
 * [wiki:"Overview of Django, IPython notebook and Azure cloud computing" PTVS Django Support]
  * [wiki:"Django tutorial for PTVS, Azure Web Sites and Cloud Services" Django Web Site/Cloud Service Tutorial]
+* [wiki:"Azure SDK for Python" AzureSDK]
 * [wiki:"MPI, IPython, and Cluster Support" Detailed Walk-thu Guide - HPC and Cloud Features]
 * [wiki:"Kinect for Python" PyKinect]
 * [wiki:"Pyvot - an Excel to Python bridge" Pyvot]

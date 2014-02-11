@@ -1,6 +1,7 @@
 ﻿{
+    "AzureSDK.html": "86ec71b7d682e7e247cbda157dcc3a1fda36f8bd1863874970d96e146317cb04", 
     "Django%20Web%20Site%2fCloud%20Service%20Tutorial.html": "ac0627cdeb98dda00743f9157848f9e32e486c9317aed8fabe2ccecf7df4dc1b", 
-    "Documentation.html": "dcaf181c1421dfa058814f4c7cf707cb4adcb93510a94cd7d89825989a4addbc", 
+    "Documentation.html": "5c34f388c1fb1490def03634c39aeb4a6aa6087487226526040fc3098d1e4820", 
     "Features Browsing.html": "f51a50d91c7da22b51a4477ba56d7ae665c025e3c695ca541e6086e8af626f5c", 
     "Features Debugging.html": "ddf3271d6566eff98ab86e7990881ebfb245f3a8766b1bd0de1b12f1a48b39b4", 
     "Features Editor.html": "4bc4444b07be82c775b5082094806c4d41ca992a76b7f8522b9cd396999077bb", 
