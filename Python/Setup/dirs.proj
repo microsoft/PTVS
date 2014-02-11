@@ -19,8 +19,6 @@
     <ProjectFile Include="PythonTools\PythonTools.wixproj"/>
     <ProjectFile Include="PythonProfiling\PythonProfiling.wixproj"/>
     <ProjectFile Include="PythonToolsInstaller\PythonToolsInstaller.wixproj"/>
-    <ProjectFile Include="PyKinectInstaller\PyKinectInstaller.wixproj"/>
-    <ProjectFile Include="PyVotInstaller\PyVotInstaller.wixproj"/>
     <ProjectFile Include="FastCgiInstaller\FastCgi.wixproj"/>    
     <ProjectFile Include="..\..\Internal\Python\VsLoggerSetup\VsLogger.wixproj" Condition="'$(IncludeVsLogger)' == 'True'"/>    
   </ItemGroup>

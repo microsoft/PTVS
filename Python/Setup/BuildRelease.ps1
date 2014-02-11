@@ -26,12 +26,12 @@
 .Parameter name
     [Optional] A suffix to append to the name of the build.
     
-    Typical values: "Alpha", "RC1", "My Feature Name"
-    (Avoid: "RTM", "2.0")
+    Typical values: "2.1 Alpha", "1.5 RC1", "My Feature Name", "2014-02-11 Dev Build"
+    (Avoid: "RTM", "2.0 RTM")
 
 .Parameter release
     When specified:
-    * `outdir` will default to \\pytools\release if unspecified
+    * `outdir` will default to \\pytools\release\x.y if unspecified
     * A build number is generated and appended to `outdir`
      - The build number includes an index
     * Debug configurations are not built
@@ -210,16 +210,6 @@ $products = @(
       msi="PythonToolsInstaller.msi";
       signtag="";
       outname1="PTVS"; outname2=".msi"
-    },
-    @{name="PyKinect";
-      msi="PyKinectInstaller.msi";
-      signtag=" - PyKinect";
-      outname1="PTVS"; outname2=" - PyKinect Sample.msi"
-    },
-    @{name="Pyvot";
-      msi="PyvotInstaller.msi";
-      signtag=" - Pyvot";
-      outname1="PTVS"; outname2=" - Pyvot Sample.msi"
     },
     @{name="WFastCGI";
       msi="WFastCGI.msi";
@@ -442,13 +432,11 @@ try {
                     "Microsoft.PythonTools.MpiShim.exe", 
                     "Microsoft.PythonTools.Profiling.dll", 
                     "Microsoft.VisualStudio.ReplWindow.dll",
-                    "Microsoft.PythonTools.PyKinect.dll",
                     "Microsoft.PythonTools.WebRole.dll",
                     "Microsoft.PythonTools.Django.dll",
                     "Microsoft.PythonTools.VsLogger.dll",
                     "Microsoft.PythonTools.AzureSetup.exe",
-                    "Microsoft.IronPythonTools.Resolver.dll",
-                    "Microsoft.PythonTools.Pyvot.dll"
+                    "Microsoft.IronPythonTools.Resolver.dll"
                     ) | ForEach {@{path="$destdir\Binaries\$_"; name=$projectName}} `
                       | Where-Object {Test-Path $_.path})
                 
@@ -458,8 +446,7 @@ try {
                     "Microsoft.PythonTools.Debugger.Helper.x86.dll",
                     "Microsoft.PythonTools.Debugger.Helper.x64.dll",
                     "VsPyProf.dll",
-                    "VsPyProfX86.dll",
-                    "PyKinectAudio.dll"
+                    "VsPyProfX86.dll"
                     ) | ForEach {@{path="$destdir\Binaries\$_"; name=$projectName}} `
                       | Where-Object {Test-Path $_.path})
 
