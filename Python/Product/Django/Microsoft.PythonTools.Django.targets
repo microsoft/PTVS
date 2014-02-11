@@ -48,10 +48,10 @@
       CreateDjangoAppSettings;
       CreateFastCgiRewriteConditions;
     </CreateWebConfigDependsOnTargets>
-    <BuildDependsOnTargets>
-      $(BuildDependsOnTargets);
+    <PipelineCollectFilesPhaseDependsOn>
+      $(PipelineCollectFilesPhaseDependsOn);
       DjangoCollectStaticFiles;
-    </BuildDependsOnTargets>
+    </PipelineCollectFilesPhaseDependsOn>
   </PropertyGroup>
 
   <!-- *************************************************************************
@@ -66,7 +66,7 @@
                       ConsoleToMSBuild="true">
       <Output TaskParameter="ConsoleOutput" PropertyName="DjangoStaticUrlSetting" />
     </RunPythonCommand>
-    
+
     <Message Text="DjangoStaticUrlSetting=$(DjangoStaticUrlSetting)"/>
   </Target>
 
@@ -90,20 +90,19 @@
        user has provided their own value.
   -->
   <Target Name="DetectStaticRootPath" DependsOnTargets="ResolvePythonInterpreterPath;ResolveQualifiedProjectHome">
-    <PropertyGroup>
-      <_EscapedQualifiedProjectHome>"""$(QualifiedProjectHome.Replace(`\`, `\\`))"""</_EscapedQualifiedProjectHome>
-    </PropertyGroup>
-    <RunPythonCommand Target="from $(MSBuildProjectName) import settings; from os import path; print(path.relpath(settings.STATIC_ROOT, $(EscapedQualifiedProjectHome)) if settings.STATIC_ROOT else '')"
+    <RunPythonCommand Target="from $(MSBuildProjectName) import settings; print(settings.STATIC_ROOT or '')"
                       TargetType="code"
                       ExecuteIn="none"
                       WorkingDirectory="$(QualifiedProjectHome)"
+                      Environment="DJANGO_SETTINGS_MODULE=$(DjangoSettingsModule)"
                       ConsoleToMSBuild="true"
                       Condition="'$(DjangoStaticRootSetting)' == ''">
       <Output TaskParameter="ConsoleOutput" PropertyName="DjangoStaticRootSetting" />
     </RunPythonCommand>
 
-    <PropertyGroup>
-      <DjangoStaticRootSetting Condition="'$(DjangoStaticRootSetting)' != '' and !HasTrailingSlash('$(DjangoStaticRootSetting)')">$(DjangoStaticRootSetting)\</DjangoStaticRootSetting>
+    <PropertyGroup Condition="'$(DjangoStaticRootSetting)' != ''">
+      <DjangoStaticRootSetting>$(DjangoStaticRootSetting.Replace(`/`, `\`))</DjangoStaticRootSetting>
+      <DjangoStaticRootSetting Condition="!HasTrailingSlash('$(DjangoStaticRootSetting)')">$(DjangoStaticRootSetting)\</DjangoStaticRootSetting>
     </PropertyGroup>
 
     <Message Text="DjangoStaticRootSetting=$(DjangoStaticRootSetting)"/>
@@ -114,16 +113,25 @@
           Condition="'$(DisableStaticFiles)' != 'true'" />
 
   <Target Name="_DjangoCollectStaticFiles"
-          DependsOnTargets="ResolvePythonInterpreterPath;ResolveQualifiedProjectHome"
+          DependsOnTargets="ResolvePythonInterpreterPath;ResolveQualifiedProjectHome;SetStartupFileOrManagePy"
           Condition="'$(DjangoStaticRootSetting)' != ''">
-    <Exec Command="&quot;$(PythonInterpreterPath)&quot; &quot;$(QualifiedProjectHome)manage.py&quot; collectstatic --noinput"
-          WorkingDirectory="$(QualifiedProjectHome)" />
+    <RunPythonCommand Target="$(StartupFileOrManagePy)"
+                      TargetType="script"
+                      Arguments="collectstatic --noinput"
+                      ExecuteIn="none"
+                      WorkingDirectory="$(QualifiedProjectHome)"
+                      Environment="DJANGO_SETTINGS_MODULE=$(DjangoSettingsModule)" />
 
     <ItemGroup>
-      <Content Include="$(DjangoStaticRootSetting)**\*" />
+      <_DjangoStaticFiles Include="$(DjangoStaticRootSetting)**\*" />
+      <FilesForPackagingFromProject Include="@(_DjangoStaticFiles)" Condition="'%(FullPath)' != ''">
+        <DestinationRelativePath>$([MSBuild]::MakeRelative($(QualifiedProjectHome), %(FullPath)))</DestinationRelativePath>
+        <FromTarget>DjangoCollectStaticFiles</FromTarget>
+        <Category>Run</Category>
+      </FilesForPackagingFromProject>
     </ItemGroup>
   </Target>
-  
+
 
   <!-- *************************************************************************
        Django-specific project commands
@@ -147,6 +155,7 @@
     <CreatePythonCommandItem Target="import django; print('Starting Django %s shell' % django.get_version())"
                              TargetType="code"
                              Arguments=""
+                             Environment="DJANGO_SETTINGS_MODULE=$(DjangoSettingsModule)"
                              ExecuteIn="repl:resource:Microsoft.PythonTools.Django;Microsoft.PythonTools.Django.Resources;CommandReplTitle">
       <Output TaskParameter="Command" ItemName="Commands" />
     </CreatePythonCommandItem>
@@ -159,6 +168,7 @@
     <CreatePythonCommandItem Target="$(StartupFileOrManagePy)"
                              TargetType="script"
                              Arguments="validate"
+                             Environment="DJANGO_SETTINGS_MODULE=$(DjangoSettingsModule)"
                              ExecuteIn="Repl:resource:Microsoft.PythonTools.Django;Microsoft.PythonTools.Django.Resources;CommandReplTitle">
       <Output TaskParameter="Command" ItemName="Commands" />
     </CreatePythonCommandItem>
@@ -171,6 +181,7 @@
     <CreatePythonCommandItem Target="$(StartupFileOrManagePy)"
                              TargetType="script"
                              Arguments="syncdb"
+                             Environment="DJANGO_SETTINGS_MODULE=$(DjangoSettingsModule)"
                              ExecuteIn="Repl:resource:Microsoft.PythonTools.Django;Microsoft.PythonTools.Django.Resources;CommandReplTitle">
       <Output TaskParameter="Command" ItemName="Commands" />
     </CreatePythonCommandItem>

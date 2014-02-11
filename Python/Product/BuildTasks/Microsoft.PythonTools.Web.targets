@@ -98,7 +98,7 @@
       _DetectWebConfig;
       _GetPythonWebSitesFiles;
       _GetPythonCloudServiceFiles;
-      ResolveVirtualEnvSettings;
+      _GetPythonVirtualEnvProxyForEmulator;
       _GetPythonAzureSetupConfigOutput
     </AllProjectOutputGroupsDependsOn>
 
@@ -122,14 +122,14 @@
       <BuiltProjectOutputGroupOutput Remove="@(BuiltProjectOutputGroupOutput)" />
       <BuiltProjectOutputGroupOutput Include="@(_PythonWebSitesFiles)" />
       <BuiltProjectOutputGroupOutput Include="@(_PythonCloudServiceFiles);@(_PythonCloudServiceFilesForEmulator)" />
-      <BuiltProjectOutputGroupOutput Include="@(_PythonVirtualEnvProxy)" />
+      <BuiltProjectOutputGroupOutput Include="@(_PythonVirtualEnvProxyForEmulator)" />
       <BuiltProjectOutputGroupOutput Include="@(_PythonAzureSetupConfigOutput)" />
 
       <!-- The common targets invents a symbols file for our project, which will
            never be created. -->
       <DebugSymbolsProjectOutputGroupOutput Remove="@(DebugSymbolsProjectOutputGroupOutput)" />
     </ItemGroup>
-    
+
     <!-- Finished checking, so reset this flag in case whoever is building us
          immediately starts running an actual build. -->
     <PropertyGroup>
@@ -273,8 +273,16 @@
   -->
   <Target Name="ResolveVirtualEnvSettings" DependsOnTargets="ResolvePythonInterpreterPath;_ResolveVirtualEnvSettings" />
 
+  <Target Name="_GetPythonVirtualEnvProxyForEmulator" Condition="'$(_PythonDeploymentMethod)' == 'CloudServiceDeploy'">
+    <ItemGroup>
+      <_PythonVirtualEnvProxyForEmulator Include="$(QualifiedProjectHome)bin\ptvs_virtualenv_proxy.py">
+        <SourceFile>$(_AzureSupportPath)ptvs_virtualenv_proxy.py</SourceFile>
+      </_PythonVirtualEnvProxyForEmulator>
+    </ItemGroup>
+  </Target>
+
   <Target Name="_ResolveVirtualEnvSettings"
-          DependsOnTargets="ResolvePythonWsgiHandler;ResolveDeploymentSettings"
+          DependsOnTargets="ResolvePythonWsgiHandler;ResolveDeploymentSettings;_GetPythonVirtualEnvProxyForEmulator"
           Condition="$(VirtualEnvEnabled)">
     <Error Text="No WSGI handler specified" Condition="'$(PythonWsgiHandler)' == ''" />
 
@@ -306,18 +314,11 @@
     <!-- Copy the proxy script to the bin\ directory for the Cloud Service
          emulator. -->
     <Copy SourceFiles="$(_AzureSupportPath)ptvs_virtualenv_proxy.py"
-          DestinationFolder="bin"
+          DestinationFiles="@(_PythonVirtualEnvProxyForEmulator)"
           SkipUnchangedFiles="true"
           Condition="'$(_PythonDeploymentMethod)' == 'CloudServiceDeploy'">
-      <Output TaskParameter="CopiedFiles" ItemName="_CopiedVirtualEnvProxy"/>
       <Output TaskParameter="CopiedFiles" ItemName="FileWrites"/>
     </Copy>
-
-    <ItemGroup>
-      <_PythonVirtualEnvProxy Include="%(_CopiedVirtualEnvProxy)">
-        <SourceFile>$(_AzureSupportPath)ptvs_virtualenv_proxy.py</SourceFile>
-      </_PythonVirtualEnvProxy>
-    </ItemGroup>
   </Target>
 
   <Target Name="CollectVirtualEnvFiles" DependsOnTargets="ResolvePythonInterpreterPath;_CollectVirtualEnvFiles;_CollectVEnvFiles" />
