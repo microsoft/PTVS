@@ -380,67 +380,102 @@ namespace Microsoft.PythonTools.Interpreter {
         /// </summary>
         public const int NotSupportedExitCode = -4;
 
-        /// <summary>
-        /// Invokes Analyzer.exe for the specified factory.
-        /// </summary>
-        public static void Generate(PythonTypeDatabaseCreationRequest request) {
+        public static async Task<int> GenerateAsync(PythonTypeDatabaseCreationRequest request) {
             var fact = request.Factory;
             var evt = request.OnExit;
             if (fact == null || !Directory.Exists(fact.Configuration.LibraryPath)) {
                 if (evt != null) {
                     evt(NotSupportedExitCode);
                 }
-                return;
+                return NotSupportedExitCode;
             }
             var outPath = request.OutputPath;
 
-            ThreadPool.QueueUserWorkItem(x => {
-                var path = PythonToolsInstallPath.GetFile("Microsoft.PythonTools.Analyzer.exe");
+            var analyzerPath = PythonToolsInstallPath.GetFile("Microsoft.PythonTools.Analyzer.exe");
 
-                Directory.CreateDirectory(CompletionDatabasePath);
+            Directory.CreateDirectory(CompletionDatabasePath);
 
-                var baseDb = BaselineDatabasePath;
-                if (request.ExtraInputDatabases.Any()) {
-                    baseDb = baseDb + ";" + string.Join(";", request.ExtraInputDatabases);
-                }
+            var baseDb = BaselineDatabasePath;
+            if (request.ExtraInputDatabases.Any()) {
+                baseDb = baseDb + ";" + string.Join(";", request.ExtraInputDatabases);
+            }
 
-                var logPath = Path.Combine(outPath, "AnalysisLog.txt");
-                var glogPath = Path.Combine(CompletionDatabasePath, "AnalysisLog.txt");
+            var logPath = Path.Combine(outPath, "AnalysisLog.txt");
+            var glogPath = Path.Combine(CompletionDatabasePath, "AnalysisLog.txt");
 
-                using (var output = ProcessOutput.RunHiddenAndCapture(path,
-                    "/id", fact.Id.ToString("B"),
-                    "/version", fact.Configuration.Version.ToString(),
-                    "/python", fact.Configuration.InterpreterPath,
-                    "/library", fact.Configuration.LibraryPath,
-                    "/outdir", outPath,
-                    "/basedb", baseDb,
-                    (request.SkipUnchanged ? null : "/all"),  // null will be filtered out; empty strings are quoted 
-                    "/log", logPath,
-                    "/glog", glogPath,
-                    "/wait", (request.WaitFor != null ? AnalyzerStatusUpdater.GetIdentifier(request.WaitFor) : ""))) {
+            using (var output = ProcessOutput.RunHiddenAndCapture(
+                analyzerPath,
+                "/id", fact.Id.ToString("B"),
+                "/version", fact.Configuration.Version.ToString(),
+                "/python", fact.Configuration.InterpreterPath,
+                "/library", fact.Configuration.LibraryPath,
+                "/outdir", outPath,
+                "/basedb", baseDb,
+                (request.SkipUnchanged ? null : "/all"),  // null will be filtered out; empty strings are quoted
+                "/log", logPath,
+                "/glog", glogPath,
+                "/wait", (request.WaitFor != null ? AnalyzerStatusUpdater.GetIdentifier(request.WaitFor) : "")
+            )) {
+                output.PriorityClass = ProcessPriorityClass.BelowNormal;
+                int exitCode = await output;
 
-                    output.PriorityClass = ProcessPriorityClass.BelowNormal;
-                    output.Wait();
-
-                    if (output.ExitCode > -10 && output.ExitCode < 0) {
-                        try {
-                            File.AppendAllLines(
-                                glogPath,
-                                new[] { string.Format("FAIL_STDLIB: ({0}) {1}", output.ExitCode, output.Arguments) }
-                                    .Concat(output.StandardErrorLines)
-                            );
-                        } catch (IOException) {
-                        } catch (ArgumentException) {
-                        } catch (SecurityException) {
-                        } catch (UnauthorizedAccessException) {
-                        }
-                    }
-
-                    if (evt != null) {
-                        evt(output.ExitCode ?? InvalidOperationExitCode);
+                if (exitCode > -10 && exitCode < 0) {
+                    try {
+                        File.AppendAllLines(
+                            glogPath,
+                            new[] { string.Format("FAIL_STDLIB: ({0}) {1}", exitCode, output.Arguments) }
+                                .Concat(output.StandardErrorLines)
+                        );
+                    } catch (IOException) {
+                    } catch (ArgumentException) {
+                    } catch (SecurityException) {
+                    } catch (UnauthorizedAccessException) {
                     }
                 }
-            });
+
+                if (evt != null) {
+                    evt(exitCode);
+                }
+                return exitCode;
+            }
+        }
+
+        /// <summary>
+        /// Invokes Analyzer.exe for the specified factory.
+        /// </summary>
+        [Obsolete("Use GenerateAsync instead")]
+        public static void Generate(PythonTypeDatabaseCreationRequest request) {
+            var onExit = request.OnExit;
+
+            GenerateAsync(request).ContinueWith(t => {
+                var exc = t.Exception;
+                if (exc == null) {
+                    return;
+                }
+
+                try {
+                    var message = string.Format(
+                        "ERROR_STDLIB: {0}\\{1}{2}{3}",
+                        request.Factory.Id,
+                        request.Factory.Configuration.Version,
+                        Environment.NewLine,
+                        (exc.InnerException ?? exc).ToString()
+                    );
+
+                    Debug.WriteLine(message);
+
+                    var glogPath = Path.Combine(CompletionDatabasePath, "AnalysisLog.txt");
+                    File.AppendAllText(glogPath, message);
+                } catch (IOException) {
+                } catch (ArgumentException) {
+                } catch (SecurityException) {
+                } catch (UnauthorizedAccessException) {
+                }
+
+                if (onExit != null) {
+                    onExit(PythonTypeDatabase.InvalidOperationExitCode);
+                }
+            }, TaskContinuationOptions.OnlyOnFaulted);
         }
 
         private static bool DatabaseExists(string path) {

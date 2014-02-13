@@ -12,10 +12,9 @@
  *
  * ***************************************************************************/
 
+extern alias analysis;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -37,6 +36,7 @@ using TestUtilities;
 using TestUtilities.Python;
 using TestUtilities.UI;
 using TestUtilities.UI.Python;
+using PythonInterpreterFactoryExtensions = analysis::Microsoft.PythonTools.Interpreter.PythonInterpreterFactoryExtensions;
 
 namespace PythonToolsUITests {
     [TestClass]
@@ -453,8 +453,10 @@ namespace PythonToolsUITests {
                 try {
                     // Not crashing is sufficient to ensure that
                     // https://pytools.codeplex.com/workitem/1199 is fixed.
-                    var withDb = (IPythonInterpreterFactoryWithDatabase)fake;
-                    withDb.GenerateDatabase(GenerateDatabaseOptions.None);
+                    PythonInterpreterFactoryExtensions.GenerateDatabaseAsync(
+                        (IPythonInterpreterFactoryWithDatabase)fake,
+                        GenerateDatabaseOptions.None
+                    ).Wait();
                 } finally {
                     configurable.RemoveInterpreter(fake.Id);
                 }

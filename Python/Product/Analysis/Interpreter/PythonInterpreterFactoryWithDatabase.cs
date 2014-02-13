@@ -222,21 +222,22 @@ namespace Microsoft.PythonTools.Interpreter {
             WatchingLibrary = false;
             _generating = true;
 
-            var originalOnExit = request.OnExit;
+            PythonTypeDatabase.GenerateAsync(request).ContinueWith(t => {
+                int exitCode;
+                try {
+                    exitCode = t.Result;
+                } catch (Exception ex) {
+                    Debug.Fail(ex.ToString());
+                    exitCode = PythonTypeDatabase.InvalidOperationExitCode;
+                }
 
-            request.OnExit = exitCode => {
                 if (exitCode != PythonTypeDatabase.AlreadyGeneratingExitCode) {
                     _generating = false;
-                }
-                if (originalOnExit != null) {
-                    originalOnExit(exitCode);
                 }
                 if (onExit != null) {
                     onExit(exitCode);
                 }
-            };
-
-            PythonTypeDatabase.Generate(request);
+            });
         }
 
         /// <summary>

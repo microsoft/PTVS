@@ -18,7 +18,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
+using System.Threading.Tasks;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
@@ -319,6 +321,59 @@ namespace PythonToolsTests {
             foreach (var version in new[] { threeTwo }) {
                 Assert.AreNotEqual(null, version.GetModule("sys").GetMember(null, "setswitchinterval"));
             }
+        }
+
+        [TestMethod, Priority(1)]
+        public void CheckObsoleteGenerateFunction() {
+            var path = PythonPaths.Versions.LastOrDefault(p => p != null && p.IsCPython);
+            path.AssertInstalled();
+
+            var factory = InterpreterFactoryCreator.CreateInterpreterFactory(new InterpreterFactoryCreationOptions {
+                Id = path.Interpreter,
+                LanguageVersion = path.Version.ToVersion(),
+                Description = "Test Interpreter",
+                Architecture = path.Isx64 ? ProcessorArchitecture.Amd64 : ProcessorArchitecture.X86,
+                LibraryPath = path.LibPath,
+                PrefixPath = path.PrefixPath,
+                InterpreterPath = path.Path,
+                WatchLibraryForNewModules = false
+            });
+
+            var tcs = new TaskCompletionSource<int>();
+            var beforeProc = Process.GetProcessesByName("Microsoft.PythonTools.Analyzer");
+
+            var request = new PythonTypeDatabaseCreationRequest {
+                Factory = factory,
+                OutputPath = TestData.GetTempPath(randomSubPath: true),
+                SkipUnchanged = true,
+                OnExit = tcs.SetResult
+            };
+
+#pragma warning disable 618
+            PythonTypeDatabase.Generate(request);
+#pragma warning restore 618
+
+            int expected = 0;
+
+            if (!tcs.Task.Wait(TimeSpan.FromMinutes(1.0))) {
+                var proc = Process.GetProcessesByName("Microsoft.PythonTools.Analyzer")
+                    .Except(beforeProc)
+                    .ToArray();
+                
+                // Ensure we actually started running
+                Assert.AreNotEqual(0, proc.Length, "Process is not running");
+
+                expected = -1;
+
+                // Kill the process
+                foreach (var p in proc) {
+                    p.Kill();
+                }
+
+                Assert.IsTrue(tcs.Task.Wait(TimeSpan.FromMinutes(1.0)), "Process did not die");
+            }
+
+            Assert.AreEqual(expected, tcs.Task.Result, "Incorrect exit code");
         }
     }
 }

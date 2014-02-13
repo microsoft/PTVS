@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.VisualStudioTools.Project;
 
@@ -65,6 +66,19 @@ namespace Microsoft.PythonTools.Interpreter {
                 }
             }
             return result;
+        }
+
+        /// <summary>
+        /// Generates the completion database and returns a task that will
+        /// complete when the database is regenerated.
+        /// </summary>
+        internal static Task<int> GenerateDatabaseAsync(
+            this IPythonInterpreterFactoryWithDatabase factory,
+            GenerateDatabaseOptions options
+        ) {
+            var tcs = new TaskCompletionSource<int>();
+            factory.GenerateDatabase(options, tcs.SetResult);
+            return tcs.Task;
         }
     }
 }
