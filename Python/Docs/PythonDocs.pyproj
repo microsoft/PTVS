@@ -66,6 +66,8 @@
     <Content Include="User\AzureSDK.md" />
     <Content Include="User\Features Browsing.md" />
     <Content Include="User\Features Debugging.md" />
+    <Content Include="User\Images\PyLintCommand.png" />
+    <Content Include="User\Images\PyLintErrorList.png" />
     <Content Include="User\Features Editor.md" />
     <Content Include="User\Features Interactive REPL.md" />
     <Content Include="User\Features Mixed-Mode Debugging.md" />
@@ -178,6 +180,7 @@
     <Content Include="User\Images\StepCommands.png" />
     <Content Include="User\Images\WatchWindow.png" />
     <Content Include="User\Images\WebPIComponents.png" />
+    <Content Include="User\PyLint.md" />
     <Content Include="User\Python Environments.md" />
     <Content Include="User\Where is PTVS installed%253f.md" />
   </ItemGroup>

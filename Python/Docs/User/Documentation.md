@@ -39,6 +39,7 @@ Features in Depth
  * [wiki:"References" Features Projects#references]
  * [wiki:"Python Environments" Python Environments]
 * [wiki:"Unit Tests" Unit Tests]
+* [wiki:"PyLint" PyLint]
 * [wiki:"Overview of Django, IPython notebook and Azure cloud computing" PTVS Django Support]
  * [wiki:"Django tutorial for PTVS, Azure Web Sites and Cloud Services" Django Web Site/Cloud Service Tutorial]
 * [wiki:"Azure SDK for Python" AzureSDK]
