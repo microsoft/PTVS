@@ -73,6 +73,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public override IAnalysisSet GetMember(Node node, AnalysisUnit unit, string name) {
+            // Must unconditionally call the base implementation of GetMember
+            var ignored = base.GetMember(node, unit, name);
+
             var mro = ClassInfo._mro;
             if (!mro.IsValid) {
                 return AnalysisSet.Empty;

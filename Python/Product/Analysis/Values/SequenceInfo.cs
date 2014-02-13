@@ -24,10 +24,12 @@ namespace Microsoft.PythonTools.Analysis.Values {
     /// </summary>
     internal class SequenceInfo : IterableInfo {
         private readonly ProjectEntry _declaringModule;
+        private readonly int _declaringVersion;
         
         public SequenceInfo(VariableDef[] indexTypes, BuiltinClassInfo seqType, Node node, ProjectEntry entry)
             : base(indexTypes, seqType, node) {
             _declaringModule = entry;
+            _declaringVersion = entry.AnalysisVersion;
         }
 
         public override IPythonProjectEntry DeclaringModule {
@@ -38,7 +40,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public override int DeclaringVersion {
             get {
-                return DeclaringModule.AnalysisVersion;
+                return _declaringVersion;
             }
         }
 

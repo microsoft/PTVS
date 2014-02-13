@@ -65,21 +65,24 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public override IAnalysisSet GetMember(Node node, AnalysisUnit unit, string name) {
+            // Must unconditionally call the base implementation of GetMember
+            var res = base.GetMember(node, unit, name);
+
             if (unit.ProjectState.LanguageVersion.Is2x() && name == "next" ||
                 unit.ProjectState.LanguageVersion.Is3x() && name == "__next__") {
                 return _next = _next ?? new SpecializedCallable(
-                    base.GetMember(node, unit, name).OfType<BuiltinNamespace<IPythonType>>().FirstOrDefault(),
+                    res.OfType<BuiltinNamespace<IPythonType>>().FirstOrDefault(),
                     IteratorNext,
                     false
                 );
             } else if (name == "__iter__") {
                 return _iter = _iter ?? new SpecializedCallable(
-                    base.GetMember(node, unit, name).OfType<BuiltinNamespace<IPythonType>>().FirstOrDefault(),
+                    res.OfType<BuiltinNamespace<IPythonType>>().FirstOrDefault(),
                     IteratorIter,
                     false
                 );
             }
-            return base.GetMember(node, unit, name);
+            return res;
         }
 
         private IAnalysisSet IteratorIter(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {

@@ -25,11 +25,16 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         public readonly VariableDef ReturnValue;
         public readonly GeneratorInfo Generator;
 
-        public FunctionScope(FunctionInfo function, Node node, InterpreterScope declScope)
+        public FunctionScope(
+            FunctionInfo function,
+            Node node,
+            InterpreterScope declScope,
+            IPythonProjectEntry declModule
+        )
             : base(function, node, declScope) {
             ReturnValue = new VariableDef();
             if (Function.FunctionDefinition.IsGenerator) {
-                Generator = new GeneratorInfo(function.ProjectState, Function.FunctionDefinition);
+                Generator = new GeneratorInfo(function.ProjectState, declModule);
                 ReturnValue.AddTypes(function.ProjectEntry, Generator.SelfSet, false);
             }
         }
@@ -117,7 +122,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
 
         public FunctionInfo Function {
             get {
-                return AnalysisValue as FunctionInfo;
+                return (FunctionInfo)AnalysisValue;
             }
         }
 

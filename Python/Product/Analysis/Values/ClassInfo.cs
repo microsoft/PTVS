@@ -362,6 +362,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public override IAnalysisSet GetMember(Node node, AnalysisUnit unit, string name) {
+            // Must unconditionally call the base implementation of GetMember
+            var ignored = base.GetMember(node, unit, name);
+
             return GetMemberNoReferences(node, unit, name).GetDescriptor(node, unit.ProjectState._noneInst, this, unit);
         }
 
@@ -568,37 +571,36 @@ namespace Microsoft.PythonTools.Analysis.Values {
         #region IVariableDefContainer Members
 
         public IEnumerable<IReferenceable> GetDefinitions(string name) {
+            var result = new List<IReferenceable>();
             VariableDef def;
             if (_scope.Variables.TryGetValue(name, out def)) {
-                yield return def;
+                result.Add(def);
             }
 
             if (Push()) {
-                foreach (var baseClassSet in Bases) {
-                    foreach (var subdef in GetDefinitions(name, baseClassSet)) {
-                        yield return subdef;
-                    }
+                try {
+                    result.AddRange(Bases.SelectMany(b => GetDefinitions(name, b)));
+                    result.AddRange(GetDefinitions(name, SubClasses.TypesNoCopy));
+                } finally {
+                    Pop();
                 }
-
-                foreach (var subdef in GetDefinitions(name, SubClasses.Types)) {
-                    yield return subdef;
-                }
-                Pop();
             }
+
+            return result;
         }
 
         private IEnumerable<IReferenceable> GetDefinitions(string name, IEnumerable<AnalysisValue> nses) {
+            var result = new List<IReferenceable>();
             foreach (var subType in nses) {
                 if (subType.Push()) {
                     IReferenceableContainer container = subType as IReferenceableContainer;
                     if (container != null) {
-                        foreach (var baseDef in container.GetDefinitions(name)) {
-                            yield return baseDef;
-                        }
+                        result.AddRange(container.GetDefinitions(name));
                     }
                     subType.Pop();
                 }
             }
+            return result;
         }
 
         #endregion

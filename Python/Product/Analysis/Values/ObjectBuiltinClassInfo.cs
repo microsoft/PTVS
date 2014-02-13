@@ -25,14 +25,17 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public override IAnalysisSet GetMember(Parsing.Ast.Node node, AnalysisUnit unit, string name) {
+            var res = base.GetMember(node, unit, name);
+
             if (name == "__new__") {
                 return _new = _new ?? new SpecializedCallable(
-                    base.GetMember(node, unit, name).OfType<BuiltinNamespace<IPythonType>>().FirstOrDefault(),
+                    res.OfType<BuiltinNamespace<IPythonType>>().FirstOrDefault(),
                     ObjectNew,
                     false
                 );
             }
-            return base.GetMember(node, unit, name);
+
+            return res;
         }
 
         private IAnalysisSet ObjectNew(Node node, Analysis.AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {

@@ -116,19 +116,27 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         public static void Enqueue(Deque<AnalysisUnit> deque, AnalysisUnit unit) {
-            Add("E", IdDispenser.GetId(unit), deque.Count);
+            if (Output != null) {
+                Add("E", IdDispenser.GetId(unit), deque.Count);
+            }
         }
 
         public static void Dequeue(Deque<AnalysisUnit> deque, AnalysisUnit unit) {
-            Add("D", IdDispenser.GetId(unit), deque.Count);
+            if (Output != null) {
+                Add("D", IdDispenser.GetId(unit), deque.Count);
+            }
         }
 
         public static void NewUnit(AnalysisUnit unit) {
-            Add("N", IdDispenser.GetId(unit), unit.FullName, unit.ToString());
+            if (Output != null) {
+                Add("N", IdDispenser.GetId(unit), unit.FullName, unit.ToString());
+            }
         }
 
         public static void UpdateUnit(AnalysisUnit unit) {
-            Add("U", IdDispenser.GetId(unit), unit.FullName, unit.ToString());
+            if (Output != null) {
+                Add("U", IdDispenser.GetId(unit), unit.FullName, unit.ToString());
+            }
         }
 
         public static void EndOfQueue(int beforeLength, int afterLength) {

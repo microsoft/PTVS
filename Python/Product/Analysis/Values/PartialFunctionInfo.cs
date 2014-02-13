@@ -86,6 +86,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public override IAnalysisSet GetMember(Node node, AnalysisUnit unit, string name) {
+            // Must unconditionally call the base implementation of GetMember
+            var res = base.GetMember(node, unit, name);
+
             if (name == "func") {
                 AddReference(node, unit);
                 return _function;
@@ -123,7 +126,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 }
                 return _keywordsDict;
             }
-            return base.GetMember(node, unit, name);
+            return res;
         }
     }
 }

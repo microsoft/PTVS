@@ -14,8 +14,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using Microsoft.PythonTools.Analysis.Analyzer;
+using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
@@ -171,6 +173,16 @@ namespace Microsoft.PythonTools.Analysis {
             return AnalysisSet.Empty;
         }
 
+        /// <summary>
+        /// Attempts to get a member from this object with the specified name.
+        /// </summary>
+        /// <param name="node">The node which is triggering the call, for reference tracking</param>
+        /// <param name="unit">The analysis unit performing the analysis</param>
+        /// <param name="name">The name of the member.</param>
+        /// <remarks>
+        /// Overrides of this method must unconditionally call the base
+        /// implementation, even if the return value is ignored.
+        /// </remarks>
         public virtual IAnalysisSet GetMember(Node node, AnalysisUnit unit, string name) {
             return AnalysisSet.Empty;
         }
@@ -359,7 +371,8 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         public void Pop() {
-            _processing.Remove(this);
+            bool wasRemoved = _processing.Remove(this);
+            Debug.Assert(wasRemoved, string.Format("Popped {0} but it wasn't pushed", GetType().FullName));
         }
 
         #endregion

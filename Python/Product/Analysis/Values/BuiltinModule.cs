@@ -35,6 +35,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public override IAnalysisSet GetMember(Node node, AnalysisUnit unit, string name) {
+            // Must unconditionally call the base implementation of GetMember
             var res = base.GetMember(node, unit, name);
             if (res.Count > 0) {
                 _references.AddReference(node, unit, name);

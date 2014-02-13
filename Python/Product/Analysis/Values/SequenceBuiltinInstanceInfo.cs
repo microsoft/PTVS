@@ -47,15 +47,18 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public override IAnalysisSet GetMember(Node node, AnalysisUnit unit, string name) {
+            // Must unconditionally call the base implementation of GetMember
+            var res = base.GetMember(node, unit, name);
+
             if (name == "__iter__") {
                 return _iterMethod = _iterMethod ?? new SpecializedCallable(
-                    base.GetMember(node, unit, name).OfType<BuiltinNamespace<IPythonType>>().FirstOrDefault(),
+                    res.OfType<BuiltinNamespace<IPythonType>>().FirstOrDefault(),
                     SequenceIter,
                     false
                 );
             }
 
-            return base.GetMember(node, unit, name);
+            return res;
         }
 
         private IAnalysisSet SequenceIter(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {

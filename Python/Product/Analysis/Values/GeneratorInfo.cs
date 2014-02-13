@@ -25,19 +25,24 @@ namespace Microsoft.PythonTools.Analysis.Values {
     internal class GeneratorInfo : BuiltinInstanceInfo {
         private AnalysisValue _nextMethod;
         private AnalysisValue _sendMethod;
-        private readonly Node _node;
+        private readonly IPythonProjectEntry _declaringModule;
+        private readonly int _declaringVersion;
         public readonly VariableDef Yields;
         public readonly VariableDef Sends;
         public readonly VariableDef Returns;
 
-        public GeneratorInfo(PythonAnalyzer projectState, Node node)
+        public GeneratorInfo(PythonAnalyzer projectState, IPythonProjectEntry entry)
             : base(projectState.ClassInfos[BuiltinTypeId.Generator]) {
-            _node = node;
+            
+            _declaringModule = entry;
+            _declaringVersion = entry.AnalysisVersion;
             Yields = new VariableDef();
             Sends = new VariableDef();
             Returns = new VariableDef();
         }
 
+        public override IPythonProjectEntry DeclaringModule { get { return _declaringModule; } }
+        public override int DeclaringVersion { get { return _declaringVersion; } }
 
         private IAnalysisSet GeneratorNext(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
             return GetEnumeratorTypes(node, unit);
@@ -52,11 +57,14 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
 
         public override IAnalysisSet GetMember(Node node, AnalysisUnit unit, string name) {
+            // Must unconditionally call the base implementation of GetMember
+            var res = base.GetMember(node, unit, name);
+
             switch(name) {
                 case "next":
                     if (unit.ProjectState.LanguageVersion.Is2x()) {
                         return _nextMethod = _nextMethod ?? new SpecializedCallable(
-                            base.GetMember(node, unit, name).OfType<BuiltinNamespace<IPythonType>>().FirstOrDefault(),
+                            res.OfType<BuiltinNamespace<IPythonType>>().FirstOrDefault(),
                             GeneratorNext,
                             false
                         );
@@ -65,7 +73,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 case "__next__":
                     if (unit.ProjectState.LanguageVersion.Is3x()) {
                         return _nextMethod = _nextMethod ?? new SpecializedCallable(
-                            base.GetMember(node, unit, name).OfType<BuiltinNamespace<IPythonType>>().FirstOrDefault(),
+                            res.OfType<BuiltinNamespace<IPythonType>>().FirstOrDefault(),
                             GeneratorNext,
                             false
                         );
@@ -73,13 +81,13 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     break;
                 case "send":
                     return _sendMethod = _sendMethod ?? new SpecializedCallable(
-                        base.GetMember(node, unit, name).OfType<BuiltinNamespace<IPythonType>>().FirstOrDefault(),
+                        res.OfType<BuiltinNamespace<IPythonType>>().FirstOrDefault(),
                         GeneratorSend,
                         false
                     );
             }
 
-            return base.GetMember(node, unit, name);
+            return res;
         }
 
         public override IAnalysisSet GetIterator(Node node, AnalysisUnit unit) {

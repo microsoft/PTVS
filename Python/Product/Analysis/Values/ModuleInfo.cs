@@ -219,6 +219,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public override IAnalysisSet GetMember(Node node, AnalysisUnit unit, string name) {
+            // Must unconditionally call the base implementation of GetMember
+            var ignored = base.GetMember(node, unit, name);
+
             ModuleDefinition.AddDependency(unit);
 
             return Scope.CreateEphemeralVariable(node, unit, name).Types;

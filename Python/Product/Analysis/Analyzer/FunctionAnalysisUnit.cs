@@ -35,13 +35,18 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         private readonly AnalysisUnit _declUnit;
         private readonly Dictionary<Node, Expression> _decoratorCalls;
 
-        internal FunctionAnalysisUnit(FunctionInfo function, AnalysisUnit declUnit, InterpreterScope declScope)
+        internal FunctionAnalysisUnit(
+            FunctionInfo function,
+            AnalysisUnit declUnit,
+            InterpreterScope declScope,
+            IPythonProjectEntry declEntry
+        )
             : base(function.FunctionDefinition, null) {
             _declUnit = declUnit;
             Function = function;
             _decoratorCalls = new Dictionary<Node, Expression>();
 
-            var scope = new FunctionScope(Function, Function.FunctionDefinition, declScope);
+            var scope = new FunctionScope(Function, Function.FunctionDefinition, declScope, declEntry);
             scope.EnsureParameters(this);
             _scope = scope;
 
@@ -56,7 +61,12 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
 
             CallChain = callChain;
 
-            var scope = new FunctionScope(Function, Ast, originalUnit.Scope.OuterScope);
+            var scope = new FunctionScope(
+                Function,
+                Ast,
+                originalUnit.Scope.OuterScope,
+                originalUnit.DeclaringModule.ProjectEntry
+            );
             scope.UpdateParameters(this, callArgs, false, originalUnit.Scope as FunctionScope);
             _scope = scope;
 

@@ -116,48 +116,50 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public override IAnalysisSet GetMember(Node node, AnalysisUnit unit, string name) {
-            var res = AnalysisSet.Empty;
+            // Must unconditionally call the base implementation of GetMember
+            var res = base.GetMember(node, unit, name);
+
             switch (name) {
                 case "get":
                     return _getMethod = _getMethod ?? new SpecializedCallable(
-                        base.GetMember(node, unit, name).OfType<BuiltinNamespace<IPythonType>>().FirstOrDefault(),
+                        res.OfType<BuiltinNamespace<IPythonType>>().FirstOrDefault(),
                         DictionaryGet,
                         false
                     );
                 case "items":
                     return _itemsMethod = _itemsMethod ?? new SpecializedCallable(
-                        base.GetMember(node, unit, name).OfType<BuiltinNamespace<IPythonType>>().FirstOrDefault(),
+                        res.OfType<BuiltinNamespace<IPythonType>>().FirstOrDefault(),
                         unit.ProjectState.LanguageVersion.Is3x() ? (CallDelegate)DictionaryIterItems : DictionaryItems,
                         false
                     );
                 case "keys":
                     return _keysMethod = _keysMethod ?? new SpecializedCallable(
-                        base.GetMember(node, unit, name).OfType<BuiltinNamespace<IPythonType>>().FirstOrDefault(),
+                        res.OfType<BuiltinNamespace<IPythonType>>().FirstOrDefault(),
                         unit.ProjectState.LanguageVersion.Is3x() ? (CallDelegate)DictionaryIterKeys : DictionaryKeys,
                         false
                     );
                 case "values":
                     return _valuesMethod = _valuesMethod ?? new SpecializedCallable(
-                        base.GetMember(node, unit, name).OfType<BuiltinNamespace<IPythonType>>().FirstOrDefault(),
+                        res.OfType<BuiltinNamespace<IPythonType>>().FirstOrDefault(),
                         unit.ProjectState.LanguageVersion.Is3x() ? (CallDelegate)DictionaryIterValues : DictionaryValues,
                         false
                     );
                 case "pop":
                     return _popMethod = _popMethod ?? new SpecializedCallable(
-                        base.GetMember(node, unit, name).OfType<BuiltinNamespace<IPythonType>>().FirstOrDefault(),
+                        res.OfType<BuiltinNamespace<IPythonType>>().FirstOrDefault(),
                         DictionaryPop,
                         false
                     );
                 case "popitem":
                     return _popItemMethod = _popItemMethod ?? new SpecializedCallable(
-                        base.GetMember(node, unit, name).OfType<BuiltinNamespace<IPythonType>>().FirstOrDefault(),
+                        res.OfType<BuiltinNamespace<IPythonType>>().FirstOrDefault(),
                         DictionaryPopItem,
                         false
                     );
                 case "iterkeys":
                     if (!unit.ProjectState.LanguageVersion.Is3x()) {
                         return _iterKeysMethod = _iterKeysMethod ?? new SpecializedCallable(
-                            base.GetMember(node, unit, name).OfType<BuiltinNamespace<IPythonType>>().FirstOrDefault(),
+                            res.OfType<BuiltinNamespace<IPythonType>>().FirstOrDefault(),
                             DictionaryIterKeys,
                             false
                         );
@@ -166,7 +168,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 case "itervalues":
                     if (!unit.ProjectState.LanguageVersion.Is3x()) {
                         return _iterValuesMethod = _iterValuesMethod ?? new SpecializedCallable(
-                            base.GetMember(node, unit, name).OfType<BuiltinNamespace<IPythonType>>().FirstOrDefault(),
+                            res.OfType<BuiltinNamespace<IPythonType>>().FirstOrDefault(),
                             DictionaryIterValues,
                             false
                         );
@@ -175,7 +177,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 case "iteritems":
                     if (!unit.ProjectState.LanguageVersion.Is3x()) {
                         return _iterItemsMethod = _iterItemsMethod ?? new SpecializedCallable(
-                            base.GetMember(node, unit, name).OfType<BuiltinNamespace<IPythonType>>().FirstOrDefault(),
+                            res.OfType<BuiltinNamespace<IPythonType>>().FirstOrDefault(),
                             DictionaryIterItems,
                             false
                         );
@@ -183,13 +185,13 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     break;
                 case "update":
                     return _updateMethod = _updateMethod ?? new SpecializedCallable(
-                        base.GetMember(node, unit, name).OfType<BuiltinNamespace<IPythonType>>().FirstOrDefault(),
+                        res.OfType<BuiltinNamespace<IPythonType>>().FirstOrDefault(),
                         DictionaryUpdate,
                         false
                     );
             }
 
-            return res ?? base.GetMember(node, unit, name);
+            return res;
         }
 
         public override string ShortDescription {
@@ -513,17 +515,23 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 sb.Append("dict(keys=(");
                 foreach (var type in _keysAndValues.KeyTypes) {
                     if (type.Push()) {
-                        sb.Append(type.ToString());
-                        sb.Append(", ");
-                        type.Pop();
+                        try {
+                            sb.Append(type.ToString());
+                            sb.Append(", ");
+                        } finally {
+                            type.Pop();
+                        }
                     }
                 }
                 sb.Append("), values = (");
                 foreach (var type in _keysAndValues.AllValueTypes) {
                     if (type.Push()) {
-                        sb.Append(type.ToString());
-                        sb.Append(", ");
-                        type.Pop();
+                        try {
+                            sb.Append(type.ToString());
+                            sb.Append(", ");
+                        } finally {
+                            type.Pop();
+                        }
                     }
                 }
                 sb.Append(")");

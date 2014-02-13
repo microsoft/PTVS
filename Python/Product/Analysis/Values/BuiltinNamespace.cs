@@ -32,16 +32,19 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public override IAnalysisSet GetMember(Node node, AnalysisUnit unit, string name) {
+            // Must unconditionally call the base implementation of GetMember
+            var res = base.GetMember(node, unit, name);
+            
             IAnalysisSet specializedRes;
             if (_specializedValues != null && _specializedValues.TryGetValue(name, out specializedRes)) {
                 return specializedRes;
             }
 
-            var res = _type.GetMember(unit.DeclaringModule.InterpreterContext, name);
-            if (res != null) {
-                return ProjectState.GetAnalysisValueFromObjects(res).SelfSet;
+            var member = _type.GetMember(unit.DeclaringModule.InterpreterContext, name);
+            if (member != null) {
+                res = ProjectState.GetAnalysisValueFromObjects(member);
             }
-            return AnalysisSet.Empty;
+            return res;
         }
 
         public override IDictionary<string, IAnalysisSet> GetAllMembers(IModuleContext moduleContext) {

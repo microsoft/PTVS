@@ -28,34 +28,37 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public override IAnalysisSet GetMember(Node node, AnalysisUnit unit, string name) {
+            // Must unconditionally call the base implementation of GetMember
+            var res = base.GetMember(node, unit, name);
+
             switch (name) {
                 case "append":
                     return _appendMethod = _appendMethod ?? new SpecializedCallable(
-                        base.GetMember(node, unit, name).OfType<BuiltinNamespace<IPythonType>>().FirstOrDefault(),
+                        res.OfType<BuiltinNamespace<IPythonType>>().FirstOrDefault(),
                         ListAppend,
                         false
                     );
                 case "pop":
                     return _popMethod = _popMethod ?? new SpecializedCallable(
-                        base.GetMember(node, unit, name).OfType<BuiltinNamespace<IPythonType>>().FirstOrDefault(),
+                        res.OfType<BuiltinNamespace<IPythonType>>().FirstOrDefault(),
                         ListPop,
                         false
                     );
                 case "insert":
                     return _insertMethod = _insertMethod ?? new SpecializedCallable(
-                        base.GetMember(node, unit, name).OfType<BuiltinNamespace<IPythonType>>().FirstOrDefault(),
+                        res.OfType<BuiltinNamespace<IPythonType>>().FirstOrDefault(),
                         ListInsert,
                         false
                     );
                 case "extend":
                     return _extendMethod = _extendMethod ?? new SpecializedCallable(
-                        base.GetMember(node, unit, name).OfType<BuiltinNamespace<IPythonType>>().FirstOrDefault(),
+                        res.OfType<BuiltinNamespace<IPythonType>>().FirstOrDefault(),
                         ListExtend,
                         false
                     );
             }
 
-            return base.GetMember(node, unit, name);
+            return res;
         }
 
         private IAnalysisSet ListAppend(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {

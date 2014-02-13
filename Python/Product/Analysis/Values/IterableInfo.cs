@@ -59,15 +59,18 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public override IAnalysisSet GetMember(Node node, AnalysisUnit unit, string name) {
+            // Must unconditionally call the base implementation of GetMember
+            var res = base.GetMember(node, unit, name);
+
             if (name == "__iter__") {
                 return _iterMethod = _iterMethod ?? new SpecializedCallable(
-                    base.GetMember(node, unit, name).OfType<BuiltinNamespace<IPythonType>>().FirstOrDefault(),
+                    res.OfType<BuiltinNamespace<IPythonType>>().FirstOrDefault(),
                     IterableIter,
                     false
                 );
             }
 
-            return base.GetMember(node, unit, name);
+            return res;
         }
 
         private IAnalysisSet IterableIter(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
@@ -86,14 +89,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         internal bool AddTypes(AnalysisUnit unit, IAnalysisSet[] types) {
             if (_indexTypes.Length < types.Length) {
-                VariableDef[] newTypes = new VariableDef[types.Length];
-                for (int i = 0; i < _indexTypes.Length; i++) {
-                    newTypes[i] = _indexTypes[i];
-                }
-                for (int i = _indexTypes.Length; i < types.Length; i++) {
-                    newTypes[i] = new VariableDef();
-                }
-                _indexTypes = newTypes;
+                _indexTypes = _indexTypes.Concat(VariableDef.Generator).Take(types.Length).ToArray();
             }
 
             bool added = false;

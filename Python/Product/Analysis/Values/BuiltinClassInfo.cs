@@ -126,6 +126,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public override IAnalysisSet GetMember(Node node, AnalysisUnit unit, string name) {
+            // Must unconditionally call the base implementation of GetMember
             var res = base.GetMember(node, unit, name);
             if (res.Count > 0) {
                 _referencedMembers.AddReference(node, unit, name);
@@ -135,10 +136,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public override void SetMember(Node node, AnalysisUnit unit, string name, IAnalysisSet value) {
-            var res = base.GetMember(node, unit, name);
-            if (res.Count > 0) {
-                _referencedMembers.AddReference(node, unit, name);
-            }
+            base.SetMember(node, unit, name, value);
+            _referencedMembers.AddReference(node, unit, name);
         }
 
         public override IAnalysisSet GetIndex(Node node, AnalysisUnit unit, IAnalysisSet index) {

@@ -163,19 +163,15 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         private IEnumerable<IAnalysisVariable> GetVariablesInScope(NameExpression name, InterpreterScope scope) {
-            foreach (var res in scope.GetMergedVariables(name.Name).SelectMany(ToVariables)) {
-                yield return res;
-            }
+            var result = new List<IAnalysisVariable>();
+
+            result.AddRange(scope.GetMergedVariables(name.Name).SelectMany(ToVariables));
 
             // if a variable is imported from another module then also yield the defs/refs for the 
             // value in the defining module.
             var linked = scope.GetLinkedVariablesNoCreate(name.Name);
             if (linked != null) {
-                foreach (var linkedVar in linked) {
-                    foreach (var res in ToVariables(linkedVar)) {
-                        yield return res;
-                    }
-                }
+                result.AddRange(linked.SelectMany(ToVariables));
             }
 
             var classScope = scope as ClassScope;
@@ -184,14 +180,14 @@ namespace Microsoft.PythonTools.Analysis {
                 var cls = classScope.Class;
                 if (cls.Push()) {
                     try {
-                        foreach (var baseNs in cls.Bases.SelectMany(c => c)) {
+                        foreach (var baseNs in cls.Bases.SelectMany()) {
                             if (baseNs.Push()) {
                                 try {
                                     ClassInfo baseClassNs = baseNs as ClassInfo;
                                     if (baseClassNs != null) {
-                                        foreach (var res in baseClassNs.Scope.GetMergedVariables(name.Name).SelectMany(ToVariables)) {
-                                            yield return res;
-                                        }
+                                        result.AddRange(
+                                            baseClassNs.Scope.GetMergedVariables(name.Name).SelectMany(ToVariables)
+                                        );
                                     }
                                 } finally {
                                     baseNs.Pop();
@@ -203,6 +199,8 @@ namespace Microsoft.PythonTools.Analysis {
                     }
                 }
             }
+
+            return result;
         }
 
         public MemberResult[] GetModules(bool topLevelOnly = false) {

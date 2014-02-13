@@ -53,7 +53,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 _callDepthLimit = declUnit.ProjectState.Limits.CallDepth;
             }
 
-            _analysisUnit = new FunctionAnalysisUnit(this, declUnit, declScope);
+            _analysisUnit = new FunctionAnalysisUnit(this, declUnit, declScope, _projectEntry);
         }
 
         public ProjectEntry ProjectEntry {
@@ -484,6 +484,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public override IAnalysisSet GetMember(Node node, AnalysisUnit unit, string name) {
+            // Must unconditionally call the base implementation of GetMember
+            var ignored = base.GetMember(node, unit, name);
+
             VariableDef tmp;
             if (_functionAttrs != null && _functionAttrs.TryGetValue(name, out tmp)) {
                 tmp.AddDependency(unit);

@@ -516,8 +516,16 @@ namespace Microsoft.PythonTools.Analysis {
     class GeneratorComprehensionAnalysisUnit : ComprehensionAnalysisUnit {
         public GeneratorComprehensionAnalysisUnit(Comprehension node, PythonAst parent, AnalysisUnit outerUnit, InterpreterScope outerScope)
             : base(node, parent,
-                new ComprehensionScope(new GeneratorInfo(outerUnit.ProjectState, node), node, outerScope),
-                outerUnit) { }
+                new ComprehensionScope(
+                    new GeneratorInfo(
+                        outerUnit.ProjectState,
+                        outerUnit.ProjectEntry
+                    ),
+                    node,
+                    outerScope
+                ),
+                outerUnit
+            ) { }
 
         internal override void AnalyzeWorker(DDG ddg, CancellationToken cancel) {
             base.AnalyzeWorker(ddg, cancel);

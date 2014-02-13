@@ -30,7 +30,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
 
         public override int GetBodyStart(PythonAst ast) {
             return ast.IndexToLocation(((ClassDefinition)Node).HeaderIndex).Index;
-        }        
+        }
 
         public override string Name {
             get { return Class.ClassDefinition.Name; }
