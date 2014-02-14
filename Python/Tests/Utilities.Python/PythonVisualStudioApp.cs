@@ -20,6 +20,7 @@ using EnvDTE;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.Win32;
 using TestUtilities.Python;
 
 namespace TestUtilities.UI.Python {
@@ -59,14 +60,20 @@ namespace TestUtilities.UI.Python {
         }
 
         // Constants for passing to CreateProject
+        private const string _templateLanguageName = "Python";
+        public static string TemplateLanguageName {
+            get {
 #if DEV10
-        // VS 2010 looks up language names as if they are progids, which means
-        // passing "Python" may fail, whereas passing the GUID will always
-        // succeed.
-        public const string TemplateLanguageName = "{888888a0-9f3d-457c-b088-3a5042f75d52}";
-#else
-        public const string TemplateLanguageName = "Python";
+                // VS 2010 looks up language names as if they are progids, which means
+                // passing "Python" may fail, whereas passing the GUID will always
+                // succeed.
+                using (var progid = Registry.ClassesRoot.OpenSubKey(_templateLanguageName)) {
+                    Assert.IsNull(progid, "Python is a registered progid. Templates cannot be created in VS 2010");
+                }
 #endif
+                return _templateLanguageName;
+            }
+        }
 
         public const string PythonApplicationTemplate = "ConsoleAppProject.zip";
         public const string EmptyWebProjectTemplate = "EmptyWebProject.zip";
