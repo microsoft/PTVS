@@ -81,6 +81,12 @@ namespace TestUtilities.SharedProject {
                 project.SetProperty("Name", _name);
                 project.SetProperty("ProjectGuid", projGuid.ToString("B"));
                 project.SetProperty("SchemaVersion", "2.0");
+                var group = project.Xml.AddPropertyGroup();
+                group.Condition = " '$(Configuration)' == 'Debug' ";
+                group.AddProperty("DebugSymbols", "true");
+                group = project.Xml.AddPropertyGroup();
+                group.Condition = " '$(Configuration)' == 'Release' ";
+                group.AddProperty("DebugSymbols", "false");
             }
 
             foreach (var processor in ProjectType.Processors) {

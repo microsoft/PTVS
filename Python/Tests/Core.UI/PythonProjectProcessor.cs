@@ -23,14 +23,18 @@ namespace Microsoft.Nodejs.Tests.UI {
         public void PreProcess(MSBuild.Project project) {
             project.SetProperty("ProjectHome", ".");
             project.SetProperty("WorkingDirectory", ".");
+
+            project.Xml.AddProperty("VisualStudioVersion", "11.0").Condition = "'$(VisualStudioVersion)' == ''";
+            project.Xml.AddProperty("VSToolsPath", "$(MSBuildExtensionsPath32)\\Microsoft\\VisualStudio\\v$(VisualStudioVersion)").Condition = "'$(VSToolsPath)' == ''";
+            project.Xml.AddProperty("PtvsTargetsFile", "$(VSToolsPath)\\Python Tools\\Microsoft.PythonTools.targets");
+
+            var import1 = project.Xml.AddImport("$(PtvsTargetsFile)");
+            import1.Condition = "Exists($(PtvsTargetsFile))";
+            var import2 = project.Xml.AddImport("$(MSBuildToolsPath)\\Microsoft.Common.targets");
+            import2.Condition = "!Exists($(PtvsTargetsFile))";
         }
 
         public void PostProcess(MSBuild.Project project) {
-            project.Xml.AddProperty("VisualStudioVersion", "11.0").Condition = "'$(VisualStudioVersion)' == ''";
-            project.Xml.AddProperty("VSToolsPath", "$(MSBuildExtensionsPath32)\\Microsoft\\VisualStudio\\v$(VisualStudioVersion)").Condition = "'$(VSToolsPath)' == ''";
-
-            var import = project.Xml.AddImport("$(MSBuildExtensionsPath)\\$(MSBuildToolsVersion)\\Microsoft.Common.props");
-            import.Condition = "Exists('$(MSBuildExtensionsPath)\\$(MSBuildToolsVersion)\\Microsoft.Common.props')";
         }
     }
 }

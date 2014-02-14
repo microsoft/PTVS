@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Automation;
 using EnvDTE;
 using Microsoft.PythonTools;
 using Microsoft.TC.TestHostAdapters;
@@ -40,33 +41,31 @@ namespace PythonToolsUITests {
 
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
-        public void ToggableOptionTest() {
+        public void ToggleableOptionTest() {
             using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
                 PythonToolsPackage.Instance.SetFormattingOption("SpaceBeforeClassDeclarationParen", true);
-                bool first = true;
                 foreach (var expectedResult in new bool?[] { false, null, true }) {
-                    System.Windows.Automation.AutomationElement dialog;
-                    var spacingView = app.GetFormattingOptions("Spacing", out dialog);
-                    var value = spacingView.WaitForItem("Class Definitions", "Insert space between a class declaration's name and bases list");
-                    Assert.IsNotNull(value, "Did not find item");
+                    using (var dialog = ToolsOptionsDialog.Open(app)) {
+                        dialog.SelectedView = "Text Editor/Python/Formatting/Spacing";
+                        var spacingView = FormattingOptionsTreeView.FromDialog(dialog);
 
-                    Mouse.MoveTo(value.GetClickablePoint());
-                    if (first) {
-                        // first click selects node, but on subsequently bringing up the dialog
-                        // the node will still have focus.
+                        var value = spacingView.WaitForItem(
+                            "Class Definitions",
+                            "Insert space between a class declaration's name and bases list"
+                        );
+                        Assert.IsNotNull(value, "Did not find item");
+
+                        value.SetFocus();
+                        Mouse.MoveTo(value.GetClickablePoint());
                         Mouse.Click(System.Windows.Input.MouseButton.Left);
-                        first = false;
+
+                        dialog.OK(TimeSpan.FromSeconds(10.0));
+
+                        Assert.AreEqual(
+                            expectedResult,
+                            PythonToolsPackage.Instance.GetFormattingOption("SpaceBeforeClassDeclarationParen")
+                        );
                     }
-                    Mouse.Click(System.Windows.Input.MouseButton.Left); // second click changes value
-
-                    new AutomationWrapper(dialog).ClickButtonByName("OK");  // commit result
-
-                    app.WaitForDialogDismissed();
-
-                    Assert.AreEqual(
-                        expectedResult,
-                        PythonToolsPackage.Instance.GetFormattingOption("SpaceBeforeClassDeclarationParen")
-                    );
                 }
             }
         }

@@ -12,6 +12,7 @@
  *
  * ***************************************************************************/
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Automation;
@@ -23,15 +24,32 @@ namespace TestUtilities.UI
         public TreeNode(AutomationElement element)
             : base(element) {
         }
-        
+
         public new void Select()
         {
-            Mouse.MoveTo(new System.Drawing.Point(0, 0));
-            System.Threading.Thread.Sleep(100);
-            Mouse.MoveTo(this.Element.GetClickablePoint());
-            System.Threading.Thread.Sleep(100);
-            Mouse.Click(System.Windows.Input.MouseButton.Left);
-            System.Threading.Thread.Sleep(100);
+            try
+            {
+                Element.GetSelectionItemPattern().AddToSelection();
+            }
+            catch (InvalidOperationException)
+            {
+                // Control does not support this pattern, so let's just click
+                // on it.
+                var point = Element.GetClickablePoint();
+                point.Offset(0.0, 50.0);
+                Mouse.MoveTo(point);
+                System.Threading.Thread.Sleep(100);
+                point.Offset(0.0, -50.0);
+                Mouse.MoveTo(point);
+                System.Threading.Thread.Sleep(100);
+                Mouse.Click(System.Windows.Input.MouseButton.Left);
+                System.Threading.Thread.Sleep(100);
+            }
+        }
+
+        public void Deselect()
+        {
+            Element.GetSelectionItemPattern().RemoveFromSelection();
         }
 
         public string Value
@@ -46,19 +64,29 @@ namespace TestUtilities.UI
         {
             get
             {
-                var pattern = (ExpandCollapsePattern)Element.GetCurrentPattern(ExpandCollapsePattern.Pattern);
-                return pattern.Current.ExpandCollapseState != ExpandCollapseState.Collapsed;
+                switch (Element.GetExpandCollapsePattern().Current.ExpandCollapseState)
+                {
+                    case ExpandCollapseState.Collapsed:
+                        return false;
+                    case ExpandCollapseState.Expanded:
+                        return true;
+                    case ExpandCollapseState.LeafNode:
+                        return true;
+                    case ExpandCollapseState.PartiallyExpanded:
+                        return false;
+                    default:
+                        return false;
+                }
             }
             set
             {
-                var pattern = (ExpandCollapsePattern)Element.GetCurrentPattern(ExpandCollapsePattern.Pattern);
                 if (value)
                 {
-                    pattern.Expand();
+                    Element.GetExpandCollapsePattern().Expand();
                 }
                 else
                 {
-                    pattern.Collapse();
+                    Element.GetExpandCollapsePattern().Collapse();
                 }
             }
         }
@@ -78,19 +106,33 @@ namespace TestUtilities.UI
         }
 
         public void ExpandCollapse()
-        {            
-            var pattern = (InvokePattern)Element.GetCurrentPattern(InvokePattern.Pattern);
-            pattern.Invoke();
+        {
+            try {
+                var pattern = Element.GetExpandCollapsePattern();
+                switch (pattern.Current.ExpandCollapseState)
+                {
+                    case ExpandCollapseState.Collapsed:
+                        pattern.Expand();
+                        break;
+                    case ExpandCollapseState.Expanded:
+                        pattern.Collapse();
+                        break;
+                    case ExpandCollapseState.LeafNode:
+                        break;
+                    case ExpandCollapseState.PartiallyExpanded:
+                        pattern.Expand();
+                        break;
+                    default:
+                        break;
+                }
+            } catch (InvalidOperationException) {
+                Element.GetInvokePattern().Invoke();
+            }
         }
 
         public void DoubleClick()
         {
-            Mouse.MoveTo(new System.Drawing.Point(0, 0));
-            System.Threading.Thread.Sleep(100);
-            Mouse.MoveTo(this.Element.GetClickablePoint());
-            System.Threading.Thread.Sleep(100);
-            Mouse.DoubleClick(System.Windows.Input.MouseButton.Left);
-            System.Threading.Thread.Sleep(100);
+            Element.GetInvokePattern().Invoke();
         }
 
         public void ShowContextMenu()
@@ -99,7 +141,6 @@ namespace TestUtilities.UI
             System.Threading.Thread.Sleep(100);
             Mouse.Click(System.Windows.Input.MouseButton.Right);
             System.Threading.Thread.Sleep(100);
-            //System.Windows.Automation.AutomationElement.RootElement
         }
     }
 }

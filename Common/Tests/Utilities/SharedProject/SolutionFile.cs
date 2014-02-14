@@ -53,7 +53,7 @@ namespace TestUtilities.SharedProject {
         /// <returns></returns>
         public static SolutionFile Generate(string solutionName, int pathSpaceRemaining, params ISolutionElement[] toGenerate) {
             List<MSBuild.Project> projects = new List<MSBuild.Project>();
-            var location = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+            var location = TestData.GetTempPath(randomSubPath: true);
 
             if (pathSpaceRemaining >= 0) {
                 int targetPathLength = 260 - pathSpaceRemaining;
@@ -91,11 +91,11 @@ EndProject
  project != null ? Guid.Parse(project.GetProperty("ProjectGuid").EvaluatedValue) : Guid.NewGuid());
             }
             slnFile.Append(@"Global
-	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Debug|Any CPU = Debug|Any CPU
-		Release|Any CPU = Release|Any CPU
-	EndGlobalSection
-	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+    GlobalSection(SolutionConfigurationPlatforms) = preSolution
+        Debug|Any CPU = Debug|Any CPU
+        Release|Any CPU = Release|Any CPU
+    EndGlobalSection
+    GlobalSection(ProjectConfigurationPlatforms) = postSolution
 ");
             for (int i = 0; i < projects.Count; i++) {
                 if (toGenerate[i].Flags.HasFlag(SolutionElementFlags.ExcludeFromConfiguration)) {
@@ -104,16 +104,16 @@ EndProject
 
                 var project = projects[i];
                 slnFile.AppendFormat(@"		{0:B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{0:B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{0:B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{0:B}.Release|Any CPU.Build.0 = Release|Any CPU
+        {0:B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+        {0:B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+        {0:B}.Release|Any CPU.Build.0 = Release|Any CPU
 ", Guid.Parse(project.GetProperty("ProjectGuid").EvaluatedValue));
             }
 
             slnFile.Append(@"	EndGlobalSection
-	GlobalSection(SolutionProperties) = preSolution
-		HideSolutionNode = FALSE
-	EndGlobalSection
+    GlobalSection(SolutionProperties) = preSolution
+        HideSolutionNode = FALSE
+    EndGlobalSection
 EndGlobal
 ");
 
@@ -134,11 +134,6 @@ EndGlobal
         #region IDisposable Members
 
         public void Dispose() {
-            try {
-                NativeMethods.RecursivelyDeleteDirectory(Path.GetDirectoryName(Filename));
-            } catch(Exception ex) {
-                Console.WriteLine("Failed to delete dir: {0}", ex);
-            }
         }
 
         #endregion

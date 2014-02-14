@@ -76,8 +76,14 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                     projectType,
                     Folder("SubFolder")
                 );
+                var userDef = new ProjectDefinition(
+                    def.Name,
+                    projectType,
+                    true,
+                    Property("ProjectView", "ShowAllFiles")
+                );
 
-                var solutionFile = def.Generate();
+                var solutionFile = SolutionFile.Generate(def.Name, def, userDef);
 
                 using (System.Diagnostics.Process p = System.Diagnostics.Process.Start("cmd.exe",
                     String.Format("/c mklink /J \"{0}\" \"{1}\"",

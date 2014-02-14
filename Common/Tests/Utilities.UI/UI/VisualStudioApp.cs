@@ -240,42 +240,15 @@ namespace TestUtilities.UI {
         public void SelectSourceControlProvider(string providerName) {
             Element.SetFocus();
 
-            // bring up Tools->Options
-            var dialog = AutomationElement.FromHandle(OpenDialogWithDteExecuteCommand("Tools.Options"));
-
-            try {
-                // go to the tree view which lets us select a set of options...
-                var treeView = new TreeView(dialog.FindFirst(TreeScope.Descendants,
-                new PropertyCondition(
-                    AutomationElement.ClassNameProperty,
-                    "SysTreeView32")
-                ));
-
-                treeView.FindItem("Source Control", "Plug-in Selection").SetFocus();
-
-                var currentSourceControl = new ComboBox(dialog.FindFirst(
-                    TreeScope.Descendants,
-                    new AndCondition(
-                       new PropertyCondition(
-                           AutomationElement.NameProperty,
-                           "Current source control plug-in:"
-                       ),
-                       new PropertyCondition(
-                           AutomationElement.ClassNameProperty,
-                           "ComboBox"
-                       )
-                    )
-                ));
+            using (var dialog = ToolsOptionsDialog.Open(this)) {
+                dialog.SelectedView = "Source Control/Plug-in Selection";
+                var currentSourceControl = new ComboBox(
+                    dialog.FindByAutomationId("2001") // Current source control plug-in
+                );
 
                 currentSourceControl.SelectItem(providerName);
 
-                new AutomationWrapper(dialog).ClickButtonByName("OK");
-                WaitForDialogDismissed();
-                dialog = null;
-            } finally {
-                if (dialog != null) {
-                    DismissAllDialogs();
-                }
+                dialog.OK(TimeSpan.FromSeconds(10.0));
             }
         }
 

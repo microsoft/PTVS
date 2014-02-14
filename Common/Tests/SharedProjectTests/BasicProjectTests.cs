@@ -199,11 +199,17 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CleanSolution() {
+            var msbuildLogProperty = VsIdeTestHostContext.Dte
+                .get_Properties("Environment", "ProjectsAndSolution")
+                .Item("MSBuildOutputVerbosity");
+            var originalValue = msbuildLogProperty.Value;
+            msbuildLogProperty.Value = 2;
             try {
                 foreach (var projectType in ProjectTypes) {
                     var proj = new ProjectDefinition(
                         "HelloWorld",
                         projectType,
+                        Property("OutputPath", "."),
                         Compile("server"),
                         Target(
                             "Clean", 
@@ -217,6 +223,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                     }
                 }
             } finally {
+                msbuildLogProperty.Value = originalValue;
                 VsIdeTestHostContext.Dte.Solution.Close();
                 GC.Collect();
                 GC.WaitForPendingFinalizers();
@@ -226,17 +233,24 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void BuildSolution() {
+            var msbuildLogProperty = VsIdeTestHostContext.Dte
+                .get_Properties("Environment", "ProjectsAndSolution")
+                .Item("MSBuildOutputVerbosity");
+            var originalValue = msbuildLogProperty.Value;
+            msbuildLogProperty.Value = 2;
             try {
                 foreach (var projectType in ProjectTypes) {
                     var proj = new ProjectDefinition(
                         "HelloWorld",
                         projectType,
+                        Property("OutputPath", "."),
                         Compile("server"),
                         Target(
                             "Build",
                             Tasks.Message("Hello Build World!", importance: "high")
                         ),
-                        Target("CoreCompile")
+                        Target("CoreCompile"),
+                        Target("CreateManifestResourceNames")
                     );
                     using (var solution = proj.Generate().ToVs()) {
                         VsIdeTestHostContext.Dte.ExecuteCommand("Build.BuildSolution");
@@ -244,6 +258,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                     }
                 }
             } finally {
+                msbuildLogProperty.Value = originalValue;
                 VsIdeTestHostContext.Dte.Solution.Close();
                 GC.Collect();
                 GC.WaitForPendingFinalizers();
@@ -1177,6 +1192,11 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void OpenCommandHere() {
             var existing = System.Diagnostics.Process.GetProcesses().Select(x => x.Id).ToSet();
+            try {
+                VsIdeTestHostContext.Dte.Commands.Item("ProjectandSolutionContextMenus.Project.OpenCommandPromptHere");
+            } catch (ArgumentException) {
+                Assert.Inconclusive("Open Command Prompt Here command is not implemented");
+            }
 
             foreach (var projectType in ProjectTypes) {
                 var def = new ProjectDefinition(
@@ -1193,7 +1213,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
 
                     var after = System.Diagnostics.Process.GetProcesses();
                     var newProcs = after.Where(x => !existing.Contains(x.Id) && x.ProcessName == "cmd");
-                    Assert.AreEqual(1, newProcs.Count(), string.Join(";", after.Select(x => x.ProcessName)));                    
+                    Assert.AreEqual(1, newProcs.Count(), string.Join(";", after.Select(x => x.ProcessName)));
                     newProcs.First().Kill();
 
                     var project = solution.WaitForItem("HelloWorld");
@@ -1243,7 +1263,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                     );
 
                     System.Threading.Thread.Sleep(1000);
-                    solution.AssertFileExistsWithContent("// new server", "HelloWorld", "server.js");
+                    solution.AssertFileExistsWithContent("// new server", "HelloWorld", "server" + projectType.CodeExtension);
 
                     var dlg = solution.App.WaitForDialog(); // not a simple dialog we can check
                     NativeMethods.EndDialog(dlg, new IntPtr((int)TestUtilities.UI.MessageBoxButton.Yes));

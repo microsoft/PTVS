@@ -203,41 +203,6 @@ namespace TestUtilities.UI.Python {
             throw new InvalidOperationException("Document not opened: " + docName);
         }
 
-        public FormattingOptionsTreeView GetFormattingOptions(string page, out AutomationElement optionsDialog) {
-            Element.SetFocus();
-
-            // bring up Tools->Options
-            optionsDialog = AutomationElement.FromHandle(OpenDialogWithDteExecuteCommand("Tools.Options"));
-
-            // go to the tree view which lets us select a set of options...
-            var treeView = new TreeView(optionsDialog.FindFirst(TreeScope.Descendants,
-                new PropertyCondition(
-                    AutomationElement.ClassNameProperty,
-                    "SysTreeView32")
-                ));
-
-            treeView.FindItem("Text Editor", "Python", "Formatting", page).SetFocus();
-
-            for (int i = 0; i < 10; i++) {
-                var optionsTree = optionsDialog.FindFirst(
-                    TreeScope.Descendants,
-                    new PropertyCondition(
-                        AutomationElement.AutomationIdProperty,
-                        "_optionsTree"
-                    )
-                );
-
-                if (optionsTree != null) {
-                    return new FormattingOptionsTreeView(optionsTree);
-                }
-                System.Threading.Thread.Sleep(1000);
-            }
-
-            AutomationWrapper.DumpElement(optionsDialog);
-            Assert.Fail("failed to find _optionsTree page");
-            return null;
-        }
-
         /// <summary>
         /// Selects the given interpreter as the default.
         /// </summary>
