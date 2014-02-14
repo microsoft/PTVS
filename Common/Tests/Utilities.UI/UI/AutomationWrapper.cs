@@ -17,7 +17,6 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows.Automation;
-using Accessibility;
 using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio.Shell.Interop;
 
@@ -220,12 +219,6 @@ namespace TestUtilities.UI {
         public static void Select(AutomationElement selectionItem) {
             CheckNullElement(selectionItem);
             selectionItem.GetSelectionItemPattern().Select();
-        }
-
-        public static void DoDefaultAction(AutomationElement element) {
-            CheckNullElement(element);
-            var accessible = NativeMethods.GetAccessibleObject(element);
-            accessible.accDoDefaultAction();
         }
 
         /// <summary>
