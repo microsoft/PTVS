@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Analysis.Analyzer;
@@ -30,7 +31,7 @@ namespace AnalyzerStatusTests {
             GC.Collect();
             GC.WaitForPendingFinalizers();
         }
-        
+
         [TestMethod, Priority(0)]
         public void InitializeWithoutCrashing() {
             using (var updater = new AnalyzerStatusUpdater("hi")) { }
@@ -73,8 +74,7 @@ namespace AnalyzerStatusTests {
                     Assert.AreEqual(string.Empty, results["s2"].Message, "s2.Message not initialized to empty");
 
                     sender1.UpdateStatus(100, 200, "Message1");
-                    // No way to block on sending an update
-                    Thread.Sleep(50);
+                    sender1.FlushQueue(TimeSpan.FromSeconds(1.0));
 
                     ready.Reset();
                     listener.RequestUpdate();
@@ -87,8 +87,7 @@ namespace AnalyzerStatusTests {
                     Assert.AreEqual(string.Empty, results["s2"].Message, "s2.Message changed from empty");
 
                     sender2.UpdateStatus(1000, 2000, "Message2");
-                    // No way to block on sending an update
-                    Thread.Sleep(50);
+                    sender2.FlushQueue(TimeSpan.FromSeconds(1.0));
 
                     ready.Reset();
                     listener.RequestUpdate();
@@ -165,7 +164,10 @@ namespace AnalyzerStatusTests {
 
             using (var ready = new AutoResetEvent(false))
             using (var listener = new AnalyzerStatusListener(r => { results = r; ready.Set(); })) {
-                ready.Reset();
+                listener.WaitForWorkerStarted();
+                listener.ThrowPendingExceptions();
+
+                // Ensure that updates are being received
                 listener.RequestUpdate();
                 ready.WaitOne();
                 Assert.IsNotNull(results);
@@ -175,17 +177,22 @@ namespace AnalyzerStatusTests {
                     sender.WaitForWorkerStarted();
                     sender.ThrowPendingExceptions();
 
+                    // Create a message that is deliberately too long
                     string message = new string('x', AnalyzerStatusUpdater.MAX_MESSAGE_LENGTH * 2);
                     sender.UpdateStatus(0, 0, message);
+                    sender.FlushQueue(TimeSpan.FromSeconds(1.0));
 
-                    ready.Reset();
                     listener.RequestUpdate();
                     ready.WaitOne();
                     Assert.IsNotNull(results);
                     AssertUtil.ContainsExactly(results.Keys, "s");
-                    Console.WriteLine(results["s"].Message);
-                    Assert.AreEqual(AnalyzerStatusUpdater.MAX_MESSAGE_LENGTH, results["s"].Message.Length, 
-                        "Message length was not limited");
+                    var receivedMessage = results["s"].Message;
+                    Console.WriteLine("Message: <{0}>", receivedMessage);
+                    Assert.AreEqual(
+                        AnalyzerStatusUpdater.MAX_MESSAGE_LENGTH,
+                        receivedMessage.Length,
+                        "Message length was not limited"
+                    );
                 }
             }
         }

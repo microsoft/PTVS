@@ -13,10 +13,12 @@
  * ***************************************************************************/
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO.MemoryMappedFiles;
+using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
 using System.Threading;
 using Microsoft.PythonTools.Interpreter;
@@ -147,21 +149,19 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
     /// or <see cref="AnalyzerStatusListener"/>.
     /// </summary>
     public class AnalyzerStatusUpdaterImplementation : IDisposable {
-        readonly Thread _worker;
-        readonly string _identifier;
-        readonly TimeSpan _period;
+        private readonly Thread _worker;
+        private readonly string _identifier;
+        private readonly TimeSpan _period;
 
-        readonly object _requestLock = new object();
-        readonly Action<Dictionary<string, AnalysisProgress>> _callback;
-        readonly object _latestUpdateLock = new object();
-        AnalysisProgress _latestUpdate;
-        volatile bool _abort;
-        readonly AutoResetEvent _newRequest;
-        readonly ManualResetEvent _workerStarted;
+        private readonly Action<Dictionary<string, AnalysisProgress>> _callback;
+        private readonly ConcurrentQueue<Request> _requests = new ConcurrentQueue<Request>();
 
-        Exception _pending;
+        private readonly AutoResetEvent _requestAdded = new AutoResetEvent(false);
+        private readonly ManualResetEvent _workerStarted = new ManualResetEvent(false);
 
-        bool _disposed;
+        private ExceptionDispatchInfo _pending;
+
+        private bool _disposed;
 
         const int LOCK_TIMEOUT = 1000;
         const int MAX_ITEMS = 128;
@@ -260,30 +260,26 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             _callback = callback;
             _identifier = null;
             _period = period;
-            _newRequest = new AutoResetEvent(false);
-            _workerStarted = new ManualResetEvent(false);
             _worker = new Thread(ThreadProc);
             _worker.Name = "AnalyzerStatusUpdater Listener";
             _worker.IsBackground = true;
             try {
                 _worker.Start();
             } catch (Exception ex) {
-                _pending = ex;
+                _pending = ExceptionDispatchInfo.Capture(ex);
                 _disposed = true;
             }
         }
 
         internal AnalyzerStatusUpdaterImplementation(string identifier) {
             _identifier = identifier;
-            _newRequest = new AutoResetEvent(false);
-            _workerStarted = new ManualResetEvent(false);
             _worker = new Thread(ThreadProc);
             _worker.Name = "AnalyzerStatusUpdater Identifier=" + identifier;
             _worker.IsBackground = true;
             try {
                 _worker.Start();
             } catch (Exception ex) {
-                _pending = ex;
+                _pending = ExceptionDispatchInfo.Capture(ex);
                 _disposed = true;
             }
         }
@@ -302,9 +298,9 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         /// function should be called occasionally.
         /// </summary>
         public void ThrowPendingExceptions() {
-            var exc = Interlocked.Exchange(ref _pending, null);
-            if (exc != null) {
-                throw exc;
+            var ex = Interlocked.Exchange(ref _pending, null);
+            if (ex != null) {
+                ex.Throw();
             }
         }
 
@@ -313,21 +309,30 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 throw new InvalidOperationException("Cannot update status without providing an identifier");
             }
 
-            lock (_latestUpdateLock) {
-                _latestUpdate = new AnalysisProgress {
-                    Progress = progress,
-                    Maximum = maximum,
-                    Message = message
-                };
+            var update = new AnalysisProgress {
+                Progress = progress,
+                Maximum = maximum,
+                Message = message
+            };
+
+            _requests.Enqueue(new Request { Update = update });
+            _requestAdded.Set();
+        }
+
+        internal void FlushQueue(TimeSpan timeout) {
+            int msRemaining = (int)timeout.TotalMilliseconds;
+            while (msRemaining > 0 && _requests.Count > 0) {
+                msRemaining -= 10;
+                Thread.Sleep(10);
             }
-            _newRequest.Set();
         }
 
         protected void RequestUpdateImplementation() {
             if (_identifier != null) {
                 throw new InvalidOperationException("Cannot request updates when an identifier has been provided");
             }
-            _newRequest.Set();
+            _requests.Enqueue(Request.Send);
+            _requestAdded.Set();
         }
 
         protected void RequestCancellationImplementation(string identifier) {
@@ -344,8 +349,8 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         /// thread has ended.</para>
         /// </summary>
         public void Abort() {
-            _abort = true;
-            _newRequest.Set();
+            _requests.Enqueue(Request.Abort);
+            _requestAdded.Set();
         }
 
         void ThreadProc() {
@@ -360,21 +365,26 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             try {
                 Initialize(_identifier, out globalLock, out sharedData, out dataOffset, out me);
             } catch (Exception ex) {
-                _pending = ex;
+                _pending = ExceptionDispatchInfo.Capture(ex);
                 return;
             } finally {
                 _workerStarted.Set();
             }
 
             Dictionary<string, AnalysisProgress> response = null;
+            Request request;
 
             for (; ; ) {
-                if (_identifier == null && _period.TotalDays < 1) {
-                    _newRequest.WaitOne((int)_period.TotalMilliseconds);
-                } else {
-                    _newRequest.WaitOne();
+                while (!_requests.TryDequeue(out request)) {
+                    if (_identifier == null && _period.TotalDays < 1) {
+                        _requestAdded.WaitOne(_period);
+                    } else {
+                        _requestAdded.WaitOne();
+                    }
                 }
-                if (_abort) {
+                if (request == null) {
+                    continue;
+                } else if (request == Request.Abort) {
                     break;
                 }
 
@@ -387,20 +397,17 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 }
 
                 try {
-                    if (_identifier != null) {
-                        AnalysisProgress update;
-                        lock (_latestUpdateLock) {
-                            update = _latestUpdate;
-                        }
-
+                    if (request == Request.Send) {
+                        Debug.Assert(_identifier == null);
+                        response = ReadAllStatuses(sharedData, ref knownEntries);
+                    } else {
+                        Debug.Assert(_identifier != null);
                         using (var accessor = sharedData.CreateViewAccessor(dataOffset, SIZE)) {
-                            me.ItemsInQueue = update.Progress;
-                            me.MaximumItems = update.Maximum;
-                            me.Message = update.Message;
+                            me.ItemsInQueue = request.Update.Progress;
+                            me.MaximumItems = request.Update.Maximum;
+                            me.Message = request.Update.Message;
                             accessor.Write(0, ref me);
                         }
-                    } else {
-                        response = ReadAllStatuses(sharedData, ref knownEntries);
                     }
                 } finally {
                     globalLock.ReleaseMutex();
@@ -416,7 +423,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             try {
                 Uninitialize(_identifier, globalLock, sharedData, dataOffset);
             } catch (Exception ex) {
-                _pending = ex;
+                _pending = ExceptionDispatchInfo.Capture(ex);
             }
         }
 
@@ -607,6 +614,17 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 Abort();
                 _worker.Join(LOCK_TIMEOUT);
             }
+        }
+
+        /// <summary>
+        /// Class wrapper for the AnalysisProgress struct, allowing instances to
+        /// be used as sentinel values.
+        /// </summary>
+        class Request {
+            public static readonly Request Abort = new Request();
+            public static readonly Request Send = new Request();
+
+            public AnalysisProgress Update;
         }
     }
 }
