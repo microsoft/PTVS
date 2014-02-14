@@ -273,8 +273,10 @@
   -->
   <Target Name="ResolveVirtualEnvSettings" DependsOnTargets="ResolvePythonInterpreterPath;_ResolveVirtualEnvSettings" />
 
-  <Target Name="_GetPythonVirtualEnvProxyForEmulator" Condition="'$(_PythonDeploymentMethod)' == 'CloudServiceDeploy'">
-    <ItemGroup>
+  <Target Name="_GetPythonVirtualEnvProxyForEmulator"
+          DependsOnTargets="ResolvePythonInterpreterPath"
+          Condition="'$(_PythonDeploymentMethod)' == 'CloudServiceDeploy'">
+    <ItemGroup Condition="$(VirtualEnvEnabled)">
       <_PythonVirtualEnvProxyForEmulator Include="$(QualifiedProjectHome)bin\ptvs_virtualenv_proxy.py">
         <SourceFile>$(_AzureSupportPath)ptvs_virtualenv_proxy.py</SourceFile>
       </_PythonVirtualEnvProxyForEmulator>
@@ -310,15 +312,6 @@
         <Category>Run</Category>
       </FilesForPackagingFromProject>
     </ItemGroup>
-
-    <!-- Copy the proxy script to the bin\ directory for the Cloud Service
-         emulator. -->
-    <Copy SourceFiles="$(_AzureSupportPath)ptvs_virtualenv_proxy.py"
-          DestinationFiles="@(_PythonVirtualEnvProxyForEmulator)"
-          SkipUnchangedFiles="true"
-          Condition="'$(_PythonDeploymentMethod)' == 'CloudServiceDeploy'">
-      <Output TaskParameter="CopiedFiles" ItemName="FileWrites"/>
-    </Copy>
   </Target>
 
   <Target Name="CollectVirtualEnvFiles" DependsOnTargets="ResolvePythonInterpreterPath;_CollectVirtualEnvFiles;_CollectVEnvFiles" />
@@ -490,13 +483,22 @@
   <Target Name="_DeployPythonCloudServiceFilesForEmulator"
           Inputs="@(_CloudServiceFiles)"
           Outputs="@(_PythonCloudServiceFilesForEmulator)"
-          DependsOnTargets="_GetPythonCloudServiceFiles"
+          DependsOnTargets="_GetPythonCloudServiceFiles;_GetPythonVirtualEnvProxyForEmulator"
           Condition="'$(_PythonDeploymentMethod)' == 'CloudServiceDeploy'">
     <Error Text="Should not be invoked during up-to-date check" Condition="$(BuildingForUpToDateCheck)" />
 
     <Copy SourceFiles="@(_CloudServiceFiles)"
           DestinationFiles="@(_PythonCloudServiceFilesForEmulator)"
           SkipUnchangedFiles="true">
+      <Output TaskParameter="CopiedFiles" ItemName="FileWrites"/>
+    </Copy>
+    
+    <!-- Copy the proxy script to the bin\ directory for the Cloud Service
+         emulator. -->
+    <Copy SourceFiles="$(_AzureSupportPath)ptvs_virtualenv_proxy.py"
+          DestinationFiles="@(_PythonVirtualEnvProxyForEmulator)"
+          SkipUnchangedFiles="true"
+          Condition="'@(_PythonVirtualEnvProxyForEmulator)' != ''">
       <Output TaskParameter="CopiedFiles" ItemName="FileWrites"/>
     </Copy>
   </Target>
@@ -701,13 +703,17 @@ interpreter_path_emulated=$(PythonInterpreterPath)
     <PropertyGroup>
       <PythonRunWebServerCommand Condition="'$(PythonRunWebServerCommand)' == ''">$(StartupPath)</PythonRunWebServerCommand>
       <PythonRunWebServerCommandType Condition="'$(PythonRunWebServerCommandType)' == ''">script</PythonRunWebServerCommandType>
+      <PythonRunWebServerCommandEnvironment>
+        SERVER_HOST=$(WebServerHost)
+        SERVER_PORT=$(WebBrowserPort)
+        $(PythonRunWebServerCommandEnvironment)
+      </PythonRunWebServerCommandEnvironment>
     </PropertyGroup>
     <!-- 'console' and 'consolepause' are the only valid ExecuteIn values for this command. -->
     <CreatePythonCommandItem Target="$(PythonRunWebServerCommand)"
                              TargetType="$(PythonRunWebServerCommandType)"
                              Arguments="$(PythonRunWebServerCommandArguments)"
-                             Environment="SERVER_HOST=$(WebServerHost)
-                                          SERVER_PORT=$(WebBrowserPort)"
+                             Environment="$(PythonRunWebServerCommandEnvironment)"
                              ExecuteIn="console">
       <Output TaskParameter="Command" ItemName="Commands" />
     </CreatePythonCommandItem>
@@ -720,13 +726,17 @@ interpreter_path_emulated=$(PythonInterpreterPath)
     <PropertyGroup>
       <PythonDebugWebServerCommand Condition="'$(PythonDebugWebServerCommand)' == ''">$(StartupPath)</PythonDebugWebServerCommand>
       <PythonDebugWebServerCommandType Condition="'$(PythonDebugWebServerCommandType)' == ''">script</PythonDebugWebServerCommandType>
+      <PythonDebugWebServerCommandEnvironment>
+        SERVER_HOST=$(WebServerHost)
+        SERVER_PORT=$(WebBrowserPort)
+        $(PythonDebugWebServerCommandEnvironment)
+      </PythonDebugWebServerCommandEnvironment>
     </PropertyGroup>
     <!-- 'console' and 'consolepause' are the only valid ExecuteIn values for this command. -->
     <CreatePythonCommandItem Target="$(PythonDebugWebServerCommand)"
                              TargetType="$(PythonDebugWebServerCommandType)"
                              Arguments="$(PythonDebugWebServerCommandArguments)"
-                             Environment="SERVER_HOST=$(WebServerHost)
-                                          SERVER_PORT=$(WebBrowserPort)"
+                             Environment="$(PythonDebugWebServerCommandEnvironment)"
                              ExecuteIn="console">
       <Output TaskParameter="Command" ItemName="Commands" />
     </CreatePythonCommandItem>
