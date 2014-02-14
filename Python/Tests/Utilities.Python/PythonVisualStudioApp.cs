@@ -91,8 +91,8 @@ namespace TestUtilities.UI.Python {
             } catch {
                 // If the package is not loaded yet then the command may not
                 // work. Force load the package by opening the Launch dialog.
-                var dialog = new PythonPerfTarget(OpenDialogWithDteExecuteCommand("Analyze.LaunchPythonProfiling"));
-                dialog.Cancel();
+                using (var dialog = new PythonPerfTarget(OpenDialogWithDteExecuteCommand("Analyze.LaunchPythonProfiling"))) {
+                }
                 Dte.ExecuteCommand("View.PythonPerformanceExplorer");
             }
         }
