@@ -43,6 +43,10 @@ namespace TestUtilities {
             return new HashSet<T>(enumeration);
         }
 
+        public static HashSet<T> ToSet<T>(this IEnumerable<T> enumeration, IEqualityComparer<T> comparer) {
+            return new HashSet<T>(enumeration, comparer);
+        }
+
         public static bool ContainsExactly<T>(this HashSet<T> set, IEnumerable<T> values) {
             if (set.Count != values.Count()) {
                 return false;

@@ -75,7 +75,13 @@ namespace Microsoft.PythonTools.Profiling {
         public StandaloneTargetView(StandaloneTarget template)
             : this() {
             if (template.PythonInterpreter != null) {
-                Interpreter = new PythonInterpreterView(template.PythonInterpreter);
+                Version version;
+                if (IsAnyAvailableInterpreters && Version.TryParse(template.PythonInterpreter.Version, out version)) {
+                    Interpreter = AvailableInterpreters
+                        .FirstOrDefault(v => v.Id == template.PythonInterpreter.Id && v.Version == version);
+                } else {
+                    Interpreter = _customInterpreter;
+                }
             } else {
                 InterpreterPath = template.InterpreterPath;
             }

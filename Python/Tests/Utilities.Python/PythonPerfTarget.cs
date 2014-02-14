@@ -13,12 +13,24 @@
  * ***************************************************************************/
 
 using System;
+using System.Threading;
 using System.Windows.Automation;
 
 namespace TestUtilities.UI.Python {
-    class PythonPerfTarget : AutomationWrapper {
+    class PythonPerfTarget : AutomationWrapper, IDisposable {
         public PythonPerfTarget(IntPtr hwnd)
-            : base(AutomationElement.FromHandle(hwnd)) {            
+            : base(AutomationElement.FromHandle(hwnd)) {
+            WaitForInputIdle();
+        }
+
+        public void Dispose() {
+            object pattern;
+            if (Element.TryGetCurrentPattern(WindowPattern.Pattern, out pattern)) {
+                try {
+                    ((WindowPattern)pattern).Close();
+                } catch (ElementNotAvailableException) {
+                }
+            }
         }
 
         /// <summary>
@@ -133,11 +145,13 @@ namespace TestUtilities.UI.Python {
         }
 
         public void Ok() {
-            Invoke(FindButton("Ok"));
+            WaitForInputIdle();
+            WaitForClosed(TimeSpan.FromSeconds(10.0), () => ClickButtonByAutomationId("OK"));
         }
 
         public void Cancel() {
-            Invoke(FindButton("Cancel"));
+            WaitForInputIdle();
+            WaitForClosed(TimeSpan.FromSeconds(10.0), () => ClickButtonByAutomationId("Cancel"));
         }
     }
 }

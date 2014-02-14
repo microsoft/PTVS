@@ -16,17 +16,30 @@ using System;
 using System.Windows.Automation;
 
 namespace TestUtilities.UI.Python {
-    class ComparePerfReports : AutomationWrapper {
+    class ComparePerfReports : AutomationWrapper, IDisposable {
         public ComparePerfReports(IntPtr hwnd)
             : base(AutomationElement.FromHandle(hwnd)) {
+            WaitForInputIdle();
+        }
+
+        public void Dispose() {
+            object pattern;
+            if (Element.TryGetCurrentPattern(WindowPattern.Pattern, out pattern)) {
+                try {
+                    ((WindowPattern)pattern).Close();
+                } catch (ElementNotAvailableException) {
+                }
+            }
         }
 
         public void Ok() {
-            ClickButtonByName("OK");
+            WaitForInputIdle();
+            WaitForClosed(TimeSpan.FromSeconds(10.0), () => ClickButtonByName("OK"));
         }
 
         public void Cancel() {
-            ClickButtonByName("Cancel");
+            WaitForInputIdle();
+            WaitForClosed(TimeSpan.FromSeconds(10.0), () => ClickButtonByName("Cancel"));
         }
 
         public string ComparisonFile {

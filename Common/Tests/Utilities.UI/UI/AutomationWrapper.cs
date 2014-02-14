@@ -14,6 +14,7 @@
 
 using System;
 using System.Diagnostics;
+using System.Threading;
 using System.Windows.Automation;
 using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -324,6 +325,41 @@ namespace TestUtilities.UI {
 
         public void Invoke() {
             Invoke(Element);
+        }
+
+        public void WaitForInputIdle() {
+            object pattern;
+            if (Element.TryGetCurrentPattern(WindowPattern.Pattern, out pattern)) {
+                if (!((WindowPattern)pattern).WaitForInputIdle(5000)) {
+                    throw new TimeoutException();
+                }
+            }
+        }
+
+        public void WaitForClosed(TimeSpan timeout, Action closeCommand = null) {
+            using (var closed = new AutoResetEvent(false)) {
+                AutomationEventHandler handler = (s, e) => {
+                    closed.Set();
+                };
+                Automation.AddAutomationEventHandler(
+                    WindowPattern.WindowClosedEvent,
+                    Element,
+                    TreeScope.Element,
+                    handler
+                );
+
+                if (closeCommand != null) {
+                    closeCommand();
+                }
+
+                closed.WaitOne(timeout);
+
+                Automation.RemoveAutomationEventHandler(
+                    WindowPattern.WindowClosedEvent,
+                    Element,
+                    handler
+                );
+            }
         }
     }
 
