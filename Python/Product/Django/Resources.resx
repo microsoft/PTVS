@@ -120,6 +120,15 @@
   <data name="CommandReplTitle" xml:space="preserve">
     <value>Django Management Console - {ProjectName}</value>
   </data>
+  <data name="DjangoLauncherDescription" xml:space="preserve">
+    <value>Launches Django web sites using the Python debugger. This enables launching and starting a web browser automatically. It launches using manage.py and passes the runserver flag as well as additional options to configure the port and other settings.</value>
+  </data>
+  <data name="DjangoLauncherName" xml:space="preserve">
+    <value>Django Web launcher</value>
+  </data>
+  <data name="DjangoSettingsModuleHelp" xml:space="preserve">
+    <value>The Python path to a settings module, e.g. "myproject.settings.main". If this isn't provided, the DJANGO_SETTINGS_MODULE environment variable will be used.</value>
+  </data>
   <data name="OpenDjangoShellLabel" xml:space="preserve">
     <value>Open &amp;Django Shell</value>
   </data>

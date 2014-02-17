@@ -1608,7 +1608,7 @@ namespace Microsoft.VisualStudioTools.Project {
             // as the browse object of the project node so that filtering is possible.
             var genPropPage = GetGeneralPropertyPageType();
             if (genPropPage != null) {
-            AddCATIDMapping(GetGeneralPropertyPageType(), GetGeneralPropertyPageType().GUID);
+                AddCATIDMapping(GetGeneralPropertyPageType(), GetGeneralPropertyPageType().GUID);
             }
             // We could also provide CATIDs for references and the references container node, if we wanted to.
         }

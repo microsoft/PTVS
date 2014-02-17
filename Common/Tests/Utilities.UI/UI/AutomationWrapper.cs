@@ -17,6 +17,7 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows.Automation;
+using Accessibility;
 using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio.Shell.Interop;
 
@@ -221,6 +222,12 @@ namespace TestUtilities.UI {
             selectionItem.GetSelectionItemPattern().Select();
         }
 
+        public static void DoDefaultAction(AutomationElement element) {
+            CheckNullElement(element);
+            var accessible = NativeMethods.GetAccessibleObject(element);
+            accessible.accDoDefaultAction();
+        }
+
         /// <summary>
         /// Selects the selectable item.  The item must support the Selection item pattern.
         /// </summary>
@@ -401,6 +408,11 @@ namespace TestUtilities.UI {
         [DebuggerStepThrough]
         public static ValuePattern GetValuePattern(this AutomationElement node) {
             return node.Pattern<ValuePattern>(ValuePattern.Pattern);
+        }
+
+        [DebuggerStepThrough]
+        public static TextPattern GetTextPattern(this AutomationElement node) {
+            return node.Pattern<TextPattern>(TextPattern.Pattern);
         }
 
         [DebuggerStepThrough]

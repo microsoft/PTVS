@@ -38,8 +38,7 @@ namespace TestUtilities.UI {
         }
 
         public string GetSelectedItemName() {
-            var pat = (SelectionPattern)Element.GetCurrentPattern(SelectionPattern.Pattern);
-            var selection = pat.Current.GetSelection();
+            var selection = Element.GetSelectionPattern().Current.GetSelection();
             if (selection == null || selection.Length == 0) {
                 return null;
             }

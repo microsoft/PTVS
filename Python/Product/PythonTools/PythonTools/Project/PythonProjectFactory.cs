@@ -16,9 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
-using System.Xml;
 using Microsoft.Build.Construction;
-using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools.Project;
 using IOleServiceProvider = Microsoft.VisualStudio.OLE.Interop.IServiceProvider;
@@ -69,6 +67,8 @@ namespace Microsoft.PythonTools.Project {
         ) {
             Version version;
 
+            // ToolsVersion less than 4.0 (or unspecified) is not supported, so
+            // set it to 4.0.
             if (!Version.TryParse(projectXml.ToolsVersion, out version) ||
                 version < new Version(4, 0)) {
                 return ProjectUpgradeState.SafeRepair;
@@ -82,8 +82,15 @@ namespace Microsoft.PythonTools.Project {
             ref ProjectRootElement userProjectXml,
             Action<__VSUL_ERRORLEVEL, string> log
         ) {
-            projectXml.ToolsVersion = "4.0";
-            log(__VSUL_ERRORLEVEL.VSUL_INFORMATIONAL, SR.GetString(SR.UpgradedToolsVersion));
+            Version version;
+
+            // ToolsVersion less than 4.0 (or unspecified) is not supported, so
+            // set it to 4.0.
+            if (!Version.TryParse(projectXml.ToolsVersion, out version) ||
+                version < new Version(4, 0)) {
+                projectXml.ToolsVersion = "4.0";
+                log(__VSUL_ERRORLEVEL.VSUL_INFORMATIONAL, SR.GetString(SR.UpgradedToolsVersion));
+            }
         }
     }
 }

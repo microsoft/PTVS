@@ -403,4 +403,28 @@ See the Python Environments window for details.</value>
   <data name="WebLauncherSearchPathHelp" xml:space="preserve">
     <value>Specifies additional directories which are added to sys.path for making libraries available for importing.</value>
   </data>
+  <data name="WebLauncherDebugServerArgumentsHelp" xml:space="preserve">
+    <value>Any command line arguments to provide. This is ignored if the command type is "code".</value>
+  </data>
+  <data name="WebLauncherDebugServerEnvironmentHelp" xml:space="preserve">
+    <value>Environment variables to set before starting the server. Each value should appear on its own line in "KEY=VALUE" format. By default, SERVER_HOST and SERVER_PORT are set.</value>
+  </data>
+  <data name="WebLauncherDebugServerTargetHelp" xml:space="preserve">
+    <value>The command to run when pressing F5 or the "Start debug server" command. This may be a script, module, or a single line of Python code. By default, the current startup script is used.</value>
+  </data>
+  <data name="WebLauncherDebugServerTargetTypeHelp" xml:space="preserve">
+    <value>The type of the command. If no command is specified, this value is always treated as "script".</value>
+  </data>
+  <data name="WebLauncherRunServerArgumentsHelp" xml:space="preserve">
+    <value>Any command line arguments to provide. This is ignored if the command type is "code".</value>
+  </data>
+  <data name="WebLauncherRunServerEnvironmentHelp" xml:space="preserve">
+    <value>Environment variables to set before starting the server. Each value should appear on its own line in "KEY=VALUE" format. By default, SERVER_HOST and SERVER_PORT are set.</value>
+  </data>
+  <data name="WebLauncherRunServerTargetHelp" xml:space="preserve">
+    <value>The command to run when pressing Ctrl+F5 or the "Start server" command. This may be a script, module, or a single line of Python code. By default, the current startup script is used.</value>
+  </data>
+  <data name="WebLauncherRunServerTargetTypeHelp" xml:space="preserve">
+    <value>The type of the command. If no command is specified, this value is always treated as "script".</value>
+  </data>
 </root>

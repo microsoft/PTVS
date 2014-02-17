@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 using System;
+using System.Collections.Generic;
 using System.Windows.Forms;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Project;
@@ -20,11 +21,33 @@ using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Project.Web {
     public partial class PythonWebLauncherOptions : UserControl, IPythonLauncherOptions {
+        private readonly Dictionary<string, TextBox> _textBoxMap;
+        private readonly Dictionary<string, ComboBox> _comboBoxMap;
         private readonly IPythonProject _properties;
         private bool _loadingSettings;
 
         public PythonWebLauncherOptions() {
             InitializeComponent();
+
+            _textBoxMap = new Dictionary<string, TextBox> {
+                { PythonConstants.SearchPathSetting, _searchPaths },
+                { PythonConstants.CommandLineArgumentsSetting, _arguments },
+                { PythonConstants.InterpreterPathSetting, _interpreterPath },
+                { PythonConstants.InterpreterArgumentsSetting, _interpArgs },
+                { PythonConstants.WebBrowserUrlSetting, _launchUrl },
+                { PythonConstants.WebBrowserPortSetting, _portNumber },
+                { PythonWebLauncher.RunWebServerTargetProperty, _runServerTarget },
+                { PythonWebLauncher.RunWebServerArgumentsProperty, _runServerArguments },
+                { PythonWebLauncher.RunWebServerEnvironmentProperty, _runServerEnvironment },
+                { PythonWebLauncher.DebugWebServerTargetProperty, _debugServerTarget },
+                { PythonWebLauncher.DebugWebServerArgumentsProperty, _debugServerArguments },
+                { PythonWebLauncher.DebugWebServerEnvironmentProperty, _debugServerEnvironment }
+            };
+
+            _comboBoxMap = new Dictionary<string, ComboBox> {
+                { PythonWebLauncher.RunWebServerTargetTypeProperty, _runServerTargetType },
+                { PythonWebLauncher.DebugWebServerTargetTypeProperty, _debugServerTargetType }
+            };
 
             _toolTip.SetToolTip(_searchPathLabel, SR.GetString(SR.WebLauncherSearchPathHelp));
             _toolTip.SetToolTip(_searchPaths, SR.GetString(SR.WebLauncherSearchPathHelp));
@@ -43,6 +66,28 @@ namespace Microsoft.PythonTools.Project.Web {
 
             _toolTip.SetToolTip(_portNumber, SR.GetString(SR.WebLauncherPortNumberHelp));
             _toolTip.SetToolTip(_portNumberLabel, SR.GetString(SR.WebLauncherPortNumberHelp));
+
+            _toolTip.SetToolTip(_runServerTarget, SR.GetString(SR.WebLauncherRunServerTargetHelp));
+            _toolTip.SetToolTip(_runServerTargetLabel, SR.GetString(SR.WebLauncherRunServerTargetHelp));
+
+            _toolTip.SetToolTip(_runServerTargetType, SR.GetString(SR.WebLauncherRunServerTargetTypeHelp));
+
+            _toolTip.SetToolTip(_runServerArguments, SR.GetString(SR.WebLauncherRunServerArgumentsHelp));
+            _toolTip.SetToolTip(_runServerArgumentsLabel, SR.GetString(SR.WebLauncherRunServerArgumentsHelp));
+
+            _toolTip.SetToolTip(_runServerEnvironment, SR.GetString(SR.WebLauncherRunServerEnvironmentHelp));
+            _toolTip.SetToolTip(_runServerEnvironmentLabel, SR.GetString(SR.WebLauncherRunServerEnvironmentHelp));
+
+            _toolTip.SetToolTip(_debugServerTarget, SR.GetString(SR.WebLauncherDebugServerTargetHelp));
+            _toolTip.SetToolTip(_debugServerTargetLabel, SR.GetString(SR.WebLauncherDebugServerTargetHelp));
+
+            _toolTip.SetToolTip(_debugServerTargetType, SR.GetString(SR.WebLauncherDebugServerTargetTypeHelp));
+
+            _toolTip.SetToolTip(_debugServerArguments, SR.GetString(SR.WebLauncherDebugServerArgumentsHelp));
+            _toolTip.SetToolTip(_debugServerArgumentsLabel, SR.GetString(SR.WebLauncherDebugServerArgumentsHelp));
+
+            _toolTip.SetToolTip(_debugServerEnvironment, SR.GetString(SR.WebLauncherDebugServerEnvironmentHelp));
+            _toolTip.SetToolTip(_debugServerEnvironmentLabel, SR.GetString(SR.WebLauncherDebugServerEnvironmentHelp));
         }
 
         public PythonWebLauncherOptions(IPythonProject properties)
@@ -53,34 +98,38 @@ namespace Microsoft.PythonTools.Project.Web {
         #region ILauncherOptions Members
 
         public void SaveSettings() {
-            _properties.SetProperty(PythonConstants.SearchPathSetting, SearchPaths);
-            _properties.SetProperty(PythonConstants.CommandLineArgumentsSetting, Arguments);
-            _properties.SetProperty(PythonConstants.InterpreterPathSetting, InterpreterPath);
-            _properties.SetProperty(PythonConstants.InterpreterArgumentsSetting, _interpArgs.Text);
-            _properties.SetProperty(PythonConstants.WebBrowserUrlSetting, _launchUrl.Text);
-            _properties.SetProperty(PythonConstants.WebBrowserPortSetting, _portNumber.Text);
+            foreach (var propTextBox in _textBoxMap) {
+                _properties.SetProperty(propTextBox.Key, propTextBox.Value.Text);
+            }
+            foreach (var propComboBox in _comboBoxMap) {
+                var value = propComboBox.Value.SelectedItem as string;
+                if (value != null) {
+                    _properties.SetProperty(propComboBox.Key, value);
+                }
+            }
             RaiseIsSaved();
         }
 
         public void LoadSettings() {
             _loadingSettings = true;
-            SearchPaths = _properties.GetUnevaluatedProperty(PythonConstants.SearchPathSetting);
-            InterpreterPath = _properties.GetUnevaluatedProperty(PythonConstants.InterpreterPathSetting);
-            Arguments = _properties.GetUnevaluatedProperty(PythonConstants.CommandLineArgumentsSetting);
-            _interpArgs.Text = _properties.GetUnevaluatedProperty(PythonConstants.InterpreterArgumentsSetting);
-            _launchUrl.Text = _properties.GetUnevaluatedProperty(PythonConstants.WebBrowserUrlSetting);
-            _portNumber.Text = _properties.GetUnevaluatedProperty(PythonConstants.WebBrowserPortSetting);
+            foreach (var propTextBox in _textBoxMap) {
+                propTextBox.Value.Text = _properties.GetUnevaluatedProperty(propTextBox.Key);
+            }
+            foreach (var propComboBox in _comboBoxMap) {
+                int index = propComboBox.Value.FindString(_properties.GetUnevaluatedProperty(propComboBox.Key));
+                propComboBox.Value.SelectedIndex = index >= 0 ? index : 0;
+            }
             _loadingSettings = false;
         }
 
         public void ReloadSetting(string settingName) {
-            switch (settingName) {
-                case PythonConstants.SearchPathSetting:
-                    SearchPaths = _properties.GetUnevaluatedProperty(PythonConstants.SearchPathSetting);
-                    break;
-                case PythonConstants.InterpreterPathSetting:
-                    InterpreterPath = _properties.GetUnevaluatedProperty(PythonConstants.InterpreterPathSetting);
-                    break;
+            TextBox textBox;
+            ComboBox comboBox;
+            if (_textBoxMap.TryGetValue(settingName, out textBox)) {
+                textBox.Text = _properties.GetUnevaluatedProperty(settingName);
+            } else if (_comboBoxMap.TryGetValue(settingName, out comboBox)) {
+                int index = comboBox.FindString(_properties.GetUnevaluatedProperty(settingName));
+                comboBox.SelectedIndex = index >= 0 ? index : 0;
             }
         }
 
@@ -92,21 +141,6 @@ namespace Microsoft.PythonTools.Project.Web {
 
         #endregion
 
-        public string SearchPaths {
-            get { return _searchPaths.Text; }
-            set { _searchPaths.Text = value; }
-        }
-
-        public string Arguments {
-            get { return _arguments.Text; }
-            set { _arguments.Text = value; }
-        }
-
-        public string InterpreterPath {
-            get { return _interpreterPath.Text; }
-            set { _interpreterPath.Text = value; }
-        }
-
         private void RaiseIsSaved() {
             var isDirty = DirtyChanged;
             if (isDirty != null) {
@@ -115,6 +149,15 @@ namespace Microsoft.PythonTools.Project.Web {
         }
 
         private void Setting_TextChanged(object sender, EventArgs e) {
+            if (!_loadingSettings) {
+                var isDirty = DirtyChanged;
+                if (isDirty != null) {
+                    DirtyChanged(this, DirtyChangedEventArgs.DirtyValue);
+                }
+            }
+        }
+
+        private void Setting_SelectedValueChanged(object sender, EventArgs e) {
             if (!_loadingSettings) {
                 var isDirty = DirtyChanged;
                 if (isDirty != null) {

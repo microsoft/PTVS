@@ -15,6 +15,8 @@
 using System;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Windows.Automation;
+using Accessibility;
 using Microsoft.VisualStudio.OLE.Interop;
 
 namespace TestUtilities
@@ -154,6 +156,22 @@ namespace TestUtilities
 
         [DllImport("user32.dll")]
         public static extern int GetDlgCtrlID(IntPtr hwndCtl);
+
+        [DllImport("oleacc.dll")]
+        private static extern int AccessibleObjectFromWindow(IntPtr hWnd, int dwObjectID, ref Guid riid, ref IAccessible pAcc);
+
+        public static IAccessible GetAccessibleObject(IntPtr handle) {
+            Guid iid = typeof(IAccessible).GUID;
+            const int OBJID_WINDOW = 0;
+            IAccessible result = null;
+
+            Marshal.ThrowExceptionForHR(AccessibleObjectFromWindow(handle, OBJID_WINDOW, ref iid, ref result));
+            return result;
+        }
+
+        public static IAccessible GetAccessibleObject(AutomationElement element) {
+            return GetAccessibleObject(new IntPtr(element.Current.NativeWindowHandle));
+        }
 
         //User32 wrappers cover API's used for Mouse input
         #region User32

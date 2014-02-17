@@ -46,6 +46,19 @@ namespace Microsoft.PythonTools.Project.Web {
     class PythonWebLauncher : IProjectLauncher {
         private int? _testServerPort;
 
+        public const string RunWebServerCommand = "PythonRunWebServerCommand";
+        public const string DebugWebServerCommand = "PythonDebugWebServerCommand";
+
+        public const string RunWebServerTargetProperty = "PythonRunWebServerCommand";
+        public const string RunWebServerTargetTypeProperty = "PythonRunWebServerCommandType";
+        public const string RunWebServerArgumentsProperty = "PythonRunWebServerCommandArguments";
+        public const string RunWebServerEnvironmentProperty = "PythonRunWebServerCommandEnvironment";
+
+        public const string DebugWebServerTargetProperty = "PythonDebugWebServerCommand";
+        public const string DebugWebServerTargetTypeProperty = "PythonDebugWebServerCommandType";
+        public const string DebugWebServerArgumentsProperty = "PythonDebugWebServerCommandArguments";
+        public const string DebugWebServerEnvironmentProperty = "PythonDebugWebServerCommandEnvironment";
+
         private readonly IPythonProject _project;
         private readonly IAsyncCommand _runServerCommand;
         private readonly IAsyncCommand _debugServerCommand;
@@ -57,8 +70,8 @@ namespace Microsoft.PythonTools.Project.Web {
             if (project2 != null) {
                 // The provider may return its own object, but the web launcher only
                 // supports instances of CustomCommand.
-                _runServerCommand = project2.FindCommand("PythonRunWebServerCommand");
-                _debugServerCommand = project2.FindCommand("PythonDebugWebServerCommand");
+                _runServerCommand = project2.FindCommand(RunWebServerCommand);
+                _debugServerCommand = project2.FindCommand(DebugWebServerCommand);
             }
 
             var portNumber = _project.GetProperty(PythonConstants.WebBrowserPortSetting);

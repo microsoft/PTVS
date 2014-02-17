@@ -40,9 +40,31 @@
             this._launchUrlLabel = new System.Windows.Forms.Label();
             this._toolTip = new System.Windows.Forms.ToolTip(this.components);
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
+            this._debugServerGroup = new System.Windows.Forms.GroupBox();
+            this.tableLayoutPanel4 = new System.Windows.Forms.TableLayoutPanel();
+            this._debugServerTarget = new System.Windows.Forms.TextBox();
+            this._debugServerArguments = new System.Windows.Forms.TextBox();
+            this._debugServerEnvironment = new System.Windows.Forms.TextBox();
+            this._debugServerEnvironmentLabel = new System.Windows.Forms.Label();
+            this._debugServerArgumentsLabel = new System.Windows.Forms.Label();
+            this._debugServerTargetLabel = new System.Windows.Forms.Label();
+            this._debugServerTargetType = new System.Windows.Forms.ComboBox();
+            this._runServerGroup = new System.Windows.Forms.GroupBox();
+            this.tableLayoutPanel3 = new System.Windows.Forms.TableLayoutPanel();
+            this._runServerTarget = new System.Windows.Forms.TextBox();
+            this._runServerArguments = new System.Windows.Forms.TextBox();
+            this._runServerEnvironment = new System.Windows.Forms.TextBox();
+            this._runServerEnvironmentLabel = new System.Windows.Forms.Label();
+            this._runServerArgumentsLabel = new System.Windows.Forms.Label();
+            this._runServerTargetLabel = new System.Windows.Forms.Label();
+            this._runServerTargetType = new System.Windows.Forms.ComboBox();
             this._debugGroup.SuspendLayout();
             this.tableLayoutPanel2.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
+            this._debugServerGroup.SuspendLayout();
+            this.tableLayoutPanel4.SuspendLayout();
+            this._runServerGroup.SuspendLayout();
+            this.tableLayoutPanel3.SuspendLayout();
             this.SuspendLayout();
             // 
             // _debugGroup
@@ -55,7 +77,7 @@
             this._debugGroup.Margin = new System.Windows.Forms.Padding(6, 8, 6, 8);
             this._debugGroup.Name = "_debugGroup";
             this._debugGroup.Padding = new System.Windows.Forms.Padding(6, 8, 6, 8);
-            this._debugGroup.Size = new System.Drawing.Size(438, 185);
+            this._debugGroup.Size = new System.Drawing.Size(549, 185);
             this._debugGroup.TabIndex = 0;
             this._debugGroup.TabStop = false;
             this._debugGroup.Text = "Debug";
@@ -90,7 +112,7 @@
             this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tableLayoutPanel2.Size = new System.Drawing.Size(426, 156);
+            this.tableLayoutPanel2.Size = new System.Drawing.Size(537, 156);
             this.tableLayoutPanel2.TabIndex = 0;
             // 
             // _searchPaths
@@ -100,7 +122,7 @@
             this._searchPaths.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
             this._searchPaths.MinimumSize = new System.Drawing.Size(50, 4);
             this._searchPaths.Name = "_searchPaths";
-            this._searchPaths.Size = new System.Drawing.Size(291, 20);
+            this._searchPaths.Size = new System.Drawing.Size(402, 20);
             this._searchPaths.TabIndex = 1;
             this._searchPaths.TextChanged += new System.EventHandler(this.Setting_TextChanged);
             // 
@@ -111,7 +133,7 @@
             this._arguments.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
             this._arguments.MinimumSize = new System.Drawing.Size(50, 4);
             this._arguments.Name = "_arguments";
-            this._arguments.Size = new System.Drawing.Size(291, 20);
+            this._arguments.Size = new System.Drawing.Size(402, 20);
             this._arguments.TabIndex = 3;
             this._arguments.TextChanged += new System.EventHandler(this.Setting_TextChanged);
             // 
@@ -122,7 +144,7 @@
             this._interpArgs.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
             this._interpArgs.MinimumSize = new System.Drawing.Size(50, 4);
             this._interpArgs.Name = "_interpArgs";
-            this._interpArgs.Size = new System.Drawing.Size(291, 20);
+            this._interpArgs.Size = new System.Drawing.Size(402, 20);
             this._interpArgs.TabIndex = 5;
             this._interpArgs.TextChanged += new System.EventHandler(this.Setting_TextChanged);
             // 
@@ -133,7 +155,7 @@
             this._interpreterPath.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
             this._interpreterPath.MinimumSize = new System.Drawing.Size(50, 4);
             this._interpreterPath.Name = "_interpreterPath";
-            this._interpreterPath.Size = new System.Drawing.Size(291, 20);
+            this._interpreterPath.Size = new System.Drawing.Size(402, 20);
             this._interpreterPath.TabIndex = 7;
             this._interpreterPath.TextChanged += new System.EventHandler(this.Setting_TextChanged);
             // 
@@ -203,7 +225,7 @@
             this._portNumber.Location = new System.Drawing.Point(129, 133);
             this._portNumber.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
             this._portNumber.Name = "_portNumber";
-            this._portNumber.Size = new System.Drawing.Size(291, 20);
+            this._portNumber.Size = new System.Drawing.Size(402, 20);
             this._portNumber.TabIndex = 11;
             this._portNumber.TextChanged += new System.EventHandler(this.Setting_TextChanged);
             // 
@@ -213,7 +235,7 @@
             this._launchUrl.Location = new System.Drawing.Point(129, 107);
             this._launchUrl.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
             this._launchUrl.Name = "_launchUrl";
-            this._launchUrl.Size = new System.Drawing.Size(291, 20);
+            this._launchUrl.Size = new System.Drawing.Size(402, 20);
             this._launchUrl.TabIndex = 9;
             this._launchUrl.TextChanged += new System.EventHandler(this.Setting_TextChanged);
             // 
@@ -234,16 +256,286 @@
             this.tableLayoutPanel1.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.tableLayoutPanel1.ColumnCount = 1;
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanel1.Controls.Add(this._debugServerGroup, 0, 2);
+            this.tableLayoutPanel1.Controls.Add(this._runServerGroup, 0, 1);
             this.tableLayoutPanel1.Controls.Add(this._debugGroup, 0, 0);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
             this.tableLayoutPanel1.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
-            this.tableLayoutPanel1.RowCount = 2;
+            this.tableLayoutPanel1.RowCount = 4;
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(450, 221);
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(561, 541);
             this.tableLayoutPanel1.TabIndex = 0;
+            // 
+            // _debugServerGroup
+            // 
+            this._debugServerGroup.AutoSize = true;
+            this._debugServerGroup.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this._debugServerGroup.Controls.Add(this.tableLayoutPanel4);
+            this._debugServerGroup.Dock = System.Windows.Forms.DockStyle.Fill;
+            this._debugServerGroup.Location = new System.Drawing.Point(6, 369);
+            this._debugServerGroup.Margin = new System.Windows.Forms.Padding(6, 8, 6, 8);
+            this._debugServerGroup.Name = "_debugServerGroup";
+            this._debugServerGroup.Padding = new System.Windows.Forms.Padding(6, 8, 6, 8);
+            this._debugServerGroup.Size = new System.Drawing.Size(549, 144);
+            this._debugServerGroup.TabIndex = 2;
+            this._debugServerGroup.TabStop = false;
+            this._debugServerGroup.Text = "Debug Server Command";
+            // 
+            // tableLayoutPanel4
+            // 
+            this.tableLayoutPanel4.AutoSize = true;
+            this.tableLayoutPanel4.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.tableLayoutPanel4.ColumnCount = 3;
+            this.tableLayoutPanel4.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
+            this.tableLayoutPanel4.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanel4.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
+            this.tableLayoutPanel4.Controls.Add(this._debugServerTarget, 1, 0);
+            this.tableLayoutPanel4.Controls.Add(this._debugServerArguments, 1, 1);
+            this.tableLayoutPanel4.Controls.Add(this._debugServerEnvironment, 1, 2);
+            this.tableLayoutPanel4.Controls.Add(this._debugServerEnvironmentLabel, 0, 2);
+            this.tableLayoutPanel4.Controls.Add(this._debugServerArgumentsLabel, 0, 1);
+            this.tableLayoutPanel4.Controls.Add(this._debugServerTargetLabel, 0, 0);
+            this.tableLayoutPanel4.Controls.Add(this._debugServerTargetType, 2, 0);
+            this.tableLayoutPanel4.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tableLayoutPanel4.Location = new System.Drawing.Point(6, 21);
+            this.tableLayoutPanel4.Name = "tableLayoutPanel4";
+            this.tableLayoutPanel4.RowCount = 3;
+            this.tableLayoutPanel4.RowStyles.Add(new System.Windows.Forms.RowStyle());
+            this.tableLayoutPanel4.RowStyles.Add(new System.Windows.Forms.RowStyle());
+            this.tableLayoutPanel4.RowStyles.Add(new System.Windows.Forms.RowStyle());
+            this.tableLayoutPanel4.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
+            this.tableLayoutPanel4.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
+            this.tableLayoutPanel4.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
+            this.tableLayoutPanel4.Size = new System.Drawing.Size(537, 115);
+            this.tableLayoutPanel4.TabIndex = 0;
+            // 
+            // _debugServerTarget
+            // 
+            this._debugServerTarget.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
+            this._debugServerTarget.Location = new System.Drawing.Point(87, 3);
+            this._debugServerTarget.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
+            this._debugServerTarget.MinimumSize = new System.Drawing.Size(50, 4);
+            this._debugServerTarget.Name = "_debugServerTarget";
+            this._debugServerTarget.Size = new System.Drawing.Size(292, 20);
+            this._debugServerTarget.TabIndex = 1;
+            this._debugServerTarget.TextChanged += new System.EventHandler(this.Setting_TextChanged);
+            // 
+            // _debugServerArguments
+            // 
+            this._debugServerArguments.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
+            this.tableLayoutPanel4.SetColumnSpan(this._debugServerArguments, 2);
+            this._debugServerArguments.Location = new System.Drawing.Point(87, 30);
+            this._debugServerArguments.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
+            this._debugServerArguments.MinimumSize = new System.Drawing.Size(50, 4);
+            this._debugServerArguments.Name = "_debugServerArguments";
+            this._debugServerArguments.Size = new System.Drawing.Size(444, 20);
+            this._debugServerArguments.TabIndex = 4;
+            this._debugServerArguments.TextChanged += new System.EventHandler(this.Setting_TextChanged);
+            // 
+            // _debugServerEnvironment
+            // 
+            this._debugServerEnvironment.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
+            this.tableLayoutPanel4.SetColumnSpan(this._debugServerEnvironment, 2);
+            this._debugServerEnvironment.Location = new System.Drawing.Point(87, 56);
+            this._debugServerEnvironment.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
+            this._debugServerEnvironment.MinimumSize = new System.Drawing.Size(50, 4);
+            this._debugServerEnvironment.Multiline = true;
+            this._debugServerEnvironment.Name = "_debugServerEnvironment";
+            this._debugServerEnvironment.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
+            this._debugServerEnvironment.Size = new System.Drawing.Size(444, 56);
+            this._debugServerEnvironment.TabIndex = 6;
+            this._debugServerEnvironment.TextChanged += new System.EventHandler(this.Setting_TextChanged);
+            // 
+            // _debugServerEnvironmentLabel
+            // 
+            this._debugServerEnvironmentLabel.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this._debugServerEnvironmentLabel.AutoSize = true;
+            this._debugServerEnvironmentLabel.Location = new System.Drawing.Point(6, 77);
+            this._debugServerEnvironmentLabel.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
+            this._debugServerEnvironmentLabel.Name = "_debugServerEnvironmentLabel";
+            this._debugServerEnvironmentLabel.Size = new System.Drawing.Size(69, 13);
+            this._debugServerEnvironmentLabel.TabIndex = 5;
+            this._debugServerEnvironmentLabel.Text = "Environment:";
+            this._debugServerEnvironmentLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // _debugServerArgumentsLabel
+            // 
+            this._debugServerArgumentsLabel.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this._debugServerArgumentsLabel.AutoSize = true;
+            this._debugServerArgumentsLabel.Location = new System.Drawing.Point(6, 33);
+            this._debugServerArgumentsLabel.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
+            this._debugServerArgumentsLabel.Name = "_debugServerArgumentsLabel";
+            this._debugServerArgumentsLabel.Size = new System.Drawing.Size(60, 13);
+            this._debugServerArgumentsLabel.TabIndex = 3;
+            this._debugServerArgumentsLabel.Text = "Arguments:";
+            this._debugServerArgumentsLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // _debugServerTargetLabel
+            // 
+            this._debugServerTargetLabel.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this._debugServerTargetLabel.AutoSize = true;
+            this._debugServerTargetLabel.Location = new System.Drawing.Point(6, 7);
+            this._debugServerTargetLabel.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
+            this._debugServerTargetLabel.Name = "_debugServerTargetLabel";
+            this._debugServerTargetLabel.Size = new System.Drawing.Size(57, 13);
+            this._debugServerTargetLabel.TabIndex = 0;
+            this._debugServerTargetLabel.Text = "Command:";
+            this._debugServerTargetLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // _debugServerTargetType
+            // 
+            this._debugServerTargetType.Dock = System.Windows.Forms.DockStyle.Fill;
+            this._debugServerTargetType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this._debugServerTargetType.FormattingEnabled = true;
+            this._debugServerTargetType.Items.AddRange(new object[] {
+            "",
+            "script",
+            "module",
+            "code"});
+            this._debugServerTargetType.Location = new System.Drawing.Point(391, 3);
+            this._debugServerTargetType.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
+            this._debugServerTargetType.Name = "_debugServerTargetType";
+            this._debugServerTargetType.Size = new System.Drawing.Size(140, 21);
+            this._debugServerTargetType.TabIndex = 2;
+            this._debugServerTargetType.SelectedValueChanged += new System.EventHandler(this.Setting_SelectedValueChanged);
+            // 
+            // _runServerGroup
+            // 
+            this._runServerGroup.AutoSize = true;
+            this._runServerGroup.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this._runServerGroup.Controls.Add(this.tableLayoutPanel3);
+            this._runServerGroup.Dock = System.Windows.Forms.DockStyle.Fill;
+            this._runServerGroup.Location = new System.Drawing.Point(6, 209);
+            this._runServerGroup.Margin = new System.Windows.Forms.Padding(6, 8, 6, 8);
+            this._runServerGroup.Name = "_runServerGroup";
+            this._runServerGroup.Padding = new System.Windows.Forms.Padding(6, 8, 6, 8);
+            this._runServerGroup.Size = new System.Drawing.Size(549, 144);
+            this._runServerGroup.TabIndex = 1;
+            this._runServerGroup.TabStop = false;
+            this._runServerGroup.Text = "Run Server Command";
+            // 
+            // tableLayoutPanel3
+            // 
+            this.tableLayoutPanel3.AutoSize = true;
+            this.tableLayoutPanel3.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.tableLayoutPanel3.ColumnCount = 3;
+            this.tableLayoutPanel3.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
+            this.tableLayoutPanel3.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanel3.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
+            this.tableLayoutPanel3.Controls.Add(this._runServerTarget, 1, 0);
+            this.tableLayoutPanel3.Controls.Add(this._runServerArguments, 1, 1);
+            this.tableLayoutPanel3.Controls.Add(this._runServerEnvironment, 1, 2);
+            this.tableLayoutPanel3.Controls.Add(this._runServerEnvironmentLabel, 0, 2);
+            this.tableLayoutPanel3.Controls.Add(this._runServerArgumentsLabel, 0, 1);
+            this.tableLayoutPanel3.Controls.Add(this._runServerTargetLabel, 0, 0);
+            this.tableLayoutPanel3.Controls.Add(this._runServerTargetType, 2, 0);
+            this.tableLayoutPanel3.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tableLayoutPanel3.Location = new System.Drawing.Point(6, 21);
+            this.tableLayoutPanel3.Name = "tableLayoutPanel3";
+            this.tableLayoutPanel3.RowCount = 3;
+            this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle());
+            this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle());
+            this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle());
+            this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
+            this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
+            this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
+            this.tableLayoutPanel3.Size = new System.Drawing.Size(537, 115);
+            this.tableLayoutPanel3.TabIndex = 0;
+            // 
+            // _runServerTarget
+            // 
+            this._runServerTarget.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
+            this._runServerTarget.Location = new System.Drawing.Point(87, 3);
+            this._runServerTarget.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
+            this._runServerTarget.MinimumSize = new System.Drawing.Size(50, 4);
+            this._runServerTarget.Name = "_runServerTarget";
+            this._runServerTarget.Size = new System.Drawing.Size(292, 20);
+            this._runServerTarget.TabIndex = 1;
+            this._runServerTarget.TextChanged += new System.EventHandler(this.Setting_TextChanged);
+            // 
+            // _runServerArguments
+            // 
+            this._runServerArguments.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
+            this.tableLayoutPanel3.SetColumnSpan(this._runServerArguments, 2);
+            this._runServerArguments.Location = new System.Drawing.Point(87, 30);
+            this._runServerArguments.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
+            this._runServerArguments.MinimumSize = new System.Drawing.Size(50, 4);
+            this._runServerArguments.Name = "_runServerArguments";
+            this._runServerArguments.Size = new System.Drawing.Size(444, 20);
+            this._runServerArguments.TabIndex = 4;
+            this._runServerArguments.TextChanged += new System.EventHandler(this.Setting_TextChanged);
+            // 
+            // _runServerEnvironment
+            // 
+            this._runServerEnvironment.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
+            this.tableLayoutPanel3.SetColumnSpan(this._runServerEnvironment, 2);
+            this._runServerEnvironment.Location = new System.Drawing.Point(87, 56);
+            this._runServerEnvironment.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
+            this._runServerEnvironment.MinimumSize = new System.Drawing.Size(50, 4);
+            this._runServerEnvironment.Multiline = true;
+            this._runServerEnvironment.Name = "_runServerEnvironment";
+            this._runServerEnvironment.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
+            this._runServerEnvironment.Size = new System.Drawing.Size(444, 56);
+            this._runServerEnvironment.TabIndex = 6;
+            this._runServerEnvironment.TextChanged += new System.EventHandler(this.Setting_TextChanged);
+            // 
+            // _runServerEnvironmentLabel
+            // 
+            this._runServerEnvironmentLabel.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this._runServerEnvironmentLabel.AutoSize = true;
+            this._runServerEnvironmentLabel.Location = new System.Drawing.Point(6, 77);
+            this._runServerEnvironmentLabel.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
+            this._runServerEnvironmentLabel.Name = "_runServerEnvironmentLabel";
+            this._runServerEnvironmentLabel.Size = new System.Drawing.Size(69, 13);
+            this._runServerEnvironmentLabel.TabIndex = 5;
+            this._runServerEnvironmentLabel.Text = "Environment:";
+            this._runServerEnvironmentLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // _runServerArgumentsLabel
+            // 
+            this._runServerArgumentsLabel.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this._runServerArgumentsLabel.AutoSize = true;
+            this._runServerArgumentsLabel.Location = new System.Drawing.Point(6, 33);
+            this._runServerArgumentsLabel.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
+            this._runServerArgumentsLabel.Name = "_runServerArgumentsLabel";
+            this._runServerArgumentsLabel.Size = new System.Drawing.Size(60, 13);
+            this._runServerArgumentsLabel.TabIndex = 3;
+            this._runServerArgumentsLabel.Text = "Arguments:";
+            this._runServerArgumentsLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // _runServerTargetLabel
+            // 
+            this._runServerTargetLabel.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this._runServerTargetLabel.AutoSize = true;
+            this._runServerTargetLabel.Location = new System.Drawing.Point(6, 7);
+            this._runServerTargetLabel.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
+            this._runServerTargetLabel.Name = "_runServerTargetLabel";
+            this._runServerTargetLabel.Size = new System.Drawing.Size(57, 13);
+            this._runServerTargetLabel.TabIndex = 0;
+            this._runServerTargetLabel.Text = "Command:";
+            this._runServerTargetLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // _runServerTargetType
+            // 
+            this._runServerTargetType.Dock = System.Windows.Forms.DockStyle.Fill;
+            this._runServerTargetType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this._runServerTargetType.FormattingEnabled = true;
+            this._runServerTargetType.Items.AddRange(new object[] {
+            "",
+            "script",
+            "module",
+            "code"});
+            this._runServerTargetType.Location = new System.Drawing.Point(391, 3);
+            this._runServerTargetType.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
+            this._runServerTargetType.Name = "_runServerTargetType";
+            this._runServerTargetType.Size = new System.Drawing.Size(140, 21);
+            this._runServerTargetType.TabIndex = 2;
+            this._runServerTargetType.SelectedValueChanged += new System.EventHandler(this.Setting_SelectedValueChanged);
             // 
             // PythonWebLauncherOptions
             // 
@@ -254,13 +546,21 @@
             this.Controls.Add(this.tableLayoutPanel1);
             this.Margin = new System.Windows.Forms.Padding(6, 8, 6, 8);
             this.Name = "PythonWebLauncherOptions";
-            this.Size = new System.Drawing.Size(450, 221);
+            this.Size = new System.Drawing.Size(561, 541);
             this._debugGroup.ResumeLayout(false);
             this._debugGroup.PerformLayout();
             this.tableLayoutPanel2.ResumeLayout(false);
             this.tableLayoutPanel2.PerformLayout();
             this.tableLayoutPanel1.ResumeLayout(false);
             this.tableLayoutPanel1.PerformLayout();
+            this._debugServerGroup.ResumeLayout(false);
+            this._debugServerGroup.PerformLayout();
+            this.tableLayoutPanel4.ResumeLayout(false);
+            this.tableLayoutPanel4.PerformLayout();
+            this._runServerGroup.ResumeLayout(false);
+            this._runServerGroup.PerformLayout();
+            this.tableLayoutPanel3.ResumeLayout(false);
+            this.tableLayoutPanel3.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -284,5 +584,23 @@
         private System.Windows.Forms.TextBox _portNumber;
         private System.Windows.Forms.TextBox _launchUrl;
         private System.Windows.Forms.Label _launchUrlLabel;
+        private System.Windows.Forms.GroupBox _debugServerGroup;
+        private System.Windows.Forms.TableLayoutPanel tableLayoutPanel4;
+        private System.Windows.Forms.TextBox _debugServerTarget;
+        private System.Windows.Forms.TextBox _debugServerArguments;
+        private System.Windows.Forms.TextBox _debugServerEnvironment;
+        private System.Windows.Forms.Label _debugServerEnvironmentLabel;
+        private System.Windows.Forms.Label _debugServerArgumentsLabel;
+        private System.Windows.Forms.Label _debugServerTargetLabel;
+        private System.Windows.Forms.ComboBox _debugServerTargetType;
+        private System.Windows.Forms.GroupBox _runServerGroup;
+        private System.Windows.Forms.TableLayoutPanel tableLayoutPanel3;
+        private System.Windows.Forms.TextBox _runServerTarget;
+        private System.Windows.Forms.TextBox _runServerArguments;
+        private System.Windows.Forms.TextBox _runServerEnvironment;
+        private System.Windows.Forms.Label _runServerEnvironmentLabel;
+        private System.Windows.Forms.Label _runServerArgumentsLabel;
+        private System.Windows.Forms.Label _runServerTargetLabel;
+        private System.Windows.Forms.ComboBox _runServerTargetType;
     }
 }

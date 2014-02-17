@@ -56,6 +56,7 @@ namespace Microsoft.PythonTools.Django {
     [ProvideKeyBindingTable(GuidList.guidDjangoKeyBindingString, 102)]
     [Guid(GuidList.guidDjangoPkgString)]
     [ProvideObject(typeof(DjangoProject), RegisterUsing = RegistrationMethod.CodeBase)]
+    [ProvideObject(typeof(DjangoPropertyPage))]
     [ProvideProjectFactory(typeof(DjangoProjectFactory), "Django/Python", "Python Project Files (*.pyproj);*.pyproj", "pyproj", "pyproj", ".\\NullPath", LanguageVsTemplate = "Python")]
     [ProvideLanguageTemplates("{349C5851-65DF-11DA-9384-00065B846F21}", "Python", GuidList.guidDjangoPkgString, "Web", "Python Application Project Templates", "{888888a0-9f3d-457c-b088-3a5042f75d52}", ".py", "Python", "{9AF89C0F-85F6-4A20-9023-5D15D912F3B1}")]
     public sealed class DjangoPackage : Package {

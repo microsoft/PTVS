@@ -14,24 +14,32 @@
 
 using System.Windows.Automation;
 using System;
+using System.Threading;
 
 namespace TestUtilities.UI
 {
     class ProjectPropertiesWindow : AutomationWrapper
     {
-        public ProjectPropertiesWindow(AutomationElement element)
-            : base(element) { 
+        public ProjectPropertiesWindow(IntPtr element)
+            : base(AutomationElement.FromHandle(element)) { 
         }
 
         public AutomationElement this[string tabName] {
             get {
                 var tabItem = FindFirstByControlType(tabName, ControlType.Pane);
-                var point = tabItem.GetClickablePoint();
-                Mouse.MoveTo(point);
-                System.Threading.Thread.Sleep(100);
+                if (tabItem == null) {
+                    AutomationWrapper.DumpElement(Element);
+                    return null;
+                } else {
+                    AutomationWrapper.DumpElement(tabItem);
+                }
+
+                Mouse.MoveTo(tabItem.GetClickablePoint());
+                Thread.Sleep(100);
                 Mouse.Click(System.Windows.Input.MouseButton.Left);
-                System.Threading.Thread.Sleep(100);                
-                return FindFirstByControlType(tabName, ControlType.Pane);
+                Thread.Sleep(100);
+
+                return FindByAutomationId("PageHostingPanel");
             }
         }
     }

@@ -13,10 +13,9 @@
  * ***************************************************************************/
 
 using System;
-using System.Diagnostics;
+using System.Linq;
 using System.Runtime.InteropServices;
-using System.Threading;
-using System.Windows.Automation;
+using Microsoft.PythonTools;
 using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
@@ -40,28 +39,18 @@ namespace DjangoUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void NewDjangoProject() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var newProjDialog = app.FileNewProject();
-
-                newProjDialog.FocusLanguageNode();
-                var djangoApp = newProjDialog.ProjectTypes.FindItem("Django Web Project");
-                djangoApp.Select();
-
-                newProjDialog.Location = TestData.GetTempPath();
-                newProjDialog.ClickOK();
-
-                // wait for new solution to load...
-                for (int i = 0; i < 100 && app.Dte.Solution.Projects.Count == 0; i++) {
-                    System.Threading.Thread.Sleep(1000);
-                }
-
-                Assert.AreEqual(1, app.Dte.Solution.Projects.Count);
-                var curProj = app.Dte.Solution.Projects.Item(1);
-                var folder = curProj.ProjectItems.Item(curProj.Name);
-                Assert.AreNotEqual(null, curProj.ProjectItems.Item("manage.py"));
-                Assert.AreNotEqual(null, folder.ProjectItems.Item("settings.py"));
-                Assert.AreNotEqual(null, folder.ProjectItems.Item("urls.py"));
-                Assert.AreNotEqual(null, folder.ProjectItems.Item("__init__.py"));
-                Assert.AreNotEqual(null, folder.ProjectItems.Item("wsgi.py"));
+                var project = app.CreateProject(
+                    PythonVisualStudioApp.TemplateLanguageName,
+                    PythonVisualStudioApp.DjangoWebProjectTemplate,
+                    TestData.GetTempPath(),
+                    "NewDjangoProject"
+                );
+                var folder = project.ProjectItems.Item(project.Name);
+                Assert.IsNotNull(project.ProjectItems.Item("manage.py"));
+                Assert.IsNotNull(folder.ProjectItems.Item("settings.py"));
+                Assert.IsNotNull(folder.ProjectItems.Item("urls.py"));
+                Assert.IsNotNull(folder.ProjectItems.Item("__init__.py"));
+                Assert.IsNotNull(folder.ProjectItems.Item("wsgi.py"));
             }
         }
 
@@ -72,20 +61,13 @@ namespace DjangoUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void DjangoCommandsNonDjangoApp() {
             using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var newProjDialog = app.FileNewProject();
-
-                newProjDialog.FocusLanguageNode();
-
-                var djangoApp = newProjDialog.ProjectTypes.FindItem("Python Application");
-                djangoApp.Select();
-
-                newProjDialog.Location = TestData.GetTempPath();
-                newProjDialog.ClickOK();
-
-                // wait for new solution to load...
-                for (int i = 0; i < 100 && app.Dte.Solution.Projects.Count == 0; i++) {
-                    System.Threading.Thread.Sleep(1000);
-                }
+                var project = app.CreateProject(
+                    PythonVisualStudioApp.TemplateLanguageName,
+                    PythonVisualStudioApp.PythonApplicationTemplate,
+                    TestData.GetTempPath(),
+                    "DjangoCommandsNoDjangoApp"
+                );
+                app.SolutionExplorerTreeView.SelectProject(project);
 
                 try {
                     app.Dte.ExecuteCommand("Project.ValidateDjangoApp");
@@ -109,23 +91,13 @@ namespace DjangoUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void StartNewApp() {
             using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var newProjDialog = app.FileNewProject();
-
-                newProjDialog.FocusLanguageNode();
-
-                var djangoApp = newProjDialog.ProjectTypes.FindItem("Django Web Project");
-                djangoApp.Select();
-
-                newProjDialog.Location = TestData.GetTempPath();
-                newProjDialog.ClickOK();
-
-                // wait for new solution to load...
-                var projItem = app.SolutionExplorerTreeView.WaitForItem(
-                    "Solution '" + app.Dte.Solution.Projects.Item(1).Name + "' (1 project)",
-                    app.Dte.Solution.Projects.Item(1).Name
+                var project = app.CreateProject(
+                    PythonVisualStudioApp.TemplateLanguageName,
+                    PythonVisualStudioApp.DjangoWebProjectTemplate,
+                    TestData.GetTempPath(),
+                    "StartNewApp"
                 );
-                AutomationWrapper.Select(projItem);
-                System.Threading.Thread.Sleep(1000);
+                app.SolutionExplorerTreeView.SelectProject(project);
 
                 var newAppDialog = new NewAppDialog(app.OpenDialogWithDteExecuteCommand(AddDjangoAppCmd));
 
@@ -139,37 +111,20 @@ namespace DjangoUITests {
                     "models.py"
                 );
 
-                var appFolder = app.Dte.Solution.Projects.Item(1).ProjectItems.Item("Fob");
-                Assert.AreNotEqual(null, appFolder.Collection.Item("models.py"));
-                Assert.AreNotEqual(null, appFolder.Collection.Item("tests.py"));
-                Assert.AreNotEqual(null, appFolder.Collection.Item("views.py"));
-                Assert.AreNotEqual(null, appFolder.Collection.Item("__init__.py"));
+                var appFolder = project.ProjectItems.Item("Fob");
+                Assert.IsNotNull(appFolder.Collection.Item("models.py"));
+                Assert.IsNotNull(appFolder.Collection.Item("tests.py"));
+                Assert.IsNotNull(appFolder.Collection.Item("views.py"));
+                Assert.IsNotNull(appFolder.Collection.Item("__init__.py"));
 
+                app.SolutionExplorerTreeView.SelectProject(project);
+                app.Dte.ExecuteCommand("Project.ValidateDjangoApp");
 
-                projItem = app.SolutionExplorerTreeView.FindItem(
-                    "Solution '" + app.Dte.Solution.Projects.Item(1).Name + "' (1 project)",
-                    app.Dte.Solution.Projects.Item(1).Name
-                );
-                AutomationWrapper.Select(projItem);
-                System.Threading.Thread.Sleep(1000);
-                ThreadPool.QueueUserWorkItem(x => {
-                    try {
-                        app.Dte.ExecuteCommand("Project.ValidateDjangoApp");
-                    } catch (Exception e) {
-                        Debug.WriteLine("Failed to execute command: {0}", e);
-                    }
-                });
-
-                var console = app.GetInteractiveWindow("Django Management Console - " + app.Dte.Solution.Projects.Item(1).Name);
+                var console = app.GetInteractiveWindow("Django Management Console - " + project.Name);
                 Assert.IsNotNull(console);
                 console.WaitForTextEnd("Executing manage.py validate", "0 errors found", "The Python REPL process has exited", ">>> ");
 
-                projItem = app.SolutionExplorerTreeView.FindItem(
-                    "Solution '" + app.Dte.Solution.Projects.Item(1).Name + "' (1 project)",
-                    app.Dte.Solution.Projects.Item(1).Name
-                );
-                AutomationWrapper.Select(projItem);
-                System.Threading.Thread.Sleep(1000);
+                app.SolutionExplorerTreeView.SelectProject(project);
 
                 var newItem = new NewItemDialog(app.OpenDialogWithDteExecuteCommand("Project.AddNewItem")); 
                 AutomationWrapper.Select(newItem.ProjectTypes.FindItem("Django HTML Template"));
@@ -178,8 +133,7 @@ namespace DjangoUITests {
 
                 System.Threading.Thread.Sleep(1000);
 
-                var solutionFolder = app.Dte.Solution.Projects.Item(1).ProjectItems;
-                Assert.AreNotEqual(null, solutionFolder.Item("NewPage.html"));
+                Assert.IsNotNull(project.ProjectItems.Item("NewPage.html"));
             }
         }
 
@@ -187,27 +141,13 @@ namespace DjangoUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void StartNewAppDuplicateName() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var newProjDialog = app.FileNewProject();
-
-                newProjDialog.FocusLanguageNode();
-
-                var djangoApp = newProjDialog.ProjectTypes.FindItem("Django Web Project");
-                djangoApp.Select();
-
-                newProjDialog.Location = TestData.GetTempPath();
-                newProjDialog.ClickOK();
-
-                // wait for new solution to load...
-                for (int i = 0; i < 100 && app.Dte.Solution.Projects.Count == 0; i++) {
-                    System.Threading.Thread.Sleep(1000);
-                }
-
-                var projItem = app.SolutionExplorerTreeView.FindItem(
-                    "Solution '" + app.Dte.Solution.Projects.Item(1).Name + "' (1 project)",
-                    app.Dte.Solution.Projects.Item(1).Name
+                var project = app.CreateProject(
+                    PythonVisualStudioApp.TemplateLanguageName,
+                    PythonVisualStudioApp.DjangoWebProjectTemplate,
+                    TestData.GetTempPath(),
+                    "StartNewAppDuplicateName"
                 );
-                AutomationWrapper.Select(projItem);
-                System.Threading.Thread.Sleep(1000);
+                app.SolutionExplorerTreeView.SelectProject(project);
 
                 var newAppDialog = new NewAppDialog(app.OpenDialogWithDteExecuteCommand(AddDjangoAppCmd));
 
@@ -223,8 +163,7 @@ namespace DjangoUITests {
 
                 app.Dte.Documents.CloseAll(EnvDTE.vsSaveChanges.vsSaveChangesNo);
 
-                AutomationWrapper.Select(projItem);
-                System.Threading.Thread.Sleep(1000);
+                app.SolutionExplorerTreeView.SelectProject(project);
                 newAppDialog = new NewAppDialog(app.OpenDialogWithDteExecuteCommand(AddDjangoAppCmd));
                 newAppDialog.AppName = "Fob";
                 newAppDialog.Ok();
@@ -233,7 +172,7 @@ namespace DjangoUITests {
 
                 VisualStudioApp.CheckMessageBox(
                     TestUtilities.UI.MessageBoxButton.Ok,
-                    "A file of this name is already part of the project."
+                    "is already part of the project."
                 );
             }
         }
@@ -245,27 +184,13 @@ namespace DjangoUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void StartNewAppSameAsProjectName() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var newProjDialog = app.FileNewProject();
-
-                newProjDialog.FocusLanguageNode();
-
-                var djangoApp = newProjDialog.ProjectTypes.FindItem("Django Web Project");
-                djangoApp.Select();
-
-                newProjDialog.Location = TestData.GetTempPath();
-                newProjDialog.ClickOK();
-
-                // wait for new solution to load...
-                for (int i = 0; i < 100 && app.Dte.Solution.Projects.Count == 0; i++) {
-                    System.Threading.Thread.Sleep(1000);
-                }
-
-                var projItem = app.SolutionExplorerTreeView.FindItem(
-                    "Solution '" + app.Dte.Solution.Projects.Item(1).Name + "' (1 project)",
-                    app.Dte.Solution.Projects.Item(1).Name
+                var project = app.CreateProject(
+                    PythonVisualStudioApp.TemplateLanguageName,
+                    PythonVisualStudioApp.DjangoWebProjectTemplate,
+                    TestData.GetTempPath(),
+                    "StartNewAppSameAsProjectName"
                 );
-                AutomationWrapper.Select(projItem);
-                System.Threading.Thread.Sleep(1000);
+                app.SolutionExplorerTreeView.SelectProject(project);
 
                 var newAppDialog = new NewAppDialog(app.OpenDialogWithDteExecuteCommand(AddDjangoAppCmd));
                 newAppDialog.AppName = app.Dte.Solution.Projects.Item(1).Name;
@@ -283,47 +208,29 @@ namespace DjangoUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void DebugProjectProperties() {
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var newProjDialog = app.FileNewProject();
-
-                newProjDialog.FocusLanguageNode();
-
-                var djangoApp = newProjDialog.ProjectTypes.FindItem("Django Web Project");
-                djangoApp.Select();
-
-                newProjDialog.Location = TestData.GetTempPath();
-                newProjDialog.ClickOK();
-
-                // wait for new solution to load...
-                for (int i = 0; i < 100 && app.Dte.Solution.Projects.Count == 0; i++) {
-                    System.Threading.Thread.Sleep(1000);
-                }
-
-                var projItem = app.SolutionExplorerTreeView.FindItem(
-                    "Solution '" + app.Dte.Solution.Projects.Item(1).Name + "' (1 project)",
-                    app.Dte.Solution.Projects.Item(1).Name
+            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.CreateProject(
+                    PythonVisualStudioApp.TemplateLanguageName,
+                    PythonVisualStudioApp.DjangoWebProjectTemplate,
+                    TestData.GetTempPath(),
+                    "DebugProjectProperties"
                 );
-                AutomationWrapper.Select(projItem);
+                app.SolutionExplorerTreeView.SelectProject(project);
 
                 app.Dte.ExecuteCommand("ClassViewContextMenus.ClassViewMultiselectProjectreferencesItems.Properties");
-                EnvDTE.Window window = null;
-                for (int i = 1; i <= app.Dte.Windows.Count; i++) {
-                    var curWindow = app.Dte.Windows.Item(i);
-                    if (curWindow.Caption == app.Dte.Solution.Projects.Item(1).Name) {
-                        Console.WriteLine("Found window!");
-                        window = curWindow;
-                        break;
-                    }
-                }
+                var window = app.Dte.Windows.OfType<EnvDTE.Window>().FirstOrDefault(w => w.Caption == project.Name);
                 Assert.IsNotNull(window);
+
                 window.Activate();
                 var hwnd = window.HWnd;
-                var projProps = new ProjectPropertiesWindow(AutomationElement.FromHandle(new IntPtr(hwnd)));
+                var projProps = new ProjectPropertiesWindow(new IntPtr(hwnd));
+
                 var debugPage = projProps["Debug"];
                 Assert.IsNotNull(debugPage);
 
                 var dbgProps = new PythonProjectDebugProperties(debugPage);
-                Assert.AreEqual("Django launcher", dbgProps.LaunchMode);
+                Assert.AreEqual("Django Web launcher", dbgProps.LaunchMode);
+                dbgProps.AssertMatchesProject(project.GetPythonProject());
             }
         }
     }

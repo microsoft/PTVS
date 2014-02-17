@@ -89,5 +89,16 @@ namespace TestUtilities.UI {
                 Assert.IsNotNull(item, msg);
             }
         }
+
+        public void SelectProject(EnvDTE.Project project) {
+            var slnName = string.Format("Solution '{0}' ({1} project{2})",
+                Path.GetFileNameWithoutExtension(project.DTE.Solution.FullName),
+                project.DTE.Solution.Projects.Count,
+                project.DTE.Solution.Projects.Count == 1 ? "" : "s"
+            );
+            var item = WaitForItem(slnName, project.Name).AsWrapper();
+            Assert.IsNotNull(item);
+            item.Select();
+        }
     }
 }

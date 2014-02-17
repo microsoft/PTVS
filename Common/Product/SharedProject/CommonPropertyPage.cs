@@ -49,6 +49,16 @@ namespace Microsoft.VisualStudioTools.Project {
             }
         }
 
+        protected void SetProjectProperty(string propertyName, string propertyValue) {
+            // SetProjectProperty's implementation will check whether the value
+            // has changed.
+            Project.SetProjectProperty(propertyName, propertyValue);
+        }
+
+        protected string GetProjectProperty(string propertyName) {
+            return Project.GetUnevaluatedProperty(propertyName);
+        }
+
         public bool Loading {
             get {
                 return _loading;

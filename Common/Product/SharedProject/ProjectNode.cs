@@ -1950,35 +1950,26 @@ namespace Microsoft.VisualStudioTools.Project
             Utilities.ArgumentNotNull("propertyName", propertyName);
             UIThread.Instance.MustBeCalledFromUIThread();
 
-            string oldValue = null;
-            ProjectPropertyInstance oldProp = GetMsBuildProperty(propertyName, true);
-            if (oldProp != null)
-                oldValue = oldProp.EvaluatedValue;
-            if (propertyValue == null)
+            var oldValue = GetUnevaluatedProperty(propertyName) ?? string.Empty;
+            propertyValue = propertyValue ?? string.Empty;
+
+            if (oldValue.Equals(propertyValue, StringComparison.Ordinal))
             {
-                // if property already null, do nothing
-                if (oldValue == null)
-                    return;
-                // otherwise, set it to empty
-                propertyValue = String.Empty;
+                // Property is unchanged or unspecified, so don't set it.
+                return;
             }
 
-            // Only do the work if this is different to what we had before
-            if (String.Compare(oldValue, propertyValue, StringComparison.Ordinal) != 0)
+            // Check out the project file.
+            if (!this.QueryEditProjectFile(false))
             {
-                // Check out the project file.
-                if (!this.QueryEditProjectFile(false))
-                {
-                    throw Marshal.GetExceptionForHR(VSConstants.OLE_E_PROMPTSAVECANCELLED);
-                }
-
-                var newProp = this.buildProject.SetProperty(propertyName, propertyValue);
-                RaiseProjectPropertyChanged(propertyName, oldValue, propertyValue);
-
-                // property cache will need to be updated
-                this.currentConfig = null;
+                throw Marshal.GetExceptionForHR(VSConstants.OLE_E_PROMPTSAVECANCELLED);
             }
-            return;
+
+            var newProp = this.buildProject.SetProperty(propertyName, propertyValue);
+            RaiseProjectPropertyChanged(propertyName, oldValue, propertyValue);
+
+            // property cache will need to be updated
+            this.currentConfig = null;
         }
 
 

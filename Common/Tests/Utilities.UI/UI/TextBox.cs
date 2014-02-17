@@ -26,7 +26,11 @@ namespace TestUtilities.UI
         {
             get
             {
-                return (((TextPattern)Element.GetCurrentPattern(TextPattern.Pattern)).DocumentRange.GetText(-1).ToString());
+                return Element.GetTextPattern().DocumentRange.GetText(-1);
+            }
+            set
+            {
+                Element.GetValuePattern().SetValue(value);
             }
         }
     }

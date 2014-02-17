@@ -37,11 +37,12 @@ namespace Microsoft.PythonTools.Project {
                 return base.Project;
             }
             set {
+                if (value == null && base.Project != null) {
+                    ((PythonProjectNode)base.Project).DebugPropertyPage = null;
+                }
                 base.Project = value;
                 if (value != null) {
                     ((PythonProjectNode)value).DebugPropertyPage = this;
-                } else {
-                    ((PythonProjectNode)value).DebugPropertyPage = null;
                 }
             }
         }
