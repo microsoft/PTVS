@@ -61,6 +61,15 @@ namespace Microsoft.PythonTools.Django {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to &amp;Collect Static Files.
+        /// </summary>
+        internal static string CollectStaticLabel {
+            get {
+                return ResourceManager.GetString("CollectStaticLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Django Management Console - {ProjectName}.
         /// </summary>
         internal static string CommandReplTitle {

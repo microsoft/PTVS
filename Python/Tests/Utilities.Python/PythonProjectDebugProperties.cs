@@ -82,11 +82,11 @@ namespace TestUtilities.UI.Python {
             }
         }
 
-        private static string PropertyValue(PythonProjectNode project, string property, string defaultValue = "") {
+        private static string PropertyValue(IPythonProject project, string property, string defaultValue = "") {
             return UIThread.Instance.RunSync(() => project.GetUnevaluatedProperty(property) ?? defaultValue);
         }
 
-        public void AssertMatchesProject(PythonProjectNode project) {
+        public void AssertMatchesProject(IPythonProject project) {
             Assert.AreEqual(PropertyValue(project, PythonConstants.SearchPathSetting), SearchPaths, "SearchPaths does not match");
             Assert.AreEqual(PropertyValue(project, PythonConstants.CommandLineArgumentsSetting), CommandLineArguments, "CommandLineArguments does not match");
             Assert.AreEqual(PropertyValue(project, PythonConstants.InterpreterArgumentsSetting), InterpreterArguments, "InterpreterArguments does not match");

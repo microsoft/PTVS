@@ -13,6 +13,7 @@
     <SearchPath></SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <LaunchProvider>Django launcher</LaunchProvider>
+    <DjangoSettingsModule>$safeprojectname$.settings</DjangoSettingsModule>
     <OutputPath>.</OutputPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">

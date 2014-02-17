@@ -15,8 +15,11 @@
 using System;
 using System.Linq;
 using System.Runtime.InteropServices;
-using Microsoft.PythonTools;
+using Microsoft.PythonTools.Django;
+using Microsoft.PythonTools.Interpreter;
 using Microsoft.TC.TestHostAdapters;
+using Microsoft.VisualStudio.ComponentModelHost;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 using TestUtilities.Python;
@@ -53,6 +56,53 @@ namespace DjangoUITests {
                 Assert.IsNotNull(folder.ProjectItems.Item("wsgi.py"));
             }
         }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void NewDjangoProjectSafeProjectName() {
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.CreateProject(
+                    PythonVisualStudioApp.TemplateLanguageName,
+                    PythonVisualStudioApp.DjangoWebProjectTemplate,
+                    TestData.GetTempPath(),
+                    "Django Project $100"
+                );
+
+                var folder = project.ProjectItems.Item("Django_Project__100");
+                Assert.IsNotNull(project.ProjectItems.Item("manage.py"));
+                Assert.IsNotNull(folder.ProjectItems.Item("settings.py"));
+                Assert.IsNotNull(folder.ProjectItems.Item("urls.py"));
+                Assert.IsNotNull(folder.ProjectItems.Item("__init__.py"));
+                Assert.IsNotNull(folder.ProjectItems.Item("wsgi.py"));
+                var settings = ThreadHelper.Generic.Invoke(() => project.GetPythonProject().GetProperty("DjangoSettingsModule"));
+                Assert.AreEqual("Django_Project__100.settings", settings);
+            }
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void DjangoCollectStaticFilesCommand() {
+            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var service = app.GetService<IComponentModel>(typeof(SComponentModel)).GetService<IInterpreterOptionsService>();
+
+                var envWithDjango = service.Interpreters.LastOrDefault(env => env.FindModules("django").Contains("django"));
+                if (envWithDjango == null) {
+                    Assert.Inconclusive("No available environments have Django installed");
+                }
+
+                using (var dis = new DefaultInterpreterSetter(envWithDjango)) {
+                    var project = app.OpenProject("TestData\\DjangoApplication.sln");
+                    app.SolutionExplorerTreeView.SelectProject(project);
+
+                    app.Dte.ExecuteCommand("Project.CollectStaticFiles");
+
+                    var console = app.GetInteractiveWindow("Django Management Console - " + project.Name);
+                    Assert.IsNotNull(console);
+                    console.WaitForTextEnd("0 static files copied.", "The Python REPL process has exited", ">>> ");
+                }
+            }
+        }
+
 
         /// <summary>
         /// http://pytools.codeplex.com/workitem/778
@@ -118,7 +168,7 @@ namespace DjangoUITests {
                 Assert.IsNotNull(appFolder.Collection.Item("__init__.py"));
 
                 app.SolutionExplorerTreeView.SelectProject(project);
-                app.Dte.ExecuteCommand("Project.ValidateDjangoApp");
+                        app.Dte.ExecuteCommand("Project.ValidateDjangoApp");
 
                 var console = app.GetInteractiveWindow("Django Management Console - " + project.Name);
                 Assert.IsNotNull(console);

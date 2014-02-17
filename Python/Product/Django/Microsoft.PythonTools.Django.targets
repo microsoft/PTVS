@@ -59,7 +59,7 @@
        ensure they are served directly.
    -->
   <Target Name="ResolveStaticUrlSetting" DependsOnTargets="ResolvePythonInterpreterPath;ResolveQualifiedProjectHome">
-    <RunPythonCommand Target="from $(MSBuildProjectName) import settings; print(settings.STATIC_URL)"
+    <RunPythonCommand Target="import $(DjangoSettingsModule) as settings; print(settings.STATIC_URL)"
                       TargetType="code"
                       ExecuteIn="none"
                       WorkingDirectory="$(QualifiedProjectHome)"
@@ -90,7 +90,7 @@
        user has provided their own value.
   -->
   <Target Name="DetectStaticRootPath" DependsOnTargets="ResolvePythonInterpreterPath;ResolveQualifiedProjectHome">
-    <RunPythonCommand Target="from $(MSBuildProjectName) import settings; print(settings.STATIC_ROOT or '')"
+    <RunPythonCommand Target="import $(DjangoSettingsModule) as settings; print(settings.STATIC_ROOT or '')"
                       TargetType="code"
                       ExecuteIn="none"
                       WorkingDirectory="$(QualifiedProjectHome)"
@@ -138,7 +138,7 @@
   -->
 
   <PropertyGroup>
-    <PythonCommands>DjangoShellCommand;DjangoValidateAppCommand;DjangoSyncDbCommand;$(PythonCommands)</PythonCommands>
+    <PythonCommands>DjangoShellCommand;DjangoValidateAppCommand;DjangoSyncDbCommand;DjangoCollectStaticCommand;$(PythonCommands)</PythonCommands>
   </PropertyGroup>
 
   <Target Name="SetStartupFileOrManagePy" DependsOnTargets="ResolveStartupPath" Outputs="$(StartupFileOrManagePy)">
@@ -152,7 +152,7 @@
   <Target Name="DjangoShellCommand"
           Label="resource:Microsoft.PythonTools.Django;Microsoft.PythonTools.Django.Resources;OpenDjangoShellLabel"
           Returns="@(Commands)">
-    <CreatePythonCommandItem Target="import django; print('Starting Django %s shell' % django.get_version())"
+    <CreatePythonCommandItem Target="import django, $(DjangoSettingsModule); print('Starting Django %s shell' % django.get_version())"
                              TargetType="code"
                              Arguments=""
                              Environment="DJANGO_SETTINGS_MODULE=$(DjangoSettingsModule)"
@@ -181,6 +181,19 @@
     <CreatePythonCommandItem Target="$(StartupFileOrManagePy)"
                              TargetType="script"
                              Arguments="syncdb"
+                             Environment="DJANGO_SETTINGS_MODULE=$(DjangoSettingsModule)"
+                             ExecuteIn="Repl:resource:Microsoft.PythonTools.Django;Microsoft.PythonTools.Django.Resources;CommandReplTitle">
+      <Output TaskParameter="Command" ItemName="Commands" />
+    </CreatePythonCommandItem>
+  </Target>
+
+  <Target Name="DjangoCollectStaticCommand"
+          Label="resource:Microsoft.PythonTools.Django;Microsoft.PythonTools.Django.Resources;CollectStaticLabel"
+          DependsOnTargets="SetStartupFileOrManagePy"
+          Returns="@(Commands)">
+    <CreatePythonCommandItem Target="$(StartupFileOrManagePy)"
+                             TargetType="script"
+                             Arguments="collectstatic --noinput"
                              Environment="DJANGO_SETTINGS_MODULE=$(DjangoSettingsModule)"
                              ExecuteIn="Repl:resource:Microsoft.PythonTools.Django;Microsoft.PythonTools.Django.Resources;CommandReplTitle">
       <Output TaskParameter="Command" ItemName="Commands" />
