@@ -101,20 +101,30 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                     p.WaitForExit();
                 }
 
-                using (var solution = solutionFile.ToVs()) {
-                    Assert.IsNotNull(solution.WaitForItem("ShowAllFilesSymLink", "SymFolder"));
+                try {
+                    using (var solution = solutionFile.ToVs()) {
+                        Assert.IsNotNull(solution.WaitForItem("ShowAllFilesSymLink", "SymFolder"));
 
-                    // https://pytools.codeplex.com/workitem/1150 - infinite links, not displayed
-                    Assert.IsNull(solution.FindItem("ShowAllFilesSymLink", "SubFolder", "Infinite"));
+                        // https://pytools.codeplex.com/workitem/1150 - infinite links, not displayed
+                        Assert.IsNull(solution.FindItem("ShowAllFilesSymLink", "SubFolder", "Infinite"));
 
-                    File.WriteAllText(
-                        Path.Combine(solutionFile.Directory, @"ShowAllFilesSymLink\SubFolder\Foo.txt"),
-                        "Hi!"
-                    );
+                        File.WriteAllText(
+                            Path.Combine(solutionFile.Directory, @"ShowAllFilesSymLink\SubFolder\Foo.txt"),
+                            "Hi!"
+                        );
 
-                    // https://pytools.codeplex.com/workitem/1152 - watching the sym link folder
-                    Assert.IsNotNull(solution.WaitForItem("ShowAllFilesSymLink", "SubFolder", "Foo.txt"));
-                    Assert.IsNotNull(solution.WaitForItem("ShowAllFilesSymLink", "SymFolder", "Foo.txt"));
+                        // https://pytools.codeplex.com/workitem/1152 - watching the sym link folder
+                        Assert.IsNotNull(solution.WaitForItem("ShowAllFilesSymLink", "SubFolder", "Foo.txt"));
+                        Assert.IsNotNull(solution.WaitForItem("ShowAllFilesSymLink", "SymFolder", "Foo.txt"));
+                    }
+                } finally {
+                    using (System.Diagnostics.Process p = System.Diagnostics.Process.Start("cmd.exe",
+                        String.Format("/c rmdir \"{0}\" \"{1}\"",
+                            Path.Combine(solutionFile.Directory, @"ShowAllFilesSymLink\SymFolder"),
+                            Path.Combine(solutionFile.Directory, @"ShowAllFilesSymLink\SubFolder\Infinite")
+                        ))) {
+                        p.WaitForExit();
+                    }
                 }
             }
         }
