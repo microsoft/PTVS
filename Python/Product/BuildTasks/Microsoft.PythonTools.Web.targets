@@ -160,11 +160,17 @@
 
     <PropertyGroup Condition="'$(PythonPrefixSubPath)' == ''">
       <VirtualEnvEnabled>false</VirtualEnvEnabled>
+      <VirtualEnvIsVenv>false</VirtualEnvIsVenv>
     </PropertyGroup>
     <PropertyGroup Condition="'$(PythonPrefixSubPath)' != ''">
       <VirtualEnvEnabled>true</VirtualEnvEnabled>
+      <VirtualEnvIsVEnv Condition="Exists('$(PythonPrefixSubPath)Lib\orig-prefix.txt')">false</VirtualEnvIsVEnv>
+      <VirtualEnvIsVEnv Condition="Exists('$(PythonPrefixSubPath)pyvenv.cfg')">true</VirtualEnvIsVEnv>
       <PythonPrefixSubPath Condition="!HasTrailingSlash('$(PythonPrefixSubPath)')">$(PythonPrefixSubPath)\</PythonPrefixSubPath>
     </PropertyGroup>
+
+    <Error Text="A virtual environment is active, but cannot be resolved (orig-prefix.txt or pyvenv.cfg files were not found)."
+           Condition="$(VirtualEnvEnabled) and '$(VirtualEnvIsVenv)' == ''" />
   </Target>
 
   <!-- *************************************************************************
@@ -295,10 +301,18 @@
       <DeployedVirtualEnvPath Condition="!HasTrailingSlash('$(DeployedVirtualEnvPath)')">$(DeployedVirtualEnvPath)\</DeployedVirtualEnvPath>
       <WsgiAppSettings>
         <![CDATA[$(WsgiAppSettings)
-    <add key="WSGI_ALT_VIRTUALENV_HANDLER" value="$(PythonWsgiHandler)"/>
+    <add key="WSGI_ALT_VIRTUALENV_HANDLER" value="$(PythonWsgiHandler)"/>]]>
+      </WsgiAppSettings>
+      <WsgiAppSettings Condition="!$(VirtualEnvIsVEnv)">
+        <![CDATA[$(WsgiAppSettings)
     <add key="WSGI_ALT_VIRTUALENV_ACTIVATE_THIS" value="$(DeployedVirtualEnvPath)$(PythonPrefixSubPath)Scripts\activate_this.py"/>]]>
       </WsgiAppSettings>
-      <PythonWsgiHandler>ptvs_virtualenv_proxy.handler</PythonWsgiHandler>
+      <WsgiAppSettings Condition="$(VirtualEnvIsVEnv)">
+        <![CDATA[$(WsgiAppSettings)
+    <add key="WSGI_ALT_VIRTUALENV_ACTIVATE_THIS" value="$(DeployedVirtualEnvPath)$(PythonPrefixSubPath)$([msbuild]::MakeRelative($(PythonPrefixPath), $(PythonInterpreterPath)))"/>]]>
+      </WsgiAppSettings>
+      <PythonWsgiHandler Condition="!$(VirtualEnvIsVEnv)">ptvs_virtualenv_proxy.get_virtualenv_handler()</PythonWsgiHandler>
+      <PythonWsgiHandler Condition="$(VirtualEnvIsVEnv)">ptvs_virtualenv_proxy.get_venv_handler()</PythonWsgiHandler>
     </PropertyGroup>
 
     <!-- ptvs_virtualenv_proxy.py runs virtualenv's activate_this.py and then
@@ -318,7 +332,7 @@
 
   <Target Name="_CollectVirtualEnvFiles"
           DependsOnTargets="ResolveVirtualEnvSettings"
-          Condition="$(VirtualEnvEnabled) and Exists('$(PythonPrefixSubPath)Lib\orig-prefix.txt')">
+          Condition="!$(VirtualEnvIsVenv)">
     <Error Text="Should not be invoked during up-to-date check" Condition="$(BuildingForUpToDateCheck)" />
 
     <PropertyGroup>
@@ -336,6 +350,8 @@
                       Condition="'$(_ExistingPrefixText)' != '$(TargetPythonPrefix)' "/>
 
     <ItemGroup>
+      <FileWrites Include="$(OrigPrefixPath)" />
+      
       <!-- Include all the virtual env files (except cached bytecode and
            completion DBs), and replace the orig-prefix.txt file with our
            rewritten version.
@@ -362,8 +378,51 @@
 
   <Target Name="_CollectVEnvFiles"
           DependsOnTargets="ResolvePythonInterpreterPath"
-          Condition="$(VirtualEnvEnabled) and Exists('$(PythonPrefixSubPath)pyvenv.cfg')">
-    <Error Text="venv environments are not yet supported. Please use the virtualenv package to create a virtual environment." />
+          Condition="$(VirtualEnvIsVenv)">
+    <Error Text="Should not be invoked during up-to-date check" Condition="$(BuildingForUpToDateCheck)" />
+
+    <PropertyGroup>
+      <PyVEnvCfg>$(IntermediateOutputPath)deployment-updated-pyvenv.cfg</PyVEnvCfg>
+      <_ExistingCfgText Condition="Exists($(PyVEnvCfg))">$([System.IO.File]::ReadAllText($(PyVEnvCfg)))</_ExistingCfgText>
+      
+      <TargetPythonPrefix Condition="$(TargetPythonPrefix) == ''">D:\Python$(PythonMajorVersion)$(PythonMinorVersion)</TargetPythonPrefix>
+      <_PyVEnvCfgText>$([System.Text.RegularExpressions.Regex]::Replace(
+        $([System.IO.File]::ReadAllText(`$(PythonPrefixSubPath)pyvenv.cfg`)),
+        `(home\s*=\s*)[^\r\n]+`,
+        `$1$(TargetPythonPrefix)`)
+      )</_PyVEnvCfgText>
+    </PropertyGroup>
+
+    <WriteLinesToFile Lines="$(_PyVEnvCfgText)"
+                      File="$(PyVEnvCfg)"
+                      Overwrite="true"
+                      Condition="'$(_ExistingCfgText)' != '$(_PyVEnvCfgText)' "/>
+
+    <ItemGroup>
+      <FileWrites Include="$(PyVEnvCfg)" />
+      
+      <!-- Include all the virtual env files (except cached bytecode and
+           completion DBs), and replace the orig-prefix.txt file with our
+           rewritten version.
+      -->
+      <_VirtualEnvFilesWithoutMetadata Include="$(PythonPrefixSubPath)**\*"
+        Exclude="$(PythonPrefixSubPath)pyvenv.cfg;
+                 $(PythonPrefixSubPath).ptvs\**\*;
+                 $(PythonPrefixSubPath)**\*.pyc;
+                 $(PythonPrefixSubPath)**\*.pyo" />
+
+      <FilesForPackagingFromProject Include="@(_VirtualEnvFilesWithoutMetadata)">
+        <DestinationRelativePath>$(PythonPrefixSubPath)%(RecursiveDir)%(Filename)%(Extension)</DestinationRelativePath>
+        <FromTarget>CollectVEnvFiles</FromTarget>
+        <Category>Run</Category>
+      </FilesForPackagingFromProject>
+
+      <FilesForPackagingFromProject Include="$(PyVEnvCfg)">
+        <DestinationRelativePath>$(PythonPrefixSubPath)pyvenv.cfg</DestinationRelativePath>
+        <FromTarget>CollectVEnvFiles</FromTarget>
+        <Category>Run</Category>
+      </FilesForPackagingFromProject>
+    </ItemGroup>
   </Target>
 
   <!-- *************************************************************************

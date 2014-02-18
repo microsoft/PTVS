@@ -77,8 +77,29 @@ activate_this = os.getenv('WSGI_ALT_VIRTUALENV_ACTIVATE_THIS')
 if not activate_this:
     raise Exception('WSGI_ALT_VIRTUALENV_ACTIVATE_THIS is not set')
 
-log('Activating virtualenv with %s\n' % activate_this)
-execfile(activate_this, dict(__file__=activate_this))
-log('Getting handler %s\n' % os.getenv('WSGI_ALT_VIRTUALENV_HANDLER'))
-handler = get_wsgi_handler(os.getenv('WSGI_ALT_VIRTUALENV_HANDLER'))
-log('Got handler: %r\n' % handler)
+def get_virtualenv_handler():
+    log('Activating virtualenv with %s\n' % activate_this)
+    execfile(activate_this, dict(__file__=activate_this))
+
+    log('Getting handler %s\n' % os.getenv('WSGI_ALT_VIRTUALENV_HANDLER'))
+    handler = get_wsgi_handler(os.getenv('WSGI_ALT_VIRTUALENV_HANDLER'))
+    log('Got handler: %r\n' % handler)
+    return handler
+
+def get_venv_handler():
+    log('Activating venv with executable at %s\n' % activate_this)
+    import site
+    sys.executable = activate_this
+    old_sys_path, sys.path = sys.path, []
+    
+    site.main()
+    
+    sys.path.insert(0, '')
+    for item in old_sys_path:
+        if item not in sys.path:
+            sys.path.append(item)
+
+    log('Getting handler %s\n' % os.getenv('WSGI_ALT_VIRTUALENV_HANDLER'))
+    handler = get_wsgi_handler(os.getenv('WSGI_ALT_VIRTUALENV_HANDLER'))
+    log('Got handler: %r\n' % handler)
+    return handler

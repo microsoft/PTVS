@@ -94,10 +94,10 @@ namespace Microsoft.PythonTools.Interpreters {
             if (File.Exists(cfgFile)) {
                 try {
                     var lines = File.ReadAllLines(cfgFile);
-                    return lines
+                    return !lines
                         .Select(line => Regex.Match(
                             line,
-                            "^include-system-site-packages\\s*=\\s*true",
+                            "^include-system-site-packages\\s*=\\s*false",
                             RegexOptions.IgnoreCase
                         ))
                         .Any(m => m != null && m.Success);
