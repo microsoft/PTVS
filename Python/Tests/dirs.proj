@@ -5,6 +5,7 @@
   <ItemGroup>
     <ProjectFile Include="$(BuildRoot)\Common\Tests\dirs.proj"/>
     <ProjectFile Include="Analysis\AnalysisTests.csproj" />
+    <ProjectFile Include="AzurePublishingUITests\AzurePublishingUITests.csproj" />
     <ProjectFile Include="DebuggerTests\DebuggerTests.csproj" />
     <ProjectFile Include="DebuggerUITests\DebuggerUITests.csproj" />
     <ProjectFile Include="Django\DjangoTests.csproj" />

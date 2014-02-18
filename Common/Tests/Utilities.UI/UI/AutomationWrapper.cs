@@ -333,6 +333,17 @@ namespace TestUtilities.UI {
             Invoke(Element);
         }
 
+        public static void WaitFor<T>(T obj, Predicate<T> condition, int timeout = 100000) where T : AutomationWrapper {
+            for (int i = 0; i < timeout; i += 100) {
+                if (condition(obj))
+                    return;
+
+                Thread.Sleep(100);
+            }
+
+            throw new TimeoutException(string.Format("Timeout waiting for element '{0}'", obj.Element.Current.Name));
+        }
+
         public void WaitForInputIdle() {
             object pattern;
             if (Element.TryGetCurrentPattern(WindowPattern.Pattern, out pattern)) {

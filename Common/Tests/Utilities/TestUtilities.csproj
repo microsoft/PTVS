@@ -56,6 +56,9 @@
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Management.Automation, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+    </Reference>
     <Reference Include="System.Runtime.Remoting" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xaml" />
@@ -90,6 +93,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AssertListener.cs" />
+    <Compile Include="WebDownloadUtility.cs" />
     <Compile Include="Classification.cs" />
     <Compile Include="IWarningLogger.cs" />
     <Compile Include="AssertUtil.cs">
@@ -157,6 +161,7 @@
     <Compile Include="SharedProject\SolutionFolder.cs" />
     <Compile Include="SharedProject\ImportDefinition.cs" />
     <Compile Include="SharedProject\TargetDefinition.cs" />
+    <Compile Include="AzureUtility.cs" />
     <Compile Include="TestData.cs" />
     <Compile Include="TestExtensions.cs" />
     <Compile Include="TestMethod.cs" />

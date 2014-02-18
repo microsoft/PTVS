@@ -93,14 +93,22 @@
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="UI\AddExistingItemDialog.cs" />
+    <Compile Include="UI\AutomationDialog.cs" />
     <Compile Include="UI\AddReferenceDialog.cs" />
     <Compile Include="UI\AttachToProcessDialog.cs" />
     <Compile Include="UI\AutomationWrapper.cs" />
+    <Compile Include="UI\ListBox.cs" />
     <Compile Include="UI\Button.cs" />
     <Compile Include="UI\CheckBox.cs" />
     <Compile Include="UI\CheckListView.cs" />
     <Compile Include="UI\ChooseLocationDialog.cs" />
     <Compile Include="UI\ComboBox.cs" />
+    <Compile Include="UI\ListBoxItem.cs" />
+    <Compile Include="UI\AzureWebSiteImportPublishSettingsDialog.cs" />
+    <Compile Include="UI\AzureWebSiteCreateDialog.cs" />
+    <Compile Include="UI\AzureWebSiteImportSubscriptionDialog.cs" />
+    <Compile Include="UI\AzureWebSiteManageSubscriptionsDialog.cs" />
+    <Compile Include="UI\AzureWebSitePublishDialog.cs" />
     <Compile Include="UI\OpenProjectDialog.cs" />
     <Compile Include="UI\CredentialsDialog.cs" />
     <Compile Include="UI\DetailPane.cs" />

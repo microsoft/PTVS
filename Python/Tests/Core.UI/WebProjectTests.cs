@@ -87,29 +87,9 @@ namespace PythonToolsUITests {
 
                 Assert.IsInstanceOfType(pyProj.GetLauncher(), typeof(PythonWebLauncher));
 
-                var model = app.GetService<IComponentModel>(typeof(SComponentModel));
-                var service = model.GetService<IInterpreterOptionsService>();
-                var task = pyProj.CreateOrAddVirtualEnvironment(
-                    service,
-                    true,
-                    Path.Combine(pyProj.ProjectHome, "env"),
-                    service.FindInterpreter(PythonPaths.CPythonGuid, pythonVersion),
-                    pythonVersion == "3.3"
-                );
-                task.Wait();
-                var factory = task.Result;
-                Assert.IsTrue(factory.Id == pyProj.GetInterpreterFactory().Id);
+                var factory = CreateVirtualEnvironment(pythonVersion, app, pyProj);
 
-                // Ensure pip is installed so we don't have to click through the
-                // dialog.
-                Pip.InstallPip(factory, false).Wait();
-
-                UIThread.Instance.RunSync(() => {
-                    var cmd = ((IPythonProject2)pyProj).FindCommand("PythonUpgradeWebFrameworkCommand");
-                    cmd.Execute(null);
-                });
-
-                Assert.AreEqual(1, InterpreterExt.FindModules(factory, moduleName).Count);
+                InstallWebFramework(moduleName, pyProj, factory);
 
                 // Wait for analysis to complete so we don't have too many
                 // python.exe processes floating around.
@@ -129,6 +109,7 @@ namespace PythonToolsUITests {
             }
         }
 
+
         private static void LaunchAndVerifyDebug(VisualStudioApp app, int port, string textInResponse) {
             app.Dte.Solution.SolutionBuild.Build(true);
             app.Dte.Debugger.Go(false);
@@ -143,10 +124,7 @@ namespace PythonToolsUITests {
                     Thread.Sleep(300);
                 }
 
-                var req = HttpWebRequest.CreateHttp(new Uri(string.Format("http://localhost:{0}/", port)));
-                using (var resp = req.GetResponse()) {
-                    text = new StreamReader(resp.GetResponseStream()).ReadToEnd();
-                }
+                text = WebDownloadUtility.GetString(new Uri(string.Format("http://localhost:{0}/", port)));
             } finally {
                 app.Dte.Debugger.Stop();
             }
@@ -243,6 +221,35 @@ namespace PythonToolsUITests {
                 --i) {
                 Thread.Sleep(500);
             }
+        }
+
+        internal static IPythonInterpreterFactory CreateVirtualEnvironment(string pythonVersion, VisualStudioApp app, PythonProjectNode pyProj) {
+            var model = app.GetService<IComponentModel>(typeof(SComponentModel));
+            var service = model.GetService<IInterpreterOptionsService>();
+            var task = pyProj.CreateOrAddVirtualEnvironment(
+                service,
+                true,
+                Path.Combine(pyProj.ProjectHome, "env"),
+                service.FindInterpreter(PythonPaths.CPythonGuid, pythonVersion),
+                pythonVersion == "3.3"
+            );
+            task.Wait();
+            var factory = task.Result;
+            Assert.IsTrue(factory.Id == pyProj.GetInterpreterFactory().Id);
+            return factory;
+        }
+
+        internal static void InstallWebFramework(string moduleName, PythonProjectNode pyProj, IPythonInterpreterFactory factory) {
+            // Ensure pip is installed so we don't have to click through the
+            // dialog.
+            Pip.InstallPip(factory, false).Wait();
+
+            UIThread.Instance.RunSync(() => {
+                var cmd = ((IPythonProject2)pyProj).FindCommand("PythonUpgradeWebFrameworkCommand");
+                cmd.Execute(null);
+            });
+
+            Assert.AreEqual(1, InterpreterExt.FindModules(factory, moduleName).Count);
         }
 
         #endregion

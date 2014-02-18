@@ -266,6 +266,17 @@ namespace TestUtilities.UI {
             return ((DTE2)VsIdeTestHostContext.Dte).ToolWindows.OutputWindow.OutputWindowPanes.Item(name);
         }
 
+        public void WaitForBuildComplete(int timeout) {
+            for (int i = 0; i < timeout; i += 500) {
+                if (Dte.Solution.SolutionBuild.BuildState == vsBuildState.vsBuildStateDone) {
+                    return;
+                }
+                System.Threading.Thread.Sleep(500);
+            }
+
+            throw new TimeoutException("Timeout waiting for build to complete");
+        }
+
         public string GetOutputWindowText(string name) {
             var window = GetOutputWindow(name);
             var doc = window.TextDocument;
@@ -273,8 +284,8 @@ namespace TestUtilities.UI {
             return doc.Selection.Text;
         }
 
-        public void WaitForOutputWindowText(string name, string containsText) {
-            for (int i = 0; i < 10; i++) {
+        public void WaitForOutputWindowText(string name, string containsText, int timeout=5000) {
+            for (int i = 0; i < timeout; i += 500) {
                 var text = GetOutputWindowText(name);
                 if (text.Contains(containsText)) {
                     return;
@@ -353,6 +364,13 @@ namespace TestUtilities.UI {
             return WaitForDialogToReplace(originalHwnd, null);
         }
 
+        /// <summary>
+        /// Waits for a modal dialog to take over a given window and returns the HWND for the new dialog.
+        /// </summary>
+        /// <returns>An IntPtr which should be interpreted as an HWND</returns>        
+        public IntPtr WaitForDialogToReplace(AutomationElement element) {
+            return WaitForDialogToReplace(new IntPtr(element.Current.NativeWindowHandle), null);
+        }
 
         private IntPtr WaitForDialogToReplace(IntPtr originalHwnd, Task task) {
             IVsUIShell uiShell = GetService<IVsUIShell>(typeof(IVsUIShell));
@@ -712,6 +730,43 @@ namespace TestUtilities.UI {
 
         internal void Invoke(Action action) {
             ThreadHelper.Generic.Invoke(action);
+        }
+
+        public Uri PublishToAzureWebSite(string siteName, string subscriptionPublishSettingsFilePath) {
+            using (var publishDialog = AzureWebSitePublishDialog.Open(this)) {
+                using (var importSettingsDialog = publishDialog.ClickImportSettings()) {
+                    importSettingsDialog.ClickImportFromWindowsAzureWebSite();
+
+                    using (var manageSubscriptionsDialog = importSettingsDialog.ClickImportOrManageSubscriptions()) {
+                        manageSubscriptionsDialog.ClickCertificates();
+
+                        while (manageSubscriptionsDialog.SubscriptionsListBox.Count > 0) {
+                            manageSubscriptionsDialog.SubscriptionsListBox[0].Select();
+                            manageSubscriptionsDialog.ClickRemove();
+                            WaitForDialogToReplace(manageSubscriptionsDialog.Element);
+                            VisualStudioApp.CheckMessageBox(TestUtilities.UI.MessageBoxButton.Yes);
+                        }
+
+                        using (var importSubscriptionDialog = manageSubscriptionsDialog.ClickImport()) {
+                            importSubscriptionDialog.FileName = subscriptionPublishSettingsFilePath;
+                            importSubscriptionDialog.ClickImport();
+
+                            manageSubscriptionsDialog.Close();
+                        }
+                    }
+
+                    using (var createSiteDialog = importSettingsDialog.ClickNew()) {
+                        createSiteDialog.SiteName = siteName;
+                        createSiteDialog.ClickCreate();
+                    }
+
+                    importSettingsDialog.ClickOK();
+                }
+
+                publishDialog.ClickPublish();
+            }
+
+            return new Uri(string.Format("http://{0}.azurewebsites.net", siteName));
         }
 
         public List<IVsTaskItem> WaitForErrorListItems(int expectedCount) {
