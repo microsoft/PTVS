@@ -283,7 +283,11 @@ namespace Microsoft.PythonTools.Project {
 
             result.PrefixPath = prefixPath;
             result.LibraryPath = libPath;
-            result.Description = Path.GetFileName(CommonUtils.TrimEndSeparator(prefixPath));
+            result.Description = string.Format(
+                "{0} ({1})",
+                Path.GetFileName(CommonUtils.TrimEndSeparator(prefixPath)),
+                baseInterpreter.Description
+            );
 
             result.Id = baseInterpreter.Id;
             result.LanguageVersion = baseInterpreter.Configuration.Version;

@@ -1172,9 +1172,6 @@ namespace Microsoft.PythonTools.Project {
             if (!create) {
                 baseInterp = service.FindInterpreter(options.Id, options.LanguageVersion);
             }
-            if (baseInterp != null) {
-                options.Description = string.Format("{0} ({1})", options.Description, baseInterp.Description);
-            }
 
             if (!QueryEditProjectFile(false)) {
                 throw Marshal.GetExceptionForHR(VSConstants.OLE_E_PROMPTSAVECANCELLED);

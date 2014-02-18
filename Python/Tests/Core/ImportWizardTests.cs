@@ -12,18 +12,25 @@
  *
  * ***************************************************************************/
 
+extern alias analysis;
 using System;
 using System.IO;
 using System.Linq;
+using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Windows;
 using System.Windows.Threading;
 using System.Xml.Linq;
 using Microsoft.PythonTools;
+using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Project.ImportWizard;
+using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 using TestUtilities.Python;
+using CommonUtils = analysis::Microsoft.VisualStudioTools.CommonUtils;
+using ProcessOutput = analysis::Microsoft.VisualStudioTools.Project.ProcessOutput;
 
 namespace PythonToolsTests {
     [TestClass]
@@ -37,22 +44,24 @@ namespace PythonToolsTests {
         #region ImportSettingsProxy class
 
         sealed class ImportSettingsProxy : IDisposable {
-            ImportSettings settings;
-            readonly Thread controller;
-            readonly AutoResetEvent ready;
+            IInterpreterOptionsService _service;
+            ImportSettings _settings;
+            readonly Thread _controller;
+            readonly AutoResetEvent _ready;
 
-            public ImportSettingsProxy() {
-                ready = new AutoResetEvent(false);
-                controller = new Thread(ControllerThread);
-                controller.Start();
-                ready.WaitOne();
+            public ImportSettingsProxy(IInterpreterOptionsService service = null) {
+                _service = service;
+                _ready = new AutoResetEvent(false);
+                _controller = new Thread(ControllerThread);
+                _controller.Start();
+                _ready.WaitOne();
             }
 
             public void Dispose() {
                 GC.SuppressFinalize(this);
-                settings.Dispatcher.BeginInvokeShutdown(System.Windows.Threading.DispatcherPriority.Normal);
-                controller.Join();
-                ready.Dispose();
+                _settings.Dispatcher.BeginInvokeShutdown(DispatcherPriority.Normal);
+                _controller.Join();
+                _ready.Dispose();
             }
 
             ~ImportSettingsProxy() {
@@ -60,28 +69,39 @@ namespace PythonToolsTests {
             }
 
             private void ControllerThread(object obj) {
-                settings = new ImportSettings();
-                ready.Set();
+                _settings = new ImportSettings(_service);
+                _ready.Set();
                 Dispatcher.Run();
             }
 
             public string CreateRequestedProject() {
+                ExceptionDispatchInfo exInfo = null;
                 string result = null;
-                ready.Reset();
-                settings.Dispatcher.BeginInvoke((Action)(async () => {
-                    result = await settings.CreateRequestedProjectAsync();
-                    ready.Set();
+                _ready.Reset();
+                _settings.Dispatcher.BeginInvoke((Action)(async () => {
+                    try {
+                        result = await _settings.CreateRequestedProjectAsync();
+                    } catch (Exception ex) {
+                        if (ErrorHandler.IsCriticalException(ex)) {
+                            throw;
+                        }
+                        exInfo = ExceptionDispatchInfo.Capture(ex);
+                    }
+                    _ready.Set();
                 }));
-                ready.WaitOne();
+                _ready.WaitOne();
+                if (exInfo != null) {
+                    exInfo.Throw();
+                }
                 return result;
             }
 
             private T GetValue<T>(DependencyProperty prop) {
-                return settings.Dispatcher.Invoke((Func<T>)(() => (T)settings.GetValue(prop)));
+                return _settings.Dispatcher.Invoke((Func<T>)(() => (T)_settings.GetValue(prop)));
             }
 
             private void SetValue<T>(DependencyProperty prop, T value) {
-                settings.Dispatcher.Invoke((Action)(() => settings.SetCurrentValue(prop, (object)value)));
+                _settings.Dispatcher.Invoke((Action)(() => _settings.SetCurrentValue(prop, (object)value)));
             }
 
             public string SourcePath {
@@ -115,7 +135,7 @@ namespace PythonToolsTests {
             }
 
             public void AddAvailableInterpreter(PythonInterpreterView interpreter) {
-                settings.Dispatcher.Invoke((Action)(() => settings.AvailableInterpreters.Add(interpreter)));
+                _settings.Dispatcher.Invoke((Action)(() => _settings.AvailableInterpreters.Add(interpreter)));
             }
         }
 
@@ -261,6 +281,91 @@ namespace PythonToolsTests {
                     "A%3bB%3bC"
                 );
             }
+        }
+
+        private void ImportWizardVirtualEnvWorker(
+            PythonVersion python,
+            string venvModuleName,
+            string expectedFile
+        ) {
+            var mockService = new MockInterpreterOptionsService();
+            mockService.AddProvider(new MockPythonInterpreterFactoryProvider("Test Provider",
+                new MockPythonInterpreterFactory(python.Interpreter, "Test Python", python.Configuration)
+            ));
+
+            using (var settings = new ImportSettingsProxy(mockService)) {
+                var sourcePath = TestData.GetTempPath(randomSubPath: true);
+                // Create a fake set of files to import
+                File.WriteAllText(Path.Combine(sourcePath, "main.py"), "");
+                Directory.CreateDirectory(Path.Combine(sourcePath, "A"));
+                File.WriteAllText(Path.Combine(sourcePath, "A", "__init__.py"), "");
+                // Create a real virtualenv environment to import
+                using (var p = ProcessOutput.RunHiddenAndCapture(python.Path, "-m", venvModuleName, Path.Combine(sourcePath, "env"))) {
+                    Console.WriteLine(p.Arguments);
+                    p.Wait();
+                    Console.WriteLine(string.Join(Environment.NewLine, p.StandardOutputLines.Concat(p.StandardErrorLines)));
+                    Assert.AreEqual(0, p.ExitCode);
+                }
+
+                Console.WriteLine("All files:");
+                foreach (var f in Directory.EnumerateFiles(sourcePath, "*", SearchOption.AllDirectories)) {
+                    Console.WriteLine(CommonUtils.GetRelativeFilePath(sourcePath, f));
+                }
+
+                Assert.IsTrue(
+                    File.Exists(Path.Combine(sourcePath, "env", expectedFile)),
+                    "Virtualenv was not created correctly"
+                );
+
+                settings.SourcePath = sourcePath;
+
+                var path = settings.CreateRequestedProject();
+
+                Assert.AreEqual(settings.ProjectPath, path);
+                var proj = XDocument.Load(path);
+
+                // Does not include any .py files from the virtualenv
+                AssertUtil.ContainsExactly(proj.Descendants(proj.GetName("Compile")).Select(x => x.Attribute("Include").Value),
+                    "main.py",
+                    "A\\__init__.py"
+                );
+                // Does not contain 'env'
+                AssertUtil.ContainsExactly(proj.Descendants(proj.GetName("Folder")).Select(x => x.Attribute("Include").Value),
+                    "A"
+                );
+
+                var env = proj.Descendant("Interpreter");
+                Assert.AreEqual("env\\", env.Attribute("Include").Value);
+                Assert.AreEqual("env (Test Python)", env.Descendant("Description").Value);
+                Assert.AreEqual("scripts\\python.exe", env.Descendant("InterpreterPath").Value, true);
+                // The mock configuration uses python.exe for both paths.
+                Assert.AreEqual("scripts\\python.exe", env.Descendant("WindowsInterpreterPath").Value, true);
+                Assert.AreEqual("lib\\", env.Descendant("LibraryPath").Value, true);
+                Assert.AreEqual(python.Interpreter.ToString("B"), env.Descendant("BaseInterpreter").Value, true);
+                Assert.AreEqual("PYTHONPATH", env.Descendant("PathEnvironmentVariable").Value, true);
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public void ImportWizardVirtualEnv() {
+            var python = PythonPaths.Versions.LastOrDefault(pv =>
+                pv.IsCPython &&
+                File.Exists(Path.Combine(pv.LibPath, "site-packages", "virtualenv.py")) &&
+                // CPython 3.3.4 does not work correctly with virtualenv, so
+                // skip testing on 3.3 to avoid false failures
+                pv.Version != PythonLanguageVersion.V33
+            );
+
+            ImportWizardVirtualEnvWorker(python, "virtualenv", "lib\\orig-prefix.txt");
+        }
+
+        [TestMethod, Priority(0)]
+        public void ImportWizardVEnv() {
+            var python = PythonPaths.Versions.LastOrDefault(pv =>
+                pv.IsCPython && File.Exists(Path.Combine(pv.LibPath, "venv", "__main__.py"))
+            );
+
+            ImportWizardVirtualEnvWorker(python, "venv", "pyvenv.cfg");
         }
 
         static T Wait<T>(System.Threading.Tasks.Task<T> task) {

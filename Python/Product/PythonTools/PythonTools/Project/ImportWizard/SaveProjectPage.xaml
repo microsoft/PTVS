@@ -43,6 +43,7 @@
                            HelpText="These can not be changed later without creating a new project."
                            Grid.Row="1">
             <StackPanel Orientation="Vertical">
+                <CheckBox IsChecked="{Binding DetectVirtualEnv}">Detect _Virtual Environments</CheckBox>
                 <CheckBox IsChecked="{Binding SupportDjango}">_Django</CheckBox>
             </StackPanel>
         </wpf:LabelledControl>
