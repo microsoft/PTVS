@@ -43,8 +43,35 @@
                            HelpText="These can not be changed later without creating a new project."
                            Grid.Row="1">
             <StackPanel Orientation="Vertical">
-                <CheckBox IsChecked="{Binding DetectVirtualEnv}">Detect _Virtual Environments</CheckBox>
-                <CheckBox IsChecked="{Binding SupportDjango}">_Django</CheckBox>
+                <CheckBox IsChecked="{Binding DetectVirtualEnv}"
+                          Margin="3">
+                    Detect _Virtual Environments
+                </CheckBox>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <CheckBox Grid.Column="0"
+                              Name="CustomizationEnabled"
+                              IsChecked="{Binding UseCustomization}"
+                              Margin="3">
+                        Customize Project _Type:
+                    </CheckBox>
+
+                    <ComboBox Grid.Column="1"
+                              ItemsSource="{Binding SupportedProjectCustomizations,Mode=OneTime}"
+                              SelectedItem="{Binding Customization}"
+                              IsEnabled="{Binding IsChecked,ElementName=CustomizationEnabled}"
+                              IsEditable="False"
+                              Margin="3">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate DataType="{x:Type l:ProjectCustomization}">
+                                <TextBlock Text="{Binding DisplayName}" Foreground="{Binding Foreground,RelativeSource={RelativeSource FindAncestor,AncestorType=ComboBox}}"/>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                </Grid>
             </StackPanel>
         </wpf:LabelledControl>
     </Grid>

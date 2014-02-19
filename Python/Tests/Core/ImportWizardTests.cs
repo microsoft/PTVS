@@ -137,6 +137,16 @@ namespace PythonToolsTests {
             public void AddAvailableInterpreter(PythonInterpreterView interpreter) {
                 _settings.Dispatcher.Invoke((Action)(() => _settings.AvailableInterpreters.Add(interpreter)));
             }
+
+            public bool UseCustomization {
+                get { return GetValue<bool>(ImportSettings.UseCustomizationProperty); }
+                set { SetValue(ImportSettings.UseCustomizationProperty, value); }
+            }
+            
+            public ProjectCustomization Customization {
+                get { return GetValue<ProjectCustomization>(ImportSettings.CustomizationProperty); }
+                set { SetValue(ImportSettings.CustomizationProperty, value); }
+            }
         }
 
         #endregion
@@ -367,6 +377,50 @@ namespace PythonToolsTests {
 
             ImportWizardVirtualEnvWorker(python, "venv", "pyvenv.cfg");
         }
+
+        private static void ImportWizardCustomizationsWorker(ProjectCustomization customization, Action<XDocument> verify) {
+            using (var settings = new ImportSettingsProxy()) {
+                settings.SourcePath = TestData.GetPath("TestData\\HelloWorld\\");
+                settings.Filters = "*.py;*.pyproj";
+                settings.StartupFile = "Program.py";
+                settings.UseCustomization = true;
+                settings.Customization = customization;
+                settings.ProjectPath = Path.Combine(TestData.GetTempPath("ImportWizardCustomizations_" + customization.GetType().Name), "Project.pyproj");
+                Directory.CreateDirectory(Path.GetDirectoryName(settings.ProjectPath));
+
+                var path = settings.CreateRequestedProject();
+
+                Assert.AreEqual(settings.ProjectPath, path);
+                Console.WriteLine(File.ReadAllText(path));
+                var proj = XDocument.Load(path);
+
+                verify(proj);
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public void ImportWizardCustomizations() {
+            ImportWizardCustomizationsWorker(DefaultProjectCustomization.Instance, proj => {
+                Assert.AreEqual("Program.py", proj.Descendant("StartupFile").Value);
+                Assert.IsTrue(proj.Descendants(proj.GetName("Import")).Any(d => d.Attribute("Project").Value == "$(PtvsTargetsFile)"));
+            });
+            ImportWizardCustomizationsWorker(BottleProjectCustomization.Instance, proj => {
+                Assert.AreNotEqual(-1, proj.Descendant("ProjectTypeGuids").Value.IndexOf("e614c764-6d9e-4607-9337-b7073809a0bd", StringComparison.OrdinalIgnoreCase));
+                Assert.IsTrue(proj.Descendants(proj.GetName("Import")).Any(d => d.Attribute("Project").Value.Contains("Bottle.targets")));
+                Assert.AreEqual("Web launcher", proj.Descendant("LaunchProvider").Value);
+            });
+            ImportWizardCustomizationsWorker(DjangoProjectCustomization.Instance, proj => {
+                Assert.AreNotEqual(-1, proj.Descendant("ProjectTypeGuids").Value.IndexOf("5F0BE9CA-D677-4A4D-8806-6076C0FAAD37", StringComparison.OrdinalIgnoreCase));
+                Assert.IsTrue(proj.Descendants(proj.GetName("Import")).Any(d => d.Attribute("Project").Value.Contains("Django.targets")));
+                Assert.AreEqual("Django launcher", proj.Descendant("LaunchProvider").Value);
+            });
+            ImportWizardCustomizationsWorker(FlaskProjectCustomization.Instance, proj => {
+                Assert.AreNotEqual(-1, proj.Descendant("ProjectTypeGuids").Value.IndexOf("789894c7-04a9-4a11-a6b5-3f4435165112", StringComparison.OrdinalIgnoreCase));
+                Assert.IsTrue(proj.Descendants(proj.GetName("Import")).Any(d => d.Attribute("Project").Value.Contains("Flask.targets")));
+                Assert.AreEqual("Web launcher", proj.Descendant("LaunchProvider").Value);
+            });
+        }
+
 
         static T Wait<T>(System.Threading.Tasks.Task<T> task) {
             task.Wait();

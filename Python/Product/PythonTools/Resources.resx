@@ -427,4 +427,16 @@ See the Python Environments window for details.</value>
   <data name="WebLauncherRunServerTargetTypeHelp" xml:space="preserve">
     <value>The type of the command. If no command is specified, this value is always treated as "script".</value>
   </data>
+  <data name="ImportWizardBottleProjectCustomization" xml:space="preserve">
+    <value>Bottle Web Project</value>
+  </data>
+  <data name="ImportWizardDefaultProjectCustomization" xml:space="preserve">
+    <value>(No customizations)</value>
+  </data>
+  <data name="ImportWizardDjangoProjectCustomization" xml:space="preserve">
+    <value>Django Web Project</value>
+  </data>
+  <data name="ImportWizardFlaskProjectCustomization" xml:space="preserve">
+    <value>Flask Web Project</value>
+  </data>
 </root>

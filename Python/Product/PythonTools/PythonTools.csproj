@@ -314,6 +314,7 @@
     <Compile Include="PythonTools\Project\CustomCommand.cs" />
     <Compile Include="PythonTools\Project\EasyInstall.cs" />
     <Compile Include="PythonTools\Project\IAsyncCommand.cs" />
+    <Compile Include="PythonTools\Project\ImportWizard\ProjectCustomizations.cs" />
     <Compile Include="PythonTools\Project\ImportWizard\SaveProjectPage.xaml.cs">
       <DependentUpon>SaveProjectPage.xaml</DependentUpon>
     </Compile>

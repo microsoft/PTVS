@@ -296,6 +296,42 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Bottle Web Project.
+        /// </summary>
+        internal static string ImportWizardBottleProjectCustomization {
+            get {
+                return ResourceManager.GetString("ImportWizardBottleProjectCustomization", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to (No customizations).
+        /// </summary>
+        internal static string ImportWizardDefaultProjectCustomization {
+            get {
+                return ResourceManager.GetString("ImportWizardDefaultProjectCustomization", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Django Web Project.
+        /// </summary>
+        internal static string ImportWizardDjangoProjectCustomization {
+            get {
+                return ResourceManager.GetString("ImportWizardDjangoProjectCustomization", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Flask Web Project.
+        /// </summary>
+        internal static string ImportWizardFlaskProjectCustomization {
+            get {
+                return ResourceManager.GetString("ImportWizardFlaskProjectCustomization", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The specified project file already exists. Overwrite?.
         /// </summary>
         internal static string ImportWizardProjectExists {

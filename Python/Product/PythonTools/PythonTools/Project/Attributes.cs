@@ -95,6 +95,10 @@ namespace Microsoft.PythonTools.Project {
         public const string StatusImportWizardError = "StatusImportWizardError";
         public const string StatusImportWizardStarting = "StatusImportWizardStarting";
         public const string ImportWizardProjectExists = "ImportWizardProjectExists";
+        public const string ImportWizardDefaultProjectCustomization = "ImportWizardDefaultProjectCustomization";
+        public const string ImportWizardBottleProjectCustomization = "ImportWizardBottleProjectCustomization";
+        public const string ImportWizardDjangoProjectCustomization = "ImportWizardDjangoProjectCustomization";
+        public const string ImportWizardFlaskProjectCustomization = "ImportWizardFlaskProjectCustomization";
 
         public const string ReplInitializationMessage = "ReplInitializationMessage";
         public const string ReplEvaluatorInterpreterNotFound = "ReplEvaluatorInterpreterNotFound";
