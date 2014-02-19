@@ -24,10 +24,7 @@ namespace TestUtilities.UI {
             : base(element) {
         }
 
-        /// <summary>
-        /// Waits for the item in the solution tree to be available for up to 10 seconds.
-        /// </summary>
-        public AutomationElement WaitForItem(params string[] path) {
+        protected AutomationElement WaitForItemHelper(Func<string[], AutomationElement> getItem, string[] path) {
             AutomationElement item = null;
             for (int i = 0; i < 40; i++) {
                 item = FindItem(path);
@@ -46,10 +43,14 @@ namespace TestUtilities.UI {
         /// <summary>
         /// Waits for the item in the solution tree to be available for up to 10 seconds.
         /// </summary>
-        public AutomationElement WaitForItemRemoved(params string[] path) {
+        public AutomationElement WaitForItem(params string[] path) {
+            return WaitForItemHelper(FindItem, path);
+        }
+
+        protected AutomationElement WaitForItemRemovedHelper(Func<string[], AutomationElement> getItem, string[] path) {
             AutomationElement item = null;
             for (int i = 0; i < 40; i++) {
-                item = FindItem(path);
+                item = getItem(path);
                 if (item == null) {
                     break;
                 }
@@ -57,6 +58,14 @@ namespace TestUtilities.UI {
             }
             return item;
         }
+
+        /// <summary>
+        /// Waits for the item in the solution tree to be removed within 10 seconds.
+        /// </summary>
+        public AutomationElement WaitForItemRemoved(params string[] path) {
+            return WaitForItemRemovedHelper(FindItem, path);
+        }
+
 
         /// <summary>
         /// Finds the specified item in the solution tree and returns it.
@@ -67,7 +76,7 @@ namespace TestUtilities.UI {
             return FindNode(Element.FindAll(TreeScope.Children, Condition.TrueCondition), path, 0);
         }
 
-        private static AutomationElement FindNode(AutomationElementCollection nodes, string[] splitPath, int depth) {
+        protected static AutomationElement FindNode(AutomationElementCollection nodes, string[] splitPath, int depth) {
             for (int i = 0; i < nodes.Count; i++) {
                 var node = nodes[i];
                 var name = node.GetCurrentPropertyValue(AutomationElement.NameProperty) as string;

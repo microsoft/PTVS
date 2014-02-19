@@ -316,18 +316,18 @@ namespace Microsoft.PythonTools.Project {
                 typeof(AddVirtualEnvironmentView),
                 new PropertyMetadata(null, BaseInterpreter_Changed));
 
-        private static void BaseInterpreter_Changed(DependencyObject d, DependencyPropertyChangedEventArgs e) {
+        private static async void BaseInterpreter_Changed(DependencyObject d, DependencyPropertyChangedEventArgs e) {
             var aiv = d as AddVirtualEnvironmentView;
             if (aiv == null) {
                 return;
             }
 
-            aiv.UpdateInterpreter(e.NewValue as InterpreterView);
+            await aiv.UpdateInterpreter(e.NewValue as InterpreterView);
         }
 
-        private void UpdateInterpreter(InterpreterView view) {
+        internal async Task UpdateInterpreter(InterpreterView view) {
             if (!view.Dispatcher.CheckAccess()) {
-                view.Dispatcher.BeginInvoke((Action)(() => UpdateInterpreter(view)));
+                await view.Dispatcher.InvokeAsync(() => UpdateInterpreter(view));
                 return;
             }
 
@@ -347,22 +347,22 @@ namespace Microsoft.PythonTools.Project {
 
             var libPath = interp.Configuration.LibraryPath;
             if (Directory.Exists(libPath)) {
-                Task.Factory.StartNew((Func<HashSet<string>>)(() =>
+                var installed = await Task.Run((Func<HashSet<string>>)(() =>
                     interp.FindModules("pip", "virtualenv", "venv")
-                )).ContinueWith((Action<Task<HashSet<string>>>)(t => {
-                    if (t.Result.Contains("venv") || t.Result.Contains("virtualenv")) {
-                        WillInstallPipAndVirtualEnv = false;
-                        WillInstallVirtualEnv = false;
-                        WillInstallElevated = false;
-                        UseVEnv = !t.Result.Contains("virtualenv");
-                    } else {
-                        WillInstallPipAndVirtualEnv = !t.Result.Contains("pip");
-                        WillInstallVirtualEnv = !WillInstallPipAndVirtualEnv;
-                        WillInstallElevated = PythonToolsPackage.Instance != null &&
-                            PythonToolsPackage.Instance.GeneralOptionsPage.ElevatePip;
-                        UseVEnv = false;
-                    }
-                }), TaskScheduler.FromCurrentSynchronizationContext());
+                )).ConfigureAwait(true);
+                
+                if (installed.Contains("venv") || installed.Contains("virtualenv")) {
+                    WillInstallPipAndVirtualEnv = false;
+                    WillInstallVirtualEnv = false;
+                    WillInstallElevated = false;
+                    UseVEnv = !installed.Contains("virtualenv");
+                } else {
+                    WillInstallPipAndVirtualEnv = !installed.Contains("pip");
+                    WillInstallVirtualEnv = !WillInstallPipAndVirtualEnv;
+                    WillInstallElevated = PythonToolsPackage.Instance != null &&
+                        PythonToolsPackage.Instance.GeneralOptionsPage.ElevatePip;
+                    UseVEnv = false;
+                }
             }
         }
 

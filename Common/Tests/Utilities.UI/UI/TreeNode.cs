@@ -29,6 +29,11 @@ namespace TestUtilities.UI
         {
             try
             {
+                var parent = Element.GetSelectionItemPattern().Current.SelectionContainer;
+                foreach (var item in parent.GetSelectionPattern().Current.GetSelection())
+                {
+                    item.GetSelectionItemPattern().RemoveFromSelection();
+                }
                 Element.GetSelectionItemPattern().AddToSelection();
             }
             catch (InvalidOperationException)

@@ -13,13 +13,15 @@
  * ***************************************************************************/
 
 extern alias analysis;
+extern alias pythontools;
 using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
-using System.Windows.Automation;
+using System.Windows.Interop;
 using analysis::Microsoft.VisualStudioTools;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Interpreter;
@@ -66,7 +68,7 @@ namespace PythonToolsUITests {
             return defaultInterpreterSetter;
         }
 
-        private void CreateTemporaryProject(VisualStudioApp app) {
+        private EnvDTE.Project CreateTemporaryProject(VisualStudioApp app) {
             var project = app.CreateProject(
                 PythonVisualStudioApp.TemplateLanguageName,
                 PythonVisualStudioApp.PythonApplicationTemplate,
@@ -74,79 +76,72 @@ namespace PythonToolsUITests {
                 TestContext.TestName
             );
 
-            Assert.IsNotNull(project);
+            Assert.IsNotNull(project, "Project was not created");
+            return project;
         }
 
-        internal static AutomationWrapper CreateVirtualEnvironment(VisualStudioApp app, out string envName) {
+        internal static TreeNode CreateVirtualEnvironment(VisualStudioApp app, EnvDTE.Project project, out string envName) {
             string dummy;
-            return CreateVirtualEnvironment(app, out envName, out dummy);
+            return CreateVirtualEnvironment(app, project, out envName, out dummy);
         }
 
-        internal static AutomationWrapper CreateVirtualEnvironment(VisualStudioApp app, out string envName, out string envPath) {
-            app.OpenSolutionExplorer();
-            var virtualEnv = app.SolutionExplorerTreeView.FindItem(
-                "Solution '" + app.Dte.Solution.Projects.Item(1).Name + "' (1 project)",
-                app.Dte.Solution.Projects.Item(1).Name,
-                SR.GetString(SR.Environments));
-            AutomationWrapper.Select(virtualEnv);
+        internal static TreeNode CreateVirtualEnvironment(VisualStudioApp app, EnvDTE.Project project, out string envName, out string envPath) {
+            var environmentsNode = app.OpenSolutionExplorer().FindChildOfProject(
+                project,
+                SR.GetString(SR.Environments)
+            );
+            environmentsNode.Select();
 
-            var createVenv = new AutomationWrapper(AutomationElement.FromHandle(
-                app.OpenDialogWithDteExecuteCommand("Project.AddVirtualEnvironment")));
+            using (var createVenv = AutomationDialog.FromDte(app, "Project.AddVirtualEnvironment")) {
+                envPath = new TextBox(createVenv.FindByAutomationId("VirtualEnvPath")).GetValue();
+                var baseInterp = new ComboBox(createVenv.FindByAutomationId("BaseInterpreter")).GetSelectedItemName();
 
-            envPath = new TextBox(createVenv.FindByAutomationId("VirtualEnvPath")).GetValue();
-            var baseInterp = new ComboBox(createVenv.FindByAutomationId("BaseInterpreter")).GetSelectedItemName();
+                envName = string.Format("{0} ({1})", envPath, baseInterp);
 
-            envName = string.Format("{0} ({1})", envPath, baseInterp);
+                Console.WriteLine("Expecting environment named: {0}", envName);
 
-            Console.WriteLine("Expecting environment named: {0}", envName);
+                // Force a wait for the view to be updated.
+                var wnd = (pythontools::Microsoft.VisualStudioTools.DialogWindowVersioningWorkaround)HwndSource.FromHwnd(
+                    new IntPtr(createVenv.Element.Current.NativeWindowHandle)
+                ).RootVisual;
+                wnd.Dispatcher.Invoke(() => {
+                    var view = (AddVirtualEnvironmentView)wnd.DataContext;
+                    return view.UpdateInterpreter(view.BaseInterpreter);
+                }).Wait();
 
-            createVenv.ClickButtonByAutomationId("Create");
-            app.WaitForDialogDismissed();
-
-            AutomationElement env = null;
-            app.OpenSolutionExplorer();
-            for (int i = 0; i < 6 && env == null; i++) {
-                env = app.SolutionExplorerTreeView.WaitForItem(
-                    "Solution '" + app.Dte.Solution.Projects.Item(1).Name + "' (1 project)",
-                    app.Dte.Solution.Projects.Item(1).Name,
-                    SR.GetString(SR.Environments),
-                    envName);
+                createVenv.ClickButtonAndClose("Create", nameIsAutomationId: true);
             }
-            Assert.IsNotNull(env);
-            return new AutomationWrapper(env);
+
+            return app.OpenSolutionExplorer().WaitForChildOfProject(
+                project,
+                SR.GetString(SR.Environments),
+                envName
+            );
         }
 
-        internal static AutomationWrapper AddExistingVirtualEnvironment(VisualStudioApp app, string envPath, out string envName) {
-            app.OpenSolutionExplorer();
-            var virtualEnv = app.SolutionExplorerTreeView.FindItem(
-                "Solution '" + app.Dte.Solution.Projects.Item(1).Name + "' (1 project)",
-                app.Dte.Solution.Projects.Item(1).Name,
-                SR.GetString(SR.Environments));
-            AutomationWrapper.Select(virtualEnv);
+        internal static TreeNode AddExistingVirtualEnvironment(VisualStudioApp app, EnvDTE.Project project, string envPath, out string envName) {
+            var environmentsNode = app.OpenSolutionExplorer().FindChildOfProject(
+                project,
+                SR.GetString(SR.Environments)
+            );
+            environmentsNode.Select();
 
-            var createVenv = new AutomationWrapper(AutomationElement.FromHandle(
-                app.OpenDialogWithDteExecuteCommand("Project.AddVirtualEnvironment")));
+            using (var createVenv = AutomationDialog.FromDte(app, "Project.AddVirtualEnvironment")) {
+                new TextBox(createVenv.FindByAutomationId("VirtualEnvPath")).SetValue(envPath);
+                var baseInterp = new ComboBox(createVenv.FindByAutomationId("BaseInterpreter")).GetSelectedItemName();
 
-            new TextBox(createVenv.FindByAutomationId("VirtualEnvPath")).SetValue(envPath);
-            var baseInterp = new ComboBox(createVenv.FindByAutomationId("BaseInterpreter")).GetSelectedItemName();
+                envName = string.Format("{0} ({1})", Path.GetFileName(envPath), baseInterp);
 
-            envName = string.Format("{0} ({1})", Path.GetFileName(envPath), baseInterp);
+                Console.WriteLine("Expecting environment named: {0}", envName);
 
-            Console.WriteLine("Expecting environment named: {0}", envName);
-
-            createVenv.ClickButtonByAutomationId("Add");
-            app.WaitForDialogDismissed();
-
-            AutomationElement env = null;
-            for (int i = 0; i < 6 && env == null; i++) {
-                env = app.SolutionExplorerTreeView.WaitForItem(
-                    "Solution '" + app.Dte.Solution.Projects.Item(1).Name + "' (1 project)",
-                    app.Dte.Solution.Projects.Item(1).Name,
-                    SR.GetString(SR.Environments),
-                    envName);
+                createVenv.ClickButtonAndClose("Add", nameIsAutomationId: true);
             }
-            Assert.IsNotNull(env);
-            return new AutomationWrapper(env);
+
+            return app.OpenSolutionExplorer().WaitForChildOfProject(
+                project,
+                SR.GetString(SR.Environments),
+                envName
+            );
         }
 
 
@@ -155,40 +150,37 @@ namespace PythonToolsUITests {
         public void InstallUninstallPackage() {
             using (var dis = Init())
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                CreateTemporaryProject(app);
+                var project = CreateTemporaryProject(app);
 
                 string envName;
-                var env = CreateVirtualEnvironment(app, out envName);
+                var env = CreateVirtualEnvironment(app, project, out envName);
                 env.Select();
 
-                var installPackage = new AutomationWrapper(AutomationElement.FromHandle(
-                    app.OpenDialogWithDteExecuteCommand("Project.InstallPythonPackage")));
+                using (var installPackage = AutomationDialog.FromDte(app, "Project.InstallPythonPackage")) {
+                    var packageName = new TextBox(installPackage.FindByAutomationId("Name"));
+                    packageName.SetValue("azure==0.6.2");
+                    installPackage.ClickButtonAndClose("OK", nameIsAutomationId: true);
+                }
 
-                var packageName = new TextBox(installPackage.FindByAutomationId("Name"));
-                packageName.SetValue("azure==0.6.2");
-                installPackage.ClickButtonByAutomationId("Ok");
-                app.WaitForDialogDismissed();
-
-                var azure = app.SolutionExplorerTreeView.WaitForItem(
-                    "Solution '" + app.Dte.Solution.Projects.Item(1).Name + "' (1 project)",
-                    app.Dte.Solution.Projects.Item(1).Name,
+                var azure = app.SolutionExplorerTreeView.WaitForChildOfProject(
+                    project,
                     SR.GetString(SR.Environments),
                     envName,
-                    "azure (0.6.2)");
+                    "azure (0.6.2)"
+                );
 
-                Assert.IsNotNull(azure);
-                AutomationWrapper.Select(azure);
+                azure.Select();
 
-                var confirmation = new AutomationWrapper(AutomationElement.FromHandle(
-                    app.OpenDialogWithDteExecuteCommand("Edit.Delete")));
-                confirmation.ClickButtonByName("OK");
+                using (var confirmation = AutomationDialog.FromDte(app, "Edit.Delete")) {
+                    confirmation.OK();
+                }
 
-                app.SolutionExplorerTreeView.WaitForItemRemoved(
-                    "Solution '" + app.Dte.Solution.Projects.Item(1).Name + "' (1 project)",
-                    app.Dte.Solution.Projects.Item(1).Name,
+                app.SolutionExplorerTreeView.WaitForChildOfProjectRemoved(
+                    project,
                     SR.GetString(SR.Environments),
                     envName,
-                    "azure (0.6.2)");
+                    "azure (0.6.2)"
+                );
             }
         }
 
@@ -197,24 +189,23 @@ namespace PythonToolsUITests {
         public void LoadVirtualEnv() {
             using (var dis = Init())
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                CreateTemporaryProject(app);
+                var project = CreateTemporaryProject(app);
+                var projectName = project.UniqueName;
 
                 string envName;
-                var env = CreateVirtualEnvironment(app, out envName);
+                var env = CreateVirtualEnvironment(app, project, out envName);
 
-                var solution = VsIdeTestHostContext.Dte.Solution.FullName;
-                VsIdeTestHostContext.Dte.Solution.Close(true);
+                var solution = app.Dte.Solution.FullName;
+                app.Dte.Solution.Close(true);
 
-                VsIdeTestHostContext.Dte.Solution.Open(solution);
+                app.Dte.Solution.Open(solution);
+                project = app.Dte.Solution.Item(projectName);
 
-                AutomationElement env2 = null;
-                for (int i = 0; i < 6 && env2 == null; i++) {
-                    env2 = app.SolutionExplorerTreeView.WaitForItem(
-                        "Solution '" + app.Dte.Solution.Projects.Item(1).Name + "' (1 project)",
-                        app.Dte.Solution.Projects.Item(1).Name,
-                        SR.GetString(SR.Environments),
-                        envName);
-                }
+                app.OpenSolutionExplorer().WaitForChildOfProject(
+                    project,
+                    SR.GetString(SR.Environments),
+                    envName
+                );
             }
         }
 
@@ -223,16 +214,15 @@ namespace PythonToolsUITests {
         public void ActivateVirtualEnv() {
             using (var dis = Init())
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                CreateTemporaryProject(app);
+                var project = CreateTemporaryProject(app);
 
-                var project = app.Dte.Solution.Projects.Item(1);
                 Assert.AreNotEqual(null, project.ProjectItems.Item(Path.GetFileNameWithoutExtension(app.Dte.Solution.FullName) + ".py"));
 
                 var id0 = Guid.Parse((string)project.Properties.Item("InterpreterId").Value);
 
                 string envName1, envName2;
-                var env1 = CreateVirtualEnvironment(app, out envName1);
-                var env2 = CreateVirtualEnvironment(app, out envName2);
+                var env1 = CreateVirtualEnvironment(app, project, out envName1);
+                var env2 = CreateVirtualEnvironment(app, project, out envName2);
 
                 var id1 = Guid.Parse((string)project.Properties.Item("InterpreterId").Value);
                 Assert.AreNotEqual(id0, id1);
@@ -251,19 +241,17 @@ namespace PythonToolsUITests {
                 Assert.AreNotEqual(id0, id2);
                 Assert.AreNotEqual(id1, id2);
 
-                var virtualEnv = app.SolutionExplorerTreeView.FindItem(
-                    "Solution '" + app.Dte.Solution.Projects.Item(1).Name + "' (1 project)",
-                    app.Dte.Solution.Projects.Item(1).Name,
-                    SR.GetString(SR.Environments));
-                AutomationWrapper.Select(virtualEnv);
+                // Change the selected node
+                app.SolutionExplorerTreeView.FindChildOfProject(
+                    project,
+                    SR.GetString(SR.Environments)
+                ).Select();
 
-                env1 = new AutomationWrapper(app.SolutionExplorerTreeView.FindItem(
-                    "Solution '" + app.Dte.Solution.Projects.Item(1).Name + "' (1 project)",
-                    app.Dte.Solution.Projects.Item(1).Name,
+                app.SolutionExplorerTreeView.FindChildOfProject(
+                    project,
                     SR.GetString(SR.Environments),
-                    envName1));
-                env1.Select();
-                System.Threading.Thread.Sleep(1000);
+                    envName1
+                ).Select();
                 app.Dte.ExecuteCommand("Project.ActivateEnvironment");
 
                 var id1b = Guid.Parse((string)project.Properties.Item("InterpreterId").Value);
@@ -276,25 +264,24 @@ namespace PythonToolsUITests {
         public void RemoveVirtualEnv() {
             using (var dis = Init())
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                CreateTemporaryProject(app);
+                var project = CreateTemporaryProject(app);
 
                 string envName, envPath;
-                var env = CreateVirtualEnvironment(app, out envName, out envPath);
+                var env = CreateVirtualEnvironment(app, project, out envName, out envPath);
 
                 env.Select();
 
-                var removeDeleteDlg = new AutomationWrapper(AutomationElement.FromHandle(
-                    app.OpenDialogWithDteExecuteCommand("Edit.Delete")));
-                removeDeleteDlg.ClickButtonByName("Remove");
-                app.WaitForDialogDismissed();
+                using (var removeDeleteDlg = RemoveItemDialog.FromDte(app)) {
+                    removeDeleteDlg.Remove();
+                }
 
-                app.SolutionExplorerTreeView.WaitForItemRemoved(
-                    "Solution '" + app.Dte.Solution.Projects.Item(1).Name + "' (1 project)",
-                    app.Dte.Solution.Projects.Item(1).Name,
+                app.OpenSolutionExplorer().WaitForChildOfProjectRemoved(
+                    project,
                     SR.GetString(SR.Environments),
-                    envName);
+                    envName
+                );
 
-                var projectHome = (string)app.Dte.Solution.Projects.Item(1).Properties.Item("ProjectHome").Value;
+                var projectHome = (string)project.Properties.Item("ProjectHome").Value;
                 envPath = Path.Combine(projectHome, envPath);
                 Assert.IsTrue(Directory.Exists(envPath), envPath);
             }
@@ -305,12 +292,10 @@ namespace PythonToolsUITests {
         public void DeleteVirtualEnv() {
             using (var dis = Init())
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                CreateTemporaryProject(app);
+                var project = CreateTemporaryProject(app);
 
                 string envName, envPath;
-                var env = CreateVirtualEnvironment(app, out envName, out envPath);
-
-                env.Select();
+                var env = CreateVirtualEnvironment(app, project, out envName, out envPath);
 
                 // Need to wait for analysis to complete before deleting - otherwise
                 // it will always fail.
@@ -322,18 +307,18 @@ namespace PythonToolsUITests {
                 // Need to wait some more for the database to be loaded.
                 Thread.Sleep(5000);
 
-                var removeDeleteDlg = new AutomationWrapper(AutomationElement.FromHandle(
-                    app.OpenDialogWithDteExecuteCommand("Edit.Delete")));
-                removeDeleteDlg.ClickButtonByName("Delete");
-                app.WaitForDialogDismissed();
+                env.Select();
+                using (var removeDeleteDlg = RemoveItemDialog.FromDte(app)) {
+                    removeDeleteDlg.Delete();
+                }
 
-                app.SolutionExplorerTreeView.WaitForItemRemoved(
-                    "Solution '" + app.Dte.Solution.Projects.Item(1).Name + "' (1 project)",
-                    app.Dte.Solution.Projects.Item(1).Name,
+                app.OpenSolutionExplorer().WaitForChildOfProjectRemoved(
+                    project,
                     SR.GetString(SR.Environments),
-                    envName);
+                    envName
+                );
 
-                var projectHome = (string)app.Dte.Solution.Projects.Item(1).Properties.Item("ProjectHome").Value;
+                var projectHome = (string)project.Properties.Item("ProjectHome").Value;
                 envPath = Path.Combine(projectHome, envPath);
                 for (int retries = 10;
                     Directory.Exists(envPath) && retries > 0;
@@ -347,67 +332,45 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void DefaultBaseInterpreterSelection() {
+            // The project that will be loaded references these environments.
             PythonPaths.Python27.AssertInstalled();
             PythonPaths.Python33.AssertInstalled();
-            
+
             using (var dis = Init())
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
                 var project = app.OpenProject(@"TestData\Environments.sln");
 
-                app.OpenSolutionExplorer();
-                var env = app.SolutionExplorerTreeView.FindItem(
-                    "Solution 'Environments' (1 project)",
-                    project.Name,
+                app.OpenSolutionExplorer().FindChildOfProject(
+                    project,
                     SR.GetString(SR.Environments),
                     "Python 2.7"
-                ).AsWrapper();
-                env.Select();
+                ).Select();
                 app.Dte.ExecuteCommand("Project.ActivateEnvironment");
 
-                app.OpenSolutionExplorer();
-                var virtualEnv = app.SolutionExplorerTreeView.FindItem(
-                    "Solution 'Environments' (1 project)",
-                    project.Name,
-                    SR.GetString(SR.Environments)
-                );
-                AutomationWrapper.Select(virtualEnv);
+                app.OpenSolutionExplorer().FindChildOfProject(project, SR.GetString(SR.Environments)).Select();
 
-                var createVenv = new AutomationWrapper(AutomationElement.FromHandle(
-                    app.OpenDialogWithDteExecuteCommand("Project.AddVirtualEnvironment")
-                ));
+                using (var createVenv = AutomationDialog.FromDte(app, "Project.AddVirtualEnvironment")) {
+                    var baseInterp = new ComboBox(createVenv.FindByAutomationId("BaseInterpreter")).GetSelectedItemName();
 
-                AutomationWrapper.DumpElement(createVenv.Element);
-                var baseInterp = new ComboBox(createVenv.FindByAutomationId("BaseInterpreter")).GetSelectedItemName();
+                    Assert.AreEqual("Python 2.7", baseInterp);
+                    createVenv.Cancel();
+                }
 
-                Assert.AreEqual("Python 2.7", baseInterp);
-                createVenv.ClickButtonByAutomationId("Cancel");
-
-                app.OpenSolutionExplorer();
-                env = new AutomationWrapper(app.SolutionExplorerTreeView.FindItem(
-                    "Solution 'Environments' (1 project)",
-                    project.Name,
+                app.OpenSolutionExplorer().FindChildOfProject(
+                    project,
                     SR.GetString(SR.Environments),
                     "Python 3.3"
-                ));
-                env.Select();
+                ).Select();
                 app.Dte.ExecuteCommand("Project.ActivateEnvironment");
 
-                app.OpenSolutionExplorer();
-                virtualEnv = app.SolutionExplorerTreeView.FindItem(
-                    "Solution 'Environments' (1 project)",
-                    project.Name,
-                    SR.GetString(SR.Environments)
-                );
-                AutomationWrapper.Select(virtualEnv);
+                app.OpenSolutionExplorer().FindChildOfProject(project, SR.GetString(SR.Environments)).Select();
 
-                createVenv = new AutomationWrapper(AutomationElement.FromHandle(
-                    app.OpenDialogWithDteExecuteCommand("Project.AddVirtualEnvironment")
-                ));
+                using (var createVenv = AutomationDialog.FromDte(app, "Project.AddVirtualEnvironment")) {
+                    var baseInterp = new ComboBox(createVenv.FindByAutomationId("BaseInterpreter")).GetSelectedItemName();
 
-                baseInterp = new ComboBox(createVenv.FindByAutomationId("BaseInterpreter")).GetSelectedItemName();
-
-                Assert.AreEqual("Python 3.3", baseInterp);
-                createVenv.ClickButtonByAutomationId("Cancel");
+                    Assert.AreEqual("Python 3.3", baseInterp);
+                    createVenv.Cancel();
+                }
             }
         }
 
@@ -416,10 +379,10 @@ namespace PythonToolsUITests {
         public void NoGlobalSitePackages() {
             using (var dis = Init())
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                CreateTemporaryProject(app);
+                var project = CreateTemporaryProject(app);
 
                 string envName, envPath;
-                var env = CreateVirtualEnvironment(app, out envName, out envPath);
+                var env = CreateVirtualEnvironment(app, project, out envName, out envPath);
 
                 env.Select();
 
@@ -433,8 +396,7 @@ namespace PythonToolsUITests {
                 Thread.Sleep(5000);
 
                 // Ensure virtualenv_support is NOT available in the virtual environment.
-                var pyProj = app.Dte.Solution.Projects.Item(1).GetPythonProject();
-                var interp = pyProj.GetInterpreter();
+                var interp = project.GetPythonProject().GetInterpreter();
 
                 Assert.IsNull(interp.ImportModule("virtualenv_support"));
             }
@@ -450,16 +412,21 @@ namespace PythonToolsUITests {
                     Pip.Uninstall(dis.CurrentDefault, "virtualenv", false).Wait();
                 }
 
+                Assert.AreEqual(0, analysis::Microsoft.PythonTools.Interpreter.PythonInterpreterFactoryExtensions
+                    .FindModules(dis.CurrentDefault, "virtualenv").Count,
+                    string.Format("FindModules thinks 'virtualenv' is installed into {0}", dis.CurrentDefault.Configuration.PrefixPath)
+                );
+
                 using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                    CreateTemporaryProject(app);
+                    var project = CreateTemporaryProject(app);
 
                     string envName, envPath;
 
-                    var env = CreateVirtualEnvironment(app, out envName, out envPath);
+                    var env = CreateVirtualEnvironment(app, project, out envName, out envPath);
                     Assert.IsNotNull(env);
                     Assert.IsNotNull(env.Element);
                     Assert.AreEqual(string.Format("env (Python {0}3.3)",
-                        dis.CurrentDefault.Configuration.Architecture == System.Reflection.ProcessorArchitecture.Amd64 ? "64-bit " : ""
+                        dis.CurrentDefault.Configuration.Architecture == ProcessorArchitecture.Amd64 ? "64-bit " : ""
                     ), envName);
                 }
             }
@@ -474,12 +441,12 @@ namespace PythonToolsUITests {
             }
 
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                CreateTemporaryProject(app);
+                var project = CreateTemporaryProject(app);
 
                 string envName;
                 var envPath = TestData.GetPath(@"TestData\\Environments\\venv");
 
-                var env = AddExistingVirtualEnvironment(app, envPath, out envName);
+                var env = AddExistingVirtualEnvironment(app, project, envPath, out envName);
                 Assert.IsNotNull(env);
                 Assert.IsNotNull(env.Element);
                 Assert.AreEqual("venv (Python 3.3)", envName);

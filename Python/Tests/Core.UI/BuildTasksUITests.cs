@@ -341,7 +341,7 @@ namespace PythonToolsUITests {
                 OpenProject(app, "CommandRequirePackages.sln", out node, out proj);
 
                 string envName;
-                var env = VirtualEnvTests.CreateVirtualEnvironment(app, out envName);
+                var env = VirtualEnvTests.CreateVirtualEnvironment(app, proj, out envName);
 
                 env.Select();
                 app.Dte.ExecuteCommand("Project.ActivateEnvironment");
@@ -359,26 +359,27 @@ namespace PythonToolsUITests {
                         }
                     }
 
-                    var dialog = new AutomationWrapper(AutomationElement.FromHandle(dialogHandle));
-                    var label = dialog.FindByAutomationId("65535");
-                    Assert.IsNotNull(label);
+                    using (var dialog = new AutomationDialog(app, AutomationElement.FromHandle(dialogHandle))) {
+                        var label = dialog.FindByAutomationId("65535");
+                        Assert.IsNotNull(label);
 
-                    string expectedLabel =
-                        "The following packages will be installed from PyPI in order to run this command:\r\n" +
-                        "\r\n" +
-                        "ptvsd\r\n" +
-                        "azure==0.1\r\n" +
-                        "\r\n" +
-                        "Do you want to continue?";
-                    Assert.AreEqual(expectedLabel, label.Current.Name);
+                        string expectedLabel =
+                            "The following packages will be installed from PyPI in order to run this command:\r\n" +
+                            "\r\n" +
+                            "ptvsd\r\n" +
+                            "azure==0.1\r\n" +
+                            "\r\n" +
+                            "Do you want to continue?";
+                        Assert.AreEqual(expectedLabel, label.Current.Name);
 
-                    dialog.ClickButtonByName("Cancel");
-                    try {
-                        task.Wait(1000);
-                        Assert.Fail("Command was not canceled after dismissing the package install confirmation dialog");
-                    } catch (AggregateException ex) {
-                        if (!(ex.InnerException is TaskCanceledException)) {
-                            throw;
+                        dialog.Cancel();
+                        try {
+                            task.Wait(1000);
+                            Assert.Fail("Command was not canceled after dismissing the package install confirmation dialog");
+                        } catch (AggregateException ex) {
+                            if (!(ex.InnerException is TaskCanceledException)) {
+                                throw;
+                            }
                         }
                     }
                 }
@@ -394,8 +395,9 @@ namespace PythonToolsUITests {
                         }
                     }
 
-                    var dialog = new AutomationWrapper(AutomationElement.FromHandle(dialogHandle));
-                    dialog.ClickButtonByName("OK");
+                    using (var dialog = new AutomationDialog(app, AutomationElement.FromHandle(dialogHandle))) {
+                        dialog.OK();
+                    }
                     task.Wait();
 
                     var ver = PythonVersion.Version.ToVersion();

@@ -19,21 +19,31 @@ namespace TestUtilities.UI {
     /// <summary>
     /// Wraps the Delete/Remove/Cancel dialog displayed when removing something from a hierarchy window (such as the solution explorer).
     /// </summary>
-    public class RemoveItemDialog : AutomationWrapper {
+    public class RemoveItemDialog : AutomationDialog {
         public RemoveItemDialog(IntPtr hwnd)
-            : base(AutomationElement.FromHandle(hwnd)) {
+            : base(null, AutomationElement.FromHandle(hwnd)) {
+        }
+
+        public RemoveItemDialog(VisualStudioApp app, AutomationElement element)
+            : base(app, element) {
+        }
+
+        public static RemoveItemDialog FromDte(VisualStudioApp app) {
+            return new RemoveItemDialog(app, AutomationElement.FromHandle(app.OpenDialogWithDteExecuteCommand("Edit.Delete")));
+        }
+
+        public override void OK() {
+            throw new NotSupportedException();
         }
 
         public void Remove() {
-            Invoke(FindButton("Remove"));
+            WaitForInputIdle();
+            WaitForClosed(DefaultTimeout, () => ClickButtonByName("Remove"));
         }
 
         public void Delete() {
-            Invoke(FindButton("Delete"));
-        }
-
-        public void Cancel() {
-            Invoke(FindButton("Cancel"));
+            WaitForInputIdle();
+            WaitForClosed(DefaultTimeout, () => ClickButtonByName("Delete"));
         }
     }
 }

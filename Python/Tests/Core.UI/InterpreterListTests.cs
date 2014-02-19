@@ -28,6 +28,7 @@ using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.InterpreterList;
 using Microsoft.PythonTools.Parsing;
+using Microsoft.PythonTools.Project;
 using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell;
@@ -85,7 +86,7 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CreateRemoveVirtualEnvInInterpreterListInVS() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                app.CreateProject(
+                var project = app.CreateProject(
                     PythonVisualStudioApp.TemplateLanguageName,
                     PythonVisualStudioApp.PythonApplicationTemplate,
                     TestData.GetTempPath(),
@@ -113,7 +114,7 @@ namespace PythonToolsUITests {
 
                 // Create a virtual environment
                 string envName;
-                var env = VirtualEnvTests.CreateVirtualEnvironment(app, out envName);
+                var env = VirtualEnvTests.CreateVirtualEnvironment(app, project, out envName);
                 env.Select();
 
                 app.Dte.ExecuteCommand("View.PythonEnvironments");
@@ -135,16 +136,15 @@ namespace PythonToolsUITests {
                 env.Select();
                 env.SetFocus();
 
-                var removeDeleteDlg = new AutomationWrapper(AutomationElement.FromHandle(
-                    app.OpenDialogWithDteExecuteCommand("Edit.Delete")));
-                removeDeleteDlg.ClickButtonByName("Remove");
-                app.WaitForDialogDismissed();
+                using (var removeDeleteDlg = RemoveItemDialog.FromDte(app)) {
+                    removeDeleteDlg.Remove();
+                }
 
-                app.SolutionExplorerTreeView.WaitForItemRemoved(
-                    "Solution '" + app.Dte.Solution.Projects.Item(1).Name + "' (1 project)",
-                    app.Dte.Solution.Projects.Item(1).Name,
-                    "Python Environments",
-                    envName);
+                app.OpenSolutionExplorer().WaitForChildOfProjectRemoved(
+                    project,
+                    SR.GetString(SR.Environments),
+                    envName
+                );
 
                 // Check that only global environments are in the list
                 allNames = new HashSet<string>(service.Interpreters.Select(i => i.Description));

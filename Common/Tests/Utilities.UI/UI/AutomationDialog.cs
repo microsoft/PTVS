@@ -19,17 +19,27 @@ namespace TestUtilities.UI {
     public class AutomationDialog  : AutomationWrapper, IDisposable {
         private bool _isDisposed;
 
+        public VisualStudioApp App { get; private set; }
+        public TimeSpan DefaultTimeout { get; set; }
+
         public AutomationDialog(VisualStudioApp app, AutomationElement element)
             : base(element) {
             App = app;
+            DefaultTimeout = TimeSpan.FromSeconds(10.0);
         }
 
-        ~AutomationDialog()
-        {
+        public static AutomationDialog FromDte(VisualStudioApp app, string commandName, string commandArgs = "") {
+            return new AutomationDialog(
+                app,
+                AutomationElement.FromHandle(app.OpenDialogWithDteExecuteCommand(commandName, commandArgs))
+            );
+        }
+
+        #region IDisposable Members
+
+        ~AutomationDialog() {
             Dispose(false);
         }
-
-        public VisualStudioApp App { get; private set; }
 
         protected virtual void Dispose(bool disposing) {
             if (!_isDisposed) {
@@ -47,6 +57,25 @@ namespace TestUtilities.UI {
         public void Dispose() {
             this.Dispose(true);
             GC.SuppressFinalize(this);
+        }
+
+        #endregion
+
+        public void ClickButtonAndClose(string buttonName, bool nameIsAutomationId = false) {
+            WaitForInputIdle();
+            if (nameIsAutomationId) {
+                WaitForClosed(DefaultTimeout, () => ClickButtonByAutomationId(buttonName));
+            } else {
+                WaitForClosed(DefaultTimeout, () => ClickButtonByName(buttonName));
+            }
+        }
+
+        public virtual void OK() {
+            ClickButtonAndClose("OK");
+        }
+
+        public virtual void Cancel() {
+            ClickButtonAndClose("Cancel");
         }
     }
 }

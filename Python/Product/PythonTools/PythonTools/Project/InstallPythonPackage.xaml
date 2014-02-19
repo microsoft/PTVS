@@ -94,7 +94,7 @@
             <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
                 <Button IsDefault="True" Click="OkClick" IsEnabled="{Binding IsValid}"
                         MinWidth="86" MinHeight="24" Margin="0 0 9 0"
-                        AutomationProperties.AutomationId="Ok"
+                        AutomationProperties.AutomationId="OK"
                         VerticalAlignment="Center">
                     <StackPanel Orientation="Horizontal">
                         <Image Source="{x:Static wpf:Controls.UacShield}"

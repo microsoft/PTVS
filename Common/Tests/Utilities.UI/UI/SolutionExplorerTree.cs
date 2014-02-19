@@ -77,7 +77,7 @@ namespace TestUtilities.UI {
 
         private void AssertItemExistsInTree(string[] path) {
             var item = WaitForItem(path);
-            if(item == null) {
+            if (item == null) {
                 string msg = "Item not found in solution explorer " + String.Join("\\", path);
                 for (int i = 1; i < path.Length; i++) {
                     item = FindItem(path.Take(i).ToArray());
@@ -100,5 +100,68 @@ namespace TestUtilities.UI {
             Assert.IsNotNull(item);
             item.Select();
         }
+
+        public TreeNode WaitForChildOfProject(EnvDTE.Project project, params string[] path) {
+            var item = WaitForItemHelper(p => FindChildOfProjectHelper(project, p, false), path);
+            // Check one more time, but now let the assertions be raised.
+            return new TreeNode(FindChildOfProjectHelper(project, path, true));
+        }
+
+        public AutomationElement WaitForChildOfProjectRemoved(EnvDTE.Project project, params string[] path) {
+            return WaitForItemRemovedHelper(p => FindChildOfProjectHelper(project, p, false), path);
+        }
+
+        public TreeNode FindChildOfProject(EnvDTE.Project project, params string[] path) {
+            return new TreeNode(FindChildOfProjectHelper(project, path, true));
+        }
+
+        public TreeNode TryFindChildOfProject(EnvDTE.Project project, params string[] path) {
+            return new TreeNode(FindChildOfProjectHelper(project, path, false));
+        }
+
+        private AutomationElement FindChildOfProjectHelper(EnvDTE.Project project, string[] path, bool assertOnFailure) {
+            var sln = project.DTE.Solution;
+            var slnLabel = string.Format(
+                "Solution '{0}' ({1} project{2})",
+                Path.GetFileNameWithoutExtension(sln.FullName),
+                sln.Count,
+                sln.Count == 1 ? "" : "s"
+            );
+
+            var slnElements = Element.FindAll(TreeScope.Children, new PropertyCondition(
+                AutomationElement.NameProperty, slnLabel
+            ));
+            int slnCount = slnElements.OfType<AutomationElement>().Count();
+            if (assertOnFailure) {
+                Assert.AreEqual(1, slnCount, string.Format("Did not find single node <{0}>", slnLabel));
+            } else if (slnCount != 1) {
+                return null;
+            }
+            var slnElement = slnElements.Cast<AutomationElement>().Single();
+
+            var projLabel = project.Name;
+            var projElements = slnElement.FindAll(TreeScope.Children, new PropertyCondition(
+                AutomationElement.NameProperty, projLabel
+            ));
+            int projCount = projElements.OfType<AutomationElement>().Count();
+            if (assertOnFailure) {
+                Assert.AreEqual(1, projCount, string.Format("Did not find single node <{0}>", projLabel));
+            } else if (projCount != 1) {
+                return null;
+            }
+            var projElement = projElements.Cast<AutomationElement>().Single();
+
+            var itemElement = FindNode(
+                projElement.FindAll(TreeScope.Children, Condition.TrueCondition),
+                path,
+                0
+            );
+
+            if (assertOnFailure) {
+                Assert.IsNotNull(itemElement, string.Format("Did not find element <{0}\\{1}\\{2}>", slnLabel, projLabel, string.Join("\\", path)));
+            }
+            return itemElement;
+        }
+
     }
 }
