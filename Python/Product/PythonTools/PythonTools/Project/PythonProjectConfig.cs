@@ -14,7 +14,6 @@
 
 using System.Windows.Forms;
 using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Project {
@@ -40,7 +39,7 @@ namespace Microsoft.PythonTools.Project {
                 return base.DebugLaunch(flags);
             } catch (NoInterpretersException) {
                 PythonToolsPackage.OpenVsWebBrowser(PythonToolsInstallPath.GetFile("NoInterpreters.html"));
-                return VSConstants.E_FAIL;
+                return VSConstants.S_OK;
             }
         }
     }
