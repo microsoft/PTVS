@@ -22,11 +22,14 @@ namespace Microsoft.PythonTools.InterpreterList {
     [Guid(PythonConstants.InterpreterListToolWindowGuid)]
     class InterpreterListToolWindow : ToolWindowPane {
         public InterpreterListToolWindow() {
+            BitmapResourceID = PythonConstants.ResourceIdForReplImages;
+            BitmapIndex = 1;
             Caption = SR.GetString(SR.Environments);
 
             Content = new InterpreterList(
                 PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>(),
-                PythonToolsPackage.Instance);
+                PythonToolsPackage.Instance
+            );
         }
     }
 }

@@ -59,6 +59,7 @@ namespace Microsoft.PythonTools {
         //IDs of the icons for product registration (see Resources.resx)
         internal const int IconIfForSplashScreen = 300;
         internal const int IconIdForAboutBox = 400;
+        internal const int ResourceIdForReplImages = 407;
 
         internal const int AddEnvironment = 0x4006;
         internal const int AddVirtualEnv = 0x4007;
