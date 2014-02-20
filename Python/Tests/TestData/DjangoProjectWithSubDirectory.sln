@@ -1,0 +1,18 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "DjangoProjectWithSubDirectory", "DjangoProjectWithSubDirectory\DjangoProjectWithSubDirectory.pyproj", "{4B3BCC75-1100-4DAB-8D85-C805D7BA78E4}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{4B3BCC75-1100-4DAB-8D85-C805D7BA78E4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4B3BCC75-1100-4DAB-8D85-C805D7BA78E4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

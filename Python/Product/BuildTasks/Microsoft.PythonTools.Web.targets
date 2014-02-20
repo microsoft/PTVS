@@ -773,6 +773,7 @@ interpreter_path_emulated=$(PythonInterpreterPath)
                              TargetType="$(PythonRunWebServerCommandType)"
                              Arguments="$(PythonRunWebServerCommandArguments)"
                              Environment="$(PythonRunWebServerCommandEnvironment)"
+                             WorkingDirectory="$(WorkingDirectory)"
                              ExecuteIn="console">
       <Output TaskParameter="Command" ItemName="Commands" />
     </CreatePythonCommandItem>
@@ -796,6 +797,7 @@ interpreter_path_emulated=$(PythonInterpreterPath)
                              TargetType="$(PythonDebugWebServerCommandType)"
                              Arguments="$(PythonDebugWebServerCommandArguments)"
                              Environment="$(PythonDebugWebServerCommandEnvironment)"
+                             WorkingDirectory="$(WorkingDirectory)"
                              ExecuteIn="console">
       <Output TaskParameter="Command" ItemName="Commands" />
     </CreatePythonCommandItem>

@@ -13,10 +13,12 @@
  * ***************************************************************************/
 
 using System;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using Microsoft.PythonTools.Django;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Project;
 using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell;
@@ -281,6 +283,32 @@ namespace DjangoUITests {
                 var dbgProps = new PythonProjectDebugProperties(debugPage);
                 Assert.AreEqual("Django Web launcher", dbgProps.LaunchMode);
                 dbgProps.AssertMatchesProject(project.GetPythonProject());
+            }
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void DjangoProjectWithSubdirectory() {
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenProject("TestData\\DjangoProjectWithSubDirectory.sln");
+
+                var pyProj = (IPythonProject2)project.GetPythonProject();
+                var dsm = ThreadHelper.Generic.Invoke(() => pyProj.GetProperty("DjangoSettingsModule"));
+                Assert.AreEqual("config.settings", dsm);
+                var workDir = ThreadHelper.Generic.Invoke(() => pyProj.GetWorkingDirectory()).TrimEnd('\\');
+                Assert.AreEqual(TestData.GetPath("TestData\\DjangoProjectWithSubDirectory\\project"), workDir, true);
+
+                var cmd = pyProj.FindCommand("DjangoCollectStaticCommand");
+                
+                ThreadHelper.Generic.Invoke(() => {
+                    Assert.IsTrue(cmd.CanExecute(pyProj), "Cannot execute DjangoCollectStaticCommand");
+                    cmd.Execute(pyProj);
+                });
+
+                // The static dir is 'test_static', check that the admin files
+                // are copied into there.
+                Assert.IsTrue(Directory.Exists(Path.Combine(workDir, "test_static", "admin")), "admin static directory was not created");
+                Assert.IsTrue(File.Exists(Path.Combine(workDir, "test_static", "admin", "css", "base.css")), "admin static files were not copied");
             }
         }
     }
