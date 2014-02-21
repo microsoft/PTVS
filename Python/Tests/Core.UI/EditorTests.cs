@@ -15,7 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using EnvDTE;
 using Microsoft.PythonTools;
@@ -232,11 +232,14 @@ namespace PythonToolsUITests {
                     doc.TextView.Caret.MoveTo(point);
                 }));
 
-                ThreadPool.QueueUserWorkItem(x => VsIdeTestHostContext.Dte.ExecuteCommand("Edit.ParameterInfo"));
+                var t = Task.Run(() => VsIdeTestHostContext.Dte.ExecuteCommand("Edit.ParameterInfo"));
 
-
-                using (var sh = doc.WaitForSession<ISignatureHelpSession>()) {
-                    Assert.AreEqual("b", sh.Session.SelectedSignature.CurrentParameter.Name);
+                try {
+                    using (var sh = doc.WaitForSession<ISignatureHelpSession>()) {
+                        Assert.AreEqual("b", sh.Session.SelectedSignature.CurrentParameter.Name);
+                    }
+                } finally {
+                    t.Wait();
                 }
             }
         }
@@ -632,20 +635,16 @@ x\
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
                 var project = app.OpenProject(@"TestData\ErrorProjectUnicode.sln");
                 var item = project.ProjectItems.Item("Program.py");
-                EnvDTE.Window window = null;
-                ThreadPool.QueueUserWorkItem(x => { window = item.Open(); });
-
-                var dialog = app.WaitForDialog();
+                var windowTask = Task.Run(() => item.Open());
 
                 VisualStudioApp.CheckMessageBox(TestUtilities.UI.MessageBoxButton.Ok, "File Load", "Program.py", "ascii encoding");
-                while (window == null) {
-                    System.Threading.Thread.Sleep(1000);
-                }
 
+                var window = windowTask.Result;
                 window.Activate();
                 var doc = app.GetDocument(item.Document.FullName);
                 var text = doc.TextView.TextBuffer.CurrentSnapshot.GetText();
-                Assert.AreNotEqual(text.IndexOf("????"), -1);
+                // Characters should not have been replaced
+                Assert.AreEqual(-1, text.IndexOf("????"));
             }
         }
 

@@ -16,40 +16,33 @@ using System;
 using System.Windows.Automation;
 
 namespace TestUtilities.UI {
-    class CredentialsDialog : AutomationWrapper {
-        public CredentialsDialog(IntPtr hwnd)
-            : base(AutomationElement.FromHandle(hwnd)) {
+    class CredentialsDialog : AutomationDialog {
+        public CredentialsDialog(VisualStudioApp app, AutomationElement element)
+            : base(app, element) {
         }
 
-        public void Ok() {
-            Invoke(FindButton("OK"));
-        }
-
-        public void Cancel() {
-            Invoke(FindButton("Cancel"));
+        public static CredentialsDialog PublishSelection(VisualStudioApp app) {
+            return new CredentialsDialog(
+                app,
+                AutomationElement.FromHandle(app.OpenDialogWithDteExecuteCommand("Build.PublishSelection"))
+            );
         }
 
         public string UserName {
             get {
-                var patterns = GetUsernameEditBox().GetSupportedPatterns();
-                var filename = (ValuePattern)GetUsernameEditBox().GetCurrentPattern(ValuePattern.Pattern);
-                return filename.Current.Value;
+                return GetUsernameEditBox().GetValuePattern().Current.Value;
             }
             set {
-                var patterns = GetUsernameEditBox().GetSupportedPatterns();
-                var filename = (ValuePattern)GetUsernameEditBox().GetCurrentPattern(ValuePattern.Pattern);
-                filename.SetValue(value);
+                GetUsernameEditBox().GetValuePattern().SetValue(value);
             }
         }
 
         public string Password {
             get {
-                var filename = (ValuePattern)GetPasswordEditBox().GetCurrentPattern(ValuePattern.Pattern);
-                return filename.Current.Value;
+                return GetPasswordEditBox().GetValuePattern().Current.Value;
             }
             set {
-                var filename = (ValuePattern)GetPasswordEditBox().GetCurrentPattern(ValuePattern.Pattern);
-                filename.SetValue(value);
+                GetPasswordEditBox().GetValuePattern().SetValue(value);
             }
         }
 

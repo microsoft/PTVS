@@ -240,7 +240,7 @@ namespace TestUtilities.UI {
         public void SelectSourceControlProvider(string providerName) {
             Element.SetFocus();
 
-            using (var dialog = ToolsOptionsDialog.Open(this)) {
+            using (var dialog = ToolsOptionsDialog.FromDte(this)) {
                 dialog.SelectedView = "Source Control/Plug-in Selection";
                 var currentSourceControl = new ComboBox(
                     dialog.FindByAutomationId("2001") // Current source control plug-in
@@ -248,7 +248,7 @@ namespace TestUtilities.UI {
 
                 currentSourceControl.SelectItem(providerName);
 
-                dialog.OK(TimeSpan.FromSeconds(10.0));
+                dialog.OK();
             }
         }
 

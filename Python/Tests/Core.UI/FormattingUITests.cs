@@ -45,7 +45,7 @@ namespace PythonToolsUITests {
             using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
                 PythonToolsPackage.Instance.SetFormattingOption("SpaceBeforeClassDeclarationParen", true);
                 foreach (var expectedResult in new bool?[] { false, null, true }) {
-                    using (var dialog = ToolsOptionsDialog.Open(app)) {
+                    using (var dialog = ToolsOptionsDialog.FromDte(app)) {
                         dialog.SelectedView = "Text Editor/Python/Formatting/Spacing";
                         var spacingView = FormattingOptionsTreeView.FromDialog(dialog);
 
@@ -59,7 +59,7 @@ namespace PythonToolsUITests {
                         Mouse.MoveTo(value.GetClickablePoint());
                         Mouse.Click(System.Windows.Input.MouseButton.Left);
 
-                        dialog.OK(TimeSpan.FromSeconds(10.0));
+                        dialog.OK();
 
                         Assert.AreEqual(
                             expectedResult,

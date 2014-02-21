@@ -68,6 +68,33 @@ namespace PythonToolsUITests {
             throw new InvalidOperationException();
         }
 
+        private static string[] WaitForFiles(string dir) {
+            string[] confirmation = null;
+            string[] files = null;
+            for (int retries = 10; retries > 0; --retries) {
+                try {
+                    files = Directory.GetFiles(dir);
+                    break;
+                } catch (IOException) {
+                }
+                Thread.Sleep(1000);
+            }
+
+            while (confirmation == null || files.Except(confirmation).Any()) {
+                Thread.Sleep(500);
+                confirmation = files;
+                files = Directory.GetFiles(dir);
+            }
+
+            return files;
+        }
+
+        private static string[] PublishAndWaitForFiles(VisualStudioApp app, string command, string dir) {
+            app.Dte.ExecuteCommand(command);
+
+            return WaitForFiles(dir);
+        }
+
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void TestPublishFiles() {
@@ -86,11 +113,11 @@ namespace PythonToolsUITests {
 
                     AutomationWrapper.Select(programPy);
 
-                    ThreadPool.QueueUserWorkItem(x => VsIdeTestHostContext.Dte.ExecuteCommand("Build.PublishSelection"));
-                    System.Threading.Thread.Sleep(2000);
-                    var files = Directory.GetFiles(dir);
-                    Assert.AreEqual(files.Length, 1);
-                    Assert.AreEqual(Path.GetFileName(files[0]), "Program.py");
+                    var files = PublishAndWaitForFiles(app, "Build.PublishSelection", dir);
+
+                    Assert.IsNotNull(files, "Timed out waiting for files to publish");
+                    Assert.AreEqual(1, files.Length);
+                    Assert.AreEqual("Program.py", Path.GetFileName(files[0]));
 
                     Directory.Delete(dir, true);
                 } finally {
@@ -124,11 +151,11 @@ namespace PythonToolsUITests {
 
                     AutomationWrapper.Select(programPy);
 
-                    ThreadPool.QueueUserWorkItem(x => VsIdeTestHostContext.Dte.ExecuteCommand("Build.PublishSelection"));
-                    System.Threading.Thread.Sleep(2000);
-                    var files = Directory.GetFiles(dir);
-                    Assert.AreEqual(files.Length, 1);
-                    Assert.AreEqual(Path.GetFileName(files[0]), "Program.py");
+                    var files = PublishAndWaitForFiles(app, "Build.PublishSelection", dir);
+                    
+                    Assert.IsNotNull(files, "Timed out waiting for files to publish");
+                    Assert.AreEqual(1, files.Length);
+                    Assert.AreEqual("Program.py", Path.GetFileName(files[0]));
                     Assert.IsTrue(File.GetAttributes(sourceFile).HasFlag(FileAttributes.ReadOnly), "Source file should be read-only");
                     Assert.IsFalse(File.GetAttributes(files[0]).HasFlag(FileAttributes.ReadOnly), "Published file should not be read-only");
 
@@ -158,37 +185,15 @@ namespace PythonToolsUITests {
                     var programPy = window.FindItem("Solution 'PublishTest' (1 project)", "HelloWorld");
 
                     AutomationWrapper.Select(programPy);
+                    var files = PublishAndWaitForFiles(app, "Build.PublishSelection", dir);
 
-                    using (var publishComplete = new AutoResetEvent(false))
-                    using (var tcs = new CancellationTokenSource()) {
-                        const double TIMEOUT = 10; // seconds
-                        tcs.CancelAfter(TimeSpan.FromSeconds(TIMEOUT));
-
-                        ThreadPool.QueueUserWorkItem(x => {
-                            try {
-                                app.Dte.ExecuteCommand("Build.PublishSelection");
-
-                                while (!tcs.IsCancellationRequested) {
-                                    try {
-                                        Directory.GetFiles(dir);
-                                        break;
-                                    } catch (IOException) {
-                                    } catch (UnauthorizedAccessException) {
-                                    }
-                                    Thread.Sleep(1000);
-                                }
-                            } finally {
-                                publishComplete.Set();
-                            }
-                        });
-                        Assert.IsTrue(publishComplete.WaitOne(TimeSpan.FromSeconds(TIMEOUT)), "Publish timed out");
-                    }
-
-                    var files = Directory.GetFiles(dir);
-                    Assert.AreEqual(files.Length, 2);
-                    files = files.Select(x => Path.GetFileName(x)).ToArray();
-                    Assert.IsTrue(files.Contains("Program.py"));
-                    Assert.IsTrue(files.Contains("TextFile.txt"));
+                    Assert.IsNotNull(files, "Timed out waiting for files to publish");
+                    Assert.AreEqual(2, files.Length);
+                    AssertUtil.ContainsExactly(
+                        files.Select(Path.GetFileName),
+                        "Program.py",
+                        "TextFile.txt"
+                    );
 
                     Directory.Delete(dir, true);
                 } finally {
@@ -219,21 +224,18 @@ namespace PythonToolsUITests {
 
                         AutomationWrapper.Select(programPy);
 
-                        var creds = new CredentialsDialog(app.OpenDialogWithDteExecuteCommand("Build.PublishSelection"));
-                        creds.UserName = PrivateShareUserWithoutMachine;
-                        creds.Password = PrivateSharePassword;
-                        creds.Ok();
-
-                        System.Threading.Thread.Sleep(2000);
+                        using (var creds = CredentialsDialog.PublishSelection(app)) {
+                            creds.UserName = PrivateShareUserWithoutMachine;
+                            creds.Password = PrivateSharePassword;
+                            creds.OK();
+                        }
 
                         string dir = Path.Combine(TestSharePrivate, subDir);
 
-                        for (int i = 0; i < 10 && !Directory.Exists(dir); i++) {
-                            System.Threading.Thread.Sleep(1000);
-                        }
+                        var files = WaitForFiles(dir);
 
-                        var files = Directory.GetFiles(dir);
-                        Assert.AreEqual(files.Length, 1);
+                        Assert.IsNotNull(files, "Timed out waiting for files to publish");                        
+                        Assert.AreEqual(1, files.Length);
                         Assert.AreEqual(Path.GetFileName(files[0]), "Program.py");
 
                         Directory.Delete(dir, true);
@@ -303,18 +305,19 @@ namespace PythonToolsUITests {
 
                         AutomationWrapper.Select(programPy);
 
-                        var creds = new CredentialsDialog(app.OpenDialogWithDteExecuteCommand("Build.PublishSelection"));
-                        creds.UserName = PrivateShareUserWithoutMachine;
-                        creds.Password = PrivateSharePassword;
-                        creds.Ok();
+                        using (var creds = CredentialsDialog.PublishSelection(app)) {
+                            creds.UserName = PrivateShareUserWithoutMachine;
+                            creds.Password = PrivateSharePassword;
+                            creds.OK();
+                        }
 
                         System.Threading.Thread.Sleep(2000);
 
                         using (var helper = new NetUseHelper()) {
                             string dir = Path.Combine(helper.Drive + "\\", subDir);
-                            var files = Directory.GetFiles(dir);
-                            Assert.AreEqual(files.Length, 1);
-                            Assert.AreEqual(Path.GetFileName(files[0]), "Program.py");
+                            var files = WaitForFiles(dir);
+                            Assert.AreEqual(1, files.Length);
+                            Assert.AreEqual("Program.py", Path.GetFileName(files[0]));
 
                             Directory.Delete(dir, true);
                         }
@@ -347,10 +350,11 @@ namespace PythonToolsUITests {
 
                         AutomationWrapper.Select(programPy);
 
-                        var creds = new CredentialsDialog(app.OpenDialogWithDteExecuteCommand("Build.PublishSelection"));
-                        creds.UserName = PrivateShareUser;
-                        creds.Password = PrivateSharePasswordIncorrect;
-                        creds.Ok();
+                        using (var creds = CredentialsDialog.PublishSelection(app)) {
+                            creds.UserName = PrivateShareUser;
+                            creds.Password = PrivateSharePasswordIncorrect;
+                            creds.OK();
+                        }
 
                         const string expected = "Publish failed: Incorrect user name or password: ";
 
@@ -394,10 +398,11 @@ namespace PythonToolsUITests {
 
                         AutomationWrapper.Select(programPy);
 
-                        var creds = new CredentialsDialog(app.OpenDialogWithDteExecuteCommand("Build.PublishSelection"));
-                        creds.UserName = PrivateShareUser;
-                        creds.Password = PrivateSharePasswordIncorrect;
-                        creds.Cancel();
+                        using (var creds = CredentialsDialog.PublishSelection(app)) {
+                            creds.UserName = PrivateShareUser;
+                            creds.Password = PrivateSharePasswordIncorrect;
+                            creds.Cancel();
+                        }
 
                         var statusBar = app.GetService<IVsStatusbar>(typeof(SVsStatusbar));
                         string text = null;
@@ -463,21 +468,6 @@ namespace PythonToolsUITests {
                     VsIdeTestHostContext.Dte.Solution.Close(false);
                 }
             }
-        }
-
-        private static string[] WaitForFiles(string dir) {
-            string[] files = null;
-            for (int i = 0; i < 10; i++) {
-                try {
-                    files = Directory.GetFiles(dir);
-                } catch {
-                }
-                if (files == null || files.Length != 0) {
-                    break;
-                }
-                System.Threading.Thread.Sleep(3000);
-            }
-            return files;
         }
     }
 }

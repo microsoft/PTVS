@@ -16,42 +16,27 @@ using System;
 using System.Windows.Automation;
 
 namespace TestUtilities.UI {
-    public class ToolsOptionsDialog : AutomationWrapper, IDisposable {
-        private ToolsOptionsDialog(IntPtr handle)
-            : base(AutomationElement.FromHandle(handle)) {
+    public class ToolsOptionsDialog : AutomationDialog {
+        public ToolsOptionsDialog(VisualStudioApp app, AutomationElement element)
+            : base(app, element) {
         }
 
-        public static ToolsOptionsDialog Open(VisualStudioApp app) {
-            return new ToolsOptionsDialog(app.OpenDialogWithDteExecuteCommand("Tools.Options"));
+        public static ToolsOptionsDialog FromDte(VisualStudioApp app) {
+            return new ToolsOptionsDialog(
+                app,
+                AutomationElement.FromHandle(app.OpenDialogWithDteExecuteCommand("Tools.Options"))
+            );
         }
 
-        public void Dispose() {
-            try {
-                Element.GetWindowPattern().Close();
-            } catch (InvalidOperationException) {
-            } catch (ElementNotAvailableException) {
-            }
+        public override void OK() {
+            ClickButtonAndClose("1", nameIsAutomationId: true);
         }
 
-        public void OK(TimeSpan timeout) {
-            WaitForInputIdle();
-            var button = FindByAutomationId("1").AsWrapper();   // "OK"
-            button.SetFocus();
-            WaitForClosed(timeout, button.Invoke);
-        }
-
-        public void Cancel(TimeSpan timeout) {
-            WaitForInputIdle();
-            var button = FindByAutomationId("2").AsWrapper();   // "Cancel"
-            button.SetFocus();
-            WaitForClosed(timeout, button.Invoke);
+        public override void Cancel() {
+            ClickButtonAndClose("2", nameIsAutomationId: true);
         }
 
         public string SelectedView {
-            get {
-                // TODO: Implement getting the selected view (when we need it)
-                throw new NotSupportedException("Cannot get the selected view (yet)");
-            }
             set {
                 var treeView = new TreeView(Element.FindFirst(
                     TreeScope.Descendants,

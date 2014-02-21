@@ -373,9 +373,6 @@ namespace PythonToolsUITests {
                     var rowCount = (int)list.Element.GetCurrentPropertyValue(GridPattern.RowCountProperty);
                     Assert.AreEqual(service.Interpreters.Count(), rowCount);
 
-                    var window = PythonToolsPackage.Instance.FindWindowPane(typeof(InterpreterListToolWindow), 0, true) as WindowPane;
-                    var interpreterList = window.Content as InterpreterList;
-
                     var label = list.FindByAutomationId("InterpreterName");
                     var name = (string)label.GetCurrentPropertyValue(AutomationElement.NameProperty);
                     Assert.AreEqual(fact.Description, name);
@@ -403,7 +400,7 @@ namespace PythonToolsUITests {
                     Assert.IsFalse((bool)progress.GetCurrentPropertyValue(AutomationElement.IsOffscreenProperty));
 
                     fact.EndGenerateCompletionDatabase(identifier, false);
-                    interpreterList.Dispatcher.Invoke((Action)(() => { CommandManager.InvalidateRequerySuggested(); }));
+                    CommandManager.InvalidateRequerySuggested();
                     Thread.Sleep(1000);
 
                     Assert.IsFalse((bool)required.GetCurrentPropertyValue(AutomationElement.IsOffscreenProperty));
@@ -418,7 +415,7 @@ namespace PythonToolsUITests {
                     Assert.IsFalse((bool)progress.GetCurrentPropertyValue(AutomationElement.IsOffscreenProperty));
 
                     fact.EndGenerateCompletionDatabase(identifier, true);
-                    interpreterList.Dispatcher.Invoke((Action)(() => { CommandManager.InvalidateRequerySuggested(); }));
+                    CommandManager.InvalidateRequerySuggested();
                     Thread.Sleep(1000);
 
                     Assert.IsTrue((bool)required.GetCurrentPropertyValue(AutomationElement.IsOffscreenProperty));
@@ -622,53 +619,63 @@ namespace PythonToolsUITests {
             });
             t.SetApartmentState(ApartmentState.STA);
             t.Start();
-            Assert.IsTrue(e.WaitOne(5000));
-            var dispatcher = wnd.Dispatcher;
-
             try {
-                Assert.IsTrue(dispatcher.Invoke(() => view.CanRefresh));
-                Assert.IsTrue(dispatcher.Invoke(() => InterpreterList.RegenerateCommand.CanExecute(view, list)));
-                Assert.IsFalse(fact.IsCurrent);
-                Assert.AreEqual(MockPythonInterpreterFactory.NoDatabaseReason, fact.GetIsCurrentReason(null));
+                Assert.IsTrue(e.WaitOne(5000));
+                var dispatcher = wnd.Dispatcher;
 
-                dispatcher.Invoke(() => InterpreterList.RegenerateCommand.Execute(view, list));
+                try {
+                    Assert.IsTrue(dispatcher.Invoke(() => view.CanRefresh));
+                    Assert.IsTrue(dispatcher.Invoke(() => InterpreterList.RegenerateCommand.CanExecute(view, list)));
+                    Assert.IsFalse(fact.IsCurrent);
+                    Assert.AreEqual(MockPythonInterpreterFactory.NoDatabaseReason, fact.GetIsCurrentReason(null));
 
-                Assert.IsTrue(dispatcher.Invoke(() => view.IsRunning));
-                Assert.IsFalse(dispatcher.Invoke(() => InterpreterList.RegenerateCommand.CanExecute(view, list)));
-                Assert.IsFalse(fact.IsCurrent);
-                Assert.AreEqual(MockPythonInterpreterFactory.GeneratingReason, fact.GetIsCurrentReason(null));
+                    dispatcher.Invoke(() => InterpreterList.RegenerateCommand.Execute(view, list));
 
-                fact.EndGenerateCompletionDatabase(list, view.Identifier, false, true);
-                while (dispatcher.Invoke(() => view.IsRunning)) {
-                    dispatcher.BeginInvoke((Action)(() => { e.Set(); }), DispatcherPriority.ApplicationIdle);
-                    Assert.IsTrue(e.WaitOne(5000));
+                    Assert.IsTrue(dispatcher.Invoke(() => view.IsRunning));
+                    Assert.IsFalse(dispatcher.Invoke(() => InterpreterList.RegenerateCommand.CanExecute(view, list)));
+                    Assert.IsFalse(fact.IsCurrent);
+                    Assert.AreEqual(MockPythonInterpreterFactory.GeneratingReason, fact.GetIsCurrentReason(null));
+
+                    fact.EndGenerateCompletionDatabase(list, view.Identifier, false, true);
+                    while (dispatcher.Invoke(() => view.IsRunning)) {
+                        dispatcher.BeginInvoke((Action)(() => { e.Set(); }), DispatcherPriority.ApplicationIdle);
+                        Assert.IsTrue(e.WaitOne(5000));
+                    }
+
+                    Assert.IsFalse(dispatcher.Invoke(() => view.IsRunning));
+                    Assert.IsTrue(dispatcher.Invoke(() => InterpreterList.RegenerateCommand.CanExecute(view, list)));
+                    Assert.IsFalse(fact.IsCurrent);
+                    Assert.AreEqual(MockPythonInterpreterFactory.MissingModulesReason, fact.GetIsCurrentReason(null));
+
+                    dispatcher.Invoke(() => InterpreterList.RegenerateCommand.Execute(view, list));
+
+                    Assert.IsTrue(dispatcher.Invoke(() => view.IsRunning));
+                    Assert.IsFalse(dispatcher.Invoke(() => InterpreterList.RegenerateCommand.CanExecute(view, list)));
+                    Assert.IsFalse(fact.IsCurrent);
+                    Assert.AreEqual(MockPythonInterpreterFactory.GeneratingReason, fact.GetIsCurrentReason(null));
+
+                    fact.EndGenerateCompletionDatabase(list, view.Identifier, true, true);
+                    while (dispatcher.Invoke(() => view.IsRunning)) {
+                        dispatcher.BeginInvoke((Action)(() => e.Set()), DispatcherPriority.ApplicationIdle);
+                        Assert.IsTrue(e.WaitOne(5000));
+                    }
+
+                    Assert.IsFalse(dispatcher.Invoke(() => view.IsRunning));
+                    Assert.IsTrue(dispatcher.Invoke(() => InterpreterList.RegenerateCommand.CanExecute(view, list)));
+                    Assert.IsTrue(fact.IsCurrent);
+                    Assert.AreEqual(MockPythonInterpreterFactory.UpToDateReason, fact.GetIsCurrentReason(null));
+                } finally {
+                    dispatcher.Invoke(() => wnd.Close());
+                    dispatcher.BeginInvokeShutdown(DispatcherPriority.Normal);
                 }
-
-                Assert.IsFalse(dispatcher.Invoke(() => view.IsRunning));
-                Assert.IsTrue(dispatcher.Invoke(() => InterpreterList.RegenerateCommand.CanExecute(view, list)));
-                Assert.IsFalse(fact.IsCurrent);
-                Assert.AreEqual(MockPythonInterpreterFactory.MissingModulesReason, fact.GetIsCurrentReason(null));
-
-                dispatcher.Invoke(() => InterpreterList.RegenerateCommand.Execute(view, list));
-
-                Assert.IsTrue(dispatcher.Invoke(() => view.IsRunning));
-                Assert.IsFalse(dispatcher.Invoke(() => InterpreterList.RegenerateCommand.CanExecute(view, list)));
-                Assert.IsFalse(fact.IsCurrent);
-                Assert.AreEqual(MockPythonInterpreterFactory.GeneratingReason, fact.GetIsCurrentReason(null));
-
-                fact.EndGenerateCompletionDatabase(list, view.Identifier, true, true);
-                while (dispatcher.Invoke(() => view.IsRunning)) {
-                    dispatcher.BeginInvoke((Action)(() => e.Set()), DispatcherPriority.ApplicationIdle);
-                    Assert.IsTrue(e.WaitOne(5000));
-                }
-
-                Assert.IsFalse(dispatcher.Invoke(() => view.IsRunning));
-                Assert.IsTrue(dispatcher.Invoke(() => InterpreterList.RegenerateCommand.CanExecute(view, list)));
-                Assert.IsTrue(fact.IsCurrent);
-                Assert.AreEqual(MockPythonInterpreterFactory.UpToDateReason, fact.GetIsCurrentReason(null));
             } finally {
-                dispatcher.Invoke(() => wnd.Close());
-                dispatcher.BeginInvokeShutdown(DispatcherPriority.Normal);
+                if (t.IsAlive) {
+                    t.Join(TimeSpan.FromSeconds(10.0));
+                    // Should have been closed nicely by the dispatcher, but if
+                    // not...
+                    t.Abort();
+                }
+                e.Dispose();
             }
         }
 
