@@ -12,6 +12,8 @@
 -->
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
   <PropertyGroup>
+    <PythonRunWebServerCommandArguments Condition="'$(PythonRunWebServerCommandArguments)' == ''">$(CommandLineArguments)</PythonRunWebServerCommandArguments>
+    <PythonDebugWebServerCommandArguments Condition="'$(PythonDebugWebServerCommandArguments)' == ''">$(CommandLineArguments)</PythonDebugWebServerCommandArguments>
     <PythonWebFrameworkPackage Condition="'$(PythonWebFrameworkPackage)' == ''">flask</PythonWebFrameworkPackage>
     <PythonWebFrameworkPackageDisplayName Condition="'$(PythonWebFrameworkPackageDisplayName)' == ''">Flask</PythonWebFrameworkPackageDisplayName>
   </PropertyGroup>

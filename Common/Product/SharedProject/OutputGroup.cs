@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using Microsoft.VisualStudio;
@@ -108,7 +109,12 @@ namespace Microsoft.VisualStudioTools.Project
             {
                 bool succeeded = false;
                 _project.BuildTarget(generateDependencyList, out succeeded);
-                System.Diagnostics.Debug.Assert(succeeded, "Failed to build target: " + generateDependencyList);
+                if (!succeeded)
+                {
+                    Debug.WriteLine("Failed to build target {0}", generateDependencyList);
+                    this._outputs.Clear();
+                    return;
+                }
             }
 
             // Rebuild the content of our list of output

@@ -21,6 +21,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Build.Evaluation;
+using Microsoft.PythonTools.Commands;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Interpreters;
 using Microsoft.VisualStudio;
@@ -28,6 +29,7 @@ using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
+using MessageBox = System.Windows.Forms.MessageBox;
 using VsCommands = Microsoft.VisualStudio.VSConstants.VSStd97CmdID;
 using VsCommands2K = Microsoft.VisualStudio.VSConstants.VSStd2KCmdID;
 using VsMenus = Microsoft.VisualStudioTools.Project.VsMenus;
@@ -182,6 +184,21 @@ namespace Microsoft.PythonTools.Project {
                         return ProjectMgr.SetInterpreterFactory(_factory);
                     case PythonConstants.InstallPythonPackage:
                         var task = InterpretersPackageNode.InstallNewPackage(this);
+                        return VSConstants.S_OK;
+                    case PythonConstants.OpenInteractiveForEnvironment:
+                        try {
+                            var window = ExecuteInReplCommand.EnsureReplWindow(_factory, ProjectMgr);
+                            var pane = window as ToolWindowPane;
+                            if (pane != null) {
+                                ErrorHandler.ThrowOnFailure(((IVsWindowFrame)pane.Frame).Show());
+                                window.Focus();
+                            }
+                        } catch (InvalidOperationException ex) {
+                            MessageBox.Show(
+                                string.Format("An error occurred opening this interactive window.{0}{0}{1}", Environment.NewLine, ex),
+                                SR.GetString(SR.PythonToolsForVisualStudio)
+                            );
+                        }
                         return VSConstants.S_OK;
                 }
             }
@@ -363,6 +380,13 @@ namespace Microsoft.PythonTools.Project {
                         if (_interpreters.IsAvailable(_factory) &&
                             Directory.Exists(_factory.Configuration.PrefixPath) &&
                             !_installingPackage) {
+                            result |= QueryStatusResult.ENABLED;
+                        }
+                        return VSConstants.S_OK;
+                    case PythonConstants.OpenInteractiveForEnvironment:
+                        result |= QueryStatusResult.SUPPORTED;
+                        if (_interpreters.IsAvailable(_factory) &&
+                            File.Exists(_factory.Configuration.InterpreterPath)) {
                             result |= QueryStatusResult.ENABLED;
                         }
                         return VSConstants.S_OK;

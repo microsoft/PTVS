@@ -145,6 +145,15 @@
           PythonMajorVersion (2 or 3)
           PythonMinorVersion (0 through 9)
   -->
+  <PropertyGroup>
+    <!-- Setting default values in case targets that require them are invoked
+         without invoking ResolvePythonInterpreterPath (for example, when
+         checking whether we are up to date without any interpreters installed).
+    -->
+    <VirtualEnvEnabled>false</VirtualEnvEnabled>
+    <VirtualEnvIsVEnv>false</VirtualEnvIsVEnv>
+  </PropertyGroup>
+  
   <Target Name="ResolvePythonInterpreterPath" DependsOnTargets="ResolveQualifiedProjectHome">
     <ResolveEnvironment>
       <Output TaskParameter="PrefixPath" PropertyName="PythonPrefixPath" />
@@ -160,7 +169,7 @@
 
     <PropertyGroup Condition="'$(PythonPrefixSubPath)' == ''">
       <VirtualEnvEnabled>false</VirtualEnvEnabled>
-      <VirtualEnvIsVenv>false</VirtualEnvIsVenv>
+      <VirtualEnvIsVEnv>false</VirtualEnvIsVEnv>
     </PropertyGroup>
     <PropertyGroup Condition="'$(PythonPrefixSubPath)' != ''">
       <VirtualEnvEnabled>true</VirtualEnvEnabled>
@@ -280,7 +289,7 @@
   <Target Name="ResolveVirtualEnvSettings" DependsOnTargets="ResolvePythonInterpreterPath;_ResolveVirtualEnvSettings" />
 
   <Target Name="_GetPythonVirtualEnvProxyForEmulator"
-          DependsOnTargets="ResolvePythonInterpreterPath"
+          DependsOnTargets="ResolveQualifiedProjectHome"
           Condition="'$(_PythonDeploymentMethod)' == 'CloudServiceDeploy'">
     <ItemGroup Condition="$(VirtualEnvEnabled)">
       <_PythonVirtualEnvProxyForEmulator Include="$(QualifiedProjectHome)bin\ptvs_virtualenv_proxy.py">
@@ -762,6 +771,7 @@ interpreter_path_emulated=$(PythonInterpreterPath)
     <PropertyGroup>
       <PythonRunWebServerCommand Condition="'$(PythonRunWebServerCommand)' == ''">$(StartupPath)</PythonRunWebServerCommand>
       <PythonRunWebServerCommandType Condition="'$(PythonRunWebServerCommandType)' == ''">script</PythonRunWebServerCommandType>
+      <PythonRunWebServerCommandArguments Condition="'$(PythonRunWebServerCommandArguments)' == ''">$(CommandLineArguments)</PythonRunWebServerCommandArguments>
       <PythonRunWebServerCommandEnvironment>
         SERVER_HOST=$(WebServerHost)
         SERVER_PORT=$(WebBrowserPort)
@@ -786,6 +796,7 @@ interpreter_path_emulated=$(PythonInterpreterPath)
     <PropertyGroup>
       <PythonDebugWebServerCommand Condition="'$(PythonDebugWebServerCommand)' == ''">$(StartupPath)</PythonDebugWebServerCommand>
       <PythonDebugWebServerCommandType Condition="'$(PythonDebugWebServerCommandType)' == ''">script</PythonDebugWebServerCommandType>
+      <PythonDebugWebServerCommandArguments Condition="'$(PythonDebugWebServerCommandArguments)' == ''">$(CommandLineArguments)</PythonDebugWebServerCommandArguments>
       <PythonDebugWebServerCommandEnvironment>
         SERVER_HOST=$(WebServerHost)
         SERVER_PORT=$(WebBrowserPort)

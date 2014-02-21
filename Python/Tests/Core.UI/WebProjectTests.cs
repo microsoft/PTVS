@@ -27,6 +27,7 @@ using Microsoft.PythonTools.Project.Web;
 using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
@@ -66,6 +67,40 @@ namespace PythonToolsUITests {
                 Assert.IsNotNull(ccp.FindCommand("PythonRunWebServerCommand"), "No PythonRunWebServerCommand");
                 Assert.IsNotNull(ccp.FindCommand("PythonDebugWebServerCommand"), "No PythonDebugWebServerCommand");
                 Assert.IsNull(ccp.FindCommand("PythonUpgradeWebFrameworkCommand"), "Unexpected PythonUpgradeWebFrameworkCommand");
+            }
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void WebProjectCommandLineArgs() {
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.OpenProject(@"TestData\CheckCommandLineArgs.sln");
+
+                var proj = project.GetCommonProject() as IPythonProject2;
+                Assert.IsNotNull(proj);
+
+                var outFile = Path.Combine(Path.GetDirectoryName(project.FullName), "output.txt");
+
+                foreach (var cmdName in new[] { "PythonRunWebServerCommand", "PythonDebugWebServerCommand" }) {
+                    Console.WriteLine("Testing {0}, writing to {1}", cmdName, outFile);
+
+                    if (File.Exists(outFile)) {
+                        File.Delete(outFile);
+                    }
+
+                    var outData = Guid.NewGuid().ToString("N");
+
+                    ThreadHelper.Generic.Invoke(() => {
+                        proj.SetProperty("CommandLineArguments", outData + " \"" + outFile + "\"");
+                        proj.FindCommand(cmdName).Execute(proj);
+                    });
+
+                    for (int retries = 10; retries > 0 && !File.Exists(outFile); --retries) {
+                        Thread.Sleep(100);
+                    }
+
+                    Assert.AreEqual(outData, File.ReadAllText(outFile).Trim());
+                }
             }
         }
 

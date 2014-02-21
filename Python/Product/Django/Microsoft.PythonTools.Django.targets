@@ -20,9 +20,9 @@
     <DjangoSettingsModule Condition="'$(DjangoSettingsModule)' == ''">$(MSBuildProjectName).settings</DjangoSettingsModule>
     <DjangoDebugging Condition="'$(DjangoDebugging)'==''">true</DjangoDebugging>
 
-    <PythonRunWebServerCommandArguments Condition="'$(PythonRunWebServerCommandArguments)' == ''">runserver --settings $(DjangoSettingsModule) $(CommandLineArguments) %SERVER_PORT%</PythonRunWebServerCommandArguments>
+    <PythonRunWebServerCommandArguments Condition="'$(PythonRunWebServerCommandArguments)' == ''">runserver --settings $(DjangoSettingsModule) %SERVER_PORT% $(CommandLineArguments)</PythonRunWebServerCommandArguments>
     <PythonRunWebServerCommandType Condition="'$(PythonRunWebServerCommandType)' == ''">script</PythonRunWebServerCommandType>
-    <PythonDebugWebServerCommandArguments Condition="'$(PythonDebugWebServerCommandArguments)' == ''">runserver --noreload --settings $(DjangoSettingsModule) $(CommandLineArguments) %SERVER_PORT%</PythonDebugWebServerCommandArguments>
+    <PythonDebugWebServerCommandArguments Condition="'$(PythonDebugWebServerCommandArguments)' == ''">runserver --noreload --settings $(DjangoSettingsModule) %SERVER_PORT% $(CommandLineArguments)</PythonDebugWebServerCommandArguments>
     <PythonDebugWebServerCommandType Condition="'$(PythonDebugWebServerCommandType)' == ''">script</PythonDebugWebServerCommandType>
     <PythonWebFrameworkPackage Condition="'$(PythonWebFrameworkPackage)' == ''">django</PythonWebFrameworkPackage>
     <PythonWebFrameworkPackageDisplayName Condition="'$(PythonWebFrameworkPackageDisplayName)' == ''">Django</PythonWebFrameworkPackageDisplayName>

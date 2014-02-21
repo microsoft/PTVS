@@ -28,6 +28,7 @@ using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio.Repl;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text.Adornments;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
@@ -236,8 +237,14 @@ namespace Microsoft.PythonTools.Repl {
             }
 
             var workingDir = CurrentOptions.WorkingDirectory;
-            if (workingDir != null) {
+            if (!string.IsNullOrEmpty(workingDir)) {
                 processInfo.WorkingDirectory = workingDir;
+            } else if (configurableOptions != null && configurableOptions.Project != null) {
+                processInfo.WorkingDirectory = ThreadHelper.Generic.Invoke(() => {
+                    return configurableOptions.Project.GetWorkingDirectory();
+                });
+            } else {
+                processInfo.WorkingDirectory = Interpreter.Configuration.PrefixPath;
             }
 
             var envVars = CurrentOptions.EnvironmentVariables;

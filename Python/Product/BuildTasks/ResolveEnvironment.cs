@@ -144,7 +144,20 @@ namespace Microsoft.PythonTools.BuildTasks {
                     factory = provider.FindInterpreter(id, version);
                 }
 
-                if (factory != null) {
+                if (!provider.IsAvailable(factory)) {
+                    _log.LogError(
+                        "The environment '{0}' is not available. Check your project configuration and try again.",
+                        factory.Description
+                    );
+                    return false;
+                } else if (factory == service.NoInterpretersValue) {
+                    _log.LogError(
+                        "No Python environments are configured. Please install or configure an environment and try " +
+                        "again. See http://go.microsoft.com/fwlink/?LinkID=299429 for information on setting up a " +
+                        "Python environment."
+                    );
+                    return false;
+                } else if (factory != null) {
                     PrefixPath = CommonUtils.EnsureEndSeparator(factory.Configuration.PrefixPath);
                     if (CommonUtils.IsSubpathOf(projectHome, PrefixPath)) {
                         ProjectRelativePrefixPath = CommonUtils.GetRelativeDirectoryPath(projectHome, PrefixPath);

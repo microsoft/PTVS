@@ -736,6 +736,7 @@ namespace Microsoft.PythonTools.Interpreter {
                     } else if (value == null || !_factories.ContainsKey(value)) {
                         // Choose a factory and make it our default.
                         _active = _factories.Keys
+                            .Where(f => !(f is NotFoundInterpreterFactory))
                             .Where(f => !string.IsNullOrEmpty(f.Configuration.InterpreterPath))
                             .OrderBy(f => f.Description)
                             .ThenBy(f => f.Configuration.Version)

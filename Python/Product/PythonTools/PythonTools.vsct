@@ -670,6 +670,19 @@
         </Strings>
       </Button>
 
+      <Button guid="guidPythonToolsCmdSet" id="cmdidOpenInteractiveForEnvironment" priority="0x0302" type="Button">
+        <Parent guid="guidPythonToolsCmdSet" id="CodeFileGroup"/>
+        <Icon guid="guidImages" id="pyReplPic" />
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <CommandFlag>DefaultInvisible</CommandFlag>
+        <Strings>
+          <ButtonText>Open I&amp;nteractive Window</ButtonText>
+          <MenuText>Open I&amp;nteractive Window</MenuText>
+          <ToolTipText>Open Interactive Window</ToolTipText>
+          <CommandName>Open Interactive Window</CommandName>
+        </Strings>
+      </Button>
+
 
       <Button guid="guidPythonToolsCmdSet" id="cmdidFirstCustomCmdId" priority="0x400" type="Button">
         <CommandFlag>DynamicItemStart DynamicVisibility DefaultInvisible NoButtonCustomize TextChanges</CommandFlag>
@@ -1007,6 +1020,7 @@
       <IDSymbol name="cmdidLastCustomCmdId" value="0x402F" />
 
       <IDSymbol name="cmdIdAddPythonPathToSearchPath" value="0x4030" />
+      <IDSymbol name="cmdidOpenInteractiveForEnvironment" value="0x4031" />
 
       <!-- Groups -->
       <IDSymbol name="EditorContextGroup" value="0x1010" />

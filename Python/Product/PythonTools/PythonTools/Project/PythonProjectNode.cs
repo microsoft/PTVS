@@ -92,7 +92,7 @@ namespace Microsoft.PythonTools.Project {
             }
             _customCommands = null;
 
-            // Project has been cleared, so nothing elso to do here
+            // Project has been cleared, so nothing else to do here
             if (project == null) {
                 return;
             }
@@ -118,8 +118,13 @@ namespace Microsoft.PythonTools.Project {
         }
 
         ProjectInstance IPythonProject2.GetMSBuildProjectInstance() {
-            return CurrentConfig ??
-                BuildProject.CreateProjectInstance(Microsoft.Build.Execution.ProjectInstanceSettings.Immutable);
+            if (CurrentConfig == null) {
+                SetCurrentConfiguration();
+                if (CurrentConfig == null) {
+                    throw new InvalidOperationException("Cannot get current configuration");
+                }
+            }
+            return CurrentConfig;
         }
 
         private void InterpreterFactoriesChanged(object sender, EventArgs e) {
@@ -770,6 +775,13 @@ namespace Microsoft.PythonTools.Project {
 
         public IPythonInterpreterFactory GetInterpreterFactory() {
             var fact = _interpreters.ActiveInterpreter;
+            
+            if (!_interpreters.IsAvailable(fact)) {
+                var service = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
+                if (service != null) {
+                    fact = service.NoInterpretersValue;
+                }
+            }
 
             PythonToolsPackage.EnsureCompletionDb(fact);
 

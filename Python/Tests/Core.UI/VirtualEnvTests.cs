@@ -508,5 +508,51 @@ namespace PythonToolsUITests {
                 collection.Dispose();
             }
         }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void EnvironmentReplWorkingDirectory() {
+            using (var dis = Init())
+            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = CreateTemporaryProject(app);
+
+                var path1 = Path.Combine(Path.GetDirectoryName(project.FullName), Guid.NewGuid().ToString("N"));
+                var path2 = Path.Combine(Path.GetDirectoryName(project.FullName), Guid.NewGuid().ToString("N"));
+                Directory.CreateDirectory(path1);
+                Directory.CreateDirectory(path2);
+
+                ThreadHelper.Generic.Invoke(() => {
+                    project.GetPythonProject().SetProjectProperty("WorkingDirectory", path1);
+                });
+
+                string envName;
+                var env = CreateVirtualEnvironment(app, project, out envName);
+                env.Select();
+
+                app.Dte.ExecuteCommand("Project.OpenInteractiveWindow");
+
+                var window = app.GetInteractiveWindow(string.Format("{0} Interactive", envName));
+                try {
+                    window.ReplWindow.Evaluator.ExecuteText("import os; os.getcwd()").Wait();
+                    window.WaitForTextEnd(
+                        string.Format("'{0}'", path1.Replace("\\", "\\\\")),
+                        ">>>"
+                    );
+
+                    ThreadHelper.Generic.Invoke(() => {
+                        project.GetPythonProject().SetProjectProperty("WorkingDirectory", path2);
+                    });
+
+                    window.Reset();
+                    window.ReplWindow.Evaluator.ExecuteText("import os; os.getcwd()").Wait();
+                    window.WaitForTextEnd(
+                        string.Format("'{0}'", path2.Replace("\\", "\\\\")),
+                        ">>>"
+                    );
+                } finally {
+                    window.Close();
+                }
+            }
+        }
     }
 }

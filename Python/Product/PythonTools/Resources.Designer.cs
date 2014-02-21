@@ -403,7 +403,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to No Python environments are configured. Please install or configure an environment and try again..
+        ///   Looks up a localized string similar to No Python environments are configured. Please install or configure an environment and try again. See http://go.microsoft.com/fwlink/?LinkID=299429 for information on setting up a Python environment..
         /// </summary>
         internal static string NoInterpretersAvailable {
             get {
