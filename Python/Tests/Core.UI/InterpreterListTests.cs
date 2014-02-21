@@ -85,6 +85,7 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("InterpreterList")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CreateRemoveVirtualEnvInInterpreterListInVS() {
+            using (var dis = VirtualEnvTests.Init(PythonPaths.Python27 ?? PythonPaths.Python27_x64, true))
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
                 var project = app.CreateProject(
                     PythonVisualStudioApp.TemplateLanguageName,
@@ -94,7 +95,7 @@ namespace PythonToolsUITests {
                 );
 
                 // Check that only global environments are in the list
-                var model = (IComponentModel)VsIdeTestHostContext.ServiceProvider.GetService(typeof(SComponentModel));
+                var model = app.GetService<IComponentModel>(typeof(SComponentModel));
                 var service = model.GetService<IInterpreterOptionsService>();
                 Assert.IsNotNull(service);
 

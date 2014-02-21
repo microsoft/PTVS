@@ -326,8 +326,8 @@ namespace Microsoft.PythonTools.Project {
         }
 
         internal async Task UpdateInterpreter(InterpreterView view) {
-            if (!view.Dispatcher.CheckAccess()) {
-                await view.Dispatcher.InvokeAsync(() => UpdateInterpreter(view));
+            if (!Dispatcher.CheckAccess()) {
+                await Dispatcher.InvokeAsync(() => UpdateInterpreter(view));
                 return;
             }
 
@@ -335,6 +335,11 @@ namespace Microsoft.PythonTools.Project {
             WillInstallVirtualEnv = false;
             WillInstallElevated = false;
             MayNotSupportVirtualEnv = false;
+
+            Debug.Assert(view != null);
+            if (view == null) {
+                return;
+            }
 
             var interp = view.Interpreter;
             Debug.Assert(interp != null);
