@@ -18,7 +18,7 @@ using Microsoft.VisualStudio.Shell.Interop;
 
 namespace Microsoft.VisualStudioTools.Navigation {
     public interface ISimpleObject {
-        bool CanDelete { get;  }
+        bool CanDelete { get; }
         bool CanGoToSource { get; }
         bool CanRename { get; }
         string Name { get; }

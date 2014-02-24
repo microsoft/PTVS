@@ -64,7 +64,7 @@ namespace Microsoft.VisualStudioTools.Project {
                         string newfilename = newFileNames[index];
                         node = _project.FindNodeByFullPath(newfilename) as FileNode;
                         Debug.Assert(node != null);
-                    }                    
+                    }
 
                     if (node != null) {
                         // Startup file has been renamed

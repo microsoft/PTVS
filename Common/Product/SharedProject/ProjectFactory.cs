@@ -21,19 +21,17 @@ using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using MSBuild = Microsoft.Build.Evaluation;
 
-namespace Microsoft.VisualStudioTools.Project
-{
+namespace Microsoft.VisualStudioTools.Project {
     /// <summary>
     /// Creates projects within the solution
     /// </summary>
 
     public abstract class ProjectFactory : Microsoft.VisualStudio.Shell.Flavor.FlavoredProjectFactoryBase,
 #if DEV11_OR_LATER
-        IVsAsynchronousProjectCreate,
+ IVsAsynchronousProjectCreate,
         IVsProjectUpgradeViaFactory4,
 #endif
-        IVsProjectUpgradeViaFactory
-    {
+ IVsProjectUpgradeViaFactory {
         #region fields
         private Microsoft.VisualStudio.Shell.Package package;
         private System.IServiceProvider site;
@@ -50,7 +48,7 @@ namespace Microsoft.VisualStudioTools.Project
 #if DEV11_OR_LATER
         private static readonly Lazy<IVsTaskSchedulerService> taskSchedulerService = new Lazy<IVsTaskSchedulerService>(() => Package.GetGlobalService(typeof(SVsTaskSchedulerService)) as IVsTaskSchedulerService);
 #endif
-        
+
         // (See GetSccInfo below.)
         // When we upgrade a project, we need to cache the SCC info in case
         // somebody calls to ask for it via GetSccInfo.
@@ -63,22 +61,17 @@ namespace Microsoft.VisualStudioTools.Project
         #endregion
 
         #region properties
-        protected Microsoft.VisualStudio.Shell.Package Package
-        {
-            get
-            {
+        protected Microsoft.VisualStudio.Shell.Package Package {
+            get {
                 return this.package;
             }
         }
 
-        protected internal System.IServiceProvider Site
-        {
-            get
-            {
+        protected internal System.IServiceProvider Site {
+            get {
                 return this.site;
             }
-            internal set
-            {
+            internal set {
                 this.site = value;
             }
         }
@@ -86,8 +79,7 @@ namespace Microsoft.VisualStudioTools.Project
         #endregion
 
         #region ctor
-        protected ProjectFactory(Microsoft.VisualStudio.Shell.Package package)
-        {
+        protected ProjectFactory(Microsoft.VisualStudio.Shell.Package package) {
             this.package = package;
             this.site = package;
             this.buildEngine = MSBuild.ProjectCollection.GlobalProjectCollection;
@@ -111,10 +103,8 @@ namespace Microsoft.VisualStudioTools.Project
         /// <param name="projectGuid">Guid of the project</param>
         /// <param name="project">Project that end up being created by this method</param>
         /// <param name="canceled">Was the project creation canceled</param>
-        protected override void CreateProject(string fileName, string location, string name, uint flags, ref Guid projectGuid, out IntPtr project, out int canceled)
-        {
-            using (new DebugTimer("CreateProject"))
-            {
+        protected override void CreateProject(string fileName, string location, string name, uint flags, ref Guid projectGuid, out IntPtr project, out int canceled) {
+            using (new DebugTimer("CreateProject")) {
                 project = IntPtr.Zero;
                 canceled = 0;
 
@@ -139,8 +129,7 @@ namespace Microsoft.VisualStudioTools.Project
         /// </summary>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Reliability", "CA2000:Dispose objects before losing scope",
             Justification = "The global property handles is instantiated here and used in the project node that will Dispose it")]
-        protected override object PreCreateForOuter(IntPtr outerProjectIUnknown)
-        {
+        protected override object PreCreateForOuter(IntPtr outerProjectIUnknown) {
             Utilities.CheckNotNull(this.buildProject, "The build project should have been initialized before calling PreCreateForOuter.");
 
             // Please be very carefull what is initialized here on the ProjectNode. Normally this should only instantiate and return a project node.
@@ -162,8 +151,7 @@ namespace Microsoft.VisualStudioTools.Project
         /// </summary>
         /// <param name="file">Project file to look into to find the Guid list</param>
         /// <returns>List of semi-colon separated GUIDs</returns>
-        protected override string ProjectTypeGuids(string file)
-        {
+        protected override string ProjectTypeGuids(string file) {
             // Load the project so we can extract the list of GUIDs
 
             this.buildProject = Utilities.ReinitializeMsBuildProject(this.buildEngine, file, this.buildProject);
@@ -179,25 +167,20 @@ namespace Microsoft.VisualStudioTools.Project
 
 #if DEV11_OR_LATER
 
-        public virtual bool CanCreateProjectAsynchronously(ref Guid rguidProjectID, string filename, uint flags)
-        {
+        public virtual bool CanCreateProjectAsynchronously(ref Guid rguidProjectID, string filename, uint flags) {
             return true;
         }
 
-        public void OnBeforeCreateProjectAsync(ref Guid rguidProjectID, string filename, string location, string pszName, uint flags)
-        {
+        public void OnBeforeCreateProjectAsync(ref Guid rguidProjectID, string filename, string location, string pszName, uint flags) {
         }
 
-        public IVsTask CreateProjectAsync(ref Guid rguidProjectID, string filename, string location, string pszName, uint flags)
-        {
+        public IVsTask CreateProjectAsync(ref Guid rguidProjectID, string filename, string location, string pszName, uint flags) {
             Guid iid = typeof(IVsHierarchy).GUID;
-            return VsTaskLibraryHelper.CreateAndStartTask(taskSchedulerService.Value, VsTaskRunContext.UIThreadBackgroundPriority, VsTaskLibraryHelper.CreateTaskBody(() =>
-            {
+            return VsTaskLibraryHelper.CreateAndStartTask(taskSchedulerService.Value, VsTaskRunContext.UIThreadBackgroundPriority, VsTaskLibraryHelper.CreateTaskBody(() => {
                 IntPtr project;
                 int cancelled;
                 CreateProject(filename, location, pszName, flags, ref iid, out project, out cancelled);
-                if (cancelled != 0)
-                {
+                if (cancelled != 0) {
                     throw new OperationCanceledException();
                 }
 
@@ -321,7 +304,7 @@ namespace Microsoft.VisualStudioTools.Project
             out Guid pguidNewProjectFactory
         ) {
             pbstrUpgradedFullyQualifiedFileName = null;
-            
+
             // We first run (or re-run) the upgrade check and bail out early if
             // there is actually no need to upgrade.
             uint dummy;
@@ -348,7 +331,7 @@ namespace Microsoft.VisualStudioTools.Project
             } else {
                 sxsBackup = copyBackup = false;
             }
-            
+
             if (copyBackup) {
                 throw new NotSupportedException("PUVFF_COPYBACKUP is not supported");
             }
@@ -472,7 +455,7 @@ namespace Microsoft.VisualStudioTools.Project
                     _cachedSccLocalPath = string.Empty;
                     _cachedSccProvider = string.Empty;
                     foreach (var property in projectXml.Properties) {
-                        switch(property.Name) {
+                        switch (property.Name) {
                             case ProjectFileConstants.SccProjectName:
                                 _cachedSccProjectName = property.Value;
                                 break;

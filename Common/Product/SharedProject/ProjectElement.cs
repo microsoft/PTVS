@@ -16,8 +16,7 @@ using System;
 using System.Runtime.InteropServices;
 using Microsoft.VisualStudio;
 
-namespace Microsoft.VisualStudioTools.Project
-{
+namespace Microsoft.VisualStudioTools.Project {
 
     /// <summary>
     /// This class represent a project item (usualy a file) and allow getting and
@@ -27,38 +26,28 @@ namespace Microsoft.VisualStudioTools.Project
     /// While the class itself is public so it can be manipulated by derived classes,
     /// its internal constructors make sure it can only be created from within the assembly.
     /// </summary>
-    internal abstract class ProjectElement
-    {
+    internal abstract class ProjectElement {
         private readonly ProjectNode _itemProject;
         private bool _deleted;
 
-        internal ProjectElement(ProjectNode project)
-        {
+        internal ProjectElement(ProjectNode project) {
             Utilities.ArgumentNotNull("project", project);
 
             _itemProject = project;
         }
 
-        public string ItemTypeName
-        {
-            get
-            {
-                if (HasItemBeenDeleted())
-                {
+        public string ItemTypeName {
+            get {
+                if (HasItemBeenDeleted()) {
                     return String.Empty;
-                }
-                else
-                {
+                } else {
                     return ItemType;
                 }
             }
-            set
-            {
-                if (!HasItemBeenDeleted())
-                {
+            set {
+                if (!HasItemBeenDeleted()) {
                     // Check out the project file.
-                    if (!_itemProject.QueryEditProjectFile(false))
-                    {
+                    if (!_itemProject.QueryEditProjectFile(false)) {
                         throw Marshal.GetExceptionForHR(VSConstants.OLE_E_PROMPTSAVECANCELLED);
                     }
 
@@ -67,24 +56,19 @@ namespace Microsoft.VisualStudioTools.Project
             }
         }
 
-        protected abstract string ItemType
-        {
+        protected abstract string ItemType {
             get;
             set;
         }
 
-        internal ProjectNode ItemProject
-        {
-            get
-            {
+        internal ProjectNode ItemProject {
+            get {
                 return _itemProject;
             }
         }
 
-        protected virtual bool Deleted
-        {
-            get
-            {
+        protected virtual bool Deleted {
+            get {
                 return _deleted;
             }
         }
@@ -94,15 +78,12 @@ namespace Microsoft.VisualStudioTools.Project
         /// Once the item is delete, you should not longer be using it.
         /// Note that the item should be removed from the hierarchy prior to this call.
         /// </summary>
-        public virtual void RemoveFromProjectFile()
-        {
+        public virtual void RemoveFromProjectFile() {
             _deleted = true;
         }
 
-        public virtual bool IsExcluded 
-        {
-            get 
-            {
+        public virtual bool IsExcluded {
+            get {
                 return false;
             }
         }
@@ -130,8 +111,7 @@ namespace Microsoft.VisualStudioTools.Project
         /// this items depends on have changed.
         /// Be aware that there is a perf cost in calling this function.
         /// </summary>
-        public virtual void RefreshProperties()
-        {
+        public virtual void RefreshProperties() {
         }
 
         /// <summary>
@@ -144,8 +124,7 @@ namespace Microsoft.VisualStudioTools.Project
         /// For non-file system based project, it may make sense to override.
         /// </summary>
         /// <returns>FullPath</returns>
-        public string GetFullPathForElement()
-        {
+        public string GetFullPathForElement() {
             string path = this.GetMetadata(ProjectFileConstants.Include);
 
             path = CommonUtils.GetAbsoluteFilePath(_itemProject.ProjectHome, path);
@@ -156,29 +135,25 @@ namespace Microsoft.VisualStudioTools.Project
         /// <summary>
         /// Has the item been deleted
         /// </summary>
-        private bool HasItemBeenDeleted()
-        {
+        private bool HasItemBeenDeleted() {
             return _deleted;
         }
 
-        public static bool operator ==(ProjectElement element1, ProjectElement element2)
-        {
+        public static bool operator ==(ProjectElement element1, ProjectElement element2) {
 
             // Do they reference the same element?
             if (Object.ReferenceEquals(element1, element2))
                 return true;
 
             // Verify that they are not null (cast to object first to avoid stack overflow)
-            if (element1 as object == null || element2 as object == null)
-            {
+            if (element1 as object == null || element2 as object == null) {
                 return false;
             }
 
             return element1.Equals(element2);
         }
 
-        public static bool operator !=(ProjectElement element1, ProjectElement element2)
-        {
+        public static bool operator !=(ProjectElement element1, ProjectElement element2) {
             return !(element1 == element2);
         }
 

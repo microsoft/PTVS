@@ -26,7 +26,7 @@ namespace Microsoft.VisualStudioTools {
             var res = new Stopwatch();
             res.Start();
             return res;
-        } 
+        }
 #endif
 
         /// <summary>
@@ -42,7 +42,7 @@ namespace Microsoft.VisualStudioTools {
             _minReportTime = minReportTime;
 #endif
         }
-        
+
 
         #region IDisposable Members
 

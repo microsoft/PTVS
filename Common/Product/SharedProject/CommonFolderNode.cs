@@ -38,7 +38,7 @@ namespace Microsoft.VisualStudioTools.Project {
 
         public override object GetIconHandle(bool open) {
             if (ItemNode.IsExcluded) {
-                return ProjectMgr.GetIconHandleByName(open ? 
+                return ProjectMgr.GetIconHandleByName(open ?
                     ProjectNode.ImageName.OpenExcludedFolder :
                     ProjectNode.ImageName.ExcludedFolder
                 );
@@ -146,7 +146,7 @@ namespace Microsoft.VisualStudioTools.Project {
         }
 
         internal override int ExcludeFromProjectWithProgress() {
-            using(new WaitDialog(
+            using (new WaitDialog(
                 "Excluding files and folders...",
                 "Excluding files and folders in your project, this may take several seconds...",
                 ProjectMgr.Site)) {
@@ -170,7 +170,7 @@ namespace Microsoft.VisualStudioTools.Project {
 
             ResetNodeProperties();
             ItemNode = ProjectMgr.CreateMsBuildFileItem(
-                CommonUtils.GetRelativeDirectoryPath(ProjectMgr.ProjectHome, Url), 
+                CommonUtils.GetRelativeDirectoryPath(ProjectMgr.ProjectHome, Url),
                 ProjectFileConstants.Folder
             );
             IsVisible = true;
@@ -196,7 +196,7 @@ namespace Microsoft.VisualStudioTools.Project {
                 "Including files and folders...",
                 "Including files and folders to your project, this may take several seconds...",
                 ProjectMgr.Site)) {
-                
+
                 return IncludeInProject(includeChildren);
             }
         }
@@ -212,7 +212,7 @@ namespace Microsoft.VisualStudioTools.Project {
 
             if (ProjectMgr.TryDeactivateSymLinkWatcher(this)) {
                 ProjectMgr.CreateSymLinkWatcher(Url);
-        }
+            }
         }
 
         public override void Remove(bool removeFromStorage) {
@@ -235,7 +235,7 @@ namespace Microsoft.VisualStudioTools.Project {
         internal override bool CanDeleteItem(__VSDELETEITEMOPERATION deleteOperation) {
             return deleteOperation == __VSDELETEITEMOPERATION.DELITEMOP_DeleteFromStorage;
         }
-        
+
         public new CommonProjectNode ProjectMgr {
             get {
                 return (CommonProjectNode)base.ProjectMgr;

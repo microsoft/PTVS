@@ -1030,7 +1030,9 @@ namespace Microsoft.VisualStudioTools.Project {
                     case WatcherChangeTypes.Deleted:
                         ChildDeleted(child);
                         break;
-                    case WatcherChangeTypes.Created: ChildCreated(child); break;
+                    case WatcherChangeTypes.Created:
+                        ChildCreated(child);
+                        break;
                     case WatcherChangeTypes.Changed:
                         // we only care about the attributes
                         if (_project.IsFileHidden(_path)) {

@@ -51,7 +51,7 @@ namespace Microsoft.VisualStudioTools.Project {
                     this.Node.ProjectMgr.SetProjectProperty(
                         CommonConstants.StartupFile,
                         CommonUtils.GetRelativeFilePath(
-                            Node.ProjectMgr.ProjectHome, 
+                            Node.ProjectMgr.ProjectHome,
                             Path.Combine(Node.ProjectMgr.ProjectHome, value)
                         )
                     );
@@ -133,7 +133,7 @@ namespace Microsoft.VisualStudioTools.Project {
         #endregion
 
         #region ProjectProperties Members
-        
+
         [Browsable(false)]
         public string AbsoluteProjectDirectory {
             get {

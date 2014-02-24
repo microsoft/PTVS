@@ -26,8 +26,7 @@ namespace Microsoft.VisualStudioTools.Navigation {
         private IConnectionPoint _connectionPoint;
         private uint _connectionCookie;
 
-        public TextLineEventListener(IVsTextLines buffer, string fileName, ModuleId id)
-        {
+        public TextLineEventListener(IVsTextLines buffer, string fileName, ModuleId id) {
             _buffer = buffer;
             _fileId = id;
             _fileName = fileName;

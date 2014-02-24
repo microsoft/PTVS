@@ -36,13 +36,13 @@ namespace Microsoft.VisualStudioTools.Navigation {
     internal abstract partial class LibraryManager : IDisposable, IVsRunningDocTableEvents {
         private readonly CommonPackage/*!*/ _package;
         private readonly Dictionary<uint, TextLineEventListener> _documents;
-        private readonly Dictionary<IVsHierarchy, HierarchyInfo> _hierarchies = new Dictionary<IVsHierarchy,HierarchyInfo>();
+        private readonly Dictionary<IVsHierarchy, HierarchyInfo> _hierarchies = new Dictionary<IVsHierarchy, HierarchyInfo>();
         private readonly Dictionary<ModuleId, LibraryNode> _files;
         private readonly Library _library;
         private readonly IVsEditorAdaptersFactoryService _adapterFactory;
         private uint _objectManagerCookie;
         private uint _runningDocTableCookie;
-        
+
         public LibraryManager(CommonPackage/*!*/ package) {
             Contract.Assert(package != null);
             _package = package;
@@ -101,7 +101,7 @@ namespace Microsoft.VisualStudioTools.Navigation {
             if ((null == hierarchy) || _hierarchies.ContainsKey(hierarchy)) {
                 return;
             }
-            
+
             RegisterLibrary();
             var commonProject = hierarchy.GetProject().GetCommonProject();
             HierarchyListener listener = new HierarchyListener(hierarchy, this);
@@ -240,7 +240,7 @@ namespace Microsoft.VisualStudioTools.Navigation {
                 return;
             }
 
-            foreach (IScopeNode subItem in scope.NestedScopes) {                
+            foreach (IScopeNode subItem in scope.NestedScopes) {
                 LibraryNode newNode = CreateLibraryNode(current, subItem, namePrefix, moduleId.Hierarchy, moduleId.ItemID);
                 string newNamePrefix = namePrefix;
 
@@ -254,7 +254,7 @@ namespace Microsoft.VisualStudioTools.Navigation {
             }
         }
         #endregion
-        
+
         #region Hierarchy Events
 
         private void OnNewFile(object sender, HierarchyEventArgs args) {
@@ -402,7 +402,7 @@ namespace Microsoft.VisualStudioTools.Navigation {
                     // Check the file to see if a listener is required.
                     if (_package.IsRecognizedFile(documentMoniker)) {
                         return VSConstants.S_OK;
-                    }                    
+                    }
 
                     // Create the module id for this document.
                     ModuleId docId = new ModuleId(hierarchy, itemId);

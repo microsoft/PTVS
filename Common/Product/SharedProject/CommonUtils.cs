@@ -106,10 +106,10 @@ namespace Microsoft.VisualStudioTools {
             }
 
             Uri uri1, uri2;
-            return 
+            return
                 TryMakeUri(path1, true, UriKind.Absolute, out uri1) &&
                 TryMakeUri(path2, true, UriKind.Absolute, out uri2) &&
-                uri1 == uri2;            
+                uri1 == uri2;
         }
 
         /// <summary>

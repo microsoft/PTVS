@@ -32,12 +32,10 @@ using Microsoft.VisualStudio.Shell.Interop;
     a) undocumented
     b) not really wise in the managed world
 */
-namespace Microsoft.VisualStudioTools.Project
-{
+namespace Microsoft.VisualStudioTools.Project {
 
     [ComVisible(true)]
-    internal abstract class ConfigProvider : IVsCfgProvider2
-    {
+    internal abstract class ConfigProvider : IVsCfgProvider2 {
         internal const string configString = " '$(Configuration)' == '{0}' ";
         internal const string AnyCPUPlatform = "Any CPU";
         internal const string x86Platform = "x86";
@@ -47,18 +45,15 @@ namespace Microsoft.VisualStudioTools.Project
         private List<KeyValuePair<KeyValuePair<string, string>, string>> newCfgProps = new List<KeyValuePair<KeyValuePair<string, string>, string>>();
         private Dictionary<string, ProjectConfig> configurationsList = new Dictionary<string, ProjectConfig>();
 
-        public ConfigProvider(ProjectNode manager)
-        {
+        public ConfigProvider(ProjectNode manager) {
             this.project = manager;
         }
 
         /// <summary>
         /// The associated project.
         /// </summary>
-        internal ProjectNode ProjectMgr
-        {
-            get
-            {
+        internal ProjectNode ProjectMgr {
+            get {
                 return this.project;
             }
         }
@@ -69,14 +64,11 @@ namespace Microsoft.VisualStudioTools.Project
         /// Returns/sets the [(<propName, propCondition>) <propValue>] collection
         /// </summary>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1002:DoNotExposeGenericLists"), System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
-        public virtual List<KeyValuePair<KeyValuePair<string, string>, string>> NewConfigProperties
-        {
-            get
-            {
+        public virtual List<KeyValuePair<KeyValuePair<string, string>, string>> NewConfigProperties {
+            get {
                 return newCfgProps;
             }
-            set
-            {
+            set {
                 newCfgProps = value;
             }
         }
@@ -86,11 +78,9 @@ namespace Microsoft.VisualStudioTools.Project
         /// </summary>
         /// <param name="configName">The name of the configuration</param>
         /// <returns>An instance of a ProjectConfig object.</returns>
-        protected ProjectConfig GetProjectConfiguration(string configName)
-        {
+        protected ProjectConfig GetProjectConfiguration(string configName) {
             // if we already created it, return the cached one
-            if (configurationsList.ContainsKey(configName))
-            {
+            if (configurationsList.ContainsKey(configName)) {
                 return configurationsList[configName];
             }
 
@@ -111,11 +101,9 @@ namespace Microsoft.VisualStudioTools.Project
         /// <param name="cloneName">the name of the configuration to copy, or a null reference, indicating that AddCfgsOfCfgName should create a new configuration.</param>
         /// <param name="fPrivate">Flag indicating whether or not the new configuration is private. If fPrivate is set to true, the configuration is private. If set to false, the configuration is public. This flag can be ignored.</param>
         /// <returns>If the method succeeds, it returns S_OK. If it fails, it returns an error code. </returns>
-        public virtual int AddCfgsOfCfgName(string name, string cloneName, int fPrivate)
-        {
+        public virtual int AddCfgsOfCfgName(string name, string cloneName, int fPrivate) {
             // We need to QE/QS the project file
-            if (!this.ProjectMgr.QueryEditProjectFile(false))
-            {
+            if (!this.ProjectMgr.QueryEditProjectFile(false)) {
                 throw Marshal.GetExceptionForHR(VSConstants.OLE_E_PROMPTSAVECANCELLED);
             }
 
@@ -126,11 +114,9 @@ namespace Microsoft.VisualStudioTools.Project
             List<ProjectPropertyGroupElement> configGroup = new List<ProjectPropertyGroupElement>(this.project.BuildProject.Xml.PropertyGroups);
             ProjectPropertyGroupElement configToClone = null;
 
-            if (cloneName != null)
-            {
+            if (cloneName != null) {
                 // Find the configuration to clone
-                foreach (ProjectPropertyGroupElement currentConfig in configGroup)
-                {
+                foreach (ProjectPropertyGroupElement currentConfig in configGroup) {
                     // Only care about conditional property groups
                     if (currentConfig.Condition == null || currentConfig.Condition.Length == 0)
                         continue;
@@ -144,28 +130,22 @@ namespace Microsoft.VisualStudioTools.Project
             }
 
             ProjectPropertyGroupElement newConfig = null;
-            if (configToClone != null)
-            {
+            if (configToClone != null) {
                 // Clone the configuration settings
                 newConfig = this.project.ClonePropertyGroup(configToClone);
                 //Will be added later with the new values to the path
 
-                foreach (ProjectPropertyElement property in newConfig.Properties)
-                {
-                    if (property.Name.Equals("OutputPath", StringComparison.OrdinalIgnoreCase))
-                    {
+                foreach (ProjectPropertyElement property in newConfig.Properties) {
+                    if (property.Name.Equals("OutputPath", StringComparison.OrdinalIgnoreCase)) {
                         property.Parent.RemoveChild(property);
                     }
                 }
-            }
-            else
-            {
+            } else {
                 // no source to clone from, lets just create a new empty config
                 newConfig = this.project.BuildProject.Xml.AddPropertyGroup();
                 // Get the list of property name, condition value from the config provider
                 IList<KeyValuePair<KeyValuePair<string, string>, string>> propVals = this.NewConfigProperties;
-                foreach (KeyValuePair<KeyValuePair<string, string>, string> data in propVals)
-                {
+                foreach (KeyValuePair<KeyValuePair<string, string>, string> data in propVals) {
                     KeyValuePair<string, string> propData = data.Key;
                     string value = data.Value;
                     ProjectPropertyElement newProperty = newConfig.AddProperty(propData.Key, value);
@@ -193,8 +173,7 @@ namespace Microsoft.VisualStudioTools.Project
         /// <param name="platformName">The name of the new platform.</param>
         /// <param name="clonePlatformName">The name of the platform to copy, or a null reference, indicating that AddCfgsOfPlatformName should create a new platform.</param>
         /// <returns>If the method succeeds, it returns S_OK. If it fails, it returns an error code.</returns>
-        public virtual int AddCfgsOfPlatformName(string platformName, string clonePlatformName)
-        {
+        public virtual int AddCfgsOfPlatformName(string platformName, string clonePlatformName) {
             return VSConstants.E_NOTIMPL;
         }
 
@@ -203,33 +182,26 @@ namespace Microsoft.VisualStudioTools.Project
         /// </summary>
         /// <param name="name">The name of the configuration to be deleted.</param>
         /// <returns>If the method succeeds, it returns S_OK. If it fails, it returns an error code. </returns>
-        public virtual int DeleteCfgsOfCfgName(string name)
-        {
+        public virtual int DeleteCfgsOfCfgName(string name) {
             // We need to QE/QS the project file
-            if (!this.ProjectMgr.QueryEditProjectFile(false))
-            {
+            if (!this.ProjectMgr.QueryEditProjectFile(false)) {
                 throw Marshal.GetExceptionForHR(VSConstants.OLE_E_PROMPTSAVECANCELLED);
             }
 
-            if (name == null)
-            {
+            if (name == null) {
                 // The configuration " '$(Configuration)' ==  " does not exist, so technically the goal
                 // is achieved so return S_OK
                 return VSConstants.S_OK;
             }
             // Verify that this config exist
             string[] configs = GetPropertiesConditionedOn(ProjectFileConstants.Configuration);
-            foreach (string config in configs)
-            {
-                if (String.Compare(config, name, StringComparison.OrdinalIgnoreCase) == 0)
-                {
+            foreach (string config in configs) {
+                if (String.Compare(config, name, StringComparison.OrdinalIgnoreCase) == 0) {
                     // Create condition of config to remove
                     string condition = String.Format(CultureInfo.InvariantCulture, configString, config);
 
-                    foreach (ProjectPropertyGroupElement element in this.project.BuildProject.Xml.PropertyGroups)
-                    {
-                        if (String.Equals(element.Condition, condition, StringComparison.OrdinalIgnoreCase))
-                        {
+                    foreach (ProjectPropertyGroupElement element in this.project.BuildProject.Xml.PropertyGroups) {
+                        if (String.Equals(element.Condition, condition, StringComparison.OrdinalIgnoreCase)) {
                             element.Parent.RemoveChild(element);
                         }
                     }
@@ -246,8 +218,7 @@ namespace Microsoft.VisualStudioTools.Project
         /// </summary>
         /// <param name="platName">The platform name to delet.</param>
         /// <returns>If the method succeeds, it returns S_OK. If it fails, it returns an error code.</returns>
-        public virtual int DeleteCfgsOfPlatformName(string platName)
-        {
+        public virtual int DeleteCfgsOfPlatformName(string platName) {
             return VSConstants.E_NOTIMPL;
         }
 
@@ -259,27 +230,22 @@ namespace Microsoft.VisualStudioTools.Project
         /// On output, names contains configuration property names.</param>
         /// <param name="actual">The actual number of property names returned.</param>
         /// <returns>If the method succeeds, it returns S_OK. If it fails, it returns an error code.</returns>
-        public virtual int GetCfgNames(uint celt, string[] names, uint[] actual)
-        {
+        public virtual int GetCfgNames(uint celt, string[] names, uint[] actual) {
             // get's called twice, once for allocation, then for retrieval            
             int i = 0;
 
             string[] configList = GetPropertiesConditionedOn(ProjectFileConstants.Configuration);
 
-            if (names != null)
-            {
-                foreach (string config in configList)
-                {
+            if (names != null) {
+                foreach (string config in configList) {
                     names[i++] = config;
                     if (i == celt)
                         break;
                 }
-            }
-            else
+            } else
                 i = configList.Length;
 
-            if (actual != null)
-            {
+            if (actual != null) {
                 actual[0] = (uint)i;
             }
 
@@ -293,8 +259,7 @@ namespace Microsoft.VisualStudioTools.Project
         /// <param name="platName">The name of the platform for the configuration to be returned.</param>
         /// <param name="cfg">The implementation of the IVsCfg interface.</param>
         /// <returns>If the method succeeds, it returns S_OK. If it fails, it returns an error code.</returns>
-        public virtual int GetCfgOfName(string name, string platName, out IVsCfg cfg)
-        {
+        public virtual int GetCfgOfName(string name, string platName, out IVsCfg cfg) {
             cfg = null;
             cfg = this.GetProjectConfiguration(name);
 
@@ -307,11 +272,9 @@ namespace Microsoft.VisualStudioTools.Project
         /// <param name="propid">Specifies the property identifier for the property to return. For valid propid values, see __VSCFGPROPID.</param>
         /// <param name="var">The value of the property.</param>
         /// <returns>If the method succeeds, it returns S_OK. If it fails, it returns an error code.</returns>
-        public virtual int GetCfgProviderProperty(int propid, out object var)
-        {
+        public virtual int GetCfgProviderProperty(int propid, out object var) {
             var = false;
-            switch ((__VSCFGPROPID)propid)
-            {
+            switch ((__VSCFGPROPID)propid) {
                 case __VSCFGPROPID.VSCFGPROPID_SupportsCfgAdd:
                     var = true;
                     break;
@@ -343,26 +306,22 @@ namespace Microsoft.VisualStudioTools.Project
         /// <param name="actual">The number of configuration objects actually returned or a null reference, if this information is not necessary.</param>
         /// <param name="flags">Flags that specify settings for project configurations, or a null reference (Nothing in Visual Basic) if no additional flag settings are required. For valid prgrFlags values, see __VSCFGFLAGS.</param>
         /// <returns>If the method succeeds, it returns S_OK. If it fails, it returns an error code.</returns>
-        public virtual int GetCfgs(uint celt, IVsCfg[] a, uint[] actual, uint[] flags)
-        {
+        public virtual int GetCfgs(uint celt, IVsCfg[] a, uint[] actual, uint[] flags) {
             if (flags != null)
                 flags[0] = 0;
 
             int i = 0;
             string[] configList = GetPropertiesConditionedOn(ProjectFileConstants.Configuration);
 
-            if (a != null)
-            {
-                foreach (string configName in configList)
-                {
+            if (a != null) {
+                foreach (string configName in configList) {
                     a[i] = this.GetProjectConfiguration(configName);
 
                     i++;
                     if (i == celt)
                         break;
                 }
-            }
-            else
+            } else
                 i = configList.Length;
 
             if (actual != null)
@@ -378,8 +337,7 @@ namespace Microsoft.VisualStudioTools.Project
         /// <param name="names">On input, an allocated array to hold the number of platform names specified by celt. This parameter can also be a null reference if the celt parameter is zero. On output, names contains platform names.</param>
         /// <param name="actual">The actual number of platform names returned.</param>
         /// <returns>If the method succeeds, it returns S_OK. If it fails, it returns an error code.</returns>
-        public virtual int GetPlatformNames(uint celt, string[] names, uint[] actual)
-        {
+        public virtual int GetPlatformNames(uint celt, string[] names, uint[] actual) {
             string[] platforms = this.GetPlatformsFromProject();
             return GetPlatforms(celt, names, actual, platforms);
         }
@@ -391,8 +349,7 @@ namespace Microsoft.VisualStudioTools.Project
         /// <param name="names">On input, an allocated array to hold the number of names specified by celt. This parameter can also be a null reference (Nothing in Visual Basic)if the celt parameter is zero. On output, names contains the names of supported platforms</param>
         /// <param name="actual">The actual number of platform names returned.</param>
         /// <returns>If the method succeeds, it returns S_OK. If it fails, it returns an error code.</returns>
-        public virtual int GetSupportedPlatformNames(uint celt, string[] names, uint[] actual)
-        {
+        public virtual int GetSupportedPlatformNames(uint celt, string[] names, uint[] actual) {
             string[] platforms = this.GetSupportedPlatformsFromProject();
             return GetPlatforms(celt, names, actual, platforms);
         }
@@ -403,13 +360,11 @@ namespace Microsoft.VisualStudioTools.Project
         /// <param name="old">The old name of the target configuration.</param>
         /// <param name="newname">The new name of the target configuration.</param>
         /// <returns>If the method succeeds, it returns S_OK. If it fails, it returns an error code.</returns>
-        public virtual int RenameCfgsOfCfgName(string old, string newname)
-        {
+        public virtual int RenameCfgsOfCfgName(string old, string newname) {
             // First create the condition that represent the configuration we want to rename
             string condition = String.Format(CultureInfo.InvariantCulture, configString, old).Trim();
 
-            foreach (ProjectPropertyGroupElement config in this.project.BuildProject.Xml.PropertyGroups)
-            {
+            foreach (ProjectPropertyGroupElement config in this.project.BuildProject.Xml.PropertyGroups) {
                 // Only care about conditional property groups
                 if (config.Condition == null || config.Condition.Length == 0)
                     continue;
@@ -421,8 +376,7 @@ namespace Microsoft.VisualStudioTools.Project
                 // Change the name 
                 config.Condition = String.Format(CultureInfo.InvariantCulture, configString, newname);
                 // Update the name in our config list
-                if (configurationsList.ContainsKey(old))
-                {
+                if (configurationsList.ContainsKey(old)) {
                     ProjectConfig configuration = configurationsList[old];
                     configurationsList.Remove(old);
                     configurationsList.Add(newname, configuration);
@@ -441,8 +395,7 @@ namespace Microsoft.VisualStudioTools.Project
         /// </summary>
         /// <param name="cookie">The cookie used for registration.</param>
         /// <returns>If the method succeeds, it returns S_OK. If it fails, it returns an error code.</returns>
-        public virtual int UnadviseCfgProviderEvents(uint cookie)
-        {
+        public virtual int UnadviseCfgProviderEvents(uint cookie) {
             this.cfgEventSinks.RemoveAt(cookie);
             return VSConstants.S_OK;
         }
@@ -453,8 +406,7 @@ namespace Microsoft.VisualStudioTools.Project
         /// <param name="sink">Reference to the IVsCfgProviderEvents interface to be called to provide notification of configuration events.</param>
         /// <param name="cookie">Reference to a token representing the completed registration</param>
         /// <returns>If the method succeeds, it returns S_OK. If it fails, it returns an error code.</returns>
-        public virtual int AdviseCfgProviderEvents(IVsCfgProviderEvents sink, out uint cookie)
-        {
+        public virtual int AdviseCfgProviderEvents(IVsCfgProviderEvents sink, out uint cookie) {
             cookie = this.cfgEventSinks.Add(sink);
             return VSConstants.S_OK;
         }
@@ -466,10 +418,8 @@ namespace Microsoft.VisualStudioTools.Project
         /// Called when a new configuration name was added.
         /// </summary>
         /// <param name="name">The name of configuration just added.</param>
-        private void NotifyOnCfgNameAdded(string name)
-        {
-            foreach (IVsCfgProviderEvents sink in this.cfgEventSinks)
-            {
+        private void NotifyOnCfgNameAdded(string name) {
+            foreach (IVsCfgProviderEvents sink in this.cfgEventSinks) {
                 ErrorHandler.ThrowOnFailure(sink.OnCfgNameAdded(name));
             }
         }
@@ -478,10 +428,8 @@ namespace Microsoft.VisualStudioTools.Project
         /// Called when a config name was deleted.
         /// </summary>
         /// <param name="name">The name of the configuration.</param>
-        private void NotifyOnCfgNameDeleted(string name)
-        {
-            foreach (IVsCfgProviderEvents sink in this.cfgEventSinks)
-            {
+        private void NotifyOnCfgNameDeleted(string name) {
+            foreach (IVsCfgProviderEvents sink in this.cfgEventSinks) {
                 ErrorHandler.ThrowOnFailure(sink.OnCfgNameDeleted(name));
             }
         }
@@ -491,10 +439,8 @@ namespace Microsoft.VisualStudioTools.Project
         /// </summary>
         /// <param name="oldName">Old configuration name</param>
         /// <param name="newName">New configuration name</param>
-        private void NotifyOnCfgNameRenamed(string oldName, string newName)
-        {
-            foreach (IVsCfgProviderEvents sink in this.cfgEventSinks)
-            {
+        private void NotifyOnCfgNameRenamed(string oldName, string newName) {
+            foreach (IVsCfgProviderEvents sink in this.cfgEventSinks) {
                 ErrorHandler.ThrowOnFailure(sink.OnCfgNameRenamed(oldName, newName));
             }
         }
@@ -504,10 +450,8 @@ namespace Microsoft.VisualStudioTools.Project
         /// </summary>
         /// <param name="platformName">The name of the platform.</param>
         [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        private void NotifyOnPlatformNameAdded(string platformName)
-        {
-            foreach (IVsCfgProviderEvents sink in this.cfgEventSinks)
-            {
+        private void NotifyOnPlatformNameAdded(string platformName) {
+            foreach (IVsCfgProviderEvents sink in this.cfgEventSinks) {
                 ErrorHandler.ThrowOnFailure(sink.OnPlatformNameAdded(platformName));
             }
         }
@@ -517,10 +461,8 @@ namespace Microsoft.VisualStudioTools.Project
         /// </summary>
         /// <param name="platformName">The name of the platform.</param>
         [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        private void NotifyOnPlatformNameDeleted(string platformName)
-        {
-            foreach (IVsCfgProviderEvents sink in this.cfgEventSinks)
-            {
+        private void NotifyOnPlatformNameDeleted(string platformName) {
+            foreach (IVsCfgProviderEvents sink in this.cfgEventSinks) {
                 ErrorHandler.ThrowOnFailure(sink.OnPlatformNameDeleted(platformName));
             }
         }
@@ -529,17 +471,14 @@ namespace Microsoft.VisualStudioTools.Project
         /// Gets all the platforms defined in the project
         /// </summary>
         /// <returns>An array of platform names.</returns>
-        private string[] GetPlatformsFromProject()
-        {
+        private string[] GetPlatformsFromProject() {
             string[] platforms = GetPropertiesConditionedOn(ProjectFileConstants.Platform);
 
-            if (platforms == null || platforms.Length == 0)
-            {
+            if (platforms == null || platforms.Length == 0) {
                 return new string[] { x86Platform, AnyCPUPlatform };
             }
 
-            for (int i = 0; i < platforms.Length; i++)
-            {
+            for (int i = 0; i < platforms.Length; i++) {
                 platforms[i] = ConvertPlatformToVsProject(platforms[i]);
             }
 
@@ -550,17 +489,14 @@ namespace Microsoft.VisualStudioTools.Project
         /// Return the supported platform names.
         /// </summary>
         /// <returns>An array of supported platform names.</returns>
-        private string[] GetSupportedPlatformsFromProject()
-        {
+        private string[] GetSupportedPlatformsFromProject() {
             string platforms = this.ProjectMgr.BuildProject.GetPropertyValue(ProjectFileConstants.AvailablePlatforms);
 
-            if (platforms == null)
-            {
+            if (platforms == null) {
                 return new string[] { };
             }
 
-            if (platforms.Contains(","))
-            {
+            if (platforms.Contains(",")) {
                 return platforms.Split(',');
             }
 
@@ -572,10 +508,8 @@ namespace Microsoft.VisualStudioTools.Project
         /// </summary>
         /// <param name="oldName">The oldname.</param>
         /// <returns>The new name.</returns>
-        private static string ConvertPlatformToVsProject(string oldPlatformName)
-        {
-            if (String.Compare(oldPlatformName, ProjectFileValues.AnyCPU, StringComparison.OrdinalIgnoreCase) == 0)
-            {
+        private static string ConvertPlatformToVsProject(string oldPlatformName) {
+            if (String.Compare(oldPlatformName, ProjectFileValues.AnyCPU, StringComparison.OrdinalIgnoreCase) == 0) {
                 return AnyCPUPlatform;
             }
 
@@ -591,13 +525,10 @@ namespace Microsoft.VisualStudioTools.Project
         /// <param name="platforms">An array of available platform names</param>
         /// <returns>A count of the actual number of platform names returned.</returns>
         /// <devremark>The platforms array is never null. It is assured by the callers.</devremark>
-        private static int GetPlatforms(uint celt, string[] names, uint[] actual, string[] platforms)
-        {
+        private static int GetPlatforms(uint celt, string[] names, uint[] actual, string[] platforms) {
             Utilities.ArgumentNotNull("platforms", platforms);
-            if (names == null)
-            {
-                if (actual == null || actual.Length == 0)
-                {
+            if (names == null) {
+                if (actual == null || actual.Length == 0) {
                     throw new ArgumentException(SR.GetString(SR.InvalidParameter, CultureInfo.CurrentUICulture), "actual");
                 }
 
@@ -606,10 +537,8 @@ namespace Microsoft.VisualStudioTools.Project
             }
 
             //Degenarate case
-            if (celt == 0)
-            {
-                if (actual != null && actual.Length != 0)
-                {
+            if (celt == 0) {
+                if (actual != null && actual.Length != 0) {
                     actual[0] = (uint)platforms.Length;
                 }
 
@@ -617,19 +546,16 @@ namespace Microsoft.VisualStudioTools.Project
             }
 
             uint returned = 0;
-            for (int i = 0; i < platforms.Length && names.Length > returned; i++)
-            {
+            for (int i = 0; i < platforms.Length && names.Length > returned; i++) {
                 names[returned] = platforms[i];
                 returned++;
             }
 
-            if (actual != null && actual.Length != 0)
-            {
+            if (actual != null && actual.Length != 0) {
                 actual[0] = returned;
             }
 
-            if (celt > returned)
-            {
+            if (celt > returned) {
                 return VSConstants.S_FALSE;
             }
 
@@ -640,8 +566,7 @@ namespace Microsoft.VisualStudioTools.Project
         /// <summary>
         /// Get all the configurations in the project.
         /// </summary>
-        private string[] GetPropertiesConditionedOn(string constant)
-        {
+        private string[] GetPropertiesConditionedOn(string constant) {
             List<string> configurations = null;
             this.project.BuildProject.ReevaluateIfNecessary();
             this.project.BuildProject.ConditionedProperties.TryGetValue(constant, out configurations);

@@ -23,7 +23,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Win32.SafeHandles;
 
-namespace Microsoft.VisualStudioTools.Project{
+namespace Microsoft.VisualStudioTools.Project {
     /// <summary>
     /// Base class that can receive output from <see cref="ProcessOutput"/>.
     /// 
@@ -167,7 +167,7 @@ namespace Microsoft.VisualStudioTools.Project{
             if (elevate) {
                 return RunElevated(filename, arguments, workingDirectory, redirector, quoteArgs);
             }
-            
+
             var psi = new ProcessStartInfo(filename);
             if (quoteArgs) {
                 psi.Arguments = string.Join(" ",
@@ -216,14 +216,14 @@ namespace Microsoft.VisualStudioTools.Project{
             psi.WindowStyle = ProcessWindowStyle.Hidden;
             psi.UseShellExecute = true;
             psi.Verb = "runas";
-            
+
             string args;
             if (quoteArgs) {
                 args = string.Join(" ", arguments.Where(a => a != null).Select(QuoteSingleArgument));
             } else {
                 args = string.Join(" ", arguments.Where(a => a != null));
             }
-            psi.Arguments = string.Format("/S /C \"{0} {1} >>{2} 2>>{3}\"", 
+            psi.Arguments = string.Format("/S /C \"{0} {1} >>{2} 2>>{3}\"",
                 QuoteSingleArgument(filename),
                 args,
                 QuoteSingleArgument(outFile),
@@ -356,7 +356,8 @@ namespace Microsoft.VisualStudioTools.Project{
             if (_process != null) {
                 if (_process.StartInfo.RedirectStandardOutput) {
                     _process.BeginOutputReadLine();
-                } if (_process.StartInfo.RedirectStandardError) {
+                }
+                if (_process.StartInfo.RedirectStandardError) {
                     _process.BeginErrorReadLine();
                 }
             }

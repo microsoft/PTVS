@@ -74,7 +74,7 @@ namespace Microsoft.VisualStudioTools.Navigation {
         private static string GetLibraryNodeName(IScopeNode node, string namePrefix) {
             namePrefix = namePrefix.Substring(namePrefix.LastIndexOf(':') + 1); // remove filename prefix
             return node.NodeType == LibraryNodeType.Members ? node.Name : string.Format(CultureInfo.InvariantCulture, "{0}{1}", namePrefix, node.Name);
-        }    
+        }
 
         protected CommonLibraryNode(CommonLibraryNode node) :
             base(node) {

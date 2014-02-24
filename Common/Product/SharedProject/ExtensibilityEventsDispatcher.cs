@@ -38,7 +38,7 @@ namespace Microsoft.VisualStudioTools.Project {
 
         private readonly ProjectNode _project;
         private bool _suspended;
-        
+
         public ExtensibilityEventsDispatcher(ProjectNode/*!*/ project) {
             Utilities.ArgumentNotNull("project", project);
 

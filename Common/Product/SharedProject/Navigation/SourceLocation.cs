@@ -152,8 +152,10 @@ namespace Microsoft.VisualStudioTools.Parsing {
         /// <param name="right">The other location to compare.</param>
         /// <returns>0 if the locations are equal, -1 if the left one is less than the right one, 1 otherwise.</returns>
         public static int Compare(SourceLocation left, SourceLocation right) {
-            if (left < right) return -1;
-            if (right > left) return 1;
+            if (left < right)
+                return -1;
+            if (right > left)
+                return 1;
 
             return 0;
         }
@@ -184,7 +186,8 @@ namespace Microsoft.VisualStudioTools.Parsing {
         }
 
         public override bool Equals(object obj) {
-            if (!(obj is SourceLocation)) return false;
+            if (!(obj is SourceLocation))
+                return false;
 
             SourceLocation other = (SourceLocation)obj;
             return other._index == _index && other._line == _line && other._column == _column;

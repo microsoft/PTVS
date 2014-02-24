@@ -167,7 +167,7 @@ namespace Microsoft.VisualStudioTools.Navigation {
 
         public override uint CategoryField(LIB_CATEGORY category) {
             uint fieldValue = 0;
-            
+
             switch (category) {
                 case (LIB_CATEGORY)_LIB_CATEGORY2.LC_PHYSICALCONTAINERTYPE:
                     fieldValue = (uint)_LIBCAT_PHYSICALCONTAINERTYPE.LCPT_PROJECT;
@@ -226,7 +226,7 @@ namespace Microsoft.VisualStudioTools.Navigation {
         }
 
         public virtual void FillDescription(_VSOBJDESCOPTIONS flags, IVsObjectBrowserDescription3 description) {
-            description.ClearDescriptionText();            
+            description.ClearDescriptionText();
             description.AddDescriptionText3(_name, VSOBDESCRIPTIONSECTION.OBDS_NAME, null);
         }
 
@@ -254,7 +254,7 @@ namespace Microsoft.VisualStudioTools.Navigation {
 
         public virtual string Name {
             get {
-                return _name; 
+                return _name;
             }
         }
 
@@ -291,7 +291,7 @@ namespace Microsoft.VisualStudioTools.Navigation {
                 return _fullname;
             }
         }
-        
+
         public CommandID ContextMenuID {
             get {
                 return _contextMenuID;

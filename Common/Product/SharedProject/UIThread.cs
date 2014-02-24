@@ -12,16 +12,14 @@
  *
  * ***************************************************************************/
 
-namespace Microsoft.VisualStudioTools.Project
-{
+namespace Microsoft.VisualStudioTools.Project {
     using System;
     using System.Diagnostics;
     using System.Globalization;
     using System.Threading;
     using System.Windows.Forms;
 
-    internal sealed class UIThread : IDisposable
-    {
+    internal sealed class UIThread : IDisposable {
         private WindowsFormsSynchronizationContext synchronizationContext;
         private static bool isUnitTestingMode;
         private Thread uithread;
@@ -44,18 +42,15 @@ namespace Microsoft.VisualStudioTools.Project
         /// </summary>
         private static volatile UIThread instance;
 
-        internal UIThread()
-        {
+        internal UIThread() {
             this.Initialize();
         }
 
         /// <summary>
         /// Gets the singleton instance
         /// </summary>
-        public static UIThread Instance
-        {
-            get
-            {
+        public static UIThread Instance {
+            get {
                 return instance = instance ?? new UIThread();
             }
         }
@@ -63,16 +58,14 @@ namespace Microsoft.VisualStudioTools.Project
         /// <summary>
         /// Checks whether this is the UI thread.
         /// </summary>
-        public bool IsUIThread
-        {
+        public bool IsUIThread {
             get { return this.uithread == System.Threading.Thread.CurrentThread; }
         }
 
         /// <summary>
         /// Checks whether unit testing mode has been initialized.
         /// </summary>
-        internal static bool IsUnitTestingMode
-        {
+        internal static bool IsUnitTestingMode {
             get { return isUnitTestingMode; }
         }
 
@@ -80,10 +73,8 @@ namespace Microsoft.VisualStudioTools.Project
         /// <summary>
         /// Dispose implementation.
         /// </summary>
-        public void Dispose()
-        {
-            if (this.synchronizationContext != null)
-            {
+        public void Dispose() {
+            if (this.synchronizationContext != null) {
                 this.synchronizationContext.Dispose();
             }
         }
@@ -94,15 +85,13 @@ namespace Microsoft.VisualStudioTools.Project
         /// Initializes unit testing mode for this object
         /// </summary>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        internal static void InitUnitTestingMode()
-        {
+        internal static void InitUnitTestingMode() {
             Debug.Assert(instance == null, "Context has already been captured; too late to InitUnitTestingMode");
             isUnitTestingMode = true;
         }
 
         [Conditional("DEBUG")]
-        internal void MustBeCalledFromUIThread()
-        {
+        internal void MustBeCalledFromUIThread() {
             Debug.Assert(IsUIThread || isUnitTestingMode, "This must be called from the GUI thread");
         }
 
@@ -111,10 +100,8 @@ namespace Microsoft.VisualStudioTools.Project
         /// </summary>
         /// <param name="a">The action to run</param>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes")]
-        internal void Run(Action a)
-        {
-            if (isUnitTestingMode)
-            {
+        internal void Run(Action a) {
+            if (isUnitTestingMode) {
                 a();
                 return;
             }
@@ -123,14 +110,12 @@ namespace Microsoft.VisualStudioTools.Project
             StackTrace stackTrace = new StackTrace(true);
 #endif
             this.synchronizationContext.Post(delegate(object ignore) {
-                try
-                {
+                try {
                     this.MustBeCalledFromUIThread();
                     a();
                 }
 #if DEBUG
-                catch (Exception e)
-                {
+ catch (Exception e) {
                     // swallow, random exceptions should not kill process
                     Debug.Assert(false, string.Format(CultureInfo.InvariantCulture, "UIThread.Run caught and swallowed exception: {0}\n\noriginally invoked from stack:\n{1}", e.ToString(), stackTrace.ToString()));
                 }
@@ -149,35 +134,31 @@ namespace Microsoft.VisualStudioTools.Project
         /// </summary>
         /// <param name="a">The action to run.</param>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode"), System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes")]
-        internal void RunSync(Action a)
-        {
+        internal void RunSync(Action a) {
             // if we're already on the UI thread run immediately - this prevents
             // re-entrancy at unexpected times when we're already on the UI thread.
-            if (isUnitTestingMode || IsUIThread)   
-            {
+            if (isUnitTestingMode || IsUIThread) {
                 a();
                 return;
             }
-            Exception exn = null; ;
+            Exception exn = null;
+            ;
             Debug.Assert(this.synchronizationContext != null, "The SynchronizationContext must be captured before calling this method");
 
             // Send on UI thread will execute immediately.
             this.synchronizationContext.Send(ignore => {
-                try
-                {
+                try {
                     this.MustBeCalledFromUIThread();
                     a();
-                }
-                catch (Exception e)
-                {
+                } catch (Exception e) {
                     exn = e;
                 }
             }, null
             );
-            if (exn != null)
-            {
+            if (exn != null) {
                 // throw exception on calling thread, preserve stacktrace
-                if (!exn.Data.Contains(WrappedStacktraceKey)) exn.Data[WrappedStacktraceKey] = exn.StackTrace;
+                if (!exn.Data.Contains(WrappedStacktraceKey))
+                    exn.Data[WrappedStacktraceKey] = exn.StackTrace;
                 throw exn;
             }
         }
@@ -194,7 +175,8 @@ namespace Microsoft.VisualStudioTools.Project
             if (isUnitTestingMode || IsUIThread) {
                 return a();
             }
-            Exception exn = null; ;
+            Exception exn = null;
+            ;
             Debug.Assert(this.synchronizationContext != null, "The SynchronizationContext must be captured before calling this method");
 
             // Send on UI thread will execute immediately.
@@ -209,7 +191,8 @@ namespace Microsoft.VisualStudioTools.Project
             );
             if (exn != null) {
                 // throw exception on calling thread, preserve stacktrace
-                if (exn.Data != null && !exn.Data.Contains(WrappedStacktraceKey)) exn.Data[WrappedStacktraceKey] = exn.StackTrace;
+                if (exn.Data != null && !exn.Data.Contains(WrappedStacktraceKey))
+                    exn.Data[WrappedStacktraceKey] = exn.StackTrace;
                 throw exn;
             }
             return retValue;
@@ -218,19 +201,17 @@ namespace Microsoft.VisualStudioTools.Project
         /// <summary>
         /// Initializes this object.
         /// </summary>
-        private void Initialize()
-        {
-            if (isUnitTestingMode) return;
+        private void Initialize() {
+            if (isUnitTestingMode)
+                return;
             this.uithread = System.Threading.Thread.CurrentThread;
 
-            if (this.synchronizationContext == null)
-            {
+            if (this.synchronizationContext == null) {
 #if DEBUG
                 // This is a handy place to do this, since the product and all interesting unit tests
                 // must go through this code path.
                 AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler(delegate(object sender, UnhandledExceptionEventArgs args) {
-                    if (args.IsTerminating)
-                    {
+                    if (args.IsTerminating) {
                         string s = String.Format(CultureInfo.InvariantCulture, "An unhandled exception is about to terminate the process.  Exception info:\n{0}", args.ExceptionObject.ToString());
                         Debug.Assert(false, s);
                     }
@@ -239,9 +220,7 @@ namespace Microsoft.VisualStudioTools.Project
                 this.captureStackTrace = new StackTrace(true);
 #endif
                 this.synchronizationContext = new WindowsFormsSynchronizationContext();
-            }
-            else
-            {
+            } else {
                 // Make sure we are always capturing the same thread.
                 Debug.Assert(this.uithread == Thread.CurrentThread);
             }

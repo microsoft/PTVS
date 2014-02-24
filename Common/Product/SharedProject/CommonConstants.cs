@@ -91,7 +91,7 @@ namespace Microsoft.VisualStudioTools {
 
         //Maximal sort priority for Search Path nodes
         public const int SearchPathNodeMaxSortPriority = 110;
-        
+
         //Project Home project property
         public const string ProjectHome = "ProjectHome";
 
@@ -114,7 +114,7 @@ namespace Microsoft.VisualStudioTools {
         //Command statuses
         public const int NotSupportedInvisibleCmdStatus = (int)OleConstants.OLECMDERR_E_NOTSUPPORTED |
                             (int)OleConstants.OLECMDSTATE_INVISIBLE;
-        public const int SupportedEnabledCmdStatus = (int)(OLECMDF.OLECMDF_SUPPORTED | 
+        public const int SupportedEnabledCmdStatus = (int)(OLECMDF.OLECMDF_SUPPORTED |
                             OLECMDF.OLECMDF_ENABLED);
         public const int SupportedCmdStatus = (int)OLECMDF.OLECMDF_SUPPORTED;
 

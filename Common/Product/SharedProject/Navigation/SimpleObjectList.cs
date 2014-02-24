@@ -153,7 +153,7 @@ namespace Microsoft.VisualStudioTools.Navigation {
                 pfCatField = _children[(int)index].CategoryField((LIB_CATEGORY)Category);
             } else {
                 throw new ArgumentOutOfRangeException("index");
-            }            
+            }
             return VSConstants.S_OK;
         }
 

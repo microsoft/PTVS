@@ -287,7 +287,8 @@ namespace Microsoft.VisualStudioTools.Project {
                 case NativeMethods.IDNO:
                     return VSConstants.S_OK;
 
-                case NativeMethods.IDCANCEL: goto default;
+                case NativeMethods.IDCANCEL:
+                    goto default;
 
                 default:
                     fCancelDrop = 1;
@@ -1165,10 +1166,10 @@ folder you are copying, do you want to replace the existing files?", Path.GetFil
                                 //If a race occurrs simply treat the source as a non-included item
                                 bool wasMemberItem = false;
                                 var sourceItem = Project.FindNodeByFullPath(SourceMoniker);
-                                if (sourceItem != null) {                                    
+                                if (sourceItem != null) {
                                     wasMemberItem = !sourceItem.IsNonMemberItem;
-                                }                                
-                                                               
+                                }
+
                                 if (wasMemberItem && targetFolder.IsNonMemberItem) {
                                     // dropping/pasting folder into non-member folder, non member folder
                                     // should get included into the project.
@@ -1182,7 +1183,7 @@ folder you are copying, do you want to replace the existing files?", Path.GetFil
                                     ErrorHandler.ThrowOnFailure(fileNode.ExcludeFromProject());
                                 }
                             }
-                            Project.tracker.OnItemAdded(fileNode.Url, VSADDFILEFLAGS.VSADDFILEFLAGS_NoFlags);                            
+                            Project.tracker.OnItemAdded(fileNode.Url, VSADDFILEFLAGS.VSADDFILEFLAGS_NoFlags);
                         } else if (existing.IsNonMemberItem) {
                             // replacing item that already existed, just include it in the project.
                             existing.IncludeInProject(false);

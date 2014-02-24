@@ -12,10 +12,8 @@
  *
  * ***************************************************************************/
 
-namespace Microsoft.VisualStudioTools.Project
-{
-    internal static class ExternDll
-    {
+namespace Microsoft.VisualStudioTools.Project {
+    internal static class ExternDll {
 
 #if FEATURE_PAL
 

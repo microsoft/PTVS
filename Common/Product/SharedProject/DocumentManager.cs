@@ -22,31 +22,26 @@ using Microsoft.VisualStudio.Shell.Interop;
 using IServiceProvider = System.IServiceProvider;
 using ShellConstants = Microsoft.VisualStudio.Shell.Interop.Constants;
 
-namespace Microsoft.VisualStudioTools.Project
-{
+namespace Microsoft.VisualStudioTools.Project {
     /// <summary>
     /// This abstract class handles opening, saving of items in the hierarchy.
     /// </summary>
 
-    internal abstract class DocumentManager
-    {
+    internal abstract class DocumentManager {
         #region fields
         private readonly HierarchyNode node = null;
         #endregion
 
         #region properties
-        protected HierarchyNode Node
-        {
-            get
-            {
+        protected HierarchyNode Node {
+            get {
                 return this.node;
             }
         }
         #endregion
 
         #region ctors
-        protected DocumentManager(HierarchyNode node)
-        {
+        protected DocumentManager(HierarchyNode node) {
             Utilities.ArgumentNotNull("node", node);
             this.node = node;
         }
@@ -63,8 +58,7 @@ namespace Microsoft.VisualStudioTools.Project
         /// <param name="windowFrameAction">Determine the UI action on the document window</param>
         /// <returns>NotImplementedException</returns>
         /// <remarks>See FileDocumentManager class for an implementation of this method</remarks>
-        public virtual int Open(ref Guid logicalView, IntPtr docDataExisting, out IVsWindowFrame windowFrame, WindowFrameShowAction windowFrameAction)
-        {
+        public virtual int Open(ref Guid logicalView, IntPtr docDataExisting, out IVsWindowFrame windowFrame, WindowFrameShowAction windowFrameAction) {
             throw new NotImplementedException();
         }
 
@@ -80,8 +74,7 @@ namespace Microsoft.VisualStudioTools.Project
         /// <param name="windowFrameAction">Determine the UI action on the document window</param>
         /// <returns>NotImplementedException</returns>
         /// <remarks>See FileDocumentManager for an implementation of this method</remarks>
-        public virtual int OpenWithSpecific(uint editorFlags, ref Guid editorType, string physicalView, ref Guid logicalView, IntPtr docDataExisting, out IVsWindowFrame frame, WindowFrameShowAction windowFrameAction)
-        {
+        public virtual int OpenWithSpecific(uint editorFlags, ref Guid editorType, string physicalView, ref Guid logicalView, IntPtr docDataExisting, out IVsWindowFrame frame, WindowFrameShowAction windowFrameAction) {
             throw new NotImplementedException();
         }
 
@@ -97,8 +90,7 @@ namespace Microsoft.VisualStudioTools.Project
         /// <param name="windowFrameAction">Determine the UI action on the document window</param>
         /// <returns>NotImplementedException</returns>
         /// <remarks>See FileDocumentManager for an implementation of this method</remarks>
-        public virtual int ReOpenWithSpecific(uint editorFlags, ref Guid editorType, string physicalView, ref Guid logicalView, IntPtr docDataExisting, out IVsWindowFrame frame, WindowFrameShowAction windowFrameAction)
-        {
+        public virtual int ReOpenWithSpecific(uint editorFlags, ref Guid editorType, string physicalView, ref Guid logicalView, IntPtr docDataExisting, out IVsWindowFrame frame, WindowFrameShowAction windowFrameAction) {
             return OpenWithSpecific(editorFlags, ref editorType, physicalView, ref logicalView, docDataExisting, out frame, windowFrameAction);
         }
 
@@ -107,15 +99,12 @@ namespace Microsoft.VisualStudioTools.Project
         /// </summary>
         /// <param name="closeFlag">Decides how to close the document</param>
         /// <returns>S_OK if successful, otherwise an error is returned</returns>
-        public virtual int Close(__FRAMECLOSE closeFlag)
-        {
-            if (this.node == null || this.node.ProjectMgr == null || this.node.ProjectMgr.IsClosed || this.node.ProjectMgr.IsClosing)
-            {
+        public virtual int Close(__FRAMECLOSE closeFlag) {
+            if (this.node == null || this.node.ProjectMgr == null || this.node.ProjectMgr.IsClosed || this.node.ProjectMgr.IsClosing) {
                 return VSConstants.E_FAIL;
             }
 
-            if (IsOpenedByUs)
-            {
+            if (IsOpenedByUs) {
                 IVsUIShellOpenDocument shell = this.Node.ProjectMgr.Site.GetService(typeof(IVsUIShellOpenDocument)) as IVsUIShellOpenDocument;
                 Guid logicalView = Guid.Empty;
                 uint grfIDO = 0;
@@ -125,8 +114,7 @@ namespace Microsoft.VisualStudioTools.Project
                 int fOpen;
                 ErrorHandler.ThrowOnFailure(shell.IsDocumentOpen(this.Node.ProjectMgr, this.Node.ID, this.Node.Url, ref logicalView, grfIDO, out pHierOpen, itemIdOpen, out windowFrame, out fOpen));
 
-                if (windowFrame != null)
-                {
+                if (windowFrame != null) {
                     return windowFrame.CloseFrame((uint)closeFlag);
                 }
             }
@@ -139,8 +127,7 @@ namespace Microsoft.VisualStudioTools.Project
         /// </summary>
         /// <param name="saveIfDirty">Save the open document only if it is dirty</param>
         /// <remarks>The call to SaveDocData may return Microsoft.VisualStudio.Shell.Interop.PFF_RESULTS.STG_S_DATALOSS to indicate some characters could not be represented in the current codepage</remarks>
-        public virtual void Save(bool saveIfDirty)
-        {
+        public virtual void Save(bool saveIfDirty) {
             if (saveIfDirty && IsDirty) {
                 IVsPersistDocData persistDocData = DocData;
                 if (persistDocData != null) {
@@ -297,8 +284,7 @@ namespace Microsoft.VisualStudioTools.Project
         }
 #endif
 
-        protected string GetOwnerCaption()
-        {
+        protected string GetOwnerCaption() {
             Debug.Assert(this.node != null, "No node has been initialized for the document manager");
 
             object pvar;
@@ -307,23 +293,17 @@ namespace Microsoft.VisualStudioTools.Project
             return (pvar as string);
         }
 
-        protected static void CloseWindowFrame(ref IVsWindowFrame windowFrame)
-        {
-            if (windowFrame != null)
-            {
-                try
-                {
+        protected static void CloseWindowFrame(ref IVsWindowFrame windowFrame) {
+            if (windowFrame != null) {
+                try {
                     ErrorHandler.ThrowOnFailure(windowFrame.CloseFrame(0));
-                }
-                finally
-                {
+                } finally {
                     windowFrame = null;
                 }
             }
         }
 
-        protected string GetFullPathForDocument()
-        {
+        protected string GetFullPathForDocument() {
             string fullPath = String.Empty;
 
             // Get the URL representing the item
@@ -342,12 +322,10 @@ namespace Microsoft.VisualStudioTools.Project
         /// <param name="site">The service provider.</param>
         /// <param name="caption">The new caption.</param>
         /// <param name="docData">The IUnknown interface to a document data object associated with a registered document.</param>
-        public static void UpdateCaption(IServiceProvider site, string caption, IntPtr docData)
-        {
+        public static void UpdateCaption(IServiceProvider site, string caption, IntPtr docData) {
             Utilities.ArgumentNotNull("site", site);
 
-            if (String.IsNullOrEmpty(caption))
-            {
+            if (String.IsNullOrEmpty(caption)) {
                 throw new ArgumentException(SR.GetString(SR.ParameterCannotBeNullOrEmpty, CultureInfo.CurrentUICulture), "caption");
             }
 
@@ -358,23 +336,17 @@ namespace Microsoft.VisualStudioTools.Project
             ErrorHandler.ThrowOnFailure(uiShell.GetDocumentWindowEnum(out windowFramesEnum));
             IVsWindowFrame[] windowFrames = new IVsWindowFrame[1];
             uint fetched;
-            while (windowFramesEnum.Next(1, windowFrames, out fetched) == VSConstants.S_OK && fetched == 1)
-            {
+            while (windowFramesEnum.Next(1, windowFrames, out fetched) == VSConstants.S_OK && fetched == 1) {
                 IVsWindowFrame windowFrame = windowFrames[0];
                 object data;
                 ErrorHandler.ThrowOnFailure(windowFrame.GetProperty((int)__VSFPROPID.VSFPROPID_DocData, out data));
                 IntPtr ptr = Marshal.GetIUnknownForObject(data);
-                try
-                {
-                    if (ptr == docData)
-                    {
+                try {
+                    if (ptr == docData) {
                         ErrorHandler.ThrowOnFailure(windowFrame.SetProperty((int)__VSFPROPID.VSFPROPID_OwnerCaption, caption));
                     }
-                }
-                finally
-                {
-                    if (ptr != IntPtr.Zero)
-                    {
+                } finally {
+                    if (ptr != IntPtr.Zero) {
                         Marshal.Release(ptr);
                     }
                 }
@@ -388,29 +360,26 @@ namespace Microsoft.VisualStudioTools.Project
         /// <param name="oldName">Full path to the old name of the document.</param>		
         /// <param name="newName">Full path to the new name of the document.</param>		
         /// <param name="newItemId">The new item id of the document</param>		
-        public static void RenameDocument(IServiceProvider site, string oldName, string newName, uint newItemId)
-        {
+        public static void RenameDocument(IServiceProvider site, string oldName, string newName, uint newItemId) {
             Utilities.ArgumentNotNull("site", site);
 
-            if (String.IsNullOrEmpty(oldName))
-            {
+            if (String.IsNullOrEmpty(oldName)) {
                 throw new ArgumentException(SR.GetString(SR.ParameterCannotBeNullOrEmpty, CultureInfo.CurrentUICulture), "oldName");
             }
 
-            if (String.IsNullOrEmpty(newName))
-            {
+            if (String.IsNullOrEmpty(newName)) {
                 throw new ArgumentException(SR.GetString(SR.ParameterCannotBeNullOrEmpty, CultureInfo.CurrentUICulture), "newName");
             }
 
-            if (newItemId == VSConstants.VSITEMID_NIL)
-            {
+            if (newItemId == VSConstants.VSITEMID_NIL) {
                 throw new ArgumentNullException("newItemId");
             }
 
             IVsRunningDocumentTable pRDT = site.GetService(typeof(SVsRunningDocumentTable)) as IVsRunningDocumentTable;
             IVsUIShellOpenDocument doc = site.GetService(typeof(SVsUIShellOpenDocument)) as IVsUIShellOpenDocument;
 
-            if (pRDT == null || doc == null) return;
+            if (pRDT == null || doc == null)
+                return;
 
             IVsHierarchy pIVsHierarchy;
             uint itemId;
@@ -418,28 +387,21 @@ namespace Microsoft.VisualStudioTools.Project
             uint uiVsDocCookie;
             ErrorHandler.ThrowOnFailure(pRDT.FindAndLockDocument((uint)_VSRDTFLAGS.RDT_NoLock, oldName, out pIVsHierarchy, out itemId, out docData, out uiVsDocCookie));
 
-            if (docData != IntPtr.Zero)
-            {
-                try
-                {
+            if (docData != IntPtr.Zero) {
+                try {
                     IntPtr pUnk = Marshal.GetIUnknownForObject(pIVsHierarchy);
                     Guid iid = typeof(IVsHierarchy).GUID;
                     IntPtr pHier;
                     Marshal.QueryInterface(pUnk, ref iid, out pHier);
-                    try
-                    {
+                    try {
                         ErrorHandler.ThrowOnFailure(pRDT.RenameDocument(oldName, newName, pHier, newItemId));
-                    }
-                    finally
-                    {
+                    } finally {
                         if (pHier != IntPtr.Zero)
                             Marshal.Release(pHier);
                         if (pUnk != IntPtr.Zero)
                             Marshal.Release(pUnk);
                     }
-                }
-                finally
-                {
+                } finally {
                     Marshal.Release(docData);
                 }
             }

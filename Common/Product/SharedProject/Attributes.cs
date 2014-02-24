@@ -17,30 +17,24 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
 
-namespace Microsoft.VisualStudioTools.Project
-{
+namespace Microsoft.VisualStudioTools.Project {
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Property | AttributeTargets.Field, Inherited = false, AllowMultiple = false)]
-    internal sealed class LocDisplayNameAttribute : DisplayNameAttribute
-    {
+    internal sealed class LocDisplayNameAttribute : DisplayNameAttribute {
         #region fields
         string name;
         #endregion
 
         #region ctors
-        public LocDisplayNameAttribute(string name)
-        {
+        public LocDisplayNameAttribute(string name) {
             this.name = name;
         }
         #endregion
 
         #region properties
-        public override string DisplayName
-        {
-            get
-            {
+        public override string DisplayName {
+            get {
                 string result = SR.GetString(this.name, CultureInfo.CurrentUICulture);
-                if (result == null)
-                {
+                if (result == null) {
                     Debug.Assert(false, "String resource '" + this.name + "' is missing");
                     result = this.name;
                 }

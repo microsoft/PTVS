@@ -63,7 +63,7 @@ namespace Microsoft.VisualStudioTools.Navigation {
         }
 
         public virtual VSTREEDISPLAYDATA DisplayData {
-            get { return new VSTREEDISPLAYDATA();  }
+            get { return new VSTREEDISPLAYDATA(); }
         }
 
         public virtual uint CategoryField(LIB_CATEGORY lIB_CATEGORY) {

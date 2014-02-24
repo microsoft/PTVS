@@ -17,14 +17,12 @@ using System.Diagnostics;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
 
-namespace Microsoft.VisualStudioTools.Project
-{
+namespace Microsoft.VisualStudioTools.Project {
     /// <summary>
     ///This class provides some useful static shell based methods. 
     /// </summary>
 
-    public static class UIHierarchyUtilities
-    {
+    public static class UIHierarchyUtilities {
         /// <summary>
         /// Get reference to IVsUIHierarchyWindow interface from guid persistence slot.
         /// </summary>
@@ -33,8 +31,7 @@ namespace Microsoft.VisualStudioTools.Project
         /// The caller of this method can use predefined identifiers that map to tool windows if those tool windows 
         /// are known to the caller. </param>
         /// <returns>A reference to an IVsUIHierarchyWindow interface.</returns>
-        public static IVsUIHierarchyWindow GetUIHierarchyWindow(IServiceProvider serviceProvider, Guid persistenceSlot)
-        {
+        public static IVsUIHierarchyWindow GetUIHierarchyWindow(IServiceProvider serviceProvider, Guid persistenceSlot) {
             if (serviceProvider == null) {
                 throw new ArgumentNullException("serviceProvider");
             }
@@ -48,8 +45,7 @@ namespace Microsoft.VisualStudioTools.Project
             IVsWindowFrame frame;
 
             if (ErrorHandler.Succeeded(shell.FindToolWindow(0, ref persistenceSlot, out frame)) &&
-                ErrorHandler.Succeeded(frame.GetProperty((int)__VSFPROPID.VSFPROPID_DocView, out pvar)))
-            {
+                ErrorHandler.Succeeded(frame.GetProperty((int)__VSFPROPID.VSFPROPID_DocView, out pvar))) {
                 return pvar as IVsUIHierarchyWindow;
             }
 

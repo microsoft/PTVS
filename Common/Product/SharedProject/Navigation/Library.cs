@@ -89,7 +89,7 @@ namespace Microsoft.VisualStudioTools.Navigation {
             }
 
             ICustomSearchListProvider listProvider;
-            if(pobSrch != null && 
+            if (pobSrch != null &&
                 pobSrch.Length > 0) {
                 if ((listProvider = pobSrch[0].pIVsNavInfo as ICustomSearchListProvider) != null) {
                     switch ((_LIB_LISTTYPE)ListType) {
@@ -154,7 +154,7 @@ namespace Microsoft.VisualStudioTools.Navigation {
                 _root.Visit(visitor, ct);
             }
         }
-        
+
         public int GetSeparatorStringWithOwnership(out string pbstrSeparator) {
             pbstrSeparator = ".";
             return VSConstants.S_OK;

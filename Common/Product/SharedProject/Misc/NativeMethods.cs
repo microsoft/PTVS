@@ -562,7 +562,7 @@ namespace Microsoft.VisualStudioTools.Project {
         [DllImport("user32", CallingConvention = CallingConvention.Winapi)]
         public static extern IntPtr SendMessage(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);
 
-        [DllImport("user32", CallingConvention = CallingConvention.Winapi, CharSet=CharSet.Unicode)]
+        [DllImport("user32", CallingConvention = CallingConvention.Winapi, CharSet = CharSet.Unicode)]
         public static extern IntPtr SendMessageW(IntPtr hWnd, uint msg, IntPtr wParam, string lParam);
 
         [DllImport("user32", CallingConvention = CallingConvention.Winapi)]

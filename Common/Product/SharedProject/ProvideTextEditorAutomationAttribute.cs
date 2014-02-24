@@ -31,7 +31,7 @@ namespace Microsoft.VisualStudioTools {
         private readonly short _descriptionResourceId;
         private readonly ProfileMigrationType _migrationType;
 
-        public ProvideTextEditorAutomationAttribute(string categoryName, short categoryResourceId, 
+        public ProvideTextEditorAutomationAttribute(string categoryName, short categoryResourceId,
             short descriptionResourceId, ProfileMigrationType migrationType) {
             Utilities.ArgumentNotNull(categoryName, "categoryName");
 
@@ -72,8 +72,8 @@ namespace Microsoft.VisualStudioTools {
         public override void Register(RegistrationContext context) {
             using (Key automationKey = context.CreateKey(AutomationCategoryRegKey)) {
                 automationKey.SetValue(null, "#" + CategoryResourceId);
-                automationKey.SetValue("Description", "#" + DescriptionResourceId);                
-                automationKey.SetValue("Name", CategoryName);                
+                automationKey.SetValue("Description", "#" + DescriptionResourceId);
+                automationKey.SetValue("Name", CategoryName);
                 automationKey.SetValue("Package", CommonConstants.TextEditorPackage);
                 automationKey.SetValue("ProfileSave", 1);
                 automationKey.SetValue("ResourcePackage", context.ComponentType.GUID.ToString("B"));

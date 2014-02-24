@@ -18,24 +18,18 @@ using System.Globalization;
 using System.Resources;
 using System.Threading;
 
-namespace Microsoft.VisualStudioTools.Project
-{
+namespace Microsoft.VisualStudioTools.Project {
     [AttributeUsage(AttributeTargets.All)]
-    internal sealed class SRDescriptionAttribute : DescriptionAttribute
-    {
+    internal sealed class SRDescriptionAttribute : DescriptionAttribute {
         private bool replaced;
 
         public SRDescriptionAttribute(string description)
-            : base(description)
-        {
+            : base(description) {
         }
 
-        public override string Description
-        {
-            get
-            {
-                if (!replaced)
-                {
+        public override string Description {
+            get {
+                if (!replaced) {
                     replaced = true;
                     DescriptionValue = SR.GetString(base.Description, CultureInfo.CurrentUICulture);
                 }
@@ -45,21 +39,17 @@ namespace Microsoft.VisualStudioTools.Project
     }
 
     [AttributeUsage(AttributeTargets.All)]
-    internal sealed class SRCategoryAttribute : CategoryAttribute
-    {
+    internal sealed class SRCategoryAttribute : CategoryAttribute {
 
         public SRCategoryAttribute(string category)
-            : base(category)
-        {
+            : base(category) {
         }
 
-        protected override string GetLocalizedString(string value)
-        {
+        protected override string GetLocalizedString(string value) {
             return SR.GetString(value, CultureInfo.CurrentUICulture);
         }
     }
-    internal class SR
-    {
+    internal class SR {
         internal const string AddReferenceDialogTitle = "AddReferenceDialogTitle";
         internal const string AddToNullProjectError = "AddToNullProjectError";
         internal const string Advanced = "Advanced";
@@ -205,12 +195,9 @@ namespace Microsoft.VisualStudioTools.Project
         ResourceManager resources;
 
         private static Object s_InternalSyncObject;
-        private static Object InternalSyncObject
-        {
-            get
-            {
-                if (s_InternalSyncObject == null)
-                {
+        private static Object InternalSyncObject {
+            get {
+                if (s_InternalSyncObject == null) {
                     Object o = new Object();
                     Interlocked.CompareExchange(ref s_InternalSyncObject, o, null);
                 }
@@ -218,19 +205,14 @@ namespace Microsoft.VisualStudioTools.Project
             }
         }
 
-        internal SR()
-        {
+        internal SR() {
             resources = new System.Resources.ResourceManager("Microsoft.VisualStudio.Project", this.GetType().Assembly);
         }
 
-        private static SR GetLoader()
-        {
-            if (loader == null)
-            {
-                lock (InternalSyncObject)
-                {
-                    if (loader == null)
-                    {
+        private static SR GetLoader() {
+            if (loader == null) {
+                lock (InternalSyncObject) {
+                    if (loader == null) {
                         loader = new SR();
                     }
                 }
@@ -239,48 +221,39 @@ namespace Microsoft.VisualStudioTools.Project
             return loader;
         }
 
-        private static CultureInfo Culture
-        {
+        private static CultureInfo Culture {
             get { return null/*use ResourceManager default, CultureInfo.CurrentUICulture*/; }
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        public static ResourceManager Resources
-        {
-            get
-            {
+        public static ResourceManager Resources {
+            get {
                 return GetLoader().resources;
             }
         }
 
-        public static string GetString(string name, params object[] args)
-        {
+        public static string GetString(string name, params object[] args) {
             SR sys = GetLoader();
             if (sys == null)
                 return null;
             string res = sys.resources.GetString(name, SR.Culture);
 
-            if (args != null && args.Length > 0)
-            {
+            if (args != null && args.Length > 0) {
                 return String.Format(CultureInfo.CurrentCulture, res, args);
-            }
-            else
-            {
+            } else {
                 return res;
             }
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        public static string GetString(string name)
-        {
+        public static string GetString(string name) {
             SR sys = GetLoader();
             if (sys == null)
                 return null;
             return sys.resources.GetString(name, SR.Culture);
         }
 
-        public static string GetString(string name, CultureInfo culture)
-        {
+        public static string GetString(string name, CultureInfo culture) {
             SR sys = GetLoader();
             if (sys == null)
                 return null;
@@ -288,8 +261,7 @@ namespace Microsoft.VisualStudioTools.Project
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        public static object GetObject(string name)
-        {
+        public static object GetObject(string name) {
             SR sys = GetLoader();
             if (sys == null)
                 return null;

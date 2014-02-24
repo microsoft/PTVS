@@ -22,7 +22,7 @@ namespace Microsoft.VisualStudioTools.Navigation {
 
         public ProjectLibraryNode(CommonProjectNode project)
             : base(null, project.Caption, project.Caption, LibraryNodeType.PhysicalContainer) {
-                _project = project;
+            _project = project;
         }
 
         public override uint CategoryField(LIB_CATEGORY category) {

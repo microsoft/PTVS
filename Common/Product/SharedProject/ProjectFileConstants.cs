@@ -14,14 +14,12 @@
 
 using System.Diagnostics.CodeAnalysis;
 
-namespace Microsoft.VisualStudioTools.Project
-{
+namespace Microsoft.VisualStudioTools.Project {
     /// <summary>
     /// Defines the constant strings for various msbuild targets
     /// </summary>
     [SuppressMessage("Microsoft.Naming", "CA1709:IdentifiersShouldBeCasedCorrectly", MessageId = "Ms")]
-    public static class MsBuildTarget
-    {
+    public static class MsBuildTarget {
         public const string ResolveProjectReferences = "ResolveProjectReferences";
         public const string ResolveAssemblyReferences = "ResolveAssemblyReferences";
         public const string ResolveComReferences = "ResolveComReferences";
@@ -31,8 +29,7 @@ namespace Microsoft.VisualStudioTools.Project
     }
 
     [SuppressMessage("Microsoft.Naming", "CA1709:IdentifiersShouldBeCasedCorrectly", MessageId = "Ms")]
-    public static class MsBuildGeneratedItemType
-    {
+    public static class MsBuildGeneratedItemType {
         public const string ReferenceCopyLocalPaths = "ReferenceCopyLocalPaths";
         public const string ComReferenceWrappers = "ComReferenceWrappers";
     }
@@ -41,8 +38,7 @@ namespace Microsoft.VisualStudioTools.Project
     /// Defines the constant strings used with project files.
     /// </summary>
     [SuppressMessage("Microsoft.Naming", "CA1709:IdentifiersShouldBeCasedCorrectly", MessageId = "COM")]
-    public static class ProjectFileConstants
-    {
+    public static class ProjectFileConstants {
         public const string Include = "Include";
         public const string Name = "Name";
         public const string HintPath = "HintPath";
@@ -105,8 +101,7 @@ namespace Microsoft.VisualStudioTools.Project
         public const string User = "User";
     }
 
-    public static class ProjectFileAttributeValue
-    {
+    public static class ProjectFileAttributeValue {
         public const string Code = "Code";
         public const string Form = "Form";
         public const string Component = "Component";
@@ -114,13 +109,11 @@ namespace Microsoft.VisualStudioTools.Project
         public const string UserControl = "UserControl";
     }
 
-    internal static class ProjectFileValues
-    {
+    internal static class ProjectFileValues {
         internal const string AnyCPU = "AnyCPU";
     }
 
-    public enum WrapperToolAttributeValue
-    {
+    public enum WrapperToolAttributeValue {
         Primary,
         TlbImp
     }
@@ -128,8 +121,7 @@ namespace Microsoft.VisualStudioTools.Project
     /// <summary>
     /// A set of constants that specify the default sort order for different types of hierarchy nodes.
     /// </summary>
-    public static class DefaultSortOrderNode
-    {
+    public static class DefaultSortOrderNode {
         public const int HierarchyNode = 1000;
         public const int FolderNode = 500;
         public const int NestedProjectNode = 200;

@@ -245,7 +245,7 @@ namespace Microsoft.VisualStudioTools.Project {
         internal override int ExcludeFromProject() {
             Debug.Assert(this.ProjectMgr != null, "The project item " + this.ToString() + " has not been initialised correctly. It has a null ProjectMgr");
             if (!ProjectMgr.QueryEditProjectFile(false) ||
-                !ProjectMgr.Tracker.CanRemoveItems(new[] { Url }, new [] { VSQUERYREMOVEFILEFLAGS.VSQUERYREMOVEFILEFLAGS_NoFlags })) {
+                !ProjectMgr.Tracker.CanRemoveItems(new[] { Url }, new[] { VSQUERYREMOVEFILEFLAGS.VSQUERYREMOVEFILEFLAGS_NoFlags })) {
                 return VSConstants.E_FAIL;
             }
 
@@ -312,7 +312,7 @@ namespace Microsoft.VisualStudioTools.Project {
                     case VsCommands2K.EXCLUDEFROMPROJECT:
                         if (ItemNode.IsExcluded) {
                             result |= QueryStatusResult.NOTSUPPORTED | QueryStatusResult.INVISIBLE;
-                        return VSConstants.S_OK;
+                            return VSConstants.S_OK;
                         }
                         break;
                     case VsCommands2K.INCLUDEINPROJECT:
@@ -322,7 +322,7 @@ namespace Microsoft.VisualStudioTools.Project {
                         }
                         break;
                 }
-            } 
+            }
 
             return base.QueryStatusOnNode(guidCmdGroup, cmd, pCmdText, ref result);
         }

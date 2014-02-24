@@ -23,7 +23,7 @@ namespace Microsoft.VisualStudioTools {
     /// Supports hierarchy registration but all elements of the hierarchy also need
     /// to be registered independently (to provide their code/state settings).
     /// </summary>
-    [AttributeUsage(AttributeTargets.Class, AllowMultiple=true)]
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
     class ProvideDebugExceptionAttribute : RegistrationAttribute {
         private readonly string _engineGuid;
         private readonly string[] _path;
