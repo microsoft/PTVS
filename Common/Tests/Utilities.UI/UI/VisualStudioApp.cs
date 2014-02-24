@@ -155,6 +155,21 @@ namespace TestUtilities.UI {
             return dialog;
         }
 
+        public void ExecuteCommand(string commandName, string commandArgs = "", int timeout = 25000) {
+            Task task = Task.Factory.StartNew(() => {
+                Console.WriteLine("Executing command {0} {1}", commandName, commandArgs);
+                Dte.ExecuteCommand(commandName, commandArgs);
+                Console.WriteLine("Successfully executed command {0} {1}", commandName, commandArgs);
+            });
+
+            if (!task.Wait(timeout)) {
+                string msg = String.Format("Command {0} failed to execute in specified timeout", commandName);
+                Console.WriteLine(msg);
+                DumpVS();
+                Assert.Fail(msg);
+            }
+        }
+
         /// <summary>
         /// Opens and activates the Navigate To window.
         /// </summary>
@@ -196,6 +211,19 @@ namespace TestUtilities.UI {
             Debug.Assert(Path.IsPathRooted(filename));
 
             string windowName = Path.GetFileName(filename);
+            var elem = GetDocumentTab(windowName);
+
+            elem = elem.FindFirst(TreeScope.Descendants,
+                new PropertyCondition(
+                    AutomationElement.ClassNameProperty,
+                    "WpfTextView"
+                )
+            );
+
+            return new EditorWindow(filename, elem);
+        }
+
+        public AutomationElement GetDocumentTab(string windowName) {
             var elem = Element.FindFirst(TreeScope.Descendants,
                 new AndCondition(
                     new PropertyCondition(
@@ -223,15 +251,7 @@ namespace TestUtilities.UI {
                     )
                 );
             }
-
-            elem = elem.FindFirst(TreeScope.Descendants,
-                new PropertyCondition(
-                    AutomationElement.ClassNameProperty,
-                    "WpfTextView"
-                )
-            );
-
-            return new EditorWindow(filename, elem);
+            return elem;
         }
 
         /// <summary>

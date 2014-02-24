@@ -182,6 +182,12 @@
 
 Your web browser will not be opened.</value>
   </data>
+  <data name="HasTests" xml:space="preserve">
+    <value>Is Test File</value>
+  </data>
+  <data name="HasTestsDescription" xml:space="preserve">
+    <value>Specifies the file contents are for unit testing.</value>
+  </data>
   <data name="UnexpectedUpgradeError" xml:space="preserve">
     <value>An unexpected error occurred while attempting to upgrade a project: {0}
 Run Visual Studio with the /Log option and check ActivityLog.xml for more detail.</value>

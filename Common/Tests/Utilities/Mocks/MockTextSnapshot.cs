@@ -69,25 +69,44 @@ namespace TestUtilities.Mocks {
         }
 
         private string[] GetLines() {
-            return _text.Split(new[] { "\r\n" }, StringSplitOptions.None);
+            return _text.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.None);
         }
 
         public ITextSnapshotLine GetLineFromLineNumber(int lineNumber) {
             for (int curLine = 0, curPosition = 0; ; curLine++) {
-                int endOfLine = _text.IndexOf('\r', curPosition);
+                int endOfLine = _text.IndexOfAny(new[] { '\r', '\n' }, curPosition);
+                string eolChar = GetEolChar(endOfLine);
                 if (curLine == lineNumber) {
-                    if (endOfLine == -1) {
-                        return new MockTextSnapshotLine(this, _text.Substring(curPosition), lineNumber, curPosition, false);
-                    } else {
-                        return new MockTextSnapshotLine(this, _text.Substring(curPosition, endOfLine - curPosition), lineNumber, curPosition, true);
-                    }
+                    return new MockTextSnapshotLine(
+                        this, 
+                        endOfLine == -1 ? 
+                            _text.Substring(curPosition) : 
+                            _text.Substring(curPosition, endOfLine - curPosition), 
+                        lineNumber, 
+                        curPosition, 
+                        eolChar
+                    );
                 }
                 if (endOfLine == -1) {
                     Debug.Assert(false);
                     return null;
                 }
-                curPosition = endOfLine + 2;
+                curPosition = endOfLine + eolChar.Length;
             }
+        }
+
+        private string GetEolChar(int endOfLine) {
+            if (endOfLine != -1) {
+                if (_text[endOfLine] == '\r') {
+                    if ((endOfLine + 1) < _text.Length && _text[endOfLine + 1] == '\n') {
+                        return "\r\n";
+                    }
+                    return "\r";
+                } else if (_text[endOfLine] == '\n') {
+                    return "\n";
+                }
+            }
+            return "";
         }
 
         public ITextSnapshotLine GetLineFromPosition(int position) {
@@ -133,7 +152,11 @@ namespace TestUtilities.Mocks {
         }
 
         public IEnumerable<ITextSnapshotLine> Lines {
-            get { throw new NotImplementedException(); }
+            get {
+                for (int i = 0; i < LineCount; i++) {
+                    yield return GetLineFromLineNumber(i);
+                }
+            }
         }
 
         public ITextBuffer TextBuffer {

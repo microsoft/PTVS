@@ -37,6 +37,7 @@ namespace Microsoft.VisualStudioTools.Project
         private static readonly string[] _defaultOpensWithDesignViewExtensions = new[] { ".aspx", ".ascx", ".asax", ".asmx", ".xsd", ".resource", ".xaml" };
         private static readonly string[] _supportsDesignViewExtensions = new[] { ".aspx", ".ascx", ".asax", ".asmx" };
         private static readonly string[] _supportsDesignViewSubTypes = new[] { ProjectFileAttributeValue.Code, ProjectFileAttributeValue.Form, ProjectFileAttributeValue.UserControl, ProjectFileAttributeValue.Component, ProjectFileAttributeValue.Designer };
+        private string _caption;
 
         #region static fields
         private static Dictionary<string, int> extensionIcons;
@@ -82,7 +83,7 @@ namespace Microsoft.VisualStudioTools.Project
                 return ItemNode is AllFilesProjectElement;
             }
         }
-
+        
         /// <summary>
         /// overwrites of the generic hierarchyitem.
         /// </summary>
@@ -91,16 +92,19 @@ namespace Microsoft.VisualStudioTools.Project
         {
             get
             {
-                // Use LinkedIntoProjectAt property if available
-                string caption = this.ItemNode.GetMetadata(ProjectFileConstants.LinkedIntoProjectAt);
-                if (caption == null || caption.Length == 0)
-                {
-                    // Otherwise use filename
-                    caption = this.ItemNode.GetMetadata(ProjectFileConstants.Include);
-                    caption = Path.GetFileName(caption);
-                }
-                return caption;
+                return _caption;
             }
+        }
+
+        private void UpdateCaption() {
+            // Use LinkedIntoProjectAt property if available
+            string caption = this.ItemNode.GetMetadata(ProjectFileConstants.LinkedIntoProjectAt);
+            if (caption == null || caption.Length == 0) {
+                // Otherwise use filename
+                caption = this.ItemNode.GetMetadata(ProjectFileConstants.Include);
+                caption = Path.GetFileName(caption);
+            }
+            _caption = caption;
         }
 
         public override string GetEditLabel()
@@ -243,6 +247,7 @@ namespace Microsoft.VisualStudioTools.Project
         public FileNode(ProjectNode root, ProjectElement element)
             : base(root, element)
         {
+            UpdateCaption();
         }
         #endregion
 
@@ -440,6 +445,7 @@ namespace Microsoft.VisualStudioTools.Project
                     ProjectMgr.OnInvalidateItems(this.Parent);
                 }
 
+                UpdateCaption();
             }
             catch (Exception e)
             {
@@ -548,9 +554,7 @@ namespace Microsoft.VisualStudioTools.Project
                     result |= QueryStatusResult.SUPPORTED | QueryStatusResult.ENABLED;
                     return VSConstants.S_OK;
                 }
-            }
-            else
-            {
+            } else if (cmdGroup != ProjectMgr.SharedCommandGuid) {
                 return (int)OleConstants.OLECMDERR_E_UNKNOWNGROUP;
             }
             return base.QueryStatusOnNode(cmdGroup, cmd, pCmdText, ref result);

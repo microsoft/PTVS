@@ -607,6 +607,17 @@
         </Strings>
       </Button>
 
+      <Button guid="guidPythonToolsCmdSet" id="cmdidCopyFullPath" priority="0x0610" type="Button">
+        <Parent guid="guidSHLMainMenu" id="IDG_VS_CTXT_FOLDER_EXPLORE" />
+        <CommandFlag>DefaultInvisible</CommandFlag>
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <Strings>
+          <CommandName>CopyFullPath</CommandName>
+          <ButtonText>Copy F&amp;ull Path</ButtonText>
+        </Strings>
+      </Button>
+
+     
       <!--================================================================================================================-->
       <!--======================================= Environment Management Commands ========================================-->
       <!--================================================================================================================-->
@@ -807,7 +818,12 @@
     <CommandPlacement guid="guidVSStd2K" id="cmdidExploreFolderInWindows" priority="0x800">
       <Parent guid="guidPythonToolsCmdSet" id="CodeFileGroup2" />
     </CommandPlacement>
-    
+    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidCopyFullPath" priority="0x601">
+      <Parent guid="guidSHLMainMenu" id="IDG_VS_CTXT_PROJECT_EXPLORE"/>
+    </CommandPlacement>
+    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidCopyFullPath" priority="0x602">
+      <Parent guid="guidPythonToolsCmdSet" id="CodeFileGroup"/>
+    </CommandPlacement>
     <!-- Place the Send to REPL item in our context group in addition to it's normal placement in the Edit menu. -->
     <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidSendToRepl" priority="0x100">
       <Parent guid="guidPythonToolsCmdSet" id="EditorContextGroup"/>
@@ -1048,6 +1064,7 @@
 
       <!-- Shared commands, defined in CommonConstants.cs -->
       <IDSymbol name="cmdidAddExistingFolder" value="0x10001" />
+      <IDSymbol name="cmdidCopyFullPath" value="0x10003" />
     </GuidSymbol>
 
     <GuidSymbol name="guidImages" value="{7f103a95-8141-4004-a01d-e3f739caa27d}" >

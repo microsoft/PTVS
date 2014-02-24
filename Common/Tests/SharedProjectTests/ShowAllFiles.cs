@@ -214,12 +214,8 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                     var notInProject = solution.WaitForItem("ShowAllFilesIncludeExclude", "NotInProject" + projectType.CodeExtension);
                     AutomationWrapper.Select(notInProject);
 
-                    try {
-                        solution.App.Dte.ExecuteCommand("Project.SetasNode.jsStartupFile");
-                        Assert.Fail("Successfully set startup file on excluded item");
-                    } catch (COMException) {
-                    }
-
+                    solution.App.Dte.ExecuteCommand("Project.SetasNode.jsStartupFile");
+                    
                     var folder = solution.WaitForItem("ShowAllFilesIncludeExclude", "ExcludeFolder1");
                     AutomationWrapper.Select(folder);
                     solution.App.Dte.ExecuteCommand("Project.ExcludeFromProject");

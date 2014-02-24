@@ -114,7 +114,10 @@ namespace TestUtilities.Mocks {
         }
 
         public ITextSnapshot Insert(int position, string text) {
-            throw new NotImplementedException();
+            using (var edit = CreateEdit()) {
+                edit.Insert(position, text);
+                return edit.Apply();
+            }
         }
 
         public bool IsReadOnly(Span span, bool isEdit) {

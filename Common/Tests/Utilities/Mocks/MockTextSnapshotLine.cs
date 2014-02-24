@@ -21,15 +21,15 @@ namespace TestUtilities.Mocks {
         private readonly MockTextSnapshot _snapshot;
         private readonly string _text;
         private readonly int _lineNo, _startPos;
-        private readonly bool _hasLineBreak;
+        private readonly string _lineBreak;
 
-        public MockTextSnapshotLine(MockTextSnapshot snapshot, string text, int lineNo, int startPos, bool hasLineBreak) {
+        public MockTextSnapshotLine(MockTextSnapshot snapshot, string text, int lineNo, int startPos, string lineBreak) {
             Debug.Assert(!text.EndsWith("\n"));
             _snapshot = snapshot;
             _text = text;
             _lineNo = lineNo;
             _startPos = startPos;
-            _hasLineBreak = hasLineBreak;
+            _lineBreak = lineBreak;
         }
 
         public SnapshotPoint End {
@@ -38,10 +38,7 @@ namespace TestUtilities.Mocks {
 
         public SnapshotPoint EndIncludingLineBreak {
             get {
-                if (_hasLineBreak) {
-                    return new SnapshotPoint(_snapshot, _startPos + _text.Length + 2);
-                }
-                return End;
+                return new SnapshotPoint(_snapshot, _startPos + _text.Length + _lineBreak.Length);
             }
         }
 
@@ -56,7 +53,7 @@ namespace TestUtilities.Mocks {
         }
 
         public string GetLineBreakText() {
-            return "\r\n";
+            return _lineBreak;
         }
 
         public string GetText() {
@@ -76,9 +73,8 @@ namespace TestUtilities.Mocks {
         }
 
         public int LineBreakLength {
-            get { 
-                if (_hasLineBreak) { return 2; }
-                return 0;
+            get {
+                return _lineBreak.Length;
             }
         }
 

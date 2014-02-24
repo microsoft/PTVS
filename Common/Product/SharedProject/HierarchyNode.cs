@@ -1520,6 +1520,9 @@ namespace Microsoft.VisualStudioTools.Project
                         psi.WorkingDirectory = FullPathToChildren;
                         Process.Start(psi);
                         return VSConstants.S_OK;
+                    case SharedCommands.CopyFullPath:
+                        System.Windows.Clipboard.SetText(Url);
+                        return VSConstants.S_OK;
                 }
             }
 
@@ -1581,6 +1584,12 @@ namespace Microsoft.VisualStudioTools.Project
                 switch ((SharedCommands)cmd) {
                     case SharedCommands.OpenCommandPromptHere:
                         if (CanOpenCommandPrompt) {
+                            result |= QueryStatusResult.SUPPORTED | QueryStatusResult.ENABLED;
+                            return VSConstants.S_OK;
+                        }
+                        break;
+                    case SharedCommands.CopyFullPath:
+                        if (this is IDiskBasedNode || this is ProjectNode) {
                             result |= QueryStatusResult.SUPPORTED | QueryStatusResult.ENABLED;
                             return VSConstants.S_OK;
                         }

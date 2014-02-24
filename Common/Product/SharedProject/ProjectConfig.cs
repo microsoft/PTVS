@@ -678,6 +678,12 @@ namespace Microsoft.VisualStudioTools.Project
             var earliestOutput = DateTime.MaxValue;
             bool mustRebuild = false;
 
+            var allInputs = new HashSet<string>(OutputGroups
+                .Where(g => IsInputGroup(g.Name))
+                .SelectMany(x => x.EnumerateOutputs())
+                .Select(input => input.CanonicalName),
+                StringComparer.OrdinalIgnoreCase
+            );
             foreach (var group in OutputGroups.Where(g => !IsInputGroup(g.Name)))
             {
                 foreach (var output in group.EnumerateOutputs())
@@ -699,6 +705,11 @@ namespace Microsoft.VisualStudioTools.Project
                     {
                         mustRebuild = true;
                         break;
+                    }
+                    
+                    // output is an input, ignore it...
+                    if (allInputs.Contains(path)) {
+                        continue;
                     }
 
                     string inputPath;
@@ -838,7 +849,14 @@ namespace Microsoft.VisualStudioTools.Project
             } else if (iidCfg == typeof(IVsBuildableProjectCfg).GUID) {
                 IVsBuildableProjectCfg buildableConfig;
                 this.get_BuildableProjectCfg(out buildableConfig);
-                ppCfg = Marshal.GetComInterfaceForObject(buildableConfig, typeof(IVsBuildableProjectCfg));
+                //
+                //In some cases we've intentionally shutdown the build options
+                //  If buildableConfig is null then don't try to get the BuildableProjectCfg interface
+                //  
+                if (null != buildableConfig) 
+                {                    
+                    ppCfg = Marshal.GetComInterfaceForObject(buildableConfig, typeof(IVsBuildableProjectCfg));
+                }
             }
 
             // If not supported
@@ -928,7 +946,7 @@ namespace Microsoft.VisualStudioTools.Project
         public virtual int StartUpToDateCheck(IVsOutputWindowPane pane, uint options) {
             return config.IsUpToDate() ?
                 VSConstants.S_OK :
-                VSConstants.E_FAIL;
+                VSConstants.E_FAIL;            
         }
 
         public virtual int Stop(int fsync) {

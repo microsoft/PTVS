@@ -393,7 +393,7 @@ namespace Microsoft.VisualStudioTools.Project
                 if (res is prjBuildAction) {
                     return (prjBuildAction)res;
                 }
-                return prjBuildAction.prjBuildActionNone;
+                return prjBuildAction.prjBuildActionContent;
             }
             set 
             {
@@ -802,8 +802,11 @@ namespace Microsoft.VisualStudioTools.Project
             }
         }
 
-        [Browsable(false)]
+        [Browsable(true)]
         [AutomationBrowsable(true)]
+        [SRCategoryAttribute(SR.Misc)]
+        [LocDisplayName(SR.FullPath)]
+        [SRDescriptionAttribute(SR.FullPathDescription)]
         public string FullPath
         {
             get

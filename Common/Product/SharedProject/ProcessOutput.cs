@@ -346,8 +346,7 @@ namespace Microsoft.VisualStudioTools.Project{
             _process.Exited += OnExited;
             _process.EnableRaisingEvents = true;
 
-            try
-            {
+            try {
                 _process.Start();
             } catch (Exception ex) {
                 _error.AddRange(SplitLines(ex.ToString()));

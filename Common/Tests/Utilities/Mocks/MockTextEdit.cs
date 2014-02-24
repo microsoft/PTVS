@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Linq;
 using Microsoft.VisualStudio.Text;
 
 namespace TestUtilities.Mocks {
@@ -78,62 +79,69 @@ namespace TestUtilities.Mocks {
         }
 
         public ITextSnapshot Apply() {
-            // this works for non-overlapping edits...
             StringBuilder text = new StringBuilder(_snapshot.GetText());
+            var deletes = new NormalizedSnapshotSpanCollection(
+                _snapshot,
+                _edits.Where(edit => edit is DeletionEdit)
+                .Select(edit =>
+                    new Span(
+                        ((DeletionEdit)edit).Position,
+                        ((DeletionEdit)edit).Length
+                    )
+                )
+            );
+
+            // apply the deletes
+            for (int i = deletes.Count - 1; i >= 0; i--) {
+                text.Remove(deletes[i].Start, deletes[i].Length);
+            }
+
+            // now apply the inserts
+            int curDelete = 0, adjust = 0;
+            foreach (InsertionEdit insert in _edits.Where(edit => edit is InsertionEdit)) {
+                while (curDelete < deletes.Count && deletes[curDelete].Start < insert.Position) {
+                    adjust -= deletes[curDelete++].Length;
+                }
+
+                text.Insert(insert.Position + adjust, insert.Text);
+                adjust += insert.Text.Length;
+            }
+
             List<MockTextChange> changes = new List<MockTextChange>();
             for (int i = 0; i < _edits.Count; i++) {
                 var curEdit = _edits[i];
-
-                int adjust = 0;
-                for (int j = 0; j < i; j++) {
-                    var compEdit = _edits[j];
-                    DeletionEdit del = compEdit as DeletionEdit;
-                    if (del != null) {
-                        if ((compEdit.Position) < curEdit.Position) {
-                            adjust -= del.Length;
-                        }
-                    } else {
-                        if ((compEdit.Position) <= curEdit.Position) {
-                            adjust += ((InsertionEdit)compEdit).Text.Length;
-                        }
-                    }
-                }
-
                 InsertionEdit insert = curEdit as InsertionEdit;
                 if (insert != null) {
                     changes.Add(
                         new MockTextChange(
                             new SnapshotSpan(
                                 _snapshot,
-                                insert.Position, 
+                                insert.Position,
                                 0
                             ),
-                            insert.Position + adjust, 
+                            insert.Position + adjust,
                             insert.Text
                         )
                     );
-                    text.Insert(insert.Position + adjust, insert.Text);
                 } else {
                     DeletionEdit delete = curEdit as DeletionEdit;
                     changes.Add(
                         new MockTextChange(
                             new SnapshotSpan(
-                                _snapshot, 
-                                delete.Position, 
+                                _snapshot,
+                                delete.Position,
                                 delete.Length
-                            ), 
+                            ),
                             delete.Position + adjust,
                             ""
                         )
                     );
-                    text.Remove(delete.Position + adjust, delete.Length);
                 }
-
             }
 
             var res = ((MockTextBuffer)_snapshot.TextBuffer)._snapshot = new MockTextSnapshot(
-                (MockTextBuffer)_snapshot.TextBuffer, 
-                text.ToString(), 
+                (MockTextBuffer)_snapshot.TextBuffer,
+                text.ToString(),
                 _snapshot,
                 changes.ToArray()
             );

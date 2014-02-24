@@ -91,6 +91,7 @@ namespace Microsoft.VisualStudioTools.Project {
                 return this.VSProjectItem;
             }
         }
+
         #endregion
 
         #region overridden methods
