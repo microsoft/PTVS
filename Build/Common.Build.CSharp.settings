@@ -15,6 +15,7 @@
     <CodeAnalysisTreatWarningsAsErrors>true</CodeAnalysisTreatWarningsAsErrors>
     <!-- This eliminates the warning CA0060, EnvDTE Version=7.0 not found, for VS 10 installations. -->
     <CodeAnalysisAdditionalOptions> /assemblycomparemode:StrongNameIgnoringVersion</CodeAnalysisAdditionalOptions>
+    <SuppressSigning Condition="'$(SuppressSigning)'==''">false</SuppressSigning>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
@@ -55,7 +56,7 @@
     <DefineConstants>$(DefineConstants);SUPPRESS_COMMON_ASSEMBLY_METADATA</DefineConstants>
   </PropertyGroup>
 
-  <PropertyGroup>
+  <PropertyGroup Condition="!$(SuppressSigning)">
     <SignManifests>false</SignManifests>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>$(TargetsPath)\FinalPublicKey.snk</AssemblyOriginatorKeyFile>

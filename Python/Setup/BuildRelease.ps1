@@ -377,12 +377,19 @@ try {
                 }
             }
             
+            if ($release -or $mockrelease) {
+              $signedbuild = "true"
+            } else {
+              $signedbuild = "false"
+            }
+
             msbuild /v:n /m /fl /flp:"Verbosity=d;LogFile=BuildRelease.$config.$($targetVs.number).log" `
             /t:$target `
             /p:Configuration=$config `
             /p:WixVersion=$version `
             /p:VSTarget=$($targetVs.number) `
             /p:VisualStudioVersion=$($targetVs.number) `
+            /p:SignedBuild=$signedbuild `
             /p:"CustomBuildIdentifier=$name" `
             /p:IncludeVsLogger=$includeVsLogger `
             Python\Setup\dirs.proj

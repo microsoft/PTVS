@@ -22,6 +22,10 @@
       </PropertyGroup>
     </When>
   </Choose>
+  <PropertyGroup>
+      <SignedBuild Condition="'$(SignedBuild)'==''">false</SignedBuild>
+      <SuppressSigning Condition="!$(SignedBuild)">true</SuppressSigning>
+  </PropertyGroup>
   <Import Project="..\ProjectBefore.settings" />
   <PropertyGroup>
     <UseIISExpress>false</UseIISExpress>
