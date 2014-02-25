@@ -97,6 +97,9 @@
     <Compile Include="UI\AddReferenceDialog.cs" />
     <Compile Include="UI\AttachToProcessDialog.cs" />
     <Compile Include="UI\AutomationWrapper.cs" />
+    <Compile Include="UI\AzureCloudServiceActivityLog.cs" />
+    <Compile Include="UI\AzureCloudServiceCreateDialog.cs" />
+    <Compile Include="UI\AzureCloudServicePublishDialog.cs" />
     <Compile Include="UI\ListBox.cs" />
     <Compile Include="UI\Button.cs" />
     <Compile Include="UI\CheckBox.cs" />
@@ -106,8 +109,8 @@
     <Compile Include="UI\ListBoxItem.cs" />
     <Compile Include="UI\AzureWebSiteImportPublishSettingsDialog.cs" />
     <Compile Include="UI\AzureWebSiteCreateDialog.cs" />
-    <Compile Include="UI\AzureWebSiteImportSubscriptionDialog.cs" />
-    <Compile Include="UI\AzureWebSiteManageSubscriptionsDialog.cs" />
+    <Compile Include="UI\AzureImportSubscriptionDialog.cs" />
+    <Compile Include="UI\AzureManageSubscriptionsDialog.cs" />
     <Compile Include="UI\AzureWebSitePublishDialog.cs" />
     <Compile Include="UI\OpenProjectDialog.cs" />
     <Compile Include="UI\CredentialsDialog.cs" />

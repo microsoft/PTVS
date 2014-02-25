@@ -32,14 +32,14 @@ namespace TestUtilities.UI {
             sign.ClickButtonByName("Sign Out");
         }
 
-        public AzureWebSiteManageSubscriptionsDialog ClickImportOrManageSubscriptions() {
+        public AzureManageSubscriptionsDialog ClickImportOrManageSubscriptions() {
             WaitForInputIdle();
             var importElement = ImportSubscriptionsHyperlink();
             if (importElement == null) {
                 importElement = ManageSubscriptionsHyperlink();
             }
             importElement.GetInvokePattern().Invoke();
-            return new AzureWebSiteManageSubscriptionsDialog(App, AutomationElement.FromHandle(App.WaitForDialogToReplace(Element)));
+            return new AzureManageSubscriptionsDialog(App, AutomationElement.FromHandle(App.WaitForDialogToReplace(Element)));
         }
 
         public AzureWebSiteCreateDialog ClickNew() {

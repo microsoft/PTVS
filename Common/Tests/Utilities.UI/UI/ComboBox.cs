@@ -37,6 +37,28 @@ namespace TestUtilities.UI {
             }
         }
 
+        /// <summary>
+        /// Selects an item in the combo box by clicking on it.
+        /// Only use this if SelectItem doesn't work!
+        /// </summary
+        /// <param name="name"></param>
+        public void ClickItem(string name) {
+            ExpandCollapsePattern pat = (ExpandCollapsePattern)Element.GetCurrentPattern(ExpandCollapsePattern.Pattern);
+            pat.Expand();
+
+            var item = Element.FindFirst(TreeScope.Descendants, new PropertyCondition(AutomationElement.NameProperty, name));
+            if (item == null) {
+                throw new ElementNotAvailableException(name + " is not in the combobox");
+            }
+
+            // On Win8, we need to move mouse onto the text, otherwise we cannot select the item 
+            AutomationElement innerText = item.FindFirst(TreeScope.Children, new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.Text));
+            var rect = innerText.Current.BoundingRectangle;
+            var pt = new System.Windows.Point((int)((rect.Left + rect.Right) / 2), (int)((rect.Top + rect.Bottom) / 2));
+            Mouse.MoveTo(pt);
+            Mouse.Click();
+        }
+
         public string GetSelectedItemName() {
             var selection = Element.GetSelectionPattern().Current.GetSelection();
             if (selection == null || selection.Length == 0) {

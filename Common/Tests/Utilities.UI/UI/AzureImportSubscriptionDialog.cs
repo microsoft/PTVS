@@ -16,8 +16,8 @@ using System;
 using System.Windows.Automation;
 
 namespace TestUtilities.UI {
-    public class AzureWebSiteImportSubscriptionDialog : AutomationDialog {
-        public AzureWebSiteImportSubscriptionDialog(VisualStudioApp app, AutomationElement element)
+    public class AzureImportSubscriptionDialog : AutomationDialog {
+        public AzureImportSubscriptionDialog(VisualStudioApp app, AutomationElement element)
             : base(app, element) {
         }
 

@@ -36,6 +36,16 @@ namespace TestUtilities {
             }
         }
 
+        public static bool DeleteCloudServiceWithRetry(string subscriptionPublishSettingsFilePath, string serviceName) {
+            for (int i = 0; i < 60; i++) {
+                if (DeleteCloudService(subscriptionPublishSettingsFilePath, serviceName))
+                    return true;
+                Thread.Sleep(2000);
+            }
+
+            return false;
+        }
+
         public static bool DeleteWebSiteWithRetry(string subscriptionPublishSettingsFilePath, string webSiteName) {
             for (int i = 0; i < 5; i++) {
                 if (DeleteWebSite(subscriptionPublishSettingsFilePath, webSiteName))
@@ -44,6 +54,25 @@ namespace TestUtilities {
             }
 
             return false;
+        }
+
+        public static bool DeleteCloudService(string subscriptionPublishSettingsFilePath, string serviceName) {
+            var subscriptionName = FirstSubscriptionNameFromPublishSettings(subscriptionPublishSettingsFilePath);
+            using (var ps = PowerShell.Create()) {
+                ps.AddCommand("Set-ExecutionPolicy").AddParameter("Scope", "Process").AddParameter("ExecutionPolicy", "Unrestricted");
+                ps.Invoke();
+                ps.AddScript(@"
+                        param($serviceName, $publishSettingsFile, $subscriptionName)
+                        Import-AzurePublishSettingsFile -PublishSettingsFile $publishSettingsFile
+                        Set-AzureSubscription -SubscriptionName $subscriptionName
+                        Remove-AzureService -Force -DeleteAll -ServiceName $serviceName
+                ");
+                ps.AddParameter("publishSettingsFile", subscriptionPublishSettingsFilePath);
+                ps.AddParameter("subscriptionName", subscriptionName);
+                ps.AddParameter("serviceName", serviceName);
+                ps.Invoke();
+                return !ps.HadErrors;
+            }
         }
 
         public static bool DeleteWebSite(string subscriptionPublishSettingsFilePath, string webSiteName) {

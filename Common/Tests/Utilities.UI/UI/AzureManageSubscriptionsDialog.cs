@@ -16,8 +16,8 @@ using System;
 using System.Windows.Automation;
 
 namespace TestUtilities.UI {
-    public class AzureWebSiteManageSubscriptionsDialog : AutomationDialog {
-        public AzureWebSiteManageSubscriptionsDialog(VisualStudioApp app, AutomationElement element)
+    public class AzureManageSubscriptionsDialog : AutomationDialog {
+        public AzureManageSubscriptionsDialog(VisualStudioApp app, AutomationElement element)
             : base(app, element) {
         }
 
@@ -26,11 +26,11 @@ namespace TestUtilities.UI {
             CertificatesTab().Select();
         }
 
-        public AzureWebSiteImportSubscriptionDialog ClickImport() {
+        public AzureImportSubscriptionDialog ClickImport() {
             WaitForInputIdle();
             ClickButtonByAutomationId("ImportButton");
 
-            return new AzureWebSiteImportSubscriptionDialog(App, AutomationElement.FromHandle(App.WaitForDialogToReplace(Element)));
+            return new AzureImportSubscriptionDialog(App, AutomationElement.FromHandle(App.WaitForDialogToReplace(Element)));
         }
 
         public void ClickRemove() {
