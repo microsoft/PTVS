@@ -55,7 +55,7 @@ Preferably, these lines should be inserted at the first line of the script, so t
 
 The `secret` parameter passed to `enable_attach` is used to prevent random people from connecting to the running script – it will have to be specified in Visual Studio when connecting, and connections will only be permitted when the specified secret matches the one used by the script. If you wish to disable this, and allow anyone to connect, you should use `enable_attach(secret=None)`. 
 
-After making the necessary edits, start the script. Note that `enable_attach` call does not block – the debug server is launched on the background thread and awaits incoming connections, while your program continues to run. A separate function `wait_for_attach` is provided by ptvsd package if it is more desirable to wait until the debugger is attached before running. 
+After making the necessary edits, start the script. Note that `enable_attach` call does not block – the debug server is launched on the background thread and awaits incoming connections, while your program continues to run. Another function in the same package, `wait_for_attach`, can be called after `enable_attach` to block program execution until the debugger attaches in cases where that is desired.
 
 In addition to the two functions mentioned above, ptvsd also provides a helper function `break_into_debugger`, which serves as a programmatic breakpoint. This can be useful when you need a breakpoint to be triggered only when some complicated condition is true.
 
