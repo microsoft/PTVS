@@ -14,34 +14,25 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.Design;
 using System.Diagnostics;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
-using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Input;
 using Microsoft.Build.Execution;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Interpreters;
 using Microsoft.PythonTools.Navigation;
-using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Repl;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text.Adornments;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 using NativeMethods = Microsoft.VisualStudioTools.Project.NativeMethods;
-using OleConstants = Microsoft.VisualStudio.OLE.Interop.Constants;
 using Task = System.Threading.Tasks.Task;
 using VsCommands2K = Microsoft.VisualStudio.VSConstants.VSStd2KCmdID;
 using VsMenus = Microsoft.VisualStudioTools.Project.VsMenus;
@@ -121,7 +112,10 @@ namespace Microsoft.PythonTools.Project {
             if (CurrentConfig == null) {
                 SetCurrentConfiguration();
                 if (CurrentConfig == null) {
-                    throw new InvalidOperationException("Cannot get current configuration");
+                    if (BuildProject == null) {
+                        return null;
+                    }
+                    return BuildProject.CreateProjectInstance();
                 }
             }
             return CurrentConfig;

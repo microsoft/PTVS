@@ -21,7 +21,6 @@ using TestUtilities.UI;
 namespace PythonToolsUITests {
     [TestClass]
     public class NugetTests {
-
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
@@ -47,27 +46,23 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void FileNamesResolve() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenProject(@"TestData\DjangoProject.sln");
+                var project = app.OpenProject(@"TestData\HelloWorld.sln");
 
                 var ps = System.Management.Automation.PowerShell.Create();
                 ps.AddScript(@"
                         param($project)
-                        $folderProjectItem = $project.ProjectItems.Item(""Oar"")
+                        $folderProjectItem = $project.ProjectItems.Item(""Program.py"")
                         $result =  $folderProjectItem.FileNames(1)
                 ");
                 ps.AddParameter("project", project);
                 ps.Invoke();
                 var result = ps.Runspace.SessionStateProxy.GetVariable("result");
 
-                var folder = project.ProjectItems.Item("Oar");
+                var folder = project.ProjectItems.Item("Program.py");
                 string path = folder.get_FileNames(1);
                 
-                Assert.AreEqual(result, path);
-
-
+                Assert.AreEqual(path, result);
             }
         }
-                
-
     }
 }

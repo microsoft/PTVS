@@ -24,8 +24,6 @@ using System.Threading.Tasks;
 using System.Windows.Threading;
 using Microsoft.Build.Construction;
 using Microsoft.Build.Execution;
-using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
 using Microsoft.PythonTools.BuildTasks;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Navigation;
@@ -150,9 +148,12 @@ namespace Microsoft.PythonTools.Project {
                     return project.ProjectFile;
                 }
 
-                var value = project.GetMSBuildProjectInstance().GetPropertyValue(key);
-                if (!string.IsNullOrEmpty(value)) {
-                    return value;
+                var instance = project.GetMSBuildProjectInstance();
+                if (instance != null) {
+                    var value = instance.GetPropertyValue(key);
+                    if (!string.IsNullOrEmpty(value)) {
+                        return value;
+                    }
                 }
 
                 return m.Value;
