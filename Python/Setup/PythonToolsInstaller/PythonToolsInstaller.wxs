@@ -56,10 +56,8 @@
 
     <!-- Install the tools into the VS directory -->
     <DirectoryRef Id="Dir_VSExtensions">
-      <Directory Id="Dir_VSExtensions_Microsoft" Name="Microsoft">
-        <Directory Id="Dir_VSInstallLocationParent" Name="Python Tools for Visual Studio">
-          <Directory Id="Dir_VSInstallLocation" Name="$(var.ReleaseVersion)" />
-        </Directory>
+      <Directory Id="Dir_VSInstallLocationParent" Name="Python Tools for Visual Studio">
+        <Directory Id="Dir_VSInstallLocation" Name="$(var.ReleaseVersion)" />
       </Directory>
     </DirectoryRef>
 
