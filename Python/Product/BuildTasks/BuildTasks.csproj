@@ -146,16 +146,4 @@
       <_SupportFiles Include="$(OutDir)Microsoft.PythonTools.AzureSetup.exe.config" />
     </ItemGroup>
   </Target>
-  <Target Name="_GetTargetPath" Returns="@(_ResolvedReference1)">
-    <ItemGroup>
-      <_ResolvedReference1 Include="$(TargetPath)" />
-    </ItemGroup>
-  </Target>
-  <Target Name="_GetAssemblyName" Returns="@(_ResolvedReference2)">
-    <ItemGroup>
-      <_ResolvedReference2 Include="$(TargetPath)">
-        <UseAssemblyName>true</UseAssemblyName>
-      </_ResolvedReference2>
-    </ItemGroup>
-  </Target>
 </Project>

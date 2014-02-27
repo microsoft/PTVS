@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Vsix xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" Version="1.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2010">
   <Identifier Id="413E24B0-F748-48D4-B638-01D121A88A04">
-    <Name>Python Tools for Visual Studio, HPC Support</Name>
+    <Name>Python Tools for Visual Studio - HPC</Name>
     <Author>Microsoft</Author>
     <Version>2.1</Version>
     <Description xml:space="preserve">Provides templates for MPI projects as well as cluster deployment and debugging support.</Description>
@@ -20,6 +20,8 @@
       </VisualStudio>
       <VisualStudio Version="12.0">
         <Edition>IntegratedShell</Edition>
+        <Edition>WDExpress</Edition>
+        <Edition>VWDExpress</Edition>
       </VisualStudio>
     </SupportedProducts>
     <SupportedFrameworkRuntimeEdition MinVersion="4.0" />
@@ -34,8 +36,7 @@
   </References>
   <Content>
     <VsPackage>|%CurrentProject%;PkgdefProjectOutputGroup|</VsPackage>
-    <Assembly AssemblyName="Microsoft.PythonTools.Hpc">Microsoft.PythonTools.Hpc</Assembly>
+    <Assembly AssemblyName="|%CurrentProject%;_GetAssemblyName|">|%CurrentProject%;_GetTargetPath|</Assembly>
     <MefComponent>|%CurrentProject%|</MefComponent>
-    <ProjectTemplate>Templates\Projects\HpcMpiProject</ProjectTemplate>
   </Content>
 </Vsix>

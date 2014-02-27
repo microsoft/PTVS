@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Vsix xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" Version="1.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2010">
   <Identifier Id="81da0100-e6db-4783-91ea-c38c3fa1b81e">
-    <Name>Python Tools for Visual Studio, Profiling Support</Name>
+    <Name>Python Tools for Visual Studio - Profiling</Name>
     <Author>Microsoft</Author>
     <Version>2.1</Version>
     <Description xml:space="preserve">Provides support for profiling Python projects</Description>

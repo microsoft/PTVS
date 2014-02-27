@@ -7,7 +7,7 @@
   <?define InstallerUpgradeGuid=3A433B16-7486-48A3-86A7-A56C742A634B?>
 
   <Product Id="$(var.InstallerGuid)" Name="$(var.ProductName)" Language="1033" Version="$(var.MsiVersion)" Manufacturer="Microsoft Corporation" UpgradeCode="$(var.InstallerUpgradeGuid)">
-    <Package InstallerVersion="300" Compressed="yes"  />   
+    <Package InstallerVersion="300" Compressed="yes"  />
 
     <MajorUpgrade AllowDowngrades="no" AllowSameVersionUpgrades="yes"
                   DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
@@ -18,7 +18,7 @@
 
     <!-- We install for all users-->
     <Property Id="ALLUSERS" Value="1"/>
-    
+
     <Property Id="ApplicationFolderName" Value="Scripts" />
 
     <?define PythonVersions=2.7;3.3?>
@@ -30,87 +30,88 @@
     </Property>
 
     <Directory Id="TARGETDIR" Name="SourceDir" />
+
     <?foreach i in $(python.versions)?>
-      <?define ver=$(python.get_version($(var.i)))?>
-      <?define ver_reg=$(python.get_registry_version($(var.i)))?>
-      <?define ver_display=$(python.get_display_version($(var.i)))?>
-      
-      <Property Id="PYTHON_INSTALL_PATH_$(var.ver)_HKLM" Secure="yes">
-        <RegistrySearch Id="Reg_PythonInstallPath_$(var.ver)_HKLM" Root="HKLM" Key="Software\Python\PythonCore\$(var.ver_reg)\InstallPath" Type="directory" Win64="$(python.is_win64($(var.i)))" />
-      </Property>
-      <Property Id="PYTHON_INSTALL_PATH_$(var.ver)_HKCU" Secure="yes">
-        <RegistrySearch Id="Reg_PythonInstallPath_$(var.ver)_HKCU" Root="HKCU" Key="Software\Python\PythonCore\$(var.ver_reg)\InstallPath" Type="directory" Win64="$(python.is_win64($(var.i)))" />
-      </Property>
-      
-      <CustomAction Id="SetPythonInstallPath_$(var.ver)_HKLM" Property="PYTHON_INSTALL_PATH_$(var.ver)" Value="[PYTHON_INSTALL_PATH_$(var.ver)_HKLM]" Execute="immediate" />
-      <CustomAction Id="SetPythonInstallPath_$(var.ver)_HKCU" Property="PYTHON_INSTALL_PATH_$(var.ver)" Value="[PYTHON_INSTALL_PATH_$(var.ver)_HKCU]" Execute="immediate" />
-      
-      <InstallExecuteSequence>
-        <Custom Action="SetPythonInstallPath_$(var.ver)_HKLM" After="AppSearch">PYTHON_INSTALL_PATH_$(var.ver)_HKLM</Custom>
-        <Custom Action="SetPythonInstallPath_$(var.ver)_HKCU" After="AppSearch">PYTHON_INSTALL_PATH_$(var.ver)_HKCU</Custom>
-      </InstallExecuteSequence>
-      
-      <DirectoryRef Id="TARGETDIR">
-        <Directory Id="PYTHON_INSTALL_PATH_$(var.ver)" Name="Python$(var.ver)" ComponentGuidGenerationSeed="$(python.get_guid($(var.i)))">
-          <Directory Id="Dir_Scripts_$(var.ver)" Name="Scripts" />
-        </Directory>
-      </DirectoryRef>
-      
-      <Feature
-        Id="WFastCgi_$(var.ver)"
-        Title="Python $(var.ver_display)"
-        Description="Installs the wfastcgi.py script and registers Python $(var.ver_display) as a FastCGI handler with IIS."
-        Display="expand"
-        Level="1"
-        AllowAdvertise="no"
-        Absent="allow">
-        
-        <Condition Level="2">NOT PYTHON_INSTALL_PATH_$(var.ver)_HKLM AND NOT PYTHON_INSTALL_PATH_$(var.ver)_HKCU</Condition>
-        
-        <Component Directory="Dir_Scripts_$(var.ver)">
-          <File Id="wfastcgi.py_$(var.ver)" KeyPath="yes" Source="wfastcgi.py" />
-        </Component>
-        
-      </Feature>
-      
-      <CustomAction
-        Id="AppCmd_RegCmd_$(var.ver)"
-        Property="AppCmd_Reg_$(var.ver)"
-        Value='"[APPCMD_PATH]" set config /section:system.webServer/fastCGI "/+[\[]fullPath=&apos;[PYTHON_INSTALL_PATH_$(var.ver)]python.exe&apos;, arguments=&apos;[#wfastcgi.py_$(var.ver)]&apos;[\]]"'
-        Execute="immediate" />
-      <CustomAction Id="AppCmd_Reg_$(var.ver)" BinaryKey="WixCA" DllEntry="CAQuietExec" Execute="deferred" Return="ignore" Impersonate="no"/>
+    <?define ver=$(python.get_version($(var.i)))?>
+    <?define ver_reg=$(python.get_registry_version($(var.i)))?>
+    <?define ver_display=$(python.get_display_version($(var.i)))?>
 
-      <CustomAction
-        Id="AppCmd_UnRegCmd_$(var.ver)"
-        Property="AppCmd_UnReg_$(var.ver)"
-        Value='"[APPCMD_PATH]" set config /section:system.webServer/fastCGI "/-[\[]fullPath=&apos;[PYTHON_INSTALL_PATH_$(var.ver)]python.exe&apos;, arguments=&apos;[#wfastcgi.py_$(var.ver)]&apos;[\]]"'
-        Execute="immediate" />
-      <CustomAction Id="AppCmd_UnReg_$(var.ver)" BinaryKey="WixCA" DllEntry="CAQuietExec" Execute="deferred" Return="ignore" Impersonate="no"/>
+    <Property Id="PYTHON_INSTALL_PATH_$(var.ver)_HKLM" Secure="yes">
+      <RegistrySearch Id="Reg_PythonInstallPath_$(var.ver)_HKLM" Root="HKLM" Key="Software\Python\PythonCore\$(var.ver_reg)\InstallPath" Type="directory" Win64="$(python.is_win64($(var.i)))" />
+    </Property>
+    <Property Id="PYTHON_INSTALL_PATH_$(var.ver)_HKCU" Secure="yes">
+      <RegistrySearch Id="Reg_PythonInstallPath_$(var.ver)_HKCU" Root="HKCU" Key="Software\Python\PythonCore\$(var.ver_reg)\InstallPath" Type="directory" Win64="$(python.is_win64($(var.i)))" />
+    </Property>
 
-      <InstallExecuteSequence>
-        <Custom Action="AppCmd_RegCmd_$(var.ver)" After="CostFinalize">APPCMD_PATH AND (PYTHON_INSTALL_PATH_$(var.ver)_HKLM OR PYTHON_INSTALL_PATH_$(var.ver)_HKCU) AND NOT Installed</Custom>
-        <Custom Action="AppCmd_Reg_$(var.ver)" Before="InstallFinalize">APPCMD_PATH AND (PYTHON_INSTALL_PATH_$(var.ver)_HKLM OR PYTHON_INSTALL_PATH_$(var.ver)_HKCU) AND NOT Installed</Custom>
-        <Custom Action="AppCmd_UnRegCmd_$(var.ver)" After="CostFinalize">APPCMD_PATH AND REMOVE~="ALL"</Custom>
-        <Custom Action="AppCmd_UnReg_$(var.ver)" Before="InstallFinalize">APPCMD_PATH AND REMOVE~="ALL"</Custom>
-      </InstallExecuteSequence>
+    <CustomAction Id="SetPythonInstallPath_$(var.ver)_HKLM" Property="PYTHON_INSTALL_PATH_$(var.ver)" Value="[PYTHON_INSTALL_PATH_$(var.ver)_HKLM]" Execute="immediate" />
+    <CustomAction Id="SetPythonInstallPath_$(var.ver)_HKCU" Property="PYTHON_INSTALL_PATH_$(var.ver)" Value="[PYTHON_INSTALL_PATH_$(var.ver)_HKCU]" Execute="immediate" />
 
-      <?undef ver?>
-      <?undef ver_reg?>
-      <?undef ver_display?>
+    <InstallExecuteSequence>
+      <Custom Action="SetPythonInstallPath_$(var.ver)_HKLM" After="AppSearch">PYTHON_INSTALL_PATH_$(var.ver)_HKLM</Custom>
+      <Custom Action="SetPythonInstallPath_$(var.ver)_HKCU" After="AppSearch">PYTHON_INSTALL_PATH_$(var.ver)_HKCU</Custom>
+    </InstallExecuteSequence>
+
+    <DirectoryRef Id="TARGETDIR">
+      <Directory Id="PYTHON_INSTALL_PATH_$(var.ver)" Name="Python$(var.ver)" ComponentGuidGenerationSeed="$(python.get_guid($(var.i)))">
+        <Directory Id="Dir_Scripts_$(var.ver)" Name="Scripts" />
+      </Directory>
+    </DirectoryRef>
+
+    <Feature
+      Id="WFastCgi_$(var.ver)"
+      Title="Python $(var.ver_display)"
+      Description="Installs the wfastcgi.py script and registers Python $(var.ver_display) as a FastCGI handler with IIS."
+      Display="expand"
+      Level="1"
+      AllowAdvertise="no"
+      Absent="allow">
+
+      <Condition Level="2">NOT PYTHON_INSTALL_PATH_$(var.ver)_HKLM AND NOT PYTHON_INSTALL_PATH_$(var.ver)_HKCU</Condition>
+
+      <Component Directory="Dir_Scripts_$(var.ver)">
+        <File Id="wfastcgi.py_$(var.ver)" KeyPath="yes" Source="wfastcgi.py" />
+      </Component>
+
+    </Feature>
+
+    <CustomAction
+      Id="AppCmd_RegCmd_$(var.ver)"
+      Property="AppCmd_Reg_$(var.ver)"
+      Value='"[APPCMD_PATH]" set config /section:system.webServer/fastCGI "/+[\[]fullPath=&apos;[PYTHON_INSTALL_PATH_$(var.ver)]python.exe&apos;, arguments=&apos;[#wfastcgi.py_$(var.ver)]&apos;[\]]"'
+      Execute="immediate" />
+    <CustomAction Id="AppCmd_Reg_$(var.ver)" BinaryKey="WixCA" DllEntry="CAQuietExec" Execute="deferred" Return="ignore" Impersonate="no"/>
+
+    <CustomAction
+      Id="AppCmd_UnRegCmd_$(var.ver)"
+      Property="AppCmd_UnReg_$(var.ver)"
+      Value='"[APPCMD_PATH]" set config /section:system.webServer/fastCGI "/-[\[]fullPath=&apos;[PYTHON_INSTALL_PATH_$(var.ver)]python.exe&apos;, arguments=&apos;[#wfastcgi.py_$(var.ver)]&apos;[\]]"'
+      Execute="immediate" />
+    <CustomAction Id="AppCmd_UnReg_$(var.ver)" BinaryKey="WixCA" DllEntry="CAQuietExec" Execute="deferred" Return="ignore" Impersonate="no"/>
+
+    <InstallExecuteSequence>
+      <Custom Action="AppCmd_RegCmd_$(var.ver)" After="CostFinalize">APPCMD_PATH AND (PYTHON_INSTALL_PATH_$(var.ver)_HKLM OR PYTHON_INSTALL_PATH_$(var.ver)_HKCU) AND NOT Installed</Custom>
+      <Custom Action="AppCmd_Reg_$(var.ver)" Before="InstallFinalize">APPCMD_PATH AND (PYTHON_INSTALL_PATH_$(var.ver)_HKLM OR PYTHON_INSTALL_PATH_$(var.ver)_HKCU) AND NOT Installed</Custom>
+      <Custom Action="AppCmd_UnRegCmd_$(var.ver)" After="CostFinalize">APPCMD_PATH AND REMOVE~="ALL"</Custom>
+      <Custom Action="AppCmd_UnReg_$(var.ver)" Before="InstallFinalize">APPCMD_PATH AND REMOVE~="ALL"</Custom>
+    </InstallExecuteSequence>
+
+    <?undef ver?>
+    <?undef ver_reg?>
+    <?undef ver_display?>
     <?endforeach?>
-    
+
     <UIRef Id="WixUI_FeatureTree" />
-    
+
     <WixVariable Id="WixUILicenseRtf" Value="..\PythonToolsInstaller\License.rtf" />
     <?if "$(var.VSTargetVersion)" = "10.0" ?>
-        <WixVariable Id="WixUIBannerBmp" Value="..\PythonToolsInstaller\UIBanner2010.bmp" />
-        <WixVariable Id="WixUIDialogBmp" Value="..\PythonToolsInstaller\Dialog2010.bmp" />
+    <WixVariable Id="WixUIBannerBmp" Value="..\PythonToolsInstaller\UIBanner2010.bmp" />
+    <WixVariable Id="WixUIDialogBmp" Value="..\PythonToolsInstaller\Dialog2010.bmp" />
     <?elseif "$(var.VSTargetVersion)" = "11.0" ?>
-        <WixVariable Id="WixUIBannerBmp" Value="..\PythonToolsInstaller\UIBanner2012.bmp" />
-        <WixVariable Id="WixUIDialogBmp" Value="..\PythonToolsInstaller\Dialog2012.bmp" />
+    <WixVariable Id="WixUIBannerBmp" Value="..\PythonToolsInstaller\UIBanner2012.bmp" />
+    <WixVariable Id="WixUIDialogBmp" Value="..\PythonToolsInstaller\Dialog2012.bmp" />
     <?elseif "$(var.VSTargetVersion)" = "12.0" ?>
-        <WixVariable Id="WixUIBannerBmp" Value="..\PythonToolsInstaller\UIBanner2013.bmp" />
-        <WixVariable Id="WixUIDialogBmp" Value="..\PythonToolsInstaller\Dialog2013.bmp" />
+    <WixVariable Id="WixUIBannerBmp" Value="..\PythonToolsInstaller\UIBanner2013.bmp" />
+    <WixVariable Id="WixUIDialogBmp" Value="..\PythonToolsInstaller\Dialog2013.bmp" />
     <?endif?>
   </Product>
 </Wix>

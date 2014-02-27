@@ -12,6 +12,8 @@
   <PropertyGroup>
     <Configuration Condition="'$(Configuration)' == ''">Debug</Configuration>
     <WixVersion Condition="$(WixVersion)==''">0.7.4100.000</WixVersion>
+    <WixReleaseVersion Condition="$(ReleaseVersion)==''">0.7</WixReleaseVersion>
+    
     <!--Default Platform value is specified in the C#/C++ specific files imported below -->
     
     <RunFXCop Condition="'$(RunFXCop)' == ''">false</RunFXCop>

@@ -13,10 +13,8 @@
     <SccAuxPath>SAK</SccAuxPath>
     <SccLocalPath>SAK</SccLocalPath>
     <DefineConstants>
-      PyToolsDir=$(BuildRoot)\Python\Product\PythonTools;
-      MsiVersion=$(WixVersion);
-      VSTargetVersion=$(VSTarget);
-      IncludeVsLogger=$(IncludeVsLogger)
+      $(DefineConstants);
+      IncludeVsLogger=$(IncludeVsLogger);
     </DefineConstants>
     <DefineConstants Condition="'$(CustomBuildIdentifier)' != ''">
       $(DefineConstants);
@@ -25,10 +23,19 @@
   </PropertyGroup>
   <ItemGroup>
     <WixExtension Include="WixUIExtension;WixUtilExtension;WixDependencyExtension" />
+    <BindInputPaths Include="$(OutDir)">
+      <Visible>false</Visible>
+    </BindInputPaths>
+    <BindInputPaths Include="$(BuildRoot)\Python\Product\PythonTools">
+      <Visible>false</Visible>
+    </BindInputPaths>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="PythonToolsInstaller.wxs" />
     <Compile Include="UpgradeCodes.wxs" />
+    <Compile Include="LaunchConditions.wxs" />
+    <Compile Include="Directories.wxs" />
+    <Compile Include="UI.wxs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="License.rtf" />

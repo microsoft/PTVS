@@ -239,9 +239,14 @@ if ($release -and -not $outdir) {
 
 $buildnumber = '{0}{1:MMdd}.{2:D2}' -f (((Get-Date).Year - $base_year), (Get-Date), 0)
 if ($release -or $mockrelease -or $internal) {
+    if ($internal) {
+        $outdirwithname = "$outdir\$name"
+    } else {
+        $outdirwithname = $outdir
+    }
     for ($buildindex = 0; $buildindex -lt 10000; $buildindex += 1) {
         $buildnumber = '{0}{1:MMdd}.{2:D2}' -f (((Get-Date).Year - $base_year), (Get-Date), $buildindex)
-        if (-not (Test-Path $outdir\$buildnumber)) {
+        if (-not (Test-Path $outdirwithname\$buildnumber)) {
             break
         }
         $buildnumber = ''
@@ -362,13 +367,14 @@ try {
             if (-not $skiptests)
             {
                 msbuild /m /v:m /fl /flp:"Verbosity=n;LogFile=BuildRelease.$config.$($targetVs.number).tests.log" `
-                /t:$target `
-                /p:Configuration=$config `
-                /p:WixVersion=$version `
-                /p:VSTarget=$($targetVs.number) `
-                /p:VisualStudioVersion=$($targetVs.number) `
-                /p:"CustomBuildIdentifier=$name" `
-                Python\Tests\dirs.proj
+                    /t:$target `
+                    /p:Configuration=$config `
+                    /p:WixVersion=$version `
+                    /p:WixReleaseVersion=$fileVersion `
+                    /p:VSTarget=$($targetVs.number) `
+                    /p:VisualStudioVersion=$($targetVs.number) `
+                    /p:"CustomBuildIdentifier=$name" `
+                    Python\Tests\dirs.proj
 
                 if ($LASTEXITCODE -gt 0) {
                     Write-Error -EA:Continue "Test build failed: $config"
@@ -384,15 +390,16 @@ try {
             }
 
             msbuild /v:n /m /fl /flp:"Verbosity=d;LogFile=BuildRelease.$config.$($targetVs.number).log" `
-            /t:$target `
-            /p:Configuration=$config `
-            /p:WixVersion=$version `
-            /p:VSTarget=$($targetVs.number) `
-            /p:VisualStudioVersion=$($targetVs.number) `
-            /p:SignedBuild=$signedbuild `
-            /p:"CustomBuildIdentifier=$name" `
-            /p:IncludeVsLogger=$includeVsLogger `
-            Python\Setup\dirs.proj
+                /t:$target `
+                /p:Configuration=$config `
+                /p:WixVersion=$version `
+                /p:WixReleaseVersion=$fileVersion `
+                /p:VSTarget=$($targetVs.number) `
+                /p:VisualStudioVersion=$($targetVs.number) `
+                /p:SignedBuild=$signedbuild `
+                /p:"CustomBuildIdentifier=$name" `
+                /p:IncludeVsLogger=$includeVsLogger `
+                Python\Setup\dirs.proj
 
             if ($LASTEXITCODE -gt 0) {
                 Write-Error -EA:Continue "Build failed: $config"

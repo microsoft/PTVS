@@ -14,15 +14,17 @@
   <Installation InstalledByMsi="true">
     <InstallationTarget Id="Microsoft.VisualStudio.Pro" Version="11.0" />
     <InstallationTarget Id="Microsoft.VisualStudio.IntegratedShell" Version="12.0" />
+    <InstallationTarget Id="Microsoft.VisualStudio.WDExpress" Version="12.0" />
+    <InstallationTarget Id="Microsoft.VisualStudio.VWDExpress" Version="12.0" />
   </Installation>
   <Dependencies>
     <Dependency Id="Microsoft.Framework.NDP" DisplayName="Microsoft .NET Framework" Version="4.5" />
     <Dependency Id="TestWindow.Microsoft.0771d463-d74d-4e95-aac2-39d3c7ec1f97" IsRequired="false" DisplayName="Test Explorer" Version="11.0" />
-    <Dependency Id="ce8d8e55-ad29-423e-aca2-810d0b16cdc4" IsRequired="true" DisplayName="Microsoft.VisualStudio.InteractiveWindow" Version="2.1"/>
+    <Dependency Id="ce8d8e55-ad29-423e-aca2-810d0b16cdc4" IsRequired="true" DisplayName="Python Tools for Visual Studio - Interactive" Version="2.1"/>
   </Dependencies>
   <Assets>
     <Asset Type="Microsoft.VisualStudio.Package" Path="|%CurrentProject%;PkgdefProjectOutputGroup|" />
-    <Asset Type="Microsoft.VisualStudio.Assembly" Path="|%CurrentProject%|" />
+    <Asset Type="Microsoft.VisualStudio.Assembly" Path="|%CurrentProject%;_GetTargetPath|" AssemblyName="|%CurrentProject%;_GetAssemblyName|" />
     <Asset Type="Microsoft.VisualStudio.Assembly" Path="|Microsoft.PythonTools.Analysis|" AssemblyName="|Microsoft.PythonTools.Analysis;AssemblyName|" />
     <Asset Type="Microsoft.VisualStudio.Assembly" Path="|Microsoft.PythonTools.BuildTasks;_GetTargetPath|" AssemblyName="|Microsoft.PythonTools.BuildTasks;_GetAssemblyName|" />
     <Asset Type="Microsoft.VisualStudio.Assembly" Path="|Microsoft.PythonTools.Debugger|" AssemblyName="|Microsoft.PythonTools.Debugger;AssemblyName|" />

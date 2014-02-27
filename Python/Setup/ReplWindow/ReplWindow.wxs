@@ -1,26 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
-  <?define InstallLocationName = "Repl Window" ?>
-
   <Module Id="ReplWindow" Language="1033" Version="1.0.0.0">
     <Package Id="509BB9F6-D4C1-4AB2-9EDD-D84D548A9EE4" Manufacturer="Microsoft Corporation" InstallerVersion="200" />
 
-    <?include ..\InstallPath.wxi ?>
     <?include ..\MergeModule.wxi ?>
 
-    <Directory Id="TARGETDIR" Name="SourceDir">
-      <Directory Id="EXTENSION_INSTALLPATH">
-        <Directory Id="_0AC62D6FF09F49DCB209A740D8BED631" Name="Extensions">
-          <Directory Id="_16BB2A4F12774B36AA7994C01AE3479A" Name="Microsoft">
-            <Directory Id="_D67A6BA9BF9248ECB0BA398AC5AF37AA" Name="Microsoft.VisualStudio.ReplWindow">
-              <Directory Id="INSTALLLOCATION" Name="2.1">
-              </Directory>
-            </Directory>
-          </Directory>
-        </Directory>
-      </Directory>
-    </Directory>
+    <Component Id="PerUserInstallRegistry" Directory="Dir_VSInstallLocation" Guid="{D02050BD-AC66-4EFF-AF1C-E5C08A906CF1}">
+      <Condition>NOT ALLUSERS = 1</Condition>
+      <RegistryKey Root='HKCU' Key='Software\Microsoft\VisualStudio\$(var.VSTargetVersion)\ExtensionManager\EnabledExtensions'>
+        <RegistryValue Type='string' Name='ce8d8e55-ad29-423e-aca2-810d0b16cdc4,$(var.ReleaseVersion)' Value='[Dir_VSInstallLocation]'/>
+      </RegistryKey>
+      <RegistryKey Root='HKCU' Key='Software\Microsoft\VisualStudio\$(var.VSTargetVersion)\ExtensionManager\ExtensionTypes'>
+        <RegistryValue Type='string' Name='ce8d8e55-ad29-423e-aca2-810d0b16cdc4,$(var.ReleaseVersion)' Value='Tool'/>
+      </RegistryKey>
+    </Component>
 
-    <ComponentGroupRef Id="ReplWindowExt"/>
+    <ComponentGroupRef Id="CGroup_ReplWindowFiles"/>
   </Module>
 </Wix>

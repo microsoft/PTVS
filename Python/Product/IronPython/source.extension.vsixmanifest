@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Vsix xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" Version="1.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2010">
   <Identifier Id="0AC9CC8C-C057-4CFA-884B-0D4318BB2EFC">
-    <Name>Python Tools for Visual Studio, IronPython Support</Name>
+    <Name>Python Tools for Visual Studio - IronPython</Name>
     <Author>Microsoft</Author>
     <Version>2.1</Version>
     <Description xml:space="preserve">Adds templates and intellisense support for IronPython based projects in Python Tools for Visual Studio.</Description>
@@ -20,6 +20,8 @@
       </VisualStudio>
       <VisualStudio Version="12.0">
         <Edition>IntegratedShell</Edition>
+        <Edition>WDExpress</Edition>
+        <Edition>VWDExpress</Edition>
       </VisualStudio>
     </SupportedProducts>
     <SupportedFrameworkRuntimeEdition MinVersion="4.0" />
@@ -31,8 +33,9 @@
     </Reference>  
   </References>
   <Content>
-    <Assembly AssemblyName="Microsoft.PythonTools.IronPython">Microsoft.PythonTools.IronPython</Assembly>
-    <Assembly AssemblyName="Microsoft.IronPythonTools.Resolver">Microsoft.IronPythonTools.Resolver</Assembly>
+    <Assembly AssemblyName="|%CurrentProject%;_GetAssemblyName|">|%CurrentProject%;_GetTargetPath|</Assembly>
+    <Assembly AssemblyName="|Microsoft.IronPythonTools.Resolver;AssemblyName|">|Microsoft.IronPythonTools.Resolver|</Assembly>
+    <Assembly AssemblyName="|Microsoft.PythonTools.IronPython.Interpreter;AssemblyName|">|Microsoft.PythonTools.IronPython.Interpreter|</Assembly>
     <VsPackage>|%CurrentProject%;PkgdefProjectOutputGroup|</VsPackage>
     <MefComponent>|%CurrentProject%|</MefComponent>
   </Content>

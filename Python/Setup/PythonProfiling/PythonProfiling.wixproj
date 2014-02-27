@@ -5,21 +5,20 @@
     <ProductVersion>3.5</ProductVersion>
     <ProjectGuid>{C7D3FCEB-47DA-4539-8D20-6B9047BAC3F7}</ProjectGuid>
     <SchemaVersion>2.0</SchemaVersion>
-    <OutputName>PythonProfiler</OutputName>
+    <OutputName>Profiling</OutputName>
     <OutputType>Module</OutputType>
     <DefineSolutionProperties>false</DefineSolutionProperties>
+    <DefineConstants>$(DefineConstants);ProductSuffix=Profiling</DefineConstants>
     <SccProjectName>SAK</SccProjectName>
     <SccProvider>SAK</SccProvider>
     <SccAuxPath>SAK</SccAuxPath>
     <SccLocalPath>SAK</SccLocalPath>
-    <DefineConstants>
-      ObjDir=$(BuildRoot)\Python\Product\Profiling\obj\Dev$(VSTarget)\$(Configuration);
-      VSTargetVersion=$(VSTarget)
-    </DefineConstants>
   </PropertyGroup>
   <ItemGroup>
+    <BindInputPaths Include="$(OutDir)" />
+  </ItemGroup>
+  <ItemGroup>
     <Compile Include="PythonProfiling.wxs" />
-    <Compile Include="PythonProfilingVsExt.wxs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="$(BuildRoot)\Python\Product\Profiling\Profiling.csproj">
@@ -28,6 +27,12 @@
       <Private>True</Private>
       <DoNotHarvest>true</DoNotHarvest>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="..\MergeModule.wxi">
+      <Link>MergeModule.wxi</Link>
+    </Content>
+    <FilesProj Include="ProfilingFiles.proj" />
   </ItemGroup>
   <Import Project="..\SetupProjectAfter.settings" />
   <!--<Target Name="BuildOtherProjects" BeforeTargets="Link">

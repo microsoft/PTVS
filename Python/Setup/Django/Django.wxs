@@ -1,45 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
-  <?define InstallLocationName = "PTVS Samples" ?>
-
   <Module Id="PTVSDjangoPackage" Language="1033" Version="1.0.0.0">
     <Package Id="AF938468-55BF-4F28-8F64-EA8B2676B77E" Manufacturer="Microsoft Corporation" InstallerVersion="200" />
 
-    <?include ..\InstallPath.wxi ?>
     <?include ..\MergeModule.wxi ?>
 
-    <Property Id="SERVICEHOSTING_SDK" > 
-      <RegistrySearch Id="SH_SDK_SEARCH" Root="HKLM" Type="raw" Key="SOFTWARE\Microsoft\Microsoft SDKs\ServiceHosting\v1.6" Name="InstallPath"/>
-    </Property> 
+    <Component Id="PerUserInstallRegistry" Directory="Dir_VSInstallLocation" Guid="{4B9498D3-AA15-4DA7-951B-47A49883AF73}">
+      <Condition>NOT ALLUSERS = 1</Condition>
+      <RegistryKey Root='HKCU' Key='Software\Microsoft\VisualStudio\$(var.VSTargetVersion)\ExtensionManager\EnabledExtensions'>
+        <RegistryValue Type='string' Name='a8637c34-aa55-46e2-973c-9c3e09afc17b,$(var.ReleaseVersion)' Value='[Dir_VSInstallLocation]'/>
+      </RegistryKey>
+      <RegistryKey Root='HKCU' Key='Software\Microsoft\VisualStudio\$(var.VSTargetVersion)\ExtensionManager\ExtensionTypes'>
+        <RegistryValue Type='string' Name='a8637c34-aa55-46e2-973c-9c3e09afc17b,$(var.ReleaseVersion)' Value='Tool'/>
+      </RegistryKey>
+    </Component>
 
-
-    <Directory Id="TARGETDIR" Name="SourceDir">
-      <Directory Id="EXTENSION_INSTALLPATH">
-        <Directory Id="_48ABEECB7E104253B82907FA93A3A324" Name="Extensions">
-           <Directory Id="_42CE42D0B12F4D5DBD0FF6B42799150C" Name="Microsoft">
-             <Directory Id="_F68B9718F51542FA90160A491D0C2011" Name="Python Tools Django Support">
-               <Directory Id="INSTALLLOCATION" Name="2.1">
-               </Directory>
-             </Directory>
-          </Directory>
-        </Directory>
-      </Directory>
-      
-      <Directory Id="ProgramFilesFolder" Name="PFILES">
-          <Directory Id="Dir_MSBuild" Name="MSBuild"> 
-              <Directory Id="Dir_MSBuildMS" Name="Microsoft"> 
-                  <Directory Id="Dir_MSBuildVisualStudio" Name="VisualStudio"> 
-                      <Directory Id="Dir_VSVersion" Name="v$(var.VSTargetVersion)">
-                        <Directory Id="Dir_PythonToolsMsBuild" Name="Python Tools"> 
-                        </Directory>
-                      </Directory>
-                  </Directory> 
-              </Directory> 
-          </Directory> 
-      </Directory>
-  </Directory> 
-
-
-    <ComponentGroupRef Id="DjangoVsExt"/>
+    <ComponentGroupRef Id="CGroup_DjangoFiles"/>
   </Module>
 </Wix>

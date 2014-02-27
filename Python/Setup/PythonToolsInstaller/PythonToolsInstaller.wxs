@@ -12,6 +12,7 @@
 
     <Media Id="1" Cabinet="media1.cab" EmbedCab="yes" />
 
+
     <!-- Properties that we need to search for -->
 
     <!-- By default we install for all users, users can change this -->
@@ -19,99 +20,74 @@
 
     <!-- we detect other installed software (IronPython, HPC pack) and set the install level of the feature to 2 if they're not installed to uncheck them by default.  -->
     <Property Id="INSTALLLEVEL" Value="1"/>
-    <Property Id="ApplicationFolderName" Value="$(var.ProductName)" />
-
-    <Property Id="IPYTOOLS_INSTALLED">
-      <ComponentSearch Id="Comp_VSTools" Guid="2DF41B37-FAEF-4FD8-A2F5-46B57FF9E951" Type="file" />
-    </Property>
-
-    <?include ..\InstallPath.wxi ?>
-
-    <Property Id="VSLAUNCHER" >
-      <DirectorySearch Path="[ProgramFilesFolder]\Common Files\Microsoft Shared\MSEnv" Depth="4" Id="FindVSLauncher">
-        <FileSearch Name="VSLauncher.exe" />
-      </DirectorySearch>
-    </Property>
-
-    <Property Id="DEVENV_PATH" Secure="yes">
-      <RegistrySearch Id="DevEnvPath" Root="HKLM" Key="Software\Microsoft\VisualStudio\$(var.VSTargetVersion)\Setup\VS" Name="EnvironmentPath" Type="raw" />
-    </Property>
 
     <Property Id="HPC_CLIENT_INSTALLED">
       <ComponentSearch Id="SchedUtil" Guid="4BC84A98-B96A-4564-8BD7-11CE7340DA3B" Type="file" />
     </Property>
 
     <!-- Conditions for install -->
-      
-    <Property Id="PTVS_15_PERUSER" Secure="no"> 
-      <RegistrySearch Id="PTVS15RegistrySearch" Root="HKCU" Key="Software\Microsoft\VisualStudio\$(var.VSTargetVersion)\ExtensionManager\EnabledExtensions" Name="96492FC7-7BC6-46F7-8559-66BB4E09FD1E,1.5" Type="raw"/>
-    </Property>
-
+    <PropertyRef Id="PTVS_15_PERUSER"/>
     <Condition Message="Python Tools 1.5 was installed per-user.  Python Tools 1.5 must be uninstalled via Add\Remove Programs before continuing installation.">NOT PTVS_15_PERUSER OR Installed</Condition>
     
+    <PropertyRef Id="IPYTOOLS_INSTALLED"/>
+    <Condition Message="The IronPython Tools feature of IronPython 2.7 must be uninstalled.  Python Tools replaces IronPython Tools and supports all the same features and more.">NOT IPYTOOLS_INSTALLED OR REMOVE ~= "ALL"</Condition>
+
     <!-- On 2013 prevent installing on Visual Studio pre-Release builds -->
     <?if "$(var.VSTargetVersion)" = "12.0" ?>
-      <Property Id="VS2013_PRERELEASE" Secure="no"> 
-        <DirectorySearch Id="VS120DevEnvFilePathSearch" Path="[VSINSTALLPATH]"> 
-          <FileSearch Id="VS120DevEnvFileVersionSearch" Name="devenv.exe" MaxVersion="12.0.21004.0"/> 
-        </DirectorySearch>
-      </Property> 
-    
-      <Condition Message="A pre-release version of Visual Studio 2013 was detected.  This version of Python Tools is not supported on pre-release builds of Visual Studio 2013.  Please upgrade to Visual Studio 2013."> NOT VS2013_PRERELEASE OR Installed </Condition>
+    <PropertyRef Id="VS2013_PRERELEASE"/>
+    <Condition Message="A pre-release version of Visual Studio 2013 was detected.  This version of Python Tools is not supported on pre-release builds of Visual Studio 2013.  Please upgrade to Visual Studio 2013."> NOT VS2013_PRERELEASE OR Installed </Condition>
     <?endif ?>
+
+    <PropertyRef Id="VSINSTALLPATH"/>
+    <PropertyRef Id="WDINSTALLPATH"/>
+    <PropertyRef Id="VWDINSTALLPATH"/>
     
-    
-    <Condition Message="The IronPython Tools feature of IronPython 2.7 must be uninstalled.  Python Tools replaces IronPython Tools and supports all the same features and more.">NOT IPYTOOLS_INSTALLED OR REMOVE ~= "ALL"</Condition>
     <?if "$(var.VSTargetVersion)" = "10.0" ?>
-    <Condition Message="Visual Studio 2010 must be installed."> VSINSTALLPATH OR Installed </Condition>
+    <Condition Message="Visual Studio 2010 is required.  PTVS for other versions of Visual Studio can be downloaded from http://pytools.codeplex.com/."> VSINSTALLPATH OR Installed </Condition>
     <?elseif "$(var.VSTargetVersion)" = "11.0" ?>
-    <Condition Message="Visual Studio 2012 must be installed."> VSINSTALLPATH OR Installed </Condition>
+    <Condition Message="Visual Studio 2012 is required.  PTVS for other versions of Visual Studio can be downloaded from http://pytools.codeplex.com/."> VSINSTALLPATH OR Installed </Condition>
+    <?elseif "$(var.VSTargetVersion)" = "12.0" ?>
+    <Condition Message="Visual Studio 2013 is required.  The free Express for Desktop and Express for Web editions can be downloaded from http://www.visualstudio.com/.">
+      VSINSTALLPATH OR WDINSTALLPATH OR VWDINSTALLPATH OR Installed
+    </Condition>
     <?else?>
-    <Condition Message="Visual Studio 2013 must be installed.  The free integrated shell (and its dependent isolated shell) can be downloaded at http://www.microsoft.com/visualstudio."> VSINSTALLPATH OR Installed </Condition>
+    <Condition Message="Visual Studio v$(var.VSTargetVersion) must be installed."> VSINSTALLPATH OR Installed </Condition>
     <?endif ?>
-
-    <!-- Files/Components/MSMs to install -->
-
-    <Directory Id="TARGETDIR" Name="SourceDir">
-      <Directory Id="ProgramMenuFolder">
-        <Directory Id="ApplicationProgramsFolder" Name="$(var.ProductName)" />
-      </Directory>
-      <Directory Id="EXTENSION_INSTALLPATH">
-        <Directory Id="_48ABEECB7E104253B82907FA93A3A324" Name="Extensions">
-          <Directory Id="_42CE42D0B12F4D5DBD0FF6B42799150C" Name="Microsoft">
-            <Directory Id="_B3593B26D51E4E91BED2317473CC5D85" Name="Python Tools for Visual Studio">
-              <Directory Id="INSTALLLOCATION" Name="2.1" />
-            </Directory>
-          </Directory>
-        </Directory>
-      </Directory>
-    </Directory>
 
     <!-- Install the tools into the VS directory -->
-    <DirectoryRef Id="INSTALLLOCATION">
+    <DirectoryRef Id="Dir_VSExtensions">
+      <Directory Id="Dir_VSExtensions_Microsoft" Name="Microsoft">
+        <Directory Id="Dir_VSInstallLocationParent" Name="Python Tools for Visual Studio">
+          <Directory Id="Dir_VSInstallLocation" Name="$(var.ReleaseVersion)" />
+        </Directory>
+      </Directory>
+    </DirectoryRef>
+
+    <PropertyRef Id="VSLAUNCHER"/>
+    
+    <DirectoryRef Id="Dir_VSInstallLocation">
       <Component Id="Comp_InstallDirItems" Guid="$(var.Comp_InstallDirItemsGuid)">
-        <File Id="File_License.html" Name="License.html" Source="$(var.PyToolsDir)\License.html">
-          <Shortcut Id="LicenseShortcut"
-                    Directory="ApplicationProgramsFolder"
-                    Name="PTVS License"
-                    Description="Python Tools for Visual Studio License Agreement" />
-        </File>
+        <Shortcut Id="LicenseShortcut"
+                  Target="[File_License.html]"
+                  Directory="Dir_StartMenu"
+                  Name="PTVS License"
+                  Description="Python Tools for Visual Studio License Agreement" />
         <RegistryValue Root='HKCU' Key='SOFTWARE\Microsoft\PythonTools\$(var.VSTargetVersion)' Type='string' Value='Readme' KeyPath='yes' />
-        <RemoveFolder Id='DeleteApplicationProgramsFolder' Directory='ApplicationProgramsFolder' On='uninstall'/>
-        
-        <util:RestartResource Path="[DEVENV_PATH]" />
+        <RemoveFolder Id='DeleteDir_StartMenu' Directory='Dir_StartMenu' On='uninstall'/>
       </Component>
 
       <Component Id="Comp_InstallLocation" Guid="$(var.Comp_InstallLocationGuid)">
+        <File Id="File_License.html" Name="License.html" Source="License.html" />
         <RegistryKey Root="HKMU" Key="Software\Microsoft\PythonTools\$(var.VSTargetVersion)">
-          <RegistryValue Type="string" Name="InstallDir" Value="[INSTALLLOCATION]" KeyPath="yes"/>
+          <RegistryValue Type="string" Name="InstallDir" Value="[Dir_VSInstallLocation]" KeyPath="yes"/>
         </RegistryKey>
+        <util:RestartResource Path="[DEVENV_PATH]" />
       </Component>
-      
+
       <!-- Double click to open Python projects with Visual Studio -->
       <Component Id="Comp_PyProjRegistration" DiskId="1" Guid="$(var.Comp_PyProjRegistrationGuid)">
         <RegistryValue Root='HKCR' Key='.pyproj' Type='string' Name='PerceivedType' Value='text' />
-        <RegistryValue Root='HKCR' Key='VisualStudio.Launcher.pyproj.$(var.VSTargetVersion)\DefaultIcon' Type='string' Value='[INSTALLLOCATION]\PythonProject.ico' />
+        <RegistryValue Root='HKCR' Key='VisualStudio.Launcher.pyproj.$(var.VSTargetVersion)\DefaultIcon' Type='string' Value='[Dir_VSInstallLocation]\PythonProject.ico' />
 
         <ProgId Id="VisualStudio.Launcher.pyproj.$(var.VSTargetVersion)" Description="Python Project">
           <Extension Id="pyproj" ContentType="text/plain">
@@ -127,7 +103,7 @@
           <RegistryValue Type='string' Value='Python source file' />
 
           <RegistryKey Key='DefaultIcon'>
-            <RegistryValue Type='string' Value="[INSTALLLOCATION]\PythonFile.ico" />
+            <RegistryValue Type='string' Value="[Dir_VSInstallLocation]\PythonFile.ico" />
           </RegistryKey>
 
           <RegistryKey Key='shell\open'>
@@ -143,14 +119,58 @@
         <RegistryValue Root='HKCR' Key='.pyw\OpenWithProgids' Name='VisualStudio.py.$(var.VSTargetVersion)' Type='string' Value='' />
       </Component>
 
-      <Merge Id="ReplWindow" Language="1033" SourceFile="$(var.TargetDir)ReplWindow.msm" DiskId="1" />
-      <Merge Id="PythonProfiler" Language="1033" SourceFile="$(var.TargetDir)PythonProfiler.msm" DiskId="1" />
-      <Merge Id="PTVSDjangoPackage" Language="1033" SourceFile="$(var.TargetDir)DjangoMsm.msm" DiskId="1" />
-      <Merge Id="PythonTools" Language="1033" SourceFile="$(var.TargetDir)PythonTools.msm" DiskId="1" />
-      <Merge Id="PythonHpc" Language="1033" SourceFile="$(var.TargetDir)PythonHpcSupportMsm.msm" DiskId="1" />
-      <Merge Id="IronPythonInterpreter" Language="1033" SourceFile="$(var.TargetDir)IronPythonInterpreterMsm.msm" DiskId="1" />
+      <Merge Id="Merge_ReplWindow" Language="1033" SourceFile="ReplWindow.msm" DiskId="1">
+        <?foreach key in VS;WD;VWD?>
+        <ConfigurationData Name="Config_$(var.key)ExtensionsParent" Value="Dir_$(var.key)Extensions" />
+        <ConfigurationData Name="Config_$(var.key)TemplatesParent" Value="Dir_$(var.key)Templates"/>
+        <?endforeach?>
+        <ConfigurationData Name="Config_MSBuildLocation" Value="Dir_MSBuildTargets"/>
+      </Merge>
+      <Merge Id="Merge_Profiling" Language="1033" SourceFile="Profiling.msm" DiskId="1">
+        <?foreach key in VS;WD;VWD?>
+        <ConfigurationData Name="Config_$(var.key)ExtensionsParent" Value="Dir_$(var.key)Extensions" />
+        <ConfigurationData Name="Config_$(var.key)TemplatesParent" Value="Dir_$(var.key)Templates"/>
+        <?endforeach?>
+        <ConfigurationData Name="Config_MSBuildLocation" Value="Dir_MSBuildTargets"/>
+      </Merge>
+      <Merge Id="Merge_Django" Language="1033" SourceFile="Django.msm" DiskId="1">
+        <?foreach key in VS;WD;VWD?>
+        <ConfigurationData Name="Config_$(var.key)ExtensionsParent" Value="Dir_$(var.key)Extensions" />
+        <ConfigurationData Name="Config_$(var.key)TemplatesParent" Value="Dir_$(var.key)Templates"/>
+        <?endforeach?>
+        <ConfigurationData Name="Config_MSBuildLocation" Value="Dir_MSBuildTargets"/>
+      </Merge>
+      <Merge Id="Merge_PythonTools" Language="1033" SourceFile="PythonTools.msm" DiskId="1">
+        <?foreach key in VS;WD;VWD?>
+        <ConfigurationData Name="Config_$(var.key)ExtensionsParent" Value="Dir_$(var.key)Extensions" />
+        <ConfigurationData Name="Config_$(var.key)TemplatesParent" Value="Dir_$(var.key)Templates"/>
+        <?endforeach?>
+        <ConfigurationData Name="Config_MSBuildLocation" Value="Dir_MSBuildTargets"/>
+
+        <ConfigurationData Name="Config_StartMenuLocation" Value="Dir_StartMenu"/>
+      </Merge>
+      <Merge Id="Merge_Hpc" Language="1033" SourceFile="Hpc.msm" DiskId="1">
+        <?foreach key in VS;WD;VWD?>
+        <ConfigurationData Name="Config_$(var.key)ExtensionsParent" Value="Dir_$(var.key)Extensions" />
+        <ConfigurationData Name="Config_$(var.key)TemplatesParent" Value="Dir_$(var.key)Templates"/>
+        <?endforeach?>
+        <ConfigurationData Name="Config_MSBuildLocation" Value="Dir_MSBuildTargets"/>
+      </Merge>
+      <Merge Id="Merge_IronPython" Language="1033" SourceFile="IronPython.msm" DiskId="1">
+        <?foreach key in VS;WD;VWD?>
+        <ConfigurationData Name="Config_$(var.key)ExtensionsParent" Value="Dir_$(var.key)Extensions" />
+        <ConfigurationData Name="Config_$(var.key)TemplatesParent" Value="Dir_$(var.key)Templates"/>
+        <?endforeach?>
+        <ConfigurationData Name="Config_MSBuildLocation" Value="Dir_MSBuildTargets"/>
+      </Merge>
       <?if "$(var.IncludeVsLogger)" = "True" ?>
-        <Merge Id="PTVSVsLoggerPackage" Language="1033" SourceFile="$(var.TargetDir)VsLoggerMsm.msm" DiskId="1" />
+      <Merge Id="Merge_VsLogger" Language="1033" SourceFile="VsLogger.msm" DiskId="1">
+        <?foreach key in VS;WD;VWD?>
+        <ConfigurationData Name="Config_$(var.key)ExtensionsParent" Value="Dir_$(var.key)Extensions" />
+        <ConfigurationData Name="Config_$(var.key)TemplatesParent" Value="Dir_$(var.key)Templates"/>
+        <?endforeach?>
+        <ConfigurationData Name="Config_MSBuildLocation" Value="Dir_MSBuildTargets"/>
+      </Merge>
       <?endif?>
     </DirectoryRef>
 
@@ -162,25 +182,25 @@
       <ComponentRef Id="Comp_InstallDirItems" />
       <ComponentRef Id="Comp_InstallLocation" />
 
-      <MergeRef Id="PythonTools"/>
-      <MergeRef Id="ReplWindow"/>
-      <MergeRef Id="PythonProfiler"/>
+      <MergeRef Id="Merge_PythonTools"/>
+      <MergeRef Id="Merge_ReplWindow"/>
+      <MergeRef Id="Merge_Profiling"/>
 
       <?if "$(var.IncludeVsLogger)" = "True" ?>
-        <MergeRef Id="PTVSVsLoggerPackage"/>
+      <MergeRef Id="Merge_VsLogger"/>
       <?endif?>
 
       <Feature Id="Feature_Django" AllowAdvertise="no" Level="1" Title="Django integration" Description="Django integration">
-        <MergeRef Id="PTVSDjangoPackage"/>
+        <MergeRef Id="Merge_Django"/>
       </Feature>
 
       <Feature Id="Feature_IronPython" AllowAdvertise="no" Level="1" Title="IronPython support" Description="IronPython support">
-        <MergeRef Id="IronPythonInterpreter"/>
+        <MergeRef Id="Merge_IronPython"/>
       </Feature>
 
       <Feature Id="Feature_WinHpc" AllowAdvertise="no" Level="1" Title="Windows HPC Support" Description="Windows HPC Support">
         <Condition Level="2">NOT HPC_CLIENT_INSTALLED</Condition>
-        <MergeRef Id="PythonHpc"/>
+        <MergeRef Id="Merge_Hpc"/>
       </Feature>
 
       <Feature Id="Feature_VsPyFile" AllowAdvertise="no" Level="1" Title="Register file associations" Description="Associates Python projects and source files with Visual Studio (existing source file associations are not modified).">
@@ -190,168 +210,35 @@
     </Feature>
 
 
-    <!-- User interface elements -->
+    <!-- Execute devenv /setup -->
+    <PropertyRef Id="DEVENV_PATH"/>
+    <PropertyRef Id="WDEXPRESS_PATH"/>
+    <PropertyRef Id="VWDEXPRESS_PATH"/>
 
     <CustomAction Id="DevEnvSetup" Property="DEVENV_PATH" ExeCommand="/setup" Execute="deferred" Return="check" Impersonate="no" />
     <CustomAction Id="DevEnvSetup_Rollback" Property="DEVENV_PATH" ExeCommand="/setup" Execute="rollback" Return="check" Impersonate="no" />
-    
+    <CustomAction Id="WDExpressSetup" Property="WDEXPRESS_PATH" ExeCommand="/setup" Execute="deferred" Return="check" Impersonate="no" />
+    <CustomAction Id="WDExpressSetup_Rollback" Property="WDEXPRESS_PATH" ExeCommand="/setup" Execute="rollback" Return="check" Impersonate="no" />
+    <CustomAction Id="VWDExpressSetup" Property="VWDEXPRESS_PATH" ExeCommand="/setup" Execute="deferred" Return="check" Impersonate="no" />
+    <CustomAction Id="VWDExpressSetup_Rollback" Property="VWDEXPRESS_PATH" ExeCommand="/setup" Execute="rollback" Return="check" Impersonate="no" />
+
     <InstallExecuteSequence>
       <Custom Action="DevEnvSetup_Rollback" Before="DevEnvSetup" Overridable="yes">DEVENV_PATH</Custom>
       <Custom Action="DevEnvSetup" Before="InstallFinalize" Overridable="yes">DEVENV_PATH</Custom>
+      <Custom Action="WDExpressSetup_Rollback" Before="WDExpressSetup" Overridable="yes">WDEXPRESS_PATH</Custom>
+      <Custom Action="WDExpressSetup" Before="InstallFinalize" Overridable="yes">WDEXPRESS_PATH</Custom>
+      <Custom Action="VWDExpressSetup_Rollback" Before="VWDExpressSetup" Overridable="yes">VWDEXPRESS_PATH</Custom>
+      <Custom Action="VWDExpressSetup" Before="InstallFinalize" Overridable="yes">VWDEXPRESS_PATH</Custom>
     </InstallExecuteSequence>
     <InstallUISequence>
       <Show Dialog="CustomAdvancedWelcomeEulaDlg" Before="FindRelatedProducts">NOT Installed</Show>
       <Show Dialog="CustomFeaturesDlg" After="CostFinalize">NOT Installed AND EasyInstall=0</Show>
     </InstallUISequence>
 
-    <UI>
-      <ProgressText Action="DevEnvSetup">Updating extension registration with Visual Studio...</ProgressText>
-      <ProgressText Action="DevEnvSetup_Rollback">Removing extension registration with Visual Studio...</ProgressText>
-      
-      <Dialog Id="CustomAdvancedWelcomeEulaDlg" Width="370" Height="270" Title="!(loc.AdvancedWelcomeEulaDlg_Title)">
-        <Control Id="BannerBitmap" Type="Bitmap" X="0" Y="0" Width="370" Height="44" TabSkip="no" Text="!(loc.AdvancedWelcomeEulaDlgBannerBitmap)" />
-        <Control Id="Title" Type="Text" X="20" Y="10" Width="300" Height="24" Transparent="yes" NoPrefix="yes" Text="!(loc.AdvancedWelcomeEulaDlgTitle)" />
-        <Control Id="LicenseText" Type="ScrollableText" X="20" Y="55" Width="330" Height="121" Sunken="yes" TabSkip="no">
-          <Text SourceFile="License.rtf" />
-        </Control>
-        <Control Id="LicenseAcceptedCheckBox" Type="CheckBox" X="20" Y="180" Width="226" Height="18" CheckBoxValue="1" Property="LicenseAccepted" Text="!(loc.WelcomeEulaDlgLicenseAcceptedCheckBox)" />
-        <Control Id="DescriptionPerMachine" Type="Text" X="20" Y="202" Width="330" Height="31" Transparent="yes" NoPrefix="yes" Hidden="yes" Text="!(loc.AdvancedWelcomeEulaDlgDescriptionPerMachine)">
-          <Condition Action="show">ALLUSERS</Condition>
-        </Control>
-        <Control Id="DescriptionPerUser" Type="Text" X="20" Y="202" Width="330" Height="31" Transparent="yes" NoPrefix="yes" Hidden="yes" Text="!(loc.AdvancedWelcomeEulaDlgDescriptionPerUser)">
-          <Condition Action="show">NOT ALLUSERS</Condition>
-        </Control>
-        <Control Id="Advanced" Type="PushButton" X="156" Y="243" Width="56" Height="17" Text="!(loc.AdvancedWelcomeEulaDlgAdvanced)" Disabled="yes">
-          <Publish Property="EasyInstall" Value="0">1</Publish>
-          <Publish Event="EndDialog" Value="Return">1</Publish>
-          <Condition Action="enable">LicenseAccepted</Condition>
-        </Control>
-        <Control Id="Install" Type="PushButton" ElevationShield="yes" X="212" Y="243" Width="80" Height="17" Default="yes" Text="!(loc.AdvancedWelcomeEulaDlgInstall)" Hidden="yes" Disabled="yes">
-          <Publish Property="EasyInstall" Value="1">1</Publish>
-          <Publish Event="EndDialog" Value="Return">1</Publish>
-          <Condition Action="show">ALLUSERS</Condition>
-          <Condition Action="enable">LicenseAccepted</Condition>
-        </Control>
-        <Control Id="InstallNoShield" Type="PushButton" ElevationShield="no" X="212" Y="243" Width="80" Height="17" Default="yes" Text="!(loc.AdvancedWelcomeEulaDlgInstall)" Hidden="yes" Disabled="yes">
-          <Publish Property="EasyInstall" Value="1">1</Publish>
-          <Publish Event="EndDialog" Value="Return">1</Publish>
-          <Condition Action="show">NOT ALLUSERS</Condition>
-          <Condition Action="enable">LicenseAccepted</Condition>
-        </Control>
-        <Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17" Cancel="yes" Text="!(loc.WixUICancel)">
-          <Publish Event="SpawnDialog" Value="CancelDlg">1</Publish>          
-        </Control>
-        <Control Id="Print" Type="PushButton" X="88" Y="243" Width="56" Height="17" Text="!(loc.WixUIPrint)">
-          <Publish Event="DoAction" Value="WixUIPrintEula">1</Publish>
-        </Control>
-        <Control Id="BottomLine" Type="Line" X="0" Y="234" Width="370" Height="0" />
-      </Dialog>
-      <Dialog Id="CustomFeaturesDlg" Width="370" Height="270" Title="!(loc.FeaturesDlg_Title)" TrackDiskSpace="yes">
-        <Control Id="Tree" Type="SelectionTree" X="20" Y="55" Width="330" Height="121" Property="_BrowseProperty" TabSkip="no" Text="!(loc.FeaturesDlgTree)" />
-        <Control Id="Install" Type="PushButton" ElevationShield="yes" X="212" Y="243" Width="80" Height="17" Hidden="yes" Text="!(loc.FeaturesDlgInstall)">
-          <Condition Action="show">NOT Installed AND ALLUSERS</Condition>
-          <Condition Action="default">NOT Installed</Condition>
-          <Publish Event="SpawnWaitDialog" Value="WaitForCostingDlg">CostingComplete = 1</Publish>
-          <Publish Event="EndDialog" Value="Return"><![CDATA[OutOfDiskSpace <> 1]]></Publish>
-          <Publish Event="SpawnDialog" Value="OutOfRbDiskDlg">OutOfDiskSpace = 1 AND OutOfNoRbDiskSpace = 0 AND (PROMPTROLLBACKCOST="P" OR NOT PROMPTROLLBACKCOST)</Publish>
-          <Publish Event="EndDialog" Value="Return">OutOfDiskSpace = 1 AND OutOfNoRbDiskSpace = 0 AND PROMPTROLLBACKCOST="D"</Publish>
-          <Publish Event="EnableRollback" Value="False">OutOfDiskSpace = 1 AND OutOfNoRbDiskSpace = 0 AND PROMPTROLLBACKCOST="D"</Publish>
-          <Publish Event="SpawnDialog" Value="OutOfDiskDlg">(OutOfDiskSpace = 1 AND OutOfNoRbDiskSpace = 1) OR (OutOfDiskSpace = 1 AND PROMPTROLLBACKCOST="F")</Publish>
-        </Control>
-        <Control Id="InstallNoShield" Type="PushButton" ElevationShield="no" X="212" Y="243" Width="80" Height="17" Hidden="yes" Text="!(loc.FeaturesDlgInstall)">
-          <Condition Action="show">NOT Installed AND NOT ALLUSERS</Condition>
-          <Condition Action="default">NOT Installed</Condition>
-          <Publish Event="SpawnWaitDialog" Value="WaitForCostingDlg">CostingComplete = 1</Publish>
-          <Publish Event="EndDialog" Value="Return"><![CDATA[OutOfDiskSpace <> 1]]></Publish>
-          <Publish Event="SpawnDialog" Value="OutOfRbDiskDlg">OutOfDiskSpace = 1 AND OutOfNoRbDiskSpace = 0 AND (PROMPTROLLBACKCOST="P" OR NOT PROMPTROLLBACKCOST)</Publish>
-          <Publish Event="EndDialog" Value="Return">OutOfDiskSpace = 1 AND OutOfNoRbDiskSpace = 0 AND PROMPTROLLBACKCOST="D"</Publish>
-          <Publish Event="EnableRollback" Value="False">OutOfDiskSpace = 1 AND OutOfNoRbDiskSpace = 0 AND PROMPTROLLBACKCOST="D"</Publish>
-          <Publish Event="SpawnDialog" Value="OutOfDiskDlg">(OutOfDiskSpace = 1 AND OutOfNoRbDiskSpace = 1) OR (OutOfDiskSpace = 1 AND PROMPTROLLBACKCOST="F")</Publish>
-        </Control>
-        <Control Id="Change" Type="PushButton" ElevationShield="yes" X="212" Y="243" Width="80" Height="17" Hidden="yes" Text="!(loc.FeaturesDlgChange)">
-          <Condition Action="show">Installed AND ALLUSERS AND (ADDLOCAL OR REMOVE)</Condition>
-          <Condition Action="default">Installed</Condition>
-          <Publish Event="EndDialog" Value="Return"><![CDATA[OutOfDiskSpace <> 1]]></Publish>
-          <Publish Event="SpawnDialog" Value="OutOfRbDiskDlg">OutOfDiskSpace = 1 AND OutOfNoRbDiskSpace = 0 AND (PROMPTROLLBACKCOST="P" OR NOT PROMPTROLLBACKCOST)</Publish>
-          <Publish Event="EndDialog" Value="Return">OutOfDiskSpace = 1 AND OutOfNoRbDiskSpace = 0 AND PROMPTROLLBACKCOST="D"</Publish>
-          <Publish Event="EnableRollback" Value="False">OutOfDiskSpace = 1 AND OutOfNoRbDiskSpace = 0 AND PROMPTROLLBACKCOST="D"</Publish>
-          <Publish Event="SpawnDialog" Value="OutOfDiskDlg">(OutOfDiskSpace = 1 AND OutOfNoRbDiskSpace = 1) OR (OutOfDiskSpace = 1 AND PROMPTROLLBACKCOST="F")</Publish>
-        </Control>
-        <Control Id="ChangeNoShield" Type="PushButton" ElevationShield="no" X="212" Y="243" Width="80" Height="17" Hidden="yes" Text="!(loc.FeaturesDlgChange)">
-          <Condition Action="show">Installed AND (NOT ALLUSERS OR (NOT ADDLOCAL AND NOT REMOVE))</Condition>
-          <Condition Action="default">Installed</Condition>
-          <Publish Event="EndDialog" Value="Return"><![CDATA[OutOfDiskSpace <> 1]]></Publish>
-          <Publish Event="SpawnDialog" Value="OutOfRbDiskDlg">OutOfDiskSpace = 1 AND OutOfNoRbDiskSpace = 0 AND (PROMPTROLLBACKCOST="P" OR NOT PROMPTROLLBACKCOST)</Publish>
-          <Publish Event="EndDialog" Value="Return">OutOfDiskSpace = 1 AND OutOfNoRbDiskSpace = 0 AND PROMPTROLLBACKCOST="D"</Publish>
-          <Publish Event="EnableRollback" Value="False">OutOfDiskSpace = 1 AND OutOfNoRbDiskSpace = 0 AND PROMPTROLLBACKCOST="D"</Publish>
-          <Publish Event="SpawnDialog" Value="OutOfDiskDlg">(OutOfDiskSpace = 1 AND OutOfNoRbDiskSpace = 1) OR (OutOfDiskSpace = 1 AND PROMPTROLLBACKCOST="F")</Publish>
-        </Control>
-        <Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17" Cancel="yes" Text="!(loc.WixUICancel)">
-          <Publish Event="SpawnDialog" Value="CancelDlg">1</Publish>
-        </Control>
-        <Control Id="BannerBitmap" Type="Bitmap" X="0" Y="0" Width="370" Height="44" TabSkip="no" Text="!(loc.FeaturesDlgBannerBitmap)" />
-        <Control Id="BannerLine" Type="Line" X="0" Y="44" Width="370" Height="0" />
-        <Control Id="BottomLine" Type="Line" X="0" Y="234" Width="370" Height="0" />
-        <Control Id="Description" Type="Text" X="25" Y="23" Width="280" Height="15" Transparent="yes" NoPrefix="yes" Text="!(loc.FeaturesDlgDescription)" />
-        <Control Id="Title" Type="Text" X="15" Y="6" Width="210" Height="15" Transparent="yes" NoPrefix="yes" Text="!(loc.FeaturesDlgTitle)" />
-        <Control Id="ItemDescription" Type="Text" X="20" Y="180" Width="330" Height="24" Transparent="yes" NoPrefix="yes" Text="!(loc.FeaturesDlgItemDescription)">
-          <Subscribe Event="SelectionDescription" Attribute="Text" />
-        </Control>
-        <Control Id="ItemSize" Type="Text" X="20" Y="209" Width="330" Height="24" Transparent="yes" NoPrefix="yes" Text="!(loc.FeaturesDlgItemSize)">
-          <Subscribe Event="SelectionSize" Attribute="Text" />
-        </Control>
-      </Dialog>
-    </UI>
-    <UI Id="WixUI_AdvancedCustom">
-      <TextStyle Id="WixUI_Font_Normal" FaceName="!(loc.Advanced_Font_FaceName)" Size="!(loc.Advanced_Font_Normal_Size)" />
-      <TextStyle Id="WixUI_Font_Bigger" FaceName="!(loc.Advanced_Font_FaceName)" Size="!(loc.Advanced_Font_Bigger_Size)" />
-      <TextStyle Id="WixUI_Font_Title" FaceName="!(loc.Advanced_Font_FaceName)" Size="!(loc.Advanced_Font_Title_Size)" Bold="yes" />
-      <TextStyle Id="WixUI_Font_Emphasized" FaceName="!(loc.Advanced_Font_FaceName)" Size="!(loc.Advanced_Font_Emphasized_Size)" Bold="yes" />
-
-      <Property Id="DefaultUIFont" Value="WixUI_Font_Normal" />
-      <Property Id="WixUI_Mode" Value="Advanced" />
-
-      <DialogRef Id="BrowseDlg" />
-      <DialogRef Id="DiskCostDlg" />
-      <DialogRef Id="ErrorDlg" />
-      <DialogRef Id="FatalError" />
-      <DialogRef Id="FilesInUse" />
-      <DialogRef Id="MsiRMFilesInUse" />
-      <DialogRef Id="PrepareDlg" />
-      <DialogRef Id="ProgressDlg" />
-      <DialogRef Id="ResumeDlg" />
-      <DialogRef Id="UserExit" />
-
-      <Publish Dialog="ExitDialog" Control="Finish" Event="EndDialog" Value="Return" Order="999">1</Publish>
-
-      <Publish Dialog="BrowseDlg" Control="OK" Event="DoAction" Value="WixUIValidatePath" Order="1">1</Publish>
-      <Publish Dialog="BrowseDlg" Control="OK" Event="SpawnDialog" Value="InvalidDirDlg" Order="2"><![CDATA[WIXUI_INSTALLDIR_VALID<>"1"]]></Publish>
-
-      <Publish Dialog="MaintenanceWelcomeDlg" Control="Next" Event="NewDialog" Value="MaintenanceTypeDlg">1</Publish>
-
-      <Publish Dialog="MaintenanceTypeDlg" Control="ChangeButton" Event="NewDialog" Value="CustomFeaturesDlg">1</Publish>
-      <Publish Dialog="MaintenanceTypeDlg" Control="RepairButton" Event="NewDialog" Value="VerifyReadyDlg">1</Publish>
-      <Publish Dialog="MaintenanceTypeDlg" Control="RemoveButton" Event="NewDialog" Value="VerifyReadyDlg">1</Publish>
-      <Publish Dialog="MaintenanceTypeDlg" Control="Back" Event="NewDialog" Value="MaintenanceWelcomeDlg">1</Publish>
-
-      <Publish Dialog="VerifyReadyDlg" Control="Back" Event="NewDialog" Value="MaintenanceTypeDlg" Order="2">1</Publish>
-    </UI>
-
-    <Property Id="EasyInstall" Value="0" />
-    <UIRef Id="WixUI_Common" />
-
-    <WixVariable Id="WixUILicenseRtf" Value="License.rtf" />
-
-    <?if "$(var.VSTargetVersion)" = "10.0" ?>
-    <WixVariable Id="WixUIBannerBmp" Value="UIBanner2010.bmp" />
-    <WixVariable Id="WixUIDialogBmp" Value="Dialog2010.bmp" />
-    <?elseif "$(var.VSTargetVersion)" = "11.0" ?>
-    <WixVariable Id="WixUIBannerBmp" Value="UIBanner2012.bmp" />
-    <WixVariable Id="WixUIDialogBmp" Value="Dialog2012.bmp" />
-    <?elseif "$(var.VSTargetVersion)" = "12.0" ?>
-    <WixVariable Id="WixUIBannerBmp" Value="UIBanner2013.bmp" />
-    <WixVariable Id="WixUIDialogBmp" Value="Dialog2013.bmp" />
-    <?endif?>
+    <!-- Include the UI from UI.wxs -->
+    <UIRef Id="UI_Default"/>
+    
+    <!-- Handle ref-counting of our package -->
     <Feature Id="Provider" Absent="disallow" AllowAdvertise="no" Description="Used for Ref Counting" Display="hidden" Level="1" InstallDefault="local" Title="RefCounting" TypicalDefault="install">
       <ComponentRef Id="PythonTools_Provider" />
     </Feature>
@@ -359,7 +246,7 @@
   <Fragment>
     <DirectoryRef Id="TARGETDIR">
       <Component Id="PythonTools_Provider" Guid="8F19174A-E8A1-4608-9084-E9ADEDE9E4C1">
-        <dep:Provides Key="Microsoft.PythonTools,v2" />
+        <dep:Provides Key="Microsoft.PythonTools,v2.1" />
       </Component>
     </DirectoryRef>
   </Fragment>

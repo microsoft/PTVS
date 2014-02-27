@@ -1,7 +1,65 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Include>
-    <Property Id="LocalAppDataFolder" SuppressModularization="yes"/> 
-    <Property Id="TARGETDIR" SuppressModularization="yes"/> 
-    <Property Id="VSINSTALLPATH" SuppressModularization="yes"/> 
-    <Property Id="EXTENSION_INSTALLPATH" SuppressModularization="yes"/> 
+<Include xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Property Id="WDEXTENSION_INSTALLPATH" Secure="yes" SuppressModularization="yes" />
+  <Property Id="VWDEXTENSION_INSTALLPATH" Secure="yes" SuppressModularization="yes" />
+  
+  <Directory Id="TARGETDIR" Name="SourceDir">
+    <Directory Id="Dir_VSExtensions_FakeParent" Name="VSExtensions">
+      <Directory Id="Dir_VSExtensions" ComponentGuidGenerationSeed="{54A5E3E9-B80C-4BD4-87C9-B6A5B054471E}" />
+    </Directory>
+    <Directory Id="Dir_VSTemplates_FakeParent" Name="VSTemplates">
+      <Directory Id="Dir_VSTemplates" ComponentGuidGenerationSeed="{0CF200D4-4455-42E7-88A5-09DE804DA3A9}" />
+    </Directory>
+    <Directory Id="Dir_WDExtensions_FakeParent" Name="WDExtensions">
+      <Directory Id="Dir_WDExtensions" ComponentGuidGenerationSeed="{95CC9EB7-DA86-4B25-AFB6-DA24083C7AD6}" />
+    </Directory>
+    <Directory Id="Dir_WDTemplates_FakeParent" Name="WDTemplates">
+      <Directory Id="Dir_WDTemplates" ComponentGuidGenerationSeed="{32904C4A-CDFF-45F7-A68F-34BFE8DD509A}" />
+    </Directory>
+    <Directory Id="Dir_VWDExtensions_FakeParent" Name="VWDExtensions">
+      <Directory Id="Dir_VWDExtensions" ComponentGuidGenerationSeed="{5851DF99-09FF-4EDE-A898-0E367C7C5465}" />
+    </Directory>
+    <Directory Id="Dir_VWDTemplates_FakeParent" Name="VWDTemplates">
+      <Directory Id="Dir_VWDTemplates" ComponentGuidGenerationSeed="{269F9981-57A3-42AD-BBA6-73D1AAC79667}" />
+    </Directory>
+  </Directory>
+
+  <?foreach key in VS;WD;VWD?>
+  <Configuration Name="Config_$(var.key)ExtensionsParent" Format="Key" Type="Identifier"/>
+  <Configuration Name="Config_$(var.key)TemplatesParent" Format="Key" Type="Identifier"/>
+
+  <Substitution Table="Directory" Row="Dir_$(var.key)Extensions" Column="Directory_Parent" Value="[=Config_$(var.key)ExtensionsParent]"/>
+  <Substitution Table="Directory" Row="Dir_$(var.key)Templates" Column="Directory_Parent" Value="[=Config_$(var.key)TemplatesParent]"/>
+
+  <DirectoryRef Id="Dir_$(var.key)Templates">
+    <Directory Id="Dir_$(var.key)AllProjectTemplates" Name="ProjectTemplates">
+      <Directory Id="Dir_$(var.key)ProjectTemplates" Name="Python" />
+    </Directory>
+    <Directory Id="Dir_$(var.key)AllItemTemplates" Name="ItemTemplates">
+      <Directory Id="Dir_$(var.key)ItemTemplates" Name="Python" />
+    </Directory>
+  </DirectoryRef>
+
+  <DirectoryRef Id="Dir_$(var.key)Extensions">
+    <Directory Id="Dir_$(var.key)Extensions_Microsoft">
+      <?ifdef ProductSuffix?>
+      <Directory Id="Dir_$(var.key)InstallLocationParent" Name="Python Tools for Visual Studio - $(var.ProductSuffix)">
+        <Directory Id="Dir_$(var.key)InstallLocation" Name="$(var.ReleaseVersion)" />
+      </Directory>
+      <?else?>
+      <Directory Id="Dir_$(var.key)InstallLocationParent" Name="Python Tools for Visual Studio">
+        <Directory Id="Dir_$(var.key)InstallLocation" Name="$(var.ReleaseVersion)" />
+      </Directory>
+      <?endif?>
+    </Directory>
+  </DirectoryRef>
+
+  <?endforeach?>
+  
+  <DirectoryRef Id="TARGETDIR">
+    <Directory Id="Dir_MSBuildTargets" ComponentGuidGenerationSeed="{28369620-2F2A-47DC-A91D-1BA9C41EA77C}" />
+  </DirectoryRef>
+  
+  <Configuration Name="Config_MSBuildLocation" Format="Key" Type="Identifier" DefaultValue="TARGETDIR" />
+  <Substitution Table="Directory" Column="Directory_Parent" Row="Dir_MSBuildTargets" Value="[=Config_MSBuildLocation]" />
 </Include>

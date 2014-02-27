@@ -100,11 +100,6 @@
       <IncludeInVSIX>true</IncludeInVSIX>
       <VSIXSubPath>.</VSIXSubPath>
     </Content>
-    <Content Include="Templates\Projects\HpcMpiProject\HpcMpiApp.zip">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
-    <Content Include="Templates\Projects\HpcMpiProject\PythonApp.pyproj" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\PythonTools\PythonToolsInstallPath.cs">
@@ -160,9 +155,15 @@
       <Name>PythonTools</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemDefinitionGroup>
+    <ZipProject>
+      <Language>Python</Language>
+    </ZipProject>
+  </ItemDefinitionGroup>
   <ItemGroup>
-    <Content Include="Templates\Projects\HpcMpiProject\Program.py" />
-    <Content Include="Templates\Projects\HpcMpiProject\HpcMpiApp.vstemplate" />
+    <ZipProject Include="Templates\Projects\HpcMpiProject\PythonApp.pyproj" />
+    <ZipProject Include="Templates\Projects\HpcMpiProject\Program.py" />
+    <ZipProject Include="Templates\Projects\HpcMpiProject\HpcMpiApp.vstemplate" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Resources\" />

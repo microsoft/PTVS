@@ -22,6 +22,7 @@ using System.Threading;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Logging;
 using Microsoft.PythonTools.Project;
+using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudioTools;
 
@@ -68,7 +69,33 @@ namespace Microsoft.PythonTools.Commands {
             var interestingProjectProperties = new[] { "ClusterRunEnvironment", "ClusterPublishBeforeRun", "ClusterWorkingDir", "ClusterMpiExecCommand", "ClusterAppCommand", "ClusterAppArguments", "ClusterDeploymentDir", "ClusterTargetPlatform" };
 
             foreach (EnvDTE.Project project in projects) {
-                res.AppendLine("    Project: " + project.UniqueName);
+                string name;
+                try {
+                    // Some projects will throw rather than give us a unique
+                    // name. They are not ours, so we will ignore them.
+                    name = project.UniqueName;
+                } catch (Exception ex) {
+                    if (ErrorHandler.IsCriticalException(ex)) {
+                        throw;
+                    }
+                    bool isPythonProject = false;
+                    try {
+                        isPythonProject = project.Kind.ToLower() == pyProjectKind;
+                    } catch (Exception ex2) {
+                        if (ErrorHandler.IsCriticalException(ex2)) {
+                            throw;
+                        }
+                    }
+                    if (isPythonProject) {
+                        // Actually, it was one of our projects, so we do care
+                        // about the exception. We'll add it to the output,
+                        // rather than crashing.
+                        res.AppendLine("    Project: " + ex.Message);
+                        res.AppendLine("        Kind: Python");
+                    }
+                    continue;
+                }
+                res.AppendLine("    Project: " + name);
 
                 if (project.Kind.ToLower() == pyProjectKind) {
                     res.AppendLine("        Kind: Python");

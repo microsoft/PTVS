@@ -1,0 +1,11 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Target Name="CompileFilesProj"
+          BeforeTargets="BeforeBuild"
+          Condition="'@(FilesProj)' != ''">
+    <MSBuild Projects="%(FilesProj.FullPath)"
+             Properties="VSTarget=$(VSTarget);Configuration=$(Configuration);TargetPath=$(IntermediateOutputPath)%(FilesProj.FileName).wxs" />
+    <ItemGroup>
+      <Compile Include="@(FilesProj->'$(IntermediateOutputPath)%(FileName).wxs')" />
+    </ItemGroup>
+  </Target>
+</Project>

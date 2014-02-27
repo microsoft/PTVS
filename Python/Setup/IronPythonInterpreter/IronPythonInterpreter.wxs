@@ -1,26 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
-  <?define InstallLocationName = "IronPython Interpreter" ?>
-
   <Module Id="IronPythonInterpreter" Language="1033" Version="1.0.0.0">
     <Package Id="52BFBDBC-3AAA-4C89-9420-B83ECEF328A7" Manufacturer="Microsoft Corporation" InstallerVersion="200" />
 
-    <?include ..\InstallPath.wxi ?>
     <?include ..\MergeModule.wxi ?>
 
-    <Directory Id="TARGETDIR" Name="SourceDir">
-      <Directory Id="EXTENSION_INSTALLPATH">
-        <Directory Id="_48ABEECB7E104253B82907FA93A3A324" Name="Extensions">
-           <Directory Id="_42CE42D0B12F4D5DBD0FF6B42799150C" Name="Microsoft">
-             <Directory Id="_B3593B26D51E4E91BED2317473CC5D85" Name="IronPython Interpreter">
-               <Directory Id="INSTALLLOCATION" Name="2.1">
-               </Directory>
-             </Directory>
-          </Directory>
-        </Directory>
-      </Directory>
-    </Directory>
+    <Component Id="PerUserInstallRegistry" Directory="Dir_VSInstallLocation" Guid="{B2C46CB0-DF28-4540-BC7F-29B0EA636055}">
+      <Condition>NOT ALLUSERS = 1</Condition>
+      <RegistryKey Root='HKCU' Key='Software\Microsoft\VisualStudio\$(var.VSTargetVersion)\ExtensionManager\EnabledExtensions'>
+        <RegistryValue Type='string' Name='0AC9CC8C-C057-4CFA-884B-0D4318BB2EFC,$(var.ReleaseVersion)' Value='[Dir_VSInstallLocation]'/>
+      </RegistryKey>
+      <RegistryKey Root='HKCU' Key='Software\Microsoft\VisualStudio\$(var.VSTargetVersion)\ExtensionManager\ExtensionTypes'>
+        <RegistryValue Type='string' Name='0AC9CC8C-C057-4CFA-884B-0D4318BB2EFC,$(var.ReleaseVersion)' Value='Tool'/>
+      </RegistryKey>
+    </Component>
 
-    <ComponentGroupRef Id="IronPythonInterpreterVsExt"/>
+    <ComponentGroupRef Id="CGroup_IronPythonFiles"/>
   </Module>
 </Wix>

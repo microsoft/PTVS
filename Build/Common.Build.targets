@@ -1,6 +1,8 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" Condition="'$(Language)' == 'C#'" />
   <Import Project="$(VSToolsPath)\VSSDK\Microsoft.VsSDK.targets" Condition="'$(Language)' == 'C#' and '$(CreateVsixContainer)' != '' and $(CreateVsixContainer) and '$(VSToolsPath)' != ''" />
+  <Import Project="Common.Build.CSharp.targets" Condition="'$(Language)' == 'C#'" />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" Condition="'$(Language)' == 'C++'" />
   <Import Project="$(WixTargetsPath)" Condition="'$(Language)' == 'WiX'" />
+  <Import Project="Common.Build.Wix.targets" Condition="'$(Language)' == 'WiX'" />
 </Project>

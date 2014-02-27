@@ -1,0 +1,35 @@
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <BuildRoot Condition="'$(BuildRoot)' == ''">$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), build.root))</BuildRoot>
+
+    <TargetName>ProfilingFiles</TargetName>
+    <SourceDir>$(BuildRoot)\Python\Product\Profiling\</SourceDir>
+    <ObjDir>$(SourceDir)obj\Dev$(VSTarget)\$(Configuration)</ObjDir>
+  </PropertyGroup>
+
+  <ItemDefinitionGroup>
+    <File>
+      <IncludeInWDExpress>false</IncludeInWDExpress>
+      <IncludeInVWDExpress>false</IncludeInVWDExpress>
+    </File>
+  </ItemDefinitionGroup>
+
+  <ItemGroup>
+    <!-- Registration files -->
+    <File Include="$(ObjDir)\extension.vsixmanifest" />
+    <File Include="Microsoft.PythonTools.Profiling.pkgdef" />
+
+    <!-- Core extension -->
+    <File Include="Microsoft.PythonTools.Profiling.dll;
+                   VsPyProf.dll;
+                   VsPyProfX86.dll;
+                   vspyprof.py;
+                   proflaun.py" />
+
+    <!-- Resources -->
+    <File Include="PythonProject.ico;
+                   PythonProjectBig.ico" />
+  </ItemGroup>
+
+  <Import Project="..\WixGenerator.targets"/>
+</Project>

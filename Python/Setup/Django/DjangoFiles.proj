@@ -1,0 +1,35 @@
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <BuildRoot Condition="'$(BuildRoot)' == ''">$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), build.root))</BuildRoot>
+
+    <TargetName>DjangoFiles</TargetName>
+    <SourceDir>$(BuildRoot)\Python\Product\Django\</SourceDir>
+    <ObjDir>$(SourceDir)obj\Dev$(VSTarget)\$(Configuration)</ObjDir>
+  </PropertyGroup>
+
+
+  <ItemGroup>
+    <!-- Registration files -->
+    <File Include="$(ObjDir)\extension.vsixmanifest" />
+    <File Include="Microsoft.PythonTools.Django.pkgdef" />
+
+    <!-- Core extension -->
+    <File Include="Microsoft.PythonTools.Django.dll" />
+
+    <!-- Resources -->
+    <File Include="PythonProject.ico;
+                   PythonProjectBig.ico" />
+
+    <!-- Templates -->
+    <ItemTemplate Include="ItemTemplates\Python\DjangoHtml.zip;
+                           ItemTemplates\Python\JavaScript.zip;
+                           ItemTemplates\Python\Stylesheet.zip;
+                           ItemTemplates\Python\DjangoNewAppFiles14.zip" />
+    <ProjectTemplate Include="ProjectTemplates\Python\DjangoProject.zip" />
+
+    <!-- Targets -->
+    <MSBuildFile Include="Microsoft.PythonTools.Django.targets" />
+  </ItemGroup>
+
+  <Import Project="..\WixGenerator.targets"/>
+</Project>

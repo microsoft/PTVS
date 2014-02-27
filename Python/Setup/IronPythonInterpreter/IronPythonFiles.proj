@@ -1,0 +1,34 @@
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <BuildRoot Condition="'$(BuildRoot)' == ''">$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), build.root))</BuildRoot>
+
+    <TargetName>IronPythonFiles</TargetName>
+    <SourceDir>$(BuildRoot)\Python\Product\IronPython\</SourceDir>
+    <ObjDir>$(SourceDir)obj\Dev$(VSTarget)\$(Configuration)</ObjDir>
+  </PropertyGroup>
+
+
+  <ItemGroup>
+    <!-- Registration files -->
+    <File Include="$(ObjDir)\extension.vsixmanifest" />
+    <File Include="Microsoft.PythonTools.IronPython.pkgdef" />
+
+    <!-- Core extension -->
+    <File Include="Microsoft.PythonTools.IronPython.dll;
+                   Microsoft.PythonTools.IronPython.Interpreter.dll;
+                   Microsoft.IronPythonTools.Resolver.dll" />
+
+    <!-- Resources -->
+    <File Include="PythonProject.ico;
+                   PythonProjectBig.ico" />
+
+    <!-- Templates -->
+    <ItemTemplate Include="ItemTemplates\Python\WpfWindow.zip" />
+    <ProjectTemplate Include="ProjectTemplates\Python\SilverlightProject.zip;
+                              ProjectTemplates\Python\WinformsProject.zip;
+                              ProjectTemplates\Python\WpfProject.zip;
+                              ProjectTemplates\Python\ConsoleProject.zip" />
+  </ItemGroup>
+
+  <Import Project="..\WixGenerator.targets"/>
+</Project>

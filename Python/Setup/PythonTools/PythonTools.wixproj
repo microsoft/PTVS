@@ -12,14 +12,16 @@
     <SccProvider>SAK</SccProvider>
     <SccAuxPath>SAK</SccAuxPath>
     <SccLocalPath>SAK</SccLocalPath>
-    <DefineConstants>
-      ObjDir=$(BuildRoot)\Python\Product\PythonTools\obj\Dev$(VSTarget)\$(Configuration);
-      VSTargetVersion=$(VSTarget)
+    <DefineConstants Condition="'$(CustomBuildIdentifier)' != ''">
+      $(DefineConstants);
+      CustomBuildIdentifier=$(CustomBuildIdentifier)
     </DefineConstants>
   </PropertyGroup>
   <ItemGroup>
+    <BindInputPaths Include="$(OutDir)" />
+  </ItemGroup>
+  <ItemGroup>
     <Compile Include="PythonTools.wxs" />
-    <Compile Include="PythonToolsVsExt.wxs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="$(BuildRoot)\Python\Product\PythonTools\PythonTools.csproj">
@@ -82,6 +84,12 @@
       <RefTargetDir>INSTALLLOCATION</RefTargetDir>
       <DoNotHarvest>true</DoNotHarvest>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="..\MergeModule.wxi">
+      <Link>MergeModule.wxi</Link>
+    </Content>
+    <FilesProj Include="PythonToolsFiles.proj" />
   </ItemGroup>
   <Import Project="..\SetupProjectAfter.settings" />
   <!--<Target Name="BuildOtherProjects" BeforeTargets="Link">

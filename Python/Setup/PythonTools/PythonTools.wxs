@@ -1,43 +1,68 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
-  <?define InstallLocationName = "Python Tools for Visual Studio" ?>
-
   <Module Id="PythonTools" Language="1033" Version="1.0.0.0">
     <Package Id="DB5A4FB0-1771-45D7-97E6-7C731734F328" Manufacturer="Microsoft Corporation" InstallerVersion="200" />
 
-    <?include ..\InstallPath.wxi ?>
     <?include ..\MergeModule.wxi ?>
-    <?include ..\PythonToolsInstaller\PythonToolsInstallerVars.wxi ?>
 
-    <Directory Id="TARGETDIR" Name="SourceDir">
-      <Directory Id="EXTENSION_INSTALLPATH">
-        <Directory Id="_48ABEECB7E104253B82907FA93A3A324" Name="Extensions">
-          <Directory Id="_42CE42D0B12F4D5DBD0FF6B42799150C" Name="Microsoft">
-            <Directory Id="_B3593B26D51E4E91BED2317473CC5D85" Name="Python Tools for Visual Studio">
-              <Directory Id="INSTALLLOCATION" Name="2.1" />
-            </Directory>
-          </Directory>
-        </Directory>
+    <DirectoryRef Id="Dir_VSInstallLocation">
+      <Directory Id="Dir_ptvsd" Name="ptvsd" />
+      <Directory Id="GAC" Name="GAC" />
+    </DirectoryRef>
+
+    <?foreach key in VS;WD;VWD?>
+    <DirectoryRef Id="Dir_$(var.key)InstallLocation">
+      <Directory Id="Dir_$(var.key)InstallLocationTemplates" Name="Templates">
+        <Directory Id="Dir_$(var.key)FileTemplate" Name="NewItem" />
       </Directory>
+      <Directory Id="Dir_$(var.key)CompletionDB" Name="CompletionDB" />
+    </DirectoryRef>
+    <?endforeach?>
 
-      <Directory Id="ProgramFilesFolder" Name="PFILES">
-        <Directory Id="Dir_MSBuild" Name="MSBuild">
-          <Directory Id="Dir_MSBuildMS" Name="Microsoft">
-            <Directory Id="Dir_MSBuildVisualStudio" Name="VisualStudio">
-              <Directory Id="Dir_VSVersion" Name="v$(var.VSTargetVersion)">
-                <Directory Id="Dir_PythonToolsMsBuild" Name="Python Tools">
-                </Directory>
-              </Directory>
-            </Directory>
-          </Directory>
-        </Directory>
-      </Directory>
+    <Configuration Name="Config_StartMenuLocation" Format="Key" Type="Identifier" DefaultValue="TARGETDIR" />
+    <Substitution Table="Directory" Column="Directory_Parent" Row="Dir_StartMenu" Value="[=Config_StartMenuLocation]" />
 
-      <Directory Id="ProgramMenuFolder">
-        <Directory Id="ApplicationProgramsFolder" Name="$(var.ProductName)" />
-      </Directory>
-    </Directory>
+    <DirectoryRef Id="TARGETDIR">
+      <Directory Id="Dir_StartMenu" />
+    </DirectoryRef>
 
-    <ComponentGroupRef Id="PythonToolsExt"/>
+    <?if "$(var.VSTargetVersion)" = "10.0" ?>
+    <?define Comp_PTVSDShortcutGuid=77AC6ECB-D100-4E1A-83B3-95069098EEEE?>
+    <?elseif "$(var.VSTargetVersion)" = "11.0" ?>
+    <?define Comp_PTVSDShortcutGuid=5DD43BC7-B38F-46F1-BD72-705207743912?>
+    <?elseif "$(var.VSTargetVersion)" = "12.0" ?>
+    <?define Comp_PTVSDShortcutGuid=DA8A6ECB-5662-4778-977A-D79C65ACB827?>
+    <?endif ?>
+
+    <Component Id="Comp_PTVSDShortcut" Directory="Dir_ptvsd" Guid="$(var.Comp_PTVSDShortcutGuid)">
+      <Shortcut Id="PTVSDShortcut"
+                Name="ptvsd Package"
+                Directory="Dir_StartMenu"
+                Description="Python Tools for Visual Studio Debugger package"
+                Target="[$Comp_PTVSDShortcut]" />
+      <RegistryValue Root='HKCU' Key='SOFTWARE\Microsoft\PythonTools\$(var.VSTargetVersion)'
+                     Type='string'
+                     Name='ptvsd'
+                     Value='[$Comp_PTVSDShortcut]'
+                     KeyPath='yes' />
+      <RemoveFolder Id='DeleteDir_StartMenu' Directory='Dir_StartMenu' On='uninstall'/>
+    </Component>
+
+    <Component Id="PerUserInstallRegistry" Directory="Dir_VSInstallLocation" Guid="*">
+      <Condition>NOT ALLUSERS = 1</Condition>
+      <RegistryKey Root='HKCU' Key='Software\Microsoft\VisualStudio\$(var.VSTargetVersion)\ExtensionManager\EnabledExtensions'>
+        <RegistryValue Type='string' Name='96492FC7-7BC6-46F7-8559-66BB4E09FD1E,$(var.ReleaseVersion)' Value='[Dir_VSInstallLocation]'/>
+      </RegistryKey>
+      <RegistryKey Root='HKCU' Key='Software\Microsoft\VisualStudio\$(var.VSTargetVersion)\ExtensionManager\ExtensionTypes'>
+        <RegistryValue KeyPath='yes' Type='string' Name='96492FC7-7BC6-46F7-8559-66BB4E09FD1E,$(var.ReleaseVersion)' Value='Tool'/>
+      </RegistryKey>
+    </Component>
+
+    <Component Directory="Dir_VSInstallLocation" Guid="*">
+      <Condition>NOT ALLUSERS = 1</Condition>
+      <File KeyPath="yes" Source='VSTemplateStore.pkgdef' />
+    </Component>
+
+    <ComponentGroupRef Id="CGroup_PythonToolsFiles"/>
   </Module>
 </Wix>

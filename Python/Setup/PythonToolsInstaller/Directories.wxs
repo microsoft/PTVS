@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <?include PythonToolsInstallerVars.wxi ?>
+  
+  <Fragment>
+    <Property Id="EXTENSION_INSTALLPATH" Secure="yes" />
+    <Property Id="WDEXTENSION_INSTALLPATH" Secure="yes" />
+    <Property Id="VWDEXTENSION_INSTALLPATH" Secure="yes" />
+    
+    <CustomAction Id="SetDefaultPerUserFolder" Property="ExtensionPerUserFolder" Value="[LocalAppDataFolder]Microsoft\VisualStudio\$(var.VSTargetVersion)" Execute="immediate" />
+    <CustomAction Id="SetDefaultPerMachineFolder" Property="ExtensionPerMachineFolder" Value="[VSINSTALLPATH]" Execute="immediate" />
+    <CustomAction Id="SetPerUserFolder" Property="EXTENSION_INSTALLPATH" Value="[ExtensionPerUserFolder]" Execute="immediate" />
+    <CustomAction Id="SetPerMachineFolder" Property="EXTENSION_INSTALLPATH" Value="[ExtensionPerMachineFolder]" Execute="immediate" />
+    <CustomAction Id="SetWDExtensionFolder" Property="WDEXTENSION_INSTALLPATH" Value="[WDINSTALLPATH]" Execute="immediate" />
+    <CustomAction Id="SetVWDExtensionFolder" Property="VWDEXTENSION_INSTALLPATH" Value="[VWDINSTALLPATH]" Execute="immediate" />
+
+    <InstallExecuteSequence>
+      <Custom Action="SetDefaultPerUserFolder" Before="CostFinalize" />
+      <Custom Action="SetDefaultPerMachineFolder" After="SetDefaultPerUserFolder" />
+      <Custom Action="SetPerUserFolder" After="SetDefaultPerMachineFolder">ACTION="INSTALL" AND (ALLUSERS="" OR (ALLUSERS=2 AND (NOT Privileged)))</Custom>
+      <Custom Action="SetPerMachineFolder" After="SetPerUserFolder">ACTION="INSTALL" AND (ALLUSERS=1 OR (ALLUSERS=2 AND Privileged))</Custom>
+      <Custom Action="SetWDExtensionFolder" After="SetPerMachineFolder" />
+      <Custom Action="SetVWDExtensionFolder" After="SetPerMachineFolder" />
+    </InstallExecuteSequence>
+
+    <InstallUISequence>
+      <Custom Action="SetDefaultPerUserFolder" Before="CostFinalize" />
+      <Custom Action="SetDefaultPerMachineFolder" After="SetDefaultPerUserFolder" />
+      <Custom Action="SetPerUserFolder" After="SetDefaultPerMachineFolder">ACTION="INSTALL" AND (ALLUSERS="" OR (ALLUSERS=2 AND (NOT Privileged)))</Custom>
+      <Custom Action="SetPerMachineFolder" After="SetPerUserFolder">ACTION="INSTALL" AND (ALLUSERS=1 OR (ALLUSERS=2 AND Privileged))</Custom>
+      <Custom Action="SetWDExtensionFolder" After="SetPerMachineFolder" />
+      <Custom Action="SetVWDExtensionFolder" After="SetPerMachineFolder" />
+    </InstallUISequence>
+
+
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="EXTENSION_INSTALLPATH">
+        <Directory Id="Dir_VSExtensionsParent" Name="Extensions">
+          <Directory Id="Dir_VSExtensions" Name="Microsoft" />
+        </Directory>
+        <Directory Id="Dir_VSTemplates" />
+      </Directory>
+
+      <Directory Id="WDEXTENSION_INSTALLPATH">
+        <Directory Id="Dir_WDExtensionsParent" Name="WDExpressExtensions">
+          <Directory Id="Dir_WDExtensions" Name="Microsoft" />
+        </Directory>
+        <Directory Id="Dir_WDTemplates" Name="WDExpress" />
+      </Directory>
+
+      <Directory Id="VWDEXTENSION_INSTALLPATH">
+        <Directory Id="Dir_VWDExtensionsParent" Name="VWDExpressExtensions">
+          <Directory Id="Dir_VWDExtensions" Name="Microsoft" />
+        </Directory>
+        <Directory Id="Dir_VWDTemplates" Name="VWDExpress" />
+      </Directory>
+
+      <Directory Id="ProgramFilesFolder" Name="PFILES">
+        <Directory Id="Dir_MSBuild" Name="MSBuild">
+          <Directory Id="Dir_MSBuild_Microsoft" Name="Microsoft">
+            <Directory Id="Dir_MSBuild_Microsoft_VisualStudio" Name="VisualStudio">
+              <Directory Id="Dir_MSBuild_Microsoft_VisualStudio_VSVersion" Name="v$(var.VSTargetVersion)">
+                <Directory Id="Dir_MSBuildTargets" Name="Python Tools" />
+              </Directory>
+            </Directory>
+          </Directory>
+        </Directory>
+      </Directory>
+    </Directory>
+  </Fragment>
+  
+  <Fragment>
+    <DirectoryRef Id="TARGETDIR">
+      <Directory Id="ProgramMenuFolder">
+        <Directory Id="Dir_StartMenu" Name="$(var.ProductName)" />
+      </Directory>
+    </DirectoryRef>
+  </Fragment>
+</Wix>

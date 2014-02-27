@@ -1,0 +1,111 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <TargetName Condition="'$(TargetName)' == ''">$(MSBuildProjectName)</TargetName>
+    <TargetExt Condition="'$(TargetExt)' == ''">.wxs</TargetExt>
+    <TargetPath Condition="'$(TargetPath)' == ''">$(IntermediateOutputPath)$(TargetName)$(TargetExt)</TargetPath>
+  </PropertyGroup>
+
+  
+  
+  <Target Name="Build">
+    <ItemGroup>
+      <_SourceFiles Include="@(GACAssembly)">
+        <IdPrefix>GAC_</IdPrefix>
+        <InstallDirectory>GAC</InstallDirectory>
+        <InstallDirectoryNeedsPrefix>false</InstallDirectoryNeedsPrefix>
+      </_SourceFiles>
+      <_SourceFiles Include="@(File)" />
+      <_SourceFiles Include="@(SharedFile)">
+        <InstallDirectoryNeedsPrefix>false</InstallDirectoryNeedsPrefix>
+      </_SourceFiles>
+      <_SourceFiles Include="@(ProjectTemplate)">
+        <InstallDirectory>ProjectTemplates</InstallDirectory>
+      </_SourceFiles>
+      <_SourceFiles Include="@(ItemTemplate)">
+        <InstallDirectory>ItemTemplates</InstallDirectory>
+      </_SourceFiles>
+      <_SourceFiles Include="@(MSBuildFile)">
+        <InstallDirectory>Dir_MSBuildTargets</InstallDirectory>
+        <InstallDirectoryNeedsPrefix>false</InstallDirectoryNeedsPrefix>
+      </_SourceFiles>
+    </ItemGroup>
+
+    <ItemGroup>
+      <_Files Include="@(_SourceFiles)">
+        <InstallDirectory Condition="'%(_SourceFiles.InstallDirectory)' == ''">InstallLocation</InstallDirectory>
+        <InstallDirectoryNeedsPrefix Condition="'%(_SourceFiles.InstallDirectoryNeedsPrefix)' == ''">true</InstallDirectoryNeedsPrefix>
+        <IncludeInVS Condition="'%(_SourceFiles.IncludeInVS)' == ''">true</IncludeInVS>
+        <IncludeInWD Condition="'%(_SourceFiles.IncludeInWD)' == ''">true</IncludeInWD>
+        <IncludeInVWD Condition="'%(_SourceFiles.IncludeInVWD)' == ''">true</IncludeInVWD>
+        <_Id>$([System.Text.RegularExpressions.Regex]::Replace(
+          `%(_SourceFiles.IdPrefix)%(_SourceFiles.InstallDirectory)%(_SourceFiles.FileName)%(_SourceFiles.Extension)`,
+          `[^a-zA-Z0-9_.]`,
+          `_`
+        ))</_Id>
+      </_Files>
+
+      <_SharedFileData Include="@(_Files)" Condition="!%(InstallDirectoryNeedsPrefix)">
+        <Xml><![CDATA[<Component Id="Comp_%(_Files._Id)" Guid="*" Directory="%(_Files.InstallDirectory)">
+  <File Id="File_%(_Files._Id)" KeyPath="yes" Source="%(_Files.Identity)" />
+</Component>
+]]></Xml>
+      </_SharedFileData>
+      
+      <_SeparateFileDataIntermediate Include="@(_Files)" Condition="%(InstallDirectoryNeedsPrefix)">
+        <Xml1 Condition="!%(_Files.IncludeInVS)" />
+        <Xml1 Condition="%(_Files.IncludeInVS)">
+          <![CDATA[<Component Id="Comp_VS_%(_Files._Id)" Guid="*" Directory="Dir_VS%(_Files.InstallDirectory)">
+  <File Id="File_VS_%(_Files._Id)" KeyPath="yes" Source="%(_Files.Identity)" />
+</Component>
+]]>
+        </Xml1>
+        <Xml2 Condition="!%(_Files.IncludeInWD)" />
+        <Xml2 Condition="%(_Files.IncludeInWD)">
+          <![CDATA[<Component Id="Comp_WD_%(_Files._Id)" Guid="*" Directory="Dir_WD%(_Files.InstallDirectory)">
+  <Condition>WDEXTENSION_INSTALLPATH</Condition>
+  <File Id="File_WD_%(_Files._Id)" KeyPath="yes" Source="%(_Files.Identity)" />
+</Component>
+]]>
+        </Xml2>
+        <Xml3 Condition="!%(_Files.IncludeInVWD)" />
+        <Xml3 Condition="%(_Files.IncludeInVWD)">
+          <![CDATA[<Component Id="Comp_VWD_%(_Files._Id)" Guid="*" Directory="Dir_VWD%(_Files.InstallDirectory)">
+  <Condition>VWDEXTENSION_INSTALLPATH</Condition>
+  <File Id="File_VWD_%(_Files._Id)" KeyPath="yes" Source="%(_Files.Identity)" />
+</Component>
+]]>
+        </Xml3>
+      </_SeparateFileDataIntermediate>
+      <_SeparateFileData Include="@(_SeparateFileDataIntermediate)">
+        <Xml>%(_SeparateFileDataIntermediate.Xml1)%(_SeparateFileDataIntermediate.Xml2)%(_SeparateFileDataIntermediate.Xml3)</Xml>
+      </_SeparateFileData>
+    </ItemGroup>
+
+    <PropertyGroup>
+      <WixData>
+        <![CDATA[<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+<Fragment>
+<ComponentGroup Id='CGroup_$(TargetName)'>
+@(_SharedFileData->'%(Xml)', '')
+@(_SeparateFileData->'%(Xml)', '')
+</ComponentGroup>
+</Fragment>
+</Wix>]]>
+      </WixData>
+    </PropertyGroup>
+
+    <MakeDir Directories="$([System.IO.Path]::GetDirectoryName($(TargetPath)))" />
+    
+    <WriteLinesToFile File="$(TargetPath)"
+                      Overwrite="true"
+                      Encoding="utf-8"
+                      Lines="$(WixData)" />
+
+    <ItemGroup>
+      <FileWrites Include="$(TargetPath)" />
+    </ItemGroup>
+    
+    <Message Text="File generated at $(TargetPath)" Importance="normal" />
+  </Target>
+</Project>

@@ -5,21 +5,20 @@
     <ProductVersion>3.5</ProductVersion>
     <ProjectGuid>{92851481-9141-480E-A85D-85120766949C}</ProjectGuid>
     <SchemaVersion>2.0</SchemaVersion>
-    <OutputName>IronPythonInterpreterMsm</OutputName>
+    <OutputName>IronPython</OutputName>
     <OutputType>Module</OutputType>
     <DefineSolutionProperties>false</DefineSolutionProperties>
+    <DefineConstants>$(DefineConstants);ProductSuffix=IronPython</DefineConstants>
     <SccProjectName>SAK</SccProjectName>
     <SccProvider>SAK</SccProvider>
     <SccAuxPath>SAK</SccAuxPath>
     <SccLocalPath>SAK</SccLocalPath>
-    <DefineConstants>
-        ObjDir=$(BuildRoot)\Python\Product\IronPython\obj\Dev$(VSTarget)\$(Configuration);
-        VSTargetVersion=$(VSTarget)
-    </DefineConstants>
   </PropertyGroup>
   <ItemGroup>
+    <BindInputPaths Include="$(OutDir)" />
+  </ItemGroup>
+  <ItemGroup>
     <Compile Include="IronPythonInterpreter.wxs" />
-    <Compile Include="IronPythonInterpreterVsExt.wxs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="$(BuildRoot)\Python\Product\IronPython\IronPython.csproj">
@@ -30,6 +29,12 @@
       <RefTargetDir>INSTALLLOCATION</RefTargetDir>
       <DoNotHarvest>true</DoNotHarvest>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="..\MergeModule.wxi">
+      <Link>MergeModule.wxi</Link>
+    </Content>
+    <FilesProj Include="IronPythonFiles.proj" />
   </ItemGroup>
   <Import Project="..\SetupProjectAfter.settings" />
 </Project>

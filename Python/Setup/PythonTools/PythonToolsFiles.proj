@@ -1,0 +1,125 @@
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <BuildRoot Condition="'$(BuildRoot)' == ''">$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), build.root))</BuildRoot>
+    <ProjectGuid>{6AE79541-B1A5-4C40-B431-87252F08157F}</ProjectGuid>
+
+    <TargetName>PythonToolsFiles</TargetName>
+    <SourceDir>$(BuildRoot)\Python\Product\PythonTools\</SourceDir>
+    <ObjDir>$(SourceDir)obj\Dev$(VSTarget)\$(Configuration)</ObjDir>
+  </PropertyGroup>
+
+
+  <ItemGroup>
+    <GACAssembly Include="Microsoft.PythonTools.Analysis.dll;
+                          Microsoft.PythonTools.Attacher.exe;
+                          Microsoft.PythonTools.Debugger.dll" />
+
+    <!-- Registration files -->
+    <File Include="$(ObjDir)\extension.vsixmanifest" />
+    <File Include="Microsoft.PythonTools.pkgdef" />
+
+    <!-- Core extension -->
+    <File Include="Microsoft.PythonTools.dll;
+                   Microsoft.PythonTools.Analysis.dll;
+                   Microsoft.PythonTools.ImportWizard.dll;
+                   Microsoft.PythonTools.VSInterpreters.dll;
+                   pip_downloader.py" />
+
+    <!-- Analyzer -->
+    <File Include="Microsoft.PythonTools.Analyzer.exe;
+                   Microsoft.PythonTools.Analyzer.exe.config;
+                   PythonScraper.py;
+                   ExtensionScraper.py;
+                   IronPythonScraper.py;
+                   BuiltinScraper.py" />
+    
+    <!-- Debugger -->
+    <File Include="Microsoft.PythonTools.Debugger.dll;
+                   Microsoft.PythonTools.Attacher.exe;
+                   Microsoft.PythonTools.AttacherX86.exe;
+                   PyDebugAttach.dll;
+                   PyDebugAttachX86.dll;
+                   visualstudio_py_repl.py;
+                   visualstudio_ipython_repl.py;
+                   visualstudio_py_launcher.py;
+                   visualstudio_py_debugger.py;
+                   visualstudio_py_util.py" />
+
+    <!-- Resources -->
+    <File Include="Python Tools for VS License.rtf;
+                   NoInterpreters.html;
+                   NoSurveyNewsFeed.html" />
+    <File Include="PythonFile.ico;
+                   PythonProject.ico;
+                   PythonProjectBig.ico" />
+
+    <!-- Templates -->
+    <File Include="Templates\NewItem\NewPythonItems.vsdir;
+                   Templates\NewItem\class.py;
+                   Templates\NewItem\class.pyw;
+                   Templates\NewItem\module.py;
+                   Templates\NewItem\module.pyw">
+      <InstallDirectory>FileTemplate</InstallDirectory>
+    </File>
+    <ItemTemplate Include="ItemTemplates\Python\EmptyPackage.zip;
+                           ItemTemplates\Python\EmptyPyFile.zip;
+                           ItemTemplates\Python\PyClass.zip;
+                           ItemTemplates\Python\TextFile.zip" />
+    <ProjectTemplate Include="ProjectTemplates\Python\ConsoleAppProject.zip;
+                              ProjectTemplates\Python\FromExistingCode.zip;
+                              ProjectTemplates\Python\EmptyWebProject.zip;
+                              ProjectTemplates\Python\WebProjectBottle.zip;
+                              ProjectTemplates\Python\WebProjectFlask.zip" />
+
+    <!-- Default Completion DB -->
+    <File Include="$(SourceDir)CompletionDB\*.idb">
+      <InstallDirectory>CompletionDB</InstallDirectory>
+    </File>
+  
+    <!-- Build Tasks -->
+    <File Include="Microsoft.PythonTools.BuildTasks.dll" />
+    <MSBuildFile Include="Microsoft.PythonTools.targets;
+                          Microsoft.PythonTools.Web.targets;
+                          Microsoft.PythonTools.Bottle.targets;
+                          Microsoft.PythonTools.Flask.targets;
+                          wfastcgi.py;
+                          web_config.xml;
+                          ptvs_virtualenv_proxy.py;
+                          Microsoft.PythonTools.WebRole.dll;
+                          Microsoft.PythonTools.AzureSetup.exe;
+                          Microsoft.PythonTools.AzureSetup.exe.config;
+                          WebpiCmdLine\Microsoft.Web.Deployment.dll;
+                          WebpiCmdLine\Microsoft.Web.PlatformInstaller.dll;
+                          WebpiCmdLine\Microsoft.Web.PlatformInstaller.UI.dll;
+                          WebpiCmdLine\WebPICmdLine.exe;
+                          WebpiCmdLine\WebPICmdLine.exe.config" />
+    
+    <!-- Mixed-mode Debugging -->
+    <File Condition="$(VSTarget) != '10.0'"
+          Include="Microsoft.PythonTools.Debugger.Helper.x86.dll;
+                   Microsoft.PythonTools.Debugger.Helper.x86.pdb;
+                   Microsoft.PythonTools.Debugger.Helper.x64.dll;
+                   Microsoft.PythonTools.Debugger.Helper.x64.pdb;
+                   DkmDebugger.vsdconfig;
+                   PythonDkm.natvis" />
+    
+    <!-- Unit Test Adapter -->
+    <File Condition="$(VSTarget) != '10.0'"
+          Include="Microsoft.PythonTools.TestAdapter.dll;
+                   visualstudio_py_testlauncher.py" />
+    <ItemTemplate Condition="$(VSTarget) != '10.0'"
+                  Include="ItemTemplates\Python\UnitTestFile.zip" />
+
+    <!-- ptvsd -->
+    <SharedFile Include="visualstudio_py_repl.py;
+                   visualstudio_py_debugger.py;
+                   visualstudio_py_util.py;
+                   ptvsd\attach_server.py;
+                   ptvsd\__init__.py;
+                   ptvsd\__main__.py">
+      <InstallDirectory>Dir_ptvsd</InstallDirectory>
+    </SharedFile>
+  </ItemGroup>
+
+  <Import Project="..\WixGenerator.targets"/>
+</Project>

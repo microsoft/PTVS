@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Vsix Version="1.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2010">
   <Identifier Id="a8637c34-aa55-46e2-973c-9c3e09afc17b">
-    <Name>Python Tools for Visual Studio, Django Support</Name>
+    <Name>Python Tools for Visual Studio - Django</Name>
     <Author>Microsoft</Author>
     <Version>2.1</Version>
     <Description xml:space="preserve">Provides templates and integration for the Django web framework.</Description>
@@ -22,6 +22,8 @@
       </VisualStudio>
       <VisualStudio Version="12.0">
         <Edition>IntegratedShell</Edition>
+        <Edition>WDExpress</Edition>
+        <Edition>VWDExpress</Edition>
       </VisualStudio>
     </SupportedProducts>
     <SupportedFrameworkRuntimeEdition MinVersion="4.0" />
@@ -35,7 +37,8 @@
       <MoreInfoUrl>http://pytools.codeplex.com/</MoreInfoUrl>
     </Reference>
     <Reference Id="ce8d8e55-ad29-423e-aca2-810d0b16cdc4" MinVersion="2.1">
-      <Name>Microsoft.VisualStudio.InteractiveWindow</Name>
+      <Name>Python Tools for Visual Studio - Interactive</Name>
+      <MoreInfoUrl>http://pytools.codeplex.com/</MoreInfoUrl>
     </Reference>
   </References>
   <Content>

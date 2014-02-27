@@ -4,33 +4,33 @@
 
   <!-- Product GUIDs: Must just be unique-->
   <?if "$(var.VSTargetVersion)" = "10.0" ?>
-      <?define InstallerGuid=*?>
-      <?define InstallerUpgradeGuid=4D6FE7B2-2E09-4553-A90C-8CBC6DCE508A?>
-      <?define Comp_InstallDirItemsGuid=90B6BA38-DC6E-4F5B-A083-53D520626118?>
-      <?define Comp_InstallLocationGuid=8C4A7B00-6821-4193-A4A2-AB76A692E0CF?>
-      <?define Comp_PyFileProgIdGuid=1B75125D-B4E0-4E43-A578-9DF11358D5DC?>
-      <?define Comp_PyProjRegistrationGuid=2DC47948-AC8D-404C-8213-83A014FDD5E3?>
-      <?define ProductNameYear = 2010?>
+  <?define InstallerGuid=*?>
+  <?define InstallerUpgradeGuid=4D6FE7B2-2E09-4553-A90C-8CBC6DCE508A?>
+  <?define Comp_InstallDirItemsGuid=90B6BA38-DC6E-4F5B-A083-53D520626118?>
+  <?define Comp_InstallLocationGuid=8C4A7B00-6821-4193-A4A2-AB76A692E0CF?>
+  <?define Comp_PyFileProgIdGuid=1B75125D-B4E0-4E43-A578-9DF11358D5DC?>
+  <?define Comp_PyProjRegistrationGuid=2DC47948-AC8D-404C-8213-83A014FDD5E3?>
+  <?define ProductNameYear = 2010?>
   <?elseif "$(var.VSTargetVersion)" = "11.0" ?>
-      <?define InstallerGuid=*?>
-      <?define InstallerUpgradeGuid=6A060E66-FDD1-49EC-AD4A-13A0BA2B5F7C?>
-      <?define Comp_InstallDirItemsGuid=5F67FEB3-DD79-43C5-9E4B-23D33AD54796?>
-      <?define Comp_InstallLocationGuid=85008770-0D43-4BAC-8228-A77BD7C9E6B8?>
-      <?define Comp_PyFileProgIdGuid=40F901B8-3B40-44BE-8592-280725805D88?>
-      <?define Comp_PyProjRegistrationGuid=8C952F07-ADEC-4896-AFA8-1163139E4F11?>
-      <?define ProductNameYear = 2012?>
+  <?define InstallerGuid=*?>
+  <?define InstallerUpgradeGuid=6A060E66-FDD1-49EC-AD4A-13A0BA2B5F7C?>
+  <?define Comp_InstallDirItemsGuid=5F67FEB3-DD79-43C5-9E4B-23D33AD54796?>
+  <?define Comp_InstallLocationGuid=85008770-0D43-4BAC-8228-A77BD7C9E6B8?>
+  <?define Comp_PyFileProgIdGuid=40F901B8-3B40-44BE-8592-280725805D88?>
+  <?define Comp_PyProjRegistrationGuid=8C952F07-ADEC-4896-AFA8-1163139E4F11?>
+  <?define ProductNameYear = 2012?>
   <?elseif "$(var.VSTargetVersion)" = "12.0" ?>
-      <?define InstallerGuid=*?>
-      <?define InstallerUpgradeGuid=D3FFD34D-B716-4496-BFF0-0C34E536DC64?>
-      <?define Comp_InstallDirItemsGuid=0B534FC2-E67E-41D3-B375-6CF32303236D?>
-      <?define Comp_InstallLocationGuid=1B224F2A-4A9B-480F-8769-B357A716274B?>
-      <?define Comp_PyFileProgIdGuid=C48EAEBD-4ABB-4A4B-A134-15B5B5BBA533?>
-      <?define Comp_PyProjRegistrationGuid=5764E5F1-D819-4985-8D5C-AE58534DDF41?>
-      <?define ProductNameYear = 2013?>  
+  <?define InstallerGuid=*?>
+  <?define InstallerUpgradeGuid=D3FFD34D-B716-4496-BFF0-0C34E536DC64?>
+  <?define Comp_InstallDirItemsGuid=0B534FC2-E67E-41D3-B375-6CF32303236D?>
+  <?define Comp_InstallLocationGuid=1B224F2A-4A9B-480F-8769-B357A716274B?>
+  <?define Comp_PyFileProgIdGuid=C48EAEBD-4ABB-4A4B-A134-15B5B5BBA533?>
+  <?define Comp_PyProjRegistrationGuid=5764E5F1-D819-4985-8D5C-AE58534DDF41?>
+  <?define ProductNameYear = 2013?>
   <?endif ?>
   <?ifdef CustomBuildIdentifier?>
-      <?define ProductName = Python Tools $(var.CustomBuildIdentifier) for Visual Studio $(var.ProductNameYear)?>
+  <?define ProductName = Python Tools $(var.CustomBuildIdentifier) for Visual Studio $(var.ProductNameYear)?>
   <?else?>
-      <?define ProductName = Python Tools for Visual Studio $(var.ProductNameYear)?>
+  <?define ProductName = Python Tools for Visual Studio $(var.ProductNameYear)?>
   <?endif?>
 </Include>

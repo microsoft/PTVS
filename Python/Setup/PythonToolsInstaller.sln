@@ -1,0 +1,120 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2013
+VisualStudioVersion = 12.0.30110.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{930C7802-8A8C-48F9-8165-68863BCCD9DD}") = "PythonToolsInstaller", "PythonToolsInstaller\PythonToolsInstaller.wixproj", "{4D1D8D10-CEAD-4BA5-ACB2-47B012868050}"
+EndProject
+Project("{930C7802-8A8C-48F9-8165-68863BCCD9DD}") = "Django", "Django\Django.wixproj", "{16671BE6-DD23-41D9-841A-0B80D47A090D}"
+EndProject
+Project("{930C7802-8A8C-48F9-8165-68863BCCD9DD}") = "FastCgi", "FastCgiInstaller\FastCgi.wixproj", "{A1DAEA3E-6A47-4D65-A4AB-5F8BFEB4CD42}"
+EndProject
+Project("{930C7802-8A8C-48F9-8165-68863BCCD9DD}") = "IronPythonInterpreter", "IronPythonInterpreter\IronPythonInterpreter.wixproj", "{92851481-9141-480E-A85D-85120766949C}"
+EndProject
+Project("{930C7802-8A8C-48F9-8165-68863BCCD9DD}") = "PythonHpcSupport", "PythonHpcSupport\PythonHpcSupport.wixproj", "{45DBE334-D497-4441-B136-5BA636173D26}"
+EndProject
+Project("{930C7802-8A8C-48F9-8165-68863BCCD9DD}") = "PythonProfiling", "PythonProfiling\PythonProfiling.wixproj", "{C7D3FCEB-47DA-4539-8D20-6B9047BAC3F7}"
+EndProject
+Project("{930C7802-8A8C-48F9-8165-68863BCCD9DD}") = "PythonTools", "PythonTools\PythonTools.wixproj", "{0D7C4C3A-A08F-4B91-BD1C-C4C79C013484}"
+EndProject
+Project("{930C7802-8A8C-48F9-8165-68863BCCD9DD}") = "ReplWindow", "ReplWindow\ReplWindow.wixproj", "{C0D64130-C0E9-4CAB-99BC-68F62357F010}"
+EndProject
+Project("{930C7802-8A8C-48F9-8165-68863BCCD9DD}") = "VsLogger", "..\..\Internal\Python\VsLoggerSetup\VsLogger.wixproj", "{639BFC80-B31B-4D3F-9DF3-A65913000B4B}"
+EndProject
+Global
+	GlobalSection(TeamFoundationVersionControl) = preSolution
+		SccNumberOfProjects = 9
+		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
+		SccTeamFoundationServer = http://vstfdevdiv:8080/devdiv2
+		SccProjectUniqueName0 = PythonToolsInstaller\\PythonToolsInstaller.wixproj
+		SccProjectName0 = PythonToolsInstaller
+		SccAuxPath0 = http://vstfdevdiv:8080/devdiv2
+		SccLocalPath0 = PythonToolsInstaller
+		SccProvider0 = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
+		SccProjectUniqueName1 = Django\\Django.wixproj
+		SccProjectName1 = Django
+		SccAuxPath1 = http://vstfdevdiv:8080/devdiv2
+		SccLocalPath1 = Django
+		SccProvider1 = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
+		SccProjectUniqueName2 = FastCgiInstaller\\FastCgi.wixproj
+		SccProjectName2 = FastCgiInstaller
+		SccAuxPath2 = http://vstfdevdiv:8080/devdiv2
+		SccLocalPath2 = FastCgiInstaller
+		SccProvider2 = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
+		SccProjectUniqueName3 = IronPythonInterpreter\\IronPythonInterpreter.wixproj
+		SccProjectName3 = IronPythonInterpreter
+		SccAuxPath3 = http://vstfdevdiv:8080/devdiv2
+		SccLocalPath3 = IronPythonInterpreter
+		SccProvider3 = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
+		SccProjectUniqueName4 = PythonHpcSupport\\PythonHpcSupport.wixproj
+		SccProjectName4 = PythonHpcSupport
+		SccAuxPath4 = http://vstfdevdiv:8080/devdiv2
+		SccLocalPath4 = PythonHpcSupport
+		SccProvider4 = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
+		SccProjectUniqueName5 = PythonProfiling\\PythonProfiling.wixproj
+		SccProjectName5 = PythonProfiling
+		SccAuxPath5 = http://vstfdevdiv:8080/devdiv2
+		SccLocalPath5 = PythonProfiling
+		SccProvider5 = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
+		SccProjectUniqueName6 = PythonTools\\PythonTools.wixproj
+		SccProjectName6 = PythonTools
+		SccAuxPath6 = http://vstfdevdiv:8080/devdiv2
+		SccLocalPath6 = PythonTools
+		SccProvider6 = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
+		SccProjectUniqueName7 = ReplWindow\\ReplWindow.wixproj
+		SccProjectName7 = ReplWindow
+		SccAuxPath7 = http://vstfdevdiv:8080/devdiv2
+		SccLocalPath7 = ReplWindow
+		SccProvider7 = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
+		SccProjectUniqueName8 = ..\\..\\Internal\\Python\\VsLoggerSetup\\VsLogger.wixproj
+		SccProjectName8 = ../../Internal/Python/VsLoggerSetup
+		SccAuxPath8 = http://vstfdevdiv:8080/devdiv2
+		SccLocalPath8 = ..\\..\\Internal\\Python\\VsLoggerSetup
+		SccProvider8 = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
+	EndGlobalSection
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x86 = Debug|x86
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{4D1D8D10-CEAD-4BA5-ACB2-47B012868050}.Debug|x86.ActiveCfg = Debug|x86
+		{4D1D8D10-CEAD-4BA5-ACB2-47B012868050}.Debug|x86.Build.0 = Debug|x86
+		{4D1D8D10-CEAD-4BA5-ACB2-47B012868050}.Release|x86.ActiveCfg = Release|x86
+		{4D1D8D10-CEAD-4BA5-ACB2-47B012868050}.Release|x86.Build.0 = Release|x86
+		{16671BE6-DD23-41D9-841A-0B80D47A090D}.Debug|x86.ActiveCfg = Debug|x86
+		{16671BE6-DD23-41D9-841A-0B80D47A090D}.Debug|x86.Build.0 = Debug|x86
+		{16671BE6-DD23-41D9-841A-0B80D47A090D}.Release|x86.ActiveCfg = Release|x86
+		{16671BE6-DD23-41D9-841A-0B80D47A090D}.Release|x86.Build.0 = Release|x86
+		{A1DAEA3E-6A47-4D65-A4AB-5F8BFEB4CD42}.Debug|x86.ActiveCfg = Debug|x86
+		{A1DAEA3E-6A47-4D65-A4AB-5F8BFEB4CD42}.Debug|x86.Build.0 = Debug|x86
+		{A1DAEA3E-6A47-4D65-A4AB-5F8BFEB4CD42}.Release|x86.ActiveCfg = Release|x86
+		{A1DAEA3E-6A47-4D65-A4AB-5F8BFEB4CD42}.Release|x86.Build.0 = Release|x86
+		{92851481-9141-480E-A85D-85120766949C}.Debug|x86.ActiveCfg = Debug|x86
+		{92851481-9141-480E-A85D-85120766949C}.Debug|x86.Build.0 = Debug|x86
+		{92851481-9141-480E-A85D-85120766949C}.Release|x86.ActiveCfg = Release|x86
+		{92851481-9141-480E-A85D-85120766949C}.Release|x86.Build.0 = Release|x86
+		{45DBE334-D497-4441-B136-5BA636173D26}.Debug|x86.ActiveCfg = Debug|x86
+		{45DBE334-D497-4441-B136-5BA636173D26}.Debug|x86.Build.0 = Debug|x86
+		{45DBE334-D497-4441-B136-5BA636173D26}.Release|x86.ActiveCfg = Release|x86
+		{45DBE334-D497-4441-B136-5BA636173D26}.Release|x86.Build.0 = Release|x86
+		{C7D3FCEB-47DA-4539-8D20-6B9047BAC3F7}.Debug|x86.ActiveCfg = Debug|x86
+		{C7D3FCEB-47DA-4539-8D20-6B9047BAC3F7}.Debug|x86.Build.0 = Debug|x86
+		{C7D3FCEB-47DA-4539-8D20-6B9047BAC3F7}.Release|x86.ActiveCfg = Release|x86
+		{C7D3FCEB-47DA-4539-8D20-6B9047BAC3F7}.Release|x86.Build.0 = Release|x86
+		{0D7C4C3A-A08F-4B91-BD1C-C4C79C013484}.Debug|x86.ActiveCfg = Debug|x86
+		{0D7C4C3A-A08F-4B91-BD1C-C4C79C013484}.Debug|x86.Build.0 = Debug|x86
+		{0D7C4C3A-A08F-4B91-BD1C-C4C79C013484}.Release|x86.ActiveCfg = Release|x86
+		{0D7C4C3A-A08F-4B91-BD1C-C4C79C013484}.Release|x86.Build.0 = Release|x86
+		{C0D64130-C0E9-4CAB-99BC-68F62357F010}.Debug|x86.ActiveCfg = Debug|x86
+		{C0D64130-C0E9-4CAB-99BC-68F62357F010}.Debug|x86.Build.0 = Debug|x86
+		{C0D64130-C0E9-4CAB-99BC-68F62357F010}.Release|x86.ActiveCfg = Release|x86
+		{C0D64130-C0E9-4CAB-99BC-68F62357F010}.Release|x86.Build.0 = Release|x86
+		{639BFC80-B31B-4D3F-9DF3-A65913000B4B}.Debug|x86.ActiveCfg = Debug|x86
+		{639BFC80-B31B-4D3F-9DF3-A65913000B4B}.Debug|x86.Build.0 = Debug|x86
+		{639BFC80-B31B-4D3F-9DF3-A65913000B4B}.Release|x86.ActiveCfg = Release|x86
+		{639BFC80-B31B-4D3F-9DF3-A65913000B4B}.Release|x86.Build.0 = Release|x86
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

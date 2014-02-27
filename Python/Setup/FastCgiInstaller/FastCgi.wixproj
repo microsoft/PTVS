@@ -12,9 +12,6 @@
     <SccProvider>SAK</SccProvider>
     <SccAuxPath>SAK</SccAuxPath>
     <SccLocalPath>SAK</SccLocalPath>
-    <DefineConstants>
-      MsiVersion=$(WixVersion);VSTargetVersion=$(VSTarget)
-    </DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <WixExtension Include="WixUIExtension;WixUtilExtension" />

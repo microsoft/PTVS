@@ -19,6 +19,20 @@
     <LuxTargetsPath>$(WixToolPath)\Lux.targets</LuxTargetsPath>
     <LuxTasksPath>$(WixToolPath)\LuxTasks.dll</LuxTasksPath>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <SuppressIces>ICE03;ICE61</SuppressIces>
+    <DefineConstants>
+        VSTargetVersion=$(VSTarget);
+        MsiVersion=$(WixVersion);
+        ReleaseVersion=$(WixReleaseVersion)
+    </DefineConstants>
   </PropertyGroup>
+  
+  <ItemDefinitionGroup>
+    <BindInputPaths>
+      <!-- The WiX VS extension cannot open projects where a bind path
+           is visible and outside of the project path. -->
+      <Visible>false</Visible>
+    </BindInputPaths>
+  </ItemDefinitionGroup>
 
 </Project>

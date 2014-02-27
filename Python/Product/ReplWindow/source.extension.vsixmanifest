@@ -1,10 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Vsix xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" Version="1.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2010">
   <Identifier Id="ce8d8e55-ad29-423e-aca2-810d0b16cdc4">
-    <Name>Microsoft.VisualStudio.InteractiveWindow</Name>
+    <Name>Python Tools for Visual Studio - Interactive</Name>
     <Author>Microsoft</Author>
     <Version>2.1</Version>
-    <Description xml:space="preserve">Visual Studio Interactive Window</Description>
+    <Description xml:space="preserve">Provides the tool window used for Python Interactive windows.</Description>
     <Locale>1033</Locale>
     <InstalledByMsi>true</InstalledByMsi>
     <SystemComponent>false</SystemComponent>
@@ -19,6 +19,8 @@
       </VisualStudio>
       <VisualStudio Version="12.0">
         <Edition>IntegratedShell</Edition>
+        <Edition>WDExpress</Edition>
+        <Edition>VWDExpress</Edition>
       </VisualStudio>
     </SupportedProducts>
     <SupportedFrameworkRuntimeEdition MinVersion="4.0" />
@@ -31,7 +33,7 @@
   <Content>
     <VsPackage>|%CurrentProject%;PkgdefProjectOutputGroup|</VsPackage>
     <MefComponent>|%CurrentProject%|</MefComponent>
-    <Assembly AssemblyName="Microsoft.VisualStudio.ReplWindow, Version=1.8.50330.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">|%CurrentProject%|</Assembly>
+    <Assembly AssemblyName="|%CurrentProject%;AssemblyName|">|%CurrentProject%|</Assembly>
   </Content>
 
 </Vsix>

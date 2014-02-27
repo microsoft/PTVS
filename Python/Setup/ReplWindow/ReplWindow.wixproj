@@ -8,18 +8,17 @@
     <OutputName>ReplWindow</OutputName>
     <OutputType>Module</OutputType>
     <DefineSolutionProperties>false</DefineSolutionProperties>
+    <DefineConstants>$(DefineConstants);ProductSuffix=Interactive Window</DefineConstants>
     <SccProjectName>SAK</SccProjectName>
     <SccProvider>SAK</SccProvider>
     <SccAuxPath>SAK</SccAuxPath>
     <SccLocalPath>SAK</SccLocalPath>
-    <DefineConstants>
-      ObjDir=$(BuildRoot)\Python\Product\ReplWindow\obj\Dev$(VSTarget)\$(Configuration);
-      VSTargetVersion=$(VSTarget)
-    </DefineConstants>
   </PropertyGroup>
   <ItemGroup>
+    <BindInputPaths Include="$(OutDir)" />
+  </ItemGroup>
+  <ItemGroup>
     <Compile Include="ReplWindow.wxs" />
-    <Compile Include="ReplWindowVsExt.wxs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="$(BuildRoot)\Python\Product\ReplWindow\ReplWindow.csproj">
@@ -31,5 +30,11 @@
       <DoNotHarvest>true</DoNotHarvest>
     </ProjectReference>
   </ItemGroup>
-  <Import Project="..\SetupProjectAfter.settings"/>
+  <ItemGroup>
+    <Content Include="..\MergeModule.wxi">
+      <Link>MergeModule.wxi</Link>
+    </Content>
+    <FilesProj Include="ReplWindowFiles.proj" />
+  </ItemGroup>
+  <Import Project="..\SetupProjectAfter.settings" />
 </Project>

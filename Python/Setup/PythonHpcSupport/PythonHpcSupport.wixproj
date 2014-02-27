@@ -5,21 +5,20 @@
     <ProductVersion>3.5</ProductVersion>
     <ProjectGuid>{45DBE334-D497-4441-B136-5BA636173D26}</ProjectGuid>
     <SchemaVersion>2.0</SchemaVersion>
-    <OutputName>PythonHpcSupportMsm</OutputName>
+    <OutputName>Hpc</OutputName>
     <OutputType>Module</OutputType>
     <DefineSolutionProperties>false</DefineSolutionProperties>
+    <DefineConstants>$(DefineConstants);ProductSuffix=Hpc</DefineConstants>
     <SccProjectName>SAK</SccProjectName>
     <SccProvider>SAK</SccProvider>
     <SccAuxPath>SAK</SccAuxPath>
     <SccLocalPath>SAK</SccLocalPath>
-    <DefineConstants>
-      ObjDir=$(BuildRoot)\Python\Product\Hpc\obj\Dev$(VSTarget)\$(Configuration);
-      VSTargetVersion=$(VSTarget)
-    </DefineConstants>
   </PropertyGroup>
   <ItemGroup>
+    <BindInputPaths Include="$(OutDir)" />
+  </ItemGroup>
+  <ItemGroup>
     <Compile Include="PythonHpcSupport.wxs" />
-    <Compile Include="PythonHpcSupportVsExt.wxs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\Python\Product\Hpc\Hpc.csproj">
@@ -30,6 +29,12 @@
       <RefTargetDir>INSTALLLOCATION</RefTargetDir>
       <DoNotHarvest>true</DoNotHarvest>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="..\MergeModule.wxi">
+      <Link>MergeModule.wxi</Link>
+    </Content>
+    <FilesProj Include="HpcFiles.proj" />
   </ItemGroup>
   <Import Project="..\SetupProjectAfter.settings" />
 </Project>

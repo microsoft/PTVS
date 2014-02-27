@@ -1,0 +1,21 @@
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <BuildRoot Condition="'$(BuildRoot)' == ''">$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), build.root))</BuildRoot>
+
+    <TargetName>ReplWindowFiles</TargetName>
+    <SourceDir>$(BuildRoot)\Python\Product\ReplWindow\</SourceDir>
+    <ObjDir>$(SourceDir)obj\Dev$(VSTarget)\$(Configuration)</ObjDir>
+  </PropertyGroup>
+
+
+  <ItemGroup>
+    <!-- Registration files -->
+    <File Include="$(ObjDir)\extension.vsixmanifest" />
+    <File Include="Microsoft.VisualStudio.ReplWindow.pkgdef" />
+
+    <!-- Core extension -->
+    <File Include="Microsoft.VisualStudio.ReplWindow.dll" />
+  </ItemGroup>
+
+  <Import Project="..\WixGenerator.targets"/>
+</Project>

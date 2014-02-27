@@ -22,12 +22,12 @@
   </Identifier>
   <References>
     <Reference Id="ce8d8e55-ad29-423e-aca2-810d0b16cdc4" MinVersion="2.1">
-      <Name>Microsoft.VisualStudio.InteractiveWindow</Name>
+      <Name>Python Tools for Visual Studio - Interactive</Name>
     </Reference>
   </References>
   <Content>
     <VsPackage>|%CurrentProject%;PkgdefProjectOutputGroup|</VsPackage>
-    <Assembly AssemblyName="Microsoft.PythonTools">|%CurrentProject%|</Assembly>
+    <Assembly AssemblyName="|%CurrentProject%;_GetAssemblyName|">|%CurrentProject%|</Assembly>
     <Assembly AssemblyName="|Microsoft.PythonTools.Analysis;AssemblyName|">|Microsoft.PythonTools.Analysis|</Assembly>
     <Assembly AssemblyName="|Microsoft.PythonTools.BuildTasks;_GetAssemblyName|">|Microsoft.PythonTools.BuildTasks;_GetTargetPath|</Assembly>
     <Assembly AssemblyName="|Microsoft.PythonTools.Debugger;AssemblyName|">|Microsoft.PythonTools.Debugger|</Assembly>

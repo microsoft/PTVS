@@ -5,21 +5,20 @@
     <ProductVersion>3.5</ProductVersion>
     <ProjectGuid>{16671BE6-DD23-41D9-841A-0B80D47A090D}</ProjectGuid>
     <SchemaVersion>2.0</SchemaVersion>
-    <OutputName>DjangoMsm</OutputName>
+    <OutputName>Django</OutputName>
     <OutputType>Module</OutputType>
     <DefineSolutionProperties>false</DefineSolutionProperties>
+    <DefineConstants>$(DefineConstants);ProductSuffix=Django</DefineConstants>
     <SccProjectName>SAK</SccProjectName>
     <SccProvider>SAK</SccProvider>
     <SccAuxPath>SAK</SccAuxPath>
     <SccLocalPath>SAK</SccLocalPath>
-    <DefineConstants>
-      ObjDir=$(BuildRoot)\Python\Product\Django\obj\Dev$(VSTarget)\$(Configuration);
-      VSTargetVersion=$(VSTarget)
-    </DefineConstants>
   </PropertyGroup>
   <ItemGroup>
+    <BindInputPaths Include="$(OutDir)" />
+  </ItemGroup>
+  <ItemGroup>
     <Compile Include="Django.wxs" />
-    <Compile Include="DjangoVsExt.wxs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\Python\Product\Django\Django.csproj">
@@ -30,6 +29,12 @@
       <RefTargetDir>INSTALLLOCATION</RefTargetDir>
       <DoNotHarvest>true</DoNotHarvest>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="..\MergeModule.wxi">
+      <Link>MergeModule.wxi</Link>
+    </Content>
+    <FilesProj Include="DjangoFiles.proj" />
   </ItemGroup>
   <Import Project="..\SetupProjectAfter.settings" />
 </Project>
