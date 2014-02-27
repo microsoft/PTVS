@@ -77,12 +77,17 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         }
 
         // Gets the source code range of this document context.
-        // A source range is the entire range of source code, from the current statement back to just after the previous s
+        // A source range is the entire range of source code, from the current statement back to just after the previous
         // statement that contributed code. The source range is typically used for mixing source statements, including 
         // comments, with code in the disassembly window.
-        // Sincethis engine does not support the disassembly window, this is not implemented.
+        // This is currently used only by 'Show Call Stack on Code Map' and doesn't use the information so just set to 
+        // null.  If we wanted to use the info from this for another feature, perhaps this should be set to actual 
+        // points like GetStatementRange
         int IDebugDocumentContext2.GetSourceRange(TEXT_POSITION[] pBegPosition, TEXT_POSITION[] pEndPosition) {
-            throw new NotImplementedException("This method is not implemented");
+            pBegPosition = null;
+            pEndPosition = null;
+
+            return VSConstants.S_OK;
         }
 
         // Gets the file statement range of the document context.
