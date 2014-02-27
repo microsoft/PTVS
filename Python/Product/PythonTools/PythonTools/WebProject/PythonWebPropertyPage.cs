@@ -16,25 +16,24 @@ using System;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using Microsoft.VisualStudioTools.Project;
+using SR = Microsoft.PythonTools.Project.SR;
 
-namespace Microsoft.PythonTools.Django.Project {
-    [Guid(GuidList.guidDjangoPropertyPageString)]
-    class DjangoPropertyPage : CommonPropertyPage {
-        private readonly DjangoPropertyPageControl _control;
+namespace Microsoft.PythonTools.Project.Web {
+    [Guid(PythonConstants.WebPropertyPageGuid)]
+    class PythonWebPropertyPage : CommonPropertyPage {
+        private readonly PythonWebPropertyPageControl _control;
 
-        public const string SettingModulesSetting = "DjangoSettingsModule";
         public const string StaticUriPatternSetting = "StaticUriPattern";
 
-        public DjangoPropertyPage() {
-            _control = new DjangoPropertyPageControl(this);
+        public PythonWebPropertyPage() {
+            _control = new PythonWebPropertyPageControl(this);
         }
-        
+
         public override Control Control {
             get { return _control; }
         }
 
         public override void Apply() {
-            SetProjectProperty(SettingModulesSetting, _control.SettingsModule);
             SetProjectProperty(StaticUriPatternSetting, _control.StaticUriPattern);
             IsDirty = false;
         }
@@ -42,7 +41,6 @@ namespace Microsoft.PythonTools.Django.Project {
         public override void LoadSettings() {
             Loading = true;
             try {
-                _control.SettingsModule = GetProjectProperty(SettingModulesSetting);
                 _control.StaticUriPattern = GetProjectProperty(StaticUriPatternSetting);
                 IsDirty = false;
             } finally {
@@ -51,7 +49,7 @@ namespace Microsoft.PythonTools.Django.Project {
         }
 
         public override string Name {
-            get { return Resources.DjangoPropertyPageTitle; }
+            get { return SR.GetString(SR.PythonWebPropertyPageTitle); }
         }
     }
 }

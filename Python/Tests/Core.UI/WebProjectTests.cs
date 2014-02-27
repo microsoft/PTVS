@@ -104,6 +104,50 @@ namespace PythonToolsUITests {
             }
         }
 
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void WebProjectStaticUri() {
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.CreateProject(
+                    PythonVisualStudioApp.TemplateLanguageName,
+                    PythonVisualStudioApp.EmptyWebProjectTemplate,
+                    TestData.GetTempPath(),
+                    "WebProjectStaticUri"
+                );
+
+                var proj = project.GetCommonProject() ;
+                Assert.IsNotNull(proj);
+
+                ThreadHelper.Generic.Invoke(() => {
+                    proj.SetProjectProperty("PythonWsgiHandler", "NoHandler");
+
+                    proj.SetProjectProperty("StaticUriPattern", "");
+                });
+                app.ExecuteCommand("Build.RebuildSolution");
+                app.WaitForOutputWindowText("Build", "1 succeeded");
+
+                ThreadHelper.Generic.Invoke(() => {
+                    proj.SetProjectProperty("StaticUriPattern", "^/static/.*$");
+                });
+                app.ExecuteCommand("Build.RebuildSolution");
+                app.WaitForOutputWindowText("Build", "1 succeeded");
+                
+                var webConfig = File.ReadAllText(Path.Combine(Path.GetDirectoryName(project.FullName), "web.config"));
+                if (!webConfig.Contains(@"<add input=""{REQUEST_URI}"" pattern=""^/static/.*$"" ignoreCase=""true"" negate=""true"" />")) {
+                    Assert.Fail(string.Format("Did not find rewrite condition in:{0}{0}{1}",
+                        Environment.NewLine,
+                        webConfig
+                    ));
+                }
+
+                ThreadHelper.Generic.Invoke(() => {
+                    proj.SetProjectProperty("StaticUriPattern", "invalid[pattern");
+                });
+                app.ExecuteCommand("Build.RebuildSolution");
+                app.WaitForOutputWindowText("Build", "1 failed");
+            }
+        }
+
         #region EndToEndTest
 
         private void EndToEndTest(

@@ -334,6 +334,12 @@
     <Compile Include="PythonTools\Project\VirtualEnv.cs" />
     <Compile Include="PythonTools\Project\XamlDesignerSupport.cs" />
     <Compile Include="PythonTools\WebProject\AzureSolutionListener.cs" />
+    <Compile Include="PythonTools\WebProject\PythonWebPropertyPageControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="PythonTools\WebProject\PythonWebPropertyPageControl.Designer.cs">
+      <DependentUpon>PythonWebPropertyPageControl.cs</DependentUpon>
+    </Compile>
     <Compile Include="PythonTools\WebProject\PythonWebLauncher.cs" />
     <Compile Include="PythonTools\WebProject\PythonWebLauncherOptions.cs">
       <SubType>UserControl</SubType>
@@ -671,6 +677,7 @@
     <Compile Include="PythonToolsPackage.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PkgCmdID.cs" />
+    <Compile Include="PythonTools\WebProject\PythonWebPropertyPage.cs" />
     <Compile Include="VsCredentials.cs" />
   </ItemGroup>
   <ItemGroup Condition="'$(VSTarget)' != '10.0'">
@@ -942,6 +949,9 @@
       <DependentUpon>Resources.resx</DependentUpon>
       <Visible>true</Visible>
     </Compile>
+    <EmbeddedResource Include="PythonTools\WebProject\PythonWebPropertyPageControl.resx">
+      <DependentUpon>PythonWebPropertyPageControl.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="PythonTools\WebProject\PythonWebLauncherOptions.resx">
       <DependentUpon>PythonWebLauncherOptions.cs</DependentUpon>
     </EmbeddedResource>

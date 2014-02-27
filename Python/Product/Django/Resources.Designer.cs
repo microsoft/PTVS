@@ -97,6 +97,15 @@ namespace Microsoft.PythonTools.Django {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Django.
+        /// </summary>
+        internal static string DjangoPropertyPageTitle {
+            get {
+                return ResourceManager.GetString("DjangoPropertyPageTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The Python path to a settings module, e.g. &quot;myproject.settings.main&quot;. If this isn&apos;t provided, the DJANGO_SETTINGS_MODULE environment variable will be used..
         /// </summary>
         internal static string DjangoSettingsModuleHelp {
@@ -111,6 +120,17 @@ namespace Microsoft.PythonTools.Django {
         internal static string OpenDjangoShellLabel {
             get {
                 return ResourceManager.GetString("OpenDjangoShellLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A regex pattern to identify static URIs, for example: ^/static/.*
+        ///The web.config file will be configured to resolve URIs matching this pattern to a file system path rather than your application.
+        ///NOTE: This pattern is applied in addition to the static URI specified in the Django settings module..
+        /// </summary>
+        internal static string StaticUriHelp {
+            get {
+                return ResourceManager.GetString("StaticUriHelp", resourceCulture);
             }
         }
         

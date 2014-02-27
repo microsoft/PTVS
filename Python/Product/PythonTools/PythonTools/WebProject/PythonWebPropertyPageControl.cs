@@ -19,28 +19,20 @@ using Microsoft.PythonTools;
 using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudioTools.Project;
 
-namespace Microsoft.PythonTools.Django.Project {
-    public partial class DjangoPropertyPageControl : UserControl {
-        private readonly DjangoPropertyPage _properties;
+namespace Microsoft.PythonTools.Project.Web {
+    public partial class PythonWebPropertyPageControl : UserControl {
+        private readonly PythonWebPropertyPage _properties;
 
-        private DjangoPropertyPageControl() {
+        private PythonWebPropertyPageControl() {
             InitializeComponent();
 
-            _toolTip.SetToolTip(_settingsModule, Resources.DjangoSettingsModuleHelp);
-            _toolTip.SetToolTip(_settingsModuleLabel, Resources.DjangoSettingsModuleHelp);
-
-            _toolTip.SetToolTip(_staticUri, Resources.StaticUriHelp);
-            _toolTip.SetToolTip(_staticUriLabel, Resources.StaticUriHelp);
+            _toolTip.SetToolTip(_staticUri, SR.GetString(SR.StaticUriHelp));
+            _toolTip.SetToolTip(_staticUriLabel, SR.GetString(SR.StaticUriHelp));
         }
 
-        internal DjangoPropertyPageControl(DjangoPropertyPage properties)
+        internal PythonWebPropertyPageControl(PythonWebPropertyPage properties)
             : this() {
             _properties = properties;
-        }
-
-        public string SettingsModule {
-            get { return _settingsModule.Text; }
-            set { _settingsModule.Text = value; }
         }
 
         public string StaticUriPattern {

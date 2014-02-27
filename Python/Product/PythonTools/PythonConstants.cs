@@ -41,6 +41,7 @@ namespace Microsoft.PythonTools {
         internal const string GeneralPropertyPageGuid = "888888fd-3c4a-40da-aefb-5ac10f5e8b30";
         internal const string DebugPropertyPageGuid = "9A46BC86-34CB-4597-83E5-498E3BDBA20A";
         internal const string PublishPropertyPageGuid = "63DF0877-CF53-4975-B200-2B11D669AB00";
+        internal const string WebPropertyPageGuid = "76EED3B5-14B1-413B-937A-F6F79AC1F8C8";
         internal const string EditorFactoryPromptForEncodingGuid = "CA887E0B-55C6-4AE9-B5CF-A2EEFBA90A3E";
 
         internal const string InterpreterItemType = "32235F49-CF87-4F2C-A986-B38D229976A3";

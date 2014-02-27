@@ -439,4 +439,11 @@ See the Python Environments window for details.</value>
   <data name="ImportWizardFlaskProjectCustomization" xml:space="preserve">
     <value>Flask Web Project</value>
   </data>
+  <data name="PythonWebPropertyPageTitle" xml:space="preserve">
+    <value>Web</value>
+  </data>
+  <data name="StaticUriHelp" xml:space="preserve">
+    <value>A regex pattern to identify static URIs, for example: ^/static/.*
+The web.config file will be configured to resolve URIs matching this pattern to a file system path rather than your application.</value>
+  </data>
 </root>

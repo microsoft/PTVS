@@ -129,11 +129,19 @@
   <data name="DjangoLauncherName" xml:space="preserve">
     <value>Django Web launcher</value>
   </data>
+  <data name="DjangoPropertyPageTitle" xml:space="preserve">
+    <value>Django</value>
+  </data>
   <data name="DjangoSettingsModuleHelp" xml:space="preserve">
     <value>The Python path to a settings module, e.g. "myproject.settings.main". If this isn't provided, the DJANGO_SETTINGS_MODULE environment variable will be used.</value>
   </data>
   <data name="OpenDjangoShellLabel" xml:space="preserve">
     <value>Open &amp;Django Shell</value>
+  </data>
+  <data name="StaticUriHelp" xml:space="preserve">
+    <value>A regex pattern to identify static URIs, for example: ^/static/.*
+The web.config file will be configured to resolve URIs matching this pattern to a file system path rather than your application.
+NOTE: This pattern is applied in addition to the static URI specified in the Django settings module.</value>
   </data>
   <data name="SyncDbLabel" xml:space="preserve">
     <value>Django &amp;Sync DB...</value>

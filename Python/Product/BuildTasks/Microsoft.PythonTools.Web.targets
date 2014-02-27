@@ -113,7 +113,7 @@
 
   <Target Name="AllProjectOutputGroups" DependsOnTargets="$(AllProjectOutputGroupsDependsOn)">
     <ItemGroup>
-      <SourceFilesProjectOutputGroupOutput Include="@(Compile);@(Content)" />
+      <SourceFilesProjectOutputGroupOutput Include="@(Compile);@(Content);$(MSBuildProjectFullPath)" />
 
       <!-- If the project includes web.config, but we are going to regenerate
            it, we need to exclude it from our source files. -->
@@ -238,8 +238,8 @@
   <!-- *************************************************************************
        WSGI settings are written by CreateWebConfig target. To extend the
        settings added to this file, create a target that appends to
-       $(WsgiAppSettings) and add its name to the CreateWebConfigDependsOn
-       property.
+       $(WsgiAppSettings) and add its name to the
+       CreateWebConfigDependsOnTargets property.
        
        Note that if the user includes a web.config file in their project, no
        file will be generated and these targets will have no effect.
@@ -278,6 +278,25 @@
     </PropertyGroup>
   </Target>
 
+  <!-- *************************************************************************
+       The static URI pattern is added as a condition to the rewrite that
+       directs requests to WFastCGI. URIs that match the pattern will be
+       resolved to a file system path.
+  -->
+  
+  <Target Name="AddStaticUriSetting"
+          Condition="'$(StaticUriPattern)' != ''">
+    <ValidateRegexPattern Pattern="$(StaticUriPattern)"
+                          Message="Invalid static URI pattern: {0}" />
+    
+    <PropertyGroup>
+      <FastCgiRewriteConditions>
+        <![CDATA[$(FastCgiRewriteConditions)
+            <add input="{REQUEST_URI}" pattern="$(StaticUriPattern)" ignoreCase="true" negate="true"/>]]>
+      </FastCgiRewriteConditions>
+    </PropertyGroup>
+  </Target>
+  
   <!-- *************************************************************************
        Virtual environments are handled in three targets.
        
@@ -648,6 +667,7 @@ interpreter_path_emulated=$(PythonInterpreterPath)
       ResolvePythonInterpreterPath;
       ResolvePythonWsgiHandler;
       ResolveFastCgiHandler;
+      AddStaticUriSetting;
       ResolveDeploymentSettings;
       ResolveWsgiAppSettings;
       ResolveVirtualEnvSettings;

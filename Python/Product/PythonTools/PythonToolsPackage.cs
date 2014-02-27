@@ -21,8 +21,6 @@ using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Net;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
@@ -52,7 +50,6 @@ using Microsoft.VisualStudio.Repl;
 using Microsoft.VisualStudio.Settings;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
-using Microsoft.VisualStudio.Shell.Settings;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Adornments;
 using Microsoft.VisualStudio.TextManager.Interop;
@@ -107,7 +104,7 @@ namespace Microsoft.PythonTools {
     [ProvidePythonExecutionMode(ExecutionMode.StandardModeId, "Standard", "Standard")]
     [ProvidePythonExecutionMode("{91BB0245-B2A9-47BF-8D76-DD428C6D8974}", "IPython", "visualstudio_ipython_repl.IPythonBackend", supportsMultipleScopes: false, supportsMultipleCompleteStatementInputs: true)]
     [ProvidePythonExecutionMode("{3E390328-A806-4250-ACAD-97B5B37076E2}", "IPython w/o PyLab", "visualstudio_ipython_repl.IPythonBackendWithoutPyLab", supportsMultipleScopes: false, supportsMultipleCompleteStatementInputs: true)]
-
+    #region Exception List
     [ProvideDebugException(AD7Engine.DebugEngineId, "Python Exceptions")]
 
     [ProvideDebugException(AD7Engine.DebugEngineId, "Python Exceptions", "Python 2.x")]
@@ -247,7 +244,7 @@ namespace Microsoft.PythonTools {
     [ProvideDebugException(AD7Engine.DebugEngineId, "Python Exceptions", "Python 3.x", "builtins", "builtins.Warning")]
     [ProvideDebugException(AD7Engine.DebugEngineId, "Python Exceptions", "Python 3.x", "builtins", "builtins.WindowsError")]
     [ProvideDebugException(AD7Engine.DebugEngineId, "Python Exceptions", "Python 3.x", "builtins", "builtins.ZeroDivisionError")]
-
+    #endregion
     [ProvideComponentPickerPropertyPage(typeof(PythonToolsPackage), typeof(WebPiComponentPickerControl), "WebPi", DefaultPageNameValue = "#4000")]
     [ProvideToolWindow(typeof(InterpreterListToolWindow), Style = VsDockStyle.Linked, Window = ToolWindowGuids80.Outputwindow)]
     [ProvidePythonInterpreterFactoryProvider(CPythonInterpreterFactoryConstants.Id32, typeof(CPythonInterpreterFactoryConstants))]

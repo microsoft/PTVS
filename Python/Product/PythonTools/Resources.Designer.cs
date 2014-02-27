@@ -601,6 +601,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Web.
+        /// </summary>
+        internal static string PythonWebPropertyPageTitle {
+            get {
+                return ResourceManager.GetString("PythonWebPropertyPageTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to References.
         /// </summary>
         internal static string ReferencesNodeName {
@@ -700,6 +709,16 @@ namespace Microsoft.PythonTools {
         internal static string SettingWorkDir {
             get {
                 return ResourceManager.GetString("SettingWorkDir", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A regex pattern to identify static URIs, for example: ^/static/.*
+        ///The web.config file will be configured to resolve URIs matching this pattern to a file system path rather than your application..
+        /// </summary>
+        internal static string StaticUriHelp {
+            get {
+                return ResourceManager.GetString("StaticUriHelp", resourceCulture);
             }
         }
         

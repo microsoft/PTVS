@@ -106,6 +106,17 @@
   <UsingTask AssemblyFile="$([MSBuild]::Unescape($(_PythonToolsPath)\Microsoft.PythonTools.BuildTasks.dll))"
              TaskName="ConvertPathToModuleName" />
 
+  <!-- Checks whether a pattern is valid regex.
+  
+  <ValidateRegexPattern Pattern="..." [Message="..."]>
+    <Output TaskParameter="IsValid"
+            PropertyName="Isvalid" />
+  </ValidateRegexPattern>
+  -->
+  
+  <UsingTask AssemblyFile="$([MSBuild]::Unescape($(_PythonToolsPath)\Microsoft.PythonTools.BuildTasks.dll))"
+             TaskName="ValidateRegexPattern" />
+  
   <!-- Gets the fully qualified path to the project home.  -->
   <Target Name="ResolveQualifiedProjectHome">
     <CombinePath BasePath="$(MSBuildProjectDirectory)" Paths="$(ProjectHome)" Condition="'$(ProjectHome)' != ''">

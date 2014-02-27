@@ -67,6 +67,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ResolveEnvironment.cs" />
     <Compile Include="TaskFactory.cs" />
+    <Compile Include="ValidateRegexPattern.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Microsoft.PythonTools.targets">

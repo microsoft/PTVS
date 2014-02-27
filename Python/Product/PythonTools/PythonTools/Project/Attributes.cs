@@ -109,6 +109,9 @@ namespace Microsoft.PythonTools.Project {
         
         public const string PythonWebLauncherName = "PythonWebLauncherName";
         public const string PythonWebLauncherDescription = "PythonWebLauncherDescription";
+        public const string PythonWebPropertyPageTitle = "PythonWebPropertyPageTitle";
+
+        public const string StaticUriHelp = "StaticUriHelp";
 
         public const string WebLauncherSearchPathHelp = "WebLauncherSearchPathHelp";
         public const string WebLauncherArgumentsHelp = "WebLauncherArgumentsHelp";
