@@ -14,7 +14,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -29,7 +28,6 @@ using Microsoft.NodejsTools.Repl;
 #else
 using Microsoft.VisualStudio.Repl;
 #endif
-using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text.Editor;
@@ -46,29 +44,28 @@ namespace TestUtilities.UI {
             public readonly ManualResetEvent ReadyForInput = new ManualResetEvent(false);
 
             public void OnReadyForInput() {
-                Debug.WriteLine("Ready for input");
+                Console.WriteLine("Ready for input");
                 ReadyForInput.Set();
             }
         }
 
         private static ConditionalWeakTable<IReplWindow, ReplWindowInfo> _replWindows = new ConditionalWeakTable<IReplWindow, ReplWindowInfo>();
 
+        private readonly VisualStudioApp _app;
         private readonly string _title;
         private readonly ReplWindow _replWindow;
         private readonly ReplWindowInfo _replWindowInfo;
 
-        public InteractiveWindow(string title, AutomationElement element, VisualStudioApp app = null)
+        public InteractiveWindow(string title, AutomationElement element, VisualStudioApp app)
             : base(null, element) {
+            _app = app;
             _title = title;
 
-            IComponentModel compModel;
-            if (app != null) {
-                compModel = app.GetService<IComponentModel>(typeof(SComponentModel));
-            } else {
-                compModel = (IComponentModel)VsIdeTestHostContext.ServiceProvider.GetService(typeof(SComponentModel));
-            }
+            var compModel = _app.GetService<IComponentModel>(typeof(SComponentModel));
             var replWindowProvider = compModel.GetService<IReplWindowProvider>();
-            _replWindow = (ReplWindow)GetReplWindow(replWindowProvider);
+            _replWindow = replWindowProvider.GetReplWindows()
+                .OfType<ReplWindow>()
+                .FirstOrDefault(p => p.Title.Equals(title, StringComparison.CurrentCulture));
 
             _replWindowInfo = _replWindows.GetValue(_replWindow, window => {
                 var info = new ReplWindowInfo();
@@ -100,10 +97,6 @@ namespace TestUtilities.UI {
             }
         }
 
-        public void WaitForReadyState(int timeout = 500) {
-            Assert.IsTrue(_replWindowInfo.ReadyForInput.WaitOne(timeout));
-        }
-
         public void WaitForIdleState() {
             DispatchAndWait(_replWindowInfo.Idle, () => { }, DispatcherPriority.ApplicationIdle);
         }
@@ -112,9 +105,9 @@ namespace TestUtilities.UI {
             Dispatcher dispatcher = ((FrameworkElement)ReplWindow.TextView).Dispatcher;
             waitHandle.Reset();
 
-            dispatcher.Invoke(new Action(() => { 
+            dispatcher.Invoke(new Action(() => {
                 action();
-                waitHandle.Set(); 
+                waitHandle.Set();
             }), priority);
 
             Assert.IsTrue(waitHandle.WaitOne(500));
@@ -136,6 +129,19 @@ namespace TestUtilities.UI {
             }
 
             FailWrongText(expected);
+        }
+
+        public void WaitForTextContainsAll(params string[] substrings) {
+            for (int i = 0; i < 100; ++i) {
+                WaitForIdleState();
+                var text = Text;
+                if (substrings.All(s => text.Contains(s))) {
+                    return;
+                }
+                Thread.Sleep(100);
+            }
+
+            FailWrongText("All of: " + string.Join(", ", substrings.Select(s => "<" + s + ">")));
         }
 
         public void WaitForTextIPython(params string[] text) {
@@ -171,7 +177,7 @@ namespace TestUtilities.UI {
                     }
                 }
             }
-            return res.ToString();            
+            return res.ToString();
         }
 
         public void WaitForTextStartIPython(params string[] text) {
@@ -220,26 +226,33 @@ namespace TestUtilities.UI {
             Assert.AreEqual(null, sessionStack.TopSession);
         }
 
+        public ManualResetEvent ReadyForInput {
+            get {
+                return _replWindowInfo.ReadyForInput;
+            }
+        }
+
         public void ClearScreen() {
-            Debug.WriteLine("REPL Clearing screen");
-            _replWindowInfo.ReadyForInput.Reset();
-            VsIdeTestHostContext.Dte.ExecuteCommand("OtherContextMenus.InteractiveConsole.ClearScreen");
-            WaitForReadyState();
+            Console.WriteLine("REPL Clearing screen");
+            ReadyForInput.Reset();
+            _app.ExecuteCommand("OtherContextMenus.InteractiveConsole.ClearScreen");
+            Assert.IsTrue(ReadyForInput.WaitOne(1000));
         }
 
         public void CancelExecution(int attempts = 100) {
-            Debug.WriteLine("REPL Cancelling Execution");
-            _replWindowInfo.ReadyForInput.Reset();
+            Console.WriteLine("REPL Cancelling Execution");
             for (int i = 0; i < attempts && !_replWindowInfo.ReadyForInput.WaitOne(0); i++) {
+                ReadyForInput.Reset();
                 try {
-                    VsIdeTestHostContext.Dte.ExecuteCommand("OtherContextMenus.InteractiveConsole.CancelExecution");
-                    Thread.Sleep(1000); // give abort a chance to run...
+                    _app.ExecuteCommand("OtherContextMenus.InteractiveConsole.CancelExecution");
                 } catch {
                     // command may not be immediately available
-                    Thread.Sleep(1000);
+                }
+                if (ReadyForInput.WaitOne(1000)) {
+                    break;
                 }
             }
-            WaitForReadyState(10000);
+            Assert.IsTrue(ReadyForInput.WaitOne(10000));
         }
 
         internal IReplWindow ReplWindow {
@@ -254,20 +267,9 @@ namespace TestUtilities.UI {
             }
         }
 
-        private IReplWindow GetReplWindow(IReplWindowProvider replWindowProvider) {
-            IReplWindow curWindow = null;
-            foreach (var provider in replWindowProvider.GetReplWindows()) {
-                if (provider.Title.Equals(_title, StringComparison.CurrentCulture)) {
-                    curWindow = provider;
-                    break;
-                }
-            }
-            return curWindow;
-        }
-
         public void Reset() {
-            Debug.WriteLine("REPL resetting");
-            
+            Console.WriteLine("REPL resetting");
+
             Assert.IsTrue(ReplWindow.Reset().Wait(10000));
         }
 

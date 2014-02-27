@@ -47,25 +47,12 @@ namespace PythonToolsUITests {
 
         public TestContext TestContext { get; set; }
 
-        private static DefaultInterpreterSetter Init() {
-            return Init(PythonPaths.Python27 ?? PythonPaths.Python27_x64, true);
+        static DefaultInterpreterSetter Init(PythonVisualStudioApp app) {
+            return app.SelectDefaultInterpreter(PythonPaths.Python27 ?? PythonPaths.Python27_x64, "virtualenv");
         }
 
-        public static DefaultInterpreterSetter Init(PythonVersion interp, bool install) {
-            interp.AssertInstalled();
-
-            var sp = new ServiceProvider(VsIdeTestHostContext.Dte as Microsoft.VisualStudio.OLE.Interop.IServiceProvider);
-            var model = (IComponentModel)sp.GetService(typeof(SComponentModel));
-            var interpreterService = model.GetService<IInterpreterOptionsService>();
-            var factory = interpreterService.FindInterpreter(interp.Interpreter, interp.Configuration.Version);
-            var defaultInterpreterSetter = new DefaultInterpreterSetter(factory);
-
-            if (install) {
-                Pip.InstallPip(factory, false).Wait();
-                VirtualEnv.Install(factory).Wait();
-            }
-
-            return defaultInterpreterSetter;
+        static DefaultInterpreterSetter Init(PythonVisualStudioApp app, PythonVersion interp, bool install) {
+            return app.SelectDefaultInterpreter(PythonPaths.Python27 ?? PythonPaths.Python27_x64, install ? "virtualenv" : null);
         }
 
         private EnvDTE.Project CreateTemporaryProject(VisualStudioApp app) {
@@ -80,80 +67,15 @@ namespace PythonToolsUITests {
             return project;
         }
 
-        internal static TreeNode CreateVirtualEnvironment(VisualStudioApp app, EnvDTE.Project project, out string envName) {
-            string dummy;
-            return CreateVirtualEnvironment(app, project, out envName, out dummy);
-        }
-
-        internal static TreeNode CreateVirtualEnvironment(VisualStudioApp app, EnvDTE.Project project, out string envName, out string envPath) {
-            var environmentsNode = app.OpenSolutionExplorer().FindChildOfProject(
-                project,
-                SR.GetString(SR.Environments)
-            );
-            environmentsNode.Select();
-
-            using (var createVenv = AutomationDialog.FromDte(app, "Project.AddVirtualEnvironment")) {
-                envPath = new TextBox(createVenv.FindByAutomationId("VirtualEnvPath")).GetValue();
-                var baseInterp = new ComboBox(createVenv.FindByAutomationId("BaseInterpreter")).GetSelectedItemName();
-
-                envName = string.Format("{0} ({1})", envPath, baseInterp);
-
-                Console.WriteLine("Expecting environment named: {0}", envName);
-
-                // Force a wait for the view to be updated.
-                var wnd = (pythontools::Microsoft.VisualStudioTools.DialogWindowVersioningWorkaround)HwndSource.FromHwnd(
-                    new IntPtr(createVenv.Element.Current.NativeWindowHandle)
-                ).RootVisual;
-                wnd.Dispatcher.Invoke(() => {
-                    var view = (AddVirtualEnvironmentView)wnd.DataContext;
-                    return view.UpdateInterpreter(view.BaseInterpreter);
-                }).Wait();
-
-                createVenv.ClickButtonAndClose("Create", nameIsAutomationId: true);
-            }
-
-            return app.OpenSolutionExplorer().WaitForChildOfProject(
-                project,
-                SR.GetString(SR.Environments),
-                envName
-            );
-        }
-
-        internal static TreeNode AddExistingVirtualEnvironment(VisualStudioApp app, EnvDTE.Project project, string envPath, out string envName) {
-            var environmentsNode = app.OpenSolutionExplorer().FindChildOfProject(
-                project,
-                SR.GetString(SR.Environments)
-            );
-            environmentsNode.Select();
-
-            using (var createVenv = AutomationDialog.FromDte(app, "Project.AddVirtualEnvironment")) {
-                new TextBox(createVenv.FindByAutomationId("VirtualEnvPath")).SetValue(envPath);
-                var baseInterp = new ComboBox(createVenv.FindByAutomationId("BaseInterpreter")).GetSelectedItemName();
-
-                envName = string.Format("{0} ({1})", Path.GetFileName(envPath), baseInterp);
-
-                Console.WriteLine("Expecting environment named: {0}", envName);
-
-                createVenv.ClickButtonAndClose("Add", nameIsAutomationId: true);
-            }
-
-            return app.OpenSolutionExplorer().WaitForChildOfProject(
-                project,
-                SR.GetString(SR.Environments),
-                envName
-            );
-        }
-
-
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void InstallUninstallPackage() {
-            using (var dis = Init())
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte))
+            using (var dis = Init(app)) {
                 var project = CreateTemporaryProject(app);
 
                 string envName;
-                var env = CreateVirtualEnvironment(app, project, out envName);
+                var env = app.CreateVirtualEnvironment(project, out envName);
                 env.Select();
 
                 using (var installPackage = AutomationDialog.FromDte(app, "Project.InstallPythonPackage")) {
@@ -187,13 +109,13 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void LoadVirtualEnv() {
-            using (var dis = Init())
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte))
+            using (var dis = Init(app)) {
                 var project = CreateTemporaryProject(app);
                 var projectName = project.UniqueName;
 
                 string envName;
-                var env = CreateVirtualEnvironment(app, project, out envName);
+                var env = app.CreateVirtualEnvironment(project, out envName);
 
                 var solution = app.Dte.Solution.FullName;
                 app.Dte.Solution.Close(true);
@@ -212,8 +134,8 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ActivateVirtualEnv() {
-            using (var dis = Init())
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte))
+            using (var dis = Init(app)) {
                 var project = CreateTemporaryProject(app);
 
                 Assert.AreNotEqual(null, project.ProjectItems.Item(Path.GetFileNameWithoutExtension(app.Dte.Solution.FullName) + ".py"));
@@ -221,8 +143,8 @@ namespace PythonToolsUITests {
                 var id0 = Guid.Parse((string)project.Properties.Item("InterpreterId").Value);
 
                 string envName1, envName2;
-                var env1 = CreateVirtualEnvironment(app, project, out envName1);
-                var env2 = CreateVirtualEnvironment(app, project, out envName2);
+                var env1 = app.CreateVirtualEnvironment(project, out envName1);
+                var env2 = app.CreateVirtualEnvironment(project, out envName2);
 
                 var id1 = Guid.Parse((string)project.Properties.Item("InterpreterId").Value);
                 Assert.AreNotEqual(id0, id1);
@@ -262,12 +184,12 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void RemoveVirtualEnv() {
-            using (var dis = Init())
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte))
+            using (var dis = Init(app)) {
                 var project = CreateTemporaryProject(app);
 
                 string envName, envPath;
-                var env = CreateVirtualEnvironment(app, project, out envName, out envPath);
+                var env = app.CreateVirtualEnvironment(project, out envName, out envPath);
 
                 env.Select();
 
@@ -290,12 +212,12 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void DeleteVirtualEnv() {
-            using (var dis = Init())
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte))
+            using (var dis = Init(app)) {
                 var project = CreateTemporaryProject(app);
 
                 string envName, envPath;
-                var env = CreateVirtualEnvironment(app, project, out envName, out envPath);
+                var env = app.CreateVirtualEnvironment(project, out envName, out envPath);
 
                 // Need to wait for analysis to complete before deleting - otherwise
                 // it will always fail.
@@ -336,8 +258,8 @@ namespace PythonToolsUITests {
             PythonPaths.Python27.AssertInstalled();
             PythonPaths.Python33.AssertInstalled();
 
-            using (var dis = Init())
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte))
+            using (var dis = Init(app)) {
                 var project = app.OpenProject(@"TestData\Environments.sln");
 
                 app.OpenSolutionExplorer().FindChildOfProject(
@@ -377,12 +299,12 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void NoGlobalSitePackages() {
-            using (var dis = Init())
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte))
+            using (var dis = Init(app)) {
                 var project = CreateTemporaryProject(app);
 
                 string envName, envPath;
-                var env = CreateVirtualEnvironment(app, project, out envName, out envPath);
+                var env = app.CreateVirtualEnvironment(project, out envName, out envPath);
 
                 env.Select();
 
@@ -405,7 +327,8 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CreateVEnv() {
-            using (var dis = Init(PythonPaths.Python33 ?? PythonPaths.Python33_x64, false)) {
+            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte))
+            using (var dis = Init(app, PythonPaths.Python33 ?? PythonPaths.Python33_x64, false)) {
                 if (analysis::Microsoft.PythonTools.Interpreter.PythonInterpreterFactoryExtensions
                         .FindModules(dis.CurrentDefault, "virtualenv")
                         .Contains("virtualenv")) {
@@ -417,18 +340,16 @@ namespace PythonToolsUITests {
                     string.Format("FindModules thinks 'virtualenv' is installed into {0}", dis.CurrentDefault.Configuration.PrefixPath)
                 );
 
-                using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                    var project = CreateTemporaryProject(app);
+                var project = CreateTemporaryProject(app);
 
-                    string envName, envPath;
+                string envName, envPath;
 
-                    var env = CreateVirtualEnvironment(app, project, out envName, out envPath);
-                    Assert.IsNotNull(env);
-                    Assert.IsNotNull(env.Element);
-                    Assert.AreEqual(string.Format("env (Python {0}3.3)",
-                        dis.CurrentDefault.Configuration.Architecture == ProcessorArchitecture.Amd64 ? "64-bit " : ""
-                    ), envName);
-                }
+                var env = app.CreateVirtualEnvironment(project, out envName, out envPath);
+                Assert.IsNotNull(env);
+                Assert.IsNotNull(env.Element);
+                Assert.AreEqual(string.Format("env (Python {0}3.3)",
+                    dis.CurrentDefault.Configuration.Architecture == ProcessorArchitecture.Amd64 ? "64-bit " : ""
+                ), envName);
             }
         }
 
@@ -440,13 +361,13 @@ namespace PythonToolsUITests {
                 Assert.Inconclusive("Python 3.3 not configured correctly");
             }
 
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
                 var project = CreateTemporaryProject(app);
 
                 string envName;
                 var envPath = TestData.GetPath(@"TestData\\Environments\\venv");
 
-                var env = AddExistingVirtualEnvironment(app, project, envPath, out envName);
+                var env = app.AddExistingVirtualEnvironment(project, envPath, out envName);
                 Assert.IsNotNull(env);
                 Assert.IsNotNull(env.Element);
                 Assert.AreEqual("venv (Python 3.3)", envName);
@@ -512,8 +433,8 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void EnvironmentReplWorkingDirectory() {
-            using (var dis = Init())
-            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte))
+            using (var dis = Init(app)) {
                 var project = CreateTemporaryProject(app);
 
                 var path1 = Path.Combine(Path.GetDirectoryName(project.FullName), Guid.NewGuid().ToString("N"));
@@ -526,7 +447,7 @@ namespace PythonToolsUITests {
                 });
 
                 string envName;
-                var env = CreateVirtualEnvironment(app, project, out envName);
+                var env = app.CreateVirtualEnvironment(project, out envName);
                 env.Select();
 
                 app.Dte.ExecuteCommand("Project.OpenInteractiveWindow");

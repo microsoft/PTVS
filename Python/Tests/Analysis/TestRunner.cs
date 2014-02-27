@@ -180,12 +180,12 @@ TRACE and will also log detailed analysis information to CSV file.
                     AnalysisLog.ResetTime();
                     AnalysisLog.Output = new StreamWriter(new FileStream(string.Format("AnalysisTests.StdLib.{0}.csv", ver.Version), FileMode.Append, FileAccess.Write, FileShare.Read), Encoding.UTF8);
                     AnalysisLog.AsCSV = true;
-                    AnalysisLog.Add("StdLib Start", ver.Path, ver.Version, DateTime.Now);
+                    AnalysisLog.Add("StdLib Start", ver.InterpreterPath, ver.Version, DateTime.Now);
                 }
 
                 if (!RunOneTest(() => {
                     new AnalysisTest().AnalyzeDir(ver.LibPath, ver.Version, new[] { "site-packages" }); 
-                }, ver.Path)) {
+                }, ver.InterpreterPath)) {
                     failures += 1;
                 }
                 Console.ForegroundColor = fg;
@@ -225,10 +225,10 @@ TRACE and will also log detailed analysis information to CSV file.
                     AnalysisLog.ResetTime();
                     AnalysisLog.Output = new StreamWriter(new FileStream(string.Format("AnalysisTests.Django.{0}.csv", ver.Version), FileMode.Append, FileAccess.Write, FileShare.Read), Encoding.UTF8);
                     AnalysisLog.AsCSV = true;
-                    AnalysisLog.Add("Django Start", ver.Path, ver.Version, DateTime.Now);
+                    AnalysisLog.Add("Django Start", ver.InterpreterPath, ver.Version, DateTime.Now);
                 }
 
-                if (!RunOneTest(() => { new AnalysisTest().AnalyzeDir(djangoPath, ver.Version); }, ver.Path)) {
+                if (!RunOneTest(() => { new AnalysisTest().AnalyzeDir(djangoPath, ver.Version); }, ver.InterpreterPath)) {
                     failures += 1;
                 }
                 Console.ForegroundColor = fg;

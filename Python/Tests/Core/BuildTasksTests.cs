@@ -68,10 +68,10 @@ namespace PythonToolsTests {
 
             foreach (var version in PythonPaths.Versions) {
                 var verStr = version.Version.ToVersion().ToString();
-                proj.SetProperty("InterpreterId", version.Interpreter.ToString("B"));
+                proj.SetProperty("InterpreterId", version.Id.ToString("B"));
                 proj.SetProperty("InterpreterVersion", verStr);
                 proj.RemoveItems(proj.ItemsIgnoringCondition.Where(i => i.ItemType == "InterpreterReference").ToArray());
-                proj.AddItem("InterpreterReference", string.Format("{0:B}\\{1}", version.Interpreter, verStr));
+                proj.AddItem("InterpreterReference", string.Format("{0:B}\\{1}", version.Id, verStr));
                 proj.Save();
                 proj.ReevaluateIfNecessary();
 
@@ -79,7 +79,7 @@ namespace PythonToolsTests {
                 Assert.IsTrue(proj.Build("CheckCode", new ILogger[] { new ConsoleLogger(LoggerVerbosity.Detailed), log }));
                 
                 Console.WriteLine();
-                Console.WriteLine("Output from {0:B} {1}", version.Interpreter, version.Version.ToVersion());
+                Console.WriteLine("Output from {0:B} {1}", version.Id, version.Version.ToVersion());
                 foreach (var line in log.Lines) {
                     Console.WriteLine("* {0}", line.TrimEnd('\r', '\n'));
                 }

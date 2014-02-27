@@ -25,10 +25,13 @@ namespace Microsoft.PythonTools.Options {
         }
 
         /// <summary>
-        /// Gets interactive options for the given interpreter.  The interpreter should be either the
-        /// interpreter description for a user installed interpreter or the description plus the 
-        /// version.
+        /// Gets interactive options for the given environment.
         /// </summary>
+        /// <param name="interpreterName">
+        /// The user-visible description of the environment. If multiple
+        /// environments have the same description, one will be returned
+        /// arbitrarily.
+        /// </param>
         IPythonInteractiveOptions GetInteractiveOptions(string interpreterName);
 
         bool PromptBeforeRunningWithBuildErrorSetting {

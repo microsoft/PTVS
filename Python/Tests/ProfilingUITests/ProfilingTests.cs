@@ -754,7 +754,7 @@ namespace ProfilingUITests {
             using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
                 var session = LaunchProcess(app,
                     profiling,
-                    interp.Path,
+                    interp.InterpreterPath,
                     TestData.GetPath(@"TestData\ProfileTest\Program.py"),
                     TestData.GetPath(@"TestData\ProfileTest"),
                     "",
@@ -774,7 +774,7 @@ namespace ProfilingUITests {
                 Mouse.DoubleClick(System.Windows.Input.MouseButton.Left);
 
                 using (var perfTarget = new PythonPerfTarget(app.WaitForDialog())) {
-                    Assert.AreEqual(interp.Path, perfTarget.InterpreterPath);
+                    Assert.AreEqual(interp.InterpreterPath, perfTarget.InterpreterPath);
                     Assert.AreEqual("", perfTarget.Arguments);
                     Assert.IsTrue(perfTarget.ScriptName.EndsWith("Program.py"));
                     Assert.IsTrue(perfTarget.ScriptName.StartsWith(perfTarget.WorkingDir));
@@ -796,7 +796,7 @@ namespace ProfilingUITests {
             using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
                 var session = LaunchProcess(app,
                     profiling,
-                    interp.Path,
+                    interp.InterpreterPath,
                     TestData.GetPath(@"TestData\ProfileTest\InfiniteProfile.py"),
                     TestData.GetPath(@"TestData\ProfileTest"),
                     "",
@@ -880,7 +880,7 @@ namespace ProfilingUITests {
                         var interp = PythonPaths.Python27;
                         interp.AssertInstalled();
 
-                        session2 = LaunchProcess(app, profiling, interp.Path,
+                        session2 = LaunchProcess(app, profiling, interp.InterpreterPath,
                             TestData.GetPath(@"TestData\ProfileTest\Program.py"),
                             TestData.GetPath(@"TestData\ProfileTest"),
                             "",
@@ -945,7 +945,7 @@ namespace ProfilingUITests {
                         var interp = PythonPaths.Python27;
                         interp.AssertInstalled();
 
-                        session2 = LaunchProcess(app, profiling, interp.Path,
+                        session2 = LaunchProcess(app, profiling, interp.InterpreterPath,
                             TestData.GetPath(@"TestData\ProfileTest\Program.py"),
                             TestData.GetPath(@"TestData\ProfileTest"),
                             "",
@@ -1031,7 +1031,7 @@ namespace ProfilingUITests {
             interp.AssertInstalled();
 
             using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var session = LaunchProcess(app, profiling, interp.Path,
+                var session = LaunchProcess(app, profiling, interp.InterpreterPath,
                     TestData.GetPath(@"TestData\ProfileTest\Program.py"),
                     TestData.GetPath(@"TestData\ProfileTest"),
                     "",
@@ -1069,7 +1069,7 @@ namespace ProfilingUITests {
             interp.AssertInstalled();
 
             using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var session = LaunchProcess(app, profiling, interp.Path,
+                var session = LaunchProcess(app, profiling, interp.InterpreterPath,
                     TestData.GetPath(@"TestData\ProfileTest\ClassProfile.py"),
                     TestData.GetPath(@"TestData\ProfileTest"),
                     "",
@@ -1112,7 +1112,7 @@ namespace ProfilingUITests {
                 Assert.IsNull(profiling.GetSession(1));
 
                 using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
-                    var session = LaunchProcess(app, profiling, version.Path,
+                    var session = LaunchProcess(app, profiling, version.InterpreterPath,
                     TestData.GetPath(@"TestData\ProfileTest\OldStyleClassProfile.py"),
                     TestData.GetPath(@"TestData\ProfileTest"),
                     "",
@@ -1159,7 +1159,7 @@ namespace ProfilingUITests {
             interp.AssertInstalled();
 
             using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var session = LaunchProcess(app, profiling, interp.Path,
+                var session = LaunchProcess(app, profiling, interp.InterpreterPath,
                     TestData.GetPath(@"TestData\ProfileTest\DerivedProfile.py"),
                     TestData.GetPath(@"TestData\ProfileTest"),
                     "",
@@ -1197,7 +1197,7 @@ namespace ProfilingUITests {
             interp.AssertInstalled();
 
             using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var session = LaunchProcess(app, profiling, interp.Path,
+                var session = LaunchProcess(app, profiling, interp.InterpreterPath,
                     TestData.GetPath(@"TestData\ProfileTest\BuiltinsProfile.py"),
                     TestData.GetPath(@"TestData\ProfileTest"),
                     "",
@@ -1237,7 +1237,7 @@ namespace ProfilingUITests {
             interp.AssertInstalled();
 
             using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var session = LaunchProcess(app, profiling, interp.Path,
+                var session = LaunchProcess(app, profiling, interp.InterpreterPath,
                     Path.Combine(interp.LibPath, "test\\pystone.py"),
                     Path.Combine(interp.LibPath, "test"),
                     "",
@@ -1272,7 +1272,7 @@ namespace ProfilingUITests {
             interp.AssertInstalled();
 
             using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var session = LaunchProcess(app, profiling, interp.Path,
+                var session = LaunchProcess(app, profiling, interp.InterpreterPath,
                     TestData.GetPath(@"TestData\ProfileTest\BuiltinsProfile.py"),
                     TestData.GetPath(@"TestData\ProfileTest"),
                     "",
@@ -1311,7 +1311,7 @@ namespace ProfilingUITests {
             interp.AssertInstalled();
 
             using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var session = LaunchProcess(app, profiling, interp.Path,
+                var session = LaunchProcess(app, profiling, interp.InterpreterPath,
                     TestData.GetPath(@"TestData\ProfileTest\BuiltinsProfile.py"),
                     TestData.GetPath(@"TestData\ProfileTest"),
                     "",
@@ -1391,7 +1391,7 @@ namespace ProfilingUITests {
 
             using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
                 var session = LaunchProcess(app, profiling,
-                    string.Format("{0:B};{1}", PythonPaths.Python27.Interpreter, PythonPaths.Python27.Version.ToVersion()),
+                    string.Format("{0:B};{1}", PythonPaths.Python27.Id, PythonPaths.Python27.Version.ToVersion()),
                     TestData.GetPath(@"TestData\ProfileTest\Program.py"),
                     TestData.GetPath(@"TestData\ProfileTest"),
                     "",

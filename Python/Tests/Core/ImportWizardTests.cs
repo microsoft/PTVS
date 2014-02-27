@@ -300,7 +300,7 @@ namespace PythonToolsTests {
         ) {
             var mockService = new MockInterpreterOptionsService();
             mockService.AddProvider(new MockPythonInterpreterFactoryProvider("Test Provider",
-                new MockPythonInterpreterFactory(python.Interpreter, "Test Python", python.Configuration)
+                new MockPythonInterpreterFactory(python.Id, "Test Python", python.Configuration)
             ));
 
             using (var settings = new ImportSettingsProxy(mockService)) {
@@ -310,7 +310,7 @@ namespace PythonToolsTests {
                 Directory.CreateDirectory(Path.Combine(sourcePath, "A"));
                 File.WriteAllText(Path.Combine(sourcePath, "A", "__init__.py"), "");
                 // Create a real virtualenv environment to import
-                using (var p = ProcessOutput.RunHiddenAndCapture(python.Path, "-m", venvModuleName, Path.Combine(sourcePath, "env"))) {
+                using (var p = ProcessOutput.RunHiddenAndCapture(python.InterpreterPath, "-m", venvModuleName, Path.Combine(sourcePath, "env"))) {
                     Console.WriteLine(p.Arguments);
                     p.Wait();
                     Console.WriteLine(string.Join(Environment.NewLine, p.StandardOutputLines.Concat(p.StandardErrorLines)));
@@ -351,7 +351,7 @@ namespace PythonToolsTests {
                 // The mock configuration uses python.exe for both paths.
                 Assert.AreEqual("scripts\\python.exe", env.Descendant("WindowsInterpreterPath").Value, true);
                 Assert.AreEqual("lib\\", env.Descendant("LibraryPath").Value, true);
-                Assert.AreEqual(python.Interpreter.ToString("B"), env.Descendant("BaseInterpreter").Value, true);
+                Assert.AreEqual(python.Id.ToString("B"), env.Descendant("BaseInterpreter").Value, true);
                 Assert.AreEqual("PYTHONPATH", env.Descendant("PathEnvironmentVariable").Value, true);
             }
         }

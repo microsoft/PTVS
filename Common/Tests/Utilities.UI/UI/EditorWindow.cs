@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Runtime.ExceptionServices;
 using System.Text;
 using System.Threading;
 using System.Windows;
@@ -274,20 +275,20 @@ namespace TestUtilities.UI {
         }
 
         public void Invoke(Action action) {
-            Exception excep = null;
+            ExceptionDispatchInfo excep = null;
             ((UIElement)TextView).Dispatcher.Invoke(
                 (Action)(() => {
                     try {
                         action();
                     } catch (Exception e) {
-                        excep = e;
+                        excep = ExceptionDispatchInfo.Capture(e);
 
                     }
                 })
             );
 
             if (excep != null) {
-                Assert.Fail("Exception on UI thread: " + excep.ToString());
+                excep.Throw();
             }
         }
 

@@ -55,7 +55,7 @@ namespace PythonToolsUITests {
         public void GetInstalledInterpreters() {
             var interps = InterpreterView.GetInterpreters().ToList();
             foreach (var ver in PythonPaths.Versions) {
-                var expected = AnalyzerStatusUpdater.GetIdentifier(ver.Interpreter, ver.Version.ToVersion());
+                var expected = AnalyzerStatusUpdater.GetIdentifier(ver.Id, ver.Version.ToVersion());
                 Assert.AreEqual(1, interps.Count(iv => iv.Identifier.Equals(expected, StringComparison.Ordinal)), expected);
             }
         }
@@ -85,8 +85,8 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("InterpreterList")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CreateRemoveVirtualEnvInInterpreterListInVS() {
-            using (var dis = VirtualEnvTests.Init(PythonPaths.Python27 ?? PythonPaths.Python27_x64, true))
-            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte))
+            using (var dis = app.SelectDefaultInterpreter(PythonPaths.Python27 ?? PythonPaths.Python27_x64, "virtualenv")) {
                 var project = app.CreateProject(
                     PythonVisualStudioApp.TemplateLanguageName,
                     PythonVisualStudioApp.PythonApplicationTemplate,
@@ -95,9 +95,7 @@ namespace PythonToolsUITests {
                 );
 
                 // Check that only global environments are in the list
-                var model = app.GetService<IComponentModel>(typeof(SComponentModel));
-                var service = model.GetService<IInterpreterOptionsService>();
-                Assert.IsNotNull(service);
+                var service = app.InterpreterService;
 
                 app.Dte.ExecuteCommand("View.PythonEnvironments");
                 var list = app.FindByAutomationId("PythonTools.InterpreterList");
@@ -115,7 +113,7 @@ namespace PythonToolsUITests {
 
                 // Create a virtual environment
                 string envName;
-                var env = VirtualEnvTests.CreateVirtualEnvironment(app, project, out envName);
+                var env = app.CreateVirtualEnvironment(project, out envName);
                 env.Select();
 
                 app.Dte.ExecuteCommand("View.PythonEnvironments");
@@ -556,7 +554,7 @@ namespace PythonToolsUITests {
 
         [TestMethod, Priority(0), TestCategory("InterpreterListNonUI")]
         public void FactoryWithValidPath() {
-            foreach (string validPath in PythonPaths.Versions.Select(pv => pv.Path)) {
+            foreach (string validPath in PythonPaths.Versions.Select(pv => pv.InterpreterPath)) {
                 var fact = new MockPythonInterpreterFactory(Guid.NewGuid(), "Test Factory", MockInterpreterConfiguration(validPath));
                 var view = new InterpreterView(fact, fact.Description, false);
                 Assert.IsTrue(view.CanRefresh);
@@ -585,7 +583,7 @@ namespace PythonToolsUITests {
 
             Assert.IsTrue(provider.RemoveFactory(fact));
             Assert.AreEqual(0, listView.Items.Count);
-            fact = new MockPythonInterpreterFactory(Guid.NewGuid(), "Test Factory 2", MockInterpreterConfiguration(PythonPaths.Versions.First().Path));
+            fact = new MockPythonInterpreterFactory(Guid.NewGuid(), "Test Factory 2", MockInterpreterConfiguration(PythonPaths.Versions.First().InterpreterPath));
             provider.AddFactory(fact);
             Assert.AreEqual("Test Factory 2", ((InterpreterView)listView.Items[0]).Interpreter.Description);
 
@@ -598,7 +596,7 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0), TestCategory("InterpreterListNonUI")]
         public void RefreshDBStates() {
             var mockService = new MockInterpreterOptionsService();
-            var fact = new MockPythonInterpreterFactory(Guid.NewGuid(), "Test Factory 1", MockInterpreterConfiguration(PythonPaths.Versions.First().Path));
+            var fact = new MockPythonInterpreterFactory(Guid.NewGuid(), "Test Factory 1", MockInterpreterConfiguration(PythonPaths.Versions.First().InterpreterPath));
             mockService.AddProvider(new MockPythonInterpreterFactoryProvider("Test Provider 1", fact));
 
             var e = new AutoResetEvent(false);

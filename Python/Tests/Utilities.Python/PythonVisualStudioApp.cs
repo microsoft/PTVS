@@ -13,13 +13,19 @@
  * ***************************************************************************/
 
 using System;
+using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Windows.Automation;
 using System.Windows.Input;
+using System.Windows.Interop;
 using EnvDTE;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Parsing;
+using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudioTools;
 using Microsoft.Win32;
 using TestUtilities.Python;
 
@@ -206,52 +212,116 @@ namespace TestUtilities.UI.Python {
         /// <summary>
         /// Selects the given interpreter as the default.
         /// </summary>
-        public void SelectDefaultInterpreter(string name) {
-            Element.SetFocus();
+        /// <remarks>
+        /// This method should always be called as a using block.
+        /// </remarks>
+        public DefaultInterpreterSetter SelectDefaultInterpreter(PythonVersion python) {
+            return new DefaultInterpreterSetter(
+                InterpreterService.FindInterpreter(python.Id, python.Version.ToVersion())
+            );
+        }
 
-            // bring up Tools->Options
-            var dialog = AutomationElement.FromHandle(OpenDialogWithDteExecuteCommand("Tools.Options"));
+        public DefaultInterpreterSetter SelectDefaultInterpreter(PythonVersion interp, string installPackages) {
+            interp.AssertInstalled();
+            if (interp.IsIronPython && !string.IsNullOrEmpty(installPackages)) {
+                Assert.Inconclusive("Package installation not supported on IronPython");
+            }
+
+            var interpreterService = InterpreterService;
+            var factory = interpreterService.FindInterpreter(interp.Id, interp.Configuration.Version);
+            var defaultInterpreterSetter = new DefaultInterpreterSetter(factory);
+
             try {
-                // go to the tree view which lets us select a set of options...
-                var treeView = new TreeView(dialog.FindFirst(TreeScope.Descendants,
-                    new PropertyCondition(
-                        AutomationElement.ClassNameProperty,
-                        "SysTreeView32")
-                    ));
+                if (!string.IsNullOrEmpty(installPackages)) {
+                    Pip.InstallPip(factory, false).Wait();
+                    foreach (var package in installPackages.Split(' ', ',', ';').Select(s => s.Trim()).Where(s => !string.IsNullOrEmpty(s))) {
+                        Pip.Install(factory, package, false).Wait();
+                    }
+                }
 
-                treeView.FindItem("Python Tools", "Environment Options").SetFocus();
-
-                var defaultInterpreter = new ComboBox(dialog.FindFirst(
-                        TreeScope.Descendants,
-                        new AndCondition(
-                           new PropertyCondition(
-                               AutomationElement.NameProperty,
-                               "Default Environment:"
-                           ),
-                           new PropertyCondition(
-                               AutomationElement.ControlTypeProperty,
-                               ControlType.ComboBox
-                           )
-                        )
-                    )
-                );
-
-                defaultInterpreter.SelectItem(name);
-                dialog.AsWrapper().ClickButtonByName("OK");
-                WaitForDialogDismissed();
-                dialog = null;
+                var result = defaultInterpreterSetter;
+                defaultInterpreterSetter = null;
+                return result;
             } finally {
-                if (dialog != null) {
-                    DismissAllDialogs();
+                if (defaultInterpreterSetter != null) {
+                    defaultInterpreterSetter.Dispose();
                 }
             }
         }
 
+
         public IInterpreterOptionsService InterpreterService {
             get {
                 var model = GetService<IComponentModel>(typeof(SComponentModel));
-                return model.GetService<IInterpreterOptionsService>();
+                var service = model.GetService<IInterpreterOptionsService>();
+                Assert.IsNotNull(service, "Unable to get InterpreterOptionsService");
+                return service;
             }
         }
+
+        public TreeNode CreateVirtualEnvironment(EnvDTE.Project project, out string envName) {
+            string dummy;
+            return CreateVirtualEnvironment(project, out envName, out dummy);
+        }
+
+        public TreeNode CreateVirtualEnvironment(EnvDTE.Project project, out string envName, out string envPath) {
+            var environmentsNode = OpenSolutionExplorer().FindChildOfProject(
+                project,
+                SR.GetString(SR.Environments)
+            );
+            environmentsNode.Select();
+
+            using (var createVenv = AutomationDialog.FromDte(this, "Project.AddVirtualEnvironment")) {
+                envPath = new TextBox(createVenv.FindByAutomationId("VirtualEnvPath")).GetValue();
+                var baseInterp = new ComboBox(createVenv.FindByAutomationId("BaseInterpreter")).GetSelectedItemName();
+
+                envName = string.Format("{0} ({1})", envPath, baseInterp);
+
+                Console.WriteLine("Expecting environment named: {0}", envName);
+
+                // Force a wait for the view to be updated.
+                var wnd = (DialogWindowVersioningWorkaround)HwndSource.FromHwnd(
+                    new IntPtr(createVenv.Element.Current.NativeWindowHandle)
+                ).RootVisual;
+                wnd.Dispatcher.Invoke(() => {
+                    var view = (AddVirtualEnvironmentView)wnd.DataContext;
+                    return view.UpdateInterpreter(view.BaseInterpreter);
+                }).Wait();
+
+                createVenv.ClickButtonAndClose("Create", nameIsAutomationId: true);
+            }
+
+            return OpenSolutionExplorer().WaitForChildOfProject(
+                project,
+                SR.GetString(SR.Environments),
+                envName
+            );
+        }
+
+        public TreeNode AddExistingVirtualEnvironment(EnvDTE.Project project, string envPath, out string envName) {
+            var environmentsNode = OpenSolutionExplorer().FindChildOfProject(
+                project,
+                SR.GetString(SR.Environments)
+            );
+            environmentsNode.Select();
+
+            using (var createVenv = AutomationDialog.FromDte(this, "Project.AddVirtualEnvironment")) {
+                new TextBox(createVenv.FindByAutomationId("VirtualEnvPath")).SetValue(envPath);
+                var baseInterp = new ComboBox(createVenv.FindByAutomationId("BaseInterpreter")).GetSelectedItemName();
+
+                envName = string.Format("{0} ({1})", Path.GetFileName(envPath), baseInterp);
+
+                Console.WriteLine("Expecting environment named: {0}", envName);
+
+                createVenv.ClickButtonAndClose("Add", nameIsAutomationId: true);
+            }
+
+            return OpenSolutionExplorer().WaitForChildOfProject(
+                project,
+                SR.GetString(SR.Environments),
+                envName
+            );
+        }
+
     }
 }

@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.InteropServices;
 using Microsoft.PythonTools.Commands;
 using Microsoft.PythonTools.Interpreter;
@@ -23,7 +24,8 @@ using Microsoft.PythonTools.Repl;
 
 namespace Microsoft.PythonTools {
     /// <summary>
-    /// Exposes language specific options for Python via automation.  This object can be fetched using Dte.GetObject("PythonOptions")
+    /// Exposes language specific options for Python via automation. This object
+    /// can be fetched using Dte.GetObject("VsPython").
     /// </summary>
     [ComVisible(true)]
     public sealed class PythonAutomation : IVsPython, IPythonOptions, IPythonIntellisenseOptions {
@@ -37,12 +39,13 @@ namespace Microsoft.PythonTools {
         }
 
         IPythonInteractiveOptions IPythonOptions.GetInteractiveOptions(string interpreterName) {
-            foreach (var interpreter in PythonToolsPackage.Instance.InteractiveOptionsPage._options.Keys) {
-                if (IsSameInterpreter(interpreter, interpreterName)) {
-                    return new AutomationInterpreterOptions(interpreter);
-                }
+            var service = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
+            if (service == null) {
+                return null;
             }
-            return null;
+            var factory = service.Interpreters.FirstOrDefault(i => i.Description == interpreterName);
+
+            return factory == null ? null : new AutomationInterpreterOptions(factory);
         }
 
         private bool IsSameInterpreter(IPythonInterpreterFactory interpreter, string interpreterName) {

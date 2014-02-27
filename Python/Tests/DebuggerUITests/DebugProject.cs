@@ -114,7 +114,7 @@ namespace DebuggerUITests {
                 VsIdeTestHostContext.Dte.Solution.Close(false);
 
                 // copy an interpreter over and try again
-                File.Copy(PythonPaths.Python27.Path, TestData.GetPath(@"TestData\Interpreter.exe"));
+                File.Copy(PythonPaths.Python27.InterpreterPath, TestData.GetPath(@"TestData\Interpreter.exe"));
                 try {
                     OpenProjectAndBreak(app, TestData.GetPath(@"TestData\RelativeInterpreterPath.sln"), "Program.py", 1);
                     VsIdeTestHostContext.Dte.Debugger.Go(WaitForBreakOrEnd: true);

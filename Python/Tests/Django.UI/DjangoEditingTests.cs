@@ -55,7 +55,7 @@ namespace DjangoUITests {
 
                 foreach (var p in Directory.EnumerateDirectories(Path.Combine(ver.LibPath, "site-packages"))) {
                     if (Path.GetFileName(p).StartsWith("django")) {
-                        interpreterService.DefaultInterpreter = interpreterService.FindInterpreter(ver.Interpreter, ver.Version.ToVersion());
+                        interpreterService.DefaultInterpreter = interpreterService.FindInterpreter(ver.Id, ver.Version.ToVersion());
                         return;
                     }
                 }

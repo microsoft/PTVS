@@ -177,7 +177,6 @@ g()",
             if (!reopenOnly) {
                 interactive.ClearScreen();
                 interactive.ReplWindow.ClearHistory();
-                interactive.WaitForReadyState();
 
                 bool isReady = false;
                 for (int retries = 10; retries > 0; --retries) {
@@ -200,7 +199,6 @@ g()",
                 interactive.ClearScreen();
                 interactive.ReplWindow.ClearHistory();
             }
-            interactive.WaitForReadyState();
             return interactive;
         }
 
@@ -471,7 +469,6 @@ g()",
                 Keyboard.Type(code + "\r");
 
                 interactive.WaitForText(ReplPrompt + code, ReplPrompt);
-                interactive.WaitForReadyState();
 
                 const string code2 = "x = subprocess.Popen(['C:\\\\python27\\\\python.exe', '-c', 'print 42'], stdout=sys.stdout).wait()";
                 Keyboard.Type(code2 + "\r");
@@ -1342,7 +1339,6 @@ g()",
 
                 const string code = "$unknown";
                 Keyboard.Type(code + "\r");
-                interactive.WaitForReadyState();
 
                 interactive.WaitForText(ReplPrompt + code, "Unknown command 'unknown', use \"$help\" for help", ReplPrompt);
             }
@@ -1360,7 +1356,6 @@ g()",
 
                 const string code = "$$ quox oar baz";
                 Keyboard.Type(code + "\r");
-                interactive.WaitForReadyState();
 
                 interactive.WaitForText(ReplPrompt + code, ReplPrompt);
             }
@@ -2455,7 +2450,6 @@ $cls
                 Keyboard.Type(assignCode + "\r");
 
                 interactive.WaitForText(ReplPrompt + assignCode, ReplPrompt);
-                interactive.WaitForReadyState();
 
                 Keyboard.Type(inspectCode + "\r");
                 interactive.WaitForText(new[] { ReplPrompt + assignCode, ReplPrompt + inspectCode }.Concat(IntDocumentation).Concat(new[] { ReplPrompt }).ToArray());
@@ -2534,7 +2528,6 @@ $cls
                 Keyboard.Type(code + "\r");
 
                 interactive.WaitForText(ReplPrompt + code, ReplPrompt);
-                interactive.WaitForReadyState();
 
                 Keyboard.Type("x.");
 
@@ -3126,15 +3119,32 @@ def g(): pass
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void VirtualEnvironmentSendToInteractive() {
-            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var project = app.OpenProject(@"TestData\VirtualEnv.sln");
+#if PY_IRON27
+            Assert.Inconclusive("Test not supported on IronPython");
+#endif
 
+            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte))
+            using (var dis = app.SelectDefaultInterpreter(PythonVersion, "virtualenv")) {
+                var project = app.CreateProject(
+                    PythonVisualStudioApp.TemplateLanguageName,
+                    PythonVisualStudioApp.PythonApplicationTemplate,
+                    TestData.GetTempPath(),
+                    "VirtualEnvironmentSendToInteractive"
+                );
+
+                string envName, envPath;
+                var env = app.CreateVirtualEnvironment(project, out envName, out envPath);
+
+                env.Select();
+                app.ExecuteCommand("Project.OpenInteractiveWindow");
+
+                project.ProjectItems.AddFromFileCopy(TestData.GetPath(@"TestData\VirtualEnv\Program.py"));
                 var program = project.ProjectItems.Item("Program.py");
 
                 var window = program.Open();
                 window.Activate();
                 var doc = app.GetDocument(program.Document.FullName);
-                doc.Invoke(() =>
+                doc.Invoke(() => {
                     doc.TextView.Selection.Select(
                         new SnapshotSpan(
                             doc.TextView.TextBuffer.CurrentSnapshot,
@@ -3142,28 +3152,16 @@ def g(): pass
                             doc.TextView.TextBuffer.CurrentSnapshot.Length
                         ),
                         false
-                    )
+                    );
+                });
+
+                var interactive = Prepare(app, description: envName + " Interactive");
+                app.ExecuteCommand("Edit.SendtoInteractive");
+
+                interactive.WaitForTextContainsAll(
+                    File.ReadAllLines(program.FileNames[1]).Last(s => !string.IsNullOrEmpty(s)),
+                    Path.Combine(Path.GetDirectoryName(project.FullName), envPath, "Scripts", "python.exe")
                 );
-
-                // This is required to open the window, since VS automation is
-                // currently unable to find virtual environments. Once the window
-                // is open, UI automation will find it by the description.
-                app.Dte.ExecuteCommand("Edit.SendtoInteractive");
-
-                var interactive = Prepare(app, description: "env (Python 2.7) Interactive");
-                app.Dte.ExecuteCommand("Edit.SendtoInteractive");
-
-                var expectedText = new List<string>();
-
-                using (var reader = TestData.Read(@"TestData\VirtualEnv\Program.py")) {
-                    for (var line = reader.ReadLine(); line != null; line = reader.ReadLine()) {
-                        expectedText.Add(ReplPrompt + line);
-                    }
-                }
-                expectedText.Add(TestData.GetPath(@"TestData\VirtualEnv\env\Scripts\python.exe"));
-                expectedText.Add(ReplPrompt);
-
-                interactive.WaitForText(expectedText);
             }
         }
 

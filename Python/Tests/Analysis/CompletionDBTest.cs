@@ -43,14 +43,14 @@ namespace PythonToolsTests {
 
         private void TestOpen(PythonVersion path) {
             path.AssertInstalled();
-            Console.WriteLine(path.Path);
+            Console.WriteLine(path.InterpreterPath);
 
             Guid testId = Guid.NewGuid();
             var testDir = TestData.GetTempPath(testId.ToString());
 
             // run the scraper
             using (var proc = ProcessOutput.RunHiddenAndCapture(
-                path.Path,
+                path.InterpreterPath,
                 TestData.GetPath("PythonScraper.py"),
                 testDir,
                 TestData.GetPath("CompletionDB")
@@ -81,7 +81,7 @@ namespace PythonToolsTests {
                     Assert.AreEqual("file", overload["ret_type"][0][1]);
                 }
 
-                if (!path.Path.Contains("Iron")) {
+                if (!path.InterpreterPath.Contains("Iron")) {
                     // http://pytools.codeplex.com/workitem/799
                     var arr = (IList<object>)builtinDb["members"]["list"]["value"]["members"]["__init__"]["value"]["overloads"];
                     Assert.AreEqual(
@@ -91,7 +91,7 @@ namespace PythonToolsTests {
                 }
             }
 
-            if (!path.Path.Contains("Iron")) {
+            if (!path.InterpreterPath.Contains("Iron")) {
                 dynamic itertoolsDb = Unpickle.Load(new FileStream(Path.Combine(testDir, "itertools.idb"), FileMode.Open, FileAccess.Read));
                 var tee = itertoolsDb["members"]["tee"]["value"];
                 var overloads = tee["overloads"];
@@ -105,7 +105,7 @@ namespace PythonToolsTests {
                 Assert.IsTrue(members.ContainsKey("SRE_Match"));
             }
 
-            Console.WriteLine("Passed: {0}", path.Path);
+            Console.WriteLine("Passed: {0}", path.InterpreterPath);
         }
 
         [TestMethod, Priority(0)]
@@ -198,7 +198,7 @@ namespace PythonToolsTests {
 
             // run the analyzer
             using (var output = ProcessOutput.RunHiddenAndCapture("Microsoft.PythonTools.Analyzer.exe",
-                "/python", PythonPaths.Python27.Path,
+                "/python", PythonPaths.Python27.InterpreterPath,
                 "/lib", TestData.GetPath(@"TestData\PydStdLib"),
                 "/version", "2.7",
                 "/outdir", outputPath,
@@ -329,13 +329,13 @@ namespace PythonToolsTests {
             path.AssertInstalled();
 
             var factory = InterpreterFactoryCreator.CreateInterpreterFactory(new InterpreterFactoryCreationOptions {
-                Id = path.Interpreter,
+                Id = path.Id,
                 LanguageVersion = path.Version.ToVersion(),
                 Description = "Test Interpreter",
                 Architecture = path.Isx64 ? ProcessorArchitecture.Amd64 : ProcessorArchitecture.X86,
                 LibraryPath = path.LibPath,
                 PrefixPath = path.PrefixPath,
-                InterpreterPath = path.Path,
+                InterpreterPath = path.InterpreterPath,
                 WatchLibraryForNewModules = false
             });
 

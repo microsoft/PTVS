@@ -76,7 +76,7 @@ namespace TestUtilities {
             }
 
             var ver = new PythonVersion("C:\\Program Files (x86)\\IronPython 2.7\\" + exeName, PythonLanguageVersion.V27, IronPythonGuid);
-            if (File.Exists(ver.Path)) {
+            if (File.Exists(ver.InterpreterPath)) {
                 return ver;
             }
             return null;
@@ -242,36 +242,38 @@ namespace TestUtilities {
     }
 
     public class PythonVersion {
-        public readonly string Path;
+        public readonly string InterpreterPath;
         public readonly PythonLanguageVersion Version;
-        public readonly Guid Interpreter;
+        public readonly Guid Id;
         public readonly bool IsCPython;
+        public readonly bool IsIronPython;
         public readonly bool Isx64;
 
-        public PythonVersion(string path, PythonLanguageVersion pythonLanguageVersion, Guid interpreter) {
-            Path = path;
+        public PythonVersion(string path, PythonLanguageVersion pythonLanguageVersion, Guid id) {
+            InterpreterPath = path;
             Version = pythonLanguageVersion;
-            Interpreter = interpreter;
-            IsCPython = (Interpreter == PythonPaths.CPythonGuid || Interpreter == PythonPaths.CPython64Guid);
-            Isx64 = (Interpreter == PythonPaths.CPython64Guid || Interpreter == PythonPaths.IronPython64Guid);
+            Id = id;
+            IsCPython = (Id == PythonPaths.CPythonGuid || Id == PythonPaths.CPython64Guid);
+            Isx64 = (Id == PythonPaths.CPython64Guid || Id == PythonPaths.IronPython64Guid);
+            IsIronPython = (Id == PythonPaths.IronPythonGuid || Id == PythonPaths.IronPython64Guid);
         }
 
         public string PrefixPath {
             get {
-                return System.IO.Path.GetDirectoryName(Path);
+                return Path.GetDirectoryName(InterpreterPath);
             }
         }
 
         public string LibPath {
             get {
-                return System.IO.Path.Combine(PrefixPath, "Lib");
+                return Path.Combine(PrefixPath, "Lib");
             }
         }
 
         public InterpreterConfiguration Configuration {
             get {
                 return new InterpreterConfiguration(
-                    PrefixPath, Path, null, LibPath, "PYTHONPATH",
+                    PrefixPath, InterpreterPath, null, LibPath, "PYTHONPATH",
                     Isx64 ? ProcessorArchitecture.Amd64 : ProcessorArchitecture.X86,
                     Version.ToVersion()
                 );
@@ -281,7 +283,7 @@ namespace TestUtilities {
 
     public static class PythonVersionExtensions {
         public static void AssertInstalled(this PythonVersion self) {
-            if(self == null || !File.Exists(self.Path)) {
+            if(self == null || !File.Exists(self.InterpreterPath)) {
                 Assert.Inconclusive("Python interpreter not installed");
             }
         }

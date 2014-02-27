@@ -66,7 +66,7 @@ namespace PythonToolsUITests {
 
             dteProject = app.OpenProject("TestData\\Targets\\" + slnName);
             projectNode = dteProject.GetPythonProject();
-            var fact = projectNode.Interpreters.FindInterpreter(PythonVersion.Interpreter, PythonVersion.Configuration.Version);
+            var fact = projectNode.Interpreters.FindInterpreter(PythonVersion.Id, PythonVersion.Configuration.Version);
             Assert.IsNotNull(fact, "Project does not contain expected interpreter");
             projectNode.Interpreters.ActiveInterpreter = fact;
             dteProject.Save();
@@ -334,14 +334,14 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0)]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void CustomCommandsRequiredPackages() {
-            using (var dis = VirtualEnvTests.Init(PythonVersion, true))
-            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
+            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte))
+            using (var dis = app.SelectDefaultInterpreter(PythonVersion, "virtualenv")) {
                 PythonProjectNode node;
                 EnvDTE.Project proj;
                 OpenProject(app, "CommandRequirePackages.sln", out node, out proj);
 
                 string envName;
-                var env = VirtualEnvTests.CreateVirtualEnvironment(app, proj, out envName);
+                var env = app.CreateVirtualEnvironment(proj, out envName);
 
                 env.Select();
                 app.Dte.ExecuteCommand("Project.ActivateEnvironment");

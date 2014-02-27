@@ -32,7 +32,7 @@ namespace FastCgiTest {
 
         public override string InterpreterPath {
             get {
-                return PythonPaths.Python33.Path;
+                return PythonPaths.Python33.InterpreterPath;
             }
         }
 

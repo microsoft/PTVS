@@ -480,22 +480,17 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void ChangeDefaultInterpreterProjectClosed() {
             using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var model = (IComponentModel)VsIdeTestHostContext.ServiceProvider.GetService(typeof(SComponentModel));
-                var service = model.GetService<IInterpreterOptionsService>();
+                
+                var service = app.InterpreterService;
+                var original = service.DefaultInterpreter;
+                using (var dis = new DefaultInterpreterSetter(service.Interpreters.FirstOrDefault(i => i != original))) {
+                    var project = app.OpenProject(@"TestData\HelloWorld.sln");
+                    app.Dte.Solution.Close();
 
-                var currentDefault = service.DefaultInterpreter;
+                    Assert.AreNotEqual(dis.OriginalInterpreter, service.DefaultInterpreter);
+                }
 
-                app.SelectDefaultInterpreter(service.Interpreters.First(i => i != currentDefault).Description);
-
-                var project = app.OpenProject(@"TestData\HelloWorld.sln");
-                VsIdeTestHostContext.Dte.Solution.Close();
-
-                Assert.AreNotEqual(currentDefault, service.DefaultInterpreter);
-
-                System.Threading.Thread.Sleep(1000);
-                app.SelectDefaultInterpreter(currentDefault.Description);
-
-                Assert.AreEqual(currentDefault, service.DefaultInterpreter);
+                Assert.AreEqual(original, service.DefaultInterpreter);
             }
         }
 
@@ -1133,34 +1128,28 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void OpenInteractiveFromSolutionExplorer() {
             // http://pytools.codeplex.com/workitem/765
-            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
+            var python = PythonPaths.Python26 ?? PythonPaths.Python27;
+            python.AssertInstalled();
+
+            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte))
+            using (var dis = app.SelectDefaultInterpreter(python)) {
+                var interpreterName = dis.CurrentDefault.Description;
                 var project = app.OpenProject(@"TestData\HelloWorld.sln");
 
-                string interpreterName;
-                if (PythonPaths.Python26 != null) {
-                    interpreterName = "Python 2.6";
-                } else if (PythonPaths.Python27 != null) {
-                    interpreterName = "Python 2.7";
-                } else {
-                    Assert.Inconclusive("Test requires Python 2.6 or 2.7");
-                    return;
-                }
-                app.SelectDefaultInterpreter(interpreterName);
-
-                var options = GetInteractiveOptions(interpreterName + " Interactive");
+                var replService = (IPythonOptions)app.Dte.GetObject("VsPython");
+                Assert.IsNotNull(replService, "Unable to get VsPython object");
+                var options = replService.GetInteractiveOptions(interpreterName);
 
                 options.InlinePrompts = true;
                 options.UseInterpreterPrompts = false;
                 options.PrimaryPrompt = ">>> ";
                 options.SecondaryPrompt = "... ";
 
-                var solutionExplorer = app.SolutionExplorerTreeView;
+                var solutionExplorer = app.OpenSolutionExplorer();
+                solutionExplorer.SetFocus();
 
                 var programNode = solutionExplorer.FindItem("Solution 'HelloWorld' (1 project)", "HelloWorld", "Program.py");
-
-
-                Mouse.MoveTo(programNode.GetClickablePoint());
-                Mouse.Click();
+                programNode.Select();
 
                 // Press Alt-I to bring up the REPL
                 Keyboard.PressAndRelease(System.Windows.Input.Key.I, System.Windows.Input.Key.LeftAlt);
@@ -1169,11 +1158,6 @@ namespace PythonToolsUITests {
                 var interactive = app.GetInteractiveWindow(interpreterName + " Interactive");
                 interactive.WaitForTextEnd("hi", ">>> ");
             }
-        }
-
-        protected static IPythonInteractiveOptions GetInteractiveOptions(string name) {
-            Debug.Assert(name.EndsWith(" Interactive"));
-            return ((IPythonOptions)VsIdeTestHostContext.Dte.GetObject("VsPython")).GetInteractiveOptions(name.Substring(0, name.Length - " Interactive".Length));
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]

@@ -369,7 +369,7 @@ namespace FastCgiTest {
 
         public virtual string InterpreterPath {
             get {
-                return PythonPaths.Python27.Path;
+                return PythonPaths.Python27.InterpreterPath;
             }
         }
 

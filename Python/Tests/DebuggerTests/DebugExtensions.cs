@@ -27,7 +27,7 @@ namespace DebuggerTests {
             } else {
                 arguments = "\"" + fullPath + "\"";
             }
-            var process = debugger.CreateProcess(version.Version, version.Path, arguments, dir, "", interpreterOptions, debugOptions);
+            var process = debugger.CreateProcess(version.Version, version.InterpreterPath, arguments, dir, "", interpreterOptions, debugOptions);
             process.DebuggerOutput += (sender, args) => {
                 Console.WriteLine("{0}: {1}", args.Thread.Id, args.Output);
             };

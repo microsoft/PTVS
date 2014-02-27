@@ -102,7 +102,7 @@ namespace PythonToolsTests {
         private static PythonReplEvaluator MakeEvaluator() {
             var python = PythonPaths.Python27 ?? PythonPaths.Python27_x64 ?? PythonPaths.Python26 ?? PythonPaths.Python26_x64;
             python.AssertInstalled();
-            var provider = new SimpleFactoryProvider(python.Path, python.Path);
+            var provider = new SimpleFactoryProvider(python.InterpreterPath, python.InterpreterPath);
             return new PythonReplEvaluator(provider.GetInterpreterFactories().First(), null, new ReplTestReplOptions());
         }
 

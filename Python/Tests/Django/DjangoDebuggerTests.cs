@@ -57,7 +57,7 @@ namespace DjangoTests {
                 Version.AssertInstalled();
                 switch (requiredState) {
                     case DbState.OarApp:
-                        using (var output = ProcessOutput.Run(Version.Path,
+                        using (var output = ProcessOutput.Run(Version.InterpreterPath,
                             new [] {"manage.py", "syncdb", "--noinput"},
                             DebuggerTestPath,
                             null, false, null)) {
@@ -69,7 +69,7 @@ namespace DjangoTests {
                             Assert.AreEqual(0, output.ExitCode);
                         }
 
-                        using (var output = ProcessOutput.Run(Version.Path,
+                        using (var output = ProcessOutput.Run(Version.InterpreterPath,
                             new [] {"manage.py", "loaddata", "data.json"},
                             DebuggerTestPath,
                             null, false, null)) {

@@ -292,7 +292,7 @@ namespace DebuggerTests {
 
             string fullPath = Path.GetFullPath(filename);
             string dir = Path.GetDirectoryName(filename);
-            var process = debugger.CreateProcess(Version.Version, Version.Path, "\"" + fullPath + "\" " + (arguments ?? ""), dir, "", null, options);
+            var process = debugger.CreateProcess(Version.Version, Version.InterpreterPath, "\"" + fullPath + "\" " + (arguments ?? ""), dir, "", null, options);
             try {
                 PythonThread thread = null;
                 process.ThreadCreated += (sender, args) => {

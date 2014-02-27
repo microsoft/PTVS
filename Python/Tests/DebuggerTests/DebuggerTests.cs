@@ -978,7 +978,7 @@ namespace DebuggerTests {
             foreach (var steppingStdLib in new[] { false, true }) {
                 var process = debugger.CreateProcess(
                     Version.Version,
-                    Version.Path,
+                    Version.InterpreterPath,
                     "\"" + fullPath + "\"",
                     DebuggerTestPath,
                     "",
@@ -1604,9 +1604,9 @@ namespace DebuggerTests {
         public void TestWindowsStartup() {
             var debugger = new PythonDebugger();
 
-            string pythonwExe = Path.Combine(Path.GetDirectoryName(Version.Path), "pythonw.exe");
+            string pythonwExe = Path.Combine(Path.GetDirectoryName(Version.InterpreterPath), "pythonw.exe");
             if (!File.Exists(pythonwExe)) {
-                pythonwExe = Path.Combine(Path.GetDirectoryName(Version.Path), "ipyw.exe");
+                pythonwExe = Path.Combine(Path.GetDirectoryName(Version.InterpreterPath), "ipyw.exe");
             }
 
             if (File.Exists(pythonwExe)) {
@@ -1670,7 +1670,7 @@ namespace DebuggerTests {
         private new PythonProcess DebugProcess(PythonDebugger debugger, string filename, Action<PythonProcess, PythonThread> onLoaded = null, bool resumeOnProcessLoaded = true, string interpreterOptions = null, PythonDebugOptions debugOptions = PythonDebugOptions.RedirectOutput, string cwd = null, string pythonExe = null) {
             string fullPath = Path.GetFullPath(filename);
             string dir = cwd ?? Path.GetFullPath(Path.GetDirectoryName(filename));
-            var process = debugger.CreateProcess(Version.Version, pythonExe ?? Version.Path, "\"" + fullPath + "\"", dir, "", interpreterOptions, debugOptions);
+            var process = debugger.CreateProcess(Version.Version, pythonExe ?? Version.InterpreterPath, "\"" + fullPath + "\"", dir, "", interpreterOptions, debugOptions);
             process.ProcessLoaded += (sender, args) => {
                 if (onLoaded != null) {
                     onLoaded(process, args.Thread);
@@ -1710,7 +1710,7 @@ namespace DebuggerTests {
             if (GetType() != typeof(DebuggerTestsIpy)) {    // IronPython doesn't support attach
                 // http://pytools.codeplex.com/workitem/638
                 // http://pytools.codeplex.com/discussions/285741#post724014
-                var psi = new ProcessStartInfo(Version.Path, "\"" + TestData.GetPath(@"TestData\DebuggerProject\ThreadingStartNewThread.py") + "\"");
+                var psi = new ProcessStartInfo(Version.InterpreterPath, "\"" + TestData.GetPath(@"TestData\DebuggerProject\ThreadingStartNewThread.py") + "\"");
                 psi.WorkingDirectory = TestData.GetPath(@"TestData\DebuggerProject");
                 psi.EnvironmentVariables["PYTHONPATH"] = @"..\..";
                 psi.UseShellExecute = false;
@@ -1780,7 +1780,7 @@ namespace DebuggerTests {
         [TestMethod, Priority(0)]
         public void AttachReattach() {
             if (GetType() != typeof(DebuggerTestsIpy)) {    // IronPython doesn't support attach
-                Process p = Process.Start(Version.Path, "\"" + TestData.GetPath(@"TestData\DebuggerProject\InfiniteRun.py") + "\"");
+                Process p = Process.Start(Version.InterpreterPath, "\"" + TestData.GetPath(@"TestData\DebuggerProject\InfiniteRun.py") + "\"");
                 try {
                     System.Threading.Thread.Sleep(1000);
 
@@ -1829,7 +1829,7 @@ namespace DebuggerTests {
         public void AttachMultithreadedSleeper() {
             if (GetType() != typeof(DebuggerTestsIpy)) {    // IronPython doesn't support attach
                 // http://pytools.codeplex.com/discussions/285741 1/12/2012 6:20 PM
-                Process p = Process.Start(Version.Path, "\"" + TestData.GetPath(@"TestData\DebuggerProject\AttachMultithreadedSleeper.py") + "\"");
+                Process p = Process.Start(Version.InterpreterPath, "\"" + TestData.GetPath(@"TestData\DebuggerProject\AttachMultithreadedSleeper.py") + "\"");
                 try {
                     System.Threading.Thread.Sleep(1000);
 
@@ -1868,7 +1868,7 @@ namespace DebuggerTests {
         public void AttachSingleThreadedSleeper() {
             if (GetType() != typeof(DebuggerTestsIpy)) {    // IronPython doesn't support attach
                 // http://pytools.codeplex.com/discussions/285741 1/12/2012 6:20 PM
-                Process p = Process.Start(Version.Path, "\"" + TestData.GetPath(@"TestData\DebuggerProject\AttachSingleThreadedSleeper.py") + "\"");
+                Process p = Process.Start(Version.InterpreterPath, "\"" + TestData.GetPath(@"TestData\DebuggerProject\AttachSingleThreadedSleeper.py") + "\"");
                 try {
                     System.Threading.Thread.Sleep(1000);
 
@@ -1923,7 +1923,7 @@ namespace DebuggerTests {
         [TestMethod, Priority(0)]
         public void AttachReattachThreadingInited() {
             if (GetType() != typeof(DebuggerTestsIpy)) {    // IronPython shouldn't support attach
-                Process p = Process.Start(Version.Path, "\"" + TestData.GetPath(@"TestData\DebuggerProject\InfiniteRunThreadingInited.py") + "\"");
+                Process p = Process.Start(Version.InterpreterPath, "\"" + TestData.GetPath(@"TestData\DebuggerProject\InfiniteRunThreadingInited.py") + "\"");
                 try {
                     System.Threading.Thread.Sleep(1000);
 
@@ -1959,7 +1959,7 @@ namespace DebuggerTests {
         [TestMethod, Priority(0)]
         public void AttachReattachInfiniteThreads() {
             if (GetType() != typeof(DebuggerTestsIpy)) {    // IronPython shouldn't support attach
-                Process p = Process.Start(Version.Path, "\"" + TestData.GetPath(@"TestData\DebuggerProject\InfiniteThreads.py") + "\"");
+                Process p = Process.Start(Version.InterpreterPath, "\"" + TestData.GetPath(@"TestData\DebuggerProject\InfiniteThreads.py") + "\"");
                 try {
                     System.Threading.Thread.Sleep(1000);
 
@@ -2350,7 +2350,7 @@ int main(int argc, char* argv[]) {
             psi.RedirectStandardError = psi.RedirectStandardOutput = true;
             psi.CreateNoWindow = true;
             // Add Python to PATH so that the host can locate the DLL in case it's not in \Windows\System32 (e.g. for EPD)
-            psi.EnvironmentVariables["PATH"] = Environment.GetEnvironmentVariable("PATH") + ";" + Path.GetDirectoryName(Version.Path);
+            psi.EnvironmentVariables["PATH"] = Environment.GetEnvironmentVariable("PATH") + ";" + Path.GetDirectoryName(Version.InterpreterPath);
 
             Process p = Process.Start(psi);
             var outRecv = new OutputReceiver();
@@ -2395,7 +2395,7 @@ int main(int argc, char* argv[]) {
             // compile our host code...
             var startInfo = new ProcessStartInfo(
                 Path.Combine(GetVCBinDir(), "cl.exe"),
-                String.Format("/I{0}\\Include test.cpp /link /libpath:{0}\\libs", Path.GetDirectoryName(Version.Path))
+                String.Format("/I{0}\\Include test.cpp /link /libpath:{0}\\libs", Path.GetDirectoryName(Version.InterpreterPath))
             );
 
             startInfo.EnvironmentVariables["PATH"] = Environment.GetEnvironmentVariable("PATH") + ";" + GetVSIDEInstallDir();
@@ -2437,7 +2437,7 @@ int main(int argc, char* argv[]) {
         private Process RunHost(string hostExe) {
             var psi = new ProcessStartInfo(hostExe) { UseShellExecute = false };
             // Add Python to PATH so that the host can locate the DLL in case it's not in \Windows\System32 (e.g. for EPD)
-            psi.EnvironmentVariables["PATH"] = Environment.GetEnvironmentVariable("PATH") + ";" + Path.GetDirectoryName(Version.Path);
+            psi.EnvironmentVariables["PATH"] = Environment.GetEnvironmentVariable("PATH") + ";" + Path.GetDirectoryName(Version.InterpreterPath);
             return Process.Start(psi);
         }
 
