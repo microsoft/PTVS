@@ -5046,6 +5046,61 @@ b2 = r2.b[0]
         }
 
         [TestMethod, Priority(0)]
+        public void DecoratorReferences() {
+            var text = @"from functools import wraps
+
+def d(f):
+    @wraps(f)
+    def wrapped(*a, **kw):
+        return f(*a, **kw)
+    return wrapped
+
+@d
+def g(p):
+    return p
+
+n1 = g(1)";
+
+            var entry = ProcessText(text);
+
+            VerifyReferences(UniqifyVariables(entry.GetVariablesByIndex("d", 0)),
+                new VariableLocation(3, 5, VariableType.Definition),
+                new VariableLocation(9, 2, VariableType.Reference)
+            );
+
+            VerifyReferences(UniqifyVariables(entry.GetVariablesByIndex("g", 0)),
+                new VariableLocation(10, 5, VariableType.Definition),
+                new VariableLocation(13, 6, VariableType.Reference)
+            );
+
+            // Decorators that don't use @wraps will expose the wrapper function
+            // as a value.
+            text = @"def d(f):
+    def wrapped(*a, **kw):
+        return f(*a, **kw)
+    return wrapped
+
+@d
+def g(p):
+    return p
+
+n1 = g(1)";
+
+            entry = ProcessText(text);
+
+            VerifyReferences(UniqifyVariables(entry.GetVariablesByIndex("d", 0)),
+                new VariableLocation(1, 5, VariableType.Definition),
+                new VariableLocation(6, 2, VariableType.Reference)
+            );
+
+            VerifyReferences(UniqifyVariables(entry.GetVariablesByIndex("g", 0)),
+                new VariableLocation(7, 5, VariableType.Definition),
+                new VariableLocation(10, 6, VariableType.Reference),
+                new VariableLocation(2, 9, VariableType.Value)
+            );
+        }
+
+        [TestMethod, Priority(0)]
         public void QuickInfo() {
             var text = @"
 import sys
