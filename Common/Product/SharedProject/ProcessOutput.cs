@@ -507,9 +507,16 @@ namespace Microsoft.VisualStudioTools.Project {
         /// </summary>
         public TaskAwaiter<int> GetAwaiter() {
             var tcs = new TaskCompletionSource<int>();
-            _process.Exited += (s, e) => tcs.TrySetResult(_process.ExitCode);
+            EventHandler onExit = (s, e) => {
+                try {
+                    tcs.TrySetResult(_process.ExitCode);
+                } catch (Exception ex) {
+                    tcs.TrySetException(ex);
+                }
+            };
+            _process.Exited += onExit;
             if (_process.HasExited) {
-                tcs.TrySetResult(_process.ExitCode);
+                onExit(_process, EventArgs.Empty);
             }
             return tcs.Task.GetAwaiter();
         }

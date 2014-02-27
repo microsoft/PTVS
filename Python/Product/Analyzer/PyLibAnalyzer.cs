@@ -1073,7 +1073,7 @@ namespace Microsoft.PythonTools.Analysis {
             } else {
                 return Path.Combine(_outDir, Regex.Replace(
                     CommonUtils.TrimEndSeparator(CommonUtils.GetRelativeFilePath(_library, file.LibraryPath)),
-                    @"[.\\/]",
+                    @"[.\\/\s]",
                     "_"
                 ));
             }
