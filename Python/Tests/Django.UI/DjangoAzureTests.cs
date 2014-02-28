@@ -42,7 +42,7 @@ namespace DjangoUITests {
                 djangoApp.Select();
 
                 newProjDialog.Location = TestData.GetTempPath();
-                newProjDialog.ClickOK();
+                newProjDialog.OK();
 
                 // wait for new solution to load...
                 var projItem = app.SolutionExplorerTreeView.WaitForItem(
