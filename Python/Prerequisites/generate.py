@@ -7,6 +7,7 @@ The generated files should be checked in.
 ASSEMBLIES = sorted([
     "AnalysisTest",
     "AnalysisTests",
+    "AzurePublishingUITests",
     "DebuggerTests",
     "DebuggerUITests",
     "DjangoTests",
