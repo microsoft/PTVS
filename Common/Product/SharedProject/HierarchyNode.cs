@@ -453,7 +453,7 @@ namespace Microsoft.VisualStudioTools.Project {
                 if (value) {
                     flags |= HierarchyNodeFlags.HasParentNodeNameRelation;
                 } else {
-                    flags &= HierarchyNodeFlags.HasParentNodeNameRelation;
+                    flags &= ~HierarchyNodeFlags.HasParentNodeNameRelation;
                 }
             }
         }

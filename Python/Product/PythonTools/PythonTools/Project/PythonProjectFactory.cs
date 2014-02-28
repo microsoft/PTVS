@@ -74,6 +74,14 @@ namespace Microsoft.PythonTools.Project {
                 return ProjectUpgradeState.SafeRepair;
             }
 
+#if !DEV12_OR_LATER
+            // ToolsVersion later than 4.0 cannot be loaded in VS 2010 or 2012.
+            if (!Version.TryParse(userProjectXml.ToolsVersion, out version) ||
+                version > new Version(4, 0)) {
+                return ProjectUpgradeState.SafeRepair;
+            }
+#endif
+
             return ProjectUpgradeState.NotNeeded;
         }
 
@@ -91,6 +99,14 @@ namespace Microsoft.PythonTools.Project {
                 projectXml.ToolsVersion = "4.0";
                 log(__VSUL_ERRORLEVEL.VSUL_INFORMATIONAL, SR.GetString(SR.UpgradedToolsVersion));
             }
+
+#if !DEV12_OR_LATER
+            if (!Version.TryParse(userProjectXml.ToolsVersion, out version) ||
+                version > new Version(4, 0)) {
+                userProjectXml.ToolsVersion = "4.0";
+                log(__VSUL_ERRORLEVEL.VSUL_INFORMATIONAL, SR.GetString(SR.UpgradedUserToolsVersion));
+            }
+#endif
         }
     }
 }

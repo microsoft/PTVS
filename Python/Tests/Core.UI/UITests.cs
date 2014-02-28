@@ -59,24 +59,23 @@ namespace PythonToolsUITests {
                 // now run the test
                 string fullname;
                 using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                    var newProjDialog = app.FileNewProject();
+                    using (var newProjDialog = app.FileNewProject()) {
+                        newProjDialog.FocusLanguageNode();
 
-                    newProjDialog.FocusLanguageNode();
-
-                    var consoleApp = newProjDialog.ProjectTypes.FindItem("Python Application");
-                    consoleApp.Select();
-                    newProjDialog.ProjectName = "Fob.Oar";
-                    newProjDialog.ClickOK();
+                        var consoleApp = newProjDialog.ProjectTypes.FindItem("Python Application");
+                        consoleApp.Select();
+                        newProjDialog.ProjectName = "Fob.Oar";
+                        newProjDialog.OK();
+                    }
 
                     // wait for new solution to load...
                     for (int i = 0; i < 100 && app.Dte.Solution.Projects.Count == 0; i++) {
                         System.Threading.Thread.Sleep(1000);
                     }
 
-                    var saveProjDialog = new SaveProjectDialog(app.OpenDialogWithDteExecuteCommand("File.SaveAll"));
-                    saveProjDialog.Save();
-
-                    app.WaitForDialogDismissed();
+                    using (var saveDialog = AutomationDialog.FromDte(app, "File.SaveAll")) {
+                        saveDialog.ClickButtonAndClose("Save");
+                    }
 
                     fullname = app.Dte.Solution.FullName;
                 }
@@ -872,23 +871,23 @@ namespace PythonToolsUITests {
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void NewProject() {
             using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
-                var newProjDialog = app.FileNewProject();
+                using (var newProjDialog = NewProjectDialog.FromDte(app)) {
+                    newProjDialog.FocusLanguageNode();
 
-                newProjDialog.FocusLanguageNode();
+                    var consoleApp = newProjDialog.ProjectTypes.FindItem("Python Application");
+                    consoleApp.Select();
 
-                var consoleApp = newProjDialog.ProjectTypes.FindItem("Python Application");
-                consoleApp.Select();
-
-                newProjDialog.ClickOK();
+                    newProjDialog.OK();
+                }
 
                 // wait for new solution to load...
-                for (int i = 0; i < 100 && app.Dte.Solution.Projects.Count == 0; i++) {
+                for (int i = 0; i < 10 && app.Dte.Solution.Projects.Count == 0; i++) {
                     System.Threading.Thread.Sleep(1000);
                 }
 
                 Assert.AreEqual(1, app.Dte.Solution.Projects.Count);
 
-                Assert.AreNotEqual(null, app.Dte.Solution.Projects.Item(1).ProjectItems.Item(Path.GetFileNameWithoutExtension(app.Dte.Solution.FullName) + ".py"));
+                Assert.IsNotNull(app.Dte.Solution.Projects.Item(1).ProjectItems.Item(Path.GetFileNameWithoutExtension(app.Dte.Solution.FullName) + ".py"));
             }
         }
 

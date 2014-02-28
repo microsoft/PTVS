@@ -19,19 +19,20 @@ namespace TestUtilities.UI {
     /// <summary>
     /// Wrapps VS's File->New Project dialog.
     /// </summary>
-    public class NewProjectDialog  : AutomationWrapper {
+    public class NewProjectDialog  : AutomationDialog {
         private TreeView _installedTemplates;
         private ListView _projectTypesTable;
 
-        public NewProjectDialog(AutomationElement element)
-            : base(element) {
+        public NewProjectDialog(VisualStudioApp app, AutomationElement element)
+            : base(app, element) {
         }
 
-        /// <summary>
-        /// Clicks the OK button on the dialog.
-        /// </summary>
-        public void ClickOK() {
-            ClickButtonByAutomationId("btn_OK");
+        public static NewProjectDialog FromDte(VisualStudioApp app) {
+            return app.FileNewProject();
+        }
+
+        public override void OK() {
+            ClickButtonAndClose("btn_OK", nameIsAutomationId: true);
         }
 
         /// <summary>
@@ -99,23 +100,19 @@ namespace TestUtilities.UI {
 
         public string ProjectName {
             get {
-                var filename = (ValuePattern)GetProjectNameBox().GetCurrentPattern(ValuePattern.Pattern);
-                return filename.Current.Value;
+                return ProjectNameBox.GetValuePattern().Current.Value;
             }
             set {
-                var filename = (ValuePattern)GetProjectNameBox().GetCurrentPattern(ValuePattern.Pattern);
-                filename.SetValue(value);
+                ProjectNameBox.GetValuePattern().SetValue(value);
             }
         }
 
         public string Location {
             get {
-                var location = (ValuePattern)GetLocationBox().GetCurrentPattern(ValuePattern.Pattern);
-                return location.Current.Value;
+                return LocationBox.GetValuePattern().Current.Value;
             }
             set {
-                var location = (ValuePattern)GetLocationBox().GetCurrentPattern(ValuePattern.Pattern);
-                location.SetValue(value);
+                LocationBox.GetValuePattern().SetValue(value);
             }
         }
 
@@ -143,22 +140,26 @@ namespace TestUtilities.UI {
             item.SetFocus();
         }
 
-        private AutomationElement GetProjectNameBox() {
-            return Element.FindFirst(TreeScope.Descendants,
-                new AndCondition(
-                    new PropertyCondition(AutomationElement.AutomationIdProperty, "txt_Name"),
-                    new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.Edit)
-                )
-            );
+        private AutomationElement ProjectNameBox {
+            get {
+                return Element.FindFirst(TreeScope.Descendants,
+                    new AndCondition(
+                        new PropertyCondition(AutomationElement.AutomationIdProperty, "txt_Name"),
+                        new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.Edit)
+                    )
+                );
+            }
         }
 
-        private AutomationElement GetLocationBox() {
-            return Element.FindFirst(TreeScope.Descendants,
-                new AndCondition(
-                    new PropertyCondition(AutomationElement.AutomationIdProperty, "PART_EditableTextBox"),
-                    new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.Edit)
-                )
-            );
+        private AutomationElement LocationBox {
+            get {
+                return Element.FindFirst(TreeScope.Descendants,
+                    new AndCondition(
+                        new PropertyCondition(AutomationElement.AutomationIdProperty, "PART_EditableTextBox"),
+                        new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.Edit)
+                    )
+                );
+            }
         }
     }
 }

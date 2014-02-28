@@ -1781,7 +1781,10 @@ namespace Microsoft.VisualStudioTools.Project {
 
             if (_userBuildProject == null) {
                 // user project file doesn't exist yet, create it.
-                _userBuildProject = new MSBuild.Project(BuildProject.ProjectCollection);
+                // We set the content of user file explictly so VS2013 won't add ToolsVersion="12" which would result in incompatibility with VS2010,2012   
+                var root = Microsoft.Build.Construction.ProjectRootElement.Create(BuildProject.ProjectCollection);
+                root.ToolsVersion = "4.0";
+                _userBuildProject = new MSBuild.Project(root, null, null, BuildProject.ProjectCollection);
                 _userBuildProject.FullPath = FileName + PerUserFileExtension;
             }
             _userBuildProject.SetProperty(propertyName, propertyValue ?? String.Empty);

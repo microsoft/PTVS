@@ -25,11 +25,10 @@ using EnvDTE;
 using EnvDTE80;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Intellisense;
-using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Options;
 using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.ComponentModelHost;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
@@ -40,7 +39,7 @@ using TestUtilities.UI;
 using TestUtilities.UI.Python;
 using VSLangProj;
 using MessageBoxButton = TestUtilities.UI.MessageBoxButton;
-using ST = System.Threading;
+using Thread = System.Threading.Thread;
 
 namespace PythonToolsUITests {
     [TestClass]
@@ -49,6 +48,33 @@ namespace PythonToolsUITests {
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
             PythonTestData.Deploy();
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void UserProjectFile() {
+            using (var app = new VisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var project = app.CreateProject(
+                    PythonVisualStudioApp.TemplateLanguageName,
+                    PythonVisualStudioApp.PythonApplicationTemplate,
+                    TestData.GetTempPath(),
+                    "TestNewProject"
+                );
+
+                // Ensure that the user project is created
+                ThreadHelper.Generic.Invoke(() => {
+                    project.GetPythonProject().SetUserProjectProperty("Test", "Value");
+                });
+
+                app.ExecuteCommand("File.SaveAll");
+
+                var userFile = project.FullName + ".user";
+                Assert.IsTrue(File.Exists(userFile), userFile + " does not exist on disk");
+                var xml = Microsoft.Build.Construction.ProjectRootElement.Open(userFile);
+                Assert.IsNotNull(xml);
+                Assert.AreEqual("4.0", xml.ToolsVersion, "ToolsVersion should be '4.0'");
+                Assert.AreEqual("Value", xml.Properties.Single(p => p.Name == "Test").Value, "Test property should be 'Value'");
+            }
         }
 
         [TestMethod, Priority(0), TestCategory("Core")]
@@ -756,7 +782,7 @@ namespace PythonToolsUITests {
                 var window = program.Open();
                 window.Activate();
 
-                System.Threading.Thread.Sleep(2000);
+                Thread.Sleep(2000);
 
                 var doc = app.GetDocument(program.Document.FullName);
                 var snapshot = doc.TextView.TextBuffer.CurrentSnapshot;
@@ -764,7 +790,7 @@ namespace PythonToolsUITests {
 
                 CompileFile("ClassLibraryBool.cs", "ClassLibrary.dll");
 
-                System.Threading.Thread.Sleep(2000);
+                Thread.Sleep(2000);
 
                 Assert.AreEqual(GetVariableAnalysis("a", snapshot).Values.First().Description, "bool");
             }
@@ -788,7 +814,7 @@ namespace PythonToolsUITests {
                 var window = program.Open();
                 window.Activate();
 
-                System.Threading.Thread.Sleep(2000);
+                Thread.Sleep(2000);
 
                 var doc = app.GetDocument(program.Document.FullName);
                 var snapshot = doc.TextView.TextBuffer.CurrentSnapshot;
@@ -803,13 +829,13 @@ namespace PythonToolsUITests {
                 // recompile one file, we should still have type info for both DLLs, with one updated
                 CompileFile("ClassLibraryBool.cs", "ClassLibrary.dll");
 
-                System.Threading.Thread.Sleep(2000);
+                Thread.Sleep(2000);
                 Assert.AreEqual(GetVariableAnalysis("a", snapshot).Values.First().Description, "bool");
                 Assert.AreEqual(GetVariableAnalysis("b", snapshot).Values.First().Description, "int");
 
                 // recompile the 2nd file, we should then have updated types for both DLLs
                 CompileFile("ClassLibrary2Char.cs", "ClassLibrary2.dll");
-                System.Threading.Thread.Sleep(2000);
+                Thread.Sleep(2000);
 
                 Assert.AreEqual(GetVariableAnalysis("a", snapshot).Values.First().Description, "bool");
                 Assert.AreEqual(GetVariableAnalysis("b", snapshot).Values.First().Description, "Char");
@@ -851,7 +877,7 @@ namespace PythonToolsUITests {
                 var window = program.Open();
                 window.Activate();
 
-                System.Threading.Thread.Sleep(2000);
+                Thread.Sleep(2000);
 
                 var doc = app.GetDocument(program.Document.FullName);
                 var snapshot = doc.TextView.TextBuffer.CurrentSnapshot;
@@ -897,7 +923,7 @@ namespace PythonToolsUITests {
 
                 ProjectNewFolder(app, solutionNode, projectNode);
 
-                System.Threading.Thread.Sleep(1000);
+                Thread.Sleep(1000);
                 Keyboard.Type("."); // bad filename
                 Keyboard.Type(System.Windows.Input.Key.Enter);
 
@@ -906,7 +932,7 @@ namespace PythonToolsUITests {
 #else
                 VisualStudioApp.CheckMessageBox(MessageBoxButton.Ok, ". is an invalid filename");
 #endif
-                System.Threading.Thread.Sleep(1000);
+                Thread.Sleep(1000);
 
                 Keyboard.Type(".."); // another bad filename
                 Keyboard.Type(System.Windows.Input.Key.Enter);
@@ -916,13 +942,13 @@ namespace PythonToolsUITests {
 #else
                 VisualStudioApp.CheckMessageBox(MessageBoxButton.Ok, ".. is an invalid filename");
 #endif
-                System.Threading.Thread.Sleep(1000);
+                Thread.Sleep(1000);
 
                 Keyboard.Type("Y"); // another bad filename
                 Keyboard.Type(System.Windows.Input.Key.Enter);
 
                 VisualStudioApp.CheckMessageBox(MessageBoxButton.Ok, "The folder Y already exists.");
-                System.Threading.Thread.Sleep(1000);
+                Thread.Sleep(1000);
 
                 Keyboard.Type("X"); // directory exists, but is ok.
                 Keyboard.Type(System.Windows.Input.Key.Enter);
@@ -948,7 +974,7 @@ namespace PythonToolsUITests {
                 Keyboard.ControlC();
 
                 Keyboard.ControlV();
-                System.Threading.Thread.Sleep(2000);
+                Thread.Sleep(2000);
 
                 // Make sure that copy/paste directly under the project node works:
                 // http://pytools.codeplex.com/workitem/738
@@ -956,7 +982,7 @@ namespace PythonToolsUITests {
 
                 ProjectNewFolder(app, solutionNode, projectNode);
 
-                System.Threading.Thread.Sleep(1000);
+                Thread.Sleep(1000);
                 Keyboard.Type("Fob");
                 Keyboard.Type(System.Windows.Input.Key.Enter);
 
@@ -971,7 +997,7 @@ namespace PythonToolsUITests {
                 Mouse.Click();
 
                 Keyboard.ControlV();
-                System.Threading.Thread.Sleep(2000);
+                Thread.Sleep(2000);
 
                 Assert.IsNotNull(solutionExplorer.FindItem("Solution 'AddFolderCopyAndPasteFile' (1 project)", "AddFolderCopyAndPasteFile", "Fob", "Program.py"));
             }
@@ -1011,7 +1037,7 @@ namespace PythonToolsUITests {
                 ClipboardSetFileDropList(paths);
                 Keyboard.ControlV();
 
-                System.Threading.Thread.Sleep(2000);
+                Thread.Sleep(2000);
 
                 Assert.IsNotNull(solutionExplorer.WaitForItem("Solution 'CopyAndPasteFolder' (1 project)", "CopyAndPasteFolder", "X", "CopiedFiles"));
                 Assert.IsTrue(File.Exists(Path.Combine("TestData", "CopyAndPasteFolder", "X", "CopiedFiles", "SomeFile.py")));
@@ -1075,7 +1101,7 @@ namespace PythonToolsUITests {
 
         private static void ClipboardSetFileDropList(StringCollection paths) {
             Exception exception = null;
-            var thread = new ST.Thread(p => {
+            var thread = new Thread(p => {
                 try {
                     Clipboard.SetFileDropList((StringCollection)p);
                 } catch (Exception ex) {
@@ -1408,7 +1434,7 @@ namespace PythonToolsUITests {
 
                 Mouse.MoveTo(solutionNode.GetClickablePoint());
                 Mouse.Click();
-                System.Threading.Thread.Sleep(1000);
+                Thread.Sleep(1000);
             }
         }
 
@@ -1416,18 +1442,18 @@ namespace PythonToolsUITests {
             Mouse.MoveTo(projectNode.GetClickablePoint());
             Mouse.Click(System.Windows.Input.MouseButton.Right);
 
-            System.Threading.Thread.Sleep(500);
+            Thread.Sleep(500);
 
             Keyboard.Type("d");
             Keyboard.PressAndRelease(System.Windows.Input.Key.Right);
             Keyboard.Type("d");
 
-            System.Threading.Thread.Sleep(500);
+            Thread.Sleep(500);
 
             Keyboard.Type(name);
             Keyboard.Type("\n");
 
-            System.Threading.Thread.Sleep(1000);
+            Thread.Sleep(1000);
         }
 
         private static ProjectItem WaitForItem(Project project, string name) {
@@ -1443,7 +1469,7 @@ namespace PythonToolsUITests {
                 } catch (ArgumentException) {
                 }
                 // wait for the edit to complete
-                System.Threading.Thread.Sleep(1000);
+                Thread.Sleep(1000);
             }
             Assert.IsTrue(found);
             return item;

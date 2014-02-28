@@ -446,4 +446,7 @@ See the Python Environments window for details.</value>
     <value>A regex pattern to identify static URIs, for example: ^/static/.*
 The web.config file will be configured to resolve URIs matching this pattern to a file system path rather than your application.</value>
   </data>
+  <data name="UpgradedUserToolsVersion" xml:space="preserve">
+    <value>The tools version of the .user file has been changed to 4.0 for compatibility between versions of Visual Studio.</value>
+  </data>
 </root>

@@ -1917,12 +1917,13 @@ namespace Microsoft.VisualStudioTools.Project {
         /// </summary>
         /// <param name="strPath">Path of the folder, can be relative to project or absolute</param>
         public virtual HierarchyNode CreateFolderNodes(string path, bool createOnDisk = true) {
-            Utilities.ArgumentNotNullOrEmpty("path", path);
+            Utilities.ArgumentNotNull("path", path);
 
             if (Path.IsPathRooted(path)) {
                 // Ensure we are using a path deeper than ProjectHome
-                if (!CommonUtils.IsSubpathOf(ProjectHome, path))
+                if (!CommonUtils.IsSubpathOf(ProjectHome, path)) {
                     throw new ArgumentException("The path is not within the project", "path");
+                }
 
                 path = CommonUtils.GetRelativeDirectoryPath(ProjectHome, path);
             }
@@ -3765,27 +3766,33 @@ namespace Microsoft.VisualStudioTools.Project {
 
             // Pre-calculates some paths that we can use when calling CanAddItems
             List<string> filesToAdd = new List<string>();
-            for (int index = 0; index < files.Length; index++) {
+            foreach (var file in files) {
+                string fileName;
                 string newFileName = String.Empty;
 
-                string file = files[index];
-
                 switch (op) {
-                    case VSADDITEMOPERATION.VSADDITEMOP_CLONEFILE: {
-                            string fileName = Path.GetFileName(itemName ?? file);
-                            newFileName = CommonUtils.GetAbsoluteFilePath(baseDir, fileName);
-                        }
+                    case VSADDITEMOPERATION.VSADDITEMOP_CLONEFILE:
+                        fileName = Path.GetFileName(itemName ?? file);
+                        newFileName = CommonUtils.GetAbsoluteFilePath(baseDir, fileName);
                         break;
                     case VSADDITEMOPERATION.VSADDITEMOP_LINKTOFILE:
-                    case VSADDITEMOPERATION.VSADDITEMOP_OPENFILE: {
-                            string fileName = Path.GetFileName(file);
-                            newFileName = CommonUtils.GetAbsoluteFilePath(baseDir, fileName);
+                    case VSADDITEMOPERATION.VSADDITEMOP_OPENFILE:
+                        fileName = Path.GetFileName(file);
+                        newFileName = CommonUtils.GetAbsoluteFilePath(baseDir, fileName);
 
-                            var friendlyPath = CommonUtils.CreateFriendlyFilePath(ProjectHome, file);
+                        if (isLink && CommonUtils.IsSubpathOf(ProjectHome, file)) {
+                            // creating a link to a file that's actually in the project, it's not really a link.
+                            isLink = false;
 
-                            if (isLink && CommonUtils.IsSubpathOf(ProjectHome, file)) {
-                                // creating a link to a file that's actually in the project, it's not really a link.
-                                isLink = false;
+                            // If the file is not going to be added in its
+                            // current path (GetDirectoryName(file) != baseDir),
+                            // we need to update the filename and also update
+                            // the destination node (n). Otherwise, we don't
+                            // want to change the destination node (previous
+                            // behavior) - just trust that our caller knows
+                            // what they are doing. (Web Essentials relies on
+                            // this.)
+                            if (!CommonUtils.IsSameDirectory(baseDir, Path.GetDirectoryName(file))) {
                                 newFileName = file;
                                 n = this.CreateFolderNodes(Path.GetDirectoryName(file));
                             }

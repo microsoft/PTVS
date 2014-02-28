@@ -275,7 +275,7 @@ namespace TestUtilities.UI {
 
         public NewProjectDialog FileNewProject() {
             var dialog = OpenDialogWithDteExecuteCommand("File.NewProject");
-            return new NewProjectDialog(AutomationElement.FromHandle(dialog));
+            return new NewProjectDialog(this, AutomationElement.FromHandle(dialog));
         }
 
         public AttachToProcessDialog OpenDebugAttach() {

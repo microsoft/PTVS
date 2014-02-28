@@ -798,6 +798,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The tools version of the .user file has been changed to 4.0 for compatibility between versions of Visual Studio..
+        /// </summary>
+        internal static string UpgradedUserToolsVersion {
+            get {
+                return ResourceManager.GetString("UpgradedUserToolsVersion", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to &amp;Install/upgrade {PythonWebFrameworkPackageDisplayName}.
         /// </summary>
         internal static string UpgradeWebFrameworkLabel {

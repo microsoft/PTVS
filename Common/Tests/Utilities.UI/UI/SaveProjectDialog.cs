@@ -16,9 +16,9 @@ using System;
 using System.Windows.Automation;
 
 namespace TestUtilities.UI {
-    class SaveProjectDialog : AutomationWrapper {
-        public SaveProjectDialog(IntPtr hwnd)
-            : base(AutomationElement.FromHandle(hwnd)) {
+    class SaveProjectDialog : AutomationDialog {
+        public SaveProjectDialog(VisualStudioApp app, AutomationElement element)
+            : base(app, element) {
         }
 
         public void Save() {

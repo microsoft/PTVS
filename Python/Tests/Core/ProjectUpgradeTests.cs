@@ -114,5 +114,52 @@ namespace PythonToolsTests {
                 Assert.AreEqual(typeof(PythonProjectFactory).GUID, factoryGuid);
             }
         }
+
+        [TestMethod, Priority(0)]
+        public void UpgradeCheckUserToolsVersion() {
+            var factory = new PythonProjectFactory(null);
+            var sp = new MockServiceProvider();
+            sp.Services["SVsQueryEditQuerySave"] = null;
+            sp.Services["SVsActivityLog"] = new MockActivityLog();
+            factory.Site = sp;
+
+            var projectFile = TestData.GetPath(Path.Combine("TestData", "ProjectUpgrade", "CorrectToolsVersion.pyproj"));
+
+            var upgrade = (IVsProjectUpgradeViaFactory)factory;
+            
+            foreach (var testCase in new[] {
+#if DEV12_OR_LATER
+                new { Name = "12.0", Expected = 0 },
+#else
+                new { Name = "12.0", Expected = 1 },
+#endif
+                new { Name = "4.0", Expected = 0 }
+            }) {
+                int actual;
+                int hr;
+                Guid factoryGuid;
+                uint flags;
+
+                var xml = Microsoft.Build.Construction.ProjectRootElement.Create();
+                xml.ToolsVersion = testCase.Name;
+                xml.Save(projectFile + ".user");
+
+                try {
+                    hr = upgrade.UpgradeProject_CheckOnly(
+                        projectFile,
+                        null,
+                        out actual,
+                        out factoryGuid,
+                        out flags
+                    );
+                } finally {
+                    File.Delete(projectFile + ".user");
+                }
+
+                Assert.AreEqual(0, hr, string.Format("Wrong HR for ToolsVersion={0}", testCase.Name));
+                Assert.AreEqual(testCase.Expected, actual, string.Format("Wrong result for ToolsVersion={0}", testCase.Name));
+                Assert.AreEqual(typeof(PythonProjectFactory).GUID, factoryGuid);
+            }
+        }
     }
 }
