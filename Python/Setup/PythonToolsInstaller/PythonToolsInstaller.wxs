@@ -39,16 +39,17 @@
     <?endif ?>
 
     <PropertyRef Id="VSINSTALLPATH"/>
-    <PropertyRef Id="WDINSTALLPATH"/>
-    <PropertyRef Id="VWDINSTALLPATH"/>
+    <PropertyRef Id="DEVENV_PATH"/>
+    <PropertyRef Id="WDEXPRESS_PATH"/>
+    <PropertyRef Id="VWDEXPRESS_PATH"/>
     
     <?if "$(var.VSTargetVersion)" = "10.0" ?>
     <Condition Message="Visual Studio 2010 is required.  PTVS for other versions of Visual Studio can be downloaded from http://pytools.codeplex.com/."> VSINSTALLPATH OR Installed </Condition>
     <?elseif "$(var.VSTargetVersion)" = "11.0" ?>
     <Condition Message="Visual Studio 2012 is required.  PTVS for other versions of Visual Studio can be downloaded from http://pytools.codeplex.com/."> VSINSTALLPATH OR Installed </Condition>
     <?elseif "$(var.VSTargetVersion)" = "12.0" ?>
-    <Condition Message="Visual Studio 2013 is required.  The free Express for Desktop and Express for Web editions can be downloaded from http://www.visualstudio.com/.">
-      VSINSTALLPATH OR WDINSTALLPATH OR VWDINSTALLPATH OR Installed
+    <Condition Message="Visual Studio 2013 is required.  The free Visual Studio Express 2013 for Desktop and Visual Studio Express 2013 for Web editions, as well as the required Visual Studio 2013 Update 2, can be downloaded from http://www.visualstudio.com/.">
+      VSINSTALLPATH OR WDEXPRESS_PATH OR VWDEXPRESS_PATH OR Installed
     </Condition>
     <?else?>
     <Condition Message="Visual Studio v$(var.VSTargetVersion) must be installed."> VSINSTALLPATH OR Installed </Condition>
@@ -209,10 +210,6 @@
 
 
     <!-- Execute devenv /setup -->
-    <PropertyRef Id="DEVENV_PATH"/>
-    <PropertyRef Id="WDEXPRESS_PATH"/>
-    <PropertyRef Id="VWDEXPRESS_PATH"/>
-
     <CustomAction Id="DevEnvSetup" Property="DEVENV_PATH" ExeCommand="/setup" Execute="deferred" Return="check" Impersonate="no" />
     <CustomAction Id="DevEnvSetup_Rollback" Property="DEVENV_PATH" ExeCommand="/setup" Execute="rollback" Return="check" Impersonate="no" />
     <CustomAction Id="WDExpressSetup" Property="WDEXPRESS_PATH" ExeCommand="/setup" Execute="deferred" Return="check" Impersonate="no" />
