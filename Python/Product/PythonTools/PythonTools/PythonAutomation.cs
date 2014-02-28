@@ -39,21 +39,10 @@ namespace Microsoft.PythonTools {
         }
 
         IPythonInteractiveOptions IPythonOptions.GetInteractiveOptions(string interpreterName) {
-            var service = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
-            if (service == null) {
-                return null;
-            }
-            var factory = service.Interpreters.FirstOrDefault(i => i.Description == interpreterName);
+            var interpreters = PythonToolsPackage.Instance.InterpreterOptionsPage._options.Keys;
+            var factory = interpreters.FirstOrDefault(i => i.Description == interpreterName);
 
             return factory == null ? null : new AutomationInterpreterOptions(factory);
-        }
-
-        private bool IsSameInterpreter(IPythonInterpreterFactory interpreter, string interpreterName) {
-            if (interpreter.Description == interpreterName) {
-                return true;
-            }
-
-            return false;
         }
 
         bool IPythonOptions.PromptBeforeRunningWithBuildErrorSetting {
