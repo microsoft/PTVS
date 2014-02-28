@@ -222,6 +222,7 @@ namespace Microsoft.PythonTools.Analysis {
                         using (var reader = new StreamReader(file)) {
                             string line;
                             while ((line = reader.ReadLine()) != null) {
+                                line = line.Trim();
                                 if (line.StartsWith("import ", StringComparison.Ordinal) ||
                                     !CommonUtils.IsValidPath(line)) {
                                     continue;
