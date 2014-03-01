@@ -236,7 +236,7 @@ namespace TestUtilities.UI {
             Console.WriteLine("REPL Clearing screen");
             ReadyForInput.Reset();
             _app.ExecuteCommand("OtherContextMenus.InteractiveConsole.ClearScreen");
-            Assert.IsTrue(ReadyForInput.WaitOne(1000));
+            Assert.IsTrue(ReadyForInput.WaitOne(10000));
         }
 
         public void CancelExecution(int attempts = 100) {
