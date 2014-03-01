@@ -4,23 +4,35 @@
   <Property Id="VWDEXTENSION_INSTALLPATH" Secure="yes" SuppressModularization="yes" />
   
   <Directory Id="TARGETDIR" Name="SourceDir">
-    <Directory Id="Dir_VSExtensions_FakeParent" Name="VSExtensions">
-      <Directory Id="Dir_VSExtensions" ComponentGuidGenerationSeed="{54A5E3E9-B80C-4BD4-87C9-B6A5B054471E}" />
+    <Directory Id="Dir_VSExtensions_FakeParent" Name="VSExtensions" ComponentGuidGenerationSeed="{54A5E3E9-B80C-4BD4-87C9-B6A5B054471E}">
+      <Directory Id="Dir_VSExtensions_Ver" Name="$(var.VSTargetVersion)">
+        <Directory Id="Dir_VSExtensions" />
+      </Directory>
     </Directory>
-    <Directory Id="Dir_VSTemplates_FakeParent" Name="VSTemplates">
-      <Directory Id="Dir_VSTemplates" ComponentGuidGenerationSeed="{0CF200D4-4455-42E7-88A5-09DE804DA3A9}" />
+    <Directory Id="Dir_VSTemplates_FakeParent" Name="VSTemplates" ComponentGuidGenerationSeed="{0CF200D4-4455-42E7-88A5-09DE804DA3A9}">
+      <Directory Id="Dir_VSTemplates_Ver" Name="$(var.VSTargetVersion)">
+        <Directory Id="Dir_VSTemplates" />
+      </Directory>
     </Directory>
-    <Directory Id="Dir_WDExtensions_FakeParent" Name="WDExtensions">
-      <Directory Id="Dir_WDExtensions" ComponentGuidGenerationSeed="{95CC9EB7-DA86-4B25-AFB6-DA24083C7AD6}" />
+    <Directory Id="Dir_WDExtensions_FakeParent" Name="WDExtensions" ComponentGuidGenerationSeed="{95CC9EB7-DA86-4B25-AFB6-DA24083C7AD6}">
+      <Directory Id="Dir_WDExtensions_Ver" Name="$(var.VSTargetVersion)">
+        <Directory Id="Dir_WDExtensions" />
+      </Directory>
     </Directory>
-    <Directory Id="Dir_WDTemplates_FakeParent" Name="WDTemplates">
-      <Directory Id="Dir_WDTemplates" ComponentGuidGenerationSeed="{32904C4A-CDFF-45F7-A68F-34BFE8DD509A}" />
+    <Directory Id="Dir_WDTemplates_FakeParent" Name="WDTemplates" ComponentGuidGenerationSeed="{32904C4A-CDFF-45F7-A68F-34BFE8DD509A}">
+      <Directory Id="Dir_WDTemplates_Ver" Name="$(var.VSTargetVersion)">
+        <Directory Id="Dir_WDTemplates" />
+      </Directory>
     </Directory>
-    <Directory Id="Dir_VWDExtensions_FakeParent" Name="VWDExtensions">
-      <Directory Id="Dir_VWDExtensions" ComponentGuidGenerationSeed="{5851DF99-09FF-4EDE-A898-0E367C7C5465}" />
+    <Directory Id="Dir_VWDExtensions_FakeParent" Name="VWDExtensions" ComponentGuidGenerationSeed="{5851DF99-09FF-4EDE-A898-0E367C7C5465}">
+      <Directory Id="Dir_VWDExtensions_Ver" Name="$(var.VSTargetVersion)">
+        <Directory Id="Dir_VWDExtensions" />
+      </Directory>
     </Directory>
-    <Directory Id="Dir_VWDTemplates_FakeParent" Name="VWDTemplates">
-      <Directory Id="Dir_VWDTemplates" ComponentGuidGenerationSeed="{269F9981-57A3-42AD-BBA6-73D1AAC79667}" />
+    <Directory Id="Dir_VWDTemplates_FakeParent" Name="VWDTemplates" ComponentGuidGenerationSeed="{269F9981-57A3-42AD-BBA6-73D1AAC79667}">
+      <Directory Id="Dir_VWDTemplates_Ver" Name="$(var.VSTargetVersion)">
+        <Directory Id="Dir_VWDTemplates" />
+      </Directory>
     </Directory>
   </Directory>
 

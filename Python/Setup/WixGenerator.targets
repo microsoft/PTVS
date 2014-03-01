@@ -13,6 +13,7 @@
         <IdPrefix>GAC_</IdPrefix>
         <InstallDirectory>GAC</InstallDirectory>
         <InstallDirectoryNeedsPrefix>false</InstallDirectoryNeedsPrefix>
+        <ExtraFileAttributes>Assembly=".net"</ExtraFileAttributes>
       </_SourceFiles>
       <_SourceFiles Include="@(File)" />
       <_SourceFiles Include="@(SharedFile)">
@@ -46,7 +47,7 @@
 
       <_SharedFileData Include="@(_Files)" Condition="!%(InstallDirectoryNeedsPrefix)">
         <Xml><![CDATA[<Component Id="Comp_%(_Files._Id)" Guid="*" Directory="%(_Files.InstallDirectory)">
-  <File Id="File_%(_Files._Id)" KeyPath="yes" Source="%(_Files.Identity)" />
+  <File Id="File_%(_Files._Id)" KeyPath="yes" Source="%(_Files.Identity)" %(_Files.ExtraFileAttributes) />
 </Component>
 ]]></Xml>
       </_SharedFileData>
@@ -55,7 +56,7 @@
         <Xml1 Condition="!%(_Files.IncludeInVS)" />
         <Xml1 Condition="%(_Files.IncludeInVS)">
           <![CDATA[<Component Id="Comp_VS_%(_Files._Id)" Guid="*" Directory="Dir_VS%(_Files.InstallDirectory)">
-  <File Id="File_VS_%(_Files._Id)" KeyPath="yes" Source="%(_Files.Identity)" />
+  <File Id="File_VS_%(_Files._Id)" KeyPath="yes" Source="%(_Files.Identity)" %(_Files.ExtraFileAttributes) />
 </Component>
 ]]>
         </Xml1>
@@ -63,7 +64,7 @@
         <Xml2 Condition="%(_Files.IncludeInWD)">
           <![CDATA[<Component Id="Comp_WD_%(_Files._Id)" Guid="*" Directory="Dir_WD%(_Files.InstallDirectory)">
   <Condition>WDEXTENSION_INSTALLPATH</Condition>
-  <File Id="File_WD_%(_Files._Id)" KeyPath="yes" Source="%(_Files.Identity)" />
+  <File Id="File_WD_%(_Files._Id)" KeyPath="yes" Source="%(_Files.Identity)" %(_Files.ExtraFileAttributes) />
 </Component>
 ]]>
         </Xml2>
@@ -71,7 +72,7 @@
         <Xml3 Condition="%(_Files.IncludeInVWD)">
           <![CDATA[<Component Id="Comp_VWD_%(_Files._Id)" Guid="*" Directory="Dir_VWD%(_Files.InstallDirectory)">
   <Condition>VWDEXTENSION_INSTALLPATH</Condition>
-  <File Id="File_VWD_%(_Files._Id)" KeyPath="yes" Source="%(_Files.Identity)" />
+  <File Id="File_VWD_%(_Files._Id)" KeyPath="yes" Source="%(_Files.Identity)" %(_Files.ExtraFileAttributes) />
 </Component>
 ]]>
         </Xml3>
