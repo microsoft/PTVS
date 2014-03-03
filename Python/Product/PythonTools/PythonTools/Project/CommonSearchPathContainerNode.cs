@@ -108,8 +108,13 @@ namespace Microsoft.PythonTools.Project {
                 switch (cmd) {
                     case CommonConstants.AddSearchPathCommandId:
                     case PythonConstants.AddSearchPathZipCommandId:
-                    case PythonConstants.AddPythonPathToSearchPathCommandId:
                         result |= QueryStatusResult.SUPPORTED | QueryStatusResult.ENABLED;
+                        return VSConstants.S_OK;
+                    case PythonConstants.AddPythonPathToSearchPathCommandId:
+                        result |= QueryStatusResult.SUPPORTED;
+                        if (_projectNode.IsPythonPathSet()) {
+                            result |= QueryStatusResult.ENABLED;
+                        }
                         return VSConstants.S_OK;
                 }
             }

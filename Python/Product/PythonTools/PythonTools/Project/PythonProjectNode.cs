@@ -1076,6 +1076,12 @@ namespace Microsoft.PythonTools.Project {
             return VSConstants.S_OK;
         }
 
+        internal bool IsPythonPathSet() {
+            return !string.IsNullOrEmpty(
+                Environment.GetEnvironmentVariable(GetInterpreterFactory().Configuration.PathEnvironmentVariable)
+            );
+        }
+
         internal int AddPythonPathToSearchPath() {
             var value = Environment.GetEnvironmentVariable(GetInterpreterFactory().Configuration.PathEnvironmentVariable);
             if (string.IsNullOrEmpty(value)) {
