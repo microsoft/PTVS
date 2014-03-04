@@ -1132,7 +1132,6 @@ namespace Microsoft.PythonTools.Project {
         /// </summary>
         internal Task ShowAddVirtualEnvironment(bool browseForExisting) {
             var service = PythonToolsPackage.ComponentModel.GetService<IInterpreterOptionsService>();
-            var scheduler = TaskScheduler.FromCurrentSynchronizationContext();
 
             var data = AddVirtualEnvironment.ShowDialog(this, service, browseForExisting);
 

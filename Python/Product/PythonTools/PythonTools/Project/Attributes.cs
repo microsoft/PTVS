@@ -78,6 +78,7 @@ namespace Microsoft.PythonTools.Project {
         public const string VirtualEnvCreationSucceeded = "VirtualEnvCreationSucceeded";
         public const string VirtualEnvCreationFailed = "VirtualEnvCreationFailed";
         public const string VirtualEnvCreationFailedExitCode = "VirtualEnvCreationFailedExitCode";
+        public const string VirtualEnvAddFailed = "VirtualEnvAddFailed";
 
         public const string ErrorRunningCustomCommand = "ErrorRunningCustomCommand";
         public const string ErrorBuildingCustomCommand = "ErrorBuildingCustomCommand";

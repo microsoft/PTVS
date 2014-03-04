@@ -13,19 +13,17 @@
  * ***************************************************************************/
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Interpreters;
 using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools.Project;
 using OleConstants = Microsoft.VisualStudio.OLE.Interop.Constants;
 using VsCommands = Microsoft.VisualStudio.VSConstants.VSStd97CmdID;
+using VsMenus = Microsoft.VisualStudioTools.Project.VsMenus;
 
 namespace Microsoft.PythonTools.Project {
     /// <summary>
@@ -148,10 +146,25 @@ namespace Microsoft.PythonTools.Project {
                         goto case PythonConstants.AddVirtualEnv;
                     case PythonConstants.AddVirtualEnv:
                         _projectNode.ShowAddVirtualEnvironment(browseForExisting).ContinueWith(t => {
-                                var statusBar = (IVsStatusbar)GetService(typeof(SVsStatusbar));
-                                statusBar.SetText(string.Format("Error adding virtual environment: {0}",
-                                    t.Exception.InnerException.Message));
-                            }, 
+                            var ex = t.Exception;
+                            if (ex == null) {
+                                return;
+                            }
+
+                            var statusBar = (IVsStatusbar)GetService(typeof(SVsStatusbar));
+                            statusBar.SetText(SR.GetString(SR.VirtualEnvAddFailed));
+
+                            Debug.WriteLine("Failed to add virtual environment.\r\n{0}", ex.InnerException ?? ex);
+
+                            try {
+                                ActivityLog.LogError(
+                                    SR.GetString(SR.PythonToolsForVisualStudio),
+                                    (ex.InnerException ?? ex).ToString()
+                                );
+                            } catch (InvalidOperationException) {
+                                // Activity log may be unavailable
+                            }
+                        }, 
                             CancellationToken.None,
                             TaskContinuationOptions.OnlyOnFaulted,
                             TaskScheduler.FromCurrentSynchronizationContext());

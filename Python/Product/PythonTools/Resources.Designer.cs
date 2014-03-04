@@ -816,6 +816,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Failed to create or add the virtual environment. See the Output window for details..
+        /// </summary>
+        internal static string VirtualEnvAddFailed {
+            get {
+                return ResourceManager.GetString("VirtualEnvAddFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Virtual environment is being created at &apos;{0}&apos;.
         /// </summary>
         internal static string VirtualEnvCreating {
