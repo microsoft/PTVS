@@ -13,8 +13,41 @@ function submit_symbols {
     UserName=$env:username"
 }
 
+function _find_sdk_tool {
+    param($tool)
+    
+    $_tool_item = ""
+    foreach ($ver in ("v8.1A", "v8.0A")) {
+        foreach ($kit in ("WinSDK-NetFx40Tools-x64", "WinSDK-NetFx40Tools-x86", "WinSDK-NetFx40Tools")) {
+            $_kit_path = (Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Microsoft SDKs\Windows\$ver\$kit" -EA 0)
+            if (-not $_kit_path) {
+                $_kit_path = (Get-ItemProperty "HKLM:\SOFTWARE\Wow6432Node\Microsoft\Microsoft SDKs\Windows\$ver\$kit" -EA 0)
+            }
+
+            if ($_kit_path -and (Test-Path $_kit_path.InstallationFolder)) {
+                $_tool_item = Get-Item "$($_kit_path.InstallationFolder)\$tool.exe" -EA 0
+                if (-not (Test-Path alias:\$tool) -and $_tool_item) {
+                    Set-Alias -Name $tool -Value $_tool_item.FullName -Scope Global
+                }
+            }
+        }
+    }
+}
+
 function begin_sign_files {
-    param($files, $outdir, $approvers, $projectName, $projectUrl, $jobDescription, $jobKeywords, $certificates)
+    param($files, $outdir, $approvers, $projectName, $projectUrl, $jobDescription, $jobKeywords, $certificates, [switch] $delaysigned)
+    
+    if ($delaysigned) {
+        # Ensure that all files are delay-signed
+        # "sn -q -v ..." is true if the assembly has strong name and skip verification
+        _find_sdk_tool "sn"
+        if (Test-Path alias:\sn) {
+            $not_delay_signed = $files | %{ gi $_.path } | ?{ sn -q -v $_ }
+            if ($not_delay_signed) {
+                Write-Error "Delay-signed check failed: $($not_delay_signed | %{ $_.Name })" -EA Stop
+            }
+        }
+    }
     
     [Reflection.Assembly]::Load("CODESIGN.Submitter, Version=3.0.0.6, Culture=neutral, PublicKeyToken=3d8252bd1272440d, processorArchitecture=MSIL") | Out-Null
     [Reflection.Assembly]::Load("CODESIGN.PolicyManager, Version=1.0.0.0, Culture=neutral, PublicKeyToken=3d8252bd1272440d, processorArchitecture=MSIL") | Out-Null
@@ -50,7 +83,7 @@ job.AddFile($($file.path), $($file.name), $projectUrl, None)"
     }
     
     $msg = "$msg
-Returning @{@{filecount=$($files.Count); outdir=$outdir}"
+Returning @{filecount=$($files.Count); outdir=$outdir}"
     Write-Debug $msg
     
     $uniqueJobFolderID = ((Get-Date -format "yyyyMMdd-HHmmss").ToString() + "-" + (Get-Date).Millisecond.ToString())
@@ -65,15 +98,15 @@ Returning @{@{filecount=$($files.Count); outdir=$outdir}"
     $mockFolderPath = $mockJob.JobCompletionPath    
     mkdir $mockFolderPath -EA 0 | Out-Null
 
-    foreach($file in $files) {      
+    foreach($file in $files) {
         $destPath = "$($mockFolderPath)\$($fileInfo.Name)"
         copy -path $($file.path) -dest $destPath
         if (-not $?) {
             Write-Output "Failed to copy $($file.path) to $destPath"
-        }            
+        }
     }
-   
-    return @{job=$mockJob; description=$jobDescription; filecount=$($files.Count); outdir=$outdir}
+    
+    return @{rjob=$job; job=$mockJob; description=$jobDescription; filecount=$($files.Count); outdir=$outdir}
 }
 
 function end_sign_files {

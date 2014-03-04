@@ -119,6 +119,7 @@ param(
     [switch] $skipclean,
     [switch] $skipcopy,
     [switch] $skipdebug,
+    [switch] $skipbuild,
     [switch] $dev
 )
 
@@ -182,8 +183,10 @@ if ($name) {
     '-name [build name]' must be specified when using '-internal'"
 }
 
-if ($release -or $mockrelease) {
-    $approvers = "smortaz", "dinov", "stevdo", "pminaev", "arturl", "zacha", "gilbertw", "huvalo"
+$signedbuild = $release -or $mockrelease
+if ($signedbuild) {
+    $signedbuildText = "true"
+    $approvers = "smortaz", "dinov", "stevdo", "pminaev", "arturl", "gilbertw", "huvalo"
     $approvers = @($approvers | Where-Object {$_ -ne $env:USERNAME})
     $symbol_contacts = "$env:username;dinov;smortaz;stevdo;gilbertw"
     
@@ -199,6 +202,8 @@ if ($release -or $mockrelease) {
         Import-Module -force $buildroot\Common\Setup\ReleaseHelpers.psm1
     }
     Pop-Location
+} else {
+    $signedbuildText = "false"
 }
 
 # Add new products here
@@ -356,16 +361,14 @@ try {
     Set-ItemProperty $asmverfile -Name IsReadOnly -Value $false
     (Get-Content $asmverfile) | %{ $_ -replace ' = "4100.00"', (' = "' + $buildnumber + '"') } | Set-Content $asmverfile
 
-    foreach ($targetVs in $targetVersions) {
-        foreach ($config in $targetConfigs)
-        {
+    foreach ($config in $targetConfigs) {
+        foreach ($targetVs in $targetVersions) {
             $bindir = "Binaries\$config$($targetVs.number)"
             $destdir = "$outdir\$($targetVs.name)\$config"
             mkdir $destdir -EA 0 | Out-Null
             $includeVsLogger = test-path Internal\Python\VsLogger\VsLogger.csproj
             
-            if (-not $skiptests)
-            {
+            if (-not $skiptests -and -not $skipbuild) {
                 msbuild /m /v:m /fl /flp:"Verbosity=n;LogFile=BuildRelease.$config.$($targetVs.number).tests.log" `
                     /t:$target `
                     /p:Configuration=$config `
@@ -374,6 +377,7 @@ try {
                     /p:VSTarget=$($targetVs.number) `
                     /p:VisualStudioVersion=$($targetVs.number) `
                     /p:"CustomBuildIdentifier=$name" `
+                    /p:ReleaseBuild=$signedbuildText `
                     Python\Tests\dirs.proj
 
                 if ($LASTEXITCODE -gt 0) {
@@ -383,28 +387,24 @@ try {
                 }
             }
             
-            if ($release -or $mockrelease) {
-              $signedbuild = "true"
-            } else {
-              $signedbuild = "false"
-            }
+            if (-not $skipbuild) {
+                msbuild /v:n /m /fl /flp:"Verbosity=d;LogFile=BuildRelease.$config.$($targetVs.number).log" `
+                    /t:$target `
+                    /p:Configuration=$config `
+                    /p:WixVersion=$version `
+                    /p:WixReleaseVersion=$fileVersion `
+                    /p:VSTarget=$($targetVs.number) `
+                    /p:VisualStudioVersion=$($targetVs.number) `
+                    /p:"CustomBuildIdentifier=$name" `
+                    /p:IncludeVsLogger=$includeVsLogger `
+                    /p:ReleaseBuild=$signedbuildText `
+                    Python\Setup\dirs.proj
 
-            msbuild /v:n /m /fl /flp:"Verbosity=d;LogFile=BuildRelease.$config.$($targetVs.number).log" `
-                /t:$target `
-                /p:Configuration=$config `
-                /p:WixVersion=$version `
-                /p:WixReleaseVersion=$fileVersion `
-                /p:VSTarget=$($targetVs.number) `
-                /p:VisualStudioVersion=$($targetVs.number) `
-                /p:SignedBuild=$signedbuild `
-                /p:"CustomBuildIdentifier=$name" `
-                /p:IncludeVsLogger=$includeVsLogger `
-                Python\Setup\dirs.proj
-
-            if ($LASTEXITCODE -gt 0) {
-                Write-Error -EA:Continue "Build failed: $config"
-                $failed_logs += Get-Item "BuildRelease.$config.$($targetVs.number).log"
-                continue
+                if ($LASTEXITCODE -gt 0) {
+                    Write-Error -EA:Continue "Build failed: $config"
+                    $failed_logs += Get-Item "BuildRelease.$config.$($targetVs.number).log"
+                    continue
+                }
             }
             
             Copy-Item -force $bindir\*.msi $destdir\
@@ -422,12 +422,16 @@ try {
             
             mkdir $destdir\Binaries\ReplWindow -EA 0 | Out-Null
             Copy-Item -force -recurse Python\Product\ReplWindow\obj\Dev$($targetVs.number)\$config\extension.vsixmanifest $destdir\Binaries\ReplWindow
+        }
+        
+        ######################################################################
+        ##  BEGIN SIGNING CODE
+        ######################################################################
+        if ($signedBuild) {
+            $jobs = @()
             
-            ######################################################################
-            ##  BEGIN SIGNING CODE
-            ######################################################################
-            if ($release -or $mockrelease) {
-                submit_symbols "PTVS$spacename" "$buildnumber $($targetvs.name)" "symbols" "$destdir\Symbols" $symbol_contacts
+            foreach ($targetVs in $targetVersions) {
+                $destdir = "$outdir\$($targetVs.name)\$config"
 
                 $managed_files = @((
                     "Microsoft.PythonTools.Analysis.dll", 
@@ -464,19 +468,29 @@ try {
                     ) | ForEach {@{path="$destdir\Binaries\$_"; name=$projectName}} `
                       | Where-Object {Test-Path $_.path})
 
-                $job1 = begin_sign_files $managed_files "$destdir\SignedBinaries" $approvers `
-                    $projectName $projectUrl "$projectName - managed code" $projectKeywords `
-                    "authenticode;strongname"
+                Write-Output "Submitting signing jobs for $($targetVs.name)"
 
-                $job2 = begin_sign_files $native_files "$destdir\SignedBinaries" $approvers `
-                    $projectName $projectUrl "$projectName - native code" $projectKeywords `
-                    "authenticode"
+                $jobs += begin_sign_files $managed_files "$destdir\SignedBinaries" $approvers `
+                    $projectName $projectUrl "$projectName $($targetVs.name) - managed code" $projectKeywords `
+                    "authenticode;strongname" `
+                    -delaysigned
 
-                end_sign_files @($job1, $job2)
+                $jobs += begin_sign_files $native_files "$destdir\SignedBinaries" $approvers `
+                    $projectName $projectUrl "$projectName $($targetVs.name) - native code" $projectKeywords `
+                    "authenticode" 
+            }
+            
+            end_sign_files $jobs
+            
+            foreach ($targetVs in $targetVersions) {
+                $bindir = "Binaries\$config$($targetVs.number)"
+                $destdir = "$outdir\$($targetVs.name)\$config"
+
                 Copy-Item "$destdir\SignedBinaries\*" $bindir -Recurse -Force
 
                 submit_symbols "PTVS$spacename" "$buildnumber $($targetvs.name)" "binaries" "$destdir\SignedBinaries" $symbol_contacts
-                
+                submit_symbols "PTVS$spacename" "$buildnumber $($targetvs.name)" "symbols" "$destdir\Symbols" $symbol_contacts
+
                 foreach ($cmd in (Get-Content "BuildRelease.$config.$($targetVs.number).log") | Select-String "light.exe.+-out") {
                     $targetdir = [regex]::Match($cmd, 'Python\\Setup\\([^\\]+)').Groups[1].Value
 
@@ -503,28 +517,39 @@ try {
                 
                 Move-Item $destdir\*.msi $destdir\UnsignedMsi -Force
                 Move-Item $bindir\*.msi $destdir\SignedBinariesUnsignedMsi -Force
-                
+            }
+            
+            $jobs = @()
+            
+            foreach ($targetVs in $targetVersions) {
+                $destdir = "$outdir\$($targetVs.name)\$config"
                 $msi_files = @($products | 
                     ForEach {@{
                         path="$destdir\SignedBinariesUnsignedMsi\$($_.msi)";
                         name="Python Tools for Visual Studio$($_.signtag)"
                     }}
                 )
-                
-                $job = begin_sign_files $msi_files $destdir $approvers `
-                    $projectName $projectUrl "$projectName - installer" $projectKeywords `
+
+                Write-Output "Submitting MSI signing job for $($targetVs.name)"
+
+                $jobs += begin_sign_files $msi_files $destdir $approvers `
+                    $projectName $projectUrl "$projectName $($targetVs.name) - installer" $projectKeywords `
                     "authenticode"
-                end_sign_files @(,$job)
             }
-            ######################################################################
-            ##  END SIGNING CODE
-            ######################################################################
+            
+            end_sign_files $jobs
         }
+        ######################################################################
+        ##  END SIGNING CODE
+        ######################################################################
         
-        foreach ($product in $products) {
-            Copy-Item "$destdir\$($product.msi)" "$outdir\$($product.outname1)$spacename $($targetvs.name)$($product.outname2)" -Force -EA:0
-            if (-not $?) {
-                Write-Output "Failed to copy $destdir\$($product.msi)"
+        foreach ($targetVs in $targetVersions) {
+            $destdir = "$outdir\$($targetVs.name)\$config"
+            foreach ($product in $products) {
+                Copy-Item "$destdir\$($product.msi)" "$outdir\$($product.outname1)$spacename $($targetvs.name)$($product.outname2)" -Force -EA:0
+                if (-not $?) {
+                    Write-Output "Failed to copy $destdir\$($product.msi)"
+                }
             }
         }
     }

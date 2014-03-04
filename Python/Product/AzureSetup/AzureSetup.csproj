@@ -22,10 +22,6 @@
       </PropertyGroup>
     </When>
   </Choose>
-  <PropertyGroup>
-      <SignedBuild Condition="'$(SignedBuild)'==''">false</SignedBuild>
-      <SuppressSigning Condition="!$(SignedBuild)">true</SuppressSigning>
-  </PropertyGroup>
   <Import Project="..\ProjectBefore.settings" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -45,6 +41,11 @@
     <SccProvider>SAK</SccProvider>
     <UseIISExpress>false</UseIISExpress>
     <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup>
+    <!-- This typically defaults to True, but unless we're going to completely
+         sign this assembly, we'd prefer it wasn't delay signed. -->
+    <SignAssembly Condition="'$(ReleaseBuild)' != ''">$(ReleaseBuild)</SignAssembly>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
