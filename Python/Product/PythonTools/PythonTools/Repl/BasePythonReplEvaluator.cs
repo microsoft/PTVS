@@ -113,7 +113,11 @@ namespace Microsoft.PythonTools.Repl {
 
         internal void EnsureConnected() {
             if (_curListener == null) {
-                Connect();
+                ThreadHelper.Generic.Invoke(() => {
+                    if (_curListener == null) {
+                        Connect();
+                    }
+                });
             }
         }
 

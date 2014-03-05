@@ -159,10 +159,13 @@ g()",
             }
 
             description = description ?? InterpreterDescription;
+            Assert.IsNotNull(description, "InterpreterDescription is null");
+            Assert.IsTrue(description.EndsWith(" Interactive"), string.Format("Description \"{0}\" does not end with \" Interactive\"", description));
 
             try {
                 GetPythonAutomation().OpenInteractive(description);
-            } catch (KeyNotFoundException) {
+            } catch (KeyNotFoundException ex) {
+                Console.WriteLine(ex.ToString());
                 // Can't open it, but may still be able to find it.
             }
             var interactive = app.GetInteractiveWindow(description);
@@ -202,9 +205,14 @@ g()",
             return interactive;
         }
 
-        internal void ForceReset(PythonVisualStudioApp app) {
+        internal void ForceReset(PythonVisualStudioApp app, bool assertIfNotFound = false) {
             var interactive = app.GetInteractiveWindow(InterpreterDescription);
-            interactive.Reset();
+            if (assertIfNotFound) {
+                Assert.IsNotNull(interactive, InterpreterDescription + " is not open");
+            }
+            if (interactive != null) {
+                interactive.Reset();
+            }
         }
 
         protected virtual void ConfigurePrompts() {
@@ -218,8 +226,10 @@ g()",
 
         protected IPythonInteractiveOptions GetInteractiveOptions(string name = null) {
             name = name ?? InterpreterDescription;
-            Debug.Assert(name.EndsWith(" Interactive"));
-            var options = ((IPythonOptions)VsIdeTestHostContext.Dte.GetObject("VsPython")).GetInteractiveOptions(name.Substring(0, name.Length - " Interactive".Length));
+            if (name.EndsWith(" Interactive")) {
+                name = name.Remove(name.LastIndexOf(" Interactive"));
+            }
+            var options = ((IPythonOptions)GetPythonAutomation()).GetInteractiveOptions(name);
             if (options == null) {
                 Assert.Inconclusive("Need " + name);
             }
@@ -1259,40 +1269,37 @@ g()",
         public void CursorWhileCodeIsRunning() {
             using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
                 var interactive = Prepare(app);
-                try {
-                    const string code = "while True: pass\r\n";
-                    Keyboard.Type(code);
-                    interactive.WaitForText(ReplPrompt + "while True: pass", SecondPrompt, "");
+                app.OnDispose(interactive.Reset);
 
-                    Keyboard.Type(Key.Up);
-                    Keyboard.Type(Key.Up);
-                    for (int i = 0; i < ReplPrompt.Length; i++) {
-                        Keyboard.Type(Key.Right);
-                    }
+                const string code = "while True: pass\r\n";
+                Keyboard.Type(code);
+                interactive.WaitForText(ReplPrompt + "while True: pass", SecondPrompt, "");
 
-                    Keyboard.PressAndRelease(Key.End, Key.LeftShift);
-                    Keyboard.PressAndRelease(Key.C, Key.LeftCtrl);
-
-                    System.Threading.Thread.Sleep(100);
-
-                    interactive.CancelExecution();
-
-                    if (KeyboardInterruptHasTracebackHeader) {
-                        interactive.WaitForTextStart(ReplPrompt + "while True: pass", SecondPrompt, "Traceback (most recent call last):");
-                    } else {
-                        interactive.WaitForTextStart(ReplPrompt + "while True: pass", SecondPrompt);
-                    }
-                    interactive.WaitForTextEnd("KeyboardInterrupt", ReplPrompt);
-
-                    interactive.ClearScreen();
-                    interactive.WaitForText(ReplPrompt);
-                    Keyboard.ControlV();
-
-                    interactive.WaitForText(ReplPrompt + "while True: pass");
-                } finally {
-                    // make sure we leave the test in a reasonable state, even if the test fails.
-                    interactive.Reset();
+                Keyboard.Type(Key.Up);
+                Keyboard.Type(Key.Up);
+                for (int i = 0; i < ReplPrompt.Length; i++) {
+                    Keyboard.Type(Key.Right);
                 }
+
+                Keyboard.PressAndRelease(Key.End, Key.LeftShift);
+                Keyboard.PressAndRelease(Key.C, Key.LeftCtrl);
+
+                System.Threading.Thread.Sleep(100);
+
+                interactive.CancelExecution();
+
+                if (KeyboardInterruptHasTracebackHeader) {
+                    interactive.WaitForTextStart(ReplPrompt + "while True: pass", SecondPrompt, "Traceback (most recent call last):");
+                } else {
+                    interactive.WaitForTextStart(ReplPrompt + "while True: pass", SecondPrompt);
+                }
+                interactive.WaitForTextEnd("KeyboardInterrupt", ReplPrompt);
+
+                interactive.ClearScreen();
+                interactive.WaitForText(ReplPrompt);
+                Keyboard.ControlV();
+
+                interactive.WaitForText(ReplPrompt + "while True: pass");
             }
         }
 
@@ -1305,26 +1312,24 @@ g()",
             GetInteractiveOptions().ExecutionMode = "Standard";
             using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
                 var interactive = Prepare(app);
-                try {
-                    const string code = "raise Exception()";
-                    Keyboard.Type(code + "\r");
+                app.OnDispose(interactive.Reset);
 
-                    interactive.WaitForText(ReplPrompt + code, "Traceback (most recent call last):", "  File \"<" + SourceFileName + ">\", line 1, in <module>", "Exception", ReplPrompt);
+                const string code = "raise Exception()";
+                Keyboard.Type(code + "\r");
 
-                    var snapshot = interactive.ReplWindow.TextView.TextBuffer.CurrentSnapshot;
-                    var span = new SnapshotSpan(snapshot, new Span(0, snapshot.Length));
-                    var classifications = interactive.Classifier.GetClassificationSpans(span);
+                interactive.WaitForText(ReplPrompt + code, "Traceback (most recent call last):", "  File \"<" + SourceFileName + ">\", line 1, in <module>", "Exception", ReplPrompt);
 
-                    Assert.AreEqual(classifications[0].ClassificationType.Classification, PredefinedClassificationTypeNames.Keyword);
-                    Assert.AreEqual(classifications[1].ClassificationType.Classification, PredefinedClassificationTypeNames.Identifier);
-                    Assert.AreEqual(classifications[2].ClassificationType.Classification, "Python grouping");
+                var snapshot = interactive.ReplWindow.TextView.TextBuffer.CurrentSnapshot;
+                var span = new SnapshotSpan(snapshot, new Span(0, snapshot.Length));
+                var classifications = interactive.Classifier.GetClassificationSpans(span);
 
-                    Assert.AreEqual(classifications[0].Span.GetText(), "raise");
-                    Assert.AreEqual(classifications[1].Span.GetText(), "Exception");
-                    Assert.AreEqual(classifications[2].Span.GetText(), "()");
-                } finally {
-                    interactive.Reset();
-                }
+                Assert.AreEqual(classifications[0].ClassificationType.Classification, PredefinedClassificationTypeNames.Keyword);
+                Assert.AreEqual(classifications[1].ClassificationType.Classification, PredefinedClassificationTypeNames.Identifier);
+                Assert.AreEqual(classifications[2].ClassificationType.Classification, "Python grouping");
+
+                Assert.AreEqual(classifications[0].Span.GetText(), "raise");
+                Assert.AreEqual(classifications[1].Span.GetText(), "Exception");
+                Assert.AreEqual(classifications[2].Span.GetText(), "()");
             }
         }
 
@@ -2145,30 +2150,27 @@ $cls
         public void DeleteSelectionInRawInput() {
             using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
                 var interactive = Prepare(app);
+                app.OnDispose(interactive.Reset);
 
-                try {
-                    interactive.WithStandardInputPrompt("INPUT: ", stdInputPrompt => {
-                        Keyboard.Type(RawInput + "()\r");
-                        interactive.WaitForText(ReplPrompt + RawInput + "()", stdInputPrompt);
+                interactive.WithStandardInputPrompt("INPUT: ", stdInputPrompt => {
+                    Keyboard.Type(RawInput + "()\r");
+                    interactive.WaitForText(ReplPrompt + RawInput + "()", stdInputPrompt);
 
-                        Keyboard.Type("hel");
-                        interactive.WaitForText(ReplPrompt + RawInput + "()", stdInputPrompt + "hel");
+                    Keyboard.Type("hel");
+                    interactive.WaitForText(ReplPrompt + RawInput + "()", stdInputPrompt + "hel");
 
-                        // attempt to type in the previous submission should move the cursor back to the end of the stdin:
-                        Keyboard.Type(Key.Up);
-                        Keyboard.Type("lo");
-                        interactive.WaitForText(ReplPrompt + RawInput + "()", stdInputPrompt + "hello");
+                    // attempt to type in the previous submission should move the cursor back to the end of the stdin:
+                    Keyboard.Type(Key.Up);
+                    Keyboard.Type("lo");
+                    interactive.WaitForText(ReplPrompt + RawInput + "()", stdInputPrompt + "hello");
 
-                        Keyboard.PressAndRelease(Key.Left, Key.LeftShift);
-                        Keyboard.PressAndRelease(Key.Left, Key.LeftShift);
-                        Keyboard.PressAndRelease(Key.Left, Key.LeftShift);
-                        Keyboard.Press(Key.Delete);
+                    Keyboard.PressAndRelease(Key.Left, Key.LeftShift);
+                    Keyboard.PressAndRelease(Key.Left, Key.LeftShift);
+                    Keyboard.PressAndRelease(Key.Left, Key.LeftShift);
+                    Keyboard.Press(Key.Delete);
 
-                        interactive.WaitForText(ReplPrompt + RawInput + "()", stdInputPrompt + "he");
-                    });
-                } finally {
-                    interactive.Reset();
-                }
+                    interactive.WaitForText(ReplPrompt + RawInput + "()", stdInputPrompt + "he");
+                });
             }
         }
 
@@ -2442,8 +2444,11 @@ $cls
 
             GetInteractiveOptions().ExecutionMode = "IPython";
             InteractiveWindow interactive = null;
-            var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte);
-            try {
+            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
+                app.OnDispose(() => {
+                    GetInteractiveOptions().ExecutionMode = "Standard";
+                    ForceReset(app);
+                });
                 interactive = Prepare(app);
                 string assignCode = "x = 42";
                 string inspectCode = "?x";
@@ -2453,10 +2458,6 @@ $cls
 
                 Keyboard.Type(inspectCode + "\r");
                 interactive.WaitForText(new[] { ReplPrompt + assignCode, ReplPrompt + inspectCode }.Concat(IntDocumentation).Concat(new[] { ReplPrompt }).ToArray());
-            } finally {
-                GetInteractiveOptions().ExecutionMode = "Standard";
-                ForceReset(app);
-                app.Dispose();
             }
         }
 
@@ -2473,8 +2474,11 @@ $cls
 
             GetInteractiveOptions().ExecutionMode = "IPython";
             InteractiveWindow interactive = null;
-            var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte);
-            try {
+            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
+                app.OnDispose(() => {
+                    GetInteractiveOptions().ExecutionMode = "Standard";
+                    ForceReset(app);
+                });
                 interactive = Prepare(app);
                 const string code = "while True: pass\r\n";
                 Keyboard.Type(code);
@@ -2498,11 +2502,6 @@ $cls
                         "---------------------------------------------------------------------------",
                         "KeyboardInterrupt                         Traceback (most recent call last)");
                 }
-
-            } finally {
-                GetInteractiveOptions().ExecutionMode = "Standard";
-                ForceReset(app);
-                app.Dispose();
             }
         }
 
@@ -2521,8 +2520,11 @@ $cls
             PythonToolsPackage.Instance.AdvancedEditorOptionsPage.AddNewLineAtEndOfFullyTypedWord = false;
             GetInteractiveOptions().ExecutionMode = "IPython";
             InteractiveWindow interactive = null;
-            var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte);
-            try {
+            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
+                app.OnDispose(() => {
+                    GetInteractiveOptions().ExecutionMode = "Standard";
+                    ForceReset(app);
+                });
                 interactive = Prepare(app);
                 const string code = "x = 42";
                 Keyboard.Type(code + "\r");
@@ -2558,10 +2560,6 @@ $cls
                     Keyboard.PressAndRelease(Key.Escape);
                     interactive.WaitForSessionDismissed();
                 }
-            } finally {
-                GetInteractiveOptions().ExecutionMode = "Standard";
-                ForceReset(app);
-                app.Dispose();
             }
         }
 
@@ -2580,8 +2578,11 @@ $cls
 
             GetInteractiveOptions().ExecutionMode = "IPython";
             InteractiveWindow interactive = null;
-            var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte);
-            try {
+            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
+                app.OnDispose(() => {
+                    GetInteractiveOptions().ExecutionMode = "Standard";
+                    ForceReset(app);
+                });
                 interactive = Prepare(app);
                 Assert.IsNotNull(interactive);
 
@@ -2603,10 +2604,6 @@ $cls
 
                     interactive.WaitForSessionDismissed();
                 }
-            } finally {
-                GetInteractiveOptions().ExecutionMode = "Standard";
-                ForceReset(app);
-                app.Dispose();
             }
         }
 
@@ -2623,8 +2620,12 @@ $cls
 
             GetInteractiveOptions().ExecutionMode = "IPython";
             InteractiveWindow interactive = null;
-            var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte);
-            try {
+            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
+                app.OnDispose(() => {
+                    GetInteractiveOptions().ExecutionMode = "Standard";
+                    ForceReset(app);
+                });
+
                 interactive = Prepare(app);
 
                 var replWindow = interactive.ReplWindow;
@@ -2640,11 +2641,6 @@ $cls
                 var snapshot = textview.TextBuffer.CurrentSnapshot;
                 var tags = WaitForTags(textview, aggregator, snapshot);
                 Assert.AreEqual(1, tags.Length);
-
-            } finally {
-                GetInteractiveOptions().ExecutionMode = "Standard";
-                ForceReset(app);
-                app.Dispose();
             }
         }
 
@@ -2663,8 +2659,12 @@ $cls
 
             GetInteractiveOptions().ExecutionMode = "IPython";
             InteractiveWindow interactive = null;
-            var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte);
-            try {
+            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
+                app.OnDispose(() => {
+                    GetInteractiveOptions().ExecutionMode = "Standard";
+                    ForceReset(app);
+                });
+
                 interactive = Prepare(app);
                 using (new DefaultInterpreterSetter(interactive.TextView.GetAnalyzer().InterpreterFactory)) {
                     var project = app.OpenProject(@"TestData\InteractiveFile.sln");
@@ -2674,10 +2674,6 @@ $cls
 
                     interactive.WaitForTextEnd("Program.pyabcdef", ReplPrompt);
                 }
-            } finally {
-                GetInteractiveOptions().ExecutionMode = "Standard";
-                ForceReset(app);
-                app.Dispose();
             }
         }
 
@@ -2723,8 +2719,12 @@ $cls
 
             GetInteractiveOptions().ExecutionMode = "IPython";
             InteractiveWindow interactive;
-            var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte);
-            try {
+            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
+                app.OnDispose(() => {
+                    GetInteractiveOptions().ExecutionMode = "Standard";
+                    ForceReset(app);
+                });
+
                 interactive = Prepare(app);
                 using (new DefaultInterpreterSetter(interactive.TextView.GetAnalyzer().InterpreterFactory)) {
                     var project = app.OpenProject(@"TestData\SysArgvRepl.sln");
@@ -2734,10 +2734,6 @@ $cls
 
                     interactive.WaitForTextEnd("Program.py']", ReplPrompt);
                 }
-            } finally {
-                GetInteractiveOptions().ExecutionMode = "Standard";
-                ForceReset(app);
-                app.Dispose();
             }
         }
 
@@ -2751,8 +2747,11 @@ $cls
 
             GetInteractiveOptions().ExecutionMode = "IPython";
             InteractiveWindow interactive;
-            var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte);
-            try {
+            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
+                app.OnDispose(() => {
+                    GetInteractiveOptions().ExecutionMode = "Standard";
+                    ForceReset(app);
+                });
                 interactive = Prepare(app);
                 using (new DefaultInterpreterSetter(interactive.TextView.GetAnalyzer().InterpreterFactory)) {
                     var project = app.OpenProject(@"TestData\SysArgvScriptArgsRepl.sln");
@@ -2762,10 +2761,6 @@ $cls
 
                     interactive.WaitForTextEnd(@"Program.py', '-source', 'C:\\Projects\\BuildSuite', '-destination', 'C:\\Projects\\TestOut', '-pattern', '*.txt', '-recurse', 'true']", ReplPrompt);
                 }
-            } finally {
-                GetInteractiveOptions().ExecutionMode = "Standard";
-                ForceReset(app);
-                app.Dispose();
             }
         }
 
@@ -2794,37 +2789,36 @@ $cls
                 var optionsInteractive = GetInteractiveOptions();
                 var previousEnableAttach = optionsInteractive.EnableAttach;
                 optionsInteractive.EnableAttach = true;
-                try {
-                    var interactive = Prepare(app);
+                app.OnDispose(() => optionsInteractive.EnableAttach = previousEnableAttach);
 
-                    using (new DefaultInterpreterSetter(interactive.TextView.GetAnalyzer().InterpreterFactory)) {
-                        const string attachCmd = "$attach";
-                        Keyboard.Type(attachCmd + "\r");
+                var interactive = Prepare(app);
 
-                        app.Dte.Debugger.Breakpoints.Add(File: "BreakpointTest.py", Line: 1);
-                        interactive.WaitForText(ReplPrompt + attachCmd, ReplPrompt);
+                using (new DefaultInterpreterSetter(interactive.TextView.GetAnalyzer().InterpreterFactory)) {
+                    const string attachCmd = "$attach";
+                    Keyboard.Type(attachCmd + "\r");
 
-                        DebuggerUITests.DebugProject.WaitForMode(app, EnvDTE.dbgDebugMode.dbgRunMode);
+                    app.Dte.Debugger.Breakpoints.Add(File: "BreakpointTest.py", Line: 1);
+                    interactive.WaitForText(ReplPrompt + attachCmd, ReplPrompt);
 
-                        // Space after the name is deliberate to avoid having to
-                        // hit Enter twice depending on options.
-                        const string import = "import BreakpointTest ";
-                        Keyboard.Type(import + "\r");
-                        interactive.WaitForText(ReplPrompt + attachCmd, ReplPrompt + import, "");
+                    DebuggerUITests.DebugProject.WaitForMode(app, EnvDTE.dbgDebugMode.dbgRunMode);
 
-                        DebuggerUITests.DebugProject.WaitForMode(app, EnvDTE.dbgDebugMode.dbgBreakMode);
+                    interactive = Prepare(app, reopenOnly: true);
+                    // Space after the name is deliberate to avoid having to
+                    // hit Enter twice depending on options.
+                    const string import = "import BreakpointTest ";
+                    Keyboard.Type(import + "\r");
+                    interactive.WaitForText(ReplPrompt + attachCmd, ReplPrompt + import, "");
 
-                        Assert.AreEqual(EnvDTE.dbgEventReason.dbgEventReasonBreakpoint, app.Dte.Debugger.LastBreakReason);
-                        Assert.AreEqual(app.Dte.Debugger.BreakpointLastHit.FileLine, 1);
+                    DebuggerUITests.DebugProject.WaitForMode(app, EnvDTE.dbgDebugMode.dbgBreakMode);
 
-                        app.Dte.ExecuteCommand("Debug.DetachAll");
+                    Assert.AreEqual(EnvDTE.dbgEventReason.dbgEventReasonBreakpoint, app.Dte.Debugger.LastBreakReason);
+                    Assert.AreEqual(app.Dte.Debugger.BreakpointLastHit.FileLine, 1);
 
-                        DebuggerUITests.DebugProject.WaitForMode(app, EnvDTE.dbgDebugMode.dbgDesignMode);
+                    app.Dte.ExecuteCommand("Debug.DetachAll");
 
-                        interactive.WaitForText(ReplPrompt + attachCmd, ReplPrompt + import, "hello", ReplPrompt);
-                    }
-                } finally {
-                    optionsInteractive.EnableAttach = previousEnableAttach;
+                    DebuggerUITests.DebugProject.WaitForMode(app, EnvDTE.dbgDebugMode.dbgDesignMode);
+
+                    interactive.WaitForText(ReplPrompt + attachCmd, ReplPrompt + import, "hello", ReplPrompt);
                 }
             }
         }
@@ -3076,43 +3070,41 @@ def g(): pass
             GetInteractiveOptions().ExecutionMode = "IPython";
             InteractiveWindow interactive = null;
             using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
-                try {
-                    var project = app.OpenProject(@"TestData\Repl.sln");
-
-                    var program = project.ProjectItems.Item("Program.py");
-
-                    interactive = Prepare(app);
-
-                    var window = program.Open();
-                    window.Activate();
-                    var doc = app.GetDocument(program.Document.FullName);
-                    doc.Invoke(() =>
-                        doc.TextView.Selection.Select(
-                            new SnapshotSpan(
-                                doc.TextView.TextBuffer.CurrentSnapshot,
-                                0,
-                                doc.TextView.TextBuffer.CurrentSnapshot.Length
-                            ),
-                            false
-                        )
-                    );
-
-                    app.Dte.ExecuteCommand("Edit.SendtoInteractive");
-
-                    interactive.WaitForText(
-                        ReplPrompt + "def f():",
-                        SecondPrompt + "    return 42",
-                        SecondPrompt,
-                        SecondPrompt + "100",
-                        SecondPrompt,
-                        "Out[2]: 100",
-                        ReplPrompt
-                    );
-                } finally {
+                app.OnDispose(() => {
                     GetInteractiveOptions().ExecutionMode = "Standard";
                     ForceReset(app);
-                    app.Dispose();
-                }
+                });
+                var project = app.OpenProject(@"TestData\Repl.sln");
+
+                var program = project.ProjectItems.Item("Program.py");
+
+                interactive = Prepare(app);
+
+                var window = program.Open();
+                window.Activate();
+                var doc = app.GetDocument(program.Document.FullName);
+                doc.Invoke(() =>
+                    doc.TextView.Selection.Select(
+                        new SnapshotSpan(
+                            doc.TextView.TextBuffer.CurrentSnapshot,
+                            0,
+                            doc.TextView.TextBuffer.CurrentSnapshot.Length
+                        ),
+                        false
+                    )
+                );
+
+                app.Dte.ExecuteCommand("Edit.SendtoInteractive");
+
+                interactive.WaitForText(
+                    ReplPrompt + "def f():",
+                    SecondPrompt + "    return 42",
+                    SecondPrompt,
+                    SecondPrompt + "100",
+                    SecondPrompt,
+                    "Out[2]: 100",
+                    ReplPrompt
+                );
             }
         }
 

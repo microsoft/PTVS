@@ -39,6 +39,7 @@ namespace TestUtilities.UI {
         private AzureCloudServiceActivityLog _azureActivityLog;
         private IntPtr _mainWindowHandle;
         private readonly DTE _dte;
+        private List<Action> _onDispose;
         private bool _isDisposed, _skipCloseAll;
 
         public VisualStudioApp(DTE dte)
@@ -55,10 +56,25 @@ namespace TestUtilities.UI {
             get { return _isDisposed; }
         }
 
+        public void OnDispose(Action action) {
+            Debug.Assert(action != null);
+            if (_onDispose == null) {
+                _onDispose = new List<Action> { action };
+            } else {
+                _onDispose.Add(action);
+            }
+        }
+
         protected virtual void Dispose(bool disposing) {
             if (!_isDisposed) {
                 _isDisposed = true;
                 try {
+                    if (_onDispose != null) {
+                        foreach (var action in _onDispose) {
+                            action();
+                        }
+                    }
+
                     if (_dte != null && _dte.Debugger.CurrentMode != dbgDebugMode.dbgDesignMode) {
                         _dte.Debugger.TerminateAll();
                         _dte.Debugger.Stop();
