@@ -232,14 +232,10 @@ namespace PythonToolsUITests {
                     doc.TextView.Caret.MoveTo(point);
                 }));
 
-                var t = Task.Run(() => VsIdeTestHostContext.Dte.ExecuteCommand("Edit.ParameterInfo"));
+                app.ExecuteCommand("Edit.ParameterInfo");
 
-                try {
-                    using (var sh = doc.WaitForSession<ISignatureHelpSession>()) {
-                        Assert.AreEqual("b", sh.Session.SelectedSignature.CurrentParameter.Name);
-                    }
-                } finally {
-                    t.Wait();
+                using (var sh = doc.WaitForSession<ISignatureHelpSession>()) {
+                    Assert.AreEqual("b", sh.Session.SelectedSignature.CurrentParameter.Name);
                 }
             }
         }
