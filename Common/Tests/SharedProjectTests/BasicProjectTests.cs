@@ -21,6 +21,8 @@ using System.Threading.Tasks;
 using System.Windows;
 using EnvDTE;
 using Microsoft.TC.TestHostAdapters;
+using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 using TestUtilities.SharedProject;
@@ -261,7 +263,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
                         Target("CreateManifestResourceNames")
                     );
                     using (var solution = proj.Generate().ToVs()) {
-                        VsIdeTestHostContext.Dte.ExecuteCommand("Build.BuildSolution");
+                        VsIdeTestHostContext.Dte.ExecuteCommand("Build.RebuildSolution");
                         solution.App.WaitForOutputWindowText("Build", "Hello Build World!");
                     }
                 }
@@ -1374,5 +1376,166 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             }
         }
 
+        class DocumentTracker : IVsTrackProjectDocumentsEvents2 {
+            public bool Renamed;
+
+            public int OnAfterAddDirectoriesEx(int cProjects, int cDirectories, IVsProject[] rgpProjects, int[] rgFirstIndices, string[] rgpszMkDocuments, VSADDDIRECTORYFLAGS[] rgFlags) {
+                return VSConstants.S_OK;
+            }
+
+            public int OnAfterAddFilesEx(int cProjects, int cFiles, IVsProject[] rgpProjects, int[] rgFirstIndices, string[] rgpszMkDocuments, VSADDFILEFLAGS[] rgFlags) {
+                return VSConstants.S_OK;
+            }
+
+            public int OnAfterRemoveDirectories(int cProjects, int cDirectories, IVsProject[] rgpProjects, int[] rgFirstIndices, string[] rgpszMkDocuments, VSREMOVEDIRECTORYFLAGS[] rgFlags) {
+                return VSConstants.S_OK;
+            }
+
+            public int OnAfterRemoveFiles(int cProjects, int cFiles, IVsProject[] rgpProjects, int[] rgFirstIndices, string[] rgpszMkDocuments, VSREMOVEFILEFLAGS[] rgFlags) {
+                return VSConstants.S_OK;
+            }
+
+            public int OnAfterRenameDirectories(int cProjects, int cDirs, IVsProject[] rgpProjects, int[] rgFirstIndices, string[] rgszMkOldNames, string[] rgszMkNewNames, VSRENAMEDIRECTORYFLAGS[] rgFlags) {
+                return VSConstants.S_OK;
+            }
+
+            public int OnAfterRenameFiles(int cProjects, int cFiles, IVsProject[] rgpProjects, int[] rgFirstIndices, string[] rgszMkOldNames, string[] rgszMkNewNames, VSRENAMEFILEFLAGS[] rgFlags) {
+                Assert.AreEqual(cProjects, 1);
+                Assert.AreEqual(cFiles, 1);
+                uint itemid;
+                ErrorHandler.ThrowOnFailure(((IVsHierarchy)rgpProjects[0]).ParseCanonicalName(rgszMkNewNames[0], out itemid));
+                object caption;
+                ErrorHandler.ThrowOnFailure(((IVsHierarchy)rgpProjects[0]).GetProperty(itemid, (int)__VSHPROPID.VSHPROPID_Caption, out caption));
+                Assert.AreEqual(Path.GetFileName(rgszMkNewNames[0]), (string)caption);
+                Renamed = true;
+                return VSConstants.S_OK;
+            }
+
+            public int OnAfterSccStatusChanged(int cProjects, int cFiles, IVsProject[] rgpProjects, int[] rgFirstIndices, string[] rgpszMkDocuments, uint[] rgdwSccStatus) {
+                return VSConstants.S_OK;
+            }
+
+            public int OnQueryAddDirectories(IVsProject pProject, int cDirectories, string[] rgpszMkDocuments, VSQUERYADDDIRECTORYFLAGS[] rgFlags, VSQUERYADDDIRECTORYRESULTS[] pSummaryResult, VSQUERYADDDIRECTORYRESULTS[] rgResults) {
+                return VSConstants.S_OK;
+            }
+
+            public int OnQueryAddFiles(IVsProject pProject, int cFiles, string[] rgpszMkDocuments, VSQUERYADDFILEFLAGS[] rgFlags, VSQUERYADDFILERESULTS[] pSummaryResult, VSQUERYADDFILERESULTS[] rgResults) {
+                return VSConstants.S_OK;
+            }
+
+            public int OnQueryRemoveDirectories(IVsProject pProject, int cDirectories, string[] rgpszMkDocuments, VSQUERYREMOVEDIRECTORYFLAGS[] rgFlags, VSQUERYREMOVEDIRECTORYRESULTS[] pSummaryResult, VSQUERYREMOVEDIRECTORYRESULTS[] rgResults) {
+                return VSConstants.S_OK;
+            }
+
+            public int OnQueryRemoveFiles(IVsProject pProject, int cFiles, string[] rgpszMkDocuments, VSQUERYREMOVEFILEFLAGS[] rgFlags, VSQUERYREMOVEFILERESULTS[] pSummaryResult, VSQUERYREMOVEFILERESULTS[] rgResults) {
+                return VSConstants.S_OK;
+            }
+
+            public int OnQueryRenameDirectories(IVsProject pProject, int cDirs, string[] rgszMkOldNames, string[] rgszMkNewNames, VSQUERYRENAMEDIRECTORYFLAGS[] rgFlags, VSQUERYRENAMEDIRECTORYRESULTS[] pSummaryResult, VSQUERYRENAMEDIRECTORYRESULTS[] rgResults) {
+                return VSConstants.S_OK;
+            }
+
+            public int OnQueryRenameFiles(IVsProject pProject, int cFiles, string[] rgszMkOldNames, string[] rgszMkNewNames, VSQUERYRENAMEFILEFLAGS[] rgFlags, VSQUERYRENAMEFILERESULTS[] pSummaryResult, VSQUERYRENAMEFILERESULTS[] rgResults) {
+                return VSConstants.S_OK;
+            }
+        }
+
+        class HierarchyEvents : IVsHierarchyEvents {
+            private readonly IVsHierarchy _hierarchy;
+            private readonly string _codeExtension;
+            public bool PropertyChanged;
+
+            public HierarchyEvents(IVsHierarchy hierarchy, string codeExtension) {
+                _hierarchy = hierarchy;
+                _codeExtension = codeExtension;
+            }
+
+            public int OnInvalidateIcon(IntPtr hicon) {
+                return VSConstants.S_OK;
+            }
+
+            public int OnInvalidateItems(uint itemidParent) {
+                return VSConstants.S_OK;
+            }
+
+            public int OnItemAdded(uint itemidParent, uint itemidSiblingPrev, uint itemidAdded) {
+                return VSConstants.S_OK;
+            }
+
+            public int OnItemDeleted(uint itemid) {
+                return VSConstants.S_OK;
+            }
+
+            public int OnItemsAppended(uint itemidParent) {
+                return VSConstants.S_OK;
+            }
+
+            public int OnPropertyChanged(uint itemid, int propid, uint flags) {
+                if (propid == (int)__VSHPROPID.VSHPROPID_Caption) {
+                    string name;
+                    ErrorHandler.ThrowOnFailure(_hierarchy.GetCanonicalName(itemid, out name));
+                    object caption;
+                    ErrorHandler.ThrowOnFailure(_hierarchy.GetProperty(itemid, (int)__VSHPROPID.VSHPROPID_Caption, out caption));
+                    Assert.AreEqual("foo" + _codeExtension, caption);
+                    Assert.AreEqual(Path.GetFileName(name), caption);
+                    PropertyChanged = true;
+                }
+                return VSConstants.S_OK;
+            }
+        }
+
+        /// <summary>
+        /// 1) Select file node
+        /// 2) F2
+        /// 3) Change name
+        /// 4) Enter to commit
+        /// 
+        /// Make sure that our events fire correctly for the rename
+        /// </summary>
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void RenameFile() {
+            foreach (var projectType in ProjectTypes) {
+                var proj = new ProjectDefinition(
+                    "HelloWorld",
+                    projectType,
+                    Compile("server")
+                );
+                using (var solution = proj.Generate().ToVs()) {
+                    Console.WriteLine(projectType.ProjectExtension);
+
+                    var project = (IVsHierarchy)((dynamic)solution.Project).Project;
+                    var hierarchyEvents = new HierarchyEvents(project, projectType.CodeExtension);
+                    uint hierarchyCookie = VSConstants.VSCOOKIE_NIL;
+
+                    ErrorHandler.ThrowOnFailure(project.AdviseHierarchyEvents(hierarchyEvents, out hierarchyCookie));
+                    try {
+                        var trackDocs = (IVsTrackProjectDocuments2)VsIdeTestHostContext.ServiceProvider.GetService(typeof(SVsTrackProjectDocuments));
+                        var docTracker = new DocumentTracker();
+                        uint cookie = VSConstants.VSCOOKIE_NIL;
+
+                        trackDocs.AdviseTrackProjectDocumentsEvents(docTracker, out cookie);
+                        try {
+                            var file = solution.FindItem("HelloWorld", projectType.Code("server"));
+                            AutomationWrapper.Select(file);
+
+                            Keyboard.Type(System.Windows.Input.Key.F2);
+                            Keyboard.Type("foo\r");
+
+                            Assert.IsTrue(docTracker.Renamed, "didn't get rename event");
+                            Assert.IsTrue(hierarchyEvents.PropertyChanged, "didn't get property changed event");
+                        } finally {
+                            if (cookie != VSConstants.VSCOOKIE_NIL) {
+                                trackDocs.UnadviseTrackProjectDocumentsEvents(cookie);
+                            }
+                        }
+                    } finally {
+                        if (hierarchyCookie != VSConstants.VSCOOKIE_NIL) {
+                            project.UnadviseHierarchyEvents(hierarchyCookie);
+                        }
+                    }
+                }
+            }
+        }
     }
 }

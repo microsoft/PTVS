@@ -389,8 +389,6 @@ namespace Microsoft.VisualStudioTools.Project {
                 if (this is DependentFileNode) {
                     ProjectMgr.OnInvalidateItems(this.Parent);
                 }
-
-                UpdateCaption();
             } catch (Exception e) {
                 // Just re-throw the exception so we don't get duplicate message boxes.
                 Trace.WriteLine("Exception : " + e.Message);
@@ -676,6 +674,7 @@ namespace Microsoft.VisualStudioTools.Project {
                 this.ID = this.ProjectMgr.ItemIdMap.Add(this);
                 this.ItemNode.Rename(CommonUtils.GetRelativeFilePath(ProjectMgr.ProjectHome, newFileName));
                 this.ItemNode.RefreshProperties();
+                UpdateCaption();
                 newParent.AddChild(this);
                 this.Parent = newParent;
             }
@@ -834,8 +833,8 @@ namespace Microsoft.VisualStudioTools.Project {
                 } else {
                     this.RenameCaseOnlyChange(oldName, newName);
                 }
-
-                DocumentManager.UpdateCaption(this.ProjectMgr.Site, Caption, docData);
+                
+                DocumentManager.UpdateCaption(this.ProjectMgr.Site, Caption, docData);                
 
                 // changed from MPFProj:
                 // http://mpfproj10.codeplex.com/WorkItem/View.aspx?WorkItemId=8231
@@ -876,6 +875,7 @@ namespace Microsoft.VisualStudioTools.Project {
             this.ItemNode.Rename(relName);
             this.ItemNode.RefreshProperties();
 
+            UpdateCaption();
             ProjectMgr.ReDrawNode(this, UIHierarchyElement.Caption);
             this.RenameChildNodes(this);
 
