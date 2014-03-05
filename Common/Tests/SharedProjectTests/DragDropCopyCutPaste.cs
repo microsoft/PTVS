@@ -1150,6 +1150,61 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             }
         }
 
+        /// <summary>
+        /// Copy read-only file within project - ensure RO attribute is removed.
+        /// </summary>
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void CopyReadOnlyFileByKeyboard() {
+            CopyReadOnlyFile(CopyByKeyboard);
+        }
+
+        /// <summary>
+        /// Copy read-only file within project - ensure RO attribute is removed.
+        /// </summary>
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void CopyReadOnlyFileByMouse() {
+            CopyReadOnlyFile(CopyByMouse);
+        }
+
+        private void CopyReadOnlyFile(MoveDelegate mover) {
+            foreach (var projectType in ProjectTypes) {
+                var projects = new[] {
+                    new ProjectDefinition(
+                        "CopyReadOnlyFile",
+                        projectType,
+                        ItemGroup(
+                            Compile("Class")
+                        )
+                    )
+                };
+
+                using (var solution = SolutionFile.Generate("CopyReadOnlyFile", projects).ToVs()) {
+                    var classFile = Path.Combine(solution.Directory, "CopyReadOnlyFile", "Class" + projectType.CodeExtension);
+                    Assert.IsTrue(File.Exists(classFile));
+                    File.SetAttributes(classFile, FileAttributes.ReadOnly | FileAttributes.Archive);
+                    Assert.IsTrue(File.GetAttributes(classFile).HasFlag(FileAttributes.ReadOnly));
+                    Assert.IsTrue(File.GetAttributes(classFile).HasFlag(FileAttributes.Archive));
+
+                    var classCopyFile = Path.Combine(solution.Directory, "CopyReadOnlyFile", "Class - Copy" + projectType.CodeExtension);
+                    Assert.IsFalse(File.Exists(classCopyFile));
+
+                    mover(
+                        solution.WaitForItem("CopyReadOnlyFile"),
+                        solution.WaitForItem("CopyReadOnlyFile", "Class" + projectType.CodeExtension)
+                    );
+
+                    solution.WaitForItem("CopyReadOnlyFile", "Class - Copy" + projectType.CodeExtension);
+
+                    Assert.IsTrue(File.Exists(classCopyFile));
+                    Assert.IsFalse(File.GetAttributes(classCopyFile).HasFlag(FileAttributes.ReadOnly), "Read-only attribute was not cleared");
+                    Assert.IsTrue(File.GetAttributes(classCopyFile).HasFlag(FileAttributes.Archive), "Other attributes were cleared");
+                }
+            }
+        }
+
+
         internal delegate void MoveDelegate(AutomationElement destination, params AutomationElement[] source);
 
         /// <summary>

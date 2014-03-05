@@ -1597,10 +1597,10 @@ namespace Microsoft.VisualStudioTools.Project {
                     Directory.CreateDirectory(directory);
                 }
 
-                FileInfo fiOrg = new FileInfo(source);
-                FileInfo fiNew = fiOrg.CopyTo(target, true);
+                File.Copy(source, target, true);
 
-                fiNew.Attributes = FileAttributes.Normal; // remove any read only attributes.
+                // best effort to reset the ReadOnly attribute
+                File.SetAttributes(target, File.GetAttributes(target) & ~FileAttributes.ReadOnly);
             } catch (IOException e) {
                 Trace.WriteLine("Exception : " + e.Message);
             } catch (UnauthorizedAccessException e) {

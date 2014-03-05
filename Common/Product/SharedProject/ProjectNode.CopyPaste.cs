@@ -1155,6 +1155,15 @@ folder you are copying, do you want to replace the existing files?", Path.GetFil
                     } else {
                         // we are copying and adding a new file node
                         File.Copy(SourceMoniker, newPath, true);
+                        
+                        // best effort to reset the ReadOnly attribute
+                        try {
+                            File.SetAttributes(newPath, File.GetAttributes(newPath) &~ FileAttributes.ReadOnly);
+                        } catch (ArgumentException) {
+                        } catch (UnauthorizedAccessException) {
+                        } catch (IOException) {
+                        }
+
                         var existing = Project.FindNodeByFullPath(newPath);
                         if (existing == null) {
                             var fileNode = Project.CreateFileNode(newPath);
