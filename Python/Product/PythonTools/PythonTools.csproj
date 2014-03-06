@@ -748,6 +748,16 @@
     <ZipProject Include="Templates\Projects\WebProjectBottle\WebProjectBottle.vstemplate">
       <SubType>Designer</SubType>
     </ZipProject>
+    <ZipItem Include="Templates\Files\Stylesheet\Stylesheet.css" />
+    <ZipItem Include="Templates\Files\Stylesheet\Stylesheet.vstemplate">
+      <SubType>Designer</SubType>
+    </ZipItem>
+    <ZipItem Include="Templates\Files\JavaScript\JavaScript.js" />
+    <ZipItem Include="Templates\Files\JavaScript\JavaScript.vstemplate">
+      <SubType>Designer</SubType>
+    </ZipItem>
+    <ZipItem Include="Templates\Files\HtmlFile\HtmlFile.html" />
+    <ZipItem Include="Templates\Files\HtmlFile\HtmlFile.vstemplate" />
     <Content Include="visualstudio_py_debugger.py">
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

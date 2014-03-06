@@ -7,6 +7,17 @@
     <ObjDir>$(SourceDir)obj\Dev$(VSTarget)\$(Configuration)</ObjDir>
   </PropertyGroup>
 
+  <ItemDefinitionGroup>
+    <File>
+      <IncludeInWD>false</IncludeInWD>
+    </File>
+    <ItemTemplate>
+      <IncludeInWD>false</IncludeInWD>
+    </ItemTemplate>
+    <ProjectTemplate>
+      <IncludeInWD>false</IncludeInWD>
+    </ProjectTemplate>
+  </ItemDefinitionGroup>
 
   <ItemGroup>
     <!-- Registration files -->
@@ -21,10 +32,7 @@
                    PythonProjectBig.ico" />
 
     <!-- Templates -->
-    <ItemTemplate Include="ItemTemplates\Python\DjangoHtml.zip;
-                           ItemTemplates\Python\JavaScript.zip;
-                           ItemTemplates\Python\Stylesheet.zip;
-                           ItemTemplates\Python\DjangoNewAppFiles14.zip" />
+    <ItemTemplate Include="ItemTemplates\Python\DjangoNewAppFiles14.zip" />
     <ProjectTemplate Include="ProjectTemplates\Python\DjangoProject.zip" />
 
     <!-- Targets -->

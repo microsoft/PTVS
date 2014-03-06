@@ -294,7 +294,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <SubType>Designer</SubType>
     </Content>
-    <ZipItem Include="Templates\Files\DjangoHtml\DjangoTemplate.html" />
     <Content Include="FastCgiTutorial\FastCGI Getting Started.html" />
     <Resource Include="FastCgiTutorial\images\IIS - Enable FastCGI Role.png" />
     <Resource Include="FastCgiTutorial\images\CGI in Vista.png" />
@@ -309,17 +308,6 @@
       <SubType>Designer</SubType>
     </ZipItem>
     <ZipItem Include="Templates\Files\DjangoNewAppFiles14\DjangoTemplate.html" />
-    <ZipItem Include="Templates\Files\Stylesheet\Stylesheet.vstemplate">
-      <SubType>Designer</SubType>
-    </ZipItem>
-    <ZipItem Include="Templates\Files\JavaScript\JavaScript.js" />
-    <ZipItem Include="Templates\Files\JavaScript\JavaScript.vstemplate">
-      <SubType>Designer</SubType>
-    </ZipItem>
-    <ZipItem Include="Templates\Files\Stylesheet\Stylesheet.css" />
-    <ZipItem Include="Templates\Files\DjangoHtml\DjangoHtml.vstemplate">
-      <SubType>Designer</SubType>
-    </ZipItem>
     <ZipItem Include="Templates\Files\DjangoNewAppFiles14\models.py" />
     <ZipItem Include="Templates\Files\DjangoNewAppFiles14\tests.py" />
     <ZipItem Include="Templates\Files\DjangoNewAppFiles14\views.py" />

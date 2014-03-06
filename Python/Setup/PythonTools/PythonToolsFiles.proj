@@ -65,11 +65,18 @@
                            ItemTemplates\Python\EmptyPyFile.zip;
                            ItemTemplates\Python\PyClass.zip;
                            ItemTemplates\Python\TextFile.zip" />
+    <ItemTemplate Include="ItemTemplates\Python\HTMLFile.zip;
+                           ItemTemplates\Python\JavaScript.zip;
+                           ItemTemplates\Python\Stylesheet.zip">
+      <IncludeInWD>false</IncludeInWD>
+    </ItemTemplate>
     <ProjectTemplate Include="ProjectTemplates\Python\ConsoleAppProject.zip;
-                              ProjectTemplates\Python\FromExistingCode.zip;
-                              ProjectTemplates\Python\EmptyWebProject.zip;
+                              ProjectTemplates\Python\FromExistingCode.zip" />
+    <ProjectTemplate Include="ProjectTemplates\Python\EmptyWebProject.zip;
                               ProjectTemplates\Python\WebProjectBottle.zip;
-                              ProjectTemplates\Python\WebProjectFlask.zip" />
+                              ProjectTemplates\Python\WebProjectFlask.zip">
+      <IncludeInWD>false</IncludeInWD>
+    </ProjectTemplate>
 
     <!-- Default Completion DB -->
     <File Include="$(SourceDir)CompletionDB\*.idb">
