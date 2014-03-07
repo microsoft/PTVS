@@ -32,31 +32,53 @@ namespace Microsoft.PythonTools.Project {
         /// Installs virtualenv. If pip is not installed, the returned task will
         /// succeed but error text will be passed to the redirector.
         /// </summary>
-        public static Task Install(IPythonInterpreterFactory factory, Redirector output = null) {
+        public static async Task Install(IPythonInterpreterFactory factory, Redirector output = null) {
             bool elevate = PythonToolsPackage.Instance != null && PythonToolsPackage.Instance.GeneralOptionsPage.ElevatePip;
             if (factory.Configuration.Version < new Version(2, 5)) {
                 if (output != null) {
                     output.WriteErrorLine("Python versions earlier than 2.5 are not supported by PTVS.");
                 }
-                var tcs = new TaskCompletionSource<object>();
-                tcs.SetCanceled();
-                return tcs.Task;
+                throw new OperationCanceledException();
             } else if (factory.Configuration.Version == new Version(2, 5)) {
-                return Pip.Install(factory, "https://go.microsoft.com/fwlink/?LinkID=317970", elevate, output);
+                await Pip.Install(factory, "https://go.microsoft.com/fwlink/?LinkID=317970", elevate, output);
             } else {
-                return Pip.Install(factory, "https://go.microsoft.com/fwlink/?LinkID=317969", elevate, output);
+                await Pip.Install(factory, "https://go.microsoft.com/fwlink/?LinkID=317969", elevate, output);
             }
         }
 
-        private static Task ContinueCreate(Task task, IPythonInterpreterFactory factory, string path, bool useVEnv, Redirector output) {
-            return task.ContinueWith(t => {
-                path = CommonUtils.TrimEndSeparator(path);
-                var name = Path.GetFileName(path);
-                var dir = Path.GetDirectoryName(path);
-                int? exitCode = null;
+        private static async Task ContinueCreate(IPythonInterpreterFactory factory, string path, bool useVEnv, Redirector output) {
+            path = CommonUtils.TrimEndSeparator(path);
+            var name = Path.GetFileName(path);
+            var dir = Path.GetDirectoryName(path);
+
+            if (output != null) {
+                output.WriteLine(SR.GetString(SR.VirtualEnvCreating, path));
+                if (PythonToolsPackage.Instance != null && PythonToolsPackage.Instance.GeneralOptionsPage.ShowOutputWindowForVirtualEnvCreate) {
+                    output.ShowAndActivate();
+                } else {
+                    output.Show();
+                }
+            }
+
+            // Ensure the target directory exists.
+            Directory.CreateDirectory(dir);
+
+            using (var proc = ProcessOutput.Run(
+                factory.Configuration.InterpreterPath,
+                new[] { "-m", useVEnv ? "venv" : "virtualenv", name },
+                dir,
+                UnbufferedEnv,
+                false,
+                output
+            )) {
+                var exitCode = await proc;
 
                 if (output != null) {
-                    output.WriteLine(SR.GetString(SR.VirtualEnvCreating, path));
+                    if (exitCode == 0) {
+                        output.WriteLine(SR.GetString(SR.VirtualEnvCreationSucceeded, path));
+                    } else {
+                        output.WriteLine(SR.GetString(SR.VirtualEnvCreationFailedExitCode, path, exitCode));
+                    }
                     if (PythonToolsPackage.Instance != null && PythonToolsPackage.Instance.GeneralOptionsPage.ShowOutputWindowForVirtualEnvCreate) {
                         output.ShowAndActivate();
                     } else {
@@ -64,36 +86,10 @@ namespace Microsoft.PythonTools.Project {
                     }
                 }
 
-                // Ensure the target directory exists.
-                Directory.CreateDirectory(dir);
-
-                using (var proc = ProcessOutput.Run(factory.Configuration.InterpreterPath,
-                    new[] { "-m", useVEnv ? "venv" : "virtualenv", name },
-                    dir,
-                    UnbufferedEnv,
-                    false,
-                    output)) {
-                    proc.Wait();
-                    exitCode = proc.ExitCode;
-
-                    if (output != null) {
-                        if (exitCode == 0) {
-                            output.WriteLine(SR.GetString(SR.VirtualEnvCreationSucceeded, path));
-                        } else {
-                            output.WriteLine(SR.GetString(SR.VirtualEnvCreationFailedExitCode, path, exitCode ?? -1));
-                        }
-                        if (PythonToolsPackage.Instance != null && PythonToolsPackage.Instance.GeneralOptionsPage.ShowOutputWindowForVirtualEnvCreate) {
-                            output.ShowAndActivate();
-                        } else {
-                            output.Show();
-                        }
-                    }
-                }
-
                 if (exitCode != 0 || !Directory.Exists(path)) {
                     throw new InvalidOperationException(SR.GetString(SR.VirtualEnvCreationFailed, path));
                 }
-            }, TaskContinuationOptions.OnlyOnRanToCompletion);
+            }
         }
 
         /// <summary>
@@ -101,9 +97,8 @@ namespace Microsoft.PythonTools.Project {
         /// task will succeed but error text will be passed to the redirector.
         /// </summary>
         public static Task Create(IPythonInterpreterFactory factory, string path, Redirector output = null) {
-            var tcs = new TaskCompletionSource<object>();
-            tcs.SetResult(null);
-            return ContinueCreate(tcs.Task, factory, path, false, output);
+            factory.ThrowIfNotRunnable();
+            return ContinueCreate(factory, path, false, output);
         }
 
         /// <summary>
@@ -112,46 +107,45 @@ namespace Microsoft.PythonTools.Project {
         /// redirector.
         /// </summary>
         public static Task CreateWithVEnv(IPythonInterpreterFactory factory, string path, Redirector output = null) {
-            var tcs = new TaskCompletionSource<object>();
-            tcs.SetResult(null);
-            return ContinueCreate(tcs.Task, factory, path, true, output);
+            factory.ThrowIfNotRunnable();
+            return ContinueCreate(factory, path, true, output);
         }
 
         internal static Task<HashSet<string>> FindPipAndVirtualEnv(IPythonInterpreterFactory factory) {
-            return Task.Factory.StartNew((Func<HashSet<string>>)(
-                () => factory.FindModules("pip", "virtualenv", "venv")
-            ));
+            return Task.Run(() => factory.FindModules("pip", "virtualenv", "venv"));
         }
 
         /// <summary>
         /// Creates a virtual environment. If virtualenv or pip are not
         /// installed then they are downloaded and installed automatically.
         /// </summary>
-        public static Task CreateAndInstallDependencies(
+        public static async Task CreateAndInstallDependencies(
             IPythonInterpreterFactory factory,
-            string path, Redirector output = null) {
-            Utilities.ArgumentNotNull("factory", factory);
+            string path,
+            Redirector output = null
+        ) {
+            factory.ThrowIfNotRunnable("factory");
 
-            var task = FindPipAndVirtualEnv(factory).ContinueWith(t => {
-                bool hasPip = t.Result.Contains("pip");
-                bool hasVirtualEnv = t.Result.Contains("virtualenv") || t.Result.Contains("venv");
+            var modules = await FindPipAndVirtualEnv(factory);
+            bool hasPip = modules.Contains("pip");
+            bool hasVirtualEnv = modules.Contains("virtualenv") || modules.Contains("venv");
 
-                if (!hasVirtualEnv) {
-                    if (!hasPip) {
-                        bool elevate = PythonToolsPackage.Instance != null && PythonToolsPackage.Instance.GeneralOptionsPage.ElevatePip;
-                        Pip.InstallPip(factory, elevate, output).Wait();
-                    }
-                    Install(factory, output).Wait();
+            if (!hasVirtualEnv) {
+                if (!hasPip) {
+                    bool elevate = PythonToolsPackage.Instance != null && PythonToolsPackage.Instance.GeneralOptionsPage.ElevatePip;
+                    await Pip.InstallPip(factory, elevate, output);
                 }
-            });
+                await Install(factory, output);
+            }
 
-            return ContinueCreate(task, factory, path, false, output);
+            await ContinueCreate(factory, path, false, output);
         }
 
         private static IPythonInterpreterFactory FindBaseInterpreterFromVirtualEnv(
             string prefixPath,
             string libPath,
-            IInterpreterOptionsService service) {
+            IInterpreterOptionsService service
+        ) {
             string basePath = GetOrigPrefixPath(prefixPath, libPath);
 
             if (Directory.Exists(basePath)) {
@@ -262,7 +256,8 @@ namespace Microsoft.PythonTools.Project {
         public static InterpreterFactoryCreationOptions FindInterpreterOptions(
             string prefixPath,
             IInterpreterOptionsService service,
-            IPythonInterpreterFactory baseInterpreter = null) {
+            IPythonInterpreterFactory baseInterpreter = null
+        ) {
 
             var result = new InterpreterFactoryCreationOptions();
 

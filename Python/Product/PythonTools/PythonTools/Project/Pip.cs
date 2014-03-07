@@ -43,6 +43,8 @@ namespace Microsoft.PythonTools.Project {
         };
 
         private static ProcessOutput Run(IPythonInterpreterFactory factory, Redirector output, bool elevate, params string[] cmd) {
+            factory.ThrowIfNotRunnable("factory");
+
             var args = cmd.AsEnumerable();
             bool isScript = false;
             string pipPath = null;
@@ -64,53 +66,53 @@ namespace Microsoft.PythonTools.Project {
                 pipPath = factory.Configuration.InterpreterPath;
             }
 
-            return ProcessOutput.Run(pipPath,
+            return ProcessOutput.Run(
+                pipPath,
                 args,
                 factory.Configuration.PrefixPath,
                 UnbufferedEnv,
                 false,
                 output,
                 quoteArgs: false,
-                elevate: elevate);
+                elevate: elevate
+            );
         }
 
-        public static Task<HashSet<string>> Freeze(IPythonInterpreterFactory factory) {
-            return Task.Factory.StartNew<HashSet<string>>((Func<HashSet<string>>)(() => {
-                var lines = new HashSet<string>();
-                using (var proc = Run(factory, null, false, "--version")) {
-                    proc.Wait();
-                    if (proc.ExitCode == 0) {
-                        lines.UnionWith(proc.StandardOutputLines
-                            .Select(line => Regex.Match(line, "pip (?<version>[0-9.]+)"))
-                            .Where(match => match.Success && match.Groups["version"].Success)
-                            .Select(match => "pip==" + match.Groups["version"].Value));
-                    }
+        public static async Task<HashSet<string>> Freeze(IPythonInterpreterFactory factory) {
+            var lines = new HashSet<string>();
+            using (var proc = Run(factory, null, false, "--version")) {
+                if (await proc == 0) {
+                    lines.UnionWith(proc.StandardOutputLines
+                        .Select(line => Regex.Match(line, "pip (?<version>[0-9.]+)"))
+                        .Where(match => match.Success && match.Groups["version"].Success)
+                        .Select(match => "pip==" + match.Groups["version"].Value));
                 }
+            }
 
-                using (var proc = Run(factory, null, false, "freeze")) {
-                    proc.Wait();
-                    if (proc.ExitCode == 0) {
-                        lines.UnionWith(proc.StandardOutputLines);
-                        return lines;
-                    }
+            using (var proc = Run(factory, null, false, "freeze")) {
+                if (await proc == 0) {
+                    lines.UnionWith(proc.StandardOutputLines);
+                    return lines;
                 }
+            }
 
-                // Pip failed, so clear out any entries that may have appeared
-                lines.Clear();
+            // Pip failed, so clear out any entries that may have appeared
+            lines.Clear();
 
-                try {
-                    var packagesPath = Path.Combine(factory.Configuration.LibraryPath, "site-packages");
+            try {
+                var packagesPath = Path.Combine(factory.Configuration.LibraryPath, "site-packages");
+                await Task.Run(() => {
                     lines.UnionWith(Directory.EnumerateDirectories(packagesPath)
                         .Select(name => Path.GetFileName(name))
                         .Select(name => PackageNameRegex.Match(name))
                         .Where(m => m.Success)
                         .Select(m => m.Groups["name"].Value));
-                } catch {
-                    lines.Clear();
-                }
+                });
+            } catch {
+                lines.Clear();
+            }
 
-                return lines;
-            }));
+            return lines;
         }
 
         /// <summary>
@@ -124,8 +126,10 @@ namespace Microsoft.PythonTools.Project {
             return factory.Configuration.Version > new Version(2, 5);
         }
 
-        private static string GetInsecureArg(IPythonInterpreterFactory factory,
-            Redirector output = null) {
+        private static string GetInsecureArg(
+            IPythonInterpreterFactory factory,
+            Redirector output = null
+        ) {
             if (!IsSecureInstall(factory)) {
                 // Python 2.5 does not include ssl, and so the --insecure
                 // option is required to use pip.
@@ -137,164 +141,179 @@ namespace Microsoft.PythonTools.Project {
             return null;
         }
 
-        public static Task Install(IPythonInterpreterFactory factory,
+        public static async Task Install(
+            IPythonInterpreterFactory factory,
             string package,
             bool elevate,
-            Redirector output = null) {
-            return Task.Factory.StartNew((Action)(() => {
-                using (var proc = Run(factory, output, elevate, "install", GetInsecureArg(factory, output), package)) {
-                    proc.Wait();
-                }
-            }));
+            Redirector output = null
+        ) {
+            using (var proc = Run(factory, output, elevate, "install", GetInsecureArg(factory, output), package)) {
+                await proc;
+            }
         }
 
-        public static Task<bool> Install(IPythonInterpreterFactory factory,
+        public static async Task<bool> Install(
+            IPythonInterpreterFactory factory,
             string package,
             IServiceProvider site,
             bool elevate,
-            Redirector output = null) {
-
-            Task task;
+            Redirector output = null
+        ) {
             if (site != null && !ModulePath.GetModulesInLib(factory).Any(mp => mp.ModuleName == "pip")) {
-                task = QueryInstallPip(factory, site, SR.GetString(SR.InstallPip), elevate, output);
-            } else {
-                var tcs = new TaskCompletionSource<object>();
-                tcs.SetResult(null);
-                task = tcs.Task;
+                try {
+                    await QueryInstallPip(factory, site, SR.GetString(SR.InstallPip), elevate, output);
+                } catch (OperationCanceledException) {
+                    return false;
+                }
             }
-            return task.ContinueWith(t => {
+
+            if (output != null) {
+                output.WriteLine(SR.GetString(SR.PackageInstalling, package));
+                if (PythonToolsPackage.Instance != null && PythonToolsPackage.Instance.GeneralOptionsPage.ShowOutputWindowForPackageInstallation) {
+                    output.ShowAndActivate();
+                } else {
+                    output.Show();
+                }
+            }
+
+            using (var proc = Run(factory, output, elevate, "install", GetInsecureArg(factory, output), package)) {
+                var exitCode = await proc;
+
                 if (output != null) {
-                    output.WriteLine(SR.GetString(SR.PackageInstalling, package));
+                    if (exitCode == 0) {
+                        output.WriteLine(SR.GetString(SR.PackageInstallSucceeded, package));
+                    } else {
+                        output.WriteLine(SR.GetString(SR.PackageInstallFailedExitCode, package, exitCode));
+                    }
                     if (PythonToolsPackage.Instance != null && PythonToolsPackage.Instance.GeneralOptionsPage.ShowOutputWindowForPackageInstallation) {
                         output.ShowAndActivate();
                     } else {
                         output.Show();
                     }
                 }
-                using (var proc = Run(factory, output, elevate, "install", GetInsecureArg(factory, output), package)) {
-                    proc.Wait();
-
-                    if (output != null) {
-                        if (proc.ExitCode == 0) {
-                            output.WriteLine(SR.GetString(SR.PackageInstallSucceeded, package));
-                        } else {
-                            output.WriteLine(SR.GetString(SR.PackageInstallFailedExitCode, package, proc.ExitCode ?? -1));
-                        }
-                        if (PythonToolsPackage.Instance != null && PythonToolsPackage.Instance.GeneralOptionsPage.ShowOutputWindowForPackageInstallation) {
-                            output.ShowAndActivate();
-                        } else {
-                            output.Show();
-                        }
-                    }
-                    return proc.ExitCode == 0;
-                }
-            }, TaskContinuationOptions.OnlyOnRanToCompletion);
+                return exitCode == 0;
+            }
         }
 
-        public static Task<bool> Uninstall(IPythonInterpreterFactory factory, string package, bool elevate, Redirector output = null) {
-            return Task.Factory.StartNew((Func<bool>)(() => {
+        public static async Task<bool> Uninstall(
+            IPythonInterpreterFactory factory,
+            string package,
+            bool elevate,
+            Redirector output = null
+        ) {
+            factory.ThrowIfNotRunnable("factory");
+
+            if (output != null) {
+                output.WriteLine(SR.GetString(SR.PackageUninstalling, package));
+                if (PythonToolsPackage.Instance != null && PythonToolsPackage.Instance.GeneralOptionsPage.ShowOutputWindowForPackageInstallation) {
+                    output.ShowAndActivate();
+                } else {
+                    output.Show();
+                }
+            }
+
+            using (var proc = Run(factory, output, elevate, "uninstall", "-y", package)) {
+                var exitCode = await proc;
+
                 if (output != null) {
-                    output.WriteLine(SR.GetString(SR.PackageUninstalling, package));
+                    if (exitCode == 0) {
+                        output.WriteLine(SR.GetString(SR.PackageUninstallSucceeded, package));
+                    } else {
+                        output.WriteLine(SR.GetString(SR.PackageUninstallFailedExitCode, package, exitCode));
+                    }
                     if (PythonToolsPackage.Instance != null && PythonToolsPackage.Instance.GeneralOptionsPage.ShowOutputWindowForPackageInstallation) {
                         output.ShowAndActivate();
                     } else {
                         output.Show();
                     }
                 }
-                using (var proc = Run(factory, output, elevate, "uninstall", "-y", package)) {
-                    proc.Wait();
-
-                    if (output != null) {
-                        if (proc.ExitCode == 0) {
-                            output.WriteLine(SR.GetString(SR.PackageUninstallSucceeded, package));
-                        } else {
-                            output.WriteLine(SR.GetString(SR.PackageUninstallFailedExitCode, package, proc.ExitCode ?? -1));
-                        }
-                        if (PythonToolsPackage.Instance != null && PythonToolsPackage.Instance.GeneralOptionsPage.ShowOutputWindowForPackageInstallation) {
-                            output.ShowAndActivate();
-                        } else {
-                            output.Show();
-                        }
-                    }
-                    return proc.ExitCode == 0;
-                }
-            }));
+                return exitCode == 0;
+            }
         }
 
-        public static Task InstallPip(IPythonInterpreterFactory factory, bool elevate, Redirector output = null) {
+        public static async Task InstallPip(IPythonInterpreterFactory factory, bool elevate, Redirector output = null) {
+            factory.ThrowIfNotRunnable("factory");
+
             var pipDownloaderPath = PythonToolsInstallPath.GetFile("pip_downloader.py");
 
-            return Task.Factory.StartNew((Action)(() => {
+            if (output != null) {
+                output.WriteLine(SR.GetString(SR.PipInstalling));
+                if (PythonToolsPackage.Instance != null && PythonToolsPackage.Instance.GeneralOptionsPage.ShowOutputWindowForPackageInstallation) {
+                    output.ShowAndActivate();
+                } else {
+                    output.Show();
+                }
+            }
+            using (var proc = ProcessOutput.Run(
+                factory.Configuration.InterpreterPath,
+                new[] { pipDownloaderPath },
+                factory.Configuration.PrefixPath,
+                null,
+                false,
+                output,
+                elevate: PythonToolsPackage.Instance != null && PythonToolsPackage.Instance.GeneralOptionsPage.ElevatePip
+            )) {
+                var exitCode = await proc;
                 if (output != null) {
-                    output.WriteLine(SR.GetString(SR.PipInstalling));
+                    if (exitCode == 0) {
+                        output.WriteLine(SR.GetString(SR.PipInstallSucceeded));
+                    } else {
+                        output.WriteLine(SR.GetString(SR.PipInstallFailedExitCode, exitCode));
+                    }
                     if (PythonToolsPackage.Instance != null && PythonToolsPackage.Instance.GeneralOptionsPage.ShowOutputWindowForPackageInstallation) {
                         output.ShowAndActivate();
                     } else {
                         output.Show();
                     }
                 }
-                using (var proc = ProcessOutput.Run(factory.Configuration.InterpreterPath,
-                    new[] { pipDownloaderPath },
-                    factory.Configuration.PrefixPath,
-                    null,
-                    false,
-                    output,
-                    elevate: PythonToolsPackage.Instance != null && PythonToolsPackage.Instance.GeneralOptionsPage.ElevatePip)
-                ) {
-                    proc.Wait();
-                    if (output != null) {
-                        if (proc.ExitCode == 0) {
-                            output.WriteLine(SR.GetString(SR.PipInstallSucceeded));
-                        } else {
-                            output.WriteLine(SR.GetString(SR.PipInstallFailedExitCode, proc.ExitCode ?? -1));
-                        }
-                        if (PythonToolsPackage.Instance != null && PythonToolsPackage.Instance.GeneralOptionsPage.ShowOutputWindowForPackageInstallation) {
-                            output.ShowAndActivate();
-                        } else {
-                            output.Show();
-                        }
-                    }
-                }
-            }));
+            }
         }
 
-        public static Task QueryInstall(IPythonInterpreterFactory factory,
+        public static async Task QueryInstall(
+            IPythonInterpreterFactory factory,
             string package,
             IServiceProvider site,
             string message,
             bool elevate,
-            Redirector output = null) {
-            if (Microsoft.VisualStudio.Shell.VsShellUtilities.ShowMessageBox(site,
+            Redirector output = null
+        ) {
+            factory.ThrowIfNotRunnable("factory");
+
+            if (Microsoft.VisualStudio.Shell.VsShellUtilities.ShowMessageBox(
+                site,
                 message,
                 null,
                 OLEMSGICON.OLEMSGICON_QUERY,
                 OLEMSGBUTTON.OLEMSGBUTTON_OKCANCEL,
-                OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST) == 2) {
-                var tcs = new TaskCompletionSource<object>();
-                tcs.SetCanceled();
-                return tcs.Task;
+                OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST
+            ) == 2) {
+                throw new OperationCanceledException();
             }
 
-            return Install(factory, package, elevate, output);
+            await Install(factory, package, elevate, output);
         }
 
-        public static Task QueryInstallPip(IPythonInterpreterFactory factory,
+        public static async Task QueryInstallPip(
+            IPythonInterpreterFactory factory,
             IServiceProvider site,
             string message,
             bool elevate,
-            Redirector output = null) {
-            if (Microsoft.VisualStudio.Shell.VsShellUtilities.ShowMessageBox(site,
+            Redirector output = null
+        ) {
+            factory.ThrowIfNotRunnable();
+
+            if (Microsoft.VisualStudio.Shell.VsShellUtilities.ShowMessageBox(
+                site,
                 message,
                 null,
                 OLEMSGICON.OLEMSGICON_QUERY,
                 OLEMSGBUTTON.OLEMSGBUTTON_OKCANCEL,
-                OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST) == 2) {
-                var tcs = new TaskCompletionSource<object>();
-                tcs.SetCanceled();
-                return tcs.Task;
+                OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST
+            ) == 2) {
+                throw new OperationCanceledException();
             }
 
-            return InstallPip(factory, elevate, output);
+            await InstallPip(factory, elevate, output);
         }
 
         /// <summary>
@@ -305,22 +324,27 @@ namespace Microsoft.PythonTools.Project {
         /// This method requires setuptools to be installed to correctly detect packages and verify their versions. If setuptools
         /// is not available, the method will always return <c>false</c> for any package name.
         /// </remarks>
-        public static Task<bool> IsInstalled(IPythonInterpreterFactory factory, string package) {
-            return Task.Factory.StartNew(() => {
-                var code = string.Format("import pkg_resources; pkg_resources.require('{0}')", package);
-                using (var proc = ProcessOutput.Run(
-                    factory.Configuration.InterpreterPath,
-                    new[] { "-c", code  },
-                    factory.Configuration.PrefixPath,
-                    UnbufferedEnv,
-                    visible: false,
-                    redirector: null,
-                    quoteArgs: true)
-                ) {
-                    proc.Wait();
-                    return proc.ExitCode == 0;
+        public static async Task<bool> IsInstalled(IPythonInterpreterFactory factory, string package) {
+            if (!factory.IsRunnable()) {
+                return false;
+            }
+
+            var code = string.Format("import pkg_resources; pkg_resources.require('{0}')", package);
+            using (var proc = ProcessOutput.Run(
+                factory.Configuration.InterpreterPath,
+                new[] { "-c", code  },
+                factory.Configuration.PrefixPath,
+                UnbufferedEnv,
+                visible: false,
+                redirector: null,
+                quoteArgs: true)
+            ) {
+                try {
+                    return await proc == 0;
+                } catch (NoInterpretersException) {
+                    return false;
                 }
-            });
+            }
         }
     }
 }

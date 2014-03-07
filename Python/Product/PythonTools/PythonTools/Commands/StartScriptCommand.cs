@@ -45,7 +45,7 @@ namespace Microsoft.PythonTools.Commands {
             try {
                 launcher.LaunchFile(file, CommandId == CommonConstants.StartDebuggingCmdId);
             } catch (NoInterpretersException) {
-                PythonToolsPackage.OpenVsWebBrowser(PythonToolsInstallPath.GetFile("NoInterpreters.html"));
+                PythonToolsPackage.OpenNoInterpretersHelpPage();
             }
         }
 

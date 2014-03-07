@@ -158,6 +158,7 @@ namespace TestUtilities.UI {
             );
 
             if (assertOnFailure) {
+                AutomationWrapper.DumpElement(Element);
                 Assert.IsNotNull(itemElement, string.Format("Did not find element <{0}\\{1}\\{2}>", slnLabel, projLabel, string.Join("\\", path)));
             }
             return itemElement;

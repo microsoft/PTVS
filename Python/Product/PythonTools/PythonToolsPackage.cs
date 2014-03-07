@@ -412,6 +412,10 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
             }
         }
 
+        internal static void OpenNoInterpretersHelpPage() {
+            OpenVsWebBrowser(PythonToolsInstallPath.GetFile("NoInterpreters.html"));
+        }
+
         public static string InterpreterHelpUrl {
             get {
                 return string.Format("http://go.microsoft.com/fwlink/?LinkId=299429&clcid=0x{0:X}",

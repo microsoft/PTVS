@@ -978,14 +978,19 @@ namespace Microsoft.PythonTools.Project {
 
                         command.ExecuteAsync(null).ContinueWith(t => {
                             if (t.Exception != null) {
-                                MessageBox.Show(
-                                    SR.GetString(
-                                        SR.ErrorRunningCustomCommand,
-                                        command.DisplayLabelWithoutAccessKeys,
-                                        t.Exception.InnerException.Message
-                                    ),
-                                    SR.GetString(SR.PythonToolsForVisualStudio)
-                                );
+                                var ex = t.Exception.InnerException ?? t.Exception;
+                                if (ex is NoInterpretersException) {
+                                    PythonToolsPackage.OpenNoInterpretersHelpPage();
+                                } else {
+                                    MessageBox.Show(
+                                        SR.GetString(
+                                            SR.ErrorRunningCustomCommand,
+                                            command.DisplayLabelWithoutAccessKeys,
+                                            ex.Message
+                                        ),
+                                        SR.GetString(SR.PythonToolsForVisualStudio)
+                                    );
+                                }
                             }
                         });
                     }

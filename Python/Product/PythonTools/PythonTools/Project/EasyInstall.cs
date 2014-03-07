@@ -37,6 +37,8 @@ namespace Microsoft.PythonTools.Project {
         };
 
         private static string GetEasyInstallPath(IPythonInterpreterFactory factory, out bool isScript) {
+            factory.ThrowIfNotRunnable("factory");
+
             foreach (var path in EasyInstallLocations) {
                 string easyInstallPath = Path.Combine(factory.Configuration.PrefixPath, path.Key);
                 isScript = path.Value;
@@ -48,99 +50,84 @@ namespace Microsoft.PythonTools.Project {
             return null;
         }
 
-        private static Task<int> ContinueRun(
-            Task task,
+        private static async Task<int> ContinueRun(
             IPythonInterpreterFactory factory,
             Redirector output,
             bool elevate,
             params string[] cmd
         ) {
-            return task.ContinueWith((Func<Task, int>)(t => {
-                bool isScript;
-                var easyInstallPath = GetEasyInstallPath(factory, out isScript);
-                if (easyInstallPath == null) {
-                    throw new FileNotFoundException("Cannot find setuptools ('easy_install.exe')");
-                }
+            bool isScript;
+            var easyInstallPath = GetEasyInstallPath(factory, out isScript);
+            if (easyInstallPath == null) {
+                throw new FileNotFoundException("Cannot find setuptools ('easy_install.exe')");
+            }
 
-                var args = cmd.ToList();
-                args.Insert(0, "--always-copy");
-                args.Insert(0, "--always-unzip");
-                if (isScript) {
-                    args.Insert(0, ProcessOutput.QuoteSingleArgument(easyInstallPath));
-                    easyInstallPath = factory.Configuration.InterpreterPath;
-                }
-                using (var proc = ProcessOutput.Run(
-                    easyInstallPath,
-                    args,
-                    factory.Configuration.PrefixPath,
-                    UnbufferedEnv,
-                    false,
-                    output,
-                    false,
-                    elevate
-                )) {
-                    proc.Wait();
-                    return proc.ExitCode ?? -1;
-                }
-            }), TaskContinuationOptions.LongRunning);
+            var args = cmd.ToList();
+            args.Insert(0, "--always-copy");
+            args.Insert(0, "--always-unzip");
+            if (isScript) {
+                args.Insert(0, ProcessOutput.QuoteSingleArgument(easyInstallPath));
+                easyInstallPath = factory.Configuration.InterpreterPath;
+            }
+            using (var proc = ProcessOutput.Run(
+                easyInstallPath,
+                args,
+                factory.Configuration.PrefixPath,
+                UnbufferedEnv,
+                false,
+                output,
+                false,
+                elevate
+            )) {
+                return await proc;
+            }
         }
 
-        public static Task Install(
+        public static async Task Install(
             IPythonInterpreterFactory factory,
             string package,
             bool elevate,
             Redirector output = null
         ) {
-            var tcs = new TaskCompletionSource<object>();
-            tcs.SetResult(null);
-            return ContinueRun(tcs.Task, factory, output, elevate, package);
+            await ContinueRun(factory, output, elevate, package);
         }
 
-        public static Task<bool> Install(
+        public static async Task<bool> Install(
             IPythonInterpreterFactory factory,
             string package,
             IServiceProvider site,
             bool elevate,
             Redirector output = null
         ) {
-            Task task;
             bool isScript;
             if (site != null && GetEasyInstallPath(factory, out isScript) == null) {
-                task = Pip.QueryInstallPip(factory, site, SR.GetString(SR.InstallEasyInstall), elevate, output);
-            } else {
-                var tcs = new TaskCompletionSource<object>();
-                tcs.SetResult(null);
-                task = tcs.Task;
+                await Pip.QueryInstallPip(factory, site, SR.GetString(SR.InstallEasyInstall), elevate, output);
             }
 
-            var task2 = task.ContinueWith(t => {
-                if (output != null) {
-                    output.WriteLine(SR.GetString(SR.PackageInstalling, package));
-                    if (PythonToolsPackage.Instance != null && PythonToolsPackage.Instance.GeneralOptionsPage.ShowOutputWindowForPackageInstallation) {
-                        output.ShowAndActivate();
-                    } else {
-                        output.Show();
-                    }
+            if (output != null) {
+                output.WriteLine(SR.GetString(SR.PackageInstalling, package));
+                if (PythonToolsPackage.Instance != null && PythonToolsPackage.Instance.GeneralOptionsPage.ShowOutputWindowForPackageInstallation) {
+                    output.ShowAndActivate();
+                } else {
+                    output.Show();
                 }
-            });
+            }
 
-            return ContinueRun(task2, factory, output, elevate, package).ContinueWith(t => {
-                var exitCode = t.Result;
+            var exitCode = await ContinueRun(factory, output, elevate, package);
 
-                if (output != null) {
-                    if (exitCode == 0) {
-                        output.WriteLine(SR.GetString(SR.PackageInstallSucceeded, package));
-                    } else {
-                        output.WriteLine(SR.GetString(SR.PackageInstallFailedExitCode, package, exitCode));
-                    }
-                    if (PythonToolsPackage.Instance != null && PythonToolsPackage.Instance.GeneralOptionsPage.ShowOutputWindowForPackageInstallation) {
-                        output.ShowAndActivate();
-                    } else {
-                        output.Show();
-                    }
+            if (output != null) {
+                if (exitCode == 0) {
+                    output.WriteLine(SR.GetString(SR.PackageInstallSucceeded, package));
+                } else {
+                    output.WriteLine(SR.GetString(SR.PackageInstallFailedExitCode, package, exitCode));
                 }
-                return exitCode == 0;
-            });
+                if (PythonToolsPackage.Instance != null && PythonToolsPackage.Instance.GeneralOptionsPage.ShowOutputWindowForPackageInstallation) {
+                    output.ShowAndActivate();
+                } else {
+                    output.Show();
+                }
+            }
+            return exitCode == 0;
         }
     }
 }

@@ -333,6 +333,7 @@
     <Compile Include="PythonTools\Project\PythonProjectImageName.cs" />
     <Compile Include="PythonTools\Project\VirtualEnv.cs" />
     <Compile Include="PythonTools\Project\XamlDesignerSupport.cs" />
+    <Compile Include="PythonTools\PythonInterpreterFactoryExtensions.cs" />
     <Compile Include="PythonTools\WebProject\AzureSolutionListener.cs" />
     <Compile Include="PythonTools\WebProject\PythonWebPropertyPageControl.cs">
       <SubType>UserControl</SubType>

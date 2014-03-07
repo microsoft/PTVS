@@ -27,7 +27,7 @@ namespace TestUtilities.UI {
         protected AutomationElement WaitForItemHelper(Func<string[], AutomationElement> getItem, string[] path) {
             AutomationElement item = null;
             for (int i = 0; i < 40; i++) {
-                item = FindItem(path);
+                item = getItem(path);
                 if (item != null) {
                     break;
                 }
@@ -91,6 +91,7 @@ namespace TestUtilities.UI {
                         EnsureExpanded(node);
                     } catch (InvalidOperationException) {
                         // handle race w/ items being removed...
+                        Console.WriteLine("Failed to expand {0}", splitPath[depth]);
                     }
                     return FindNode(node.FindAll(TreeScope.Children, Condition.TrueCondition), splitPath, depth + 1);
                 }

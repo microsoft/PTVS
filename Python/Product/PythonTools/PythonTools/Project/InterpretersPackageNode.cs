@@ -16,15 +16,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools.Project;
 using OleConstants = Microsoft.VisualStudio.OLE.Interop.Constants;
+using Task = System.Threading.Tasks.Task;
 using VsCommands = Microsoft.VisualStudio.VSConstants.VSStd97CmdID;
 using VsMenus = Microsoft.VisualStudioTools.Project.VsMenus;
 
@@ -62,12 +61,10 @@ namespace Microsoft.PythonTools.Project {
             get { return _packageName; }
         }
 
-        public static System.Threading.Tasks.Task InstallNewPackage(InterpretersNode parent) {
+        public static async Task InstallNewPackage(InterpretersNode parent) {
             var view = InstallPythonPackage.ShowDialog(parent._factory);
             if (view == null) {
-                var tcs = new TaskCompletionSource<object>();
-                tcs.SetCanceled();
-                return tcs.Task;
+                throw new OperationCanceledException();
             }
 
             var name = view.Name;
@@ -84,21 +81,23 @@ namespace Microsoft.PythonTools.Project {
                 Pip.Install(parent._factory, name, parent.ProjectMgr.Site, view.InstallElevated, redirector) :
                 EasyInstall.Install(parent._factory, name, parent.ProjectMgr.Site, view.InstallElevated, redirector);
 
-            return task.ContinueWith(t => {
-                if (t.IsCanceled || t.IsFaulted) {
-                    statusBar.SetText(SR.GetString(SR.PackageInstallFailed, name));
-                } else {
-                    bool success = t.Result;
-
-                    statusBar.SetText(SR.GetString(
-                        success ? SR.PackageInstallSucceeded : SR.PackageInstallFailed,
-                        name));
+            try {
+                bool success = await task;
+                statusBar.SetText(SR.GetString(
+                    success ? SR.PackageInstallSucceeded : SR.PackageInstallFailed,
+                    name
+                ));
+            } catch (Exception ex) {
+                if (ErrorHandler.IsCriticalException(ex)) {
+                    throw;
                 }
+                statusBar.SetText(SR.GetString(SR.PackageInstallFailed, name));
+            } finally {
                 parent.PackageChangeDone();
-            }, TaskScheduler.FromCurrentSynchronizationContext());
+            }
         }
 
-        public static System.Threading.Tasks.Task UninstallPackage(InterpretersNode parent, string name) {
+        public static async Task UninstallPackage(InterpretersNode parent, string name) {
             // don't process events while we're installing, we'll
             // rescan once we're done
             parent.BeginPackageChange();
@@ -109,16 +108,20 @@ namespace Microsoft.PythonTools.Project {
 
             bool elevate = PythonToolsPackage.Instance != null && PythonToolsPackage.Instance.GeneralOptionsPage.ElevatePip;
 
-            return Pip.Uninstall(parent._factory, name, elevate, redirector).ContinueWith(t => {
-                if (t.IsCompleted) {
-                    bool success = t.Result;
-
-                    statusBar.SetText(SR.GetString(
-                        success ? SR.PackageUninstallSucceeded : SR.PackageUninstallFailed,
-                        name));
+            try {
+                bool success = await Pip.Uninstall(parent._factory, name, elevate, redirector);
+                statusBar.SetText(SR.GetString(
+                    success ? SR.PackageUninstallSucceeded : SR.PackageUninstallFailed,
+                    name
+                ));
+            } catch (Exception ex) {
+                if (ErrorHandler.IsCriticalException(ex)) {
+                    throw;
                 }
+                statusBar.SetText(SR.GetString(SR.PackageUninstallFailed, name));
+            } finally {
                 parent.PackageChangeDone();
-            }, TaskScheduler.FromCurrentSynchronizationContext());
+            }
         }
 
         public override Guid ItemTypeGuid {

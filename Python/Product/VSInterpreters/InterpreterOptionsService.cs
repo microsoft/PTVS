@@ -30,7 +30,7 @@ namespace Microsoft.PythonTools.Interpreter {
     [Export(typeof(IInterpreterOptionsService))]
     [PartCreationPolicy(CreationPolicy.Shared)]
     class InterpreterOptionsService : IInterpreterOptionsService {
-        private static Guid NoInterpretersFactoryGuid = new Guid("{15CEBB59-1008-4305-97A9-CF5E2CB04711}");
+        internal static Guid NoInterpretersFactoryGuid = new Guid("{15CEBB59-1008-4305-97A9-CF5E2CB04711}");
 
         // Two locations for specifying factory providers.
         // The first is within the VS 1x.0_Config hive, and is easiest to

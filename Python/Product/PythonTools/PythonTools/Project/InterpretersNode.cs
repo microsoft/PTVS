@@ -116,7 +116,12 @@ namespace Microsoft.PythonTools.Project {
 
             Pip.Freeze(_factory).ContinueWith((Action<Task<HashSet<string>>>)(t => {
                 bool anyChanges = false;
-                var lines = t.Result;
+                HashSet<string> lines;
+                try {
+                    lines = t.Result;
+                } catch (NoInterpretersException) {
+                    return;
+                }
                 if (ProjectMgr == null || ProjectMgr.IsClosed) {
                     return;
                 }

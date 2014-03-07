@@ -194,15 +194,17 @@ namespace Microsoft.VisualStudioTools {
         }
 
         internal static void OpenVsWebBrowser(string url) {
-            var web = GetGlobalService(typeof(SVsWebBrowsingService)) as IVsWebBrowsingService;
-            if (web == null) {
-                OpenWebBrowser(url);
-                return;
-            }
+            ThreadHelper.Generic.Invoke(() => {
+                var web = GetGlobalService(typeof(SVsWebBrowsingService)) as IVsWebBrowsingService;
+                if (web == null) {
+                    OpenWebBrowser(url);
+                    return;
+                }
 
-            IVsWindowFrame frame;
-            ErrorHandler.ThrowOnFailure(web.Navigate(url, (uint)__VSWBNAVIGATEFLAGS.VSNWB_ForceNew, out frame));
-            frame.Show();
+                IVsWindowFrame frame;
+                ErrorHandler.ThrowOnFailure(web.Navigate(url, (uint)__VSWBNAVIGATEFLAGS.VSNWB_ForceNew, out frame));
+                frame.Show();
+            });
         }
 
         #region IOleComponent Members

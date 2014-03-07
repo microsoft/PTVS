@@ -156,14 +156,19 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <see cref="RunElevated"/>.
         /// </param>
         /// <returns>A <see cref="ProcessOutput"/> object.</returns>
-        public static ProcessOutput Run(string filename,
-                                        IEnumerable<string> arguments,
-                                        string workingDirectory,
-                                        IEnumerable<KeyValuePair<string, string>> env,
-                                        bool visible,
-                                        Redirector redirector,
-                                        bool quoteArgs = true,
-                                        bool elevate = false) {
+        public static ProcessOutput Run(
+            string filename,
+            IEnumerable<string> arguments,
+            string workingDirectory,
+            IEnumerable<KeyValuePair<string, string>> env,
+            bool visible,
+            Redirector redirector,
+            bool quoteArgs = true,
+            bool elevate = false
+        ) {
+            if (string.IsNullOrEmpty(filename)) {
+                throw new ArgumentException("Filename required", "filename");
+            }
             if (elevate) {
                 return RunElevated(filename, arguments, workingDirectory, redirector, quoteArgs);
             }
@@ -349,7 +354,13 @@ namespace Microsoft.VisualStudioTools.Project {
             try {
                 _process.Start();
             } catch (Exception ex) {
-                _error.AddRange(SplitLines(ex.ToString()));
+                if (_redirector != null) {
+                    foreach (var line in SplitLines(ex.ToString())) {
+                        _redirector.WriteErrorLine(line);
+                    }
+                } else if (_error != null) {
+                    _error.AddRange(SplitLines(ex.ToString()));
+                }
                 _process = null;
             }
 
