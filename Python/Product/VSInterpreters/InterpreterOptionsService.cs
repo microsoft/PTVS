@@ -76,15 +76,15 @@ namespace Microsoft.PythonTools.Interpreter {
             } else if (ServiceProvider.GlobalProvider != null) {
                 _activityLog = ServiceProvider.GlobalProvider.GetService(typeof(SVsActivityLog)) as IVsActivityLog;
             }
-            Initialize();
+            Initialize(provider);
 
             InitializeDefaultInterpreterWatcher(provider);
         }
 
-        private void InitializeDefaultInterpreterWatcher(IServiceProvider provider) {
+        private void InitializeDefaultInterpreterWatcher(IServiceProvider serviceProvider) {
             RegistryKey userSettingsKey;
-            if (provider != null) {
-                userSettingsKey = VSRegistry.RegistryRoot(provider, __VsLocalRegistryType.RegType_UserSettings, false);
+            if (serviceProvider != null) {
+                userSettingsKey = VSRegistry.RegistryRoot(serviceProvider, __VsLocalRegistryType.RegType_UserSettings, false);
             } else {
                 userSettingsKey = VSRegistry.RegistryRoot(__VsLocalRegistryType.RegType_UserSettings, false);
             }
@@ -110,11 +110,11 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
-        private void Initialize() {
+        private void Initialize(IServiceProvider serviceProvider) {
             BeginSuppressInterpretersChangedEvent();
             try {
                 var store = _settings.GetReadOnlySettingsStore(SettingsScope.Configuration);
-                _providers = LoadProviders(store);
+                _providers = LoadProviders(store, serviceProvider);
             } finally {
                 EndSuppressInterpretersChangedEvent();
             }
@@ -222,7 +222,10 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
-        private IPythonInterpreterFactoryProvider[] LoadProviders(SettingsStore store) {
+        private IPythonInterpreterFactoryProvider[] LoadProviders(
+            SettingsStore store,
+            IServiceProvider serviceProvider
+        ) {
             var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             var catalog = new List<ComposablePartCatalog>();
 
@@ -259,20 +262,25 @@ namespace Microsoft.PythonTools.Interpreter {
 
             const string FailedToImportMessage = "Failed to import factory providers";
             var providers = new List<IPythonInterpreterFactoryProvider>();
+            var serviceProviderProvider = new MockExportProvider();
+            if (serviceProvider != null) {
+                serviceProviderProvider.SetExport(typeof(SVsServiceProvider), () => serviceProvider);
+            }
+
             foreach (var part in catalog) {
                 var container = new CompositionContainer(part);
-                try {
-                    foreach (var provider in container.GetExportedValues<IPythonInterpreterFactoryProvider>()) {
-                        if (provider != null) {
-                            providers.Add(provider);
+                foreach (var provider in container.GetExports<IPythonInterpreterFactoryProvider>()) {
+                    try {
+                        if (provider.Value != null) {
+                            providers.Add(provider.Value);
                         }
+                    } catch (CompositionException ex) {
+                        LogException(_activityLog, FailedToImportMessage, null, ex, ex.Errors);
+                    } catch (ReflectionTypeLoadException ex) {
+                        LogException(_activityLog, FailedToImportMessage, null, ex, ex.LoaderExceptions);
+                    } catch (Exception ex) {
+                        LogException(_activityLog, FailedToImportMessage, null, ex);
                     }
-                } catch (CompositionException ex) {
-                    LogException(_activityLog, FailedToImportMessage, null, ex, ex.Errors);
-                } catch (ReflectionTypeLoadException ex) {
-                    LogException(_activityLog, FailedToImportMessage, null, ex, ex.LoaderExceptions);
-                } catch (Exception ex) {
-                    LogException(_activityLog, FailedToImportMessage, null, ex);
                 }
             }
 

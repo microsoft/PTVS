@@ -3,12 +3,12 @@
      xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
   <Fragment>
     <UI Id="UI_Default">
-      <ProgressText Action="DevEnvSetup">Registering extension in Visual Studio...</ProgressText>
-      <ProgressText Action="DevEnvSetup_Rollback">Removing extension from Visual Studio...</ProgressText>
-      <ProgressText Action="WDExpresSetup">Registering extension in Visual Studio Express for Desktop...</ProgressText>
-      <ProgressText Action="WDExpressSetup_Rollback">Removing extension from Visual Studio Express for Desktop...</ProgressText>
-      <ProgressText Action="VWDExpressSetup">Registering extension in Visual Studio Express for Web...</ProgressText>
-      <ProgressText Action="VWDExpressSetup_Rollback">Removing extension from Visual Studio Express for Web...</ProgressText>
+      <ProgressText Action="DevEnvSetup">!(loc.DevEnvSetup)</ProgressText>
+      <ProgressText Action="DevEnvSetup_Rollback">!(loc.DevEnvSetup_Rollback)</ProgressText>
+      <ProgressText Action="WDExpressSetup">!(loc.WDExpresSetup)</ProgressText>
+      <ProgressText Action="WDExpressSetup_Rollback">!(loc.WDExpressSetup_Rollback)</ProgressText>
+      <ProgressText Action="VWDExpressSetup">!(loc.VWDExpressSetup)</ProgressText>
+      <ProgressText Action="VWDExpressSetup_Rollback">!(loc.VWDExpressSetup_Rollback)</ProgressText>
 
       <Dialog Id="CustomAdvancedWelcomeEulaDlg" Width="370" Height="270" Title="!(loc.AdvancedWelcomeEulaDlg_Title)">
         <Control Id="BannerBitmap" Type="Bitmap" X="0" Y="0" Width="370" Height="44" TabSkip="no" Text="!(loc.AdvancedWelcomeEulaDlgBannerBitmap)" />

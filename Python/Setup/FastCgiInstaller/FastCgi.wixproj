@@ -14,13 +14,35 @@
     <SccLocalPath>SAK</SccLocalPath>
   </PropertyGroup>
   <ItemGroup>
-    <WixExtension Include="WixUIExtension;WixUtilExtension" />
-    <WixExtension Include="PythonVersions" />
+    <WixExtension Include="WixUIExtension">
+      <HintPath>WixUIExtension</HintPath>
+      <Name>WixUIExtension</Name>
+    </WixExtension>
+    <WixExtension Include="WixUtilExtension">
+      <HintPath>WixUtilExtension</HintPath>
+      <Name>WixUtilExtension</Name>
+    </WixExtension>
+    <WixExtension Include="PythonVersions">
+      <HintPath>PythonVersions</HintPath>
+      <Name>PythonVersions</Name>
+    </WixExtension>
     <BindInputPaths Include="$(BuildRoot)\Python\Product\BuildTasks" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="FastCgiInstaller.wxs" />
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Strings10.0.wxl" />
+    <EmbeddedResource Include="Strings11.0.wxl" />
+    <EmbeddedResource Include="Strings12.0.wxl" />
+  </ItemGroup>
+  <Target Name="ExcludeStrings" BeforeTargets="BeforeBuild">
+    <ItemGroup>
+      <EmbeddedResource Remove="Strings10.0.wxl" Condition="'$(VSTarget)' != '10.0'" />
+      <EmbeddedResource Remove="Strings11.0.wxl" Condition="'$(VSTarget)' != '11.0'" />
+      <EmbeddedResource Remove="Strings12.0.wxl" Condition="'$(VSTarget)' != '12.0'" />
+    </ItemGroup>
+  </Target>
   <Import Project="..\SetupProjectAfter.settings" />
   <!-- Build our extension that we use for this installer -->
   <Target Name="BuildExtension" BeforeTargets="BeforeBuild" Inputs="PythonVersions.cs" Outputs="PythonVersions.dll">

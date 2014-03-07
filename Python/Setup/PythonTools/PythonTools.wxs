@@ -26,24 +26,21 @@
       <Directory Id="Dir_StartMenu" />
     </DirectoryRef>
 
-    <?if "$(var.VSTargetVersion)" = "10.0" ?>
-    <?define Comp_PTVSDShortcutGuid=77AC6ECB-D100-4E1A-83B3-95069098EEEE?>
-    <?elseif "$(var.VSTargetVersion)" = "11.0" ?>
-    <?define Comp_PTVSDShortcutGuid=5DD43BC7-B38F-46F1-BD72-705207743912?>
-    <?elseif "$(var.VSTargetVersion)" = "12.0" ?>
-    <?define Comp_PTVSDShortcutGuid=DA8A6ECB-5662-4778-977A-D79C65ACB827?>
-    <?endif ?>
-
-    <Component Id="Comp_PTVSDShortcut" Directory="Dir_ptvsd" Guid="$(var.Comp_PTVSDShortcutGuid)">
+    <Component Id="Comp_Shortcuts" Directory="Dir_VSInstallLocation" Guid="*">
       <Shortcut Id="PTVSDShortcut"
                 Name="ptvsd Package"
                 Directory="Dir_StartMenu"
                 Description="Python Tools for Visual Studio Debugger package"
-                Target="[$Comp_PTVSDShortcut]" />
+                Target="[Dir_ptvsd]" />
+      <Shortcut Id="LicenseShortcut"
+                Name="PTVS License"
+                Directory="Dir_StartMenu"
+                Description="Python Tools for Visual Studio License Agreement"
+                Target="[#File_VS_Python_Tools_for_VS_License.rtf]"/>
       <RegistryValue Root='HKCU' Key='SOFTWARE\Microsoft\PythonTools\$(var.VSTargetVersion)'
                      Type='string'
                      Name='ptvsd'
-                     Value='[$Comp_PTVSDShortcut]'
+                     Value='[Dir_ptvsd]'
                      KeyPath='yes' />
       <RemoveFolder Id='DeleteDir_StartMenu' Directory='Dir_StartMenu' On='uninstall'/>
     </Component>

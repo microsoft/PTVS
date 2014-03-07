@@ -119,6 +119,9 @@
     <Compile Include="..\PythonTools\PythonToolsInstallPath.cs">
       <Link>PythonToolsInstallPath.cs</Link>
     </Compile>
+    <Compile Include="..\VSInterpreters\MockExportProvider.cs">
+      <Link>MockExportProvider.cs</Link>
+    </Compile>
     <Compile Include="InterpreterOptionsServiceProvider.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RunFromContextFileExtensions.cs" />

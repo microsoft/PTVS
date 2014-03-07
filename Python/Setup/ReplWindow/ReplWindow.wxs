@@ -5,6 +5,10 @@
 
     <?include ..\MergeModule.wxi ?>
 
+    <DirectoryRef Id="Dir_VSInstallLocation">
+      <Directory Id="GAC" Name="GAC" />
+    </DirectoryRef>
+
     <Component Id="PerUserInstallRegistry" Directory="Dir_VSInstallLocation" Guid="{D02050BD-AC66-4EFF-AF1C-E5C08A906CF1}">
       <Condition>NOT ALLUSERS = 1</Condition>
       <RegistryKey Root='HKCU' Key='Software\Microsoft\VisualStudio\$(var.VSTargetVersion)\ExtensionManager\EnabledExtensions'>

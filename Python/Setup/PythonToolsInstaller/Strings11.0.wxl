@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WixLocalization Culture="en-us" xmlns="http://schemas.microsoft.com/wix/2006/localization">
+  <String Id="ProductName">Python Tools</String>
+  <String Id="ForVisualStudio">for Visual Studio 2012</String>
+  <String Id="VSProductName">Visual Studio 2012</String>
+  <String Id="WDProductName">Visual Studio Express 2012 for Desktop</String>
+  <String Id="VWDProductName">Visual Studio Express 2012 for Web</String>
+
+  <String Id="ProductDescription">!(loc.ProductName) !(loc.ForVisualStudio)</String>
+  <String Id="DowngradeErrorMessage">A newer version of !(loc.ProductDescription) is already installed.</String>
+  <String Id="NoInstallPath">!(loc.VSProductName) is required.  An installer for other versions of Visual Studio can be downloaded from http://pytools.codeplex.com/.</String>
+  <String Id="NoExePath">Your version of !(loc.VSProductName) is not supported.  Please install the latest update from http://www.visualstudio.com/.</String>
+  <String Id="WDInstallPathButNoExe">Your version of !(loc.WDProductName) is not supported.  Please install the latest update from http://www.visualstudio.com/.</String>
+  <String Id="VWDInstallPathButNoExe">Your version of !(loc.VWDProductName) is not supported.  Please install the latest update from http://www.visualstudio.com/.</String>
+  <String Id="VSPrerelease">A pre-release version of !(loc.VSProductName) was detected.  This version of !(loc.ProductName) is not supported on pre-release builds of !(loc.VSProductName).  Please upgrade to !(loc.VSProductName).</String>
+  <String Id="IronPythonToolsInstalled">The IronPython Tools feature of IronPython 2.7 must be uninstalled.  !(loc.ProductName) replaces IronPython Tools and supports all the same features and more.</String>
+  <String Id="PTVS15PerUserInstalled">Python Tools 1.5 was installed per-user.  Python Tools 1.5 must be uninstalled via Add\Remove Programs before continuing installation.</String>
+  <String Id="DevEnvSetup">Registering extension in !(loc.VSProductName)...</String>
+  <String Id="DevEnvSetup_Rollback">Removing extension from !(loc.VSProductName)...</String>
+  <String Id="WDExpresSetup">Registering extension in !(loc.WDProductName)...</String>
+  <String Id="WDExpressSetup_Rollback">Removing extension from !(loc.WDProductName)...</String>
+  <String Id="VWDExpressSetup">Registering extension in !(loc.VWDProductName)...</String>
+  <String Id="VWDExpressSetup_Rollback">Removing extension from !(loc.VWDProductName)...</String>
+</WixLocalization>

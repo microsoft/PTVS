@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="..\SetupProjectBefore.settings" />
   <PropertyGroup>
@@ -22,7 +22,18 @@
     </DefineConstants>
   </PropertyGroup>
   <ItemGroup>
-    <WixExtension Include="WixUIExtension;WixUtilExtension;WixDependencyExtension" />
+    <WixExtension Include="WixUIExtension">
+      <HintPath>WixUIExtension</HintPath>
+      <Name>WixUIExtension</Name>
+    </WixExtension>
+    <WixExtension Include="WixUtilExtension">
+      <HintPath>WixUtilExtension</HintPath>
+      <Name>WixUtilExtension</Name>
+    </WixExtension>
+    <WixExtension Include="WixDependencyExtension">
+      <HintPath>WixDependencyExtension</HintPath>
+      <Name>WixDependencyExtension</Name>
+    </WixExtension>
     <BindInputPaths Include="$(OutDir)">
       <Visible>false</Visible>
     </BindInputPaths>
@@ -39,6 +50,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="License.rtf" />
+    <Content Include="PythonToolsInstallerVars.wxi" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\PythonProfiling\PythonProfiling.wixproj">
@@ -91,5 +103,17 @@
       <RefTargetDir>INSTALLLOCATION</RefTargetDir>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Strings10.0.wxl" />
+    <EmbeddedResource Include="Strings11.0.wxl" />
+    <EmbeddedResource Include="Strings12.0.wxl" />
+  </ItemGroup>
+  <Target Name="ExcludeStrings" BeforeTargets="BeforeBuild">
+    <ItemGroup>
+      <EmbeddedResource Remove="Strings10.0.wxl" Condition="'$(VSTarget)' != '10.0'" />
+      <EmbeddedResource Remove="Strings11.0.wxl" Condition="'$(VSTarget)' != '11.0'" />
+      <EmbeddedResource Remove="Strings12.0.wxl" Condition="'$(VSTarget)' != '12.0'" />
+    </ItemGroup>
+  </Target>
   <Import Project="..\SetupProjectAfter.settings" />
 </Project>

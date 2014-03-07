@@ -215,7 +215,10 @@ $products = @(
       msi="PythonToolsInstaller.msi";
       signtag="";
       outname1="PTVS"; outname2=".msi"
-    },
+    }
+)
+
+$nonvs_products = @(
     @{name="WFastCGI";
       msi="WFastCGI.msi";
       signtag=" - WFastCGI";
@@ -326,19 +329,21 @@ Write-Output "============================================================"
 Write-Output ""
 
 if (-not $skipclean) {
-    if (Test-Path $outdir) {
+    if ((Test-Path $outdir) -and (Get-ChildItem $outdir)) {
         Write-Output "Cleaning previous release in $outdir"
-        rmdir -Recurse -Force $outdir -EA 0
-        while (Test-Path $outdir) {
+        del -Recurse -Force $outdir\* -EA 0
+        while (Get-ChildItem $outdir) {
             Write-Output "Failed to clean release. Retrying in five seconds. (Press Ctrl+C to abort)"
             Sleep -Seconds 5
-            rmdir -Recurse -Force $outdir -EA 0
+            del -Recurse -Force $outdir\* -EA 0
         }
     }
-    mkdir $outdir -EA 0 | Out-Null
-    if (-not $?) {
-        Write-Error -EA:Stop "
+    if (-not (Test-Path $outdir)) {
+        mkdir $outdir -EA 0 | Out-Null
+        if (-not $?) {
+            Write-Error -EA:Stop "
     Could not make output directory: $outdir"
+        }
     }
 }
 
@@ -407,7 +412,7 @@ try {
                 }
             }
             
-            Copy-Item -force $bindir\*.msi $destdir\
+            Copy-Item -force $bindir\en-us\*.msi $destdir\
             Copy-Item -force Python\Prerequisites\*.reg $destdir\
             
             mkdir $destdir\Symbols -EA 0 | Out-Null
@@ -516,14 +521,23 @@ try {
                 mkdir $destdir\SignedBinariesUnsignedMsi -EA 0 | Out-Null
                 
                 Move-Item $destdir\*.msi $destdir\UnsignedMsi -Force
-                Move-Item $bindir\*.msi $destdir\SignedBinariesUnsignedMsi -Force
+                Move-Item $bindir\en-us\*.msi $destdir\SignedBinariesUnsignedMsi -Force
             }
             
             $jobs = @()
+            $done_nonvs_products = 0
             
             foreach ($targetVs in $targetVersions) {
                 $destdir = "$outdir\$($targetVs.name)\$config"
-                $msi_files = @($products | 
+                
+                if (-not $done_nonvs_products) {
+                    $_products = $products + $nonvs_products
+                    $done_nonvs_products = 1
+                } else {
+                    $_products = $products
+                }
+                
+                $msi_files = @($_products | 
                     ForEach {@{
                         path="$destdir\SignedBinariesUnsignedMsi\$($_.msi)";
                         name="Python Tools for Visual Studio$($_.signtag)"
@@ -543,10 +557,27 @@ try {
         ##  END SIGNING CODE
         ######################################################################
         
+        $done_nonvs_products = 0
         foreach ($targetVs in $targetVersions) {
             $destdir = "$outdir\$($targetVs.name)\$config"
+            if ($config -match "debug") {
+                $config_mark = " Debug"
+            } else {
+                $config_mark = ""
+            }
+            
+            if (-not $done_nonvs_products) {
+                foreach ($product in $nonvs_products) {
+                    Copy-Item "$destdir\$($product.msi)" "$outdir\$($product.outname1)$spacename$config_mark$($product.outname2)" -Force -EA:0
+                    if (-not $?) {
+                        Write-Output "Failed to copy $destdir\$($product.msi)"
+                    }
+                }
+                $done_nonvs_products = 1
+            }
+            
             foreach ($product in $products) {
-                Copy-Item "$destdir\$($product.msi)" "$outdir\$($product.outname1)$spacename $($targetvs.name)$($product.outname2)" -Force -EA:0
+                Copy-Item "$destdir\$($product.msi)" "$outdir\$($product.outname1)$spacename $($targetvs.name)$config_mark$($product.outname2)" -Force -EA:0
                 if (-not $?) {
                     Write-Output "Failed to copy $destdir\$($product.msi)"
                 }

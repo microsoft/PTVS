@@ -23,7 +23,6 @@ using System.Threading.Tasks;
 using Microsoft.Build.Evaluation;
 using Microsoft.PythonTools.Commands;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Interpreters;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;

@@ -18,17 +18,9 @@ if __name__ == '__main__':
     import unittest
     from optparse import OptionParser
     
-    try:
-        import ptvsd
-    except ImportError:
-        ptvsd = None
-    else:
-        from ptvsd.visualstudio_py_debugger import DONT_DEBUG
-        from ptvsd.attach_server import PTVS_VER, DEFAULT_PORT, enable_attach, wait_for_attach
-    
-    parser = OptionParser(prog = 'visualstudio_py_testlauncher', usage = 'Usage: %prog [<option>] <test names>... ', version = '%prog ' + PTVS_VER)
+    parser = OptionParser(prog = 'visualstudio_py_testlauncher', usage = 'Usage: %prog [<option>] <test names>... ')
     parser.add_option('-s', '--secret', metavar = '<secret>', help = 'restrict server to only allow clients that specify <secret> when connecting')
-    parser.add_option('-p', '--port', type='int', default = DEFAULT_PORT, metavar = '<port>', help = 'listen for debugger connections on <port>')
+    parser.add_option('-p', '--port', type='int', metavar = '<port>', help = 'listen for debugger connections on <port>')
     parser.add_option('-t', '--test', type='str', dest = 'tests', action = 'append', help = 'specifies a test to run')
     parser.add_option('-m', '--module', type='str', help = 'name of the module to import the tests from')
     
@@ -36,9 +28,12 @@ if __name__ == '__main__':
     
     sys.path[0] = os.getcwd()
     
-    if ptvsd and opts.secret and opts.port:
+    if opts.secret and opts.port:
+        from ptvsd.visualstudio_py_debugger import DONT_DEBUG
+        from ptvsd.attach_server import DEFAULT_PORT, enable_attach, wait_for_attach
+
         DONT_DEBUG.append(__file__)
-        enable_attach(opts.secret, ('127.0.0.1', opts.port), redirect_output = True)
+        enable_attach(opts.secret, ('127.0.0.1', getattr(opts, 'port', DEFAULT_PORT)), redirect_output = True)
         wait_for_attach()
     
     __import__(opts.module)

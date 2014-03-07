@@ -18,6 +18,7 @@ using System.Runtime.InteropServices;
 using EnvDTE;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudioTools.Project;
+using Process = System.Diagnostics.Process;
 
 namespace Microsoft.VisualStudioTools {
     class VisualStudioApp : IDisposable {
@@ -69,8 +70,13 @@ namespace Microsoft.VisualStudioTools {
 
         private static DTE GetDTE(int processId) {
             MessageFilter.Register();
-            
-            string progId = string.Format("!VisualStudio.DTE.{0}:{1}", AssemblyVersionInfo.VSVersion, processId);
+
+            var prefix = Process.GetProcessById(processId).ProcessName;
+            if ("devenv".Equals(prefix, StringComparison.OrdinalIgnoreCase)) {
+                prefix = "VisualStudio";
+            }
+
+            string progId = string.Format("!{0}.DTE.{1}:{2}", prefix, AssemblyVersionInfo.VSVersion, processId);
             object runningObject = null;
 
             IBindCtx bindCtx = null;

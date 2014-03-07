@@ -17,7 +17,6 @@ using System.ComponentModel;
 using System.IO;
 using System.Runtime.InteropServices;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Interpreters;
 using Microsoft.VisualStudioTools;
 using AutomationBrowsableAttribute = Microsoft.VisualStudioTools.Project.AutomationBrowsableAttribute;
 using HierarchyNode = Microsoft.VisualStudioTools.Project.HierarchyNode;

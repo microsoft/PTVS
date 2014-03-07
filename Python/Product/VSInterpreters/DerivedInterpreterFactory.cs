@@ -17,10 +17,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
-using Microsoft.PythonTools.Analysis.Analyzer;
-using Microsoft.PythonTools.Interpreter;
 
-namespace Microsoft.PythonTools.Interpreters {
+namespace Microsoft.PythonTools.Interpreter {
     class DerivedInterpreterFactory : PythonInterpreterFactoryWithDatabase {
         readonly PythonInterpreterFactoryWithDatabase _base;
 

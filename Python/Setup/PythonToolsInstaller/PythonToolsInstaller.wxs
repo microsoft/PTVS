@@ -3,90 +3,85 @@
      xmlns:util="http://schemas.microsoft.com/wix/UtilExtension"
      xmlns:dep="http://schemas.microsoft.com/wix/DependencyExtension">
   <?include PythonToolsInstallerVars.wxi ?>
-
-  <Product Id="$(var.InstallerGuid)" Name="$(var.ProductName)" Language="1033" Version="$(var.MsiVersion)" Manufacturer="Microsoft Corporation" UpgradeCode="$(var.InstallerUpgradeGuid)">
-    <Package InstallerVersion="300" Compressed="yes"  />
-    <MajorUpgrade AllowDowngrades="no" AllowSameVersionUpgrades="yes"
-                  DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
+  
+  <Product Id="*" Name="$(var.ProductName)" Language="1033" Version="$(var.MsiVersion)" Manufacturer="Microsoft Corporation" UpgradeCode="$(var.InstallerUpgradeGuid)">
+    <Package InstallerVersion="300" Compressed="yes" InstallScope="perMachine" />
+    <MajorUpgrade AllowDowngrades="no" AllowSameVersionUpgrades="yes" DowngradeErrorMessage="!(loc.DowngradeErrorMessage)" />
     <PropertyRef Id="UpgradeVersionsDummyProperty" />
 
-    <Media Id="1" Cabinet="media1.cab" EmbedCab="yes" />
+    <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
 
-
-    <!-- Properties that we need to search for -->
-
-    <!-- By default we install for all users, users can change this -->
-    <Property Id="ALLUSERS" Value="1"/>
-
-    <!-- we detect other installed software (IronPython, HPC pack) and set the install level of the feature to 2 if they're not installed to uncheck them by default.  -->
+    <!-- Detect other installed software (IronPython, HPC pack) and set the
+         install level of the feature to 2 if they're not installed. This will
+         cause them to be unselected by default. -->
     <Property Id="INSTALLLEVEL" Value="1"/>
 
-    <Property Id="HPC_CLIENT_INSTALLED">
-      <ComponentSearch Id="SchedUtil" Guid="4BC84A98-B96A-4564-8BD7-11CE7340DA3B" Type="file" />
-    </Property>
-
-    <!-- Conditions for install -->
+    <PropertyRef Id="HPC_CLIENT_INSTALLED"/>
     <PropertyRef Id="PTVS_15_PERUSER"/>
-    <Condition Message="Python Tools 1.5 was installed per-user.  Python Tools 1.5 must be uninstalled via Add\Remove Programs before continuing installation.">NOT PTVS_15_PERUSER OR Installed</Condition>
-    
     <PropertyRef Id="IPYTOOLS_INSTALLED"/>
-    <Condition Message="The IronPython Tools feature of IronPython 2.7 must be uninstalled.  Python Tools replaces IronPython Tools and supports all the same features and more.">NOT IPYTOOLS_INSTALLED OR REMOVE ~= "ALL"</Condition>
-
-    <!-- On 2013 prevent installing on Visual Studio pre-Release builds -->
-    <?if "$(var.VSTargetVersion)" = "12.0" ?>
     <PropertyRef Id="VS2013_PRERELEASE"/>
-    <Condition Message="A pre-release version of Visual Studio 2013 was detected.  This version of Python Tools is not supported on pre-release builds of Visual Studio 2013.  Please upgrade to Visual Studio 2013."> NOT VS2013_PRERELEASE OR Installed </Condition>
-    <?endif ?>
-
+    
     <PropertyRef Id="VSINSTALLPATH"/>
+    <PropertyRef Id="WDINSTALLPATH"/>
+    <PropertyRef Id="VWDINSTALLPATH"/>
     <PropertyRef Id="DEVENV_PATH"/>
     <PropertyRef Id="WDEXPRESS_PATH"/>
     <PropertyRef Id="VWDEXPRESS_PATH"/>
-    
-    <?if "$(var.VSTargetVersion)" = "10.0" ?>
-    <Condition Message="Visual Studio 2010 is required.  PTVS for other versions of Visual Studio can be downloaded from http://pytools.codeplex.com/."> VSINSTALLPATH OR Installed </Condition>
-    <?elseif "$(var.VSTargetVersion)" = "11.0" ?>
-    <Condition Message="Visual Studio 2012 is required.  PTVS for other versions of Visual Studio can be downloaded from http://pytools.codeplex.com/."> VSINSTALLPATH OR Installed </Condition>
-    <?elseif "$(var.VSTargetVersion)" = "12.0" ?>
-    <Condition Message="Visual Studio 2013 is required.  The free Visual Studio Express 2013 for Desktop and Visual Studio Express 2013 for Web editions, as well as the required Visual Studio 2013 Update 2, can be downloaded from http://www.visualstudio.com/.">
-      VSINSTALLPATH OR WDEXPRESS_PATH OR VWDEXPRESS_PATH OR Installed
-    </Condition>
-    <?else?>
-    <Condition Message="Visual Studio v$(var.VSTargetVersion) must be installed."> VSINSTALLPATH OR Installed </Condition>
-    <?endif ?>
 
-    <!-- Install the tools into the VS directory -->
+    <!-- Conditions for install -->
+    <Condition Message="!(loc.PTVS15PerUserInstalled)">NOT PTVS_15_PERUSER OR Installed</Condition>
+    <Condition Message="!(loc.IronPythonToolsInstalled)">NOT IPYTOOLS_INSTALLED OR REMOVE ~= "ALL"</Condition>
+    <Condition Message="!(loc.VSPrerelease)"> NOT VS2013_PRERELEASE OR Installed </Condition>
+
+    <!-- At least one installation path means some version is installed. -->
+    <Condition Message="!(loc.NoInstallPath)">
+      VSINSTALLPATH OR WDINSTALLPATH OR VWDINSTALLPATH OR Installed
+    </Condition>
+    <!-- At least one executable path means a suitable version is installed. -->
+    <!-- Skip this message if WD's install path was not found -->
+    <Condition Message="!(loc.WDInstallPathButNoExe)">
+      DEVENV_PATH OR WDEXPRESS_PATH OR VWDEXPRESS_PATH OR NOT WDINSTALLPATH OR Installed
+    </Condition>
+    <!-- Skip this message if VWD's install path was not found -->
+    <Condition Message="!(loc.VWDInstallPathButNoExe)">
+      DEVENV_PATH OR WDEXPRESS_PATH OR VWDEXPRESS_PATH OR NOT VWDINSTALLPATH OR Installed
+    </Condition>
+    <!-- Always show this message if there are no suitable versions -->
+    <Condition Message="!(loc.NoExePath)">
+      DEVENV_PATH OR WDEXPRESS_PATH OR VWDEXPRESS_PATH OR Installed
+    </Condition>
+
+    <!-- This location is the directory that PythonTools.msm will install into.
+         We use it to reference some installed files. -->
     <DirectoryRef Id="Dir_VSExtensions">
-      <Directory Id="Dir_VSInstallLocationParent" Name="Python Tools for Visual Studio">
-        <Directory Id="Dir_VSInstallLocation" Name="$(var.ReleaseVersion)" />
+      <Directory Id="Dir_PTVSInstallLocationParent" Name="Python Tools for Visual Studio">
+        <Directory Id="Dir_PTVSInstallLocation" Name="$(var.ReleaseVersion)" />
       </Directory>
     </DirectoryRef>
 
     <PropertyRef Id="VSLAUNCHER"/>
-    
-    <DirectoryRef Id="Dir_VSInstallLocation">
-      <Component Id="Comp_InstallDirItems" Guid="$(var.Comp_InstallDirItemsGuid)">
-        <Shortcut Id="LicenseShortcut"
-                  Target="[File_License.html]"
-                  Directory="Dir_StartMenu"
-                  Name="PTVS License"
-                  Description="Python Tools for Visual Studio License Agreement" />
-        <RegistryValue Root='HKCU' Key='SOFTWARE\Microsoft\PythonTools\$(var.VSTargetVersion)' Type='string' Value='Readme' KeyPath='yes' />
-        <RemoveFolder Id='DeleteDir_StartMenu' Directory='Dir_StartMenu' On='uninstall'/>
-      </Component>
 
-      <Component Id="Comp_InstallLocation" Guid="$(var.Comp_InstallLocationGuid)">
-        <File Id="File_License.html" Name="License.html" Source="License.html" />
-        <RegistryKey Root="HKMU" Key="Software\Microsoft\PythonTools\$(var.VSTargetVersion)">
-          <RegistryValue Type="string" Name="InstallDir" Value="[Dir_VSInstallLocation]" KeyPath="yes"/>
-        </RegistryKey>
-        <util:RestartResource Path="[DEVENV_PATH]" />
-      </Component>
+    <DirectoryRef Id="TARGETDIR">
+      <Directory Id="ProgramMenuFolder">
+        <Directory Id="Dir_StartMenu" Name="!(loc.ProductName) !(loc.ForVisualStudio)">
+          <Component Id="Comp_ProgramMenuFolder" Guid="$(var.Comp_ProgramMenuFolder)">
+            <RemoveFolder Id='DeleteDir_StartMenu' Directory='Dir_StartMenu' On='uninstall'/>
+            <RegistryKey Root="HKMU" Key="Software\Microsoft\PythonTools\$(var.VSTargetVersion)">
+              <RegistryValue Type="string" Name="InstallDir" Value="[Dir_PTVSInstallLocation]" KeyPath="yes"/>
+            </RegistryKey>
+            <util:RestartResource Path="[DEVENV_PATH]" />
+            <util:RestartResource Path="[WDEXPRESS_PATH]" />
+            <util:RestartResource Path="[VWDEXPRESS_PATH]" />
+          </Component>
+        </Directory>
+      </Directory>
+    </DirectoryRef>
 
+    <DirectoryRef Id="Dir_PTVSInstallLocation">
       <!-- Double click to open Python projects with Visual Studio -->
       <Component Id="Comp_PyProjRegistration" DiskId="1" Guid="$(var.Comp_PyProjRegistrationGuid)">
         <RegistryValue Root='HKCR' Key='.pyproj' Type='string' Name='PerceivedType' Value='text' />
-        <RegistryValue Root='HKCR' Key='VisualStudio.Launcher.pyproj.$(var.VSTargetVersion)\DefaultIcon' Type='string' Value='[Dir_VSInstallLocation]\PythonProject.ico' />
+        <RegistryValue Root='HKCR' Key='VisualStudio.Launcher.pyproj.$(var.VSTargetVersion)\DefaultIcon' Type='string' Value='[Dir_PTVSInstallLocation]\PythonProject.ico' />
 
         <ProgId Id="VisualStudio.Launcher.pyproj.$(var.VSTargetVersion)" Description="Python Project">
           <Extension Id="pyproj" ContentType="text/plain">
@@ -96,17 +91,18 @@
       </Component>
 
       <!-- Open with Visual Studio context menu -->
-      <Component Id="Comp_PyFileProgId" Guid="$(var.Comp_PyFileProgIdGuid)">
-        <!-- Manually writing the ProdId so we can add DDE info -->
+      <Component Id="Comp_VSPyFileProgId" Guid="$(var.Comp_VSPyFileProgIdGuid)">
+        <Condition>DEVENV_PATH</Condition>
+        <!-- Manually writing the ProgId so we can add DDE info -->
         <RegistryKey Root='HKCR' Key='VisualStudio.py.$(var.VSTargetVersion)'>
           <RegistryValue Type='string' Value='Python source file' />
 
           <RegistryKey Key='DefaultIcon'>
-            <RegistryValue Type='string' Value="[Dir_VSInstallLocation]\PythonFile.ico" />
+            <RegistryValue Type='string' Value="[Dir_PTVSInstallLocation]\PythonFile.ico" />
           </RegistryKey>
 
           <RegistryKey Key='shell\open'>
-            <RegistryValue Key='Command' Type='string' Value='[VSINSTALLPATH]devenv.exe /dde "%1"' />
+            <RegistryValue Key='Command' Type='string' Value='"[DEVENV_PATH]" /dde "%1"' />
 
             <RegistryValue Key='ddeexec' Type='string' Value='Open("%1")' />
             <RegistryValue Key='ddeexec\Application' Type='string' Value='VisualStudio.$(var.VSTargetVersion)' />
@@ -117,6 +113,55 @@
         <RegistryValue Root='HKCR' Key='.py\OpenWithProgids' Name='VisualStudio.py.$(var.VSTargetVersion)' Type='string' Value='' />
         <RegistryValue Root='HKCR' Key='.pyw\OpenWithProgids' Name='VisualStudio.py.$(var.VSTargetVersion)' Type='string' Value='' />
       </Component>
+
+      <!-- Open with WDExpress context menu -->
+      <Component Id="Comp_WDPyFileProgId" Guid="$(var.Comp_WDPyFileProgIdGuid)">
+        <Condition>WDEXPRESS_PATH</Condition>
+        <!-- Manually writing the ProgId so we can add DDE info -->
+        <RegistryKey Root='HKCR' Key='WDExpress.py.$(var.VSTargetVersion)'>
+          <RegistryValue Type='string' Value='Python source file' />
+
+          <RegistryKey Key='DefaultIcon'>
+            <RegistryValue Type='string' Value="[Dir_PTVSInstallLocation]\PythonFile.ico" />
+          </RegistryKey>
+
+          <RegistryKey Key='shell\open'>
+            <RegistryValue Key='Command' Type='string' Value='"[WDEXPRESS_PATH]" /dde "%1"' />
+
+            <RegistryValue Key='ddeexec' Type='string' Value='Open("%1")' />
+            <RegistryValue Key='ddeexec\Application' Type='string' Value='WDExpress.$(var.VSTargetVersion)' />
+            <RegistryValue Key='ddeexec\Topic' Type='string' Value='system' />
+          </RegistryKey>
+        </RegistryKey>
+
+        <RegistryValue Root='HKCR' Key='.py\OpenWithProgids' Name='WDExpress.py.$(var.VSTargetVersion)' Type='string' Value='' />
+        <RegistryValue Root='HKCR' Key='.pyw\OpenWithProgids' Name='WDExpress.py.$(var.VSTargetVersion)' Type='string' Value='' />
+      </Component>
+
+      <!-- Open with Visual Studio context menu -->
+      <Component Id="Comp_VWDPyFileProgId" Guid="$(var.Comp_VWDPyFileProgIdGuid)">
+        <Condition>VWDEXPRESS_PATH</Condition>
+        <!-- Manually writing the ProgId so we can add DDE info -->
+        <RegistryKey Root='HKCR' Key='VWDExpress.py.$(var.VSTargetVersion)'>
+          <RegistryValue Type='string' Value='Python source file' />
+
+          <RegistryKey Key='DefaultIcon'>
+            <RegistryValue Type='string' Value="[Dir_PTVSInstallLocation]\PythonFile.ico" />
+          </RegistryKey>
+
+          <RegistryKey Key='shell\open'>
+            <RegistryValue Key='Command' Type='string' Value='"[VWDEXPRESS_PATH]" /dde "%1"' />
+
+            <RegistryValue Key='ddeexec' Type='string' Value='Open("%1")' />
+            <RegistryValue Key='ddeexec\Application' Type='string' Value='VWDExpress.$(var.VSTargetVersion)' />
+            <RegistryValue Key='ddeexec\Topic' Type='string' Value='system' />
+          </RegistryKey>
+        </RegistryKey>
+
+        <RegistryValue Root='HKCR' Key='.py\OpenWithProgids' Name='VWDExpress.py.$(var.VSTargetVersion)' Type='string' Value='' />
+        <RegistryValue Root='HKCR' Key='.pyw\OpenWithProgids' Name='VWDExpress.py.$(var.VSTargetVersion)' Type='string' Value='' />
+      </Component>
+
 
       <Merge Id="Merge_ReplWindow" Language="1033" SourceFile="ReplWindow.msm" DiskId="1">
         <?foreach key in VS;WD;VWD?>
@@ -176,10 +221,9 @@
     <!-- Features to install -->
 
     <!-- Main visual studio support feature, requires Visual Studio. -->
-    <Feature Id="ProductFeature" Title="$(var.ProductName)" Description="$(var.ProductName)"
+    <Feature Id="ProductFeature" Title="$(var.ProductName)" Description="!(loc.ProductDescription)"
              Display="expand" Level="1" AllowAdvertise="no" Absent="disallow"  >
-      <ComponentRef Id="Comp_InstallDirItems" />
-      <ComponentRef Id="Comp_InstallLocation" />
+      <ComponentRef Id="Comp_ProgramMenuFolder" />
 
       <MergeRef Id="Merge_PythonTools"/>
       <MergeRef Id="Merge_ReplWindow"/>
@@ -203,7 +247,9 @@
       </Feature>
 
       <Feature Id="Feature_VsPyFile" AllowAdvertise="no" Level="1" Title="Register file associations" Description="Associates Python projects and source files with Visual Studio (existing source file associations are not modified).">
-        <ComponentRef Id="Comp_PyFileProgId"/>
+        <ComponentRef Id="Comp_VSPyFileProgId"/>
+        <ComponentRef Id="Comp_WDPyFileProgId"/>
+        <ComponentRef Id="Comp_VWDPyFileProgId"/>
         <ComponentRef Id="Comp_PyProjRegistration" />
       </Feature>
     </Feature>
@@ -218,6 +264,7 @@
     <CustomAction Id="VWDExpressSetup_Rollback" Property="VWDEXPRESS_PATH" ExeCommand="/setup" Execute="rollback" Return="check" Impersonate="no" />
 
     <InstallExecuteSequence>
+      <InstallExecute Before="DevEnvSetup_Rollback" />
       <Custom Action="DevEnvSetup_Rollback" Before="DevEnvSetup" Overridable="yes">DEVENV_PATH</Custom>
       <Custom Action="DevEnvSetup" Before="InstallFinalize" Overridable="yes">DEVENV_PATH</Custom>
       <Custom Action="WDExpressSetup_Rollback" Before="WDExpressSetup" Overridable="yes">WDEXPRESS_PATH</Custom>

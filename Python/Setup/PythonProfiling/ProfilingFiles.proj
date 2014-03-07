@@ -9,8 +9,8 @@
 
   <ItemDefinitionGroup>
     <File>
-      <IncludeInWDExpress>false</IncludeInWDExpress>
-      <IncludeInVWDExpress>false</IncludeInVWDExpress>
+      <IncludeInWD>false</IncludeInWD>
+      <IncludeInVWD>false</IncludeInVWD>
     </File>
   </ItemDefinitionGroup>
 

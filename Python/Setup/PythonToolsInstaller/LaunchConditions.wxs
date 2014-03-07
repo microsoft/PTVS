@@ -1,8 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
   <Fragment>
+    <!-- The install path properties are set if the path is available. -->
     <Property Id="VSINSTALLPATH" Secure="yes">
-      <RegistrySearch Id="VSInstallDir" Root="HKLM" Key="Software\Microsoft\VisualStudio\$(var.VSTargetVersion)" Name="InstallDir" Type="directory" />
+      <RegistrySearch Id="VSInstallDir" Root="HKLM" Key="Software\Microsoft\VisualStudio\$(var.VSTargetVersion)\Setup\VS" Name="ProductDir" Type="directory">
+          <DirectorySearch Id="VSInstallDir_Common7_IDE" Path="Common7\IDE" AssignToProperty="yes" Depth="1">
+            <FileSearch Id="VSInstallDir_Common7_IDE_msenv_dll" Name="msenv.dll"/>
+        </DirectorySearch>
+      </RegistrySearch>
     </Property>
     <Property Id="WDINSTALLPATH" Secure="yes">
       <?if "$(var.VSTargetVersion)" = "12.0" ?>
@@ -15,8 +20,13 @@
       <?endif?>
     </Property>
 
+    <!-- The executable path properties are set if we can install into the
+         specific version that is available. 
+    -->
     <Property Id="DEVENV_PATH" Secure="yes">
-      <RegistrySearch Id="DevEnvPath" Root="HKLM" Key="Software\Microsoft\VisualStudio\$(var.VSTargetVersion)\Setup\VS" Name="EnvironmentPath" Type="raw" />
+      <DirectorySearch Id="DevEnvDir" Path="[VSINSTALLPATH]" Depth="1">
+        <FileSearch Name="devenv.exe" />
+      </DirectorySearch>
     </Property>
     <Property Id="WDEXPRESS_PATH" Secure="yes">
       <?if "$(var.VSTargetVersion)" = "12.0" ?>
@@ -57,8 +67,14 @@
   <Fragment>
     <Property Id="VS2013_PRERELEASE" Secure="no">
       <DirectorySearch Id="VS120DevEnvFilePathSearch" Path="[VSINSTALLPATH]">
-        <FileSearch Id="VS120DevEnvFileVersionSearch" Name="devenv.exe" MaxVersion="12.0.21004.0"/>
+        <FileSearch Id="VS120DevEnvFileVersionSearch" Name="devenv.exe" MinVersion="12.0.0.0" MaxVersion="12.0.21004.0"/>
       </DirectorySearch>
+    </Property>
+  </Fragment>
+
+  <Fragment>
+    <Property Id="HPC_CLIENT_INSTALLED">
+      <ComponentSearch Id="SchedUtil" Guid="4BC84A98-B96A-4564-8BD7-11CE7340DA3B" Type="file" />
     </Property>
   </Fragment>
 </Wix>

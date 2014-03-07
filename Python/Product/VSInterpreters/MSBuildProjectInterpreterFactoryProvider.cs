@@ -20,7 +20,6 @@ using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.PythonTools.Analysis;
-using Microsoft.PythonTools.Interpreters;
 using Microsoft.VisualStudioTools;
 using MSBuild = Microsoft.Build.Evaluation;
 

@@ -140,6 +140,12 @@ namespace Microsoft.PythonTools.TestAdapter {
             };
         }
 
+        private static string PtvsdSearchPath {
+            get {
+                return Path.GetDirectoryName(Path.GetDirectoryName(PythonToolsInstallPath.GetFile("ptvsd\\__init__.py")));
+            }
+        }
+
         private void RunTestCase(VisualStudioApp app, IFrameworkHandle frameworkHandle, IRunContext runContext, TestCase test, Dictionary<string, PythonProjectSettings> sourceToSettings) {
             var testResult = new TestResult(test);
             frameworkHandle.RecordStart(test);
@@ -178,6 +184,12 @@ namespace Microsoft.PythonTools.TestAdapter {
             string secret = null;
             int port = 0;
             if (runContext.IsBeingDebugged && app != null) {
+                if (string.IsNullOrEmpty(searchPath)) {
+                    searchPath = PtvsdSearchPath;
+                } else {
+                    searchPath += ";" + PtvsdSearchPath;
+                }
+
                 app.DTE.Debugger.DetachAll();
                 args = args.Concat(GetDebugArgs(settings, out secret, out port));
             }
@@ -199,7 +211,8 @@ namespace Microsoft.PythonTools.TestAdapter {
                 workingDir,
                 env,
                 false,
-                null)) {
+                null
+            )) {
                 bool killed = false;
 
 #if DEBUG
@@ -210,6 +223,17 @@ namespace Microsoft.PythonTools.TestAdapter {
 
                 proc.Wait(TimeSpan.FromMilliseconds(500));
                 if (runContext.IsBeingDebugged && app != null) {
+                    if (proc.ExitCode.HasValue) {
+                        // Process has already exited
+                        frameworkHandle.SendMessage(TestMessageLevel.Error, "Failed to attach debugger because the process has already exited.");
+                        if (proc.StandardErrorLines.Any()) {
+                            frameworkHandle.SendMessage(TestMessageLevel.Error, "Standard error from Python:");
+                            foreach (var line in proc.StandardErrorLines) {
+                                frameworkHandle.SendMessage(TestMessageLevel.Error, line);
+                            }
+                        }
+                    }
+
                     try {
                         while (!app.AttachToProcess(proc, PythonRemoteDebugPortSupplierUnsecuredId, secret, port)) {
                             if (proc.Wait(TimeSpan.FromMilliseconds(500))) {
@@ -220,20 +244,32 @@ namespace Microsoft.PythonTools.TestAdapter {
                     } catch (COMException ex) {
                         frameworkHandle.SendMessage(TestMessageLevel.Error, "Error occurred connecting to debuggee.");
                         frameworkHandle.SendMessage(TestMessageLevel.Error, ex.ToString());
-                        proc.Kill();
+                        try {
+                            proc.Kill();
+                        } catch (InvalidOperationException) {
+                            // Process has already exited
+                        }
                         killed = true;
                     }
 #else
                     } catch (COMException) {
                         frameworkHandle.SendMessage(TestMessageLevel.Error, "Error occurred connecting to debuggee.");
-                        proc.Kill();
+                        try {
+                            proc.Kill();
+                        } catch (InvalidOperationException) {
+                            // Process has already exited
+                        }
                         killed = true;
                     }
 #endif
                 }
 
                 if (!killed && WaitHandle.WaitAny(new WaitHandle[] { _cancelRequested, proc.WaitHandle }) == 0) {
-                    proc.Kill();
+                    try {
+                        proc.Kill();
+                    } catch (InvalidOperationException) {
+                        // Process has already exited
+                    }
                     killed = true;
                 } else {
                     RecordEnd(frameworkHandle, test, testResult,

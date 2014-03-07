@@ -68,12 +68,4 @@
       </Directory>
     </Directory>
   </Fragment>
-  
-  <Fragment>
-    <DirectoryRef Id="TARGETDIR">
-      <Directory Id="ProgramMenuFolder">
-        <Directory Id="Dir_StartMenu" Name="$(var.ProductName)" />
-      </Directory>
-    </DirectoryRef>
-  </Fragment>
 </Wix>

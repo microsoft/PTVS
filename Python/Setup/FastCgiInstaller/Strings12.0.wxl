@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WixLocalization Culture="en-us" xmlns="http://schemas.microsoft.com/wix/2006/localization">
+  <String Id="ProductName">WFastCGI script for Python</String>
+  <String Id="ProductDescription">WFastCGI script for Python</String>
+  <String Id="DowngradeErrorMessage">A newer version of WFastCgi is already installed.</String>
+</WixLocalization>

@@ -30,7 +30,7 @@
     <ProjectTypeGuids>{82b43b9b-a64c-4715-b499-d71e9ca2bd60};{60DC8134-EBA5-43B8-BCC9-BB4BC16C2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Microsoft.PythonTools.Interpreters</RootNamespace>
+    <RootNamespace>Microsoft.PythonTools.Interpreter</RootNamespace>
     <AssemblyName>Microsoft.PythonTools.VSInterpreters</AssemblyName>
     <ProjectGuid>{815DB0CD-C0DD-4997-B43C-ABEE4DBEFFE7}</ProjectGuid>
     <SccProjectName>SAK</SccProjectName>
@@ -106,6 +106,7 @@
     <Compile Include="DerivedInterpreterFactory.cs" />
     <Compile Include="IInterpreterOptionsService.cs" />
     <Compile Include="InterpreterOptionsService.cs" />
+    <Compile Include="MockExportProvider.cs" />
     <Compile Include="MSBuildProjectInterpreterFactoryProvider.cs" />
     <Compile Include="NativeMethods.cs" />
     <Compile Include="RegistryWatcher.cs" />

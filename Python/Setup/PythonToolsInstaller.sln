@@ -21,56 +21,44 @@ Project("{930C7802-8A8C-48F9-8165-68863BCCD9DD}") = "ReplWindow", "ReplWindow\Re
 EndProject
 Project("{930C7802-8A8C-48F9-8165-68863BCCD9DD}") = "VsLogger", "..\..\Internal\Python\VsLoggerSetup\VsLogger.wixproj", "{639BFC80-B31B-4D3F-9DF3-A65913000B4B}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{F3A54CA7-4BE0-4888-9C2D-98088460E069}"
+	ProjectSection(SolutionItems) = preProject
+		WixGenerator.targets = WixGenerator.targets
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(TeamFoundationVersionControl) = preSolution
-		SccNumberOfProjects = 9
+		SccNumberOfProjects = 10
 		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
 		SccTeamFoundationServer = http://vstfdevdiv:8080/devdiv2
 		SccProjectUniqueName0 = PythonToolsInstaller\\PythonToolsInstaller.wixproj
 		SccProjectName0 = PythonToolsInstaller
-		SccAuxPath0 = http://vstfdevdiv:8080/devdiv2
 		SccLocalPath0 = PythonToolsInstaller
-		SccProvider0 = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
 		SccProjectUniqueName1 = Django\\Django.wixproj
 		SccProjectName1 = Django
-		SccAuxPath1 = http://vstfdevdiv:8080/devdiv2
 		SccLocalPath1 = Django
-		SccProvider1 = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
 		SccProjectUniqueName2 = FastCgiInstaller\\FastCgi.wixproj
 		SccProjectName2 = FastCgiInstaller
-		SccAuxPath2 = http://vstfdevdiv:8080/devdiv2
 		SccLocalPath2 = FastCgiInstaller
-		SccProvider2 = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
 		SccProjectUniqueName3 = IronPythonInterpreter\\IronPythonInterpreter.wixproj
 		SccProjectName3 = IronPythonInterpreter
-		SccAuxPath3 = http://vstfdevdiv:8080/devdiv2
 		SccLocalPath3 = IronPythonInterpreter
-		SccProvider3 = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
 		SccProjectUniqueName4 = PythonHpcSupport\\PythonHpcSupport.wixproj
 		SccProjectName4 = PythonHpcSupport
-		SccAuxPath4 = http://vstfdevdiv:8080/devdiv2
 		SccLocalPath4 = PythonHpcSupport
-		SccProvider4 = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
 		SccProjectUniqueName5 = PythonProfiling\\PythonProfiling.wixproj
 		SccProjectName5 = PythonProfiling
-		SccAuxPath5 = http://vstfdevdiv:8080/devdiv2
 		SccLocalPath5 = PythonProfiling
-		SccProvider5 = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
 		SccProjectUniqueName6 = PythonTools\\PythonTools.wixproj
 		SccProjectName6 = PythonTools
-		SccAuxPath6 = http://vstfdevdiv:8080/devdiv2
 		SccLocalPath6 = PythonTools
-		SccProvider6 = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
 		SccProjectUniqueName7 = ReplWindow\\ReplWindow.wixproj
 		SccProjectName7 = ReplWindow
-		SccAuxPath7 = http://vstfdevdiv:8080/devdiv2
 		SccLocalPath7 = ReplWindow
-		SccProvider7 = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
 		SccProjectUniqueName8 = ..\\..\\Internal\\Python\\VsLoggerSetup\\VsLogger.wixproj
 		SccProjectName8 = ../../Internal/Python/VsLoggerSetup
-		SccAuxPath8 = http://vstfdevdiv:8080/devdiv2
 		SccLocalPath8 = ..\\..\\Internal\\Python\\VsLoggerSetup
-		SccProvider8 = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
+		SccLocalPath9 = .
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x86 = Debug|x86

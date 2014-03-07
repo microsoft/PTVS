@@ -119,11 +119,11 @@
 
     <!-- ptvsd -->
     <SharedFile Include="visualstudio_py_repl.py;
-                   visualstudio_py_debugger.py;
-                   visualstudio_py_util.py;
-                   ptvsd\attach_server.py;
-                   ptvsd\__init__.py;
-                   ptvsd\__main__.py">
+                         visualstudio_py_debugger.py;
+                         visualstudio_py_util.py;
+                         ptvsd\attach_server.py;
+                         ptvsd\__init__.py;
+                         ptvsd\__main__.py">
       <InstallDirectory>Dir_ptvsd</InstallDirectory>
     </SharedFile>
   </ItemGroup>
