@@ -137,9 +137,11 @@ class VsIOPubChannel(DefaultHandler, IOPubChannel):
         output_str = data.get('text/plain', None)
         if output_str is not None:
             if execution_count is not None:
+                if '\n' in output_str:
+                    output_str = '\n' + output_str
                 output_str = 'Out[' + str(execution_count) + ']: ' + output_str
 
-            self._vs_backend.write_stdout(output_str)        
+            self._vs_backend.write_stdout(output_str)
             self._vs_backend.write_stdout('\n') 
             return
 
