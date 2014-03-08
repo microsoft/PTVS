@@ -162,15 +162,19 @@ g()",
             Assert.IsNotNull(description, "InterpreterDescription is null");
             Assert.IsTrue(description.EndsWith(" Interactive"), string.Format("Description \"{0}\" does not end with \" Interactive\"", description));
 
-            try {
-                GetPythonAutomation().OpenInteractive(description);
-            } catch (KeyNotFoundException ex) {
-                Console.WriteLine(ex.ToString());
-                // Can't open it, but may still be able to find it.
-            }
+            GetPythonAutomation().OpenInteractive(description);
             var interactive = app.GetInteractiveWindow(description);
+            for (int retries = 10; retries > 0 && interactive == null; --retries) {
+                Console.WriteLine("Did not open {0}. Trying again...", description);
+                Thread.Sleep(1000);
+                GetPythonAutomation().OpenInteractive(description);
+                interactive = app.GetInteractiveWindow(description);
+            }
+
             if (interactive == null) {
-                Assert.Inconclusive("Need " + description);
+                // This is a failure, since we check if the environment is
+                // installed in TestInitialize().
+                Assert.Fail("Need " + description);
             }
 
             interactive.WaitForIdleState();
