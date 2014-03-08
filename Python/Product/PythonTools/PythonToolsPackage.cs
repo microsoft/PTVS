@@ -722,6 +722,11 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
 
             RegisterProjectFactory(new PythonWebProjectFactory(this));
 
+            var monitorSel = (IVsMonitorSelection)GetService(typeof(SVsShellMonitorSelection));
+            guid = AD7Engine.DebugEngineGuid;
+            ErrorHandler.ThrowOnFailure(monitorSel.GetCmdUIContextCookie(ref guid, out cookie));
+            ErrorHandler.ThrowOnFailure(monitorSel.SetCmdUIContext(cookie, 1));
+
             var interpreterService = ComponentModel.GetService<IInterpreterOptionsService>();
             interpreterService.InterpretersChanged += RefreshReplCommands;
             interpreterService.DefaultInterpreterChanged += RefreshReplCommands;
