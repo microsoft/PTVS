@@ -55,9 +55,15 @@ namespace Microsoft.IronPythonTools.Debugger {
         }
 
         public int LaunchFile(string file, bool debug) {
-            var interpreterFactoryId = _project.GetInterpreterFactory().Id;
+            var factory = _project.GetInterpreterFactory();
 
-            if (interpreterFactoryId == _cpyInterpreterGuid || interpreterFactoryId == _cpy64InterpreterGuid) {
+            if (factory == null ||
+                factory.Configuration == null ||
+                !File.Exists(factory.Configuration.InterpreterPath)) {
+                throw new NoInterpretersException();
+            }
+
+            if (factory.Id == _cpyInterpreterGuid || factory.Id == _cpy64InterpreterGuid) {
                 MessageBox.Show(
                     "The project is currently set to use the .NET debugger for IronPython debugging but the project is configured to start with a CPython interpreter.\r\n\r\nTo fix this change the debugger type in project properties->Debug->Launch mode.\r\nIf IronPython is not an available interpreter you may need to download it from http://ironpython.codeplex.com.",
                     "Python Tools for Visual Studio");
