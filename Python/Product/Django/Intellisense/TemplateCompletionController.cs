@@ -47,12 +47,6 @@ namespace Microsoft.PythonTools.Django.Intellisense {
 
             return PythonToolsPackage.Instance.AdvancedEditorOptionsPage.CompletionCommittedBy.IndexOf(typedCharacter) > 0;
         }
-
-        protected override bool FilterCompletionOnFirstCharacters(string typedText) {
-            // CompletionController does some filtering of its own based on StartsWith here, and doesn't even bother to call
-            // FuzzyCompletionSet.Filter if it can't find anything. We want it to always go to FuzzyCompletionSet instead.
-            return true;
-        }
     }
 }
 
