@@ -137,6 +137,8 @@ namespace Microsoft.PythonTools.Project {
         public const string UpgradedToolsVersion = "UpgradedToolsVersion";
         public const string UpgradedUserToolsVersion = "UpgradedUserToolsVersion";
 
+        public const string ProjectRequiresVWDExpress = "ProjectRequiresVWDExpress";
+
         internal static new string GetString(string value) {
             string result = Microsoft.PythonTools.Resources.ResourceManager.GetString(value, CultureInfo.CurrentUICulture) ?? CommonSR.GetString(value);
             if (result == null) {

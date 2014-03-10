@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using Microsoft.Build.Construction;
+using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools.Project;
 using IOleServiceProvider = Microsoft.VisualStudio.OLE.Interop.IServiceProvider;
@@ -67,6 +68,26 @@ namespace Microsoft.PythonTools.Project {
         ) {
             Version version;
 
+#if DEV12_OR_LATER
+            // Web projects are incompatible with WDExpress/Shell
+            ProjectPropertyElement projectType;
+            if (!IsWebProjectSupported &&
+                (projectType = projectXml.Properties.FirstOrDefault(p => p.Name == "ProjectTypeGuids")) != null) {
+                var webProjectGuid = new Guid(PythonConstants.WebProjectFactoryGuid);
+                if (projectType.Value
+                    .Split(';')
+                    .Select(s => {
+                        Guid g;
+                        return Guid.TryParse(s, out g) ? g : Guid.Empty;
+                    })
+                    .Contains(webProjectGuid)
+                ) {
+                    log(__VSUL_ERRORLEVEL.VSUL_ERROR, SR.GetString(SR.ProjectRequiresVWDExpress));
+                    return ProjectUpgradeState.Incompatible;
+                }
+            }
+#endif
+
             // ToolsVersion less than 4.0 (or unspecified) is not supported, so
             // set it to 4.0.
             if (!Version.TryParse(projectXml.ToolsVersion, out version) ||
@@ -108,5 +129,36 @@ namespace Microsoft.PythonTools.Project {
             }
 #endif
         }
+
+        private const int ExpressSkuValue = 500;
+        private const int ShellSkuValue = 1000;
+        private const int ProSkuValue = 2000;
+        private const int PremiumUltimateSkuValue = 3000;
+
+        private const int VWDExpressSkuValue = 0x0040;
+        private const int WDExpressSkuValue = 0x8000;
+        private const int PremiumSubSkuValue = 0x0080;
+        private const int UltimateSubSkuValue = 0x0188;
+
+        private bool IsWebProjectSupported {
+            get {
+                var shell = (IVsShell)Site.GetService(typeof(SVsShell));
+                Utilities.CheckNotNull(shell);
+                object obj;
+                ErrorHandler.ThrowOnFailure(shell.GetProperty((int)__VSSPROPID2.VSSPROPID_SKUEdition, out obj));
+                var sku = (obj as int?) ?? 0;
+                if (sku == ShellSkuValue) {
+                    return false;
+                } else if (sku == ExpressSkuValue) {
+                    ErrorHandler.ThrowOnFailure(shell.GetProperty((int)__VSSPROPID2.VSSPROPID_SubSKUEdition, out obj));
+                    if ((obj as int?) == WDExpressSkuValue) {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+        }
+
     }
 }

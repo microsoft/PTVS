@@ -571,41 +571,6 @@ namespace Microsoft.VisualStudioTools.Project {
         [DllImport("user32", CallingConvention = CallingConvention.Winapi)]
         public static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
 
-        /// <devdoc>
-        /// Please use this "approved" method to compare file names.
-        /// </devdoc>
-        /*public static bool IsSamePath(string file1, string file2)
-        {
-            if (file1 == null || file1.Length == 0)
-            {
-                return (file2 == null || file2.Length == 0);
-            }
-
-            Uri uri1 = null;
-            Uri uri2 = null;
-
-            try
-            {
-                if (!Uri.TryCreate(file1, UriKind.Absolute, out uri1) || !Uri.TryCreate(file2, UriKind.Absolute, out uri2))
-                {
-                    return false;
-                }
-
-                if (uri1 != null && uri1.IsFile && uri2 != null && uri2.IsFile)
-                {
-                    return 0 == String.Compare(uri1.LocalPath, uri2.LocalPath, StringComparison.OrdinalIgnoreCase);
-                }
-
-                return file1 == file2;
-            }
-            catch (UriFormatException e)
-            {
-                Trace.WriteLine("Exception " + e.Message);
-            }
-
-            return false;
-        }*/
-
         public static void SetErrorDescription(string description, params object[] args) {
             ICreateErrorInfo errInfo;
             ErrorHandler.ThrowOnFailure(CreateErrorInfo(out errInfo));
@@ -1016,11 +981,11 @@ namespace Microsoft.VisualStudioTools.Project {
         public static extern bool
         CredRead(
             [MarshalAs(UnmanagedType.LPWStr)]
-			string targetName,
+            string targetName,
             [MarshalAs(UnmanagedType.U4)]
-			uint type,
+            uint type,
             [MarshalAs(UnmanagedType.U4)]
-			uint flags,
+            uint flags,
             out IntPtr credential
             );
 
@@ -1029,7 +994,7 @@ namespace Microsoft.VisualStudioTools.Project {
         CredWrite(
             ref NativeCredential Credential,
             [MarshalAs(UnmanagedType.U4)]
-			uint flags
+            uint flags
             );
 
         [DllImport(advapi32Dll, SetLastError = true)]
@@ -1042,17 +1007,17 @@ namespace Microsoft.VisualStudioTools.Project {
         public static extern CredUIReturnCodes CredUIPromptForCredentials(
             CREDUI_INFO pUiInfo,  // Optional (one can pass null here)
             [MarshalAs(UnmanagedType.LPWStr)]
-			string targetName,
+            string targetName,
             IntPtr Reserved,      // Must be 0 (IntPtr.Zero)
             int iError,
             [MarshalAs(UnmanagedType.LPWStr)]
-			StringBuilder pszUserName,
+            StringBuilder pszUserName,
             [MarshalAs(UnmanagedType.U4)]
-			uint ulUserNameMaxChars,
+            uint ulUserNameMaxChars,
             [MarshalAs(UnmanagedType.LPWStr)]
-			StringBuilder pszPassword,
+            StringBuilder pszPassword,
             [MarshalAs(UnmanagedType.U4)]
-			uint ulPasswordMaxChars,
+            uint ulPasswordMaxChars,
             ref int pfSave,
             CREDUI_FLAGS dwFlags);
 
@@ -1068,13 +1033,13 @@ namespace Microsoft.VisualStudioTools.Project {
             [MarshalAs(UnmanagedType.LPWStr)]
             string strUserName,
             [MarshalAs(UnmanagedType.LPWStr)]
-			StringBuilder strUser,
+            StringBuilder strUser,
             [MarshalAs(UnmanagedType.U4)]
-			uint iUserMaxChars,
+            uint iUserMaxChars,
             [MarshalAs(UnmanagedType.LPWStr)]
-			StringBuilder strDomain,
+            StringBuilder strDomain,
             [MarshalAs(UnmanagedType.U4)]
-			uint iDomainMaxChars
+            uint iDomainMaxChars
             );
 
 

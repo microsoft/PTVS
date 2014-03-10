@@ -452,4 +452,10 @@ The web.config file will be configured to resolve URIs matching this pattern to 
   <data name="VirtualEnvAddFailed" xml:space="preserve">
     <value>Failed to create or add the virtual environment. See the Output window for details.</value>
   </data>
+  <data name="ProjectRequiresVWDExpress" xml:space="preserve">
+    <value>This project requires Visual Studio Professional or higher, or Visual Studio Express 2013 for Web.</value>
+  </data>
+  <data name="UnexpectedUpgradeError" xml:space="preserve">
+    <value>An error occurred while upgrading projects: {0}</value>
+  </data>
 </root>
