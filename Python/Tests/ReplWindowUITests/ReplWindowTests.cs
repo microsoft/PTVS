@@ -182,9 +182,6 @@ g()",
             interactive.Element.SetFocus();
 
             if (!reopenOnly) {
-                interactive.ClearScreen();
-                interactive.ReplWindow.ClearHistory();
-
                 bool isReady = false;
                 for (int retries = 10; retries > 0; --retries) {
                     interactive.Reset();
@@ -1299,7 +1296,7 @@ g()",
                 }
                 interactive.WaitForTextEnd("KeyboardInterrupt", ReplPrompt);
 
-                interactive.ClearScreen();
+                interactive.ClearScreen(waitForReady: false);
                 interactive.WaitForText(ReplPrompt);
                 Keyboard.ControlV();
 

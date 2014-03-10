@@ -232,15 +232,20 @@ namespace TestUtilities.UI {
             }
         }
 
-        public void ClearScreen() {
+        public void ClearScreen(bool waitForReady = true) {
             Console.WriteLine("REPL Clearing screen");
-            ReadyForInput.Reset();
+            if (waitForReady) {
+                ReadyForInput.Reset();
+            }
             _app.ExecuteCommand("OtherContextMenus.InteractiveConsole.ClearScreen");
-            Assert.IsTrue(ReadyForInput.WaitOne(10000));
+            if (waitForReady) {
+                Assert.IsTrue(ReadyForInput.WaitOne(1000));
+            }
         }
 
         public void CancelExecution(int attempts = 100) {
             Console.WriteLine("REPL Cancelling Execution");
+            ReadyForInput.Reset();
             for (int i = 0; i < attempts && !_replWindowInfo.ReadyForInput.WaitOne(0); i++) {
                 ReadyForInput.Reset();
                 try {

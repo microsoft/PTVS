@@ -813,16 +813,12 @@ namespace PythonToolsUITests {
                 Assert.IsNotNull(projectNode, "projectNode");
                 AutomationWrapper.Select(projectNode);
 
+                const string filename = "Program2.py";
+
                 var addItemDlg = new NewItemDialog(app.OpenDialogWithDteExecuteCommand("Project.AddNewItem"));
                 AutomationWrapper.Select(addItemDlg.ProjectTypes.FindItem("Empty Python File"));
-                addItemDlg.FileName = "Program2.py";
+                addItemDlg.FileName = filename;
                 addItemDlg.ClickOK();
-
-#if DEV12_OR_LATER
-                var filename = TestData.GetPath(@"TestData\AddExistingItem\Program2.py");
-#else
-                var filename = "Program2.py";
-#endif
 
                 VisualStudioApp.CheckMessageBox(
                     MessageBoxButton.Yes,

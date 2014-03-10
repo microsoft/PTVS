@@ -52,7 +52,7 @@ namespace PythonToolsUITests {
         }
 
         static DefaultInterpreterSetter Init(PythonVisualStudioApp app, PythonVersion interp, bool install) {
-            return app.SelectDefaultInterpreter(PythonPaths.Python27 ?? PythonPaths.Python27_x64, install ? "virtualenv" : null);
+            return app.SelectDefaultInterpreter(interp, install ? "virtualenv" : null);
         }
 
         private EnvDTE.Project CreateTemporaryProject(VisualStudioApp app) {

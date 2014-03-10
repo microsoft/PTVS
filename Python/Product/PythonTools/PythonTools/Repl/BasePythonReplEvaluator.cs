@@ -277,7 +277,7 @@ namespace Microsoft.PythonTools.Repl {
                         }
 
                         if (_executionText != null) {
-                            Debug.WriteLine("Executing delayed text: " + _executionText);
+                            Trace.TraceInformation("Executing delayed text: " + _executionText);
                             SendExecuteText(_executionText);
                             _executionText = null;
                         }
@@ -292,7 +292,7 @@ namespace Microsoft.PythonTools.Repl {
                         string cmd = stream.ReadAsciiString(4);
 
                         using (new SocketLock(this)) {
-                            Debug.WriteLine("Repl {0} received command: {1}", _eval.DisplayName, cmd);
+                            Trace.TraceInformation("Repl {0} received command: {1}", _eval.DisplayName, cmd);
                             switch (cmd) {
                                 case "DONE": HandleExecutionDone(); break;
                                 case "ERRE": HandleExecutionError(); break;
@@ -634,11 +634,11 @@ namespace Microsoft.PythonTools.Repl {
                     return ExecutionResult.Failed;
                 }
 
-                Debug.WriteLine("Executing text: " + text);
+                Trace.TraceInformation("Executing text: {0}", text);
                 using (new SocketLock(this)) {
                     if (!_connected) {
                         // delay executing the text until we're connected
-                        Debug.WriteLine("Delayed executing text");
+                        Trace.TraceInformation("Delayed executing text");
                         _completion = new TaskCompletionSource<ExecutionResult>();
                         _executionText = text;
                         return _completion.Task;
