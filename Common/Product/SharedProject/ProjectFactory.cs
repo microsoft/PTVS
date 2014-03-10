@@ -441,6 +441,10 @@ namespace Microsoft.VisualStudioTools.Project {
                 // Load the project file and user file into MSBuild as plain
                 // XML to make it easier for subclasses.
                 var projectXml = ProjectRootElement.Open(bstrFileName);
+                if (projectXml == null) {
+                    throw new Exception(SR.GetString(SR.UpgradeCannotLoadProject));
+                }
+
                 var userXml = userFileName != null ? ProjectRootElement.Open(userFileName) : null;
 
                 // Invoke our virtual UpgradeProject function. If it fails, it
@@ -487,6 +491,10 @@ namespace Microsoft.VisualStudioTools.Project {
                 logger.Log(__VSUL_ERRORLEVEL.VSUL_STATUSMSG, "Converted");
                 return VSConstants.S_OK;
             } catch (Exception ex) {
+                if (ErrorHandler.IsCriticalException(ex)) {
+                    throw;
+                }
+
                 logger.Log(__VSUL_ERRORLEVEL.VSUL_ERROR, SR.GetString(SR.UnexpectedUpgradeError, ex.Message));
                 try {
                     ActivityLog.LogError(GetType().FullName, ex.ToString());

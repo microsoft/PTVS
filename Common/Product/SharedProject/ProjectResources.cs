@@ -14,6 +14,7 @@
 
 using System;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Globalization;
 using System.Resources;
 using System.Threading;
@@ -53,7 +54,6 @@ namespace Microsoft.VisualStudioTools.Project {
         internal const string AddReferenceDialogTitle = "AddReferenceDialogTitle";
         internal const string AddToNullProjectError = "AddToNullProjectError";
         internal const string Advanced = "Advanced";
-        internal const string AssemblyReferenceAlreadyExists = "AssemblyReferenceAlreadyExists";
         internal const string AttributeLoad = "AttributeLoad";
         internal const string BuildAction = "BuildAction";
         internal const string BuildActionDescription = "BuildActionDescription";
@@ -95,7 +95,6 @@ namespace Microsoft.VisualStudioTools.Project {
         internal const string ErrorSaving = "ErrorSaving";
         internal const string Exe = "Exe";
         internal const string ExpectedObjectOfType = "ExpectedObjectOfType";
-        internal const string FailedToGetService = "FailedToGetService";
         internal const string FailedToRetrieveProperties = "FailedToRetrieveProperties";
         internal const string FileNameCannotContainALeadingPeriod = "FileNameCannotContainALeadingPeriod";
         internal const string FileCannotBeRenamedToAnExistingFile = "FileCannotBeRenamedToAnExistingFile";
@@ -190,6 +189,7 @@ namespace Microsoft.VisualStudioTools.Project {
         internal const string UnexpectedUpgradeError = "UnexpectedUpgradeError";
         internal const string UpgradeNotRequired = "UpgradeNotRequired";
         internal const string UpgradeCannotCheckOutProject = "UpgradeCannotCheckOutProject";
+        internal const string UpgradeCannotLoadProject = "UpgradeCannotLoadProject";
 
         static SR loader;
         ResourceManager resources;
@@ -238,6 +238,11 @@ namespace Microsoft.VisualStudioTools.Project {
                 return null;
             string res = sys.resources.GetString(name, SR.Culture);
 
+            if (string.IsNullOrEmpty(res)) {
+                Debug.Assert(false, "String resource '" + name + "' is missing");
+                res = name;
+            }
+
             if (args != null && args.Length > 0) {
                 return String.Format(CultureInfo.CurrentCulture, res, args);
             } else {
@@ -250,14 +255,24 @@ namespace Microsoft.VisualStudioTools.Project {
             SR sys = GetLoader();
             if (sys == null)
                 return null;
-            return sys.resources.GetString(name, SR.Culture);
+            var res = sys.resources.GetString(name, SR.Culture);
+            if (string.IsNullOrEmpty(res)) {
+                Debug.Assert(false, "String resource '" + name + "' is missing");
+                res = name;
+            }
+            return res;
         }
 
         public static string GetString(string name, CultureInfo culture) {
             SR sys = GetLoader();
             if (sys == null)
                 return null;
-            return sys.resources.GetString(name, culture);
+            var res = sys.resources.GetString(name, culture);
+            if (string.IsNullOrEmpty(res)) {
+                Debug.Assert(false, "String resource '" + name + "' is missing");
+                res = name;
+            }
+            return res;
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
