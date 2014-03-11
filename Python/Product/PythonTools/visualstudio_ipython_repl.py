@@ -288,7 +288,12 @@ exec(compile(%(contents)r, %(filename)r, 'exec'))
         
         reply = self.object_info_reply 
         argspec = reply['argspec']
-        return [(reply['docstring'], argspec['args'], argspec['varargs'], argspec['varkw'], argspec['defaults'])]
+        defaults = argspec['defaults']
+        if defaults is not None:
+            defaults = [repr(default) for default in defaults]
+        else:
+            defaults = []
+        return [(reply['docstring'], argspec['args'], argspec['varargs'], argspec['varkw'], defaults)]
 
     def interrupt_main(self):
         """aborts the current running command"""
