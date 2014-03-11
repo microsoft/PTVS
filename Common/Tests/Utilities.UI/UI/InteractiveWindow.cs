@@ -232,6 +232,17 @@ namespace TestUtilities.UI {
             }
         }
 
+        public void ClearInput() {
+            var buffer = _replWindow.CurrentLanguageBuffer;
+            if (buffer == null) {
+                return;
+            }
+
+            var edit = buffer.CreateEdit();
+            edit.Delete(0, edit.Snapshot.Length);
+            edit.Apply();
+        }
+
         public void ClearScreen(bool waitForReady = true) {
             Console.WriteLine("REPL Clearing screen");
             if (waitForReady) {

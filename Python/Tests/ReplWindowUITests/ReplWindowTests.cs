@@ -153,7 +153,12 @@ g()",
         /// <summary>
         /// Opens the interactive window, clears the screen.
         /// </summary>
-        internal InteractiveWindow Prepare(PythonVisualStudioApp app, bool reopenOnly = false, string description = null) {
+        internal InteractiveWindow Prepare(
+            PythonVisualStudioApp app,
+            bool reopenOnly = false,
+            string description = null,
+            bool alreadyOpen = false
+        ) {
             if (!reopenOnly) {
                 ConfigurePrompts();
             }
@@ -162,7 +167,9 @@ g()",
             Assert.IsNotNull(description, "InterpreterDescription is null");
             Assert.IsTrue(description.EndsWith(" Interactive"), string.Format("Description \"{0}\" does not end with \" Interactive\"", description));
 
-            GetPythonAutomation().OpenInteractive(description);
+            if (!alreadyOpen) {
+                GetPythonAutomation().OpenInteractive(description);
+            }
             var interactive = app.GetInteractiveWindow(description);
             for (int retries = 10; retries > 0 && interactive == null; --retries) {
                 Console.WriteLine("Did not open {0}. Trying again...", description);
@@ -181,13 +188,21 @@ g()",
             app.Element.SetFocus();
             interactive.Element.SetFocus();
 
+            int timeout = 10000;
+            if (GetInteractiveOptions(description).ExecutionMode.Contains("IPython")) {
+                // Allow longer for IPython to start before aborting the test
+                timeout = 30000;
+            }
+
             if (!reopenOnly) {
+                interactive.ClearInput();
+
                 bool isReady = false;
                 for (int retries = 10; retries > 0; --retries) {
                     interactive.Reset();
                     try {
                         var task = interactive.ReplWindow.Evaluator.ExecuteText("print('READY')");
-                        Assert.IsTrue(task.Wait(10000), "ReplWindow did not initialize in time");
+                        Assert.IsTrue(task.Wait(timeout), "ReplWindow did not initialize in time");
                         if (!task.Result.IsSuccessful) {
                             continue;
                         }
@@ -312,6 +327,20 @@ g()",
             Assert.Inconclusive("Test not part of this run");
 #endif
             TestInitialize();
+        }
+
+        [TestMethod, Priority(0), TestCategory("Core")]
+        [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
+        public void ClearInputHelper() {
+            using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
+                var interactive = Prepare(app);
+
+                Keyboard.Type("1 + ");
+                interactive.ClearInput();
+                Keyboard.Type("2\r");
+
+                interactive.WaitForTextEnd("2");
+            }
         }
 
         /// <summary>
@@ -3148,7 +3177,7 @@ def g(): pass
                     );
                 });
 
-                var interactive = Prepare(app, description: envName + " Interactive");
+                var interactive = Prepare(app, description: envName + " Interactive", alreadyOpen: true);
                 app.ExecuteCommand("Edit.SendtoInteractive");
 
                 interactive.WaitForTextContainsAll(

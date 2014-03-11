@@ -471,9 +471,11 @@ namespace Microsoft.PythonTools.Repl {
 
             private void HandlePromptChanged() {
                 // prompt change
+                Trace.TraceInformation("Old prompts: \"{0}\" \"{1}\"", _prompt1, _prompt2);
                 _prompt1 = Stream.ReadString();
                 _prompt2 = Stream.ReadString();
                 bool updateAll = Stream.ReadInt32() == 1;
+                Trace.TraceInformation("New prompts: \"{0}\" \"{1}\" updateAll={2}", _prompt1, _prompt2, updateAll);
                 if (Window != null) {
                     using (new SocketUnlock(this)) {
                         _eval.UpdatePrompts(updateAll);
@@ -594,6 +596,7 @@ namespace Microsoft.PythonTools.Repl {
             private void HandleOutput() {
                 string data = Stream.ReadString();
                 if (data != null) {
+                    Trace.TraceInformation("Data = \"{0}\"", FixNewLines(data).Replace("\r\n", "\\r\\n"));
                     using (new SocketUnlock(this)) {
                         Window.WriteOutput(FixNewLines(data));
                     }
@@ -602,6 +605,7 @@ namespace Microsoft.PythonTools.Repl {
 
             private void HandleError() {
                 string data = Stream.ReadString();
+                Trace.TraceInformation("Data = \"{0}\"", FixNewLines(data).Replace("\r\n", "\\r\\n"));
                 using (new SocketUnlock(this)) {
                     Window.WriteError(FixNewLines(data));
                 }
