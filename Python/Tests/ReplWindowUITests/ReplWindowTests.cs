@@ -2924,6 +2924,11 @@ $cls
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void PasteWithError() {
+            if (string.IsNullOrEmpty(ReplPrompt)) {
+                // Test breaks the test run without a prompt
+                return;
+            }
+
             using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
                 var interactive = Prepare(app);
 
@@ -3074,6 +3079,11 @@ def g(): pass
         [TestMethod, Priority(0), TestCategory("Core")]
         [HostType("TC Dynamic"), DynamicHostType(typeof(VsIdeHostAdapter))]
         public void NewLinesOverTime() {
+            if (string.IsNullOrEmpty(ReplPrompt)) {
+                // Test breaks the test run without a prompt
+                return;
+            }
+
             using (var app = new PythonVisualStudioApp(VsIdeTestHostContext.Dte)) {
                 var interactive = Prepare(app);
 
