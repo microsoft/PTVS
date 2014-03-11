@@ -12,7 +12,7 @@
 -->
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <_PythonToolsPath>$(LocalAppData)\Microsoft\VisualStudio\$(VisualStudioVersion)Exp\Extensions\Microsoft\Python Tools for Visual Studio, Django Support\2.1</_PythonToolsPath>
+    <_PythonToolsPath>$(LocalAppData)\Microsoft\VisualStudio\$(VisualStudioVersion)Exp\Extensions\Microsoft\Python Tools for Visual Studio - Django\2.1</_PythonToolsPath>
     <!-- Enable logging for publish/preview -->
     <EnablePackageProcessLoggingAndAssert>true</EnablePackageProcessLoggingAndAssert>
   </PropertyGroup>

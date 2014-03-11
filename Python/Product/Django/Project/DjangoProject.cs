@@ -16,19 +16,19 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Design;
 using System.Diagnostics;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Xml;
-using Microsoft.Build.Execution;
-using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Flavor;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudio.TextManager.Interop;
 
 namespace Microsoft.PythonTools.Django.Project {
     [Guid("564253E9-EF07-4A40-89CF-790E61F53368")]
@@ -676,19 +676,91 @@ namespace Microsoft.PythonTools.Django.Project {
                 return;
             }
 
+            // first try and update the file through the RDT.  If it's open we want to make sure
+            // that VS is aware of the change.
+            // https://nodejstools.codeplex.com/workitem/480
+            IVsRunningDocumentTable rdt = PythonToolsPackage.GetGlobalService(typeof(SVsRunningDocumentTable)) as IVsRunningDocumentTable;
+            IEnumRunningDocuments enumDocs;
+            ErrorHandler.ThrowOnFailure(rdt.GetRunningDocumentsEnum(out enumDocs));
+            uint[] doc = new uint[1];
+            uint fetched;
+            while (ErrorHandler.Succeeded(enumDocs.Next(1, doc, out fetched)) && fetched == 1) {
+                uint flags;
+                uint readLocks, editLocks, itemid;
+                string filename;
+                IVsHierarchy hierarchy;
+                IntPtr docData;
+
+                ErrorHandler.ThrowOnFailure(
+                    rdt.GetDocumentInfo(
+                        doc[0],
+                        out flags,
+                        out readLocks,
+                        out editLocks,
+                        out filename,
+                        out hierarchy,
+                        out itemid,
+                        out docData
+                    )
+                );
+                try {
+                    if (hierarchy == project && docData != IntPtr.Zero) {
+                        if (String.Equals(Path.GetFileName(filename), "ServiceDefinition.csdef", StringComparison.OrdinalIgnoreCase)) {
+                            var adapterFactory = PythonToolsPackage.ComponentModel.GetService<IVsEditorAdaptersFactoryService>();
+                            var obj = System.Runtime.InteropServices.Marshal.GetObjectForIUnknown(docData);
+                            var vsTextBuffer = obj as IVsTextBuffer;
+                            if (vsTextBuffer != null) {
+                                var textBuffer = adapterFactory.GetDocumentBuffer(vsTextBuffer);
+                                using (var edit = textBuffer.CreateEdit()) {
+                                    if (textBuffer != null) {
+                                        edit.Replace(
+                                            new Span(0, textBuffer.CurrentSnapshot.Length),
+                                            UpdateServiceDefinition(textBuffer.CurrentSnapshot.GetText())
+                                        );
+                                        edit.Apply();
+                                    }
+
+                                    string newDoc;
+                                    int fCancelled;
+                                    if (ErrorHandler.Succeeded(
+                                        ((IVsPersistDocData)vsTextBuffer).SaveDocData(
+                                            VSSAVEFLAGS.VSSAVE_SilentSave,
+                                            out newDoc,
+                                            out fCancelled
+                                            )
+                                    )) {
+                                        // we've successfully updated the file via the RDT
+                                        return;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } finally {
+                    if (docData != IntPtr.Zero) {
+                        Marshal.Release(docData);
+                    }
+                }
+            }
+
+            // didn't find the file in the RDT, update it on disk the old fashioned way
             var dteProject = project.GetProject();
             var serviceDef = dteProject.ProjectItems.Item("ServiceDefinition.csdef");
             if (serviceDef != null && serviceDef.FileCount == 1) {
-                var filename = serviceDef.FileNames[0];
-                UpdateServiceDefinition(filename);
+                string filename = serviceDef.FileNames[0];
+                string tmpFile = filename + ".tmp";
+                File.WriteAllText(tmpFile, UpdateServiceDefinition(File.ReadAllText(filename)));
+                File.Delete(filename);
+                File.Move(tmpFile, filename);
             }
         }
 
-        private static void UpdateServiceDefinition(string filename) {
+        private static string UpdateServiceDefinition(string input) {
             List<string> elements = new List<string>();
             XmlWriterSettings settings = new XmlWriterSettings() { Indent = true, IndentChars = " ", NewLineHandling = NewLineHandling.Entitize };
-            using (var reader = XmlReader.Create(filename)) {
-                using (var writer = XmlWriter.Create(filename + ".tmp", settings)) {
+            var strWriter = new StringWriter();
+            using (var reader = XmlReader.Create(new StringReader(input))) {
+                using (var writer = XmlWriter.Create(strWriter, settings)) {
                     while (reader.Read()) {
                         switch (reader.NodeType) {
                             case XmlNodeType.Element:
@@ -764,8 +836,7 @@ namespace Microsoft.PythonTools.Django.Project {
                 }
             }
 
-            File.Delete(filename);
-            File.Move(filename + ".tmp", filename);
+            return strWriter.ToString();
         }
 
         int IOleCommandTarget.QueryStatus(ref Guid pguidCmdGroup, uint cCmds, OLECMD[] prgCmds, IntPtr pCmdText) {
