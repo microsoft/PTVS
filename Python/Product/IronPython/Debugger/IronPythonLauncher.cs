@@ -73,7 +73,11 @@ namespace Microsoft.IronPythonTools.Debugger {
             string extension = Path.GetExtension(file);
             if (String.Equals(extension, ".html", StringComparison.OrdinalIgnoreCase) ||
                 String.Equals(extension, ".htm", StringComparison.OrdinalIgnoreCase)) {
-                StartSilverlightApp(file, debug);
+                try {
+                    StartSilverlightApp(file, debug);
+                } catch (ChironNotFoundException ex) {
+                    MessageBox.Show(ex.Message, "Python Tools for Visual Studio");
+                }
             } else if (debug) {
                 StartWithDebugger(file);
             } else {
@@ -370,6 +374,7 @@ You may need to download it from http://ironpython.codeplex.com.");
             if (_chironProcess == null || _chironProcess.HasExited) {
                 // start Chiron
                 var chironPath = ChironPath;
+
                 // Get a free port
                 _chironPort = GetFreePort();
 
@@ -412,7 +417,12 @@ You may need to download it from http://ironpython.codeplex.com.");
                     }
                 }
 
-                return Path.Combine(Path.GetDirectoryName(typeof(IronPythonLauncher).Assembly.Location), "Chiron.exe");
+                result = Path.Combine(Path.GetDirectoryName(typeof(IronPythonLauncher).Assembly.Location), "Chiron.exe");
+                if (File.Exists(result)) {
+                    return result;
+                }
+
+                throw new ChironNotFoundException();
             }
         }
 
@@ -489,6 +499,20 @@ You may need to download it from http://ironpython.codeplex.com.");
                 //IronPython passes search path via IRONPYTHONPATH environment variable
                 environment["IRONPYTHONPATH"] = string.Join(";", _project.GetSearchPaths());
             }
+        }
+
+        [Serializable]
+        class ChironNotFoundException : Exception {
+            public ChironNotFoundException()
+                : this("Chiron.exe was not found. Ensure the Silverlight Tools component of IronPython has been installed.") {
+            }
+
+            public ChironNotFoundException(string message) : base(message) { }
+            public ChironNotFoundException(string message, Exception inner) : base(message, inner) { }
+            protected ChironNotFoundException(
+              System.Runtime.Serialization.SerializationInfo info,
+              System.Runtime.Serialization.StreamingContext context)
+                : base(info, context) { }
         }
     }
 }
