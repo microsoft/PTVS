@@ -789,7 +789,7 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
         // found initialized Python runtime, gather and check the APIs we need for a successful attach...
         auto addPendingCall = (Py_AddPendingCall*)GetProcAddress(module, "Py_AddPendingCall");
         auto curPythonThread = (PyThreadState**)(void*)GetProcAddress(module, "_PyThreadState_Current");
-        auto interpHeap = (PyInterpreterState_Head*)GetProcAddress(module, "PyInterpreterState_Head");
+        auto interpHead = (PyInterpreterState_Head*)GetProcAddress(module, "PyInterpreterState_Head");
         auto gilEnsure = (PyGILState_Ensure*)GetProcAddress(module, "PyGILState_Ensure");
         auto gilRelease = (PyGILState_Release*)GetProcAddress(module, "PyGILState_Release");
         auto threadHead = (PyInterpreterState_ThreadHead*)GetProcAddress(module, "PyInterpreterState_ThreadHead");
@@ -843,7 +843,7 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
         auto pyGilStateRelease = (PyGILState_ReleaseFunc*)GetProcAddress(module, "PyGILState_Release");
         auto PyCFrame_Type = (PyTypeObject*)GetProcAddress(module, "PyCFrame_Type");
 
-        if (addPendingCall == nullptr || curPythonThread == nullptr || interpHeap == nullptr || gilEnsure == nullptr || gilRelease == nullptr || threadHead == nullptr ||
+        if (addPendingCall == nullptr || curPythonThread == nullptr || interpHead == nullptr || gilEnsure == nullptr || gilRelease == nullptr || threadHead == nullptr ||
             initThreads == nullptr || releaseLock == nullptr || threadsInited == nullptr || threadNext == nullptr || threadSwap == nullptr ||
             pyDictNew == nullptr || pyCompileString == nullptr || pyEvalCode == nullptr || getDictItem == nullptr || call == nullptr ||
             getBuiltins == nullptr || dictSetItem == nullptr || intFromLong == nullptr || pyErrRestore == nullptr || pyErrFetch == nullptr ||
@@ -855,9 +855,9 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
                 return false;
         }
 
-        auto head = interpHeap();
+        auto head = interpHead();
         if (head == nullptr) {
-            // this interpreter is loaded butt not initialized.
+            // this interpreter is loaded but not initialized.
             connInfo.ReportError(ConnError_InterpreterNotInitialized);
             return false;
         }
@@ -939,6 +939,19 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
                     if (*curPythonThread == nullptr) {
                         // no threads are currently running, it is safe to initialize multi threading.
                         PyGILState_STATE gilState;
+                        if (version >= PythonVersion_34) {
+                            // in 3.4 due to http://bugs.python.org/issue20891,
+                            // we need to create our thread state manually
+                            // before we can call PyGILState_Ensure() before we
+                            // can call PyEval_InitThreads().
+                            
+                            // Don't require this function unless we need it.
+                            auto threadNew = (PyThreadState_NewFunc*)GetProcAddress(module, "PyThreadState_New");
+                            if (threadNew != nullptr) {
+                                threadNew(head);
+                            }
+                        }
+                        
                         if (version >= PythonVersion_32) {
                             // in 3.2 due to the new GIL and later we can't call Py_InitThreads 
                             // without a thread being initialized.  
