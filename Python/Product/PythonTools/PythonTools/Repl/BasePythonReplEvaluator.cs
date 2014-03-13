@@ -113,7 +113,7 @@ namespace Microsoft.PythonTools.Repl {
 
         internal void EnsureConnected() {
             if (_curListener == null) {
-                ThreadHelper.Generic.Invoke(() => {
+                UIThread.Instance.RunSync(() => {
                     if (_curListener == null) {
                         Connect();
                     }
