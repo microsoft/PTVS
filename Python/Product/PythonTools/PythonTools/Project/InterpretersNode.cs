@@ -66,12 +66,26 @@ namespace Microsoft.PythonTools.Project {
 
             if (Directory.Exists(_factory.Configuration.LibraryPath)) {
                 // TODO: Need to handle watching for creation
-                _fileWatcher = new FileSystemWatcher(_factory.Configuration.LibraryPath);
-                _fileWatcher.IncludeSubdirectories = true;
-                _fileWatcher.Deleted += PackagesChanged;
-                _fileWatcher.Created += PackagesChanged;
-                _fileWatcher.EnableRaisingEvents = true;
-                _timer = new Timer(CheckPackages);
+                try {
+                    _fileWatcher = new FileSystemWatcher(_factory.Configuration.LibraryPath);
+                } catch (ArgumentException) {
+                    // Path was not actually valid, despite Directory.Exists
+                    // returning true.
+                }
+                if (_fileWatcher != null) {
+                    try {
+                        _fileWatcher.IncludeSubdirectories = true;
+                        _fileWatcher.Deleted += PackagesChanged;
+                        _fileWatcher.Created += PackagesChanged;
+                        _fileWatcher.EnableRaisingEvents = true;
+                        // Only create the timer if the file watcher is running.
+                        _timer = new Timer(CheckPackages);
+                    } catch (IOException) {
+                        // Raced with directory deletion
+                        _fileWatcher.Dispose();
+                        _fileWatcher = null;
+                    }
+                }
             }
         }
 

@@ -71,6 +71,14 @@ namespace Microsoft.PythonTools.Interpreter {
                     _libWatcher.Changed += OnChanged;
                     _libWatcher.Renamed += OnRenamed;
                     _libWatcher.EnableRaisingEvents = true;
+                } catch (IOException) {
+                    // Raced with directory deletion. We normally handle the
+                    // library being deleted by disposing the watcher, but this
+                    // occurs in response to an event from the watcher. Because
+                    // we never got to start watching, we will just dispose
+                    // immediately.
+                    _libWatcher.Dispose();
+                    _libWatcher = null;
                 } catch (ArgumentException ex) {
                     Debug.WriteLine("Error starting FileSystemWatcher:\r\n{0}", ex);
                 }
@@ -601,44 +609,69 @@ namespace Microsoft.PythonTools.Interpreter {
         #region Database.ver watcher
 
         private FileSystemWatcher CreateDatabaseVerWatcher() {
+            FileSystemWatcher watcher = null;
+
             lock (_verWatcherLock) {
                 var dir = DatabasePath;
                 if (Directory.Exists(dir)) {
                     try {
-                        var watcher = new FileSystemWatcher {
+                        watcher = new FileSystemWatcher {
                             IncludeSubdirectories = false,
                             Path = dir,
                             Filter = "database.*",
                             NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite
                         };
-                        watcher.Deleted += OnDatabaseVerChanged;
-                        watcher.Created += OnDatabaseVerChanged;
-                        watcher.Changed += OnDatabaseVerChanged;
-                        watcher.EnableRaisingEvents = true;
-                        return watcher;
                     } catch (ArgumentException ex) {
                         Debug.WriteLine("Error starting database.ver FileSystemWatcher:\r\n{0}", ex);
+                        return null;
                     }
-                    return null;
-                } else {
-                    var dirName = Path.GetFileName(CommonUtils.TrimEndSeparator(dir));
-                    while (CommonUtils.IsValidPath(dir) && !Directory.Exists(dir)) {
-                        dir = Path.GetDirectoryName(dir);
+
+                    watcher.Deleted += OnDatabaseVerChanged;
+                    watcher.Created += OnDatabaseVerChanged;
+                    watcher.Changed += OnDatabaseVerChanged;
+
+                    try {
+                        watcher.EnableRaisingEvents = true;
+                        return watcher;
+                    } catch (IOException) {
+                        // Raced with directory deletion. Fall through and find
+                        // a parent directory that exists.
+                        watcher.Dispose();
+                        watcher = null;
                     }
-                    if (Directory.Exists(dir)) {
-                        var watcher = new FileSystemWatcher {
+                }
+
+                var dirName = Path.GetFileName(CommonUtils.TrimEndSeparator(dir));
+                while (CommonUtils.IsValidPath(dir) && !Directory.Exists(dir)) {
+                    dir = Path.GetDirectoryName(dir);
+                }
+
+                if (Directory.Exists(dir)) {
+                    try {
+                        watcher = new FileSystemWatcher {
                             IncludeSubdirectories = true,
                             Path = dir,
                             Filter = dirName,
                             NotifyFilter = NotifyFilters.DirectoryName
                         };
-                        watcher.Created += OnDatabaseFolderCreated;
-                        watcher.EnableRaisingEvents = true;
-                        return watcher;
-                    } else {
+                    } catch (ArgumentException ex) {
+                        Debug.WriteLine("Error starting database directory FileSystemWatcher:\r\n{0}", ex);
                         return null;
                     }
+
+                    watcher.Created += OnDatabaseFolderCreated;
+
+                    try {
+                        watcher.EnableRaisingEvents = true;
+                        return watcher;
+                    } catch (IOException) {
+                        // Raced with directory deletion
+                        watcher.Dispose();
+                        watcher = null;
+                    }
                 }
+
+                return null;
             }
         }
 
