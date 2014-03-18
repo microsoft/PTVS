@@ -22,6 +22,7 @@ using Microsoft.PythonTools.Debugger;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio.Repl;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudioTools.Project;
 using TestUtilities;
 using TestUtilities.Mocks;
 using TestUtilities.Python;
@@ -42,6 +43,7 @@ namespace PythonToolsTests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
+            UIThread.InitUnitTestingMode();
             PythonTestData.Deploy();
         }
 
@@ -260,6 +262,9 @@ NameError: name 'does_not_exist' is not defined
             Thread.Sleep(1000);
 
             // We should still be in the <module>, not in the internals of print in repl code
+            foreach (var frame in thread.Frames) {
+                Console.WriteLine("{0}:{1} [{2}]", frame.FunctionName, frame.LineNo, frame.FileName);
+            }
             Assert.AreEqual(1, thread.Frames.Count);
             Assert.AreEqual("<module>", thread.Frames[0].FunctionName);
         }
