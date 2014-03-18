@@ -24,6 +24,7 @@ namespace Microsoft.PythonTools.Project.Web {
         private readonly PythonWebPropertyPageControl _control;
 
         public const string StaticUriPatternSetting = "StaticUriPattern";
+        public const string WsgiHandlerSetting = "PythonWsgiHandler";
 
         public PythonWebPropertyPage() {
             _control = new PythonWebPropertyPageControl(this);
@@ -35,6 +36,7 @@ namespace Microsoft.PythonTools.Project.Web {
 
         public override void Apply() {
             SetProjectProperty(StaticUriPatternSetting, _control.StaticUriPattern);
+            SetProjectProperty(WsgiHandlerSetting, _control.WsgiHandler);
             IsDirty = false;
         }
 
@@ -42,6 +44,7 @@ namespace Microsoft.PythonTools.Project.Web {
             Loading = true;
             try {
                 _control.StaticUriPattern = GetProjectProperty(StaticUriPatternSetting);
+                _control.WsgiHandler = GetProjectProperty(WsgiHandlerSetting);
                 IsDirty = false;
             } finally {
                 Loading = false;

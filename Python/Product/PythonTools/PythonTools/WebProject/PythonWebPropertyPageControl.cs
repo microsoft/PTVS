@@ -28,6 +28,9 @@ namespace Microsoft.PythonTools.Project.Web {
 
             _toolTip.SetToolTip(_staticUri, SR.GetString(SR.StaticUriHelp));
             _toolTip.SetToolTip(_staticUriLabel, SR.GetString(SR.StaticUriHelp));
+
+            _toolTip.SetToolTip(_wsgiHandler, SR.GetString(SR.WsgiHandlerHelp));
+            _toolTip.SetToolTip(_wsgiHandlerLabel, SR.GetString(SR.WsgiHandlerHelp));
         }
 
         internal PythonWebPropertyPageControl(PythonWebPropertyPage properties)
@@ -38,6 +41,11 @@ namespace Microsoft.PythonTools.Project.Web {
         public string StaticUriPattern {
             get { return _staticUri.Text; }
             set { _staticUri.Text = value; }
+        }
+
+        public string WsgiHandler {
+            get { return _wsgiHandler.Text; }
+            set { _wsgiHandler.Text = value; }
         }
 
         private void Setting_TextChanged(object sender, EventArgs e) {

@@ -332,6 +332,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Generic Web Project.
+        /// </summary>
+        internal static string ImportWizardGenericWebProjectCustomization {
+            get {
+                return ResourceManager.GetString("ImportWizardGenericWebProjectCustomization", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The specified project file already exists. Overwrite?.
         /// </summary>
         internal static string ImportWizardProjectExists {
@@ -1010,6 +1019,15 @@ namespace Microsoft.PythonTools {
         internal static string WebLauncherSearchPathHelp {
             get {
                 return ResourceManager.GetString("WebLauncherSearchPathHelp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Specifies the source WSGI app to execute. This may be a combination of module names, variable names, and callable objects (without arguments). For example, &quot;app.get_wsgi_app()&quot;..
+        /// </summary>
+        internal static string WsgiHandlerHelp {
+            get {
+                return ResourceManager.GetString("WsgiHandlerHelp", resourceCulture);
             }
         }
     }

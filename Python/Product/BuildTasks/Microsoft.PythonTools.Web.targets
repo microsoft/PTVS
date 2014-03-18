@@ -246,11 +246,19 @@
   -->
   <Target Name="ResolveWsgiAppSettings"
           DependsOnTargets="ResolvePythonWsgiHandler;ResolveVirtualEnvSettings;ResolveDeploymentSettings">
+    <ItemGroup>
+      <_AbsoluteSearchPaths Include="$(DeployedSiteRoot)" />
+      <_SearchPaths Include="$(WorkingDirectory)" Condition="'$(WorkingDirectory)' != '' and '$(WorkingDirectory)' != '.'" />
+      <_SearchPaths Include="$(SearchPath)" Condition="'$(SearchPath)' != ''" />
+    </ItemGroup>
+    <CombinePath BasePath="$(DeployedSiteRoot)" Paths="@(_SearchPaths)" Condition="'@(_SearchPaths)' != ''">
+      <Output TaskParameter="CombinedPaths" ItemName="_AbsoluteSearchPaths"/>
+    </CombinePath>
     <PropertyGroup>
       <WsgiAppSettings>
         <![CDATA[$(WsgiAppSettings)
     <add key="WSGI_HANDLER" value="$(PythonWsgiHandler)"/>
-    <add key="PYTHONPATH" value="$(DeployedSiteRoot)"/>]]>
+    <add key="PYTHONPATH" value="@(_AbsoluteSearchPaths->'%(Identity)', '%3b')"/>]]>
       </WsgiAppSettings>
       <WsgiAppSettings Condition="'$(WsgiLogPath)' != ''">
         <![CDATA[$(WsgiAppSettings)

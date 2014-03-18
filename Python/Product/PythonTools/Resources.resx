@@ -458,4 +458,10 @@ The web.config file will be configured to resolve URIs matching this pattern to 
   <data name="UnexpectedUpgradeError" xml:space="preserve">
     <value>An error occurred while upgrading projects: {0}</value>
   </data>
+  <data name="WsgiHandlerHelp" xml:space="preserve">
+    <value>Specifies the source WSGI app to execute. This may be a combination of module names, variable names, and callable objects (without arguments). For example, "app.get_wsgi_app()".</value>
+  </data>
+  <data name="ImportWizardGenericWebProjectCustomization" xml:space="preserve">
+    <value>Generic Web Project</value>
+  </data>
 </root>

@@ -42,7 +42,8 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
         private static readonly IList<ProjectCustomization> _projectCustomizations = new [] {
             BottleProjectCustomization.Instance,
             DjangoProjectCustomization.Instance,
-            FlaskProjectCustomization.Instance
+            FlaskProjectCustomization.Instance,
+            GenericWebProjectCustomization.Instance
         };
 
         public ImportSettings()
@@ -66,7 +67,7 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
             TopLevelPythonFiles = new BulkObservableCollection<string>();
             Customization = _projectCustomizations.First();
 
-            Filters = "*.pyw;*.txt;*.htm;*.html;*.css;*.djt;*.js;*.png;*.jpg;*.gif;*.bmp;*.ico;*.svg";
+            Filters = "*.pyw;*.txt;*.htm;*.html;*.css;*.djt;*.js;*.ini;*.png;*.jpg;*.gif;*.bmp;*.ico;*.svg";
         }
 
         private static string MakeSafePath(string path) {

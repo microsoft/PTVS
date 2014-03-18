@@ -85,10 +85,15 @@ from encodings import utf_8
 
 debugger_dll_handle = None
 DETACHED = True
-def thread_creator(func, args, kwargs = {}):
-    id = _start_new_thread(new_thread_wrapper, (func, ) + args, kwargs)
-        
-    return id
+def thread_creator(func, args, kwargs = {}, *extra_args):
+    if not isinstance(args, tuple):
+        # args is not a tuple. This may be because we have become bound to a
+        # class, which has offset our arguments by one.
+        if isinstance(kwargs, tuple):
+            func, args = args, kwargs
+            kwargs = extra_args[0] if len(extra_args) > 0 else {}
+
+    return _start_new_thread(new_thread_wrapper, (func, args, kwargs))
 
 _start_new_thread = thread.start_new_thread
 THREADS = {}
@@ -1692,7 +1697,7 @@ class DebuggerLoop(object):
 
 DETACH_CALLBACKS = []
 
-def new_thread_wrapper(func, *posargs, **kwargs):
+def new_thread_wrapper(func, posargs, kwargs):
     cur_thread = new_thread()
     try:
         sys.settrace(cur_thread.trace_func)

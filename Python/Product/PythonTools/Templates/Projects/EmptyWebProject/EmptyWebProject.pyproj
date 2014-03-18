@@ -12,6 +12,7 @@
     <WorkingDirectory>.</WorkingDirectory>
     <LaunchProvider>Web launcher</LaunchProvider>
     <OutputPath>.</OutputPath>
+    <PythonWsgiApp>app.wsgi_app</PythonWsgiApp>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>

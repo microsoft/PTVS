@@ -100,6 +100,7 @@ namespace Microsoft.PythonTools.Project {
         public const string ImportWizardBottleProjectCustomization = "ImportWizardBottleProjectCustomization";
         public const string ImportWizardDjangoProjectCustomization = "ImportWizardDjangoProjectCustomization";
         public const string ImportWizardFlaskProjectCustomization = "ImportWizardFlaskProjectCustomization";
+        public const string ImportWizardGenericWebProjectCustomization = "ImportWizardGenericWebProjectCustomization";
 
         public const string ReplInitializationMessage = "ReplInitializationMessage";
         public const string ReplEvaluatorInterpreterNotFound = "ReplEvaluatorInterpreterNotFound";
@@ -113,6 +114,7 @@ namespace Microsoft.PythonTools.Project {
         public const string PythonWebPropertyPageTitle = "PythonWebPropertyPageTitle";
 
         public const string StaticUriHelp = "StaticUriHelp";
+        public const string WsgiHandlerHelp = "WsgiHandlerHelp";
 
         public const string WebLauncherSearchPathHelp = "WebLauncherSearchPathHelp";
         public const string WebLauncherArgumentsHelp = "WebLauncherArgumentsHelp";

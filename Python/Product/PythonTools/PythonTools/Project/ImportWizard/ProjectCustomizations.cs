@@ -169,4 +169,32 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
         }
     }
 
+    class GenericWebProjectCustomization : ProjectCustomization {
+        public static readonly ProjectCustomization Instance = new GenericWebProjectCustomization();
+
+        private GenericWebProjectCustomization() { }
+
+        public override string DisplayName {
+            get {
+                return SR.GetString(SR.ImportWizardGenericWebProjectCustomization);
+            }
+        }
+
+        public override void Process(ProjectRootElement project, ProjectPropertyGroupElement globals) {
+            AddOrSetProperty(globals, "ProjectTypeGuids", "{1b580a1a-fdb3-4b32-83e1-6407eb2722e6};{349c5851-65df-11da-9384-00065b846f21};{888888a0-9f3d-457c-b088-3a5042f75d52}");
+            AddOrSetProperty(globals, "LaunchProvider", PythonConstants.WebLauncherName);
+
+            project.AddItem(
+                "WebPiReference",
+                "https://www.microsoft.com/web/webpi/3.0/toolsproductlist.xml%3fPython27",
+                new Dictionary<string, string> {
+                    { "Feed", "https://www.microsoft.com/web/webpi/3.0/toolsproductlist.xml" },
+                    { "ProductId", "Python27" },
+                    { "FriendlyName", "Python 2.7" }
+                }
+            );
+
+            project.AddImport(@"$(VSToolsPath)\Python Tools\Microsoft.PythonTools.Web.targets");
+        }
+    }
 }
