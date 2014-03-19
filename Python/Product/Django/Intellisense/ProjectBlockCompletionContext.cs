@@ -19,12 +19,11 @@ using Microsoft.Html.Editor;
 using Microsoft.PythonTools.Django.Project;
 using Microsoft.PythonTools.Django.TemplateParsing;
 using Microsoft.VisualStudio.Text;
-using Microsoft.Web.Editor;
 
 namespace Microsoft.PythonTools.Django.Intellisense {
     internal class ProjectBlockCompletionContext : ProjectBlockCompletionContextBase {
         public ProjectBlockCompletionContext(DjangoAnalyzer analyzer, ITextBuffer buffer)
-            : base(analyzer, buffer, TextBufferExtensions.GetFileName(buffer)) {
+            : base(analyzer, buffer, buffer.GetFileName()) {
 
             var doc = HtmlEditorDocument.FromTextBuffer(buffer);
             if (doc == null) {

@@ -199,6 +199,7 @@
     <Compile Include="Intellisense\DjangoCompletionSource.cs" />
     <Compile Include="Intellisense\ProjectBlockCompletionContext.cs" />
     <Compile Include="Intellisense\ProjectBlockCompletionContextBase.cs" />
+    <Compile Include="Intellisense\TextBufferExtensions.cs" />
     <Compile Include="Legacy\DjangoEditorFactory.cs" />
     <Compile Include="Legacy\Intellisense\DjangoCompletionSource.cs" />
     <Compile Include="Legacy\Intellisense\DjangoCompletionSourceProvider.cs" />

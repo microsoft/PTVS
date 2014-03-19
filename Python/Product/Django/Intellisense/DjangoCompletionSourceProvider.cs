@@ -30,7 +30,7 @@ namespace Microsoft.PythonTools.Django.Intellisense {
         }
 
         public ICompletionSource TryCreateCompletionSource(ITextBuffer textBuffer) {
-            var filename = Microsoft.Web.Editor.TextBufferExtensions.GetFileName(textBuffer);
+            var filename = textBuffer.GetFileName();
             if (filename != null) {
                 var project = DjangoPackage.GetProject(filename);
                 return new DjangoCompletionSource(_glyphService, project.Analyzer, textBuffer);
