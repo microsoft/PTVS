@@ -30,8 +30,7 @@ long_description = 'The pykinect package provides access to the Kinect device. T
 classifiers = [
     'Development Status :: 4 - Beta',
     'Environment :: Win32 (MS Windows)',
-    'License :: Free for non-commercial use',
-    'License :: Other/Proprietary License',
+    'License :: OSI Approved :: Apache Software License',
     'Natural Language :: English',
     'Operating System :: Microsoft',
     'Operating System :: Microsoft :: Windows :: Windows NT/2000',
@@ -115,10 +114,10 @@ pykinectaudio_ext.headers=[
 
 setup_cfg = dict(
     name='pykinect',
-    version='1.1',
+    version='2.1b1',
     description='PyKinect Module for interacting with the Kinect SDK',
     long_description=long_description,
-    author='Microsoft',
+    author='Microsoft Corporation',
     author_email='ptvshelp@microsoft.com',
     url='http://pytools.codeplex.com/',
     zip_safe=False,

@@ -20,6 +20,11 @@ while ((Test-Path $buildroot) -and -not (Test-Path "$buildroot\build.root")) {
 Write-Output "Build Root: $buildroot"
 
 pushd $buildroot\Python\Product\PyKinect\PyKinect
+
+if (Get-Command tf -EA 0) {
+    tf edit * /r
+}
+
 try {
     $signedbuild = $release -or $mockrelease
     if ($signedbuild) {
@@ -83,5 +88,9 @@ try {
         }
     }
 } finally {
+    if (Get-Command tfpt -EA 0) {
+        tfpt uu /noget /noprompt . /r
+    }
+    
     popd
 }
