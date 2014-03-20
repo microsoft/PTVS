@@ -20,6 +20,7 @@ using System.ComponentModel.Composition.Primitives;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Threading;
 using Microsoft.VisualStudio.Settings;
 using Microsoft.VisualStudio.Shell;
@@ -340,6 +341,8 @@ namespace Microsoft.PythonTools.Interpreter {
 #endif
             try {
                 LoadDefaultInterpreter();
+            } catch (InvalidComObjectException) {
+                // Race between VS closing and accessing the settings store.
             } catch (Exception ex) {
                 try {
                     ActivityLog.LogError(
