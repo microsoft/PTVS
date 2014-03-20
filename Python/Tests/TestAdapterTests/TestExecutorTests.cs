@@ -14,14 +14,13 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
 using System.Linq;
-using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudioTools;
 using TestUtilities;
 using TestUtilities.Python;
 
@@ -32,6 +31,30 @@ namespace TestAdapterTests {
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
             PythonTestData.Deploy();
+        }
+
+        [TestMethod, Priority(0)]
+        public void FromCommandLineArgsRaceCondition() {
+            // https://pytools.codeplex.com/workitem/1429
+
+            var mre = new ManualResetEvent(false);
+            var tasks = new Task<bool>[100];
+            try {
+                for (int i = 0; i < tasks.Length; i += 1) {
+                    tasks[i] = Task.Run(() => {
+                        mre.WaitOne();
+                        using (var arg = VisualStudioApp.FromCommandLineArgs(new[] { "/parentProcessId", "123" })) {
+                            return arg is VisualStudioApp;
+                        }
+                    });
+                }
+                mre.Set();
+                Assert.IsTrue(Task.WaitAll(tasks, TimeSpan.FromSeconds(30.0)));
+                Assert.IsTrue(tasks.All(t => t.Result));
+            } finally {
+                mre.Dispose();
+                Task.WaitAll(tasks, TimeSpan.FromSeconds(30.0));
+            }
         }
 
         [TestMethod, Priority(0)]

@@ -41,8 +41,10 @@ namespace Microsoft.VisualStudioTools {
                 if (commandLineArgs[i].Equals("/parentProcessId", StringComparison.InvariantCultureIgnoreCase) &&
                     int.TryParse(commandLineArgs[i + 1], out processId)) {
                     VisualStudioApp inst;
-                    if (!_knownInstances.TryGetValue(processId, out inst)) {
-                        _knownInstances[processId] = inst = new VisualStudioApp(processId);
+                    lock (_knownInstances) {
+                        if (!_knownInstances.TryGetValue(processId, out inst)) {
+                            _knownInstances[processId] = inst = new VisualStudioApp(processId);
+                        }
                     }
                     return inst;
                 }
@@ -55,7 +57,9 @@ namespace Microsoft.VisualStudioTools {
         }
 
         public void Dispose() {
-            _knownInstances.Remove(_processId);
+            lock (_knownInstances) {
+                _knownInstances.Remove(_processId);
+            }
             if (_dte != null) {
                 Marshal.ReleaseComObject(_dte);
                 _dte = null;
