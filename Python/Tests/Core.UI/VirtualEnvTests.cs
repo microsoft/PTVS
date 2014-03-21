@@ -13,7 +13,7 @@
  * ***************************************************************************/
 
 extern alias analysis;
-extern alias pythontools;
+extern alias util;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -21,13 +21,11 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
-using System.Windows.Interop;
 using analysis::Microsoft.VisualStudioTools;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Project;
 using Microsoft.TC.TestHostAdapters;
-using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
@@ -35,6 +33,7 @@ using TestUtilities.Python;
 using TestUtilities.UI;
 using TestUtilities.UI.Python;
 using Path = System.IO.Path;
+using UIThread = util::Microsoft.VisualStudioTools.UIThread;
 
 namespace PythonToolsUITests {
     [TestClass]
@@ -442,9 +441,7 @@ namespace PythonToolsUITests {
                 Directory.CreateDirectory(path1);
                 Directory.CreateDirectory(path2);
 
-                ThreadHelper.Generic.Invoke(() => {
-                    project.GetPythonProject().SetProjectProperty("WorkingDirectory", path1);
-                });
+                UIThread.Invoke(() => project.GetPythonProject().SetProjectProperty("WorkingDirectory", path1));
 
                 string envName;
                 var env = app.CreateVirtualEnvironment(project, out envName);
@@ -460,9 +457,7 @@ namespace PythonToolsUITests {
                         ">>>"
                     );
 
-                    ThreadHelper.Generic.Invoke(() => {
-                        project.GetPythonProject().SetProjectProperty("WorkingDirectory", path2);
-                    });
+                    UIThread.Invoke(() => project.GetPythonProject().SetProjectProperty("WorkingDirectory", path2));
 
                     window.Reset();
                     window.ReplWindow.Evaluator.ExecuteText("import os; os.getcwd()").Wait();

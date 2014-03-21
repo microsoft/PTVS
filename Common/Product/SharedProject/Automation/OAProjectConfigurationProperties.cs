@@ -197,12 +197,10 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
 
         public string OutputPath {
             get {
-                return _project.GetProjectProperty("OutputPath");
+                return UIThread.Invoke(() => _project.GetProjectProperty("OutputPath"));
             }
             set {
-                UIThread.Instance.RunSync(() => {
-                    _project.SetProjectProperty("OutputPath", value);
-                });
+                UIThread.Invoke(() => _project.SetProjectProperty("OutputPath", value));
             }
         }
 

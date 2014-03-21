@@ -13,6 +13,7 @@
  * ***************************************************************************/
 
 extern alias analysis;
+extern alias util;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -36,6 +37,7 @@ using TestUtilities.Python;
 using TestUtilities.UI;
 using TestUtilities.UI.Python;
 using InterpreterExt = analysis::Microsoft.PythonTools.Interpreter.PythonInterpreterFactoryExtensions;
+using UIThread = util::Microsoft.VisualStudioTools.UIThread;
 
 namespace PythonToolsUITests {
     [TestClass]
@@ -90,7 +92,7 @@ namespace PythonToolsUITests {
 
                     var outData = Guid.NewGuid().ToString("N");
 
-                    ThreadHelper.Generic.Invoke(() => {
+                    UIThread.Invoke(() => {
                         proj.SetProperty("CommandLineArguments", outData + " \"" + outFile + "\"");
                         proj.FindCommand(cmdName).Execute(proj);
                     });
@@ -118,7 +120,7 @@ namespace PythonToolsUITests {
                 var proj = project.GetCommonProject() ;
                 Assert.IsNotNull(proj);
 
-                ThreadHelper.Generic.Invoke(() => {
+                UIThread.Invoke(() => {
                     proj.SetProjectProperty("PythonWsgiHandler", "NoHandler");
 
                     proj.SetProjectProperty("StaticUriPattern", "");
@@ -126,7 +128,7 @@ namespace PythonToolsUITests {
                 app.ExecuteCommand("Build.RebuildSolution");
                 app.WaitForOutputWindowText("Build", "1 succeeded");
 
-                ThreadHelper.Generic.Invoke(() => {
+                UIThread.Invoke(() => {
                     proj.SetProjectProperty("StaticUriPattern", "^/static/.*$");
                 });
                 app.ExecuteCommand("Build.RebuildSolution");
@@ -140,7 +142,7 @@ namespace PythonToolsUITests {
                     ));
                 }
 
-                ThreadHelper.Generic.Invoke(() => {
+                UIThread.Invoke(() => {
                     proj.SetProjectProperty("StaticUriPattern", "invalid[pattern");
                 });
                 app.ExecuteCommand("Build.RebuildSolution");
@@ -176,12 +178,12 @@ namespace PythonToolsUITests {
                     Thread.Sleep(1000);
                 }
 
-                UIThread.Instance.RunSync(() => {
+                UIThread.Invoke(() => {
                     pyProj.SetProjectProperty("WebBrowserPort", "23457");
                 });
                 LaunchAndVerifyNoDebug(app, 23457, textInResponse);
 
-                UIThread.Instance.RunSync(() => {
+                UIThread.Invoke(() => {
                     pyProj.SetProjectProperty("WebBrowserPort", "23456");
                 });
                 LaunchAndVerifyDebug(app, 23456, textInResponse);
@@ -231,7 +233,7 @@ namespace PythonToolsUITests {
             bool prevNormal = true, prevAbnormal = true;
 
             try {
-                UIThread.Instance.RunSync(() => {
+                UIThread.Invoke(() => {
                     app.Dte.Solution.SolutionBuild.Build(true);
                     prevNormal = PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnNormalExit;
                     prevAbnormal = PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnAbnormalExit;
@@ -256,7 +258,7 @@ namespace PythonToolsUITests {
                     Thread.Sleep(300);
                 }
             } finally {
-                UIThread.Instance.RunSync(() => {
+                UIThread.Invoke(() => {
                     PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnNormalExit = prevNormal;
                     PythonToolsPackage.Instance.DebuggingOptionsPage.WaitOnAbnormalExit = prevAbnormal;
                 });
@@ -323,7 +325,7 @@ namespace PythonToolsUITests {
             // dialog.
             Pip.InstallPip(factory, false).Wait();
 
-            UIThread.Instance.RunSync(() => {
+            UIThread.Invoke(() => {
                 var cmd = ((IPythonProject2)pyProj).FindCommand("PythonUpgradeWebFrameworkCommand");
                 cmd.Execute(null);
             });

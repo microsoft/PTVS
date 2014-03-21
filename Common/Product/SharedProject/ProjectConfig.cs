@@ -860,7 +860,7 @@ namespace Microsoft.VisualStudioTools.Project {
                     }
                 } catch (Exception e) {
                     // If those who ask for status have bugs in their code it should not prevent the build/notification from happening
-                    Debug.Fail(String.Format(CultureInfo.CurrentCulture, SR.GetString(SR.BuildEventError, CultureInfo.CurrentUICulture), e.Message));
+                    Debug.Fail(SR.GetString(SR.BuildEventError, e.Message));
                 }
             }
 
@@ -876,7 +876,7 @@ namespace Microsoft.VisualStudioTools.Project {
                     ErrorHandler.ThrowOnFailure(cb.BuildEnd(success));
                 } catch (Exception e) {
                     // If those who ask for status have bugs in their code it should not prevent the build/notification from happening
-                    Debug.Fail(String.Format(CultureInfo.CurrentCulture, SR.GetString(SR.BuildEventError, CultureInfo.CurrentUICulture), e.Message));
+                    Debug.Fail(SR.GetString(SR.BuildEventError, e.Message));
                 } finally {
                     // We want to refresh the references if we are building with the Build or Rebuild target or if the project was opened for browsing only.
                     bool shouldRepaintReferences = (buildTarget == null || buildTarget == MsBuildTarget.Build || buildTarget == MsBuildTarget.Rebuild);
@@ -901,6 +901,9 @@ namespace Microsoft.VisualStudioTools.Project {
             try {
                 config.ProjectMgr.BuildAsync(options, this.config.ConfigName, output, target, (result, buildTarget) => this.NotifyBuildEnd(result, buildTarget));
             } catch (Exception e) {
+                if (e.IsCriticalException()) {
+                    throw;
+                }
                 Trace.WriteLine("Exception : " + e.Message);
                 ErrorHandler.ThrowOnFailure(output.OutputStringThreadSafe("Unhandled Exception:" + e.Message + "\n"));
                 this.NotifyBuildEnd(MSBuildResult.Failed, target);

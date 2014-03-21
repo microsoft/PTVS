@@ -237,6 +237,9 @@ namespace Microsoft.PythonTools.Project.Web {
                 try {
                     Validate();
                 } catch (Exception ex) {
+                    if (ex.IsCriticalException()) {
+                        throw;
+                    }
                     MessageBox.Show(
                         ex.Message,
                         SR.GetString(SR.PythonToolsForVisualStudio)

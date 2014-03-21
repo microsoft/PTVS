@@ -15,11 +15,11 @@
       <Link>SharedProject\HierarchyNodeFlags.cs</Link>
       <Visible>true</Visible>
     </Compile>
-	<Compile Include="$(_ProjectSystemFilesLocation)\OutputWindowRedirector.cs">
+    <Compile Include="$(_ProjectSystemFilesLocation)\OutputWindowRedirector.cs">
       <Link>SharedProject\OutputWindowRedirector.cs</Link>
       <Visible>true</Visible>
     </Compile>
-	<Compile Include="$(_ProjectSystemFilesLocation)\ProcessOutput.cs">
+    <Compile Include="$(_ProjectSystemFilesLocation)\ProcessOutput.cs">
       <Link>SharedProject\ProcessOutput.cs</Link>
       <Visible>true</Visible>
     </Compile>
@@ -579,6 +579,14 @@
     </Compile>
     <Compile Include="$(_ProjectSystemFilesLocation)\SolutionEventsListener.cs">
       <Link>SharedProject\SolutionEventsListener.cs</Link>
+      <Visible>true</Visible>
+    </Compile>
+    <Compile Include="$(_ProjectSystemFilesLocation)\ExceptionExtensions.cs">
+      <Link>SharedProject\ExceptionExtensions.cs</Link>
+      <Visible>true</Visible>
+    </Compile>
+    <Compile Include="$(_ProjectSystemFilesLocation)\TaskExtensions.cs">
+      <Link>SharedProject\TaskExtensions.cs</Link>
       <Visible>true</Visible>
     </Compile>
     <Compile Include="$(_ProjectSystemFilesLocation)\Wpf\Commands.cs">

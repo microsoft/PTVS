@@ -17,6 +17,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.Resources;
+using System.Runtime.CompilerServices;
 using System.Threading;
 
 namespace Microsoft.VisualStudioTools.Project {
@@ -281,6 +282,29 @@ namespace Microsoft.VisualStudioTools.Project {
             if (sys == null)
                 return null;
             return sys.resources.GetObject(name, SR.Culture);
+        }
+
+        private const string UnhandledException = "UnhandledException";
+
+        /// <summary>
+        /// Gets a localized string suitable for logging details about an
+        /// otherwise unhandled exception. This should not generally be shown to
+        /// users through the UI.
+        /// </summary>
+        internal static string GetUnhandledExceptionString(
+            Exception ex,
+            Type callerType,
+            [CallerFilePath] string callerFile = null,
+            [CallerLineNumber] int callerLineNumber = 0,
+            [CallerMemberName] string callerName = null
+        ) {
+            if (string.IsNullOrEmpty(callerName)) {
+                callerName = callerType != null ? callerType.FullName : string.Empty;
+            } else if (callerType != null) {
+                callerName = callerType.FullName + "." + callerName;
+            }
+
+            return GetString(UnhandledException, ex, callerFile ?? "", callerLineNumber, callerName);
         }
     }
 }

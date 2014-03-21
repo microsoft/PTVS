@@ -17,10 +17,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 using OleConstants = Microsoft.VisualStudio.OLE.Interop.Constants;
 using Task = System.Threading.Tasks.Task;
@@ -88,7 +88,7 @@ namespace Microsoft.PythonTools.Project {
                     name
                 ));
             } catch (Exception ex) {
-                if (ErrorHandler.IsCriticalException(ex)) {
+                if (ex.IsCriticalException()) {
                     throw;
                 }
                 statusBar.SetText(SR.GetString(SR.PackageInstallFailed, name));
@@ -115,7 +115,7 @@ namespace Microsoft.PythonTools.Project {
                     name
                 ));
             } catch (Exception ex) {
-                if (ErrorHandler.IsCriticalException(ex)) {
+                if (ex.IsCriticalException()) {
                     throw;
                 }
                 statusBar.SetText(SR.GetString(SR.PackageUninstallFailed, name));

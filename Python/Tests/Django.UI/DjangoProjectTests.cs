@@ -12,6 +12,7 @@
  *
  * ***************************************************************************/
 
+extern alias util;
 using System;
 using System.IO;
 using System.Linq;
@@ -21,13 +22,13 @@ using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Project;
 using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio.ComponentModelHost;
-using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 using TestUtilities.Python;
 using TestUtilities.UI;
 using TestUtilities.UI.Python;
 using TestUtilities.UI.Python.Django;
+using UIThread = util::Microsoft.VisualStudioTools.UIThread;
 
 namespace DjangoUITests {
     [TestClass]
@@ -76,7 +77,7 @@ namespace DjangoUITests {
                 Assert.IsNotNull(folder.ProjectItems.Item("urls.py"));
                 Assert.IsNotNull(folder.ProjectItems.Item("__init__.py"));
                 Assert.IsNotNull(folder.ProjectItems.Item("wsgi.py"));
-                var settings = ThreadHelper.Generic.Invoke(() => project.GetPythonProject().GetProperty("DjangoSettingsModule"));
+                var settings = UIThread.Invoke(() => project.GetPythonProject().GetProperty("DjangoSettingsModule"));
                 Assert.AreEqual("Django_Project__100.settings", settings);
             }
         }
@@ -293,14 +294,14 @@ namespace DjangoUITests {
                 var project = app.OpenProject("TestData\\DjangoProjectWithSubDirectory.sln");
 
                 var pyProj = (IPythonProject2)project.GetPythonProject();
-                var dsm = ThreadHelper.Generic.Invoke(() => pyProj.GetProperty("DjangoSettingsModule"));
+                var dsm = UIThread.Invoke(() => pyProj.GetProperty("DjangoSettingsModule"));
                 Assert.AreEqual("config.settings", dsm);
-                var workDir = ThreadHelper.Generic.Invoke(() => pyProj.GetWorkingDirectory()).TrimEnd('\\');
+                var workDir = UIThread.Invoke(() => pyProj.GetWorkingDirectory()).TrimEnd('\\');
                 Assert.AreEqual(TestData.GetPath("TestData\\DjangoProjectWithSubDirectory\\project"), workDir, true);
 
                 var cmd = pyProj.FindCommand("DjangoCollectStaticCommand");
-                
-                ThreadHelper.Generic.Invoke(() => {
+
+                UIThread.Invoke(() => {
                     Assert.IsTrue(cmd.CanExecute(pyProj), "Cannot execute DjangoCollectStaticCommand");
                     cmd.Execute(pyProj);
                 });

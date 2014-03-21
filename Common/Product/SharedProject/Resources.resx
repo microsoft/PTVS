@@ -183,4 +183,8 @@
   <data name="HasTestsDescription" xml:space="preserve">
     <value>Specifies the file contents are for unit testing.</value>
   </data>
+  <data name="UnhandledException" xml:space="preserve">
+    <value>Unhandled exception in {3} ({1}:{2})
+{0}</value>
+  </data>
 </root>

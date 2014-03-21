@@ -19,7 +19,6 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Build.Evaluation;
 using Microsoft.PythonTools.Commands;
 using Microsoft.PythonTools.Interpreter;
@@ -29,6 +28,7 @@ using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 using MessageBox = System.Windows.Forms.MessageBox;
+using Task = System.Threading.Tasks.Task;
 using VsCommands = Microsoft.VisualStudio.VSConstants.VSStd97CmdID;
 using VsCommands2K = Microsoft.VisualStudio.VSConstants.VSStd2KCmdID;
 using VsMenus = Microsoft.VisualStudioTools.Project.VsMenus;
@@ -45,7 +45,6 @@ namespace Microsoft.PythonTools.Project {
         private readonly bool _canDelete;
         private readonly FileSystemWatcher _fileWatcher;
         private readonly Timer _timer;
-        private readonly TaskScheduler _scheduler;
         private bool _checkedItems, _checkingItems, _disposed;
         private bool _installingPackage;
 
@@ -61,8 +60,6 @@ namespace Microsoft.PythonTools.Project {
             _factory = factory;
             _isReference = isInterpreterReference;
             _canDelete = canDelete;
-
-            _scheduler = TaskScheduler.FromCurrentSynchronizationContext();
 
             if (Directory.Exists(_factory.Configuration.LibraryPath)) {
                 // TODO: Need to handle watching for creation
@@ -111,11 +108,16 @@ namespace Microsoft.PythonTools.Project {
 
         private void PackagesChanged(object sender, FileSystemEventArgs e) {
             // have a delay before refreshing because there's probably more than one write,
-            // so we wait until things have been quite for a second.
+            // so we wait until things have been quiet for a second.
             _timer.Change(1000, Timeout.Infinite);
         }
 
         private void CheckPackages(object arg) {
+            UIThread.InvokeTask(() => CheckPackagesAsync())
+                .WaitAndHandleAllExceptions(SR.GetString(SR.PythonToolsForVisualStudio), GetType());
+        }
+
+        private async Task CheckPackagesAsync() {
             bool prevChecked = _checkedItems;
             // Use _checkingItems to prevent the expanded state from
             // disappearing too quickly.
@@ -127,54 +129,52 @@ namespace Microsoft.PythonTools.Project {
                 return;
             }
 
-            Pip.Freeze(_factory).ContinueWith((Action<Task<HashSet<string>>>)(t => {
-                bool anyChanges = false;
-                HashSet<string> lines;
-                try {
-                    lines = t.Result;
-                } catch (NoInterpretersException) {
-                    return;
-                }
-                if (ProjectMgr == null || ProjectMgr.IsClosed) {
-                    return;
-                }
+            HashSet<string> lines;
+            bool anyChanges = false;
+            try {
+                lines = await Pip.Freeze(_factory);
+            } catch (NoInterpretersException) {
+                return;
+            }
+            if (ProjectMgr == null || ProjectMgr.IsClosed) {
+                return;
+            }
 
-                var existing = AllChildren.ToDictionary(c => c.Url);
+            var existing = AllChildren.ToDictionary(c => c.Url);
 
-                // remove the nodes which were uninstalled.
-                foreach (var keyValue in existing) {
-                    if (!lines.Contains(keyValue.Key)) {
-                        RemoveChild(keyValue.Value);
-                        anyChanges = true;
-                    }
-                }
-
-                // remove already existing nodes so we don't add them a 2nd time
-                lines.ExceptWith(existing.Keys);
-
-                // add the new nodes
-                foreach (var line in lines) {
-                    AddChild(new InterpretersPackageNode(ProjectMgr, line));
+            // remove the nodes which were uninstalled.
+            foreach (var keyValue in existing) {
+                if (!lines.Contains(keyValue.Key)) {
+                    RemoveChild(keyValue.Value);
                     anyChanges = true;
                 }
-                _checkingItems = false;
+            }
 
-                var wasExpanded = prevChecked && GetIsExpanded();
-                ProjectMgr.OnInvalidateItems(this);
-                if (!prevChecked) {
-                    ProjectMgr.OnPropertyChanged(this, (int)__VSHPROPID.VSHPROPID_Expandable, 0);
-                }
-                if (wasExpanded) {
-                    ExpandItem(EXPANDFLAGS.EXPF_ExpandFolder);
-                }
+            // remove already existing nodes so we don't add them a 2nd time
+            lines.ExceptWith(existing.Keys);
 
-                if (prevChecked && anyChanges) {
-                    var withDb = _factory as IPythonInterpreterFactoryWithDatabase;
-                    if (withDb != null) {
-                        withDb.GenerateDatabase(GenerateDatabaseOptions.SkipUnchanged);
-                    }
+            // add the new nodes
+            foreach (var line in lines) {
+                AddChild(new InterpretersPackageNode(ProjectMgr, line));
+                anyChanges = true;
+            }
+            _checkingItems = false;
+
+            var wasExpanded = prevChecked && GetIsExpanded();
+            ProjectMgr.OnInvalidateItems(this);
+            if (!prevChecked) {
+                ProjectMgr.OnPropertyChanged(this, (int)__VSHPROPID.VSHPROPID_Expandable, 0);
+            }
+            if (wasExpanded) {
+                ExpandItem(EXPANDFLAGS.EXPF_ExpandFolder);
+            }
+
+            if (prevChecked && anyChanges) {
+                var withDb = _factory as IPythonInterpreterFactoryWithDatabase;
+                if (withDb != null) {
+                    withDb.GenerateDatabase(GenerateDatabaseOptions.SkipUnchanged);
                 }
-            }), _scheduler).Wait();
+            }
         }
 
         public override Guid ItemTypeGuid {

@@ -71,7 +71,7 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
         public virtual int Count {
             get {
                 int count = 0;
-                UIThread.Instance.RunSync(() => {
+                UIThread.Invoke(() => {
                     for (HierarchyNode child = this.NodeWithItems.FirstChild; child != null; child = child.NextSibling) {
                         if (!child.IsNonMemberItem && child.GetAutomationObject() is EnvDTE.ProjectItem) {
                             count += 1;

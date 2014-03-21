@@ -275,6 +275,9 @@ namespace Microsoft.PythonTools.InterpreterList {
                 }
                 e.CanExecute = true;
             } catch (Exception ex) {
+                if (ex.IsCriticalException()) {
+                    throw;
+                }
                 Debug.WriteLine(ex.ToString());
                 e.CanExecute = false;
             }

@@ -63,22 +63,16 @@ namespace Microsoft.VisualStudioTools.Project {
         }
 
         public override void Show() {
-            if (UIThread.Instance.IsUIThread) {
-                ErrorHandler.ThrowOnFailure(_pane.Activate());
-            } else {
-                UIThread.Instance.Run(Show);
-            }
+            UIThread.Invoke(() => ErrorHandler.ThrowOnFailure(_pane.Activate()));
         }
 
         public override void ShowAndActivate() {
-            if (UIThread.Instance.IsUIThread) {
+            UIThread.Invoke(() => {
                 ErrorHandler.ThrowOnFailure(_pane.Activate());
                 if (_window != null) {
                     ErrorHandler.ThrowOnFailure(_window.ShowNoActivate());
                 }
-            } else {
-                UIThread.Instance.Run(ShowAndActivate);
-            }
+            });
         }
 
         public override void WriteLine(string line) {

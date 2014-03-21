@@ -24,9 +24,9 @@ using EnvDTE80;
 using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
-using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudioTools;
 using Task = System.Threading.Tasks.Task;
 
 namespace TestUtilities.UI {
@@ -796,7 +796,7 @@ namespace TestUtilities.UI {
         }
 
         internal void Invoke(Action action) {
-            ThreadHelper.Generic.Invoke(action);
+            UIThread.Invoke(action);
         }
 
         public Uri PublishToAzureCloudService(string serviceName, string subscriptionPublishSettingsFilePath) {

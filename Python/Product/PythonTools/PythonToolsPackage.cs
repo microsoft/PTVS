@@ -275,6 +275,34 @@ namespace Microsoft.PythonTools {
         /// initialization is the Initialize method.
         /// </summary>
         public PythonToolsPackage() {
+#if DEBUG
+            AppDomain.CurrentDomain.UnhandledException += (sender, e) => {
+                if (e.IsTerminating) {
+                    var ex = e.ExceptionObject as Exception;
+                    if (ex != null) {
+                        Debug.Fail(
+                            string.Format("An unhandled exception is about to terminate the process:\n\n{0}", ex.Message),
+                            ex.ToString()
+                        );
+                    } else {
+                        Debug.Fail(string.Format(
+                            "An unhandled exception is about to terminate the process:\n\n{0}",
+                            e.ExceptionObject
+                        ));
+                    }
+                }
+            };
+            System.Threading.Tasks.TaskScheduler.UnobservedTaskException += (sender, e) => {
+                if (!e.Observed) {
+                    Debug.Fail(
+                        string.Format("An exception in a task was not observed:\n    {0}\n\nThis is not fatal - click 'Ignore' to continue running.", e.Exception.Message),
+                        e.Exception.ToString()
+                    );
+                    e.SetObserved();
+                }
+            };
+#endif
+
             Trace.WriteLine(string.Format(CultureInfo.CurrentCulture, "Entering constructor for: {0}", this.ToString()));
             Instance = this;
 
@@ -360,12 +388,12 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
         }
 
         internal static IProjectLauncher GetLauncher(IPythonProject project) {
-            var launchProvider = UIThread.Instance.RunSync<string>(() => project.GetProperty(PythonConstants.LaunchProvider));
+            var launchProvider = UIThread.Invoke<string>(() => project.GetProperty(PythonConstants.LaunchProvider));
 
             IPythonLauncherProvider defaultLaunchProvider = null;
             foreach (var launcher in ComponentModel.GetExtensions<IPythonLauncherProvider>()) {
                 if (launcher.Name == launchProvider) {
-                    return UIThread.Instance.RunSync<IProjectLauncher>(() => launcher.CreateLauncher(project));
+                    return UIThread.Invoke<IProjectLauncher>(() => launcher.CreateLauncher(project));
                 }
 
                 if (launcher.Name == DefaultLauncherProvider.DefaultLauncherName) {
@@ -376,7 +404,7 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
             // no launcher configured, use the default one.
             Debug.Assert(defaultLaunchProvider != null);
             return (defaultLaunchProvider != null) ?
-                UIThread.Instance.RunSync<IProjectLauncher>(() => defaultLaunchProvider.CreateLauncher(project)) :
+                UIThread.Invoke<IProjectLauncher>(() => defaultLaunchProvider.CreateLauncher(project)) :
                 null;
         }
 

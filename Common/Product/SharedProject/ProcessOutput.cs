@@ -249,16 +249,38 @@ namespace Microsoft.VisualStudioTools.Project {
                             foreach (var line in lines) {
                                 redirector.WriteLine(line);
                             }
-                        } catch (Exception) {
+                        } catch (Exception ex) {
+                            if (IsCriticalException(ex)) {
+                                throw;
+                            }
                             redirector.WriteErrorLine("Failed to obtain standard output from elevated process.");
+#if DEBUG
+                            foreach (var line in SplitLines(ex.ToString())) {
+                                redirector.WriteErrorLine(line);
+                            }
+#else
+                            Trace.TraceError("Failed to obtain standard output from elevated process.");
+                            Trace.TraceError(ex.ToString());
+#endif
                         }
                         try {
                             var lines = File.ReadAllLines(errFile);
                             foreach (var line in lines) {
                                 redirector.WriteErrorLine(line);
                             }
-                        } catch (Exception) {
+                        } catch (Exception ex) {
+                            if (IsCriticalException(ex)) {
+                                throw;
+                            }
                             redirector.WriteErrorLine("Failed to obtain standard error from elevated process.");
+#if DEBUG
+                            foreach (var line in SplitLines(ex.ToString())) {
+                                redirector.WriteErrorLine(line);
+                            }
+#else
+                            Trace.TraceError("Failed to obtain standard error from elevated process.");
+                            Trace.TraceError(ex.ToString());
+#endif
                         }
                     } finally {
                         try {
@@ -354,6 +376,9 @@ namespace Microsoft.VisualStudioTools.Project {
             try {
                 _process.Start();
             } catch (Exception ex) {
+                if (IsCriticalException(ex)) {
+                    throw;
+                }
                 if (_redirector != null) {
                     foreach (var line in SplitLines(ex.ToString())) {
                         _redirector.WriteErrorLine(line);
@@ -577,6 +602,13 @@ namespace Microsoft.VisualStudioTools.Project {
                     _waitHandle.Dispose();
                 }
             }
+        }
+
+        private static bool IsCriticalException(Exception ex) {
+            return ex is StackOverflowException ||
+                ex is OutOfMemoryException ||
+                ex is ThreadAbortException ||
+                ex is AccessViolationException;
         }
     }
 }

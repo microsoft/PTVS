@@ -100,7 +100,7 @@ namespace Microsoft.VisualStudioTools.Project {
         /// Constructor.  Inititialize member data.
         /// </summary>
         public IDEBuildLogger(IVsOutputWindowPane output, TaskProvider taskProvider, IVsHierarchy hierarchy) {
-            UIThread.Instance.MustBeCalledFromUIThread();
+            UIThread.MustBeCalledFromUIThread();
 
             Utilities.ArgumentNotNull("taskProvider", taskProvider);
             Utilities.ArgumentNotNull("hierarchy", hierarchy);
@@ -515,7 +515,7 @@ namespace Microsoft.VisualStudioTools.Project {
             try {
                 action();
             } catch (Exception ex) {
-                if (Microsoft.VisualStudio.ErrorHandler.IsCriticalException(ex)) {
+                if (ex.IsCriticalException()) {
                     throw;
                 }
 

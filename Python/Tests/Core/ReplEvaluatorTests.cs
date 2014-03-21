@@ -40,7 +40,6 @@ namespace PythonToolsTests {
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
             PythonTestData.Deploy();
-            UIThread.InitUnitTestingMode();
         }
 
         [TestMethod, Priority(0)]
@@ -228,8 +227,17 @@ namespace PythonToolsTests {
             var replWindow = new MockReplWindow(replEval);
             replEval.Initialize(replWindow);
             var execute = replEval.ExecuteText("42");
-            Assert.IsTrue(replWindow.Error.IndexOf("Failed to start interactive process, the interpreter could not be found: C:\\Does\\Not\\Exist\\Some\\Interpreter.exe") != -1);
-        }    
+            var errorText = replWindow.Error;
+            const string expected = "Failed to start interactive process, the interpreter could not be found: C:\\Does\\Not\\Exist\\Some\\Interpreter.exe";
+
+            if (!errorText.Contains(expected)) {
+                Assert.Fail(string.Format(
+                    "Did not find:\n{0}\n\nin:\n{1}",
+                    expected,
+                    errorText
+                ));
+            }
+        }
     }
 
 

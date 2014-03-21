@@ -12,6 +12,7 @@
  *
  * ***************************************************************************/
 
+extern alias util;
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -28,7 +29,6 @@ using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Options;
 using Microsoft.TC.TestHostAdapters;
 using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
@@ -40,6 +40,7 @@ using TestUtilities.UI.Python;
 using VSLangProj;
 using MessageBoxButton = TestUtilities.UI.MessageBoxButton;
 using Thread = System.Threading.Thread;
+using UIThread = util::Microsoft.VisualStudioTools.UIThread;
 
 namespace PythonToolsUITests {
     [TestClass]
@@ -62,9 +63,7 @@ namespace PythonToolsUITests {
                 );
 
                 // Ensure that the user project is created
-                ThreadHelper.Generic.Invoke(() => {
-                    project.GetPythonProject().SetUserProjectProperty("Test", "Value");
-                });
+                UIThread.Invoke(() => project.GetPythonProject().SetUserProjectProperty("Test", "Value"));
 
                 app.ExecuteCommand("File.SaveAll");
 

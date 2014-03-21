@@ -218,6 +218,10 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
 
                 StartupFile = SelectDefaultStartupFile(fileList, StartupFile);
             } catch (Exception ex) {
+                if (ex.IsCriticalException()) {
+                    throw;
+                }
+
                 try {
                     Microsoft.VisualStudio.Shell.ActivityLog.LogError(
                         SR.GetString(SR.PythonToolsForVisualStudio),

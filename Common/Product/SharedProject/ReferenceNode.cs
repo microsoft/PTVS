@@ -155,7 +155,7 @@ namespace Microsoft.VisualStudioTools.Project {
         /// Links a reference node to the project and hierarchy.
         /// </summary>
         public virtual void AddReference() {
-            UIThread.Instance.MustBeCalledFromUIThread();
+            UIThread.MustBeCalledFromUIThread();
 
             ReferenceContainerNode referencesFolder = this.ProjectMgr.GetReferenceContainer() as ReferenceContainerNode;
             Utilities.CheckNotNull(referencesFolder, "Could not find the References node");

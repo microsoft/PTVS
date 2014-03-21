@@ -48,8 +48,7 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
                 return this.Node.FileName;
             }
             set {
-                UIThread.Instance.RunSync(() =>
-                    base.Name = value);
+                UIThread.Invoke(() => base.Name = value);
             }
         }
 
@@ -66,7 +65,7 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
                 bool isDirty = false;
 
                 using (AutomationScope scope = new AutomationScope(this.Node.ProjectMgr.Site)) {
-                    UIThread.Instance.RunSync(() => {
+                    UIThread.Invoke(() => {
                         DocumentManager manager = this.Node.GetDocumentManager();
                         Utilities.CheckNotNull(manager);
 
@@ -88,7 +87,7 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
                 EnvDTE.Document document = null;
 
                 using (AutomationScope scope = new AutomationScope(this.Node.ProjectMgr.Site)) {
-                    UIThread.Instance.RunSync(() => {
+                    UIThread.Invoke(() => {
                         IVsUIHierarchy hier;
                         uint itemid;
 
@@ -125,7 +124,7 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
             IntPtr docData = IntPtr.Zero;
 
             using (AutomationScope scope = new AutomationScope(this.Node.ProjectMgr.Site)) {
-                UIThread.Instance.RunSync(() => {
+                UIThread.Invoke(() => {
                     try {
                         // Validate input params
                         Guid logicalViewGuid = VSConstants.LOGVIEWID_Primary;
@@ -171,7 +170,7 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
         /// <exception cref="InvalidOperationException">Is thrown if the save operation failes.</exception>
         /// <exception cref="ArgumentNullException">Is thrown if fileName is null.</exception>
         public override void Save(string fileName) {
-            UIThread.Instance.RunSync(() => {
+            UIThread.Invoke(() => {
                 this.DoSave(false, fileName);
             });
         }
@@ -183,7 +182,7 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
         /// <returns>true if the rename was successful. False if Save as failes</returns>
         public override bool SaveAs(string fileName) {
             try {
-                UIThread.Instance.RunSync(() => {
+                UIThread.Invoke(() => {
                     this.DoSave(true, fileName);
                 });
             } catch (InvalidOperationException) {
@@ -217,7 +216,7 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
             bool isOpen = false;
 
             using (AutomationScope scope = new AutomationScope(this.Node.ProjectMgr.Site)) {
-                UIThread.Instance.RunSync(() => {
+                UIThread.Invoke(() => {
                     IVsUIHierarchy hier;
                     uint itemid;
 
@@ -235,7 +234,7 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
         /// </summary>
         public override ProjectItems ProjectItems {
             get {
-                return UIThread.Instance.RunSync<ProjectItems>(() => {
+                return UIThread.Invoke<ProjectItems>(() => {
                     if (this.Project.ProjectNode.CanFileNodesHaveChilds)
                         return new OAProjectItems(this.Project, this.Node);
                     else
@@ -260,7 +259,7 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
 
             using (AutomationScope scope = new AutomationScope(this.Node.ProjectMgr.Site)) {
 
-                UIThread.Instance.RunSync(() => {
+                UIThread.Invoke(() => {
                     IntPtr docData = IntPtr.Zero;
 
                     try {

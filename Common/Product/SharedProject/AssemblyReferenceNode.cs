@@ -152,7 +152,7 @@ namespace Microsoft.VisualStudioTools.Project {
         /// Links a reference node to the project and hierarchy.
         /// </summary>
         protected override void BindReferenceData() {
-            UIThread.Instance.MustBeCalledFromUIThread();
+            UIThread.MustBeCalledFromUIThread();
 
             Debug.Assert(this.assemblyName != null, "The AssemblyName field has not been initialized");
 
@@ -302,7 +302,7 @@ namespace Microsoft.VisualStudioTools.Project {
         /// This function ensures that some properies of the reference are set.
         /// </summary>
         private void SetReferenceProperties() {
-            UIThread.Instance.MustBeCalledFromUIThread();
+            UIThread.MustBeCalledFromUIThread();
 
             // Set a default HintPath for msbuild to be able to resolve the reference.
             this.ItemNode.SetMetadata(ProjectFileConstants.HintPath, this.assemblyPath);

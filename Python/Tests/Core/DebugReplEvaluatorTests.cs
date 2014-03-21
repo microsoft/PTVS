@@ -43,7 +43,6 @@ namespace PythonToolsTests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
-            UIThread.InitUnitTestingMode();
             PythonTestData.Deploy();
         }
 

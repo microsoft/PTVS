@@ -510,7 +510,7 @@ g()",
 
                 interactive.WaitForText(ReplPrompt + code, ReplPrompt);
 
-                const string code2 = "x = subprocess.Popen(['C:\\\\python27\\\\python.exe', '-c', 'print 42'], stdout=sys.stdout).wait()";
+                string code2 = "x = subprocess.Popen([r'" + PythonVersion.InterpreterPath + "', '-c', 'print(42)'], stdout=sys.stdout).wait()";
                 Keyboard.Type(code2 + "\r");
 
                 interactive.WaitForText(ReplPrompt + code, ReplPrompt + code2, Print42Output, ReplPrompt);

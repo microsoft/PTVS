@@ -12,6 +12,7 @@
  *
  * ***************************************************************************/
 
+extern alias util;
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -28,6 +29,7 @@ using TestUtilities;
 using TestUtilities.SharedProject;
 using TestUtilities.UI;
 using VSLangProj;
+using UIThread = util::Microsoft.VisualStudioTools.UIThread;
 
 namespace Microsoft.VisualStudioTools.SharedProjectTests {
     [TestClass]
@@ -1278,9 +1280,7 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             AutomationWrapper.Select(element);
             VsIdeTestHostContext.Dte.ExecuteCommand("Project.CopyFullPath");
             
-            UIThreadInvoker.Invoke((Action)(() => {
-                clipboardText = System.Windows.Clipboard.GetText();
-            }));
+            UIThread.Invoke(() => clipboardText = System.Windows.Clipboard.GetText());
 
             Assert.AreEqual(expected, clipboardText);
         }

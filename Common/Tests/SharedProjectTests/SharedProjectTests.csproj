@@ -87,6 +87,7 @@
     <ProjectReference Include="..\Utilities.UI\TestUtilities.UI.csproj">
       <Project>{e8150ebc-6b62-40bf-bf91-1dc60149b530}</Project>
       <Name>TestUtilities.UI</Name>
+      <Aliases>global,util</Aliases>
     </ProjectReference>
     <ProjectReference Include="..\Utilities\TestUtilities.csproj">
       <Project>{d092d54e-ff29-4d32-9aee-4ef704c92f67}</Project>

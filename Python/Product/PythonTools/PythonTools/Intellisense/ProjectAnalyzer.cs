@@ -696,8 +696,12 @@ namespace Microsoft.PythonTools.Intellisense {
 
                         var options = PythonToolsPackage.Instance == null ? null : PythonToolsPackage.Instance.GeneralOptionsPage;
                         bool unresolvedImportWarning = options != null && options.UnresolvedImportWarning;
-
-                        if (UIThread.IsUnitTestingMode) {
+                        
+                        bool unresolvedImportWarningOverride;
+                        if (snapshot.TextBuffer.Properties.TryGetProperty(
+                            "Microsoft.PythonTools.Intellisense.VsProjectAnalyzer.UnresolvedImportWarning",
+                            out unresolvedImportWarningOverride
+                        ) && unresolvedImportWarningOverride) {
                             UpdateSquiggles(snapshot, bufferParser._currentProjEntry, errorSink, true);
                             // For unit tests we want to always warn about
                             // unresolved imports. Otherwise we can't test them.
@@ -842,6 +846,9 @@ namespace Microsoft.PythonTools.Intellisense {
                     ast = parser.ParseFile();
                 } catch (BadSourceException) {
                 } catch (Exception e) {
+                    if (e.IsCriticalException()) {
+                        throw;
+                    }
                     Debug.Assert(false, String.Format("Failure in Python parser: {0}", e.ToString()));
                 }
 

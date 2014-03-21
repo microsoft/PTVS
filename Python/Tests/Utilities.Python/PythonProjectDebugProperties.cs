@@ -17,7 +17,7 @@ using Microsoft.PythonTools;
 using Microsoft.PythonTools.Project;
 using Microsoft.PythonTools.Project.Web;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Microsoft.VisualStudioTools.Project;
+using Microsoft.VisualStudioTools;
 
 namespace TestUtilities.UI.Python {
     class PythonProjectDebugProperties : AutomationWrapper {
@@ -83,7 +83,7 @@ namespace TestUtilities.UI.Python {
         }
 
         private static string PropertyValue(IPythonProject project, string property, string defaultValue = "") {
-            return UIThread.Instance.RunSync(() => project.GetUnevaluatedProperty(property) ?? defaultValue);
+            return UIThread.Invoke(() => project.GetUnevaluatedProperty(property) ?? defaultValue);
         }
 
         public void AssertMatchesProject(IPythonProject project) {

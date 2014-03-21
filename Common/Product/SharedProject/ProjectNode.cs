@@ -1677,7 +1677,7 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <param name="resetCache">True to avoid using the cache</param>
         /// <returns>null if property does not exist, otherwise value of the property</returns>
         public virtual string GetProjectProperty(string propertyName, bool resetCache) {
-            UIThread.Instance.MustBeCalledFromUIThread();
+            UIThread.MustBeCalledFromUIThread();
 
             MSBuildExecution.ProjectPropertyInstance property = GetMsBuildProperty(propertyName, resetCache);
             if (property == null)
@@ -1693,7 +1693,7 @@ namespace Microsoft.VisualStudioTools.Project {
         /// </summary>
         /// <param name="propertyName">Name of the property to get</param>
         public virtual string GetUnevaluatedProperty(string propertyName) {
-            UIThread.Instance.MustBeCalledFromUIThread();
+            UIThread.MustBeCalledFromUIThread();
 
             var res = this.buildProject.GetProperty(propertyName);
 
@@ -1710,7 +1710,7 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <param name="propertyValue">Value of property</param>
         public virtual void SetProjectProperty(string propertyName, string propertyValue) {
             Utilities.ArgumentNotNull("propertyName", propertyName);
-            UIThread.Instance.MustBeCalledFromUIThread();
+            UIThread.MustBeCalledFromUIThread();
 
             var oldValue = GetUnevaluatedProperty(propertyName) ?? string.Empty;
             propertyValue = propertyValue ?? string.Empty;
@@ -2315,7 +2315,7 @@ namespace Microsoft.VisualStudioTools.Project {
         /// </remarks>
         [SuppressMessage("Microsoft.Naming", "CA1709:IdentifiersShouldBeCasedCorrectly", MessageId = "Ms")]
         protected virtual MSBuildResult InvokeMsBuild(string target) {
-            UIThread.Instance.MustBeCalledFromUIThread();
+            UIThread.MustBeCalledFromUIThread();
 
             MSBuildResult result = MSBuildResult.Failed;
             const bool designTime = true;
@@ -2395,7 +2395,7 @@ namespace Microsoft.VisualStudioTools.Project {
                 }
 
                 submission.ExecuteAsync(sub => {
-                    UIThread.Instance.Run(() => {
+                    UIThread.Invoke(() => {
                         IDEBuildLogger ideLogger = this.buildLogger as IDEBuildLogger;
                         if (ideLogger != null) {
                             ideLogger.FlushBuildOutput();
@@ -2970,7 +2970,7 @@ namespace Microsoft.VisualStudioTools.Project {
         /// Overloaded method. Invokes MSBuild using the default configuration and does without logging on the output window pane.
         /// </summary>
         public MSBuildResult Build(string target) {
-            UIThread.Instance.MustBeCalledFromUIThread();
+            UIThread.MustBeCalledFromUIThread();
 
             return this.Build(String.Empty, target);
         }
@@ -2981,7 +2981,7 @@ namespace Microsoft.VisualStudioTools.Project {
         ///  PrepareBuild mainly creates directories and cleans house if cleanBuild is true
         /// </summary>
         public virtual void PrepareBuild(string config, bool cleanBuild) {
-            UIThread.Instance.MustBeCalledFromUIThread();
+            UIThread.MustBeCalledFromUIThread();
 
             try {
                 SetConfiguration(config);
@@ -2999,7 +2999,7 @@ namespace Microsoft.VisualStudioTools.Project {
         /// </summary>
         [SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "vsopts")]
         public virtual MSBuildResult Build(string config, string target) {
-            UIThread.Instance.MustBeCalledFromUIThread();
+            UIThread.MustBeCalledFromUIThread();
 
             lock (ProjectNode.BuildLock) {
                 IVsOutputWindowPane output = null;
@@ -3971,8 +3971,11 @@ namespace Microsoft.VisualStudioTools.Project {
                                     if (fileInfo.Attributes.HasFlag(FileAttributes.ReadOnly)) {
                                         fileInfo.Attributes &= ~FileAttributes.ReadOnly;
                                     }
-                                } catch (Exception) {
+                                } catch (Exception ex) {
                                     // Best-effort, but no big deal if this fails.
+                                    if (ex.IsCriticalException()) {
+                                        throw;
+                                    }
                                 }
                             }
                         } finally {
@@ -4423,7 +4426,7 @@ If the files in the existing folder have the same names as files in the folder y
         /// <param name="hwndDialog">Handle to the component picker dialog</param>
         /// <param name="pResult">Result to be returned to the caller</param>
         public virtual int AddComponent(VSADDCOMPOPERATION dwAddCompOperation, uint cComponents, System.IntPtr[] rgpcsdComponents, System.IntPtr hwndDialog, VSADDCOMPRESULT[] pResult) {
-            UIThread.Instance.MustBeCalledFromUIThread();
+            UIThread.MustBeCalledFromUIThread();
 
             if (rgpcsdComponents == null || pResult == null) {
                 return VSConstants.E_FAIL;
@@ -4915,7 +4918,7 @@ If the files in the existing folder have the same names as files in the folder y
         /// <param name="item">msbuild item</param>
         /// <returns>parent node</returns>
         internal HierarchyNode GetItemParentNode(MSBuild.ProjectItem item) {
-            UIThread.Instance.MustBeCalledFromUIThread();
+            UIThread.MustBeCalledFromUIThread();
 
             var link = item.GetMetadataValue(ProjectFileConstants.Link);
             HierarchyNode currentParent = this;
@@ -5231,7 +5234,7 @@ If the files in the existing folder have the same names as files in the folder y
                         Marshal.ThrowExceptionForHR(accessor.UnregisterLoggers(submission.SubmissionId));
                     }
                 } catch (Exception ex) {
-                    if (ErrorHandler.IsCriticalException(ex)) {
+                    if (ex.IsCriticalException()) {
                         throw;
                     }
 
@@ -5243,7 +5246,7 @@ If the files in the existing folder have the same names as files in the folder y
                         Marshal.ThrowExceptionForHR(accessor.EndDesignTimeBuild());
                     }
                 } catch (Exception ex) {
-                    if (ErrorHandler.IsCriticalException(ex)) {
+                    if (ex.IsCriticalException()) {
                         throw;
                     }
 
@@ -5256,7 +5259,7 @@ If the files in the existing folder have the same names as files in the folder y
                         Marshal.ThrowExceptionForHR(accessor.ReleaseUIThreadForBuild());
                     }
                 } catch (Exception ex) {
-                    if (ErrorHandler.IsCriticalException(ex)) {
+                    if (ex.IsCriticalException()) {
                         throw;
                     }
 
@@ -5332,7 +5335,7 @@ If the files in the existing folder have the same names as files in the folder y
         /// Finds a node by it's full path on disk.
         /// </summary>
         internal HierarchyNode FindNodeByFullPath(string name) {
-            UIThread.Instance.MustBeCalledFromUIThread();
+            UIThread.MustBeCalledFromUIThread();
 
             Debug.Assert(Path.IsPathRooted(name));
 
@@ -5550,7 +5553,7 @@ If the files in the existing folder have the same names as files in the folder y
             Utilities.ArgumentNotNull("parent", parent);
             Utilities.ArgumentNotNull("child", child);
 
-            UIThread.Instance.MustBeCalledFromUIThread();
+            UIThread.MustBeCalledFromUIThread();
 
             IDiskBasedNode diskNode = child as IDiskBasedNode;
             if (diskNode != null) {
@@ -5574,7 +5577,7 @@ If the files in the existing folder have the same names as files in the folder y
         }
 
         internal void OnItemDeleted(HierarchyNode deletedItem) {
-            UIThread.Instance.MustBeCalledFromUIThread();
+            UIThread.MustBeCalledFromUIThread();
 
             IDiskBasedNode diskNode = deletedItem as IDiskBasedNode;
             if (diskNode != null) {
@@ -5907,7 +5910,7 @@ If the files in the existing folder have the same names as files in the folder y
         #endregion
 
         public void UpdatePathForDeferredSave(string oldPath, string newPath) {
-            UIThread.Instance.MustBeCalledFromUIThread();
+            UIThread.MustBeCalledFromUIThread();
 
             var existing = _diskNodes[oldPath];
             _diskNodes.Remove(oldPath);

@@ -1213,13 +1213,12 @@ namespace Microsoft.PythonTools.Project {
 
             var path = factory.Configuration.PrefixPath;
             if (removeFromStorage && Directory.Exists(path)) {
-                try {
-                    await Task.Run(() => Directory.Delete(path, true));
-                } catch (Exception ex) {
-                    ActivityLog.LogError(
-                        SR.GetString(SR.PythonToolsForVisualStudio),
-                        SR.GetString(SR.EnvironmentDeleteError, path) + ex.ToString()
-                    );
+                var t = Task.Run(() => {
+                    Directory.Delete(path, true);
+                    return true;
+                }).HandleAllExceptions(SR.GetString(SR.PythonToolsForVisualStudio), GetType());
+
+                if (!await t) {
                     MessageBox.Show(
                         SR.GetString(SR.EnvironmentDeleteError, path),
                         SR.GetString(SR.PythonToolsForVisualStudio)

@@ -22,8 +22,6 @@ using System.Threading;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Logging;
 using Microsoft.PythonTools.Project;
-using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Commands {
@@ -75,14 +73,14 @@ namespace Microsoft.PythonTools.Commands {
                     // name. They are not ours, so we will ignore them.
                     name = project.UniqueName;
                 } catch (Exception ex) {
-                    if (ErrorHandler.IsCriticalException(ex)) {
+                    if (ex.IsCriticalException()) {
                         throw;
                     }
                     bool isPythonProject = false;
                     try {
                         isPythonProject = project.Kind.ToLower() == pyProjectKind;
                     } catch (Exception ex2) {
-                        if (ErrorHandler.IsCriticalException(ex2)) {
+                        if (ex2.IsCriticalException()) {
                             throw;
                         }
                     }
@@ -183,6 +181,9 @@ namespace Microsoft.PythonTools.Commands {
                 try {
                     res.AppendLine(File.ReadAllText(globalAnalysisLog));
                 } catch (Exception e) {
+                    if (e.IsCriticalException()) {
+                        throw;
+                    }
                     res.AppendLine("Error reading: " + e);
                 }
             }

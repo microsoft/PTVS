@@ -52,7 +52,7 @@ namespace TestUtilities.UI {
         public static bool GetNodeState(this EnvDTE.Project project, string item, __VSHIERARCHYITEMSTATE state) {
             IVsHierarchy hier = null;
             uint id = 0;
-            UIThreadInvoker.Invoke((Action)(() => {
+            UIThread.Invoke((Action)(() => {
                 hier = ((dynamic)project).Project as IVsHierarchy;
                 object projectDir;
                 ErrorHandler.ThrowOnFailure(

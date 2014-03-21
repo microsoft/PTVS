@@ -43,7 +43,6 @@ namespace PythonToolsTests {
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
             PythonTestData.Deploy(includeTestData: false);
-            UIThread.InitUnitTestingMode();
         }
 
         private static VsProjectAnalyzer AnalyzeTextBuffer(
@@ -94,6 +93,7 @@ namespace PythonToolsTests {
         [TestMethod, Priority(0)]
         public void UnresolvedImportSquiggle() {
             var buffer = new MockTextBuffer("import fob, oar\r\nfrom baz import *\r\nfrom .spam import eggs", "C:\\name.py");
+            buffer.Properties.AddProperty("Microsoft.PythonTools.Intellisense.VsProjectAnalyzer.UnresolvedImportWarning", true);
             var analyzer = AnalyzeTextBuffer(buffer);
 
             var squiggles = GetErrorSquiggles(buffer).Select(FormatErrorTag).ToArray();

@@ -131,7 +131,7 @@ namespace Microsoft.VisualStudioTools.Project {
         }
 
         public virtual IList<Output> EnumerateOutputs() {
-            UIThread.Instance.RunSync(Refresh);
+            UIThread.Invoke(Refresh);
             return _outputs;
         }
 

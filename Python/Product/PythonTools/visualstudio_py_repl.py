@@ -924,8 +924,8 @@ due to the exec, so we do it here"""
             raise
 
         remove_self = type_obj is not None or (type(val) is types.MethodType and 
-                        ((sys.version >= '3.0' and val.__self__ is not None) or
-                        (sys.version < '3.0' and val.im_self is not None)))
+                        ((sys.version_info >= (3,) and val.__self__ is not None) or
+                        (sys.version_info < (3,) and val.im_self is not None)))
 
         if remove_self:
             # remove self for instance methods and types
@@ -1152,6 +1152,7 @@ class _ReplOutput(object):
     errors = None
 
     def __init__(self, backend, is_stdout, old_out = None):
+        self.name = "<stdout>" if is_stdout else "<stderr>"
         self.backend = backend
         self.old_out = old_out
         self.is_stdout = is_stdout
@@ -1162,7 +1163,7 @@ class _ReplOutput(object):
             self.old_out.flush()
     
     def fileno(self):
-        if self.pipe is None:        
+        if self.pipe is None:
             self.pipe = os.pipe()
             thread.start_new_thread(self.pipe_thread, (), {})
 
@@ -1203,13 +1204,6 @@ class _ReplOutput(object):
 
     def next(self):
         pass
-    
-    @property
-    def name(self):
-        if self.is_stdout:
-            return "<stdout>"
-        else:
-            return "<stderr>"
 
 
 class _ReplInput(object):

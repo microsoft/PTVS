@@ -18,6 +18,7 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.Linq;
+using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
@@ -750,7 +751,7 @@ namespace Microsoft.VisualStudio.Repl {
         /// Sets the current value for the specified option.
         /// </summary>
         public void SetOptionValue(ReplOptions option, object value) {
-            Exception toThrow = null;
+            ExceptionDispatchInfo toThrow = null;
             UIThread(() => {
                 try {
                     switch (option) {
@@ -854,12 +855,12 @@ namespace Microsoft.VisualStudio.Repl {
                             throw new InvalidOperationException(String.Format("Unknown option: {0}", option));
                     }
                 } catch (Exception e) {
-                    toThrow = e;
+                    toThrow = ExceptionDispatchInfo.Capture(e);
                 }
             });
             if (toThrow != null) {
                 // throw exception on original thread, not the UI thread.
-                throw toThrow;
+                toThrow.Throw();
             }
         }
 

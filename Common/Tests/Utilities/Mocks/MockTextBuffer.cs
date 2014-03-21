@@ -179,7 +179,6 @@ namespace TestUtilities.Mocks {
                 _properties = new PropertyCollection();
             }
             _properties.AddProperty(key, value);
-            InitProperties();
         }
     }
 }

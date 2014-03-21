@@ -54,7 +54,7 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
                 CheckProjectIsValid();
 
                 using (AutomationScope scope = new AutomationScope(this.project.Site)) {
-                    UIThread.Instance.RunSync(() => {
+                    UIThread.Invoke(() => {
                         project.SetEditLabel(value);
                     });
                 }
@@ -84,7 +84,7 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
                 CheckProjectIsValid();
 
                 using (AutomationScope scope = new AutomationScope(this.project.Site)) {
-                    UIThread.Instance.RunSync(() => {
+                    UIThread.Invoke(() => {
                         project.isDirty = value;
                     });
                 }
@@ -226,7 +226,7 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
         /// </summary>
         public virtual EnvDTE.ConfigurationManager ConfigurationManager {
             get {
-                return UIThread.Instance.RunSync(() => {
+                return UIThread.Invoke(() => {
                     if (this.configurationManager == null) {
                         IVsExtensibility3 extensibility = this.project.Site.GetService(typeof(IVsExtensibility)) as IVsExtensibility3;
 
@@ -277,7 +277,7 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
         /// <exception cref="InvalidOperationException">Is thrown if the save operation failes.</exception>
         /// <exception cref="ArgumentNullException">Is thrown if fileName is null.</exception>        
         public virtual void SaveAs(string fileName) {
-            UIThread.Instance.RunSync(() => {
+            UIThread.Invoke(() => {
                 this.DoSave(true, fileName);
             });
         }
@@ -289,7 +289,7 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
         /// <exception cref="InvalidOperationException">Is thrown if the save operation failes.</exception>
         /// <exception cref="ArgumentNullException">Is thrown if fileName is null.</exception>        
         public virtual void Save(string fileName) {
-            UIThread.Instance.RunSync(() => {
+            UIThread.Invoke(() => {
                 this.DoSave(false, fileName);
             });
         }
@@ -301,7 +301,7 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
             CheckProjectIsValid();
 
             using (AutomationScope scope = new AutomationScope(this.project.Site)) {
-                UIThread.Instance.RunSync(() => {
+                UIThread.Invoke(() => {
                     this.project.Remove(false);
                 });
             }

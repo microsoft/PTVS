@@ -12,218 +12,326 @@
  *
  * ***************************************************************************/
 
-namespace Microsoft.VisualStudioTools.Project {
-    using System;
-    using System.Diagnostics;
-    using System.Globalization;
-    using System.Threading;
-    using System.Windows.Forms;
+using System;
+using System.Diagnostics;
+using System.Runtime.InteropServices;
+using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.Shell;
+using IOleServiceProvider = Microsoft.VisualStudio.OLE.Interop.IServiceProvider;
+using Task = System.Threading.Tasks.Task;
 
-    internal sealed class UIThread : IDisposable {
-        private WindowsFormsSynchronizationContext synchronizationContext;
-        private static bool isUnitTestingMode;
-        private Thread uithread;
-#if DEBUG
-        /// <summary>
-        /// Stack trace when synchronizationContext was captured
-        /// </summary>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1823:AvoidUnusedPrivateFields")]
-        private StackTrace captureStackTrace;
-#endif
+namespace Microsoft.VisualStudioTools {
+    /// <summary>
+    /// Provides helper functions to execute code on the UI thread.
+    /// </summary>
+    /// <remarks>
+    /// Because the UI thread is determined from the global service provider,
+    /// in non-VS tests, all invocations will occur on the current thread.
+    /// To specify a UI thread, call <see cref="MakeCurrentThreadUIThread"/>.
+    /// </remarks>
+    internal static class UIThread {
+        private static ThreadHelper _invoker;
+        private static readonly object _invokerLock = new object();
+        private static bool _invokerSet;
 
-        /// <summary>
-        /// RunSync puts orignal exception stacktrace to Exception.Data by this key if action throws on UI thread
-        /// </summary>
-        /// WrappedStacktraceKey is a string to keep exception serializable.
-        private const string WrappedStacktraceKey = "$$Microsoft.VisualStudio.Package.UIThread.WrappedStacktraceKey$$";
+        private static bool CanInvoke {
+            get {
+                if (!_invokerSet) {
+                    lock (_invokerLock) {
+                        if (!_invokerSet) {
+                            _invokerSet = true;
+                            try {
+                                _invoker = ThreadHelper.Generic;
+                                // Test the invoker to make sure it is available
+                                _invoker.Invoke(() => { });
+                            } catch (InvalidOperationException) {
+                                // Not running within VS
+                                _invoker = null;
+                            }
+                        }
+                    }
+                }
 
-        /// <summary>
-        /// The singleton instance.
-        /// </summary>
-        private static volatile UIThread instance;
-
-        internal UIThread() {
-            this.Initialize();
+                return _invokerSet && _invoker != null;
+            }
         }
 
-        /// <summary>
-        /// Gets the singleton instance
-        /// </summary>
-        public static UIThread Instance {
+        internal static bool InvokeRequired {
             get {
-                return instance = instance ?? new UIThread();
+                // Must check CanInvoke() first or we may crash in unit tests
+                return CanInvoke && !ThreadHelper.CheckAccess();
+            }
+        }
+
+
+        public static void MustBeCalledFromUIThread(bool throwInRelease = false) {
+            if (InvokeRequired) {
+                Debug.Fail("Invalid cross-thread call", new StackTrace().ToString());
+
+                if (throwInRelease) {
+                    throw new COMException("Invalid cross-thread call", VSConstants.RPC_E_WRONG_THREAD);
+                }
             }
         }
 
         /// <summary>
-        /// Checks whether this is the UI thread.
+        /// Executes the specified action on the UI thread. Returns once the
+        /// action has been completed.
         /// </summary>
-        public bool IsUIThread {
-            get { return this.uithread == System.Threading.Thread.CurrentThread; }
+        /// <remarks>
+        /// If called from the UI thread, the action is executed synchronously.
+        /// </remarks>
+        public static void Invoke(Action action) {
+            if (InvokeRequired) {
+                _invoker.Invoke(action);
+            } else {
+                action();
+            }
         }
 
         /// <summary>
-        /// Checks whether unit testing mode has been initialized.
+        /// Evaluates the specified function on the UI thread. Returns once the
+        /// function has completed.
         /// </summary>
-        internal static bool IsUnitTestingMode {
-            get { return isUnitTestingMode; }
+        /// <remarks>
+        /// If called from the UI thread, the function is evaluated 
+        /// synchronously.
+        /// </remarks>
+        public static T Invoke<T>(Func<T> func) {
+            if (InvokeRequired) {
+                return _invoker.Invoke(func);
+            } else {
+                return func();
+            }
         }
 
-        #region IDisposable Members
         /// <summary>
-        /// Dispose implementation.
+        /// Executes the specified action on the UI thread. The task is
+        /// completed once the action completes.
         /// </summary>
-        public void Dispose() {
-            if (this.synchronizationContext != null) {
-                this.synchronizationContext.Dispose();
+        /// <remarks>
+        /// If called from the UI thread, the action is executed synchronously.
+        /// </remarks>
+        public static Task InvokeAsync(Action action) {
+            var tcs = new TaskCompletionSource<object>();
+            if (InvokeRequired) {
+#if DEV10
+                // VS 2010 does not have BeginInvoke, so use the thread pool
+                // to run it asynchronously.
+                ThreadPool.QueueUserWorkItem(() => {
+                    _invoker.Invoke(() => InvokeAsyncHelper(action, tcs));
+                });
+#else
+                _invoker.BeginInvoke(() => InvokeAsyncHelper(action, tcs));
+#endif
+            } else {
+                // Action is run synchronously, but we still return the task.
+                InvokeAsyncHelper(action, tcs);
+            }
+            return tcs.Task;
+        }
+
+        /// <summary>
+        /// Evaluates the specified function on the UI thread. The task is
+        /// completed once the result is available.
+        /// </summary>
+        /// <remarks>
+        /// If called from the UI thread, the function is evaluated 
+        /// synchronously.
+        /// </remarks>
+        public static Task<T> InvokeAsync<T>(Func<T> func) {
+            var tcs = new TaskCompletionSource<T>();
+            if (InvokeRequired) {
+#if DEV10
+                // VS 2010 does not have BeginInvoke, so use the thread pool
+                // to run it asynchronously.
+                ThreadPool.QueueUserWorkItem(() => {
+                    _invoker.Invoke(() => InvokeAsyncHelper(func, tcs));
+                });
+#else
+                _invoker.BeginInvoke(() => InvokeAsyncHelper(func, tcs));
+#endif
+            } else {
+                // Function is run synchronously, but we still return the task.
+                InvokeAsyncHelper(func, tcs);
+            }
+            return tcs.Task;
+        }
+
+        /// <summary>
+        /// Awaits the provided task on the UI thread. The function will be
+        /// invoked on the UI thread to ensure the correct context is captured
+        /// for any await statements within the task.
+        /// </summary>
+        /// <remarks>
+        /// If called from the UI thread, the function is evaluated 
+        /// synchronously.
+        /// </remarks>
+        public static Task InvokeTask(Func<Task> func) {
+            var tcs = new TaskCompletionSource<object>();
+            if (InvokeRequired) {
+#if DEV10
+                // VS 2010 does not have BeginInvoke, so use the thread pool
+                // to run it asynchronously.
+                ThreadPool.QueueUserWorkItem(() => {
+                    _invoker.Invoke(() => InvokeTaskHelper(func, tcs));
+                });
+#else
+                _invoker.BeginInvoke(() => InvokeTaskHelper(func, tcs));
+#endif
+            } else {
+                // Function is run synchronously, but we still return the task.
+                InvokeTaskHelper(func, tcs);
+            }
+            return tcs.Task;
+        }
+
+        /// <summary>
+        /// Awaits the provided task on the UI thread. The function will be
+        /// invoked on the UI thread to ensure the correct context is captured
+        /// for any await statements within the task.
+        /// </summary>
+        /// <remarks>
+        /// If called from the UI thread, the function is evaluated 
+        /// synchronously.
+        /// </remarks>
+        public static Task<T> InvokeTask<T>(Func<Task<T>> func) {
+            var tcs = new TaskCompletionSource<T>();
+            if (InvokeRequired) {
+#if DEV10
+                // VS 2010 does not have BeginInvoke, so use the thread pool
+                // to run it asynchronously.
+                ThreadPool.QueueUserWorkItem(() => {
+                    _invoker.Invoke(() => InvokeTaskHelper(func, tcs));
+                });
+#else
+                _invoker.BeginInvoke(() => InvokeTaskHelper(func, tcs));
+#endif
+            } else {
+                // Function is run synchronously, but we still return the task.
+                InvokeTaskHelper(func, tcs);
+            }
+            return tcs.Task;
+        }
+
+        #region Helper Functions
+
+        private static void InvokeAsyncHelper(Action action, TaskCompletionSource<object> tcs) {
+            try {
+                action();
+                tcs.TrySetResult(null);
+            } catch (OperationCanceledException) {
+                tcs.TrySetCanceled();
+            } catch (Exception ex) {
+                if (ex.IsCriticalException()) {
+                    throw;
+                }
+                tcs.TrySetException(ex);
+            }
+        }
+
+        private static void InvokeAsyncHelper<T>(Func<T> func, TaskCompletionSource<T> tcs) {
+            try {
+                tcs.TrySetResult(func());
+            } catch (OperationCanceledException) {
+                tcs.TrySetCanceled();
+            } catch (Exception ex) {
+                if (ex.IsCriticalException()) {
+                    throw;
+                }
+                tcs.TrySetException(ex);
+            }
+        }
+
+        private static async void InvokeTaskHelper(Func<Task> func, TaskCompletionSource<object> tcs) {
+            try {
+                await func();
+                tcs.TrySetResult(null);
+            } catch (OperationCanceledException) {
+                tcs.TrySetCanceled();
+            } catch (Exception ex) {
+                if (ex.IsCriticalException()) {
+                    throw;
+                }
+                tcs.TrySetException(ex);
+            }
+        }
+
+        private static async void InvokeTaskHelper<T>(Func<Task<T>> func, TaskCompletionSource<T> tcs) {
+            try {
+                tcs.TrySetResult(await func());
+            } catch (OperationCanceledException) {
+                tcs.TrySetCanceled();
+            } catch (Exception ex) {
+                if (ex.IsCriticalException()) {
+                    throw;
+                }
+                tcs.TrySetException(ex);
             }
         }
 
         #endregion
 
-        /// <summary>
-        /// Initializes unit testing mode for this object
-        /// </summary>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        internal static void InitUnitTestingMode() {
-            Debug.Assert(instance == null, "Context has already been captured; too late to InitUnitTestingMode");
-            isUnitTestingMode = true;
-        }
-
-        [Conditional("DEBUG")]
-        internal void MustBeCalledFromUIThread() {
-            Debug.Assert(IsUIThread || isUnitTestingMode, "This must be called from the GUI thread");
-        }
+        #region Test Helpers
 
         /// <summary>
-        /// Runs an action asynchronously on an associated forms synchronization context.
+        /// Makes the current thread the UI thread. This is done by setting
+        /// <see cref="ServiceProvider.GlobalProvider"/>.
         /// </summary>
-        /// <param name="a">The action to run</param>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes")]
-        internal void Run(Action a) {
-            if (isUnitTestingMode) {
-                a();
-                return;
+        /// <param name="provider">
+        /// A service provider that may be used to fulfil queries made through
+        /// the global provider.
+        /// </param>
+        /// <remarks>
+        /// This function is intended solely for testing purposes and should
+        /// only be called from outside Visual Studio.
+        /// </remarks>
+        /// <exception cref="InvalidOperationException">
+        /// A UI thread already exists. This may indicate that the function
+        /// has been called within Visual Studio.
+        /// </exception>
+        internal static void MakeCurrentThreadUIThread(ServiceProvider provider = null) {
+            if (ServiceProvider.GlobalProvider != null) {
+                throw new InvalidOperationException("UI thread already exists");
             }
-            Debug.Assert(this.synchronizationContext != null, "The SynchronizationContext must be captured before calling this method");
-#if DEBUG
-            StackTrace stackTrace = new StackTrace(true);
-#endif
-            this.synchronizationContext.Post(delegate(object ignore) {
-                try {
-                    this.MustBeCalledFromUIThread();
-                    a();
-                }
-#if DEBUG
- catch (Exception e) {
-                    // swallow, random exceptions should not kill process
-                    Debug.Assert(false, string.Format(CultureInfo.InvariantCulture, "UIThread.Run caught and swallowed exception: {0}\n\noriginally invoked from stack:\n{1}", e.ToString(), stackTrace.ToString()));
-                }
-#else
-                catch (Exception)
-                {
-                    // swallow, random exceptions should not kill process
-                }
-#endif
-            }, null);
-
+            ServiceProvider.CreateFromSetSite(new DummyOleServiceProvider(provider));
         }
 
-        /// <summary>
-        /// Runs an action synchronously on an associated forms synchronization context
-        /// </summary>
-        /// <param name="a">The action to run.</param>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode"), System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes")]
-        internal void RunSync(Action a) {
-            // if we're already on the UI thread run immediately - this prevents
-            // re-entrancy at unexpected times when we're already on the UI thread.
-            if (isUnitTestingMode || IsUIThread) {
-                a();
-                return;
-            }
-            Exception exn = null;
-            ;
-            Debug.Assert(this.synchronizationContext != null, "The SynchronizationContext must be captured before calling this method");
+        class DummyOleServiceProvider : IOleServiceProvider {
+            private readonly ServiceProvider _provider;
 
-            // Send on UI thread will execute immediately.
-            this.synchronizationContext.Send(ignore => {
-                try {
-                    this.MustBeCalledFromUIThread();
-                    a();
-                } catch (Exception e) {
-                    exn = e;
+            public DummyOleServiceProvider(ServiceProvider provider) {
+                _provider = provider;
+            }
+
+            public int QueryService(ref Guid guidService, ref Guid riid, out IntPtr ppvObject) {
+                if (_provider == null) {
+                    ppvObject = IntPtr.Zero;
+                    return VSConstants.E_FAIL;
                 }
-            }, null
-            );
-            if (exn != null) {
-                // throw exception on calling thread, preserve stacktrace
-                if (!exn.Data.Contains(WrappedStacktraceKey))
-                    exn.Data[WrappedStacktraceKey] = exn.StackTrace;
-                throw exn;
-            }
-        }
 
-        /// <summary>
-        /// Runs an action synchronously on an associated forms synchronization context
-        /// </summary>
-        /// <typeparam name="T">Return type</typeparam>
-        /// <param name="a">The function</param>
-        /// <returns></returns>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode"), System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes")]
-        internal T RunSync<T>(Func<T> a) {
-            T retValue = default(T);
-            if (isUnitTestingMode || IsUIThread) {
-                return a();
-            }
-            Exception exn = null;
-            ;
-            Debug.Assert(this.synchronizationContext != null, "The SynchronizationContext must be captured before calling this method");
-
-            // Send on UI thread will execute immediately.
-            this.synchronizationContext.Send(ignore => {
-                try {
-                    this.MustBeCalledFromUIThread();
-                    retValue = a();
-                } catch (Exception e) {
-                    exn = e;
+                object service;
+                int hr = _provider.QueryService(guidService, out service);
+                if (ErrorHandler.Failed(hr)) {
+                    ppvObject = IntPtr.Zero;
+                    return hr;
                 }
-            }, null
-            );
-            if (exn != null) {
-                // throw exception on calling thread, preserve stacktrace
-                if (exn.Data != null && !exn.Data.Contains(WrappedStacktraceKey))
-                    exn.Data[WrappedStacktraceKey] = exn.StackTrace;
-                throw exn;
-            }
-            return retValue;
-        }
 
-        /// <summary>
-        /// Initializes this object.
-        /// </summary>
-        private void Initialize() {
-            if (isUnitTestingMode)
-                return;
-            this.uithread = System.Threading.Thread.CurrentThread;
-
-            if (this.synchronizationContext == null) {
-#if DEBUG
-                // This is a handy place to do this, since the product and all interesting unit tests
-                // must go through this code path.
-                AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler(delegate(object sender, UnhandledExceptionEventArgs args) {
-                    if (args.IsTerminating) {
-                        string s = String.Format(CultureInfo.InvariantCulture, "An unhandled exception is about to terminate the process.  Exception info:\n{0}", args.ExceptionObject.ToString());
-                        Debug.Assert(false, s);
+                ppvObject = Marshal.GetIUnknownForObject(service);
+                if (riid != VSConstants.IID_IUnknown) {
+                    var punk = ppvObject;
+                    try {
+                        Marshal.QueryInterface(punk, ref riid, out ppvObject);
+                    } finally {
+                        Marshal.Release(punk);
                     }
-                });
-
-                this.captureStackTrace = new StackTrace(true);
-#endif
-                this.synchronizationContext = new WindowsFormsSynchronizationContext();
-            } else {
-                // Make sure we are always capturing the same thread.
-                Debug.Assert(this.uithread == Thread.CurrentThread);
+                }
+                return VSConstants.S_OK;
             }
         }
+
+        #endregion
     }
 }

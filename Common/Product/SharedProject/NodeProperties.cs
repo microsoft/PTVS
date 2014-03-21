@@ -671,7 +671,7 @@ namespace Microsoft.VisualStudioTools.Project {
                 return this.HierarchyNode.Caption;
             }
             set {
-                UIThread.Instance.RunSync(() => {
+                UIThread.Invoke(() => {
                     this.HierarchyNode.SetEditLabel(value);
                     this.HierarchyNode.ProjectMgr.ReDrawNode(HierarchyNode, UIHierarchyElement.Caption);
                 });
@@ -686,7 +686,7 @@ namespace Microsoft.VisualStudioTools.Project {
                 return this.HierarchyNode.Caption;
             }
             set {
-                UIThread.Instance.RunSync(() => {
+                UIThread.Invoke(() => {
                     this.HierarchyNode.SetEditLabel(value);
                     this.HierarchyNode.ProjectMgr.ReDrawNode(HierarchyNode, UIHierarchyElement.Caption);
                 });

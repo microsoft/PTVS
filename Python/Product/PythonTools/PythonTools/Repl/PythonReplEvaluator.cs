@@ -193,6 +193,8 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         protected override void Connect() {
+            UIThread.MustBeCalledFromUIThread();
+            
             var configurableOptions = CurrentOptions as ConfigurablePythonReplOptions;
             if (configurableOptions != null) {
                 _interpreter = configurableOptions.InterpreterFactory ?? _interpreter;
@@ -240,9 +242,7 @@ namespace Microsoft.PythonTools.Repl {
             if (!string.IsNullOrEmpty(workingDir)) {
                 processInfo.WorkingDirectory = workingDir;
             } else if (configurableOptions != null && configurableOptions.Project != null) {
-                processInfo.WorkingDirectory = ThreadHelper.Generic.Invoke(() => {
-                    return configurableOptions.Project.GetWorkingDirectory();
-                });
+                processInfo.WorkingDirectory = configurableOptions.Project.GetWorkingDirectory();
             } else {
                 processInfo.WorkingDirectory = Interpreter.Configuration.PrefixPath;
             }
@@ -315,29 +315,34 @@ namespace Microsoft.PythonTools.Repl {
 
             processInfo.Arguments = String.Join(" ", args);
 
-            UIThread.Instance.RunSync(() => {
-                var process = new Process();
-                process.StartInfo = processInfo;
-                try {
-                    process.Start();
-                } catch (Exception e) {
-                    Win32Exception wex = e as Win32Exception;
-                    if (wex != null && wex.NativeErrorCode == Microsoft.VisualStudioTools.Project.NativeMethods.ERROR_FILE_NOT_FOUND) {
-                        Window.WriteError(
-                            String.Format(
-                                "Failed to start interactive process, the interpreter could not be found: {0}{1}",
-                                Interpreter.Configuration.InterpreterPath,
-                                Environment.NewLine
-                            )
-                        );
-                    } else {
-                        Window.WriteError(String.Format("Failed to start interactive process: {0}{1}{2}", Environment.NewLine, e.ToString(), Environment.NewLine));
-                    }
-                    return;
+            var process = new Process();
+            process.StartInfo = processInfo;
+            try {
+                if (!File.Exists(processInfo.FileName)) {
+                    throw new Win32Exception(Microsoft.VisualStudioTools.Project.NativeMethods.ERROR_FILE_NOT_FOUND);
+                }
+                process.Start();
+            } catch (Exception e) {
+                if (e.IsCriticalException()) {
+                    throw;
                 }
 
-                CreateCommandProcessor(conn, null, processInfo.RedirectStandardOutput, process);
-            });
+                Win32Exception wex = e as Win32Exception;
+                if (wex != null && wex.NativeErrorCode == Microsoft.VisualStudioTools.Project.NativeMethods.ERROR_FILE_NOT_FOUND) {
+                    Window.WriteError(
+                        String.Format(
+                            "Failed to start interactive process, the interpreter could not be found: {0}{1}",
+                            Interpreter.Configuration.InterpreterPath,
+                            Environment.NewLine
+                        )
+                    );
+                } else {
+                    Window.WriteError(String.Format("Failed to start interactive process: {0}{1}{2}", Environment.NewLine, e.ToString(), Environment.NewLine));
+                }
+                return;
+            }
+
+            CreateCommandProcessor(conn, null, processInfo.RedirectStandardOutput, process);
         }
 
         const int ERROR_FILE_NOT_FOUND = 2;

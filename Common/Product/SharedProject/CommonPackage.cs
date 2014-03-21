@@ -47,11 +47,6 @@ namespace Microsoft.VisualStudioTools {
 
         #endregion
 
-        static CommonPackage() {
-            // ensure the UI thread is initialized
-            UIThread.Instance.Run(() => { });
-        }
-
         internal CommonPackage() {
             IServiceContainer container = this as IServiceContainer;
             ServiceCreatorCallback callback = new ServiceCreatorCallback(CreateService);
@@ -194,7 +189,7 @@ namespace Microsoft.VisualStudioTools {
         }
 
         internal static void OpenVsWebBrowser(string url) {
-            ThreadHelper.Generic.Invoke(() => {
+            UIThread.Invoke(() => {
                 var web = GetGlobalService(typeof(SVsWebBrowsingService)) as IVsWebBrowsingService;
                 if (web == null) {
                     OpenWebBrowser(url);

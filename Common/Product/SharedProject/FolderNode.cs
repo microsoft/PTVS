@@ -155,7 +155,10 @@ namespace Microsoft.VisualStudioTools.Project {
                 // also force a refresh of the SolutionExplorer's node.
                 ProjectMgr.OnPropertyChanged(this, (int)__VSHPROPID.VSHPROPID_Caption, 0);
             } catch (Exception e) {
-                throw new InvalidOperationException(String.Format(CultureInfo.CurrentCulture, SR.GetString(SR.RenameFolder, CultureInfo.CurrentUICulture), e.Message));
+                if (e.IsCriticalException()) {
+                    throw;
+                }
+                throw new InvalidOperationException(SR.GetString(SR.RenameFolder, e.Message));
             }
             return VSConstants.S_OK;
         }
