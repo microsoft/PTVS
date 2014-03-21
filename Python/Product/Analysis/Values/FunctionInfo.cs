@@ -187,7 +187,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                                     } else {
                                         result.Append(", ");
                                     }
-                                    AppendDescription(result, av);
+                                    result.Append((av.ShortDescription ?? "").Replace("\r\n", "\n").Replace("\n", "\r\n    "));
                                 }
                             } finally {
                                 av.Pop();
@@ -260,10 +260,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
                 return result.ToString();
             }
-        }
-
-        private static void AppendDescription(StringBuilder result, AnalysisValue key) {
-            result.Append(key.ShortDescription);
         }
 
         public override IAnalysisSet GetDescriptor(Node node, AnalysisValue instance, AnalysisValue context, AnalysisUnit unit) {

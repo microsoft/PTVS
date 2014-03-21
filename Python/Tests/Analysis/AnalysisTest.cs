@@ -5992,6 +5992,20 @@ def update_wrapper(wrapper, wrapped, assigned, updated):
             }
         }
 
+        [TestMethod, Priority(0)]
+        public void MultilineFunctionDescription() {
+            var code = @"class A:
+    def fn(self):
+        return lambda: 123
+";
+            var entry = ProcessText(code);
+
+            Assert.AreEqual(
+                entry.GetDescriptionsByIndex("A.fn", 0).Single().Replace("\r\n", "\n"),
+                "def fn(self) -> lambda : 123 -> int\n    declared in A.fn\ndeclared in A"
+            );
+        }
+
         #endregion
 
         #region Helpers
