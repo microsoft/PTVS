@@ -26,8 +26,8 @@ namespace PythonVersions {
         private static readonly VersionInfo[] Versions = new[] {
             new VersionInfo(2, 7, "{389073E5-F922-4007-9AAE-5F5ACB2A9DEE}", false),
             new VersionInfo(2, 7, "{6FAD4626-E962-4EAC-934E-354BA07F1E5A}", true),
-            new VersionInfo(3, 3, "{008C5687-391B-446D-A26D-433124179358}", false),
-            new VersionInfo(3, 3, "{32CDF3F8-5342-42EF-82B8-729D2FC10662}", true),
+            new VersionInfo(3, 4, "{CDDA8AE3-52A5-4765-9E06-D772B325F62F}", false),
+            new VersionInfo(3, 4, "{B8A50E10-3135-45A5-BEA1-3F2702539A18}", true),
         };
 
 

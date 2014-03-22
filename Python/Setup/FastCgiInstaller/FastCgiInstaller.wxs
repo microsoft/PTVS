@@ -18,7 +18,7 @@
 
     <Property Id="ApplicationFolderName" Value="Scripts" />
 
-    <?define PythonVersions=2.7;3.3?>
+    <?define PythonVersions=2.7;3.4?>
 
     <Property Id="APPCMD_PATH" Secure="yes">
       <DirectorySearch Id="Dir_inetsrv" Path="[WindowsFolder]system32\inetsrv" Depth="1" AssignToProperty="no">
