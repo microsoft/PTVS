@@ -66,6 +66,7 @@
     <Content Include="User\AzureSDK.md" />
     <Content Include="User\Features Browsing.md" />
     <Content Include="User\Features Debugging.md" />
+    <Content Include="User\Features Matrix.md" />
     <Content Include="User\Images\PyLintCommand.png" />
     <Content Include="User\Images\PyLintErrorList.png" />
     <Content Include="User\Features Editor.md" />

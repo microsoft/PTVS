@@ -5,6 +5,7 @@ Getting Started
 ---------------
 
 [wiki:"Installation Instructions" PTVS Installation]
+[wiki:"Feature Matrix" Features Matrix]
 
 Features in Depth
 -----------------
