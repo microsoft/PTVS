@@ -264,7 +264,17 @@ namespace Microsoft.PythonTools.TestAdapter {
 #endif
                 }
 
-                if (!killed && WaitHandle.WaitAny(new WaitHandle[] { _cancelRequested, proc.WaitHandle }) == 0) {
+
+                // https://pytools.codeplex.com/workitem/2290
+                // Check that proc.WaitHandle was not null to avoid crashing if
+                // a test fails to start running. We will report failure and
+                // send the error message from stdout/stderr.
+                var handles = new WaitHandle[] { _cancelRequested, proc.WaitHandle };
+                if (handles[1] == null) {
+                    killed = true;
+                }
+
+                if (!killed && WaitHandle.WaitAny(handles) == 0) {
                     try {
                         proc.Kill();
                     } catch (InvalidOperationException) {
