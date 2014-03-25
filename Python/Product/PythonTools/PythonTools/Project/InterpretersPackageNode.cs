@@ -35,9 +35,10 @@ namespace Microsoft.PythonTools.Project {
     internal class InterpretersPackageNode : HierarchyNode {
         private static readonly Regex PipFreezeRegex = new Regex(
             "^(?<name>[^=]+)==(?<version>.+)$",
-            RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
+            RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase
+        );
 
-        private static readonly IEnumerable<string> CannotUninstall = new[] { "pip", "distribute", "virtualenv" };
+        private static readonly IEnumerable<string> CannotUninstall = new[] { "pip", "wsgiref" };
         private readonly bool _canUninstall;
         private readonly string _caption;
         private readonly string _packageName;

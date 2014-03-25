@@ -141,7 +141,7 @@ namespace Microsoft.PythonTools.Project {
             HashSet<string> lines;
             bool anyChanges = false;
             try {
-                lines = await Pip.Freeze(_factory);
+                lines = await Pip.List(_factory);
             } catch (NoInterpretersException) {
                 return;
             }

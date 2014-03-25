@@ -400,6 +400,10 @@ namespace Microsoft.VisualStudioTools.Project {
         }
 
         private void OnOutputDataReceived(object sender, DataReceivedEventArgs e) {
+            if (_isDisposed) {
+                return;
+            }
+
             if (!string.IsNullOrEmpty(e.Data)) {
                 foreach (var line in SplitLines(e.Data)) {
                     if (_output != null) {
@@ -413,6 +417,10 @@ namespace Microsoft.VisualStudioTools.Project {
         }
 
         private void OnErrorDataReceived(object sender, DataReceivedEventArgs e) {
+            if (_isDisposed) {
+                return;
+            }
+
             if (!string.IsNullOrEmpty(e.Data)) {
                 foreach (var line in SplitLines(e.Data)) {
                     if (_error != null) {
@@ -483,6 +491,19 @@ namespace Microsoft.VisualStudioTools.Project {
             get { return _redirector; }
         }
 
+        private void FlushAndCloseOutput() {
+            if (_process == null) {
+                return;
+            }
+
+            if (_process.StartInfo.RedirectStandardOutput) {
+                _process.CancelOutputRead();
+            }
+            if (_process.StartInfo.RedirectStandardError) {
+                _process.CancelErrorRead();
+            }
+        }
+
         /// <summary>
         /// The lines of text sent to standard output. These do not include
         /// newline characters.
@@ -521,6 +542,7 @@ namespace Microsoft.VisualStudioTools.Project {
         public void Wait() {
             if (_process != null) {
                 _process.WaitForExit();
+                FlushAndCloseOutput();
             }
         }
 
@@ -533,7 +555,11 @@ namespace Microsoft.VisualStudioTools.Project {
         /// </returns>
         public bool Wait(TimeSpan timeout) {
             if (_process != null) {
-                return _process.WaitForExit((int)timeout.TotalMilliseconds);
+                bool exited = _process.WaitForExit((int)timeout.TotalMilliseconds);
+                if (exited) {
+                    FlushAndCloseOutput();
+                }
+                return exited;
             }
             return true;
         }
@@ -543,17 +569,20 @@ namespace Microsoft.VisualStudioTools.Project {
         /// </summary>
         public TaskAwaiter<int> GetAwaiter() {
             var tcs = new TaskCompletionSource<int>();
-            EventHandler onExit = (s, e) => {
-                try {
+            
+            if (_process == null) {
+                tcs.SetCanceled();
+            } else {
+                _process.Exited += (s, e) => {
+                    FlushAndCloseOutput();
                     tcs.TrySetResult(_process.ExitCode);
-                } catch (Exception ex) {
-                    tcs.TrySetException(ex);
+                };
+                if (_process.HasExited) {
+                    FlushAndCloseOutput();
+                    tcs.TrySetResult(_process.ExitCode);
                 }
-            };
-            _process.Exited += onExit;
-            if (_process.HasExited) {
-                onExit(_process, EventArgs.Empty);
             }
+
             return tcs.Task.GetAwaiter();
         }
 
@@ -563,6 +592,7 @@ namespace Microsoft.VisualStudioTools.Project {
         public void Kill() {
             if (_process != null) {
                 _process.Kill();
+                FlushAndCloseOutput();
             }
         }
 
@@ -592,6 +622,12 @@ namespace Microsoft.VisualStudioTools.Project {
             if (!_isDisposed) {
                 _isDisposed = true;
                 if (_process != null) {
+                    if (_process.StartInfo.RedirectStandardOutput) {
+                        _process.OutputDataReceived -= OnOutputDataReceived;
+                    }
+                    if (_process.StartInfo.RedirectStandardError) {
+                        _process.ErrorDataReceived -= OnErrorDataReceived;
+                    }
                     _process.Dispose();
                 }
                 var disp = _redirector as IDisposable;

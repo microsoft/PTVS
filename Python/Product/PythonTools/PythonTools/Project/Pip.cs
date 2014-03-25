@@ -21,6 +21,7 @@ using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Project {
@@ -33,41 +34,27 @@ namespace Microsoft.PythonTools.Project {
             new KeyValuePair<string, string>("PYTHONUNBUFFERED", "1")
         };
 
-        // The relative path from PrefixPath, and true if it is a Python script
-        // that needs to be run with the interpreter.
-        private static readonly KeyValuePair<string, bool>[] PipLocations = new[] {
-            new KeyValuePair<string, bool>(Path.Combine("Scripts", "pip-script.py"), true),
-            new KeyValuePair<string, bool>("pip-script.py", true),
-            new KeyValuePair<string, bool>(Path.Combine("Scripts", "pip.exe"), false),
-            new KeyValuePair<string, bool>("pip.exe", false)
-        };
+        private static readonly Version SupportsDashMPip = new Version(2, 7);
 
-        private static ProcessOutput Run(IPythonInterpreterFactory factory, Redirector output, bool elevate, params string[] cmd) {
+        private static ProcessOutput Run(
+            IPythonInterpreterFactory factory,
+            Redirector output,
+            bool elevate,
+            params string[] cmd
+        ) {
             factory.ThrowIfNotRunnable("factory");
 
-            var args = cmd.AsEnumerable();
-            bool isScript = false;
-            string pipPath = null;
-            foreach (var path in PipLocations) {
-                pipPath = Path.Combine(factory.Configuration.PrefixPath, path.Key);
-                isScript = path.Value;
-                if (File.Exists(pipPath)) {
-                    break;
-                }
-                pipPath = null;
-            }
-
-            if (string.IsNullOrEmpty(pipPath)) {
-                args = new[] { "-m", "pip" }.Concat(args);
-                isScript = true;
-                pipPath = factory.Configuration.InterpreterPath;
-            } else if (isScript) {
-                args = new[] { ProcessOutput.QuoteSingleArgument(pipPath) }.Concat(args);
-                pipPath = factory.Configuration.InterpreterPath;
+            IEnumerable<string> args;
+            if (factory.Configuration.Version >= SupportsDashMPip) {
+                args = new[] { "-m", "pip" }.Concat(cmd);
+            } else {
+                // Manually quote the code, since we are passing false to
+                // quoteArgs below.
+                args = new[] { "-c", "\"import pip; pip.main()\"" }.Concat(cmd);
             }
 
             return ProcessOutput.Run(
-                pipPath,
+                factory.Configuration.InterpreterPath,
                 args,
                 factory.Configuration.PrefixPath,
                 UnbufferedEnv,
@@ -78,41 +65,41 @@ namespace Microsoft.PythonTools.Project {
             );
         }
 
-        public static async Task<HashSet<string>> Freeze(IPythonInterpreterFactory factory) {
-            var lines = new HashSet<string>();
-            using (var proc = Run(factory, null, false, "--version")) {
+        public static async Task<HashSet<string>> List(IPythonInterpreterFactory factory) {
+            using (var proc = Run(factory, null, false, "list")) {
                 if (await proc == 0) {
-                    lines.UnionWith(proc.StandardOutputLines
-                        .Select(line => Regex.Match(line, "pip (?<version>[0-9.]+)"))
-                        .Where(match => match.Success && match.Groups["version"].Success)
-                        .Select(match => "pip==" + match.Groups["version"].Value));
+                    return new HashSet<string>(proc.StandardOutputLines
+                        .Select(line => Regex.Match(line, "(?<name>.+?) \\((?<version>.+?)\\)"))
+                        .Where(match => match.Success)
+                        .Select(match => string.Format("{0}=={1}",
+                            match.Groups["name"].Value,
+                            match.Groups["version"].Value
+                        ))
+                    );
                 }
             }
 
+            // Pip failed, so return a directory listing
+            var packagesPath = Path.Combine(factory.Configuration.LibraryPath, "site-packages");
+            var result = await Task.Run(() => new HashSet<string>(Directory.EnumerateDirectories(packagesPath)
+                .Select(path => Path.GetFileName(path))
+                .Select(name => PackageNameRegex.Match(name))
+                .Where(match => match.Success)
+                .Select(match => match.Groups["name"].Value)
+            )).HandleAllExceptions(SR.GetString(SR.PythonToolsForVisualStudio), typeof(Pip));
+
+            return result ?? new HashSet<string>();
+        }
+
+        public static async Task<HashSet<string>> Freeze(IPythonInterpreterFactory factory) {
             using (var proc = Run(factory, null, false, "freeze")) {
                 if (await proc == 0) {
-                    lines.UnionWith(proc.StandardOutputLines);
-                    return lines;
+                    return new HashSet<string>(proc.StandardOutputLines);
                 }
             }
 
-            // Pip failed, so clear out any entries that may have appeared
-            lines.Clear();
-
-            try {
-                var packagesPath = Path.Combine(factory.Configuration.LibraryPath, "site-packages");
-                await Task.Run(() => {
-                    lines.UnionWith(Directory.EnumerateDirectories(packagesPath)
-                        .Select(name => Path.GetFileName(name))
-                        .Select(name => PackageNameRegex.Match(name))
-                        .Where(m => m.Success)
-                        .Select(m => m.Groups["name"].Value));
-                });
-            } catch {
-                lines.Clear();
-            }
-
-            return lines;
+            // Pip failed, so return an empty set
+            return new HashSet<string>();
         }
 
         /// <summary>
@@ -317,12 +304,17 @@ namespace Microsoft.PythonTools.Project {
         }
 
         /// <summary>
-        /// Checks whether a given package is installed and satisfies the version specification.
+        /// Checks whether a given package is installed and satisfies the
+        /// version specification.
         /// </summary>
-        /// <param name="package">Name, and optionally the version of the package to install, in setuptools format.</param>
+        /// <param name="package">
+        /// Name, and optionally the version of the package to install, in
+        /// setuptools format.
+        /// </param>
         /// <remarks>
-        /// This method requires setuptools to be installed to correctly detect packages and verify their versions. If setuptools
-        /// is not available, the method will always return <c>false</c> for any package name.
+        /// This method requires setuptools to be installed to correctly detect
+        /// packages and verify their versions. If setuptools is not available,
+        /// the method will always return <c>false</c> for any package name.
         /// </remarks>
         public static async Task<bool> IsInstalled(IPythonInterpreterFactory factory, string package) {
             if (!factory.IsRunnable()) {
